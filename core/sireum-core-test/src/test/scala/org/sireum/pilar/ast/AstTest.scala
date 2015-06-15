@@ -73,12 +73,14 @@ class AstTest {
 
   @Test
   def testPicklingString(): Unit = {
-    assert(model == Node.fromJson[Model](model.toJsonString))
+    import Picklers._
+    assert(model == fromJson[Model](toJsonString(model)))
   }
 
   @Test
   def testPicklingBytes(): Unit = {
-    assert(model == Node.fromJson[Model](model.toJsonBytes))
+    import Picklers._
+    assert(model == fromJson[Model](toJsonBytes(model)))
   }
 }
 

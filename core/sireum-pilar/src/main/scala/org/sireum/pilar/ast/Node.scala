@@ -29,80 +29,8 @@ package org.sireum.pilar.ast
 
 import org.sireum.util._
 
-import scala.util.Success
 
-
-object Node {
-  private implicit val nodeJsonPickler = {
-    import prickle._
-    import Pickler._
-
-    implicit val idPickler =
-      CompositePickler[Id].concreteType[IdImpl]
-    implicit val rawPickler =
-      CompositePickler[Raw].concreteType[RawImpl]
-    implicit val annotationPickler =
-      CompositePickler[Annotation].concreteType[AnnotationImpl]
-    implicit val modelElementPickler =
-      CompositePickler[ModelElement].
-        concreteType[GlobalVarDeclImpl]
-    implicit val modelPickler =
-      CompositePickler[Model].concreteType[ModelImpl]
-
-    CompositePickler[Node].
-      concreteType[AnnotationImpl].
-      concreteType[GlobalVarDeclImpl].
-      concreteType[IdImpl].
-      concreteType[ModelImpl].
-      concreteType[RawImpl]
-  }
-
-  private implicit val nodeJsonBPickler = {
-    import boopickle._
-    import Pickler._
-
-    implicit val idPickler =
-      CompositePickler[Id].addConcreteType[IdImpl]
-    implicit val rawPickler =
-      CompositePickler[Raw].addConcreteType[RawImpl]
-    implicit val annotationPickler =
-      CompositePickler[Annotation].addConcreteType[AnnotationImpl]
-    implicit val modelElementPickler =
-      CompositePickler[ModelElement].
-        addConcreteType[GlobalVarDeclImpl]
-    implicit val modelPickler =
-      CompositePickler[Model].addConcreteType[ModelImpl]
-
-    CompositePickler[Node].
-      addConcreteType[AnnotationImpl].
-      addConcreteType[GlobalVarDeclImpl].
-      addConcreteType[IdImpl].
-      addConcreteType[ModelImpl].
-      addConcreteType[RawImpl]
-  }
-
-  def fromJson[T <: Node](s: String): T = {
-    prickle.Unpickle[Node].fromString(s) match {
-      case Success(n) => n.asInstanceOf[T]
-      case _ => throw new Error(s"Error deserializing AST from:\n$s")
-    }
-  }
-
-  def fromJson[T <: Node](b: Array[Byte]): T = {
-    boopickle.Unpickle[Node].
-      fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
-  }
-}
-
-sealed abstract class Node extends NodeLocation {
-  def toJsonString: String = {
-    prickle.Pickle.intoString(this)
-  }
-
-  def toJsonBytes: Array[Byte] = {
-    boopickle.Pickle.intoBytes(this).array()
-  }
-}
+sealed abstract class Node extends NodeLocation
 
 
 object NodeLocation {
