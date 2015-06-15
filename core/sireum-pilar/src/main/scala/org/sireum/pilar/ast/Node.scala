@@ -18,7 +18,7 @@ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
 DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SE RVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
@@ -71,8 +71,7 @@ object Model {
             elements: ISeq[ModelElement]) =
     ModelImpl(annotations, elements)
 
-  def unapply(m: Model): Option[(ISeq[ModelElement])] =
-    Some(m.elements)
+  def unapply(m: Model) = Some(m.elements)
 }
 
 abstract class Model extends AnnotatedNode {
@@ -82,9 +81,9 @@ abstract class Model extends AnnotatedNode {
 private[ast] final case class
 ModelImpl(annotations: AnnotationMap,
           elements: ISeq[ModelElement],
-          override private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-          override private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends AnnotatedNode
+          private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
+          private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
+  extends Model
 
 
 object Id {
@@ -101,7 +100,7 @@ private[ast] final case class
 IdImpl(value: String,
        private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
        private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Node
+  extends Id
 
 
 object Annotation {

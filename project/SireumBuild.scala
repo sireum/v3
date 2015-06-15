@@ -52,7 +52,7 @@ object SireumBuild extends Build {
             ProjectHelper.cliGen(args, projectInfos)
           }),
       base = file(".")) aggregate(
-      util, pilarParser
+      util, pilar, pilarParser, coreTest
       ) settings (
       name := "Sireum")
 
@@ -77,7 +77,11 @@ object SireumBuild extends Build {
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVer
   )
 
-  val sireumTestSettings = sireumSettings ++ Seq(
+  val sireumJvmSettings = sireumSettings ++ Seq(
+    libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.5"
+  )
+
+  val sireumJvmTestSettings = sireumJvmSettings ++ Seq(
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
   )
 
@@ -97,14 +101,14 @@ object SireumBuild extends Build {
   lazy val util = toSbtProject(utilPI)
   lazy val pilar = toSbtProject(pilarPI)
 
-  lazy val pilarParser = toSbtProject(pilarParserPI,
-    Seq(libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.3")
-  )
+  lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
+  lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
 
   val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
   val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
 
   val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
+  val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
 
   def firstExists(default: String, paths: String*): String = {
     for (p <- paths)
@@ -117,10 +121,10 @@ object SireumBuild extends Build {
     path
   }
 
-  def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Seq()): Project =
+  def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumSettings): Project =
     Project(
       id = pi.id,
-      settings = sireumSettings ++ settings,
+      settings = settings,
       base = pi.baseDir).
       dependsOn(pi.dependencies.map { p =>
       new ClasspathDependency(new LocalProject(p.id), None)

@@ -25,12 +25,44 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar
+package org.sireum.pilar.ast
 
+import org.junit.Test
 import org.sireum.util._
 
-package object ast {
-  type AnnotationMap = ILinkedMap[String, Annotation]
+import scala.util.Random
 
-  final val emptyAnnotationMap: AnnotationMap = ilinkedMap()
+class AstTest {
+
+  @Test
+  def testEmptyModel(): Unit = {
+    Model(emptyAnnotationMap, ivectorEmpty) match {
+      case Model(elements) => assert(elements.isEmpty, "Expected model with empty elements")
+    }
+  }
+
+  @Test
+  def testRewriteAnnotationOffset(): Unit = {
+    val n = Random.nextInt().abs
+
+    val model =
+      Model(emptyAnnotationMap +
+        ("object" -> Annotation(Id("object"), 1)),
+        ivectorEmpty)
+
+    val model2 = Rewriter.build({
+      case a: Annotation =>
+        a.offsetBegin = n
+        a.offsetEnd = n
+        a
+    })(model)
+
+    Visitor.build({
+      case a: Annotation =>
+        assert(a.offsetBegin == n && a.offsetEnd == n, s"Expected annotation offset ($n, $n)")
+        false
+    })(model2)
+
+    assert(model eq model2, "Expected model not changed ude to offset updates")
+  }
 }

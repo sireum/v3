@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser.iml" />
