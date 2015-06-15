@@ -78,7 +78,11 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "com.github.benhutchison" %% "prickle" % "1.1.6",
       "me.chrons" %% "boopickle" % "1.0.0"
-    )
+    ),
+    scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
+    javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
+    autoAPIMappings := true,
+    apiURL := Some(url("http://sireum.org/api/"))
   )
 
   val sireumJvmSettings = sireumSettings ++ Seq(
@@ -88,6 +92,7 @@ object SireumBuild extends Build {
   )
 
   val sireumJvmTestSettings = sireumJvmSettings ++ Seq(
+    testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
     libraryDependencies ++= Seq(
       "com.novocode" % "junit-interface" % "0.11" % "test"
     )
