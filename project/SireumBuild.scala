@@ -69,41 +69,49 @@ object SireumBuild extends Build {
         }) + "." + artifact.extension
     },
     incOptions := incOptions.value.withNameHashing(true),
-    parallelExecution in Test := false,
+    parallelExecution in Test := true,
     scalaVersion := scalaVer,
-    scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode", "-deprecation"),
+    scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVer,
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVer
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVer,
+      "org.scala-lang" % "scala-compiler" % scalaVer,
+      "com.github.benhutchison" %% "prickle" % "1.1.6",
+      "me.chrons" %% "boopickle" % "1.0.0"
+    )
   )
 
   val sireumJvmSettings = sireumSettings ++ Seq(
-    libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.5"
+    libraryDependencies ++= Seq(
+      "org.antlr" % "antlr4-runtime" % "4.5"
+    )
   )
 
   val sireumJvmTestSettings = sireumJvmSettings ++ Seq(
-    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
+    libraryDependencies ++= Seq(
+      "com.novocode" % "junit-interface" % "0.11" % "test"
+    )
   )
 
   val sireumJsSettings = Seq(
     organization := "SAnToS Laboratory",
     incOptions := incOptions.value.withNameHashing(true),
-    parallelExecution in Test := false,
+    parallelExecution in Test := true,
     scalaVersion := scalaVer,
     relativeSourceMaps := true,
     scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.8.1",
-      "com.github.benhutchison" %%% "prickle" % "1.1.6"
+      "com.github.benhutchison" %%% "prickle" % "1.1.6",
+      "me.chrons" %%% "boopickle" % "1.0.0"
     )
   )
 
-  lazy val util = toSbtProject(utilPI)
-  lazy val pilar = toSbtProject(pilarPI)
+  lazy val util = toSbtProject(utilPI, sireumSettings)
+  lazy val pilar = toSbtProject(pilarPI, sireumSettings)
 
   lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
-
   val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
   val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
 
@@ -121,7 +129,7 @@ object SireumBuild extends Build {
     path
   }
 
-  def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumSettings): Project =
+  def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project =
     Project(
       id = pi.id,
       settings = settings,

@@ -29,15 +29,87 @@ package org.sireum.pilar.ast
 
 import org.sireum.util._
 
+import scala.util.Success
 
-sealed abstract class Node extends NodeLocation
+
+object Node {
+  private implicit val nodeJsonPickler = {
+    import prickle._
+    import Pickler._
+
+    implicit val idPickler =
+      CompositePickler[Id].concreteType[IdImpl]
+    implicit val rawPickler =
+      CompositePickler[Raw].concreteType[RawImpl]
+    implicit val annotationPickler =
+      CompositePickler[Annotation].concreteType[AnnotationImpl]
+    implicit val modelElementPickler =
+      CompositePickler[ModelElement].
+        concreteType[GlobalVarDeclImpl]
+    implicit val modelPickler =
+      CompositePickler[Model].concreteType[ModelImpl]
+
+    CompositePickler[Node].
+      concreteType[AnnotationImpl].
+      concreteType[GlobalVarDeclImpl].
+      concreteType[IdImpl].
+      concreteType[ModelImpl].
+      concreteType[RawImpl]
+  }
+
+  private implicit val nodeJsonBPickler = {
+    import boopickle._
+    import Pickler._
+
+    implicit val idPickler =
+      CompositePickler[Id].addConcreteType[IdImpl]
+    implicit val rawPickler =
+      CompositePickler[Raw].addConcreteType[RawImpl]
+    implicit val annotationPickler =
+      CompositePickler[Annotation].addConcreteType[AnnotationImpl]
+    implicit val modelElementPickler =
+      CompositePickler[ModelElement].
+        addConcreteType[GlobalVarDeclImpl]
+    implicit val modelPickler =
+      CompositePickler[Model].addConcreteType[ModelImpl]
+
+    CompositePickler[Node].
+      addConcreteType[AnnotationImpl].
+      addConcreteType[GlobalVarDeclImpl].
+      addConcreteType[IdImpl].
+      addConcreteType[ModelImpl].
+      addConcreteType[RawImpl]
+  }
+
+  def fromJson[T <: Node](s: String): T = {
+    prickle.Unpickle[Node].fromString(s) match {
+      case Success(n) => n.asInstanceOf[T]
+      case _ => throw new Error(s"Error deserializing AST from:\n$s")
+    }
+  }
+
+  def fromJson[T <: Node](b: Array[Byte]): T = {
+    boopickle.Unpickle[Node].
+      fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
+  }
+}
+
+sealed abstract class Node extends NodeLocation {
+  def toJsonString: String = {
+    prickle.Pickle.intoString(this)
+  }
+
+  def toJsonBytes: Array[Byte] = {
+    boopickle.Pickle.intoBytes(this).array()
+  }
+}
 
 
 object NodeLocation {
   final val OFFSET_DEFAULT = -1
 }
 
-import NodeLocation.OFFSET_DEFAULT
+import org.sireum.pilar.ast.NodeLocation.OFFSET_DEFAULT
 
 sealed trait NodeLocation {
   private[ast] var _offsetBegin: Int
@@ -61,14 +133,17 @@ sealed trait NodeLocation {
 }
 
 
-abstract class AnnotatedNode {
-  def annotations : AnnotationMap
+abstract class AnnotatedNode extends Node {
+  def annotations: ISeq[Annotation]
+
+  def annotation(id: String): Option[Annotation] =
+    annotations.find(_.id.value == id)
 }
 
 
 object Model {
-  def apply(annotations: AnnotationMap,
-            elements: ISeq[ModelElement]) =
+  def apply(annotations: ISeq[Annotation],
+            elements: ISeq[ModelElement]): Model =
     ModelImpl(annotations, elements)
 
   def unapply(m: Model) = Some(m.elements)
@@ -79,7 +154,7 @@ abstract class Model extends AnnotatedNode {
 }
 
 private[ast] final case class
-ModelImpl(annotations: AnnotationMap,
+ModelImpl(annotations: ISeq[Annotation],
           elements: ISeq[ModelElement],
           private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
           private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
@@ -87,13 +162,13 @@ ModelImpl(annotations: AnnotationMap,
 
 
 object Id {
-  def apply(value: String) = IdImpl(value.intern())
+  def apply(value: String): Id = IdImpl(value.intern())
 
   def unapply(id: Id) = Some(id.value)
 }
 
 abstract class Id extends Node {
-  def value : String
+  def value: String
 }
 
 private[ast] final case class
@@ -103,26 +178,60 @@ IdImpl(value: String,
   extends Id
 
 
+object Raw {
+  def apply(value: String): Raw = RawImpl(value)
+
+  def unapply(raw: Raw) = Some(raw.value)
+}
+
+abstract class Raw extends Node {
+  def value: String
+}
+
+private[ast] final case class
+RawImpl(value: String,
+        private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
+        private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
+  extends Raw
+
+
 object Annotation {
-  def apply(id: Id, raw: Any) = AnnotationImpl(id, raw)
+  def apply(id: Id, raw: Raw): Annotation = AnnotationImpl(id, raw)
 
   def unapply(a: Annotation) = Some((a.id, a.raw))
 }
 
 abstract class Annotation extends Node {
-  def id : Id
+  def id: Id
 
-  def raw[T] : T
+  def raw: Raw
 }
 
 private[ast] final case class
 AnnotationImpl(id: Id,
-               _raw: Any,
+               raw: Raw,
                private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
                private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Annotation {
-  def raw[T] : T = _raw.asInstanceOf[T]
-}
+  extends Annotation
 
 
 abstract class ModelElement extends AnnotatedNode
+
+
+object GlobalVarDecl {
+  def apply(id: Id, annotations: ISeq[Annotation]): GlobalVarDecl =
+    GlobalVarDeclImpl(id, annotations)
+
+  def unapply(gvd: GlobalVarDecl) = Some(gvd.id)
+}
+
+abstract class GlobalVarDecl extends ModelElement {
+  def id: Id
+}
+
+private[ast] final case class
+GlobalVarDeclImpl(id: Id,
+                  annotations: ISeq[Annotation],
+                  private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
+                  private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
+  extends GlobalVarDecl

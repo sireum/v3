@@ -34,9 +34,19 @@ import scala.util.Random
 
 class AstTest {
 
+  val emptyModel = Model(ivectorEmpty, ivectorEmpty)
+
+  val model =
+    Model(
+      ivector(
+        Annotation(Id("object"), Raw("1"))),
+      ivector(
+        GlobalVarDecl(Id("x"),
+          ivector(Annotation(Id("type"), Raw("Int"))))))
+
   @Test
   def testEmptyModel(): Unit = {
-    Model(emptyAnnotationMap, ivectorEmpty) match {
+    emptyModel match {
       case Model(elements) => assert(elements.isEmpty, "Expected model with empty elements")
     }
   }
@@ -44,11 +54,6 @@ class AstTest {
   @Test
   def testRewriteAnnotationOffset(): Unit = {
     val n = Random.nextInt().abs
-
-    val model =
-      Model(emptyAnnotationMap +
-        ("object" -> Annotation(Id("object"), 1)),
-        ivectorEmpty)
 
     val model2 = Rewriter.build({
       case a: Annotation =>
@@ -63,6 +68,17 @@ class AstTest {
         false
     })(model2)
 
-    assert(model eq model2, "Expected model not changed ude to offset updates")
+    assert(model eq model2, "Expected model not changed due to offset updates")
+  }
+
+  @Test
+  def testPicklingString(): Unit = {
+    assert(model == Node.fromJson[Model](model.toJsonString))
+  }
+
+  @Test
+  def testPicklingBytes(): Unit = {
+    assert(model == Node.fromJson[Model](model.toJsonBytes))
   }
 }
+
