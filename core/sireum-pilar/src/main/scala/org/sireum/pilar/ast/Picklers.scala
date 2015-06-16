@@ -93,6 +93,10 @@ object Picklers {
   def toJsonString(node: Node) =
     prickle.Pickle.intoString(node)
 
-  def toJsonBytes(node: Node) =
-    boopickle.Pickle.intoBytes(node).array()
+  def toJsonBytes(node: Node) = {
+    val bb = boopickle.Pickle.intoBytes(node)
+    val ba = new Array[Byte](bb.limit)
+    bb.get(ba)
+    ba
+  }
 }

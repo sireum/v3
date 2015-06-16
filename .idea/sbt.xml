@@ -8,6 +8,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/core/sireum-core-js-test" />
+            <option value="$PROJECT_DIR$/core/sireum-core-js-test/project" />
             <option value="$PROJECT_DIR$/core/sireum-core-test" />
             <option value="$PROJECT_DIR$/core/sireum-core-test/project" />
             <option value="$PROJECT_DIR$/core/sireum-pilar" />

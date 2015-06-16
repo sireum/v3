@@ -23,7 +23,10 @@
 /crashlytics.properties
 /crashlytics-build.properties
 /project/project
+/project/target
 /core/sireum-pilar/target
 /core/sireum-pilar-parser/target
 /core/sireum-util/target
 /core/sireum-core-test/target
+/core/sireum-core-js-test/target
+/.history

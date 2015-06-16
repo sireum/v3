@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2011-2015, Robby, Kansas State University
+Copyright (c) 2015, Robby, Kansas State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,60 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.util;
+package org.sireum.pilar.ast
 
-/**
- * @author <a href="mailto:robby@k-state.edu">Robby</a>
- */
+import utest._
+
+import org.sireum.util._
+
+import scala.util.Random
+
+object AstJsTest extends TestSuite {
+  def tests = TestSuite {
+
+    val emptyModel = Model(ivectorEmpty, ivectorEmpty)
+
+    val model =
+      Model(
+        ivector(
+          Annotation(Id("object"), Raw("1"))),
+        ivector(
+          GlobalVarDecl(Id("x"),
+            ivector(Annotation(Id("type"), Raw("Int"))))))
+
+    'EmptyModel {
+      emptyModel match {
+        case Model(elements) => assert(elements.isEmpty)
+      }
+    }
+
+    //    'RewriteAnnotationOffset {
+    //      val n = Random.nextInt().abs
+    //
+    //      val model2 = Rewriter.build({
+    //        case a: Annotation =>
+    //          a.offsetBegin = n
+    //          a.offsetEnd = n
+    //          a
+    //      })(model)
+    //
+    //      Visitor.build({
+    //        case a: Annotation =>
+    //          assert(a.offsetBegin == n, a.offsetEnd == n)
+    //          false
+    //      })(model2)
+    //
+    //      assert(model eq model2)
+    //    }
+
+    'PicklingString {
+      import Picklers._
+      assert(model == fromJson[Model](toJsonString(model)))
+    }
+
+    'PicklingBytes {
+      import Picklers._
+      assert(model == fromJson[Model](toJsonBytes(model)))
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
@@ -52,7 +53,10 @@ object SireumBuild extends Build {
             ProjectHelper.cliGen(args, projectInfos)
           }),
       base = file(".")) aggregate(
-      util, pilar, pilarParser, coreTest
+      util, pilar,
+      pilarParser,
+      coreTest,
+      coreJsTest
       ) settings (
       name := "Sireum")
 
@@ -101,27 +105,44 @@ object SireumBuild extends Build {
   val sireumJsSettings = Seq(
     organization := "SAnToS Laboratory",
     incOptions := incOptions.value.withNameHashing(true),
-    parallelExecution in Test := true,
+    parallelExecution in Test := false,
     scalaVersion := scalaVer,
     relativeSourceMaps := true,
     scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
+    scalaJSStage in Global := FastOptStage,
+    postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.8.1",
       "com.github.benhutchison" %%% "prickle" % "1.1.6",
       "me.chrons" %%% "boopickle" % "1.0.0"
     )
+  )
+
+  val sireumJsTestSettings = sireumJsSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % "0.3.1"
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework")
   )
 
   lazy val util = toSbtProject(utilPI, sireumSettings)
   lazy val pilar = toSbtProject(pilarPI, sireumSettings)
 
   lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
+
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
+
+  lazy val coreJsTest = toSbtJsProject(coreJsTestPI, sireumJsTestSettings)
+
+
   val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
   val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
 
   val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
+
   val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
+
+  val coreJsTestPI = new ProjectInfo("Sireum Core Js Test", CORE_DIR, Seq(), utilPI, pilarPI)
+
 
   def firstExists(default: String, paths: String*): String = {
     for (p <- paths)
@@ -144,6 +165,22 @@ object SireumBuild extends Build {
     }: _*).
       settings(name := pi.name)
 
+  def toSbtJsProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project = {
+    val (jsPIs, purePIs) = pi.dependencies.partition(p => p.id.contains("-js"))
+    Project(
+      id = pi.id,
+      settings = settings ++ Seq(
+        name := pi.name,
+        unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
+          purePIs.map { pi =>
+            base / base.getAbsoluteFile.toPath.relativize((pi.baseDir / "src/main/scala").getAbsoluteFile.toPath).toString
+          }
+        }
+      ),
+      base = pi.baseDir).dependsOn(jsPIs.map(p =>
+      new ClasspathDependency(new LocalProject(p.id), None)): _*
+      ).enablePlugins(ScalaJSPlugin)
+  }
 
   lazy val projectInfoMap = scala.collection.mutable.Map[String, ProjectInfo](
 
