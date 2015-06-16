@@ -27,11 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-import utest._
-
 import org.sireum.util._
-
-import scala.util.Random
+import utest._
 
 object AstJsTest extends TestSuite {
   def tests = TestSuite {
@@ -73,12 +70,17 @@ object AstJsTest extends TestSuite {
 
     'PicklingString {
       import Picklers._
-      assert(model == fromJson[Model](toJsonString(model)))
+      assert(model == fromJsonString[Model](toJsonString(model)))
+    }
+
+    'PicklingGraphString {
+      import Picklers._
+      assert(model == fromJsonGraphString[Model](toJsonGraphString(model)))
     }
 
     'PicklingBytes {
       import Picklers._
-      assert(model == fromJson[Model](toJsonBytes(model)))
+      assert(model == fromJsonBytes[Model](toJsonBytes(model)))
     }
   }
 }

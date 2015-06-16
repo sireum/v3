@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="clean compile test:compile test" type="SbtRunConfiguration" factoryName="SBT Task">
+    <setting name="tasks" value="clean compile test:compile test" />
+    <setting name="vmparams" value="-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled" />
+    <envs />
+    <method />
+  </configuration>
+</component>

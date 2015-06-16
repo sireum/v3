@@ -80,6 +80,7 @@ object SireumBuild extends Build {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
+      "com.lihaoyi" %% "upickle" % "0.2.8",
       "com.github.benhutchison" %% "prickle" % "1.1.6",
       "me.chrons" %% "boopickle" % "1.0.0"
     ),
@@ -112,6 +113,7 @@ object SireumBuild extends Build {
     scalaJSStage in Global := FastOptStage,
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "upickle" % "0.2.8",
       "com.github.benhutchison" %%% "prickle" % "1.1.6",
       "me.chrons" %%% "boopickle" % "1.0.0"
     )

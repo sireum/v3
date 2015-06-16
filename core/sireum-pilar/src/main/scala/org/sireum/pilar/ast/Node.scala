@@ -30,7 +30,9 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 
-sealed abstract class Node extends NodeLocation
+object Node
+
+sealed trait Node extends NodeLocation
 
 
 object NodeLocation {
@@ -60,8 +62,9 @@ sealed trait NodeLocation {
   }
 }
 
+object AnnotatedNode
 
-abstract class AnnotatedNode extends Node {
+sealed trait AnnotatedNode extends Node {
   def annotations: ISeq[Annotation]
 
   def annotation(id: String): Option[Annotation] =
@@ -77,7 +80,7 @@ object Model {
   def unapply(m: Model) = Some(m.elements)
 }
 
-abstract class Model extends AnnotatedNode {
+sealed trait Model extends AnnotatedNode {
   def elements: ISeq[ModelElement]
 }
 
@@ -95,7 +98,7 @@ object Id {
   def unapply(id: Id) = Some(id.value)
 }
 
-abstract class Id extends Node {
+sealed trait Id extends Node {
   def value: String
 }
 
@@ -112,7 +115,7 @@ object Raw {
   def unapply(raw: Raw) = Some(raw.value)
 }
 
-abstract class Raw extends Node {
+sealed trait Raw extends Node {
   def value: String
 }
 
@@ -129,7 +132,7 @@ object Annotation {
   def unapply(a: Annotation) = Some((a.id, a.raw))
 }
 
-abstract class Annotation extends Node {
+sealed trait Annotation extends Node {
   def id: Id
 
   def raw: Raw
@@ -143,7 +146,7 @@ AnnotationImpl(id: Id,
   extends Annotation
 
 
-abstract class ModelElement extends AnnotatedNode
+sealed trait ModelElement extends AnnotatedNode
 
 
 object GlobalVarDecl {
@@ -153,7 +156,7 @@ object GlobalVarDecl {
   def unapply(gvd: GlobalVarDecl) = Some(gvd.id)
 }
 
-abstract class GlobalVarDecl extends ModelElement {
+sealed trait GlobalVarDecl extends ModelElement {
   def id: Id
 }
 

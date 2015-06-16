@@ -78,19 +78,30 @@ object Picklers {
       addConcreteType[RawImpl]
   }
 
-  def fromJson[T <: Node](s: String): T = {
+
+  def fromJsonString[T <: Node](s: String): T = {
+    import upickle._
+    read[Node](s).asInstanceOf[T]
+  }
+
+  def fromJsonGraphString[T <: Node](s: String): T = {
     prickle.Unpickle[Node].fromString(s) match {
       case Success(n) => n.asInstanceOf[T]
       case _ => throw new Error(s"Error deserializing AST from:\n$s")
     }
   }
 
-  def fromJson[T <: Node](b: Array[Byte]): T = {
+  def fromJsonBytes[T <: Node](b: Array[Byte]): T = {
     boopickle.Unpickle[Node].
       fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
   }
 
-  def toJsonString(node: Node) =
+  def toJsonString(node: Node) = {
+    import upickle._
+    write(node)
+  }
+
+  def toJsonGraphString(node: Node) =
     prickle.Pickle.intoString(node)
 
   def toJsonBytes(node: Node) = {
