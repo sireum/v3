@@ -48,7 +48,7 @@ object ProductUtil {
   @inline
   final def equals(p1: Product, p2: Product): Boolean =
     if (p1.productArity != p2.productArity) false
-    else
-      p1.productIterator.zip(p2.productIterator).
-        forall(p => p._1 == p._2)
+    else if (p1.productPrefix != p2.productPrefix) false
+    else p1.productIterator.zip(p2.productIterator).
+      forall(p => p._1 == p._2)
 }
