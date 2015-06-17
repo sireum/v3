@@ -98,6 +98,12 @@ object Model {
 
 sealed trait Model extends AnnotatedNode {
   def elements: ISeq[ModelElement]
+
+  def copy(annotations: ISeq[Annotation] = this.annotations,
+           elements: ISeq[ModelElement] = this.elements,
+           offsetBegin: Int = this.offsetBegin,
+           offsetEnd: Int = this.offsetEnd): Model =
+    Model(annotations, elements, offsetBegin, offsetEnd)
 }
 
 private[ast] final case class
@@ -107,18 +113,10 @@ ModelImpl(annotations: ISeq[Annotation],
           private[ast] var _offsetEnd: Int)
   extends Model {
 
-  override def make(children: AnyRef*): ModelImpl = {
-
-    val Seq(
-    anns: ISeq[_],
-    es: ISeq[_],
-    ob: Integer,
-    oe: Integer) = children
-
-    ModelImpl(
-      anns.map(_.asInstanceOf[Annotation]),
-      es.map(_.asInstanceOf[ModelElement]),
-      ob, oe)
+  override def make(children: AnyRef*): Model = {
+    val Seq(anns: ISeq[_], es: ISeq[_], ob: Integer, oe: Integer) =
+      children
+    ModelImpl(cast(anns), cast(es), ob, oe)
   }
 }
 
@@ -134,6 +132,11 @@ object Id {
 
 sealed trait Id extends Node {
   def value: String
+
+  def copy(value: String = this.value,
+           offsetBegin: Int = this.offsetBegin,
+           offsetEnd: Int = this.offsetEnd): Id =
+    Id(value, offsetBegin, offsetEnd)
 }
 
 private[ast] final case class
@@ -142,16 +145,11 @@ IdImpl(value: String,
        private[ast] var _offsetEnd: Int)
   extends Id {
 
-  override def make(children: AnyRef*): IdImpl = {
-
-    val Seq(
-    value: String,
-    ob: Integer,
-    oe: Integer) = children
-
+  override def make(children: AnyRef*): Id = {
+    val Seq(value: String, ob: Integer, oe: Integer) =
+      children
     IdImpl(value, ob, oe)
   }
-
 }
 
 
@@ -166,6 +164,11 @@ object Raw {
 
 sealed trait Raw extends Node {
   def value: String
+
+  def copy(value: String = this.value,
+           offsetBegin: Int = this.offsetBegin,
+           offsetEnd: Int = this.offsetEnd): Raw =
+    Raw(value, offsetBegin, offsetEnd)
 }
 
 private[ast] final case class
@@ -174,16 +177,11 @@ RawImpl(value: String,
         private[ast] var _offsetEnd: Int)
   extends Raw {
 
-  override def make(children: AnyRef*): RawImpl = {
-
-    val Seq(
-    value: String,
-    ob: Integer,
-    oe: Integer) = children
-
+  override def make(children: AnyRef*): Raw = {
+    val Seq(value: String, ob: Integer, oe: Integer) =
+      children
     RawImpl(value, ob, oe)
   }
-
 }
 
 
@@ -200,6 +198,12 @@ sealed trait Annotation extends Node {
   def id: Id
 
   def raw: Raw
+
+  def copy(id: Id = this.id,
+           raw: Raw = this.raw,
+           offsetBegin: Int = this.offsetBegin,
+           offsetEnd: Int = this.offsetEnd): Annotation =
+    Annotation(id, raw, offsetBegin, offsetEnd)
 }
 
 private[ast] final case class
@@ -210,16 +214,10 @@ AnnotationImpl(id: Id,
   extends Annotation {
 
   override def make(children: AnyRef*): AnnotationImpl = {
-
-    val Seq(
-    id: Id,
-    raw: Raw,
-    ob: Integer,
-    oe: Integer) = children
-
+    val Seq(id: Id, raw: Raw, ob: Integer, oe: Integer) =
+      children
     AnnotationImpl(id, raw, ob, oe)
   }
-
 }
 
 
@@ -237,6 +235,12 @@ object GlobalVarDecl {
 
 sealed trait GlobalVarDecl extends ModelElement {
   def id: Id
+
+  def copy(id: Id = this.id,
+           annotations: ISeq[Annotation] = this.annotations,
+           offsetBegin: Int = this.offsetBegin,
+           offsetEnd: Int = this.offsetEnd): GlobalVarDecl =
+    GlobalVarDecl(id, annotations, offsetBegin, offsetEnd)
 }
 
 private[ast] final case class
@@ -247,13 +251,8 @@ GlobalVarDeclImpl(id: Id,
   extends GlobalVarDecl {
 
   override def make(children: AnyRef*): GlobalVarDeclImpl = {
-
-    val Seq(
-    id: Id,
-    anns: ISeq[_],
-    ob: Integer,
-    oe: Integer) = children
-
-    GlobalVarDeclImpl(id, anns.map(_.asInstanceOf[Annotation]), ob, oe)
+    val Seq(id: Id, anns: ISeq[_], ob: Integer, oe: Integer) =
+      children
+    GlobalVarDeclImpl(id, cast(anns), ob, oe)
   }
 }
