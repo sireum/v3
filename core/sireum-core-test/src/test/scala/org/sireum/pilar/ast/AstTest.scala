@@ -72,22 +72,15 @@ class AstTest {
   }
 
   @Test
-  def testPicklingGraphString(): Unit = {
-    import Picklers._
-    assert(model == fromJsonGraphString[Model](toJsonGraphString(model)))
-  }
-
-
-  @Test
   def testPicklingString(): Unit = {
     import Picklers._
-    assert(model == fromJsonString[Model](toJsonString(model)))
+    assert(model == from[Model](to(model)))
   }
 
   @Test
   def testPicklingBytes(): Unit = {
     import Picklers._
-    assert(model == fromJsonBytes[Model](toJsonBytes(model)))
+    assert(model == from[Model](toBytes(model)))
   }
 }
 

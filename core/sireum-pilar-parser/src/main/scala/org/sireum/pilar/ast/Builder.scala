@@ -27,27 +27,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-object Picklers {
+import org.antlr.v4.runtime.ParserRuleContext
+import org.sireum.pilar.parser.PilarParser._
+import scala.collection.JavaConversions._
 
-  def from[T <: Node](s: String): T = {
-    import upickle._
-    read[Node](s).asInstanceOf[T]
+object Builder {
+
+  final def build(ctx: ModelContext): Model = {
+    Model(
+      ctx.annotation().toVector.map(build),
+      ctx.modelElement().toVector.map(build)
+    ) at ctx
   }
 
-  def from[T <: Node](b: Array[Byte]): T = {
-    boopickle.Unpickle[Node].
-      fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
+  final def build(ctx: AnnotationContext): Annotation = ???
+
+  final def build(ctx: ModelElementContext): ModelElement = ???
+
+
+  implicit class At[T <: Node](val n: T) extends AnyVal {
+    def at(ctx: ParserRuleContext): T = {
+      val start = ctx.getStart
+      n.line = start.getLine
+      n.column = start.getCharPositionInLine
+      n
+    }
   }
 
-  def to(node: Node): String = {
-    import upickle._
-    write(node)
-  }
-
-  def toBytes(node: Node): Array[Byte] = {
-    val bb = boopickle.Pickle.intoBytes(node)
-    val ba = new Array[Byte](bb.limit)
-    bb.get(ba)
-    ba
-  }
 }

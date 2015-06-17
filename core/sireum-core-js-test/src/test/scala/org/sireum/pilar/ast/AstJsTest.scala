@@ -70,17 +70,12 @@ object AstJsTest extends TestSuite {
 
     'PicklingString {
       import Picklers._
-      assert(model == fromJsonString[Model](toJsonString(model)))
-    }
-
-    'PicklingGraphString {
-      import Picklers._
-      assert(model == fromJsonGraphString[Model](toJsonGraphString(model)))
+      assert(model == from[Model](to(model)))
     }
 
     'PicklingBytes {
       import Picklers._
-      assert(model == fromJsonBytes[Model](toJsonBytes(model)))
+      assert(model == from[Model](toBytes(model)))
     }
   }
 }

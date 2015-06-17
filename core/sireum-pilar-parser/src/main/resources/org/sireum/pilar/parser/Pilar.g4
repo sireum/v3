@@ -37,18 +37,18 @@ modelElement
   ;
 
 globalVarDecl
-  : 'var' name ';'
+  : 'var' ID annotation* ';'
   ;
 
 procDecl
-  : 'def' name
+  : 'def' ID
     '(' param ( ',' param )* ')'
     annotation*
     ( procBody | ';' )
   ;
 
 param
-  : name
+  : ID annotation*
   ;
 
 procBody
@@ -59,51 +59,52 @@ procBody
   ;
 
 localVarDecl
-  : 'var' name ';'
+  : 'var' ID annotation* ';'
   ;
 
 location
-  : '#' ( name ':' )? annotation* transformation
+  : '#' ( ID ':' )?
+    annotation* transformation
   ;
 
 transformation
   : 'call' ( exp ':=' )?
-    ID arg
-    ( 'goto' ID )? ';'
-  | action* jump?
+    p=ID arg 'goto' l=ID ';'          #Call
+  | action* jump                      #Block
   ;
 
 action
-  : exp ':=' exp annotation* ';'
-  | 'assert' exp annotation* ';'
-  | 'assume' exp annotation* ';'
-  | 'aext' ID arg annotation* ';'
+  : l=exp ':=' r=exp annotation* ';'  #AssignAction
+  | 'assert' exp annotation* ';'      #AssertAction
+  | 'assume' exp annotation* ';'      #AssumeAction
+  | 'aext' ID arg annotation* ';'     #ExtAction
   ;
 
 jump
-  : 'goto' name annotation* ';'
-  | 'if' exp annotation* 'then' name 'else' name ';'
-  | 'return' exp annotation* ';'
+  : 'goto' ID annotation* ';'         #GotoJump
+  | 'if' exp 'then' ID
+    'else' ID annotation* ';'         #IfJump
+  | 'return' exp annotation* ';'      #ReturnHump
   | 'switch' exp
     switchCase*
-    'default' '_' ':' name annotation* ';'
-     annotation?
-  | 'jext' ID arg annotation* ';'
+    'default' '_' ':'
+    ID annotation* ';'                #SwitchJump
+  | 'jext' ID arg annotation* ';'     #ExtJump
   ;
 
 switchCase
-  : 'case' lit ':' name annotation*
+  : 'case' lit ':' ID
   ;
 
 exp
-  : prim arg*
-  | exp ID exp
+  : prim arg*                         #PrimExp
+  | l=exp ID r=exp                    #BinExp
   ;
 
 prim
-  : lit
-  | ID
-  | '(' exp ( ',' exp )* ')'
+  : lit                               #LitExp
+  | ID                                #IdExp
+  | '(' exp ( ',' exp )* ')'          #TupleExp
   ;
 
 arg
@@ -112,10 +113,6 @@ arg
 
 lit
   : ID LIT
-  ;
-
-name
-  : ID annotation*
   ;
 
 annotation
@@ -129,7 +126,7 @@ ID
 
 LIT
   : '\'' ~[ \t\r\n\u000C]+
-  | '"""' .*? '"""'
+  | ( '"""' .*? '"""' )+
   ;
 
 WS
@@ -137,11 +134,11 @@ WS
   ;
 
 COMMENT
-  : '/*' .*? '*/' -> skip
+  : '/*' .*? '*/' -> channel(2)
   ;
 
 LINE_COMMENT
-  : '//' ~[\r\n]* -> skip
+  : '//' ~[\r\n]* -> channel(2)
   ;
 
 ERROR_CHAR

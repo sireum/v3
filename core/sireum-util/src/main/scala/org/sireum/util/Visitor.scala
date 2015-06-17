@@ -36,12 +36,11 @@ trait Visitable {
 }
 
 object Visitor {
-  object TraversalMode extends Enum {
-    sealed abstract class Type extends EnumElem
-    object TOP_DOWN extends Type
-    object BOTTOM_UP extends Type
 
-    def elements = ivector(TOP_DOWN, BOTTOM_UP)
+  object TraversalMode extends Enum("TraversalMode") {
+    type Type = Value
+    final val TOP_DOWN = Value("TOP_DOWN")
+    final val BOTTOM_UP = Value("BOTTON_UP")
   }
 
   def map(fs : ISeq[VisitorFunction],

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2011-2015, Robby, Kansas State University
+Copyright (c) 2015, Robby, Kansas State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,61 +27,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.util
 
+abstract class Enum(name: String) {
+  type Value = String
 
-trait Enum {
-  context =>
+  private val values = mlinkedMapEmpty[String, Int]
+  private lazy val names = values.keys.toVector
+  private var isFrozen = false
 
-  def elements : IVector[EnumElem]
-
-  private def init() {
-    if (!initialized) {
-      initialized = true
-      assert(elements.size == elems.size)
-      for (e <- elements)
-        assert(elems(e) >= 0)
-    }
+  final def Value(s: String): Value = {
+    assert(!isFrozen)
+    val r = s"$name.$s"
+    values(r) = values.size
+    r
   }
 
-  private var initialized = false
-
-  private val elems : MLinkedMap[EnumElem, Int] = mlinkedMapEmpty
-
-  def valueOf(elemName : String) : Option[EnumElem] = {
-    init()
-    for (e <- elements) {
-      if (e.toString == elemName)
-        return Some(e)
-    }
-    None
+  final def ordinal(name: String) = {
+    isFrozen = true
+    values(name)
   }
 
-  abstract class EnumElem {
-    elems += (this -> elems.size)
+  final def fromOrdinal(n: Int) = {
+    isFrozen = true
+    names(n)
+  }
 
-    def enum : Enum = context
-
-    def elements : Iterable[EnumElem] = {
-      init()
-      context.elems.keys
-    }
-
-    def ordinal : Int = {
-      init()
-      context.elems(this)
-    }
-
-    def maxOrdinal = {
-      init()
-      context.elems.size - 1
-    }
-
-    override def toString = {
-      init()
-      val s = getClass.getSimpleName
-      val i = s.lastIndexOf('$', s.length - 2)
-      if (i >= 0) s.substring(i + 1, s.length - 1)
-      else s
-    }
+  final def elements = {
+    isFrozen = true
+    values.keys
   }
 }
-

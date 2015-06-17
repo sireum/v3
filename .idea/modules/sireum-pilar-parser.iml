@@ -29,11 +29,7 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.3:jar" level="project" />
     <orderEntry type="module" module-name="sireum-pilar" exported="" />
     <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.github.benhutchison:microjson_2.11:1.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:utest_2.11:0.3.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
     <orderEntry type="library" name="SBT: me.chrons:boopickle_2.11:1.0.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.github.benhutchison:prickle_2.11:1.1.6:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.2.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
   </component>

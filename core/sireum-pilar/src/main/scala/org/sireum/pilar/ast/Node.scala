@@ -105,7 +105,7 @@ object Model {
 }
 
 sealed trait Model extends AnnotatedNode {
-  final private[ast] def subTree: Product = (annotations, elements)
+  final private[ast] def subTree = (annotations, elements)
 
   final def copy(annotations: ISeq[Annotation] = this.annotations,
                  elements: ISeq[ModelElement] = this.elements,
@@ -141,7 +141,7 @@ object Id {
 }
 
 sealed trait Id extends Node {
-  final private[ast] def subTree: Product = Tuple1(value)
+  final private[ast] def subTree = Tuple1(value)
 
   final def copy(value: String = this.value,
                  line: Int = this.line,
@@ -175,7 +175,7 @@ object Raw {
 }
 
 sealed trait Raw extends Node {
-  final private[ast] def subTree: Product = Tuple1(value)
+  final private[ast] def subTree = Tuple1(value)
 
   final def copy(value: String = this.value,
                  line: Int = this.line,
@@ -205,11 +205,11 @@ object Annotation {
                   column: Int = LOC_DEFAULT): Annotation =
     AnnotationImpl(id, raw, line, column)
 
-  final def unapply(a: Annotation) = Some((a.id, a.raw))
+  final def unapply(a: Annotation) = Some(a.subTree)
 }
 
 sealed trait Annotation extends Node {
-  final private[ast] def subTree: Product = (id, raw)
+  final private[ast] def subTree = (id, raw)
 
   final def copy(id: Id = this.id,
                  raw: Raw = this.raw,
@@ -229,7 +229,7 @@ AnnotationImpl(id: Id,
                private[ast] var _column: Int)
   extends Annotation {
 
-  override def make(children: AnyRef*): AnnotationImpl = {
+  override def make(children: AnyRef*): Annotation = {
     val Seq(id: Id, raw: Raw, ob: Integer, oe: Integer) =
       children
     AnnotationImpl(id, raw, ob, oe)
@@ -250,7 +250,7 @@ object GlobalVarDecl {
 }
 
 sealed trait GlobalVarDecl extends ModelElement {
-  final private[ast] def subTree: Product = (id, annotations)
+  final private[ast] def subTree = (id, annotations)
 
   final def copy(id: Id = this.id,
                  annotations: ISeq[Annotation] = this.annotations,
@@ -268,9 +268,137 @@ GlobalVarDeclImpl(id: Id,
                   private[ast] var _column: Int)
   extends GlobalVarDecl {
 
-  override def make(children: AnyRef*): GlobalVarDeclImpl = {
+  override def make(children: AnyRef*): GlobalVarDecl = {
     val Seq(id: Id, anns: ISeq[_], ob: Integer, oe: Integer) =
       children
     GlobalVarDeclImpl(id, cast(anns), ob, oe)
+  }
+}
+
+
+sealed trait Exp extends Node
+
+
+object BinaryExp {
+  final def apply(left: Exp, op: Id, right: Exp,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): BinaryExp =
+    BinaryExpImpl(left, op, right, line, column)
+
+  final def unapply(e: BinaryExp) = Some(e.subTree)
+}
+
+sealed trait BinaryExp extends Exp {
+  final private[ast] def subTree = (left, op, right)
+
+  def left: Exp
+
+  def op: Id
+
+  def right: Exp
+}
+
+private final case class
+BinaryExpImpl(left: Exp,
+              op: Id,
+              right: Exp,
+              private[ast] var _line: Int,
+              private[ast] var _column: Int)
+  extends BinaryExp {
+
+  override def make(children: AnyRef*): BinaryExp = {
+    val Seq(left: Exp, op: Id, right: Exp, ob: Integer, oe: Integer) =
+      children
+    BinaryExpImpl(left, op, right, ob, oe)
+  }
+}
+
+
+object TupleExp {
+  final def apply(exps: ISeq[Exp],
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): TupleExp =
+    TupleExpImpl(exps, line, column)
+
+  final def unapply(e: TupleExp) = Some(e.exps)
+}
+
+sealed trait TupleExp extends Exp {
+  final private[ast] def subTree = Tuple1(exps)
+
+  def exps: ISeq[Exp]
+}
+
+private final case class
+TupleExpImpl(exps: ISeq[Exp],
+             private[ast] var _line: Int,
+             private[ast] var _column: Int)
+  extends TupleExp {
+
+  override def make(children: AnyRef*): TupleExp = {
+    val Seq(exps: ISeq[_], ob: Integer, oe: Integer) =
+      children
+    TupleExpImpl(cast(exps), ob, oe)
+  }
+}
+
+
+object IdExp {
+  final def apply(id: Id,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): IdExp =
+    IdExpImpl(id, line, column)
+
+  final def unapply(e: IdExp) = Some(e.id)
+}
+
+sealed trait IdExp extends Exp {
+  final private[ast] def subTree = Tuple1(id)
+
+  def id: Id
+}
+
+private final case class
+IdExpImpl(id: Id,
+          private[ast] var _line: Int,
+          private[ast] var _column: Int)
+  extends IdExp {
+
+  override def make(children: AnyRef*): IdExp = {
+    val Seq(id: Id, ob: Integer, oe: Integer) =
+      children
+    IdExpImpl(id, ob, oe)
+  }
+}
+
+
+object LiteralExp {
+  final def apply(id: Id, raw: Raw,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): LiteralExp =
+    LiteralExpImpl(id, raw, line, column)
+
+  final def unapply(e: LiteralExp) = Some(e.subTree)
+}
+
+sealed trait LiteralExp extends Exp {
+  final private[ast] def subTree = (id, raw)
+
+  def id: Id
+
+  def raw: Raw
+}
+
+private final case class
+LiteralExpImpl(id: Id,
+               raw: Raw,
+               private[ast] var _line: Int,
+               private[ast] var _column: Int)
+  extends LiteralExp {
+
+  override def make(children: AnyRef*): LiteralExp = {
+    val Seq(id: Id, raw: Raw, ob: Integer, oe: Integer) =
+      children
+    LiteralExpImpl(id, raw, ob, oe)
   }
 }

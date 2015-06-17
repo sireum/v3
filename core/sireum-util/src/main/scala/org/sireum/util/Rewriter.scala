@@ -34,12 +34,11 @@ trait Rewritable extends Visitable {
 }
 
 object Rewriter {
-  object TraversalMode extends Enum {
-    sealed abstract class Type extends EnumElem
-    object TOP_DOWN extends Type
-    object BOTTOM_UP extends Type
 
-    def elements = ivector(TOP_DOWN, BOTTOM_UP)
+  object TraversalMode extends Enum("TraversalMode") {
+    type Type = Value
+    val TOP_DOWN = Value("TOP_DOWN")
+    val BOTTOM_UP = Value("BOTTOM_UP")
   }
 
   def all(f : RewriteFunction, g : RewriteFunction) : RewriteFunction =
