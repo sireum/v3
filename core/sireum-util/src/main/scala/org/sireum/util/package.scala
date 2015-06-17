@@ -231,4 +231,8 @@ package object util {
     def pop() : (E, IStack[E]) = (l.head, l.tail)
     def push(e : E) : IStack[E] = e::l
   }
+
+
+  @inline
+  def cast[T](t: ISeq[_]): ISeq[T] = t.map(_.asInstanceOf[T])
 }
