@@ -37,80 +37,90 @@ sealed trait Node
   with Rewritable
   with Product {
 
-  override def getChildren: ISeq[AnyRef] = {
-    var r = ivectorEmpty[AnyRef]
-    for (e <- productIterator) {
-      r = r :+ e.asInstanceOf[AnyRef]
-    }
-    r
-  }
+  final override val hashCode: Int =
+    subTree.hashCode()
 
-  override def getNumOfChildren: Int = productArity
+  final override def equals(other: Any): Boolean =
+    other match {
+      case other: Node =>
+        ProductUtil.equals(subTree, other.subTree)
+      case _ => false
+    }
+
+  final override def getChildren: ISeq[AnyRef] =
+    ProductUtil.getChildren(this)
+
+  final override def getNumOfChildren: Int =
+    ProductUtil.getNumOfChildren(this)
+
+  private[ast] def subTree: Product
 }
 
 
 object NodeLocation {
-  final val OFFSET_DEFAULT = -1
+  final val LOC_DEFAULT = -1
 }
 
-import org.sireum.pilar.ast.NodeLocation.OFFSET_DEFAULT
+import org.sireum.pilar.ast.NodeLocation.LOC_DEFAULT
 
 sealed trait NodeLocation {
-  private[ast] var _offsetBegin: Int
-  private[ast] var _offsetEnd: Int
+  private[ast] var _line: Int
+  private[ast] var _column: Int
 
-  def hasOffset: Boolean =
-    _offsetBegin != OFFSET_DEFAULT &&
-      _offsetEnd != OFFSET_DEFAULT
+  final def hasLoc: Boolean =
+    _line != LOC_DEFAULT &&
+      _column != LOC_DEFAULT
 
-  def offsetBegin: Int = _offsetBegin
+  final def line: Int = _line
 
-  def offsetEnd: Int = _offsetEnd
+  final def column: Int = _column
 
-  private[ast] def offsetBegin_=(offset: Int): Unit = {
-    _offsetBegin = offset
+  final private[ast] def line_=(line: Int): Unit = {
+    _line = line
   }
 
-  private[ast] def offsetEnd_=(offset: Int): Unit = {
-    _offsetEnd = offset
+  final private[ast] def column_=(column: Int): Unit = {
+    _column = column
   }
 }
 
 object AnnotatedNode
 
 sealed trait AnnotatedNode extends Node {
-  def annotations: ISeq[Annotation]
-
-  def annotation(id: String): Option[Annotation] =
+  final def annotation(id: String): Option[Annotation] =
     annotations.find(_.id.value == id)
+
+  def annotations: ISeq[Annotation]
 }
 
 
 object Model {
-  def apply(annotations: ISeq[Annotation],
-            elements: ISeq[ModelElement],
-            offsetBegin: Int = OFFSET_DEFAULT,
-            offsetEnd: Int = OFFSET_DEFAULT): Model =
-    ModelImpl(annotations, elements, offsetBegin, offsetEnd)
+  final def apply(annotations: ISeq[Annotation],
+                  elements: ISeq[ModelElement],
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): Model =
+    ModelImpl(annotations, elements, line, column)
 
-  def unapply(m: Model) = Some(m.elements)
+  final def unapply(m: Model) = Some(m.elements)
 }
 
 sealed trait Model extends AnnotatedNode {
-  def elements: ISeq[ModelElement]
+  final private[ast] def subTree: Product = (annotations, elements)
 
-  def copy(annotations: ISeq[Annotation] = this.annotations,
-           elements: ISeq[ModelElement] = this.elements,
-           offsetBegin: Int = this.offsetBegin,
-           offsetEnd: Int = this.offsetEnd): Model =
-    Model(annotations, elements, offsetBegin, offsetEnd)
+  final def copy(annotations: ISeq[Annotation] = this.annotations,
+                 elements: ISeq[ModelElement] = this.elements,
+                 line: Int = this.line,
+                 column: Int = this.column): Model =
+    Model(annotations, elements, line, column)
+
+  def elements: ISeq[ModelElement]
 }
 
 private final case class
 ModelImpl(annotations: ISeq[Annotation],
           elements: ISeq[ModelElement],
-          private[ast] var _offsetBegin: Int,
-          private[ast] var _offsetEnd: Int)
+          private[ast] var _line: Int,
+          private[ast] var _column: Int)
   extends Model {
 
   override def make(children: AnyRef*): Model = {
@@ -122,27 +132,29 @@ ModelImpl(annotations: ISeq[Annotation],
 
 
 object Id {
-  def apply(value: String,
-            offsetBegin: Int = OFFSET_DEFAULT,
-            offsetEnd: Int = OFFSET_DEFAULT): Id =
-    IdImpl(value.intern(), offsetBegin, offsetEnd)
+  final def apply(value: String,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): Id =
+    IdImpl(value.intern(), line, column)
 
-  def unapply(id: Id) = Some(id.value)
+  final def unapply(id: Id) = Some(id.value)
 }
 
 sealed trait Id extends Node {
-  def value: String
+  final private[ast] def subTree: Product = Tuple1(value)
 
-  def copy(value: String = this.value,
-           offsetBegin: Int = this.offsetBegin,
-           offsetEnd: Int = this.offsetEnd): Id =
-    Id(value, offsetBegin, offsetEnd)
+  final def copy(value: String = this.value,
+                 line: Int = this.line,
+                 column: Int = this.column): Id =
+    Id(value, line, column)
+
+  def value: String
 }
 
 private final case class
 IdImpl(value: String,
-       private[ast] var _offsetBegin: Int,
-       private[ast] var _offsetEnd: Int)
+       private[ast] var _line: Int,
+       private[ast] var _column: Int)
   extends Id {
 
   override def make(children: AnyRef*): Id = {
@@ -154,27 +166,29 @@ IdImpl(value: String,
 
 
 object Raw {
-  def apply(value: String,
-            offsetBegin: Int = OFFSET_DEFAULT,
-            offsetEnd: Int = OFFSET_DEFAULT): Raw =
-    RawImpl(value, offsetBegin, offsetEnd)
+  final def apply(value: String,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): Raw =
+    RawImpl(value, line, column)
 
-  def unapply(raw: Raw) = Some(raw.value)
+  final def unapply(raw: Raw) = Some(raw.value)
 }
 
 sealed trait Raw extends Node {
-  def value: String
+  final private[ast] def subTree: Product = Tuple1(value)
 
-  def copy(value: String = this.value,
-           offsetBegin: Int = this.offsetBegin,
-           offsetEnd: Int = this.offsetEnd): Raw =
-    Raw(value, offsetBegin, offsetEnd)
+  final def copy(value: String = this.value,
+                 line: Int = this.line,
+                 column: Int = this.column): Raw =
+    Raw(value, line, column)
+
+  def value: String
 }
 
 private final case class
 RawImpl(value: String,
-        private[ast] var _offsetBegin: Int,
-        private[ast] var _offsetEnd: Int)
+        private[ast] var _line: Int,
+        private[ast] var _column: Int)
   extends Raw {
 
   override def make(children: AnyRef*): Raw = {
@@ -186,31 +200,33 @@ RawImpl(value: String,
 
 
 object Annotation {
-  def apply(id: Id, raw: Raw,
-            offsetBegin: Int = OFFSET_DEFAULT,
-            offsetEnd: Int = OFFSET_DEFAULT): Annotation =
-    AnnotationImpl(id, raw, offsetBegin, offsetEnd)
+  final def apply(id: Id, raw: Raw,
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): Annotation =
+    AnnotationImpl(id, raw, line, column)
 
-  def unapply(a: Annotation) = Some((a.id, a.raw))
+  final def unapply(a: Annotation) = Some((a.id, a.raw))
 }
 
 sealed trait Annotation extends Node {
+  final private[ast] def subTree: Product = (id, raw)
+
+  final def copy(id: Id = this.id,
+                 raw: Raw = this.raw,
+                 line: Int = this.line,
+                 column: Int = this.column): Annotation =
+    Annotation(id, raw, line, column)
+
   def id: Id
 
   def raw: Raw
-
-  def copy(id: Id = this.id,
-           raw: Raw = this.raw,
-           offsetBegin: Int = this.offsetBegin,
-           offsetEnd: Int = this.offsetEnd): Annotation =
-    Annotation(id, raw, offsetBegin, offsetEnd)
 }
 
 private final case class
 AnnotationImpl(id: Id,
                raw: Raw,
-               private[ast] var _offsetBegin: Int,
-               private[ast] var _offsetEnd: Int)
+               private[ast] var _line: Int,
+               private[ast] var _column: Int)
   extends Annotation {
 
   override def make(children: AnyRef*): AnnotationImpl = {
@@ -225,29 +241,31 @@ sealed trait ModelElement extends AnnotatedNode
 
 
 object GlobalVarDecl {
-  def apply(id: Id, annotations: ISeq[Annotation],
-            offsetBegin: Int = OFFSET_DEFAULT,
-            offsetEnd: Int = OFFSET_DEFAULT): GlobalVarDecl =
-    GlobalVarDeclImpl(id, annotations, offsetBegin, offsetEnd)
+  final def apply(id: Id, annotations: ISeq[Annotation],
+                  line: Int = LOC_DEFAULT,
+                  column: Int = LOC_DEFAULT): GlobalVarDecl =
+    GlobalVarDeclImpl(id, annotations, line, column)
 
-  def unapply(gvd: GlobalVarDecl) = Some(gvd.id)
+  final def unapply(gvd: GlobalVarDecl) = Some(gvd.id)
 }
 
 sealed trait GlobalVarDecl extends ModelElement {
-  def id: Id
+  final private[ast] def subTree: Product = (id, annotations)
 
-  def copy(id: Id = this.id,
-           annotations: ISeq[Annotation] = this.annotations,
-           offsetBegin: Int = this.offsetBegin,
-           offsetEnd: Int = this.offsetEnd): GlobalVarDecl =
-    GlobalVarDecl(id, annotations, offsetBegin, offsetEnd)
+  final def copy(id: Id = this.id,
+                 annotations: ISeq[Annotation] = this.annotations,
+                 line: Int = this.line,
+                 column: Int = this.column): GlobalVarDecl =
+    GlobalVarDecl(id, annotations, line, column)
+
+  def id: Id
 }
 
 private final case class
 GlobalVarDeclImpl(id: Id,
                   annotations: ISeq[Annotation],
-                  private[ast] var _offsetBegin: Int,
-                  private[ast] var _offsetEnd: Int)
+                  private[ast] var _line: Int,
+                  private[ast] var _column: Int)
   extends GlobalVarDecl {
 
   override def make(children: AnyRef*): GlobalVarDeclImpl = {

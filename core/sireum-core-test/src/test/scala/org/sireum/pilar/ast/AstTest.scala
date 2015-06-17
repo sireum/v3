@@ -57,14 +57,14 @@ class AstTest {
 
     val model2 = Rewriter.build({
       case a: Annotation =>
-        a.offsetBegin = n
-        a.offsetEnd = n
+        a.line = n
+        a.column = n
         a
     })(model)
 
     Visitor.build({
       case a: Annotation =>
-        assert(a.offsetBegin == n && a.offsetEnd == n, s"Expected annotation offset ($n, $n)")
+        assert(a.line == n && a.column == n, s"Expected annotation offset ($n, $n)")
         false
     })(model2)
 

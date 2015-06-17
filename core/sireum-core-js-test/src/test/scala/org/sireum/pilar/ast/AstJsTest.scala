@@ -54,14 +54,14 @@ object AstJsTest extends TestSuite {
 
       val model2 = Rewriter.build({
         case a: Annotation =>
-          a.offsetBegin = n
-          a.offsetEnd = n
+          a.line = n
+          a.column = n
           a
       })(model)
 
       Visitor.build({
         case a: Annotation =>
-          assert(a.offsetBegin == n, a.offsetEnd == n)
+          assert(a.line == n, a.column == n)
           false
       })(model2)
 

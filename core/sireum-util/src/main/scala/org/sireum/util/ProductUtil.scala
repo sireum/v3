@@ -25,125 +25,30 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-grammar Pilar;
+package org.sireum.util
 
-model
-  : annotation* modelElement*
-  ;
+object ProductUtil {
+  @inline
+  final def getChildren(p: Product): ISeq[AnyRef] = {
+    var r = ivectorEmpty[AnyRef]
+    for (e <- p.productIterator) {
+      r = r :+ e.asInstanceOf[AnyRef]
+    }
+    r
+  }
 
-modelElement
-  : globalVarDecl
-  | procDecl
-  ;
+  @inline
+  final def getNumOfChildren(p: Product): Int =
+    p.productArity
 
-globalVarDecl
-  : 'var' name ';'
-  ;
+  @inline
+  final def hashCode(p: Product): Int =
+    getChildren(p).hashCode()
 
-procDecl
-  : 'def' name
-    '(' param ( ',' param )* ')'
-    annotation*
-    ( procBody | ';' )
-  ;
-
-param
-  : name
-  ;
-
-procBody
-  : '{'
-    localVarDecl*
-    location+
-    '}'
-  ;
-
-localVarDecl
-  : 'var' name ';'
-  ;
-
-location
-  : '#' ( name ':' )? annotation* transformation
-  ;
-
-transformation
-  : 'call' ( exp ':=' )?
-    ID arg
-    ( 'goto' ID )? ';'
-  | action* jump?
-  ;
-
-action
-  : exp ':=' exp annotation* ';'
-  | 'assert' exp annotation* ';'
-  | 'assume' exp annotation* ';'
-  | 'aext' ID arg annotation* ';'
-  ;
-
-jump
-  : 'goto' name annotation* ';'
-  | 'if' exp annotation* 'then' name 'else' name ';'
-  | 'return' exp annotation* ';'
-  | 'switch' exp
-    switchCase*
-    'default' '_' ':' name annotation* ';'
-     annotation?
-  | 'jext' ID arg annotation* ';'
-  ;
-
-switchCase
-  : 'case' lit ':' name annotation*
-  ;
-
-exp
-  : prim arg*
-  | exp ID exp
-  ;
-
-prim
-  : lit
-  | ID
-  | '(' exp ( ',' exp )* ')'
-  ;
-
-arg
-  : '(' ( exp ( ',' exp )* )? ')'
-  ;
-
-lit
-  : ID LIT
-  ;
-
-name
-  : ID annotation*
-  ;
-
-annotation
-  : '@' lit
-  ;
-
-ID
-  : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | '`' ~[\r\n\t\u000C]+ '`'
-  ;
-
-LIT
-  : '\'' ~[ \t\r\n\u000C]+
-  | '"""' .*? '"""'
-  ;
-
-WS
-  : [ \t\r\n\u000C]+ -> skip
-  ;
-
-COMMENT
-  : '/*' .*? '*/' -> skip
-  ;
-
-LINE_COMMENT
-  : '//' ~[\r\n]* -> skip
-  ;
-
-ERROR_CHAR
-  : .
-  ;
+  @inline
+  final def equals(p1: Product, p2: Product): Boolean =
+    if (p1.productArity != p2.productArity) false
+    else
+      p1.productIterator.zip(p2.productIterator).
+        forall(p => p._1 == p._2)
+}
