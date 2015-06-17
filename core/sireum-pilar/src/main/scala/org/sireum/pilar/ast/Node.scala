@@ -32,7 +32,21 @@ import org.sireum.util._
 
 object Node
 
-sealed trait Node extends NodeLocation
+sealed trait Node
+  extends NodeLocation
+  with Rewritable
+  with Product {
+
+  override def getChildren: ISeq[AnyRef] = {
+    var r = ivectorEmpty[AnyRef]
+    for (e <- productIterator) {
+      r = r :+ e.asInstanceOf[AnyRef]
+    }
+    r
+  }
+
+  override def getNumOfChildren: Int = productArity
+}
 
 
 object NodeLocation {
@@ -74,8 +88,10 @@ sealed trait AnnotatedNode extends Node {
 
 object Model {
   def apply(annotations: ISeq[Annotation],
-            elements: ISeq[ModelElement]): Model =
-    ModelImpl(annotations, elements)
+            elements: ISeq[ModelElement],
+            offsetBegin: Int = OFFSET_DEFAULT,
+            offsetEnd: Int = OFFSET_DEFAULT): Model =
+    ModelImpl(annotations, elements, offsetBegin, offsetEnd)
 
   def unapply(m: Model) = Some(m.elements)
 }
@@ -87,13 +103,31 @@ sealed trait Model extends AnnotatedNode {
 private[ast] final case class
 ModelImpl(annotations: ISeq[Annotation],
           elements: ISeq[ModelElement],
-          private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-          private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Model
+          private[ast] var _offsetBegin: Int,
+          private[ast] var _offsetEnd: Int)
+  extends Model {
+
+  override def make(children: AnyRef*): ModelImpl = {
+
+    val Seq(
+    anns: ISeq[_],
+    es: ISeq[_],
+    ob: Integer,
+    oe: Integer) = children
+
+    ModelImpl(
+      anns.map(_.asInstanceOf[Annotation]),
+      es.map(_.asInstanceOf[ModelElement]),
+      ob, oe)
+  }
+}
 
 
 object Id {
-  def apply(value: String): Id = IdImpl(value.intern())
+  def apply(value: String,
+            offsetBegin: Int = OFFSET_DEFAULT,
+            offsetEnd: Int = OFFSET_DEFAULT): Id =
+    IdImpl(value.intern(), offsetBegin, offsetEnd)
 
   def unapply(id: Id) = Some(id.value)
 }
@@ -104,13 +138,28 @@ sealed trait Id extends Node {
 
 private[ast] final case class
 IdImpl(value: String,
-       private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-       private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Id
+       private[ast] var _offsetBegin: Int,
+       private[ast] var _offsetEnd: Int)
+  extends Id {
+
+  override def make(children: AnyRef*): IdImpl = {
+
+    val Seq(
+    value: String,
+    ob: Integer,
+    oe: Integer) = children
+
+    IdImpl(value, ob, oe)
+  }
+
+}
 
 
 object Raw {
-  def apply(value: String): Raw = RawImpl(value)
+  def apply(value: String,
+            offsetBegin: Int = OFFSET_DEFAULT,
+            offsetEnd: Int = OFFSET_DEFAULT): Raw =
+    RawImpl(value, offsetBegin, offsetEnd)
 
   def unapply(raw: Raw) = Some(raw.value)
 }
@@ -121,13 +170,28 @@ sealed trait Raw extends Node {
 
 private[ast] final case class
 RawImpl(value: String,
-        private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-        private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Raw
+        private[ast] var _offsetBegin: Int,
+        private[ast] var _offsetEnd: Int)
+  extends Raw {
+
+  override def make(children: AnyRef*): RawImpl = {
+
+    val Seq(
+    value: String,
+    ob: Integer,
+    oe: Integer) = children
+
+    RawImpl(value, ob, oe)
+  }
+
+}
 
 
 object Annotation {
-  def apply(id: Id, raw: Raw): Annotation = AnnotationImpl(id, raw)
+  def apply(id: Id, raw: Raw,
+            offsetBegin: Int = OFFSET_DEFAULT,
+            offsetEnd: Int = OFFSET_DEFAULT): Annotation =
+    AnnotationImpl(id, raw, offsetBegin, offsetEnd)
 
   def unapply(a: Annotation) = Some((a.id, a.raw))
 }
@@ -141,17 +205,32 @@ sealed trait Annotation extends Node {
 private[ast] final case class
 AnnotationImpl(id: Id,
                raw: Raw,
-               private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-               private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends Annotation
+               private[ast] var _offsetBegin: Int,
+               private[ast] var _offsetEnd: Int)
+  extends Annotation {
+
+  override def make(children: AnyRef*): AnnotationImpl = {
+
+    val Seq(
+    id: Id,
+    raw: Raw,
+    ob: Integer,
+    oe: Integer) = children
+
+    AnnotationImpl(id, raw, ob, oe)
+  }
+
+}
 
 
 sealed trait ModelElement extends AnnotatedNode
 
 
 object GlobalVarDecl {
-  def apply(id: Id, annotations: ISeq[Annotation]): GlobalVarDecl =
-    GlobalVarDeclImpl(id, annotations)
+  def apply(id: Id, annotations: ISeq[Annotation],
+            offsetBegin: Int = OFFSET_DEFAULT,
+            offsetEnd: Int = OFFSET_DEFAULT): GlobalVarDecl =
+    GlobalVarDeclImpl(id, annotations, offsetBegin, offsetEnd)
 
   def unapply(gvd: GlobalVarDecl) = Some(gvd.id)
 }
@@ -163,6 +242,18 @@ sealed trait GlobalVarDecl extends ModelElement {
 private[ast] final case class
 GlobalVarDeclImpl(id: Id,
                   annotations: ISeq[Annotation],
-                  private[ast] var _offsetBegin: Int = OFFSET_DEFAULT,
-                  private[ast] var _offsetEnd: Int = OFFSET_DEFAULT)
-  extends GlobalVarDecl
+                  private[ast] var _offsetBegin: Int,
+                  private[ast] var _offsetEnd: Int)
+  extends GlobalVarDecl {
+
+  override def make(children: AnyRef*): GlobalVarDeclImpl = {
+
+    val Seq(
+    id: Id,
+    anns: ISeq[_],
+    ob: Integer,
+    oe: Integer) = children
+
+    GlobalVarDeclImpl(id, anns.map(_.asInstanceOf[Annotation]), ob, oe)
+  }
+}

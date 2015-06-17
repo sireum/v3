@@ -139,7 +139,7 @@ object Rewriter {
       val b = cbf(t)
       b.sizeHint(t.size)
       b ++= newChildren
-      b.result
+      b.result()
     }
 
     private def makeHelperM[CC[V, W] <: scala.collection.Map[V, W]](t : CC[Any, Any]) //
@@ -147,20 +147,8 @@ object Rewriter {
       val b = cbf(t)
       b.sizeHint(t.size)
       b ++= newChildren.map(_.asInstanceOf[(Any, Any)])
-      b.result
+      b.result()
     }
-  }
-
-  private[util] class RProductStackElement(
-    value : Product, copyPropertyMap : Boolean, alwaysCopy : Boolean)
-      extends ProductStackElement(value : Product)
-      with RewritableStackElement[Product] {
-    val newChildren = new Array[Object](value.productArity)
-    var isDirty = alwaysCopy
-
-    def makeWithNewChildren =
-      if (isDirty) ProductUtil.make(value.getClass, newChildren : _*)
-      else value
   }
 
   private[util] class RVisitableStackElement(
@@ -221,8 +209,6 @@ object Rewriter {
             o match {
               case t : scala.collection.Traversable[_] =>
                 _stack = new RTraversableStackElement(t, alwaysCopy, rewriter _) :: _stack
-              case p : Product =>
-                _stack = new RProductStackElement(p, copyPropertyMap, alwaysCopy) :: _stack
               case v : Rewritable =>
                 _stack = new RVisitableStackElement(v, alwaysCopy) :: _stack
               case _ =>

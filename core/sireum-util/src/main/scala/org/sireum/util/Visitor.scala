@@ -73,7 +73,7 @@ object Visitor {
             parallel : Boolean = false) : VisitorFunction = {
     case x : Any if (if (parallel) fs.par else fs).exists(_.isDefinedAt(x)) =>
       val size = fs.size
-      var i = 0;
+      var i = 0
       var found = false
       var result = false
       while (i < size && !found) {
@@ -91,7 +91,7 @@ object Visitor {
     new PartialFunction[Any, Boolean] {
       def isDefinedAt(o : Any) = f.isDefinedAt(o) || g.isDefinedAt(o)
       def apply(o : Any) = {
-        var result = if (f.isDefinedAt(o)) f(o) else true
+        val result = if (f.isDefinedAt(o)) f(o) else true
         if (g.isDefinedAt(o)) g(o)
         result
       }
@@ -137,16 +137,10 @@ object Visitor {
     var curr : Any = null
     val it = value.toIterator
     def hasNext = it.hasNext
-    def next = { curr = it.next; nextIndex += 1; curr }
-  }
 
-  private[util] class IterableStackElement(val value : java.lang.Iterable[_])
-      extends VisitorStackElementRoot {
-    var nextIndex = 0
-    var curr : Any = null
-    val it = value.iterator
-    def hasNext = it.hasNext
-    def next = { curr = it.next; nextIndex += 1; curr }
+    def next = {
+      curr = it.next(); nextIndex += 1; curr
+    }
   }
 
   private[util] class ProductStackElement(val value : Product)
@@ -190,8 +184,6 @@ object Visitor {
             _stack = new ProductStackElement(p) :: _stack
           case v : Visitable =>
             _stack = new VisitableStackElement(v) :: _stack
-          case i : java.lang.Iterable[_] =>
-            _stack = new IterableStackElement(i) :: _stack
           case _ =>
         }
       }
@@ -199,7 +191,7 @@ object Visitor {
       @inline
       def peek = _stack.head
 
-      def pop {
+    def pop() {
         if (hasPost && g.isDefinedAt(peek.value))
           g(peek.value)
         _stack = _stack.tail
@@ -210,7 +202,7 @@ object Visitor {
         if (_stack.isEmpty) true
         else if (_stack.head.hasNext) false
         else {
-          pop
+          pop()
           isEmpty
         }
       }

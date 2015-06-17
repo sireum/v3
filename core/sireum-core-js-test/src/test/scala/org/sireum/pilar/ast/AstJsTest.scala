@@ -49,24 +49,24 @@ object AstJsTest extends TestSuite {
       }
     }
 
-    //    'RewriteAnnotationOffset {
-    //      val n = Random.nextInt().abs
-    //
-    //      val model2 = Rewriter.build({
-    //        case a: Annotation =>
-    //          a.offsetBegin = n
-    //          a.offsetEnd = n
-    //          a
-    //      })(model)
-    //
-    //      Visitor.build({
-    //        case a: Annotation =>
-    //          assert(a.offsetBegin == n, a.offsetEnd == n)
-    //          false
-    //      })(model2)
-    //
-    //      assert(model eq model2)
-    //    }
+    'RewriteAnnotationOffset {
+      val n = scala.util.Random.nextInt().abs
+
+      val model2 = Rewriter.build({
+        case a: Annotation =>
+          a.offsetBegin = n
+          a.offsetEnd = n
+          a
+      })(model)
+
+      Visitor.build({
+        case a: Annotation =>
+          assert(a.offsetBegin == n, a.offsetEnd == n)
+          false
+      })(model2)
+
+      assert(model eq model2)
+    }
 
     'PicklingString {
       import Picklers._
