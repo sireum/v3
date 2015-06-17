@@ -106,7 +106,7 @@ sealed trait Model extends AnnotatedNode {
     Model(annotations, elements, offsetBegin, offsetEnd)
 }
 
-private[ast] final case class
+private final case class
 ModelImpl(annotations: ISeq[Annotation],
           elements: ISeq[ModelElement],
           private[ast] var _offsetBegin: Int,
@@ -139,7 +139,7 @@ sealed trait Id extends Node {
     Id(value, offsetBegin, offsetEnd)
 }
 
-private[ast] final case class
+private final case class
 IdImpl(value: String,
        private[ast] var _offsetBegin: Int,
        private[ast] var _offsetEnd: Int)
@@ -171,7 +171,7 @@ sealed trait Raw extends Node {
     Raw(value, offsetBegin, offsetEnd)
 }
 
-private[ast] final case class
+private final case class
 RawImpl(value: String,
         private[ast] var _offsetBegin: Int,
         private[ast] var _offsetEnd: Int)
@@ -206,7 +206,7 @@ sealed trait Annotation extends Node {
     Annotation(id, raw, offsetBegin, offsetEnd)
 }
 
-private[ast] final case class
+private final case class
 AnnotationImpl(id: Id,
                raw: Raw,
                private[ast] var _offsetBegin: Int,
@@ -243,7 +243,7 @@ sealed trait GlobalVarDecl extends ModelElement {
     GlobalVarDecl(id, annotations, offsetBegin, offsetEnd)
 }
 
-private[ast] final case class
+private final case class
 GlobalVarDeclImpl(id: Id,
                   annotations: ISeq[Annotation],
                   private[ast] var _offsetBegin: Int,
