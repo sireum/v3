@@ -82,7 +82,7 @@ package object util {
   def msetEmpty[T] : MSet[T] = scala.collection.mutable.Set.empty[T]
 
   @inline
-  def mstackEmpty[T] : MStack[T] = scala.collection.mutable.Stack.empty[T]
+  def mstackEmpty[T]: MStack[T] = new scala.collection.mutable.Stack[T]
 
   @inline
   def idmapEmpty[K, V] : MIdMap[K, V] = {
@@ -141,7 +141,7 @@ package object util {
   def seq2ivect[T](seq : CSeq[T]) : IVector[T] = {
     val vb = Vector.newBuilder[T]
     vb ++= seq
-    vb.result
+    vb.result()
   }
 
   @inline
@@ -159,13 +159,13 @@ package object util {
   }
 
   @inline
-  def isortedMapEmpty[K <% Ordered[K], V] : ISortedMap[K, V] = scala.collection.immutable.SortedMap.empty[K, V]
+  def isortedMapEmpty[K, V](implicit ord: Ordering[K]): ISortedMap[K, V] = scala.collection.immutable.SortedMap.empty[K, V]
 
   @inline
   def isetEmpty[T] : ISet[T] = scala.collection.immutable.Set.empty[T]
 
   @inline
-  def isortedSetEmpty[T <% Ordered[T]] : ISortedSet[T] = scala.collection.immutable.SortedSet.empty[T]
+  def isortedSetEmpty[T](implicit ord: Ordering[T]): ISortedSet[T] = scala.collection.immutable.SortedSet.empty[T]
 
   @inline
   def istackEmpty[T] : IStack[T] = scala.collection.immutable.List.empty[T]
@@ -180,7 +180,7 @@ package object util {
   def bigCIntersect[T](it : Iterable[CSet[T]]) : CSet[T] =
     it.size match {
       case 0 => Set()
-      case 1 => it.iterator.next
+      case 1 => it.iterator.next()
       case _ => it.reduce(cintersect[T])
     }
 
@@ -188,7 +188,7 @@ package object util {
   def bigCUnion[T](it : Iterable[CSet[T]]) : CSet[T] =
     it.size match {
       case 0 => Set()
-      case 1 => it.iterator.next
+      case 1 => it.iterator.next()
       case _ => it.reduce(cunion[T])
     }
 
@@ -202,7 +202,7 @@ package object util {
   def bigIIntersect[T](it : Iterable[ISet[T]]) : ISet[T] =
     it.size match {
       case 0 => Set()
-      case 1 => it.iterator.next
+      case 1 => it.iterator.next()
       case _ => it.reduce(iintersect[T])
     }
 
@@ -210,7 +210,7 @@ package object util {
   def bigIUnion[T](it : Iterable[ISet[T]]) : ISet[T] =
     it.size match {
       case 0 => Set()
-      case 1 => it.iterator.next
+      case 1 => it.iterator.next()
       case _ => it.reduce(iunion[T])
     }
 

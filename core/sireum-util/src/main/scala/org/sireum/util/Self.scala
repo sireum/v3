@@ -28,6 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.util
 
 
-trait SelfType[Self <: SelfType[Self]] {
-  def self : Self
+trait Self[S <: Self[S]] {
+  def self: S
 }

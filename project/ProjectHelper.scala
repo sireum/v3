@@ -36,14 +36,14 @@ object ProjectHelper {
       "-c", genClassName, "-d", destDir, "-p", "org.sireum", className)
     import UpdateSiteBuilder.Exec._
     val e = new UpdateSiteBuilder.Exec()
-    e.env("CLASSPATH") = (projectInfos.map(f => f.libFiles.mkString(":"))).mkString(":")
+    e.env("CLASSPATH") = projectInfos.map(_.libFiles.mkString(":")).mkString(":")
     e.run(-1, cliargs, None, None) match {
       case StringResult(s, 0) => println(s)
-      case StringResult(s, e) =>
+      case StringResult(s, c) =>
         Console.err.println(s)
-        sys.exit(e)
-      case ExceptionRaised(e) =>
-        Console.err.println(e)
+        sys.exit(c)
+      case ExceptionRaised(ex) =>
+        Console.err.println(ex)
         sys.exit(1)
       case Timeout => sys.exit(1)
     }
@@ -70,6 +70,6 @@ object ProjectHelper {
       }
       pw.println("}")
       println("Project dependency graph written to: " + f.getCanonicalPath)
-    } finally fw.close
+    } finally fw.close()
   }
 }

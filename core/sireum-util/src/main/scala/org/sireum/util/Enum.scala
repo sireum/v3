@@ -33,7 +33,7 @@ trait Enum {
 
   def elements : IVector[EnumElem]
 
-  private def init {
+  private def init() {
     if (!initialized) {
       initialized = true
       assert(elements.size == elems.size)
@@ -47,7 +47,7 @@ trait Enum {
   private val elems : MLinkedMap[EnumElem, Int] = mlinkedMapEmpty
 
   def valueOf(elemName : String) : Option[EnumElem] = {
-    init
+    init()
     for (e <- elements) {
       if (e.toString == elemName)
         return Some(e)
@@ -61,23 +61,23 @@ trait Enum {
     def enum : Enum = context
 
     def elements : Iterable[EnumElem] = {
-      init
+      init()
       context.elems.keys
     }
 
     def ordinal : Int = {
-      init
+      init()
       context.elems(this)
     }
 
     def maxOrdinal = {
-      init
+      init()
       context.elems.size - 1
     }
 
     override def toString = {
-      init
-      val s = getClass.getSimpleName()
+      init()
+      val s = getClass.getSimpleName
       val i = s.lastIndexOf('$', s.length - 2)
       if (i >= 0) s.substring(i + 1, s.length - 1)
       else s

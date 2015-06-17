@@ -2,21 +2,21 @@
 /* sbt -- Simple Build Tool
  * Copyright 2008, 2009, 2010 Mark Harrah, Viktor Klang, Ross McDonald
  */
-package sbt
 
-import Using._
-import ErrorHandling.translate
-
-import java.io.{BufferedReader, ByteArrayOutputStream, BufferedWriter, File, FileInputStream, InputStream, OutputStream, PrintWriter}
-import java.net.{URI, URISyntaxException, URL}
+import java.io.{BufferedReader, BufferedWriter, ByteArrayOutputStream, File, InputStream, OutputStream, PrintWriter}
+import java.net.URISyntaxException
 import java.nio.charset.Charset
 import java.util.Properties
-import java.util.jar.{Attributes, JarEntry, JarFile, JarInputStream, JarOutputStream, Manifest}
-import java.util.zip.{CRC32, GZIPOutputStream, ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
+import java.util.jar.{Attributes, JarEntry, JarOutputStream, Manifest}
+import java.util.zip.{CRC32, ZipEntry, ZipInputStream, ZipOutputStream}
+
+import sbt.ErrorHandling.translate
+import sbt.Using._
+import sbt._
+
+import scala.Function.tupled
 import scala.collection.immutable.TreeSet
-import scala.collection.mutable.{HashMap,HashSet}
 import scala.reflect.{Manifest => SManifest}
-import Function.tupled
 
 object MyIO
 {
@@ -34,12 +34,14 @@ object MyIO
   def classLocation(cl: Class[_]): URL =
   {
     val codeSource = cl.getProtectionDomain.getCodeSource
-    if(codeSource == null) error("No class location for " + cl)
+    if (codeSource == null) sys.error("No class location for " + cl)
     else codeSource.getLocation
   }
   def classLocationFile(cl: Class[_]): File = toFile(classLocation(cl))
-  def classLocation[T](implicit mf: SManifest[T]): URL = classLocation(mf.erasure)
-  def classLocationFile[T](implicit mf: SManifest[T]): File = classLocationFile(mf.erasure)
+
+  def classLocation[T](implicit mf: SManifest[T]): URL = classLocation(mf.runtimeClass)
+
+  def classLocationFile[T](implicit mf: SManifest[T]): File = classLocationFile(mf.runtimeClass)
 
   def toFile(url: URL) =
     try { new File(url.toURI) }
@@ -55,7 +57,7 @@ object MyIO
         val path = url.getPath
         val end = path.indexOf('!')
         new File(new URI(if(end == -1) path else path.substring(0, end)))
-      case _ => error("Invalid protocol " + url.getProtocol)
+      case _ => sys.error("Invalid protocol " + url.getProtocol)
     }
   }
   def assertDirectory(file: File) { assert(file.isDirectory, (if(file.exists) "Not a directory: " else "Directory not found: ") + file) }
@@ -80,7 +82,7 @@ object MyIO
     if(created || file.isDirectory)
       ()
     else if(setModified && !file.setLastModified(System.currentTimeMillis))
-      error("Could not update last modified time for file " + file)
+      sys.error("Could not update last modified time for file " + file)
   }
   def createDirectories(dirs: Traversable[File]): Unit =
     dirs.foreach(createDirectory)
@@ -93,10 +95,10 @@ object MyIO
     if(dir.isDirectory)
       ()
     else if(dir.exists) {
-      error(failBase + ": file exists and is not a directory.")
+      sys.error(failBase + ": file exists and is not a directory.")
     }
     else
-      error(failBase)
+      sys.error(failBase)
   }
 
   /** Gzips the file 'in' and writes it to 'out'.  'in' cannot be the same file as 'out'. */
@@ -136,7 +138,7 @@ object MyIO
   }
   private def extract(from: ZipInputStream, toDirectory: File, filter: NameFilter) =
   {
-    val set = new HashSet[File]
+    val set = new scala.collection.mutable.HashSet[File]
     def next()
     {
       val entry = from.getNextEntry
@@ -192,10 +194,10 @@ object MyIO
 
   /** Copies all bytes from the given input stream to the given output stream.
   * Neither stream is closed.*/
-  def transfer(in: InputStream, out: OutputStream): Unit = transferImpl(in, out, false)
+  def transfer(in: InputStream, out: OutputStream): Unit = transferImpl(in, out, close = false)
   /** Copies all bytes from the given input stream to the given output stream.  The
   * input stream is closed after the method completes.*/
-  def transferAndClose(in: InputStream, out: OutputStream): Unit = transferImpl(in, out, true)
+  def transferAndClose(in: InputStream, out: OutputStream): Unit = transferImpl(in, out, close = true)
   private def transferImpl(in: InputStream, out: OutputStream, close: Boolean)
   {
     try
@@ -212,7 +214,9 @@ object MyIO
       }
       read()
     }
-    finally { if(close) in.close }
+    finally {
+      if (close) in.close()
+    }
   }
 
   /** Creates a temporary directory and provides its location to the given function.  The directory
@@ -229,7 +233,7 @@ object MyIO
     def create(tries: Int): File =
     {
       if(tries > MaximumTries)
-        error("Could not create temporary directory.")
+        sys.error("Could not create temporary directory.")
       else
       {
         val randomName = "sbt_" + java.lang.Integer.toHexString(random.nextInt)
@@ -248,11 +252,11 @@ object MyIO
     finally { file.delete() }
   }
 
-  private[sbt] def jars(dir: File): Iterable[File] = listFiles(dir, GlobFilter("*.jar"))
+  def jars(dir: File): Iterable[File] = listFiles(dir, GlobFilter("*.jar"))
 
   def deleteIfEmpty(dirs: collection.Set[File]): Unit =
   {
-    val isEmpty = new HashMap[File, Boolean]
+    val isEmpty = new scala.collection.mutable.HashMap[File, Boolean]
     def visit(f: File): Boolean = isEmpty.getOrElseUpdate(f, dirs(f) && f.isDirectory && (f.listFiles forall visit) )
 
     dirs foreach visit
@@ -276,7 +280,8 @@ object MyIO
   def listFiles(filter: java.io.FileFilter)(dir: File): Array[File] = wrapNull(dir.listFiles(filter))
   def listFiles(dir: File, filter: java.io.FileFilter): Array[File] = wrapNull(dir.listFiles(filter))
   def listFiles(dir: File): Array[File] = wrapNull(dir.listFiles())
-  private[sbt] def wrapNull(a: Array[File]) =
+
+  def wrapNull(a: Array[File]) =
   {
     if(a == null)
       new Array[File](0)
@@ -300,7 +305,7 @@ object MyIO
   private def archive(sources: Seq[(File,String)], outputFile: File, manifest: Option[Manifest], setTime : Boolean = true)
   {
     if(outputFile.isDirectory)
-      error("Specified output file " + outputFile + " is a directory.")
+      sys.error("Specified output file " + outputFile + " is a directory.")
     else
     {
       val outputDir = outputFile.getParentFile
@@ -318,7 +323,7 @@ object MyIO
 
     val now = System.currentTimeMillis
     // The CRC32 for an empty value, needed to store directories in zip files
-    val emptyCRC = new CRC32().getValue()
+    val emptyCRC = new CRC32().getValue
 
     def addDirectoryEntry(name: String)
     {
@@ -377,7 +382,7 @@ object MyIO
   private def normalizeDirName(name: String) =
   {
     val norm1 = normalizeName(name)
-    if(norm1.endsWith("/")) norm1 else (norm1 + "/")
+    if (norm1.endsWith("/")) norm1 else norm1 + "/"
   }
   private def normalizeName(name: String) =
   {
@@ -392,17 +397,17 @@ object MyIO
         manifest match
         {
           case Some(mf) =>
-          {
             import Attributes.Name.MANIFEST_VERSION
             val main = mf.getMainAttributes
             if(!main.containsKey(MANIFEST_VERSION))
               main.put(MANIFEST_VERSION, "1.0")
             (new JarOutputStream(fileOut, mf), "jar")
-          }
           case None => (new ZipOutputStream(fileOut), "zip")
         }
       try { f(zipOut) }
-      finally { zipOut.close }
+      finally {
+        zipOut.close()
+      }
     }
   }
   def relativize(base: File, file: File): Option[String] =
@@ -448,7 +453,7 @@ object MyIO
     to
   }
   def copyDirectory(source: File, target: File, overwrite: Boolean = false, preserveLastModified: Boolean = false): Unit =
-    copy( (PathFinder(source) ***) x Path.rebase(source, target), overwrite, preserveLastModified)
+    copy((PathFinder(source) ***) pair Path.rebase(source, target), overwrite, preserveLastModified)
 
   def copyFile(sourceFile: File, targetFile: File, preserveLastModified: Boolean = false)
   {
@@ -458,7 +463,7 @@ object MyIO
       fileOutputChannel(targetFile) { out =>
         val copied = out.transferFrom(in, 0, in.size)
         if(copied != in.size)
-          error("Could not copy '" + sourceFile + "' to '" + targetFile + "' (" + copied + "/" + in.size + " bytes copied)")
+          sys.error("Could not copy '" + sourceFile + "' to '" + targetFile + "' (" + copied + "/" + in.size + " bytes copied)")
       }
     }
     if(preserveLastModified)
@@ -475,7 +480,7 @@ object MyIO
     if(charset.newEncoder.canEncode(content))
       fileWriter(charset, append)(file) { f }
     else
-      error("String cannot be encoded by charset " + charset.name)
+      sys.error("String cannot be encoded by charset " + charset.name)
   }
 
   def reader[T](file: File, charset: Charset = defaultCharset)(f: BufferedReader => T): T =
@@ -504,12 +509,12 @@ object MyIO
   }
 
   def append(file: File, content: String, charset: Charset = defaultCharset): Unit =
-    write(file, content, charset, true)
+    write(file, content, charset, append = true)
   def append(file: File, bytes: Array[Byte]): Unit =
-    writeBytes(file, bytes, true)
+    writeBytes(file, bytes, append = true)
 
   def write(file: File, bytes: Array[Byte]): Unit =
-    writeBytes(file, bytes, false)
+    writeBytes(file, bytes, append = false)
   private def writeBytes(file: File, bytes: Array[Byte], append: Boolean): Unit =
     fileOutputStream(append)(file) { _.write(bytes) }
 
@@ -582,7 +587,7 @@ object MyIO
     createDirectory(b.getParentFile)
     if(!a.renameTo(b))
     {
-      copyFile(a, b, true)
+      copyFile(a, b, preserveLastModified = true)
       delete(a)
     }
   }
@@ -616,7 +621,7 @@ object MyIO
     assertAbsolute(uri)
     val str = uri.toASCIIString
     val dirStr = if(str.endsWith("/") || uri.getScheme != "file") str else str + "/"
-    (new URI(dirStr)).normalize
+    new URI(dirStr).normalize
   }
   /** Converts the given File to a URI.  If the File is relative, the URI is relative, unlike File.toURI*/
   def toURI(f: File): URI  =  if(f.isAbsolute) f.toURI else new URI(normalizeName(f.getPath))

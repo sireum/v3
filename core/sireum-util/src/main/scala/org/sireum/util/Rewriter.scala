@@ -208,7 +208,7 @@ object Rewriter {
           def push(o : Any) {
             o match {
               case t : scala.collection.Traversable[_] =>
-                _stack = new RTraversableStackElement(t, alwaysCopy, rewriter _) :: _stack
+                _stack = new RTraversableStackElement(t, alwaysCopy, rewriter) :: _stack
               case v : Rewritable =>
                 _stack = new RVisitableStackElement(v, alwaysCopy) :: _stack
               case _ =>

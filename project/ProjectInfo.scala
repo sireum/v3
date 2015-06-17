@@ -64,7 +64,7 @@ case class ProjectInfo(name : String, dir : String,
     (libs, srcs, licenses)
   }
 
-  def toDot(seen : scala.collection.mutable.Set[String], pw : PrintWriter) {
+  def genDot(seen: scala.collection.mutable.Set[String], pw: PrintWriter): Unit = {
     if (seen.contains(name)) return
 
     seen += name
