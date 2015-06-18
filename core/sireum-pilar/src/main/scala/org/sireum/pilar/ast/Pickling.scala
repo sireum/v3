@@ -27,27 +27,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-object Picklers {
+object Pickling {
 
   def from[T <: Node](s: String): T = {
     import upickle._
     read[Node](s).asInstanceOf[T]
   }
 
-  def from[T <: Node](b: Array[Byte]): T = {
-    boopickle.Unpickle[Node].
-      fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
-  }
+  //  def from[T <: Node](b: Array[Byte]): T = {
+  //    boopickle.Unpickle[Node].
+  //      fromBytes(java.nio.ByteBuffer.wrap(b)).asInstanceOf[T]
+  //  }
 
   def to(node: Node): String = {
     import upickle._
     write(node)
   }
 
-  def toBytes(node: Node): Array[Byte] = {
-    val bb = boopickle.Pickle.intoBytes(node)
-    val ba = new Array[Byte](bb.limit)
-    bb.get(ba)
-    ba
-  }
+  //  def toBytes(node: Node): Array[Byte] = {
+  //    val bb = boopickle.Pickle.intoBytes(node)
+  //    val ba = new Array[Byte](bb.limit)
+  //    bb.get(ba)
+  //    ba
+  //  }
 }

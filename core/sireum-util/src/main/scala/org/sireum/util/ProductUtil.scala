@@ -43,7 +43,7 @@ object ProductUtil {
 
   @inline
   final def hashCode(p: Product): Int =
-    getChildren(p).hashCode()
+    (p.productPrefix, getChildren(p)).hashCode()
 
   @inline
   final def equals(p1: Product, p2: Product): Boolean =

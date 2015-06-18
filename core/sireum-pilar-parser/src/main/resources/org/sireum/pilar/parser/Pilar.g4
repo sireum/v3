@@ -84,11 +84,11 @@ jump
   : 'goto' ID annotation* ';'         #GotoJump
   | 'if' exp 'then' ID
     'else' ID annotation* ';'         #IfJump
-  | 'return' exp annotation* ';'      #ReturnHump
+  | 'return' exp? annotation* ';'     #ReturnJump
   | 'switch' exp
     switchCase*
-    'default' '_' ':'
-    ID annotation* ';'                #SwitchJump
+    'default' '_' ':' ID
+    annotation* ';'                   #SwitchJump
   | 'jext' ID arg annotation* ';'     #ExtJump
   ;
 
@@ -104,7 +104,8 @@ exp
 prim
   : lit                               #LitExp
   | ID                                #IdExp
-  | '(' exp ( ',' exp )* ')'          #TupleExp
+  | '(' exp ( ',' exp )* ')'
+    annotation*                       #TupleExp
   ;
 
 arg
@@ -125,7 +126,7 @@ ID
   ;
 
 LIT
-  : '\'' ~[ \t\r\n\u000C]+
+  : '\'' ~[ \r\n\t\u000C]+
   | ( '"""' .*? '"""' )+
   ;
 

@@ -69,13 +69,13 @@ object AstJsTest extends TestSuite {
     }
 
     'PicklingString {
-      import Picklers._
+      import Pickling._
       assert(model == from[Model](to(model)))
     }
 
-    'PicklingBytes {
-      import Picklers._
-      assert(model == from[Model](toBytes(model)))
-    }
+    //    'PicklingBytes {
+    //      import Pickling._
+    //      assert(model == from[Model](toBytes(model)))
+    //    }
   }
 }

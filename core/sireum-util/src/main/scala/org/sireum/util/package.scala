@@ -234,5 +234,8 @@ package object util {
 
 
   @inline
-  def cast[T](t: ISeq[_]): ISeq[T] = t.map(_.asInstanceOf[T])
+  def cast[T](t: IVector[_]): IVector[T] = t.map(_.asInstanceOf[T])
+
+  @inline
+  def cast[T](t: Option[_]): Option[T] = t.map(_.asInstanceOf[T])
 }
