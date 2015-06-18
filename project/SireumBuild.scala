@@ -1,3 +1,28 @@
+/*
+Copyright (c) 2011-2015, Robby, Kansas State University
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
@@ -5,52 +30,24 @@ import sbt._
 import sbt.complete.Parsers._
 
 object SireumBuild extends Build {
+
+  final val scalaVer = "2.11.6"
+
   final val BUILD_FILENAME = "BUILD"
   final val CORE_DIR = "core/"
 
-  val UPDATE_SITE_PATH = firstExists("Temp/update.sireum.org",
-    "/research/santos/public_html/update.sireum.org")
-
-  val APPS_STASH_PATH =
-    if (System.getenv("APPS_PATH") != null)
-      System.getenv("APPS_PATH")
-    else
-      firstExists("Temp/apps.sireum.org",
-        "/research/santos/stash/apps.sireum.org",
-        "/Volumes/santos/stash/apps.sireum.org")
-
   import ProjectInfo._
 
-  val updateDist = InputKey[Unit]("update-dist", "Creates Sireum update site.")
-  val updatePublish = InputKey[Unit]("update-publish", "Publishes Sireum update site.")
-  val distPublish = InputKey[Unit]("dist-publish", "Publishes Distro distributions (managed Java and Scala).")
   val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
-  val cliGen = InputKey[Unit]("cligen", "Generate CLI.")
 
   lazy val sireum =
     Project(
       id = "sireum",
       settings = sireumSettings ++
         Seq(
-          updateDist := {
-            val args = spaceDelimited("<arg>").parsed
-            BuildHelper.updateDist(baseDirectory.value, projectInfoMap, args)
-          },
-          updatePublish := {
-            val args = spaceDelimited("<arg>").parsed
-            UpdateSiteBuilder.publishUpdate(args)
-          },
-          distPublish := {
-            val args = spaceDelimited("<arg>").parsed
-            UpdateSiteBuilder.publishDist(args)
-          },
           depDot := {
             val args = spaceDelimited("<arg>").parsed
-            ProjectHelper.dotDependency(args, projectInfos)
-          },
-          cliGen := {
-            val args = spaceDelimited("<arg>").parsed
-            ProjectHelper.cliGen(args, projectInfos)
+            dotDependency(args)
           }),
       base = file(".")) aggregate(
       util, pilar,
@@ -59,8 +56,6 @@ object SireumBuild extends Build {
       coreJsTest
       ) settings (
       name := "Sireum")
-
-  final val scalaVer = "2.11.6"
 
   val sireumSettings = Seq(
     organization := "SAnToS Laboratory",
@@ -124,36 +119,27 @@ object SireumBuild extends Build {
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
 
+  // Cross Projects
+  val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
+  val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
   lazy val util = toSbtProject(utilPI, sireumSettings)
   lazy val pilar = toSbtProject(pilarPI, sireumSettings)
 
+
+  // Jvm Projects
+  val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
   lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
 
+  // Jvm Test Projects
+  val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
 
+  // Js Projects
+
+  // Js Projects
+  val coreJsTestPI = new ProjectInfo("Sireum Core Js Test", CORE_DIR, Seq(), utilPI, pilarPI)
   lazy val coreJsTest = toSbtJsProject(coreJsTestPI, sireumJsTestSettings)
 
-
-  val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
-  val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
-
-  val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
-
-  val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
-
-  val coreJsTestPI = new ProjectInfo("Sireum Core Js Test", CORE_DIR, Seq(), utilPI, pilarPI)
-
-
-  def firstExists(default: String, paths: String*): String = {
-    for (p <- paths)
-      if (new File(p).exists)
-        return p
-    val f = new File(System.getProperty("user.home") + "/" + default)
-    f.mkdirs
-    val path = f.getAbsolutePath
-    println("Using " + path)
-    path
-  }
 
   def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project =
     Project(
@@ -173,7 +159,8 @@ object SireumBuild extends Build {
         name := pi.name,
         unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
           purePIs.map { pi =>
-            base / base.getAbsoluteFile.toPath.relativize((pi.baseDir / "src/main/scala").getAbsoluteFile.toPath).toString
+            base / base.getAbsoluteFile.toPath.relativize((pi.baseDir / "src/main/scala").
+              getAbsoluteFile.toPath).toString
           }
         }
       ),
@@ -181,13 +168,4 @@ object SireumBuild extends Build {
       new ClasspathDependency(new LocalProject(p.id), None)): _*
       ).enablePlugins(ScalaJSPlugin)
   }
-
-  lazy val projectInfoMap = scala.collection.mutable.Map[String, ProjectInfo](
-
-    Seq(
-      utilPI
-    ).map { pi => pi.id -> pi }: _*)
-
-  val deletedFiles = Seq[String](
-  )
 }

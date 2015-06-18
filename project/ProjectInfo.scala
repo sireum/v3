@@ -15,23 +15,67 @@ import java.io.PrintWriter
  */
 object ProjectInfo {
   var projectInfos = Vector[ProjectInfo]()
-  val ignoredFiles = Set(
-    "fest-assert-core.jar", "fest-assert-core-src.zip", "fest-license.txt",
-    "fest-util.jar", "fest-util-src.zip",
-    "hamcrest-core.jar", "hamcrest-core-src.zip", "hamcrest-core-license.txt",
-    "junit.jar", "junit-src.zip", "junit-license.txt",
-    "scalatest.jar", "scalatest-src.zip", "scalatest-license.txt",
-    "xmlunit.jar", "xmlunit-src.zip", "xmlunit-license.txt"
+  val ignoredFiles = Set[String](
   )
+
+  final def dotDependency(args: Seq[String]): Unit = {
+    val filename =
+      args match {
+        case Seq(file) => file
+        case _ => "project-dependency.dot"
+      }
+    val depTrans = transitiveDependencies()
+    import java.io._
+    val f = new File(filename)
+    val fw = new FileWriter(f)
+    try {
+      val pw = new PrintWriter(fw)
+      pw.println("digraph G {")
+      for (pi <- projectInfos.reverse) {
+        pw.println("  \"" + pi.name + "\" [shape=\"box\"]")
+        val deps = pi.dependencies.map(_.name)
+        for (pi2Name <- deps.toSet -- deps.flatMap(depTrans(_)))
+          pw.println("  \"" + pi.name + "\" -> \"" + pi2Name + "\"")
+      }
+      pw.println("}")
+      println("Project dependency graph written to: " + f.getCanonicalPath)
+    } finally fw.close()
+  }
+
+  private def transitiveDependencies() = {
+    var piMap = Map[String, ProjectInfo]()
+    var depTrans = Map[String, Set[String]]()
+    for (pi <- projectInfos) {
+      piMap = piMap + (pi.name -> pi)
+      depTrans = depTrans + (pi.name -> pi.dependencies.map(_.name).toSet)
+    }
+    var changed = true
+    while (changed) {
+      changed = false
+      for ((pi, piDep) <- depTrans.toSeq) {
+        var newPiDep = piDep
+        for (pi2 <- piDep) {
+          newPiDep = newPiDep ++ piMap(pi2).dependencies.map(_.name)
+        }
+        if (newPiDep.size != piDep.size) {
+          changed = true
+          depTrans = depTrans + (pi -> newPiDep)
+        }
+      }
+    }
+    depTrans
+  }
 }
 
 /**
  * @author <a href="mailto:robby@k-state.edu">Robby</a>
  */
-case class ProjectInfo(name : String, dir : String,
-                       depFeatures : Seq[String],
-                       dependencies : ProjectInfo*) {
+final case class ProjectInfo(name: String, dir: String,
+                             depFeatures: Seq[String],
+                             dependencies: ProjectInfo*) {
+
   import ProjectInfo._
+
   projectInfos = projectInfos.:+(this)
   val id = name.toLowerCase.replace(" ", "-")
   val baseDir = file(dir + id)
@@ -40,25 +84,25 @@ case class ProjectInfo(name : String, dir : String,
     val srcs = ArrayBuffer[File]()
     val licenses = ArrayBuffer[File]()
 
-      def mineFiles(dir : File) {
-        if (dir.exists) {
-          for (f <- dir.listFiles) {
-            if (f.isDirectory)
-              mineFiles(f)
-            else {
-              val fName = f.getName
-              if (!ProjectInfo.ignoredFiles.contains(fName)) {
-                if (fName.endsWith("-src.jar") || fName.endsWith("-src.zip"))
-                  srcs += f
-                else if (fName.endsWith(".jar"))
-                  libs += f
-                else if (fName.endsWith("-license.txt"))
-                  licenses += f
-              }
+    def mineFiles(dir: File) {
+      if (dir.exists) {
+        for (f <- dir.listFiles) {
+          if (f.isDirectory)
+            mineFiles(f)
+          else {
+            val fName = f.getName
+            if (!ProjectInfo.ignoredFiles.contains(fName)) {
+              if (fName.endsWith("-src.jar") || fName.endsWith("-src.zip"))
+                srcs += f
+              else if (fName.endsWith(".jar"))
+                libs += f
+              else if (fName.endsWith("-license.txt"))
+                licenses += f
             }
           }
         }
       }
+    }
     mineFiles(baseDir / "lib")
     mineFiles(baseDir / "target")
     (libs, srcs, licenses)
@@ -74,9 +118,9 @@ case class ProjectInfo(name : String, dir : String,
   }
 
   override def toString = {
-      def h(t : Traversable[Object]) =
-        if (t.isEmpty) "None"
-        else "\n" + t.foldLeft("")((s, o) => s + "* " + o.toString + "\n")
+    def h(t: Traversable[Object]) =
+      if (t.isEmpty) "None"
+      else "\n" + t.foldLeft("")((s, o) => s + "* " + o.toString + "\n")
     s"""
 Project Name:         $name
 Project Directory:    $dir
