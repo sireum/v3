@@ -17,6 +17,8 @@
             <option value="$PROJECT_DIR$/core/sireum-pilar-parser/project" />
             <option value="$PROJECT_DIR$/core/sireum-pilar/project" />
             <option value="$PROJECT_DIR$/core/sireum-util" />
+            <option value="$PROJECT_DIR$/core/sireum-util-reflect" />
+            <option value="$PROJECT_DIR$/core/sireum-util-reflect/project" />
             <option value="$PROJECT_DIR$/core/sireum-util/project" />
             <option value="$PROJECT_DIR$/project" />
           </set>

@@ -14,6 +14,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-reflect-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-reflect-build.iml" />
     </modules>
   </component>
 </project>

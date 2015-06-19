@@ -28,8 +28,6 @@ package org.sireum.pilar.ast
 import org.junit.Test
 import org.sireum.util._
 
-import scala.util.Random
-
 class AstTest {
 
   val emptyModel = Model(ivectorEmpty, ivectorEmpty)
@@ -45,34 +43,42 @@ class AstTest {
   @Test
   def testEmptyModel(): Unit = {
     emptyModel match {
-      case Model(elements) => assert(elements.isEmpty, "Expected model with empty elements")
+      case Model(elements, annds) =>
+        assert(elements.isEmpty, "Expected model with empty elements")
+        assert(elements.isEmpty, "Expected model with empty annotations")
     }
   }
 
+  //  @Test
+  //  def testRewriteAnnotationOffset(): Unit = {
+  //    val n = Random.nextInt().abs
+  //
+  //    val model2 = Rewriter.build({
+  //      case a: Annotation =>
+  //        a.line = n
+  //        a.column = n
+  //        a
+  //    })(model)
+  //
+  //    Visitor.build({
+  //      case a: Annotation =>
+  //        assert(a.line == n && a.column == n, s"Expected annotation offset ($n, $n)")
+  //        false
+  //    })(model2)
+  //
+  //    assert(model eq model2, "Expected model not changed due to offset updates")
+  //  }
+
   @Test
-  def testRewriteAnnotationOffset(): Unit = {
-    val n = Random.nextInt().abs
-
-    val model2 = Rewriter.build({
-      case a: Annotation =>
-        a.line = n
-        a.column = n
-        a
-    })(model)
-
-    Visitor.build({
-      case a: Annotation =>
-        assert(a.line == n && a.column == n, s"Expected annotation offset ($n, $n)")
-        false
-    })(model2)
-
-    assert(model eq model2, "Expected model not changed due to offset updates")
+  def testPicklingEmptyModel(): Unit = {
+    import Pickling._
+    assert(emptyModel == unpickle[Model](pickle(emptyModel)))
   }
 
   @Test
-  def testPicklingString(): Unit = {
+  def testPicklingModel(): Unit = {
     import Pickling._
-    assert(model == from[Model](to(model)))
+    assert(model == unpickle[Model](pickle(model)))
   }
 
   //  @Test

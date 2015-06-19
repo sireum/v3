@@ -23,33 +23,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar.ast
+package org.sireum.util
 
-import org.antlr.v4.runtime.ParserRuleContext
-import org.sireum.pilar.parser.PilarParser._
-import scala.collection.JavaConversions._
+trait CaseClass extends Rewritable with Product {
+  final override def getChildren: ISeq[AnyRef] =
+    ProductUtil.getChildren(this)
 
-object Builder {
+  final override def getNumOfChildren: Int =
+    ProductUtil.getNumOfChildren(this)
 
-  final def build(ctx: ModelContext): Model = {
-    Model(
-      ctx.annotation().toVector.map(build),
-      ctx.modelElement().toVector.map(build)
-    ) at ctx
-  }
-
-  final def build(ctx: AnnotationContext): Annotation = ???
-
-  final def build(ctx: ModelElementContext): ModelElement = ???
-
-
-  implicit class At[T <: Node](val n: T) extends AnyVal {
-    def at(ctx: ParserRuleContext): T = {
-      val start = ctx.getStart
-      //      n.line = start.getLine
-      //      n.column = start.getCharPositionInLine
-      n
-    }
-  }
-
+  def fieldNames: ISeq[String]
 }

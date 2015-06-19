@@ -51,7 +51,7 @@ object SireumBuild extends Build {
           }),
       base = file(".")) aggregate(
       util, pilar,
-      pilarParser,
+      pilarParser, utilReflect,
       coreTest,
       coreJsTest
       ) settings (
@@ -75,8 +75,7 @@ object SireumBuild extends Build {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
-      "com.lihaoyi" %% "upickle" % "0.2.8",
-      "me.chrons" %% "boopickle" % "1.0.0"
+      "com.lihaoyi" %% "upickle" % "0.2.8"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
@@ -86,7 +85,8 @@ object SireumBuild extends Build {
 
   val sireumJvmSettings = sireumSettings ++ Seq(
     libraryDependencies ++= Seq(
-      "org.antlr" % "antlr4-runtime" % "4.5"
+      "org.antlr" % "antlr4-runtime" % "4.5",
+      "org.antlr" % "ST4" % "4.0.8"
     )
   )
 
@@ -107,8 +107,7 @@ object SireumBuild extends Build {
     scalaJSStage in Global := FastOptStage,
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.2.8",
-      "me.chrons" %%% "boopickle" % "1.0.0"
+      "com.lihaoyi" %%% "upickle" % "0.2.8"
     )
   )
 
@@ -129,6 +128,8 @@ object SireumBuild extends Build {
   // Jvm Projects
   val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
   lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
+  val utilReflectPI = new ProjectInfo("Sireum Util Reflect", CORE_DIR, Seq(), utilPI, pilarPI)
+  lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
 
   // Jvm Test Projects
   val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)

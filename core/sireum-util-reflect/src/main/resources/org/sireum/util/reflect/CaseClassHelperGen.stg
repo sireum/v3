@@ -1,0 +1,50 @@
+pickling(packageName, name, fromCase, toCase) ::= <<
+package $packageName$
+
+import org.sireum.util.Json._
+import upickle.Js
+
+object Pickling {
+  def pickle(node: Node): String =
+    upickle.json.write(Json.from(node))
+
+  def unpickle[T <: Node](s: String): T =
+    Json.to[T](upickle.json.read(s))
+}
+
+object Json {
+  def from(o: $name$): Js.Obj =
+    o match {
+      $fromCase; separator="\n"$
+    }
+
+  def to[T <: $name$](v: Js.Value): T =
+    (v: @unchecked) match {
+      case o: Js.Obj =>
+        (o.value.head._2.asInstanceOf[Js.Str].value match {
+           $toCase; separator="\n"$
+         }).asInstanceOf[T]
+    }
+}
+>>
+
+caseFrom(name, arg) ::= <<
+case o: $name$ =>
+  Js.Obj(
+    (".class", Js.Str("$name$")),
+    $arg; separator=",\n"$
+  )
+>>
+
+caseFromArg(name, type, arg) ::= <<
+("$name$", $type$(o.$name$$if(arg)$, $arg; separator=", "$$endif$))
+>>
+
+caseTo(name, arg) ::= <<
+case "$name$" =>
+  $name$($arg; separator=", "$)
+>>
+
+caseToArg(type, i, arg) ::= <<
+$type$(o.value($i$)._2$if(arg)$, $arg; separator=", "$$endif$)
+>>

@@ -26,14 +26,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum
 
 package object util {
-  type -->[D, I] = PartialFunction[D, I]
+  type --\[D, I] = PartialFunction[D, I]
 
   type FileResourceUri = String
 
   type ResourceUri = String
 
-  type VisitorFunction = Any --> Boolean
-  type RewriteFunction = Any --> Any
+  type VisitorFunction = Any --\ Boolean
+  type RewriteFunction = Any --\ Any
 
   type CSeq[T] = scala.collection.Seq[T]
   type CMap[K, V] = scala.collection.Map[K, V]

@@ -34,9 +34,10 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: me.chrons:boopickle_2.11:1.0.0:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.2.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
   </component>
 </module>

@@ -32,7 +32,7 @@ import scala.util.control.NoStackTrace
 object PartialFunctionUtil {
   def empty[A, B] = Map[A, B]()
 
-  def default[A, B](b : B) : A --> B = {
+  def default[A, B](b: B): A --\ B = {
     case _ => b
   }
 
@@ -44,20 +44,20 @@ object PartialFunctionUtil {
 
   val EMPTY_MAP = Map()
 
-  def isEmpty(f : _ --> _) = f == EMPTY_MAP
+  def isEmpty(f: _ --\ _) = f == EMPTY_MAP
 
   def orElse[A, B, A1 <: A, B1 >: B] //
-  (f1 : A --> B, f2 : A1 --> B1) : A1 --> B1 =
+  (f1: A --\ B, f2: A1 --\ B1): A1 --\ B1 =
     if (isEmpty(f1)) f2
     else if (isEmpty(f2)) f1
     else f1 orElse f2
 
-  def orElses[A, B](fs : (A --> B)*) : A --> B = orElses(fs)
-    
-  def orElses[A, B](fs : Iterable[A --> B]) : A --> B =
+  def orElses[A, B](fs: (A --\ B)*): A --\ B = orElses(fs)
+
+  def orElses[A, B](fs: Iterable[A --\ B]): A --\ B =
     new PartialFunction[A, B] {
       lazy val pfs = {
-        val r = marrayEmpty[A --> B]
+        val r = marrayEmpty[A --\ B]
         for (f <- fs)
           if (!isEmpty(f))
             r += f
@@ -77,7 +77,7 @@ object PartialFunctionUtil {
     }
 
   def chain[A, B, A1 <: A, B1 >: B] //
-  (f1 : A --> B, f2 : A1 --> B1) : A1 --> B1 =
+  (f1: A --\ B, f2: A1 --\ B1): A1 --\ B1 =
     if (isEmpty(f1)) f2
     else
       new PartialFunction[A1, B1] {

@@ -43,32 +43,38 @@ object AstJsTest extends TestSuite {
 
     'EmptyModel {
       emptyModel match {
-        case Model(elements) => assert(elements.isEmpty)
+        case Model(elements, anns) =>
+          assert(elements.isEmpty, anns.isEmpty)
       }
     }
 
-    'RewriteAnnotationOffset {
-      val n = scala.util.Random.nextInt().abs
+    //    'RewriteAnnotationOffset {
+    //      val n = scala.util.Random.nextInt().abs
+    //
+    //      val model2 = Rewriter.build({
+    //        case a: Annotation =>
+    //          a.line = n
+    //          a.column = n
+    //          a
+    //      })(model)
+    //
+    //      Visitor.build({
+    //        case a: Annotation =>
+    //          assert(a.line == n, a.column == n)
+    //          false
+    //      })(model2)
+    //
+    //      assert(model eq model2)
+    //    }
 
-      val model2 = Rewriter.build({
-        case a: Annotation =>
-          a.line = n
-          a.column = n
-          a
-      })(model)
-
-      Visitor.build({
-        case a: Annotation =>
-          assert(a.line == n, a.column == n)
-          false
-      })(model2)
-
-      assert(model eq model2)
+    'PicklingEmptyModel {
+      import Pickling._
+      assert(emptyModel == unpickle[Model](pickle(emptyModel)))
     }
 
-    'PicklingString {
+    'PicklingModel {
       import Pickling._
-      assert(model == from[Model](to(model)))
+      assert(model == unpickle[Model](pickle(model)))
     }
 
     //    'PicklingBytes {
