@@ -23,21 +23,15 @@ object Rewriter {
     org.sireum.util.Rewriter.buildEnd[T](constructorMap)(mode, f, g)
 }
 
-object Pickling {
-  def pickle(node: Node): String =
-    upickle.json.write(Json.from(node))
-
-  def unpickle[T <: Node](s: String): T =
-    Json.to[T](upickle.json.read(s))
-}
-
 object Json {
-  def from(o: $name$): Js.Obj =
+  import scala.language.implicitConversions
+
+  implicit def from(o: $name$): Js.Obj =
     o match {
       $fromCase; separator="\n"$
     }
 
-  def to[T <: $name$](v: Js.Value): T =
+  implicit def to[T <: $name$](v: Js.Value): T =
     (v: @unchecked) match {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
@@ -63,7 +57,7 @@ case o: $name$ =>
 >>
 
 caseFromArg(name, type, arg) ::= <<
-("$name$", $type$(o.$name$$if(arg)$, $arg; separator=", "$$endif$))
+("$name$", $type$(o.$name$)$if(arg)$($arg; separator=", "$)$endif$)
 >>
 
 caseTo(name, arg) ::= <<
@@ -72,5 +66,5 @@ case "$name$" =>
 >>
 
 caseToArg(type, i, arg) ::= <<
-$type$(o.value($i$)._2$if(arg)$, $arg; separator=", "$$endif$)
+$type$(o.value($i$)._2)$if(arg)$($arg; separator=", "$)$endif$
 >>

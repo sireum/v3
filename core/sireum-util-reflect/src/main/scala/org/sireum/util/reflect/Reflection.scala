@@ -304,9 +304,8 @@ object Reflection {
       CaseClass(fullName(tipe), tipe, anns, params, imapEmpty[Any, Any])
     }
 
-    def caseClassObject[T <: Product](
-                                       t: T, processAnnotations: Boolean,
-                                       seen: MIdMap[Any, Any] = idmapEmpty): CaseClass = {
+    def caseClassObject[T <: Product](t: T, processAnnotations: Boolean,
+                                      seen: MIdMap[Any, Any]): CaseClass = {
 
       val result = caseClassType(t.getClass, processAnnotations).copy()
       seen.put(t, result)

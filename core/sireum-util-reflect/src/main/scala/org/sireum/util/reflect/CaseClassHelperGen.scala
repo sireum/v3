@@ -35,6 +35,8 @@ object CaseClassHelperGen extends App {
   final val stringType = typeOf[String]
   final val optionType = typeOf[Option[_]].erasure
   final val vectorType = typeOf[Vector[_]].erasure
+  final val tuple2Type = typeOf[(_, _)].erasure
+  final val tuple3Type = typeOf[(_, _, _)].erasure
   final val caseClassType = typeOf[CaseClass]
   final val anyValBoxMap = Map(
     "Boolean" -> "java.lang.Boolean",
@@ -124,36 +126,52 @@ object CaseClassHelperGen extends App {
         (s"$n: Option[_]", true)
       case _ if t.dealias.erasure =:= vectorType =>
         (s"$n: IVector[_]", true)
+      case _ if t.dealias.erasure =:= tuple2Type =>
+        (s"$n: (_, _)", true)
+      case _ if t.dealias.erasure =:= tuple3Type =>
+        (s"$n: (_, _, _)", true)
       case _ if t <:< caseClassType =>
         (s"$n: ${name(t)}", false)
     }
 
-  private def fromType(t: Type): (String, Option[String]) =
+  private def fromType1(t: Type) = fromType(t)._1
+
+  private def fromType(t: Type): (String, ISeq[String]) =
     t match {
       case _ if t <:< anyValType =>
-        ("fromAnyVal", None)
+        ("fromAnyVal", ivectorEmpty)
       case _ if t =:= stringType =>
-        ("fromStr", None)
+        ("fromStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
-        ("fromOption", Some(fromType(t.typeArgs.head)._1))
+        ("fromOption", t.typeArgs.map(fromType1))
       case _ if t.dealias.erasure =:= vectorType =>
-        ("fromSeq", Some(fromType(t.typeArgs.head)._1))
+        ("fromSeq", t.typeArgs.map(fromType1))
+      case _ if t.dealias.erasure =:= tuple2Type =>
+        ("fromTuple2", t.typeArgs.map(fromType1))
+      case _ if t.dealias.erasure =:= tuple3Type =>
+        ("fromTuple3", t.typeArgs.map(fromType1))
       case _ if t <:< caseClassType =>
-        ("from", None)
+        ("from", ivectorEmpty)
     }
 
-  private def toType(t: Type): (String, Option[String]) =
+  private def toType1(t: Type) = toType(t)._1
+
+  private def toType(t: Type): (String, ISeq[String]) =
     t match {
       case _ if t <:< anyValType =>
-        ("to" + name(t), None)
+        ("to" + name(t), ivectorEmpty)
       case _ if t =:= stringType =>
-        ("toStr", None)
+        ("toStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
-        ("toOption", Some(toType(t.typeArgs.head)._1))
+        ("toOption", t.typeArgs.map(toType1))
       case _ if t.dealias.erasure =:= vectorType =>
-        ("toVector", Some(toType(t.typeArgs.head)._1))
+        ("toVector", t.typeArgs.map(toType1))
+      case _ if t.dealias.erasure =:= tuple2Type =>
+        ("toTuple2", t.typeArgs.map(toType1))
+      case _ if t.dealias.erasure =:= tuple3Type =>
+        ("toTuple3", t.typeArgs.map(toType1))
       case _ if t <:< caseClassType =>
-        (s"to[${name(t)}]", None)
+        (s"to[${name(t)}]", ivectorEmpty)
     }
 
   private def hierarchy(c: ClassSymbol,

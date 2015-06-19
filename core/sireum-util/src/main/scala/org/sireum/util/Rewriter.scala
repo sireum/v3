@@ -162,7 +162,9 @@ object Rewriter {
     var isDirty = alwaysCopy
 
     def makeWithNewChildren =
-      if (isDirty) m(value.productPrefix)(newChildren) else value
+      if (isDirty)
+        value.copyInternal(m(value.productPrefix)(newChildren))
+      else value
   }
 
   def rewrite[T](m: ConstructorMap,

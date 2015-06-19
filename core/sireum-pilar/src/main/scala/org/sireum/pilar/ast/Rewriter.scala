@@ -30,7 +30,6 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 object Rewriter {
-
   import org.sireum.util.Rewriter._
 
   val constructorMap: ConstructorMap = Map(
@@ -51,8 +50,8 @@ object Rewriter {
       AssumeAction(exp, cast(annotations))
     },
     "BinaryExp" -> { es =>
-      val Seq(left: Exp, op: Id, right: Exp) = es
-      BinaryExp(left, op, right)
+      val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
+      BinaryExp(left, op, right, cast(rest))
     },
     "BlockLocation" -> { es =>
       val Seq(label: Id, actions: IVector[_], jump: Jump, annotations: IVector[_]) = es

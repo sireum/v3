@@ -31,4 +31,6 @@ trait CaseClass extends Visitable with Product {
 
   final override def getNumOfChildren: Int =
     ProductUtil.getNumOfChildren(this)
+
+  def copyInternal(newCaseClass: CaseClass): CaseClass
 }

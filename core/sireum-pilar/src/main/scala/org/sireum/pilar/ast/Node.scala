@@ -28,24 +28,35 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 object Node {
-  type NodeSeq[T <: Node] = IVector[T]
+  type Seq[T] = IVector[T]
+
+  def emptySeq[T] = ivectorEmpty[T]
+
+  def seq[T](es: T*) = ivector(es: _*)
+
+  def seq[T](es: Iterable[T]) = es.toVector
+}
+
+sealed trait Node extends CaseClass {
+  var locationInfoOpt: Option[LocationInfo] = None
+
+  def copyInternal(newNode: CaseClass) = {
+    val n = newNode.asInstanceOf[Node]
+    if (n.locationInfoOpt.isEmpty)
+      n.locationInfoOpt = locationInfoOpt
+    n
+  }
 }
 
 
-import org.sireum.pilar.ast.Node._
-
-
-sealed trait Node extends CaseClass
-
-
 sealed trait Annotated {
-  def annotations: NodeSeq[Annotation]
+  def annotations: Node.Seq[Annotation]
 }
 
 
 final case class
-Model(annotations: NodeSeq[Annotation],
-      elements: NodeSeq[ModelElement]) extends Node with Annotated
+Model(annotations: Node.Seq[Annotation],
+      elements: Node.Seq[ModelElement]) extends Node with Annotated
 
 
 final case class
@@ -68,29 +79,29 @@ sealed trait ModelElement extends Node with Annotated
 
 final case class
 GlobalVarDecl(id: Id,
-              annotations: NodeSeq[Annotation]) extends ModelElement
+              annotations: Node.Seq[Annotation]) extends ModelElement
 
 
 final case class
 ProcedureDecl(id: Id,
-              params: NodeSeq[ParamDecl],
-              annotations: NodeSeq[Annotation],
+              params: Node.Seq[ParamDecl],
+              annotations: Node.Seq[Annotation],
               bodyOpt: Option[ProcedureBody]) extends ModelElement
 
 
 final case class
 ParamDecl(id: Id,
-          annotations: NodeSeq[Annotation]) extends Node with Annotated
+          annotations: Node.Seq[Annotation]) extends Node with Annotated
 
 
 final case class
-ProcedureBody(locals: NodeSeq[LocalVarDecl],
-              locations: NodeSeq[Location]) extends Node
+ProcedureBody(locals: Node.Seq[LocalVarDecl],
+              locations: Node.Seq[Location]) extends Node
 
 
 final case class
 LocalVarDecl(id: Id,
-             annotations: NodeSeq[Annotation]) extends Node with Annotated
+             annotations: Node.Seq[Annotation]) extends Node with Annotated
 
 
 sealed trait Location extends Node with Annotated
@@ -100,16 +111,16 @@ final case class
 CallLocation(label: Id,
              lhsOpt: Option[Exp],
              id: Id,
-             args: NodeSeq[Exp],
+             args: Node.Seq[Exp],
              target: Id,
-             annotations: NodeSeq[Annotation]) extends Location
+             annotations: Node.Seq[Annotation]) extends Location
 
 
 final case class
 BlockLocation(label: Id,
-              actions: NodeSeq[Action],
+              actions: Node.Seq[Action],
               jump: Jump,
-              annotations: NodeSeq[Annotation]) extends Location {
+              annotations: Node.Seq[Annotation]) extends Location {
   {
     var i = 0
     while (i < actions.size) {
@@ -138,23 +149,23 @@ sealed trait Action extends Command
 final case class
 AssignAction(lhs: Exp,
              rhs: Exp,
-             annotations: NodeSeq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation]) extends Action
 
 
 final case class
 AssertAction(exp: Exp,
-             annotations: NodeSeq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation]) extends Action
 
 
 final case class
 AssumeAction(exp: Exp,
-             annotations: NodeSeq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation]) extends Action
 
 
 final case class
 ExtAction(id: Id,
-          args: NodeSeq[Exp],
-          annotations: NodeSeq[Annotation]) extends Action
+          args: Node.Seq[Exp],
+          annotations: Node.Seq[Annotation]) extends Action
 
 
 sealed trait Jump extends Command
@@ -162,25 +173,25 @@ sealed trait Jump extends Command
 
 final case class
 GotoJump(target: Id,
-         annotations: NodeSeq[Annotation]) extends Jump
+         annotations: Node.Seq[Annotation]) extends Jump
 
 
 final case class
 IfJump(exp: Exp,
        tTarget: Id,
        fTarget: Id,
-       annotations: NodeSeq[Annotation]) extends Jump
+       annotations: Node.Seq[Annotation]) extends Jump
 
 
 final case class
 ReturnJump(expOpt: Option[Exp],
-           annotations: NodeSeq[Annotation]) extends Jump
+           annotations: Node.Seq[Annotation]) extends Jump
 
 
 final case class
 SwitchJump(exp: Exp,
-           cases: NodeSeq[SwitchCase],
-           annotations: NodeSeq[Annotation]) extends Jump
+           cases: Node.Seq[SwitchCase],
+           annotations: Node.Seq[Annotation]) extends Jump
 
 
 final case class
@@ -190,8 +201,8 @@ SwitchCase(expOpt: Option[LiteralExp],
 
 final case class
 ExtJump(id: Id,
-        args: NodeSeq[Exp],
-        annotations: NodeSeq[Annotation]) extends Jump
+        args: Node.Seq[Exp],
+        annotations: Node.Seq[Annotation]) extends Jump
 
 
 sealed trait Exp extends Node
@@ -207,16 +218,17 @@ IdExp(id: Id) extends Exp
 
 
 final case class
-TupleExp(exps: NodeSeq[Exp],
-         annotations: NodeSeq[Annotation]) extends Exp with Annotated
+TupleExp(exps: Node.Seq[Exp],
+         annotations: Node.Seq[Annotation]) extends Exp with Annotated
 
 
 final case class
 BinaryExp(left: Exp,
           op: Id,
-          right: Exp) extends Exp
+          right: Exp,
+          rest: Node.Seq[(Id, Exp)]) extends Exp
 
 
 final case class
 CallExp(exp: Exp,
-        args: NodeSeq[Exp]) extends Exp
+        args: Node.Seq[Exp]) extends Exp

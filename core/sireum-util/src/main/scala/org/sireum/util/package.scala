@@ -28,9 +28,7 @@ package org.sireum
 package object util {
   type --\[D, I] = PartialFunction[D, I]
 
-  type FileResourceUri = String
-
-  type ResourceUri = String
+  type Uri = String
 
   type VisitorFunction = Any --\ Boolean
   type RewriteFunction = Any --\ Any
@@ -81,33 +79,6 @@ package object util {
 
   @inline
   def mstackEmpty[T]: MStack[T] = new scala.collection.mutable.Stack[T]
-
-  @inline
-  def idmapEmpty[K, V] : MIdMap[K, V] = {
-    import scala.collection.JavaConversions._
-
-    new java.util.IdentityHashMap[K, V]
-  }
-
-  @inline
-  def idsetEmpty[T] : MIdSet[T] = {
-    import scala.collection.JavaConversions._
-
-    new java.util.IdentityHashMap[T, T]
-  }
-
-  @inline
-  def idmapEmpty[K, V](initialCapacity : Int) : MMap[K, V] = {
-    import scala.collection.JavaConversions._
-
-    new java.util.IdentityHashMap[K, V](initialCapacity)
-  }
-
-  @inline
-  def cmapEmpty[K, V] : MConcMap[K, V] = {
-    import scala.collection.JavaConversions._
-    new java.util.concurrent.ConcurrentHashMap[K, V]()
-  }
 
   type IBitSet = scala.collection.immutable.BitSet
   type ISeq[T] = scala.collection.immutable.Seq[T]
@@ -236,4 +207,12 @@ package object util {
 
   @inline
   def cast[T](t: Option[_]): Option[T] = t.map(_.asInstanceOf[T])
+
+  @inline
+  def cast[T1, T2](t: (_, _)): (T1, T2) =
+    (t._1.asInstanceOf[T1], t._2.asInstanceOf[T2])
+
+  @inline
+  def cast[T1, T2, T3](t: (_, _, _)): (T1, T2, T3) =
+    (t._1.asInstanceOf[T1], t._2.asInstanceOf[T2], t._3.asInstanceOf[T3])
 }

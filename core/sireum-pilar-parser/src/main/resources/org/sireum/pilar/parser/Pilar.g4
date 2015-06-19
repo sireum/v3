@@ -26,16 +26,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 grammar Pilar;
 
 model
-  : annotation* modelElement*
+  : annotation*
+    modelElement+
   ;
 
 modelElement
-  : globalVarDecl
-  | procDecl
+  : 'var' globalVarDecl+              #GlobalVar
+  | procDecl                          #Procedure
   ;
 
 globalVarDecl
-  : 'var' ID annotation* ';'
+  : ID annotation* ';'
   ;
 
 procDecl
@@ -51,17 +52,17 @@ param
 
 procBody
   : '{'
-    localVarDecl*
+    ( 'var' localVarDecl+ )?
     location+
     '}'
   ;
 
 localVarDecl
-  : 'var' ID annotation* ';'
+  : ID annotation* ';'
   ;
 
 location
-  : '#' ( ID ':' )?
+  : '#' ID ':'
     annotation* transformation
   ;
 
@@ -75,28 +76,31 @@ action
   : l=exp ':=' r=exp annotation* ';'  #AssignAction
   | 'assert' exp annotation* ';'      #AssertAction
   | 'assume' exp annotation* ';'      #AssumeAction
-  | 'aext' ID arg annotation* ';'     #ExtAction
+  | 'axt' ID arg annotation* ';'      #ExtAction
   ;
 
 jump
   : 'goto' ID annotation* ';'         #GotoJump
-  | 'if' exp 'then' ID
-    'else' ID annotation* ';'         #IfJump
+  | 'if' exp 'then' t=ID
+    'else' f=ID annotation* ';'       #IfJump
   | 'return' exp? annotation* ';'     #ReturnJump
   | 'switch' exp
     switchCase*
-    'default' '_' ':' ID
+    b='|' '_' ':' ID
     annotation* ';'                   #SwitchJump
-  | 'jext' ID arg annotation* ';'     #ExtJump
+  | 'jxt' ID arg annotation* ';'      #ExtJump
   ;
 
 switchCase
-  : 'case' lit ':' ID
+  : '|' lit ':' ID
   ;
 
 exp
-  : prim arg*                         #PrimExp
-  | l=exp ID r=exp                    #BinExp
+  : prim arg* expSuffix*
+  ;
+
+expSuffix
+  : ID exp
   ;
 
 prim
@@ -130,14 +134,6 @@ LIT
 
 WS
   : [ \t\r\n\u000C]+ -> skip
-  ;
-
-COMMENT
-  : '/*' .*? '*/' -> channel(2)
-  ;
-
-LINE_COMMENT
-  : '//' ~[\r\n]* -> channel(2)
   ;
 
 ERROR_CHAR
