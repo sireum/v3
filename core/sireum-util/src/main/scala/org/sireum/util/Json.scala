@@ -28,16 +28,6 @@ package org.sireum.util
 import upickle.Js
 
 object Json {
-
-  type To = CaseClass --\ ISeq[(String, Js.Value)]
-  type From = Iterable[Js.Value] --\ CaseClass
-
-  trait CaseClassConverter {
-    def to: To
-
-    def from: From
-  }
-
   @inline
   final def fromAnyVal(v: AnyVal): Js.Value =
     v match {
@@ -149,49 +139,4 @@ object Json {
       case Js.Str(s) => s
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
-}
-
-import Json._
-
-final class Json {
-  private val caseClassConverterMap =
-    mmapEmpty[String, CaseClassConverter]
-
-  val CLASS_DESC = ".class"
-
-  def register[T](ccName: String,
-                  c: CaseClassConverter): Unit = {
-    if (caseClassConverterMap.contains(ccName)) {
-      sys.error("Cannot re-register a Json converter for: " + ccName)
-    }
-    caseClassConverterMap(ccName) = c
-  }
-
-  @inline
-  def fromCaseClass(cc: CaseClass): Js.Obj =
-    Js.Obj(
-      caseClassConverterMap(cc.productPrefix).to(cc) :+
-        (CLASS_DESC -> Js.Str(cc.productPrefix)): _*)
-
-  @inline
-  def toCaseClass[T <: CaseClass](v: Js.Value): T = v match {
-    case o: Js.Obj =>
-      val kvs = o.value
-      val (`CLASS_DESC`, Js.Str(v)) = kvs.head
-      val vs = kvs.drop(1).map(_._2)
-      caseClassConverterMap(v).from(vs).asInstanceOf[T]
-    case _ => sys.error("Unexpected Js.Value for a Product: " + v)
-  }
-
-  def +(other: Json): Json = {
-    val r = new Json
-    val ikeys = caseClassConverterMap.keySet.
-      intersect(other.caseClassConverterMap.keySet)
-    if (ikeys.nonEmpty)
-      sys.error("Cannot combine Json due to duplicate converter keys:" + ikeys)
-
-    r.caseClassConverterMap ++= caseClassConverterMap
-    r.caseClassConverterMap ++= other.caseClassConverterMap
-    r
-  }
 }

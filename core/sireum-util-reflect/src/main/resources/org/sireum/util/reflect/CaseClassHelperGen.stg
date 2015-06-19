@@ -1,8 +1,27 @@
-pickling(packageName, name, fromCase, toCase) ::= <<
+main(packageName, name, entry, fromCase, toCase) ::= <<
+// This file is auto-generated from the $name$ class hierarchy
+
 package $packageName$
 
+import org.sireum.util._
 import org.sireum.util.Json._
 import upickle.Js
+
+object Rewriter {
+  import org.sireum.util.Rewriter._
+
+  val constructorMap : ConstructorMap = Map(
+    $entry; separator=",\n"$
+  )
+
+  def build[T](mode: TraversalMode.Type = TraversalMode.TOP_DOWN)(
+    f: RewriteFunction) =
+    org.sireum.util.Rewriter.build[T](constructorMap)(mode, f)
+
+  def buildEnd[T](mode: TraversalMode.Type = TraversalMode.TOP_DOWN)(
+      f: RewriteFunction, g: RewriteFunction) =
+    org.sireum.util.Rewriter.buildEnd[T](constructorMap)(mode, f, g)
+}
 
 object Pickling {
   def pickle(node: Node): String =
@@ -25,6 +44,13 @@ object Json {
            $toCase; separator="\n"$
          }).asInstanceOf[T]
     }
+}
+>>
+
+constructorEntry(name, et, ec) ::= <<
+"$name$" -> { es =>
+  val Seq($et; separator=", "$) = es
+  $name$($ec; separator=", "$)
 }
 >>
 

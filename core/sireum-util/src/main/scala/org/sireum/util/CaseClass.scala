@@ -25,12 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.util
 
-trait CaseClass extends Rewritable with Product {
+trait CaseClass extends Visitable with Product {
   final override def getChildren: ISeq[AnyRef] =
     ProductUtil.getChildren(this)
 
   final override def getNumOfChildren: Int =
     ProductUtil.getNumOfChildren(this)
-
-  def fieldNames: ISeq[String]
 }

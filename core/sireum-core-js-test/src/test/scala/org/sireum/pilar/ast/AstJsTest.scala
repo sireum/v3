@@ -48,24 +48,20 @@ object AstJsTest extends TestSuite {
       }
     }
 
-    //    'RewriteAnnotationOffset {
-    //      val n = scala.util.Random.nextInt().abs
-    //
-    //      val model2 = Rewriter.build({
-    //        case a: Annotation =>
-    //          a.line = n
-    //          a.column = n
-    //          a
-    //      })(model)
-    //
-    //      Visitor.build({
-    //        case a: Annotation =>
-    //          assert(a.line == n, a.column == n)
-    //          false
-    //      })(model2)
-    //
-    //      assert(model eq model2)
-    //    }
+    'RewriteAnnotationOffset {
+      val model2 = Rewriter.build() {
+        case Annotation(Id(_, _), raw) =>
+          Annotation(Id("Z"), raw)
+      }(model)
+
+      Visitor.build({
+        case a: Annotation =>
+          assert(a.id.value == "Z")
+          false
+      })(model2)
+
+      assert(model ne model2)
+    }
 
     'PicklingEmptyModel {
       import Pickling._
@@ -76,10 +72,5 @@ object AstJsTest extends TestSuite {
       import Pickling._
       assert(model == unpickle[Model](pickle(model)))
     }
-
-    //    'PicklingBytes {
-    //      import Pickling._
-    //      assert(model == from[Model](toBytes(model)))
-    //    }
   }
 }

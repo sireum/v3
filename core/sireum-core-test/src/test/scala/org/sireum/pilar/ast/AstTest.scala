@@ -49,25 +49,21 @@ class AstTest {
     }
   }
 
-  //  @Test
-  //  def testRewriteAnnotationOffset(): Unit = {
-  //    val n = Random.nextInt().abs
-  //
-  //    val model2 = Rewriter.build({
-  //      case a: Annotation =>
-  //        a.line = n
-  //        a.column = n
-  //        a
-  //    })(model)
-  //
-  //    Visitor.build({
-  //      case a: Annotation =>
-  //        assert(a.line == n && a.column == n, s"Expected annotation offset ($n, $n)")
-  //        false
-  //    })(model2)
-  //
-  //    assert(model eq model2, "Expected model not changed due to offset updates")
-  //  }
+  @Test
+  def testRewriteAnnotationId(): Unit = {
+    val model2 = Rewriter.build() {
+      case Annotation(Id(_, _), raw) =>
+        Annotation(Id("Z"), raw)
+    }(model)
+
+    Visitor.build({
+      case a: Annotation =>
+        assert(a.id.value == "Z", s"Expected annotation ID to be Z")
+        false
+    })(model2)
+
+    assert(model ne model2, "Expected model changed due to ID update")
+  }
 
   @Test
   def testPicklingEmptyModel(): Unit = {
@@ -80,11 +76,5 @@ class AstTest {
     import Pickling._
     assert(model == unpickle[Model](pickle(model)))
   }
-
-  //  @Test
-  //  def testPicklingBytes(): Unit = {
-  //    import Pickling._
-  //    assert(model == from[Model](toBytes(model)))
-  //  }
 }
 

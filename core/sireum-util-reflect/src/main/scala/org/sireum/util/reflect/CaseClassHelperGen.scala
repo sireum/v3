@@ -32,23 +32,26 @@ import scala.reflect.runtime.universe._
 object CaseClassHelperGen extends App {
   type Hierarchy = MMap[Symbol, ISet[Symbol]]
   final val anyValType = typeOf[AnyVal]
-  final val booleanType = typeOf[Boolean]
-  final val byteType = typeOf[Byte]
-  final val charType = typeOf[Char]
-  final val shortType = typeOf[Short]
-  final val intType = typeOf[Int]
-  final val longType = typeOf[Long]
-  final val floatType = typeOf[Float]
-  final val doubleType = typeOf[Double]
   final val stringType = typeOf[String]
   final val optionType = typeOf[Option[_]].erasure
   final val vectorType = typeOf[Vector[_]].erasure
   final val caseClassType = typeOf[CaseClass]
-  val stg = new STGroupFile(getClass.getResource("CaseClassHelperGen.stg"), "UTF-8", '$', '$')
+  final val anyValBoxMap = Map(
+    "Boolean" -> "java.lang.Boolean",
+    "Byte" -> "java.lang.Byte",
+    "Char" -> "java.lang.Character",
+    "Short" -> "java.lang.Short",
+    "Int" -> "java.lang.Integer",
+    "Long" -> "java.lang.Long",
+    "Float" -> "java.lang.Float",
+    "Double" -> "java.lang.Double"
+  )
+  val stg = new STGroupFile(getClass.
+    getResource("CaseClassHelperGen.stg"), "UTF-8", '$', '$')
 
   final def generate(root: Type): ST = {
     val h = hierarchy(root.typeSymbol.asClass)
-    val stPickling = stg.getInstanceOf("pickling")
+    val stMain = stg.getInstanceOf("main")
     val rootClassSymbol = root.typeSymbol.asClass
     val packageName = {
       val fn = rootClassSymbol.fullName
@@ -56,21 +59,37 @@ object CaseClassHelperGen extends App {
     }
     val rootName = name(root)
 
-    stPickling.add("packageName", packageName)
-    stPickling.add("name", rootName)
+    stMain.add("packageName", packageName)
+    stMain.add("name", rootName)
 
-    for (c <- h.keys.filterNot(_.isAbstract).toSeq.sortBy(_.asClass.fullName)) {
+    for (
+      c <- h.keys.filterNot(_.isAbstract).
+        toSeq.sortBy(_.asClass.fullName)
+    ) {
       val cc = reflect.Reflection.CaseClass.
         caseClassType(c.asType.toType, procesAnnotations = false)
-      val stCaseFrom = stg.getInstanceOf("caseFrom")
-      stPickling.add("fromCase", stCaseFrom)
-      val stCaseTo = stg.getInstanceOf("caseTo")
-      stPickling.add("toCase", stCaseTo)
       val typeName = name(cc.tipe)
-      stCaseFrom.add("name", typeName)
-      stCaseTo.add("name", typeName)
-      var i = 1
+
+      val stCaseFrom = stg.getInstanceOf("caseFrom").
+        add("name", typeName)
+      stMain.add("fromCase", stCaseFrom)
+
+      val stCaseTo = stg.getInstanceOf("caseTo").
+        add("name", typeName)
+      stMain.add("toCase", stCaseTo)
+
+      val stConsEntry = stg.getInstanceOf("constructorEntry").
+        add("name", typeName)
+      stMain.add("entry", stConsEntry)
+
+      var i = 0
       for (p <- cc.params) {
+        {
+          val (et, b) = entryType(p.name, p.tipe)
+          stConsEntry.add("et", et)
+          if (b) stConsEntry.add("ec", s"cast(${p.name})")
+          else stConsEntry.add("ec", p.name)
+        }
         {
           val (tipe, typeArgOpt) = fromType(p.tipe)
           val stArg = stg.getInstanceOf("caseFromArg").
@@ -82,18 +101,32 @@ object CaseClassHelperGen extends App {
         {
           val (tipe, typeArgOpt) = toType(p.tipe)
           val stArg = stg.getInstanceOf("caseToArg").
-            add("type", tipe).add("i", i)
+            add("type", tipe).add("i", i + 1)
           typeArgOpt.foreach(arg => stArg.add("arg", arg))
           stCaseTo.add("arg", stArg)
         }
         i += 1
       }
     }
-    stPickling
+    stMain
   }
 
   private def name(t: Type) =
     t.typeSymbol.asClass.name.decodedName.toString
+
+  private def entryType(n: String, t: Type) =
+    t match {
+      case _ if t <:< anyValType =>
+        (s"$n: ${anyValBoxMap(name(t))}", false)
+      case _ if t =:= stringType =>
+        (s"$n: String", false)
+      case _ if t.dealias.erasure =:= optionType =>
+        (s"$n: Option[_]", true)
+      case _ if t.dealias.erasure =:= vectorType =>
+        (s"$n: IVector[_]", true)
+      case _ if t <:< caseClassType =>
+        (s"$n: ${name(t)}", false)
+    }
 
   private def fromType(t: Type): (String, Option[String]) =
     t match {
@@ -112,7 +145,7 @@ object CaseClassHelperGen extends App {
   private def toType(t: Type): (String, Option[String]) =
     t match {
       case _ if t <:< anyValType =>
-        ("to" + t.typeSymbol.name.decodedName, None)
+        ("to" + name(t), None)
       case _ if t =:= stringType =>
         ("toStr", None)
       case _ if t.dealias.erasure =:= optionType =>

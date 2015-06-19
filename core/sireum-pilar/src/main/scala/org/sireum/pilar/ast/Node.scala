@@ -29,13 +29,10 @@ import org.sireum.util._
 
 object Node {
   type NodeSeq[T <: Node] = IVector[T]
-
-  final val json: Json = new Json
 }
 
 
 import org.sireum.pilar.ast.Node._
-import org.sireum.pilar.ast.Internal._
 
 
 sealed trait Node extends CaseClass
@@ -48,42 +45,22 @@ sealed trait Annotated {
 
 final case class
 Model(annotations: NodeSeq[Annotation],
-      elements: NodeSeq[ModelElement]) extends Node with Annotated {
-
-  override val fieldNames = modelFieldNames
-
-  override def make(children: AnyRef*) = model(children)
-}
+      elements: NodeSeq[ModelElement]) extends Node with Annotated
 
 
 final case class
 Annotation(id: Id,
-           raw: Raw) extends Node {
-
-  override val fieldNames = annotationFieldNames
-
-  override def make(children: AnyRef*) = annotation(children)
-}
+           raw: Raw) extends Node
 
 
 final case class
 Id(value: String,
-   simple: Boolean = true) extends Node {
-
-  override val fieldNames = idFieldNames
-
-  override def make(children: AnyRef*) = id(children)
-}
+   simple: Boolean = true) extends Node
 
 
 final case class
 Raw(value: String,
-    simple: Boolean = true) extends Node {
-
-  override val fieldNames = rawFieldNames
-
-  override def make(children: AnyRef*) = raw(children)
-}
+    simple: Boolean = true) extends Node
 
 
 sealed trait ModelElement extends Node with Annotated
@@ -91,54 +68,29 @@ sealed trait ModelElement extends Node with Annotated
 
 final case class
 GlobalVarDecl(id: Id,
-              annotations: NodeSeq[Annotation]) extends ModelElement {
-
-  override val fieldNames = globalVarDeclFieldNames
-
-  override def make(children: AnyRef*) = globalVarDecl(children)
-}
+              annotations: NodeSeq[Annotation]) extends ModelElement
 
 
 final case class
 ProcedureDecl(id: Id,
               params: NodeSeq[ParamDecl],
               annotations: NodeSeq[Annotation],
-              bodyOpt: Option[ProcedureBody]) extends ModelElement {
-
-  override val fieldNames = procedureDeclFieldNames
-
-  override def make(children: AnyRef*) = procedureDecl(children)
-}
+              bodyOpt: Option[ProcedureBody]) extends ModelElement
 
 
 final case class
 ParamDecl(id: Id,
-          annotations: NodeSeq[Annotation]) extends Node with Annotated {
-
-  override val fieldNames = paramDeclFieldNames
-
-  override def make(children: AnyRef*) = paramDecl(children)
-}
+          annotations: NodeSeq[Annotation]) extends Node with Annotated
 
 
 final case class
 ProcedureBody(locals: NodeSeq[LocalVarDecl],
-              locations: NodeSeq[Location]) extends Node {
-
-  override val fieldNames = procedureBodyFieldNames
-
-  override def make(children: AnyRef*) = procedureBody(children)
-}
+              locations: NodeSeq[Location]) extends Node
 
 
 final case class
 LocalVarDecl(id: Id,
-             annotations: NodeSeq[Annotation]) extends Node with Annotated {
-
-  override val fieldNames = localVarDeclFieldNames
-
-  override def make(children: AnyRef*) = localVarDecl(children)
-}
+             annotations: NodeSeq[Annotation]) extends Node with Annotated
 
 
 sealed trait Location extends Node with Annotated
@@ -150,12 +102,8 @@ CallLocation(label: Id,
              id: Id,
              args: NodeSeq[Exp],
              target: Id,
-             annotations: NodeSeq[Annotation]) extends Location {
+             annotations: NodeSeq[Annotation]) extends Location
 
-  override val fieldNames = callLocationFieldNames
-
-  override def make(children: AnyRef*) = callLocation(children)
-}
 
 final case class
 BlockLocation(label: Id,
@@ -170,10 +118,6 @@ BlockLocation(label: Id,
     }
     jump.commandIndex = i
   }
-
-  override val fieldNames = blockLocationFieldNames
-
-  override def make(children: AnyRef*) = blockLocation(children)
 }
 
 
@@ -194,43 +138,23 @@ sealed trait Action extends Command
 final case class
 AssignAction(lhs: Exp,
              rhs: Exp,
-             annotations: NodeSeq[Annotation]) extends Action {
-
-  override val fieldNames = assignActionFieldNames
-
-  override def make(children: AnyRef*) = assignAction(children)
-}
+             annotations: NodeSeq[Annotation]) extends Action
 
 
 final case class
 AssertAction(exp: Exp,
-             annotations: NodeSeq[Annotation]) extends Action {
-
-  override val fieldNames = assertActionFieldNames
-
-  override def make(children: AnyRef*) = assertAction(children)
-}
+             annotations: NodeSeq[Annotation]) extends Action
 
 
 final case class
 AssumeAction(exp: Exp,
-             annotations: NodeSeq[Annotation]) extends Action {
-
-  override val fieldNames = assumeActionFieldNames
-
-  override def make(children: AnyRef*) = assumeAction(children)
-}
+             annotations: NodeSeq[Annotation]) extends Action
 
 
 final case class
 ExtAction(id: Id,
           args: NodeSeq[Exp],
-          annotations: NodeSeq[Annotation]) extends Action {
-
-  override val fieldNames = extActionFieldNames
-
-  override def make(children: AnyRef*) = extAction(children)
-}
+          annotations: NodeSeq[Annotation]) extends Action
 
 
 sealed trait Jump extends Command
@@ -238,66 +162,36 @@ sealed trait Jump extends Command
 
 final case class
 GotoJump(target: Id,
-         annotations: NodeSeq[Annotation]) extends Jump {
-
-  override val fieldNames = gotoJumpFieldNames
-
-  override def make(children: AnyRef*) = gotoJump(children)
-}
+         annotations: NodeSeq[Annotation]) extends Jump
 
 
 final case class
 IfJump(exp: Exp,
        tTarget: Id,
        fTarget: Id,
-       annotations: NodeSeq[Annotation]) extends Jump {
-
-  override val fieldNames = ifJumpFieldNames
-
-  override def make(children: AnyRef*) = ifJump(children)
-}
+       annotations: NodeSeq[Annotation]) extends Jump
 
 
 final case class
 ReturnJump(expOpt: Option[Exp],
-           annotations: NodeSeq[Annotation]) extends Jump {
-
-  override val fieldNames = returnJumpFieldNames
-
-  override def make(children: AnyRef*) = returnJump(children)
-}
+           annotations: NodeSeq[Annotation]) extends Jump
 
 
 final case class
 SwitchJump(exp: Exp,
            cases: NodeSeq[SwitchCase],
-           annotations: NodeSeq[Annotation]) extends Jump {
-
-  override val fieldNames = switchJumpFieldNames
-
-  override def make(children: AnyRef*) = switchJump(children)
-}
+           annotations: NodeSeq[Annotation]) extends Jump
 
 
 final case class
 SwitchCase(expOpt: Option[LiteralExp],
-           target: Id) extends Node {
-
-  override val fieldNames = switchCaseFieldNames
-
-  override def make(children: AnyRef*) = switchCase(children)
-}
+           target: Id) extends Node
 
 
 final case class
 ExtJump(id: Id,
         args: NodeSeq[Exp],
-        annotations: NodeSeq[Annotation]) extends Jump {
-
-  override val fieldNames = extJumpFieldNames
-
-  override def make(children: AnyRef*) = extJump(children)
-}
+        annotations: NodeSeq[Annotation]) extends Jump
 
 
 sealed trait Exp extends Node
@@ -305,49 +199,24 @@ sealed trait Exp extends Node
 
 final case class
 LiteralExp(id: Id,
-           raw: Raw) extends Exp {
-
-  override val fieldNames = literalExpFieldNames
-
-  override def make(children: AnyRef*) = literalExp(children)
-}
+           raw: Raw) extends Exp
 
 
 final case class
-IdExp(id: Id) extends Exp {
-
-  override val fieldNames = idExpFieldNames
-
-  override def make(children: AnyRef*) = idExp(children)
-}
+IdExp(id: Id) extends Exp
 
 
 final case class
 TupleExp(exps: NodeSeq[Exp],
-         annotations: NodeSeq[Annotation]) extends Exp with Annotated {
-
-  override val fieldNames = tupleExpFieldNames
-
-  override def make(children: AnyRef*) = tupleExp(children)
-}
+         annotations: NodeSeq[Annotation]) extends Exp with Annotated
 
 
 final case class
 BinaryExp(left: Exp,
           op: Id,
-          right: Exp) extends Exp {
-
-  override val fieldNames = binaryExpFieldNames
-
-  override def make(children: AnyRef*) = binaryExp(children)
-}
+          right: Exp) extends Exp
 
 
 final case class
 CallExp(exp: Exp,
-        args: NodeSeq[Exp]) extends Exp {
-
-  override val fieldNames = callExpFieldNames
-
-  override def make(children: AnyRef*) = callExp(children)
-}
+        args: NodeSeq[Exp]) extends Exp
