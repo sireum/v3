@@ -113,7 +113,8 @@ object SireumBuild extends Build {
 
   val sireumJsTestSettings = sireumJsSettings ++ Seq(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % "0.3.1"
+      "com.lihaoyi" %%% "utest" % "0.3.1",
+      "org.scala-lang" % "scala-reflect" % scalaVer
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
