@@ -28,68 +28,82 @@ package org.sireum.pilar.parser
 import org.junit.Test
 import org.sireum.pilar.ast._
 
-class FastParserTest {
-  final val threeQuotes = "\"\"\""
+final class FastParserTest {
+  private val threeQuotes = "\"\"\""
+  private val sixQuotes = "\"\"\"\"\"\""
+
+  private val noRecover = { () => }
 
   @Test
   def parseLIT1(): Unit = {
-    assert(new FastParser("'abc")().parseLIT() contains Raw("abc"))
+    assert(parseLIT("'abc") contains Raw("abc"))
   }
 
   @Test
   def parseLIT2(): Unit = {
-    assert(new FastParser(s"${threeQuotes}abc$threeQuotes${threeQuotes}abc$threeQuotes")().
-      parseLIT() contains
-      Raw("abc\"\"\"abc"))
+    assert(parseLIT(
+      s"${threeQuotes}abc${sixQuotes}abc$threeQuotes") contains
+      Raw(s"abc${sixQuotes}abc"))
   }
 
   @Test
   def parseID1(): Unit = {
-    assert(new FastParser("abc")().parseID() contains Id("abc"))
+    assert(parseID("abc") contains Id("abc"))
   }
 
   @Test
   def parseID2(): Unit = {
-    assert(new FastParser("abc2")().parseID() contains Id("abc2"))
+    assert(parseID("abc2") contains Id("abc2"))
   }
 
   @Test
   def parseID3(): Unit = {
-
-    assert(new FastParser("abc3:")().parseID() contains Id("abc3"))
+    assert(parseID("abc3:") contains Id("abc3"))
   }
 
   @Test
   def parseID4(): Unit = {
-
-    assert(new FastParser(".+")().parseID() contains Id("+", simple = false))
+    assert(parseID(".+") contains Id("+", simple = false))
   }
 
   @Test
   def parseID5(): Unit = {
-    assert(new FastParser( """`a"sdsbc2`""")().parseID() contains
+    assert(parseID( """`a"sdsbc2`""") contains
       Id( """a"sdsbc2""", simple = false))
   }
 
   @Test
   def parseID6(): Unit = {
-    assert(new FastParser( """!s""", reporter(0))().parseID().isEmpty)
+    assert(parseID( """!s""", reporter(0)).isEmpty)
   }
 
   @Test
   def parseID7(): Unit = {
-    assert(new FastParser( """s!s""", reporter(1))().parseID().isEmpty)
+    assert(parseID( """s!s""") contains Id("s"))
   }
 
   @Test
   def parseAnnotation1(): Unit = {
-    assert(new FastParser( """@z'111""", reporter(1))().parseAnnotation() contains
+    assert(parseAnnotation( """@z'111""") contains
       Annotation(Id("z"), Raw("111")))
   }
 
-  def reporter(_offset: Int) =
+  private def parseLIT(s: String) =
+    new FastParser(s)().parseLIT(noRecover)
+
+  private def parseID(s: String, reporter: FastParser.Reporter) =
+    new FastParser(s, reporter)().parseID(noRecover)
+
+  private def parseID(s: String) =
+    new FastParser(s)().parseID(noRecover)
+
+  private def parseAnnotation(s: String) =
+    new FastParser(s)().parseAnnotation(noRecover)
+
+  private def reporter(_offset: Int) =
     new FastParser.Reporter {
-      override def error(line: Int, column: Int, offset: Int, message: String): Unit = {
+      override def error(line: Int, column: Int,
+                         offset: Int, message: String): Unit = {
         assert(offset == _offset)
       }
     }

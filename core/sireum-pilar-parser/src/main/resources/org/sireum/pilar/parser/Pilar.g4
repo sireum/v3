@@ -86,13 +86,14 @@ jump
   | 'return' exp? annotation* ';'     #ReturnJump
   | 'switch' exp
     switchCase*
-    b='|' '_' ':' ID
+    b='case' u=ID /* must be _ */ ':'
+    t=ID
     annotation* ';'                   #SwitchJump
   | 'jxt' ID arg annotation* ';'      #ExtJump
   ;
 
 switchCase
-  : '|' lit ':' ID
+  : 'case' lit ':' ID
   ;
 
 exp
@@ -122,15 +123,21 @@ annotation
   : '@' lit
   ;
 
-ID
-  : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | '.' ~[ \r\n\t\u000C]+
-  | '`' ~[\r\n\t\u000C`]+ '`'
+LIT
+  : '\'' ~[ \r\n\t\u000C;(,){}'"#:@`]+
+  | '"""'
+    ( ~["]
+    | '"' .
+    | '"' '"' .
+    | '"' '"' '"' .
+    )* '"""' '"'*
   ;
 
-LIT
-  : '\'' ~[ \r\n\t\u000C]+
-  | ( '"""' .*? '"""' )+
+
+ID
+  : [a-zA-Z$_] [a-zA-Z0-9$_]*
+  | '.' ~[ \r\n\t\u000C;(,){}'"#:@`]+
+  | '`' ~[\r\n\t\u000C`]+ '`'
   ;
 
 WS

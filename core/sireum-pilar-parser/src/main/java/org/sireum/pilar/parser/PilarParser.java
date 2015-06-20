@@ -20,7 +20,7 @@ public class PilarParser extends Parser {
             T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, T__7 = 8, T__8 = 9,
             T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, T__14 = 15, T__15 = 16, T__16 = 17,
             T__17 = 18, T__18 = 19, T__19 = 20, T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24,
-            T__24 = 25, ID = 26, LIT = 27, WS = 28, ERROR_CHAR = 29;
+            LIT = 25, ID = 26, WS = 27, ERROR_CHAR = 28;
     public static final int
             RULE_model = 0, RULE_modelElement = 1, RULE_globalVarDecl = 2, RULE_procDecl = 3,
             RULE_param = 4, RULE_procBody = 5, RULE_localVarDecl = 6, RULE_location = 7,
@@ -36,12 +36,12 @@ public class PilarParser extends Parser {
 	private static final String[] _LITERAL_NAMES = {
             null, "'var'", "';'", "'def'", "'('", "','", "')'", "'{'", "'}'", "'#'",
             "':'", "'call'", "':='", "'goto'", "'assert'", "'assume'", "'axt'", "'if'",
-            "'then'", "'else'", "'return'", "'switch'", "'|'", "'_'", "'jxt'", "'@'"
+            "'then'", "'else'", "'return'", "'switch'", "'case'", "'jxt'", "'@'"
     };
     private static final String[] _SYMBOLIC_NAMES = {
             null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, "ID", "LIT", "WS", "ERROR_CHAR"
+            null, "LIT", "ID", "WS", "ERROR_CHAR"
     };
     public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -121,7 +121,7 @@ public class PilarParser extends Parser {
                 setState(39);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(36);
@@ -151,9 +151,8 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
+        } finally {
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -237,8 +236,8 @@ public class PilarParser extends Parser {
                     throw new NoViableAltException(this);
             }
         } catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
+            _localctx.exception = re;
+            _errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
 		}
 		finally {
@@ -282,7 +281,7 @@ public class PilarParser extends Parser {
                 setState(60);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(57);
@@ -304,7 +303,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ProcDeclContext extends ParserRuleContext {
         public TerminalNode ID() {
@@ -324,8 +323,8 @@ public class PilarParser extends Parser {
         }
 
         public List<AnnotationContext> annotation() {
-			return getRuleContexts(AnnotationContext.class);
-		}
+            return getRuleContexts(AnnotationContext.class);
+        }
 		public AnnotationContext annotation(int i) {
 			return getRuleContext(AnnotationContext.class,i);
 		}
@@ -371,7 +370,7 @@ public class PilarParser extends Parser {
                 setState(80);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(77);
@@ -402,9 +401,8 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
+        } finally {
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -444,7 +442,7 @@ public class PilarParser extends Parser {
                 setState(91);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(88);
@@ -464,7 +462,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ProcBodyContext extends ParserRuleContext {
 		public List<LocationContext> location() {
@@ -486,8 +484,11 @@ public class PilarParser extends Parser {
             super(parent, invokingState);
         }
 
-        @Override public int getRuleIndex() { return RULE_procBody; }
-	}
+        @Override
+        public int getRuleIndex() {
+            return RULE_procBody;
+        }
+    }
 
 	public final ProcBodyContext procBody() throws RecognitionException {
 		ProcBodyContext _localctx = new ProcBodyContext(_ctx, getState());
@@ -543,8 +544,8 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
@@ -583,7 +584,7 @@ public class PilarParser extends Parser {
                 setState(114);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(111);
@@ -605,7 +606,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class LocationContext extends ParserRuleContext {
         public TerminalNode ID() {
@@ -628,8 +629,11 @@ public class PilarParser extends Parser {
             super(parent, invokingState);
         }
 
-        @Override public int getRuleIndex() { return RULE_location; }
-	}
+        @Override
+        public int getRuleIndex() {
+            return RULE_location;
+        }
+    }
 
 	public final LocationContext location() throws RecognitionException {
 		LocationContext _localctx = new LocationContext(_ctx, getState());
@@ -647,7 +651,7 @@ public class PilarParser extends Parser {
                 setState(125);
                 _errHandler.sync(this);
                 _la = _input.LA(1);
-                while (_la == T__24) {
+                while (_la == T__23) {
                     {
                         {
                             setState(122);
@@ -666,8 +670,8 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
@@ -775,7 +779,7 @@ public class PilarParser extends Parser {
                 case T__16:
                 case T__19:
                 case T__20:
-                case T__23:
+                case T__22:
                 case ID:
                     _localctx = new BlockContext(_localctx);
                     enterOuterAlt(_localctx, 2);
@@ -803,8 +807,8 @@ public class PilarParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
 		}
 		finally {
 			exitRule();
@@ -934,7 +938,7 @@ public class PilarParser extends Parser {
                     setState(157);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(154);
@@ -960,7 +964,7 @@ public class PilarParser extends Parser {
                     setState(167);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(164);
@@ -986,7 +990,7 @@ public class PilarParser extends Parser {
                     setState(177);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(174);
@@ -1014,7 +1018,7 @@ public class PilarParser extends Parser {
                     setState(188);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(185);
@@ -1035,8 +1039,8 @@ public class PilarParser extends Parser {
         } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
+            _errHandler.recover(this, re);
+        }
 		finally {
 			exitRule();
 		}
@@ -1085,13 +1089,19 @@ public class PilarParser extends Parser {
 
     public static class SwitchJumpContext extends JumpContext {
         public Token b;
+        public Token u;
+        public Token t;
 
         public ExpContext exp() {
             return getRuleContext(ExpContext.class, 0);
         }
 
-        public TerminalNode ID() {
-            return getToken(PilarParser.ID, 0);
+        public List<TerminalNode> ID() {
+            return getTokens(PilarParser.ID);
+        }
+
+        public TerminalNode ID(int i) {
+            return getToken(PilarParser.ID, i);
         }
 
         public List<SwitchCaseContext> switchCase() {
@@ -1199,7 +1209,7 @@ public class PilarParser extends Parser {
                     setState(200);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(197);
@@ -1233,7 +1243,7 @@ public class PilarParser extends Parser {
                     setState(213);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(210);
@@ -1266,7 +1276,7 @@ public class PilarParser extends Parser {
                     setState(225);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(222);
@@ -1308,15 +1318,15 @@ public class PilarParser extends Parser {
                     setState(237);
                     ((SwitchJumpContext) _localctx).b = match(T__21);
                     setState(238);
-                    match(T__22);
+                    ((SwitchJumpContext) _localctx).u = match(ID);
                     setState(239);
                     match(T__9);
                     setState(240);
-                    match(ID);
+                    ((SwitchJumpContext) _localctx).t = match(ID);
                     setState(244);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(241);
@@ -1331,12 +1341,12 @@ public class PilarParser extends Parser {
                     match(T__1);
                 }
                 break;
-                case T__23:
+                case T__22:
                     _localctx = new ExtJumpContext(_localctx);
                     enterOuterAlt(_localctx, 5);
                 {
                     setState(249);
-                    match(T__23);
+                    match(T__22);
                     setState(250);
                     match(ID);
                     setState(251);
@@ -1344,7 +1354,7 @@ public class PilarParser extends Parser {
                     setState(255);
                     _errHandler.sync(this);
                     _la = _input.LA(1);
-                    while (_la == T__24) {
+                    while (_la == T__23) {
                         {
                             {
                                 setState(252);
@@ -1365,8 +1375,8 @@ public class PilarParser extends Parser {
         } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
+            _errHandler.recover(this, re);
+        }
 		finally {
 			exitRule();
 		}
@@ -1412,8 +1422,8 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
@@ -1455,7 +1465,7 @@ public class PilarParser extends Parser {
         try {
             int _alt;
             enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(267);
                 prim();
                 setState(271);
@@ -1672,9 +1682,8 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
+        } finally {
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -1698,7 +1707,7 @@ public class PilarParser extends Parser {
         int _la;
         try {
             enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(303);
                 match(T__3);
                 setState(312);
@@ -1734,8 +1743,8 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
@@ -1764,8 +1773,8 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
@@ -1786,7 +1795,7 @@ public class PilarParser extends Parser {
             enterOuterAlt(_localctx, 1);
             {
                 setState(319);
-                match(T__24);
+                match(T__23);
                 setState(320);
                 lit();
             }
@@ -1795,13 +1804,13 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
-		}
+            exitRule();
+        }
 		return _localctx;
 	}
 
 	public static final String _serializedATN =
-            "\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\37\u0145\4\2\t\2" +
+            "\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\36\u0145\4\2\t\2" +
                     "\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13" +
                     "\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22" +
                     "\4\23\t\23\3\2\7\2(\n\2\f\2\16\2+\13\2\3\2\6\2.\n\2\r\2\16\2/\3\3\3\3" +
@@ -1883,11 +1892,11 @@ public class PilarParser extends Parser {
                     "\2\2\u00e5\u00e3\3\2\2\2\u00e6\u0107\7\4\2\2\u00e7\u00e8\7\27\2\2\u00e8" +
                     "\u00ec\5\32\16\2\u00e9\u00eb\5\30\r\2\u00ea\u00e9\3\2\2\2\u00eb\u00ee" +
                     "\3\2\2\2\u00ec\u00ea\3\2\2\2\u00ec\u00ed\3\2\2\2\u00ed\u00ef\3\2\2\2\u00ee" +
-                    "\u00ec\3\2\2\2\u00ef\u00f0\7\30\2\2\u00f0\u00f1\7\31\2\2\u00f1\u00f2\7" +
+                    "\u00ec\3\2\2\2\u00ef\u00f0\7\30\2\2\u00f0\u00f1\7\34\2\2\u00f1\u00f2\7" +
                     "\f\2\2\u00f2\u00f6\7\34\2\2\u00f3\u00f5\5$\23\2\u00f4\u00f3\3\2\2\2\u00f5" +
                     "\u00f8\3\2\2\2\u00f6\u00f4\3\2\2\2\u00f6\u00f7\3\2\2\2\u00f7\u00f9\3\2" +
                     "\2\2\u00f8\u00f6\3\2\2\2\u00f9\u00fa\7\4\2\2\u00fa\u0107\3\2\2\2\u00fb" +
-                    "\u00fc\7\32\2\2\u00fc\u00fd\7\34\2\2\u00fd\u0101\5 \21\2\u00fe\u0100\5" +
+                    "\u00fc\7\31\2\2\u00fc\u00fd\7\34\2\2\u00fd\u0101\5 \21\2\u00fe\u0100\5" +
                     "$\23\2\u00ff\u00fe\3\2\2\2\u0100\u0103\3\2\2\2\u0101\u00ff\3\2\2\2\u0101" +
                     "\u0102\3\2\2\2\u0102\u0104\3\2\2\2\u0103\u0101\3\2\2\2\u0104\u0105\7\4" +
                     "\2\2\u0105\u0107\3\2\2\2\u0106\u00c5\3\2\2\2\u0106\u00ce\3\2\2\2\u0106" +
@@ -1910,7 +1919,7 @@ public class PilarParser extends Parser {
                     "\u0139\3\2\2\2\u0137\u0135\3\2\2\2\u0137\u0138\3\2\2\2\u0138\u013b\3\2" +
                     "\2\2\u0139\u0137\3\2\2\2\u013a\u0132\3\2\2\2\u013a\u013b\3\2\2\2\u013b" +
                     "\u013c\3\2\2\2\u013c\u013d\7\b\2\2\u013d!\3\2\2\2\u013e\u013f\7\34\2\2" +
-                    "\u013f\u0140\7\35\2\2\u0140#\3\2\2\2\u0141\u0142\7\33\2\2\u0142\u0143" +
+                    "\u013f\u0140\7\33\2\2\u0140#\3\2\2\2\u0141\u0142\7\32\2\2\u0142\u0143" +
                     "\5\"\22\2\u0143%\3\2\2\2\')/\658>KRW]eglt\177\u0088\u0093\u0097\u009f" +
                     "\u00a9\u00b3\u00be\u00c3\u00ca\u00d7\u00de\u00e3\u00ec\u00f6\u0101\u0106" +
                     "\u0111\u0117\u0125\u012c\u012f\u0137\u013a";

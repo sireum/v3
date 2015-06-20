@@ -32,7 +32,12 @@ import org.sireum.util._
 
 object Builder {
 
-  final def build(ctx: ModelContext): Model =
+  trait Reporter {
+    def error(line: Int, column: Int, offset: Int, message: String): Unit
+  }
+
+  final def build(ctx: ModelContext)(
+    implicit reporter: Reporter): Model =
     Model(
       ctx.annotation().map(build),
       ctx.modelElement().flatMap(build)
@@ -57,13 +62,11 @@ object Builder {
   final def buildLIT(n: Token): Raw = {
     val text = n.getText
     (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
-    else Raw(
-      text.substring(3, text.length - 3).
-        replaceAll("\"\"\"\"\"\"", "\"\"\""),
-      simple = true)) at n
+    else Raw(text.substring(3, text.length - 3), simple = true)) at n
   }
 
-  final def build(ctx: ModelElementContext): Node.Seq[ModelElement] =
+  final def build(ctx: ModelElementContext)(
+    implicit reporter: Reporter): Node.Seq[ModelElement] =
     ctx match {
       case ctx: GlobalVarContext => ctx.globalVarDecl().map(build)
       case ctx: ProcedureContext => Node.seq(build(ctx.procDecl()))
@@ -72,7 +75,8 @@ object Builder {
   final def build(ctx: GlobalVarDeclContext): GlobalVarDecl =
     GlobalVarDecl(buildID(ctx.ID()), ctx.annotation().map(build)) at ctx
 
-  final def build(ctx: ProcDeclContext): ProcedureDecl =
+  final def build(ctx: ProcDeclContext)(
+    implicit reporter: Reporter): ProcedureDecl =
     ProcedureDecl(
       buildID(ctx.ID()),
       ctx.param().map(build),
@@ -86,7 +90,8 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ProcBodyContext): ProcedureBody =
+  final def build(ctx: ProcBodyContext)(
+    implicit reporter: Reporter): ProcedureBody =
     ProcedureBody(
       Option(ctx.localVarDecl).
         map(_.map(build)).getOrElse(Node.emptySeq),
@@ -99,7 +104,8 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: LocationContext): Location =
+  final def build(ctx: LocationContext)(
+    implicit reporter: Reporter): Location =
     ctx.transformation() match {
       case ctxT: CallContext =>
         CallLocation(
@@ -155,7 +161,8 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: JumpContext): Jump =
+  final def build(ctx: JumpContext)(
+    implicit reporter: Reporter): Jump =
     ctx match {
       case ctx: GotoJumpContext => build(ctx)
       case ctx: IfJumpContext => build(ctx)
@@ -184,7 +191,8 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: SwitchJumpContext): SwitchJump =
+  final def build(ctx: SwitchJumpContext)(
+    implicit reporter: Reporter): SwitchJump =
     SwitchJump(
       build(ctx.exp()),
       ctx.switchCase().map { ctxSC =>
@@ -194,8 +202,15 @@ object Builder {
           Some(lit),
           buildID(ctxSC.ID())
         ) at ctxSC
-      } :+
-        (SwitchCase(None, buildID(ctx.ID())) at(ctx.b, ctx.ID())),
+      } :+ {
+        val u = buildID(ctx.u)
+        if (u.value != "_") {
+          val locInfo = u.locationInfoOpt.get
+          reporter.error(locInfo.lineBegin, locInfo.columnBegin, locInfo.offset,
+            s"Expecting: '_', but found: '${u.value}'")
+        }
+        SwitchCase(None, buildID(ctx.t)) at(ctx.b, ctx.t)
+      },
       ctx.annotation().map(build)
     ) at ctx
 
