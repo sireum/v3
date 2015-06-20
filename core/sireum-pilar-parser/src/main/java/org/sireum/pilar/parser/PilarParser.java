@@ -150,7 +150,7 @@ public class PilarParser extends Parser {
         } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
+            _errHandler.recover(this, re);
 		}
 		finally {
 			exitRule();
@@ -236,8 +236,7 @@ public class PilarParser extends Parser {
                 default:
                     throw new NoViableAltException(this);
             }
-        }
-		catch (RecognitionException re) {
+        } catch (RecognitionException re) {
 			_localctx.exception = re;
 			_errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
@@ -303,8 +302,8 @@ public class PilarParser extends Parser {
             _errHandler.recover(this, re);
         } finally {
             exitRule();
-		}
-		return _localctx;
+        }
+        return _localctx;
 	}
 
 	public static class ProcDeclContext extends ParserRuleContext {
@@ -321,9 +320,10 @@ public class PilarParser extends Parser {
         }
 
         public ProcBodyContext procBody() {
-            return getRuleContext(ProcBodyContext.class,0);
-		}
-		public List<AnnotationContext> annotation() {
+            return getRuleContext(ProcBodyContext.class, 0);
+        }
+
+        public List<AnnotationContext> annotation() {
 			return getRuleContexts(AnnotationContext.class);
 		}
 		public AnnotationContext annotation(int i) {
@@ -401,7 +401,7 @@ public class PilarParser extends Parser {
         } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
+            _errHandler.recover(this, re);
 		}
 		finally {
 			exitRule();
@@ -462,8 +462,8 @@ public class PilarParser extends Parser {
             _errHandler.recover(this, re);
         } finally {
             exitRule();
-		}
-		return _localctx;
+        }
+        return _localctx;
 	}
 
 	public static class ProcBodyContext extends ParserRuleContext {
@@ -484,8 +484,9 @@ public class PilarParser extends Parser {
 
         public ProcBodyContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_procBody; }
+        }
+
+        @Override public int getRuleIndex() { return RULE_procBody; }
 	}
 
 	public final ProcBodyContext procBody() throws RecognitionException {
@@ -541,8 +542,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -603,8 +603,8 @@ public class PilarParser extends Parser {
             _errHandler.recover(this, re);
         } finally {
             exitRule();
-		}
-		return _localctx;
+        }
+        return _localctx;
 	}
 
 	public static class LocationContext extends ParserRuleContext {
@@ -626,8 +626,9 @@ public class PilarParser extends Parser {
 
         public LocationContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_location; }
+        }
+
+        @Override public int getRuleIndex() { return RULE_location; }
 	}
 
 	public final LocationContext location() throws RecognitionException {
@@ -664,8 +665,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -802,7 +802,7 @@ public class PilarParser extends Parser {
                     throw new NoViableAltException(this);
             }
         } catch (RecognitionException re) {
-			_localctx.exception = re;
+            _localctx.exception = re;
 			_errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
 		}
@@ -1034,7 +1034,7 @@ public class PilarParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-			_errHandler.reportError(this, re);
+            _errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
 		}
 		finally {
@@ -1364,7 +1364,7 @@ public class PilarParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-			_errHandler.reportError(this, re);
+            _errHandler.reportError(this, re);
 			_errHandler.recover(this, re);
 		}
 		finally {
@@ -1411,8 +1411,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -1428,8 +1427,8 @@ public class PilarParser extends Parser {
         }
 
         public ArgContext arg(int i) {
-            return getRuleContext(ArgContext.class,i);
-		}
+            return getRuleContext(ArgContext.class, i);
+        }
 
         public List<ExpSuffixContext> expSuffix() {
             return getRuleContexts(ExpSuffixContext.class);
@@ -1455,7 +1454,7 @@ public class PilarParser extends Parser {
         int _la;
         try {
             int _alt;
-			enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
 			{
                 setState(267);
                 prim();
@@ -1538,7 +1537,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class PrimContext extends ParserRuleContext {
         public PrimContext(ParserRuleContext parent, int invokingState) {
@@ -1672,7 +1671,7 @@ public class PilarParser extends Parser {
         } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
+            _errHandler.recover(this, re);
 		}
 		finally {
 			exitRule();
@@ -1698,7 +1697,7 @@ public class PilarParser extends Parser {
         enterRule(_localctx, 30, RULE_arg);
         int _la;
         try {
-			enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
 			{
                 setState(303);
                 match(T__3);
@@ -1734,8 +1733,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -1755,7 +1753,7 @@ public class PilarParser extends Parser {
         enterRule(_localctx, 32, RULE_lit);
         try {
             enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(316);
                 match(ID);
                 setState(317);
@@ -1765,8 +1763,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -1797,8 +1794,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-        }
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;

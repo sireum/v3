@@ -124,7 +124,8 @@ annotation
 
 ID
   : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | '`' ~[\r\n\t\u000C]+ '`'
+  | '.' ~[ \r\n\t\u000C]+
+  | '`' ~[\r\n\t\u000C`]+ '`'
   ;
 
 LIT
@@ -133,7 +134,7 @@ LIT
   ;
 
 WS
-  : [ \t\r\n\u000C]+ -> skip
+  : [ \r\n\t\u000C]+ -> skip
   ;
 
 ERROR_CHAR

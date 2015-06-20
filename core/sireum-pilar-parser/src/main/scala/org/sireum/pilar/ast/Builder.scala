@@ -48,7 +48,7 @@ object Builder {
 
   final def buildID(n: Token): Id = {
     val text = n.getText
-    (if (text.charAt(0) == '\'')
+    (if (text.charAt(0) == '\'' || text.charAt(0) == '.')
       Id(text.substring(1, text.length), simple = false)
     else
       Id(text, simple = true)) at n
