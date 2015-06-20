@@ -26,9 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.parser
 
 import org.sireum.pilar.ast._
-import org.sireum.util._
-
-import FastParser._
+import org.sireum.pilar.parser.FastParser._
 
 final class FastParser(input: String,
                        reporter: Reporter = ConsoleReporter)(
@@ -37,96 +35,230 @@ final class FastParser(input: String,
                         private var line: Int = 1,
                         private var column: Int = 1) {
   val min = offset
-  val threeQuotes = "\"\"\""
-  val fourQuotes = "\"\"\"\""
 
-  def parseExp(): Option[Exp] = ???
-
-  def parsePrimaryExp(recover: () => Unit): Option[Exp] = {
+  def parseExp(recover: () => Unit): Option[Exp] = {
     implicit val begin = (line, column, offset)
-    def parseTupleExp() = {
-      consume()
-      parseWhiteSpace()
-      val rOpt = parseExp().flatMap { e =>
-        parseWhiteSpace()
-        var ok = true
-        var es = ivector(e)
-        while (peek() == ',' && ok) {
-          consume()
-          parseWhiteSpace()
-          parseExp() match {
-            case Some(e2) => es = es :+ e2
-            case _ => ok = false
-          }
-          parseWhiteSpace()
-        }
-        ok = ok && matchChar(')') {
-          reporter.error(line, column, offset,
-            s"Expecting: ')', but found: '${input.charAt(offset)}'")
-        }
-        if (ok) {
-          val anns = parseAnnotations()
-          Some(TupleExp(es, anns) at(offset, line, column))
-        } else None
-      }
-      rOpt match {
-        case Some(_) =>
-          parseWhiteSpace()
-          rOpt
-        case _ =>
-          recover()
-          None
-      }
-    }
 
-    def parseIdOrLitExp() = {
-      parseID(recover).flatMap { id =>
-        parseWhiteSpace()
-        peek() match {
-          case '\'' | '\"' =>
-            parseLIT(recover).map(raw =>
-              LiteralExp(id, raw).at(offset, line, column))
-          case _ =>
-            val r = IdExp(id)
-            r.locationInfoOpt = id.locationInfoOpt
-            Some(r)
-        }
-      }
-    }
+    val rOpt = parsePrimaryArgs(recover)
 
-    val r =
-      if (peek() == '(') parseTupleExp()
-      else parseIdOrLitExp()
+    if (rOpt.isEmpty) return None
+    val r = rOpt.get
+
     parseWhiteSpace()
-    r
+
+    var ok = true
+    var (kind, (continue, i)) = peekID()
+    var suffix = Node.emptySeq[(Id, Exp)]
+    while (ok && continue) {
+      val id = parseID(kind, i, recover).get
+
+      parseWhiteSpace()
+
+      parsePrimaryArgs(recover) match {
+        case Some(e) => suffix = suffix :+ ((id, e))
+        case _ => ok = false
+      }
+
+      if (ok) {
+        parseWhiteSpace()
+
+        val p = peekID()
+        kind = p._1
+        continue = p._2._1
+        i = p._2._2
+      }
+    }
+    if (ok && suffix.nonEmpty) {
+      val (op, right) = suffix.head
+      Some(BinaryExp(r, op, right, suffix.tail).
+        at(line, column, offset))
+    } else Some(r)
   }
 
-  def parseAnnotations(): Node.Seq[Annotation] = ???
+  def parsePrimaryArgs(recover: () => Unit): Option[Exp] = {
+    implicit val begin = (line, column, offset)
 
+    var r =
+      parsePrimaryExp(recover) match {
+        case Some(prim) => prim
+        case None => return None
+      }
+
+    parseWhiteSpace()
+
+    var ok = true
+    while (peek() == '(' && ok) {
+      parseArg(recover) match {
+        case Some(es) =>
+          r = CallExp(r, es) at(line, column, offset)
+        case _ => ok = false
+      }
+      parseWhiteSpace()
+    }
+    Some(r)
+  }
+
+  def parseArg(recover: () => Unit): Option[Node.Seq[Exp]] = {
+    def rcv(): Unit = {
+      var i = findChar(',')
+      if (i >= 0) {
+        consume(i + 1)
+        return
+      }
+      i = findChar(')')
+      if (i >= 0) {
+        consume(i + 1)
+        return
+      }
+    }
+
+    implicit val begin = (line, column, offset)
+
+    var ok = matchChar('(') { s =>
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting: '(', but found $s")
+      recover()
+    }
+    if (!ok) return None
+
+    var es = Node.emptySeq[Exp]
+
+    parseWhiteSpace()
+
+    if (peek() == ')') {
+      consume()
+      return Some(es)
+    }
+
+    val eOpt = parseExp(recover)
+    if (eOpt.isEmpty) return None
+
+    parseWhiteSpace()
+
+    es = es :+ eOpt.get
+
+    while (peek() == ',' && ok) {
+      consume()
+      parseWhiteSpace()
+      parseExp(rcv) match {
+        case Some(e2) => es = es :+ e2
+        case _ => ok = false
+      }
+      parseWhiteSpace()
+    }
+    ok = ok && matchChar(')') { s =>
+      reporter.error(line, column, offset,
+        s"Expecting: ')', but found $s")
+      recover()
+    }
+    if (ok) Some(es) else None
+  }
+
+  def parsePrimaryExp(recover: () => Unit): Option[Exp] = {
+    @inline
+    def parseTupleExp(): Option[Exp] = {
+      def rcv(): Unit = {
+        var i = findChar(',')
+        if (i >= 0) {
+          consume(i + 1)
+          return
+        }
+        i = findChar(')')
+        if (i >= 0) {
+          consume(i + 1)
+          return
+        }
+      }
+
+      implicit val begin = (line, column, offset)
+
+      consume()
+
+      parseWhiteSpace()
+
+      val eOpt = parseExp(rcv)
+      if (eOpt.isEmpty) return None
+      val e = eOpt.get
+      var ok = true
+      var es = Node.seq(e)
+      while (peek() == ',' && ok) {
+        consume()
+        parseWhiteSpace()
+        parseExp(rcv) match {
+          case Some(e2) => es = es :+ e2
+          case _ => ok = false
+        }
+        parseWhiteSpace()
+      }
+      ok = ok && matchChar(')') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ')', but found $s")
+        recover()
+      }
+      if (ok) {
+        Some(TupleExp(es, parseAnnotations(recover)).
+          at(offset, line, column))
+      } else None
+    }
+
+    @inline
+    def parseIdOrLitExp(): Option[Exp] = {
+      implicit val begin = (line, column, offset)
+
+      val idOpt = parseID(recover)
+      if (idOpt.isEmpty) return None
+      val id = idOpt.get
+      peek() match {
+        case '\'' | '\"' =>
+          parseLIT(recover).map(raw =>
+            LiteralExp(id, raw).at(offset, line, column))
+        case _ =>
+          val r = IdExp(id)
+          r.locationInfoOpt = id.locationInfoOpt
+          Some(r)
+      }
+    }
+
+    if (peek() == '(') parseTupleExp()
+    else parseIdOrLitExp()
+  }
+
+  def parseAnnotations(recover: () => Unit): Node.Seq[Annotation] = {
+    def rcv(): Unit = {
+      val i = findChar('@')
+      if (i >= 0) consume(i + 1)
+      else recover()
+    }
+
+    var r = Node.emptySeq[Annotation]
+    while (peek() == '@') {
+      parseAnnotation(rcv).foreach(a => r = r :+ a)
+    }
+    r
+  }
 
   def parseAnnotation(recover: () => Unit): Option[Annotation] = {
     implicit val begin = (line, column, offset)
 
-    if (matchChar('@') {
+    if (!matchChar('@') { s =>
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting: '@', but found: '${input.charAt(begin._3)}'")
+        s"Expecting: '@', but found $s")
       recover()
-    }) {
-      for (
-        id <- parseID(recover);
-        raw <- {
-          parseWhiteSpace()
-          parseLIT(recover)
-        }) yield {
-        val r = Annotation(id, raw) at(offset, line, column)
+    }) return None
+
+    parseWhiteSpace()
+    for (
+      id <- parseID(recover);
+      raw <- {
         parseWhiteSpace()
-        r
-      }
-    } else None
+        parseLIT(recover)
+      }) yield {
+      Annotation(id, raw) at(offset, line, column)
+    }
   }
 
-  def parseID(recover: () => Unit): Option[Id] = {
-    val r = peek() match {
+  def parseID(recover: () => Unit): Option[Id] =
+    peek() match {
       case '`' =>
         val (ok, i) = peekComplexID()
         parseComplexID(ok, i, recover)
@@ -137,85 +269,9 @@ final class FastParser(input: String,
         val (ok, i) = peekSimpleID()
         parseSimpleID(ok, i, recover)
     }
-    parseWhiteSpace()
-    r
-  }
 
-  @inline
-  def parseComplexID(ok: Boolean, i: Int, recover: () => Unit) = {
-    implicit val begin = (line, column, offset)
-    val r =
-      if (ok) {
-        for (j <- 0 until i) consume()
-        Some(Id(input.substring(begin._3 + 1, offset - 1), Id.Complex).
-          at(offset, line, column))
-      } else {
-        reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
-        recover()
-        None
-      }
-    parseWhiteSpace()
-    r
-  }
-
-  @inline
-  def parseDotID(ok: Boolean, i: Int, recover: () => Unit) = {
-    implicit val begin = (line, column, offset)
-    val r =
-      if (ok) {
-        for (j <- 0 until i) consume()
-        Some(Id(input.substring(begin._3 + 1, offset), Id.Dot).
-          at(offset, line, column))
-      } else {
-        reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
-        recover()
-        None
-      }
-    parseWhiteSpace()
-    r
-  }
-
-  @inline
-  def parseSimpleID(ok: Boolean, i: Int, recover: () => Unit) = {
-    implicit val begin = (line, column, offset)
-    val r =
-      if (ok) {
-        for (j <- 0 until i) consume()
-        Some(Id(input.substring(begin._3, offset), Id.Simple).
-          at(offset, line, column))
-      } else {
-        if (i == 0)
-          reporter.error(begin._1, begin._2, begin._3,
-            "Expecting an identifier but found" + (
-              if (offset + i < max) s": '${peek().asInstanceOf[Char]}'"
-              else " nothing"))
-        else
-          reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting a simple identifier form but found: '${input.substring(begin._3, offset + i)}'")
-        recover()
-        None
-      }
-    parseWhiteSpace()
-    r
-  }
-
-  def peekID() = peek() match {
-    case '`' => (Id.Complex, peekComplexID())
-    case '.' => (Id.Dot, peekDotID())
-    case _ => (Id.Simple, peekSimpleID())
-  }
-
-  def peekSimpleID() = peekOneStar(isJavaLetter, isJavaDigitOrLetter)
-
-  def peekDotID() =
-    peekOnePlus('.', isNotSeparator)
-
-  def peekComplexID() = peekOnePlusOne('`', isComplexIDChar, '`')
-
-  def parseLIT(recover: () => Unit): Option[Raw] = {
-    val r = peek() match {
+  def parseLIT(recover: () => Unit): Option[Raw] =
+    peek() match {
       case '\'' =>
         val (ok, i) = peekSimpleLIT()
         parseSimpleLIT(ok, i, recover)
@@ -228,44 +284,111 @@ final class FastParser(input: String,
         recover()
         None
     }
-    parseWhiteSpace()
-    r
+
+  @inline
+  private def parseID(kind: Id.Value, i: Int, recover: () => Unit) =
+    kind match {
+      case Id.Simple => parseSimpleID(ok = true, i, recover)
+      case Id.Dot => parseDotID(ok = true, i, recover)
+      case Id.Complex => parseComplexID(ok = true, i, recover)
+    }
+
+  @inline
+  private def parseComplexID(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    if (ok) {
+      consume(i)
+      Some(Id(input.substring(begin._3 + 1, offset - 1), Id.Complex).
+        at(offset, line, column))
+    } else {
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
+      recover()
+      None
+    }
   }
 
   @inline
-  def parseSimpleLIT(ok: Boolean, i: Int, recover: () => Unit) = {
+  private def parseDotID(ok: Boolean, i: Int, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
-    val r =
-      if (ok) {
-        for (j <- 0 until i) consume()
-        Some(Raw(input.substring(begin._3 + 1, offset)).
-          at(offset, line, column))
-      } else {
-        reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
-        recover()
-        None
-      }
-    parseWhiteSpace()
-    r
+    if (ok) {
+      consume(i)
+      Some(Id(input.substring(begin._3 + 1, offset), Id.Dot).
+        at(offset, line, column))
+    } else {
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
+      recover()
+      None
+    }
   }
 
   @inline
-  def parseComplexLIT(ok: Boolean, i: Int, recover: () => Unit): Option[Raw] = {
+  private def parseSimpleID(ok: Boolean, i: Int, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
-    val r =
-      if (ok) {
-        for (j <- 0 until i) consume()
-        Some(Raw(input.substring(begin._3 + 3, offset - 3)).
-          at(offset, line, column))
-      } else {
+    if (ok) {
+      consume(i)
+      Some(Id(input.substring(begin._3, offset), Id.Simple).
+        at(offset, line, column))
+    } else {
+      if (i == 0)
         reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
-        recover()
-        None
-      }
-    parseWhiteSpace()
-    r
+          "Expecting an identifier but found" + (
+            if (offset + i < max) s": '${peek().asInstanceOf[Char]}'"
+            else " nothing"))
+      else
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting a simple identifier form but found: '${input.substring(begin._3, offset + i)}'")
+      recover()
+      None
+    }
+  }
+
+  @inline
+  private def peekID() = peek() match {
+    case '`' => (Id.Complex, peekComplexID())
+    case '.' => (Id.Dot, peekDotID())
+    case _ => (Id.Simple, peekSimpleID())
+  }
+
+  @inline
+  private def peekSimpleID() = peekOneStar(isJavaLetter, isJavaDigitOrLetter)
+
+  @inline
+  private def peekDotID() =
+    peekOnePlus('.', isNotSeparator)
+
+  @inline
+  private def peekComplexID() = peekOnePlusOne('`', isComplexIDChar, '`')
+
+  @inline
+  private def parseSimpleLIT(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    if (ok) {
+      consume(i)
+      Some(Raw(input.substring(begin._3 + 1, offset)).
+        at(offset, line, column))
+    } else {
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
+      recover()
+      None
+    }
+  }
+
+  @inline
+  private def parseComplexLIT(ok: Boolean, i: Int, recover: () => Unit): Option[Raw] = {
+    implicit val begin = (line, column, offset)
+    if (ok) {
+      consume(i)
+      Some(Raw(input.substring(begin._3 + 3, offset - 3)).
+        at(offset, line, column))
+    } else {
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
+      recover()
+      None
+    }
   }
 
   private def peekLIT(): (Boolean, (Boolean, Int)) = {
@@ -276,7 +399,7 @@ final class FastParser(input: String,
     }
   }
 
-  private def peekSimpleLIT() = peekOnePlus('\'', isNotSeparator)
+  private def peekSimpleLIT() = peekOneStar((c) => c == '\'', isNotSeparator)
 
   private def peekComplexLIT(): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
@@ -467,27 +590,23 @@ final class FastParser(input: String,
       val c = peek(i)
       state match {
         case 0 =>
-          c match {
-            case C =>
-              state = 1
-              i += 1
-            case _ => ok = false
-          }
+          if (c == C) {
+            state = 1
+            i += 1
+          } else ok = false
         case 1 =>
           if (D(c)) {
             state = 2
             i += 1
           } else ok = false
         case 2 =>
-          c match {
-            case E =>
-              state = 3
-              i += 1
-            case _ if D(c) =>
-              // state = 2
-              i += 1
-            case _ => ok = false
-          }
+          if (c == E) {
+            state = 3
+            i += 1
+          } else if (D(c)) {
+            // state = 2
+            i += 1
+          } else ok = false
         case 3 => continue = false
       }
     }
@@ -507,12 +626,11 @@ final class FastParser(input: String,
       val c = peek(i)
       state match {
         case 0 =>
-          c match {
-            case C =>
-              state = 1
-              i += 1
-            case _ => ok = false
-          }
+          if (c == C) {
+            state = 1
+            i += 1
+
+          } else ok = false
         case 1 =>
           if (D(c)) {
             state = 2
@@ -577,9 +695,12 @@ final class FastParser(input: String,
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting keyword: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
       false
-    } else true
+    } else {
+      true
+    }
   }
 
+  @inline
   private def matchCharSeq(s: String)(
     implicit begin: (Int, Int, Int)): Boolean = {
     var i = 0
@@ -587,8 +708,12 @@ final class FastParser(input: String,
     while (i < s.length && ok) {
       if (s.charAt(i) != peek()) {
         ok = false
-        reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting: '$s', but found: '${input.substring(begin._3, offset)}'")
+        if (i == 0)
+          reporter.error(begin._1, begin._2, begin._3,
+            s"Expecting: '$s', but found nothing")
+        else
+          reporter.error(begin._1, begin._2, begin._3,
+            s"Expecting: '$s', but found: '${input.substring(begin._3, offset)}'")
       } else consume()
       i += 1
     }
@@ -601,15 +726,31 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def matchChar(char: Int)(f: => Unit): Boolean = {
+  private def matchChar(char: Int)(f: String => Unit): Boolean = {
     val c = peek()
     if (c != char) {
-      f
+      if (c == EOF) f(" nothing") else f(s": '${c.asInstanceOf[Char]}'")
       false
     } else {
       consume()
       true
     }
+  }
+
+  @inline
+  private def findChar(c: Char): Int = {
+    var i = 0
+    var d = peek(offset + i)
+    while (d != EOF && c != d) {
+      d = peek(offset + i)
+      i += 1
+    }
+    if (c == d) i else -1
+  }
+
+  @inline
+  private def consume(n: Int): Unit = {
+    for (i <- 0 until n) consume()
   }
 
   @inline
@@ -671,7 +812,7 @@ object FastParser {
 
   @inline
   final def isWhitespace(c: Int) = c match {
-    case '\r' | '\n' | '\t' | '\u000C' => true
+    case ' ' | '\r' | '\n' | '\t' | '\u000C' => true
     case _ => false
   }
 

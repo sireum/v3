@@ -101,7 +101,7 @@ exp
   ;
 
 expSuffix
-  : ID exp
+  : ID prim arg*
   ;
 
 prim
@@ -124,7 +124,7 @@ annotation
   ;
 
 LIT
-  : '\'' ~[ \r\n\t\u000C;(,){}'"#:@`]+
+  : '\'' ~[ \r\n\t\u000C;(,){}'"#:@`]*
   | '"""'
     ( ~["]
     | '"' .

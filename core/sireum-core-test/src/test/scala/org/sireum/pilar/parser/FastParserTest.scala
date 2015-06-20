@@ -41,9 +41,15 @@ final class FastParserTest {
 
   @Test
   def parseLIT2(): Unit = {
-    assert(parseLIT(
-      s"${threeQuotes}abc${sixQuotes}abc$threeQuotes") contains
-      Raw(s"abc${sixQuotes}abc"))
+    val r = parseLIT(
+      s"${threeQuotes}abc${sixQuotes}abc$threeQuotes")
+    val e = Raw(s"abc${sixQuotes}abc")
+    assert(r contains e)
+  }
+
+  @Test
+  def parseLIT3(): Unit = {
+    assert(parseLIT("'") contains Raw(""))
   }
 
   @Test
@@ -74,12 +80,65 @@ final class FastParserTest {
 
   @Test
   def parseID6(): Unit = {
+    assert(parseID( """s!s""") contains Id("s"))
+  }
+
+  @Test
+  def parseFID1(): Unit = {
     assert(parseID( """!s""", reporter(0)).isEmpty)
   }
 
   @Test
-  def parseID7(): Unit = {
-    assert(parseID( """s!s""") contains Id("s"))
+  def parsePrimaryExp1(): Unit = {
+    assert(parsePrimaryExp("abc") contains IdExp(Id("abc")))
+  }
+
+  @Test
+  def parsePrimaryExp2(): Unit = {
+    assert(parsePrimaryExp("abc2") contains IdExp(Id("abc2")))
+  }
+
+  @Test
+  def parsePrimaryExp3(): Unit = {
+    assert(parsePrimaryExp("abc3:") contains IdExp(Id("abc3")))
+  }
+
+  @Test
+  def parsePrimaryExp4(): Unit = {
+    assert(parsePrimaryExp(".+") contains IdExp(Id("+", Id.Dot)))
+  }
+
+  @Test
+  def parsePrimaryExp5(): Unit = {
+    assert(parsePrimaryExp( """`a"sdsbc2`""") contains
+      IdExp(Id( """a"sdsbc2""", Id.Complex)))
+  }
+
+  @Test
+  def parsePrimaryExp6(): Unit = {
+    assert(parsePrimaryExp( """s!s""") contains IdExp(Id("s")))
+  }
+
+  @Test
+  def parsePrimaryExp7(): Unit = {
+    assert(parsePrimaryExp( """z'-1""") contains
+      LiteralExp(Id("z"), Raw("-1")))
+  }
+
+  @Test
+  def parsePrimaryExp8(): Unit = {
+    assert(parsePrimaryExp( """(z'-1, b'true ,usd'1_000_000)""") contains
+      TupleExp(
+        Node.seq(
+          LiteralExp(Id("z"), Raw("-1")),
+          LiteralExp(Id("b"), Raw("true")),
+          LiteralExp(Id("usd"), Raw("1_000_000"))),
+        Node.emptySeq))
+  }
+
+  @Test
+  def parseFPrimaryExp1(): Unit = {
+    assert(parsePrimaryExp( """!s""", reporter(0)).isEmpty)
   }
 
   @Test
@@ -88,17 +147,109 @@ final class FastParserTest {
       Annotation(Id("z"), Raw("111")))
   }
 
-  private def parseLIT(s: String) =
-    new FastParser(s)().parseLIT(noRecover)
+  @Test
+  def parseAnnotationRecovery(): Unit = {
+    assert(parseAnnotations("@ 5 sdaekcn;sgej() @type 'Int", reporter(2)) ==
+      Seq(Annotation(Id("type"), Raw("Int"))))
+  }
 
-  private def parseID(s: String, reporter: FastParser.Reporter) =
+  @Test
+  def parseExp1(): Unit = {
+    assert(parseExp("abc") contains IdExp(Id("abc")))
+  }
+
+  @Test
+  def parseExp2(): Unit = {
+    assert(parseExp("abc2") contains IdExp(Id("abc2")))
+  }
+
+  @Test
+  def parseExp3(): Unit = {
+    assert(parseExp("abc3:") contains IdExp(Id("abc3")))
+  }
+
+  @Test
+  def parseExp4(): Unit = {
+    assert(parseExp(".+") contains IdExp(Id("+", Id.Dot)))
+  }
+
+  @Test
+  def parseExp5(): Unit = {
+    assert(parseExp( """`a"sdsbc2`""") contains
+      IdExp(Id( """a"sdsbc2""", Id.Complex)))
+  }
+
+  @Test
+  def parseExp6(): Unit = {
+    assert(parseExp( """s!s""") contains IdExp(Id("s")))
+  }
+
+  @Test
+  def parseExp7(): Unit = {
+    assert(parseExp( """z'-1""") contains
+      LiteralExp(Id("z"), Raw("-1")))
+  }
+
+  @Test
+  def parseExp8(): Unit = {
+    val r = parseExp( """(z'-1, b'true ,usd'1_000_000)""")
+    val e =
+      TupleExp(
+        Node.seq(
+          LiteralExp(Id("z"), Raw("-1")),
+          LiteralExp(Id("b"), Raw("true")),
+          LiteralExp(Id("usd"), Raw("1_000_000"))),
+        Node.emptySeq)
+    assert(r contains e)
+  }
+
+  @Test
+  def parseExp9(): Unit = {
+    val r = parseExp("a(b,c)")
+    val e = CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c"))))
+    assert(r contains e)
+  }
+
+  @Test
+  def parseExp10(): Unit = {
+    val r = parseExp("a(b,c) .+ z'5 .* z'6")
+    val expected = BinaryExp(
+      CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))),
+      Id("+", Id.Dot),
+      LiteralExp(Id("z"), Raw("5")),
+      Node.seq(
+        (Id("*", Id.Dot), LiteralExp(Id("z"), Raw("6")))
+      )
+    )
+    assert(r contains expected)
+  }
+
+
+  import FastParser._
+
+  private def parseExp(s: String,
+                       reporter: Reporter = ConsoleReporter) =
+    new FastParser(s, reporter)().parseExp(noRecover)
+
+  private def parsePrimaryExp(s: String,
+                              reporter: Reporter = ConsoleReporter) =
+    new FastParser(s, reporter)().parsePrimaryExp(noRecover)
+
+  private def parseLIT(s: String,
+                       reporter: Reporter = ConsoleReporter) =
+    new FastParser(s, reporter)().parseLIT(noRecover)
+
+  private def parseID(s: String,
+                      reporter: Reporter = ConsoleReporter) =
     new FastParser(s, reporter)().parseID(noRecover)
 
-  private def parseID(s: String) =
-    new FastParser(s)().parseID(noRecover)
+  private def parseAnnotation(s: String,
+                              reporter: Reporter = ConsoleReporter) =
+    new FastParser(s, reporter)().parseAnnotation(noRecover)
 
-  private def parseAnnotation(s: String) =
-    new FastParser(s)().parseAnnotation(noRecover)
+  private def parseAnnotations(s: String,
+                               reporter: Reporter = ConsoleReporter) =
+    new FastParser(s, reporter)().parseAnnotations(noRecover)
 
   private def reporter(_offset: Int) =
     new FastParser.Reporter {
