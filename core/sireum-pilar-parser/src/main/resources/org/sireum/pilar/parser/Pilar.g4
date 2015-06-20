@@ -97,11 +97,15 @@ switchCase
   ;
 
 exp
-  : prim arg* expSuffix*
+  : prim2 expSuffix*
+  ;
+
+prim2
+  : prim arg*
   ;
 
 expSuffix
-  : ID prim arg*
+  : ID prim2
   ;
 
 prim

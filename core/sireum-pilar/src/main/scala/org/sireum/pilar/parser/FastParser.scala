@@ -39,7 +39,7 @@ final class FastParser(input: String,
   def parseExp(recover: () => Unit): Option[Exp] = {
     implicit val begin = (line, column, offset)
 
-    val rOpt = parsePrimaryArgs(recover)
+    val rOpt = parsePrimaryExp2(recover)
 
     if (rOpt.isEmpty) return None
     val r = rOpt.get
@@ -54,7 +54,7 @@ final class FastParser(input: String,
 
       parseWhiteSpace()
 
-      parsePrimaryArgs(recover) match {
+      parsePrimaryExp2(recover) match {
         case Some(e) => suffix = suffix :+ ((id, e))
         case _ => ok = false
       }
@@ -75,7 +75,7 @@ final class FastParser(input: String,
     } else Some(r)
   }
 
-  def parsePrimaryArgs(recover: () => Unit): Option[Exp] = {
+  def parsePrimaryExp2(recover: () => Unit): Option[Exp] = {
     implicit val begin = (line, column, offset)
 
     var r =

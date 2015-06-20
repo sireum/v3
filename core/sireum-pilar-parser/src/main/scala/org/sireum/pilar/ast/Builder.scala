@@ -226,19 +226,25 @@ object Builder {
 
   final def build(ctx: ExpContext): Exp = {
     val start = ctx.start
+    var r = build(ctx.prim2())
+    if (ctx.expSuffix().nonEmpty) {
+      val first = ctx.expSuffix(0)
+      val op = buildID(first.ID())
+      var right = build(first.prim2())
+      r = BinaryExp(r, op, right,
+        ctx.expSuffix().map(ctxS =>
+          (buildID(ctxS.ID()), build(ctxS.prim2()))
+        )) at ctx
+    }
+    r
+  }
+
+  final def build(ctx: Prim2Context): Exp = {
+    val start = ctx.start
     var r = build(ctx.prim())
     for (arg <- ctx.arg()) {
       r = CallExp(r, Option(arg.exp()).map(_.map(build)).
         getOrElse(Node.emptySeq)) at(start, arg.stop)
-    }
-    if (ctx.expSuffix().nonEmpty) {
-      val first = ctx.expSuffix(0)
-      val op = buildID(first.ID())
-      val right = build(first.exp())
-      r = BinaryExp(r, op, right,
-        ctx.expSuffix().map(ctxS =>
-          (buildID(ctxS.ID()), build(ctxS.exp()))
-        )) at ctx
     }
     r
   }
