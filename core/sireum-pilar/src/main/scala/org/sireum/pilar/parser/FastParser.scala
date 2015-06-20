@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.parser
 
 import org.sireum.pilar.ast._
+import org.sireum.util._
 
 import FastParser._
 
@@ -37,6 +38,82 @@ final class FastParser(input: String,
                         private var column: Int = 1) {
   val min = offset
   val threeQuotes = "\"\"\""
+
+  def parseExp(): Option[Exp] = ???
+
+  def parsePrimaryExp(): Option[Exp] = {
+    implicit val begin = (line, column, offset)
+    def parseTupleExp() = {
+      consume()
+      parseWhiteSpace()
+      parseExp().flatMap { e =>
+        parseWhiteSpace()
+        var ok = true
+        var es = ivector(e)
+        while (peek() == ',' && ok) {
+          consume()
+          parseWhiteSpace()
+          parseExp() match {
+            case Some(e2) => es = es :+ e2
+            case _ => ok = false
+          }
+          parseWhiteSpace()
+        }
+        ok = ok && matchChar(')') {
+          reporter.error(line, column, offset,
+            s"Expecting: ')', but found: '${input.charAt(offset)}'")
+        }
+        if (!ok) None
+        else {
+          val anns = parseAnnotations()
+          val r = TupleExp(es, anns) at(offset, line, column)
+          parseWhiteSpace()
+          Some(r)
+        }
+      }
+    }
+
+    def parseIdOrLitExp() = {
+      val r = parseID().flatMap { id =>
+        parseWhiteSpace()
+        peek() match {
+          case '\'' | '\"' =>
+            parseLIT().map(raw => LiteralExp(id, raw).
+              at(offset, line, column))
+          case _ =>
+            val r = IdExp(id)
+            r.locationInfoOpt = id.locationInfoOpt
+            Some(r)
+        }
+      }
+      parseWhiteSpace()
+      r
+    }
+
+    if (peek() == '(') parseTupleExp()
+    else parseIdOrLitExp()
+  }
+
+  def parseAnnotations(): Node.Seq[Annotation] = ???
+
+
+  def parseAnnotation(): Option[Annotation] = {
+    implicit val begin = (line, column, offset)
+
+    if (matchChar('@') {
+      reporter.error(begin._1, begin._2, begin._3,
+        s"Expecting: '@', but found: '${input.charAt(begin._3)}'")
+      consume()
+    }) {
+      (parseID(), parseLIT()) match {
+        case (Some(id), Some(raw)) =>
+          val r = Some(Annotation(id, raw) at(offset, line, column))
+          parseWhiteSpace()
+          r
+        case _ => None
+      }
+    } else None
+  }
 
   def parseID(): Option[Id] = {
     @inline
@@ -52,8 +129,8 @@ final class FastParser(input: String,
       consume()
       while (isComplexIDChar(peek())) consume()
       if (matchChar('`') {
-        reporter.error(line, column, offset,
-          "Invalid identifier form: " + input.substring(begin._3, offset))
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Invalid identifier form: '${input.substring(begin._3, offset)}'")
       })
         Some(Id(input.substring(begin._3 + 1, offset - 1),
           simple = false) at(offset, line, column))
@@ -170,7 +247,7 @@ final class FastParser(input: String,
     matchCharSeq(s)
     if (!isSeparator(peek())) {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting keyword: $s, but found: '${input.substring(begin._3, offset + 1)}'")
+        s"Expecting keyword: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
       false
     } else true
   }
@@ -183,7 +260,7 @@ final class FastParser(input: String,
       if (s.charAt(i) != peek()) {
         ok = false
         reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting: $s, but found: '${input.substring(begin._3, offset)}'")
+          s"Expecting: '$s', but found: '${input.substring(begin._3, offset)}'")
       }
       consume()
       i += 1

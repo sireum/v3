@@ -81,6 +81,12 @@ class FastParserTest {
     assert(new FastParser( """s!s""", reporter(1))().parseID().isEmpty)
   }
 
+  @Test
+  def parseAnnotation1(): Unit = {
+    assert(new FastParser( """@z'111""", reporter(1))().parseAnnotation() contains
+      Annotation(Id("z"), Raw("111")))
+  }
+
   def reporter(_offset: Int) =
     new FastParser.Reporter {
       override def error(line: Int, column: Int, offset: Int, message: String): Unit = {
