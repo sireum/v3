@@ -155,7 +155,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ModelElementContext extends ParserRuleContext {
 		public ModelElementContext(ParserRuleContext parent, int invokingState) {
@@ -239,8 +239,7 @@ public class PilarParser extends Parser {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
-		}
-		finally {
+        } finally {
 			exitRule();
 		}
 		return _localctx;
@@ -327,7 +326,7 @@ public class PilarParser extends Parser {
         }
 
         public AnnotationContext annotation(int i) {
-			return getRuleContext(AnnotationContext.class,i);
+            return getRuleContext(AnnotationContext.class,i);
 		}
 		public ProcDeclContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -406,7 +405,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ParamContext extends ParserRuleContext {
         public TerminalNode ID() {
@@ -548,7 +547,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class LocalVarDeclContext extends ParserRuleContext {
         public TerminalNode ID() {
@@ -674,7 +673,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class TransformationContext extends ParserRuleContext {
         public TransformationContext(ParserRuleContext parent, int invokingState) {
@@ -811,7 +810,7 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -1041,7 +1040,7 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -1376,7 +1375,7 @@ public class PilarParser extends Parser {
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
         } finally {
-			exitRule();
+            exitRule();
 		}
 		return _localctx;
 	}
@@ -1423,7 +1422,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ExpContext extends ParserRuleContext {
         public PrimContext prim() {
@@ -1704,7 +1703,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class ArgContext extends ParserRuleContext {
 		public List<ExpContext> exp() {
@@ -1764,7 +1763,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class LitContext extends ParserRuleContext {
 		public TerminalNode ID() { return getToken(PilarParser.ID, 0); }
@@ -1794,7 +1793,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static class AnnotationContext extends ParserRuleContext {
 		public LitContext lit() {
@@ -1825,7 +1824,7 @@ public class PilarParser extends Parser {
             exitRule();
         }
         return _localctx;
-	}
+    }
 
 	public static final String _serializedATN =
             "\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\36\u014a\4\2\t\2" +
