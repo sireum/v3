@@ -121,7 +121,7 @@ object Json {
         Js.Obj(
           (".class", Js.Str("Id")),
           ("value", fromStr(o.value)),
-          ("simple", fromAnyVal(o.simple))
+          ("simple", fromStr(o.kind))
         )
       case o: IdExp =>
         Js.Obj(
@@ -236,7 +236,7 @@ object Json {
           case "GotoJump" =>
             GotoJump(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
           case "Id" =>
-            Id(toStr(o.value(1)._2), toBoolean(o.value(2)._2))
+            Id(toStr(o.value(1)._2), toStr(o.value(2)._2))
           case "IdExp" =>
             IdExp(to[Id](o.value(1)._2))
           case "IfJump" =>

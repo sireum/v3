@@ -30,6 +30,7 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 object Rewriter {
+
   import org.sireum.util.Rewriter._
 
   val constructorMap: ConstructorMap = Map(
@@ -82,8 +83,8 @@ object Rewriter {
       GotoJump(target, cast(annotations))
     },
     "Id" -> { es =>
-      val Seq(value: String, simple: java.lang.Boolean) = es
-      Id(value, simple)
+      val Seq(value: String, kind: String) = es
+      Id(value, kind)
     },
     "IdExp" -> { es =>
       val Seq(id: Id) = es

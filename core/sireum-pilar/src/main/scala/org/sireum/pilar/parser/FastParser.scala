@@ -126,82 +126,85 @@ final class FastParser(input: String,
   }
 
   def parseID(recover: () => Unit): Option[Id] = {
-
-    implicit val begin = (line, column, offset)
-
-    @inline
-    def parseComplexID() = {
-      val (ok, i) = peekComplexID()
-      val r =
-        if (ok) {
-          for (j <- 0 until i) consume()
-          Some(Id(input.substring(begin._3 + 1, offset - 1), simple = false).
-            at(offset, line, column))
-        } else {
-          reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
-          recover()
-          None
-        }
-      parseWhiteSpace()
-      r
-    }
-
-    @inline
-    def parseDotID() = {
-      val (ok, i) = peekDotID()
-      val r =
-        if (ok) {
-          for (j <- 0 until i) consume()
-          Some(Id(input.substring(begin._3 + 1, offset), simple = false).
-            at(offset, line, column))
-        } else {
-          reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
-          recover()
-          None
-        }
-      parseWhiteSpace()
-      r
-    }
-
-    @inline
-    def parseSimpleID() = {
-      val (ok, i) = peekSimpleID()
-      val r =
-        if (ok) {
-          for (j <- 0 until i) consume()
-          Some(Id(input.substring(begin._3, offset), simple = true).
-            at(offset, line, column))
-        } else {
-          if (i == 0)
-            reporter.error(begin._1, begin._2, begin._3,
-              "Expecting an identifier but found" + (
-                if (offset + i < max) s": '${peek().asInstanceOf[Char]}'"
-                else " nothing"))
-          else
-            reporter.error(begin._1, begin._2, begin._3,
-              s"Expecting a simple identifier form but found: '${input.substring(begin._3, offset + i)}'")
-          recover()
-          None
-        }
-      parseWhiteSpace()
-      r
-    }
-
     val r = peek() match {
-      case '`' => parseComplexID()
-      case '.' => parseDotID()
-      case _ => parseSimpleID()
+      case '`' =>
+        val (ok, i) = peekComplexID()
+        parseComplexID(ok, i, recover)
+      case '.' =>
+        val (ok, i) = peekDotID()
+        parseDotID(ok, i, recover)
+      case _ =>
+        val (ok, i) = peekSimpleID()
+        parseSimpleID(ok, i, recover)
     }
     parseWhiteSpace()
     r
   }
 
+  @inline
+  def parseComplexID(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    val r =
+      if (ok) {
+        for (j <- 0 until i) consume()
+        Some(Id(input.substring(begin._3 + 1, offset - 1), Id.Complex).
+          at(offset, line, column))
+      } else {
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        recover()
+        None
+      }
+    parseWhiteSpace()
+    r
+  }
+
+  @inline
+  def parseDotID(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    val r =
+      if (ok) {
+        for (j <- 0 until i) consume()
+        Some(Id(input.substring(begin._3 + 1, offset), Id.Dot).
+          at(offset, line, column))
+      } else {
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        recover()
+        None
+      }
+    parseWhiteSpace()
+    r
+  }
+
+  @inline
+  def parseSimpleID(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    val r =
+      if (ok) {
+        for (j <- 0 until i) consume()
+        Some(Id(input.substring(begin._3, offset), Id.Simple).
+          at(offset, line, column))
+      } else {
+        if (i == 0)
+          reporter.error(begin._1, begin._2, begin._3,
+            "Expecting an identifier but found" + (
+              if (offset + i < max) s": '${peek().asInstanceOf[Char]}'"
+              else " nothing"))
+        else
+          reporter.error(begin._1, begin._2, begin._3,
+            s"Expecting a simple identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        recover()
+        None
+      }
+    parseWhiteSpace()
+    r
+  }
+
   def peekID() = peek() match {
-    case '`' => peekComplexID()
-    case '.' => peekDotID()
-    case _ => peekSimpleID()
+    case '`' => (Id.Complex, peekComplexID())
+    case '.' => (Id.Dot, peekDotID())
+    case _ => (Id.Simple, peekSimpleID())
   }
 
   def peekSimpleID() = peekOneStar(isJavaLetter, isJavaDigitOrLetter)
@@ -212,47 +215,13 @@ final class FastParser(input: String,
   def peekComplexID() = peekOnePlusOne('`', isComplexIDChar, '`')
 
   def parseLIT(recover: () => Unit): Option[Raw] = {
-    implicit val begin = (line, column, offset)
-
-    @inline
-    def parseSimpleLIT() = {
-      val (ok, i) = peekSimpleLIT()
-      val r =
-        if (ok) {
-          for (j <- 0 until i) consume()
-          Some(Raw(input.substring(begin._3 + 1, offset)).
-            at(offset, line, column))
-        } else {
-          reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
-          recover()
-          None
-        }
-      parseWhiteSpace()
-      r
-    }
-
-    @inline
-    def parseComplexLIT(): Option[Raw] = {
-      val (ok, i) = peekComplexLIT()
-      val r =
-        if (ok) {
-          for (j <- 0 until i) consume()
-          Some(Raw(input.substring(begin._3 + 3, offset - 3)).
-            at(offset, line, column))
-        } else {
-          reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
-          recover()
-          None
-        }
-      parseWhiteSpace()
-      r
-    }
-
     val r = peek() match {
-      case '\'' => parseSimpleLIT()
-      case '"' => parseComplexLIT()
+      case '\'' =>
+        val (ok, i) = peekSimpleLIT()
+        parseSimpleLIT(ok, i, recover)
+      case '"' =>
+        val (ok, i) = peekComplexLIT()
+        parseComplexLIT(ok, i, recover)
       case c =>
         reporter.error(line, column, offset,
           s"Invalid character for a literal string: '${c.asInstanceOf[Char]}'")
@@ -263,11 +232,47 @@ final class FastParser(input: String,
     r
   }
 
-  private def peekLIT(): (Boolean, Int) = {
+  @inline
+  def parseSimpleLIT(ok: Boolean, i: Int, recover: () => Unit) = {
+    implicit val begin = (line, column, offset)
+    val r =
+      if (ok) {
+        for (j <- 0 until i) consume()
+        Some(Raw(input.substring(begin._3 + 1, offset)).
+          at(offset, line, column))
+      } else {
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
+        recover()
+        None
+      }
+    parseWhiteSpace()
+    r
+  }
+
+  @inline
+  def parseComplexLIT(ok: Boolean, i: Int, recover: () => Unit): Option[Raw] = {
+    implicit val begin = (line, column, offset)
+    val r =
+      if (ok) {
+        for (j <- 0 until i) consume()
+        Some(Raw(input.substring(begin._3 + 3, offset - 3)).
+          at(offset, line, column))
+      } else {
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
+        recover()
+        None
+      }
+    parseWhiteSpace()
+    r
+  }
+
+  private def peekLIT(): (Boolean, (Boolean, Int)) = {
     peek() match {
-      case '\'' => peekSimpleLIT()
-      case '"' => peekComplexLIT()
-      case _ => (false, 0)
+      case '\'' => (true, peekSimpleLIT())
+      case '"' => (false, peekComplexLIT())
+      case _ => (false, (false, 0))
     }
   }
 

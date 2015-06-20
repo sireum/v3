@@ -53,10 +53,12 @@ object Builder {
 
   final def buildID(n: Token): Id = {
     val text = n.getText
-    (if (text.charAt(0) == '\'' || text.charAt(0) == '.')
-      Id(text.substring(1, text.length), simple = false)
+    (if (text.charAt(0) == '\'')
+      Id(text.substring(1, text.length), Id.Complex)
+    else if (text.charAt(0) == '.')
+      Id(text.substring(1, text.length), Id.Dot)
     else
-      Id(text, simple = true)) at n
+      Id(text, Id.Simple)) at n
   }
 
   final def buildLIT(n: Token): Raw = {

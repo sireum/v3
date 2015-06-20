@@ -63,10 +63,16 @@ final case class
 Annotation(id: Id,
            raw: Raw) extends Node
 
+object Id extends Enum("Id") {
+  type Kind = Value
+  val Simple = Value("Simple")
+  val Dot = Value("Dot")
+  val Complex = Value("Complex")
+}
 
 final case class
 Id(value: String,
-   simple: Boolean = true) extends Node
+   kind: Id.Kind = Id.Simple) extends Node
 
 
 final case class

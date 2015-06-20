@@ -63,13 +63,13 @@ final class FastParserTest {
 
   @Test
   def parseID4(): Unit = {
-    assert(parseID(".+") contains Id("+", simple = false))
+    assert(parseID(".+") contains Id("+", Id.Dot))
   }
 
   @Test
   def parseID5(): Unit = {
     assert(parseID( """`a"sdsbc2`""") contains
-      Id( """a"sdsbc2""", simple = false))
+      Id( """a"sdsbc2""", Id.Complex))
   }
 
   @Test
