@@ -352,11 +352,11 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def peekSimpleID() = peekOneStar(isJavaLetter, isJavaDigitOrLetter)
+  private def peekSimpleID() = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
 
   @inline
-  private def peekDotID() =
-    peekOnePlus('.', isNotSeparator)
+  private def peekDotID(offset: Int = 0) =
+    peekOnePlus(offset, '.', isNotSeparator)
 
   @inline
   private def peekComplexID(offset: Int = 0) =
@@ -402,7 +402,8 @@ final class FastParser(input: String,
     }
   }
 
-  private def peekSimpleLIT() = peekOneStar((c) => c == '\'', isNotSeparator)
+  private def peekSimpleLIT(offset: Int = 0) =
+    peekOneStar(offset, (c) => c == '\'', isNotSeparator)
 
   private def peekComplexLIT(offset: Int = 0): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
@@ -536,7 +537,8 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekOnePlus(C: Char, D: Int => Boolean): (Boolean, Int) = {
+  private def peekOnePlus(offset: Int, C: Char,
+                          D: Int => Boolean): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // CD+
     // C is the starting character
@@ -546,7 +548,7 @@ final class FastParser(input: String,
     var ok = true
     var continue = true
     while (ok && continue) {
-      val c = peek(i)
+      val c = peek(offset + i)
       state match {
         case 0 =>
           if (c == C) {
@@ -566,10 +568,11 @@ final class FastParser(input: String,
           } else continue = false
       }
     }
-    (ok, i)
+    (ok, offset + i)
   }
 
-  private def peekOneStar(C: Int => Boolean, D: Int => Boolean): (Boolean, Int) = {
+  private def peekOneStar(offset: Int, C: Int => Boolean,
+                          D: Int => Boolean): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // CD*
     // C is the predicate for starting character
@@ -579,7 +582,7 @@ final class FastParser(input: String,
     var ok = true
     var continue = true
     while (ok && continue) {
-      val c = peek(i)
+      val c = peek(offset + i)
       state match {
         case 0 =>
           if (C(c)) {
@@ -598,7 +601,7 @@ final class FastParser(input: String,
           } else continue = false
       }
     }
-    (ok, i)
+    (ok, offset + i)
   }
 
   private def peekCharSeq(s: String): Boolean = {
@@ -670,8 +673,16 @@ final class FastParser(input: String,
           val (ok, j) = peekComplexLIT(i)
           if (ok)
             i = j + 1
+        case '\'' =>
+          val (ok, j) = peekSimpleLIT(i)
+          if (ok)
+            i = j + 1
         case '`' =>
           val (ok, j) = peekComplexID(i)
+          if (ok)
+            i = j + 1
+        case '.' =>
+          val (ok, j) = peekDotID(i)
           if (ok)
             i = j + 1
         case _ =>
