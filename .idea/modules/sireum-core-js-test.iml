@@ -17,6 +17,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/resource_managed/test" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-test/src/main/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-pilar/src/main/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-util/src/main/scala" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target" />

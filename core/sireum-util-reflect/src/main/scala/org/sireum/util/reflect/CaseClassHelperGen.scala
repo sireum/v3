@@ -29,7 +29,7 @@ import org.sireum.util._
 import org.stringtemplate.v4._
 import scala.reflect.runtime.universe._
 
-object CaseClassHelperGen extends App {
+object CaseClassHelperGen {
   type Hierarchy = MMap[Symbol, ISet[Symbol]]
   final val anyValType = typeOf[AnyVal]
   final val stringType = typeOf[String]
@@ -184,5 +184,7 @@ object CaseClassHelperGen extends App {
     map
   }
 
-  println(CaseClassHelperGen.generate(typeOf[org.sireum.pilar.ast.Node]).render())
+  def main(args: Array[String]): Unit = {
+    println(CaseClassHelperGen.generate(typeOf[org.sireum.pilar.ast.Node]).render())
+  }
 }

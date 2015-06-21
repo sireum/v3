@@ -44,6 +44,8 @@ trait TestDef {
     _single = true
     this
   }
+
+  def isSingle = _single
 }
 
 object EqualTest {
@@ -84,7 +86,7 @@ final class EmptyIterableTest(val name: String, it: () => Iterable[Any]) extends
 }
 
 trait TestDefProvider {
-  protected def testDefs: ISeq[TestDef]
+  def testDefs: ISeq[TestDef]
 
   def enabledTestDefs: ISeq[TestDef] = {
     testDefs.find(_._single) match {

@@ -29,11 +29,12 @@ import org.sireum.test._
 import org.sireum.pilar.ast._
 import org.sireum.util._
 
-class FastParserTestDefProvider(tf: TestFramework) extends TestDefProvider {
+final class FastParserTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
 
   private val noRecover = { () => }
 
-  override protected val testDefs: ISeq[TestDef] = ivector(
+  override val testDefs: ISeq[TestDef] = ivector(
 
     EqualTest("AnnRecovery",
       parseAnnotations("@ 5 sdaekcn;sgej() @type 'Int", reporter(2)),

@@ -23,32 +23,45 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar.parser
+package org.sireum.test
 
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-import org.sireum.test.{JUnitTestFramework, TestDef}
+import utest.TestSuite
 
-@RunWith(value = classOf[Parameterized])
-final class FastParserTest(name: String, td: TestDef) {
-  @Test
-  def test(): Unit = {
-    td.test(JUnitTestFramework)
-  }
-}
+import org.sireum.util._
 
-object FastParserTest {
-  val provider = new FastParserTestDefProvider(JUnitTestFramework)
+abstract class UTestTestFramework
+  extends TestSuite with TestFramework {
 
-  @Parameters(name = "{0}")
-  def parameters = {
-    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
-    val r = new java.util.ArrayList[Array[Object]](ps.size)
-    for (p <- ps) {
-      r.add(p)
+  def provider: TestDefProvider
+
+  lazy val (testDefMap, single) = {
+    var m = imapEmpty[String, TestDef]
+    for (td <- provider.testDefs) {
+      m = m + (td.name -> td)
     }
-    r
+    (m, m.values.exists(_.isSingle))
   }
+
+  def generate(): Unit = {
+    for (name <- testDefMap.keys.toSeq.sorted) {
+      println( s"""  "${name}"-{ test("${name}") }""")
+      println()
+    }
+  }
+
+  protected def test(name: String) = {
+    val td = testDefMap(name)
+    if (single) {
+      if (td.isSingle) td.test(this)
+    } else {
+      td.test(this)
+    }
+  }
+
+  override def assertEquals(any1: Any, any2: Any): Unit =
+    assert(any1 == any2)
+
+  override def assertEmpty(it: Iterable[_]): Unit =
+    assert(it.isEmpty)
+
 }
