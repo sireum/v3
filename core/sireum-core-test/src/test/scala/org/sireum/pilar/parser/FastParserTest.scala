@@ -29,9 +29,6 @@ import org.junit.Test
 import org.sireum.pilar.ast._
 
 final class FastParserTest {
-  private val threeQuotes = "\"\"\""
-  private val sixQuotes = "\"\"\"\"\"\""
-
   private val noRecover = { () => }
 
   @Test
@@ -42,8 +39,8 @@ final class FastParserTest {
   @Test
   def parseLIT2(): Unit = {
     val r = parseLIT(
-      s"${threeQuotes}abc${sixQuotes}abc$threeQuotes")
-    val e = Raw(s"abc${sixQuotes}abc")
+      "\"abc\\\"abc\"")
+    val e = Raw("abc\"abc")
     assert(r contains e)
   }
 
@@ -148,8 +145,14 @@ final class FastParserTest {
   }
 
   @Test
-  def parseAnnotationRecovery(): Unit = {
+  def parseAnnotationRecovery1(): Unit = {
     assert(parseAnnotations("@ 5 sdaekcn;sgej() @type 'Int", reporter(2)) ==
+      Seq(Annotation(Id("type"), Raw("Int"))))
+  }
+
+  @Test
+  def parseAnnotationRecovery2(): Unit = {
+    assert(parseAnnotations("@ 5 \"@\" sdaekcn;sgej() @type 'Int", reporter(2)) ==
       Seq(Annotation(Id("type"), Raw("Int"))))
   }
 

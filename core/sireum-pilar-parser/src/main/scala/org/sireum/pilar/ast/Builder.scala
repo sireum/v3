@@ -64,7 +64,7 @@ object Builder {
   final def buildLIT(n: Token): Raw = {
     val text = n.getText
     (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
-    else Raw(text.substring(3, text.length - 3), simple = true)) at n
+    else Raw(text.substring(1, text.length - 1), simple = true)) at n
   }
 
   final def build(ctx: ModelElementContext)(

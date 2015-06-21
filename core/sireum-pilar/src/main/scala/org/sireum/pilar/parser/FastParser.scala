@@ -102,12 +102,12 @@ final class FastParser(input: String,
     def rcv(): Unit = {
       var i = findChar(',')
       if (i >= 0) {
-        consume(i + 1)
+        consume(i)
         return
       }
       i = findChar(')')
       if (i >= 0) {
-        consume(i + 1)
+        consume(i)
         return
       }
     }
@@ -160,12 +160,12 @@ final class FastParser(input: String,
       def rcv(): Unit = {
         var i = findChar(',')
         if (i >= 0) {
-          consume(i + 1)
+          consume(i)
           return
         }
         i = findChar(')')
         if (i >= 0) {
-          consume(i + 1)
+          consume(i)
           return
         }
       }
@@ -226,7 +226,7 @@ final class FastParser(input: String,
   def parseAnnotations(recover: () => Unit): Node.Seq[Annotation] = {
     def rcv(): Unit = {
       val i = findChar('@')
-      if (i >= 0) consume(i + 1)
+      if (i >= 0) consume(i)
       else recover()
     }
 
@@ -359,7 +359,8 @@ final class FastParser(input: String,
     peekOnePlus('.', isNotSeparator)
 
   @inline
-  private def peekComplexID() = peekOnePlusOne('`', isComplexIDChar, '`')
+  private def peekComplexID(offset: Int = 0) =
+    peekOnePlusOne(offset, '`', isComplexIDChar, '`')
 
   @inline
   private def parseSimpleLIT(ok: Boolean, i: Int, recover: () => Unit) = {
@@ -381,7 +382,9 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 3, offset - 3)).
+      Some(Raw(input.substring(begin._3 + 1, offset - 1).
+        replaceAll( """\\\\""", "\\").
+        replaceAll( """\\"""", "\"")).
         at(offset, line, column))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -401,180 +404,100 @@ final class FastParser(input: String,
 
   private def peekSimpleLIT() = peekOneStar((c) => c == '\'', isNotSeparator)
 
-  private def peekComplexLIT(): (Boolean, Int) = {
+  private def peekComplexLIT(offset: Int = 0): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
-    // """(A|"("|A)|""("|A)|"""("|A))*""""*
-    // A is any char that is not "
+    // "(N|S("|S))*"
+    // N is any char that is not "
+    // S is \
     var state = 0
     var i = 0
     var ok = true
     var continue = true
     while (ok && continue) {
-      val c = peek(i)
+      val c = peek(offset + i)
       state match {
-        case 0 | 1 | 2 =>
+        case 0 =>
           c match {
             case '"' =>
-              state += 1
+              state = 1
               i += 1
             case _ => ok = false
           }
-        case 3 =>
+        case 1 =>
           c match {
-            case EOF => ok = false
             case '"' =>
+              state = 2
+              i += 1
+            case '\\' =>
               state = 4
               i += 1
             case _ =>
-              state = 5
+              if (c != '"') {
+                state = 3
+                i += 1
+              } else ok = false
+          }
+        case 2 =>
+          continue = false
+        case 3 =>
+          c match {
+            case '"' =>
+              state = 2
               i += 1
+            case '\\' =>
+              state = 4
+              i += 1
+            case _ =>
+              if (c != '"') {
+                // state = 3
+                i += 1
+              } else ok = false
           }
         case 4 =>
           c match {
-            case EOF => ok = false
             case '"' =>
+              state = 5
+              i += 1
+            case '\\' =>
               state = 6
               i += 1
-            case _ =>
-              state = 7
-              i += 1
+            case _ => ok = false
           }
         case 5 =>
           c match {
-            case EOF => ok = false
             case '"' =>
+              state = 2
+              i += 1
+            case '\\' =>
               state = 4
               i += 1
             case _ =>
-              // state = 5
-              i += 1
+              if (c != '"') {
+                state = 3
+                i += 1
+              } else ok = false
           }
         case 6 =>
           c match {
-            case EOF => ok = false
             case '"' =>
-              state = 8
+              state = 2
               i += 1
-            case _ =>
-              state = 9
-              i += 1
-          }
-        case 7 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
+            case '\\' =>
               state = 4
               i += 1
             case _ =>
-              state = 5
-              i += 1
-          }
-        case 8 =>
-          c match {
-            case EOF => continue = false
-            case '"' =>
-              state = 10
-              i += 1
-            case _ =>
-              state = 11
-              i += 1
-          }
-        case 9 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
-              state = 4
-              i += 1
-            case _ =>
-              state = 5
-              i += 1
-          }
-        case 10 =>
-          c match {
-            case EOF => continue = false
-            case '"' =>
-              state = 12
-              i += 1
-            case _ =>
-              state = 13
-              i += 1
-          }
-        case 11 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
-              state = 4
-              i += 1
-            case _ =>
-              state = 5
-              i += 1
-          }
-        case 12 =>
-          c match {
-            case EOF => continue = false
-            case '"' =>
-              state = 14
-              i += 1
-            case _ =>
-              state = 15
-              i += 1
-          }
-        case 13 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
-              state = 4
-              i += 1
-            case _ =>
-              state = 5
-              i += 1
-          }
-        case 14 =>
-          c match {
-            case EOF => continue = false
-            case '"' =>
-              state = 16
-              i += 1
-            case _ =>
-              state = 17
-              i += 1
-          }
-        case 15 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
-              state = 4
-              i += 1
-            case _ =>
-              state = 5
-              i += 1
-          }
-        case 16 =>
-          c match {
-            case EOF => continue = false
-            case '"' =>
-              state = 14
-              i += 1
-            case _ =>
-              state = 15
-              i += 1
-          }
-        case 17 =>
-          c match {
-            case EOF => ok = false
-            case '"' =>
-              state = 4
-              i += 1
-            case _ =>
-              state = 5
-              i += 1
+              if (c != '"') {
+                state = 3
+                i += 1
+              } else ok = false
           }
       }
     }
-    (ok, i)
+    (ok, offset + i)
   }
 
-  private def peekOnePlusOne(C: Char,
+  private def peekOnePlusOne(offset: Int,
+                             C: Char,
                              D: Int => Boolean,
                              E: Char): (Boolean, Int) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
@@ -587,7 +510,7 @@ final class FastParser(input: String,
     var ok = true
     var continue = true
     while (ok && continue) {
-      val c = peek(i)
+      val c = peek(offset + i)
       state match {
         case 0 =>
           if (c == C) {
@@ -610,7 +533,7 @@ final class FastParser(input: String,
         case 3 => continue = false
       }
     }
-    (ok, i)
+    (ok, offset + i)
   }
 
   private def peekOnePlus(C: Char, D: Int => Boolean): (Boolean, Int) = {
@@ -740,10 +663,21 @@ final class FastParser(input: String,
   @inline
   private def findChar(c: Char): Int = {
     var i = 0
-    var d = peek(offset + i)
+    var d = peek(i)
     while (d != EOF && c != d) {
-      d = peek(offset + i)
-      i += 1
+      d match {
+        case '"' =>
+          val (ok, j) = peekComplexLIT(i)
+          if (ok)
+            i = j + 1
+        case '`' =>
+          val (ok, j) = peekComplexID(i)
+          if (ok)
+            i = j + 1
+        case _ =>
+          i += 1
+      }
+      d = peek(i)
     }
     if (c == d) i else -1
   }
