@@ -23,30 +23,20 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar.parser
+package org.sireum.test
 
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-import org.sireum.test.{JUnitTestFramework, TestDef}
+import org.junit.Assert
 
-@RunWith(value = classOf[Parameterized])
-final class FastParserTest(name: String, td: TestDef) {
-  @Test
-  def test(): Unit = {
-    td.test(JUnitTestFramework)
-  }
-}
+object JUnitTestFramework extends TestFramework {
 
-object FastParserTest extends FastParserTestDefProvider(JUnitTestFramework) {
-  @Parameters(name = "{0}")
-  def parameters = {
-    val ps = enabledTestDefs.map(td => Array(td.name, td))
-    val r = new java.util.ArrayList[Array[Object]](ps.size)
-    for (p <- ps) {
-      r.add(p)
+  override def assertEquals(any1: Any, any2: Any): Unit =
+    Assert.assertEquals(any1, any2)
+
+  override def assertEmpty(it: Iterable[_]): Unit = {
+    if (it.nonEmpty) {
+      Console.err.println("Expecting an empty iterable but found: " + it)
+      Console.err.flush()
     }
-    r
+    Assert.assertTrue(it.isEmpty)
   }
 }
