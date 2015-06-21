@@ -86,7 +86,8 @@ jump
   | 'return' exp? annotation* ';'     #ReturnJump
   | 'switch' exp
     switchCase*
-    b='case' u=ID /* must be _ */ ':'
+    b='default'
+    u=ID /* must be _ */ ':'
     t=ID
     annotation* ';'                   #SwitchJump
   | 'jxt' ID arg annotation* ';'      #ExtJump
