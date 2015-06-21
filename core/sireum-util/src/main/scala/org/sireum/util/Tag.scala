@@ -34,17 +34,17 @@ sealed trait UriTag {
 }
 
 sealed trait LocationInfoTag {
-  def lineBegin: Int
+  def lineBegin: PosInteger
 
-  def columnBegin: Int
+  def columnBegin: PosInteger
 
-  def lineEnd: Int
+  def lineEnd: PosInteger
 
-  def columnEnd: Int
+  def columnEnd: PosInteger
 
-  def offset: Int
+  def offset: Natural
 
-  def length: Int
+  def length: Natural
 }
 
 sealed trait SeverityTag
@@ -60,23 +60,23 @@ sealed trait MessageTag {
 }
 
 final case class
-LocationInfo(lineBegin: Int,
-             columnBegin: Int,
-             lineEnd: Int,
-             columnEnd: Int,
-             offset: Int,
-             length: Int)
+LocationInfo(lineBegin: PosInteger,
+             columnBegin: PosInteger,
+             lineEnd: PosInteger,
+             columnEnd: PosInteger,
+             offset: Natural,
+             length: Natural)
   extends LocationInfoTag
 
 final case class
 FileLocationInfoErrorMessage(kind: String,
                              uri: Uri,
-                             lineBegin: Int,
-                             columnBegin: Int,
-                             lineEnd: Int,
-                             columnEnd: Int,
-                             offset: Int,
-                             length: Int,
+                             lineBegin: PosInteger,
+                             columnBegin: PosInteger,
+                             lineEnd: PosInteger,
+                             columnEnd: PosInteger,
+                             offset: Natural,
+                             length: Natural,
                              message: String)
   extends UriTag
   with LocationInfoTag
@@ -87,12 +87,12 @@ FileLocationInfoErrorMessage(kind: String,
 final case class
 FileLocationInfoWarningMessage(kind: String,
                                uri: Uri,
-                               lineBegin: Int,
-                               columnBegin: Int,
-                               lineEnd: Int,
-                               columnEnd: Int,
-                               offset: Int,
-                               length: Int,
+                               lineBegin: PosInteger,
+                               columnBegin: PosInteger,
+                               lineEnd: PosInteger,
+                               columnEnd: PosInteger,
+                               offset: Natural,
+                               length: Natural,
                                message: String)
   extends UriTag
   with LocationInfoTag
@@ -103,12 +103,12 @@ FileLocationInfoWarningMessage(kind: String,
 final case class
 FileLocationInfoInfoMessage(kind: String,
                             uri: Uri,
-                            lineBegin: Int,
-                            columnBegin: Int,
-                            lineEnd: Int,
-                            columnEnd: Int,
-                            offset: Int,
-                            length: Int,
+                            lineBegin: PosInteger,
+                            columnBegin: PosInteger,
+                            lineEnd: PosInteger,
+                            columnEnd: PosInteger,
+                            offset: Natural,
+                            length: Natural,
                             message: String)
   extends UriTag
   with LocationInfoTag
@@ -118,12 +118,12 @@ FileLocationInfoInfoMessage(kind: String,
 
 final case class
 LocationInfoErrorMessage(kind: String,
-                         lineBegin: Int,
-                         columnBegin: Int,
-                         lineEnd: Int,
-                         columnEnd: Int,
-                         offset: Int,
-                         length: Int,
+                         lineBegin: PosInteger,
+                         columnBegin: PosInteger,
+                         lineEnd: PosInteger,
+                         columnEnd: PosInteger,
+                         offset: Natural,
+                         length: Natural,
                          message: String)
   extends LocationInfoTag
   with ErrorTag
@@ -132,12 +132,12 @@ LocationInfoErrorMessage(kind: String,
 
 final case class
 LocationInfoWarningMessage(kind: String,
-                           lineBegin: Int,
-                           columnBegin: Int,
-                           lineEnd: Int,
-                           columnEnd: Int,
-                           offset: Int,
-                           length: Int,
+                           lineBegin: PosInteger,
+                           columnBegin: PosInteger,
+                           lineEnd: PosInteger,
+                           columnEnd: PosInteger,
+                           offset: Natural,
+                           length: Natural,
                            message: String)
   extends LocationInfoTag
   with WarningTag
@@ -146,12 +146,12 @@ LocationInfoWarningMessage(kind: String,
 
 final case class
 LocationInfoInfoMessage(kind: String,
-                        lineBegin: Int,
-                        columnBegin: Int,
-                        lineEnd: Int,
-                        columnEnd: Int,
-                        offset: Int,
-                        length: Int,
+                        lineBegin: PosInteger,
+                        columnBegin: PosInteger,
+                        lineEnd: PosInteger,
+                        columnEnd: PosInteger,
+                        offset: Natural,
+                        length: Natural,
                         message: String)
   extends LocationInfoTag
   with InfoTag

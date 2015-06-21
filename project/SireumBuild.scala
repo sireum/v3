@@ -30,6 +30,7 @@ import sbt._
 import sbt.complete.Parsers._
 
 object SireumBuild extends Build {
+  final val isRelease = System.getenv("SIREUM_RELEASE") != null
 
   final val scalaVer = "2.11.6"
 
@@ -70,7 +71,8 @@ object SireumBuild extends Build {
     incOptions := incOptions.value.withNameHashing(true),
     parallelExecution in Test := true,
     scalaVersion := scalaVer,
-    scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
+    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode") ++
+      (if (isRelease) Seq("-optimize", "-Yinline-warnings") else Seq())),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,

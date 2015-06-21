@@ -139,11 +139,11 @@ BlockLocation(label: Id,
 
 
 sealed trait Command extends Node with Annotated {
-  private var _index = -1
+  private var _index: NaturalSentinel = naturalSentinel
 
   final def commandIndex = _index
 
-  final private[ast] def commandIndex_=(i: Int): Unit = {
+  final private[ast] def commandIndex_=(i: Natural): Unit = {
     _index = i
   }
 }

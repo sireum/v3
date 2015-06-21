@@ -31,7 +31,6 @@ object Json {
 
   import scala.language.implicitConversions
 
-  @inline
   implicit final def fromAnyVal(v: AnyVal): Js.Value =
     v match {
       case true => Js.True
@@ -45,20 +44,16 @@ object Json {
       case v: Double => Js.Num(v)
     }
 
-  @inline
   implicit final def fromStr(s: String): Js.Str = Js.Str(s)
 
-  @inline
   implicit final def fromSeq[T](c: CSeq[T])(
     implicit f: T => Js.Value): Js.Arr =
     Js.Arr(c.map(f): _*)
 
-  @inline
   implicit final def fromTuple2[T1, T2](t: (T1, T2))(
     implicit f1: T1 => Js.Value, f2: T2 => Js.Value): Js.Arr =
     Js.Arr(f1(t._1), f2(t._2))
 
-  @inline
   implicit final def fromTuple3[T1, T2, T3](t: (T1, T2, T3))(
     implicit
     f1: T1 => Js.Value,
@@ -66,12 +61,10 @@ object Json {
     f3: T3 => Js.Value): Js.Arr =
     Js.Arr(f1(t._1), f2(t._2), f3(t._3))
 
-  @inline
   implicit final def fromOption[T](c: Option[T])(
     implicit f: T => Js.Value): Js.Arr =
     Js.Arr(c.map(f).toSeq: _*)
 
-  @inline
   implicit final def toVector[T](v: Js.Value)(
     implicit f: Js.Value => T): Vector[T] =
     v match {
@@ -84,7 +77,6 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a sequence: " + v)
     }
 
-  @inline
   implicit final def toTuple2[T1, T2](v: Js.Value)(
     implicit
     f1: Js.Value => T1,
@@ -95,7 +87,6 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a pair: " + v)
     }
 
-  @inline
   implicit final def toTuple3[T1, T2, T3](v: Js.Value)(
     implicit
     f1: Js.Value => T1,
@@ -107,7 +98,6 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a triplet: " + v)
     }
 
-  @inline
   implicit final def toOption[T](v: Js.Value)(
     implicit f: Js.Value => T): Option[T] =
     v match {
@@ -119,7 +109,6 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for an option: " + v)
     }
 
-  @inline
   implicit final def toBoolean(v: Js.Value): Boolean =
     v match {
       case Js.True => true
@@ -127,56 +116,48 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a Boolean: " + v)
     }
 
-  @inline
   implicit final def toByte(v: Js.Value): Byte =
     v match {
       case Js.Num(d) => d.toByte
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toChar(v: Js.Value): Int =
     v match {
       case Js.Str(s) => s.charAt(0)
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toShort(v: Js.Value): Short =
     v match {
       case Js.Num(d) => d.toShort
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toInt(v: Js.Value): Int =
     v match {
       case Js.Num(d) => d.toInt
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toLong(v: Js.Value): Long =
     v match {
       case Js.Num(d) => d.toLong
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toFloat(v: Js.Value): Float =
     v match {
       case Js.Num(d) => d.toFloat
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toDouble(v: Js.Value): Double =
     v match {
       case Js.Num(d) => d
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
-  @inline
   implicit final def toStr(v: Js.Value): String =
     v match {
       case Js.Str(s) => s

@@ -42,10 +42,10 @@ object Json {
 >>
 
 constructorEntry(name, et, ec) ::= <<
-"$name$" -> { es =>
+("$name$", { es =>
   val Seq($et; separator=", "$) = es
   $name$($ec; separator=", "$)
-}
+})
 >>
 
 caseFrom(name, arg) ::= <<

@@ -27,13 +27,14 @@ package org.sireum.pilar.parser
 
 import org.sireum.pilar.ast._
 import org.sireum.pilar.parser.FastParser._
+import org.sireum.util._
 
 final class FastParser(input: String,
                        reporter: Reporter = ConsoleReporter)(
-                        max: Int = input.length,
-                        private var offset: Int = 0,
-                        private var line: Int = 1,
-                        private var column: Int = 1) {
+  max: Natural = input.length,
+  private var line: PosInteger = 1,
+  private var column: PosInteger = 1,
+  private var offset: Natural = 0) {
   val min = offset
 
   def parseExp(recover: () => Unit): Option[Exp] = {
@@ -87,7 +88,7 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     var ok = true
-    while (peek() == '(' && ok) {
+    while (charEq(peek(), '(') && ok) {
       parseArg(recover) match {
         case Some(es) =>
           r = CallExp(r, es) at(line, column, offset)
@@ -125,7 +126,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (peek() == ')') {
+    if (charEq(peek(), ')')) {
       consume()
       return Some(es)
     }
@@ -137,7 +138,7 @@ final class FastParser(input: String,
 
     es = es :+ eOpt.get
 
-    while (peek() == ',' && ok) {
+    while (charEq(peek(), ',') && ok) {
       consume()
       parseWhiteSpace()
       parseExp(rcv) match {
@@ -181,7 +182,7 @@ final class FastParser(input: String,
       val e = eOpt.get
       var ok = true
       var es = Node.seq(e)
-      while (peek() == ',' && ok) {
+      while (charEq(peek(), ',') && ok) {
         consume()
         parseWhiteSpace()
         parseExp(rcv) match {
@@ -197,7 +198,7 @@ final class FastParser(input: String,
       }
       if (ok) {
         Some(TupleExp(es, parseAnnotations(recover)).
-          at(offset, line, column))
+          at(line, column, offset))
       } else None
     }
 
@@ -211,7 +212,7 @@ final class FastParser(input: String,
       peek() match {
         case '\'' | '\"' =>
           parseLIT(recover).map(raw =>
-            LiteralExp(id, raw).at(offset, line, column))
+            LiteralExp(id, raw).at(line, column, offset))
         case _ =>
           val r = IdExp(id)
           r.locationInfoOpt = id.locationInfoOpt
@@ -219,7 +220,7 @@ final class FastParser(input: String,
       }
     }
 
-    if (peek() == '(') parseTupleExp()
+    if (charEq(peek(), '(')) parseTupleExp()
     else parseIdOrLitExp()
   }
 
@@ -231,7 +232,7 @@ final class FastParser(input: String,
     }
 
     var r = Node.emptySeq[Annotation]
-    while (peek() == '@') {
+    while (charEq(peek(), '@')) {
       parseAnnotation(rcv).foreach(a => r = r :+ a)
     }
     r
@@ -253,7 +254,7 @@ final class FastParser(input: String,
         parseWhiteSpace()
         parseLIT(recover)
       }) yield {
-      Annotation(id, raw) at(offset, line, column)
+      Annotation(id, raw) at(line, column, offset)
     }
   }
 
@@ -286,7 +287,7 @@ final class FastParser(input: String,
     }
 
   @inline
-  private def parseID(kind: Id.Value, i: Int, recover: () => Unit) =
+  private def parseID(kind: Id.Value, i: Natural, recover: () => Unit) =
     kind match {
       case Id.Simple => parseSimpleID(ok = true, i, recover)
       case Id.Dot => parseDotID(ok = true, i, recover)
@@ -294,12 +295,12 @@ final class FastParser(input: String,
     }
 
   @inline
-  private def parseComplexID(ok: Boolean, i: Int, recover: () => Unit) = {
+  private def parseComplexID(ok: Boolean, i: Natural, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
       Some(Id(input.substring(begin._3 + 1, offset - 1), Id.Complex).
-        at(offset, line, column))
+        at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
@@ -309,12 +310,12 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseDotID(ok: Boolean, i: Int, recover: () => Unit) = {
+  private def parseDotID(ok: Boolean, i: Natural, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
       Some(Id(input.substring(begin._3 + 1, offset), Id.Dot).
-        at(offset, line, column))
+        at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
@@ -324,12 +325,12 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseSimpleID(ok: Boolean, i: Int, recover: () => Unit) = {
+  private def parseSimpleID(ok: Boolean, i: Natural, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
       Some(Id(input.substring(begin._3, offset), Id.Simple).
-        at(offset, line, column))
+        at(line, column, offset))
     } else {
       if (i == 0)
         reporter.error(begin._1, begin._2, begin._3,
@@ -355,20 +356,20 @@ final class FastParser(input: String,
   private def peekSimpleID() = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
 
   @inline
-  private def peekDotID(offset: Int = 0) =
+  private def peekDotID(offset: Natural = 0) =
     peekOnePlus(offset, '.', isNotSeparator)
 
   @inline
-  private def peekComplexID(offset: Int = 0) =
+  private def peekComplexID(offset: Natural = 0) =
     peekOnePlusOne(offset, '`', isComplexIDChar, '`')
 
   @inline
-  private def parseSimpleLIT(ok: Boolean, i: Int, recover: () => Unit) = {
+  private def parseSimpleLIT(ok: Boolean, i: Natural, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
       Some(Raw(input.substring(begin._3 + 1, offset)).
-        at(offset, line, column))
+        at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
@@ -378,14 +379,14 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseComplexLIT(ok: Boolean, i: Int, recover: () => Unit): Option[Raw] = {
+  private def parseComplexLIT(ok: Boolean, i: Natural, recover: () => Unit): Option[Raw] = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
       Some(Raw(input.substring(begin._3 + 1, offset - 1).
         replaceAll( """\\\\""", "\\").
         replaceAll( """\\"""", "\"")).
-        at(offset, line, column))
+        at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
@@ -394,7 +395,7 @@ final class FastParser(input: String,
     }
   }
 
-  private def peekLIT(): (Boolean, (Boolean, Int)) = {
+  private def peekLIT(): (Boolean, (Boolean, Natural)) = {
     peek() match {
       case '\'' => (true, peekSimpleLIT())
       case '"' => (false, peekComplexLIT())
@@ -402,10 +403,10 @@ final class FastParser(input: String,
     }
   }
 
-  private def peekSimpleLIT(offset: Int = 0) =
-    peekOneStar(offset, (c) => c == '\'', isNotSeparator)
+  private def peekSimpleLIT(offset: Natural = 0) =
+    peekOneStar(offset, (c) => charEq(c, '\''), isNotSeparator)
 
-  private def peekComplexLIT(offset: Int = 0): (Boolean, Int) = {
+  private def peekComplexLIT(offset: Natural = 0): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // "(N|S("|S))*"
     // N is any char that is not "
@@ -433,7 +434,7 @@ final class FastParser(input: String,
               state = 4
               i += 1
             case _ =>
-              if (c != '"') {
+              if (charNe(c, '"')) {
                 state = 3
                 i += 1
               } else ok = false
@@ -449,7 +450,7 @@ final class FastParser(input: String,
               state = 4
               i += 1
             case _ =>
-              if (c != '"') {
+              if (charNe(c, '"')) {
                 // state = 3
                 i += 1
               } else ok = false
@@ -473,7 +474,7 @@ final class FastParser(input: String,
               state = 4
               i += 1
             case _ =>
-              if (c != '"') {
+              if (charNe(c, '"')) {
                 state = 3
                 i += 1
               } else ok = false
@@ -487,7 +488,7 @@ final class FastParser(input: String,
               state = 4
               i += 1
             case _ =>
-              if (c != '"') {
+              if (charNe(c, '"')) {
                 state = 3
                 i += 1
               } else ok = false
@@ -497,10 +498,10 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekOnePlusOne(offset: Int,
+  private def peekOnePlusOne(offset: Natural,
                              C: Char,
                              D: Int => Boolean,
-                             E: Char): (Boolean, Int) = {
+                             E: Char): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // CD+E
     // C is the starting character
@@ -514,7 +515,7 @@ final class FastParser(input: String,
       val c = peek(offset + i)
       state match {
         case 0 =>
-          if (c == C) {
+          if (charEq(c, C)) {
             state = 1
             i += 1
           } else ok = false
@@ -524,7 +525,7 @@ final class FastParser(input: String,
             i += 1
           } else ok = false
         case 2 =>
-          if (c == E) {
+          if (charEq(c, E)) {
             state = 3
             i += 1
           } else if (D(c)) {
@@ -537,8 +538,9 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekOnePlus(offset: Int, C: Char,
-                          D: Int => Boolean): (Boolean, Int) = {
+  private def peekOnePlus(offset: Natural,
+                          C: Char,
+                          D: CharSentinel => Boolean): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // CD+
     // C is the starting character
@@ -551,7 +553,7 @@ final class FastParser(input: String,
       val c = peek(offset + i)
       state match {
         case 0 =>
-          if (c == C) {
+          if (charEq(c, C)) {
             state = 1
             i += 1
 
@@ -571,8 +573,9 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekOneStar(offset: Int, C: Int => Boolean,
-                          D: Int => Boolean): (Boolean, Int) = {
+  private def peekOneStar(offset: Natural,
+                          C: CharSentinel => Boolean,
+                          D: CharSentinel => Boolean): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // CD*
     // C is the predicate for starting character
@@ -607,7 +610,7 @@ final class FastParser(input: String,
   private def peekCharSeq(s: String): Boolean = {
     var i = 0
     while (i < s.length) {
-      if (peek(i) != s.charAt(i)) return false
+      if (charNe(peek(i), s.charAt(i))) return false
       i += 1
     }
     true
@@ -632,7 +635,7 @@ final class FastParser(input: String,
     var i = 0
     var ok = true
     while (i < s.length && ok) {
-      if (s.charAt(i) != peek()) {
+      if (charNe(peek(), s.charAt(i))) {
         ok = false
         if (i == 0)
           reporter.error(begin._1, begin._2, begin._3,
@@ -646,15 +649,14 @@ final class FastParser(input: String,
     ok
   }
 
-  @inline
   private def parseWhiteSpace(): Unit = {
     while (isWhitespace(peek())) consume()
   }
 
   @inline
-  private def matchChar(char: Int)(f: String => Unit): Boolean = {
+  private def matchChar(char: Char)(f: String => Unit): Boolean = {
     val c = peek()
-    if (c != char) {
+    if (charNe(c, char)) {
       if (c == EOF) f(" nothing") else f(s": '${c.asInstanceOf[Char]}'")
       false
     } else {
@@ -664,10 +666,10 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def findChar(c: Char): Int = {
+  private def findChar(c: Char): Natural = {
     var i = 0
     var d = peek(i)
-    while (d != EOF && c != d) {
+    while (d != EOF && charNe(d, c)) {
       d match {
         case '"' =>
           val (ok, j) = peekComplexLIT(i)
@@ -690,12 +692,16 @@ final class FastParser(input: String,
       }
       d = peek(i)
     }
-    if (c == d) i else -1
+    if (charEq(d, c)) i else -1
   }
 
   @inline
-  private def consume(n: Int): Unit = {
-    for (i <- 0 until n) consume()
+  private def consume(n: Natural): Unit = {
+    var i = 0
+    while (i < n) {
+      consume()
+      i += 1
+    }
   }
 
   @inline
@@ -712,57 +718,32 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def peek(index: Int = 0): Int = {
+  private def peek(index: Natural = 0): CharSentinel = {
     val n = offset + index
     if (0 <= n && n < max) input.charAt(n) else EOF
   }
-}
-
-object FastParser {
-  final val EOF = -1
-
-  implicit class At[T <: Node](val n: T) extends AnyVal {
-    def at(offset: Int, line: Int, column: Int)(
-      implicit t: (Int, Int, Int)): T = {
-      n.locationInfoOpt = Some(org.sireum.util.LocationInfo(
-        t._1, t._2, line, column, t._3, offset - t._3 + 1
-      ))
-      n
-    }
-  }
-
-  trait Reporter {
-    def error(line: Int, column: Int, offset: Int, message: String): Unit
-  }
-
-  object ConsoleReporter extends Reporter {
-    override def error(line: Int, column: Int, offset: Int,
-                       message: String): Unit = {
-      Console.err.println(s"[$line, $column] $message")
-      Console.err.flush()
-    }
-  }
 
   @inline
-  final def isJavaLetter(c: Int) =
+  private def isJavaLetter(c: CharSentinel) =
     (c >= 'a' && c <= 'z') ||
       (c >= 'A' && c <= 'Z') ||
-      (c == '$') || (c == '_')
+      charEq(c, '$') || charEq(c, '_')
 
   @inline
-  final def isJavaDigit(c: Int) = c >= '0' && c <= '9'
+  private def isJavaDigit(c: CharSentinel) = c >= '0' && c <= '9'
 
   @inline
-  final def isJavaDigitOrLetter(c: Int) = isJavaDigit(c) || isJavaLetter(c)
+  private def isJavaDigitOrLetter(c: CharSentinel) =
+    isJavaDigit(c) || isJavaLetter(c)
 
   @inline
-  final def isWhitespace(c: Int) = c match {
+  private def isWhitespace(c: CharSentinel) = c match {
     case ' ' | '\r' | '\n' | '\t' | '\u000C' => true
     case _ => false
   }
 
   @inline
-  final def isSeparator(c: Int) =
+  private def isSeparator(c: CharSentinel) =
     if (isWhitespace(c)) true
     else c match {
       case ';' | '(' | ',' | ')' | '{' | '}' | '\'' |
@@ -771,14 +752,54 @@ object FastParser {
     }
 
   @inline
-  final def isNotSeparator(c: Int) = !isSeparator(c)
+  private def isNotSeparator(c: CharSentinel) = !isSeparator(c)
 
   @inline
-  def isComplexIDChar(c: Int) = c match {
+  private def isComplexIDChar(c: CharSentinel) = c match {
     case '\r' | '\n' | '\t' | '\u000C' | '`' => false
     case _ => true
   }
 
   @inline
-  final def isEOF(c: Int) = c == EOF
+  private def isEOF(c: CharSentinel) = c == EOF
+
+  @inline
+  private def charEq(cs: CharSentinel, c: Char) = cs == c.toInt
+
+  @inline
+  private def charNe(cs: CharSentinel, c: Char) = cs != c.toInt
+}
+
+object FastParser {
+  final val EOF = naturalSentinel
+
+  trait Reporter {
+    def error(line: PosInteger,
+              column: PosInteger,
+              offset: Natural,
+              message: String): Unit
+  }
+
+  object ConsoleReporter extends Reporter {
+    override def error(line: PosInteger,
+                       column: PosInteger,
+                       offset: Natural,
+                       message: String): Unit = {
+      Console.err.println(s"[$line, $column] $message")
+      Console.err.flush()
+    }
+  }
+
+  private[parser] implicit class At[T <: Node](val n: T) extends AnyVal {
+    def at(line: PosInteger,
+           column: PosInteger,
+           offset: Natural)(
+            implicit t: (Int, Int, Int)): T = {
+      n.locationInfoOpt = Some(org.sireum.util.LocationInfo(
+        t._1, t._2, line, column, t._3, offset - t._3 + 1
+      ))
+      n
+    }
+  }
+
 }

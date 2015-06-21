@@ -33,7 +33,10 @@ import org.sireum.util._
 object Builder {
 
   trait Reporter {
-    def error(line: Int, column: Int, offset: Int, message: String): Unit
+    def error(line: PosInteger,
+              column: PosInteger,
+              offset: PosInteger,
+              message: String): Unit
   }
 
   final def build(ctx: ModelContext)(
@@ -316,8 +319,9 @@ object Builder {
     }
 
     @inline
-    private def end(lineBegin: Int, columnBegin: Int,
-                    text: String): (Int, Int) = {
+    private def end(lineBegin: PosInteger,
+                    columnBegin: PosInteger,
+                    text: String): (PosInteger, PosInteger) = {
       val i = text.lastIndexOf('\n')
       if (i < 0)
         (lineBegin, columnBegin + text.length - 1)

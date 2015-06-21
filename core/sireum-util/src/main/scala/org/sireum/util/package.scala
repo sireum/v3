@@ -26,9 +26,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum
 
 package object util {
-  type --\[D, I] = PartialFunction[D, I]
+  type Integer = Int
+  type Natural = Int
+  type NaturalSentinel = Int
+  type PosInteger = Int
+  type CharSentinel = Int
 
   type Uri = String
+
+  type --\[D, I] = PartialFunction[D, I]
 
   type VisitorFunction = Any --\ Boolean
   type RewriteFunction = Any --\ Any
@@ -53,29 +59,31 @@ package object util {
   type MIdSet[T] = MMap[T, T]
   type MStack[T] = scala.collection.mutable.Stack[T]
 
-  @inline
-  def mbitsetEmpty() : MBitSet = scala.collection.mutable.BitSet.empty
+  val naturalSentinel: NaturalSentinel = -1
 
   @inline
-  def mbitsetEmpty(size : Int) : MBitSet = new scala.collection.mutable.BitSet(size)
+  def mbitsetEmpty(): MBitSet = scala.collection.mutable.BitSet.empty
 
   @inline
-  def marrayEmpty[T] : MArray[T] = scala.collection.mutable.ArrayBuffer.empty[T]
+  def mbitsetEmpty(size: Int): MBitSet = new scala.collection.mutable.BitSet(size)
 
   @inline
-  def mlistEmpty[T] : MList[T] = scala.collection.mutable.ListBuffer.empty[T]
+  def marrayEmpty[T]: MArray[T] = scala.collection.mutable.ArrayBuffer.empty[T]
 
   @inline
-  def mmapEmpty[K, V] : MMap[K, V] = scala.collection.mutable.Map.empty[K, V]
+  def mlistEmpty[T]: MList[T] = scala.collection.mutable.ListBuffer.empty[T]
 
   @inline
-  def mlinkedSetEmpty[T] : MLinkedSet[T] = scala.collection.mutable.LinkedHashSet.empty[T]
+  def mmapEmpty[K, V]: MMap[K, V] = scala.collection.mutable.Map.empty[K, V]
 
   @inline
-  def mlinkedMapEmpty[K, V] : MLinkedMap[K, V] = scala.collection.mutable.LinkedHashMap.empty[K, V]
+  def mlinkedSetEmpty[T]: MLinkedSet[T] = scala.collection.mutable.LinkedHashSet.empty[T]
 
   @inline
-  def msetEmpty[T] : MSet[T] = scala.collection.mutable.Set.empty[T]
+  def mlinkedMapEmpty[K, V]: MLinkedMap[K, V] = scala.collection.mutable.LinkedHashMap.empty[K, V]
+
+  @inline
+  def msetEmpty[T]: MSet[T] = scala.collection.mutable.Set.empty[T]
 
   @inline
   def mstackEmpty[T]: MStack[T] = new scala.collection.mutable.Stack[T]
@@ -92,35 +100,35 @@ package object util {
   type IStack[T] = scala.collection.immutable.List[T]
 
   @inline
-  def ibitsetEmpty : IBitSet = scala.collection.immutable.BitSet.empty
+  def ibitsetEmpty: IBitSet = scala.collection.immutable.BitSet.empty
 
   @inline
-  def ilistEmpty[T] : IList[T] = scala.collection.immutable.List.empty[T]
+  def ilistEmpty[T]: IList[T] = scala.collection.immutable.List.empty[T]
 
   @inline
-  def ilist[T](args : T*) : IList[T] = List(args : _*)
+  def ilist[T](args: T*): IList[T] = List(args: _*)
 
   @inline
-  def ivectorEmpty[T] : IVector[T] = scala.collection.immutable.Vector.empty[T]
+  def ivectorEmpty[T]: IVector[T] = scala.collection.immutable.Vector.empty[T]
 
   @inline
-  def ivector[T](args : T*) : IVector[T] = Vector(args : _*)
+  def ivector[T](args: T*): IVector[T] = Vector(args: _*)
 
   @inline
-  def seq2ivect[T](seq : CSeq[T]) : IVector[T] = {
+  def seq2ivect[T](seq: CSeq[T]): IVector[T] = {
     val vb = Vector.newBuilder[T]
     vb ++= seq
     vb.result()
   }
 
   @inline
-  def imapEmpty[K, V] : IMap[K, V] = scala.collection.immutable.Map.empty[K, V]
+  def imapEmpty[K, V]: IMap[K, V] = scala.collection.immutable.Map.empty[K, V]
 
   @inline
-  def ilinkedMapEmpty[K, V] : ILinkedMap[K, V] = scala.collection.immutable.ListMap.empty[K, V]
+  def ilinkedMapEmpty[K, V]: ILinkedMap[K, V] = scala.collection.immutable.ListMap.empty[K, V]
 
   @inline
-  def ilinkedMap[K, V](ps : (K, V)*) : ILinkedMap[K, V] = {
+  def ilinkedMap[K, V](ps: (K, V)*): ILinkedMap[K, V] = {
     var r = ilinkedMapEmpty[K, V]
     for (p <- ps)
       r = r + p
@@ -131,22 +139,22 @@ package object util {
   def isortedMapEmpty[K, V](implicit ord: Ordering[K]): ISortedMap[K, V] = scala.collection.immutable.SortedMap.empty[K, V]
 
   @inline
-  def isetEmpty[T] : ISet[T] = scala.collection.immutable.Set.empty[T]
+  def isetEmpty[T]: ISet[T] = scala.collection.immutable.Set.empty[T]
 
   @inline
   def isortedSetEmpty[T](implicit ord: Ordering[T]): ISortedSet[T] = scala.collection.immutable.SortedSet.empty[T]
 
   @inline
-  def istackEmpty[T] : IStack[T] = scala.collection.immutable.List.empty[T]
+  def istackEmpty[T]: IStack[T] = scala.collection.immutable.List.empty[T]
 
   @inline
-  def cintersect[T](s1 : CSet[T], s2 : CSet[T]) = s1.intersect(s2)
+  def cintersect[T](s1: CSet[T], s2: CSet[T]) = s1.intersect(s2)
 
   @inline
-  def cunion[T](s1 : CSet[T], s2 : CSet[T]) = s1.union(s2)
+  def cunion[T](s1: CSet[T], s2: CSet[T]) = s1.union(s2)
 
   @inline
-  def bigCIntersect[T](it : Iterable[CSet[T]]) : CSet[T] =
+  def bigCIntersect[T](it: Iterable[CSet[T]]): CSet[T] =
     it.size match {
       case 0 => Set()
       case 1 => it.iterator.next()
@@ -154,7 +162,7 @@ package object util {
     }
 
   @inline
-  def bigCUnion[T](it : Iterable[CSet[T]]) : CSet[T] =
+  def bigCUnion[T](it: Iterable[CSet[T]]): CSet[T] =
     it.size match {
       case 0 => Set()
       case 1 => it.iterator.next()
@@ -162,13 +170,13 @@ package object util {
     }
 
   @inline
-  def iintersect[T](s1 : ISet[T], s2 : ISet[T]) = s1.intersect(s2)
+  def iintersect[T](s1: ISet[T], s2: ISet[T]) = s1.intersect(s2)
 
   @inline
-  def iunion[T](s1 : ISet[T], s2 : ISet[T]) = s1.union(s2)
+  def iunion[T](s1: ISet[T], s2: ISet[T]) = s1.union(s2)
 
   @inline
-  def bigIIntersect[T](it : Iterable[ISet[T]]) : ISet[T] =
+  def bigIIntersect[T](it: Iterable[ISet[T]]): ISet[T] =
     it.size match {
       case 0 => Set()
       case 1 => it.iterator.next()
@@ -176,7 +184,7 @@ package object util {
     }
 
   @inline
-  def bigIUnion[T](it : Iterable[ISet[T]]) : ISet[T] =
+  def bigIUnion[T](it: Iterable[ISet[T]]): ISet[T] =
     it.size match {
       case 0 => Set()
       case 1 => it.iterator.next()
@@ -184,21 +192,22 @@ package object util {
     }
 
   trait IsBoolean {
-    def asBoolean : Boolean
+    def asBoolean: Boolean
 
-    override def equals(other : Any) =
+    override def equals(other: Any) =
       other match {
-        case other : Boolean   => this.asBoolean == other
-        case other : IsBoolean => this.asBoolean == other.asBoolean
-        case _                 => false
+        case other: Boolean => this.asBoolean == other
+        case other: IsBoolean => this.asBoolean == other.asBoolean
+        case _ => false
       }
 
     override def hashCode = asBoolean.hashCode
   }
 
-  implicit class IStackPushPop[E](val l : IStack[E]) extends AnyVal {
-    def pop() : (E, IStack[E]) = (l.head, l.tail)
-    def push(e : E) : IStack[E] = e::l
+  implicit class IStackPushPop[E](val l: IStack[E]) extends AnyVal {
+    def pop(): (E, IStack[E]) = (l.head, l.tail)
+
+    def push(e: E): IStack[E] = e :: l
   }
 
 
