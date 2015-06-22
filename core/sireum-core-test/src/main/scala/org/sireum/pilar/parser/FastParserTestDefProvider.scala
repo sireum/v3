@@ -191,27 +191,27 @@ final class FastParserTestDefProvider(tf: TestFramework)
 
   private def parseExp(s: String,
                        reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parseExp(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseExp(noRecover)
 
   private def parsePrimaryExp(s: String,
                               reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parsePrimaryExp(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parsePrimaryExp(noRecover)
 
   private def parseLIT(s: String,
                        reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parseLIT(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseLIT(noRecover)
 
   private def parseID(s: String,
                       reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parseID(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseID(noRecover)
 
   private def parseAnnotation(s: String,
                               reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parseAnnotation(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseAnnotation(noRecover)
 
   private def parseAnnotations(s: String,
                                reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter)().parseAnnotations(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseAnnotations(noRecover)
 
   private def reporter(_offset: Int*) =
     new FastParser.Reporter {

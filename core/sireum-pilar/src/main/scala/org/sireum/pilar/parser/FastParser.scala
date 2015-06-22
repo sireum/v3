@@ -30,12 +30,16 @@ import org.sireum.pilar.parser.FastParser._
 import org.sireum.util._
 
 final class FastParser(input: String,
-                       reporter: Reporter = ConsoleReporter)(
-  max: Natural = input.length,
-  private var line: PosInteger = 1,
-  private var column: PosInteger = 1,
-  private var offset: Natural = 0) {
-  val min = offset
+                       reporter: Reporter = ConsoleReporter,
+                       private val createLocInfo: Boolean = false,
+                       private val max: Natural = -1,
+                       private var line: PosInteger = 1,
+                       private var column: PosInteger = 1,
+                       private var offset: Natural = 0) {
+
+  private val _max = if (max == -1) input.length else max
+  private val min = offset
+  private implicit val _createLocInfo = createLocInfo
 
   def parseLocation(recover: () => Unit): Option[Location] = {
     var ok = true
@@ -51,10 +55,11 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    matchChar('#') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ';', but found $s")
-      ok = false
+    matchChar('#') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
     }
 
     if (!ok) {
@@ -139,10 +144,11 @@ final class FastParser(input: String,
 
     var ok = true
 
-    matchChar(';') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ';', but found $s")
-      ok = false
+    matchChar(';') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
     }
 
     if (ok) {
@@ -233,10 +239,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -284,10 +291,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -334,10 +342,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -384,10 +393,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -443,10 +453,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -514,10 +525,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -561,10 +573,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -618,11 +631,12 @@ final class FastParser(input: String,
 
       parseWhiteSpace()
 
-      matchChar(':') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ':', but found $s")
-        recover()
-        return None
+      matchChar(':') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ':', but found $s")
+          recover()
+          return None
       }
 
       val idOpt = parseID(recover)
@@ -630,7 +644,7 @@ final class FastParser(input: String,
       val id = idOpt.get
 
       cases = cases :+ SwitchCase(Some(lit), id).
-        at(line, column, offset)(begin2)
+        at(line, column, offset)(begin2, createLocInfo)
 
       parseWhiteSpace()
     }
@@ -643,25 +657,28 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    matchChar('_') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: '_', but found $s")
-      recover()
-      return None
+    matchChar('_') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: '_', but found $s")
+        recover()
+        return None
     }
 
-    matchChar(':') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ':', but found $s")
-      recover()
-      return None
+    matchChar(':') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ':', but found $s")
+        recover()
+        return None
     }
 
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    cases = cases :+ SwitchCase(None, id).at(line, column, offset)(begin2)
+    cases = cases :+ SwitchCase(None, id).
+      at(line, column, offset)(begin2, createLocInfo)
 
     parseWhiteSpace()
 
@@ -670,10 +687,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -720,10 +738,11 @@ final class FastParser(input: String,
     parseWhiteSpace()
 
     if (ok) {
-      matchChar(';') { s =>
-        reporter.error(line, column, offset,
-          s"Expecting: ';', but found $s")
-        ok = false
+      matchChar(';') {
+        s =>
+          reporter.error(line, column, offset,
+            s"Expecting: ';', but found $s")
+          ok = false
       }
     }
 
@@ -859,10 +878,11 @@ final class FastParser(input: String,
       }
       parseWhiteSpace()
     }
-    ok = ok && matchChar(')') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ')', but found $s")
-      recover()
+    ok = ok && matchChar(')') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ')', but found $s")
+        recover()
     }
     if (ok) {
       Some(TupleExp(es, parseAnnotations(recover)).
@@ -887,10 +907,11 @@ final class FastParser(input: String,
   def parseAnnotation(recover: () => Unit): Option[Annotation] = {
     implicit val begin = (line, column, offset)
 
-    if (!matchChar('@') { s =>
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting: '@', but found $s")
-      recover()
+    if (!matchChar('@') {
+      s =>
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting: '@', but found $s")
+        recover()
     }) return None
 
     parseWhiteSpace()
@@ -928,7 +949,9 @@ final class FastParser(input: String,
         parseComplexLIT(ok, i, recover)
       case c =>
         reporter.error(line, column, offset,
-          s"Invalid character for a literal string: '${c.asInstanceOf[Char]}'")
+          s"Invalid character for a literal string: '${
+            c.asInstanceOf[Char]
+          }'")
         recover()
         None
     }
@@ -949,10 +972,11 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    var ok = matchChar('(') { s =>
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting: '(', but found $s")
-      recover()
+    var ok = matchChar('(') {
+      s =>
+        reporter.error(begin._1, begin._2, begin._3,
+          s"Expecting: '(', but found $s")
+        recover()
     }
     if (!ok) return None
 
@@ -981,10 +1005,11 @@ final class FastParser(input: String,
       }
       parseWhiteSpace()
     }
-    ok = ok && matchChar(')') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ')', but found $s")
-      recover()
+    ok = ok && matchChar(')') {
+      s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ')', but found $s")
+        recover()
     }
     if (ok) Some(es) else None
   }
@@ -1006,7 +1031,9 @@ final class FastParser(input: String,
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a complex identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        s"Expecting a complex identifier form but found: '${
+          input.substring(begin._3, offset + i)
+        }'")
       recover()
       None
     }
@@ -1021,7 +1048,9 @@ final class FastParser(input: String,
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a Op identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        s"Expecting a Op identifier form but found: '${
+          input.substring(begin._3, offset + i)
+        }'")
       recover()
       None
     }
@@ -1038,11 +1067,15 @@ final class FastParser(input: String,
       if (i == 0)
         reporter.error(begin._1, begin._2, begin._3,
           "Expecting an identifier but found" + (
-            if (offset + i < max) s": '${peek().asInstanceOf[Char]}'"
+            if (offset + i < _max) s": '${
+              peek().asInstanceOf[Char]
+            }'"
             else " nothing"))
       else
         reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting an identifier but found: '${input.substring(begin._3, offset + i)}'")
+          s"Expecting an identifier but found: '${
+            input.substring(begin._3, offset + i)
+          }'")
       recover()
       None
     }
@@ -1106,7 +1139,9 @@ final class FastParser(input: String,
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a single-quoted string literal but found: '${input.substring(begin._3, offset + i)}'")
+        s"Expecting a single-quoted string literal but found: '${
+          input.substring(begin._3, offset + i)
+        }'")
       recover()
       None
     }
@@ -1123,7 +1158,9 @@ final class FastParser(input: String,
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a multi-line string literal but found: '${input.substring(begin._3, offset + i)}'")
+        s"Expecting a multi-line string literal but found: '${
+          input.substring(begin._3, offset + i)
+        }'")
       recover()
       None
     }
@@ -1331,7 +1368,9 @@ final class FastParser(input: String,
 
     if (isID) {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
+        s"Expecting: '$s', but found: '${
+          input.substring(begin._3, offset + 1)
+        }'")
       false
     } else {
       true
@@ -1350,7 +1389,9 @@ final class FastParser(input: String,
             s"Expecting $something: '$s', but found nothing")
         else
           reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting $something: '$s', but found: '${input.substring(begin._3, offset)}'")
+            s"Expecting $something: '$s', but found: '${
+              input.substring(begin._3, offset)
+            }'")
       } else consume()
       i += 1
     }
@@ -1364,7 +1405,10 @@ final class FastParser(input: String,
   private def matchChar(char: Char)(f: String => Unit): Boolean = {
     val c = peek()
     if (charNe(c, char)) {
-      if (c == EOF) f(" nothing") else f(s": '${c.asInstanceOf[Char]}'")
+      if (c == EOF) f(" nothing")
+      else f(s": '${
+        c.asInstanceOf[Char]
+      }'")
       false
     } else {
       consume()
@@ -1454,7 +1498,7 @@ final class FastParser(input: String,
   @inline
   private def peek(index: Natural = 0): CharSentinel = {
     val n = offset + index
-    if (0 <= n && n < max) input.charAt(n) else EOF
+    if (0 <= n && n < _max) input.charAt(n) else EOF
   }
 
   @inline
@@ -1513,7 +1557,7 @@ object FastParser {
     def at(line: PosInteger,
            column: PosInteger,
            offset: Natural)(
-            implicit t: (Int, Int, Int)): T = {
+      implicit t: (Int, Int, Int), createLocInfo: Boolean): T = {
       n.locationInfoOpt = Some(org.sireum.util.LocationInfo(
         t._1, t._2, line, column, t._3, offset - t._3 + 1
       ))
