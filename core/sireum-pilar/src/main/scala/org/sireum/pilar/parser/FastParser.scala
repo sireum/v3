@@ -103,7 +103,8 @@ final class FastParser(input: String,
 
       parseWhiteSpace()
 
-      if (!matchCharSeq(":=")((line, column, offset))) {
+      if (!matchCharSeq(":=", "assignment operator")(
+        (line, column, offset))) {
         recover()
         return None
       }
@@ -213,7 +214,8 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (!matchCharSeq(":=")((line, column, offset))) {
+    if (!matchCharSeq(":=", "assignment operator")(
+      (line, column, offset))) {
       recover()
       return None
     }
@@ -1073,7 +1075,23 @@ final class FastParser(input: String,
 
   @inline
   private def peekOpID(offset: Natural = 0) =
-    peekOneStar(offset, isOp, isNotSeparator)
+    peekOneStar(offset, isOpIDFirstChar, isOpIDTrailingChar)
+
+  @inline
+  private def isOpIDFirstChar(c: CharSentinel): Boolean =
+    c match {
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
+      case _ => false
+    }
+
+  @inline
+  private def isOpIDTrailingChar(c: CharSentinel) =
+    c match {
+      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+      case _ => true
+    }
 
   @inline
   private def peekComplexID(offset: Natural = 0) =
@@ -1112,7 +1130,18 @@ final class FastParser(input: String,
   }
 
   private def peekSimpleLIT(offset: Natural = 0) =
-    peekOneStar(offset, (c) => charEq(c, '\''), isNotSeparator)
+    peekOneStar(offset, isSimpleLITFirstChar, isSimpleLITTrailingChar)
+
+  @inline
+  private def isSimpleLITFirstChar(c: CharSentinel) = charEq(c, '\'')
+
+  @inline
+  private def isSimpleLITTrailingChar(c: CharSentinel) =
+    c match {
+      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | EOF => false
+      case _ => true
+    }
 
   private def peekComplexLIT(offset: Natural = 0): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
@@ -1291,11 +1320,16 @@ final class FastParser(input: String,
     if (isJavaDigitOrLetter(peek(j))) false else true
   }
 
-  @inline
   private def matchKeyword(s: String)(
     implicit begin: (Int, Int, Int)): Boolean = {
-    if (!matchCharSeq(s)) return false
-    if (isJavaDigitOrLetter(peek())) {
+    if (!matchCharSeq(s, "keyword")) return false
+    var isID = false
+    while (isJavaDigitOrLetter(peek())) {
+      consume()
+      isID = true
+    }
+
+    if (isID) {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
       false
@@ -1304,8 +1338,7 @@ final class FastParser(input: String,
     }
   }
 
-  @inline
-  private def matchCharSeq(s: String)(
+  private def matchCharSeq(s: String, something: String)(
     implicit begin: (Int, Int, Int)): Boolean = {
     var i = 0
     var ok = true
@@ -1314,10 +1347,10 @@ final class FastParser(input: String,
         ok = false
         if (i == 0)
           reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting: '$s', but found nothing")
+            s"Expecting $something: '$s', but found nothing")
         else
           reporter.error(begin._1, begin._2, begin._3,
-            s"Expecting: '$s', but found: '${input.substring(begin._3, offset)}'")
+            s"Expecting $something: '$s', but found: '${input.substring(begin._3, offset)}'")
       } else consume()
       i += 1
     }
@@ -1328,7 +1361,6 @@ final class FastParser(input: String,
     while (isWhitespace(peek())) consume()
   }
 
-  @inline
   private def matchChar(char: Char)(f: String => Unit): Boolean = {
     val c = peek()
     if (charNe(c, char)) {
@@ -1426,14 +1458,6 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def isOp(c: CharSentinel): Boolean =
-    c match {
-      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
-           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
-      case _ => false
-    }
-
-  @inline
   private def isJavaLetter(c: CharSentinel) =
     (c >= 'a' && c <= 'z') ||
       (c >= 'A' && c <= 'Z') ||
@@ -1451,18 +1475,6 @@ final class FastParser(input: String,
     case ' ' | '\r' | '\n' | '\t' | '\u000C' => true
     case _ => false
   }
-
-  @inline
-  private def isSeparator(c: CharSentinel) =
-    if (isWhitespace(c)) true
-    else c match {
-      case ';' | '(' | ',' | ')' | '{' | '}' | '\'' |
-           '\"' | '#' | ':' | '@' | '`' | EOF => true
-      case _ => false
-    }
-
-  @inline
-  private def isNotSeparator(c: CharSentinel) = !isSeparator(c)
 
   @inline
   private def isComplexIDChar(c: CharSentinel) = c match {
