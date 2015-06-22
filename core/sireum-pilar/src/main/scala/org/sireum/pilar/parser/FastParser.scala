@@ -38,7 +38,6 @@ final class FastParser(input: String,
                        private var offset: Natural = 0) {
 
   private val _max = if (max == -1) input.length else max
-  private val min = offset
   private implicit val _createLocInfo = createLocInfo
 
   def parseLocation(recover: () => Unit): Option[Location] = {
