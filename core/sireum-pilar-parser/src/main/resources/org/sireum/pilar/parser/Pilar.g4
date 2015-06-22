@@ -52,7 +52,7 @@ param
 
 procBody
   : '{'
-    ( 'var' localVarDecl+ )?
+    'var' localVarDecl*
     location+
     '}'
   ;
@@ -62,7 +62,7 @@ localVarDecl
   ;
 
 location
-  : '#' ID ':'
+  : '#' ID
     annotation* transformation
   ;
 
@@ -76,7 +76,7 @@ action
   : l=exp ':=' r=exp annotation* ';'  #AssignAction
   | 'assert' exp annotation* ';'      #AssertAction
   | 'assume' exp annotation* ';'      #AssumeAction
-  | 'axt' ID arg annotation* ';'      #ExtAction
+  | 'ext' ID arg annotation* ';'      #ExtAction
   ;
 
 jump
@@ -90,7 +90,7 @@ jump
     u=ID /* must be _ */ ':'
     t=ID
     annotation* ';'                   #SwitchJump
-  | 'jxt' ID arg annotation* ';'      #ExtJump
+  | 'jext' ID arg annotation* ';'     #ExtJump
   ;
 
 switchCase
@@ -98,15 +98,15 @@ switchCase
   ;
 
 exp
-  : prim2 expSuffix*
+  : primArgs expSuffix*
   ;
 
-prim2
+primArgs
   : prim arg*
   ;
 
 expSuffix
-  : ID prim2
+  : ID primArgs
   ;
 
 prim

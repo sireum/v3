@@ -229,20 +229,20 @@ object Builder {
 
   final def build(ctx: ExpContext): Exp = {
     val start = ctx.start
-    var r = build(ctx.prim2())
+    var r = build(ctx.primArgs())
     if (ctx.expSuffix().nonEmpty) {
       val first = ctx.expSuffix(0)
       val op = buildID(first.ID())
-      var right = build(first.prim2())
+      var right = build(first.primArgs())
       r = BinaryExp(r, op, right,
         ctx.expSuffix().map(ctxS =>
-          (buildID(ctxS.ID()), build(ctxS.prim2()))
+          (buildID(ctxS.ID()), build(ctxS.primArgs()))
         )) at ctx
     }
     r
   }
 
-  final def build(ctx: Prim2Context): Exp = {
+  final def build(ctx: PrimArgsContext): Exp = {
     val start = ctx.start
     var r = build(ctx.prim())
     for (arg <- ctx.arg()) {
