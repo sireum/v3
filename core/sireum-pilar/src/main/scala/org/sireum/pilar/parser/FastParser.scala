@@ -103,9 +103,7 @@ final class FastParser(input: String,
 
       parseWhiteSpace()
 
-      val begin2 = (line, column, offset)
-
-      if (!matchCharSeqSep(":=")) {
+      if (!matchCharSeqSep(":=")((line, column, offset))) {
         recover()
         return None
       }
@@ -125,9 +123,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    val begin2 = (line, column, offset)
-
-    if (!matchCharSeqSep("goto")) {
+    if (!matchCharSeqSep("goto")((line, column, offset))) {
       recover()
       return None
     }
@@ -217,9 +213,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    val begin2 = (line, column, offset)
-
-    if (!matchCharSeqSep(":=")) {
+    if (!matchCharSeqSep(":=")((line, column, offset))) {
       recover()
       return None
     }
@@ -486,9 +480,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    var begin2 = (line, column, offset)
-
-    if (!matchCharSeqSep("then")) {
+    if (!matchCharSeqSep("then")((line, column, offset))) {
       recover()
       return None
     }
@@ -502,9 +494,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    begin2 = (line, column, offset)
-
-    if (!matchCharSeqSep("else")) {
+    if (!matchCharSeqSep("else")((line, column, offset))) {
       recover()
       return None
     }
@@ -612,8 +602,7 @@ final class FastParser(input: String,
 
     while (charEq(peek(), 'c')) {
       val begin2 = (line, column, offset)
-
-      if (!matchCharSeqSep("case")) {
+      if (!matchCharSeqSep("case")(begin2)) {
         recover()
         return None
       }
@@ -645,8 +634,7 @@ final class FastParser(input: String,
     }
 
     val begin2 = (line, column, offset)
-
-    if (!matchCharSeqSep("default")) {
+    if (!matchCharSeqSep("default")(begin2)) {
       recover()
       return None
     }
