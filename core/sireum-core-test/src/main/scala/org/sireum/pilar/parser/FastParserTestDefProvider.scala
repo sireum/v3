@@ -72,9 +72,9 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parseID( """s!s"""),
       Id("s")),
 
-    EqualOptTest("DotID",
-      parseID(".+"),
-      Id("+", Id.Dot)),
+    EqualOptTest("OpID",
+      parseID("+"),
+      Id("+", Id.Op)),
 
     EqualOptTest("ComplexID",
       parseID( """`a"sdsbc2`"""),
@@ -96,9 +96,9 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parsePrimaryExp( """s!s"""),
       IdExp(Id("s"))),
 
-    EqualOptTest("PrimaryExpDotID",
-      parsePrimaryExp(".+"),
-      IdExp(Id("+", Id.Dot))),
+    EqualOptTest("PrimaryExpOpID",
+      parsePrimaryExp("+"),
+      IdExp(Id("+", Id.Op))),
 
     EqualOptTest("PrimaryExpComplexID",
       parsePrimaryExp( """`a"sdsbc2`"""),
@@ -134,12 +134,12 @@ final class FastParserTestDefProvider(tf: TestFramework)
       IdExp(Id("abc3"))),
 
     EqualOptTest("ExpSimpleIDNotEnd2",
-      parseExp( """s!s"""),
+      parseExp( """s,s"""),
       IdExp(Id("s"))),
 
-    EqualOptTest("ExpDotID",
-      parseExp(".+"),
-      IdExp(Id("+", Id.Dot))),
+    EqualOptTest("ExpOpID",
+      parseExp("+"),
+      IdExp(Id("+", Id.Op))),
 
     EqualOptTest("ExpComplexID",
       parseExp( """`a"sdsbc2`"""),
@@ -163,13 +163,13 @@ final class FastParserTestDefProvider(tf: TestFramework)
       CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c"))))),
 
     EqualOptTest("ExpInfixExp",
-      parseExp("a(b,c) .+ z'5 .* z'6"),
+      parseExp("a(b,c) + z'5 * z'6"),
       BinaryExp(
         CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))),
-        Id("+", Id.Dot),
+        Id("+", Id.Op),
         LiteralExp(Id("z"), Raw("5")),
         Node.seq(
-          (Id("*", Id.Dot), LiteralExp(Id("z"), Raw("6")))
+          (Id("*", Id.Op), LiteralExp(Id("z"), Raw("6")))
         )
       )),
 
@@ -178,10 +178,10 @@ final class FastParserTestDefProvider(tf: TestFramework)
       IdExp(Id("a"))),
 
     EmptyIterableTest("IDError",
-      parseID( """!s""", reporter(0))),
+      parseID( """:s""", reporter(0))),
 
     EmptyIterableTest("PrimaryExpIDError",
-      parsePrimaryExp( """!s""", reporter(0))),
+      parsePrimaryExp( """:s""", reporter(0))),
 
     EmptyIterableTest("ExpTupleRecovery",
       parseExp( """( 5, x ,4)""", reporter(2, 8)))

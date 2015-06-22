@@ -76,7 +76,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (peekCharSeqSep("call"))
+    if (peekKeyword("call"))
       parseCallTransformation(id, anns, recover)
     else
       parseBlockTransformation(id, anns, recover)
@@ -88,7 +88,7 @@ final class FastParser(input: String,
                                implicit begin: (Int, Int, Int)): Option[Location] = {
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("call")) {
+    if (!matchKeyword("call")) {
       recover()
       return None
     }
@@ -103,7 +103,7 @@ final class FastParser(input: String,
 
       parseWhiteSpace()
 
-      if (!matchCharSeqSep(":=")((line, column, offset))) {
+      if (!matchCharSeq(":=")((line, column, offset))) {
         recover()
         return None
       }
@@ -123,7 +123,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (!matchCharSeqSep("goto")((line, column, offset))) {
+    if (!matchKeyword("goto")((line, column, offset))) {
       recover()
       return None
     }
@@ -186,9 +186,9 @@ final class FastParser(input: String,
   }
 
   def parseAction(recover: () => Unit): Option[Action] = {
-    if (peekCharSeqSep("assert")) parseAssertAction(recover)
-    else if (peekCharSeqSep("assume")) parseAssumeAction(recover)
-    else if (peekCharSeqSep("ext")) parseExtAction(recover)
+    if (peekKeyword("assert")) parseAssertAction(recover)
+    else if (peekKeyword("assume")) parseAssumeAction(recover)
+    else if (peekKeyword("ext")) parseExtAction(recover)
     else parseAssignAction(recover)
   }
 
@@ -213,7 +213,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (!matchCharSeqSep(":=")((line, column, offset))) {
+    if (!matchCharSeq(":=")((line, column, offset))) {
       recover()
       return None
     }
@@ -264,7 +264,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("assert")) {
+    if (!matchKeyword("assert")) {
       recover()
       return None
     }
@@ -314,7 +314,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("assume")) {
+    if (!matchKeyword("assume")) {
       recover()
       return None
     }
@@ -358,7 +358,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("ext")) {
+    if (!matchKeyword("ext")) {
       recover()
       return None
     }
@@ -423,7 +423,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("goto")) {
+    if (!matchKeyword("goto")) {
       recover()
       return None
     }
@@ -467,7 +467,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("if")) {
+    if (!matchKeyword("if")) {
       recover()
       return None
     }
@@ -480,7 +480,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (!matchCharSeqSep("then")((line, column, offset))) {
+    if (!matchKeyword("then")((line, column, offset))) {
       recover()
       return None
     }
@@ -494,7 +494,7 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (!matchCharSeqSep("else")((line, column, offset))) {
+    if (!matchKeyword("else")((line, column, offset))) {
       recover()
       return None
     }
@@ -538,7 +538,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("return")) {
+    if (!matchKeyword("return")) {
       recover()
       return None
     }
@@ -585,7 +585,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("switch")) {
+    if (!matchKeyword("switch")) {
       recover()
       return None
     }
@@ -602,7 +602,7 @@ final class FastParser(input: String,
 
     while (charEq(peek(), 'c')) {
       val begin2 = (line, column, offset)
-      if (!matchCharSeqSep("case")(begin2)) {
+      if (!matchKeyword("case")(begin2)) {
         recover()
         return None
       }
@@ -634,7 +634,7 @@ final class FastParser(input: String,
     }
 
     val begin2 = (line, column, offset)
-    if (!matchCharSeqSep("default")(begin2)) {
+    if (!matchKeyword("default")(begin2)) {
       recover()
       return None
     }
@@ -694,7 +694,7 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
-    if (!matchCharSeqSep("jext")) {
+    if (!matchKeyword("jext")) {
       recover()
       return None
     }
@@ -907,9 +907,10 @@ final class FastParser(input: String,
       case '`' =>
         val (ok, i) = peekComplexID()
         parseComplexID(ok, i, recover)
-      case '.' =>
-        val (ok, i) = peekDotID()
-        parseDotID(ok, i, recover)
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
+        val (ok, i) = peekOpID()
+        parseOpID(ok, i, recover)
       case _ =>
         val (ok, i) = peekSimpleID()
         parseSimpleID(ok, i, recover)
@@ -990,7 +991,7 @@ final class FastParser(input: String,
   private def parseID(kind: Id.Value, i: Natural, recover: () => Unit) =
     kind match {
       case Id.Simple => parseSimpleID(ok = true, i, recover)
-      case Id.Dot => parseDotID(ok = true, i, recover)
+      case Id.Op => parseOpID(ok = true, i, recover)
       case Id.Complex => parseComplexID(ok = true, i, recover)
     }
 
@@ -1010,15 +1011,15 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseDotID(ok: Boolean, i: Natural, recover: () => Unit) = {
+  private def parseOpID(ok: Boolean, i: Natural, recover: () => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3 + 1, offset), Id.Dot).
+      Some(Id(input.substring(begin._3, offset), Id.Op).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a dot identifier form but found: '${input.substring(begin._3, offset + i)}'")
+        s"Expecting a Op identifier form but found: '${input.substring(begin._3, offset + i)}'")
       recover()
       None
     }
@@ -1054,14 +1055,16 @@ final class FastParser(input: String,
   @inline
   private def predictID() = peek() match {
     case '`' => true
-    case '.' => true
+    case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+         '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
     case _ => peekSimpleID()._1
   }
 
   @inline
   private def peekID() = peek() match {
     case '`' => (Id.Complex, peekComplexID())
-    case '.' => (Id.Dot, peekDotID())
+    case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+         '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => (Id.Op, peekOpID())
     case _ => (Id.Simple, peekSimpleID())
   }
 
@@ -1069,8 +1072,8 @@ final class FastParser(input: String,
   private def peekSimpleID() = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
 
   @inline
-  private def peekDotID(offset: Natural = 0) =
-    peekOnePlus(offset, '.', isNotSeparator)
+  private def peekOpID(offset: Natural = 0) =
+    peekOneStar(offset, isOp, isNotSeparator)
 
   @inline
   private def peekComplexID(offset: Natural = 0) =
@@ -1243,41 +1246,6 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekOnePlus(offset: Natural,
-                          C: Char,
-                          D: CharSentinel => Boolean): (Boolean, Natural) = {
-    // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
-    // CD+
-    // C is the starting character
-    // D is the predicate for acceptable following characters
-    var state = 0
-    var i = 0
-    var ok = true
-    var continue = true
-    while (ok && continue) {
-      val c = peek(offset + i)
-      state match {
-        case 0 =>
-          if (charEq(c, C)) {
-            state = 1
-            i += 1
-
-          } else ok = false
-        case 1 =>
-          if (D(c)) {
-            state = 2
-            i += 1
-          } else ok = false
-        case 2 =>
-          if (D(c)) {
-            // state = 2
-            i += 1
-          } else continue = false
-      }
-    }
-    (ok, offset + i)
-  }
-
   private def peekOneStar(offset: Natural,
                           C: CharSentinel => Boolean,
                           D: CharSentinel => Boolean): (Boolean, Natural) = {
@@ -1312,7 +1280,7 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekCharSeqSep(s: String, offset: Int = 0): Boolean = {
+  private def peekKeyword(s: String, offset: Int = 0): Boolean = {
     var i = 0
     var j = offset
     while (i < s.length) {
@@ -1320,16 +1288,16 @@ final class FastParser(input: String,
       i += 1
       j += 1
     }
-    if (isSeparator(peek(j))) true else false
+    if (isJavaDigitOrLetter(peek(j))) false else true
   }
 
   @inline
-  private def matchCharSeqSep(s: String)(
+  private def matchKeyword(s: String)(
     implicit begin: (Int, Int, Int)): Boolean = {
     if (!matchCharSeq(s)) return false
-    if (!isSeparator(peek())) {
+    if (isJavaDigitOrLetter(peek())) {
       reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting keyword: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
+        s"Expecting: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
       false
     } else {
       true
@@ -1387,8 +1355,9 @@ final class FastParser(input: String,
         case '`' =>
           val (ok, j) = peekComplexID(i)
           if (ok) i = j + 1 else i += 1
-        case '.' =>
-          val (ok, j) = peekDotID(i)
+        case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+             '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
+          val (ok, j) = peekOpID(i)
           if (ok) i = j + 1 else i += 1
         case ':' =>
           if (charEq(peek(i + 1), '=')) return true
@@ -1416,8 +1385,9 @@ final class FastParser(input: String,
         case '`' =>
           val (ok, j) = peekComplexID(i)
           if (ok) i = j + 1 else i += 1
-        case '.' =>
-          val (ok, j) = peekDotID(i)
+        case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+             '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
+          val (ok, j) = peekOpID(i)
           if (ok) i = j + 1 else i += 1
         case _ =>
           i += 1
@@ -1454,6 +1424,14 @@ final class FastParser(input: String,
     val n = offset + index
     if (0 <= n && n < max) input.charAt(n) else EOF
   }
+
+  @inline
+  private def isOp(c: CharSentinel): Boolean =
+    c match {
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
+      case _ => false
+    }
 
   @inline
   private def isJavaLetter(c: CharSentinel) =

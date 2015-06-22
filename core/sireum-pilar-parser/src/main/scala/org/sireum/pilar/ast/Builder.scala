@@ -58,8 +58,12 @@ object Builder {
     val text = n.getText
     (if (text.charAt(0) == '\'')
       Id(text.substring(1, text.length), Id.Complex)
-    else if (text.charAt(0) == '.')
-      Id(text.substring(1, text.length), Id.Dot)
+    else if (text.charAt(0) match {
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
+      case _ => false
+    })
+      Id(text.substring(0, text.length), Id.Op)
     else
       Id(text, Id.Simple)) at n
   }

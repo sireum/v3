@@ -66,7 +66,7 @@ Annotation(id: Id,
 object Id extends Enum("Id") {
   type Kind = Value
   val Simple = Value("Simple")
-  val Dot = Value("Dot")
+  val Op = Value("Op")
   val Complex = Value("Complex")
 }
 
