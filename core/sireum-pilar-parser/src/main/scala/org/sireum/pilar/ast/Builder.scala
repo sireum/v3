@@ -43,7 +43,7 @@ object Builder {
     implicit reporter: Reporter): Model =
     Model(
       ctx.annotation().map(build),
-      ctx.modelElement().flatMap(build)
+      ctx.modelElement().map(build)
     ) at ctx
 
   final def build(ctx: AnnotationContext): Annotation = {
@@ -75,10 +75,10 @@ object Builder {
   }
 
   final def build(ctx: ModelElementContext)(
-    implicit reporter: Reporter): Node.Seq[ModelElement] =
+    implicit reporter: Reporter): ModelElement =
     ctx match {
-      case ctx: GlobalVarContext => ctx.globalVarDecl().map(build)
-      case ctx: ProcedureContext => Node.seq(build(ctx.procDecl()))
+      case ctx: GlobalVarContext => build(ctx.globalVarDecl())
+      case ctx: ProcedureContext => build(ctx.procDecl())
     }
 
   final def build(ctx: GlobalVarDeclContext): GlobalVarDecl =

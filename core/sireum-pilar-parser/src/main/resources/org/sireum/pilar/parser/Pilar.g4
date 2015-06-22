@@ -25,13 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 grammar Pilar;
 
+modelFile
+  : model EOF
+  ;
+
 model
   : annotation*
-    modelElement+
+    modelElement*
   ;
 
 modelElement
-  : 'var' globalVarDecl+              #GlobalVar
+  : 'global' 'var' globalVarDecl      #GlobalVar
   | procDecl                          #Procedure
   ;
 
