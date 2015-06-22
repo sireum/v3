@@ -58,10 +58,6 @@ object FastParserTestJs extends UTestTestFramework {
       test("ComplexID")
     }
 
-    "DotID" - {
-      test("DotID")
-    }
-
     "EmptyLit" - {
       test("EmptyLit")
     }
@@ -70,16 +66,16 @@ object FastParserTestJs extends UTestTestFramework {
       test("ExpComplexID")
     }
 
-    "ExpDotID" - {
-      test("ExpDotID")
-    }
-
     "ExpInfixExp" - {
       test("ExpInfixExp")
     }
 
     "ExpLit" - {
       test("ExpLit")
+    }
+
+    "ExpOpID" - {
+      test("ExpOpID")
     }
 
     "ExpPrefixExp" - {
@@ -118,12 +114,12 @@ object FastParserTestJs extends UTestTestFramework {
       test("IDError")
     }
 
-    "PrimaryExpComplexID" - {
-      test("PrimaryExpComplexID")
+    "OpID" - {
+      test("OpID")
     }
 
-    "PrimaryExpDotID" - {
-      test("PrimaryExpDotID")
+    "PrimaryExpComplexID" - {
+      test("PrimaryExpComplexID")
     }
 
     "PrimaryExpIDError" - {
@@ -132,6 +128,10 @@ object FastParserTestJs extends UTestTestFramework {
 
     "PrimaryExpLit" - {
       test("PrimaryExpLit")
+    }
+
+    "PrimaryExpOpID" - {
+      test("PrimaryExpOpID")
     }
 
     "PrimaryExpSimpleID1" - {
