@@ -84,7 +84,8 @@ object Builder {
     implicit reporter: Reporter): ProcedureDecl =
     ProcedureDecl(
       buildID(ctx.ID()),
-      ctx.param().map(build),
+      Option(ctx.param()).map(_.map(build)).
+        getOrElse(Node.emptySeq),
       ctx.annotation().map(build),
       Option(ctx.procBody()).map(build)
     ) at ctx

@@ -41,7 +41,7 @@ globalVarDecl
 
 procDecl
   : 'def' ID
-    '(' param ( ',' param )* ')'
+    '(' ( param ( ',' param )* )? ')'
     annotation*
     ( procBody | ';' )
   ;

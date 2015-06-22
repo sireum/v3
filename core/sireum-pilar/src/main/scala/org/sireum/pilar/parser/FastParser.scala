@@ -37,6 +37,374 @@ final class FastParser(input: String,
   private var offset: Natural = 0) {
   val min = offset
 
+  def parseLocation(recover: () => Unit): Option[Location] = {
+    var ok = true
+    def rcv(): Unit = {
+      ok = false
+      val i = findChar('#')
+      if (i >= 0) {
+        consume(i - 1)
+      } else {
+        recover()
+      }
+    }
+
+    implicit val begin = (line, column, offset)
+
+    matchChar('#') { s =>
+      reporter.error(line, column, offset,
+        s"Expecting: ';', but found $s")
+      ok = false
+    }
+
+    if (!ok) {
+      rcv()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val idOpt = parseID(recover)
+    if (idOpt.isEmpty) return None
+    val id = idOpt.get
+
+    parseWhiteSpace()
+
+    val anns = parseAnnotations(recover)
+
+    if (!ok) return None
+
+    parseWhiteSpace()
+
+    if (peekCharSeqSep("call"))
+      parseCallTransformation(id, anns, recover)
+    else
+      parseBlockTransformation(id, anns, recover)
+  }
+
+  def parseCallTransformation(label: Id,
+                              anns: Node.Seq[Annotation],
+                              recover: () => Unit)(
+                               implicit begin: (Int, Int, Int)): Option[Location] = {
+    implicit val begin = (line, column, offset)
+
+    if (!matchCharSeqSep("call")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    var lhsOpt: Option[Exp] = None
+
+    if (predictCallAssign()) {
+      lhsOpt = parseExp(recover)
+      if (lhsOpt.isEmpty) return None
+
+      parseWhiteSpace()
+
+      val begin2 = (line, column, offset)
+
+      if (!matchCharSeqSep(":=")) {
+        recover()
+        return None
+      }
+
+      parseWhiteSpace()
+    }
+
+    val idOpt = parseID(recover)
+    if (idOpt.isEmpty) return None
+    val id = idOpt.get
+
+    parseWhiteSpace()
+
+    val argsOpt = parseArg(recover)
+    if (argsOpt.isEmpty) return None
+    val args = argsOpt.get
+
+    parseWhiteSpace()
+
+    val begin2 = (line, column, offset)
+
+    if (!matchCharSeqSep("goto")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val tOpt = parseID(recover)
+    if (tOpt.isEmpty) return None
+    val t = tOpt.get
+
+    parseWhiteSpace()
+
+    var ok = true
+
+    matchChar(';') { s =>
+      reporter.error(line, column, offset,
+        s"Expecting: ';', but found $s")
+      ok = false
+    }
+
+    if (ok) {
+      val r = Some(CallLocation(label, lhsOpt, id, args, t, anns) at(line, column, offset))
+      parseWhiteSpace()
+      r
+    } else {
+      recover()
+      None
+    }
+  }
+
+  def parseBlockTransformation(id: Id,
+                               anns: ISeq[Annotation],
+                               recover: () => Unit)(
+                                implicit begin: (Int, Int, Int)): Option[Location] = {
+    var ok = true
+
+    def rcv(): Unit = {
+      ok = false
+      recover()
+    }
+
+    var actions = Node.emptySeq[Action]
+
+    while (predictAction()) {
+      val actionOpt = parseAction(recover)
+      if (actionOpt.isEmpty) return None
+      actions = actions :+ actionOpt.get
+    }
+
+    val jumpOpt = parseJump(recover)
+    if (jumpOpt.isEmpty) return None
+
+    val anns = parseAnnotations(rcv)
+
+    if (ok) {
+      val r = Some(BlockLocation(id, actions, jumpOpt.get, anns))
+      parseWhiteSpace()
+      r
+    } else None
+  }
+
+  def parseAction(recover: () => Unit): Option[Action] = {
+    if (peekCharSeqSep("assert")) parseAssertAction(recover)
+    else if (peekCharSeqSep("assume")) parseAssumeAction(recover)
+    else if (peekCharSeqSep("ext")) parseExtAction(recover)
+    else parseAssignAction(recover)
+  }
+
+  private def parseAssignAction(recover: () => Unit): Option[AssignAction] = {
+    var ok = true
+    def rcv(): Unit = {
+      ok = false
+      val i = findChar(';')
+      if (i >= 0) {
+        consume(i)
+        parseWhiteSpace()
+      } else {
+        recover()
+      }
+    }
+
+    implicit val begin = (line, column, offset)
+
+    val lhsOpt = parseExp(recover)
+    if (lhsOpt.isEmpty) return None
+    val lhs = lhsOpt.get
+
+    parseWhiteSpace()
+
+    val begin2 = (line, column, offset)
+
+    if (!matchCharSeqSep(":=")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val rhsOpt = parseExp(recover)
+    if (rhsOpt.isEmpty) return None
+    val rhs = rhsOpt.get
+
+    parseWhiteSpace()
+
+    val anns = parseAnnotations(rcv)
+
+    parseWhiteSpace()
+
+    if (ok) {
+      matchChar(';') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
+      }
+    }
+
+    if (ok) {
+      val r = Some(AssignAction(lhs, rhs, anns) at(line, column, offset))
+      parseWhiteSpace()
+      r
+    } else {
+      recover()
+      None
+    }
+  }
+
+
+  private def parseAssertAction(recover: () => Unit): Option[AssertAction] = {
+    var ok = true
+    def rcv(): Unit = {
+      ok = false
+      val i = findChar(';')
+      if (i >= 0) {
+        consume(i)
+        parseWhiteSpace()
+      } else {
+        recover()
+      }
+    }
+
+    implicit val begin = (line, column, offset)
+
+    if (!matchCharSeqSep("assert")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val expOpt = parseExp(recover)
+    if (expOpt.isEmpty) return None
+    val exp = expOpt.get
+
+    parseWhiteSpace()
+
+    val anns = parseAnnotations(rcv)
+
+    parseWhiteSpace()
+
+    if (ok) {
+      matchChar(';') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
+      }
+    }
+
+    if (ok) {
+      val r = Some(AssertAction(exp, anns) at(line, column, offset))
+      parseWhiteSpace()
+      r
+    } else {
+      recover()
+      None
+    }
+  }
+
+  private def parseAssumeAction(recover: () => Unit): Option[AssumeAction] = {
+    var ok = true
+    def rcv(): Unit = {
+      ok = false
+      val i = findChar(';')
+      if (i >= 0) {
+        consume(i)
+        parseWhiteSpace()
+      } else {
+        recover()
+      }
+    }
+
+    implicit val begin = (line, column, offset)
+
+    if (!matchCharSeqSep("assume")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val expOpt = parseExp(recover)
+    if (expOpt.isEmpty) return None
+    val exp = expOpt.get
+
+    parseWhiteSpace()
+
+    val anns = parseAnnotations(rcv)
+
+    parseWhiteSpace()
+
+    if (ok) {
+      matchChar(';') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
+      }
+    }
+
+    if (ok) {
+      val r = Some(AssumeAction(exp, anns) at(line, column, offset))
+      parseWhiteSpace()
+      r
+    } else {
+      recover()
+      None
+    }
+  }
+
+  private def parseExtAction(recover: () => Unit): Option[ExtAction] = {
+    var ok = true
+
+    def rcv(): Unit = {
+      ok = false
+    }
+
+    implicit val begin = (line, column, offset)
+
+    if (!matchCharSeqSep("ext")) {
+      recover()
+      return None
+    }
+
+    parseWhiteSpace()
+
+    val idOpt = parseID(recover)
+    if (idOpt.isEmpty) return None
+    val id = idOpt.get
+
+    parseWhiteSpace()
+
+    val argsOpt = parseArg(recover)
+    if (argsOpt.isEmpty) return None
+    val args = argsOpt.get
+
+    parseWhiteSpace()
+
+    val anns = parseAnnotations(rcv)
+
+    parseWhiteSpace()
+
+    if (ok) {
+      matchChar(';') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ';', but found $s")
+        ok = false
+      }
+    }
+
+    if (ok) {
+      val r = Some(ExtAction(id, args, anns) at(line, column, offset))
+      parseWhiteSpace()
+      r
+    } else {
+      recover()
+      None
+    }
+  }
+
   def parseJump(recover: () => Unit): Option[Jump] = {
     peek() match {
       case 'g' => parseGotoJump(recover)
@@ -62,8 +430,6 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
 
     if (!matchCharSeqSep("goto")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a 'goto' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -108,8 +474,6 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
 
     if (!matchCharSeqSep("if")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting an 'if' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -122,9 +486,9 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
+    var begin2 = (line, column, offset)
+
     if (!matchCharSeqSep("then")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a 'then' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -138,9 +502,9 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
+    begin2 = (line, column, offset)
+
     if (!matchCharSeqSep("else")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a 'else' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -185,8 +549,6 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
 
     if (!matchCharSeqSep("return")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a 'return' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -234,8 +596,6 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
 
     if (!matchCharSeqSep("switch")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting an 'switch' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -254,8 +614,6 @@ final class FastParser(input: String,
       val begin2 = (line, column, offset)
 
       if (!matchCharSeqSep("case")) {
-        reporter.error(begin._1, begin._2, begin._3,
-          s"Expecting a 'case' keyword instead of: '${input.substring(begin._3, offset)}'")
         recover()
         return None
       }
@@ -289,8 +647,6 @@ final class FastParser(input: String,
     val begin2 = (line, column, offset)
 
     if (!matchCharSeqSep("default")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting a 'default' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -351,8 +707,6 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
 
     if (!matchCharSeqSep("jext")) {
-      reporter.error(begin._1, begin._2, begin._3,
-        s"Expecting an 'jext' keyword instead of: '${input.substring(begin._3, offset)}'")
       recover()
       return None
     }
@@ -490,7 +844,8 @@ final class FastParser(input: String,
       i = findChar(')')
       if (i >= 0) {
         consume(i)
-        return
+      } else {
+        recover()
       }
     }
 
@@ -969,7 +1324,7 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekCharSeqSep(offset: Int, s: String): Boolean = {
+  private def peekCharSeqSep(s: String, offset: Int = 0): Boolean = {
     var i = 0
     var j = offset
     while (i < s.length) {
@@ -983,7 +1338,7 @@ final class FastParser(input: String,
   @inline
   private def matchCharSeqSep(s: String)(
     implicit begin: (Int, Int, Int)): Boolean = {
-    matchCharSeq(s)
+    if (!matchCharSeq(s)) return false
     if (!isSeparator(peek())) {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expecting keyword: '$s', but found: '${input.substring(begin._3, offset + 1)}'")
@@ -1030,6 +1385,35 @@ final class FastParser(input: String,
   }
 
   @inline
+  private def predictCallAssign(): Boolean = {
+    var i = 0
+    var d = peek(i)
+    while (d != EOF && charNe(d, ';')) {
+      d match {
+        case '"' =>
+          val (ok, j) = peekComplexLIT(i)
+          if (ok) i = j + 1 else i += 1
+        case '\'' =>
+          val (ok, j) = peekSimpleLIT(i)
+          if (ok) i = j + 1 else i += 1
+        case '`' =>
+          val (ok, j) = peekComplexID(i)
+          if (ok) i = j + 1 else i += 1
+        case '.' =>
+          val (ok, j) = peekDotID(i)
+          if (ok) i = j + 1 else i += 1
+        case ':' =>
+          if (charEq(peek(i + 1), '=')) return true
+          else return true
+        case _ =>
+          i += 1
+      }
+      d = peek(i)
+    }
+    false
+  }
+
+  @inline
   private def findChar(c: Char): NaturalSentinel = {
     var i = 0
     var d = peek(i)
@@ -1037,20 +1421,16 @@ final class FastParser(input: String,
       d match {
         case '"' =>
           val (ok, j) = peekComplexLIT(i)
-          if (ok)
-            i = j + 1
+          if (ok) i = j + 1 else i += 1
         case '\'' =>
           val (ok, j) = peekSimpleLIT(i)
-          if (ok)
-            i = j + 1
+          if (ok) i = j + 1 else i += 1
         case '`' =>
           val (ok, j) = peekComplexID(i)
-          if (ok)
-            i = j + 1
+          if (ok) i = j + 1 else i += 1
         case '.' =>
           val (ok, j) = peekDotID(i)
-          if (ok)
-            i = j + 1
+          if (ok) i = j + 1 else i += 1
         case _ =>
           i += 1
       }
