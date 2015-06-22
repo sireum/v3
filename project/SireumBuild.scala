@@ -23,6 +23,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+import com.typesafe.sbteclipse.core.EclipsePlugin._
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
@@ -82,7 +83,13 @@ object SireumBuild extends Build {
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     autoAPIMappings := true,
-    apiURL := Some(url("http://sireum.org/api/"))
+    apiURL := Some(url("http://sireum.org/api/")),
+    retrieveManaged := true,
+    EclipseKeys.withSource := true,
+    EclipseKeys.relativizeLibs := true,
+    EclipseKeys.useProjectId := true,
+    EclipseKeys.withBundledScalaContainers := true,
+    EclipseKeys.eclipseOutput := Some("bin")
   )
 
   val sireumJvmSettings = sireumSettings ++ Seq(
@@ -110,7 +117,13 @@ object SireumBuild extends Build {
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.2.8"
-    )
+    ),
+    retrieveManaged := true,
+    EclipseKeys.withSource := true,
+    EclipseKeys.relativizeLibs := true,
+    EclipseKeys.useProjectId := true,
+    EclipseKeys.withBundledScalaContainers := true,
+    EclipseKeys.eclipseOutput := Some("bin")
   )
 
   val sireumJsTestSettings = sireumJsSettings ++ Seq(
@@ -122,26 +135,26 @@ object SireumBuild extends Build {
   )
 
   // Cross Projects
-  val utilPI = new ProjectInfo("Sireum Util", CORE_DIR, Seq())
-  val pilarPI = new ProjectInfo("Sireum Pilar", CORE_DIR, Seq(), utilPI)
+  val utilPI = new ProjectInfo("sireum-util", CORE_DIR, Seq())
+  val pilarPI = new ProjectInfo("sireum-pilar", CORE_DIR, Seq(), utilPI)
   lazy val util = toSbtProject(utilPI, sireumSettings)
   lazy val pilar = toSbtProject(pilarPI, sireumSettings)
 
 
   // Jvm Projects
-  val pilarParserPI = new ProjectInfo("Sireum Pilar Parser", CORE_DIR, Seq(), pilarPI)
+  val pilarParserPI = new ProjectInfo("sireum-pilar-parser", CORE_DIR, Seq(), pilarPI)
   lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
-  val utilReflectPI = new ProjectInfo("Sireum Util Reflect", CORE_DIR, Seq(), utilPI, pilarPI)
+  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, pilarPI)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
 
   // Jvm Test Projects
-  val coreTestPI = new ProjectInfo("Sireum Core Test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
+  val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
 
   // Js Projects
 
   // Js Projects
-  val coreJsTestPI = new ProjectInfo("Sireum Core Js Test", CORE_DIR, Seq(), utilPI, pilarPI, coreTestPI)
+  val coreJsTestPI = new ProjectInfo("sireum-core-js-test", CORE_DIR, Seq(), utilPI, pilarPI, coreTestPI)
   lazy val coreJsTest = toSbtJsProject(coreJsTestPI, sireumJsTestSettings)
 
 

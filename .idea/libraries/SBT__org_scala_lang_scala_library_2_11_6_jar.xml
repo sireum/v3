@@ -8,13 +8,13 @@
       </compiler-classpath>
     </properties>
     <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.6.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/docs/scala-library-2.11.6-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/docs/org.scala-lang/scala-library/scala-library-2.11.6-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/srcs/scala-library-2.11.6-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.11.6-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

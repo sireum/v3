@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="SBT: com.lihaoyi:utest_sjs0.6_2.11:0.3.1:jar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.lihaoyi/utest_sjs0.6_2.11/jars/utest_sjs0.6_2.11-0.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/utest_sjs0.6_2.11/utest_sjs0.6_2.11-0.3.1.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.lihaoyi/utest_sjs0.6_2.11/docs/utest_sjs0.6_2.11-0.3.1-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/docs/com.lihaoyi/utest_sjs0.6_2.11/utest_sjs0.6_2.11-0.3.1-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.lihaoyi/utest_sjs0.6_2.11/srcs/utest_sjs0.6_2.11-0.3.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/utest_sjs0.6_2.11/utest_sjs0.6_2.11-0.3.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

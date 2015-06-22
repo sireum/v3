@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="SBT: com.novocode:junit-interface:0.11:jar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.novocode/junit-interface/jars/junit-interface-0.11.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.novocode/junit-interface/junit-interface-0.11.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.novocode/junit-interface/docs/junit-interface-0.11-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/docs/com.novocode/junit-interface/junit-interface-0.11-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.novocode/junit-interface/srcs/junit-interface-0.11-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.novocode/junit-interface/junit-interface-0.11-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
