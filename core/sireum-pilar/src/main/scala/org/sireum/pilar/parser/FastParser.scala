@@ -1264,11 +1264,11 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseID(kind: Id.Value, i: Natural, recover: () => Unit) =
+  private def parseID(kind: FastParser.IdKind.Value, i: Natural, recover: () => Unit) =
     kind match {
-      case Id.Simple => parseSimpleID(ok = true, i, recover)
-      case Id.Op => parseOpID(ok = true, i, recover)
-      case Id.Complex => parseComplexID(ok = true, i, recover)
+      case FastParser.IdKind.Simple => parseSimpleID(ok = true, i, recover)
+      case FastParser.IdKind.Op => parseOpID(ok = true, i, recover)
+      case FastParser.IdKind.Complex => parseComplexID(ok = true, i, recover)
     }
 
   @inline
@@ -1346,10 +1346,13 @@ final class FastParser(input: String,
 
   @inline
   private def peekID() = peek() match {
-    case '`' => (Id.Complex, peekComplexID())
+    case '`' =>
+      (FastParser.IdKind.Complex, peekComplexID())
     case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
-         '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => (Id.Op, peekOpID())
-    case _ => (Id.Simple, peekSimpleID())
+         '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
+      (FastParser.IdKind.Op, peekOpID())
+    case _ =>
+      (FastParser.IdKind.Simple, peekSimpleID())
   }
 
   @inline
@@ -1840,6 +1843,13 @@ object FastParser {
     "var"
   )
 
+  object IdKind extends Enum("Id") {
+    type Type = Value
+    val Simple = Value("Simple")
+    val Op = Value("Op")
+    val Complex = Value("Complex")
+  }
+
   trait Reporter {
     def error(line: PosInteger,
               column: PosInteger,
@@ -1872,5 +1882,4 @@ object FastParser {
       n
     }
   }
-
 }
