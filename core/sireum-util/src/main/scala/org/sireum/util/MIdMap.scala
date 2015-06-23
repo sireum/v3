@@ -23,37 +23,24 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.util
 
-import org.junit.Assert
-import org.sireum.util.ProductUtil
+object MIdMap {
+  def apply[K <: AnyRef, V](): MIdMap[K, V] = new MIdMap[K, V]
 
-object JUnitTestFramework extends TestFramework {
-
-  override def assertEquals(expected: Any, result: Any): Unit = {
-    val (e, r) =
-      (expected, result) match {
-        case (expected: Product, result: Product) =>
-          (ProductUtil.toScalaString(expected).toString(),
-            ProductUtil.toScalaString(result).toString())
-        case _ => (expected, result)
-      }
-    Assert.assertEquals(e, r)
-  }
-
-  override def assertEmpty(it: Iterable[_]): Unit = {
-    if (it.nonEmpty) {
-      Console.err.println("Expecting an empty iterable but found: ")
-      for (e <- it) {
-        Console.err.print("- ")
-        e match {
-          case e: Product =>
-            Console.err.println(ProductUtil.toScalaString(e, 1).toString())
-          case _ => Console.err.println(e)
-        }
-      }
-      Console.err.flush()
+  def apply[K <: AnyRef, V](kvs: (K, V)*): MIdMap[K, V] = {
+    val r = new MIdMap[K, V]
+    for ((k, v) <- kvs) {
+      r(k) = v
     }
-    Assert.assertTrue(it.isEmpty)
+    r
   }
+}
+
+final class MIdMap[K <: AnyRef, V] extends scala.collection.mutable.HashMap[K, V] {
+  override protected def elemEquals(key1: K, key2: K): Boolean =
+    key1 eq key2
+
+  override protected def elemHashCode(key: K): Int =
+    System.identityHashCode(key)
 }

@@ -55,8 +55,9 @@ sealed trait Annotated {
 
 
 final case class
-Model(annotations: Node.Seq[Annotation],
-      elements: Node.Seq[ModelElement]) extends Node with Annotated
+Model(elements: Node.Seq[ModelElement],
+      annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Node with Annotated
 
 
 final case class
@@ -85,19 +86,19 @@ sealed trait ModelElement extends Node with Annotated
 
 final case class
 GlobalVarDecl(id: Id,
-              annotations: Node.Seq[Annotation]) extends ModelElement
+              annotations: Node.Seq[Annotation] = Node.emptySeq) extends ModelElement
 
 
 final case class
 ProcedureDecl(id: Id,
               params: Node.Seq[ParamDecl],
-              annotations: Node.Seq[Annotation],
+              annotations: Node.Seq[Annotation] = Node.emptySeq,
               bodyOpt: Option[ProcedureBody]) extends ModelElement
 
 
 final case class
 ParamDecl(id: Id,
-          annotations: Node.Seq[Annotation]) extends Node with Annotated
+          annotations: Node.Seq[Annotation] = Node.emptySeq) extends Node with Annotated
 
 
 final case class
@@ -107,7 +108,7 @@ ProcedureBody(locals: Node.Seq[LocalVarDecl],
 
 final case class
 LocalVarDecl(id: Id,
-             annotations: Node.Seq[Annotation]) extends Node with Annotated
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Node with Annotated
 
 
 sealed trait Location extends Node with Annotated
@@ -119,14 +120,14 @@ CallLocation(label: Id,
              id: Id,
              args: Node.Seq[Exp],
              target: Id,
-             annotations: Node.Seq[Annotation]) extends Location
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Location
 
 
 final case class
 BlockLocation(label: Id,
               actions: Node.Seq[Action],
               jump: Jump,
-              annotations: Node.Seq[Annotation]) extends Location {
+              annotations: Node.Seq[Annotation] = Node.emptySeq) extends Location {
   {
     var i = 0
     while (i < actions.size) {
@@ -155,23 +156,23 @@ sealed trait Action extends Command
 final case class
 AssignAction(lhs: Exp,
              rhs: Exp,
-             annotations: Node.Seq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
 
 
 final case class
 AssertAction(exp: Exp,
-             annotations: Node.Seq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
 
 
 final case class
 AssumeAction(exp: Exp,
-             annotations: Node.Seq[Annotation]) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
 
 
 final case class
 ExtAction(id: Id,
           args: Node.Seq[Exp],
-          annotations: Node.Seq[Annotation]) extends Action
+          annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
 
 
 sealed trait Jump extends Command
@@ -179,25 +180,25 @@ sealed trait Jump extends Command
 
 final case class
 GotoJump(target: Id,
-         annotations: Node.Seq[Annotation]) extends Jump
+         annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
 final case class
 IfJump(exp: Exp,
        tTarget: Id,
        fTarget: Id,
-       annotations: Node.Seq[Annotation]) extends Jump
+       annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
 final case class
 ReturnJump(expOpt: Option[Exp],
-           annotations: Node.Seq[Annotation]) extends Jump
+           annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
 final case class
 SwitchJump(exp: Exp,
            cases: Node.Seq[SwitchCase],
-           annotations: Node.Seq[Annotation]) extends Jump
+           annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
 final case class
@@ -208,7 +209,7 @@ SwitchCase(expOpt: Option[LiteralExp],
 final case class
 ExtJump(id: Id,
         args: Node.Seq[Exp],
-        annotations: Node.Seq[Annotation]) extends Jump
+        annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
 sealed trait Exp extends Node
@@ -225,7 +226,7 @@ IdExp(id: Id) extends Exp
 
 final case class
 TupleExp(exps: Node.Seq[Exp],
-         annotations: Node.Seq[Annotation]) extends Exp with Annotated
+         annotations: Node.Seq[Annotation] = Node.emptySeq) extends Exp with Annotated
 
 
 final case class

@@ -23,37 +23,40 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.util
 
-import org.junit.Assert
-import org.sireum.util.ProductUtil
-
-object JUnitTestFramework extends TestFramework {
-
-  override def assertEquals(expected: Any, result: Any): Unit = {
-    val (e, r) =
-      (expected, result) match {
-        case (expected: Product, result: Product) =>
-          (ProductUtil.toScalaString(expected).toString(),
-            ProductUtil.toScalaString(result).toString())
-        case _ => (expected, result)
-      }
-    Assert.assertEquals(e, r)
+object StringUtil {
+  @inline
+  final def escape(c: Char,
+                   sb: StringBuilder): StringBuilder = {
+    c match {
+      case '\b' => sb.append("\\b")
+      case '\t' => sb.append("\\t")
+      case '\n' => sb.append("\\n")
+      case '\f' => sb.append("\\f")
+      case '\r' => sb.append("\\r")
+      case '\"' => sb.append("\\\"")
+      case '\'' => sb.append("\\\'")
+      case '\\' => sb.append("\\\\")
+      case _ =>
+        if ((0 <= c && c < 32) || (c > 255)) {
+          sb.append("\\u")
+          val s = c.toInt.toHexString
+          for (i <- 0 until (4 - s.length)) {
+            sb.append('0')
+          }
+          sb.append(s)
+        } else {
+          sb.append(c)
+        }
+    }
+    sb
   }
 
-  override def assertEmpty(it: Iterable[_]): Unit = {
-    if (it.nonEmpty) {
-      Console.err.println("Expecting an empty iterable but found: ")
-      for (e <- it) {
-        Console.err.print("- ")
-        e match {
-          case e: Product =>
-            Console.err.println(ProductUtil.toScalaString(e, 1).toString())
-          case _ => Console.err.println(e)
-        }
-      }
-      Console.err.flush()
-    }
-    Assert.assertTrue(it.isEmpty)
+  @inline
+  final def escape(s: String,
+                   sb: StringBuilder = new StringBuilder): StringBuilder = {
+    for (c <- s) escape(c, sb)
+    sb
   }
 }

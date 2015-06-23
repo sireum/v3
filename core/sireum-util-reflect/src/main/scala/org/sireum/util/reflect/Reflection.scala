@@ -270,9 +270,8 @@ object Reflection {
       make(c, args: _*)
 
     @inline
-    def caseClassType(
-                       c: Class[_], processAnnotations: Boolean,
-                       m: Mirror = mirror): CaseClass =
+    def caseClassType(c: Class[_], processAnnotations: Boolean,
+                      m: Mirror = mirror): CaseClass =
       caseClassCache.getOrElseUpdate(c,
         caseClassType(getTypeOfClass(c), processAnnotations, m))
 
@@ -281,8 +280,7 @@ object Reflection {
       caseClassType(tipe, procesAnnotations, mirror)
     }
 
-    def caseClassType(
-                       tipe: Type, processAnnotations: Boolean, m: Mirror): CaseClass = {
+    def caseClassType(tipe: Type, processAnnotations: Boolean, m: Mirror): CaseClass = {
       val ts = tipe.typeSymbol
       require(ts.asClass.isCaseClass)
 
@@ -304,8 +302,8 @@ object Reflection {
       CaseClass(fullName(tipe), tipe, anns, params, imapEmpty[Any, Any])
     }
 
-    def caseClassObject[T <: Product](t: T, processAnnotations: Boolean,
-                                      seen: MIdMap[Any, Any]): CaseClass = {
+    def caseClassObject[T <: AnyRef with Product](t: T, processAnnotations: Boolean,
+                                                  seen: MIdMap[AnyRef, Any]): CaseClass = {
 
       val result = caseClassType(t.getClass, processAnnotations).copy()
       seen.put(t, result)
@@ -322,35 +320,38 @@ object Reflection {
     }
 
     private def value(v: Any)(
-      implicit processAnnotations: Boolean, seen: MIdMap[Any, Any]): Any =
-      if (seen.contains(v)) seen(v)
-      else
-        v match {
-          case m: ILinkedMap[_, _] =>
-            var newM = ilinkedMapEmpty[Any, Any]
-            for ((k, v) <- m) newM += (value(k) -> value(v))
-            newM
-          case m: IMap[_, _] =>
-            var newM = imapEmpty[Any, Any]
-            for ((k, v) <- m) newM += (value(k) -> value(v))
-            newM
-          case tr: IVector[_] =>
-            var newTr = ivectorEmpty[Any]
-            for (e <- tr) newTr :+= value(e)
-            newTr
-          case tr: IList[_] =>
-            var newTr = ilistEmpty[Any]
-            for (e <- tr) newTr :+= value(e)
-            newTr
-          case p: Product => caseClassObject(p, processAnnotations, seen)
-          case _ => v
-        }
+      implicit processAnnotations: Boolean, seen: MIdMap[AnyRef, Any]): Any =
+      v match {
+        case v: AnyRef =>
+          if (seen.contains(v)) seen(v)
+          else
+            v match {
+              case m: ILinkedMap[_, _] =>
+                var newM = ilinkedMapEmpty[Any, Any]
+                for ((k, v) <- m) newM += (value(k) -> value(v))
+                newM
+              case m: IMap[_, _] =>
+                var newM = imapEmpty[Any, Any]
+                for ((k, v) <- m) newM += (value(k) -> value(v))
+                newM
+              case tr: IVector[_] =>
+                var newTr = ivectorEmpty[Any]
+                for (e <- tr) newTr :+= value(e)
+                newTr
+              case tr: IList[_] =>
+                var newTr = ilistEmpty[Any]
+                for (e <- tr) newTr :+= value(e)
+                newTr
+              case p: Product => caseClassObject(p, processAnnotations, seen)
+              case _ => v
+            }
+        case _ => v
+      }
 
-    case class Param(
-                      name: String,
-                      tipe: Type,
-                      annotations: ISeq[Annotation],
-                      arg: Option[Any])
+    case class Param(name: String,
+                     tipe: Type,
+                     annotations: ISeq[Annotation],
+                     arg: Option[Any])
 
   }
 

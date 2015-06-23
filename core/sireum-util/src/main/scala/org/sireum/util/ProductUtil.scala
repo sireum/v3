@@ -49,4 +49,97 @@ object ProductUtil {
     else if (p1.productPrefix != p2.productPrefix) false
     else p1.productIterator.zip(p2.productIterator).
       forall(p => p._1 == p._2)
+
+  final def toScalaString(o: Any,
+                          indent: Int = 0,
+                          sb: StringBuilder = new StringBuilder)(
+                           implicit subs: CMap[String, String] = Map()): StringBuilder = {
+    @inline
+    def appendIndent(n: Int): Unit = {
+      var i = 0
+      while (i < n) {
+        sb.append("  ")
+        i += 1
+      }
+    }
+
+    @inline
+    def appendLine(): Unit = {
+      sb.append('\n')
+    }
+
+    @inline
+    def appendIterator(n: Natural, it: Iterator[_]): Unit = {
+      sb.append('(')
+
+      n match {
+        case 0 =>
+          sb.append(')')
+        case 1 =>
+          toScalaString(it.next(), indent, sb)
+          sb.append(')')
+        case _ =>
+          appendLine()
+          var i = 0
+          while (i < n) {
+            appendIndent(indent + 1)
+            toScalaString(it.next(), indent + 1, sb)
+            if (i != n - 1) sb.append(',')
+            appendLine()
+            i += 1
+          }
+          appendIndent(indent)
+          sb.append(')')
+      }
+    }
+
+    import StringUtil._
+
+    o match {
+      case o: Product =>
+        val prefix = o.productPrefix
+        var appendPrefix = true
+        if (prefix.length > 5 && prefix.startsWith("Tuple")) {
+          val c = prefix.charAt(5)
+          if ('0' <= c && c <= '9')
+            appendPrefix = false
+        }
+        if (appendPrefix)
+          sb.append(subs.getOrElse(prefix, prefix))
+        appendIterator(o.productArity, o.productIterator)
+      case o: IVector[_] =>
+        sb.append(subs.getOrElse("Vector", "Vector"))
+        appendIterator(o.size, o.iterator)
+      case o: IMap[_, _] =>
+        sb.append(subs.getOrElse("Map", "Map"))
+        appendIterator(o.size, o.iterator)
+      case o: String =>
+        sb.append('"')
+        escape(o, sb)
+        sb.append('"')
+      case o: Boolean =>
+        sb.append(o)
+      case o: Byte =>
+        sb.append(o)
+      case o: Char =>
+        sb.append('\'')
+        escape(o, sb)
+        sb.append('\'')
+      case o: Short =>
+        sb.append(o)
+      case o: Int =>
+        sb.append(o)
+      case o: Long =>
+        sb.append(o)
+        sb.append('l')
+      case o: Float =>
+        sb.append(o)
+      case o: Double =>
+        sb.append(o)
+        sb.append('d')
+      case null =>
+        "null"
+    }
+    sb
+  }
 }

@@ -83,7 +83,7 @@ final class FastParser(input: String,
       else ok = false
     }
 
-    Some(Model(annotations, elements) at(line, column, offset))
+    Some(Model(elements, annotations) at(line, column, offset))
   }
 
   def parseModelElement(recover: () => Unit): Option[ModelElement] = {

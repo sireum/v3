@@ -42,8 +42,8 @@ object Builder {
   final def build(ctx: ModelContext)(
     implicit reporter: Reporter): Model =
     Model(
-      ctx.annotation().map(build),
-      ctx.modelElement().map(build)
+      ctx.modelElement().map(build),
+      ctx.annotation().map(build)
     ) at ctx
 
   final def build(ctx: AnnotationContext): Annotation = {

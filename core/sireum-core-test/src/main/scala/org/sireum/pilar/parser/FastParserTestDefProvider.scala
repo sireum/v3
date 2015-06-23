@@ -38,130 +38,143 @@ final class FastParserTestDefProvider(tf: TestFramework)
 
     EqualTest("AnnotationRecovery",
       parseAnnotations("@ 5 sdaekcn;sgej(recovery skips here) @type 'Int", reporter(2)),
-      Seq(Annotation(Id("type"), Raw("Int")))),
-
+      Seq(Annotation(Id("type"), Raw("Int"))))
+    ,
     EqualTest("AnnotationRecoveryString",
       parseAnnotations("@ 5 recovery ignore \"@\" inside string @type 'Int", reporter(2)),
-      Seq(Annotation(Id("type"), Raw("Int")))),
-
+      Seq(Annotation(Id("type"), Raw("Int"))))
+    ,
     EqualOptTest("SimpleLit",
       parseLIT("'abc"),
-      Raw("abc")),
-
+      Raw("abc"))
+    ,
     EqualOptTest("StringLit",
       parseLIT("\"abc\\\"abc\""),
-      Raw("abc\"abc")),
-
+      Raw("abc\"abc"))
+    ,
     EqualOptTest("EmptyLit",
       parseLIT("'"),
-      Raw("")),
-
+      Raw(""))
+    ,
     EqualOptTest("SimpleID1",
       parseID("abc"),
-      Id("abc")),
-
+      Id("abc"))
+    ,
     EqualOptTest("SimpleID2",
       parseID("abc2"),
-      Id("abc2")),
-
+      Id("abc2"))
+    ,
     EqualOptTest("SimpleIDNotEnd1",
       parseID("abc3:"),
-      Id("abc3")),
-
+      Id("abc3"))
+    ,
     EqualOptTest("SimpleIDNotEnd2",
       parseID( """s!s"""),
-      Id("s")),
-
+      Id("s"))
+    ,
     EqualOptTest("OpID",
       parseID("+"),
-      Id("+", Id.Op)),
-
+      Id("+", Id.Op))
+    ,
     EqualOptTest("ComplexID",
       parseID( """`a"sdsbc2`"""),
-      Id( """a"sdsbc2""", Id.Complex)),
-
+      Id("a\"sdsbc2", Id.Complex))
+    ,
     EqualOptTest("PrimaryExpSimpleID1",
       parsePrimaryExp("abc"),
-      IdExp(Id("abc"))),
-
+      IdExp(Id("abc")))
+    ,
     EqualOptTest("PrimaryExpSimpleID2",
       parsePrimaryExp("abc2"),
-      IdExp(Id("abc2"))),
-
+      IdExp(Id("abc2")))
+    ,
     EqualOptTest("PrimaryExpSimpleIDNotEnd1",
       parsePrimaryExp("abc3:"),
-      IdExp(Id("abc3"))),
-
+      IdExp(Id("abc3")))
+    ,
     EqualOptTest("PrimaryExpSimpleIDNotEnd2",
       parsePrimaryExp( """s!s"""),
-      IdExp(Id("s"))),
-
+      IdExp(Id("s")))
+    ,
     EqualOptTest("PrimaryExpOpID",
       parsePrimaryExp("+"),
-      IdExp(Id("+", Id.Op))),
-
+      IdExp(Id("+", Id.Op)))
+    ,
     EqualOptTest("PrimaryExpComplexID",
       parsePrimaryExp( """`a"sdsbc2`"""),
-      IdExp(Id( """a"sdsbc2""", Id.Complex))),
-
+      IdExp(Id("a\"sdsbc2", Id.Complex)))
+    ,
     EqualOptTest("PrimaryExpLit",
       parsePrimaryExp( """z'-1"""),
-      LiteralExp(Id("z"), Raw("-1"))),
-
+      LiteralExp(Id("z"), Raw("-1")))
+    ,
     EqualOptTest("PrimaryExpTuple",
       parsePrimaryExp( """(z'-1, b'true ,usd'1_000_000)"""),
       TupleExp(
         Node.seq(
           LiteralExp(Id("z"), Raw("-1")),
           LiteralExp(Id("b"), Raw("true")),
-          LiteralExp(Id("usd"), Raw("1_000_000"))),
-        Node.emptySeq)),
-
+          LiteralExp(Id("usd"), Raw("1_000_000"))
+        )
+      )
+    )
+    ,
     EqualOptTest("Annotation",
       parseAnnotation( """@z'111"""),
-      Annotation(Id("z"), Raw("111"))),
-
+      Annotation(Id("z"), Raw("111")))
+    ,
     EqualOptTest("ExpSimpleID1",
       parseExp("abc"),
-      IdExp(Id("abc"))),
-
+      IdExp(Id("abc")))
+    ,
     EqualOptTest("ExpSimpleID2",
       parseExp("abc2"),
-      IdExp(Id("abc2"))),
-
+      IdExp(Id("abc2")))
+    ,
     EqualOptTest("ExpSimpleIDNotEnd1",
       parseExp("abc3:"),
-      IdExp(Id("abc3"))),
-
+      IdExp(Id("abc3")))
+    ,
     EqualOptTest("ExpSimpleIDNotEnd2",
       parseExp( """s,s"""),
-      IdExp(Id("s"))),
-
+      IdExp(Id("s")))
+    ,
     EqualOptTest("ExpOpID",
       parseExp("+"),
-      IdExp(Id("+", Id.Op))),
-
+      IdExp(Id("+", Id.Op)))
+    ,
     EqualOptTest("ExpComplexID",
       parseExp( """`a"sdsbc2`"""),
-      IdExp(Id( """a"sdsbc2""", Id.Complex))),
-
+      IdExp(Id( """a"sdsbc2""", Id.Complex)))
+    ,
     EqualOptTest("ExpLit",
       parseExp( """z'-1"""),
-      LiteralExp(Id("z"), Raw("-1"))),
-
+      LiteralExp(Id("z"), Raw("-1")))
+    ,
     EqualOptTest("ExpTuple",
       parseExp( """(z'-1, b'true ,usd'1_000_000)"""),
       TupleExp(
         Node.seq(
-          LiteralExp(Id("z"), Raw("-1")),
-          LiteralExp(Id("b"), Raw("true")),
-          LiteralExp(Id("usd"), Raw("1_000_000"))),
-        Node.emptySeq)
-    ),
+          LiteralExp(
+            Id("z"),
+            Raw("-1")
+          ),
+          LiteralExp(
+            Id("b"),
+            Raw("true")
+          ),
+          LiteralExp(
+            Id("usd"),
+            Raw("1_000_000")
+          )
+        )
+      )
+    )
+    ,
     EqualOptTest("ExpPrefixExp",
       parseExp("a(b,c)"),
-      CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c"))))),
-
+      CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))))
+    ,
     EqualOptTest("ExpInfixExp",
       parseExp("a(b,c) + z'5 * z'6"),
       BinaryExp(
@@ -171,21 +184,21 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.seq(
           (Id("*", Id.Op), LiteralExp(Id("z"), Raw("6")))
         )
-      )),
-
+      ))
+    ,
     EqualOptTest("ExpPrefixRecovery",
       parseExp( """a( 5, x ,4)""", reporter(3, 9)),
-      IdExp(Id("a"))),
-
+      IdExp(Id("a")))
+    ,
     EmptyIterableTest("IDError",
-      parseID( """:s""", reporter(0))),
-
+      parseID( """:s""", reporter(0)))
+    ,
     EmptyIterableTest("PrimaryExpIDError",
-      parsePrimaryExp( """:s""", reporter(0))),
-
+      parsePrimaryExp( """:s""", reporter(0)))
+    ,
     EmptyIterableTest("ExpTupleRecovery",
-      parseExp( """( 5, x ,4)""", reporter(2, 8))),
-
+      parseExp( """( 5, x ,4)""", reporter(2, 8)))
+    ,
     EqualOptTest("AssignAction1",
       parseAction( """x:=y+ z;"""),
       AssignAction(
@@ -195,8 +208,8 @@ final class FastParserTestDefProvider(tf: TestFramework)
           Id("+", Id.Op),
           IdExp(Id("z")),
           Node.emptySeq),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EqualOptTest("AssignAction2",
       parseAction( """x := d'1.0 + z * z'5;"""),
       AssignAction(
@@ -207,23 +220,23 @@ final class FastParserTestDefProvider(tf: TestFramework)
           IdExp(Id("z")),
           Node.seq(
             (Id("*", Id.Op), LiteralExp(Id("z"), Raw("5"))))),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EmptyIterableTest("AssignActionRecovery",
-      parseAction( """x := 5 + recovery skips this;""", reporter(5))),
-
+      parseAction( """x := 5 + recovery skips this;""", reporter(5)))
+    ,
     EqualOptTest("AssertAction1",
       parseAction( """assert b'true;"""),
       AssertAction(
         LiteralExp(Id("b"), Raw("true")),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EqualOptTest("AssertAction2",
       parseAction( """assert b'false;"""),
       AssertAction(
         LiteralExp(Id("b"), Raw("false")),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EqualOptTest("AssertAction3",
       parseAction( """assert x > z'0 & x < y;"""),
       AssertAction(
@@ -234,23 +247,23 @@ final class FastParserTestDefProvider(tf: TestFramework)
           Node.seq(
             (Id("&", Id.Op), IdExp(Id("x"))),
             (Id("<", Id.Op), IdExp(Id("y"))))),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EmptyIterableTest("AssertActionRecovery",
-      parseAction( """assert 7 + recovery skips this;""", reporter(7))),
-
+      parseAction( """assert 7 + recovery skips this;""", reporter(7)))
+    ,
     EqualOptTest("AssumeAction1",
       parseAction( """assume b'true;"""),
       AssumeAction(
         LiteralExp(Id("b"), Raw("true")),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EqualOptTest("AssumeAction2",
       parseAction( """assume b'false;"""),
       AssumeAction(
         LiteralExp(Id("b"), Raw("false")),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EqualOptTest("AssumeAction3",
       parseAction( """assume x > z'0 & x < y;"""),
       AssumeAction(
@@ -261,11 +274,11 @@ final class FastParserTestDefProvider(tf: TestFramework)
           Node.seq(
             (Id("&", Id.Op), IdExp(Id("x"))),
             (Id("<", Id.Op), IdExp(Id("y"))))),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EmptyIterableTest("AssumeActionRecovery",
-      parseAction( """assume 7 + recovery skips this;""", reporter(7))),
-
+      parseAction( """assume 7 + recovery skips this;""", reporter(7)))
+    ,
     EqualOptTest("ExtAction1",
       parseAction( """ext x(y,z);"""),
       ExtAction(
@@ -273,10 +286,14 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.seq(
           IdExp(Id("y")),
           IdExp(Id("z"))),
-        Node.emptySeq)),
-
+        Node.emptySeq))
+    ,
     EmptyIterableTest("ExtActionRecovery",
       parseAction( """ext x(6,recovery skip this);""", reporter(6)))
+    ,
+    EqualOptTest("GotoJump1",
+      parseJump( """goto L0;"""),
+      GotoJump(Id("L0")))
   )
 
   import FastParser._

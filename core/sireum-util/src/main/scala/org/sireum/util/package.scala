@@ -51,7 +51,6 @@ package object util {
   type MArray[T] = scala.collection.mutable.ArrayBuffer[T]
   type MList[T] = scala.collection.mutable.ListBuffer[T]
   type MMap[K, V] = scala.collection.mutable.Map[K, V]
-  type MIdMap[K, V] = MMap[K, V]
   type MConcMap[K, V] = scala.collection.concurrent.Map[K, V]
   type MSet[T] = scala.collection.mutable.Set[T]
   type MLinkedSet[T] = scala.collection.mutable.LinkedHashSet[T]
@@ -75,6 +74,9 @@ package object util {
 
   @inline
   def mmapEmpty[K, V]: MMap[K, V] = scala.collection.mutable.Map.empty[K, V]
+
+  @inline
+  def midmapEmpty[K <: AnyRef, V]: MMap[K, V] = MIdMap[K, V]()
 
   @inline
   def mlinkedSetEmpty[T]: MLinkedSet[T] = scala.collection.mutable.LinkedHashSet.empty[T]
