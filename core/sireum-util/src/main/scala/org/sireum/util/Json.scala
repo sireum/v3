@@ -158,6 +158,12 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for an Int: " + v)
     }
 
+  final def toStrIntern(v: Js.Value): String =
+    v match {
+      case Js.Str(s) => s.intern()
+      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+    }
+
   implicit final def toStr(v: Js.Value): String =
     v match {
       case Js.Str(s) => s

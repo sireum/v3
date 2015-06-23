@@ -58,21 +58,21 @@ final class Builder {
   def buildID(n: Token): Id = {
     val text = n.getText
     (if (text.charAt(0) == '\'')
-      Id(text.substring(1, text.length), Id.Complex)
+      Id(text.substring(1, text.length).intern(), Id.Complex)
     else if (text.charAt(0) match {
       case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
            '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
       case _ => false
     })
-      Id(text.substring(0, text.length), Id.Op)
+      Id(text.substring(0, text.length).intern(), Id.Op)
     else
-      Id(text, Id.Simple)) at n
+      Id(text.intern(), Id.Simple)) at n
   }
 
   def buildLIT(n: Token): Raw = {
     val text = n.getText
-    (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
-    else Raw(text.substring(1, text.length - 1), simple = true)) at n
+    (if (text.charAt(0) == '\'') Raw(text.substring(1).intern(), simple = true)
+    else Raw(text.substring(1, text.length - 1).intern(), simple = false)) at n
   }
 
   def build(ctx: ModelElementContext)(

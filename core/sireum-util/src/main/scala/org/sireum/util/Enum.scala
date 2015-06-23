@@ -34,7 +34,7 @@ abstract class Enum(name: String) {
 
   final def Value(s: String): Value = {
     assert(!isFrozen)
-    val r = s"$name.$s"
+    val r = s"$name.$s".intern()
     values(r) = values.size
     r
   }

@@ -32,14 +32,16 @@ import org.sireum.util._
 final class FastParser(input: String,
                        reporter: Reporter = ConsoleReporter,
                        private val createLocInfo: Boolean = false,
-                       private val max: Natural = -1,
+                       private val max: Natural = 0,
                        private var line: PosInteger = 1,
                        private var column: PosInteger = 1,
                        private var offset: Natural = 0) {
 
-  private val _max = if (max == -1) input.length else max
+  private val _max = if (max == 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+
+  assert(offset < _max)
 
   def parseModelFile(): Option[Model] = parseWithEOF(parseModel())
 
@@ -1268,7 +1270,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3 + 1, offset - 1), Id.Complex).
+      Some(Id(input.substring(begin._3 + 1, offset - 1).intern(), Id.Complex).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1285,7 +1287,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3, offset), Id.Op).
+      Some(Id(input.substring(begin._3, offset).intern(), Id.Op).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1302,7 +1304,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3, offset), Id.Simple).
+      Some(Id(input.substring(begin._3, offset).intern(), Id.Simple).
         at(line, column, offset))
     } else {
       if (i == 0)
@@ -1368,7 +1370,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset)).
+      Some(Raw(input.substring(begin._3 + 1, offset).intern()).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1385,7 +1387,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset - 1).
+      Some(Raw(input.substring(begin._3 + 1, offset - 1).intern().
         replaceAll( """\\\\""", "\\").
         replaceAll( """\\"""", "\"")).
         at(line, column, offset))
@@ -1830,5 +1832,4 @@ object FastParser {
       n
     }
   }
-
 }
