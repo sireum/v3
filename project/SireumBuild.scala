@@ -60,7 +60,7 @@ object SireumBuild extends Build {
       name := "Sireum")
 
   val sireumSettings = Seq(
-    organization := "SAnToS Laboratory",
+    organization := "org.sireum",
     artifactName := { (config: ScalaVersion, module: ModuleID, artifact: Artifact) =>
       artifact.name + (
         artifact.classifier match {
@@ -107,13 +107,13 @@ object SireumBuild extends Build {
   )
 
   val sireumJsSettings = Seq(
-    organization := "SAnToS Laboratory",
+    organization := "org.sireum",
     incOptions := incOptions.value.withNameHashing(true),
     parallelExecution in Test := false,
     scalaVersion := scalaVer,
     relativeSourceMaps := true,
     scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
-    scalaJSStage in Global := FastOptStage,
+    scalaJSStage in Global := FullOptStage,
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.2.8"
