@@ -64,7 +64,7 @@ final class FastParser(input: String,
     var recovered = false
     def rcv(): Unit = {
       ok = false
-      val i = findKeywords("def", "global")
+      val i = findKeywords(modelElementKeywords)
       if (i >= 0) {
         recovered = true
         consume(i)
@@ -398,10 +398,10 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    if (peekKeyword("call"))
-      parseCallTransformation(id, annotations, recover)
-    else
-      parseBlockTransformation(id, annotations, recover)
+    peekKeyword(0, locationKeywords) match {
+      case 0 => parseCallTransformation(id, annotations, recover)
+      case _ => parseBlockTransformation(id, annotations, recover)
+    }
   }
 
   def parseCallTransformation(label: Id,
@@ -506,10 +506,12 @@ final class FastParser(input: String,
   }
 
   def parseAction(recover: () => Unit): Option[Action] = {
-    if (peekKeyword("assert")) parseAssertAction(recover)
-    else if (peekKeyword("assume")) parseAssumeAction(recover)
-    else if (peekKeyword("ext")) parseExtAction(recover)
-    else parseAssignAction(recover)
+    peekKeyword(0, actionKeywords) match {
+      case 0 => parseAssertAction(recover)
+      case 1 => parseAssumeAction(recover)
+      case 2 => parseExtAction(recover)
+      case _ => parseAssignAction(recover)
+    }
   }
 
   private def parseAssignAction(recover: () => Unit): Option[AssignAction] = {
@@ -1606,15 +1608,11 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
-  private def peekKeyword(s: String, offset: Int = 0): Boolean = {
-    var i = 0
-    var j = offset
-    while (i < s.length) {
-      if (charNe(peek(j), s.charAt(j))) return false
-      i += 1
-      j += 1
-    }
-    if (isJavaDigitOrLetter(peek(j))) false else true
+  private def peekKeyword(offset: Int, keywords: Map[String, Int]): NaturalSentinel = {
+    val (ok, i) = peekOneStar(offset, isJavaLetter, isJavaDigitOrLetter)
+    if (!ok) return naturalSentinel
+    val s = input.substring(this.offset + offset, this.offset + i)
+    keywords.getOrElse(s, naturalSentinel)
   }
 
   private def matchKeyword(s: String): Boolean = {
@@ -1734,10 +1732,10 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def findKeywords(ks: String*): NaturalSentinel = {
+  private def findKeywords(m: Map[String, Int]): NaturalSentinel = {
     var i = 0
     var d = peek(i)
-    while (d != EOF && ks.exists(k => peekKeyword(k, i))) {
+    while (d != EOF && peekKeyword(i, m) == naturalSentinel) {
       d match {
         case '"' =>
           val (ok, j) = peekComplexLIT(i)
@@ -1757,8 +1755,7 @@ final class FastParser(input: String,
       }
       d = peek(i)
     }
-    if (ks.exists(k => peekKeyword(k, i))) i
-    else naturalSentinel
+    if (d != EOF) i else naturalSentinel
   }
 
 
@@ -1842,6 +1839,9 @@ object FastParser {
     "then",
     "var"
   )
+  final private val modelElementKeywords = Map("global" -> 0, "def" -> 1)
+  final private val actionKeywords = Map("assert" -> 0, "assume" -> 1, "ext" -> 2)
+  final private val locationKeywords = Map("call" -> 0)
 
   object IdKind extends Enum("Id") {
     type Type = Value
