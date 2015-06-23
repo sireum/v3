@@ -1370,7 +1370,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset).intern()).
+      Some(Raw(input.substring(begin._3 + 1, offset), simple = true).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1387,9 +1387,9 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset - 1).intern().
+      Some(Raw(input.substring(begin._3 + 1, offset - 1).
         replaceAll( """\\\\""", "\\").
-        replaceAll( """\\"""", "\"")).
+        replaceAll( """\\"""", "\""), simple = false).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1832,4 +1832,5 @@ object FastParser {
       n
     }
   }
+
 }

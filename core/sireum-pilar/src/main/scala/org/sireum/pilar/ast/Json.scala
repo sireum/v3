@@ -256,7 +256,7 @@ object Json {
           case "ProcedureDecl" =>
             ProcedureDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[ParamDecl]), toVector(o.value(3)._2)(to[Annotation]), toOption(o.value(4)._2)(to[ProcedureBody]))
           case "Raw" =>
-            Raw(toStrIntern(o.value(1)._2), toBoolean(o.value(2)._2))
+            Raw(toStr(o.value(1)._2), toBoolean(o.value(2)._2))
           case "ReturnJump" =>
             ReturnJump(toOption(o.value(1)._2)(to[Exp]), toVector(o.value(2)._2)(to[Annotation]))
           case "SwitchCase" =>

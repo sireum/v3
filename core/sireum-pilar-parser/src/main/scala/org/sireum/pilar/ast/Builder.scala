@@ -71,8 +71,10 @@ final class Builder {
 
   def buildLIT(n: Token): Raw = {
     val text = n.getText
-    (if (text.charAt(0) == '\'') Raw(text.substring(1).intern(), simple = true)
-    else Raw(text.substring(1, text.length - 1).intern(), simple = false)) at n
+    (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
+    else Raw(text.substring(1, text.length - 1).
+      replaceAll( """\\\\""", "\\").
+      replaceAll( """\\"""", "\""), simple = false)) at n
   }
 
   def build(ctx: ModelElementContext)(

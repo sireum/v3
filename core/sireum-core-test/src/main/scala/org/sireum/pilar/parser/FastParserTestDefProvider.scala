@@ -50,7 +50,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EqualOptTest("StringLit",
       parseLIT("\"abc\\\"abc\""),
-      Raw("abc\"abc"))
+      Raw("abc\"abc", simple = false))
     ,
     EqualOptTest("EmptyLit",
       parseLIT("'"),
