@@ -113,7 +113,7 @@ object SireumBuild extends Build {
     scalaVersion := scalaVer,
     relativeSourceMaps := true,
     scalacOptions ++= Seq("-target:jvm-1.8", "-Ybackend:GenBCode"),
-    scalaJSStage in Global := FullOptStage,
+    scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.2.8"

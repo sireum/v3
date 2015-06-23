@@ -48,8 +48,9 @@ final class Builder {
   }
 
   def build(ctx: AnnotationContext): Annotation = {
-    val (id, raw) = build(ctx.lit())
-    Annotation(id, raw) at ctx
+    Annotation(buildID(ctx.ID()),
+      Option(ctx.LIT().getSymbol).map(buildLIT).
+        getOrElse(Raw(""))) at ctx
   }
 
   def build(ctx: LitContext): (Id, Raw) =
@@ -58,23 +59,23 @@ final class Builder {
   def buildID(n: Token): Id = {
     val text = n.getText
     (if (text.charAt(0) == '\'')
-      Id(text.substring(1, text.length).intern(), Id.Complex)
+      Id(text.substring(1, text.length).intern())
     else if (text.charAt(0) match {
       case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
            '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
       case _ => false
     })
-      Id(text.substring(0, text.length).intern(), Id.Op)
+      Id(text.substring(0, text.length).intern())
     else
-      Id(text.intern(), Id.Simple)) at n
+      Id(text.intern())) at n
   }
 
   def buildLIT(n: Token): Raw = {
     val text = n.getText
-    (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
+    (if (text.charAt(0) == '\'') Raw(text.substring(1))
     else Raw(text.substring(1, text.length - 1).
       replaceAll( """\\\\""", "\\").
-      replaceAll( """\\"""", "\""), simple = false)) at n
+      replaceAll( """\\"""", "\""))) at n
   }
 
   def build(ctx: ModelElementContext)(
@@ -216,13 +217,7 @@ final class Builder {
           buildID(ctxSC.ID())
         ) at ctxSC
       } :+ {
-        val u = buildID(ctx.u)
-        if (u.value != "_") {
-          val locInfo = nodeLocMap(u)
-          reporter.error(locInfo.lineBegin, locInfo.columnBegin, locInfo.offset,
-            s"Expecting: '_', but found: '${u.value}'")
-        }
-        SwitchCase(None, buildID(ctx.t)) at(ctx.b, ctx.t)
+        SwitchCase(None, buildID(ctx.ID())) at(ctx.b, ctx.ID())
       },
       ctx.annotation().map(build)
     ) at ctx
@@ -241,7 +236,7 @@ final class Builder {
       val first = ctx.expSuffix(0)
       val op = buildID(first.ID())
       val right = build(first.primArgs())
-      r = BinaryExp(r, op, right,
+      r = GenBinaryExp(r, op, right,
         ctx.expSuffix().map(ctxS =>
           (buildID(ctxS.ID()), build(ctxS.primArgs()))
         )) at ctx

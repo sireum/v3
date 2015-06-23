@@ -61,14 +61,6 @@ object Json {
           ("exp", from(o.exp)),
           ("annotations", fromSeq(o.annotations)(from))
         )
-      case o: BinaryExp =>
-        Js.Obj(
-          (".class", Js.Str("BinaryExp")),
-          ("left", from(o.left)),
-          ("op", from(o.op)),
-          ("right", from(o.right)),
-          ("rest", fromSeq(o.rest)(fromTuple2))
-        )
       case o: BlockLocation =>
         Js.Obj(
           (".class", Js.Str("BlockLocation")),
@@ -107,6 +99,14 @@ object Json {
           ("args", fromSeq(o.args)(from)),
           ("annotations", fromSeq(o.annotations)(from))
         )
+      case o: GenBinaryExp =>
+        Js.Obj(
+          (".class", Js.Str("GenBinaryExp")),
+          ("left", from(o.left)),
+          ("op", from(o.op)),
+          ("right", from(o.right)),
+          ("rest", fromSeq(o.rest)(fromTuple2))
+        )
       case o: GlobalVarDecl =>
         Js.Obj(
           (".class", Js.Str("GlobalVarDecl")),
@@ -122,8 +122,7 @@ object Json {
       case o: Id =>
         Js.Obj(
           (".class", Js.Str("Id")),
-          ("value", fromStr(o.value)),
-          ("simple", fromStr(o.kind))
+          ("value", fromStr(o.value))
         )
       case o: IdExp =>
         Js.Obj(
@@ -179,8 +178,7 @@ object Json {
       case o: Raw =>
         Js.Obj(
           (".class", Js.Str("Raw")),
-          ("value", fromStr(o.value)),
-          ("simple", fromAnyVal(o.simple))
+          ("value", fromStr(o.value))
         )
       case o: ReturnJump =>
         Js.Obj(
@@ -221,8 +219,6 @@ object Json {
             AssignAction(to[Exp](o.value(1)._2), to[Exp](o.value(2)._2), toVector(o.value(3)._2)(to[Annotation]))
           case "AssumeAction" =>
             AssumeAction(to[Exp](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "BinaryExp" =>
-            BinaryExp(to[Exp](o.value(1)._2), to[Id](o.value(2)._2), to[Exp](o.value(3)._2), toVector(o.value(4)._2)(toTuple2))
           case "BlockLocation" =>
             BlockLocation(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Action]), to[Jump](o.value(3)._2), toVector(o.value(4)._2)(to[Annotation]))
           case "CallExp" =>
@@ -233,12 +229,14 @@ object Json {
             ExtAction(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Exp]), toVector(o.value(3)._2)(to[Annotation]))
           case "ExtJump" =>
             ExtJump(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Exp]), toVector(o.value(3)._2)(to[Annotation]))
+          case "GenBinaryExp" =>
+            GenBinaryExp(to[Exp](o.value(1)._2), to[Id](o.value(2)._2), to[Exp](o.value(3)._2), toVector(o.value(4)._2)(toTuple2))
           case "GlobalVarDecl" =>
             GlobalVarDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
           case "GotoJump" =>
             GotoJump(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
           case "Id" =>
-            Id(toStrIntern(o.value(1)._2), toStrIntern(o.value(2)._2))
+            Id(toStr(o.value(1)._2))
           case "IdExp" =>
             IdExp(to[Id](o.value(1)._2))
           case "IfJump" =>
@@ -256,7 +254,7 @@ object Json {
           case "ProcedureDecl" =>
             ProcedureDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[ParamDecl]), toVector(o.value(3)._2)(to[Annotation]), toOption(o.value(4)._2)(to[ProcedureBody]))
           case "Raw" =>
-            Raw(toStr(o.value(1)._2), toBoolean(o.value(2)._2))
+            Raw(toStr(o.value(1)._2))
           case "ReturnJump" =>
             ReturnJump(toOption(o.value(1)._2)(to[Exp]), toVector(o.value(2)._2)(to[Annotation]))
           case "SwitchCase" =>

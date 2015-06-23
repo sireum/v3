@@ -50,10 +50,6 @@ object Rewriter {
       val Seq(exp: Exp, annotations: IVector[_]) = es
       AssumeAction(exp, cast(annotations))
     }),
-    ("BinaryExp", { es =>
-      val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
-      BinaryExp(left, op, right, cast(rest))
-    }),
     ("BlockLocation", { es =>
       val Seq(label: Id, actions: IVector[_], jump: Jump, annotations: IVector[_]) = es
       BlockLocation(label, cast(actions), jump, cast(annotations))
@@ -74,6 +70,10 @@ object Rewriter {
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
       ExtJump(id, cast(args), cast(annotations))
     }),
+    ("GenBinaryExp", { es =>
+      val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
+      GenBinaryExp(left, op, right, cast(rest))
+    }),
     ("GlobalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
       GlobalVarDecl(id, cast(annotations))
@@ -83,8 +83,8 @@ object Rewriter {
       GotoJump(target, cast(annotations))
     }),
     ("Id", { es =>
-      val Seq(value: String, kind: String) = es
-      Id(value, kind)
+      val Seq(value: String) = es
+      Id(value)
     }),
     ("IdExp", { es =>
       val Seq(id: Id) = es
@@ -103,8 +103,8 @@ object Rewriter {
       LocalVarDecl(id, cast(annotations))
     }),
     ("Model", { es =>
-      val Seq(annotations: IVector[_], elements: IVector[_]) = es
-      Model(cast(annotations), cast(elements))
+      val Seq(elements: IVector[_], annotations: IVector[_]) = es
+      Model(cast(elements), cast(annotations))
     }),
     ("ParamDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
@@ -119,8 +119,8 @@ object Rewriter {
       ProcedureDecl(id, cast(params), cast(annotations), cast(bodyOpt))
     }),
     ("Raw", { es =>
-      val Seq(value: String, simple: java.lang.Boolean) = es
-      Raw(value, simple)
+      val Seq(value: String) = es
+      Raw(value)
     }),
     ("ReturnJump", { es =>
       val Seq(expOpt: Option[_], annotations: IVector[_]) = es

@@ -78,6 +78,10 @@ object FastParserTestJs extends UTestTestFramework {
       test("AssignAction2")
     }
 
+    "AssignAction3" - {
+      test("AssignAction3")
+    }
+
     "AssignActionRecovery" - {
       test("AssignActionRecovery")
     }
@@ -162,8 +166,40 @@ object FastParserTestJs extends UTestTestFramework {
       test("ExtActionRecovery")
     }
 
+    "ExtJump1" - {
+      test("ExtJump1")
+    }
+
+    "ExtJumpRecovery" - {
+      test("ExtJumpRecovery")
+    }
+
+    "GotoJump1" - {
+      test("GotoJump1")
+    }
+
+    "GotoJumpRecovery" - {
+      test("GotoJumpRecovery")
+    }
+
     "IDError" - {
       test("IDError")
+    }
+
+    "IfJump1" - {
+      test("IfJump1")
+    }
+
+    "IfJumpRecovery1" - {
+      test("IfJumpRecovery1")
+    }
+
+    "IfJumpRecovery2" - {
+      test("IfJumpRecovery2")
+    }
+
+    "IfJumpRecovery3" - {
+      test("IfJumpRecovery3")
     }
 
     "OpID" - {
@@ -228,6 +264,30 @@ object FastParserTestJs extends UTestTestFramework {
 
     "StringLit" - {
       test("StringLit")
+    }
+
+    "SwitchJump1" - {
+      test("SwitchJump1")
+    }
+
+    "SwitchJump2" - {
+      test("SwitchJump2")
+    }
+
+    "SwitchJump3" - {
+      test("SwitchJump3")
+    }
+
+    "SwitchJumpRecovery1" - {
+      test("SwitchJumpRecovery1")
+    }
+
+    "SwitchJumpRecovery2" - {
+      test("SwitchJumpRecovery2")
+    }
+
+    "SwitchJumpRecovery3" - {
+      test("SwitchJumpRecovery3")
     }
 
   }

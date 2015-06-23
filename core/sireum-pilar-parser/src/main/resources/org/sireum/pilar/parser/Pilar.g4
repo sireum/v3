@@ -91,8 +91,8 @@ jump
   | 'switch' exp
     switchCase*
     b='default'
-    u=ID /* must be _ */ ':'
-    t=ID
+    ':'
+    ID
     annotation* ';'                   #SwitchJump
   | 'jext' ID arg annotation* ';'     #ExtJump
   ;
@@ -129,26 +129,22 @@ lit
   ;
 
 annotation
-  : '@' lit
+  : '@' ID LIT?
   ;
 
 LIT
-  : '\'' LITIDTrailChar*
+  : '\'' ~[ \r\n\t\u000C;(,){}'"#@`]*
   | '\"' ( ~["] | '\\' ( '\\' | '"' ) )* '\"'
   ;
 
 ID
   : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | [.~!%^&*-+=|<>/?] LITIDTrailChar*
+  | [.~!%^&*-+=|<>/?] ~[ \r\n\t\u000C;(,){}'"#@`:]*
   | '`' ~[\r\n\t\u000C`]+ '`'
   ;
 
 WS
   : [ \r\n\t\u000C]+ -> skip
-  ;
-
-fragment LITIDTrailChar
-  : ~[ \r\n\t\u000C;(,){}'"#@`]
   ;
 
 ERROR_CHAR

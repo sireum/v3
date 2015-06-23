@@ -73,6 +73,8 @@ final class FastParser(input: String,
 
     implicit val begin = (line, column, offset)
 
+    parseWhiteSpace()
+
     val annotations = parseAnnotations(rcv)
 
     if (!ok && !recovered) return None
@@ -899,6 +901,8 @@ final class FastParser(input: String,
         return None
       }
 
+      parseWhiteSpace()
+
       val idOpt = parseID(recover)
       if (idOpt.isEmpty) return None
       val id = idOpt.get
@@ -909,36 +913,33 @@ final class FastParser(input: String,
       parseWhiteSpace()
     }
 
-    val begin2 = (line, column, offset)
-    if (!matchKeyword("default")) {
-      recover()
-      return None
+    if (charEq(peek(), 'd')) {
+      val begin2 = (line, column, offset)
+      if (!matchKeyword("default")) {
+        recover()
+        return None
+      }
+
+      parseWhiteSpace()
+
+      matchChar(':') { s =>
+        reporter.error(line, column, offset,
+          s"Expecting: ':', but found $s")
+        recover()
+        return None
+      }
+
+      parseWhiteSpace()
+
+      val idOpt = parseID(recover)
+      if (idOpt.isEmpty) return None
+      val id = idOpt.get
+
+      cases = cases :+ SwitchCase(None, id).
+        at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
+
+      parseWhiteSpace()
     }
-
-    parseWhiteSpace()
-
-    matchChar('_') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: '_', but found $s")
-      recover()
-      return None
-    }
-
-    matchChar(':') { s =>
-      reporter.error(line, column, offset,
-        s"Expecting: ':', but found $s")
-      recover()
-      return None
-    }
-
-    val idOpt = parseID(recover)
-    if (idOpt.isEmpty) return None
-    val id = idOpt.get
-
-    cases = cases :+ SwitchCase(None, id).
-      at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
-
-    parseWhiteSpace()
 
     val annotations = parseAnnotations(rcv)
 
@@ -1032,7 +1033,7 @@ final class FastParser(input: String,
     }
     if (ok && suffix.nonEmpty) {
       val (op, right) = suffix.head
-      Some(BinaryExp(r, op, right, suffix.tail).
+      Some(GenBinaryExp(r, op, right, suffix.tail).
         at(line, column, offset))
     } else Some(r)
   }
@@ -1073,6 +1074,9 @@ final class FastParser(input: String,
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
+
+    parseWhiteSpace()
+
     peek() match {
       case '\'' | '\"' =>
         parseLIT(recover).map(raw =>
@@ -1162,7 +1166,9 @@ final class FastParser(input: String,
       id <- parseID(recover);
       raw <- {
         parseWhiteSpace()
-        parseLIT(recover)
+        if (charEq(peek(), '\'') || charEq(peek(), '"'))
+          parseLIT(recover)
+        else Some(Raw(""))
       }) yield {
       Annotation(id, raw) at(line, column, offset)
     }
@@ -1270,7 +1276,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3 + 1, offset - 1).intern(), Id.Complex).
+      Some(Id(input.substring(begin._3 + 1, offset - 1).intern()).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1287,7 +1293,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3, offset).intern(), Id.Op).
+      Some(Id(input.substring(begin._3, offset).intern()).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1304,7 +1310,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Id(input.substring(begin._3, offset).intern(), Id.Simple).
+      Some(Id(input.substring(begin._3, offset).intern()).
         at(line, column, offset))
     } else {
       if (i == 0)
@@ -1347,11 +1353,18 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def peekSimpleID() = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
+  private def peekSimpleID() = {
+    val p = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
+    val (ok, i) = p
+    if (ok &&
+      keywords.contains(input.substring(offset, offset + i)))
+      (false, 0)
+    else p
+  }
 
   @inline
   private def peekOpID(offset: Natural = 0) =
-    peekOneStar(offset, isOpIDFirstChar, isLITIDTrailingChar)
+    peekOneStar(offset, isOpIDFirstChar, isOpIDTrailingChar)
 
   @inline
   private def isOpIDFirstChar(c: CharSentinel): Boolean =
@@ -1359,6 +1372,14 @@ final class FastParser(input: String,
       case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
            '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
       case _ => false
+    }
+
+  @inline
+  private def isOpIDTrailingChar(c: CharSentinel) =
+    c match {
+      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+      case _ => true
     }
 
   @inline
@@ -1370,7 +1391,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset), simple = true).
+      Some(Raw(input.substring(begin._3 + 1, offset)).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1389,7 +1410,7 @@ final class FastParser(input: String,
       consume(i)
       Some(Raw(input.substring(begin._3 + 1, offset - 1).
         replaceAll( """\\\\""", "\\").
-        replaceAll( """\\"""", "\""), simple = false).
+        replaceAll( """\\"""", "\"")).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1401,17 +1422,18 @@ final class FastParser(input: String,
     }
   }
 
+  @inline
   private def peekSimpleLIT(offset: Natural = 0) =
-    peekOneStar(offset, isSimpleLITFirstChar, isLITIDTrailingChar)
+    peekOneStar(offset, isSimpleLITFirstChar, isLITTrailingChar)
 
   @inline
   private def isSimpleLITFirstChar(c: CharSentinel) = charEq(c, '\'')
 
   @inline
-  private def isLITIDTrailingChar(c: CharSentinel) =
+  private def isLITTrailingChar(c: CharSentinel) =
     c match {
       case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | EOF => false
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
       case _ => true
     }
 
@@ -1799,6 +1821,24 @@ final class FastParser(input: String,
 
 object FastParser {
   final val EOF = naturalSentinel
+  final val keywords = Set(
+    "assert",
+    "assume",
+    "call",
+    "case",
+    "def",
+    "default",
+    "else",
+    "ext",
+    "global",
+    "goto",
+    "if",
+    "jext",
+    "return",
+    "switch",
+    "then",
+    "var"
+  )
 
   trait Reporter {
     def error(line: PosInteger,

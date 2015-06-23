@@ -96,6 +96,16 @@ object ProductUtil {
     import StringUtil._
 
     o match {
+      case None =>
+        sb.append("None")
+      case Some(e) =>
+        sb.append("Some(")
+        appendLine()
+        appendIndent(indent + 1)
+        toScalaString(e, indent + 1, sb)
+        appendLine()
+        appendIndent(indent)
+        sb.append(')')
       case o: Product =>
         val prefix = o.productPrefix
         var appendPrefix = true

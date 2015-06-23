@@ -37,9 +37,7 @@ object Node {
   def seq[T](es: Iterable[T]) = es.toVector
 }
 
-sealed trait Node extends CaseClass
-
-sealed trait NoInternalNode extends Node {
+sealed trait Node extends CaseClass {
   final override def copyInternal(newNode: CaseClass): CaseClass = newNode
 }
 
@@ -53,21 +51,12 @@ Model(elements: Node.Seq[ModelElement],
       annotations: Node.Seq[Annotation] = Node.emptySeq)
   extends Node with Annotated {
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
-
-  override def copyInternal(newNode: CaseClass): CaseClass = {
-    newNode match {
-      case n: Model =>
-        for ((k, v) <- nodeLocMap if !n.nodeLocMap.contains(k))
-          n.nodeLocMap(k) = v
-    }
-    newNode
-  }
 }
 
 
 final case class
 Annotation(id: Id,
-           raw: Raw) extends NoInternalNode
+           raw: Raw) extends Node
 
 object Id extends Enum("Id") {
   type Kind = Value
@@ -77,21 +66,20 @@ object Id extends Enum("Id") {
 }
 
 final case class
-Id(value: String,
-   kind: Id.Kind = Id.Simple) extends NoInternalNode
+Id(value: String) extends Node
 
 
 final case class
-Raw(value: String,
-    simple: Boolean = true) extends NoInternalNode
+Raw(value: String) extends Node
 
 
-sealed trait ModelElement extends NoInternalNode with Annotated
+sealed trait ModelElement extends Node with Annotated
 
 
 final case class
 GlobalVarDecl(id: Id,
-              annotations: Node.Seq[Annotation] = Node.emptySeq) extends ModelElement
+              annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends ModelElement
 
 
 final case class
@@ -103,20 +91,22 @@ ProcedureDecl(id: Id,
 
 final case class
 ParamDecl(id: Id,
-          annotations: Node.Seq[Annotation] = Node.emptySeq) extends NoInternalNode with Annotated
+          annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Node with Annotated
 
 
 final case class
 ProcedureBody(locals: Node.Seq[LocalVarDecl],
-              locations: Node.Seq[Location]) extends NoInternalNode
+              locations: Node.Seq[Location]) extends Node
 
 
 final case class
 LocalVarDecl(id: Id,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends NoInternalNode with Annotated
+             annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Node with Annotated
 
 
-sealed trait Location extends NoInternalNode with Annotated
+sealed trait Location extends Node with Annotated
 
 
 final case class
@@ -125,14 +115,16 @@ CallLocation(label: Id,
              id: Id,
              args: Node.Seq[Exp],
              target: Id,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Location
+             annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Location
 
 
 final case class
 BlockLocation(label: Id,
               actions: Node.Seq[Action],
               jump: Jump,
-              annotations: Node.Seq[Annotation] = Node.emptySeq) extends Location {
+              annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Location {
   {
     var i = 0
     while (i < actions.size) {
@@ -144,7 +136,7 @@ BlockLocation(label: Id,
 }
 
 
-sealed trait Command extends NoInternalNode with Annotated {
+sealed trait Command extends Node with Annotated {
   private var _index: NaturalSentinel = naturalSentinel
 
   final def commandIndex = _index
@@ -161,23 +153,27 @@ sealed trait Action extends Command
 final case class
 AssignAction(lhs: Exp,
              rhs: Exp,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Action
 
 
 final case class
 AssertAction(exp: Exp,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Action
 
 
 final case class
 AssumeAction(exp: Exp,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
+             annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Action
 
 
 final case class
 ExtAction(id: Id,
           args: Node.Seq[Exp],
-          annotations: Node.Seq[Annotation] = Node.emptySeq) extends Action
+          annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Action
 
 
 sealed trait Jump extends Command
@@ -185,39 +181,50 @@ sealed trait Jump extends Command
 
 final case class
 GotoJump(target: Id,
-         annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
+         annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Jump
 
 
 final case class
 IfJump(exp: Exp,
        tTarget: Id,
        fTarget: Id,
-       annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
+       annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Jump
 
 
 final case class
 ReturnJump(expOpt: Option[Exp],
-           annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
+           annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Jump
 
 
 final case class
 SwitchJump(exp: Exp,
            cases: Node.Seq[SwitchCase],
-           annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
+           annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Jump {
+  {
+    for (i <- 0 until cases.length - 1) {
+      assert(cases(i).expOpt.isDefined)
+    }
+  }
+}
 
 
 final case class
 SwitchCase(expOpt: Option[LiteralExp],
-           target: Id) extends NoInternalNode
+           target: Id) extends Node
 
 
 final case class
 ExtJump(id: Id,
         args: Node.Seq[Exp],
-        annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
+        annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Jump
 
 
-sealed trait Exp extends NoInternalNode
+sealed trait Exp extends Node
 
 
 final case class
@@ -231,16 +238,31 @@ IdExp(id: Id) extends Exp
 
 final case class
 TupleExp(exps: Node.Seq[Exp],
-         annotations: Node.Seq[Annotation] = Node.emptySeq) extends Exp with Annotated
+         annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends Exp with Annotated
+
+
+object BinaryExp {
+  def apply(left: Exp,
+            op: Id,
+            right: Exp) =
+    GenBinaryExp(left, op, right)
+
+  def unapply(g: GenBinaryExp) =
+    if (g.rest.isEmpty)
+      Some((g.left, g.op, g.right))
+    else None
+}
 
 
 final case class
-BinaryExp(left: Exp,
-          op: Id,
-          right: Exp,
-          rest: Node.Seq[(Id, Exp)]) extends Exp
-
+GenBinaryExp(left: Exp,
+             op: Id,
+             right: Exp,
+             rest: Node.Seq[(Id, Exp)] = Node.emptySeq)
+  extends Exp
 
 final case class
 CallExp(exp: Exp,
-        args: Node.Seq[Exp]) extends Exp
+        args: Node.Seq[Exp])
+  extends Exp

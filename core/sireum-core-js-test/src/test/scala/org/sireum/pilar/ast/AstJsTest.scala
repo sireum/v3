@@ -51,7 +51,7 @@ object AstJsTest extends TestSuite {
 
     'RewriteAnnotationOffset {
       val model2 = Rewriter.build() {
-        case Annotation(Id(_, _), raw) =>
+        case Annotation(Id(_), raw) =>
           Annotation(Id("Z"), raw)
       }(model)
 
