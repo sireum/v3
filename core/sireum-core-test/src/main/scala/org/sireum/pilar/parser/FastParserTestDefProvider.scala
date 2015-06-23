@@ -36,12 +36,12 @@ final class FastParserTestDefProvider(tf: TestFramework)
 
   override val testDefs: ISeq[TestDef] = ivector(
 
-    EqualTest("AnnRecovery",
-      parseAnnotations("@ 5 sdaekcn;sgej() @type 'Int", reporter(2)),
+    EqualTest("AnnotationRecovery",
+      parseAnnotations("@ 5 sdaekcn;sgej(recovery skips here) @type 'Int", reporter(2)),
       Seq(Annotation(Id("type"), Raw("Int")))),
 
-    EqualTest("AnnRecoveryString",
-      parseAnnotations("@ 5 \"@\" sdaekcn;sgej() @type 'Int", reporter(2)),
+    EqualTest("AnnotationRecoveryString",
+      parseAnnotations("@ 5 recovery ignore \"@\" inside string @type 'Int", reporter(2)),
       Seq(Annotation(Id("type"), Raw("Int")))),
 
     EqualOptTest("SimpleLit",
@@ -184,10 +184,114 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parsePrimaryExp( """:s""", reporter(0))),
 
     EmptyIterableTest("ExpTupleRecovery",
-      parseExp( """( 5, x ,4)""", reporter(2, 8)))
+      parseExp( """( 5, x ,4)""", reporter(2, 8))),
+
+    EqualOptTest("AssignAction1",
+      parseAction( """x:=y+ z;"""),
+      AssignAction(
+        IdExp(Id("x")),
+        BinaryExp(
+          IdExp(Id("y")),
+          Id("+", Id.Op),
+          IdExp(Id("z")),
+          Node.emptySeq),
+        Node.emptySeq)),
+
+    EqualOptTest("AssignAction2",
+      parseAction( """x := d'1.0 + z * z'5;"""),
+      AssignAction(
+        IdExp(Id("x")),
+        BinaryExp(
+          LiteralExp(Id("d"), Raw("1.0")),
+          Id("+", Id.Op),
+          IdExp(Id("z")),
+          Node.seq(
+            (Id("*", Id.Op), LiteralExp(Id("z"), Raw("5"))))),
+        Node.emptySeq)),
+
+    EmptyIterableTest("AssignActionRecovery",
+      parseAction( """x := 5 + recovery skips this;""", reporter(5))),
+
+    EqualOptTest("AssertAction1",
+      parseAction( """assert b'true;"""),
+      AssertAction(
+        LiteralExp(Id("b"), Raw("true")),
+        Node.emptySeq)),
+
+    EqualOptTest("AssertAction2",
+      parseAction( """assert b'false;"""),
+      AssertAction(
+        LiteralExp(Id("b"), Raw("false")),
+        Node.emptySeq)),
+
+    EqualOptTest("AssertAction3",
+      parseAction( """assert x > z'0 & x < y;"""),
+      AssertAction(
+        BinaryExp(
+          IdExp(Id("x")),
+          Id(">", Id.Op),
+          LiteralExp(Id("z"), Raw("0")),
+          Node.seq(
+            (Id("&", Id.Op), IdExp(Id("x"))),
+            (Id("<", Id.Op), IdExp(Id("y"))))),
+        Node.emptySeq)),
+
+    EmptyIterableTest("AssertActionRecovery",
+      parseAction( """assert 7 + recovery skips this;""", reporter(7))),
+
+    EqualOptTest("AssumeAction1",
+      parseAction( """assume b'true;"""),
+      AssumeAction(
+        LiteralExp(Id("b"), Raw("true")),
+        Node.emptySeq)),
+
+    EqualOptTest("AssumeAction2",
+      parseAction( """assume b'false;"""),
+      AssumeAction(
+        LiteralExp(Id("b"), Raw("false")),
+        Node.emptySeq)),
+
+    EqualOptTest("AssumeAction3",
+      parseAction( """assume x > z'0 & x < y;"""),
+      AssumeAction(
+        BinaryExp(
+          IdExp(Id("x")),
+          Id(">", Id.Op),
+          LiteralExp(Id("z"), Raw("0")),
+          Node.seq(
+            (Id("&", Id.Op), IdExp(Id("x"))),
+            (Id("<", Id.Op), IdExp(Id("y"))))),
+        Node.emptySeq)),
+
+    EmptyIterableTest("AssumeActionRecovery",
+      parseAction( """assume 7 + recovery skips this;""", reporter(7))),
+
+    EqualOptTest("ExtAction1",
+      parseAction( """ext x(y,z);"""),
+      ExtAction(
+        Id("x"),
+        Node.seq(
+          IdExp(Id("y")),
+          IdExp(Id("z"))),
+        Node.emptySeq)),
+
+    EmptyIterableTest("ExtActionRecovery",
+      parseAction( """ext x(6,recovery skip this);""", reporter(6)))
   )
 
   import FastParser._
+
+  private def parseAction(s: String,
+                          reporter: Reporter = ConsoleReporter) = {
+    val parser = new FastParser(s, reporter, createLocInfo = false)
+    parser.parseWithEOF(parser.parseAction(noRecover))
+  }
+
+  private def parseJump(s: String,
+                        reporter: Reporter = ConsoleReporter) = {
+    val parser = new FastParser(s, reporter, createLocInfo = false)
+    parser.parseWithEOF(parser.parseJump(noRecover))
+  }
 
   private def parseExp(s: String,
                        reporter: Reporter = ConsoleReporter) =

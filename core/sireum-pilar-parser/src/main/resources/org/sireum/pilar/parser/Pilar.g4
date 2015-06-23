@@ -133,18 +133,22 @@ annotation
   ;
 
 LIT
-  : '\'' [ \r\n\t\u000C;(,){}'"#@`]*
+  : '\'' LITIDTrailChar*
   | '\"' ( ~["] | '\\' ( '\\' | '"' ) )* '\"'
   ;
 
 ID
   : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | [.~!%^&*-+=|<>/?] [ \r\n\t\u000C;(,){}'"#@`:]*
+  | [.~!%^&*-+=|<>/?] LITIDTrailChar*
   | '`' ~[\r\n\t\u000C`]+ '`'
   ;
 
 WS
   : [ \r\n\t\u000C]+ -> skip
+  ;
+
+fragment LITIDTrailChar
+  : ~[ \r\n\t\u000C;(,){}'"#@`]
   ;
 
 ERROR_CHAR

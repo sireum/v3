@@ -29,8 +29,8 @@ import org.junit.Assert
 
 object JUnitTestFramework extends TestFramework {
 
-  override def assertEquals(any1: Any, any2: Any): Unit =
-    Assert.assertEquals(any1, any2)
+  override def assertEquals(expected: Any, result: Any): Unit =
+    Assert.assertEquals(expected, result)
 
   override def assertEmpty(it: Iterable[_]): Unit = {
     if (it.nonEmpty) {

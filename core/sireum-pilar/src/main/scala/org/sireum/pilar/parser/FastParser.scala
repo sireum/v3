@@ -40,6 +40,8 @@ final class FastParser(input: String,
   private val _max = if (max == -1) input.length else max
   private implicit val _createLocInfo = createLocInfo
 
+  def parseModelFile(): Option[Model] = parseWithEOF(parseModel())
+
   def parseWithEOF[T](parse: => Option[T]): Option[T] = {
     val rOpt = parse
     if (rOpt.isEmpty) return None
@@ -510,7 +512,6 @@ final class FastParser(input: String,
       val i = findChar(';')
       if (i >= 0) {
         consume(i)
-        parseWhiteSpace()
       } else {
         recover()
       }
@@ -543,7 +544,7 @@ final class FastParser(input: String,
 
     if (!ok) return None
 
-    if (matchChar(';') { s =>
+    if (!matchChar(';') { s =>
       reporter.error(line, column, offset,
         s"Expecting: ';', but found $s")
     }) {
@@ -562,7 +563,6 @@ final class FastParser(input: String,
       val i = findChar(';')
       if (i >= 0) {
         consume(i)
-        parseWhiteSpace()
       } else {
         recover()
       }
@@ -589,7 +589,7 @@ final class FastParser(input: String,
 
     if (!ok) return None
 
-    if (matchChar(';') { s =>
+    if (!matchChar(';') { s =>
       reporter.error(line, column, offset,
         s"Expecting: ';', but found $s")
     }) {
@@ -607,7 +607,6 @@ final class FastParser(input: String,
       val i = findChar(';')
       if (i >= 0) {
         consume(i)
-        parseWhiteSpace()
       } else {
         recover()
       }
@@ -634,7 +633,7 @@ final class FastParser(input: String,
 
     if (!ok) return None
 
-    if (matchChar(';') { s =>
+    if (!matchChar(';') { s =>
       reporter.error(line, column, offset,
         s"Expecting: ';', but found $s")
     }) {
@@ -652,7 +651,6 @@ final class FastParser(input: String,
       val i = findChar(';')
       if (i >= 0) {
         consume(i)
-        parseWhiteSpace()
       } else {
         recover()
       }
@@ -685,7 +683,7 @@ final class FastParser(input: String,
 
     if (!ok) return None
 
-    if (matchChar(';') { s =>
+    if (!matchChar(';') { s =>
       reporter.error(line, column, offset,
         s"Expecting: ';', but found $s")
     }) {
@@ -1347,7 +1345,7 @@ final class FastParser(input: String,
 
   @inline
   private def peekOpID(offset: Natural = 0) =
-    peekOneStar(offset, isOpIDFirstChar, isOpIDTrailingChar)
+    peekOneStar(offset, isOpIDFirstChar, isLITIDTrailingChar)
 
   @inline
   private def isOpIDFirstChar(c: CharSentinel): Boolean =
@@ -1355,14 +1353,6 @@ final class FastParser(input: String,
       case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
            '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
       case _ => false
-    }
-
-  @inline
-  private def isOpIDTrailingChar(c: CharSentinel) =
-    c match {
-      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
-      case _ => true
     }
 
   @inline
@@ -1406,13 +1396,13 @@ final class FastParser(input: String,
   }
 
   private def peekSimpleLIT(offset: Natural = 0) =
-    peekOneStar(offset, isSimpleLITFirstChar, isSimpleLITTrailingChar)
+    peekOneStar(offset, isSimpleLITFirstChar, isLITIDTrailingChar)
 
   @inline
   private def isSimpleLITFirstChar(c: CharSentinel) = charEq(c, '\'')
 
   @inline
-  private def isSimpleLITTrailingChar(c: CharSentinel) =
+  private def isLITIDTrailingChar(c: CharSentinel) =
     c match {
       case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
            ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | EOF => false

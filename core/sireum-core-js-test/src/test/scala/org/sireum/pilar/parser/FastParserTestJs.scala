@@ -42,16 +42,60 @@ object FastParserTestJs extends UTestTestFramework {
     // This uTest list is auto-generated from data in
     // FastParserTestDefProvider
 
-    "AnnRecovery" - {
-      test("AnnRecovery")
-    }
-
-    "AnnRecoveryString" - {
-      test("AnnRecoveryString")
-    }
-
     "Annotation" - {
       test("Annotation")
+    }
+
+    "AnnotationRecovery" - {
+      test("AnnotationRecovery")
+    }
+
+    "AnnotationRecoveryString" - {
+      test("AnnotationRecoveryString")
+    }
+
+    "AssertAction1" - {
+      test("AssertAction1")
+    }
+
+    "AssertAction2" - {
+      test("AssertAction2")
+    }
+
+    "AssertAction3" - {
+      test("AssertAction3")
+    }
+
+    "AssertActionRecovery" - {
+      test("AssertActionRecovery")
+    }
+
+    "AssignAction1" - {
+      test("AssignAction1")
+    }
+
+    "AssignAction2" - {
+      test("AssignAction2")
+    }
+
+    "AssignActionRecovery" - {
+      test("AssignActionRecovery")
+    }
+
+    "AssumeAction1" - {
+      test("AssumeAction1")
+    }
+
+    "AssumeAction2" - {
+      test("AssumeAction2")
+    }
+
+    "AssumeAction3" - {
+      test("AssumeAction3")
+    }
+
+    "AssumeActionRecovery" - {
+      test("AssumeActionRecovery")
     }
 
     "ComplexID" - {
@@ -108,6 +152,14 @@ object FastParserTestJs extends UTestTestFramework {
 
     "ExpTupleRecovery" - {
       test("ExpTupleRecovery")
+    }
+
+    "ExtAction1" - {
+      test("ExtAction1")
+    }
+
+    "ExtActionRecovery" - {
+      test("ExtActionRecovery")
     }
 
     "IDError" - {

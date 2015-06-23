@@ -57,7 +57,7 @@ final class EqualTest(val name: String,
                       result: () => Any,
                       expected: () => Any) extends TestDef {
   override def test(tf: TestFramework): Unit = {
-    tf.assertEquals(result(), expected())
+    tf.assertEquals(expected(), result())
   }
 }
 
@@ -70,7 +70,7 @@ final class EqualOptTest(val name: String,
                          result: () => Option[_],
                          expected: () => Any) extends TestDef {
   override def test(tf: TestFramework): Unit = {
-    tf.assertEquals(result().get, expected())
+    tf.assertEquals(expected(), result().get)
   }
 }
 

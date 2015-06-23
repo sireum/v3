@@ -44,7 +44,7 @@ abstract class UTestTestFramework
 
   def generate(): Unit = {
     for (name <- testDefMap.keys.toSeq.sorted) {
-      println( s"""  "${name}"-{ test("${name}") }""")
+      println( s"""  "$name"-{ test("$name") }""")
       println()
     }
   }
@@ -58,8 +58,8 @@ abstract class UTestTestFramework
     }
   }
 
-  override def assertEquals(any1: Any, any2: Any): Unit =
-    assert(any1 == any2)
+  override def assertEquals(expected: Any, result: Any): Unit =
+    assert(expected == result)
 
   override def assertEmpty(it: Iterable[_]): Unit =
     assert(it.isEmpty)
