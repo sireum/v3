@@ -30,31 +30,32 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.sireum.pilar.parser.PilarParser._
 import org.sireum.util._
 
-object Builder {
+import Builder._
 
-  trait Reporter {
-    def error(line: PosInteger,
-              column: PosInteger,
-              offset: PosInteger,
-              message: String): Unit
+final class Builder {
+
+  private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+
+  def build(ctx: ModelContext)(
+    implicit reporter: Reporter): Model = {
+    val r =
+      Model(
+        ctx.modelElement().map(build),
+        ctx.annotation().map(build)
+      ) at ctx
+    r.nodeLocMap = nodeLocMap
+    r
   }
 
-  final def build(ctx: ModelContext)(
-    implicit reporter: Reporter): Model =
-    Model(
-      ctx.modelElement().map(build),
-      ctx.annotation().map(build)
-    ) at ctx
-
-  final def build(ctx: AnnotationContext): Annotation = {
+  def build(ctx: AnnotationContext): Annotation = {
     val (id, raw) = build(ctx.lit())
     Annotation(id, raw) at ctx
   }
 
-  final def build(ctx: LitContext): (Id, Raw) =
+  def build(ctx: LitContext): (Id, Raw) =
     (buildID(ctx.ID()), buildLIT(ctx.LIT()))
 
-  final def buildID(n: Token): Id = {
+  def buildID(n: Token): Id = {
     val text = n.getText
     (if (text.charAt(0) == '\'')
       Id(text.substring(1, text.length), Id.Complex)
@@ -68,23 +69,23 @@ object Builder {
       Id(text, Id.Simple)) at n
   }
 
-  final def buildLIT(n: Token): Raw = {
+  def buildLIT(n: Token): Raw = {
     val text = n.getText
     (if (text.charAt(0) == '\'') Raw(text.substring(1), simple = true)
     else Raw(text.substring(1, text.length - 1), simple = true)) at n
   }
 
-  final def build(ctx: ModelElementContext)(
+  def build(ctx: ModelElementContext)(
     implicit reporter: Reporter): ModelElement =
     ctx match {
       case ctx: GlobalVarContext => build(ctx.globalVarDecl())
       case ctx: ProcedureContext => build(ctx.procDecl())
     }
 
-  final def build(ctx: GlobalVarDeclContext): GlobalVarDecl =
+  def build(ctx: GlobalVarDeclContext): GlobalVarDecl =
     GlobalVarDecl(buildID(ctx.ID()), ctx.annotation().map(build)) at ctx
 
-  final def build(ctx: ProcDeclContext)(
+  def build(ctx: ProcDeclContext)(
     implicit reporter: Reporter): ProcedureDecl =
     ProcedureDecl(
       buildID(ctx.ID()),
@@ -94,13 +95,13 @@ object Builder {
       Option(ctx.procBody()).map(build)
     ) at ctx
 
-  final def build(ctx: ParamContext): ParamDecl =
+  def build(ctx: ParamContext): ParamDecl =
     ParamDecl(
       buildID(ctx.ID()),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ProcBodyContext)(
+  def build(ctx: ProcBodyContext)(
     implicit reporter: Reporter): ProcedureBody =
     ProcedureBody(
       Option(ctx.localVarDecl).
@@ -108,13 +109,13 @@ object Builder {
       ctx.location().map(build)
     ) at ctx
 
-  final def build(ctx: LocalVarDeclContext): LocalVarDecl =
+  def build(ctx: LocalVarDeclContext): LocalVarDecl =
     LocalVarDecl(
       buildID(ctx.ID()),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: LocationContext)(
+  def build(ctx: LocationContext)(
     implicit reporter: Reporter): Location =
     ctx.transformation() match {
       case ctxT: CallContext =>
@@ -136,7 +137,7 @@ object Builder {
         ) at ctx
     }
 
-  final def build(ctx: ActionContext): Action =
+  def build(ctx: ActionContext): Action =
     ctx match {
       case ctx: AssignActionContext => build(ctx)
       case ctx: AssertActionContext => build(ctx)
@@ -144,26 +145,26 @@ object Builder {
       case ctx: ExtActionContext => build(ctx)
     }
 
-  final def build(ctx: AssignActionContext): AssignAction =
+  def build(ctx: AssignActionContext): AssignAction =
     AssignAction(
       build(ctx.l),
       build(ctx.r),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: AssertActionContext): AssertAction =
+  def build(ctx: AssertActionContext): AssertAction =
     AssertAction(
       build(ctx.exp()),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: AssumeActionContext): AssumeAction =
+  def build(ctx: AssumeActionContext): AssumeAction =
     AssumeAction(
       build(ctx.exp()),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ExtActionContext): ExtAction =
+  def build(ctx: ExtActionContext): ExtAction =
     ExtAction(
       buildID(ctx.ID()),
       Option(ctx.arg().exp()).
@@ -171,7 +172,7 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: JumpContext)(
+  def build(ctx: JumpContext)(
     implicit reporter: Reporter): Jump =
     ctx match {
       case ctx: GotoJumpContext => build(ctx)
@@ -181,13 +182,13 @@ object Builder {
       case ctx: ExtJumpContext => build(ctx)
     }
 
-  final def build(ctx: GotoJumpContext): GotoJump =
+  def build(ctx: GotoJumpContext): GotoJump =
     GotoJump(
       buildID(ctx.ID()),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: IfJumpContext): IfJump =
+  def build(ctx: IfJumpContext): IfJump =
     IfJump(
       build(ctx.exp()),
       buildID(ctx.t),
@@ -195,13 +196,13 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ReturnJumpContext): ReturnJump =
+  def build(ctx: ReturnJumpContext): ReturnJump =
     ReturnJump(
       Option(ctx.exp()).map(build),
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: SwitchJumpContext)(
+  def build(ctx: SwitchJumpContext)(
     implicit reporter: Reporter): SwitchJump =
     SwitchJump(
       build(ctx.exp()),
@@ -215,7 +216,7 @@ object Builder {
       } :+ {
         val u = buildID(ctx.u)
         if (u.value != "_") {
-          val locInfo = u.locationInfoOpt.get
+          val locInfo = nodeLocMap(u)
           reporter.error(locInfo.lineBegin, locInfo.columnBegin, locInfo.offset,
             s"Expecting: '_', but found: '${u.value}'")
         }
@@ -224,7 +225,7 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ExtJumpContext): ExtJump =
+  def build(ctx: ExtJumpContext): ExtJump =
     ExtJump(
       buildID(ctx.ID()),
       Option(ctx.arg().exp()).
@@ -232,13 +233,12 @@ object Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  final def build(ctx: ExpContext): Exp = {
-    val start = ctx.start
+  def build(ctx: ExpContext): Exp = {
     var r = build(ctx.primArgs())
     if (ctx.expSuffix().nonEmpty) {
       val first = ctx.expSuffix(0)
       val op = buildID(first.ID())
-      var right = build(first.primArgs())
+      val right = build(first.primArgs())
       r = BinaryExp(r, op, right,
         ctx.expSuffix().map(ctxS =>
           (buildID(ctxS.ID()), build(ctxS.primArgs()))
@@ -247,7 +247,7 @@ object Builder {
     r
   }
 
-  final def build(ctx: PrimArgsContext): Exp = {
+  def build(ctx: PrimArgsContext): Exp = {
     val start = ctx.start
     var r = build(ctx.prim())
     for (arg <- ctx.arg()) {
@@ -257,22 +257,22 @@ object Builder {
     r
   }
 
-  final def build(ctx: PrimContext): Exp =
+  def build(ctx: PrimContext): Exp =
     ctx match {
       case ctx: LitExpContext => build(ctx)
       case ctx: IdExpContext => build(ctx)
       case ctx: TupleExpContext => build(ctx)
     }
 
-  final def build(ctx: LitExpContext): LiteralExp = {
+  def build(ctx: LitExpContext): LiteralExp = {
     val (id, raw) = build(ctx.lit())
     LiteralExp(id, raw) at ctx
   }
 
-  final def build(ctx: IdExpContext): IdExp =
+  def build(ctx: IdExpContext): IdExp =
     IdExp(buildID(ctx.ID())) at ctx
 
-  final def build(ctx: TupleExpContext): TupleExp =
+  def build(ctx: TupleExpContext): TupleExp =
     TupleExp(
       Option(ctx.exp()).map(_.map(build)).
         getOrElse(Node.emptySeq),
@@ -288,38 +288,40 @@ object Builder {
 
   @inline
   private implicit def toToken(n: TerminalNode): Token = n.getSymbol
+}
 
-  private[ast] implicit class At[T <: Node](val n: T) extends AnyVal {
-    def at(ctx: ParserRuleContext): T = {
-      val start = ctx.getStart
-      val stop = ctx.getStop
-      val lb = stop.getLine
-      val cb = stop.getCharPositionInLine
-      val (le, ce) = end(lb, cb, stop.getText)
-      n.locationInfoOpt = Some(LocationInfo(
-        offset = start.getStartIndex,
-        length = stop.getStopIndex - start.getStartIndex + 1,
-        lineBegin = start.getLine,
-        columnBegin = start.getCharPositionInLine,
-        lineEnd = le,
-        columnEnd = ce))
-      n
-    }
+object Builder {
+
+  trait Reporter {
+    def error(line: PosInteger,
+              column: PosInteger,
+              offset: Natural,
+              message: String): Unit
+  }
+
+  private[ast] final implicit class At[T <: Node](val n: T) extends AnyVal {
+    @inline
+    def at(ctx: ParserRuleContext)(
+      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T =
+      at(ctx.getStart, ctx.getStop)
 
     @inline
-    def at(t: Token): T = at(t, t)
+    def at(t: Token)(
+      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = at(t, t)
 
-    def at(start: Token, stop: Token): T = {
+    def at(start: Token, stop: Token)(
+      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = {
       val lb = stop.getLine
       val cb = stop.getCharPositionInLine
       val (le, ce) = end(lb, cb, stop.getText)
-      n.locationInfoOpt = Some(LocationInfo(
-        offset = start.getStartIndex,
-        length = stop.getStopIndex - start.getStartIndex + 1,
-        lineBegin = start.getLine,
-        columnBegin = start.getCharPositionInLine,
-        lineEnd = le,
-        columnEnd = ce))
+      nodeLocMap(n) =
+        LocationInfo(
+          offset = start.getStartIndex,
+          length = stop.getStopIndex - start.getStartIndex + 1,
+          lineBegin = start.getLine,
+          columnBegin = start.getCharPositionInLine,
+          lineEnd = le,
+          columnEnd = ce)
       n
     }
 

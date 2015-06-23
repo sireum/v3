@@ -37,17 +37,11 @@ object Node {
   def seq[T](es: Iterable[T]) = es.toVector
 }
 
-sealed trait Node extends CaseClass {
-  var locationInfoOpt: Option[LocationInfo] = None
+sealed trait Node extends CaseClass
 
-  def copyInternal(newNode: CaseClass) = {
-    val n = newNode.asInstanceOf[Node]
-    if (n.locationInfoOpt.isEmpty)
-      n.locationInfoOpt = locationInfoOpt
-    n
-  }
+sealed trait NoInternalNode extends Node {
+  final override def copyInternal(newNode: CaseClass): CaseClass = newNode
 }
-
 
 sealed trait Annotated {
   def annotations: Node.Seq[Annotation]
@@ -57,12 +51,23 @@ sealed trait Annotated {
 final case class
 Model(elements: Node.Seq[ModelElement],
       annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Node with Annotated
+  extends Node with Annotated {
+  var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
+
+  override def copyInternal(newNode: CaseClass): CaseClass = {
+    newNode match {
+      case n: Model =>
+        for ((k, v) <- nodeLocMap if !n.nodeLocMap.contains(k))
+          n.nodeLocMap(k) = v
+    }
+    newNode
+  }
+}
 
 
 final case class
 Annotation(id: Id,
-           raw: Raw) extends Node
+           raw: Raw) extends NoInternalNode
 
 object Id extends Enum("Id") {
   type Kind = Value
@@ -73,15 +78,15 @@ object Id extends Enum("Id") {
 
 final case class
 Id(value: String,
-   kind: Id.Kind = Id.Simple) extends Node
+   kind: Id.Kind = Id.Simple) extends NoInternalNode
 
 
 final case class
 Raw(value: String,
-    simple: Boolean = true) extends Node
+    simple: Boolean = true) extends NoInternalNode
 
 
-sealed trait ModelElement extends Node with Annotated
+sealed trait ModelElement extends NoInternalNode with Annotated
 
 
 final case class
@@ -98,20 +103,20 @@ ProcedureDecl(id: Id,
 
 final case class
 ParamDecl(id: Id,
-          annotations: Node.Seq[Annotation] = Node.emptySeq) extends Node with Annotated
+          annotations: Node.Seq[Annotation] = Node.emptySeq) extends NoInternalNode with Annotated
 
 
 final case class
 ProcedureBody(locals: Node.Seq[LocalVarDecl],
-              locations: Node.Seq[Location]) extends Node
+              locations: Node.Seq[Location]) extends NoInternalNode
 
 
 final case class
 LocalVarDecl(id: Id,
-             annotations: Node.Seq[Annotation] = Node.emptySeq) extends Node with Annotated
+             annotations: Node.Seq[Annotation] = Node.emptySeq) extends NoInternalNode with Annotated
 
 
-sealed trait Location extends Node with Annotated
+sealed trait Location extends NoInternalNode with Annotated
 
 
 final case class
@@ -139,7 +144,7 @@ BlockLocation(label: Id,
 }
 
 
-sealed trait Command extends Node with Annotated {
+sealed trait Command extends NoInternalNode with Annotated {
   private var _index: NaturalSentinel = naturalSentinel
 
   final def commandIndex = _index
@@ -203,7 +208,7 @@ SwitchJump(exp: Exp,
 
 final case class
 SwitchCase(expOpt: Option[LiteralExp],
-           target: Id) extends Node
+           target: Id) extends NoInternalNode
 
 
 final case class
@@ -212,7 +217,7 @@ ExtJump(id: Id,
         annotations: Node.Seq[Annotation] = Node.emptySeq) extends Jump
 
 
-sealed trait Exp extends Node
+sealed trait Exp extends NoInternalNode
 
 
 final case class

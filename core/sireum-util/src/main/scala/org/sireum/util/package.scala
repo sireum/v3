@@ -76,7 +76,7 @@ package object util {
   def mmapEmpty[K, V]: MMap[K, V] = scala.collection.mutable.Map.empty[K, V]
 
   @inline
-  def midmapEmpty[K <: AnyRef, V]: MMap[K, V] = MIdMap[K, V]()
+  def midmapEmpty[K <: AnyRef, V]: MIdMap[K, V] = MIdMap[K, V]()
 
   @inline
   def mlinkedSetEmpty[T]: MLinkedSet[T] = scala.collection.mutable.LinkedHashSet.empty[T]

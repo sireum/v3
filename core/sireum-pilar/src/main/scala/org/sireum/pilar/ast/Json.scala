@@ -153,8 +153,8 @@ object Json {
       case o: Model =>
         Js.Obj(
           (".class", Js.Str("Model")),
-          ("annotations", fromSeq(o.annotations)(from)),
-          ("elements", fromSeq(o.elements)(from))
+          ("elements", fromSeq(o.elements)(from)),
+          ("annotations", fromSeq(o.annotations)(from))
         )
       case o: ParamDecl =>
         Js.Obj(
@@ -248,7 +248,7 @@ object Json {
           case "LocalVarDecl" =>
             LocalVarDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
           case "Model" =>
-            Model(toVector(o.value(1)._2)(to[Annotation]), toVector(o.value(2)._2)(to[ModelElement]))
+            Model(toVector(o.value(1)._2)(to[ModelElement]), toVector(o.value(2)._2)(to[Annotation]))
           case "ParamDecl" =>
             ParamDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
           case "ProcedureBody" =>

@@ -39,6 +39,7 @@ final class FastParser(input: String,
 
   private val _max = if (max == -1) input.length else max
   private implicit val _createLocInfo = createLocInfo
+  private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
   def parseModelFile(): Option[Model] = parseWithEOF(parseModel())
 
@@ -82,8 +83,10 @@ final class FastParser(input: String,
       if (eOpt.isDefined) elements = elements :+ eOpt.get
       else ok = false
     }
+    val r = Model(elements, annotations) at(line, column, offset)
+    r.nodeLocMap = nodeLocMap
 
-    Some(Model(elements, annotations) at(line, column, offset))
+    Some(r)
   }
 
   def parseModelElement(recover: () => Unit): Option[ModelElement] = {
@@ -899,7 +902,7 @@ final class FastParser(input: String,
       val id = idOpt.get
 
       cases = cases :+ SwitchCase(Some(lit), id).
-        at(line, column, offset)(begin2, createLocInfo)
+        at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
 
       parseWhiteSpace()
     }
@@ -931,7 +934,7 @@ final class FastParser(input: String,
     val id = idOpt.get
 
     cases = cases :+ SwitchCase(None, id).
-      at(line, column, offset)(begin2, createLocInfo)
+      at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
 
     parseWhiteSpace()
 
@@ -1074,7 +1077,8 @@ final class FastParser(input: String,
           LiteralExp(id, raw).at(line, column, offset))
       case _ =>
         val r = IdExp(id)
-        r.locationInfoOpt = id.locationInfoOpt
+        if (createLocInfo)
+          nodeLocMap(r) = nodeLocMap(id)
         Some(r)
     }
   }
@@ -1815,10 +1819,14 @@ object FastParser {
     def at(line: PosInteger,
            column: PosInteger,
            offset: Natural)(
-      implicit t: (Int, Int, Int), createLocInfo: Boolean): T = {
-      n.locationInfoOpt = Some(org.sireum.util.LocationInfo(
-        t._1, t._2, line, column, t._3, offset - t._3 + 1
-      ))
+      implicit t: (Int, Int, Int),
+      createLocInfo: Boolean,
+      nodeLocMap: MIdMap[Node, LocationInfo]): T = {
+      if (createLocInfo)
+        nodeLocMap(n) =
+          org.sireum.util.LocationInfo(
+            t._1, t._2, line, column, t._3, offset - t._3 + 1
+          )
       n
     }
   }

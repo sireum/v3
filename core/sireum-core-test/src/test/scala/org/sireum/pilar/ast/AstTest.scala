@@ -35,10 +35,11 @@ class AstTest {
   val model =
     Model(
       ivector(
-        Annotation(Id("object"), Raw("1"))),
-      ivector(
         GlobalVarDecl(Id("x"),
-          ivector(Annotation(Id("type"), Raw("Int"))))))
+          ivector(Annotation(Id("type"), Raw("Int"))))),
+      ivector(
+        Annotation(Id("object"), Raw("1")))
+    )
 
   @Test
   def testEmptyModel(): Unit = {
