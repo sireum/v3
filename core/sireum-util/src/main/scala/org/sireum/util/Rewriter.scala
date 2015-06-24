@@ -29,7 +29,7 @@ import scala.annotation.tailrec
 
 object Rewriter {
 
-  type ConstructorMap = IMap[String, Traversable[AnyRef] => CaseClass]
+  type ConstructorMap = IMap[String, Traversable[AnyRef] => Product]
 
   object TraversalMode extends Enum("TraversalMode") {
     type Type = Value
@@ -86,7 +86,7 @@ object Rewriter {
 
   import Visitor._
 
-  private[util] trait CaseClassStackElement[T] {
+  private[util] trait ProductStackElement[T] {
     def newChildren: Array[Object]
 
     var isDirty: Boolean
@@ -112,7 +112,7 @@ object Rewriter {
                            alwaysCopy: Boolean,
                            r: Any => Any)
     extends TraversableStackElement(value)
-    with CaseClassStackElement[scala.collection.Traversable[_]] {
+    with ProductStackElement[scala.collection.Traversable[_]] {
     val newChildren = new Array[Object](value.size)
     var isDirty = alwaysCopy
 
@@ -153,17 +153,23 @@ object Rewriter {
   }
 
   private[util] class
-  RCaseClassStackElement(m: ConstructorMap,
-                         override val value: CaseClass,
-                         alwaysCopy: Boolean)
-    extends VisitableStackElement(value)
-    with CaseClassStackElement[CaseClass] {
-    val newChildren = new Array[Object](value.getNumOfChildren)
+  RProductStackElement(m: ConstructorMap,
+                       override val value: Product,
+                       alwaysCopy: Boolean)
+    extends Visitor.ProductStackElement(value)
+    with ProductStackElement[Product] {
+    val newChildren = new Array[Object](value.productArity)
     var isDirty = alwaysCopy
 
     def makeWithNewChildren =
       if (isDirty)
-        value.copyInternal(m(value.productPrefix)(newChildren))
+        value match {
+          case Some(_) => Some(newChildren(0))
+          case (_, _) => (newChildren(0), newChildren(1))
+          case (_, _, _) => (newChildren(0), newChildren(1), newChildren(3))
+          case _ =>
+            m(value.productPrefix)(newChildren)
+        }
       else value
   }
 
@@ -172,7 +178,7 @@ object Rewriter {
                  fnPost: Option[VisitorStackProvider => RewriteFunction],
                  alwaysCopy: Boolean = false)(o: T): T = {
 
-    var _stack = ilistEmpty[VisitorStackElementRoot with CaseClassStackElement[_]]
+    var _stack = ilistEmpty[VisitorStackElementRoot with ProductStackElement[_]]
 
     val vsp = new VisitorStackProvider {
       def stack = _stack
@@ -214,8 +220,8 @@ object Rewriter {
         o match {
           case t: scala.collection.Traversable[_] =>
             _stack = new RTraversableStackElement(t, alwaysCopy, rewriter) :: _stack
-          case v: CaseClass =>
-            _stack = new RCaseClassStackElement(m, v, alwaysCopy) :: _stack
+          case v: Product =>
+            _stack = new RProductStackElement(m, v, alwaysCopy) :: _stack
           case _ =>
         }
       }

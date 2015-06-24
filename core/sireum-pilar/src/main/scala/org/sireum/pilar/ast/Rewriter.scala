@@ -30,6 +30,7 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 object Rewriter {
+
   import org.sireum.util.Rewriter._
 
   val constructorMap: ConstructorMap = Map(

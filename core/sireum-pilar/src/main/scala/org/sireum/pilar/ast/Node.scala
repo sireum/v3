@@ -37,9 +37,7 @@ object Node {
   def seq[T](es: Iterable[T]) = es.toVector
 }
 
-sealed trait Node extends CaseClass {
-  final override def copyInternal(newNode: CaseClass): CaseClass = newNode
-}
+sealed trait Node extends Product
 
 sealed trait Annotated {
   def annotations: Node.Seq[Annotation]

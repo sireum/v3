@@ -37,7 +37,7 @@ object CaseClassHelperGen {
   final val vectorType = typeOf[Vector[_]].erasure
   final val tuple2Type = typeOf[(_, _)].erasure
   final val tuple3Type = typeOf[(_, _, _)].erasure
-  final val caseClassType = typeOf[CaseClass]
+  final val productType = typeOf[Product]
   final val anyValBoxMap = Map(
     "Boolean" -> "java.lang.Boolean",
     "Byte" -> "java.lang.Byte",
@@ -130,7 +130,7 @@ object CaseClassHelperGen {
         (s"$n: (_, _)", true)
       case _ if t.dealias.erasure =:= tuple3Type =>
         (s"$n: (_, _, _)", true)
-      case _ if t <:< caseClassType =>
+      case _ if t <:< productType =>
         (s"$n: ${name(t)}", false)
     }
 
@@ -150,7 +150,7 @@ object CaseClassHelperGen {
         ("fromTuple2", t.typeArgs.map(fromType1))
       case _ if t.dealias.erasure =:= tuple3Type =>
         ("fromTuple3", t.typeArgs.map(fromType1))
-      case _ if t <:< caseClassType =>
+      case _ if t <:< productType =>
         ("from", ivectorEmpty)
     }
 
@@ -170,7 +170,7 @@ object CaseClassHelperGen {
         ("toTuple2", t.typeArgs.map(toType1))
       case _ if t.dealias.erasure =:= tuple3Type =>
         ("toTuple3", t.typeArgs.map(toType1))
-      case _ if t <:< caseClassType =>
+      case _ if t <:< productType =>
         (s"to[${name(t)}]", ivectorEmpty)
     }
 

@@ -31,6 +31,7 @@ import org.sireum.util.Json._
 // This file is auto-generated from the Node class hierarchy
 
 object Json {
+
   import scala.language.implicitConversions
 
   implicit def from(o: Node): Js.Obj =
