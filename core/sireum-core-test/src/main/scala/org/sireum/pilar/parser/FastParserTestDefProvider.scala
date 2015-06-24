@@ -407,9 +407,105 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EmptyIterableTest("ExtJumpRecovery",
       parseJump("jext x(7,recovery skip this);", reporter(7)))
+    ,
+    EqualOptTest("BlockLocation1",
+      parseLocation(
+        """#L0 goto L1;
+        """.stripMargin),
+      BlockLocation(
+        Id("L0"),
+        Node.emptySeq,
+        GotoJump(Id("L1"))))
+    ,
+    EqualOptTest("BlockLocation2",
+      parseLocation(
+        """#L0 @foo
+          |    x := y;
+          |    if x then L1 else L3 @bar'baz;
+        """.stripMargin),
+      BlockLocation(
+        Id("L0"),
+        Node.seq(
+          AssignAction(IdExp(Id("x")), IdExp(Id("y")))
+        ),
+        IfJump(
+          IdExp(Id("x")), Id("L1"), Id("L3"),
+          Node.seq(Annotation(Id("bar"), Raw("baz")))
+        ),
+        Node.seq(Annotation(Id("foo"), Raw("")))))
+    ,
+    EqualOptTest("BlockLocationRecovery1",
+      parseLocation(
+        """#L0 @foo
+          |    x := 5;
+          |    if x then L1 else L3 @bar'baz;
+        """.stripMargin, reporter(18)),
+      BlockLocation(
+        Id("L0"),
+        Node.emptySeq,
+        IfJump(
+          IdExp(Id("x")), Id("L1"), Id("L3"),
+          Node.seq(Annotation(Id("bar"), Raw("baz")))
+        ),
+        Node.seq(Annotation(Id("foo"), Raw("")))))
+    ,
+    EqualOptTest("BlockLocationRecovery2",
+      parseLocation(
+        """#L0 @foo
+          |    x := y;
+          |    if 5 then L1 else L3 @bar'baz;
+        """.stripMargin, reporter(28)),
+      BlockLocation(
+        Id("L0"),
+        Node.seq(
+          AssignAction(IdExp(Id("x")), IdExp(Id("y")))
+        ),
+        GotoJump(Id("<missing>")),
+        Node.seq(Annotation(Id("foo"), Raw("")))))
+    ,
+    EqualOptTest("CallLocation1",
+      parseLocation(
+        """#L0 call a(b) goto L1;
+        """.stripMargin),
+      CallLocation(
+        Id("L0"),
+        None,
+        Id("a"),
+        Node.seq(IdExp(Id("b"))),
+        Id("L1")))
+    ,
+    EqualOptTest("CallLocation2",
+      parseLocation(
+        """#L0 call (x, y) := a(b, c) goto L1;
+        """.stripMargin),
+      CallLocation(
+        Id("L0"),
+        Some(
+          TupleExp(
+            Node.seq(
+              IdExp(Id("x")),
+              IdExp(Id("y"))
+            )
+          )
+        ),
+        Id("a"),
+        Node.seq(
+          IdExp(Id("b")),
+          IdExp(Id("c"))
+        ),
+        Id("L1")))
+    ,
+    EmptyIterableTest("CallLocationRecovery",
+      parseLocation("#L0 call x(7,recovery skip this);", reporter(11)))
   )
 
   import FastParser._
+
+  private def parseLocation(s: String,
+                            reporter: Reporter = ConsoleReporter) = {
+    val parser = new FastParser(s, reporter, createLocInfo = false)
+    parser.parseWithEOF(parser.parseLocation(noRecover))
+  }
 
   private def parseAction(s: String,
                           reporter: Reporter = ConsoleReporter) = {
