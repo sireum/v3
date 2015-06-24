@@ -42,8 +42,11 @@ object StringUtil {
         if ((0 <= c && c < 32) || (c > 255)) {
           sb.append("\\u")
           val s = c.toInt.toHexString
-          for (i <- 0 until (4 - s.length)) {
+          var i = 0
+          val n = 4 - s.length
+          while (i < n) {
             sb.append('0')
+            i += 1
           }
           sb.append(s)
         } else {

@@ -71,21 +71,22 @@ final class FastParser(input: String,
       }
     }
 
-    implicit val begin = (line, column, offset)
-
     parseWhiteSpace()
+
+    implicit val begin = (line, column, offset)
 
     val annotations = parseAnnotations(rcv)
 
     if (!ok && !recovered) return None
 
-    parseWhiteSpace()
-
     var elements = Node.emptySeq[ModelElement]
+
+    parseWhiteSpace()
     while (charEq(peek(), 'g') || charEq(peek(), 'd')) {
       val eOpt = parseModelElement(rcv)
       if (eOpt.isDefined) elements = elements :+ eOpt.get
       else ok = false
+      parseWhiteSpace()
     }
     val r = Model(elements, annotations) at(line, column, offset)
     r.nodeLocMap = nodeLocMap
@@ -94,12 +95,11 @@ final class FastParser(input: String,
   }
 
   def parseModelElement(recover: () => Unit): Option[ModelElement] = {
+    parseWhiteSpace()
     peek() match {
       case 'g' =>
         if (matchKeyword("global")) {
-          parseWhiteSpace()
           if (matchKeyword("var")) {
-            parseWhiteSpace()
             return parseGlobalVarDecl(recover)
           }
         }
@@ -113,7 +113,7 @@ final class FastParser(input: String,
     }
   }
 
-  def parseGlobalVarDecl(recover: () => Unit): Option[GlobalVarDecl] = {
+  private def parseGlobalVarDecl(recover: () => Unit): Option[GlobalVarDecl] = {
     var ok = true
     def rcv(): Unit = {
       ok = false
@@ -131,11 +131,7 @@ final class FastParser(input: String,
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -150,7 +146,7 @@ final class FastParser(input: String,
     Some(GlobalVarDecl(id, annotations) at(line, column, offset))
   }
 
-  def parseProcedureDecl(recover: () => Unit): Option[ProcedureDecl] = {
+  private def parseProcedureDecl(recover: () => Unit): Option[ProcedureDecl] = {
     def rcvID(): Unit = {
       val i = findChar('(')
       if (i >= 0) {
@@ -179,21 +175,17 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     var idOpt = parseID(rcvID)
     if (idOpt.isEmpty) idOpt = Some(Id("<missing>"))
-
-    parseWhiteSpace()
 
     matchChar('(') { s =>
       reporter.error(line, column, offset,
         s"Expecting: ')', but found $s")
     }
 
-    parseWhiteSpace()
-
     var params = Node.emptySeq[ParamDecl]
+
+    parseWhiteSpace()
 
     if (charNe(peek(), ')')) {
 
@@ -215,13 +207,11 @@ final class FastParser(input: String,
         s"Expecting: ')', but found $s")
     }
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
 
-    parseWhiteSpace()
-
     var bodyOpt: Option[ProcedureBody] = None
+
+    parseWhiteSpace()
 
     if (charEq(peek(), ';')) consume()
     else bodyOpt = parseProcedureBody(recover)
@@ -237,24 +227,22 @@ final class FastParser(input: String,
       recover()
     }
 
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     val idOpt = parseID(rcv)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
     Some(ParamDecl(id, annotations) at(line, column, offset))
   }
 
-  def parseProcedureBody(recover: () => Unit): Option[ProcedureBody] = {
+  private[parser] def parseProcedureBody(recover: () => Unit): Option[ProcedureBody] = {
     def rcvLocal(): Unit = {
       val i = findChar('#')
       if (i >= 0) {
@@ -281,13 +269,11 @@ final class FastParser(input: String,
       shouldRecover = true
     }
 
-    parseWhiteSpace()
-
     matchKeyword("var")
 
-    parseWhiteSpace()
-
     var locals = Node.emptySeq[LocalVarDecl]
+
+    parseWhiteSpace()
 
     while (charNe(peek(), '#')) {
       val localOpt = parseLocalVarDecl(rcvLocal)
@@ -333,17 +319,15 @@ final class FastParser(input: String,
       }
     }
 
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     val idOpt = parseID(rcv)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -370,6 +354,8 @@ final class FastParser(input: String,
       }
     }
 
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     matchChar('#') {
@@ -384,13 +370,9 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
-
-    parseWhiteSpace()
 
     val annotations = parseAnnotations(recover)
 
@@ -404,10 +386,10 @@ final class FastParser(input: String,
     }
   }
 
-  def parseCallTransformation(label: Id,
-                              annotations: Node.Seq[Annotation],
-                              recover: () => Unit)(
-                               implicit begin: (Int, Int, Int)): Option[Location] = {
+  private def parseCallTransformation(label: Id,
+                                      annotations: Node.Seq[Annotation],
+                                      recover: () => Unit)(
+                                       implicit begin: (Int, Int, Int)): Option[Location] = {
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("call")) {
@@ -415,48 +397,34 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     var lhsOpt: Option[Exp] = None
 
     if (predictCallAssign()) {
       lhsOpt = parseExp(recover)
       if (lhsOpt.isEmpty) return None
 
-      parseWhiteSpace()
-
       if (!matchCharSeq(":=", "assignment operator")) {
         recover()
         return None
       }
-
-      parseWhiteSpace()
     }
 
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
-
     val argsOpt = parseArg(recover)
     if (argsOpt.isEmpty) return None
     val args = argsOpt.get
-
-    parseWhiteSpace()
 
     if (!matchKeyword("goto")) {
       recover()
       return None
     }
 
-    parseWhiteSpace()
-
     val tOpt = parseID(recover)
     if (tOpt.isEmpty) return None
     val t = tOpt.get
-
-    parseWhiteSpace()
 
     matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -468,10 +436,10 @@ final class FastParser(input: String,
     Some(CallLocation(label, lhsOpt, id, args, t, annotations) at(line, column, offset))
   }
 
-  def parseBlockTransformation(label: Id,
-                               annotations: Node.Seq[Annotation],
-                               recover: () => Unit)(
-                                implicit begin: (Int, Int, Int)): Option[Location] = {
+  private def parseBlockTransformation(label: Id,
+                                       annotations: Node.Seq[Annotation],
+                                       recover: () => Unit)(
+                                        implicit begin: (Int, Int, Int)): Option[Location] = {
     var recovered = false
     def rcv(): Unit = {
       val i = findChar(';')
@@ -492,7 +460,6 @@ final class FastParser(input: String,
         recover()
         return None
       }
-      parseWhiteSpace()
     }
 
     var jumpOpt = parseJump(rcv)
@@ -506,6 +473,7 @@ final class FastParser(input: String,
   }
 
   def parseAction(recover: () => Unit): Option[Action] = {
+    parseWhiteSpace()
     peekKeyword(0, actionKeywords) match {
       case 0 => parseAssertAction(recover)
       case 1 => parseAssumeAction(recover)
@@ -532,24 +500,16 @@ final class FastParser(input: String,
     if (lhsOpt.isEmpty) return None
     val lhs = lhsOpt.get
 
-    parseWhiteSpace()
-
     if (!matchCharSeq(":=", "assignment operator")) {
       recover()
       return None
     }
 
-    parseWhiteSpace()
-
     val rhsOpt = parseExp(recover)
     if (rhsOpt.isEmpty) return None
     val rhs = rhsOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -584,17 +544,11 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val expOpt = parseExp(recover)
     if (expOpt.isEmpty) return None
     val exp = expOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -628,17 +582,11 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val expOpt = parseExp(recover)
     if (expOpt.isEmpty) return None
     val exp = expOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -672,23 +620,15 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val idOpt = parseID(rcv)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
-
-    parseWhiteSpace()
 
     val argsOpt = parseArg(rcv)
     if (argsOpt.isEmpty) return None
     val args = argsOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok) return None
 
@@ -704,6 +644,7 @@ final class FastParser(input: String,
   }
 
   def parseJump(recover: () => Unit): Option[Jump] = {
+    parseWhiteSpace()
     peek() match {
       case 'g' => parseGotoJump(recover)
       case 'i' => parseIfJump(recover)
@@ -731,17 +672,11 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok || !matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -767,44 +702,29 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val expOpt = parseExp(recover)
     if (expOpt.isEmpty) return None
     val exp = expOpt.get
-
-    parseWhiteSpace()
 
     if (!matchKeyword("then")) {
       recover()
       return None
     }
 
-    parseWhiteSpace()
-
     val tOpt = parseID(recover)
     if (tOpt.isEmpty) return None
     val t = tOpt.get
-
-
-    parseWhiteSpace()
 
     if (!matchKeyword("else")) {
       recover()
       return None
     }
 
-    parseWhiteSpace()
-
     val fOpt = parseID(recover)
     if (fOpt.isEmpty) return None
     val f = fOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok || !matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -839,11 +759,7 @@ final class FastParser(input: String,
       if (eOpt.isEmpty) return None
     }
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok || !matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -870,15 +786,13 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val expOpt = parseExp(recover)
     if (expOpt.isEmpty) return None
     val exp = expOpt.get
 
-    parseWhiteSpace()
-
     var cases = Node.emptySeq[SwitchCase]
+
+    parseWhiteSpace()
 
     while (charEq(peek(), 'c')) {
       val begin2 = (line, column, offset)
@@ -887,14 +801,10 @@ final class FastParser(input: String,
         return None
       }
 
-      parseWhiteSpace()
-
       val lit = parseIdOrLitExp(recover) match {
         case Some(l: LiteralExp) => l
         case _ => return None
       }
-
-      parseWhiteSpace()
 
       matchChar(':') { s =>
         reporter.error(line, column, offset,
@@ -902,8 +812,6 @@ final class FastParser(input: String,
         recover()
         return None
       }
-
-      parseWhiteSpace()
 
       val idOpt = parseID(recover)
       if (idOpt.isEmpty) return None
@@ -922,8 +830,6 @@ final class FastParser(input: String,
         return None
       }
 
-      parseWhiteSpace()
-
       matchChar(':') { s =>
         reporter.error(line, column, offset,
           s"Expecting: ':', but found $s")
@@ -931,21 +837,15 @@ final class FastParser(input: String,
         return None
       }
 
-      parseWhiteSpace()
-
       val idOpt = parseID(recover)
       if (idOpt.isEmpty) return None
       val id = idOpt.get
 
       cases = cases :+ SwitchCase(None, id).
         at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
-
-      parseWhiteSpace()
     }
 
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok || !matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -972,23 +872,15 @@ final class FastParser(input: String,
       return None
     }
 
-    parseWhiteSpace()
-
     val idOpt = parseID(recover)
     if (idOpt.isEmpty) return None
     val id = idOpt.get
-
-    parseWhiteSpace()
 
     val argsOpt = parseArg(recover)
     if (argsOpt.isEmpty) return None
     val args = argsOpt.get
 
-    parseWhiteSpace()
-
     val annotations = parseAnnotations(rcv)
-
-    parseWhiteSpace()
 
     if (!ok || !matchChar(';') { s =>
       reporter.error(line, column, offset,
@@ -1002,6 +894,8 @@ final class FastParser(input: String,
   }
 
   def parseExp(recover: () => Unit): Option[Exp] = {
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     val rOpt = parsePrimaryExpArgs(recover)
@@ -1009,15 +903,11 @@ final class FastParser(input: String,
     if (rOpt.isEmpty) return None
     val r = rOpt.get
 
-    parseWhiteSpace()
-
     var ok = true
     var (kind, (continue, i)) = peekID()
     var suffix = Node.emptySeq[(Id, Exp)]
     while (ok && continue) {
       val id = parseID(kind, i, recover).get
-
-      parseWhiteSpace()
 
       parsePrimaryExpArgs(recover) match {
         case Some(e) => suffix = suffix :+ ((id, e))
@@ -1040,7 +930,9 @@ final class FastParser(input: String,
     } else Some(r)
   }
 
-  def parsePrimaryExpArgs(recover: () => Unit): Option[Exp] = {
+  private def parsePrimaryExpArgs(recover: () => Unit): Option[Exp] = {
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     var r =
@@ -1049,9 +941,9 @@ final class FastParser(input: String,
         case None => return None
       }
 
-    parseWhiteSpace()
 
     var ok = true
+    parseWhiteSpace()
     while (charEq(peek(), '(') && ok) {
       parseArg(recover) match {
         case Some(es) =>
@@ -1063,14 +955,14 @@ final class FastParser(input: String,
     Some(r)
   }
 
-  def parsePrimaryExp(recover: () => Unit): Option[Exp] = {
-
+  private[parser] def parsePrimaryExp(recover: () => Unit): Option[Exp] = {
     if (charEq(peek(), '(')) parseTupleExp(recover)
     else parseIdOrLitExp(recover)
   }
 
-  @inline
   private def parseIdOrLitExp(recover: () => Unit): Option[Exp] = {
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     val idOpt = parseID(recover)
@@ -1091,7 +983,6 @@ final class FastParser(input: String,
     }
   }
 
-  @inline
   private def parseTupleExp(recover: () => Unit): Option[Exp] = {
     def rcv(): Unit = {
       var i = findChar(',')
@@ -1111,16 +1002,16 @@ final class FastParser(input: String,
 
     consume()
 
-    parseWhiteSpace()
-
     val eOpt = parseExp(rcv)
     if (eOpt.isEmpty) return None
     val e = eOpt.get
+
     var ok = true
     var es = Node.seq(e)
+
+    parseWhiteSpace()
     while (charEq(peek(), ',') && ok) {
       consume()
-      parseWhiteSpace()
       parseExp(rcv) match {
         case Some(e2) => es = es :+ e2
         case _ => ok = false
@@ -1154,6 +1045,8 @@ final class FastParser(input: String,
   }
 
   def parseAnnotation(recover: () => Unit): Option[Annotation] = {
+    parseWhiteSpace()
+
     implicit val begin = (line, column, offset)
 
     if (!matchChar('@') {
@@ -1163,7 +1056,6 @@ final class FastParser(input: String,
         recover()
     }) return None
 
-    parseWhiteSpace()
     for (
       id <- parseID(recover);
       raw <- {
@@ -1176,37 +1068,7 @@ final class FastParser(input: String,
     }
   }
 
-  def parseID(recover: () => Unit): Option[Id] =
-    peek() match {
-      case '`' =>
-        val (ok, i) = peekComplexID()
-        parseComplexID(ok, i, recover)
-      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
-           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
-        val (ok, i) = peekOpID()
-        parseOpID(ok, i, recover)
-      case _ =>
-        val (ok, i) = peekSimpleID()
-        parseSimpleID(ok, i, recover)
-    }
-
-  def parseLIT(recover: () => Unit): Option[Raw] =
-    peek() match {
-      case '\'' =>
-        val (ok, i) = peekSimpleLIT()
-        parseSimpleLIT(ok, i, recover)
-      case '"' =>
-        val (ok, i) = peekComplexLIT()
-        parseComplexLIT(ok, i, recover)
-      case c =>
-        reporter.error(line, column, offset,
-          s"Invalid character for a literal string: '${
-            c.asInstanceOf[Char]
-          }'")
-        recover()
-        None
-    }
-
+  @inline
   private def parseArg(recover: () => Unit): Option[Node.Seq[Exp]] = {
     def rcv(): Unit = {
       var i = findChar(',')
@@ -1220,6 +1082,8 @@ final class FastParser(input: String,
         return
       }
     }
+
+    parseWhiteSpace()
 
     implicit val begin = (line, column, offset)
 
@@ -1242,14 +1106,12 @@ final class FastParser(input: String,
 
     val eOpt = parseExp(recover)
     if (eOpt.isEmpty) return None
+    es = es :+ eOpt.get
 
     parseWhiteSpace()
 
-    es = es :+ eOpt.get
-
     while (charEq(peek(), ',') && ok) {
       consume()
-      parseWhiteSpace()
       parseExp(rcv) match {
         case Some(e2) => es = es :+ e2
         case _ => ok = false
@@ -1265,8 +1127,44 @@ final class FastParser(input: String,
     if (ok) Some(es) else None
   }
 
-  @inline
-  private def parseID(kind: FastParser.IdKind.Value, i: Natural, recover: () => Unit) =
+  private[parser] def parseID(recover: () => Unit): Option[Id] = {
+    parseWhiteSpace()
+    peek() match {
+      case '`' =>
+        val (ok, i) = peekComplexID()
+        parseComplexID(ok, i, recover)
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' =>
+        val (ok, i) = peekOpID()
+        parseOpID(ok, i, recover)
+      case _ =>
+        val (ok, i) = peekSimpleID()
+        parseSimpleID(ok, i, recover)
+    }
+  }
+
+  private[parser] def parseLIT(recover: () => Unit): Option[Raw] = {
+    parseWhiteSpace()
+    peek() match {
+      case '\'' =>
+        val (ok, i) = peekSimpleLIT()
+        parseSimpleLIT(ok, i, recover)
+      case '"' =>
+        val (ok, i) = peekComplexLIT()
+        parseComplexLIT(ok, i, recover)
+      case c =>
+        reporter.error(line, column, offset,
+          s"Invalid character for a literal string: '${
+            c.asInstanceOf[Char]
+          }'")
+        recover()
+        None
+    }
+  }
+
+  private def parseID(kind: FastParser.IdKind.Value,
+                      i: Natural,
+                      recover: () => Unit) =
     kind match {
       case FastParser.IdKind.Simple => parseSimpleID(ok = true, i, recover)
       case FastParser.IdKind.Op => parseOpID(ok = true, i, recover)
@@ -1442,6 +1340,7 @@ final class FastParser(input: String,
       case _ => true
     }
 
+  @inline
   private def peekComplexLIT(offset: Natural = 0): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
     // "(N|S("|S))*"
@@ -1534,6 +1433,7 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
+  @inline
   private def peekOnePlusOne(offset: Natural,
                              C: Char,
                              D: Int => Boolean,
@@ -1574,6 +1474,7 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
+  @inline
   private def peekOneStar(offset: Natural,
                           C: CharSentinel => Boolean,
                           D: CharSentinel => Boolean): (Boolean, Natural) = {
@@ -1608,6 +1509,7 @@ final class FastParser(input: String,
     (ok, offset + i)
   }
 
+  @inline
   private def peekKeyword(offset: Int, keywords: Map[String, Int]): NaturalSentinel = {
     val (ok, i) = peekOneStar(offset, isJavaLetter, isJavaDigitOrLetter)
     if (!ok) return naturalSentinel
@@ -1616,6 +1518,7 @@ final class FastParser(input: String,
   }
 
   private def matchKeyword(s: String): Boolean = {
+    parseWhiteSpace()
     val begin = (line, column, offset)
     if (!matchCharSeq(s, "keyword")) return false
     var isID = false
@@ -1636,6 +1539,7 @@ final class FastParser(input: String,
   }
 
   private def matchCharSeq(s: String, something: String): Boolean = {
+    parseWhiteSpace()
     val begin = (line, column, offset)
     var i = 0
     var ok = true
@@ -1656,11 +1560,8 @@ final class FastParser(input: String,
     ok
   }
 
-  private def parseWhiteSpace(): Unit = {
-    while (isWhitespace(peek())) consume()
-  }
-
   private def matchChar(char: Char)(f: String => Unit): Boolean = {
+    parseWhiteSpace()
     val c = peek()
     if (charNe(c, char)) {
       if (c == EOF) f(" nothing")
@@ -1675,6 +1576,10 @@ final class FastParser(input: String,
   }
 
   @inline
+  private def parseWhiteSpace(): Unit = {
+    while (isWhitespace(peek())) consume()
+  }
+
   private def predictCallAssign(): Boolean = {
     var i = 0
     var d = peek(i)
@@ -1704,7 +1609,6 @@ final class FastParser(input: String,
     false
   }
 
-  @inline
   private def findChar(c: Char): NaturalSentinel = {
     var i = 0
     var d = peek(i)
@@ -1731,7 +1635,6 @@ final class FastParser(input: String,
     if (charEq(d, c)) i else naturalSentinel
   }
 
-  @inline
   private def findKeywords(m: Map[String, Int]): NaturalSentinel = {
     var i = 0
     var d = peek(i)
@@ -1882,4 +1785,5 @@ object FastParser {
       n
     }
   }
+
 }
