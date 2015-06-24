@@ -34,5 +34,7 @@
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-option" exported="" />
+    <orderEntry type="module" module-name="sireum-pilar-parser-antlr4" exported="" />
   </component>
 </module>

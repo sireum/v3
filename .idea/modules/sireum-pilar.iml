@@ -29,5 +29,6 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.3:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.2.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-option" exported="" />
   </component>
 </module>

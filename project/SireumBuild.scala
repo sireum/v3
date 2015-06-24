@@ -52,7 +52,7 @@ object SireumBuild extends Build {
             dotDependency(args)
           }),
       base = file(".")) aggregate(
-      util, pilar,
+      util, option, pilar, cli,
       pilarParserAntlr4, utilReflect,
       coreTest,
       coreJsTest
@@ -136,25 +136,29 @@ object SireumBuild extends Build {
 
   // Cross Projects
   val utilPI = new ProjectInfo("sireum-util", CORE_DIR, Seq())
-  val pilarPI = new ProjectInfo("sireum-pilar", CORE_DIR, Seq(), utilPI)
+  val optionPI = new ProjectInfo("sireum-option", CORE_DIR, Seq(), utilPI)
+  val pilarPI = new ProjectInfo("sireum-pilar", CORE_DIR, Seq(), utilPI, optionPI)
+  val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI)
   lazy val util = toSbtProject(utilPI, sireumSettings)
+  lazy val option = toSbtProject(optionPI, sireumSettings)
   lazy val pilar = toSbtProject(pilarPI, sireumSettings)
+  lazy val cli = toSbtProject(cliPI, sireumSettings)
 
 
   // Jvm Projects
-  val pilarParserAntlr4PI = new ProjectInfo("sireum-pilar-parser-antlr4", CORE_DIR, Seq(), pilarPI)
+  val pilarParserAntlr4PI = new ProjectInfo("sireum-pilar-parser-antlr4", CORE_DIR, Seq(), utilPI, optionPI, pilarPI)
+  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI)
   lazy val pilarParserAntlr4 = toSbtProject(pilarParserAntlr4PI, sireumJvmSettings)
-  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, pilarPI)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
 
   // Jvm Test Projects
-  val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserAntlr4PI)
+  val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, cliPI)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
 
   // Js Projects
 
   // Js Projects
-  val coreJsTestPI = new ProjectInfo("sireum-core-js-test", CORE_DIR, Seq(), utilPI, pilarPI, coreTestPI)
+  val coreJsTestPI = new ProjectInfo("sireum-core-js-test", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, cliPI, coreTestPI)
   lazy val coreJsTest = toSbtJsProject(coreJsTestPI, sireumJsTestSettings)
 
 

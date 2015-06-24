@@ -16,9 +16,19 @@
       <location>/Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-util/src/main/scala</location>
     </link>
     <link>
+      <name>-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-option-src-main-scala</name>
+      <type>2</type>
+      <location>/Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-option/src/main/scala</location>
+    </link>
+    <link>
       <name>-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-pilar-src-main-scala</name>
       <type>2</type>
       <location>/Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-pilar/src/main/scala</location>
+    </link>
+    <link>
+      <name>-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-cli-src-main-scala</name>
+      <type>2</type>
+      <location>/Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-cli/src/main/scala</location>
     </link>
     <link>
       <name>-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-core-test-src-main-scala</name>

@@ -39,5 +39,7 @@
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
     <orderEntry type="module" module-name="sireum-pilar-parser-antlr4" exported="" />
+    <orderEntry type="module" module-name="sireum-cli" exported="" />
+    <orderEntry type="module" module-name="sireum-option" exported="" />
   </component>
 </module>

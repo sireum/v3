@@ -2,7 +2,9 @@
   <classpathentry output="bin" kind="src" path="src/main/scala"/>
   <classpathentry output="bin" kind="src" path="src/test/scala"/>
   <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-util-src-main-scala"/>
+  <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-option-src-main-scala"/>
   <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-pilar-src-main-scala"/>
+  <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-cli-src-main-scala"/>
   <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireumv3-core-sireum-core-test-src-main-scala"/>
   <classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.3-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.3.jar"/>
