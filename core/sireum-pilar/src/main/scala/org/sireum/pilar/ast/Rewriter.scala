@@ -30,7 +30,6 @@ package org.sireum.pilar.ast
 import org.sireum.util._
 
 object Rewriter {
-
   import org.sireum.util.Rewriter._
 
   val constructorMap: ConstructorMap = Map(
@@ -115,8 +114,8 @@ object Rewriter {
       ProcedureBody(cast(locals), cast(locations))
     }),
     ("ProcedureDecl", { es =>
-      val Seq(id: Id, params: IVector[_], annotations: IVector[_], bodyOpt: Option[_]) = es
-      ProcedureDecl(id, cast(params), cast(annotations), cast(bodyOpt))
+      val Seq(id: Id, params: IVector[_], bodyOpt: Option[_], annotations: IVector[_]) = es
+      ProcedureDecl(id, cast(params), cast(bodyOpt), cast(annotations))
     }),
     ("Raw", { es =>
       val Seq(value: String) = es

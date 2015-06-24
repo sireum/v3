@@ -25,38 +25,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-import org.sireum.test.{UTestTestFramework, TestDefProvider}
-import utest._
+import org.sireum.test._
+import org.sireum.util._
 
-object AstJsTest extends UTestTestFramework {
+final class AstTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
 
-  def main(args: Array[String]): Unit = {
-    generate()
-  }
+  val emptyModel = Model(Node.emptySeq)
 
-  override lazy val provider: TestDefProvider =
-    new AstTestDefProvider(this)
+  val model =
+    Model(
+      Node.seq(
+        GlobalVarDecl(Id("x"),
+          ivector(Annotation(Id("type"), Raw("Int"))))),
+      Node.seq(
+        Annotation(Id("object"), Raw("1")))
+    )
 
-  def tests = TestSuite {
+  override def testDefs: ISeq[TestDef] = ivector(
 
-    // This uTest list is auto-generated from data in
-    // AstTestDefProvider
+    ConditionTest("EmptyModel",
+      emptyModel.elements.isEmpty && emptyModel.annotations.isEmpty)
+    ,
+    ConditionTest("RewriteAnnotationId", {
+      val model2 = Rewriter.build() {
+        case Annotation(Id(_), raw) =>
+          Annotation(Id("Z"), raw)
+      }(model)
 
-    "EmptyModel" - {
-      test("EmptyModel")
-    }
+      Visitor.build({
+        case a: Annotation =>
+          tf.assertEquals(a.id.value, "Z")
+          false
+      })(model2)
 
-    "PicklingEmptyModel" - {
-      test("PicklingEmptyModel")
-    }
-
-    "PicklingModel" - {
-      test("PicklingModel")
-    }
-
-    "RewriteAnnotationId" - {
-      test("RewriteAnnotationId")
-    }
-
-  }
+      model ne model2
+    })
+    ,
+    EqualTest("PicklingEmptyModel", {
+      import Pickling._
+      unpickle[Model](pickle(emptyModel))
+    }, emptyModel)
+    ,
+    EqualTest("PicklingModel", {
+      import Pickling._
+      unpickle[Model](pickle(model))
+    }, model)
+  )
 }

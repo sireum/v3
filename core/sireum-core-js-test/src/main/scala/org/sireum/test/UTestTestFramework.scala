@@ -64,4 +64,6 @@ abstract class UTestTestFramework
   override def assertEmpty(it: Iterable[_]): Unit =
     assert(it.isEmpty)
 
+  override def assertTrue(b: Boolean): Unit =
+    assert(b)
 }

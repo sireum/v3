@@ -29,6 +29,31 @@ import org.sireum.test._
 import org.sireum.pilar.ast._
 import org.sireum.util._
 
+object FastParserTestDefProvider {
+  final val model1 =
+    """global var z;
+      |def foo(x) {
+      |#L0 return x;
+      |}
+    """.stripMargin
+  final val model2 =
+    """def abs(x) {
+      |#L0 if x < z'0 then L1 else L2;
+      |#L1 return -(x);
+      |#L2 return x;
+      |}
+    """.stripMargin
+  final val model3 =
+    """def min(x, y) {
+      |#L0 if x <= y then L1 else L2;
+      |#L1 return x;
+      |#L2 return y;
+      |}
+    """.stripMargin
+}
+
+import FastParserTestDefProvider._
+
 final class FastParserTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
@@ -37,7 +62,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
   override val testDefs: ISeq[TestDef] = ivector(
 
     EqualTest("AnnotationRecovery",
-      parseAnnotations("@ 5 sdaekcn;sgej(recovery skips here) @type 'Int", reporter(2)),
+      parseAnnotations("@ 5 sdaekcnsgej(recovery skips here) @type 'Int", reporter(2)),
       Seq(Annotation(Id("type"), Raw("Int"))))
     ,
     EqualTest("AnnotationRecoveryString",
@@ -464,9 +489,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.seq(Annotation(Id("foo"), Raw("")))))
     ,
     EqualOptTest("CallLocation1",
-      parseLocation(
-        """#L0 call a(b) goto L1;
-        """.stripMargin),
+      parseLocation("#L0 call a(b) goto L1;"),
       CallLocation(
         Id("L0"),
         None,
@@ -475,9 +498,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Id("L1")))
     ,
     EqualOptTest("CallLocation2",
-      parseLocation(
-        """#L0 call (x, y) := a(b, c) goto L1;
-        """.stripMargin),
+      parseLocation("#L0 call (x, y) := a(b, c) goto L1;"),
       CallLocation(
         Id("L0"),
         Some(
@@ -497,9 +518,350 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EmptyIterableTest("CallLocationRecovery",
       parseLocation("#L0 call x(7,recovery skip this);", reporter(11)))
+    ,
+    EqualOptTest("ProcedureDecl1",
+      parseModelElement("def a();"),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        None))
+    ,
+    EqualOptTest("ProcedureDecl2",
+      parseModelElement("def a(b, c);"),
+      ProcedureDecl(
+        Id("a"),
+        Node.seq(
+          ParamDecl(
+            Id("b"),
+            Vector()
+          ),
+          ParamDecl(
+            Id("c"),
+            Vector()
+          )
+        ),
+        None))
+    ,
+    EqualOptTest("ProcedureDecl3",
+      parseModelElement(
+        "def a(b @type 'Int, c @type 'Int) @type 'Int;"),
+      ProcedureDecl(
+        Id("a"),
+        Node.seq(
+          ParamDecl(
+            Id("b"),
+            Node.seq(Annotation(Id("type"), Raw("Int")))
+          ),
+          ParamDecl(
+            Id("c"),
+            Node.seq(Annotation(Id("type"), Raw("Int")))
+          )
+        ),
+        None,
+        Node.seq(Annotation(Id("type"), Raw("Int")))))
+    ,
+    EqualOptTest("ProcedureDecl4",
+      parseModelElement(
+        """def a() {
+          |#L0 return;
+          |}
+        """.stripMargin),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.emptySeq,
+            Node.seq(BlockLocation(
+              Id("L0"),
+              Node.emptySeq,
+              ReturnJump(
+                None
+              )))))))
+    ,
+    EqualOptTest("ProcedureDecl5",
+      parseModelElement(
+        """def a() {
+          |  var
+          |    x;
+          |    y @type 'Int;
+          |
+          |#L0 return;
+          |}
+        """.stripMargin),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.seq(
+              LocalVarDecl(Id("x")),
+              LocalVarDecl(
+                Id("y"),
+                Node.seq(Annotation(Id("type"), Raw("Int"))))
+            ),
+            Node.seq(BlockLocation(
+              Id("L0"),
+              Node.emptySeq,
+              ReturnJump(
+                None
+              )))))))
+    ,
+    EqualOptTest("ProcedureRecovery1",
+      parseModelElement("def ();", reporter(4)),
+      ProcedureDecl(
+        Id("<missing>"),
+        Node.emptySeq,
+        None))
+    ,
+    EqualOptTest("ProcedureRecovery2",
+      parseModelElement("def a(x, 9, y);", reporter(9)),
+      ProcedureDecl(
+        Id("a"),
+        Node.seq(
+          ParamDecl(
+            Id("x"),
+            Vector()
+          ),
+          ParamDecl(
+            Id("y"),
+            Vector()
+          )
+        ),
+        None))
+    ,
+    EmptyIterableTest("ProcedureRecovery3",
+      parseModelElement("def a(x) @4;", reporter(10)))
+    ,
+    EqualOptTest("ProcedureRecovery4",
+      parseModelElement(
+        """def a() {
+          |  var
+          |    x;
+          |    27;
+          |    y @type 'Int;
+          |
+          |#L0 return;
+          |}
+        """.stripMargin, reporter(27)),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.seq(LocalVarDecl(Id("x"))),
+            Node.seq(BlockLocation(
+              Id("L0"),
+              Node.emptySeq,
+              ReturnJump(
+                None
+              )))))))
+    ,
+    EqualOptTest("ProcedureRecovery5",
+      parseModelElement(
+        """def a() {
+          |#L0
+          |#L1 return;
+          |}
+        """.stripMargin, reporter(14)),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.emptySeq,
+            Node.seq(BlockLocation(
+              Id("L1"),
+              Node.emptySeq,
+              ReturnJump(
+                None
+              )))))))
+    ,
+    EqualOptTest("ProcedureRecovery6",
+      parseModelElement(
+        """def a() {
+          |#L0 assert b'true;
+          |    assume 5;
+          |    goto L1;
+          |#L1 return;
+          |}
+        """.stripMargin, reporter(40)),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.emptySeq,
+            Node.seq(
+              BlockLocation(
+                Id("L0"),
+                Node.seq(
+                  AssertAction(LiteralExp(Id("b"), Raw("true")))),
+                GotoJump(Id("L1"))),
+              BlockLocation(
+                Id("L1"),
+                Node.emptySeq,
+                ReturnJump(None)))))))
+    ,
+    EqualOptTest("ProcedureRecovery7",
+      parseModelElement(
+        """def a() {
+          |#L0 assert b'true;
+          |    goto 5;
+          |#L1 return;
+          |}
+        """.stripMargin, reporter(38)),
+      ProcedureDecl(
+        Id("a"),
+        Node.emptySeq,
+        Some(
+          ProcedureBody(
+            Node.emptySeq,
+            Node.seq(
+              BlockLocation(
+                Id("L0"),
+                Node.seq(
+                  AssertAction(LiteralExp(Id("b"), Raw("true")))),
+                GotoJump(Id("<missing>"))),
+              BlockLocation(
+                Id("L1"),
+                Node.emptySeq,
+                ReturnJump(None)))))))
+    ,
+    EqualOptTest("GlobalVarDecl1",
+      parseModelElement("global var x;"),
+      GlobalVarDecl(Id("x")))
+    ,
+    EqualOptTest("GlobalVarDecl2",
+      parseModelElement("global var x @type 'Int;"),
+      GlobalVarDecl(
+        Id("x"),
+        Node.seq(Annotation(Id("type"), Raw("Int")))))
+    ,
+    EmptyIterableTest("GlobalVarDeclRecovery",
+      parseModelElement("global recovery skips this x;", reporter(7)))
+    ,
+    EqualOptTest("Model1",
+      parseModel(model1),
+      Model(
+        Node.seq(
+          GlobalVarDecl(Id("z")),
+          ProcedureDecl(
+            Id("foo"),
+            Node.seq(ParamDecl(Id("x"))),
+            Some(
+              ProcedureBody(
+                Node.emptySeq,
+                Node.seq(
+                  BlockLocation(Id("L0"),
+                    Node.emptySeq,
+                    ReturnJump(Some(IdExp(Id("x"))))))))))))
+    ,
+    EqualOptTest("Model2",
+      parseModel(model2),
+      Model(
+        Node.seq(
+          ProcedureDecl(
+            Id("abs"),
+            Node.seq(ParamDecl(Id("x"))),
+            Some(
+              ProcedureBody(
+                Node.emptySeq,
+                Node.seq(
+                  BlockLocation(
+                    Id("L0"),
+                    Node.emptySeq,
+                    IfJump(
+                      GenBinaryExp(
+                        IdExp(Id("x")),
+                        Id("<"),
+                        LiteralExp(Id("z"), Raw("0"))),
+                      Id("L1"),
+                      Id("L2"))),
+                  BlockLocation(
+                    Id("L1"),
+                    Node.emptySeq,
+                    ReturnJump(
+                      Some(
+                        CallExp(
+                          IdExp(Id("-")),
+                          Node.seq(IdExp(Id("x"))))))),
+                  BlockLocation(
+                    Id("L2"),
+                    Node.emptySeq,
+                    ReturnJump(Some(IdExp(Id("x"))))))))))))
+    ,
+    EqualOptTest("Model3",
+      parseModel(model3),
+      Model(
+        Node.seq(
+          ProcedureDecl(
+            Id("min"),
+            Node.seq(ParamDecl(Id("x")), ParamDecl(Id("y"))),
+            Some(
+              ProcedureBody(
+                Node.emptySeq,
+                Node.seq(
+                  BlockLocation(
+                    Id("L0"),
+                    Node.emptySeq,
+                    IfJump(
+                      GenBinaryExp(
+                        IdExp(Id("x")),
+                        Id("<="),
+                        IdExp(Id("y"))),
+                      Id("L1"),
+                      Id("L2"))),
+                  BlockLocation(
+                    Id("L1"),
+                    Node.emptySeq,
+                    ReturnJump(Some(IdExp(Id("x"))))),
+                  BlockLocation(
+                    Id("L2"),
+                    Node.emptySeq,
+                    ReturnJump(Some(IdExp(Id("y"))))))))))))
+    ,
+    EqualOptTest("ModelRecovery1",
+      parseModel(
+        """global z;
+          |def foo(x) {
+          |#L0 return x;
+          |}
+        """.stripMargin, reporter(7)),
+      Model(
+        Node.seq(
+          ProcedureDecl(
+            Id("foo"),
+            Node.seq(ParamDecl(Id("x"))),
+            Some(
+              ProcedureBody(
+                Node.emptySeq,
+                Node.seq(
+                  BlockLocation(Id("L0"),
+                    Node.emptySeq,
+                    ReturnJump(Some(IdExp(Id("x"))))))))))))
+    ,
+    EmptyIterableTest("ModelStopAtFirstError",
+      FastParser(
+        """global x;
+          |global y;
+          |global z;
+        """.stripMargin, maxErrors = 1, reporter(7)))
   )
 
   import FastParser._
+
+  private def parseModel(s: String,
+                         reporter: Reporter = ConsoleReporter) = {
+    val parser = new FastParser(s, reporter, createLocInfo = false)
+    parser.parseModelFile()
+  }
+
+  private def parseModelElement(s: String,
+                                reporter: Reporter = ConsoleReporter) = {
+    val parser = new FastParser(s, reporter, createLocInfo = false)
+    parser.parseWithEOF(parser.parseModelElement(noRecover))
+  }
 
   private def parseLocation(s: String,
                             reporter: Reporter = ConsoleReporter) = {

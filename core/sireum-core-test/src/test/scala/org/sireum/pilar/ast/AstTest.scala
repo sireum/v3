@@ -26,56 +26,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.ast
 
 import org.junit.Test
-import org.sireum.util._
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+import org.sireum.test.{JUnitTestFramework, TestDef}
 
-class AstTest {
-
-  val emptyModel = Model(ivectorEmpty, ivectorEmpty)
-
-  val model =
-    Model(
-      ivector(
-        GlobalVarDecl(Id("x"),
-          ivector(Annotation(Id("type"), Raw("Int"))))),
-      ivector(
-        Annotation(Id("object"), Raw("1")))
-    )
-
+@RunWith(value = classOf[Parameterized])
+final class AstTest(name: String, td: TestDef) {
   @Test
-  def testEmptyModel(): Unit = {
-    emptyModel match {
-      case Model(elements, annds) =>
-        assert(elements.isEmpty, "Expected model with empty elements")
-        assert(elements.isEmpty, "Expected model with empty annotations")
+  def test(): Unit = {
+    td.test(JUnitTestFramework)
+  }
+}
+
+object AstTest {
+  val provider = new AstTestDefProvider(JUnitTestFramework)
+
+  @Parameters(name = "{0}")
+  def parameters = {
+    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
+    val r = new java.util.ArrayList[Array[Object]](ps.size)
+    for (p <- ps) {
+      r.add(p)
     }
-  }
-
-  @Test
-  def testRewriteAnnotationId(): Unit = {
-    val model2 = Rewriter.build() {
-      case Annotation(Id(_), raw) =>
-        Annotation(Id("Z"), raw)
-    }(model)
-
-    Visitor.build({
-      case a: Annotation =>
-        assert(a.id.value == "Z", s"Expected annotation ID to be Z")
-        false
-    })(model2)
-
-    assert(model ne model2, "Expected model changed due to ID update")
-  }
-
-  @Test
-  def testPicklingEmptyModel(): Unit = {
-    import Pickling._
-    assert(emptyModel == unpickle[Model](pickle(emptyModel)))
-  }
-
-  @Test
-  def testPicklingModel(): Unit = {
-    import Pickling._
-    assert(model == unpickle[Model](pickle(model)))
+    r
   }
 }
 

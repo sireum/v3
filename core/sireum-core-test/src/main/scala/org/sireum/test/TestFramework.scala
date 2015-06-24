@@ -31,6 +31,8 @@ trait TestFramework {
   def assertEquals(any1: Any, any2: Any)
 
   def assertEmpty(it: Iterable[_])
+
+  def assertTrue(b: Boolean)
 }
 
 trait TestDef {
@@ -82,6 +84,17 @@ object EmptyIterableTest {
 final class EmptyIterableTest(val name: String, it: () => Iterable[Any]) extends TestDef {
   override def test(tf: TestFramework): Unit = {
     tf.assertEmpty(it())
+  }
+}
+
+object ConditionTest {
+  def apply(name: String, condition: => Boolean): ConditionTest =
+    new ConditionTest(name, () => condition)
+}
+
+final class ConditionTest(val name: String, condition: () => Boolean) extends TestDef {
+  override def test(tf: TestFramework): Unit = {
+    tf.assertTrue(condition())
   }
 }
 

@@ -25,10 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-import org.antlr.v4.runtime.{Token, ParserRuleContext}
-import org.antlr.v4.runtime.tree.TerminalNode
-import org.sireum.pilar.parser.PilarParser._
+import java.io.StringReader
+
+import org.antlr.v4.runtime.atn.PredictionMode
+import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.sireum.util._
+import org.sireum.pilar.parser._
+import org.sireum.pilar.parser.Antlr4PilarParser._
+import org.antlr.v4.runtime._
+import org.antlr.v4.runtime.tree._
 
 import Builder._
 
@@ -94,8 +99,8 @@ final class Builder {
       buildID(ctx.ID()),
       Option(ctx.param()).map(_.map(build)).
         getOrElse(Node.emptySeq),
-      ctx.annotation().map(build),
-      Option(ctx.procBody()).map(build)
+      Option(ctx.procBody()).map(build),
+      ctx.annotation().map(build)
     ) at ctx
 
   def build(ctx: ParamContext): ParamDecl =
@@ -237,7 +242,7 @@ final class Builder {
       val op = buildID(first.ID())
       val right = build(first.primArgs())
       r = GenBinaryExp(r, op, right,
-        ctx.expSuffix().map(ctxS =>
+        ctx.expSuffix().tail.map(ctxS =>
           (buildID(ctxS.ID()), build(ctxS.primArgs()))
         )) at ctx
     }
@@ -294,6 +299,56 @@ object Builder {
               column: PosInteger,
               offset: Natural,
               message: String): Unit
+  }
+
+  object ConsoleReporter extends Reporter {
+    override def error(line: PosInteger,
+                       column: PosInteger,
+                       offset: Natural,
+                       message: String): Unit = {
+      Console.err.println(s"[$line, $column] $message")
+      Console.err.flush()
+    }
+  }
+
+  def apply(input: String, reporter: Reporter = ConsoleReporter): Option[Model] = {
+    import org.sireum.pilar.parser.Antlr4PilarLexer
+
+    val sr = new StringReader(input)
+    val inputStream = new ANTLRInputStream(sr)
+    val lexer = new Antlr4PilarLexer(inputStream)
+    val tokens = new CommonTokenStream(lexer)
+    val parser = new Antlr4PilarParser(tokens)
+    parser.getInterpreter.setPredictionMode(PredictionMode.SLL)
+    parser.removeErrorListeners()
+    val errorHandler = parser.getErrorHandler
+    parser.setErrorHandler(new BailErrorStrategy())
+    var success = true
+    val mf =
+      try parser.modelFile()
+      catch {
+        case _: ParseCancellationException =>
+          tokens.reset()
+          parser.reset()
+          parser.getInterpreter.setPredictionMode(PredictionMode.LL)
+          parser.setErrorHandler(errorHandler)
+          parser.addErrorListener(new BaseErrorListener {
+            override def syntaxError(recognizer: Recognizer[_, _],
+                                     offendingSymbol: Any,
+                                     line: PosInteger,
+                                     charPositionInLine: PosInteger,
+                                     msg: String,
+                                     e: RecognitionException): Unit = {
+              success = false
+              val token = offendingSymbol.asInstanceOf[Token]
+              val start = token.getStartIndex
+              reporter.error(line, charPositionInLine, start, msg + s" (token=${token.getType})")
+            }
+          })
+          parser.modelFile()
+      }
+    if (success) Some(new Builder().build(mf.model())(reporter))
+    else None
   }
 
   private[ast] final implicit class At[T <: Node](val n: T) extends AnyVal {

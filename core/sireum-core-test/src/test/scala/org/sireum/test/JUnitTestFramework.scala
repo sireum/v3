@@ -56,4 +56,7 @@ object JUnitTestFramework extends TestFramework {
     }
     Assert.assertTrue(it.isEmpty)
   }
+
+  override def assertTrue(b: Boolean): Unit =
+    Assert.assertTrue(b)
 }

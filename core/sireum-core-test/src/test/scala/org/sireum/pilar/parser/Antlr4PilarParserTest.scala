@@ -23,40 +23,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar.ast
+package org.sireum.pilar.parser
 
-import org.sireum.test.{UTestTestFramework, TestDefProvider}
-import utest._
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+import org.sireum.test.{JUnitTestFramework, TestDef}
 
-object AstJsTest extends UTestTestFramework {
-
-  def main(args: Array[String]): Unit = {
-    generate()
+@RunWith(value = classOf[Parameterized])
+final class Antlr4PilarParserTest(name: String, td: TestDef) {
+  @Test
+  def test(): Unit = {
+    td.test(JUnitTestFramework)
   }
+}
 
-  override lazy val provider: TestDefProvider =
-    new AstTestDefProvider(this)
+object Antlr4PilarParserTest {
+  val provider = new Antlr4PilarParserTestDefProvider(JUnitTestFramework)
 
-  def tests = TestSuite {
-
-    // This uTest list is auto-generated from data in
-    // AstTestDefProvider
-
-    "EmptyModel" - {
-      test("EmptyModel")
+  @Parameters(name = "{0}")
+  def parameters = {
+    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
+    val r = new java.util.ArrayList[Array[Object]](ps.size)
+    for (p <- ps) {
+      r.add(p)
     }
-
-    "PicklingEmptyModel" - {
-      test("PicklingEmptyModel")
-    }
-
-    "PicklingModel" - {
-      test("PicklingModel")
-    }
-
-    "RewriteAnnotationId" - {
-      test("RewriteAnnotationId")
-    }
-
+    r
   }
 }

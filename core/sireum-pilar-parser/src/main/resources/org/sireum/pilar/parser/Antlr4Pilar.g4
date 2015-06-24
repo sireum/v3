@@ -23,7 +23,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-grammar Pilar;
+grammar Antlr4Pilar;
 
 modelFile
   : model EOF
@@ -56,7 +56,7 @@ param
 
 procBody
   : '{'
-    'var' localVarDecl*
+    ( 'var' localVarDecl+ )?
     location+
     '}'
   ;
@@ -139,7 +139,7 @@ LIT
 
 ID
   : [a-zA-Z$_] [a-zA-Z0-9$_]*
-  | [.~!%^&*-+=|<>/?] ~[ \r\n\t\u000C;(,){}'"#@`:]*
+  | ( [.~!%^&*+=|<>/?] | '-' ) ~[ \r\n\t\u000C;(,){}'"#@`:]*
   | '`' ~[\r\n\t\u000C`]+ '`'
   ;
 

@@ -102,6 +102,34 @@ object FastParserTestJs extends UTestTestFramework {
       test("AssumeActionRecovery")
     }
 
+    "BlockLocation1" - {
+      test("BlockLocation1")
+    }
+
+    "BlockLocation2" - {
+      test("BlockLocation2")
+    }
+
+    "BlockLocationRecovery1" - {
+      test("BlockLocationRecovery1")
+    }
+
+    "BlockLocationRecovery2" - {
+      test("BlockLocationRecovery2")
+    }
+
+    "CallLocation1" - {
+      test("CallLocation1")
+    }
+
+    "CallLocation2" - {
+      test("CallLocation2")
+    }
+
+    "CallLocationRecovery" - {
+      test("CallLocationRecovery")
+    }
+
     "ComplexID" - {
       test("ComplexID")
     }
@@ -174,6 +202,18 @@ object FastParserTestJs extends UTestTestFramework {
       test("ExtJumpRecovery")
     }
 
+    "GlobalVarDecl1" - {
+      test("GlobalVarDecl1")
+    }
+
+    "GlobalVarDecl2" - {
+      test("GlobalVarDecl2")
+    }
+
+    "GlobalVarDeclRecovery" - {
+      test("GlobalVarDeclRecovery")
+    }
+
     "GotoJump1" - {
       test("GotoJump1")
     }
@@ -200,6 +240,26 @@ object FastParserTestJs extends UTestTestFramework {
 
     "IfJumpRecovery3" - {
       test("IfJumpRecovery3")
+    }
+
+    "Model1" - {
+      test("Model1")
+    }
+
+    "Model2" - {
+      test("Model2")
+    }
+
+    "Model3" - {
+      test("Model3")
+    }
+
+    "ModelRecovery1" - {
+      test("ModelRecovery1")
+    }
+
+    "ModelStopAtFirstError" - {
+      test("ModelStopAtFirstError")
     }
 
     "OpID" - {
@@ -240,6 +300,54 @@ object FastParserTestJs extends UTestTestFramework {
 
     "PrimaryExpTuple" - {
       test("PrimaryExpTuple")
+    }
+
+    "ProcedureDecl1" - {
+      test("ProcedureDecl1")
+    }
+
+    "ProcedureDecl2" - {
+      test("ProcedureDecl2")
+    }
+
+    "ProcedureDecl3" - {
+      test("ProcedureDecl3")
+    }
+
+    "ProcedureDecl4" - {
+      test("ProcedureDecl4")
+    }
+
+    "ProcedureDecl5" - {
+      test("ProcedureDecl5")
+    }
+
+    "ProcedureRecovery1" - {
+      test("ProcedureRecovery1")
+    }
+
+    "ProcedureRecovery2" - {
+      test("ProcedureRecovery2")
+    }
+
+    "ProcedureRecovery3" - {
+      test("ProcedureRecovery3")
+    }
+
+    "ProcedureRecovery4" - {
+      test("ProcedureRecovery4")
+    }
+
+    "ProcedureRecovery5" - {
+      test("ProcedureRecovery5")
+    }
+
+    "ProcedureRecovery6" - {
+      test("ProcedureRecovery6")
+    }
+
+    "ProcedureRecovery7" - {
+      test("ProcedureRecovery7")
     }
 
     "SimpleID1" - {

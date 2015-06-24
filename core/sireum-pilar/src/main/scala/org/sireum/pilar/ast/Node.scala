@@ -78,8 +78,9 @@ GlobalVarDecl(id: Id,
 final case class
 ProcedureDecl(id: Id,
               params: Node.Seq[ParamDecl],
-              annotations: Node.Seq[Annotation] = Node.emptySeq,
-              bodyOpt: Option[ProcedureBody]) extends ModelElement
+              bodyOpt: Option[ProcedureBody],
+              annotations: Node.Seq[Annotation] = Node.emptySeq)
+  extends ModelElement
 
 
 final case class

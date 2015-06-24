@@ -31,7 +31,6 @@ import org.sireum.util.Json._
 // This file is auto-generated from the Node class hierarchy
 
 object Json {
-
   import scala.language.implicitConversions
 
   implicit def from(o: Node): Js.Obj =
@@ -172,8 +171,8 @@ object Json {
           (".class", Js.Str("ProcedureDecl")),
           ("id", from(o.id)),
           ("params", fromSeq(o.params)(from)),
-          ("annotations", fromSeq(o.annotations)(from)),
-          ("bodyOpt", fromOption(o.bodyOpt)(from))
+          ("bodyOpt", fromOption(o.bodyOpt)(from)),
+          ("annotations", fromSeq(o.annotations)(from))
         )
       case o: Raw =>
         Js.Obj(
@@ -252,7 +251,7 @@ object Json {
           case "ProcedureBody" =>
             ProcedureBody(toVector(o.value(1)._2)(to[LocalVarDecl]), toVector(o.value(2)._2)(to[Location]))
           case "ProcedureDecl" =>
-            ProcedureDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[ParamDecl]), toVector(o.value(3)._2)(to[Annotation]), toOption(o.value(4)._2)(to[ProcedureBody]))
+            ProcedureDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[ParamDecl]), toOption(o.value(3)._2)(to[ProcedureBody]), toVector(o.value(4)._2)(to[Annotation]))
           case "Raw" =>
             Raw(toStr(o.value(1)._2))
           case "ReturnJump" =>

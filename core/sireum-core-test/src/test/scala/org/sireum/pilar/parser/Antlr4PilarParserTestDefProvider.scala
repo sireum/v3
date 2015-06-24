@@ -23,40 +23,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.pilar.ast
+package org.sireum.pilar.parser
 
-import org.sireum.test.{UTestTestFramework, TestDefProvider}
-import utest._
+import org.sireum.pilar.ast.Builder
+import org.sireum.test._
+import org.sireum.util._
 
-object AstJsTest extends UTestTestFramework {
+import FastParserTestDefProvider._
 
-  def main(args: Array[String]): Unit = {
-    generate()
-  }
+final class Antlr4PilarParserTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
 
-  override lazy val provider: TestDefProvider =
-    new AstTestDefProvider(this)
+  override def testDefs: ISeq[TestDef] = ivector(
 
-  def tests = TestSuite {
-
-    // This uTest list is auto-generated from data in
-    // AstTestDefProvider
-
-    "EmptyModel" - {
-      test("EmptyModel")
-    }
-
-    "PicklingEmptyModel" - {
-      test("PicklingEmptyModel")
-    }
-
-    "PicklingModel" - {
-      test("PicklingModel")
-    }
-
-    "RewriteAnnotationId" - {
-      test("RewriteAnnotationId")
-    }
-
-  }
+    EqualTest("Model1",
+      Builder(model1), FastParser(model1))
+    ,
+    EqualTest("Model2",
+      Builder(model2), FastParser(model2))
+    ,
+    EqualTest("Model3",
+      Builder(model3), FastParser(model3))
+  )
 }
