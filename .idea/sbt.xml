@@ -13,8 +13,8 @@
             <option value="$PROJECT_DIR$/core/sireum-core-test" />
             <option value="$PROJECT_DIR$/core/sireum-core-test/project" />
             <option value="$PROJECT_DIR$/core/sireum-pilar" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser/project" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4/project" />
             <option value="$PROJECT_DIR$/core/sireum-pilar/project" />
             <option value="$PROJECT_DIR$/core/sireum-util" />
             <option value="$PROJECT_DIR$/core/sireum-util-reflect" />

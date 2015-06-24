@@ -1,5 +1,6 @@
 <classpath>
   <classpathentry output="bin" kind="src" path="src/main/scala"/>
+  <classpathentry output="bin" kind="src" path="src/main/java"/>
   <classpathentry output="bin" kind="src" path="src/main/resources"/>
   <classpathentry kind="src" path="/sireum-util" exported="true" combineaccessrules="false"/>
   <classpathentry kind="src" path="/sireum-pilar" exported="true" combineaccessrules="false"/>

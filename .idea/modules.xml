@@ -10,8 +10,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" />

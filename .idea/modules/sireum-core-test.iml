@@ -22,7 +22,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="sireum-pilar" exported="" />
-    <orderEntry type="module" module-name="sireum-pilar-parser" exported="" />
     <orderEntry type="module" module-name="sireum-util" exported="" />
     <orderEntry type="library" scope="TEST" name="SBT: com.novocode:junit-interface:0.11:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: junit:junit:4.11:jar" level="project" />
@@ -39,5 +38,6 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-pilar-parser-antlr4" exported="" />
   </component>
 </module>

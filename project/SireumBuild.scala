@@ -53,7 +53,7 @@ object SireumBuild extends Build {
           }),
       base = file(".")) aggregate(
       util, pilar,
-      pilarParser, utilReflect,
+      pilarParserAntlr4, utilReflect,
       coreTest,
       coreJsTest
       ) settings (
@@ -142,13 +142,13 @@ object SireumBuild extends Build {
 
 
   // Jvm Projects
-  val pilarParserPI = new ProjectInfo("sireum-pilar-parser", CORE_DIR, Seq(), pilarPI)
-  lazy val pilarParser = toSbtProject(pilarParserPI, sireumJvmSettings)
+  val pilarParserAntlr4PI = new ProjectInfo("sireum-pilar-parser-antlr4", CORE_DIR, Seq(), pilarPI)
+  lazy val pilarParserAntlr4 = toSbtProject(pilarParserAntlr4PI, sireumJvmSettings)
   val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, pilarPI)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
 
   // Jvm Test Projects
-  val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserPI)
+  val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserAntlr4PI)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
 
   // Js Projects
