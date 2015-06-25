@@ -10,6 +10,10 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-js-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-js-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-js.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-js.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-js-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-jvm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-jvm-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-option.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-option.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-option-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-option-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" />

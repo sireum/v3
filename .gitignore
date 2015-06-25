@@ -16,5 +16,7 @@ project-dependency.dot
 *.sjsir
 *.class
 target
+target-jvm
+target-js
 .DS_Store
 /lib_managed

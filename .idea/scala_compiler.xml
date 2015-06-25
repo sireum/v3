@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="SBT 2" modules="sireum-pilar-parser,sireum,sireum-cli,sireum-core-test,sireum-option,sireum-pilar,sireum-pilar-parser-antlr4,sireum-util,sireum-util-reflect">
+    <profile name="SBT 2" modules="sireum-pilar-parser,sireum-jvm,sireum-cli,sireum-core-test,sireum-option,sireum-pilar,sireum-pilar-parser-antlr4,sireum-util,sireum-util-reflect">
       <parameters>
         <parameter value="-target:jvm-1.8" />
         <parameter value="-Ybackend:GenBCode" />
       </parameters>
     </profile>
-    <profile name="SBT 2" modules="sireum-core-js-test">
-      <parameters>
-        <parameter value="-target:jvm-1.8" />
-        <parameter value="-Ybackend:GenBCode" />
-      </parameters>
+    <profile name="SBT 3" modules="sireum,sireum-js" />
+    <profile name="SBT 3" modules="sireum-core-js-test">
+      <plugins>
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.6/scalajs-compiler_2.11.6-0.6.3.jar" />
+      </plugins>
     </profile>
   </component>
 </project>
