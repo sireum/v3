@@ -7,10 +7,8 @@ Requirements
 
 * [Node.js](https://nodejs.org)
 
-* [PhantomJS](http://phantomjs.org)
-
 
 Building and Testing Sireum using Sbt
 =====================================
 
-1. Run: `./sbt-launch.sh test`
+1. Run: `bin/sbt-launch.sh test`

@@ -23,36 +23,46 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.util
+package org.sireum.option.annotation
 
-abstract class Enum(name: String = "") {
-  type Value = String
+import scala.annotation.StaticAnnotation
 
-  private val values = mlinkedMapEmpty[String, Int]
-  private lazy val names = values.keys.toVector
-  private var isFrozen = false
-
-  final def Value(s: String): Value = {
-    assert(!isFrozen)
-    val r =
-      if (name == "") s.intern()
-      else s"$name.$s".intern()
-    values(r) = values.size
-    r
-  }
-
-  final def ordinal(name: String) = {
-    isFrozen = true
-    values(name)
-  }
-
-  final def fromOrdinal(n: Int) = {
-    isFrozen = true
-    names(n)
-  }
-
-  final def elements = {
-    isFrozen = true
-    values.keys
-  }
+sealed trait OptionAnnotation extends StaticAnnotation {
+  def description: String
 }
+
+sealed trait NamedOptionAnnotation extends OptionAnnotation {
+  def name: String
+}
+
+final case class Mode(name: String,
+                      header: String,
+                      description: String)
+  extends NamedOptionAnnotation
+
+final case class Main(name: String,
+                      header: String,
+                      description: String,
+                      handlerObject: String)
+  extends NamedOptionAnnotation
+
+final case class Opt(shortKey: Option[String],
+                     description: String)
+  extends OptionAnnotation
+
+final case class GroupOpt(shortKey: Option[String],
+                          description: String,
+                          groupName: String)
+  extends OptionAnnotation
+
+final case class Arg(name: String,
+                     description: String)
+  extends NamedOptionAnnotation
+
+final case class ArgOpt(name: String,
+                        description: String)
+  extends NamedOptionAnnotation
+
+final case class Args(name: String,
+                      description: String)
+  extends NamedOptionAnnotation

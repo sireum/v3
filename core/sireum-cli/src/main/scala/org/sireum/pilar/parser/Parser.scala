@@ -23,36 +23,12 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.util
+package org.sireum.pilar.parser
 
-abstract class Enum(name: String = "") {
-  type Value = String
+import org.sireum.option.PilarParserOption
 
-  private val values = mlinkedMapEmpty[String, Int]
-  private lazy val names = values.keys.toVector
-  private var isFrozen = false
+object Parser {
+  def run(option: PilarParserOption): Unit = {
 
-  final def Value(s: String): Value = {
-    assert(!isFrozen)
-    val r =
-      if (name == "") s.intern()
-      else s"$name.$s".intern()
-    values(r) = values.size
-    r
-  }
-
-  final def ordinal(name: String) = {
-    isFrozen = true
-    values(name)
-  }
-
-  final def fromOrdinal(n: Int) = {
-    isFrozen = true
-    names(n)
-  }
-
-  final def elements = {
-    isFrozen = true
-    values.keys
   }
 }

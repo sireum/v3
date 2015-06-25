@@ -1,4 +1,3 @@
-bin
 /sbt
 .cache*
 .scala_dependencies
