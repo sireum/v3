@@ -1,12 +1,10 @@
-// Generated from /Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-pilar-parser/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5
+// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/core/sireum-pilar-parser-antlr4/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5
 package org.sireum.pilar.parser;
-
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
-
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;

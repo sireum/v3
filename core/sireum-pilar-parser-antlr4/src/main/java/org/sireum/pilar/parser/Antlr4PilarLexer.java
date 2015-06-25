@@ -1,6 +1,5 @@
-// Generated from /Users/robby/Repositories/Sireum-Private/sireumv3/core/sireum-pilar-parser/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5
+// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/core/sireum-pilar-parser-antlr4/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5
 package org.sireum.pilar.parser;
-
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

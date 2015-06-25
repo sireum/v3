@@ -51,11 +51,11 @@ object ProductUtil {
       forall(p => p._1 == p._2)
 
   final def toScalaString(o: Any,
-                          indent: Int = 0,
+                          indent: Natural = 0,
                           sb: StringBuilder = new StringBuilder)(
                            implicit subs: CMap[String, String] = Map()): StringBuilder = {
     @inline
-    def appendIndent(n: Int): Unit = {
+    def appendIndent(n: Natural): Unit = {
       var i = 0
       while (i < n) {
         sb.append("  ")

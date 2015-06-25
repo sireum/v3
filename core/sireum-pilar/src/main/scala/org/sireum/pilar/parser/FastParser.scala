@@ -1303,7 +1303,7 @@ final class FastParser(input: String,
 
   @inline
   private def peekSimpleID() = {
-    val p = peekOneStar(0, isJavaLetter, isJavaDigitOrLetter)
+    val p = peekOneStar(peek, 0, isJavaLetter, isJavaDigitOrLetter)
     val (ok, i) = p
     if (ok &&
       keywords.contains(input.substring(offset, offset + i)))
@@ -1313,23 +1313,11 @@ final class FastParser(input: String,
 
   @inline
   private def peekOpID(offset: Natural = 0) =
-    peekOneStar(offset, isOpIDFirstChar, isOpIDTrailingChar)
+    peekOneStar(peek, offset, isOpIDFirstChar, isOpIDTrailingChar)
 
   @inline
-  private def isOpIDFirstChar(c: CharSentinel): Boolean =
-    c match {
-      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
-           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
-      case _ => false
-    }
-
-  @inline
-  private def isOpIDTrailingChar(c: CharSentinel) =
-    c match {
-      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
-      case _ => true
-    }
+  private def peekSimpleLIT(offset: Natural = 0) =
+    peekOneStar(peek, offset, isSimpleLITFirstChar, isSimpleLITTrailingChar)
 
   @inline
   private def peekComplexID(offset: Natural = 0) =
@@ -1370,21 +1358,6 @@ final class FastParser(input: String,
       None
     }
   }
-
-  @inline
-  private def peekSimpleLIT(offset: Natural = 0) =
-    peekOneStar(offset, isSimpleLITFirstChar, isLITTrailingChar)
-
-  @inline
-  private def isSimpleLITFirstChar(c: CharSentinel) = charEq(c, '\'')
-
-  @inline
-  private def isLITTrailingChar(c: CharSentinel) =
-    c match {
-      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
-      case _ => true
-    }
 
   @inline
   private def peekComplexLIT(offset: Natural = 0): (Boolean, Natural) = {
@@ -1521,43 +1494,8 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def peekOneStar(offset: Natural,
-                          C: CharSentinel => Boolean,
-                          D: CharSentinel => Boolean): (Boolean, Natural) = {
-    // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
-    // CD*
-    // C is the predicate for starting character
-    // D is the predicate for acceptable following characters
-    var state = 0
-    var i = 0
-    var ok = true
-    var continue = true
-    while (ok && continue) {
-      val c = peek(offset + i)
-      state match {
-        case 0 =>
-          if (C(c)) {
-            state = 1
-            i += 1
-          } else ok = false
-        case 1 =>
-          if (D(c)) {
-            state = 2
-            i += 1
-          } else continue = false
-        case 2 =>
-          if (D(c)) {
-            // state = 2
-            i += 1
-          } else continue = false
-      }
-    }
-    (ok, offset + i)
-  }
-
-  @inline
   private def peekKeyword(offset: Int, keywords: Map[String, Int]): NaturalSentinel = {
-    val (ok, i) = peekOneStar(offset, isJavaLetter, isJavaDigitOrLetter)
+    val (ok, i) = peekOneStar(peek, offset, isJavaLetter, isJavaDigitOrLetter)
     if (!ok) return naturalSentinel
     val s = input.substring(this.offset + offset, this.offset + i)
     keywords.getOrElse(s, naturalSentinel)
@@ -1737,35 +1675,10 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def isJavaLetter(c: CharSentinel) =
-    (c >= 'a' && c <= 'z') ||
-      (c >= 'A' && c <= 'Z') ||
-      charEq(c, '$') || charEq(c, '_')
-
-  @inline
-  private def isJavaDigit(c: CharSentinel) = c >= '0' && c <= '9'
-
-  @inline
-  private def isJavaDigitOrLetter(c: CharSentinel) =
-    isJavaDigit(c) || isJavaLetter(c)
-
-  @inline
-  private def isWhitespace(c: CharSentinel) = c match {
-    case ' ' | '\r' | '\n' | '\t' | '\u000C' => true
-    case _ => false
-  }
-
-  @inline
   private def isComplexIDChar(c: CharSentinel) = c match {
     case '\r' | '\n' | '\t' | '\u000C' | '`' => false
     case _ => true
   }
-
-  @inline
-  private def charEq(cs: CharSentinel, c: Char) = cs == c.toInt
-
-  @inline
-  private def charNe(cs: CharSentinel, c: Char) = cs != c.toInt
 }
 
 object FastParser {
@@ -1858,4 +1771,91 @@ object FastParser {
     }
   }
 
+  @inline
+  private[pilar] def peekOneStar(peek: Natural => NaturalSentinel,
+                                 offset: Natural,
+                                 C: CharSentinel => Boolean,
+                                 D: CharSentinel => Boolean): (Boolean, Natural) = {
+    // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
+    // CD*
+    // C is the predicate for starting character
+    // D is the predicate for acceptable following characters
+    var state = 0
+    var i = 0
+    var ok = true
+    var continue = true
+    while (ok && continue) {
+      val c = peek(offset + i)
+      state match {
+        case 0 =>
+          if (C(c)) {
+            state = 1
+            i += 1
+          } else ok = false
+        case 1 =>
+          if (D(c)) {
+            state = 2
+            i += 1
+          } else continue = false
+        case 2 =>
+          if (D(c)) {
+            // state = 2
+            i += 1
+          } else continue = false
+      }
+    }
+    (ok, offset + i)
+  }
+
+  @inline
+  private[pilar] def isOpIDFirstChar(c: CharSentinel): Boolean =
+    c match {
+      case '.' | '~' | '!' | '%' | '^' | '&' | '*' |
+           '-' | '+' | '=' | '|' | '<' | '>' | '/' | '?' => true
+      case _ => false
+    }
+
+  @inline
+  private[pilar] def isOpIDTrailingChar(c: CharSentinel) =
+    c match {
+      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+      case _ => true
+    }
+
+  @inline
+  private def isSimpleLITFirstChar(c: CharSentinel) = charEq(c, '\'')
+
+  @inline
+  private[pilar] def isSimpleLITTrailingChar(c: CharSentinel) =
+    c match {
+      case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+      case _ => true
+    }
+
+  @inline
+  private def charEq(cs: CharSentinel, c: Char) = cs == c.toInt
+
+  @inline
+  private def charNe(cs: CharSentinel, c: Char) = cs != c.toInt
+
+  @inline
+  private[pilar] def isJavaLetter(c: CharSentinel) =
+    (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') ||
+      charEq(c, '$') || charEq(c, '_')
+
+  @inline
+  private[pilar] def isJavaDigit(c: CharSentinel) = c >= '0' && c <= '9'
+
+  @inline
+  private[pilar] def isJavaDigitOrLetter(c: CharSentinel) =
+    isJavaDigit(c) || isJavaLetter(c)
+
+  @inline
+  private[pilar] def isWhitespace(c: CharSentinel) = c match {
+    case ' ' | '\r' | '\n' | '\t' | '\u000C' => true
+    case _ => false
+  }
 }

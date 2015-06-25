@@ -90,9 +90,7 @@ jump
   | 'return' exp? annotation* ';'     #ReturnJump
   | 'switch' exp
     switchCase*
-    b='default'
-    ':'
-    ID
+    b='default' ':' ID
     annotation* ';'                   #SwitchJump
   | 'jext' ID arg annotation* ';'     #ExtJump
   ;

@@ -98,7 +98,9 @@ LocalVarDecl(id: Id,
   extends Node with Annotated
 
 
-sealed trait Location extends Node with Annotated
+sealed trait Location extends Node with Annotated {
+  def label: Id
+}
 
 
 final case class
