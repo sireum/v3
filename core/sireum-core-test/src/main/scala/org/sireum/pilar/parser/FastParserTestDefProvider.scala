@@ -198,12 +198,12 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EqualOptTest("ExpPrefixExp",
       parseExp("a(b,c)"),
-      CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))))
+      ExtExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))))
     ,
     EqualOptTest("ExpInfixExp",
       parseExp("a(b,c) + z'5 * z'6"),
-      GenBinaryExp(
-        CallExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))),
+      InfixExp(
+        ExtExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))),
         Id("+"),
         LiteralExp(Id("z"), Raw("5")),
         Node.seq(
@@ -228,7 +228,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parseAction("x:=y+ z;"),
       AssignAction(
         IdExp(Id("x")),
-        GenBinaryExp(
+        InfixExp(
           IdExp(Id("y")),
           Id("+"),
           IdExp(Id("z")),
@@ -239,7 +239,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parseAction("x := d'1.0 + z * z'5;"),
       AssignAction(
         IdExp(Id("x")),
-        GenBinaryExp(
+        InfixExp(
           LiteralExp(Id("d"), Raw("1.0")),
           Id("+"),
           IdExp(Id("z")),
@@ -272,7 +272,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
     EqualOptTest("AssertAction3",
       parseAction("assert x > z'0 & x < y;"),
       AssertAction(
-        GenBinaryExp(
+        InfixExp(
           IdExp(Id("x")),
           Id(">"),
           LiteralExp(Id("z"), Raw("0")),
@@ -299,7 +299,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
     EqualOptTest("AssumeAction3",
       parseAction("assume x > z'0 & x < y;"),
       AssumeAction(
-        GenBinaryExp(
+        InfixExp(
           IdExp(Id("x")),
           Id(">"),
           LiteralExp(Id("z"), Raw("0")),
@@ -772,7 +772,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
                     Id("L0"),
                     Node.emptySeq,
                     IfJump(
-                      GenBinaryExp(
+                      InfixExp(
                         IdExp(Id("x")),
                         Id("<"),
                         LiteralExp(Id("z"), Raw("0"))),
@@ -783,7 +783,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
                     Node.emptySeq,
                     ReturnJump(
                       Some(
-                        CallExp(
+                        ExtExp(
                           IdExp(Id("-")),
                           Node.seq(IdExp(Id("x"))))))),
                   BlockLocation(
@@ -806,7 +806,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
                     Id("L0"),
                     Node.emptySeq,
                     IfJump(
-                      GenBinaryExp(
+                      InfixExp(
                         IdExp(Id("x")),
                         Id("<="),
                         IdExp(Id("y"))),

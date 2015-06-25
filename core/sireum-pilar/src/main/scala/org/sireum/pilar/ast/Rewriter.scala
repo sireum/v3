@@ -54,10 +54,6 @@ object Rewriter {
       val Seq(label: Id, actions: IVector[_], jump: Jump, annotations: IVector[_]) = es
       BlockLocation(label, cast(actions), jump, cast(annotations))
     }),
-    ("CallExp", { es =>
-      val Seq(exp: Exp, args: IVector[_]) = es
-      CallExp(exp, cast(args))
-    }),
     ("CallLocation", { es =>
       val Seq(label: Id, lhsOpt: Option[_], id: Id, args: IVector[_], target: Id, annotations: IVector[_]) = es
       CallLocation(label, cast(lhsOpt), id, cast(args), target, cast(annotations))
@@ -66,13 +62,13 @@ object Rewriter {
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
       ExtAction(id, cast(args), cast(annotations))
     }),
+    ("ExtExp", { es =>
+      val Seq(exp: Exp, args: IVector[_]) = es
+      ExtExp(exp, cast(args))
+    }),
     ("ExtJump", { es =>
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
       ExtJump(id, cast(args), cast(annotations))
-    }),
-    ("GenBinaryExp", { es =>
-      val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
-      GenBinaryExp(left, op, right, cast(rest))
     }),
     ("GlobalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
@@ -93,6 +89,10 @@ object Rewriter {
     ("IfJump", { es =>
       val Seq(exp: Exp, tTarget: Id, fTarget: Id, annotations: IVector[_]) = es
       IfJump(exp, tTarget, fTarget, cast(annotations))
+    }),
+    ("InfixExp", { es =>
+      val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
+      InfixExp(left, op, right, cast(rest))
     }),
     ("LiteralExp", { es =>
       val Seq(id: Id, raw: Raw) = es

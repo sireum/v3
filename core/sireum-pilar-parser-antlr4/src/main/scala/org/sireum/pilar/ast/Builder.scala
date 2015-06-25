@@ -241,7 +241,7 @@ final class Builder {
       val first = ctx.expSuffix(0)
       val op = buildID(first.ID())
       val right = build(first.primArgs())
-      r = GenBinaryExp(r, op, right,
+      r = InfixExp(r, op, right,
         ctx.expSuffix().tail.map(ctxS =>
           (buildID(ctxS.ID()), build(ctxS.primArgs()))
         )) at ctx
@@ -253,7 +253,7 @@ final class Builder {
     val start = ctx.start
     var r = build(ctx.prim())
     for (arg <- ctx.arg()) {
-      r = CallExp(r, Option(arg.exp()).map(_.map(build)).
+      r = ExtExp(r, Option(arg.exp()).map(_.map(build)).
         getOrElse(Node.emptySeq)) at(start, arg.stop)
     }
     r

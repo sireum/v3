@@ -971,7 +971,7 @@ final class FastParser(input: String,
     }
     if (ok && suffix.nonEmpty) {
       val (op, right) = suffix.head
-      Some(GenBinaryExp(r, op, right, suffix.tail).
+      Some(InfixExp(r, op, right, suffix.tail).
         at(line, column, offset))
     } else Some(r)
   }
@@ -993,7 +993,7 @@ final class FastParser(input: String,
     while (charEq(peek(), '(') && ok) {
       parseArg(recover) match {
         case Some(es) =>
-          r = CallExp(r, es) at(line, column, offset)
+          r = ExtExp(r, es) at(line, column, offset)
         case _ => ok = false
       }
       parseWhiteSpace()

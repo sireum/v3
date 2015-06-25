@@ -238,9 +238,9 @@ object BinaryExp {
   def apply(left: Exp,
             op: Id,
             right: Exp) =
-    GenBinaryExp(left, op, right)
+    InfixExp(left, op, right)
 
-  def unapply(g: GenBinaryExp) =
+  def unapply(g: InfixExp) =
     if (g.rest.isEmpty)
       Some((g.left, g.op, g.right))
     else None
@@ -248,13 +248,13 @@ object BinaryExp {
 
 
 final case class
-GenBinaryExp(left: Exp,
-             op: Id,
-             right: Exp,
-             rest: Node.Seq[(Id, Exp)] = Node.emptySeq)
+InfixExp(left: Exp,
+         op: Id,
+         right: Exp,
+         rest: Node.Seq[(Id, Exp)] = Node.emptySeq)
   extends Exp
 
 final case class
-CallExp(exp: Exp,
-        args: Node.Seq[Exp])
+ExtExp(exp: Exp,
+       args: Node.Seq[Exp])
   extends Exp
