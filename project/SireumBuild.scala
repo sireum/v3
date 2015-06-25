@@ -157,7 +157,7 @@ object SireumBuild extends Build {
 
   // Js Projects
 
-  // Js Projects
+  // Js Test Projects
   val coreJsTestPI = new ProjectInfo("sireum-core-js-test", CORE_DIR, Seq(), utilPI, pilarPI, coreTestPI)
   lazy val coreJsTest = toSbtJsProject(coreJsTestPI, sireumJsTestSettings)
 
