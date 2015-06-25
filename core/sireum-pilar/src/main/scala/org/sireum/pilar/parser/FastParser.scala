@@ -37,7 +37,7 @@ final class FastParser(input: String,
                        private var column: PosInteger = 1,
                        private var offset: Natural = 0) {
 
-  private val _max = if (max == 0) input.length else max
+  private val _max = if (max <= 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
@@ -1793,7 +1793,7 @@ object FastParser {
   final private val locationKeywords = Map("call" -> 0)
 
   def apply(input: String,
-            maxErrors: NaturalSentinel = naturalSentinel,
+            maxErrors: Natural = 0,
             reporter: Reporter = ConsoleReporter,
             createLocInfo: Boolean = false): Option[Model] = {
     class ParsingEscape extends RuntimeException

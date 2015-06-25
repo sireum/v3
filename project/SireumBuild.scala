@@ -60,14 +60,13 @@ object SireumBuild extends Build {
       settings = sireumJvmSettings ++ assemblySettings ++
         Seq(
           name := "Sireum.jvm",
-          target := file("target-jvm"),
           assemblyJarName in assembly := "sireum-v3.jar",
           test in assembly := {},
           depDot := {
             val args = spaceDelimited("<arg>").parsed
             dotDependency(args)
           }),
-      base = file(".")).
+      base = file("jvm")).
       aggregate(subProjectJvmReferences: _*).
       dependsOn(subProjectJvmClasspathDeps: _*)
 
@@ -77,12 +76,11 @@ object SireumBuild extends Build {
       settings = sireumJsSettings ++
         Seq(
           name := "Sireum.js",
-          target := file("target-js"),
           depDot := {
             val args = spaceDelimited("<arg>").parsed
             dotDependency(args)
           }),
-      base = file(".")).
+      base = file("js")).
       aggregate(subProjectJsReferences: _*).
       disablePlugins(AssemblyPlugin)
 

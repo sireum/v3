@@ -121,14 +121,15 @@ final class Cli {
         case "-i" | "--input-mode" =>
           i += 1
           args.at(i) match {
+            case Some("auto") => option.inputMode = "auto"
             case Some("pilar") => option.inputMode = "pilar"
             case Some("json") => option.inputMode = "json"
-            case Some("auto") => option.inputMode = "auto"
+            case Some("scala") => option.inputMode = "scala"
             case Some(arg) =>
-              println(s"Only either 'pilar', 'json', or 'auto' is allowed for input mode instead of '$arg'")
+              println(s"Only either { auto, pilar, json, scala } is allowed for input mode instead of '$arg'")
               return
             case None =>
-              println("Expected either 'pilar', 'json', or 'auto' for input mode")
+              println("Expected either { auto, pilar, json, scala } for input mode")
               return
           }
         case "-o" | "--output-mode" =>
@@ -136,11 +137,12 @@ final class Cli {
           args.at(i) match {
             case Some("pilar") => option.inputMode = "pilar"
             case Some("json") => option.inputMode = "json"
+            case Some("scala") => option.inputMode = "scala"
             case Some(arg) =>
-              println(s"Only either 'pilar' or 'auto' is allowed for output mode instead of '$arg'")
+              println(s"Only either { pilar, json, scala } is allowed for output mode instead of '$arg'")
               return
             case None =>
-              println("Expected either 'pilar' or 'auto' for output mode")
+              println("Expected either { pilar, json, scala } for output mode")
               return
           }
         case "-a" | "--antlr4" =>
@@ -151,7 +153,7 @@ final class Cli {
             case Some(arg) =>
               try arg.toString catch {
                 case t: Throwable =>
-                  println(s"Invalid integer for max errors: 'arg'")
+                  println(s"Invalid integer for max errors: '$arg'")
                   return
               }
             case _ =>

@@ -24,6 +24,10 @@
             <option value="$PROJECT_DIR$/core/sireum-util-reflect" />
             <option value="$PROJECT_DIR$/core/sireum-util-reflect/project" />
             <option value="$PROJECT_DIR$/core/sireum-util/project" />
+            <option value="$PROJECT_DIR$/js" />
+            <option value="$PROJECT_DIR$/js/project" />
+            <option value="$PROJECT_DIR$/jvm" />
+            <option value="$PROJECT_DIR$/jvm/project" />
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>

@@ -311,7 +311,11 @@ object Builder {
     }
   }
 
-  def apply(input: String, reporter: Reporter = ConsoleReporter): Option[Model] = {
+  def apply(input: String,
+            maxErrors: Natural = 0,
+            reporter: Reporter = ConsoleReporter): Option[Model] = {
+    class ParsingEscape extends RuntimeException
+
     import org.sireum.pilar.parser.Antlr4PilarLexer
 
     val sr = new StringReader(input)
@@ -324,8 +328,8 @@ object Builder {
     val errorHandler = parser.getErrorHandler
     parser.setErrorHandler(new BailErrorStrategy())
     var success = true
-    val mf =
-      try parser.modelFile()
+    val mfOpt: Option[ModelFileContext] =
+      try Some(parser.modelFile())
       catch {
         case _: ParseCancellationException =>
           tokens.reset()
@@ -333,6 +337,7 @@ object Builder {
           parser.getInterpreter.setPredictionMode(PredictionMode.LL)
           parser.setErrorHandler(errorHandler)
           parser.addErrorListener(new BaseErrorListener {
+            var errors = 0
             override def syntaxError(recognizer: Recognizer[_, _],
                                      offendingSymbol: Any,
                                      line: PosInteger,
@@ -343,11 +348,20 @@ object Builder {
               val token = offendingSymbol.asInstanceOf[Token]
               val start = token.getStartIndex
               reporter.error(line, charPositionInLine, start, msg + s" (token=${token.getType})")
+              errors += 1
+              if (maxErrors > 0 && errors >= maxErrors) {
+                throw new ParsingEscape
+              }
             }
           })
-          parser.modelFile()
+          try Some(parser.modelFile())
+          catch {
+            case _: ParsingEscape =>
+              None
+          }
       }
-    if (success) Some(new Builder().build(mf.model())(reporter))
+    if (success)
+      mfOpt.map(mf => new Builder().build(mf.model())(reporter))
     else None
   }
 

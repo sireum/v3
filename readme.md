@@ -20,4 +20,4 @@ Assembling a Fat Jar
 ====================
 
 1. Run: `bin/sbt-launch.sh assembly`
-   The jar will be located at `target-jvm/scala-2.11/sireum-v3.jar`
+   The jar will be located at `jvm/target/scala-2.11/sireum-v3.jar`
