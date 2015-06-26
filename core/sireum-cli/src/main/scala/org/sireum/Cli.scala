@@ -98,9 +98,33 @@ final class Cli {
   }
 
   def parsePilarParserOption(args: Array[String], index: Int, o: Product = PilarParserOption()): Unit = {
+    val option = o.asInstanceOf[PilarParserOption]
+    def printUsage(): Unit = {
+      println(
+        // @formatter:off
+        s"""
+           |Pilar Parser
+           |... and pretty printer and JSON de/serializer
+           |
+           |Usage: sireum pilar parser <file-1> ... <file-N>
+           |
+           |Options:
+           | -a,  --antlr4            Use ANTLR4 Pilar parser instead of a hand-written one
+           | -e,  --max-errors        Maximum number of errors found before parsing stop
+           |                            Default: ${option.maxErrors}
+           | -i,  --input-mode        Input mode { auto, pilar, json, scala }
+           |                            Default: ${option.inputMode}
+           |-in,  --standard-input    Use standard input stream
+           | -f,  --output-file       Output file (if unspecified, use standard output)
+           | -o,  --output-mode       Output mode { pilar, json, scala }
+           |                            Default: ${option.outputMode}
+           | -h,  --help              Display usage information
+        """.stripMargin.trim
+        // @formatter:on
+      )
+    }
     val len = args.length
     var foundHelp = false
-    val option = o.asInstanceOf[PilarParserOption]
 
     var i = index
     var processingOptions = true
@@ -174,33 +198,9 @@ final class Cli {
       i += 1
     }
 
-    if (foundHelp) {
-      println(
-        // @formatter:off
-        s"""
-           |Pilar Parser
-           |... and pretty printer and JSON de/serializer
-           |
-           |Usage: sireum pilar parser <file-1> ... <file-N>
-           |
-           |Options:
-           | -a,  --antlr4            Use ANTLR4 Pilar parser instead of a hand-written one
-           | -e,  --max-errors        Maximum number of errors found before parsing stop
-           |                            Default: ${option.maxErrors}
-           | -i,  --input-mode        Input mode { auto, pilar, json, scala }
-           |                            Default: ${option.inputMode}
-           |-in,  --standard-input    Use standard input stream
-           | -f,  --output-file       Output file (if unspecified, use standard output)
-           | -o,  --output-mode       Output mode { pilar, json, scala }
-           |                            Default: ${option.outputMode}
-           | -h,  --help              Display usage information
-        """.stripMargin.trim
-        // @formatter:on
-      )
-      return
+    if (foundHelp || org.sireum.pilar.parser.Parser.run(option)) {
+      printUsage()
     }
-
-    org.sireum.pilar.parser.Parser.run(option)
   }
 
   private def select(args: Array[String], index: Int, m: M, o: Product): Unit = {

@@ -34,7 +34,8 @@ import org.sireum.pilar.ast._
 import org.sireum.util._
 
 object Parser {
-  def run(option: PilarParserOption): Unit = {
+  def run(option: PilarParserOption): Boolean = {
+    var printUsage = false
     val im = PilarParserOption.InputMode
     val om = PilarParserOption.OutputMode
 
@@ -131,11 +132,11 @@ object Parser {
     }
 
     if (ok && !stdin && inputs.isEmpty) {
-      ePrintln("No input to process")
+      printUsage = true
       ok = false
     }
 
-    if (!ok) return
+    if (!ok) return printUsage
 
     val inputStrings =
       if (stdin)
@@ -178,7 +179,7 @@ object Parser {
 
     if (models.isEmpty) {
       ePrintln("No result produced")
-      return
+      return false
     }
 
     val model =
@@ -202,6 +203,8 @@ object Parser {
         oPrintln(s"Written result to ${option.outputFile.get}")
       case _ => oPrintln(result)
     }
+
+    printUsage
   }
 
   def ePrintln(s: String): Unit = {
