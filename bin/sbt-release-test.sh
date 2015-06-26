@@ -1,2 +1,3 @@
-SIREUM_RELEASE=true SBT_DIR=sbt bin/sbt-launch.sh clean compile test:compile test
+#!/usr/bin/env bash
+SIREUM_RELEASE=true bin/sbt-launch.sh clean compile test:compile test
 

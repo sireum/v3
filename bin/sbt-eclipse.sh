@@ -1,2 +1,3 @@
-SBT_DIR=sbt bin/sbt-launch.sh eclipse
+#!/usr/bin/env bash
+bin/sbt-launch.sh eclipse
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [[ "$SIREUM_HOME" = "" ]] ; then
    echo "SIREUM_HOME is not set ...aborting"
    exit
@@ -8,7 +8,7 @@ if [[ ! -f ${SBT_JAR} ]] ; then
     echo "Could not find Sbt launch jar (SBT_JAR=$SBT_JAR) ...aborting."
     exit
 fi
-: ${SBT_DIR:=~/.sbt-cache}
+: ${SBT_DIR:=sbt}
 mkdir -p ${SBT_DIR}
 if [[ ! -d ${SBT_DIR} ]] ; then
     echo "Sbt cache directory is not found (SBT_DIR=$SBT_DIR) ...aborting."
