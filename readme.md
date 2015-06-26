@@ -32,7 +32,7 @@ Let `sireum` be an alias for: `java -jar path/to/sireum-v3.jar`
 e.g., in bash:
 
 ```bash
-alias sireum="jvm/target/scala-2.11/sireum-v3.jar"
+alias sireum="java -jar jvm/target/scala-2.11/sireum-v3.jar"
 ```
 
 Run: `sireum`
