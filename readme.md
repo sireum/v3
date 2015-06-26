@@ -6,6 +6,8 @@ All Platforms
 
 * [Node.js](https://nodejs.org)
 
+* Tools: `git`, `unzip`, `wget`
+
 Windows
 -------
 
