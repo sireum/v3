@@ -81,3 +81,25 @@ Options:
                             Default: json
  -h,  --help              Display usage information
 ```
+
+Try:
+
+```bash
+> sireum p p -i pilar -in↩
+def foo(x) {↩
+#L1 return x;↩
+}↩
+⌃D
+```
+
+Output:
+
+```
+{".class":"Model","elements":[{".class":"ProcedureDecl","id":{".class":"Id","val
+ue":"foo"},"params":[{".class":"ParamDecl","id":{".class":"Id","value":"x"},"ann
+otations":[]}],"bodyOpt":[{".class":"ProcedureBody","locals":[],"locations":[{".
+class":"BlockLocation","label":{".class":"Id","value":"L1"},"actions":[],"jump":
+{".class":"ReturnJump","expOpt":[{".class":"IdExp","id":{".class":"Id","value":"
+x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
+}
+```
