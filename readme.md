@@ -83,17 +83,14 @@ Options:
 ```
 
 Try:
-
-```bash
-> sireum p p -i pilar -in↩
+```
+prompt> sireum p p -i pilar -in↩
 def foo(x) {↩
 #L1 return x;↩
 }↩
 ⌃D
 ```
-
 Output:
-
 ```
 {".class":"Model","elements":[{".class":"ProcedureDecl","id":{".class":"Id","val
 ue":"foo"},"params":[{".class":"ParamDecl","id":{".class":"Id","value":"x"},"ann
