@@ -61,7 +61,7 @@ Available mode:
 parser   Pilar parser, pretty printer, JSON de/serializer
 ```
 
-More example: `sireum p p -h`
+More example: `sireum p p`
 
 ```
 Pilar Parser
@@ -90,7 +90,7 @@ def foo(x) {↩
 }↩
 ⌃D
 ```
-Output:
+Output (line-wrapped per 80 characters):
 ```
 {".class":"Model","elements":[{".class":"ProcedureDecl","id":{".class":"Id","val
 ue":"foo"},"params":[{".class":"ParamDecl","id":{".class":"Id","value":"x"},"ann
