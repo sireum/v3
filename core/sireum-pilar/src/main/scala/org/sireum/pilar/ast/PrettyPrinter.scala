@@ -28,8 +28,15 @@ package org.sireum.pilar.ast
 import org.sireum.pilar.parser.FastParser
 import org.sireum.util._
 
+object PrettyPrinter {
+  def apply(m: Model): String = {
+    val sb = new StringBuilder
+    new PrettyPrinter(sb).print(m)
+    sb.toString().trim
+  }
+}
+
 final class PrettyPrinter(sb: StringBuilder) {
-  private type SB = StringBuilder
 
   def print(m: Model, indent: Natural = 0): Unit = {
     implicit val _indent = indent
@@ -42,7 +49,7 @@ final class PrettyPrinter(sb: StringBuilder) {
     for (e <- m.elements) {
       println()
       printIndent(indent)
-      print(m)
+      print(e, indent)
     }
   }
 
@@ -66,15 +73,17 @@ final class PrettyPrinter(sb: StringBuilder) {
 
   def print(raw: Raw): Unit = {
     val s = raw.value
-    if (s.forall(isSimpleLITTrailingChar)) {
-      sb.append('\'')
-      sb.append(s)
-    } else {
-      sb.append('"')
-      sb.append(
-        s.replaceAll("\\", """\\\\""").
-          replaceAll("\"", """\\""""))
-      sb.append('"')
+    if (s != "") {
+      if (s.forall(isSimpleLITTrailingChar)) {
+        sb.append('\'')
+        sb.append(s)
+      } else {
+        sb.append('"')
+        sb.append(
+          s.replaceAll("\\", """\\\\""").
+            replaceAll("\"", """\\""""))
+        sb.append('"')
+      }
     }
   }
 
@@ -86,7 +95,7 @@ final class PrettyPrinter(sb: StringBuilder) {
 
   def print(gvd: GlobalVarDecl, indent: Natural): Unit = {
     sb.append("global var ")
-    sb.append(gvd.id)
+    print(gvd.id)
     if (gvd.annotations.size > 1) {
       for (a <- gvd.annotations) {
         println()
@@ -110,21 +119,16 @@ final class PrettyPrinter(sb: StringBuilder) {
     print(pd.id)
     sb.append('(')
     pd.params.size match {
-      case 0 => sb.append(')')
+      case 0 =>
       case _ =>
-        val paramIndent = indent + (sb.size - pos) / 2 + 1
-        println()
-        printIndent(paramIndent)
-        print(pd.params.head, paramIndent)
+        print(pd.params.head)
 
         for (p <- pd.params.tail) {
-          sb.append(',')
-          println()
-          printIndent(paramIndent)
-          print(p, paramIndent)
+          sb.append(", ")
+          print(p)
         }
-        sb.append(')')
     }
+    sb.append(')')
 
     for (a <- pd.annotations) {
       println()
@@ -146,19 +150,20 @@ final class PrettyPrinter(sb: StringBuilder) {
       sb.append(" {")
     }
 
-    println()
-    printIndent(indent + 1)
-    sb.append("var")
-
-    for (local <- body.locals) {
+    if (body.locals.nonEmpty) {
       println()
-      printIndent(indent + 2)
-      print(local, indent + 2)
+      printIndent(indent + 1)
+      sb.append("var")
+
+      for (local <- body.locals) {
+        println()
+        printIndent(indent + 2)
+        print(local, indent + 2)
+      }
     }
 
-    println()
-
     for (l <- body.locations) {
+      println()
       println()
       printIndent(indent + 1)
       print(l, indent + 1)
@@ -170,26 +175,16 @@ final class PrettyPrinter(sb: StringBuilder) {
     println()
   }
 
-  @inline
-  def print(p: ParamDecl, indent: Natural): Unit = {
-    sb.append(p.id)
-    if (p.annotations.size > 1) {
-      for (a <- p.annotations) {
-        println()
-        printIndent(indent + 1)
-        print(a)
-      }
-    } else {
-      for (a <- p.annotations) {
-        sb.append(' ')
-        print(a)
-      }
+  def print(p: ParamDecl): Unit = {
+    print(p.id)
+    for (a <- p.annotations) {
+      sb.append(' ')
+      print(a)
     }
   }
 
-  @inline
   def print(lvd: LocalVarDecl, indent: Natural): Unit = {
-    sb.append(lvd.id)
+    print(lvd.id)
     if (lvd.annotations.size > 1) {
       for (a <- lvd.annotations) {
         println()
@@ -205,7 +200,6 @@ final class PrettyPrinter(sb: StringBuilder) {
     sb.append(';')
   }
 
-  @inline
   def print(l: Location, indent: Natural): Unit = {
     sb.append('#')
     print(l.label)
@@ -230,6 +224,7 @@ final class PrettyPrinter(sb: StringBuilder) {
         sb.append(" goto ")
         print(target)
         sb.append(';')
+
       case BlockLocation(_, actions, jump, _) =>
         for (a <- actions) {
           printIndent(indent + 1)
@@ -237,11 +232,10 @@ final class PrettyPrinter(sb: StringBuilder) {
           println()
         }
         printIndent(indent + 1)
-        print(jump, indent)
+        print(jump, indent + 1)
     }
   }
 
-  @inline
   def print(a: Action, indent: Natural): Unit = {
     a match {
       case AssignAction(lhs, rhs, _) =>
@@ -267,7 +261,6 @@ final class PrettyPrinter(sb: StringBuilder) {
     sb.append(';')
   }
 
-  @inline
   def print(j: Jump, indent: Natural): Unit = {
     j match {
       case GotoJump(target, _) =>
@@ -281,14 +274,17 @@ final class PrettyPrinter(sb: StringBuilder) {
         sb.append(" else ")
         print(fTarget)
       case ReturnJump(expOpt, _) =>
-        sb.append("return ")
-        expOpt.foreach(print)
+        sb.append("return")
+        if (expOpt.isDefined) {
+          sb.append(' ')
+          print(expOpt.get)
+        }
       case SwitchJump(exp, cases, _) =>
         sb.append("switch ")
         print(exp)
         for (SwitchCase(expOpt, target) <- cases) {
           println()
-          printIndent(indent)
+          printIndent(indent + 1)
           expOpt match {
             case Some(e) =>
               sb.append("case ")
@@ -313,7 +309,6 @@ final class PrettyPrinter(sb: StringBuilder) {
     sb.append(';')
   }
 
-  @inline
   def print(es: ISeq[Exp]): Unit = {
     sb.append('(')
     if (es.nonEmpty) {
@@ -327,7 +322,6 @@ final class PrettyPrinter(sb: StringBuilder) {
     sb.append(')')
   }
 
-  @inline
   def print(e: Exp): Unit = e match {
     case LiteralExp(id, raw) =>
       print(id)
@@ -352,6 +346,8 @@ final class PrettyPrinter(sb: StringBuilder) {
         print(right2)
       }
     case ExtExp(exp, args) =>
+      print(exp)
+      print(args)
   }
 
   @inline
@@ -375,6 +371,11 @@ final class PrettyPrinter(sb: StringBuilder) {
   @inline
   private def isSimpleID(s: String) = {
     import FastParser._
-    peekOneStar(s.charAt, 0, isJavaLetter, isJavaDigitOrLetter)
+    peekOneStar(peek(s), 0, isJavaLetter, isJavaDigitOrLetter)
   }
+
+  @inline
+  private def peek(s: String)(index: Natural): NaturalSentinel =
+    if (index < s.length) s.charAt(index) else naturalSentinel
+
 }

@@ -23,20 +23,39 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.pilar.ast
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.pilar.ast.{PrettyPrinterTest, AstTest}
-import org.sireum.pilar.parser.{Antlr4PilarParserTest, FastParserTest}
+import org.sireum.test._
+import utest._
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[FastParserTest],
-    classOf[Antlr4PilarParserTest],
-    classOf[AstTest],
-    classOf[PrettyPrinterTest]
-  )
-)
-final class CoreRegressionTestSuite
+object PrettyPrinterJsTest extends UTestTestFramework {
+
+  def main(args: Array[String]): Unit = {
+    generate()
+  }
+
+  override lazy val provider: TestDefProvider =
+    new PrettyPrinterTestDefProvider(this)
+
+  def tests = TestSuite {
+
+    // This uTest list is auto-generated from data in
+    // PrettyPrinterTestDefProvider
+
+    "FPModel1" - {
+      test("FPModel1")
+    }
+
+    "FPModel2" - {
+      test("FPModel2")
+    }
+
+    "FPModel3" - {
+      test("FPModel3")
+    }
+
+    "Model1" - {
+      test("Model1")
+    }
+  }
+}

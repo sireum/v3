@@ -1,8 +1,6 @@
 To-Do
 =====
 
-* Implement pretty printer
-
 * Preserves location infos in Model when de/serializing to JSON
 
 * Remove usages of deprecated scala.reflect annotation API in sireum-util-reflect/.../Reflection.scala

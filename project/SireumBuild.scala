@@ -73,7 +73,7 @@ object SireumBuild extends Build {
   lazy val sireumJs =
     Project(
       id = "sireum-js",
-      settings = sireumJsSettings ++
+      settings = sireumSettings ++
         Seq(
           name := "Sireum.js",
           depDot := {
