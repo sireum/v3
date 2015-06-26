@@ -1,3 +1,3 @@
-#!/usr/bin/env bash
+#!/bin/bash
 bin/sbt-launch.sh eclipse
 

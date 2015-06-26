@@ -1,13 +1,19 @@
 Requirements
 ============
 
-* [Sireum v2](http://sireum.org) with the Build feature installed:
-
-  `sireum install Build`
-
-  and set `SIREUM_HOME` to Sireum v2 directory.
+All Platforms
+-------------
 
 * [Node.js](https://nodejs.org)
+
+Windows
+-------
+
+* [MSYS2](https://msys2.github.io)
+
+  ```bash
+  pacman -S git unzip wget
+  ```
 
 
 Building and Testing Sireum using Sbt

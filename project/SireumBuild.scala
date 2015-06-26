@@ -49,10 +49,16 @@ object SireumBuild extends Build {
 
   lazy val sireum = Project(
     id = "sireum",
-    settings = sireumSettings,
+    settings = sireumSettings ++ Seq(
+      name := "Sireum",
+      initialize := {
+        val required = "1.8"
+        val current = sys.props("java.specification.version")
+        assert(current == required, s"Unsupported Java version: $current (required: $required)")
+      }
+    ),
     base = file(".")
-  ).settings(name := "Sireum").
-    aggregate(sireumJvm, sireumJs)
+  ).aggregate(sireumJvm, sireumJs)
 
   lazy val sireumJvm =
     Project(
