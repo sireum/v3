@@ -49,6 +49,12 @@ Model(elements: Node.Seq[ModelElement],
       annotations: Node.Seq[Annotation] = Node.emptySeq)
   extends Node with Annotated {
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
+
+  def +(other: Model): Model = {
+    val r = Model(elements ++ other.elements, annotations ++ other.annotations)
+    r.nodeLocMap ++= other.nodeLocMap
+    r
+  }
 }
 
 

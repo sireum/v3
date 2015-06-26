@@ -25,10 +25,192 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.parser
 
+import java.io._
+import java.nio.file.Files
+import java.util.Random
+
 import org.sireum.option.PilarParserOption
+import org.sireum.pilar.ast._
+import org.sireum.util._
 
 object Parser {
   def run(option: PilarParserOption): Unit = {
+    val im = PilarParserOption.InputMode
+    val om = PilarParserOption.OutputMode
 
+    val stdin = option.standardInput
+
+    var ok = true
+    var inputs = ivectorEmpty[(PilarParserOption.InputMode.Type, File)]
+
+    val outputFile = option.outputFile.map { o =>
+      val f = new File(o)
+      val fParent = f.getParentFile
+      if (!fParent.exists()) {
+        ok = false
+        ePrintln(s"Output directory '${fParent.getPath}' does not exist")
+      } else if (f.exists()) {
+        oPrintln(s"Output file '$o'exists; it will be overwritten")
+      }
+      f
+    }
+
+    val inputMode =
+      option.inputMode match {
+        case im.Pilar | im.JSON | im.Scala => option.inputMode
+        case im.Auto =>
+          if (stdin) {
+            ePrintln(s"Cannot use input mode '${im.Auto}' for standard input")
+            oPrintln(s"Defaulting to '${im.Pilar}'")
+            im.Pilar
+          } else im.Auto
+        case mode =>
+          ePrintln(s"'$mode' is not a valid input mode")
+          if (stdin) ok = false
+          else oPrintln(s"Defaulting to '${im.Auto}'")
+          im.Auto
+      }
+
+    val maxErrors =
+      if (option.maxErrors < 0) {
+        ePrintln("Maximum number of errors cannot be lower than zero")
+        val n = new Random().nextInt(Int.MaxValue) + 1
+        oPrintln(s"Defaulting to '$n'")
+        n
+      } else {
+        option.maxErrors
+      }
+
+    val outputMode =
+      if (om.elements.contains(option.outputMode))
+        option.outputMode
+      else {
+        ePrintln(s"Output mode '${option.outputMode}' is not recognized")
+        val m = om.elements(new Random().nextInt(om.elements.size))
+        oPrintln(s"Defaulting to '$m'")
+        m
+      }
+
+    if (option.inputs.nonEmpty) {
+      if (stdin) {
+        oPrintln("Using standard input stream")
+        oPrintln(s"Ignoring input files:")
+        option.inputs.foreach(oPrintln)
+      } else {
+        for (i <- option.inputs) {
+          val f = new File(i)
+          if (f.exists()) {
+            val mode =
+              if (inputMode == im.Auto) {
+                val fname = f.getName
+                val i = fname.lastIndexOf('.')
+                if (i <= 0) im.Auto
+                else {
+                  fname.substring(i + 1) match {
+                    case "plr" => im.Pilar
+                    case "json" => im.JSON
+                    case "sc" | "scala" => im.Scala
+                    case _ => im.Auto
+                  }
+                }
+              } else {
+                option.inputMode
+              }
+            if (mode == im.Auto) {
+              ePrintln(s"Cannot guess input mode for '$i' based on its file extension")
+              oPrintln("Only .plr, .json, .sc, or .scala are recognized")
+              ok = false
+            }
+            inputs = inputs :+(mode, f)
+          } else {
+            ok = false
+            ePrintln(s"Input file '$i' does not exist")
+          }
+        }
+      }
+    }
+
+    if (ok && !stdin && inputs.isEmpty) {
+      ePrintln("No input to process")
+      ok = false
+    }
+
+    if (!ok) return
+
+    val inputStrings =
+      if (stdin)
+        ivector((inputMode, io.Source.stdin.getLines().mkString(System.lineSeparator())))
+      else
+        inputs.map(f => (f._1, new String(Files.readAllBytes(f._2.toPath))))
+
+
+    val modelOpts =
+      inputStrings.zipWithIndex.par.map { t =>
+        val ((mode, text), i) = t
+        val modelOpt =
+          mode match {
+            case im.Pilar =>
+              if (option.antlr4) {
+                Builder(text, maxErrors)
+              } else {
+                FastParser(text, maxErrors)
+              }
+            case im.JSON =>
+              try {
+                Some(Pickling.unpickle[Model](text))
+              } catch {
+                case t: Throwable =>
+                  ePrintln("Ill-formed JSON input")
+                  None
+              }
+            case im.Scala =>
+              try {
+                Some(org.sireum.util.reflect.Reflection.eval[Model](text))
+              } catch {
+                case t: Throwable =>
+                  ePrintln("Ill-formed Scala input")
+                  None
+              }
+          }
+        (modelOpt, i)
+      }
+    val models = modelOpts.toVector.sortBy(_._2).flatMap(_._1)
+
+    if (models.isEmpty) {
+      ePrintln("No result produced")
+      return
+    }
+
+    val model =
+      if (models.size == 1) models.head
+      else models.foldLeft(Model(Node.emptySeq))(_ + _)
+
+    val result =
+      outputMode match {
+        case om.Pilar =>
+          PrettyPrinter(model)
+        case om.Scala =>
+          s"""import org.sireum.pilar.ast._
+             |${ProductUtil.toScalaString(model)}
+         """.stripMargin
+        case om.JSON =>
+          Pickling.pickle(model)
+      }
+    outputFile match {
+      case Some(f) =>
+        Files.write(f.toPath, result.getBytes)
+        oPrintln(s"Written result to ${option.outputFile.get}")
+      case _ => oPrintln(result)
+    }
+  }
+
+  def ePrintln(s: String): Unit = {
+    scala.Console.err.println(s)
+    scala.Console.err.flush()
+  }
+
+  def oPrintln(s: String): Unit = {
+    scala.Console.out.println(s)
+    scala.Console.out.flush()
   }
 }

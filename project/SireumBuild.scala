@@ -60,6 +60,7 @@ object SireumBuild extends Build {
       settings = sireumJvmSettings ++ assemblySettings ++
         Seq(
           name := "Sireum.jvm",
+          mainClass in assembly := Some("org.sireum.Cli"),
           assemblyJarName in assembly := "sireum-v3.jar",
           test in assembly := {},
           depDot := {
@@ -182,8 +183,8 @@ object SireumBuild extends Build {
 
   // Jvm Projects
   val pilarParserAntlr4PI = new ProjectInfo("sireum-pilar-parser-antlr4", CORE_DIR, Seq(), utilPI, pilarPI)
-  val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI)
-  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, cliPI)
+  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI)
+  val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, utilReflectPI)
   lazy val pilarParserAntlr4 = toSbtProject(pilarParserAntlr4PI, sireumJvmSettings)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
   lazy val cli = toSbtProject(cliPI, sireumJvmSettings)

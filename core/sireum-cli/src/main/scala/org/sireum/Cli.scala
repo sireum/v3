@@ -135,9 +135,9 @@ final class Cli {
         case "-o" | "--output-mode" =>
           i += 1
           args.at(i) match {
-            case Some("pilar") => option.inputMode = "pilar"
-            case Some("json") => option.inputMode = "json"
-            case Some("scala") => option.inputMode = "scala"
+            case Some("pilar") => option.outputMode = "pilar"
+            case Some("json") => option.outputMode = "json"
+            case Some("scala") => option.outputMode = "scala"
             case Some(arg) =>
               println(s"Only either { pilar, json, scala } is allowed for output mode instead of '$arg'")
               return
@@ -159,7 +159,11 @@ final class Cli {
             case _ =>
               println("Expected an integer value for max errors")
           }
-        case _ => processingOptions = false
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            println(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
       }
 
       if (processingOptions) i += 1
@@ -180,12 +184,15 @@ final class Cli {
            |Usage: sireum pilar parser <file-1> ... <file-N>
            |
            |Options:
-           | -a,  --antlr4            Use ANTLR4 Pilar parser instead of the hand-written one
-           | -e,  --max-errors        Maximum number of errors found before parsing stop; default: ${option.maxErrors}
-           | -i,  --input-mode        Input mode { auto, pilar, json, scala }; default: ${option.inputMode}
+           | -a,  --antlr4            Use ANTLR4 Pilar parser instead of a hand-written one
+           | -e,  --max-errors        Maximum number of errors found before parsing stop
+           |                            Default: ${option.maxErrors}
+           | -i,  --input-mode        Input mode { auto, pilar, json, scala }
+           |                            Default: ${option.inputMode}
            |-in,  --standard-input    Use standard input stream
-           | -f,  --output-file       Output file (if unspecified, use standard output stream)
-           | -o,  --output-mode       Output mode { pilar, json, scala }; default: ${option.outputMode}
+           | -f,  --output-file       Output file (if unspecified, use standard output)
+           | -o,  --output-mode       Output mode { pilar, json, scala }
+           |                            Default: ${option.outputMode}
            | -h,  --help              Display usage information
         """.stripMargin.trim
         // @formatter:on

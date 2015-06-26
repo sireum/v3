@@ -53,6 +53,6 @@ abstract class Enum(name: String = "") {
 
   final def elements = {
     isFrozen = true
-    values.keys
+    names
   }
 }

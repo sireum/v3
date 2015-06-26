@@ -41,7 +41,7 @@ final class FastParser(input: String,
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
-  assert(offset < _max)
+  assert(offset <= _max)
 
   def parseModelFile(): Option[Model] = parseWithEOF(parseModel())
 

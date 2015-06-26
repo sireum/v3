@@ -82,7 +82,7 @@ final case class PilarParserOption(@Opt(shortKey = Some("in"), description = "Us
                                    var maxErrors: Int = 10,
 
                                    @Args(name = "file", description = "Input files")
-                                   var inputs: ISeq[String] = Vector("a", "b", "c"))
+                                   var inputs: ISeq[String] = Vector())
 
 object PilarParserOption {
 
