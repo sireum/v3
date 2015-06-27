@@ -81,6 +81,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     echo
     wget ${NODE_DROP_URL}
     cd ../..
+    echo "${NODE_VERSION}" > node/VER
   else
     NODE_DROP="${NODE_DROP_URL##*/}"
     NODE_DIR="${NODE_DROP%.tar.gz}"
