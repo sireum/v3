@@ -204,6 +204,11 @@ object Reflection {
 
   def annotation(a: scala.reflect.runtime.universe.Annotation,
                  m: Mirror = mirror): Annotation = {
+    def isJavaAnnotation(t: Tree) =
+      !(t.tpe <:< productType) && t.children.tail.forall {
+        case _: AssignOrNamedArg => true
+        case _ => false
+      }
     def tree(tr: Tree): Any = {
       val tipe = tr.tpe
       if (tipe != null && tipe =:= noneType) return None
@@ -226,10 +231,7 @@ object Reflection {
       }
     }
     val aType = a.tree.tpe
-    if (a.tree.children.tail.forall {
-      case _: AssignOrNamedArg => true
-      case _ => false
-    }) {
+    if (isJavaAnnotation(a.tree)) {
       Annotation(aType, a.tree.children.tail.map({
         case AssignOrNamedArg(Ident(name), rhs) =>
           AnnotationArg(name.decodedName.toString, tree(rhs))
