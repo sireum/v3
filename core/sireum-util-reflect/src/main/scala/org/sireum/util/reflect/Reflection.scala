@@ -49,6 +49,11 @@ object Reflection {
   final val doubleType = typeOf[Double]
   final val bigIntType = typeOf[BigInt]
   final val stringType = typeOf[String]
+  final val productType = typeOf[Product].erasure
+  final val arrayType = typeOf[Array[_]].erasure
+  final val seqType = typeOf[CSeq[_]].erasure
+  final val noneType = typeOf[None.type]
+
 
   def typeCheck(t: Tree, m: Mirror = mirror): Tree = {
     import scala.tools.reflect.ToolBox
@@ -197,53 +202,64 @@ object Reflection {
     result
   }
 
-  def annotation(
-                  a: scala.reflect.runtime.universe.Annotation,
-                  m: Mirror = mirror): Annotation = {
-    require(a.scalaArgs.isEmpty)
-
-    val clazz = getClassOfType(a.tree.tpe)
-    var args = ivectorEmpty[AnnotationArg]
-    for (arg <- a.javaArgs)
-      arg match {
-        case (n, a2: scala.reflect.runtime.universe.Annotation) =>
-          args :+= AnnotationArg(n.decodedName.toString, annotation(a2))
-        case (n, arg2) =>
-          args :+= AnnotationArg(n.decodedName.toString, annArgument(arg2, m))
+  def annotation(a: scala.reflect.runtime.universe.Annotation,
+                 m: Mirror = mirror): Annotation = {
+    def tree(tr: Tree): Any = {
+      val tipe = tr.tpe
+      if (tipe != null && tipe =:= noneType) return None
+      tr match {
+        case Literal(Constant(v)) => v
+        case Apply(fun, args) =>
+          tr.tpe match {
+            case t if t <:< arrayType =>
+              Array(args.map(tree): _*)
+            case t if t <:< seqType =>
+              Vector(args.map(tree): _*)
+            case t if t <:< productType =>
+              getClassOfType(t).getConstructors()(0).
+                newInstance(args.map(tree).map(_.asInstanceOf[AnyRef]): _*)
+          }
+        case AssignOrNamedArg(_, rhs) =>
+          tree(rhs)
+        case _ =>
+          sys.error("Unhandled reflection tree: " + showRaw(tr))
       }
-
-    assert(classOf[java.lang.annotation.Annotation].isAssignableFrom(clazz))
-    Annotation(clazz.asInstanceOf[Class[java.lang.annotation.Annotation]], args)
-  }
-
-  private def annArgument(arg: JavaArgument, m: Mirror): Any = {
-    arg match {
-      case ArrayArgument(a) =>
-        a.map(annArgument(_, m))
-      case LiteralArgument(Constant(v: Type)) =>
-        m.runtimeClass(v)
-      case LiteralArgument(Constant(v: Symbol)) =>
-        val c = v.owner.asClass
-        m.runtimeClass(c).getDeclaredField(v.name.toString).get(null)
-      case LiteralArgument(Constant(v)) =>
-        v
+    }
+    val aType = a.tree.tpe
+    if (a.tree.children.tail.forall {
+      case _: AssignOrNamedArg => true
+      case _ => false
+    }) {
+      Annotation(aType, a.tree.children.tail.map({
+        case AssignOrNamedArg(Ident(name), rhs) =>
+          AnnotationArg(name.decodedName.toString, tree(rhs))
+      }))
+    } else if (aType <:< productType) {
+      val cc =
+        try CaseClass.caseClassType(aType, processAnnotations = false)
+        catch {
+          case t: Throwable =>
+            sys.error("Only support case classes (or Java annotation) as annotation type")
+        }
+      Annotation(aType, cc.params.zip(a.tree.children.tail).map { p =>
+        val (param, arg) = p
+        AnnotationArg(param.name, tree(arg))
+      })
+    } else {
+      sys.error("Unhandled annotation type: " + showRaw(a.tree))
     }
   }
 
-  case class Annotation(
-                         clazz: Class[java.lang.annotation.Annotation],
-                         params: ISeq[AnnotationArg])
+  case class Annotation(tipe: Type,
+                        params: ISeq[AnnotationArg])
 
-  case class AnnotationArg(
-                            name: String,
-                            value: Any)
+  case class AnnotationArg(name: String,
+                           value: Any)
 
-  case class CaseClass(
-                        className: String,
-                        tipe: Type,
-                        annotations: ISeq[Reflection.Annotation],
-                        private[Reflection] var _params: ISeq[CaseClass.Param],
-                        private[Reflection] var _properties: IMap[Any, Any]) {
+  case class CaseClass(tipe: Type,
+                       annotations: ISeq[Reflection.Annotation],
+                       private[Reflection] var _params: ISeq[CaseClass.Param],
+                       private[Reflection] var _properties: IMap[Any, Any]) {
     def params = _params
 
     def properties = _properties
@@ -276,8 +292,8 @@ object Reflection {
         caseClassType(getTypeOfClass(c), processAnnotations, m))
 
     @inline
-    def caseClassType(tipe: Type, procesAnnotations: Boolean): CaseClass = {
-      caseClassType(tipe, procesAnnotations, mirror)
+    def caseClassType(tipe: Type, processAnnotations: Boolean): CaseClass = {
+      caseClassType(tipe, processAnnotations, mirror)
     }
 
     def caseClassType(tipe: Type, processAnnotations: Boolean, m: Mirror): CaseClass = {
@@ -299,7 +315,7 @@ object Reflection {
       val anns =
         if (processAnnotations) ts.annotations.toVector.map(annotation(_, m))
         else ivectorEmpty
-      CaseClass(fullName(tipe), tipe, anns, params, imapEmpty[Any, Any])
+      CaseClass(tipe, anns, params, imapEmpty[Any, Any])
     }
 
     def caseClassObject[T <: AnyRef with Product](t: T, processAnnotations: Boolean,

@@ -69,7 +69,7 @@ object CaseClassHelperGen {
         toSeq.sortBy(_.asClass.fullName)
     ) {
       val cc = reflect.Reflection.CaseClass.
-        caseClassType(c.asType.toType, procesAnnotations = false)
+        caseClassType(c.asType.toType, processAnnotations = false)
       val typeName = name(cc.tipe)
 
       val stCaseFrom = stg.getInstanceOf("caseFrom").

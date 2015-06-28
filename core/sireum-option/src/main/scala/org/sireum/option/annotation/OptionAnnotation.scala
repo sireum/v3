@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.option.annotation
 
 import scala.annotation.StaticAnnotation
+import scala.annotation.meta.getter
 
 sealed trait OptionAnnotation extends StaticAnnotation {
   def description: String
@@ -46,23 +47,28 @@ final case class Main(name: String,
                       handlerObject: String)
   extends NamedOptionAnnotation
 
+@getter
 final case class Opt(shortKey: Option[String],
                      description: String)
   extends OptionAnnotation
 
+@getter
 final case class GroupOpt(shortKey: Option[String],
                           description: String,
                           groupName: String)
   extends OptionAnnotation
 
+@getter
 final case class Arg(name: String,
                      description: String)
   extends NamedOptionAnnotation
 
+@getter
 final case class ArgOpt(name: String,
                         description: String)
   extends NamedOptionAnnotation
 
+@getter
 final case class Args(name: String,
                       description: String)
   extends NamedOptionAnnotation
