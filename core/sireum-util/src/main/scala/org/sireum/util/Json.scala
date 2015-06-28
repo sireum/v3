@@ -39,7 +39,7 @@ object Json {
       case v: Short => Js.Num(v)
       case v: Char => Js.Str(v.toString)
       case v: Int => Js.Num(v)
-      case v: Long => Js.Num(v)
+      case v: Long => Js.Str(v.toString)
       case v: Float => Js.Num(v)
       case v: Double => Js.Num(v)
     }
@@ -147,7 +147,7 @@ object Json {
 
   implicit final def toLong(v: Js.Value): Long =
     v match {
-      case Js.Num(d) => d.toLong
+      case Js.Str(s) => s.toLong
       case _ => sys.error("Unexpected Js.Value for a Long: " + v)
     }
 
@@ -178,9 +178,11 @@ object Json {
   implicit final def toLocationInfo(v: Js.Value): Option[LocationInfo] = v match {
     case a: Js.Arr =>
       if (a.value.isEmpty) None
-      val Seq(lineBegin, columnBegin, lineEnd, columnEnd, offset, length) =
-        a.value.map(toInt)
-      Some(LocationInfo(lineBegin, columnBegin, lineEnd, columnEnd, offset, length))
+      else {
+        val Seq(lineBegin, columnBegin, lineEnd, columnEnd, offset, length) =
+          a.value.map(toInt)
+        Some(LocationInfo(lineBegin, columnBegin, lineEnd, columnEnd, offset, length))
+      }
     case _ => sys.error("Unexpected Js.Value for a LocationInfo: " + v)
   }
 }
