@@ -25,10 +25,59 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-object Pickling {
-  def pickle(node: Node): String =
-    upickle.json.write(Json.from(node))
+import org.sireum.util._
+import upickle.Js
 
-  def unpickle[T <: Node](s: String): T =
-    Json.to[T](upickle.json.read(s))
+object Pickling {
+  final val locField = ".loc"
+
+  def pickle(node: Node): String = {
+    val jsObj = Json.from(node)
+    val o =
+      node match {
+        case node: Model if node.nodeLocMap.nonEmpty =>
+          val m = node.nodeLocMap
+          var locInfos = ivectorEmpty[Js.Arr]
+          Visitor.build({
+            case n: Node =>
+              val info =
+                m.get(n) match {
+                  case Some(li) => org.sireum.util.Json.fromLocationInfo(li)
+                  case _ => Js.Arr()
+                }
+              locInfos = locInfos :+ info
+              true
+          })(node)
+          Js.Obj(jsObj.value :+(locField, Js.Arr(locInfos: _*)): _*)
+        case _ => jsObj
+      }
+    upickle.json.write(o)
+  }
+
+  def unpickle[T <: Node](s: String): T = {
+    val (v, locInfos) =
+      upickle.json.read(s) match {
+        case o: Js.Obj if
+        o.value.last._1 == locField &&
+          o.value.head._2.asInstanceOf[Js.Str].value == "Model" =>
+          val a = o.value.last._2.asInstanceOf[Js.Arr]
+          (Js.Obj(o.value.dropRight(1): _*),
+            a.value.map(org.sireum.util.Json.toLocationInfo))
+        case o => (o, ivectorEmpty)
+      }
+    Json.to[T](v) match {
+      case m: Model if locInfos.nonEmpty =>
+        var i = 0
+        val nodeLocMap = MIdMap[Node, LocationInfo]()
+        Visitor.build({
+          case n: Node =>
+            nodeLocMap(n) = locInfos(i)
+            i += 1
+            true
+        })(m)
+        m.nodeLocMap = nodeLocMap
+        m.asInstanceOf[T]
+      case n => n
+    }
+  }
 }

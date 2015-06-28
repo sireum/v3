@@ -54,6 +54,30 @@ object AstJsTest extends UTestTestFramework {
       test("PicklingModel")
     }
 
+    "PicklingModelFastParsed1" - {
+      test("PicklingModelFastParsed1")
+    }
+
+    "PicklingModelFastParsed1Loc" - {
+      test("PicklingModelFastParsed1Loc")
+    }
+
+    "PicklingModelFastParsed2" - {
+      test("PicklingModelFastParsed2")
+    }
+
+    "PicklingModelFastParsed2Loc" - {
+      test("PicklingModelFastParsed2Loc")
+    }
+
+    "PicklingModelFastParsed3" - {
+      test("PicklingModelFastParsed3")
+    }
+
+    "PicklingModelFastParsed3Loc" - {
+      test("PicklingModelFastParsed3Loc")
+    }
+
     "RewriteAnnotationId" - {
       test("RewriteAnnotationId")
     }

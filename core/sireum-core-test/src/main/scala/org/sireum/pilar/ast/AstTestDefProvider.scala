@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
+import org.sireum.pilar.parser.{FastParserTestDefProvider, FastParser}
 import org.sireum.test._
 import org.sireum.util._
 
@@ -41,6 +42,18 @@ final class AstTestDefProvider(tf: TestFramework)
       Node.seq(
         Annotation(Id("object"), Raw("1")))
     )
+
+  lazy val modelFastParsed1 =
+    FastParser(
+      FastParserTestDefProvider.model1, createLocInfo = true).get
+
+  lazy val modelFastParsed2 =
+    FastParser(
+      FastParserTestDefProvider.model2, createLocInfo = true).get
+
+  lazy val modelFastParsed3 =
+    FastParser(
+      FastParserTestDefProvider.model3, createLocInfo = true).get
 
   override def testDefs: ISeq[TestDef] = ivector(
 
@@ -71,5 +84,45 @@ final class AstTestDefProvider(tf: TestFramework)
       import Pickling._
       unpickle[Model](pickle(model))
     }, model)
+    ,
+    EqualTest("PicklingModelFastParsed1", {
+      import Pickling._
+      unpickle[Model](pickle(modelFastParsed1))
+    }, modelFastParsed1)
+    ,
+    EqualTest("PicklingModelFastParsed1Loc", {
+      import Pickling._
+      collectLocInfos(unpickle[Model](pickle(modelFastParsed1)))
+    }, collectLocInfos(modelFastParsed1))
+    ,
+    EqualTest("PicklingModelFastParsed2", {
+      import Pickling._
+      unpickle[Model](pickle(modelFastParsed2))
+    }, modelFastParsed2)
+    ,
+    EqualTest("PicklingModelFastParsed2Loc", {
+      import Pickling._
+      collectLocInfos(unpickle[Model](pickle(modelFastParsed2)))
+    }, collectLocInfos(modelFastParsed2))
+    ,
+    EqualTest("PicklingModelFastParsed3", {
+      import Pickling._
+      unpickle[Model](pickle(modelFastParsed3))
+    }, modelFastParsed3)
+    ,
+    EqualTest("PicklingModelFastParsed3Loc", {
+      import Pickling._
+      collectLocInfos(unpickle[Model](pickle(modelFastParsed3)))
+    }, collectLocInfos(modelFastParsed3))
   )
+
+  private def collectLocInfos(m: Model): ISeq[Option[LocationInfo]] = {
+    var r = ivectorEmpty[Option[LocationInfo]]
+    Visitor.build({
+      case n: Node =>
+        r = r :+ m.nodeLocMap.get(n)
+        true
+    })(m)
+    r
+  }
 }

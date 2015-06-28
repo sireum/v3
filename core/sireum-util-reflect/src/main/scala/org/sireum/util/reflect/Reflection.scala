@@ -253,7 +253,12 @@ object Reflection {
   }
 
   case class Annotation(tipe: Type,
-                        params: ISeq[AnnotationArg])
+                        params: ISeq[AnnotationArg]) {
+    override def equals(obj: scala.Any): Boolean = obj match {
+      case obj: Annotation => tipe =:= obj.tipe && params == obj.params
+      case _ => false
+    }
+  }
 
   case class AnnotationArg(name: String,
                            value: Any)
@@ -265,6 +270,13 @@ object Reflection {
     def params = _params
 
     def properties = _properties
+
+    override def equals(obj: scala.Any): Boolean = obj match {
+      case obj: CaseClass =>
+        tipe =:= obj.tipe && annotations == obj.annotations &&
+          params == obj.params && properties == obj.properties
+      case _ => false
+    }
   }
 
   object CaseClass {
@@ -369,7 +381,16 @@ object Reflection {
     case class Param(name: String,
                      tipe: Type,
                      annotations: ISeq[Annotation],
-                     arg: Option[Any])
+                     arg: Option[Any]) {
+      override def equals(obj: scala.Any): Boolean = {
+        obj match {
+          case obj: Param =>
+            name == obj.name && tipe =:= obj.tipe &&
+              annotations == obj.annotations && arg == obj.arg
+          case _ => false
+        }
+      }
+    }
 
   }
 

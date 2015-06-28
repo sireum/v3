@@ -393,10 +393,10 @@ final class FastParser(input: String,
 
     parseWhiteSpace()
 
-    peekKeyword(0, locationKeywords) match {
+    (peekKeyword(0, locationKeywords) match {
       case 0 => parseCallTransformation(id, annotations, recover)
       case _ => parseBlockTransformation(id, annotations, recover)
-    }
+    }).map(_.at(line, column, offset))
   }
 
   private def parseCallTransformation(label: Id,
@@ -446,7 +446,7 @@ final class FastParser(input: String,
       return None
     }
 
-    Some(CallLocation(label, lhsOpt, id, args, t, annotations) at(line, column, offset))
+    Some(CallLocation(label, lhsOpt, id, args, t, annotations))
   }
 
   private def parseBlockTransformation(label: Id,

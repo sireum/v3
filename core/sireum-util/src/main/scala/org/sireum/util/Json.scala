@@ -65,6 +65,11 @@ object Json {
     implicit f: T => Js.Value): Js.Arr =
     Js.Arr(c.map(f).toSeq: _*)
 
+  implicit final def fromLocationInfo(li: LocationInfo): Js.Arr = {
+    Js.Arr(li.lineBegin, li.columnBegin, li.lineEnd, li.columnEnd,
+      li.offset, li.length)
+  }
+
   implicit final def toVector[T](v: Js.Value)(
     implicit f: Js.Value => T): Vector[T] =
     v match {
@@ -119,19 +124,19 @@ object Json {
   implicit final def toByte(v: Js.Value): Byte =
     v match {
       case Js.Num(d) => d.toByte
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Byte: " + v)
     }
 
   implicit final def toChar(v: Js.Value): Int =
     v match {
       case Js.Str(s) => s.charAt(0)
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Char: " + v)
     }
 
   implicit final def toShort(v: Js.Value): Short =
     v match {
       case Js.Num(d) => d.toShort
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Short: " + v)
     }
 
   implicit final def toInt(v: Js.Value): Int =
@@ -143,30 +148,38 @@ object Json {
   implicit final def toLong(v: Js.Value): Long =
     v match {
       case Js.Num(d) => d.toLong
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Long: " + v)
     }
 
   implicit final def toFloat(v: Js.Value): Float =
     v match {
       case Js.Num(d) => d.toFloat
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Float: " + v)
     }
 
   implicit final def toDouble(v: Js.Value): Double =
     v match {
       case Js.Num(d) => d
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a Double: " + v)
     }
 
   final def toStrIntern(v: Js.Value): String =
     v match {
       case Js.Str(s) => s.intern()
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a String: " + v)
     }
 
   implicit final def toStr(v: Js.Value): String =
     v match {
       case Js.Str(s) => s
-      case _ => sys.error("Unexpected Js.Value for an Int: " + v)
+      case _ => sys.error("Unexpected Js.Value for a String: " + v)
     }
+
+  implicit final def toLocationInfo(v: Js.Value): LocationInfo = v match {
+    case a: Js.Arr =>
+      val Seq(lineBegin, columnBegin, lineEnd, columnEnd, offset, length) =
+        a.value.map(toInt)
+      LocationInfo(lineBegin, columnBegin, lineEnd, columnEnd, offset, length)
+    case _ => sys.error("Unexpected Js.Value for a LocationInfo: " + v)
+  }
 }

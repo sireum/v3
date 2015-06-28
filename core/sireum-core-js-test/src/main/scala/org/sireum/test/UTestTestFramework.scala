@@ -61,6 +61,9 @@ abstract class UTestTestFramework
   override def assertEquals(expected: Any, result: Any): Unit =
     assert(expected == result)
 
+  override def assertEqualsRaw(expected: Any, result: Any): Unit =
+    assert(expected == result)
+
   override def assertEmpty(it: Iterable[_]): Unit =
     assert(it.isEmpty)
 

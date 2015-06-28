@@ -27,6 +27,7 @@ package org.sireum.util.reflect
 
 import org.sireum.test._
 import org.sireum.util._
+import scala.reflect.runtime.universe._
 
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
@@ -40,10 +41,38 @@ final class ReflectionTestDefProvider(tf: TestFramework)
   case class Foo(@FooAnn(x = 10, y = true, o = None)
                  var f1: Int = 10)
 
+  import Reflection.CaseClass.Param
+  import Reflection.Annotation
+  import Reflection.AnnotationArg
+
   override def testDefs: ISeq[TestDef] = ivector(
 
-    EqualTest("Test1",
-      Reflection.CaseClass.caseClassObject(Foo(), processAnnotations = true,
-        MIdMap()).toString(), "CaseClass(ReflectionTestDefProvider.this.Foo,Vector(),Vector(Param(f1,Int,Vector(Annotation(ReflectionTestDefProvider.this.FooAnn,Vector(AnnotationArg(x,10), AnnotationArg(y,true), AnnotationArg(o,None)))),Some(10))),Map())")
+    ConditionTest("Test1", {
+      tf.assertEqualsRaw(
+        Reflection.CaseClass.caseClassObject(Foo(), processAnnotations = true,
+          MIdMap()),
+        Reflection.CaseClass(
+          typeOf[ReflectionTestDefProvider.this.Foo],
+          Vector(),
+          Vector(
+            Param("f1", typeOf[Int],
+              Vector(
+                Annotation(
+                  typeOf[ReflectionTestDefProvider.this.FooAnn],
+                  Vector(
+                    AnnotationArg("x", 10),
+                    AnnotationArg("y", true),
+                    AnnotationArg("o", None)
+                  )
+                )
+              ),
+              Some(10)
+            )
+          ),
+          Map()
+        )
+      )
+      true
+    })
   )
 }

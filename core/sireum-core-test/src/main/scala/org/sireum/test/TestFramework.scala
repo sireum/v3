@@ -28,7 +28,9 @@ package org.sireum.test
 import org.sireum.util._
 
 trait TestFramework {
-  def assertEquals(any1: Any, any2: Any)
+  def assertEquals(expected: Any, result: Any)
+
+  def assertEqualsRaw(expected: Any, result: Any)
 
   def assertEmpty(it: Iterable[_])
 
