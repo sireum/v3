@@ -175,11 +175,12 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a String: " + v)
     }
 
-  implicit final def toLocationInfo(v: Js.Value): LocationInfo = v match {
+  implicit final def toLocationInfo(v: Js.Value): Option[LocationInfo] = v match {
     case a: Js.Arr =>
+      if (a.value.isEmpty) None
       val Seq(lineBegin, columnBegin, lineEnd, columnEnd, offset, length) =
         a.value.map(toInt)
-      LocationInfo(lineBegin, columnBegin, lineEnd, columnEnd, offset, length)
+      Some(LocationInfo(lineBegin, columnBegin, lineEnd, columnEnd, offset, length))
     case _ => sys.error("Unexpected Js.Value for a LocationInfo: " + v)
   }
 }

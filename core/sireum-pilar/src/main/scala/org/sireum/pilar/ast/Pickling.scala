@@ -71,7 +71,7 @@ object Pickling {
         val nodeLocMap = MIdMap[Node, LocationInfo]()
         Visitor.build({
           case n: Node =>
-            nodeLocMap(n) = locInfos(i)
+            locInfos(i).foreach(nodeLocMap(n) = _)
             i += 1
             true
         })(m)
