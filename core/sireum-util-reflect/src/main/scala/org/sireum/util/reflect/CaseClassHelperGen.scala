@@ -49,7 +49,7 @@ object CaseClassHelperGen {
     "Double" -> "java.lang.Double"
   )
   val stg = new STGroupFile(getClass.
-    getResource("CaseClassHelperGen.stg"), "UTF-8", '$', '$')
+    getResource("CaseClassHelperGen.stg"), "UTF-8", '%', '%')
 
   final def generate(root: Type): ST = {
     val h = hierarchy(root.typeSymbol.asClass)

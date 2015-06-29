@@ -1,7 +1,7 @@
 main(packageName, name, entry, fromCase, toCase) ::= <<
-// This file is auto-generated from the $name$ class hierarchy
+// This file is auto-generated from the %name% class hierarchy
 
-package $packageName$
+package %packageName%
 
 import org.sireum.util._
 import org.sireum.util.Json._
@@ -11,7 +11,7 @@ object Rewriter {
   import org.sireum.util.Rewriter._
 
   val constructorMap : ConstructorMap = Map(
-    $entry; separator=",\n"$
+    %entry; separator=",\n"%
   )
 
   def build[T](mode: TraversalMode.Type = TraversalMode.TOP_DOWN)(
@@ -26,45 +26,45 @@ object Rewriter {
 object Json {
   import scala.language.implicitConversions
 
-  implicit def from(o: $name$): Js.Obj =
+  implicit def from(o: %name%): Js.Obj =
     o match {
-      $fromCase; separator="\n"$
+      %fromCase; separator="\n"%
     }
 
-  implicit def to[T <: $name$](v: Js.Value): T =
+  implicit def to[T <: %name%](v: Js.Value): T =
     (v: @unchecked) match {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
-           $toCase; separator="\n"$
+           %toCase; separator="\n"%
          }).asInstanceOf[T]
     }
 }
 >>
 
 constructorEntry(name, et, ec) ::= <<
-("$name$", { es =>
-  val Seq($et; separator=", "$) = es
-  $name$($ec; separator=", "$)
+("%name%", { es =>
+  val Seq(%et; separator=", "%) = es
+  %name%(%ec; separator=", "%)
 })
 >>
 
 caseFrom(name, arg) ::= <<
-case o: $name$ =>
+case o: %name% =>
   Js.Obj(
-    (".class", Js.Str("$name$")),
-    $arg; separator=",\n"$
+    (".class", Js.Str("%name%")),
+    %arg; separator=",\n"%
   )
 >>
 
 caseFromArg(name, type, arg) ::= <<
-("$name$", $type$(o.$name$)$if(arg)$($arg; separator=", "$)$endif$)
+("%name%", %type%(o.%name%)%if(arg)%(%arg; separator=", "%)%endif%)
 >>
 
 caseTo(name, arg) ::= <<
-case "$name$" =>
-  $name$($arg; separator=", "$)
+case "%name%" =>
+  %name%(%arg; separator=", "%)
 >>
 
 caseToArg(type, i, arg) ::= <<
-$type$(o.value($i$)._2)$if(arg)$($arg; separator=", "$)$endif$
+%type%(o.value(%i%)._2)%if(arg)%(%arg; separator=", "%)%endif%
 >>

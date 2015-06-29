@@ -23,7 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum
+// This file is auto-generated from SireumOption
+
+package org.sireum.cli
 
 object Cli {
   private type CSeq[T] = scala.collection.Seq[T]
@@ -39,17 +41,16 @@ object Cli {
     def at(i: Int): Option[T] =
       if (i < a.length) Some(a(i)) else None
   }
-
 }
 
 final class Cli {
 
   import Cli._
 
-  val sireumOptionMap: M = Vector(
+  val modeSireumOptionMap: M = Vector(
     ("pilar", parsePilarOption _)
   )
-  val pilarOptionMap: M = Vector(
+  val modePilarOptionMap: M = Vector(
     ("parser", parsePilarParserOption _)
   )
 
@@ -65,39 +66,66 @@ final class Cli {
           |(c) 2011-2015, SAnToS Laboratory, Kansas State University
           |http://sireum.org
           |
-          |Usage: sireum <mode>
+          |Usage: sireum pilar    Pilar tooling <mode>
           |
-          |Available mode:
+          |Available mode(s):
           |
-          |pilar    Pilar IR tooling
+          |sireum
+          |pilar    Pilar tooling
         """.stripMargin.trim
         // @formatter:on
       )
       return
     }
-    select(args, index, sireumOptionMap, o)
+    select(args, index, modeSireumOptionMap, o)
   }
 
   def parsePilarOption(args: CSeq[String],
                        index: Int,
                        o: Product = org.sireum.option.PilarOption()): Unit = {
+
     if (index < 0 || index >= args.length) {
       println(
         // @formatter:off
         """
           |Pilar: Sireum's Intermediate Representation (IR)
           |
-          |Usage: sireum pilar <mode>
+          |Usage: sireum pilar parser    Pilar parser <mode>
           |
-          |Available mode:
+          |Available mode(s):
           |
-          |parser   Pilar parser, pretty printer, JSON de/serializer
+          |sireum
+          |pilar
+          |parser    Pilar parser
         """.stripMargin.trim
         // @formatter:on
       )
       return
     }
-    select(args, index, pilarOptionMap, o)
+    select(args, index, modePilarOptionMap, o)
+  }
+
+
+  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
+    val arg = args(index)
+    m.indexWhere(_._1 == arg) match {
+      case -1 =>
+        val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
+        selections.size match {
+          case 0 =>
+            println(s"$arg is not a mode for: sireum ${args.slice(0, index).mkString(" ")}")
+          case 1 =>
+            val p = o.productElement(selections.head._2).asInstanceOf[Product]
+            selections.head._1._2(args, index + 1, p)
+          case _ =>
+            println("Did you mean one of the following modes?")
+            for ((mode, _) <- selections) {
+              println(mode)
+            }
+        }
+      case i =>
+        m(i)._2(args, index + 1, o.productElement(i).asInstanceOf[Product])
+    }
   }
 
   def parsePilarParserOption(args: CSeq[String],
@@ -180,7 +208,9 @@ final class Cli {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              try arg.toString catch {
+              try {
+                option.maxErrors = arg.toInt
+              } catch {
                 case t: Throwable =>
                   println(s"Invalid integer for max errors: '$arg'")
                   return
@@ -208,26 +238,27 @@ final class Cli {
     }
   }
 
-  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
-    val arg = args(index)
-    m.indexWhere(_._1 == arg) match {
-      case -1 =>
-        val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
-        selections.size match {
-          case 0 =>
-            println(s"$arg is not a mode for: $topCommand ${args.slice(0, index).mkString(" ")}")
-          case 1 =>
-            val p = o.productElement(selections.head._2).asInstanceOf[Product]
-            selections.head._1._2(args, index + 1, p)
-          case _ =>
-            println("Did you mean one of the following modes?")
-            for ((mode, _) <- selections) {
-              println(mode)
-            }
-        }
-      case i =>
-        m(i)._2(args, index + 1, o.productElement(i).asInstanceOf[Product])
-    }
-  }
+  //
+  //  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
+  //    val arg = args(index)
+  //    m.indexWhere(_._1 == arg) match {
+  //      case -1 =>
+  //        val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
+  //        selections.size match {
+  //          case 0 =>
+  //            println(s"$arg is not a mode for: $topCommand ${args.slice(0, index).mkString(" ")}")
+  //          case 1 =>
+  //            val p = o.productElement(selections.head._2).asInstanceOf[Product]
+  //            selections.head._1._2(args, index + 1, p)
+  //          case _ =>
+  //            println("Did you mean one of the following modes?")
+  //            for ((mode, _) <- selections) {
+  //              println(mode)
+  //            }
+  //        }
+  //      case i =>
+  //        m(i)._2(args, index + 1, o.productElement(i).asInstanceOf[Product])
+  //    }
+  //  }
 
 }

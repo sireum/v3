@@ -1,0 +1,221 @@
+main(packageName, name, topCommand, rootClass, modeMap, modeDef, mainDef) ::= <<
+// This file is auto-generated from %rootClass%
+
+%if(packageName)%package %packageName%%endif%
+
+object %name% {
+  private type CSeq[T] = scala.collection.Seq[T]
+  private type M = Vector[(String, (CSeq[String], Int, Product) => Unit)]
+
+  final val topCommand = "%topCommand%"
+
+  final def main(args: Array[String]): Unit = {
+    new Cli().parse%rootClass%(args, 0)
+  }
+
+  private implicit class At[T](val a: CSeq[T]) extends AnyVal {
+    def at(i: Int): Option[T] =
+      if (i < a.length) Some(a(i)) else None
+  }
+}
+
+final class %name% {
+
+  import %name%._
+
+  %modeMap; separator="\n"%
+
+  %modeDef; separator="\n\n"%
+
+  %mainDef; separator="\n\n"%
+
+  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
+    val arg = args(index)
+    m.indexWhere(_._1 == arg) match {
+      case -1 =>
+        val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
+        selections.size match {
+          case 0 =>
+            println(s"$arg is not a mode for: %topCommand% ${args.slice(0, index).mkString(" ")}")
+          case 1 =>
+            val p = o.productElement(selections.head._2).asInstanceOf[Product]
+            selections.head._1._2(args, index + 1, p)
+          case _ =>
+            println("Did you mean one of the following modes?")
+            for ((mode, _) <- selections) {
+              println(mode)
+            }
+        }
+      case i =>
+        m(i)._2(args, index + 1, o.productElement(i).asInstanceOf[Product])
+    }
+  }
+}
+>>
+
+modeMap(modeClass, modeMapEntry) ::= <<
+val mode%modeClass%Map: M = Vector(
+  %modeMapEntry; separator=",\n"%
+)
+>>
+
+modeMapEntry(command, className) ::= <<
+("%command%", parse%className% _)
+>>
+
+modeUsage(header, command) ::= <<
+|%header; separator="\n|"%
+|
+|Usage: %command; separator=" "% <mode>
+|
+|Available mode(s):
+|
+|%command; separator="\n|"%
+>>
+
+modeDef(className, packageName, modeUsage) ::= <<
+def parse%className%(args: CSeq[String],
+                     index: Int,
+                     o: Product = %packageName%.%className%()): Unit = {
+
+  if (index < 0 || index >= args.length) {
+    println(
+      // @formatter:off
+      """
+        %modeUsage; separator="\n|"%
+      """.stripMargin.trim
+      // @formatter:on
+    )
+    return
+  }
+  select(args, index, mode%className%Map, o)
+}
+>>
+
+mainDef(className, packageName, optionCase, handler, mainUsage) ::= <<
+def parse%className%(args: CSeq[String],
+                           index: Int,
+                           o: Product = %packageName%.%className%()): Unit = {
+  val option = o.asInstanceOf[%packageName%.%className%]
+  def printUsage(): Unit = {
+    println(
+      // @formatter:off
+      s"""
+         %mainUsage; separator="\n|"%
+      """.stripMargin.trim
+      // @formatter:on
+    )
+  }
+  val len = args.length
+  var foundHelp = false
+
+  var i = index
+  var processingOptions = true
+  while (i < len && processingOptions) {
+    args(i) match {
+      case "-h" | "--help" =>
+        foundHelp = true
+      %optionCase; separator="\n"%
+      case arg =>
+        if (arg.startsWith("--") || arg.startsWith("-")) {
+          println(s"Unrecognized option: '$arg'")
+        }
+        processingOptions = false
+    }
+
+    if (processingOptions) i += 1
+  }
+
+  %arg; separator="\n\n"%
+
+  if (foundHelp || %handler%.run(option)) {
+    printUsage()
+  }
+}
+>>
+
+optionCaseBoolean(shortKey, longKey, fieldName) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  option.%fieldName% = true
+>>
+
+optionCaseInt(shortKey, longKey, fieldName, name) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  i += 1
+  args.at(i) match {
+    case Some(arg) =>
+      try {
+        option.%fieldName% = arg.toInt
+      } catch {
+        case t: Throwable =>
+          println(s"Invalid integer for %name%: '$arg'")
+          return
+      }
+    case _ =>
+      println("Expected an integer value for %name%")
+  }
+>>
+
+optionCaseString(shortKey, longKey, fieldName, name) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  i += 1
+  args.at(i) match {
+    case Some(arg) => option.%fieldName% = arg
+    case _ =>
+      println("Expected a string value for %name%")
+  }
+>>
+
+optionCaseOption(shortKey, longKey, fieldName, name, optionClass) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  args.at(i) match {
+    case Some(arg) =>
+      option.%fieldName% = %optionClass%(arg)
+    case _ =>
+      println("Expecting a path for %name%")
+      return
+  }
+>>
+
+optionCaseEnum(shortKey, longKey, fieldName, name, elem) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  i += 1
+  args.at(i) match {
+    %optionCaseEnumElem; separator="\n"%
+    case Some(arg) =>
+      println(s"Only either { %elem; separator=", "% } is allowed for %name% instead of '$arg'")
+      return
+    case None =>
+      println("Expected either { %elem; separator=", "% } for %name%")
+      return
+  }
+>>
+
+optionCaseEnumElem(fieldName, elem) ::= <<
+case Some("%elem%") => option.%fieldName% = "%elem%"
+>>
+
+optionCaseStrings(shortKey, longKey, fieldName) ::= <<
+case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  while (i < len) {
+    option.%fieldName% = option.%fieldName% :+ args(i)
+    i += 1
+  }
+>>
+
+argString(fieldName, name) ::= <<
+if (i < len) {
+  option.%fieldName% = args(i)
+  i += 1
+} else {
+  println("Expected a value for %name%")
+  return
+}
+>>
+
+argStrings(fieldName) ::= <<
+while (i < len) {
+  option.%fieldName% = option.%fieldName% :+ args(i)
+  i += 1
+}
+>>
