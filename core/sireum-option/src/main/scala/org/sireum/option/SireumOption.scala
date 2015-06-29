@@ -28,6 +28,8 @@ package org.sireum.option
 import org.sireum.option.annotation._
 import org.sireum.util._
 
+import scala.beans.BeanProperty
+
 @Mode(
   name = "sireum",
   header =
@@ -38,7 +40,8 @@ import org.sireum.util._
     """,
   description = ""
 )
-final case class SireumOption(pilar: PilarOption = PilarOption())
+final case class SireumOption(@BeanProperty
+                              var pilar: PilarOption = PilarOption())
 
 
 @Mode(
@@ -49,7 +52,8 @@ final case class SireumOption(pilar: PilarOption = PilarOption())
     """,
   description = "Pilar tooling"
 )
-final case class PilarOption(parser: PilarParserOption = PilarParserOption())
+final case class PilarOption(@BeanProperty
+                             var parser: PilarParserOption = PilarParserOption())
 
 
 @Main(
@@ -63,26 +67,33 @@ final case class PilarOption(parser: PilarParserOption = PilarParserOption())
   description = "Pilar parser",
   handlerObject = "org.sireum.pilar.parser.Parser"
 )
-final case class PilarParserOption(@Opt(shortKey = Some("in"), description = "Use standard input stream")
+final case class PilarParserOption(@BeanProperty
+                                   @Opt(shortKey = Some("in"), description = "Use standard input stream")
                                    var standardInput: Boolean = false,
 
+                                   @BeanProperty
                                    @Opt(shortKey = Some("f"), description = "Output file (if unspecified, use standard output stream)")
-                                   var outputFile: Option[String] = None,
+                                   var outputFile: OptionBean[String] = NoneBean(),
 
+                                   @BeanProperty
                                    @Opt(shortKey = Some("i"), description = "Input mode")
                                    var inputMode: PilarParserOption.InputMode.Type = PilarParserOption.InputMode.Auto,
 
+                                   @BeanProperty
                                    @Opt(shortKey = Some("o"), description = "Output mode")
                                    var outputMode: PilarParserOption.OutputMode.Type = PilarParserOption.InputMode.JSON,
 
+                                   @BeanProperty
                                    @Opt(shortKey = Some("a"), description = "Use ANTLR4 Pilar parser instead of hand-written one")
                                    var antlr4: Boolean = false,
 
+                                   @BeanProperty
                                    @Opt(shortKey = Some("e"), description = "Maximum number of errors found before parsing stop")
                                    var maxErrors: Int = 10,
 
+                                   @BeanProperty
                                    @Args(name = "file", description = "Input files")
-                                   var inputs: ISeq[String] = Vector())
+                                   var inputs: Array[String] = Array())
 
 object PilarParserOption {
 

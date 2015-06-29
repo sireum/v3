@@ -25,10 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum
 
-import org.sireum.option._
-
 object Cli {
-  private type M = Vector[(String, (Array[String], Int, Product) => Unit)]
+  private type CSeq[T] = scala.collection.Seq[T]
+  private type M = Vector[(String, (CSeq[String], Int, Product) => Unit)]
 
   final val topCommand = "sireum"
 
@@ -36,7 +35,7 @@ object Cli {
     new Cli().parseSireumOption(args, 0)
   }
 
-  private implicit class At[T](val a: Array[T]) extends AnyVal {
+  private implicit class At[T](val a: CSeq[T]) extends AnyVal {
     def at(i: Int): Option[T] =
       if (i < a.length) Some(a(i)) else None
   }
@@ -54,7 +53,9 @@ final class Cli {
     ("parser", parsePilarParserOption _)
   )
 
-  def parseSireumOption(args: Array[String], index: Int, o: Product = SireumOption()): Unit = {
+  def parseSireumOption(args: CSeq[String],
+                        index: Int,
+                        o: Product = org.sireum.option.SireumOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
       println(
@@ -77,7 +78,9 @@ final class Cli {
     select(args, index, sireumOptionMap, o)
   }
 
-  def parsePilarOption(args: Array[String], index: Int, o: Product = PilarOption()): Unit = {
+  def parsePilarOption(args: CSeq[String],
+                       index: Int,
+                       o: Product = org.sireum.option.PilarOption()): Unit = {
     if (index < 0 || index >= args.length) {
       println(
         // @formatter:off
@@ -97,8 +100,10 @@ final class Cli {
     select(args, index, pilarOptionMap, o)
   }
 
-  def parsePilarParserOption(args: Array[String], index: Int, o: Product = PilarParserOption()): Unit = {
-    val option = o.asInstanceOf[PilarParserOption]
+  def parsePilarParserOption(args: CSeq[String],
+                             index: Int,
+                             o: Product = org.sireum.option.PilarParserOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.PilarParserOption]
     def printUsage(): Unit = {
       println(
         // @formatter:off
@@ -137,7 +142,7 @@ final class Cli {
         case "-f" | "--output-file" =>
           args.at(i) match {
             case Some(arg) =>
-              option.outputFile = Some(arg)
+              option.outputFile = org.sireum.util.SomeBean(arg)
             case _ =>
               println("Expecting a path for output file")
               return
@@ -203,7 +208,7 @@ final class Cli {
     }
   }
 
-  private def select(args: Array[String], index: Int, m: M, o: Product): Unit = {
+  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
     val arg = args(index)
     m.indexWhere(_._1 == arg) match {
       case -1 =>
