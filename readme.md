@@ -82,10 +82,10 @@ Options:
                            Default: 10
  -f, --output-file       Output file
                          (if unspecified, use standard output stream)
- -i, --input-mode        Input mode
+ -i, --input-mode        Input mode { auto, pilar, json, scala }
                            Default: auto
 -in, --standard-input    Use standard input stream
- -o, --output-mode       Output mode
+ -o, --output-mode       Output mode { pilar, json, scala }
                            Default: json
  -h, --help              Display usage information
 ```

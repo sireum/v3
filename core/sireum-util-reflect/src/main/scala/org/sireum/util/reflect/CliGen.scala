@@ -198,7 +198,7 @@ final class CliGen(licenseOpt: Option[String],
           val (name, longKey) = nameLongKey(fieldName)
 
           var defaultOpt: Option[String] = None
-
+          var description = paramValue[String](pa, "description")
           if (pa.tipe <:< enumOptType) {
             val elements = paramValue[Seq[String]](pa, "elements")
             if (!(p.tipe =:= stringType)) {
@@ -216,6 +216,7 @@ final class CliGen(licenseOpt: Option[String],
                 stg.getInstanceOf("optionCaseEnumElem").
                   add("fieldName", fieldName).add("elem", e))
             }
+            description = s"$description { ${elements.mkString(", ")} }"
             stMainDef.add("optionCase", stOptionCaseEnum)
           } else if (pa.tipe =:= optType) {
             val st =
@@ -256,8 +257,7 @@ final class CliGen(licenseOpt: Option[String],
             shortKeyOpt.foreach(k => stOptionCaseStrings.add("shortKey", k))
             stMainDef.add("optionCase", stOptionCaseStrings)
           }
-          val q = (shortKeyOpt, longKey, paramValue[String](pa, "description"),
-            defaultOpt)
+          val q = (shortKeyOpt, longKey, description, defaultOpt)
           if (pa.tipe <:< groupOptType) {
             val groupName = paramValue[String](pa, "groupName")
             optionMap(groupName) = optionMap(groupName) :+ q

@@ -191,10 +191,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                           Default: ${option.maxErrors}
            | -f, --output-file       Output file
            |                         (if unspecified, use standard output stream)
-           | -i, --input-mode        Input mode
+           | -i, --input-mode        Input mode { auto, pilar, json, scala }
            |                           Default: ${option.inputMode}
            |-in, --standard-input    Use standard input stream
-           | -o, --output-mode       Output mode
+           | -o, --output-mode       Output mode { pilar, json, scala }
            |                           Default: ${option.outputMode}
            | -h, --help              Display usage information
         """.stripMargin.trim
