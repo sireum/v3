@@ -1,8 +1,10 @@
 Requirements
 ============
 
-All Platforms
--------------
+Supported platforms: x86-64 OS X, Linux, Windows
+
+All Supported Platforms
+-----------------------
 
 * Tools: `git`, `unzip`, `wget`
 
