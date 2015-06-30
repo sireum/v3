@@ -154,7 +154,7 @@ final class CliGen(packageName: String, className: String) {
       }
       sb.append("    ")
       sb.append(description)
-      stModeUsage.add("command", sb.toString())
+      stModeUsage.add("mode", sb.toString())
     }
   }
 

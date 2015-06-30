@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.option
 
 import org.sireum.option.annotation._
-import org.sireum.util._
 
 import scala.beans.BeanProperty
 
@@ -44,71 +43,3 @@ final case class SireumOption(@BeanProperty
                               var pilar: PilarOption = PilarOption())
 
 
-@Mode(
-  name = "pilar",
-  header =
-    """
-      |Pilar: Sireum's Intermediate Representation (IR)
-    """,
-  description = "Pilar tooling"
-)
-final case class PilarOption(@BeanProperty
-                             var parser: PilarParserOption = PilarParserOption())
-
-
-@Main(
-  name = "parser",
-  header =
-    """
-      |Pilar Parser
-      |... and pretty printer and JSON de/serializer
-    """,
-  description = "Pilar parser",
-  handler = "org.sireum.pilar.parser.Parser"
-)
-final case class PilarParserOption(@BeanProperty
-                                   @Opt(shortKey = Some("in"), description = "Use standard input stream")
-                                   var standardInput: Boolean = false,
-
-                                   @BeanProperty
-                                   @Opt(shortKey = Some("f"), description = "Output file\n(if unspecified, use standard output stream)")
-                                   var outputFile: OptionBean[String] = NoneBean(),
-
-                                   @BeanProperty
-                                   @EnumOpt(shortKey = Some("i"), elements = Seq("auto", "pilar", "json", "scala"), description = "Input mode")
-                                   var inputMode: PilarParserOption.InputMode.Type = PilarParserOption.InputMode.Auto,
-
-                                   @BeanProperty
-                                   @EnumOpt(shortKey = Some("o"), elements = Seq("pilar", "json", "scala"), description = "Output mode")
-                                   var outputMode: PilarParserOption.OutputMode.Type = PilarParserOption.InputMode.JSON,
-
-                                   @BeanProperty
-                                   @Opt(shortKey = Some("a"), description = "Use ANTLR4 Pilar parser instead of hand-written one")
-                                   var antlr4: Boolean = false,
-
-                                   @BeanProperty
-                                   @Opt(shortKey = Some("e"), description = "Maximum number of errors found before parsing stop")
-                                   var maxErrors: Int = 10,
-
-                                   @BeanProperty
-                                   @Arg(name = "file")
-                                   var inputs: Array[String] = Array())
-
-object PilarParserOption {
-
-  object InputMode extends Enum("") {
-    type Type = Value
-    val Auto = Value("auto")
-    val Pilar = Value("pilar")
-    val JSON = Value("json")
-    val Scala = Value("scala")
-  }
-
-  object OutputMode extends Enum("") {
-    type Type = Value
-    val Pilar = Value("pilar")
-    val JSON = Value("json")
-    val Scala = Value("scala")
-  }
-
-}

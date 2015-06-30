@@ -63,14 +63,14 @@ modeMapEntry(command, className) ::= <<
 ("%command%", parse%className% _)
 >>
 
-modeUsage(header, command) ::= <<
+modeUsage(header, command, mode) ::= <<
 |%header; separator="\n|"%
 |
 |Usage: %command; separator=" "% <mode>
 |
 |Available mode(s):
 |
-|%command; separator="\n|"%
+|%mode; separator="\n|"%
 >>
 
 modeDef(className, packageName, modeUsage) ::= <<

@@ -41,7 +41,6 @@ object Cli {
     def at(i: Int): Option[T] =
       if (i < a.length) Some(a(i)) else None
   }
-
 }
 
 final class Cli {
@@ -67,11 +66,10 @@ final class Cli {
           |(c) 2011-2015, SAnToS Laboratory, Kansas State University
           |http://sireum.org
           |
-          |Usage: sireum pilar    Pilar tooling <mode>
+          |Usage: sireum <mode>
           |
           |Available mode(s):
           |
-          |sireum
           |pilar    Pilar tooling
         """.stripMargin.trim
         // @formatter:on
@@ -91,12 +89,10 @@ final class Cli {
         """
           |Pilar: Sireum's Intermediate Representation (IR)
           |
-          |Usage: sireum pilar parser    Pilar parser <mode>
+          |Usage: sireum pilar <mode>
           |
           |Available mode(s):
           |
-          |sireum
-          |pilar
           |parser    Pilar parser
         """.stripMargin.trim
         // @formatter:on
