@@ -34,24 +34,43 @@ object Cli {
   final val topCommand = "sireum"
 
   final def main(args: Array[String]): Unit = {
-    new Cli().parseSireumOption(args, 0)
+    new Cli(oPrintln, ePrintln).parseSireumOption(args, 0)
   }
 
   private implicit class At[T](val a: CSeq[T]) extends AnyVal {
     def at(i: Int): Option[T] =
       if (i < a.length) Some(a(i)) else None
   }
+
+  private def oPrintln(line: String): Unit = {
+    Console.out.println(line)
+    Console.out.flush()
+  }
+
+  private def ePrintln(line: String): Unit = {
+    Console.err.println(line)
+    Console.err.flush()
+  }
 }
 
-final class Cli {
+final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
 
   import Cli._
 
   val modeSireumOptionMap: M = Vector(
-    ("pilar", parsePilarOption _)
+    ("pilar", parsePilarOption _),
+    ("util", parseUtilOption _)
   )
   val modePilarOptionMap: M = Vector(
     ("parser", parsePilarParserOption _)
+  )
+  val modeUtilOptionMap: M = Vector(
+    ("reflect", parseUtilReflectOption _)
+  )
+  val modeUtilReflectOptionMap: M = Vector(
+    ("cli", parseCliGenOption _),
+    ("json", parseJsonGenOption _),
+    ("rewriter", parseRewriterGenOption _)
   )
 
   def parseSireumOption(args: CSeq[String],
@@ -59,7 +78,7 @@ final class Cli {
                         o: Product = org.sireum.option.SireumOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
-      println(
+      outPrintln(
         // @formatter:off
         """
           |Sireum: A Software Analysis Platform (v3)
@@ -71,6 +90,7 @@ final class Cli {
           |Available mode(s):
           |
           |pilar    Pilar tooling
+          |util     Utility tooling
         """.stripMargin.trim
         // @formatter:on
       )
@@ -84,7 +104,7 @@ final class Cli {
                        o: Product = org.sireum.option.PilarOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
-      println(
+      outPrintln(
         // @formatter:off
         """
           |Pilar: Sireum's Intermediate Representation (IR)
@@ -102,12 +122,60 @@ final class Cli {
     select(args, index, modePilarOptionMap, o)
   }
 
+  def parseUtilOption(args: CSeq[String],
+                      index: Int,
+                      o: Product = org.sireum.option.UtilOption()): Unit = {
+
+    if (index < 0 || index >= args.length) {
+      outPrintln(
+        // @formatter:off
+        """
+          |Sireum Utility Tooling
+          |
+          |Usage: sireum util <mode>
+          |
+          |Available mode(s):
+          |
+          |reflect    Reflective tooling
+        """.stripMargin.trim
+        // @formatter:on
+      )
+      return
+    }
+    select(args, index, modeUtilOptionMap, o)
+  }
+
+  def parseUtilReflectOption(args: CSeq[String],
+                             index: Int,
+                             o: Product = org.sireum.option.UtilReflectOption()): Unit = {
+
+    if (index < 0 || index >= args.length) {
+      outPrintln(
+        // @formatter:off
+        """
+          |Sireum Reflective Tooling
+          |
+          |Usage: sireum util reflect <mode>
+          |
+          |Available mode(s):
+          |
+          |cli         CLI Generator
+          |json        JSON Binding Generator
+          |rewriter    Case Class Rewriter Generator
+        """.stripMargin.trim
+        // @formatter:on
+      )
+      return
+    }
+    select(args, index, modeUtilReflectOptionMap, o)
+  }
+
   def parsePilarParserOption(args: CSeq[String],
                              index: Int,
                              o: Product = org.sireum.option.PilarParserOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.PilarParserOption]
     def printUsage(): Unit = {
-      println(
+      outPrintln(
         // @formatter:off
         s"""
            |Pilar Parser
@@ -117,15 +185,15 @@ final class Cli {
            |
            |Options:
            | -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
-           | -i, --input-mode        Input mode
-           |                           Default: ${option.inputMode}
            | -e, --max-errors        Maximum number of errors found before parsing stop
            |                           Default: ${option.maxErrors}
            | -f, --output-file       Output file
            |                         (if unspecified, use standard output stream)
+           | -i, --input-mode        Input mode
+           |                           Default: ${option.inputMode}
+           |-in, --standard-input    Use standard input stream
            | -o, --output-mode       Output mode
            |                           Default: ${option.outputMode}
-           |-in, --standard-input    Use standard input stream
            | -h, --help              Display usage information
         """.stripMargin.trim
         // @formatter:on
@@ -147,7 +215,7 @@ final class Cli {
             case Some(arg) =>
               option.outputFile = org.sireum.util.SomeBean(arg)
             case _ =>
-              println("Expecting a path for output file")
+              errPrintln("Expecting a value for output file")
               return
           }
         case "-i" | "--input-mode" =>
@@ -158,10 +226,10 @@ final class Cli {
             case Some("json") => option.inputMode = "json"
             case Some("scala") => option.inputMode = "scala"
             case Some(arg) =>
-              println(s"Only either { auto, pilar, json, scala } is allowed for input mode instead of '$arg'")
+              errPrintln(s"Only either { auto, pilar, json, scala } is allowed for input mode instead of '$arg'")
               return
             case None =>
-              println("Expected either { auto, pilar, json, scala } for input mode")
+              errPrintln("Expected either { auto, pilar, json, scala } for input mode")
               return
           }
         case "-o" | "--output-mode" =>
@@ -171,10 +239,10 @@ final class Cli {
             case Some("json") => option.outputMode = "json"
             case Some("scala") => option.outputMode = "scala"
             case Some(arg) =>
-              println(s"Only either { pilar, json, scala } is allowed for output mode instead of '$arg'")
+              errPrintln(s"Only either { pilar, json, scala } is allowed for output mode instead of '$arg'")
               return
             case None =>
-              println("Expected either { pilar, json, scala } for output mode")
+              errPrintln("Expected either { pilar, json, scala } for output mode")
               return
           }
         case "-a" | "--antlr4" =>
@@ -187,15 +255,15 @@ final class Cli {
                 option.maxErrors = arg.toInt
               } catch {
                 case t: Throwable =>
-                  println(s"Invalid integer for max errors: '$arg'")
+                  errPrintln(s"Invalid integer for max errors: '$arg'")
                   return
               }
             case _ =>
-              println("Expected an integer value for max errors")
+              errPrintln("Expected an integer value for max errors")
           }
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
-            println(s"Unrecognized option: '$arg'")
+            errPrintln(s"Unrecognized option: '$arg'")
           }
           processingOptions = false
       }
@@ -208,7 +276,247 @@ final class Cli {
       i += 1
     }
 
-    if (foundHelp || org.sireum.pilar.parser.Parser.run(option)) {
+    if (foundHelp || org.sireum.pilar.parser.Parser.run(option, outPrintln, errPrintln)) {
+      printUsage()
+    }
+  }
+
+  def parseCliGenOption(args: CSeq[String],
+                        index: Int,
+                        o: Product = org.sireum.option.CliGenOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.CliGenOption]
+    def printUsage(): Unit = {
+      outPrintln(
+        // @formatter:off
+        s"""
+           |Sireum CLI Generator
+           |
+           |Usage: sireum util reflect cli <root-class-name>
+           |
+           |Options:
+           |-c, --class-name      Output fully-qualified class name
+           |                        Default: ${option.className}
+           |-d, --output-dir      Output directory
+           |                      (If unspecified, use standard output stream)
+           |-l, --license-file    File containing license for output
+           |-h, --help            Display usage information
+        """.stripMargin.trim
+        // @formatter:on
+      )
+    }
+    val len = args.length
+    var foundHelp = false
+
+    var i = index
+    var processingOptions = true
+    while (i < len && processingOptions) {
+      args(i) match {
+        case "-h" | "--help" =>
+          foundHelp = true
+        case "-c" | "--class-name" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.className = arg
+            case _ =>
+              errPrintln("Expected a string value for class name")
+          }
+        case "-d" | "--output-dir" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.outputDir = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for output dir")
+              return
+          }
+        case "-l" | "--license-file" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.licenseFile = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for license file")
+              return
+          }
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            errPrintln(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
+      }
+
+      if (processingOptions) i += 1
+    }
+
+    if (i < len) {
+      option.rootClassName = args(i)
+      i += 1
+    } else {
+      printUsage()
+      outPrintln("")
+      errPrintln("Expected a value for root class name")
+      return
+    }
+
+    if (foundHelp || org.sireum.util.reflect.ReflectGen.run(option, outPrintln, errPrintln)) {
+      printUsage()
+    }
+  }
+
+  def parseJsonGenOption(args: CSeq[String],
+                         index: Int,
+                         o: Product = org.sireum.option.JsonGenOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.JsonGenOption]
+    def printUsage(): Unit = {
+      outPrintln(
+        // @formatter:off
+        s"""
+           |Sireum JSON Binding Generator
+           |
+           |Usage: sireum util reflect json <root-class-name>
+           |
+           |Options:
+           |-c, --class-name      Output fully-qualified class name
+           |                        Default: ${option.className}
+           |-d, --output-dir      Output directory
+           |                      (If unspecified, use standard output stream)
+           |-l, --license-file    File containing license for output
+           |-h, --help            Display usage information
+        """.stripMargin.trim
+        // @formatter:on
+      )
+    }
+    val len = args.length
+    var foundHelp = false
+
+    var i = index
+    var processingOptions = true
+    while (i < len && processingOptions) {
+      args(i) match {
+        case "-h" | "--help" =>
+          foundHelp = true
+        case "-c" | "--class-name" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.className = arg
+            case _ =>
+              errPrintln("Expected a string value for class name")
+          }
+        case "-d" | "--output-dir" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.outputDir = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for output dir")
+              return
+          }
+        case "-l" | "--license-file" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.licenseFile = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for license file")
+              return
+          }
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            errPrintln(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
+      }
+
+      if (processingOptions) i += 1
+    }
+
+    if (i < len) {
+      option.rootClassName = args(i)
+      i += 1
+    } else {
+      printUsage()
+      outPrintln("")
+      errPrintln("Expected a value for root class name")
+      return
+    }
+
+    if (foundHelp || org.sireum.util.reflect.ReflectGen.run(option, outPrintln, errPrintln)) {
+      printUsage()
+    }
+  }
+
+  def parseRewriterGenOption(args: CSeq[String],
+                             index: Int,
+                             o: Product = org.sireum.option.RewriterGenOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.RewriterGenOption]
+    def printUsage(): Unit = {
+      outPrintln(
+        // @formatter:off
+        s"""
+           |Sireum Case Class Rewriter Generator
+           |
+           |Usage: sireum util reflect rewriter <root-class-name>
+           |
+           |Options:
+           |-c, --class-name      Output fully-qualified class name
+           |                        Default: ${option.className}
+           |-d, --output-dir      Output directory
+           |                      (If unspecified, use standard output stream)
+           |-l, --license-file    File containing license for output
+           |-h, --help            Display usage information
+        """.stripMargin.trim
+        // @formatter:on
+      )
+    }
+    val len = args.length
+    var foundHelp = false
+
+    var i = index
+    var processingOptions = true
+    while (i < len && processingOptions) {
+      args(i) match {
+        case "-h" | "--help" =>
+          foundHelp = true
+        case "-c" | "--class-name" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.className = arg
+            case _ =>
+              errPrintln("Expected a string value for class name")
+          }
+        case "-d" | "--output-dir" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.outputDir = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for output dir")
+              return
+          }
+        case "-l" | "--license-file" =>
+          args.at(i) match {
+            case Some(arg) =>
+              option.licenseFile = org.sireum.util.SomeBean(arg)
+            case _ =>
+              errPrintln("Expecting a value for license file")
+              return
+          }
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            errPrintln(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
+      }
+
+      if (processingOptions) i += 1
+    }
+
+    if (i < len) {
+      option.rootClassName = args(i)
+      i += 1
+    } else {
+      printUsage()
+      outPrintln("")
+      errPrintln("Expected a value for root class name")
+      return
+    }
+
+    if (foundHelp || org.sireum.util.reflect.ReflectGen.run(option, outPrintln, errPrintln)) {
       printUsage()
     }
   }
@@ -220,14 +528,14 @@ final class Cli {
         val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
         selections.size match {
           case 0 =>
-            println(s"$arg is not a mode for: sireum ${args.slice(0, index).mkString(" ")}")
+            errPrintln(s"$arg is not a mode for: sireum ${args.slice(0, index).mkString(" ")}")
           case 1 =>
             val p = o.productElement(selections.head._2).asInstanceOf[Product]
             selections.head._1._2(args, index + 1, p)
           case _ =>
-            println("Did you mean one of the following modes?")
+            outPrintln("Did you mean one of the following modes?")
             for ((mode, _) <- selections) {
-              println(mode)
+              outPrintln(mode._1)
             }
         }
       case i =>

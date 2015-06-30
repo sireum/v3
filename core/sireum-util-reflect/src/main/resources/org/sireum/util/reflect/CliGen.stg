@@ -1,8 +1,16 @@
-main(packageName, name, topCommand, rootClass, modeMap, modeDef, mainDef) ::= <<
+main(license, packageName, name, topCommand, rootClass, modeMap, modeDef, mainDef) ::= <<
+%if(license)%
+/*
+%license%
+*/
+
+%endif%
 // This file was auto-generated from %rootClass%
 
-%if(packageName)%package %packageName%%endif%
+%if(packageName)%
+package %packageName%
 
+%endif%
 object %name% {
   private type CSeq[T] = scala.collection.Seq[T]
   private type M = Vector[(String, (CSeq[String], Int, Product) => Unit)]
@@ -10,16 +18,26 @@ object %name% {
   final val topCommand = "%topCommand%"
 
   final def main(args: Array[String]): Unit = {
-    new Cli().parse%rootClass%(args, 0)
+    new Cli(oPrintln, ePrintln).parseSireumOption(args, 0)
   }
 
   private implicit class At[T](val a: CSeq[T]) extends AnyVal {
     def at(i: Int): Option[T] =
       if (i < a.length) Some(a(i)) else None
   }
+
+  private def oPrintln(line: String): Unit = {
+    Console.out.println(line)
+    Console.out.flush()
+  }
+
+  private def ePrintln(line: String): Unit = {
+    Console.err.println(line)
+    Console.err.flush()
+  }
 }
 
-final class %name% {
+final class %name%(outPrintln: String => Unit, errPrintln: String => Unit) {
 
   import %name%._
 
@@ -36,14 +54,14 @@ final class %name% {
         val selections = m.zipWithIndex.filter(_._1._1.startsWith(arg))
         selections.size match {
           case 0 =>
-            println(s"$arg is not a mode for: %topCommand% ${args.slice(0, index).mkString(" ")}")
+            errPrintln(s"$arg is not a mode for: %topCommand% ${args.slice(0, index).mkString(" ")}")
           case 1 =>
             val p = o.productElement(selections.head._2).asInstanceOf[Product]
             selections.head._1._2(args, index + 1, p)
           case _ =>
-            println("Did you mean one of the following modes?")
+            outPrintln("Did you mean one of the following modes?")
             for ((mode, _) <- selections) {
-              println(mode)
+              outPrintln(mode._1)
             }
         }
       case i =>
@@ -79,7 +97,7 @@ def parse%className%(args: CSeq[String],
                      o: Product = %packageName%.%className%()): Unit = {
 
   if (index < 0 || index >= args.length) {
-    println(
+    outPrintln(
       // @formatter:off
       """
         %modeUsage; separator="\n|"%
@@ -106,7 +124,7 @@ def parse%className%(args: CSeq[String],
                            o: Product = %packageName%.%className%()): Unit = {
   val option = o.asInstanceOf[%packageName%.%className%]
   def printUsage(): Unit = {
-    println(
+    outPrintln(
       // @formatter:off
       s"""
          %mainUsage; separator="\n|"%
@@ -126,7 +144,7 @@ def parse%className%(args: CSeq[String],
       %optionCase; separator="\n"%
       case arg =>
         if (arg.startsWith("--") || arg.startsWith("-")) {
-          println(s"Unrecognized option: '$arg'")
+          errPrintln(s"Unrecognized option: '$arg'")
         }
         processingOptions = false
     }
@@ -136,7 +154,7 @@ def parse%className%(args: CSeq[String],
 
   %arg; separator="\n\n"%
 
-  if (foundHelp || %handler%.run(option)) {
+  if (foundHelp || %handler%.run(option, outPrintln, errPrintln)) {
     printUsage()
   }
 }
@@ -156,11 +174,11 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
         option.%fieldName% = arg.toInt
       } catch {
         case t: Throwable =>
-          println(s"Invalid integer for %name%: '$arg'")
+          errPrintln(s"Invalid integer for %name%: '$arg'")
           return
       }
     case _ =>
-      println("Expected an integer value for %name%")
+      errPrintln("Expected an integer value for %name%")
   }
 >>
 
@@ -170,7 +188,7 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   args.at(i) match {
     case Some(arg) => option.%fieldName% = arg%if(comma)%.split(',').map(_.trim)%endif%
     case _ =>
-      println("Expected a string value for %name%")
+      errPrintln("Expected a string value for %name%")
   }
 >>
 
@@ -180,7 +198,7 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
     case Some(arg) =>
       option.%fieldName% = %someClass%(arg)
     case _ =>
-      println("Expecting a path for %name%")
+      errPrintln("Expecting a value for %name%")
       return
   }
 >>
@@ -191,10 +209,10 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   args.at(i) match {
     %optionCaseEnumElem; separator="\n"%
     case Some(arg) =>
-      println(s"Only either { %elem; separator=", "% } is allowed for %name% instead of '$arg'")
+      errPrintln(s"Only either { %elem; separator=", "% } is allowed for %name% instead of '$arg'")
       return
     case None =>
-      println("Expected either { %elem; separator=", "% } for %name%")
+      errPrintln("Expected either { %elem; separator=", "% } for %name%")
       return
   }
 >>
@@ -216,7 +234,9 @@ if (i < len) {
   option.%fieldName% = args(i)
   i += 1
 } else {
-  println("Expected a value for %name%")
+  printUsage()
+  outPrintln("")
+  errPrintln("Expected a value for %name%")
   return
 }
 >>

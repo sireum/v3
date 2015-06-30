@@ -57,19 +57,48 @@ object CliGen {
 
   def main(args: Array[String]): Unit = {
     println(
-      new CliGen("org.sireum", "Cli").
+      new CliGen(
+        Some(
+          """Copyright (c) 2015, Robby, Kansas State University
+            |All rights reserved.
+            |
+            |Redistribution and use in source and binary forms, with or without
+            |modification, are permitted provided that the following conditions are met:
+            |
+            |1. Redistributions of source code must retain the above copyright notice, this
+            |   list of conditions and the following disclaimer.
+            |2. Redistributions in binary form must reproduce the above copyright notice,
+            |   this list of conditions and the following disclaimer in the documentation
+            |   and/or other materials provided with the distribution.
+            |
+            |THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+            |ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+            |WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+            |DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+            |ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+            |(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+            |LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+            |ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+            |(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+            |SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+          """.stripMargin.trim),
+        Some("org.sireum"),
+        "Cli").
         generate(SireumOption()).
         render())
   }
 }
 
-final class CliGen(packageName: String, className: String) {
+final class CliGen(licenseOpt: Option[String],
+                   packageNameOpt: Option[String],
+                   className: String) {
 
   import CliGen._
 
   val stMain = stg.getInstanceOf("main").
-    add("packageName", packageName).
     add("name", className)
+  licenseOpt.foreach(l => stMain.add("license", l))
+  packageNameOpt.foreach(p => stMain.add("packageName", p))
   val seen = MIdMap[AnyRef, Any]()
 
   def generate(o: AnyRef with Product): ST = {
@@ -266,7 +295,7 @@ final class CliGen(packageName: String, className: String) {
           val st =
             p.tipe match {
               case t if t =:= stringType =>
-                stMainUsage.add("arg", displayName)
+                stMainUsage.add("arg", s"<$displayName>")
                 stg.getInstanceOf("argString").add("name", name)
               case t if t <:< optionStringType || t <:< optionBeanStringType =>
                 stg.getInstanceOf("argOptString")
@@ -304,7 +333,13 @@ final class CliGen(packageName: String, className: String) {
 
       val descIndent = 1 + shortKeyMaxLen + 4 + longKeyMaxLen + 4
 
-      for ((shortKeyOpt, longKey, description, defaultOpt) <- qs.sortBy(_._2) :+
+      for ((shortKeyOpt, longKey, description, defaultOpt) <- qs.
+        sortWith((q1, q2) => (q1._1, q2._1) match {
+        case (Some(k1), Some(k2)) => k1.compareTo(k2) <= 0
+        case (Some(_), None) => true
+        case (None, Some(_)) => false
+        case _ => q1._2.compareTo(q2._2) <= 0
+      }) :+
         (Some("h"), "help", "Display usage information", None)) {
         sb.append("\n|")
         shortKeyOpt match {

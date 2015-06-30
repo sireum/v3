@@ -29,6 +29,10 @@ import org.sireum.option.annotation._
 
 import scala.beans.BeanProperty
 
+object SireumOption {
+  def make() = SireumOption()
+}
+
 @Mode(
   name = "sireum",
   header =
@@ -40,6 +44,6 @@ import scala.beans.BeanProperty
   description = ""
 )
 final case class SireumOption(@BeanProperty
-                              var pilar: PilarOption = PilarOption())
-
-
+                              var pilar: PilarOption = PilarOption(),
+                              @BeanProperty
+                              var util: UtilOption = UtilOption())
