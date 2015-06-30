@@ -65,7 +65,7 @@ Usage: sireum pilar <mode>
 
 Available mode:
 
-parser   Pilar parser, pretty printer, JSON de/serializer
+parser   Pilar parser
 ```
 
 More example: `sireum p p`
@@ -77,16 +77,17 @@ Pilar Parser
 Usage: sireum pilar parser <file-1> ... <file-N>
 
 Options:
- -a,  --antlr4            Use ANTLR4 Pilar parser instead of a hand-written one
- -e,  --max-errors        Maximum number of errors found before parsing stop
-                            Default: 10
- -i,  --input-mode        Input mode { auto, pilar, json, scala }
-                            Default: auto
--in,  --standard-input    Use standard input stream
- -f,  --output-file       Output file (if unspecified, use standard output)
- -o,  --output-mode       Output mode { pilar, json, scala }
-                            Default: json
- -h,  --help              Display usage information
+ -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
+ -e, --max-errors        Maximum number of errors found before parsing stop
+                           Default: 10
+ -f, --output-file       Output file
+                         (if unspecified, use standard output stream)
+ -i, --input-mode        Input mode
+                           Default: auto
+-in, --standard-input    Use standard input stream
+ -o, --output-mode       Output mode
+                           Default: json
+ -h, --help              Display usage information
 ```
 
 Try:
