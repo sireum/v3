@@ -29,7 +29,7 @@ import org.sireum.util._
 import org.stringtemplate.v4._
 import scala.reflect.runtime.universe._
 
-object CaseClassHelperGen {
+object RewriterJsonGen {
   type Hierarchy = MMap[Symbol, ISet[Symbol]]
   final val anyValType = typeOf[AnyVal]
   final val stringType = typeOf[String]
@@ -49,20 +49,61 @@ object CaseClassHelperGen {
     "Double" -> "java.lang.Double"
   )
   val stg = new STGroupFile(getClass.
-    getResource("CaseClassHelperGen.stg"), "UTF-8", '%', '%')
+    getResource("RewriterJsonGen.stg"), "UTF-8", '%', '%')
 
-  final def generate(root: Type): ST = {
+  final def generateRewriter(licenseOpt: Option[String],
+                             packageNameOpt: Option[String],
+                             className: String,
+                             root: Type): ST = {
     val h = hierarchy(root.typeSymbol.asClass)
-    val stMain = stg.getInstanceOf("main")
-    val rootClassSymbol = root.typeSymbol.asClass
-    val packageName = {
-      val fn = rootClassSymbol.fullName
-      fn.substring(0, fn.lastIndexOf("."))
-    }
+    val stMainRewriter = stg.getInstanceOf("mainRewriter").
+      add("name", className)
+    licenseOpt.foreach(l => stMainRewriter.add("license", l))
+    packageNameOpt.foreach(p => stMainRewriter.add("packageName", p))
+
     val rootName = name(root)
 
-    stMain.add("packageName", packageName)
-    stMain.add("name", rootName)
+    stMainRewriter.add("rootClass", rootName)
+
+    for (
+      c <- h.keys.filterNot(_.isAbstract).
+        toSeq.sortBy(_.asClass.fullName)
+    ) {
+      val cc = reflect.Reflection.CaseClass.
+        caseClassType(c.asType.toType, processAnnotations = false)
+      val typeName = name(cc.tipe)
+
+      val stConsEntry = stg.getInstanceOf("constructorEntry").
+        add("name", typeName)
+      stMainRewriter.add("entry", stConsEntry)
+
+      var i = 0
+      for (p <- cc.params) {
+        {
+          val (et, b) = entryType(p.name, p.tipe)
+          stConsEntry.add("et", et)
+          if (b) stConsEntry.add("ec", s"cast(${p.name})")
+          else stConsEntry.add("ec", p.name)
+        }
+        i += 1
+      }
+    }
+    stMainRewriter
+  }
+
+  final def generateJson(licenseOpt: Option[String],
+                         packageNameOpt: Option[String],
+                         className: String,
+                         root: Type): ST = {
+    val h = hierarchy(root.typeSymbol.asClass)
+    val stMainJson = stg.getInstanceOf("mainJson").
+      add("name", className)
+    licenseOpt.foreach(l => stMainJson.add("license", l))
+    packageNameOpt.foreach(p => stMainJson.add("packageName", p))
+
+    val rootName = name(root)
+
+    stMainJson.add("rootClass", rootName)
 
     for (
       c <- h.keys.filterNot(_.isAbstract).
@@ -74,24 +115,14 @@ object CaseClassHelperGen {
 
       val stCaseFrom = stg.getInstanceOf("caseFrom").
         add("name", typeName)
-      stMain.add("fromCase", stCaseFrom)
+      stMainJson.add("fromCase", stCaseFrom)
 
       val stCaseTo = stg.getInstanceOf("caseTo").
         add("name", typeName)
-      stMain.add("toCase", stCaseTo)
-
-      val stConsEntry = stg.getInstanceOf("constructorEntry").
-        add("name", typeName)
-      stMain.add("entry", stConsEntry)
+      stMainJson.add("toCase", stCaseTo)
 
       var i = 0
       for (p <- cc.params) {
-        {
-          val (et, b) = entryType(p.name, p.tipe)
-          stConsEntry.add("et", et)
-          if (b) stConsEntry.add("ec", s"cast(${p.name})")
-          else stConsEntry.add("ec", p.name)
-        }
         {
           val (tipe, typeArgOpt) = fromType(p.tipe)
           val stArg = stg.getInstanceOf("caseFromArg").
@@ -110,7 +141,7 @@ object CaseClassHelperGen {
         i += 1
       }
     }
-    stMain
+    stMainJson
   }
 
   private def name(t: Type) =
@@ -185,6 +216,45 @@ object CaseClassHelperGen {
   }
 
   def main(args: Array[String]): Unit = {
-    println(CaseClassHelperGen.generate(typeOf[org.sireum.pilar.ast.Node]).render())
+    val licenseOpt = Some(
+      """Copyright (c) 2015, Robby, Kansas State University
+        |All rights reserved.
+        |
+        |Redistribution and use in source and binary forms, with or without
+        |modification, are permitted provided that the following conditions are met:
+        |
+        |1. Redistributions of source code must retain the above copyright notice, this
+        |   list of conditions and the following disclaimer.
+        |2. Redistributions in binary form must reproduce the above copyright notice,
+        |   this list of conditions and the following disclaimer in the documentation
+        |   and/or other materials provided with the distribution.
+        |
+        |THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+        |ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        |WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        |DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+        |ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        |(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        |LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        |ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        |(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        |SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+      """.stripMargin.trim)
+    val stRewriter =
+      RewriterJsonGen.generateRewriter(
+        licenseOpt,
+        Some("org.sireum.pilar.ast"),
+        "Rewriter",
+        typeOf[org.sireum.pilar.ast.Node]
+      )
+    val stJson =
+      RewriterJsonGen.generateJson(
+        licenseOpt,
+        Some("org.sireum.pilar.ast"),
+        "Json",
+        typeOf[org.sireum.pilar.ast.Node]
+      )
+    println(stRewriter.render())
+    println(stJson.render())
   }
 }

@@ -71,9 +71,9 @@ sealed trait ReflectGenOption {
   name = "cli",
   header =
     """
-      |Sireum CLI Generator
+      |Sireum Command-Line Interface (CLI) Generator
     """,
-  description = "CLI Generator",
+  description = "CLI generator",
   handler = "org.sireum.util.reflect.ReflectGen"
 )
 final case class CliGenOption(@BeanProperty
@@ -96,7 +96,7 @@ final case class CliGenOption(@BeanProperty
     """
       |Sireum JSON Binding Generator
     """,
-  description = "JSON Binding Generator",
+  description = "JSON binding generator",
   handler = "org.sireum.util.reflect.ReflectGen"
 )
 final case class JsonGenOption(@BeanProperty
@@ -116,9 +116,9 @@ final case class JsonGenOption(@BeanProperty
   name = "rewriter",
   header =
     """
-      |Sireum Case Class Rewriter Generator
+      |Sireum Rewriter Generator
     """,
-  description = "Case Class Rewriter Generator",
+  description = "Rewriter generator",
   handler = "org.sireum.util.reflect.ReflectGen"
 )
 final case class RewriterGenOption(@BeanProperty
