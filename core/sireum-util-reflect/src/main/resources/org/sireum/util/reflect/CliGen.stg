@@ -194,6 +194,7 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
 
 optionCaseOption(shortKey, longKey, fieldName, name, someClass) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
+  i += 1
   args.at(i) match {
     case Some(arg) =>
       option.%fieldName% = %someClass%(arg)

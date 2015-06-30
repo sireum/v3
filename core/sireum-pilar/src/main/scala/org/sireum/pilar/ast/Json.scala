@@ -31,7 +31,6 @@ import upickle.Js
 import org.sireum.util.Json._
 
 object Json {
-
   import scala.language.implicitConversions
 
   implicit def from(o: Node): Js.Obj =

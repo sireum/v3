@@ -159,9 +159,9 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |Available mode(s):
           |
-          |cli         CLI Generator
-          |json        JSON Binding Generator
-          |rewriter    Case Class Rewriter Generator
+          |cli         CLI generator
+          |json        JSON binding generator
+          |rewriter    Rewriter generator
         """.stripMargin.trim
         // @formatter:on
       )
@@ -211,6 +211,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-in" | "--standard-input" =>
           option.standardInput = true
         case "-f" | "--output-file" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.outputFile = org.sireum.util.SomeBean(arg)
@@ -289,7 +290,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       outPrintln(
         // @formatter:off
         s"""
-           |Sireum CLI Generator
+           |Sireum Command-Line Interface (CLI) Generator
            |
            |Usage: sireum util reflect cli <root-class-name>
            |
@@ -321,6 +322,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.outputDir = org.sireum.util.SomeBean(arg)
@@ -329,6 +331,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               return
           }
         case "-l" | "--license-file" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.licenseFile = org.sireum.util.SomeBean(arg)
@@ -401,6 +404,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.outputDir = org.sireum.util.SomeBean(arg)
@@ -409,6 +413,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               return
           }
         case "-l" | "--license-file" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.licenseFile = org.sireum.util.SomeBean(arg)
@@ -449,7 +454,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       outPrintln(
         // @formatter:off
         s"""
-           |Sireum Case Class Rewriter Generator
+           |Sireum Rewriter Generator
            |
            |Usage: sireum util reflect rewriter <root-class-name>
            |
@@ -481,6 +486,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.outputDir = org.sireum.util.SomeBean(arg)
@@ -489,6 +495,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               return
           }
         case "-l" | "--license-file" =>
+          i += 1
           args.at(i) match {
             case Some(arg) =>
               option.licenseFile = org.sireum.util.SomeBean(arg)

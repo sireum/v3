@@ -30,7 +30,6 @@ import java.nio.file.Files
 
 import org.sireum.option._
 import org.sireum.util._
-import scala.reflect.runtime.universe._
 
 object ReflectGen {
 
@@ -45,9 +44,8 @@ object ReflectGen {
       try {
         val companionClass =
           Class.forName(
-            Reflection.companion(
-              Reflection.getClassOfType(opt.root),
-              processAnnotations = false).get._1.asModule.fullName)
+            Reflection.companion(opt.root, processAnnotations = false).
+              get._1.asModule.fullName)
         val o = companionClass.getMethod("make").invoke(null)
         if (o.getClass.getName != option.rootClassName) {
           errPrintln(s"'${option.rootClassName}' companion 'make()' method does not return an object of type '${option.rootClassName}'")
@@ -63,40 +61,64 @@ object ReflectGen {
           return false
       }
 
-    val s = new CliGen(opt.licenseFileOpt, opt.packageNameOpt, opt.className).
-      generate(o).render()
-
-    opt.outputFileOpt match {
-      case Some(f) =>
-        Files.write(f.toPath, s.getBytes)
-      case _ => outPrintln(s)
-    }
-    false
+    write(
+      opt,
+      new CliGen(opt.licenseFileOpt, opt.packageNameOpt, opt.className).
+        generate(o),
+      outPrintln)
   }
 
   final def run(option: JsonGenOption,
                 outPrintln: String => Unit,
                 errPrintln: String => Unit): Boolean = {
-    val opt = check(option, outPrintln, errPrintln)
-    if (opt.isEmpty) return false
-    ???
+    val optOpt = check(option, outPrintln, errPrintln)
+    if (optOpt.isEmpty) return false
+    val opt = optOpt.get
+
+    val root = Reflection.getTypeOfClass(opt.root)
+
+    write(
+      opt,
+      RewriterJsonGen.generateJson(opt.licenseFileOpt,
+        opt.packageNameOpt, opt.className, root),
+      outPrintln)
   }
 
   final def run(option: RewriterGenOption,
                 outPrintln: String => Unit,
                 errPrintln: String => Unit): Boolean = {
-    val opt = check(option, outPrintln, errPrintln)
-    if (opt.isEmpty) return false
-    ???
+    val optOpt = check(option, outPrintln, errPrintln)
+    if (optOpt.isEmpty) return false
+    val opt = optOpt.get
+
+    val root = Reflection.getTypeOfClass(opt.root)
+
+    write(
+      opt,
+      RewriterJsonGen.generateRewriter(opt.licenseFileOpt,
+        opt.packageNameOpt, opt.className, root),
+      outPrintln)
+  }
+
+  private def write(opt: ReflectGenOpt,
+                    s: String,
+                    outPrintln: String => Unit): Boolean = {
+    opt.outputFileOpt match {
+      case Some(f) =>
+        Files.write(f.toPath, s.getBytes)
+        outPrintln(s"Written ${f.getAbsolutePath}")
+      case _ => outPrintln(s)
+    }
+    false
   }
 
   private def check(option: ReflectGenOption,
                     outPrintln: String => Unit,
                     errPrintln: String => Unit): Option[ReflectGenOpt] = {
     var ok = true
-    val tipe =
+    val clazz =
       try {
-        Reflection.getTypeOfClass(Class.forName(option.rootClassName))
+        Class.forName(option.rootClassName)
       } catch {
         case t: Throwable =>
           errPrintln(s"Could not find class named: '${option.rootClassName}'")
@@ -109,7 +131,7 @@ object ReflectGen {
         case SomeBean(path) =>
           val f = new File(path)
           if (f.isFile) {
-            Some(new String(Files.readAllBytes(f.toPath)))
+            Some(new String(Files.readAllBytes(f.toPath)).trim)
           } else {
             errPrintln(s"Could not read license file: '$path'")
             ok = false
@@ -153,7 +175,7 @@ object ReflectGen {
     }
 
     if (ok)
-      Some(ReflectGenOpt(packageName, className, licenseFile, outputFile, tipe))
+      Some(ReflectGenOpt(packageName, className, licenseFile, outputFile, clazz))
     else None
   }
 
@@ -161,6 +183,5 @@ object ReflectGen {
                                    className: String,
                                    licenseFileOpt: Option[String],
                                    outputFileOpt: Option[File],
-                                   root: Type)
-
+                                   root: Class[_])
 }
