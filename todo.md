@@ -1,8 +1,6 @@
 To-Do
 =====
 
-* Implement CLI gen using reflection on case classes
-
 * Added CLI options for JSON and CLI gen utils
 
 * Implement YAML de/serializer for upickle.Js JSON objects to provide user-friendly config files

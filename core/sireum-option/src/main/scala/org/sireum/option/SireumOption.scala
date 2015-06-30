@@ -71,7 +71,7 @@ final case class PilarParserOption(@BeanProperty
                                    var standardInput: Boolean = false,
 
                                    @BeanProperty
-                                   @Opt(shortKey = Some("f"), description = "Output file (if unspecified, use standard output stream)")
+                                   @Opt(shortKey = Some("f"), description = "Output file\n(if unspecified, use standard output stream)")
                                    var outputFile: OptionBean[String] = NoneBean(),
 
                                    @BeanProperty

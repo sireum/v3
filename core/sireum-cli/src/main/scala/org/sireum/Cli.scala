@@ -23,7 +23,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// This file is auto-generated from SireumOption
+// This file was auto-generated from SireumOption
 
 package org.sireum
 
@@ -120,17 +120,18 @@ final class Cli {
            |Usage: sireum pilar parser <file-1> ... <file-N>
            |
            |Options:
-           | -a,  --antlr4            Use ANTLR4 Pilar parser instead of a hand-written one
-           | -e,  --max-errors        Maximum number of errors found before parsing stop
-           |                            Default: ${option.maxErrors}
-           | -i,  --input-mode        Input mode { auto, pilar, json, scala }
-           |                            Default: ${option.inputMode}
-           |-in,  --standard-input    Use standard input stream
-           | -f,  --output-file       Output file (if unspecified, use standard output)
-           | -o,  --output-mode       Output mode { pilar, json, scala }
-           |                            Default: ${option.outputMode}
-           | -h,  --help              Display usage information
-         """.stripMargin.trim
+           | -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
+           | -i, --input-mode        Input mode
+           |                           Default: ${option.inputMode}
+           | -e, --max-errors        Maximum number of errors found before parsing stop
+           |                           Default: ${option.maxErrors}
+           | -f, --output-file       Output file
+           |                         (if unspecified, use standard output stream)
+           | -o, --output-mode       Output mode
+           |                           Default: ${option.outputMode}
+           |-in, --standard-input    Use standard input stream
+           | -h, --help              Display usage information
+        """.stripMargin.trim
         // @formatter:on
       )
     }

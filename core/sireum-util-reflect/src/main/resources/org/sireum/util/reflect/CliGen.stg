@@ -1,5 +1,5 @@
 main(packageName, name, topCommand, rootClass, modeMap, modeDef, mainDef) ::= <<
-// This file is auto-generated from %rootClass%
+// This file was auto-generated from %rootClass%
 
 %if(packageName)%package %packageName%%endif%
 

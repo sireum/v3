@@ -1,5 +1,5 @@
 main(packageName, name, entry, fromCase, toCase) ::= <<
-// This file is auto-generated from the %name% class hierarchy
+// This file was auto-generated from the %name% class hierarchy
 
 package %packageName%
 

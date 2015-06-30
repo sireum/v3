@@ -183,27 +183,24 @@ final class CliGen(packageName: String, className: String) {
       stMainUsage.add("command", c.trim)
     }
 
-    val optionMap = mmapEmpty[String, ISeq[Param]].
+    val optionMap = mmapEmpty[String, ISeq[(Option[String], String, String, Option[String])]].
       withDefaultValue(ivectorEmpty)
     for (p <- cc.params) {
       optOrArg(p.annotations) match {
         case Some(pa) if pa.tipe <:< optAnnType =>
-          if (pa.tipe <:< groupOptType) {
-            val groupName = paramValue[String](pa, "groupName")
-            optionMap(groupName) = optionMap(groupName) :+ p
-          } else {
-            optionMap("") = optionMap("") :+ p
-          }
-
           val shortKeyOpt = paramValue[Option[String]](pa, "shortKey")
           val fieldName = p.name
           val (name, longKey) = nameLongKey(fieldName)
+
+          var defaultOpt: Option[String] = None
 
           if (pa.tipe <:< enumOptType) {
             val elements = paramValue[Seq[String]](pa, "elements")
             if (!(p.tipe =:= stringType)) {
               sys.error(s"Enum main member $cName.${p.name} should be of type String")
             }
+
+            defaultOpt = Some("Default: ${option." + fieldName + "}")
             val stOptionCaseEnum = stg.getInstanceOf("optionCaseEnum").
               add("longKey", longKey).add("fieldName", fieldName).
               add("name", name)
@@ -221,17 +218,21 @@ final class CliGen(packageName: String, className: String) {
                 case `booleanType` =>
                   stg.getInstanceOf("optionCaseBoolean")
                 case `intType` =>
-                  stg.getInstanceOf("optionCaseInt")
+                  defaultOpt = Some("Default: ${option." + fieldName + "}")
+                  stg.getInstanceOf("optionCaseInt").add("name", name)
                 case `stringType` =>
-                  stg.getInstanceOf("optionCaseString")
+                  defaultOpt = Some("Default: ${option." + fieldName + "}")
+                  stg.getInstanceOf("optionCaseString").add("name", name)
                 case t if t <:< optionType || t <:< optionBeanType =>
                   val someClass =
                     if (t <:< optionType) "Some"
                     else "org.sireum.util.SomeBean"
-                  stg.getInstanceOf("optionCaseOption").
+                  stg.getInstanceOf("optionCaseOption").add("name", name).
                     add("someClass", someClass)
                 case t if t <:< cseqStringType =>
-                  stg.getInstanceOf("optionCaseString").add("comma", true)
+                  defaultOpt = Some("Default: \"${option." + fieldName + ".mkString(\",\")}\"")
+                  stg.getInstanceOf("optionCaseString").add("comma", true).
+                    add("name", name)
                 case t =>
                   sys.error(s"Unhandled type '$t' for main member $cName.${p.name}")
               }
@@ -249,6 +250,14 @@ final class CliGen(packageName: String, className: String) {
                 add("name", name)
             shortKeyOpt.foreach(k => stOptionCaseStrings.add("shortKey", k))
             stMainDef.add("optionCase", stOptionCaseStrings)
+          }
+          val q = (shortKeyOpt, longKey, paramValue[String](pa, "description"),
+            defaultOpt)
+          if (pa.tipe <:< groupOptType) {
+            val groupName = paramValue[String](pa, "groupName")
+            optionMap(groupName) = optionMap(groupName) :+ q
+          } else {
+            optionMap("") = optionMap("") :+ q
           }
         case Some(pa) if pa.tipe <:< argType =>
           val fieldName = p.name
@@ -275,9 +284,62 @@ final class CliGen(packageName: String, className: String) {
       }
     }
 
-    for ((groupName, params) <- optionMap.toSeq.sortBy(_._1)) {
+    for ((groupName, qs) <- optionMap.toSeq.sortBy(_._1)) {
+      implicit val sb = new StringBuilder()
+      stMainUsage.add("option", sb)
+      if (groupName != "") {
+        sb.append(groupName)
+        sb.append(' ')
+      }
+      sb.append("Options:")
 
+      val shortKeyMaxLen = 1.max(qs.sortBy(_._1.getOrElse("").length).lastOption match {
+        case Some((shortKeyOpt, _, _, _)) => shortKeyOpt.getOrElse("").length
+        case _ => 0
+      })
+      val longKeyMaxLen = 4.max(qs.sortBy(_._2.length).lastOption match {
+        case Some((_, longKey, _, _)) => longKey.length
+        case _ => 0
+      })
+
+      val descIndent = 1 + shortKeyMaxLen + 4 + longKeyMaxLen + 4
+
+      for ((shortKeyOpt, longKey, description, defaultOpt) <- qs.sortBy(_._2) :+
+        (Some("h"), "help", "Display usage information", None)) {
+        sb.append("\n|")
+        shortKeyOpt match {
+          case Some(shortKey) =>
+            appendSpaces(shortKeyMaxLen - shortKey.length)
+            sb.append('-')
+            sb.append(shortKey)
+            sb.append(", ")
+          case _ =>
+            appendSpaces(1 + shortKeyMaxLen + 2)
+        }
+        sb.append("--")
+        sb.append(longKey)
+        appendSpaces(longKeyMaxLen - longKey.length)
+        val dLines = description.split('\n').map(_.trim)
+        if (dLines.length > 0) {
+          sb.append("    ")
+          sb.append(dLines.head)
+          for (l <- dLines.tail) {
+            sb.append("\n|")
+            appendSpaces(descIndent)
+            sb.append(l)
+          }
+        }
+        if (defaultOpt.isDefined) {
+          sb.append("\n|")
+          appendSpaces(descIndent + 2)
+          sb.append(defaultOpt.get)
+        }
+      }
     }
+  }
+
+  private def appendSpaces(n: Int)(implicit sb: StringBuilder): Unit = {
+    for (i <- 0 until n) sb.append(' ')
   }
 
   private def nameLongKey(s: String) = {
