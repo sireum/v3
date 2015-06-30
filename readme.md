@@ -63,9 +63,9 @@ Pilar: Sireum's Intermediate Representation (IR)
 
 Usage: sireum pilar <mode>
 
-Available mode:
+Available mode(s):
 
-parser   Pilar parser
+parser    Pilar parser
 ```
 
 More example: `sireum p p`
