@@ -27,18 +27,18 @@ Assembling a Fat Jar
 
 Run: `bin/sbt-launch.sh assembly`
  
-The jar will be located at `jvm/target/scala-2.11/sireum-v3.jar`
+The jar will be located at `jvm/target/scala-2.11/sireum.jar`
 
 
 Running Sireum from the Fat Jar
 ===============================
 
-Let `sireum` be an alias for: `java -jar path/to/sireum-v3.jar`
+Let `sireum` be an alias for: `java -jar path/to/sireum.jar`
 
 e.g., in bash:
 
 ```bash
-alias sireum="java -jar jvm/target/scala-2.11/sireum-v3.jar"
+alias sireum="java -jar jvm/target/scala-2.11/sireum.jar"
 ```
 
 Run: `sireum`
@@ -50,9 +50,10 @@ http://sireum.org
 
 Usage: sireum <mode>
 
-Available mode:
+Available mode(s):
 
-pilar    Pilar IR tooling
+pilar    Pilar tooling
+util     Utility tooling
 ```
 
 Another example: `sireum pilar` (or simply `sireum p`)

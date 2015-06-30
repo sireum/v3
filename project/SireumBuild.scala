@@ -67,7 +67,7 @@ object SireumBuild extends Build {
         Seq(
           name := "Sireum.jvm",
           mainClass in assembly := Some("org.sireum.Cli"),
-          assemblyJarName in assembly := "sireum-v3.jar",
+          assemblyJarName in assembly := "sireum.jar",
           test in assembly := {},
           depDot := {
             val args = spaceDelimited("<arg>").parsed
