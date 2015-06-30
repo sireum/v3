@@ -92,7 +92,15 @@ def parse%className%(args: CSeq[String],
 }
 >>
 
-mainDef(className, packageName, optionCase, handler, mainUsage) ::= <<
+mainUsage(header, command, arg, option) ::= <<
+|%header; separator="\n|"%
+|
+|Usage: %command; separator=" "% %arg; separator=" "%
+|
+|%option; separator="\n|\n|"%
+>>
+
+mainDef(className, packageName, optionCase, handler, mainUsage, arg) ::= <<
 def parse%className%(args: CSeq[String],
                            index: Int,
                            o: Product = %packageName%.%className%()): Unit = {
@@ -156,28 +164,28 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   }
 >>
 
-optionCaseString(shortKey, longKey, fieldName, name) ::= <<
+optionCaseString(shortKey, longKey, fieldName, name, comma) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
-    case Some(arg) => option.%fieldName% = arg
+    case Some(arg) => option.%fieldName% = arg%if(comma)%.split(',').map(_.trim)%endif%
     case _ =>
       println("Expected a string value for %name%")
   }
 >>
 
-optionCaseOption(shortKey, longKey, fieldName, name, optionClass) ::= <<
+optionCaseOption(shortKey, longKey, fieldName, name, someClass) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   args.at(i) match {
     case Some(arg) =>
-      option.%fieldName% = %optionClass%(arg)
+      option.%fieldName% = %someClass%(arg)
     case _ =>
       println("Expecting a path for %name%")
       return
   }
 >>
 
-optionCaseEnum(shortKey, longKey, fieldName, name, elem) ::= <<
+optionCaseEnum(shortKey, longKey, fieldName, name, elem, optionCaseEnumElem) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
@@ -210,6 +218,13 @@ if (i < len) {
 } else {
   println("Expected a value for %name%")
   return
+}
+>>
+
+argOptString(fieldName) ::= <<
+if (i < len) {
+  option.%fieldName% = args(i)
+  i += 1
 }
 >>
 

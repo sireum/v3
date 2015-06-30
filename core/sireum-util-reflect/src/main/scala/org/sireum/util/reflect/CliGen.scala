@@ -35,19 +35,29 @@ import scala.reflect.runtime.universe._
 
 object CliGen {
   private final val argType = typeOf[Arg]
-  private final val argOptType = typeOf[ArgOpt]
-  private final val argsType = typeOf[Args]
+  private final val enumOptType = typeOf[EnumOpt]
   private final val groupOptType = typeOf[GroupOpt]
   private final val mainType = typeOf[Main]
   private final val modeType = typeOf[Mode]
   private final val optType = typeOf[Opt]
+  private final val optsType = typeOf[Opts]
+  private final val optAnnType = typeOf[OptAnnotation]
+  private final val cseqStringType = typeOf[CSeq[String]]
+  private final val arrayStringType = typeOf[Array[String]]
+  private final val optionType = typeOf[Option[_]].erasure
+  private final val optionBeanType = typeOf[OptionBean[_]].erasure
+  private final val optionStringType = typeOf[Option[String]]
+  private final val optionBeanStringType = typeOf[OptionBean[String]]
+  private final val booleanType = typeOf[Boolean]
+  private final val intType = typeOf[Int]
+  private final val stringType = typeOf[String]
 
   final val stg = new STGroupFile(getClass.
     getResource("CliGen.stg"), "UTF-8", '%', '%')
 
   def main(args: Array[String]): Unit = {
     println(
-      new CliGen("org.sireum.cli", "Cli").
+      new CliGen("org.sireum", "Cli").
         generate(SireumOption()).
         render())
   }
@@ -70,11 +80,11 @@ final class CliGen(packageName: String, className: String) {
 
     modeOrMain(ccTop.annotations) match {
       case Some(a: Reflection.Annotation) =>
-        val topCommand = paramValue(a, "name").toString
+        val topCommand = paramValue[String](a, "name")
         stMain.add("topCommand", topCommand)
         a.tipe match {
-          case `mainType` => mineMain(ivector(topCommand), ccTop, a)
-          case `modeType` => mineMode(ivector(topCommand), ccTop, a)
+          case `mainType` => main(ivector(topCommand), ccTop, a)
+          case `modeType` => mode(ivector(topCommand), ccTop, a)
         }
       case _ =>
         sys.error(s"Root object ${ccTop.tipe.typeSymbol.fullName} should be either be Mode or Main")
@@ -83,9 +93,9 @@ final class CliGen(packageName: String, className: String) {
     stMain
   }
 
-  private def mineMode(commands: ISeq[String],
-                       cc: CaseClass,
-                       a: Reflection.Annotation): Unit = {
+  private def mode(commands: ISeq[String],
+                   cc: CaseClass,
+                   a: Reflection.Annotation): Unit = {
     val (pName, cName) =
       packageClassNames(cc.tipe.typeSymbol.asClass.fullName)
     val stModeMap = stg.getInstanceOf("modeMap").add("modeClass", cName)
@@ -95,7 +105,7 @@ final class CliGen(packageName: String, className: String) {
       add("className", cName).add("modeUsage", stModeUsage)
     stMain.add("modeDef", stModeDef)
 
-    for (l <- paramValue(a, "header").toString.
+    for (l <- paramValue[String](a, "header").
       stripMargin.trim.split('\n')) {
       stModeUsage.add("header", l)
     }
@@ -110,8 +120,8 @@ final class CliGen(packageName: String, className: String) {
         case Some(ccMember: CaseClass) =>
           modeOrMain(ccMember.annotations) match {
             case Some(a: Reflection.Annotation) =>
-              val command = paramValue(a, "name").toString
-              val description = paramValue(a, "description").toString
+              val command = paramValue[String](a, "name")
+              val description = paramValue[String](a, "description")
               modes = modes :+(command, description)
               stModeMap.add("modeMapEntry",
                 stg.getInstanceOf("modeMapEntry").
@@ -119,9 +129,9 @@ final class CliGen(packageName: String, className: String) {
                   add("className", ccMember.tipe.typeSymbol.name.decodedName))
               a.tipe match {
                 case `mainType` =>
-                  mineMain(commands :+ command, ccMember, a)
+                  main(commands :+ command, ccMember, a)
                 case `modeType` =>
-                  mineMode(commands :+ command, ccMember, a)
+                  mode(commands :+ command, ccMember, a)
               }
             case _ =>
               sys.error(s"Mode member $cName.${p.name} should either be a Mode or Main")
@@ -148,18 +158,152 @@ final class CliGen(packageName: String, className: String) {
     }
   }
 
-  private def paramValue(a: Reflection.Annotation, name: String) =
-    a.params.find(_.name == name).get.value
+  private def paramValue[T](a: Reflection.Annotation, name: String) =
+    a.params.find(_.name == name).get.value.asInstanceOf[T]
 
 
-  private def mineMain(commands: ISeq[String],
-                       cc: CaseClass,
-                       a: Reflection.Annotation) = {
-    // TODO
+  private def main(commands: ISeq[String],
+                   cc: CaseClass,
+                   a: Reflection.Annotation) = {
+    val (pName, cName) =
+      packageClassNames(cc.tipe.typeSymbol.asClass.fullName)
+    val stMainUsage = stg.getInstanceOf("mainUsage")
+    val stMainDef = stg.getInstanceOf("mainDef").add("packageName", pName).
+      add("className", cName).add("mainUsage", stMainUsage).
+      add("handler", paramValue(a, "handler"))
+
+    stMain.add("mainDef", stMainDef)
+
+    for (l <- paramValue[String](a, "header").
+      stripMargin.trim.split('\n')) {
+      stMainUsage.add("header", l)
+    }
+
+    for (c <- commands) {
+      stMainUsage.add("command", c.trim)
+    }
+
+    val optionMap = mmapEmpty[String, ISeq[Param]].
+      withDefaultValue(ivectorEmpty)
+    for (p <- cc.params) {
+      optOrArg(p.annotations) match {
+        case Some(pa) if pa.tipe <:< optAnnType =>
+          if (pa.tipe <:< groupOptType) {
+            val groupName = paramValue[String](pa, "groupName")
+            optionMap(groupName) = optionMap(groupName) :+ p
+          } else {
+            optionMap("") = optionMap("") :+ p
+          }
+
+          val shortKeyOpt = paramValue[Option[String]](pa, "shortKey")
+          val fieldName = p.name
+          val (name, longKey) = nameLongKey(fieldName)
+
+          if (pa.tipe <:< enumOptType) {
+            val elements = paramValue[Seq[String]](pa, "elements")
+            if (!(p.tipe =:= stringType)) {
+              sys.error(s"Enum main member $cName.${p.name} should be of type String")
+            }
+            val stOptionCaseEnum = stg.getInstanceOf("optionCaseEnum").
+              add("longKey", longKey).add("fieldName", fieldName).
+              add("name", name)
+            shortKeyOpt.foreach(k => stOptionCaseEnum.add("shortKey", k))
+            for (e <- elements) {
+              stOptionCaseEnum.add("elem", e)
+              stOptionCaseEnum.add("optionCaseEnumElem",
+                stg.getInstanceOf("optionCaseEnumElem").
+                  add("fieldName", fieldName).add("elem", e))
+            }
+            stMainDef.add("optionCase", stOptionCaseEnum)
+          } else if (pa.tipe =:= optType) {
+            val st =
+              p.tipe match {
+                case `booleanType` =>
+                  stg.getInstanceOf("optionCaseBoolean")
+                case `intType` =>
+                  stg.getInstanceOf("optionCaseInt")
+                case `stringType` =>
+                  stg.getInstanceOf("optionCaseString")
+                case t if t <:< optionType || t <:< optionBeanType =>
+                  val someClass =
+                    if (t <:< optionType) "Some"
+                    else "org.sireum.util.SomeBean"
+                  stg.getInstanceOf("optionCaseOption").
+                    add("someClass", someClass)
+                case t if t <:< cseqStringType =>
+                  stg.getInstanceOf("optionCaseString").add("comma", true)
+                case t =>
+                  sys.error(s"Unhandled type '$t' for main member $cName.${p.name}")
+              }
+            shortKeyOpt.foreach(k => st.add("shortKey", k))
+            stMainDef.add("optionCase",
+              st.add("longKey", longKey).add("fieldName", fieldName))
+          } else {
+            assert(pa.tipe =:= optsType)
+            if (!(p.tipe <:< cseqStringType)) {
+              sys.error(s"Opts main member $cName.${p.name} should be a sequence of String")
+            }
+            val stOptionCaseStrings =
+              stg.getInstanceOf("optionCaseStrings").
+                add("longKey", longKey).add("fieldName", fieldName).
+                add("name", name)
+            shortKeyOpt.foreach(k => stOptionCaseStrings.add("shortKey", k))
+            stMainDef.add("optionCase", stOptionCaseStrings)
+          }
+        case Some(pa) if pa.tipe <:< argType =>
+          val fieldName = p.name
+          val (name, _) = nameLongKey(fieldName)
+          val displayName = paramValue[String](pa, "name")
+          val st =
+            p.tipe match {
+              case t if t =:= stringType =>
+                stMainUsage.add("arg", displayName)
+                stg.getInstanceOf("argString").add("name", name)
+              case t if t <:< optionStringType || t <:< optionBeanStringType =>
+                stg.getInstanceOf("argOptString")
+                stMainUsage.add("arg", s"[$displayName]")
+              case t if t =:= cseqStringType || t =:= arrayStringType =>
+                stMainUsage.add("arg", s"<$displayName-1> ... <$displayName-N>")
+                stg.getInstanceOf("argStrings")
+              case t =>
+                sys.error(s"Arg main member $cName.${p.name} should either be a String, String option, or a sequence of String")
+            }
+          stMainDef.add("arg", st.
+            add("fieldName", fieldName))
+        case _ =>
+          sys.error(s"Main member $cName.${p.name} should be either Arg, EnumGroupOpt, EnumOpt, GroupOpt, Opt, or Opts")
+      }
+    }
+
+    for ((groupName, params) <- optionMap.toSeq.sortBy(_._1)) {
+
+    }
   }
+
+  private def nameLongKey(s: String) = {
+    val sb = new StringBuilder
+    val sbLongKey = new StringBuilder
+    for (c <- s) {
+      if (c.isUpper) {
+        val d = c.toLower
+        sb.append(' ')
+        sb.append(d)
+        sbLongKey.append('-')
+        sbLongKey.append(d)
+      } else {
+        sb.append(c)
+        sbLongKey.append(c)
+      }
+    }
+    (sb.toString(), sbLongKey.toString())
+  }
+
 
   private def modeOrMain(as: Iterable[Reflection.Annotation]) =
     as.find(a => a.tipe =:= modeType || a.tipe =:= mainType)
+
+  private def optOrArg(as: Iterable[Reflection.Annotation]) =
+    as.find(a => a.tipe <:< optAnnType || a.tipe <:< argType)
 
   private def packageClassNames(s: String): (String, String) = {
     val i = s.lastIndexOf('.')

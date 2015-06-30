@@ -28,12 +28,24 @@ package org.sireum.option.annotation
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
 
-sealed trait OptionAnnotation extends StaticAnnotation {
-  def description: String
-}
+sealed trait OptionAnnotation extends StaticAnnotation
 
 sealed trait NamedOptionAnnotation extends OptionAnnotation {
   def name: String
+}
+
+sealed trait OptAnnotation extends OptionAnnotation {
+  def shortKey: Option[String]
+
+  def description: String
+}
+
+sealed trait GroupOptAnnotation extends OptAnnotation {
+  def groupName: String
+}
+
+sealed trait EnumOptAnnotation {
+  def elements: Seq[String]
 }
 
 final case class Mode(name: String,
@@ -44,31 +56,38 @@ final case class Mode(name: String,
 final case class Main(name: String,
                       header: String,
                       description: String,
-                      handlerObject: String)
+                      handler: String)
   extends NamedOptionAnnotation
 
 @getter
 final case class Opt(shortKey: Option[String],
                      description: String)
-  extends OptionAnnotation
+  extends OptAnnotation
+
+@getter
+final case class EnumOpt(shortKey: Option[String],
+                         elements: Seq[String],
+                         description: String)
+  extends OptAnnotation with EnumOptAnnotation
+
+@getter
+final case class Opts(shortKey: Option[String],
+                      description: String)
+  extends OptAnnotation
 
 @getter
 final case class GroupOpt(shortKey: Option[String],
                           description: String,
                           groupName: String)
-  extends OptionAnnotation
+  extends GroupOptAnnotation
 
 @getter
-final case class Arg(name: String,
-                     description: String)
-  extends NamedOptionAnnotation
+final case class EnumGroupOpt(shortKey: Option[String],
+                              elements: Seq[String],
+                              description: String,
+                              groupName: String)
+  extends GroupOptAnnotation with EnumOptAnnotation
 
 @getter
-final case class ArgOpt(name: String,
-                        description: String)
-  extends NamedOptionAnnotation
-
-@getter
-final case class Args(name: String,
-                      description: String)
+final case class Arg(name: String)
   extends NamedOptionAnnotation

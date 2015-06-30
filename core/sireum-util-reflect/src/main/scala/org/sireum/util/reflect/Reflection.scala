@@ -50,7 +50,6 @@ object Reflection {
   final val bigIntType = typeOf[BigInt]
   final val stringType = typeOf[String]
   final val productType = typeOf[Product].erasure
-  final val arrayType = typeOf[Array[_]].erasure
   final val seqType = typeOf[CSeq[_]].erasure
   final val noneType = typeOf[None.type]
 
@@ -216,13 +215,11 @@ object Reflection {
         case Literal(Constant(v)) => v
         case Apply(fun, args) =>
           tr.tpe match {
-            case t if t <:< arrayType =>
-              Array(args.map(tree): _*)
-            case t if t <:< seqType =>
-              Vector(args.map(tree): _*)
             case t if t <:< productType =>
               getClassOfType(t).getConstructors()(0).
                 newInstance(args.map(tree).map(_.asInstanceOf[AnyRef]): _*)
+            case t if t <:< seqType =>
+              Vector(args.map(tree): _*)
           }
         case AssignOrNamedArg(_, rhs) =>
           tree(rhs)

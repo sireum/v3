@@ -61,11 +61,10 @@ final case class PilarOption(@BeanProperty
   header =
     """
       |Pilar Parser
-      |... and pretty printer
-      |... and JSON serializer/deserializer
+      |... and pretty printer and JSON de/serializer
     """,
   description = "Pilar parser",
-  handlerObject = "org.sireum.pilar.parser.Parser"
+  handler = "org.sireum.pilar.parser.Parser"
 )
 final case class PilarParserOption(@BeanProperty
                                    @Opt(shortKey = Some("in"), description = "Use standard input stream")
@@ -76,11 +75,11 @@ final case class PilarParserOption(@BeanProperty
                                    var outputFile: OptionBean[String] = NoneBean(),
 
                                    @BeanProperty
-                                   @Opt(shortKey = Some("i"), description = "Input mode")
+                                   @EnumOpt(shortKey = Some("i"), elements = Seq("auto", "pilar", "json", "scala"), description = "Input mode")
                                    var inputMode: PilarParserOption.InputMode.Type = PilarParserOption.InputMode.Auto,
 
                                    @BeanProperty
-                                   @Opt(shortKey = Some("o"), description = "Output mode")
+                                   @EnumOpt(shortKey = Some("o"), elements = Seq("pilar", "json", "scala"), description = "Output mode")
                                    var outputMode: PilarParserOption.OutputMode.Type = PilarParserOption.InputMode.JSON,
 
                                    @BeanProperty
@@ -92,7 +91,7 @@ final case class PilarParserOption(@BeanProperty
                                    var maxErrors: Int = 10,
 
                                    @BeanProperty
-                                   @Args(name = "file", description = "Input files")
+                                   @Arg(name = "file")
                                    var inputs: Array[String] = Array())
 
 object PilarParserOption {
