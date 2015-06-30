@@ -41,5 +41,6 @@
     <orderEntry type="module" module-name="sireum-pilar-parser-antlr4" exported="" />
     <orderEntry type="module" module-name="sireum-cli" exported="" />
     <orderEntry type="module" module-name="sireum-option" exported="" />
+    <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.15:jar" level="project" />
   </component>
 </module>

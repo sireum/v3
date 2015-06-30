@@ -38,12 +38,12 @@ sealed trait OptionBean[T] {
   def toOption: Option[T]
 }
 
-final case class SomeBean[T](@BeanProperty var value: T)
+final case class some[T](@BeanProperty var value: T)
   extends OptionBean[T] {
   override def toOption: Option[T] = Some(value)
 }
 
-final case class NoneBean[T]() extends OptionBean[T] {
+final case class none[T]() extends OptionBean[T] {
   override def toOption: Option[T] = None
 }
 

@@ -66,7 +66,7 @@ object SireumBuild extends Build {
       settings = sireumJvmSettings ++ assemblySettings ++
         Seq(
           name := "Sireum.jvm",
-          mainClass in assembly := Some("org.sireum.Cli"),
+          mainClass in assembly := Some("org.Sireum"),
           assemblyJarName in assembly := "sireum.jar",
           test in assembly := {},
           depDot := {
@@ -145,7 +145,8 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "com.lihaoyi" %% "upickle" % "0.2.8",
       "org.antlr" % "antlr4-runtime" % "4.5",
-      "org.antlr" % "ST4" % "4.0.8"
+      "org.antlr" % "ST4" % "4.0.8",
+      "org.yaml" % "snakeyaml" % "1.15"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),

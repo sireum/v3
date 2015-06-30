@@ -26,12 +26,12 @@ object %name% {
       if (i < a.length) Some(a(i)) else None
   }
 
-  private def oPrintln(line: String): Unit = {
+  def oPrintln(line: String): Unit = {
     Console.out.println(line)
     Console.out.flush()
   }
 
-  private def ePrintln(line: String): Unit = {
+  def ePrintln(line: String): Unit = {
     Console.err.println(line)
     Console.err.flush()
   }

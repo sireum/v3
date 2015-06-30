@@ -123,7 +123,8 @@ object Reflection {
   def fullName(t: Type) = t.typeSymbol.fullName
 
   @inline
-  def constructor(t: Type) = t.decl(termNames.CONSTRUCTOR).asMethod
+  def constructor(t: Type) =
+    t.decl(termNames.CONSTRUCTOR).asTerm.alternatives.head.asMethod
 
   @inline
   def getType(o: Any, m: Mirror = mirror): Type = {

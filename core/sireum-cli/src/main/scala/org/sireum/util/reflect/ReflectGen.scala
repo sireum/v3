@@ -128,7 +128,7 @@ object ReflectGen {
 
     val licenseFile =
       option.licenseFile match {
-        case SomeBean(path) =>
+        case some(path) =>
           val f = new File(path)
           if (f.isFile) {
             Some(new String(Files.readAllBytes(f.toPath)).trim)
@@ -142,7 +142,7 @@ object ReflectGen {
 
     val (outputFile, packageName, className) =
       option.outputDir match {
-        case SomeBean(path) =>
+        case some(path) =>
           val d = new File(path)
           if (d.isFile) {
             errPrintln(s"Output directory is a file: '$path'")

@@ -39,7 +39,9 @@ import scala.beans.BeanProperty
   description = "Pilar tooling"
 )
 final case class PilarOption(@BeanProperty
-                             var parser: PilarParserOption = PilarParserOption())
+                             var parser: PilarParserOption = PilarParserOption()) {
+  def this() = this(PilarParserOption())
+}
 
 
 @Main(
@@ -58,7 +60,7 @@ final case class PilarParserOption(@BeanProperty
 
                                    @BeanProperty
                                    @Opt(shortKey = Some("f"), description = "Output file\n(if unspecified, use standard output stream)")
-                                   var outputFile: OptionBean[String] = NoneBean(),
+                                   var outputFile: OptionBean[String] = none(),
 
                                    @BeanProperty
                                    @EnumOpt(shortKey = Some("i"), elements = Seq("auto", "pilar", "json", "scala"), description = "Input mode")
@@ -78,7 +80,9 @@ final case class PilarParserOption(@BeanProperty
 
                                    @BeanProperty
                                    @Arg(name = "file")
-                                   var inputs: Array[String] = Array())
+                                   var inputs: Array[String] = Array()) {
+  def this() = this(false, none(), PilarParserOption.InputMode.Auto, PilarParserOption.OutputMode.JSON, false, 10, Array())
+}
 
 object PilarParserOption {
 

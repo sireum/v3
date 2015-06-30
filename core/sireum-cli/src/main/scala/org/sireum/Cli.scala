@@ -42,12 +42,12 @@ object Cli {
       if (i < a.length) Some(a(i)) else None
   }
 
-  private def oPrintln(line: String): Unit = {
+  def oPrintln(line: String): Unit = {
     Console.out.println(line)
     Console.out.flush()
   }
 
-  private def ePrintln(line: String): Unit = {
+  def ePrintln(line: String): Unit = {
     Console.err.println(line)
     Console.err.flush()
   }
@@ -65,6 +65,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     ("parser", parsePilarParserOption _)
   )
   val modeUtilOptionMap: M = Vector(
+    ("option", parseUtilOptionOption _),
     ("reflect", parseUtilReflectOption _)
   )
   val modeUtilReflectOptionMap: M = Vector(
@@ -136,6 +137,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |Available mode(s):
           |
+          |option     Option printer
           |reflect    Reflective tooling
         """.stripMargin.trim
         // @formatter:on
@@ -214,7 +216,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.outputFile = org.sireum.util.SomeBean(arg)
+              option.outputFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output file")
               return
@@ -282,6 +284,48 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
+  def parseUtilOptionOption(args: CSeq[String],
+                            index: Int,
+                            o: Product = org.sireum.option.UtilOptionOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.UtilOptionOption]
+    def printUsage(): Unit = {
+      outPrintln(
+        // @formatter:off
+        s"""
+           |Sireum Option Printer
+           |
+           |Usage: sireum util option 
+           |
+           |
+        """.stripMargin.trim
+        // @formatter:on
+      )
+    }
+    val len = args.length
+    var foundHelp = false
+
+    var i = index
+    var processingOptions = true
+    while (i < len && processingOptions) {
+      args(i) match {
+        case "-h" | "--help" =>
+          foundHelp = true
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            errPrintln(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
+      }
+
+      if (processingOptions) i += 1
+    }
+
+
+    if (foundHelp || org.Sireum.run(option, outPrintln, errPrintln)) {
+      printUsage()
+    }
+  }
+
   def parseCliGenOption(args: CSeq[String],
                         index: Int,
                         o: Product = org.sireum.option.CliGenOption()): Unit = {
@@ -325,7 +369,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.outputDir = org.sireum.util.SomeBean(arg)
+              option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
               return
@@ -334,7 +378,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.licenseFile = org.sireum.util.SomeBean(arg)
+              option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
               return
@@ -407,7 +451,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.outputDir = org.sireum.util.SomeBean(arg)
+              option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
               return
@@ -416,7 +460,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.licenseFile = org.sireum.util.SomeBean(arg)
+              option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
               return
@@ -489,7 +533,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.outputDir = org.sireum.util.SomeBean(arg)
+              option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
               return
@@ -498,7 +542,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.licenseFile = org.sireum.util.SomeBean(arg)
+              option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
               return

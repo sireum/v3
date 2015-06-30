@@ -231,7 +231,7 @@ final class CliGen(licenseOpt: Option[String],
                 case t if t <:< optionType || t <:< optionBeanType =>
                   val someClass =
                     if (t <:< optionType) "Some"
-                    else "org.sireum.util.SomeBean"
+                    else "org.sireum.util.some"
                   stg.getInstanceOf("optionCaseOption").add("name", name).
                     add("someClass", someClass)
                 case t if t <:< cseqStringType =>

@@ -46,4 +46,6 @@ object SireumOption {
 final case class SireumOption(@BeanProperty
                               var pilar: PilarOption = PilarOption(),
                               @BeanProperty
-                              var util: UtilOption = UtilOption())
+                              var util: UtilOption = UtilOption()) {
+  def this() = this(PilarOption(), UtilOption())
+}

@@ -39,7 +39,22 @@ import scala.beans.BeanProperty
   description = "Utility tooling"
 )
 final case class UtilOption(@BeanProperty
-                            var reflect: UtilReflectOption = UtilReflectOption())
+                            var option: UtilOptionOption = UtilOptionOption(),
+                            @BeanProperty
+                            var reflect: UtilReflectOption = UtilReflectOption()) {
+  def this() = this(UtilOptionOption(), UtilReflectOption())
+}
+
+@Main(
+  name = "option",
+  header =
+    """
+      |Sireum Option Printer
+    """,
+  description = "Option printer",
+  handler = "org.Sireum"
+)
+final case class UtilOptionOption()
 
 @Mode(
   name = "reflect",
@@ -54,8 +69,9 @@ final case class UtilReflectOption(@BeanProperty
                                    @BeanProperty
                                    var jsonGen: JsonGenOption = JsonGenOption(),
                                    @BeanProperty
-                                   var rewriterGen: RewriterGenOption = RewriterGenOption())
-
+                                   var rewriterGen: RewriterGenOption = RewriterGenOption()) {
+  def this() = this(CliGenOption(), JsonGenOption(), RewriterGenOption())
+}
 
 sealed trait ReflectGenOption {
   def className: String
@@ -81,14 +97,15 @@ final case class CliGenOption(@BeanProperty
                               var className: String = "Cli",
                               @BeanProperty
                               @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
-                              var outputDir: OptionBean[String] = NoneBean(),
+                              var outputDir: OptionBean[String] = none(),
                               @BeanProperty
                               @Opt(shortKey = Some("l"), description = "File containing license for output")
-                              var licenseFile: OptionBean[String] = NoneBean(),
+                              var licenseFile: OptionBean[String] = none(),
                               @BeanProperty
                               @Arg("root-class-name")
-                              var rootClassName: String = "")
-  extends ReflectGenOption
+                              var rootClassName: String = "") extends ReflectGenOption {
+  def this() = this("Cli", none(), none(), "")
+}
 
 @Main(
   name = "json",
@@ -104,13 +121,14 @@ final case class JsonGenOption(@BeanProperty
                                var className: String = "Json",
                                @BeanProperty
                                @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
-                               var outputDir: OptionBean[String] = NoneBean(),
+                               var outputDir: OptionBean[String] = none(),
                                @Opt(shortKey = Some("l"), description = "File containing license for output")
-                               var licenseFile: OptionBean[String] = NoneBean(),
+                               var licenseFile: OptionBean[String] = none(),
                                @BeanProperty
                                @Arg("root-class-name")
-                               var rootClassName: String = "")
-  extends ReflectGenOption
+                               var rootClassName: String = "") extends ReflectGenOption {
+  def this() = this("Json", none(), none(), "")
+}
 
 @Main(
   name = "rewriter",
@@ -126,10 +144,11 @@ final case class RewriterGenOption(@BeanProperty
                                    var className: String = "Rewriter",
                                    @BeanProperty
                                    @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
-                                   var outputDir: OptionBean[String] = NoneBean(),
+                                   var outputDir: OptionBean[String] = none(),
                                    @Opt(shortKey = Some("l"), description = "File containing license for output")
-                                   var licenseFile: OptionBean[String] = NoneBean(),
+                                   var licenseFile: OptionBean[String] = none(),
                                    @BeanProperty
                                    @Arg("root-class-name")
-                                   var rootClassName: String = "")
-  extends ReflectGenOption
+                                   var rootClassName: String = "") extends ReflectGenOption {
+  def this() = this("Rewriter", none(), none(), "")
+}
