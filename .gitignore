@@ -16,3 +16,4 @@ target
 .cache*
 .scala_dependencies
 project-dependency.dot
+*.class

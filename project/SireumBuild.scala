@@ -42,6 +42,7 @@ object SireumBuild extends Build {
 
   final val BUILD_FILENAME = "BUILD"
   final val CORE_DIR = "core/"
+  final val JAVA_DIR = "java/"
 
   import ProjectInfo._
 
@@ -97,7 +98,8 @@ object SireumBuild extends Build {
   )
 
   lazy val subProjectsJvm = Seq(
-    cli, pilarParserAntlr4, utilReflect
+    cli, pilarParserAntlr4, utilReflect,
+    javaTranslator
   )
 
   lazy val subProjectsJs = Seq(
@@ -196,6 +198,9 @@ object SireumBuild extends Build {
   lazy val pilarParserAntlr4 = toSbtProject(pilarParserAntlr4PI, sireumJvmSettings)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
   lazy val cli = toSbtProject(cliPI, sireumJvmSettings)
+
+  val javaTranslatorPI = new ProjectInfo("sireum-java-translator", JAVA_DIR, Seq(), utilPI, optionPI, pilarPI)
+  lazy val javaTranslator = toSbtProject(javaTranslatorPI, sireumJvmSettings)
 
   // Jvm Test Projects
   val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserAntlr4PI, optionPI, cliPI)

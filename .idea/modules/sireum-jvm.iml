@@ -41,5 +41,6 @@
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.15:jar" level="project" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm:5.0.4:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-java-translator" exported="" />
   </component>
 </module>
