@@ -51,11 +51,53 @@ object RewriterJsonGen {
   val stg = new STGroupFile(getClass.
     getResource("RewriterJsonGen.stg"), "UTF-8", '%', '%')
 
-  final def generateRewriter(licenseOpt: Option[String],
-                             packageNameOpt: Option[String],
-                             className: String,
-                             root: Type,
-                             imports: ISeq[String]): String = {
+  def main(args: Array[String]): Unit = {
+    val licenseOpt = Some(sireumV3License)
+    val rewriter =
+      new RewriterJsonGen(
+        licenseOpt,
+        Some("org.sireum.pilar.ast"),
+        "Rewriter",
+        typeOf[org.sireum.pilar.ast.Node],
+        ivectorEmpty,
+        ivectorEmpty
+      ).generateRewriter()
+    val json =
+      new RewriterJsonGen(
+        licenseOpt,
+        Some("org.sireum.pilar.ast"),
+        "Json",
+        typeOf[org.sireum.pilar.ast.Node],
+        ivectorEmpty,
+        ivectorEmpty
+      ).generateJson()
+    //    val json =
+    //      new RewriterJsonGen(
+    //        licenseOpt,
+    //        Some("org.sireum.java.meta"),
+    //        "AnnotationJson",
+    //        typeOf[org.sireum.java.meta.MetaAnnotation],
+    //        ivector("TypeJson"),
+    //        ivector(classOf[org.sireum.java.meta.Type])
+    //      ).generateJson()
+    println(rewriter)
+    println(json)
+  }
+}
+
+import RewriterJsonGen._
+
+final class RewriterJsonGen(licenseOpt: Option[String],
+                            packageNameOpt: Option[String],
+                            className: String,
+                            root: Type,
+                            imports: ISeq[String],
+                            roots: ISeq[Class[_]]) {
+
+  private val rootTypes: ISeq[Type] =
+    roots.map(c => Reflection.getTypeOfClass(c))
+
+  def generateRewriter(): String = {
     val h = hierarchy(root.typeSymbol.asClass)
     val stMainRewriter = stg.getInstanceOf("mainRewriter").
       add("name", className)
@@ -99,11 +141,7 @@ object RewriterJsonGen {
     stMainRewriter.render()
   }
 
-  final def generateJson(licenseOpt: Option[String],
-                         packageNameOpt: Option[String],
-                         className: String,
-                         root: Type,
-                         imports: ISeq[String]): String = {
+  def generateJson(): String = {
     val h = hierarchy(root.typeSymbol.asClass)
     val stMainJson = stg.getInstanceOf("mainJson").
       add("name", className)
@@ -152,7 +190,7 @@ object RewriterJsonGen {
         var i = 0
         for (p <- cc.params) {
           {
-            val (tipe, typeArgOpt) = fromType(p.tipe, root)
+            val (tipe, typeArgOpt) = fromType(p.tipe)
             val stArg = stg.getInstanceOf("caseFromArg").
               add("name", p.name).
               add("type", tipe)
@@ -160,7 +198,7 @@ object RewriterJsonGen {
             stCaseFrom.add("arg", stArg)
           }
           {
-            val (tipe, typeArgOpt) = toType(p.tipe, root)
+            val (tipe, typeArgOpt) = toType(p.tipe)
             val stArg = stg.getInstanceOf("caseToArg").
               add("type", tipe).add("i", i + 1)
             typeArgOpt.foreach(arg => stArg.add("arg", arg))
@@ -197,50 +235,62 @@ object RewriterJsonGen {
         (s"$n: ${name(t)}", false)
     }
 
-  private def fromType1(root: Type)(t: Type) = fromType(t, root)._1
+  private def fromType1(t: Type) = fromType(t)._1
 
-  private def fromType(t: Type, root: Type): (String, ISeq[String]) =
+  private def fromType(t: Type): (String, ISeq[String]) =
     t match {
       case _ if t <:< anyValType =>
         ("fromAnyVal", ivectorEmpty)
       case _ if t =:= stringType =>
         ("fromStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
-        ("fromOption", t.typeArgs.map(fromType1(root)))
+        ("fromOption", t.typeArgs.map(fromType1))
       case _ if t.dealias.erasure =:= vectorType =>
-        ("fromSeq", t.typeArgs.map(fromType1(root)))
+        ("fromSeq", t.typeArgs.map(fromType1))
       case _ if t.dealias.erasure =:= tuple2Type =>
-        ("fromTuple2", t.typeArgs.map(fromType1(root)))
+        ("fromTuple2", t.typeArgs.map(fromType1))
       case _ if t.dealias.erasure =:= tuple3Type =>
-        ("fromTuple3", t.typeArgs.map(fromType1(root)))
+        ("fromTuple3", t.typeArgs.map(fromType1))
       case _ if t <:< productType =>
         if (t <:< root)
           (s"from${name(root)}", ivectorEmpty)
-        else
+        else {
+          for (it <- rootTypes) {
+            if (t <:< it) {
+              return (s"from${name(it)}", ivectorEmpty)
+            }
+          }
           (s"from${name(t)}", ivectorEmpty)
+        }
     }
 
-  private def toType1(root: Type)(t: Type) = toType(t, root)._1
+  private def toType1(t: Type) = toType(t)._1
 
-  private def toType(t: Type, root: Type): (String, ISeq[String]) =
+  private def toType(t: Type): (String, ISeq[String]) =
     t match {
       case _ if t <:< anyValType =>
         ("to" + name(t), ivectorEmpty)
       case _ if t =:= stringType =>
         ("toStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
-        ("toOption", t.typeArgs.map(toType1(root)))
+        ("toOption", t.typeArgs.map(toType1))
       case _ if t.dealias.erasure =:= vectorType =>
-        ("toVector", t.typeArgs.map(toType1(root)))
+        ("toVector", t.typeArgs.map(toType1))
       case _ if t.dealias.erasure =:= tuple2Type =>
-        ("toTuple2", t.typeArgs.map(toType1(root)))
+        ("toTuple2", t.typeArgs.map(toType1))
       case _ if t.dealias.erasure =:= tuple3Type =>
-        ("toTuple3", t.typeArgs.map(toType1(root)))
+        ("toTuple3", t.typeArgs.map(toType1))
       case _ if t <:< productType =>
         if (t <:< root)
           (s"to${name(root)}[${name(t)}]", ivectorEmpty)
-        else
+        else {
+          for (it <- rootTypes) {
+            if (t <:< it) {
+              return (s"to${name(it)}[${name(t)}]", ivectorEmpty)
+            }
+          }
           (s"to${name(t)}[${name(t)}]", ivectorEmpty)
+        }
     }
 
   private def hierarchy(c: ClassSymbol,
@@ -252,27 +302,5 @@ object RewriterJsonGen {
         hierarchy(sub.asClass, map)
     }
     map
-  }
-
-  def main(args: Array[String]): Unit = {
-    val licenseOpt = Some(sireumV3License)
-    val rewriter =
-      RewriterJsonGen.generateRewriter(
-        licenseOpt,
-        Some("org.sireum.pilar.ast"),
-        "Rewriter",
-        typeOf[org.sireum.pilar.ast.Node],
-        ivectorEmpty
-      )
-    val json =
-      RewriterJsonGen.generateJson(
-        licenseOpt,
-        Some("org.sireum.pilar.ast"),
-        "Json",
-        typeOf[org.sireum.pilar.ast.Node],
-        ivectorEmpty
-      )
-    println(rewriter)
-    println(json)
   }
 }

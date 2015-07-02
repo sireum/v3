@@ -35,7 +35,7 @@ sealed trait MetaAnnotation extends Product
 
 sealed trait ArgValue extends MetaAnnotation
 
-final case class Annotation(args: MetaAnnotation.Seq[Arg]) extends ArgValue
+final case class Annotation(tipe: ObjectType, args: MetaAnnotation.Seq[Arg]) extends ArgValue
 
 final case class Arg(name: String, value: ArgValue) extends MetaAnnotation
 

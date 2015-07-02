@@ -411,9 +411,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                        Default: ${option.className}
            |-d, --output-dir      Output directory
            |                      (If unspecified, use standard output stream)
-           |-i, --imports         Import type names of other JSON binding
+           |-i, --imports         Class names of other JSON bindings or packages to import
            |                        Default: "${option.imports.mkString(",")}"
            |-l, --license-file    File containing license for output
+           |-r, --roots           Class names of other roots to import
+           |                        Default: "${option.roots.mkString(",")}"
            |-h, --help            Display usage information
         """.stripMargin.trim
       )
@@ -449,6 +451,13 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case Some(arg) => option.imports = arg.split(',').map(_.trim)
             case _ =>
               errPrintln("Expected a string value for imports")
+          }
+        case "-r" | "--roots" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.roots = arg.split(',').map(_.trim)
+            case _ =>
+              errPrintln("Expected a string value for roots")
           }
         case "-l" | "--license-file" =>
           i += 1
@@ -500,7 +509,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                        Default: ${option.className}
            |-d, --output-dir      Output directory
            |                      (If unspecified, use standard output stream)
-           |-i, --imports         Import type names of other JSON binding
+           |-i, --imports         Class names of other rewriters to import
            |                        Default: "${option.imports.mkString(",")}"
            |-l, --license-file    File containing license for output
            |-h, --help            Display usage information

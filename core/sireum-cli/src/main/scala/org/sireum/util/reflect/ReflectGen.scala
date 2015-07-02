@@ -66,6 +66,7 @@ object ReflectGen {
       new CliGen(opt.licenseFileOpt, opt.packageNameOpt, opt.className).
         generate(o),
       outPrintln)
+    false
   }
 
   final def run(option: JsonGenOption,
@@ -75,14 +76,15 @@ object ReflectGen {
     if (optOpt.isEmpty) return false
     val opt = optOpt.get
 
-    val root = Reflection.getTypeOfClass(opt.root)
-
+    for (roots <- toClass(option.roots, errPrintln)) yield
     write(
       opt,
-      RewriterJsonGen.generateJson(opt.licenseFileOpt,
-        opt.packageNameOpt, opt.className, root,
-        option.imports.toVector),
+      new RewriterJsonGen(opt.licenseFileOpt,
+        opt.packageNameOpt, opt.className,
+        Reflection.getTypeOfClass(opt.root),
+        option.imports.toVector, roots).generateJson(),
       outPrintln)
+    false
   }
 
   final def run(option: RewriterGenOption,
@@ -92,26 +94,41 @@ object ReflectGen {
     if (optOpt.isEmpty) return false
     val opt = optOpt.get
 
-    val root = Reflection.getTypeOfClass(opt.root)
-
     write(
       opt,
-      RewriterJsonGen.generateRewriter(opt.licenseFileOpt,
-        opt.packageNameOpt, opt.className, root,
-        option.imports.toVector),
+      new RewriterJsonGen(opt.licenseFileOpt,
+        opt.packageNameOpt, opt.className,
+        Reflection.getTypeOfClass(opt.root),
+        option.imports.toVector, ivectorEmpty).generateRewriter(),
       outPrintln)
+    false
+  }
+
+  private def toClass(imports: Array[String],
+                      errPrintln: String => Unit): Option[ISeq[Class[_]]] = {
+    var result = ivectorEmpty[Class[_]]
+    var ok = true
+    for (i <- imports) {
+      try {
+        result = result :+ Class.forName(i)
+      } catch {
+        case t: Throwable =>
+          errPrintln(s"Could not load class '$i'")
+          ok = false
+      }
+    }
+    if (ok) Some(result) else None
   }
 
   private def write(opt: ReflectGenOpt,
                     s: String,
-                    outPrintln: String => Unit): Boolean = {
+                    outPrintln: String => Unit): Unit = {
     opt.outputFileOpt match {
       case Some(f) =>
         Files.write(f.toPath, s.getBytes)
         outPrintln(s"Written ${f.getAbsolutePath}")
       case _ => outPrintln(s)
     }
-    false
   }
 
   private def check(option: ReflectGenOption,
@@ -142,28 +159,29 @@ object ReflectGen {
         case _ => None
       }
 
-    val (outputFile, packageName, className) =
+    val (packageName, className) = {
+      val i = option.className.lastIndexOf('.')
+      if (i < 0) (None, option.className)
+      else
+        (Some(option.className.substring(0, i)),
+          option.className.substring(i + 1))
+    }
+
+    val outputFile =
       option.outputDir match {
         case some(path) =>
           val d = new File(path)
           if (d.isFile) {
             errPrintln(s"Output directory is a file: '$path'")
             ok = false
-            (None, None, "")
+            None
           } else {
             if (!d.exists()) {
               outPrintln(s"Output directory does not exist; it will be created")
             }
-            val i = option.className.lastIndexOf('.')
-            val (packageName, className) =
-              if (i < 0) (None, option.className)
-              else
-                (Some(option.className.substring(0, i)),
-                  option.className.substring(i + 1))
-            (Some(new File(d, option.className.replaceAll("\\.", "/") + ".scala")),
-              packageName, className)
+            Some(new File(d, option.className.replaceAll("\\.", "/") + ".scala"))
           }
-        case _ => (None, None, "")
+        case _ => None
       }
 
     if (ok) {
@@ -186,4 +204,5 @@ object ReflectGen {
                                    licenseFileOpt: Option[String],
                                    outputFileOpt: Option[File],
                                    root: Class[_])
+
 }

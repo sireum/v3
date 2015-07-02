@@ -123,14 +123,17 @@ final case class JsonGenOption(@BeanProperty
                                @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
                                var outputDir: OptionBean[String] = none(),
                                @BeanProperty
-                               @Opt(shortKey = Some("i"), description = "Import type names of other JSON binding")
+                               @Opt(shortKey = Some("i"), description = "Class names of other JSON bindings or packages to import")
                                var imports: Array[String] = Array(),
+                               @BeanProperty
+                               @Opt(shortKey = Some("r"), description = "Class names of other roots to import")
+                               var roots: Array[String] = Array(),
                                @Opt(shortKey = Some("l"), description = "File containing license for output")
                                var licenseFile: OptionBean[String] = none(),
                                @BeanProperty
                                @Arg("root-class-name")
                                var rootClassName: String = "") extends ReflectGenOption {
-  def this() = this("Json", none(), Array(), none(), "")
+  def this() = this("Json", none(), Array(), Array(), none(), "")
 }
 
 @Main(
@@ -149,7 +152,7 @@ final case class RewriterGenOption(@BeanProperty
                                    @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
                                    var outputDir: OptionBean[String] = none(),
                                    @BeanProperty
-                                   @Opt(shortKey = Some("i"), description = "Import type names of other JSON binding")
+                                   @Opt(shortKey = Some("i"), description = "Class names of other rewriters to import")
                                    var imports: Array[String] = Array(),
                                    @Opt(shortKey = Some("l"), description = "File containing license for output")
                                    var licenseFile: OptionBean[String] = none(),

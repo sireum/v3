@@ -27,24 +27,24 @@ package org.sireum.java.meta
 
 sealed trait Type extends Product
 
-case object Void extends Type
+case object VoidType extends Type
 
-case object Boolean extends Type
+case object BooleanType extends Type
 
-case object Byte extends Type
+case object ByteType extends Type
 
-case object Char extends Type
+case object CharType extends Type
 
-case object Short extends Type
+case object ShortType extends Type
 
-case object Int extends Type
+case object IntType extends Type
 
-case object Long extends Type
+case object LongType extends Type
 
-case object Float extends Type
+case object FloatType extends Type
 
-case object Double extends Type
+case object DoubleType extends Type
 
-final case class Object(name: String) extends Type
+final case class ObjectType(name: String) extends Type
 
-final case class Array(element: Type) extends Type
+final case class ArrayType(element: Type) extends Type

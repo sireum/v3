@@ -40,6 +40,7 @@ object AnnotationJson {
       case o: org.sireum.java.meta.Annotation =>
         Js.Obj(
           (".class", Js.Str("Annotation")),
+          ("tipe", fromType(o.tipe)),
           ("args", fromSeq(o.args)(fromMetaAnnotation))
         )
       case o: org.sireum.java.meta.Arg =>
@@ -111,7 +112,7 @@ object AnnotationJson {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Annotation" =>
-             org.sireum.java.meta.Annotation(toVector(o.value(1)._2)(toMetaAnnotation[Arg]))
+             org.sireum.java.meta.Annotation(toType[ObjectType](o.value(1)._2), toVector(o.value(2)._2)(toMetaAnnotation[Arg]))
            case "Arg" =>
              org.sireum.java.meta.Arg(toStr(o.value(1)._2), toMetaAnnotation[ArgValue](o.value(2)._2))
            case "ArrayValue" =>
