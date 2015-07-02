@@ -210,6 +210,8 @@ package object util {
     def pop(): (E, IStack[E]) = (l.head, l.tail)
 
     def push(e: E): IStack[E] = e :: l
+
+    def top = l.head
   }
 
   object CompareResult extends Enum("Compare") {
