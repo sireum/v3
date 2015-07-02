@@ -31,6 +31,7 @@ package org.sireum.java.meta
 import upickle.Js
 import org.sireum.util.Json._
 import TypeJson._
+
 object AnnotationJson {
   import scala.language.implicitConversions
 

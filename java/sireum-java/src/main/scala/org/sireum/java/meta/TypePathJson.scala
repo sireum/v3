@@ -30,6 +30,7 @@ package org.sireum.java.meta
 
 import upickle.Js
 import org.sireum.util.Json._
+
 object TypePathJson {
   import scala.language.implicitConversions
 

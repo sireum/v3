@@ -30,6 +30,7 @@ package org.sireum.pilar.ast
 
 import upickle.Js
 import org.sireum.util.Json._
+
 object Json {
   import scala.language.implicitConversions
 

@@ -46,8 +46,8 @@ package %packageName%
 
 %endif%
 import upickle.Js
-import org.sireum.util.Json._%if(impor)%
-import %impor; separator="._\nimport "%._%endif%
+import org.sireum.util.Json._
+%if(impor)%import %impor; separator="._\nimport "%._%endif%
 
 object %name% {
   import scala.language.implicitConversions
