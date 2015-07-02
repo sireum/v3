@@ -59,8 +59,7 @@ final case class DoubleValue(value: Double) extends ArgValue
 
 final case class StringValue(value: String) extends ArgValue
 
-final case class EnumValue(name: String,
-                           tipe: Type,
+final case class EnumValue(tipe: ObjectType,
                            value: String) extends ArgValue
 
 final case class ArrayValue(elements: MetaAnnotation.Seq[ArgValue]) extends ArgValue

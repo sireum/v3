@@ -72,7 +72,6 @@ object AnnotationJson {
       case o: org.sireum.java.meta.EnumValue =>
         Js.Obj(
           (".class", Js.Str("EnumValue")),
-          ("name", fromStr(o.name)),
           ("tipe", fromType(o.tipe)),
           ("value", fromStr(o.value))
         )
@@ -124,7 +123,7 @@ object AnnotationJson {
            case "DoubleValue" =>
              org.sireum.java.meta.DoubleValue(toDouble(o.value(1)._2))
            case "EnumValue" =>
-             org.sireum.java.meta.EnumValue(toStr(o.value(1)._2), toType[Type](o.value(2)._2), toStr(o.value(3)._2))
+             org.sireum.java.meta.EnumValue(toType[ObjectType](o.value(1)._2), toStr(o.value(2)._2))
            case "FalseValue" => org.sireum.java.meta.FalseValue
            case "FloatValue" =>
              org.sireum.java.meta.FloatValue(toFloat(o.value(1)._2))

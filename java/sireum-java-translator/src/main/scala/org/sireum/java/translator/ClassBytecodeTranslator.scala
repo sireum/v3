@@ -27,6 +27,9 @@ package org.sireum.java.translator
 
 import org.objectweb.asm._
 
+import org.sireum.java._
+import org.sireum.util._
+
 object ClassBytecodeTranslator {
   final val asmApi = Opcodes.ASM5
 
@@ -36,19 +39,68 @@ import ClassBytecodeTranslator._
 
 final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
-  private final class AnnotationTranslator extends AnnotationVisitor(asmApi) {
-    override def visitArray(name: String): AnnotationVisitor = ???
+  private object AnnotationTranslator extends AnnotationVisitor(asmApi) {
 
-    override def visit(name: String, value: scala.Any): Unit = ???
+    final case class E(isArray: Boolean,
+                       args: MArray[AnyRef],
+                       endFun: MArray[AnyRef] => Unit)
 
-    override def visitEnd(): Unit = ???
+    private final var stack: IStack[E] = istackEmpty
 
-    override def visitEnum(name: String,
-                           desc: String,
-                           value: String): Unit = ???
+    final override def visitArray(name: String): AnnotationVisitor = {
+      stack = stack.push(E(true, marrayEmpty, { args =>
+        val v = meta.ArrayValue(
+          args.toVector.map(_.asInstanceOf[meta.ArgValue]))
+        addValue(name, v)
+      }))
+      this
+    }
 
-    override def visitAnnotation(name: String,
-                                 desc: String): AnnotationVisitor = ???
+    final override def visit(name: String, value: Any): Unit = {
+      def toArgValue(v: Any): meta.ArgValue =
+        v match {
+          case true => meta.TrueValue
+          case false => meta.FalseValue
+          case v: Byte => meta.ByteValue(v)
+          case v: Char => meta.CharValue(v)
+          case v: Short => meta.ShortValue(v)
+          case v: Int => meta.IntValue(v)
+          case v: Long => meta.LongValue(v)
+          case v: Float => meta.FloatValue(v)
+          case v: Double => meta.DoubleValue(v)
+          case v: String => meta.StringValue(v)
+          case v: Type => descToType(v.getDescriptor)
+          case v: Array[Any] =>
+            meta.ArrayValue(v.toVector.map(toArgValue))
+        }
+      addValue(name, toArgValue(value))
+    }
+
+    final override def visitEnd(): Unit = {
+      val (E(_, args, f), s) = stack.pop()
+      stack = s
+      f(args)
+    }
+
+    final override def visitEnum(name: String,
+                                 desc: String,
+                                 value: String): Unit =
+      addValue(name, meta.EnumValue(descToType(desc), value))
+
+    final override def visitAnnotation(name: String,
+                                       desc: String): AnnotationVisitor = {
+      stack = stack.push(E(false, marrayEmpty, { args =>
+        val v = meta.Annotation(descToType(desc),
+          args.toVector.map(_.asInstanceOf[meta.Arg]))
+        addValue(name, v)
+      }))
+      this
+    }
+
+    private def addValue(name: String, value: meta.ArgValue): Unit = {
+      stack.top.args +=
+        (if (stack.top.isArray) value else meta.Arg(name, value))
+    }
   }
 
   private final class MethodTranslator extends MethodVisitor(asmApi) {
@@ -71,7 +123,10 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitTypeAnnotation(typeRef: Int,
                                      typePath: TypePath,
                                      desc: String,
-                                     visible: Boolean): AnnotationVisitor = ???
+                                     visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitTableSwitchInsn(min: Int,
                                       max: Int,
@@ -81,7 +136,10 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitInsnAnnotation(typeRef: Int,
                                      typePath: TypePath,
                                      desc: String,
-                                     visible: Boolean): AnnotationVisitor = ???
+                                     visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitLookupSwitchInsn(dflt: Label,
                                        keys: Array[Int],
@@ -110,7 +168,10 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                                               end: Array[Label],
                                               index: Array[Int],
                                               desc: String,
-                                              visible: Boolean): AnnotationVisitor = ???
+                                              visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitJumpInsn(opcode: Int, label: Label): Unit = ???
 
@@ -128,25 +189,37 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitTypeInsn(opcode: Int, `type`: String): Unit = ???
 
-    override def visitAnnotation(desc: String, visible: Boolean): AnnotationVisitor = ???
+    override def visitAnnotation(desc: String, visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitMaxs(maxStack: Int, maxLocals: Int): Unit = ???
 
     override def visitParameterAnnotation(parameter: Int,
                                           desc: String,
-                                          visible: Boolean): AnnotationVisitor = ???
+                                          visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitTryCatchAnnotation(typeRef: Int,
                                          typePath: TypePath,
                                          desc: String,
-                                         visible: Boolean): AnnotationVisitor = ???
+                                         visible: Boolean): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitTryCatchBlock(start: Label,
                                     end: Label,
                                     handler: Label,
                                     `type`: String): Unit = ???
 
-    override def visitAnnotationDefault(): AnnotationVisitor = ???
+    override def visitAnnotationDefault(): AnnotationVisitor = {
+      ???
+      AnnotationTranslator
+    }
 
     override def visitInsn(opcode: Int): Unit = ???
 
@@ -164,7 +237,10 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
   override def visitTypeAnnotation(typeRef: Int,
                                    typePath: TypePath,
                                    desc: String,
-                                   visible: Boolean): AnnotationVisitor = ???
+                                   visible: Boolean): AnnotationVisitor = {
+    ???
+    AnnotationTranslator
+  }
 
   override def visitField(access: Int,
                           name: String,
@@ -190,7 +266,10 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                            exceptions: Array[String]): MethodVisitor = ???
 
   override def visitAnnotation(desc: String,
-                               visible: Boolean): AnnotationVisitor = ???
+                               visible: Boolean): AnnotationVisitor = {
+    ???
+    AnnotationTranslator
+  }
 
   override def visitInnerClass(name: String,
                                outerName: String,
@@ -200,4 +279,6 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
   override def visitOuterClass(owner: String,
                                name: String,
                                desc: String): Unit = ???
+
+  private def descToType[T <: meta.Type](desc: String): T = ???
 }
