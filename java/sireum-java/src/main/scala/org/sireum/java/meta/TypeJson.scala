@@ -55,15 +55,15 @@ object TypeJson {
         Js.Obj((".class", Js.Str("IntType")))
       case org.sireum.java.meta.LongType =>
         Js.Obj((".class", Js.Str("LongType")))
-      case o: org.sireum.java.meta.ObjectType =>
-        Js.Obj(
-          (".class", Js.Str("ObjectType")),
-          ("name", fromStr(o.name))
-        )
       case org.sireum.java.meta.ShortType =>
         Js.Obj((".class", Js.Str("ShortType")))
       case org.sireum.java.meta.VoidType =>
         Js.Obj((".class", Js.Str("VoidType")))
+      case o: org.sireum.java.meta._ObjectType =>
+        Js.Obj(
+          (".class", Js.Str("_ObjectType")),
+          ("name", fromStr(o.name))
+        )
     }
 
   implicit def toType[T <: org.sireum.java.meta.Type](v: Js.Value): T =
@@ -79,10 +79,10 @@ object TypeJson {
            case "FloatType" => org.sireum.java.meta.FloatType
            case "IntType" => org.sireum.java.meta.IntType
            case "LongType" => org.sireum.java.meta.LongType
-           case "ObjectType" =>
-             org.sireum.java.meta.ObjectType(toStr(o.value(1)._2))
            case "ShortType" => org.sireum.java.meta.ShortType
            case "VoidType" => org.sireum.java.meta.VoidType
+           case "_ObjectType" =>
+             org.sireum.java.meta._ObjectType(toStrIntern(o.value(1)._2))
          }).asInstanceOf[T]
     }
 }

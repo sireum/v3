@@ -78,10 +78,6 @@ object Rewriter {
       val Seq(target: Id, annotations: IVector[_]) = es
       org.sireum.pilar.ast.GotoJump(target, cast(annotations))
     }),
-    ("Id", { es =>
-      val Seq(value: String) = es
-      org.sireum.pilar.ast.Id(value)
-    }),
     ("IdExp", { es =>
       val Seq(id: Id) = es
       org.sireum.pilar.ast.IdExp(id)
@@ -137,6 +133,10 @@ object Rewriter {
     ("TupleExp", { es =>
       val Seq(exps: IVector[_], annotations: IVector[_]) = es
       org.sireum.pilar.ast.TupleExp(cast(exps), cast(annotations))
+    }),
+    ("_Id", { es =>
+      val Seq(value: String) = es
+      org.sireum.pilar.ast._Id(value)
     })
   )
 

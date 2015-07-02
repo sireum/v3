@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.util.reflect
 
+import org.sireum.util.Json.InternString
 import org.sireum.util._
 import org.stringtemplate.v4._
 import scala.reflect.runtime.universe._
@@ -175,7 +176,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
 
       } else {
         val cc = reflect.Reflection.CaseClass.
-          caseClassType(c.asType.toType, processAnnotations = false)
+          caseClassType(c.asType.toType, processAnnotations = true)
+        val shouldInternString = hasInternString(cc.annotations)
         val typeName = name(cc.tipe)
         val typeFullName = fullName(cc.tipe)
 
@@ -198,7 +200,9 @@ final class RewriterJsonGen(licenseOpt: Option[String],
             stCaseFrom.add("arg", stArg)
           }
           {
-            val (tipe, typeArgOpt) = toType(p.tipe)
+            val (tipe, typeArgOpt) =
+              toType(p.tipe, shouldInternString ||
+                hasInternString(p.annotations))
             val stArg = stg.getInstanceOf("caseToArg").
               add("type", tipe).add("i", i + 1)
             typeArgOpt.foreach(arg => stArg.add("arg", arg))
@@ -210,6 +214,9 @@ final class RewriterJsonGen(licenseOpt: Option[String],
     }
     stMainJson.render()
   }
+
+  private def hasInternString(annotations: ISeq[Reflection.Annotation]) =
+    annotations.exists(a => a.tipe =:= typeOf[InternString])
 
   private def name(t: Type) =
     t.typeSymbol.asClass.name.decodedName.toString
@@ -264,22 +271,26 @@ final class RewriterJsonGen(licenseOpt: Option[String],
         }
     }
 
-  private def toType1(t: Type) = toType(t)._1
+  private def toType1(shouldInternString: Boolean)(t: Type) =
+    toType(t, shouldInternString)._1
 
-  private def toType(t: Type): (String, ISeq[String]) =
+  private def toType(t: Type, shouldInternString: Boolean): (String, ISeq[String]) =
     t match {
       case _ if t <:< anyValType =>
         ("to" + name(t), ivectorEmpty)
       case _ if t =:= stringType =>
-        ("toStr", ivectorEmpty)
+        if (shouldInternString)
+          ("toStrIntern", ivectorEmpty)
+        else
+          ("toStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
-        ("toOption", t.typeArgs.map(toType1))
+        ("toOption", t.typeArgs.map(toType1(shouldInternString)))
       case _ if t.dealias.erasure =:= vectorType =>
-        ("toVector", t.typeArgs.map(toType1))
+        ("toVector", t.typeArgs.map(toType1(shouldInternString)))
       case _ if t.dealias.erasure =:= tuple2Type =>
-        ("toTuple2", t.typeArgs.map(toType1))
+        ("toTuple2", t.typeArgs.map(toType1(shouldInternString)))
       case _ if t.dealias.erasure =:= tuple3Type =>
-        ("toTuple3", t.typeArgs.map(toType1))
+        ("toTuple3", t.typeArgs.map(toType1(shouldInternString)))
       case _ if t <:< productType =>
         if (t <:< root)
           (s"to${name(root)}[${name(t)}]", ivectorEmpty)

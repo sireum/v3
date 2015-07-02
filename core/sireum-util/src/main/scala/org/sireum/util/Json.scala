@@ -27,7 +27,13 @@ package org.sireum.util
 
 import upickle.Js
 
+import scala.annotation.StaticAnnotation
+import scala.annotation.meta.getter
+
 object Json {
+
+  @getter
+  final class InternString extends StaticAnnotation
 
   import scala.language.implicitConversions
 

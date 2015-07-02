@@ -25,6 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java.meta
 
+import org.sireum.util.Json.InternString
+
 sealed trait Type extends Product
 
 case object VoidType extends Type
@@ -45,6 +47,17 @@ case object FloatType extends Type
 
 case object DoubleType extends Type
 
-final case class ObjectType(name: String) extends Type
+object ObjectType {
+  def apply(name: String): ObjectType = _ObjectType(name.intern())
+
+  def unapply(o: ObjectType) = Some(o.name)
+}
+
+sealed trait ObjectType extends Type {
+  def name: String
+}
+
+@InternString
+private final case class _ObjectType(name: String) extends ObjectType
 
 final case class ArrayType(element: Type) extends Type

@@ -111,11 +111,6 @@ object Json {
           ("target", fromNode(o.target)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: org.sireum.pilar.ast.Id =>
-        Js.Obj(
-          (".class", Js.Str("Id")),
-          ("value", fromStr(o.value))
-        )
       case o: org.sireum.pilar.ast.IdExp =>
         Js.Obj(
           (".class", Js.Str("IdExp")),
@@ -205,6 +200,11 @@ object Json {
           ("exps", fromSeq(o.exps)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
+      case o: org.sireum.pilar.ast._Id =>
+        Js.Obj(
+          (".class", Js.Str("_Id")),
+          ("value", fromStr(o.value))
+        )
     }
 
   implicit def toNode[T <: org.sireum.pilar.ast.Node](v: Js.Value): T =
@@ -233,8 +233,6 @@ object Json {
              org.sireum.pilar.ast.GlobalVarDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
            case "GotoJump" =>
              org.sireum.pilar.ast.GotoJump(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
-           case "Id" =>
-             org.sireum.pilar.ast.Id(toStr(o.value(1)._2))
            case "IdExp" =>
              org.sireum.pilar.ast.IdExp(toNode[Id](o.value(1)._2))
            case "IfJump" =>
@@ -263,6 +261,8 @@ object Json {
              org.sireum.pilar.ast.SwitchJump(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[SwitchCase]), toVector(o.value(3)._2)(toNode[Annotation]))
            case "TupleExp" =>
              org.sireum.pilar.ast.TupleExp(toVector(o.value(1)._2)(toNode[Exp]), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "_Id" =>
+             org.sireum.pilar.ast._Id(toStrIntern(o.value(1)._2))
          }).asInstanceOf[T]
     }
 }

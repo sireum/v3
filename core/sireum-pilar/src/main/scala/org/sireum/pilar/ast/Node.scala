@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.ast
 
 import org.sireum.util._
+import org.sireum.util.Json.InternString
 
 object Node {
   type Seq[T] = IVector[T]
@@ -62,8 +63,19 @@ final case class
 Annotation(id: Id,
            raw: Raw) extends Node
 
-final case class
-Id(value: String) extends Node
+object Id {
+  def apply(value: String): Id = _Id(value.intern())
+
+  def unapply(id: Id): Option[String] = Some(id.value)
+}
+
+sealed trait Id extends Node {
+  def value: String
+}
+
+@InternString
+private final case class
+_Id(value: String) extends Id
 
 
 final case class
