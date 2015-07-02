@@ -39,6 +39,76 @@ import ClassBytecodeTranslator._
 
 final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
+  override def visitAttribute(attr: Attribute): Unit =
+    ???
+
+  override def visitTypeAnnotation(typeRef: Int,
+                                   typePath: TypePath,
+                                   desc: String,
+                                   visible: Boolean): AnnotationVisitor = {
+    ???
+    AnnotationTranslator
+  }
+
+  override def visitField(access: Int,
+                          name: String,
+                          desc: String,
+                          signature: String,
+                          value: scala.Any): FieldVisitor = ???
+
+  override def visit(version: Int,
+                     access: Int,
+                     name: String,
+                     signature: String,
+                     superName: String,
+                     interfaces: Array[String]): Unit = ???
+
+  override def visitEnd(): Unit = ???
+
+  override def visitSource(source: String, debug: String): Unit = ???
+
+  override def visitMethod(access: Int,
+                           name: String,
+                           desc: String,
+                           signature: String,
+                           exceptions: Array[String]): MethodVisitor = ???
+
+  override def visitAnnotation(desc: String,
+                               visible: Boolean): AnnotationVisitor = {
+    ???
+    AnnotationTranslator
+  }
+
+  override def visitInnerClass(name: String,
+                               outerName: String,
+                               innerName: String,
+                               access: Int): Unit = ???
+
+  override def visitOuterClass(owner: String,
+                               name: String,
+                               desc: String): Unit = ???
+
+  @inline
+  private def descToType[T <: meta.Type](desc: String): T =
+    typeToType[T](Type.getType(desc))
+
+  private def typeToType[T <: meta.Type](tipe: Type): T = {
+    val t =
+      tipe.getSort match {
+        case Type.BOOLEAN => meta.BooleanType
+        case Type.BYTE => meta.ByteType
+        case Type.CHAR => meta.CharType
+        case Type.SHORT => meta.ShortType
+        case Type.INT => meta.IntType
+        case Type.LONG => meta.LongType
+        case Type.FLOAT => meta.FloatType
+        case Type.DOUBLE => meta.DoubleType
+        case Type.OBJECT => meta.ObjectType(tipe.getClassName)
+        case Type.ARRAY => meta.ArrayType(typeToType(tipe.getElementType))
+      }
+    t.asInstanceOf[T]
+  }
+
   private object AnnotationTranslator extends AnnotationVisitor(asmApi) {
 
     final case class E(isArray: Boolean,
@@ -231,54 +301,4 @@ final class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitLabel(label: Label): Unit = ???
   }
 
-  override def visitAttribute(attr: Attribute): Unit =
-    ???
-
-  override def visitTypeAnnotation(typeRef: Int,
-                                   typePath: TypePath,
-                                   desc: String,
-                                   visible: Boolean): AnnotationVisitor = {
-    ???
-    AnnotationTranslator
-  }
-
-  override def visitField(access: Int,
-                          name: String,
-                          desc: String,
-                          signature: String,
-                          value: scala.Any): FieldVisitor = ???
-
-  override def visit(version: Int,
-                     access: Int,
-                     name: String,
-                     signature: String,
-                     superName: String,
-                     interfaces: Array[String]): Unit = ???
-
-  override def visitEnd(): Unit = ???
-
-  override def visitSource(source: String, debug: String): Unit = ???
-
-  override def visitMethod(access: Int,
-                           name: String,
-                           desc: String,
-                           signature: String,
-                           exceptions: Array[String]): MethodVisitor = ???
-
-  override def visitAnnotation(desc: String,
-                               visible: Boolean): AnnotationVisitor = {
-    ???
-    AnnotationTranslator
-  }
-
-  override def visitInnerClass(name: String,
-                               outerName: String,
-                               innerName: String,
-                               access: Int): Unit = ???
-
-  override def visitOuterClass(owner: String,
-                               name: String,
-                               desc: String): Unit = ???
-
-  private def descToType[T <: meta.Type](desc: String): T = ???
 }
