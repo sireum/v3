@@ -24,8 +24,10 @@
             <option value="$PROJECT_DIR$/core/sireum-util-reflect" />
             <option value="$PROJECT_DIR$/core/sireum-util-reflect/project" />
             <option value="$PROJECT_DIR$/core/sireum-util/project" />
+            <option value="$PROJECT_DIR$/java/sireum-java" />
             <option value="$PROJECT_DIR$/java/sireum-java-translator" />
             <option value="$PROJECT_DIR$/java/sireum-java-translator/project" />
+            <option value="$PROJECT_DIR$/java/sireum-java/project" />
             <option value="$PROJECT_DIR$/js" />
             <option value="$PROJECT_DIR$/js/project" />
             <option value="$PROJECT_DIR$/jvm" />

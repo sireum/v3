@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="SBT 2" modules="sireum-pilar-parser,sireum-java-bytecode-translator,sireum-cli,sireum-core-test,sireum-option,sireum-pilar,sireum-pilar-parser-antlr4,sireum-util,sireum-util-reflect,sireum-java-translator,sireum-jvm">
+    <profile name="SBT 2" modules="sireum-pilar-parser,sireum-java-bytecode-translator,sireum-cli,sireum-core-test,sireum-option,sireum-pilar,sireum-pilar-parser-antlr4,sireum-util,sireum-util-reflect,sireum-java,sireum-java-translator,sireum-jvm">
       <parameters>
         <parameter value="-target:jvm-1.8" />
         <parameter value="-Ybackend:GenBCode" />
