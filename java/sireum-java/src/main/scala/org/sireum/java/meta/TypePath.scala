@@ -31,7 +31,7 @@ object MetaTypePath {
   type Seq[T] = IVector[T]
 }
 
-sealed trait MetaTypePath
+sealed trait MetaTypePath extends Product
 
 final case class TypePath(steps: MetaTypePath.Seq[Step]) extends MetaTypePath
 

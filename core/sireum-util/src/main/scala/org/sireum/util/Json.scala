@@ -127,7 +127,7 @@ object Json {
       case _ => sys.error("Unexpected Js.Value for a Byte: " + v)
     }
 
-  implicit final def toChar(v: Js.Value): Int =
+  implicit final def toChar(v: Js.Value): Char =
     v match {
       case Js.Str(s) => s.charAt(0)
       case _ => sys.error("Unexpected Js.Value for a Char: " + v)

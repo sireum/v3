@@ -23,7 +23,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// This file was auto-generated from SireumOption
+// @formatter:off
+// This file was auto-generated from org.sireum.option.SireumOption
 
 package org.sireum
 
@@ -75,12 +76,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   )
 
   def parseSireumOption(args: CSeq[String],
-                        index: Int,
-                        o: Product = org.sireum.option.SireumOption()): Unit = {
+                       index: Int,
+                       o: Product = org.sireum.option.SireumOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
       outPrintln(
-        // @formatter:off
         """
           |Sireum: A Software Analysis Platform (v3)
           |(c) 2011-2015, SAnToS Laboratory, Kansas State University
@@ -93,7 +93,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |pilar    Pilar tooling
           |util     Utility tooling
         """.stripMargin.trim
-        // @formatter:on
       )
       return
     }
@@ -106,7 +105,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
 
     if (index < 0 || index >= args.length) {
       outPrintln(
-        // @formatter:off
         """
           |Pilar: Sireum's Intermediate Representation (IR)
           |
@@ -116,7 +114,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |parser    Pilar parser
         """.stripMargin.trim
-        // @formatter:on
       )
       return
     }
@@ -124,12 +121,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   }
 
   def parseUtilOption(args: CSeq[String],
-                      index: Int,
-                      o: Product = org.sireum.option.UtilOption()): Unit = {
+                       index: Int,
+                       o: Product = org.sireum.option.UtilOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
       outPrintln(
-        // @formatter:off
         """
           |Sireum Utility Tooling
           |
@@ -140,7 +136,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |option     Option printer
           |reflect    Reflective tooling
         """.stripMargin.trim
-        // @formatter:on
       )
       return
     }
@@ -148,12 +143,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   }
 
   def parseUtilReflectOption(args: CSeq[String],
-                             index: Int,
-                             o: Product = org.sireum.option.UtilReflectOption()): Unit = {
+                       index: Int,
+                       o: Product = org.sireum.option.UtilReflectOption()): Unit = {
 
     if (index < 0 || index >= args.length) {
       outPrintln(
-        // @formatter:off
         """
           |Sireum Reflective Tooling
           |
@@ -165,7 +159,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |json        JSON binding generator
           |rewriter    Rewriter generator
         """.stripMargin.trim
-        // @formatter:on
       )
       return
     }
@@ -178,7 +171,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     val option = o.asInstanceOf[org.sireum.option.PilarParserOption]
     def printUsage(): Unit = {
       outPrintln(
-        // @formatter:off
         s"""
            |Pilar Parser
            |... and pretty printer and JSON de/serializer
@@ -198,7 +190,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                           Default: ${option.outputMode}
            | -h, --help              Display usage information
         """.stripMargin.trim
-        // @formatter:on
       )
     }
     val len = args.length
@@ -285,12 +276,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   }
 
   def parseUtilOptionOption(args: CSeq[String],
-                            index: Int,
-                            o: Product = org.sireum.option.UtilOptionOption()): Unit = {
+                             index: Int,
+                             o: Product = org.sireum.option.UtilOptionOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.UtilOptionOption]
     def printUsage(): Unit = {
       outPrintln(
-        // @formatter:off
         s"""
            |Sireum Option Printer
            |
@@ -298,7 +288,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |
            |
         """.stripMargin.trim
-        // @formatter:on
       )
     }
     val len = args.length
@@ -327,12 +316,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   }
 
   def parseCliGenOption(args: CSeq[String],
-                        index: Int,
-                        o: Product = org.sireum.option.CliGenOption()): Unit = {
+                             index: Int,
+                             o: Product = org.sireum.option.CliGenOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.CliGenOption]
     def printUsage(): Unit = {
       outPrintln(
-        // @formatter:off
         s"""
            |Sireum Command-Line Interface (CLI) Generator
            |
@@ -346,7 +334,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-l, --license-file    File containing license for output
            |-h, --help            Display usage information
         """.stripMargin.trim
-        // @formatter:on
       )
     }
     val len = args.length
@@ -409,12 +396,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   }
 
   def parseJsonGenOption(args: CSeq[String],
-                         index: Int,
-                         o: Product = org.sireum.option.JsonGenOption()): Unit = {
+                             index: Int,
+                             o: Product = org.sireum.option.JsonGenOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.JsonGenOption]
     def printUsage(): Unit = {
       outPrintln(
-        // @formatter:off
         s"""
            |Sireum JSON Binding Generator
            |
@@ -425,10 +411,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                        Default: ${option.className}
            |-d, --output-dir      Output directory
            |                      (If unspecified, use standard output stream)
+           |-i, --imports         Import type names of other JSON binding
+           |                        Default: "${option.imports.mkString(",")}"
            |-l, --license-file    File containing license for output
            |-h, --help            Display usage information
         """.stripMargin.trim
-        // @formatter:on
       )
     }
     val len = args.length
@@ -455,6 +442,13 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case _ =>
               errPrintln("Expecting a value for output dir")
               return
+          }
+        case "-i" | "--imports" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.imports = arg.split(',').map(_.trim)
+            case _ =>
+              errPrintln("Expected a string value for imports")
           }
         case "-l" | "--license-file" =>
           i += 1
@@ -496,7 +490,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     val option = o.asInstanceOf[org.sireum.option.RewriterGenOption]
     def printUsage(): Unit = {
       outPrintln(
-        // @formatter:off
         s"""
            |Sireum Rewriter Generator
            |
@@ -507,10 +500,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                        Default: ${option.className}
            |-d, --output-dir      Output directory
            |                      (If unspecified, use standard output stream)
+           |-i, --imports         Import type names of other JSON binding
+           |                        Default: "${option.imports.mkString(",")}"
            |-l, --license-file    File containing license for output
            |-h, --help            Display usage information
         """.stripMargin.trim
-        // @formatter:on
       )
     }
     val len = args.length
@@ -537,6 +531,13 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case _ =>
               errPrintln("Expecting a value for output dir")
               return
+          }
+        case "-i" | "--imports" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) => option.imports = arg.split(',').map(_.trim)
+            case _ =>
+              errPrintln("Expected a string value for imports")
           }
         case "-l" | "--license-file" =>
           i += 1

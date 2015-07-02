@@ -1,11 +1,12 @@
-mainRewriter(license, packageName, name, rootClass, entry) ::= <<
+mainRewriter(license, packageName, name, rootClassFullName, entry, impor) ::= <<
 %if(license)%
 /*
 %license%
 */
 
 %endif%
-// This file was auto-generated from %rootClass%
+// @formatter:off
+// This file was auto-generated from %rootClassFullName%
 
 %if(packageName)%
 package %packageName%
@@ -18,7 +19,7 @@ object %name% {
 
   val constructorMap : ConstructorMap = Map(
     %entry; separator=",\n"%
-  )
+  )%if(impor)%++ %impor; separator=".constructorMap ++ "%.constructorMap%endif%
 
   def build[T](mode: TraversalMode.Type = TraversalMode.TOP_DOWN)(
     f: RewriteFunction) =
@@ -30,31 +31,33 @@ object %name% {
 }
 >>
 
-mainJson(license, packageName, name, rootClass, fromCase, toCase) ::= <<
+mainJson(license, packageName, name, rootClassName, rootClassFullName, fromCase, toCase, impor) ::= <<
 %if(license)%
 /*
 %license%
 */
 
 %endif%
-// This file was auto-generated from %rootClass%
+// @formatter:off
+// This file was auto-generated from %rootClassFullName%
 
 %if(packageName)%
 package %packageName%
 
 %endif%
 import upickle.Js
-import org.sireum.util.Json._
+import org.sireum.util.Json._%if(impor)%
+import %impor; separator="._\nimport "%._%endif%
 
 object %name% {
   import scala.language.implicitConversions
 
-  implicit def from(o: %rootClass%): Js.Obj =
+  implicit def from%rootClassName%(o: %rootClassFullName%): Js.Obj =
     o match {
       %fromCase; separator="\n"%
     }
 
-  implicit def to[T <: %rootClass%](v: Js.Value): T =
+  implicit def to%rootClassName%[T <: %rootClassFullName%](v: Js.Value): T =
     (v: @unchecked) match {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
@@ -64,28 +67,41 @@ object %name% {
 }
 >>
 
-constructorEntry(name, et, ec) ::= <<
+constructorEntry(name, fullName, et, ec) ::= <<
 ("%name%", { es =>
   val Seq(%et; separator=", "%) = es
-  %name%(%ec; separator=", "%)
+  %fullName%(%ec; separator=", "%)
 })
 >>
 
-caseFrom(name, arg) ::= <<
-case o: %name% =>
+constructorModuleEntry(name, fullName) ::= <<
+("%name%", (_) => %fullName%)
+>>
+
+caseFrom(name, fullName, arg) ::= <<
+case o: %fullName% =>
   Js.Obj(
     (".class", Js.Str("%name%")),
     %arg; separator=",\n"%
   )
 >>
 
+caseModuleFrom(name, fullName) ::= <<
+case %fullName% =>
+  Js.Obj((".class", Js.Str("%name%")))
+>>
+
 caseFromArg(name, type, arg) ::= <<
 ("%name%", %type%(o.%name%)%if(arg)%(%arg; separator=", "%)%endif%)
 >>
 
-caseTo(name, arg) ::= <<
+caseTo(name, fullName, arg) ::= <<
 case "%name%" =>
-  %name%(%arg; separator=", "%)
+  %fullName%(%arg; separator=", "%)
+>>
+
+caseModuleTo(name, fullName) ::= <<
+case "%name%" => %fullName%
 >>
 
 caseToArg(type, i, arg) ::= <<

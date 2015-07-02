@@ -80,7 +80,8 @@ object ReflectGen {
     write(
       opt,
       RewriterJsonGen.generateJson(opt.licenseFileOpt,
-        opt.packageNameOpt, opt.className, root),
+        opt.packageNameOpt, opt.className, root,
+        option.imports.toVector),
       outPrintln)
   }
 
@@ -96,7 +97,8 @@ object ReflectGen {
     write(
       opt,
       RewriterJsonGen.generateRewriter(opt.licenseFileOpt,
-        opt.packageNameOpt, opt.className, root),
+        opt.packageNameOpt, opt.className, root,
+        option.imports.toVector),
       outPrintln)
   }
 

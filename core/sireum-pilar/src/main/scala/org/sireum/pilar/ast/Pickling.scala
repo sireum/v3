@@ -32,7 +32,7 @@ object Pickling {
   final val locField = ".loc"
 
   def pickle(node: Node): String = {
-    val jsObj = Json.from(node)
+    val jsObj = Json.fromNode(node)
     val o =
       node match {
         case node: Model if node.nodeLocMap.nonEmpty =>
@@ -65,7 +65,7 @@ object Pickling {
             a.value.map(org.sireum.util.Json.toLocationInfo))
         case o => (o, ivectorEmpty)
       }
-    Json.to[T](v) match {
+    Json.toNode[T](v) match {
       case m: Model if locInfos.nonEmpty =>
         var i = 0
         val nodeLocMap = MIdMap[Node, LocationInfo]()

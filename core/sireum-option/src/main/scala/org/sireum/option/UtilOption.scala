@@ -122,12 +122,15 @@ final case class JsonGenOption(@BeanProperty
                                @BeanProperty
                                @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
                                var outputDir: OptionBean[String] = none(),
+                               @BeanProperty
+                               @Opt(shortKey = Some("i"), description = "Import type names of other JSON binding")
+                               var imports: Array[String] = Array(),
                                @Opt(shortKey = Some("l"), description = "File containing license for output")
                                var licenseFile: OptionBean[String] = none(),
                                @BeanProperty
                                @Arg("root-class-name")
                                var rootClassName: String = "") extends ReflectGenOption {
-  def this() = this("Json", none(), none(), "")
+  def this() = this("Json", none(), Array(), none(), "")
 }
 
 @Main(
@@ -145,10 +148,13 @@ final case class RewriterGenOption(@BeanProperty
                                    @BeanProperty
                                    @Opt(shortKey = Some("d"), description = "Output directory\n(If unspecified, use standard output stream)")
                                    var outputDir: OptionBean[String] = none(),
+                                   @BeanProperty
+                                   @Opt(shortKey = Some("i"), description = "Import type names of other JSON binding")
+                                   var imports: Array[String] = Array(),
                                    @Opt(shortKey = Some("l"), description = "File containing license for output")
                                    var licenseFile: OptionBean[String] = none(),
                                    @BeanProperty
                                    @Arg("root-class-name")
                                    var rootClassName: String = "") extends ReflectGenOption {
-  def this() = this("Rewriter", none(), none(), "")
+  def this() = this("Rewriter", none(), Array(), none(), "")
 }

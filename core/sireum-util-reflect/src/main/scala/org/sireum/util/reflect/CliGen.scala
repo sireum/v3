@@ -79,7 +79,8 @@ final class CliGen(licenseOpt: Option[String],
 
   def generate(o: AnyRef with Product): String = {
     val ccTop = caseClassObject(o, processAnnotations = true, seen)
-    val rootClassName = Reflection.getClassOfType(ccTop.tipe).getSimpleName
+
+    val rootClassName = ccTop.tipe.typeSymbol.fullName
 
     stMain.add("rootClass", rootClassName)
 
@@ -92,7 +93,7 @@ final class CliGen(licenseOpt: Option[String],
           case `modeType` => mode(ivector(topCommand), ccTop, a)
         }
       case _ =>
-        sys.error(s"Root object ${ccTop.tipe.typeSymbol.fullName} should be either be Mode or Main")
+        sys.error(s"Root object $rootClassName should be either be Mode or Main")
     }
 
     stMain.render()
@@ -235,7 +236,7 @@ final class CliGen(licenseOpt: Option[String],
                     else "org.sireum.util.some"
                   stg.getInstanceOf("optionCaseOption").add("name", name).
                     add("someClass", someClass)
-                case t if t <:< cseqStringType =>
+                case t if t <:< cseqStringType || t <:< arrayStringType =>
                   defaultOpt = Some("Default: \"${option." + fieldName + ".mkString(\",\")}\"")
                   stg.getInstanceOf("optionCaseString").add("comma", true).
                     add("name", name)

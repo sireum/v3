@@ -5,6 +5,7 @@ main(license, packageName, name, topCommand, rootClass, modeMap, modeDef, mainDe
 */
 
 %endif%
+// @formatter:off
 // This file was auto-generated from %rootClass%
 
 %if(packageName)%
@@ -98,11 +99,9 @@ def parse%className%(args: CSeq[String],
 
   if (index < 0 || index >= args.length) {
     outPrintln(
-      // @formatter:off
       """
         %modeUsage; separator="\n|"%
       """.stripMargin.trim
-      // @formatter:on
     )
     return
   }
@@ -125,11 +124,9 @@ def parse%className%(args: CSeq[String],
   val option = o.asInstanceOf[%packageName%.%className%]
   def printUsage(): Unit = {
     outPrintln(
-      // @formatter:off
       s"""
          %mainUsage; separator="\n|"%
       """.stripMargin.trim
-      // @formatter:on
     )
   }
   val len = args.length

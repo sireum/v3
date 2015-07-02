@@ -23,246 +23,245 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// This file was auto-generated from Node
+// @formatter:off
+// This file was auto-generated from org.sireum.pilar.ast.Node
 
 package org.sireum.pilar.ast
 
 import upickle.Js
 import org.sireum.util.Json._
-
 object Json {
-
   import scala.language.implicitConversions
 
-  implicit def from(o: Node): Js.Obj =
+  implicit def fromNode(o: org.sireum.pilar.ast.Node): Js.Obj =
     o match {
-      case o: Annotation =>
+      case o: org.sireum.pilar.ast.Annotation =>
         Js.Obj(
           (".class", Js.Str("Annotation")),
-          ("id", from(o.id)),
-          ("raw", from(o.raw))
+          ("id", fromNode(o.id)),
+          ("raw", fromNode(o.raw))
         )
-      case o: AssertAction =>
+      case o: org.sireum.pilar.ast.AssertAction =>
         Js.Obj(
           (".class", Js.Str("AssertAction")),
-          ("exp", from(o.exp)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("exp", fromNode(o.exp)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: AssignAction =>
+      case o: org.sireum.pilar.ast.AssignAction =>
         Js.Obj(
           (".class", Js.Str("AssignAction")),
-          ("lhs", from(o.lhs)),
-          ("rhs", from(o.rhs)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("lhs", fromNode(o.lhs)),
+          ("rhs", fromNode(o.rhs)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: AssumeAction =>
+      case o: org.sireum.pilar.ast.AssumeAction =>
         Js.Obj(
           (".class", Js.Str("AssumeAction")),
-          ("exp", from(o.exp)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("exp", fromNode(o.exp)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: BlockLocation =>
+      case o: org.sireum.pilar.ast.BlockLocation =>
         Js.Obj(
           (".class", Js.Str("BlockLocation")),
-          ("label", from(o.label)),
-          ("actions", fromSeq(o.actions)(from)),
-          ("jump", from(o.jump)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("label", fromNode(o.label)),
+          ("actions", fromSeq(o.actions)(fromNode)),
+          ("jump", fromNode(o.jump)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: CallLocation =>
+      case o: org.sireum.pilar.ast.CallLocation =>
         Js.Obj(
           (".class", Js.Str("CallLocation")),
-          ("label", from(o.label)),
-          ("lhsOpt", fromOption(o.lhsOpt)(from)),
-          ("id", from(o.id)),
-          ("args", fromSeq(o.args)(from)),
-          ("target", from(o.target)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("label", fromNode(o.label)),
+          ("lhsOpt", fromOption(o.lhsOpt)(fromNode)),
+          ("id", fromNode(o.id)),
+          ("args", fromSeq(o.args)(fromNode)),
+          ("target", fromNode(o.target)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: ExtAction =>
+      case o: org.sireum.pilar.ast.ExtAction =>
         Js.Obj(
           (".class", Js.Str("ExtAction")),
-          ("id", from(o.id)),
-          ("args", fromSeq(o.args)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("args", fromSeq(o.args)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: ExtExp =>
+      case o: org.sireum.pilar.ast.ExtExp =>
         Js.Obj(
           (".class", Js.Str("ExtExp")),
-          ("exp", from(o.exp)),
-          ("args", fromSeq(o.args)(from))
+          ("exp", fromNode(o.exp)),
+          ("args", fromSeq(o.args)(fromNode))
         )
-      case o: ExtJump =>
+      case o: org.sireum.pilar.ast.ExtJump =>
         Js.Obj(
           (".class", Js.Str("ExtJump")),
-          ("id", from(o.id)),
-          ("args", fromSeq(o.args)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("args", fromSeq(o.args)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: GlobalVarDecl =>
+      case o: org.sireum.pilar.ast.GlobalVarDecl =>
         Js.Obj(
           (".class", Js.Str("GlobalVarDecl")),
-          ("id", from(o.id)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: GotoJump =>
+      case o: org.sireum.pilar.ast.GotoJump =>
         Js.Obj(
           (".class", Js.Str("GotoJump")),
-          ("target", from(o.target)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("target", fromNode(o.target)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: Id =>
+      case o: org.sireum.pilar.ast.Id =>
         Js.Obj(
           (".class", Js.Str("Id")),
           ("value", fromStr(o.value))
         )
-      case o: IdExp =>
+      case o: org.sireum.pilar.ast.IdExp =>
         Js.Obj(
           (".class", Js.Str("IdExp")),
-          ("id", from(o.id))
+          ("id", fromNode(o.id))
         )
-      case o: IfJump =>
+      case o: org.sireum.pilar.ast.IfJump =>
         Js.Obj(
           (".class", Js.Str("IfJump")),
-          ("exp", from(o.exp)),
-          ("tTarget", from(o.tTarget)),
-          ("fTarget", from(o.fTarget)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("exp", fromNode(o.exp)),
+          ("tTarget", fromNode(o.tTarget)),
+          ("fTarget", fromNode(o.fTarget)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: InfixExp =>
+      case o: org.sireum.pilar.ast.InfixExp =>
         Js.Obj(
           (".class", Js.Str("InfixExp")),
-          ("left", from(o.left)),
-          ("op", from(o.op)),
-          ("right", from(o.right)),
+          ("left", fromNode(o.left)),
+          ("op", fromNode(o.op)),
+          ("right", fromNode(o.right)),
           ("rest", fromSeq(o.rest)(fromTuple2))
         )
-      case o: LiteralExp =>
+      case o: org.sireum.pilar.ast.LiteralExp =>
         Js.Obj(
           (".class", Js.Str("LiteralExp")),
-          ("id", from(o.id)),
-          ("raw", from(o.raw))
+          ("id", fromNode(o.id)),
+          ("raw", fromNode(o.raw))
         )
-      case o: LocalVarDecl =>
+      case o: org.sireum.pilar.ast.LocalVarDecl =>
         Js.Obj(
           (".class", Js.Str("LocalVarDecl")),
-          ("id", from(o.id)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: Model =>
+      case o: org.sireum.pilar.ast.Model =>
         Js.Obj(
           (".class", Js.Str("Model")),
-          ("elements", fromSeq(o.elements)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("elements", fromSeq(o.elements)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: ParamDecl =>
+      case o: org.sireum.pilar.ast.ParamDecl =>
         Js.Obj(
           (".class", Js.Str("ParamDecl")),
-          ("id", from(o.id)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: ProcedureBody =>
+      case o: org.sireum.pilar.ast.ProcedureBody =>
         Js.Obj(
           (".class", Js.Str("ProcedureBody")),
-          ("locals", fromSeq(o.locals)(from)),
-          ("locations", fromSeq(o.locations)(from))
+          ("locals", fromSeq(o.locals)(fromNode)),
+          ("locations", fromSeq(o.locations)(fromNode))
         )
-      case o: ProcedureDecl =>
+      case o: org.sireum.pilar.ast.ProcedureDecl =>
         Js.Obj(
           (".class", Js.Str("ProcedureDecl")),
-          ("id", from(o.id)),
-          ("params", fromSeq(o.params)(from)),
-          ("bodyOpt", fromOption(o.bodyOpt)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("id", fromNode(o.id)),
+          ("params", fromSeq(o.params)(fromNode)),
+          ("bodyOpt", fromOption(o.bodyOpt)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: Raw =>
+      case o: org.sireum.pilar.ast.Raw =>
         Js.Obj(
           (".class", Js.Str("Raw")),
           ("value", fromStr(o.value))
         )
-      case o: ReturnJump =>
+      case o: org.sireum.pilar.ast.ReturnJump =>
         Js.Obj(
           (".class", Js.Str("ReturnJump")),
-          ("expOpt", fromOption(o.expOpt)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("expOpt", fromOption(o.expOpt)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: SwitchCase =>
+      case o: org.sireum.pilar.ast.SwitchCase =>
         Js.Obj(
           (".class", Js.Str("SwitchCase")),
-          ("expOpt", fromOption(o.expOpt)(from)),
-          ("target", from(o.target))
+          ("expOpt", fromOption(o.expOpt)(fromNode)),
+          ("target", fromNode(o.target))
         )
-      case o: SwitchJump =>
+      case o: org.sireum.pilar.ast.SwitchJump =>
         Js.Obj(
           (".class", Js.Str("SwitchJump")),
-          ("exp", from(o.exp)),
-          ("cases", fromSeq(o.cases)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("exp", fromNode(o.exp)),
+          ("cases", fromSeq(o.cases)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: TupleExp =>
+      case o: org.sireum.pilar.ast.TupleExp =>
         Js.Obj(
           (".class", Js.Str("TupleExp")),
-          ("exps", fromSeq(o.exps)(from)),
-          ("annotations", fromSeq(o.annotations)(from))
+          ("exps", fromSeq(o.exps)(fromNode)),
+          ("annotations", fromSeq(o.annotations)(fromNode))
         )
     }
 
-  implicit def to[T <: Node](v: Js.Value): T =
+  implicit def toNode[T <: org.sireum.pilar.ast.Node](v: Js.Value): T =
     (v: @unchecked) match {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
-          case "Annotation" =>
-            Annotation(to[Id](o.value(1)._2), to[Raw](o.value(2)._2))
-          case "AssertAction" =>
-            AssertAction(to[Exp](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "AssignAction" =>
-            AssignAction(to[Exp](o.value(1)._2), to[Exp](o.value(2)._2), toVector(o.value(3)._2)(to[Annotation]))
-          case "AssumeAction" =>
-            AssumeAction(to[Exp](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "BlockLocation" =>
-            BlockLocation(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Action]), to[Jump](o.value(3)._2), toVector(o.value(4)._2)(to[Annotation]))
-          case "CallLocation" =>
-            CallLocation(to[Id](o.value(1)._2), toOption(o.value(2)._2)(to[Exp]), to[Id](o.value(3)._2), toVector(o.value(4)._2)(to[Exp]), to[Id](o.value(5)._2), toVector(o.value(6)._2)(to[Annotation]))
-          case "ExtAction" =>
-            ExtAction(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Exp]), toVector(o.value(3)._2)(to[Annotation]))
-          case "ExtExp" =>
-            ExtExp(to[Exp](o.value(1)._2), toVector(o.value(2)._2)(to[Exp]))
-          case "ExtJump" =>
-            ExtJump(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Exp]), toVector(o.value(3)._2)(to[Annotation]))
-          case "GlobalVarDecl" =>
-            GlobalVarDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "GotoJump" =>
-            GotoJump(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "Id" =>
-            Id(toStr(o.value(1)._2))
-          case "IdExp" =>
-            IdExp(to[Id](o.value(1)._2))
-          case "IfJump" =>
-            IfJump(to[Exp](o.value(1)._2), to[Id](o.value(2)._2), to[Id](o.value(3)._2), toVector(o.value(4)._2)(to[Annotation]))
-          case "InfixExp" =>
-            InfixExp(to[Exp](o.value(1)._2), to[Id](o.value(2)._2), to[Exp](o.value(3)._2), toVector(o.value(4)._2)(toTuple2))
-          case "LiteralExp" =>
-            LiteralExp(to[Id](o.value(1)._2), to[Raw](o.value(2)._2))
-          case "LocalVarDecl" =>
-            LocalVarDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "Model" =>
-            Model(toVector(o.value(1)._2)(to[ModelElement]), toVector(o.value(2)._2)(to[Annotation]))
-          case "ParamDecl" =>
-            ParamDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[Annotation]))
-          case "ProcedureBody" =>
-            ProcedureBody(toVector(o.value(1)._2)(to[LocalVarDecl]), toVector(o.value(2)._2)(to[Location]))
-          case "ProcedureDecl" =>
-            ProcedureDecl(to[Id](o.value(1)._2), toVector(o.value(2)._2)(to[ParamDecl]), toOption(o.value(3)._2)(to[ProcedureBody]), toVector(o.value(4)._2)(to[Annotation]))
-          case "Raw" =>
-            Raw(toStr(o.value(1)._2))
-          case "ReturnJump" =>
-            ReturnJump(toOption(o.value(1)._2)(to[Exp]), toVector(o.value(2)._2)(to[Annotation]))
-          case "SwitchCase" =>
-            SwitchCase(toOption(o.value(1)._2)(to[LiteralExp]), to[Id](o.value(2)._2))
-          case "SwitchJump" =>
-            SwitchJump(to[Exp](o.value(1)._2), toVector(o.value(2)._2)(to[SwitchCase]), toVector(o.value(3)._2)(to[Annotation]))
-          case "TupleExp" =>
-            TupleExp(toVector(o.value(1)._2)(to[Exp]), toVector(o.value(2)._2)(to[Annotation]))
-        }).asInstanceOf[T]
+           case "Annotation" =>
+             org.sireum.pilar.ast.Annotation(toNode[Id](o.value(1)._2), toNode[Raw](o.value(2)._2))
+           case "AssertAction" =>
+             org.sireum.pilar.ast.AssertAction(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "AssignAction" =>
+             org.sireum.pilar.ast.AssignAction(toNode[Exp](o.value(1)._2), toNode[Exp](o.value(2)._2), toVector(o.value(3)._2)(toNode[Annotation]))
+           case "AssumeAction" =>
+             org.sireum.pilar.ast.AssumeAction(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "BlockLocation" =>
+             org.sireum.pilar.ast.BlockLocation(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Action]), toNode[Jump](o.value(3)._2), toVector(o.value(4)._2)(toNode[Annotation]))
+           case "CallLocation" =>
+             org.sireum.pilar.ast.CallLocation(toNode[Id](o.value(1)._2), toOption(o.value(2)._2)(toNode[Exp]), toNode[Id](o.value(3)._2), toVector(o.value(4)._2)(toNode[Exp]), toNode[Id](o.value(5)._2), toVector(o.value(6)._2)(toNode[Annotation]))
+           case "ExtAction" =>
+             org.sireum.pilar.ast.ExtAction(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Exp]), toVector(o.value(3)._2)(toNode[Annotation]))
+           case "ExtExp" =>
+             org.sireum.pilar.ast.ExtExp(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[Exp]))
+           case "ExtJump" =>
+             org.sireum.pilar.ast.ExtJump(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Exp]), toVector(o.value(3)._2)(toNode[Annotation]))
+           case "GlobalVarDecl" =>
+             org.sireum.pilar.ast.GlobalVarDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "GotoJump" =>
+             org.sireum.pilar.ast.GotoJump(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "Id" =>
+             org.sireum.pilar.ast.Id(toStr(o.value(1)._2))
+           case "IdExp" =>
+             org.sireum.pilar.ast.IdExp(toNode[Id](o.value(1)._2))
+           case "IfJump" =>
+             org.sireum.pilar.ast.IfJump(toNode[Exp](o.value(1)._2), toNode[Id](o.value(2)._2), toNode[Id](o.value(3)._2), toVector(o.value(4)._2)(toNode[Annotation]))
+           case "InfixExp" =>
+             org.sireum.pilar.ast.InfixExp(toNode[Exp](o.value(1)._2), toNode[Id](o.value(2)._2), toNode[Exp](o.value(3)._2), toVector(o.value(4)._2)(toTuple2))
+           case "LiteralExp" =>
+             org.sireum.pilar.ast.LiteralExp(toNode[Id](o.value(1)._2), toNode[Raw](o.value(2)._2))
+           case "LocalVarDecl" =>
+             org.sireum.pilar.ast.LocalVarDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "Model" =>
+             org.sireum.pilar.ast.Model(toVector(o.value(1)._2)(toNode[ModelElement]), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "ParamDecl" =>
+             org.sireum.pilar.ast.ParamDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "ProcedureBody" =>
+             org.sireum.pilar.ast.ProcedureBody(toVector(o.value(1)._2)(toNode[LocalVarDecl]), toVector(o.value(2)._2)(toNode[Location]))
+           case "ProcedureDecl" =>
+             org.sireum.pilar.ast.ProcedureDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[ParamDecl]), toOption(o.value(3)._2)(toNode[ProcedureBody]), toVector(o.value(4)._2)(toNode[Annotation]))
+           case "Raw" =>
+             org.sireum.pilar.ast.Raw(toStr(o.value(1)._2))
+           case "ReturnJump" =>
+             org.sireum.pilar.ast.ReturnJump(toOption(o.value(1)._2)(toNode[Exp]), toVector(o.value(2)._2)(toNode[Annotation]))
+           case "SwitchCase" =>
+             org.sireum.pilar.ast.SwitchCase(toOption(o.value(1)._2)(toNode[LiteralExp]), toNode[Id](o.value(2)._2))
+           case "SwitchJump" =>
+             org.sireum.pilar.ast.SwitchJump(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[SwitchCase]), toVector(o.value(3)._2)(toNode[Annotation]))
+           case "TupleExp" =>
+             org.sireum.pilar.ast.TupleExp(toVector(o.value(1)._2)(toNode[Exp]), toVector(o.value(2)._2)(toNode[Annotation]))
+         }).asInstanceOf[T]
     }
 }

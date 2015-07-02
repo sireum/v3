@@ -23,120 +23,120 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// This file was auto-generated from Node
+// @formatter:off
+// This file was auto-generated from org.sireum.pilar.ast.Node
 
 package org.sireum.pilar.ast
 
 import org.sireum.util._
 
 object Rewriter {
-
   import org.sireum.util.Rewriter._
 
-  val constructorMap: ConstructorMap = Map(
+  val constructorMap : ConstructorMap = Map(
     ("Annotation", { es =>
       val Seq(id: Id, raw: Raw) = es
-      Annotation(id, raw)
+      org.sireum.pilar.ast.Annotation(id, raw)
     }),
     ("AssertAction", { es =>
       val Seq(exp: Exp, annotations: IVector[_]) = es
-      AssertAction(exp, cast(annotations))
+      org.sireum.pilar.ast.AssertAction(exp, cast(annotations))
     }),
     ("AssignAction", { es =>
       val Seq(lhs: Exp, rhs: Exp, annotations: IVector[_]) = es
-      AssignAction(lhs, rhs, cast(annotations))
+      org.sireum.pilar.ast.AssignAction(lhs, rhs, cast(annotations))
     }),
     ("AssumeAction", { es =>
       val Seq(exp: Exp, annotations: IVector[_]) = es
-      AssumeAction(exp, cast(annotations))
+      org.sireum.pilar.ast.AssumeAction(exp, cast(annotations))
     }),
     ("BlockLocation", { es =>
       val Seq(label: Id, actions: IVector[_], jump: Jump, annotations: IVector[_]) = es
-      BlockLocation(label, cast(actions), jump, cast(annotations))
+      org.sireum.pilar.ast.BlockLocation(label, cast(actions), jump, cast(annotations))
     }),
     ("CallLocation", { es =>
       val Seq(label: Id, lhsOpt: Option[_], id: Id, args: IVector[_], target: Id, annotations: IVector[_]) = es
-      CallLocation(label, cast(lhsOpt), id, cast(args), target, cast(annotations))
+      org.sireum.pilar.ast.CallLocation(label, cast(lhsOpt), id, cast(args), target, cast(annotations))
     }),
     ("ExtAction", { es =>
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
-      ExtAction(id, cast(args), cast(annotations))
+      org.sireum.pilar.ast.ExtAction(id, cast(args), cast(annotations))
     }),
     ("ExtExp", { es =>
       val Seq(exp: Exp, args: IVector[_]) = es
-      ExtExp(exp, cast(args))
+      org.sireum.pilar.ast.ExtExp(exp, cast(args))
     }),
     ("ExtJump", { es =>
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
-      ExtJump(id, cast(args), cast(annotations))
+      org.sireum.pilar.ast.ExtJump(id, cast(args), cast(annotations))
     }),
     ("GlobalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
-      GlobalVarDecl(id, cast(annotations))
+      org.sireum.pilar.ast.GlobalVarDecl(id, cast(annotations))
     }),
     ("GotoJump", { es =>
       val Seq(target: Id, annotations: IVector[_]) = es
-      GotoJump(target, cast(annotations))
+      org.sireum.pilar.ast.GotoJump(target, cast(annotations))
     }),
     ("Id", { es =>
       val Seq(value: String) = es
-      Id(value)
+      org.sireum.pilar.ast.Id(value)
     }),
     ("IdExp", { es =>
       val Seq(id: Id) = es
-      IdExp(id)
+      org.sireum.pilar.ast.IdExp(id)
     }),
     ("IfJump", { es =>
       val Seq(exp: Exp, tTarget: Id, fTarget: Id, annotations: IVector[_]) = es
-      IfJump(exp, tTarget, fTarget, cast(annotations))
+      org.sireum.pilar.ast.IfJump(exp, tTarget, fTarget, cast(annotations))
     }),
     ("InfixExp", { es =>
       val Seq(left: Exp, op: Id, right: Exp, rest: IVector[_]) = es
-      InfixExp(left, op, right, cast(rest))
+      org.sireum.pilar.ast.InfixExp(left, op, right, cast(rest))
     }),
     ("LiteralExp", { es =>
       val Seq(id: Id, raw: Raw) = es
-      LiteralExp(id, raw)
+      org.sireum.pilar.ast.LiteralExp(id, raw)
     }),
     ("LocalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
-      LocalVarDecl(id, cast(annotations))
+      org.sireum.pilar.ast.LocalVarDecl(id, cast(annotations))
     }),
     ("Model", { es =>
       val Seq(elements: IVector[_], annotations: IVector[_]) = es
-      Model(cast(elements), cast(annotations))
+      org.sireum.pilar.ast.Model(cast(elements), cast(annotations))
     }),
     ("ParamDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
-      ParamDecl(id, cast(annotations))
+      org.sireum.pilar.ast.ParamDecl(id, cast(annotations))
     }),
     ("ProcedureBody", { es =>
       val Seq(locals: IVector[_], locations: IVector[_]) = es
-      ProcedureBody(cast(locals), cast(locations))
+      org.sireum.pilar.ast.ProcedureBody(cast(locals), cast(locations))
     }),
     ("ProcedureDecl", { es =>
       val Seq(id: Id, params: IVector[_], bodyOpt: Option[_], annotations: IVector[_]) = es
-      ProcedureDecl(id, cast(params), cast(bodyOpt), cast(annotations))
+      org.sireum.pilar.ast.ProcedureDecl(id, cast(params), cast(bodyOpt), cast(annotations))
     }),
     ("Raw", { es =>
       val Seq(value: String) = es
-      Raw(value)
+      org.sireum.pilar.ast.Raw(value)
     }),
     ("ReturnJump", { es =>
       val Seq(expOpt: Option[_], annotations: IVector[_]) = es
-      ReturnJump(cast(expOpt), cast(annotations))
+      org.sireum.pilar.ast.ReturnJump(cast(expOpt), cast(annotations))
     }),
     ("SwitchCase", { es =>
       val Seq(expOpt: Option[_], target: Id) = es
-      SwitchCase(cast(expOpt), target)
+      org.sireum.pilar.ast.SwitchCase(cast(expOpt), target)
     }),
     ("SwitchJump", { es =>
       val Seq(exp: Exp, cases: IVector[_], annotations: IVector[_]) = es
-      SwitchJump(exp, cast(cases), cast(annotations))
+      org.sireum.pilar.ast.SwitchJump(exp, cast(cases), cast(annotations))
     }),
     ("TupleExp", { es =>
       val Seq(exps: IVector[_], annotations: IVector[_]) = es
-      TupleExp(cast(exps), cast(annotations))
+      org.sireum.pilar.ast.TupleExp(cast(exps), cast(annotations))
     })
   )
 
@@ -145,6 +145,6 @@ object Rewriter {
     org.sireum.util.Rewriter.build[T](constructorMap)(mode, f)
 
   def buildEnd[T](mode: TraversalMode.Type = TraversalMode.TOP_DOWN)(
-    f: RewriteFunction, g: RewriteFunction) =
+      f: RewriteFunction, g: RewriteFunction) =
     org.sireum.util.Rewriter.buildEnd[T](constructorMap)(mode, f, g)
 }

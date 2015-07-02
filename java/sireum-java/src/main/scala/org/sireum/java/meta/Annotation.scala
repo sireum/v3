@@ -31,7 +31,7 @@ object MetaAnnotation {
   type Seq[T] = IVector[T]
 }
 
-sealed trait MetaAnnotation
+sealed trait MetaAnnotation extends Product
 
 sealed trait ArgValue extends MetaAnnotation
 
@@ -39,7 +39,23 @@ final case class Annotation(args: MetaAnnotation.Seq[Arg]) extends ArgValue
 
 final case class Arg(name: String, value: ArgValue) extends MetaAnnotation
 
-final case class LiteralValue(value: AnyVal) extends ArgValue
+case object TrueValue extends ArgValue
+
+case object FalseValue extends ArgValue
+
+final case class ByteValue(value: Byte) extends ArgValue
+
+final case class CharValue(value: Char) extends ArgValue
+
+final case class ShortValue(value: Short) extends ArgValue
+
+final case class IntValue(value: Int) extends ArgValue
+
+final case class LongValue(value: Long) extends ArgValue
+
+final case class FloatValue(value: Float) extends ArgValue
+
+final case class DoubleValue(value: Double) extends ArgValue
 
 final case class StringValue(value: String) extends ArgValue
 

@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java.meta
 
-sealed trait Type
+sealed trait Type extends Product
 
 case object Void extends Type
 
@@ -45,6 +45,6 @@ case object Float extends Type
 
 case object Double extends Type
 
-case class Object(name: String) extends Type
+final case class Object(name: String) extends Type
 
-case class Array(element: Type) extends Type
+final case class Array(element: Type) extends Type
