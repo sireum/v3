@@ -89,8 +89,8 @@ final class CliGen(licenseOpt: Option[String],
         val topCommand = paramValue[String](a, "name")
         stMain.add("topCommand", topCommand)
         a.tipe match {
-          case `mainType` => main(ivector(topCommand), ccTop, a)
-          case `modeType` => mode(ivector(topCommand), ccTop, a)
+          case `mainType` => mainGen(ivector(topCommand), ccTop, a)
+          case `modeType` => modeGen(ivector(topCommand), ccTop, a)
         }
       case _ =>
         sys.error(s"Root object $rootClassName should be either be Mode or Main")
@@ -99,9 +99,9 @@ final class CliGen(licenseOpt: Option[String],
     stMain.render()
   }
 
-  private def mode(commands: ISeq[String],
-                   cc: CaseClass,
-                   a: Reflection.Annotation): Unit = {
+  private def modeGen(commands: ISeq[String],
+                      cc: CaseClass,
+                      a: Reflection.Annotation): Unit = {
     val (pName, cName) =
       packageClassNames(cc.tipe.typeSymbol.asClass.fullName)
     val stModeMap = stg.getInstanceOf("modeMap").add("modeClass", cName)
@@ -135,9 +135,9 @@ final class CliGen(licenseOpt: Option[String],
                   add("className", ccMember.tipe.typeSymbol.name.decodedName))
               a.tipe match {
                 case `mainType` =>
-                  main(commands :+ command, ccMember, a)
+                  mainGen(commands :+ command, ccMember, a)
                 case `modeType` =>
-                  mode(commands :+ command, ccMember, a)
+                  modeGen(commands :+ command, ccMember, a)
               }
             case _ =>
               sys.error(s"Mode member $cName.${p.name} should either be a Mode or Main")
@@ -168,9 +168,9 @@ final class CliGen(licenseOpt: Option[String],
     a.params.find(_.name == name).get.value.asInstanceOf[T]
 
 
-  private def main(commands: ISeq[String],
-                   cc: CaseClass,
-                   a: Reflection.Annotation) = {
+  private def mainGen(commands: ISeq[String],
+                      cc: CaseClass,
+                      a: Reflection.Annotation) = {
     val (pName, cName) =
       packageClassNames(cc.tipe.typeSymbol.asClass.fullName)
     val stMainUsage = stg.getInstanceOf("mainUsage")

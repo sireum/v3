@@ -137,7 +137,7 @@ object ReflectGen {
     var ok = true
     val clazz =
       try {
-        Class.forName(option.rootClassName)
+        Class.forName(option.rootClassName).asInstanceOf[Class[AnyRef]]
       } catch {
         case t: Throwable =>
           errPrintln(s"Could not find class named: '${option.rootClassName}'")
@@ -203,6 +203,6 @@ object ReflectGen {
                                    className: String,
                                    licenseFileOpt: Option[String],
                                    outputFileOpt: Option[File],
-                                   root: Class[_])
+                                   root: Class[AnyRef])
 
 }

@@ -36,7 +36,7 @@ import sbtassembly.AssemblyKeys._
 object SireumBuild extends Build {
   final val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-  final val scalaVer = "2.11.6"
+  final val scalaVer = "2.11.7"
 
   final val sireumVer = "3.0-SNAPSHOT"
 
@@ -125,7 +125,7 @@ object SireumBuild extends Build {
     EclipseKeys.withSource := true,
     EclipseKeys.relativizeLibs := true,
     EclipseKeys.useProjectId := true,
-    EclipseKeys.withBundledScalaContainers := true,
+    EclipseKeys.withBundledScalaContainers := false,
     EclipseKeys.eclipseOutput := Some("bin")
   )
 
@@ -139,12 +139,13 @@ object SireumBuild extends Build {
         }) + "." + artifact.extension
     },
     parallelExecution in Test := true,
-    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode") ++
+    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method", "-feature") ++
       (if (isRelease) Seq("-optimize", "-Yinline-warnings") else Seq())),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
+      "org.scala-lang.modules" %% "scala-java8-compat" % "0.5.0",
       "com.lihaoyi" %% "upickle" % "0.2.8",
       "org.antlr" % "antlr4-runtime" % "4.5",
       "org.antlr" % "ST4" % "4.0.8",
@@ -165,6 +166,7 @@ object SireumBuild extends Build {
   )
 
   val sireumJsSettings = sireumSettings ++ Seq(
+    scalacOptions ++= Seq("-feature"),
     parallelExecution in Test := false,
     relativeSourceMaps := true,
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
