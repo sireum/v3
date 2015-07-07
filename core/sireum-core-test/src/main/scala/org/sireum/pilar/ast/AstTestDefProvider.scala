@@ -38,9 +38,9 @@ final class AstTestDefProvider(tf: TestFramework)
     Model(
       Node.seq(
         GlobalVarDecl(Id("x"),
-          ivector(Annotation(Id("type"), Raw("Int"))))),
+          ivector(Annotation(Id("type"), RawLit("Int"))))),
       Node.seq(
-        Annotation(Id("object"), Raw("1")))
+        Annotation(Id("object"), RawLit("1")))
     )
 
   lazy val modelFastParsed1 =

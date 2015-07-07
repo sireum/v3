@@ -40,6 +40,7 @@ final class FastParser(input: String,
   private val _max = if (max <= 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+  private val toExtern = org.sireum.pilar.ast.Json.externMap("ExtLit")._2
 
   assert(offset <= _max)
 
@@ -1108,7 +1109,7 @@ final class FastParser(input: String,
         parseWhiteSpace()
         if (charEq(peek(), '\'') || charEq(peek(), '"'))
           parseLIT(recover)
-        else Some(Raw(""))
+        else Some(RawLit(""))
       }) yield {
       Annotation(id, raw) at(line, column, offset)
     }
@@ -1189,22 +1190,35 @@ final class FastParser(input: String,
     }
   }
 
-  private[parser] def parseLIT(recover: () => Unit): Option[Raw] = {
+  private[parser] def parseLIT(recover: () => Unit): Option[Lit] = {
     parseWhiteSpace()
-    peek() match {
-      case '\'' =>
-        val (ok, i) = peekSimpleLIT()
-        parseSimpleLIT(ok, i, recover)
-      case '"' =>
-        val (ok, i) = peekComplexLIT()
-        parseComplexLIT(ok, i, recover)
-      case c =>
-        reporter.error(line, column, offset,
-          s"Invalid character for a literal string: '${
-            c.asInstanceOf[Char]
-          }'")
-        recover()
-        None
+    val litOpt =
+      peek() match {
+        case '\'' =>
+          val (ok, i) = peekSimpleLIT()
+          parseSimpleLIT(ok, i, recover)
+        case '"' =>
+          val (ok, i) = peekComplexLIT()
+          parseComplexLIT(ok, i, recover)
+        case c =>
+          reporter.error(line, column, offset,
+            s"Invalid character for a literal string: '${
+              c.asInstanceOf[Char]
+            }'")
+          recover()
+          None
+      }
+    litOpt.map { raw =>
+      if (toExtern.isDefinedAt(raw.value)) {
+        val lit = ExtLit(toExtern(raw.value))
+        nodeLocMap.get(raw) match {
+          case Some(li) =>
+            nodeLocMap -= raw
+            nodeLocMap(lit) = li
+          case _ =>
+        }
+        lit
+      } else raw
     }
   }
 
@@ -1328,7 +1342,7 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset)).
+      Some(RawLit(input.substring(begin._3 + 1, offset)).
         at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
@@ -1341,11 +1355,11 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseComplexLIT(ok: Boolean, i: Natural, recover: () => Unit): Option[Raw] = {
+  private def parseComplexLIT(ok: Boolean, i: Natural, recover: () => Unit): Option[RawLit] = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(Raw(input.substring(begin._3 + 1, offset - 1).
+      Some(RawLit(input.substring(begin._3 + 1, offset - 1).
         replaceAll( """\\\\""", "\\").
         replaceAll( """\\"""", "\"")).
         at(line, column, offset))

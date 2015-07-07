@@ -40,6 +40,7 @@ import Builder._
 final class Builder {
 
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+  private val toExtern = org.sireum.pilar.ast.Json.externMap("ExtLit")._2
 
   def build(ctx: ModelContext)(
     implicit reporter: Reporter): Model = {
@@ -55,10 +56,10 @@ final class Builder {
   def build(ctx: AnnotationContext): Annotation = {
     Annotation(buildID(ctx.ID()),
       Option(ctx.LIT().getSymbol).map(buildLIT).
-        getOrElse(Raw(""))) at ctx
+        getOrElse(RawLit(""))) at ctx
   }
 
-  def build(ctx: LitContext): (Id, Raw) =
+  def build(ctx: LitContext): (Id, Lit) =
     (buildID(ctx.ID()), buildLIT(ctx.LIT()))
 
   def buildID(n: Token): Id = {
@@ -75,12 +76,23 @@ final class Builder {
       Id(text.intern())) at n
   }
 
-  def buildLIT(n: Token): Raw = {
+  def buildLIT(n: Token): Lit = {
     val text = n.getText
-    (if (text.charAt(0) == '\'') Raw(text.substring(1))
-    else Raw(text.substring(1, text.length - 1).
-      replaceAll( """\\\\""", "\\").
-      replaceAll( """\\"""", "\""))) at n
+    val raw =
+      (if (text.charAt(0) == '\'') RawLit(text.substring(1))
+      else RawLit(text.substring(1, text.length - 1).
+        replaceAll( """\\\\""", "\\").
+        replaceAll( """\\"""", "\""))) at n
+    if (toExtern.isDefinedAt(raw.value)) {
+      val lit = ExtLit(toExtern(raw.value))
+      nodeLocMap.get(raw) match {
+        case Some(li) =>
+          nodeLocMap -= raw
+          nodeLocMap(lit) = li
+        case _ =>
+      }
+      lit
+    } else raw
   }
 
   def build(ctx: ModelElementContext)(
@@ -338,6 +350,7 @@ object Builder {
           parser.setErrorHandler(errorHandler)
           parser.addErrorListener(new BaseErrorListener {
             var errors = 0
+
             override def syntaxError(recognizer: Recognizer[_, _],
                                      offendingSymbol: Any,
                                      line: PosInteger,

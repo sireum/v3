@@ -32,6 +32,11 @@ import upickle.Js
 import org.sireum.util.Json._
 
 object Json {
+  type FromExtern = PartialFunction[Any, String]
+  type ToExtern = PartialFunction[String, Any]
+
+  final val externMap = scala.collection.mutable.Map[String, (FromExtern, ToExtern)]().withDefaultValue((Map(), Map()))
+
   import scala.language.implicitConversions
 
   implicit def fromNode(o: org.sireum.pilar.ast.Node): Js.Obj =
@@ -40,7 +45,7 @@ object Json {
         Js.Obj(
           (".class", Js.Str("Annotation")),
           ("id", fromNode(o.id)),
-          ("raw", fromNode(o.raw))
+          ("lit", fromNode(o.lit))
         )
       case o: org.sireum.pilar.ast.AssertAction =>
         Js.Obj(
@@ -99,6 +104,11 @@ object Json {
           ("args", fromSeq(o.args)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
+      case o: org.sireum.pilar.ast.ExtLit =>
+        Js.Obj(
+          (".class", Js.Str("ExtLit")),
+          ("value", fromStr(externMap("ExtLit")._1(o.value)))
+        )
       case o: org.sireum.pilar.ast.GlobalVarDecl =>
         Js.Obj(
           (".class", Js.Str("GlobalVarDecl")),
@@ -136,7 +146,7 @@ object Json {
         Js.Obj(
           (".class", Js.Str("LiteralExp")),
           ("id", fromNode(o.id)),
-          ("raw", fromNode(o.raw))
+          ("lit", fromNode(o.lit))
         )
       case o: org.sireum.pilar.ast.LocalVarDecl =>
         Js.Obj(
@@ -170,9 +180,9 @@ object Json {
           ("bodyOpt", fromOption(o.bodyOpt)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
-      case o: org.sireum.pilar.ast.Raw =>
+      case o: org.sireum.pilar.ast.RawLit =>
         Js.Obj(
-          (".class", Js.Str("Raw")),
+          (".class", Js.Str("RawLit")),
           ("value", fromStr(o.value))
         )
       case o: org.sireum.pilar.ast.ReturnJump =>
@@ -212,7 +222,7 @@ object Json {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Annotation" =>
-             org.sireum.pilar.ast.Annotation(toNode[Id](o.value(1)._2), toNode[Raw](o.value(2)._2))
+             org.sireum.pilar.ast.Annotation(toNode[Id](o.value(1)._2), toNode[Lit](o.value(2)._2))
            case "AssertAction" =>
              org.sireum.pilar.ast.AssertAction(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
            case "AssignAction" =>
@@ -229,6 +239,8 @@ object Json {
              org.sireum.pilar.ast.ExtExp(toNode[Exp](o.value(1)._2), toVector(o.value(2)._2)(toNode[Exp]))
            case "ExtJump" =>
              org.sireum.pilar.ast.ExtJump(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Exp]), toVector(o.value(3)._2)(toNode[Annotation]))
+           case "ExtLit" =>
+             org.sireum.pilar.ast.ExtLit(externMap("ExtLit")._2(toStr(o.value(1)._2)))
            case "GlobalVarDecl" =>
              org.sireum.pilar.ast.GlobalVarDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
            case "GotoJump" =>
@@ -240,7 +252,7 @@ object Json {
            case "InfixExp" =>
              org.sireum.pilar.ast.InfixExp(toNode[Exp](o.value(1)._2), toNode[Id](o.value(2)._2), toNode[Exp](o.value(3)._2), toVector(o.value(4)._2)(toTuple2))
            case "LiteralExp" =>
-             org.sireum.pilar.ast.LiteralExp(toNode[Id](o.value(1)._2), toNode[Raw](o.value(2)._2))
+             org.sireum.pilar.ast.LiteralExp(toNode[Id](o.value(1)._2), toNode[Lit](o.value(2)._2))
            case "LocalVarDecl" =>
              org.sireum.pilar.ast.LocalVarDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[Annotation]))
            case "Model" =>
@@ -251,8 +263,8 @@ object Json {
              org.sireum.pilar.ast.ProcedureBody(toVector(o.value(1)._2)(toNode[LocalVarDecl]), toVector(o.value(2)._2)(toNode[Location]))
            case "ProcedureDecl" =>
              org.sireum.pilar.ast.ProcedureDecl(toNode[Id](o.value(1)._2), toVector(o.value(2)._2)(toNode[ParamDecl]), toOption(o.value(3)._2)(toNode[ProcedureBody]), toVector(o.value(4)._2)(toNode[Annotation]))
-           case "Raw" =>
-             org.sireum.pilar.ast.Raw(toStr(o.value(1)._2))
+           case "RawLit" =>
+             org.sireum.pilar.ast.RawLit(toStr(o.value(1)._2))
            case "ReturnJump" =>
              org.sireum.pilar.ast.ReturnJump(toOption(o.value(1)._2)(toNode[Exp]), toVector(o.value(2)._2)(toNode[Annotation]))
            case "SwitchCase" =>

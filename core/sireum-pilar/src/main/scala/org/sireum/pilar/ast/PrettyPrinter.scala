@@ -56,7 +56,7 @@ final class PrettyPrinter(sb: StringBuilder) {
   def print(a: Annotation): Unit = {
     sb.append('@')
     print(a.id)
-    print(a.raw)
+    print(a.lit)
   }
 
   def print(id: Id): Unit = {
@@ -71,7 +71,12 @@ final class PrettyPrinter(sb: StringBuilder) {
     }
   }
 
-  def print(raw: Raw): Unit = {
+  def print(lit: Lit): Unit = lit match {
+    case lit: RawLit => print(lit)
+    case lit: ExtLit => print(RawLit(Json.externMap("ExtLit")._1(lit.value)))
+  }
+
+  def print(raw: RawLit): Unit = {
     val s = raw.value
     if (s != "") {
       if (s.forall(isSimpleLITTrailingChar)) {
@@ -114,7 +119,6 @@ final class PrettyPrinter(sb: StringBuilder) {
   }
 
   def print(pd: ProcedureDecl, indent: Natural): Unit = {
-    val pos = sb.size
     sb.append("def ")
     print(pd.id)
     sb.append('(')

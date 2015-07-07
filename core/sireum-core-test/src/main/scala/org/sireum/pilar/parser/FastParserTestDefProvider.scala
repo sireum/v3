@@ -63,23 +63,23 @@ final class FastParserTestDefProvider(tf: TestFramework)
 
     EqualTest("AnnotationRecovery",
       parseAnnotations("@ 5 sdaekcnsgej(recovery skips here) @type 'Int", reporter(2)),
-      Seq(Annotation(Id("type"), Raw("Int"))))
+      Seq(Annotation(Id("type"), RawLit("Int"))))
     ,
     EqualTest("AnnotationRecoveryString",
       parseAnnotations("@ 5 recovery ignore \"@\" inside string @type 'Int", reporter(2)),
-      Seq(Annotation(Id("type"), Raw("Int"))))
+      Seq(Annotation(Id("type"), RawLit("Int"))))
     ,
     EqualOptTest("SimpleLit",
       parseLIT("'abc"),
-      Raw("abc"))
+      RawLit("abc"))
     ,
     EqualOptTest("StringLit",
       parseLIT("\"abc\\\"abc\""),
-      Raw("abc\"abc"))
+      RawLit("abc\"abc"))
     ,
     EqualOptTest("EmptyLit",
       parseLIT("'"),
-      Raw(""))
+      RawLit(""))
     ,
     EqualOptTest("SimpleID1",
       parseID("abc"),
@@ -131,22 +131,22 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EqualOptTest("PrimaryExpLit",
       parsePrimaryExp( """z'-1"""),
-      LiteralExp(Id("z"), Raw("-1")))
+      LiteralExp(Id("z"), RawLit("-1")))
     ,
     EqualOptTest("PrimaryExpTuple",
       parsePrimaryExp( """(z'-1, b'true ,usd'1_000_000)"""),
       TupleExp(
         Node.seq(
-          LiteralExp(Id("z"), Raw("-1")),
-          LiteralExp(Id("b"), Raw("true")),
-          LiteralExp(Id("usd"), Raw("1_000_000"))
+          LiteralExp(Id("z"), RawLit("-1")),
+          LiteralExp(Id("b"), RawLit("true")),
+          LiteralExp(Id("usd"), RawLit("1_000_000"))
         )
       )
     )
     ,
     EqualOptTest("Annotation",
       parseAnnotation( """@z'111"""),
-      Annotation(Id("z"), Raw("111")))
+      Annotation(Id("z"), RawLit("111")))
     ,
     EqualOptTest("ExpSimpleID1",
       parseExp("abc"),
@@ -174,7 +174,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
     ,
     EqualOptTest("ExpLit",
       parseExp("z'-1"),
-      LiteralExp(Id("z"), Raw("-1")))
+      LiteralExp(Id("z"), RawLit("-1")))
     ,
     EqualOptTest("ExpTuple",
       parseExp("(z'-1, b'true ,usd'1_000_000)"),
@@ -182,15 +182,15 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.seq(
           LiteralExp(
             Id("z"),
-            Raw("-1")
+            RawLit("-1")
           ),
           LiteralExp(
             Id("b"),
-            Raw("true")
+            RawLit("true")
           ),
           LiteralExp(
             Id("usd"),
-            Raw("1_000_000")
+            RawLit("1_000_000")
           )
         )
       )
@@ -205,9 +205,9 @@ final class FastParserTestDefProvider(tf: TestFramework)
       InfixExp(
         ExtExp(IdExp(Id("a")), Node.seq(IdExp(Id("b")), IdExp(Id("c")))),
         Id("+"),
-        LiteralExp(Id("z"), Raw("5")),
+        LiteralExp(Id("z"), RawLit("5")),
         Node.seq(
-          (Id("*"), LiteralExp(Id("z"), Raw("6")))
+          (Id("*"), LiteralExp(Id("z"), RawLit("6")))
         )
       ))
     ,
@@ -240,19 +240,19 @@ final class FastParserTestDefProvider(tf: TestFramework)
       AssignAction(
         IdExp(Id("x")),
         InfixExp(
-          LiteralExp(Id("d"), Raw("1.0")),
+          LiteralExp(Id("d"), RawLit("1.0")),
           Id("+"),
           IdExp(Id("z")),
           Node.seq(
-            (Id("*"), LiteralExp(Id("z"), Raw("5"))))),
+            (Id("*"), LiteralExp(Id("z"), RawLit("5"))))),
         Node.emptySeq))
     ,
     EqualOptTest("AssignAction3",
       parseAction("x:=z'1@foo;"),
       AssignAction(
         IdExp(Id("x")),
-        LiteralExp(Id("z"), Raw("1")),
-        Node.seq(Annotation(Id("foo"), Raw("")))))
+        LiteralExp(Id("z"), RawLit("1")),
+        Node.seq(Annotation(Id("foo"), RawLit("")))))
     ,
     EmptyIterableTest("AssignActionRecovery",
       parseAction("x := 5 + recovery skips this;", reporter(5)))
@@ -260,13 +260,13 @@ final class FastParserTestDefProvider(tf: TestFramework)
     EqualOptTest("AssertAction1",
       parseAction("assert b'true;"),
       AssertAction(
-        LiteralExp(Id("b"), Raw("true")),
+        LiteralExp(Id("b"), RawLit("true")),
         Node.emptySeq))
     ,
     EqualOptTest("AssertAction2",
       parseAction("assert b'false;"),
       AssertAction(
-        LiteralExp(Id("b"), Raw("false")),
+        LiteralExp(Id("b"), RawLit("false")),
         Node.emptySeq))
     ,
     EqualOptTest("AssertAction3",
@@ -275,7 +275,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
         InfixExp(
           IdExp(Id("x")),
           Id(">"),
-          LiteralExp(Id("z"), Raw("0")),
+          LiteralExp(Id("z"), RawLit("0")),
           Node.seq(
             (Id("&"), IdExp(Id("x"))),
             (Id("<"), IdExp(Id("y"))))),
@@ -287,13 +287,13 @@ final class FastParserTestDefProvider(tf: TestFramework)
     EqualOptTest("AssumeAction1",
       parseAction("assume b'true;"),
       AssumeAction(
-        LiteralExp(Id("b"), Raw("true")),
+        LiteralExp(Id("b"), RawLit("true")),
         Node.emptySeq))
     ,
     EqualOptTest("AssumeAction2",
       parseAction("assume b'false;"),
       AssumeAction(
-        LiteralExp(Id("b"), Raw("false")),
+        LiteralExp(Id("b"), RawLit("false")),
         Node.emptySeq))
     ,
     EqualOptTest("AssumeAction3",
@@ -302,7 +302,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
         InfixExp(
           IdExp(Id("x")),
           Id(">"),
-          LiteralExp(Id("z"), Raw("0")),
+          LiteralExp(Id("z"), RawLit("0")),
           Node.seq(
             (Id("&"), IdExp(Id("x"))),
             (Id("<"), IdExp(Id("y"))))),
@@ -358,11 +358,11 @@ final class FastParserTestDefProvider(tf: TestFramework)
         IdExp(Id("x")),
         Node.seq(
           SwitchCase(
-            Some(LiteralExp(Id("z"), Raw("0"))),
+            Some(LiteralExp(Id("z"), RawLit("0"))),
             Id("L0")
           ),
           SwitchCase(
-            Some(LiteralExp(Id("z"), Raw("1"))),
+            Some(LiteralExp(Id("z"), RawLit("1"))),
             Id("L1")
           ),
           SwitchCase(
@@ -381,11 +381,11 @@ final class FastParserTestDefProvider(tf: TestFramework)
         IdExp(Id("x")),
         Node.seq(
           SwitchCase(
-            Some(LiteralExp(Id("z"), Raw("0"))),
+            Some(LiteralExp(Id("z"), RawLit("0"))),
             Id("L0")
           ),
           SwitchCase(
-            Some(LiteralExp(Id("z"), Raw("1"))),
+            Some(LiteralExp(Id("z"), RawLit("1"))),
             Id("L1")
           )
         )))
@@ -455,9 +455,9 @@ final class FastParserTestDefProvider(tf: TestFramework)
         ),
         IfJump(
           IdExp(Id("x")), Id("L1"), Id("L3"),
-          Node.seq(Annotation(Id("bar"), Raw("baz")))
+          Node.seq(Annotation(Id("bar"), RawLit("baz")))
         ),
-        Node.seq(Annotation(Id("foo"), Raw("")))))
+        Node.seq(Annotation(Id("foo"), RawLit("")))))
     ,
     EqualOptTest("BlockLocationRecovery1",
       parseLocation(
@@ -470,9 +470,9 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.emptySeq,
         IfJump(
           IdExp(Id("x")), Id("L1"), Id("L3"),
-          Node.seq(Annotation(Id("bar"), Raw("baz")))
+          Node.seq(Annotation(Id("bar"), RawLit("baz")))
         ),
-        Node.seq(Annotation(Id("foo"), Raw("")))))
+        Node.seq(Annotation(Id("foo"), RawLit("")))))
     ,
     EqualOptTest("BlockLocationRecovery2",
       parseLocation(
@@ -486,7 +486,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
           AssignAction(IdExp(Id("x")), IdExp(Id("y")))
         ),
         GotoJump(Id("<missing>")),
-        Node.seq(Annotation(Id("foo"), Raw("")))))
+        Node.seq(Annotation(Id("foo"), RawLit("")))))
     ,
     EqualOptTest("CallLocation1",
       parseLocation("#L0 call a(b) goto L1;"),
@@ -550,15 +550,15 @@ final class FastParserTestDefProvider(tf: TestFramework)
         Node.seq(
           ParamDecl(
             Id("b"),
-            Node.seq(Annotation(Id("type"), Raw("Int")))
+            Node.seq(Annotation(Id("type"), RawLit("Int")))
           ),
           ParamDecl(
             Id("c"),
-            Node.seq(Annotation(Id("type"), Raw("Int")))
+            Node.seq(Annotation(Id("type"), RawLit("Int")))
           )
         ),
         None,
-        Node.seq(Annotation(Id("type"), Raw("Int")))))
+        Node.seq(Annotation(Id("type"), RawLit("Int")))))
     ,
     EqualOptTest("ProcedureDecl4",
       parseModelElement(
@@ -598,7 +598,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
               LocalVarDecl(Id("x")),
               LocalVarDecl(
                 Id("y"),
-                Node.seq(Annotation(Id("type"), Raw("Int"))))
+                Node.seq(Annotation(Id("type"), RawLit("Int"))))
             ),
             Node.seq(BlockLocation(
               Id("L0"),
@@ -696,7 +696,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
               BlockLocation(
                 Id("L0"),
                 Node.seq(
-                  AssertAction(LiteralExp(Id("b"), Raw("true")))),
+                  AssertAction(LiteralExp(Id("b"), RawLit("true")))),
                 GotoJump(Id("L1"))),
               BlockLocation(
                 Id("L1"),
@@ -721,7 +721,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
               BlockLocation(
                 Id("L0"),
                 Node.seq(
-                  AssertAction(LiteralExp(Id("b"), Raw("true")))),
+                  AssertAction(LiteralExp(Id("b"), RawLit("true")))),
                 GotoJump(Id("<missing>"))),
               BlockLocation(
                 Id("L1"),
@@ -736,7 +736,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
       parseModelElement("global var x @type 'Int;"),
       GlobalVarDecl(
         Id("x"),
-        Node.seq(Annotation(Id("type"), Raw("Int")))))
+        Node.seq(Annotation(Id("type"), RawLit("Int")))))
     ,
     EmptyIterableTest("GlobalVarDeclRecovery",
       parseModelElement("global recovery skips this x;", reporter(7)))
@@ -775,7 +775,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
                       InfixExp(
                         IdExp(Id("x")),
                         Id("<"),
-                        LiteralExp(Id("z"), Raw("0"))),
+                        LiteralExp(Id("z"), RawLit("0"))),
                       Id("L1"),
                       Id("L2"))),
                   BlockLocation(

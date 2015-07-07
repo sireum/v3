@@ -35,8 +35,8 @@ object Rewriter {
 
   val constructorMap : ConstructorMap = Map(
     ("Annotation", { es =>
-      val Seq(id: Id, raw: Raw) = es
-      org.sireum.pilar.ast.Annotation(id, raw)
+      val Seq(id: Id, lit: Lit) = es
+      org.sireum.pilar.ast.Annotation(id, lit)
     }),
     ("AssertAction", { es =>
       val Seq(exp: Exp, annotations: IVector[_]) = es
@@ -70,6 +70,10 @@ object Rewriter {
       val Seq(id: Id, args: IVector[_], annotations: IVector[_]) = es
       org.sireum.pilar.ast.ExtJump(id, cast(args), cast(annotations))
     }),
+    ("ExtLit", { es =>
+      val Seq(value: Any) = es
+      org.sireum.pilar.ast.ExtLit(value)
+    }),
     ("GlobalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
       org.sireum.pilar.ast.GlobalVarDecl(id, cast(annotations))
@@ -91,8 +95,8 @@ object Rewriter {
       org.sireum.pilar.ast.InfixExp(left, op, right, cast(rest))
     }),
     ("LiteralExp", { es =>
-      val Seq(id: Id, raw: Raw) = es
-      org.sireum.pilar.ast.LiteralExp(id, raw)
+      val Seq(id: Id, lit: Lit) = es
+      org.sireum.pilar.ast.LiteralExp(id, lit)
     }),
     ("LocalVarDecl", { es =>
       val Seq(id: Id, annotations: IVector[_]) = es
@@ -114,9 +118,9 @@ object Rewriter {
       val Seq(id: Id, params: IVector[_], bodyOpt: Option[_], annotations: IVector[_]) = es
       org.sireum.pilar.ast.ProcedureDecl(id, cast(params), cast(bodyOpt), cast(annotations))
     }),
-    ("Raw", { es =>
+    ("RawLit", { es =>
       val Seq(value: String) = es
-      org.sireum.pilar.ast.Raw(value)
+      org.sireum.pilar.ast.RawLit(value)
     }),
     ("ReturnJump", { es =>
       val Seq(expOpt: Option[_], annotations: IVector[_]) = es

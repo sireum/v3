@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.ast
 
 import org.sireum.util._
-import org.sireum.util.Json.InternString
+import org.sireum.util.Json.{Extern, InternString}
 
 object Node {
   type Seq[T] = IVector[T]
@@ -61,7 +61,7 @@ Model(elements: Node.Seq[ModelElement],
 
 final case class
 Annotation(id: Id,
-           raw: Raw) extends Node
+           lit: Lit) extends Node
 
 object Id {
   def apply(value: String): Id = _Id(value.intern())
@@ -78,8 +78,13 @@ private final case class
 _Id(value: String) extends Id
 
 
+sealed trait Lit extends Node
+
 final case class
-Raw(value: String) extends Node
+RawLit(value: String) extends Lit
+
+final case class
+ExtLit(@Extern value: Any) extends Lit
 
 
 sealed trait ModelElement extends Node with Annotated
@@ -241,7 +246,7 @@ sealed trait Exp extends Node
 
 final case class
 LiteralExp(id: Id,
-           raw: Raw) extends Exp
+           lit: Lit) extends Exp
 
 
 final case class
