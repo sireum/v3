@@ -35,6 +35,9 @@ object Json {
   @getter
   final class InternString extends StaticAnnotation
 
+  @getter
+  final class Extern extends StaticAnnotation
+
   import scala.language.implicitConversions
 
   implicit final def fromAnyVal(v: AnyVal): Js.Value =

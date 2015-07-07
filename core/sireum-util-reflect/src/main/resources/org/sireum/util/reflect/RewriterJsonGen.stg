@@ -31,7 +31,7 @@ object %name% {
 }
 >>
 
-mainJson(license, packageName, name, rootClassName, rootClassFullName, fromCase, toCase, impor) ::= <<
+mainJson(license, packageName, name, rootClassName, rootClassFullName, fromCase, toCase, impor, hasExtern) ::= <<
 %if(license)%
 /*
 %license%
@@ -50,6 +50,13 @@ import org.sireum.util.Json._
 %if(impor)%import %impor; separator="._\nimport "%._%endif%
 
 object %name% {
+  %if(hasExtern)%
+  type FromExtern = PartialFunction[Any, String]
+  type ToExtern = PartialFunction[String, Any]
+
+  final val externMap = scala.collection.mutable.Map[String, (FromExtern, ToExtern)]().withDefaultValue((Map(), Map()))
+  %endif%
+
   import scala.language.implicitConversions
 
   implicit def from%rootClassName%(o: %rootClassFullName%): Js.Obj =
@@ -95,6 +102,10 @@ caseFromArg(name, type, arg) ::= <<
 ("%name%", %type%(o.%name%)%if(arg)%(%arg; separator=", "%)%endif%)
 >>
 
+caseFromExternArg(name, className) ::= <<
+("%name%", fromStr(externMap("%className%")._1(o.%name%)))
+>>
+
 caseTo(name, fullName, arg) ::= <<
 case "%name%" =>
   %fullName%(%arg; separator=", "%)
@@ -106,4 +117,8 @@ case "%name%" => %fullName%
 
 caseToArg(type, i, arg) ::= <<
 %type%(o.value(%i%)._2)%if(arg)%(%arg; separator=", "%)%endif%
+>>
+
+caseToExternArg(i, className) ::= <<
+externMap("%className%")._2(toStr(o.value(%i%)._2))
 >>

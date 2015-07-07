@@ -25,13 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.util.reflect
 
-import org.sireum.util.Json.InternString
+import org.sireum.util.Json.{Extern, InternString}
 import org.sireum.util._
 import org.stringtemplate.v4._
 import scala.reflect.runtime.universe._
 
 object RewriterJsonGen {
   type Hierarchy = MMap[Symbol, ISet[Symbol]]
+  final val anyType = typeOf[Any]
   final val anyValType = typeOf[AnyVal]
   final val stringType = typeOf[String]
   final val optionType = typeOf[Option[_]].erasure
@@ -135,6 +136,7 @@ final class RewriterJsonGen(licenseOpt: Option[String],
             if (b) stConsEntry.add("ec", s"cast(${p.name})")
             else stConsEntry.add("ec", p.name)
           }
+
           i += 1
         }
       }
@@ -191,21 +193,43 @@ final class RewriterJsonGen(licenseOpt: Option[String],
 
         var i = 0
         for (p <- cc.params) {
+          val extern = hasExtern(p.annotations)
+
+          if (extern) {
+            stMainJson.add("hasExtern", true)
+          }
+
           {
-            val (tipe, typeArgOpt) = fromType(p.tipe)
-            val stArg = stg.getInstanceOf("caseFromArg").
-              add("name", p.name).
-              add("type", tipe)
-            typeArgOpt.foreach(arg => stArg.add("arg", arg))
+            val stArg =
+              if (extern)
+                stg.getInstanceOf("caseFromExternArg").
+                  add("name", p.name).
+                  add("className", typeName)
+              else {
+                val (tipe, typeArgOpt) = fromType(p.tipe)
+                val stArg = stg.getInstanceOf("caseFromArg").
+                  add("name", p.name).
+                  add("type", tipe)
+                typeArgOpt.foreach(arg => stArg.add("arg", arg))
+                stArg
+              }
             stCaseFrom.add("arg", stArg)
           }
           {
-            val (tipe, typeArgOpt) =
-              toType(p.tipe, shouldInternString ||
-                hasInternString(p.annotations))
-            val stArg = stg.getInstanceOf("caseToArg").
-              add("type", tipe).add("i", i + 1)
-            typeArgOpt.foreach(arg => stArg.add("arg", arg))
+            val stArg =
+              if (extern)
+                stg.getInstanceOf("caseToExternArg").
+                  add("i", i + 1).
+                  add("className", typeName)
+              else {
+                val (tipe, typeArgOpt) =
+                  toType(p.tipe, shouldInternString ||
+                    hasInternString(p.annotations))
+                val stArg = stg.getInstanceOf("caseToArg").
+                  add("type", tipe).add("i", i + 1)
+                typeArgOpt.foreach(arg => stArg.add("arg", arg))
+                stArg
+              }
             stCaseTo.add("arg", stArg)
           }
           i += 1
@@ -218,6 +242,9 @@ final class RewriterJsonGen(licenseOpt: Option[String],
   private def hasInternString(annotations: ISeq[Reflection.Annotation]) =
     annotations.exists(a => a.tipe =:= typeOf[InternString])
 
+  private def hasExtern(annotations: ISeq[Reflection.Annotation]) =
+    annotations.exists(a => a.tipe =:= typeOf[Extern])
+
   private def name(t: Type) =
     t.typeSymbol.asClass.name.decodedName.toString
 
@@ -226,6 +253,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
 
   private def entryType(n: String, t: Type) =
     t match {
+      case _ if t =:= anyType =>
+        (s"$n: Any", false)
       case _ if t <:< anyValType =>
         (s"$n: ${anyValBoxMap(name(t))}", false)
       case _ if t =:= stringType =>
