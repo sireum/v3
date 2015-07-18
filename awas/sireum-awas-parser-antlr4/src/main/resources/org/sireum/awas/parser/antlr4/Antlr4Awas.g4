@@ -12,6 +12,11 @@ modelElement
   : componentDecl
   | connectionDecl
   | enumDecl
+  | enclosureDecl
+  ;
+
+enclosureDecl
+  : 'enclosure' ID
   ;
 
 componentDecl
