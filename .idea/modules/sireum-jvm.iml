@@ -44,5 +44,8 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.11:0.5.0:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-awas" exported="" />
+    <orderEntry type="module" module-name="sireum-awas-parser-antlr4" exported="" />
+    <orderEntry type="module" module-name="sireum-awas-test" exported="" />
   </component>
 </module>

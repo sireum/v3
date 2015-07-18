@@ -167,7 +167,7 @@ inserted before the file extension.)
 Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository.
 Anytime that you are asked for a JDK, point it to `platform/java`.
 
-**Note:** You can opt to use the Zulu JDK that Sireum uses instead of the custom JDK that ships with IntelliJ.
+**Note:** You can opt to use the Zulu JDK that Sireum uses to run IntelliJ instead of IntelliJ's custom JDK.
 To do so, exit IntelliJ (if it is running), then, for OS X:
 
 ```bash

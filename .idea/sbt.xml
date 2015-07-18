@@ -8,6 +8,12 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-parser-antlr4" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-test" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-test/project" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas/project" />
             <option value="$PROJECT_DIR$/core/sireum-cli" />
             <option value="$PROJECT_DIR$/core/sireum-cli/project" />
             <option value="$PROJECT_DIR$/core/sireum-core-js-test" />

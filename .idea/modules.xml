@@ -3,6 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas-parser-antlr4.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas-parser-antlr4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas-parser-antlr4-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas-parser-antlr4-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-awas-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-awas-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli-build.iml" />
