@@ -25,7 +25,7 @@ Run: `bin/sbt-launch.sh test`
 (If this is your first time running the script, it first downloads Zulu JDK 8, Node.js, and Sbt, and then
 it installs them under the `platform` directory.)
 
-**Warning:** If you use Gradle on other projects, your Ivy2 cache might get corrupted.
+**Warning:** If you use Gradle on other projects, your Ivy2 cache might be corrupted.
 In such case, Sbt will complain about unresolved dependencies, e.g.:
 
 ```
