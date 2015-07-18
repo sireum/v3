@@ -22,8 +22,8 @@ Building and Testing Sireum using Sbt
 
 Run: `bin/sbt-launch.sh test`
 
-(If this is your first time running the script, it will first download Zulu JDK 8, Node.js, and Sbt and install them
-under the `platform` directory.)
+(If this is your first time running the script, it first downloads Zulu JDK 8, Node.js, and Sbt, and then
+it installs them under the `platform` directory.)
 
 **Warning:** If you use Gradle on other projects, your Ivy2 cache might get corrupted.
 In such case, Sbt will complain about unresolved dependencies, e.g.:
@@ -154,7 +154,7 @@ Download
 --------
 
 Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 versions,
-IntelliJ provided a custom build for IntelliJ that includes a custom build of OpenJDK 8
+Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
 * Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-14.1.4-custom-jdk-bundled.dmg
