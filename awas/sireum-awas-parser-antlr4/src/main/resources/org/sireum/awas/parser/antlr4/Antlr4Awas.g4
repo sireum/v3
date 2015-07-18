@@ -32,7 +32,9 @@ connectionDecl
   ;
 
 enumDecl
-  : 'enum' ID // enum elements are defined in the profile
+  : 'enum' id=ID
+    ( 'extends' supers+=ID ( ',' supers+=ID )* )?
+    // enum elements are defined in the profile
   ;
 
 states
