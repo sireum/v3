@@ -25,7 +25,7 @@ Run: `bin/sbt-launch.sh test`
 (If this is your first time running the script, it first downloads Zulu JDK 8, Node.js, and Sbt, and then
 it installs them under the `platform` directory.)
 
-**Warning:** If you use Gradle on other projects, your Ivy2 cache might be corrupted.
+**Warning:** If you use Gradle (on other projects), your Ivy2 cache might be corrupted.
 In such case, Sbt will complain about unresolved dependencies, e.g.:
 
 ```
@@ -51,7 +51,7 @@ sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not
 To fix it, you need to delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
 corrupted library cache such as junit for the example above; in the worst case, delete all cache).
 
-Once you delete the corrupted cache, run Sbt again and it should work.
+Once you deleted the corrupted cache, run Sbt again and it should work.
 You can then check that your Gradle builds still work once Sbt fixed/recreated your Ivy2 cache.
 
 
