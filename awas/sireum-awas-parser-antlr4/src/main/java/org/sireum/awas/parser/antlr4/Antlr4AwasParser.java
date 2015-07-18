@@ -925,16 +925,6 @@ public class Antlr4AwasParser extends Parser {
         }
     }
 
-    public static class EnumTypeContext extends TypeContext {
-        public TerminalNode ID() {
-            return getToken(Antlr4AwasParser.ID, 0);
-        }
-
-        public EnumTypeContext(TypeContext ctx) {
-            copyFrom(ctx);
-        }
-    }
-
     public static class SeqTypeContext extends TypeContext {
         public TypeContext type() {
             return getRuleContext(TypeContext.class, 0);
@@ -963,12 +953,13 @@ public class Antlr4AwasParser extends Parser {
         TypeContext _localctx = new TypeContext(_ctx, getState());
         enterRule(_localctx, 22, RULE_type);
         try {
-            setState(174);
+            setState(173);
             switch (_input.LA(1)) {
                 case T__23:
                 case T__24:
                 case T__25:
                 case T__26:
+                case ID:
                     _localctx = new BaseTypeContext(_localctx);
                     enterOuterAlt(_localctx, 1);
                 {
@@ -976,57 +967,49 @@ public class Antlr4AwasParser extends Parser {
                     basicType();
                 }
                 break;
-                case ID:
-                    _localctx = new EnumTypeContext(_localctx);
+                case T__20:
+                    _localctx = new SetTypeContext(_localctx);
                     enterOuterAlt(_localctx, 2);
                 {
                     setState(156);
-                    match(ID);
-                }
-                break;
-                case T__20:
-                    _localctx = new SetTypeContext(_localctx);
-                    enterOuterAlt(_localctx, 3);
-                {
-                    setState(157);
                     match(T__20);
-                    setState(158);
+                    setState(157);
                     match(T__12);
-                    setState(159);
+                    setState(158);
                     type();
-                    setState(160);
+                    setState(159);
                     match(T__13);
                 }
                 break;
                 case T__21:
                     _localctx = new SeqTypeContext(_localctx);
-                    enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 3);
                 {
-                    setState(162);
+                    setState(161);
                     match(T__21);
-                    setState(163);
+                    setState(162);
                     match(T__12);
-                    setState(164);
+                    setState(163);
                     type();
-                    setState(165);
+                    setState(164);
                     match(T__13);
                 }
                 break;
                 case T__22:
                     _localctx = new MapTypeContext(_localctx);
-                    enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 4);
                 {
-                    setState(167);
+                    setState(166);
                     match(T__22);
-                    setState(168);
+                    setState(167);
                     match(T__12);
-                    setState(169);
+                    setState(168);
                     basicType();
-                    setState(170);
+                    setState(169);
                     match(T__9);
-                    setState(171);
+                    setState(170);
                     type();
-                    setState(172);
+                    setState(171);
                     match(T__13);
                 }
                 break;
@@ -1073,6 +1056,16 @@ public class Antlr4AwasParser extends Parser {
         }
     }
 
+    public static class EnumTypeContext extends BasicTypeContext {
+        public TerminalNode ID() {
+            return getToken(Antlr4AwasParser.ID, 0);
+        }
+
+        public EnumTypeContext(BasicTypeContext ctx) {
+            copyFrom(ctx);
+        }
+    }
+
     public static class BooleanTypeContext extends BasicTypeContext {
         public BooleanTypeContext(BasicTypeContext ctx) {
             copyFrom(ctx);
@@ -1095,7 +1088,7 @@ public class Antlr4AwasParser extends Parser {
                     _localctx = new BooleanTypeContext(_localctx);
                     enterOuterAlt(_localctx, 1);
                 {
-                    setState(176);
+                    setState(175);
                     match(T__23);
                 }
                 break;
@@ -1103,7 +1096,7 @@ public class Antlr4AwasParser extends Parser {
                     _localctx = new IntegerTypeContext(_localctx);
                     enterOuterAlt(_localctx, 2);
                 {
-                    setState(177);
+                    setState(176);
                     match(T__24);
                 }
                 break;
@@ -1111,7 +1104,7 @@ public class Antlr4AwasParser extends Parser {
                     _localctx = new RealTypeContext(_localctx);
                     enterOuterAlt(_localctx, 3);
                 {
-                    setState(178);
+                    setState(177);
                     match(T__25);
                 }
                 break;
@@ -1119,8 +1112,16 @@ public class Antlr4AwasParser extends Parser {
                     _localctx = new StringTypeContext(_localctx);
                     enterOuterAlt(_localctx, 4);
                 {
-                    setState(179);
+                    setState(178);
                     match(T__26);
+                }
+                break;
+                case ID:
+                    _localctx = new EnumTypeContext(_localctx);
+                    enterOuterAlt(_localctx, 5);
+                {
+                    setState(179);
+                    match(ID);
                 }
                 break;
                 default:
@@ -1544,7 +1545,7 @@ public class Antlr4AwasParser extends Parser {
                     "\b\u0082\13\b\5\b\u0084\n\b\3\t\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\13\3" +
                     "\13\3\13\3\f\3\f\3\f\3\f\3\f\5\f\u0097\n\f\3\f\3\f\3\f\5\f\u009c\n\f\3" +
                     "\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r" +
-                    "\3\r\5\r\u00b1\n\r\3\16\3\16\3\16\3\16\5\16\u00b7\n\16\3\17\3\17\3\17" +
+                    "\5\r\u00b0\n\r\3\16\3\16\3\16\3\16\3\16\5\16\u00b7\n\16\3\17\3\17\3\17" +
                     "\3\17\3\17\3\17\3\17\3\17\3\17\3\17\3\17\5\17\u00c4\n\17\3\17\3\17\3\17" +
                     "\3\17\7\17\u00ca\n\17\f\17\16\17\u00cd\13\17\5\17\u00cf\n\17\3\17\3\17" +
                     "\3\17\3\17\3\17\3\17\5\17\u00d7\n\17\3\17\3\17\3\17\3\17\7\17\u00dd\n" +
@@ -1554,7 +1555,7 @@ public class Antlr4AwasParser extends Parser {
                     "\3\20\3\20\2\2\21\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36\2\3\3\2\24\25" +
                     "\u011d\2 \3\2\2\2\4&\3\2\2\2\6,\3\2\2\2\b.\3\2\2\2\nN\3\2\2\2\fc\3\2\2" +
                     "\2\16p\3\2\2\2\20\u0085\3\2\2\2\22\u008a\3\2\2\2\24\u008e\3\2\2\2\26\u009b" +
-                    "\3\2\2\2\30\u00b0\3\2\2\2\32\u00b6\3\2\2\2\34\u00f9\3\2\2\2\36\u00fb\3" +
+                    "\3\2\2\2\30\u00af\3\2\2\2\32\u00b6\3\2\2\2\34\u00f9\3\2\2\2\36\u00fb\3" +
                     "\2\2\2 !\5\4\3\2!\"\7\2\2\3\"\3\3\2\2\2#%\5\6\4\2$#\3\2\2\2%(\3\2\2\2" +
                     "&$\3\2\2\2&\'\3\2\2\2\'\5\3\2\2\2(&\3\2\2\2)-\5\b\5\2*-\5\n\6\2+-\5\f" +
                     "\7\2,)\3\2\2\2,*\3\2\2\2,+\3\2\2\2-\7\3\2\2\2./\7\3\2\2/@\7%\2\2\60\64" +
@@ -1581,15 +1582,15 @@ public class Antlr4AwasParser extends Parser {
                     "\u0093\u0096\5\30\r\2\u0094\u0095\7\16\2\2\u0095\u0097\5\34\17\2\u0096" +
                     "\u0094\3\2\2\2\u0096\u0097\3\2\2\2\u0097\u009c\3\2\2\2\u0098\u0099\7%" +
                     "\2\2\u0099\u009a\7\16\2\2\u009a\u009c\5\34\17\2\u009b\u0091\3\2\2\2\u009b" +
-                    "\u0098\3\2\2\2\u009c\27\3\2\2\2\u009d\u00b1\5\32\16\2\u009e\u00b1\7%\2" +
-                    "\2\u009f\u00a0\7\27\2\2\u00a0\u00a1\7\17\2\2\u00a1\u00a2\5\30\r\2\u00a2" +
-                    "\u00a3\7\20\2\2\u00a3\u00b1\3\2\2\2\u00a4\u00a5\7\30\2\2\u00a5\u00a6\7" +
-                    "\17\2\2\u00a6\u00a7\5\30\r\2\u00a7\u00a8\7\20\2\2\u00a8\u00b1\3\2\2\2" +
-                    "\u00a9\u00aa\7\31\2\2\u00aa\u00ab\7\17\2\2\u00ab\u00ac\5\32\16\2\u00ac" +
-                    "\u00ad\7\f\2\2\u00ad\u00ae\5\30\r\2\u00ae\u00af\7\20\2\2\u00af\u00b1\3" +
-                    "\2\2\2\u00b0\u009d\3\2\2\2\u00b0\u009e\3\2\2\2\u00b0\u009f\3\2\2\2\u00b0" +
-                    "\u00a4\3\2\2\2\u00b0\u00a9\3\2\2\2\u00b1\31\3\2\2\2\u00b2\u00b7\7\32\2" +
-                    "\2\u00b3\u00b7\7\33\2\2\u00b4\u00b7\7\34\2\2\u00b5\u00b7\7\35\2\2\u00b6" +
+                    "\u0098\3\2\2\2\u009c\27\3\2\2\2\u009d\u00b0\5\32\16\2\u009e\u009f\7\27" +
+                    "\2\2\u009f\u00a0\7\17\2\2\u00a0\u00a1\5\30\r\2\u00a1\u00a2\7\20\2\2\u00a2" +
+                    "\u00b0\3\2\2\2\u00a3\u00a4\7\30\2\2\u00a4\u00a5\7\17\2\2\u00a5\u00a6\5" +
+                    "\30\r\2\u00a6\u00a7\7\20\2\2\u00a7\u00b0\3\2\2\2\u00a8\u00a9\7\31\2\2" +
+                    "\u00a9\u00aa\7\17\2\2\u00aa\u00ab\5\32\16\2\u00ab\u00ac\7\f\2\2\u00ac" +
+                    "\u00ad\5\30\r\2\u00ad\u00ae\7\20\2\2\u00ae\u00b0\3\2\2\2\u00af\u009d\3" +
+                    "\2\2\2\u00af\u009e\3\2\2\2\u00af\u00a3\3\2\2\2\u00af\u00a8\3\2\2\2\u00b0" +
+                    "\31\3\2\2\2\u00b1\u00b7\7\32\2\2\u00b2\u00b7\7\33\2\2\u00b3\u00b7\7\34" +
+                    "\2\2\u00b4\u00b7\7\35\2\2\u00b5\u00b7\7%\2\2\u00b6\u00b1\3\2\2\2\u00b6" +
                     "\u00b2\3\2\2\2\u00b6\u00b3\3\2\2\2\u00b6\u00b4\3\2\2\2\u00b6\u00b5\3\2" +
                     "\2\2\u00b7\33\3\2\2\2\u00b8\u00fa\7\36\2\2\u00b9\u00fa\7\37\2\2\u00ba" +
                     "\u00fa\7\"\2\2\u00bb\u00fa\7#\2\2\u00bc\u00fa\7$\2\2\u00bd\u00fa\7%\2" +
@@ -1617,7 +1618,7 @@ public class Antlr4AwasParser extends Parser {
                     "\u00bd\3\2\2\2\u00f9\u00be\3\2\2\2\u00f9\u00d1\3\2\2\2\u00f9\u00e4\3\2" +
                     "\2\2\u00fa\35\3\2\2\2\u00fb\u00fc\5\34\17\2\u00fc\u00fd\7\t\2\2\u00fd" +
                     "\u00fe\5\34\17\2\u00fe\37\3\2\2\2\"&,\64;>@FILRX^aknx\u0080\u0083\u0096" +
-                    "\u009b\u00b0\u00b6\u00c3\u00cb\u00ce\u00d6\u00de\u00e1\u00eb\u00f3\u00f6" +
+                    "\u009b\u00af\u00b6\u00c3\u00cb\u00ce\u00d6\u00de\u00e1\u00eb\u00f3\u00f6" +
                     "\u00f9";
     public static final ATN _ATN =
             new ATNDeserializer().deserialize(_serializedATN.toCharArray());

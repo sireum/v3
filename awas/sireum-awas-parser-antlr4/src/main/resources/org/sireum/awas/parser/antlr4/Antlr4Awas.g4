@@ -61,7 +61,6 @@ property
 
 type
   : basicType                                        #BaseType
-  | ID                                               #EnumType
   | 'Set' '[' type ']'                               #SetType
   | 'Seq' '[' type ']'                               #SeqType
   | 'Map' '[' basicType ',' type ']'                 #MapType
@@ -72,6 +71,7 @@ basicType
   | 'Integer'                                        #IntegerType
   | 'Real'                                           #RealType
   | 'String'                                         #StringType
+  | ID                                               #EnumType
   ;
 
 init
