@@ -1,12 +1,10 @@
 // Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/awas/sireum-awas-parser-antlr4/src/main/resources/org/sireum/awas/parser/antlr4/Antlr4Awas.g4 by ANTLR 4.5.1
 package org.sireum.awas.parser.antlr4;
-
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
-
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -25,7 +23,7 @@ public class Antlr4AwasParser extends Parser {
             T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, T__14 = 15, T__15 = 16, T__16 = 17,
             T__17 = 18, T__18 = 19, T__19 = 20, T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24,
             T__24 = 25, T__25 = 26, T__26 = 27, T__27 = 28, T__28 = 29, T__29 = 30, INTEGER = 31,
-            REAL = 32, STRING = 33, ID = 34, WS = 35, ERROR_CHAR = 36;
+            REAL = 32, STRING = 33, ID = 34, WS = 35, COMMENT = 36, LINE_COMMENT = 37, ERROR_CHAR = 38;
     public static final int
             RULE_modelFile = 0, RULE_model = 1, RULE_modelElement = 2, RULE_componentDecl = 3,
             RULE_connectionDecl = 4, RULE_enumDecl = 5, RULE_states = 6, RULE_transition = 7,
@@ -47,7 +45,7 @@ public class Antlr4AwasParser extends Parser {
             null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, "INTEGER", "REAL", "STRING",
-            "ID", "WS", "ERROR_CHAR"
+            "ID", "WS", "COMMENT", "LINE_COMMENT", "ERROR_CHAR"
     };
     public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -1473,7 +1471,7 @@ public class Antlr4AwasParser extends Parser {
     }
 
     public static final String _serializedATN =
-            "\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3&\u00f3\4\2\t\2\4" +
+            "\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3(\u00f3\4\2\t\2\4" +
                     "\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t" +
                     "\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\3\2\3\2\3\2\3\3\7\3" +
                     "%\n\3\f\3\16\3(\13\3\3\4\3\4\3\4\5\4-\n\4\3\5\3\5\3\5\3\5\7\5\63\n\5\f" +

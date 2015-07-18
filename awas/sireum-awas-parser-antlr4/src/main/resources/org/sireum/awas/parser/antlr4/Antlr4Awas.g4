@@ -113,6 +113,14 @@ WS
   : [ \r\n\t\u000C]+ -> skip
   ;
 
+COMMENT
+  :   '/*' .*? '*/' -> skip
+  ;
+
+LINE_COMMENT
+  :   '//' ~[\r\n]* -> skip
+  ;
+
 ERROR_CHAR
   : .
   ;
