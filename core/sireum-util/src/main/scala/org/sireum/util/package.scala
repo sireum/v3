@@ -247,7 +247,7 @@ package object util {
     (t._1.asInstanceOf[T1], t._2.asInstanceOf[T2], t._3.asInstanceOf[T3])
 
   final val sireumV3License =
-    """Copyright (c) 2015, Robby, Kansas State University
+    """Copyright (c) 2011-2015, Robby, Kansas State University
       |All rights reserved.
       |
       |Redistribution and use in source and binary forms, with or without
