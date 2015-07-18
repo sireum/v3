@@ -80,12 +80,12 @@ init
   | STRING                                           #String
   | ID                                               #EnumElement
   | 'Set' ( '[' type ']' )?
-    '(' init ( ',' init )* ')'                       #Set
+    '(' ( init ( ',' init )* )? ')'                  #Set
   | 'Seq' ( '[' type ']' )?
-    '(' init ( ',' init )* ')'                       #Seq
+    '(' ( init ( ',' init )* )? ')'                  #Seq
   | 'Map'
      ( '[' basicType ',' type ']' )?
-    '(' mapEntry ( ',' mapEntry )* ')'               #Map
+    '(' (  mapEntry ( ',' mapEntry )* )? ')'         #Map
   ;
 
 mapEntry
