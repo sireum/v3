@@ -5,18 +5,39 @@ modelFile
   ;
 
 model
-  : modelElement*
+  : unitDecl*
+  ;
+
+unitDecl
+  : namespaceDecl?
+    importEnumDecl*
+    enclosureDecl?
+    modelElement+
+  ;
+
+namespaceDecl
+  : 'namespace' name
+  ;
+
+name
+  : ID ( '::' ID )*
+  ;
+
+importEnumDecl
+  : 'import' name ( 'as' ID )?
+  ;
+
+enclosureDecl
+  : 'enclosure' ID
+      ( 'ports' port* )?
+  | 'enclosure' ID 'for' name
+      ( 'ports' portAlias* )?
   ;
 
 modelElement
   : componentDecl
   | connectionDecl
   | enumDecl
-  | enclosureDecl
-  ;
-
-enclosureDecl
-  : 'enclosure' ID
   ;
 
 componentDecl
@@ -30,16 +51,17 @@ componentDecl
 
 connectionDecl
   : 'connection'
-    from=ID ( '.' fromPort=ID )?
+    fromComponent=ID ( '.' fromPort=ID )?
     '->'
-    to=ID ( '.' toPort=ID )?
+    toComponent=ID ( '.' toPort=ID )?
       ( 'properties' property* )?
   ;
 
 enumDecl
-  : 'enum' id=ID
+  : 'enum' 'lattice'? id=ID
     ( 'extends' supers+=ID ( ',' supers+=ID )* )?
-    // enum elements are defined in the profile
+    // non-lattice enum elements are defined in the profile
+    // lattices are singleton enum hierarchy
   ;
 
 states
@@ -59,6 +81,11 @@ port
   : mod=( 'in' | 'out' ) ID
   ;
 
+portAlias
+  : mod=( 'in' | 'out' ) id=ID ( 'as' alias=ID )?
+  | id=ID 'as' alias=ID
+  ;
+
 property
   : ID ':' type ( '=' init )?
   | ID '=' init
@@ -76,7 +103,7 @@ basicType
   | 'Integer'                                        #IntegerType
   | 'Real'                                           #RealType
   | 'String'                                         #StringType
-  | ID                                               #EnumType
+  | name                                             #EnumType
   ;
 
 init
@@ -85,7 +112,7 @@ init
   | INTEGER                                          #Integer
   | REAL                                             #Real
   | STRING                                           #String
-  | ID                                               #EnumElement
+  | name                                             #EnumElement
   | 'Set' ( '[' type ']' )?
     '(' ( init ( ',' init )* )? ')'                  #Set
   | 'Seq' ( '[' type ']' )?
@@ -121,11 +148,11 @@ WS
   ;
 
 COMMENT
-  :   '/*' .*? '*/' -> skip
+  : '/*' .*? '*/' -> skip
   ;
 
 LINE_COMMENT
-  :   '//' ~[\r\n]* -> skip
+  : '//' ~[\r\n]* -> skip
   ;
 
 ERROR_CHAR
