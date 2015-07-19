@@ -1,5 +1,9 @@
 grammar Antlr4Awas;
 
+@header {
+// @formatter:off
+}
+
 modelFile
   : model EOF
   ;
@@ -32,7 +36,7 @@ enclosureDecl
       ( 'ports' port* )?
   | 'enclosure' ID 'for' name
       ( 'ports' portAlias* )?
-  ;
+  ; // TODO: properties propagation
 
 modelElement
   : componentDecl
