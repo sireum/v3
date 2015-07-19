@@ -25,6 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 grammar Antlr4Pilar;
 
+@header {
+// @formatter:off
+}
+
 modelFile
   : model EOF
   ;
