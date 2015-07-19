@@ -13,8 +13,7 @@
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang.modules/scala-java8-compat_2.11/scala-java8-compat_2.11-0.5.0-sources.jar" kind="lib" path="../../lib_managed/bundles/org.scala-lang.modules/scala-java8-compat_2.11/scala-java8-compat_2.11-0.5.0.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/upickle_2.11/upickle_2.11-0.2.8-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/upickle_2.11/upickle_2.11-0.2.8.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.spire-math/jawn-parser_2.11/jawn-parser_2.11-0.7.0-sources.jar" kind="lib" path="../../lib_managed/jars/org.spire-math/jawn-parser_2.11/jawn-parser_2.11-0.7.0.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr4-runtime/antlr4-runtime-4.5-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr4-runtime/antlr4-runtime-4.5.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.abego.treelayout/org.abego.treelayout.core/org.abego.treelayout.core-1.0.1-sources.jar" kind="lib" path="../../lib_managed/jars/org.abego.treelayout/org.abego.treelayout.core/org.abego.treelayout.core-1.0.1.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr4-runtime/antlr4-runtime-4.5.1-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr4-runtime/antlr4-runtime-4.5.1.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/ST4/ST4-4.0.8-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/ST4/ST4-4.0.8.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr-runtime/antlr-runtime-3.5.2-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr-runtime/antlr-runtime-3.5.2.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.yaml/snakeyaml/snakeyaml-1.15-sources.jar" kind="lib" path="../../lib_managed/bundles/org.yaml/snakeyaml/snakeyaml-1.15.jar"/>

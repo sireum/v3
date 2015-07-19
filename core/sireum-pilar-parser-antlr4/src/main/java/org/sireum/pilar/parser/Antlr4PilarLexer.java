@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/core/sireum-pilar-parser-antlr4/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5
+// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/core/sireum-pilar-parser-antlr4/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5.1
 package org.sireum.pilar.parser;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -12,7 +12,7 @@ import org.antlr.v4.runtime.misc.*;
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarLexer extends Lexer {
     static {
-        RuntimeMetaData.checkVersion("4.5", RuntimeMetaData.VERSION);
+        RuntimeMetaData.checkVersion("4.5.1", RuntimeMetaData.VERSION);
     }
 
     protected static final DFA[] _decisionToDFA;
@@ -74,7 +74,7 @@ public class Antlr4PilarLexer extends Lexer {
     }
 
     @Override
-    @NotNull
+
     public Vocabulary getVocabulary() {
         return VOCABULARY;
     }

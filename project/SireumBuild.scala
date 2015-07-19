@@ -53,6 +53,10 @@ object SireumBuild extends Build {
     id = "sireum",
     settings = sireumSettings ++ Seq(
       name := "Sireum",
+      depDot := {
+        val args = spaceDelimited("<arg>").parsed
+        dotDependency(args)
+      },
       initialize := {
         val required = "1.8"
         val current = sys.props("java.specification.version")
@@ -70,11 +74,7 @@ object SireumBuild extends Build {
           name := "Sireum.jvm",
           mainClass in assembly := Some("org.Sireum"),
           assemblyJarName in assembly := "sireum.jar",
-          test in assembly := {},
-          depDot := {
-            val args = spaceDelimited("<arg>").parsed
-            dotDependency(args)
-          }),
+          test in assembly := {}),
       base = file("jvm")).
       aggregate(subProjectJvmReferences: _*).
       dependsOn(subProjectJvmClasspathDeps: _*)
@@ -84,11 +84,7 @@ object SireumBuild extends Build {
       id = "sireum-js",
       settings = sireumSettings ++
         Seq(
-          name := "Sireum.js",
-          depDot := {
-            val args = spaceDelimited("<arg>").parsed
-            dotDependency(args)
-          }),
+          name := "Sireum.js"),
       base = file("js")).
       aggregate(subProjectJsReferences: _*).
       disablePlugins(AssemblyPlugin)
@@ -151,7 +147,7 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.5.0",
       "com.lihaoyi" %% "upickle" % "0.2.8",
-      "org.antlr" % "antlr4-runtime" % "4.5",
+      "org.antlr" % "antlr4-runtime" % "4.5.1",
       "org.antlr" % "ST4" % "4.0.8",
       "org.yaml" % "snakeyaml" % "1.15",
       "org.ow2.asm" % "asm" % "5.0.4"
