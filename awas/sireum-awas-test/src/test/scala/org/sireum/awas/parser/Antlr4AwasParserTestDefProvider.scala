@@ -33,6 +33,46 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] = ivector(
+    ConditionTest("properties", parsePass(
+      """
+        |enum lattice Top
+        |
+        |enum lattice Left extends Top
+        |
+        |enum lattice Right extends Top
+        |
+        |enum lattice Bottom extends Left, Right
+        |
+        |enum Error
+        |
+        |component A
+        |  ports
+        |    in aIn
+        |    out aOut
+        |  properties
+        |    b1 = true
+        |    b2 = false
+        |    b3: Boolean = true
+        |    b4: Boolean = false
+        |    x = 4
+        |    y: Integer = 5
+        |    r1 = 0.0
+        |    r2: Real = 0.0
+        |    s1 = "foo"
+        |    s2: String = "bar"
+        |    lat1 = Top
+        |    lat2: Top = Left
+        |    err1: Error = Disconnected // checked with profile
+        |    err2 = Disconnected        // checked with profile
+        |    set1 = Set(1, 2, 3)
+        |    set2: Set[Integer] = Set[Integer](1, 2, 3)
+        |    seq1 = Seq(1, 2, 3)
+        |    seq2: Seq[Integer] = Seq[Integer](1, 2, 3)
+        |    map1 = Map(1 -> 2, 2 -> 3, 3 -> 4)
+        |    map2: Map[Integer, Integer] =
+        |        Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
+      """.stripMargin))
+    ,
     ConditionTest("abcloop", parsePass(
       """
         |/*
