@@ -28,7 +28,7 @@ name
   ;
 
 importEnumDecl
-  : 'import' name ( 'as' ID )?
+  : 'import' name ( '.' elem=ID )? ( 'as' alias=ID )?
   ;
 
 enclosureDecl
@@ -120,7 +120,7 @@ init
   | INTEGER                                          #Integer
   | REAL                                             #Real
   | STRING                                           #String
-  | name                                             #EnumElement
+  | name ( '.' ID )?                                 #EnumElement
   | 'Set' ( '[' type ']' )?
     '(' ( init ( ',' init )* )? ')'                  #Set
   | 'Seq' ( '[' type ']' )?
