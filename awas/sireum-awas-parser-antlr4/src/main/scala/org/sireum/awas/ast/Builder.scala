@@ -25,6 +25,70 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.awas.ast
 
+import java.io.StringReader
+
+import org.antlr.v4.runtime._
+import org.sireum.awas.parser.antlr4.Antlr4AwasParser
+import org.sireum.util._
+
 object Builder {
 
+  trait Reporter {
+    def error(line: PosInteger,
+              column: PosInteger,
+              offset: Natural,
+              message: String): Unit
+  }
+
+  object ConsoleReporter extends Reporter {
+    override def error(line: PosInteger,
+                       column: PosInteger,
+                       offset: Natural,
+                       message: String): Unit = {
+      Console.err.println(s"[$line, $column] $message")
+      Console.err.flush()
+    }
+  }
+
+  def apply(input: String,
+            maxErrors: Natural = 0,
+            reporter: Reporter = ConsoleReporter): Option[Model] = {
+    class ParsingEscape extends RuntimeException
+
+    import org.sireum.awas.parser.antlr4.Antlr4AwasLexer
+
+    val sr = new StringReader(input)
+    val inputStream = new ANTLRInputStream(sr)
+    val lexer = new Antlr4AwasLexer(inputStream)
+    val tokens = new CommonTokenStream(lexer)
+    val parser = new Antlr4AwasParser(tokens)
+    parser.removeErrorListeners()
+    var success = true
+    parser.addErrorListener(new BaseErrorListener {
+      var errors = 0
+
+      override def syntaxError(recognizer: Recognizer[_, _],
+                               offendingSymbol: Any,
+                               line: PosInteger,
+                               charPositionInLine: PosInteger,
+                               msg: String,
+                               e: RecognitionException): Unit = {
+        success = false
+        val token = offendingSymbol.asInstanceOf[Token]
+        val start = token.getStartIndex
+        reporter.error(line, charPositionInLine, start, msg + s" (token=${token.getType})")
+        errors += 1
+        if (maxErrors > 0 && errors >= maxErrors) {
+          throw new ParsingEscape
+        }
+      }
+    })
+    try {
+      parser.modelFile() // TODO
+      if (success) Some(Model())
+      else None
+    } catch {
+      case t: Throwable => None
+    }
+  }
 }

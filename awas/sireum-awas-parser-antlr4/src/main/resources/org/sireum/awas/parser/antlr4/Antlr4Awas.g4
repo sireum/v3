@@ -34,14 +34,13 @@ importEnumDecl
 enclosureDecl
   : 'enclosure' ID
       ( 'ports' port* )?
-  | 'enclosure' ID 'for' name
-      ( 'ports' portAlias* )?
   ; // TODO: properties propagation
 
 modelElement
   : componentDecl
   | connectionDecl
   | enumDecl
+  | enclosureAssembly
   ;
 
 componentDecl
@@ -66,6 +65,11 @@ enumDecl
     ( 'extends' supers+=ID ( ',' supers+=ID )* )?
     // non-lattice enum elements are defined in the profile
     // lattices are singleton enum hierarchy
+  ;
+
+enclosureAssembly
+  : 'assembly' ID 'for' name
+      ( 'ports' portAlias* )?
   ;
 
 states

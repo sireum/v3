@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.awas.parser
 
+import org.sireum.awas.ast.Builder
 import org.sireum.test._
 import org.sireum.util._
 
@@ -32,5 +33,139 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] = ivector(
+    ConditionTest("abcloop", parsePass(
+      """
+        |/*
+        |
+        |      ┌──── A ────┐       ┌──── B ────┐
+        |      │           │       │           │
+        |  ┌───▷aIn    aOut▷───────▷bIn    bOut▷──┐
+        |  │   │           │       │           │  │
+        |  │   └───────────┘       └───────────┘  │
+        |  │                                      │
+        |  │                                      │
+        |  │             ┌──── C ────┐            │
+        |  │             │           │            │
+        |  └─────────────◁cOut    cIn◁────────────┘
+        |                │           │
+        |                └───────────┘
+        |
+        |*/
+        |
+        |component A
+        |  ports
+        |    in aIn
+        |    out aOut
+        |
+        |component B
+        |  ports
+        |    in bIn
+        |    out bOut
+        |
+        |component C
+        |  ports
+        |    in cIn
+        |    out cOut
+        |
+        |connection A -> B
+        |connection B -> C
+        |connection C -> A
+      """.stripMargin))
+    ,
+    ConditionTest("abNested", parsePass(
+      """
+        |/*
+        |
+        |   ┌───────────────────── AB ──────────────────────┐
+        |   │                                               │
+        |   │                                               │
+        |   │      ┌──── A ────┐       ┌──── B ────┐        │
+        |   │abIn  │           │       │           │   abOut│
+        |   ▷──────▷aIn    aOut▷───────▷bIn    bOut▷────────▷
+        |   │      │           │       │           │        │
+        |   │      └───────────┘       └───────────┘        │
+        |   │                                               │
+        |   │                                               │
+        |   └───────────────────────────────────────────────┘
+        |
+        |*/
+        |
+        |component AB
+        |  ports
+        |    in abIn
+        |    out abOut
+        |
+        |enclosure AB
+        |
+        |component A
+        |  ports
+        |    in aIn
+        |    out aOut
+        |
+        |component B
+        |  ports
+        |    in bIn
+        |    out bOut
+        |
+        |connection AB -> A
+        |connection A -> B
+        |connection B -> AB
+      """.stripMargin))
+    ,
+    ConditionTest("abNestedSeparateAssembly", parsePass(
+      """
+        |/*
+        |
+        |   ┌────────────────── sup::AB ────────────────────┐
+        |   │                                               │
+        |   │                                               │
+        |   │      ┌─ sub::A ──┐       ┌─ sub::B ──┐        │
+        |   │abIn  │           │       │           │   abOut│
+        |   ▷──────▷aIn    aOut▷───────▷bIn    bOut▷────────▷
+        |   │      │           │       │           │        │
+        |   │      └───────────┘       └───────────┘        │
+        |   │                                               │
+        |   │                                               │
+        |   └───────────────────────────────────────────────┘
+        |
+        |*/
+        |
+        |namespace sub
+        |
+        |enclosure MyEnclosure
+        |  ports
+        |    in enclosureIn
+        |    out enclosureOut
+        |
+        |component A
+        |  ports
+        |    in aIn
+        |    out aOut
+        |
+        |component B
+        |  ports
+        |    in bIn
+        |    out bOut
+        |
+        |connection MyEnclosure -> A
+        |connection A -> B
+        |connection B -> MyEnclosure
+        |
+        |namespace sup
+        |
+        |component AB
+        |  ports
+        |    in abIn
+        |    out abOut
+        |
+        |assembly AB for sub::MyEnclosure
+        |  ports
+        |    abIn as enclosureIn
+        |    abOut as enclosureOut
+      """.stripMargin))
   )
+
+  def parsePass(input: String): Boolean = {
+    Builder(input).isDefined
+  }
 }
