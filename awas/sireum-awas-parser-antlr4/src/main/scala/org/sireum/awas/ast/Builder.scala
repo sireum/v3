@@ -28,7 +28,6 @@ package org.sireum.awas.ast
 import java.io.StringReader
 
 import org.antlr.v4.runtime._
-import org.sireum.awas.parser.antlr4.Antlr4AwasParser
 import org.sireum.util._
 
 object Builder {
@@ -55,7 +54,8 @@ object Builder {
             reporter: Reporter = ConsoleReporter): Option[Model] = {
     class ParsingEscape extends RuntimeException
 
-    import org.sireum.awas.parser.antlr4.Antlr4AwasLexer
+    import org.sireum.awas.parser.Antlr4AwasLexer
+    import org.sireum.awas.parser.Antlr4AwasParser
 
     val sr = new StringReader(input)
     val inputStream = new ANTLRInputStream(sr)

@@ -45,29 +45,44 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |enum Error
         |
+        |enum Failure { AFail, BFail, CFail }
+        |
         |component A
         |  ports
         |    in aIn
         |    out aOut
+        |  flows
+        |    aIn -> aOut
         |  properties
+        |    b0: Boolean
         |    b1 = true
         |    b2 = false
         |    b3: Boolean = true
         |    b4: Boolean = false
-        |    x = 4
-        |    y: Integer = 5
+        |    x: Integer
+        |    y = 4
+        |    z: Integer = 5
+        |    r0: Real
         |    r1 = 0.0
         |    r2: Real = 0.0
+        |    s0: String
         |    s1 = "foo"
         |    s2: String = "bar"
+        |    lat0: Top
         |    lat1 = Top
         |    lat2: Top = Left
-        |    err1: Error = Disconnected // checked with profile
-        |    err2 = Disconnected        // checked with profile
+        |    enum1: Failure
+        |    enum1 = AFail
+        |    enum2: Failure = BFail
+        |    enum3: Error = Disconnected // checked with profile
+        |    enum4 = Disconnected        // checked with profile
+        |    set0: Set[Integer]
         |    set1 = Set(1, 2, 3)
         |    set2: Set[Integer] = Set[Integer](1, 2, 3)
+        |    seq0: Seq[Integer]
         |    seq1 = Seq(1, 2, 3)
         |    seq2: Seq[Integer] = Seq[Integer](1, 2, 3)
+        |    map0: Map[Integer, Integer]
         |    map1 = Map(1 -> 2, 2 -> 3, 3 -> 4)
         |    map2: Map[Integer, Integer] =
         |        Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
