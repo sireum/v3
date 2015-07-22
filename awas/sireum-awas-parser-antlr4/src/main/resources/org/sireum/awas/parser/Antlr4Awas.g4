@@ -9,14 +9,15 @@ modelFile
   ;
 
 model
-  : unitDecl*
+  : unitDecl+
   ;
 
 unitDecl
   : namespaceDecl?
     importEnumDecl*
-    enclosureDecl?
-    modelElement+
+    ( 'types' typeDecl* )?
+    'components' componentDecl+
+    ( 'connections' connectionDecl* )?
   ;
 
 namespaceDecl
@@ -31,29 +32,20 @@ importEnumDecl
   : 'import' name ( '.' elem=ID )? ( 'as' alias=ID )?
   ;
 
-enclosureDecl
-  : 'enclosure' ID
-      ( 'ports' port* )?
-  ;
-
-modelElement
-  : componentDecl
-  | connectionDecl
-  | enumDecl
-  | enclosureAssembly
+typeDecl
+  : enumDecl
+  | latticeDecl
+  | recordDecl
   ;
 
 componentDecl
   : 'component' ID
-      ( 'ports' port*
-        ( 'flows' dependency* )?
-      )?
+      ( 'ports' port* )?
       ( 'properties' property* )?
-      states?
   ;
 
 connectionDecl
-  : 'connection'
+  : 'connection' id=ID ':'
     fromComponent=ID ( '.' fromPort=ID )?
     '->'
     toComponent=ID ( '.' toPort=ID )?
@@ -61,42 +53,31 @@ connectionDecl
   ;
 
 enumDecl
-  : // non-lattice enum elements can be defined in the profile
+  : // enum elements can be defined in the profile
     'enum' id=ID
     ( 'extends' supers+=ID ( ',' supers+=ID )* )?
     (
       '{' elements+=ID ( ',' elements+=ID )* '}'
     )?
-  | // lattices are singleton enum hierarchy
-    'enum' 'lattice' id=ID
+  ;
+
+latticeDecl
+  : 'lattice' id=ID
     ( 'extends' supers+=ID ( ',' supers+=ID )* )?
   ;
 
-enclosureAssembly
-  : 'assembly' ID 'for' name
-      ( 'ports' portAlias* )?  // TODO: properties propagation
+recordDecl
+  : 'record' ID
+      field+
   ;
 
-states
-  : 'states' '=' '[' ID ( ',' ID )* ']' // the initial state is the first declared one
-      ( 'transitions' transition* )?
+field
+  : ID ':' type
   ;
 
-transition
-  : fromState=ID '-[' /* TODO */ ']->' toState=ID
-  ;
-
-dependency
-  : fromPort=ID '->' toPort=ID
-  ;
 
 port
   : mod=( 'in' | 'out' ) ID
-  ;
-
-portAlias
-  : mod=( 'in' | 'out' ) id=ID ( 'as' alias=ID )?
-  | id=ID 'as' alias=ID
   ;
 
 property
@@ -106,6 +87,7 @@ property
 
 type
   : basicType                                        #BaseType
+  | 'Option' '[' type ']'                            #OptionType
   | 'Set' '[' type ']'                               #SetType
   | 'Seq' '[' type ']'                               #SeqType
   | 'Map' '[' basicType ',' type ']'                 #MapType
@@ -116,7 +98,7 @@ basicType
   | 'Integer'                                        #IntegerType
   | 'Real'                                           #RealType
   | 'String'                                         #StringType
-  | name                                             #EnumType
+  | name                                             #NamedType
   ;
 
 init
@@ -125,7 +107,10 @@ init
   | INTEGER                                          #Integer
   | REAL                                             #Real
   | STRING                                           #String
-  | name ( '.' ID )?                                 #EnumElement
+  | name '(' init ( ',' init )* ')'                  #Record
+  | name ( '.' ID )?                                 #EnumOrLattice
+  | 'None' ( '[' type ']' )?                         #None
+  | 'Some' ( '[' type ']' )? '(' init ')'            #Some
   | 'Set' ( '[' type ']' )?
     '(' ( init ( ',' init )* )? ')'                  #Set
   | 'Seq' ( '[' type ']' )?
@@ -138,6 +123,44 @@ init
 mapEntry
   : key=init '->' value=init
   ;
+
+/* TODO: nested component
+enclosureDecl
+  : 'enclosure' ID
+      ( 'ports' port* )?
+  ;
+*/
+
+/* TODO: nested component
+enclosureAssembly
+  : 'assembly' ID 'for' name
+      ( 'ports' portAlias* )?  // TODO: properties propagation
+  ;
+*/
+
+/* TODO: states and transitions
+states
+  : 'states' '=' '[' ID ( ',' ID )* ']' // the initial state is the first declared one
+      ( 'transitions' transition* )?
+  ;
+
+transition
+  : fromState=ID '-[' TODO ']->' toState=ID
+  ;
+*/
+
+/* TODO: intra-flow
+flow
+  : 'flow' id=ID ':' fromPort=ID '->' toPort=ID
+  ;
+*/
+
+/* TODO: nested component
+portAlias
+  : mod=( 'in' | 'out' ) id=ID ( 'as' alias=ID )?
+  | id=ID 'as' alias=ID
+  ;
+*/
 
 INTEGER
   : '0' | [1-9] [0-9]*

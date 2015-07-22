@@ -35,57 +35,65 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] = ivector(
     ConditionTest("properties", parsePass(
       """
-        |enum lattice Top
+        |types
         |
-        |enum lattice Left extends Top
+        |  lattice Top
         |
-        |enum lattice Right extends Top
+        |  lattice Left extends Top
         |
-        |enum lattice Bottom extends Left, Right
+        |  lattice Right extends Top
         |
-        |enum Error
+        |  lattice Bottom extends Left, Right
         |
-        |enum Failure { AFail, BFail, CFail }
+        |  enum Error
         |
-        |component A
-        |  ports
-        |    in aIn
-        |    out aOut
-        |  flows
-        |    aIn -> aOut
-        |  properties
-        |    b0: Boolean
-        |    b1 = true
-        |    b2 = false
-        |    b3: Boolean = true
-        |    b4: Boolean = false
+        |  enum Failure { AFail, BFail, CFail }
+        |
+        |  record R
         |    x: Integer
-        |    y = 4
-        |    z: Integer = 5
-        |    r0: Real
-        |    r1 = 0.0
-        |    r2: Real = 0.0
-        |    s0: String
-        |    s1 = "foo"
-        |    s2: String = "bar"
-        |    lat0: Top
-        |    lat1 = Top
-        |    lat2: Top = Left
-        |    enum1: Failure
-        |    enum1 = AFail
-        |    enum2: Failure = BFail
-        |    enum3: Error = Disconnected // checked with profile
-        |    enum4 = Disconnected        // checked with profile
-        |    set0: Set[Integer]
-        |    set1 = Set(1, 2, 3)
-        |    set2: Set[Integer] = Set[Integer](1, 2, 3)
-        |    seq0: Seq[Integer]
-        |    seq1 = Seq(1, 2, 3)
-        |    seq2: Seq[Integer] = Seq[Integer](1, 2, 3)
-        |    map0: Map[Integer, Integer]
-        |    map1 = Map(1 -> 2, 2 -> 3, 3 -> 4)
-        |    map2: Map[Integer, Integer] =
-        |        Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
+        |    y: Integer
+        |
+        |components
+        |  component A
+        |    ports
+        |      in aIn
+        |      out aOut
+        |    properties
+        |      b0: Boolean
+        |      b1 = true
+        |      b2 = false
+        |      b3: Boolean = true
+        |      b4: Boolean = false
+        |      x: Integer
+        |      y = 4
+        |      z: Integer = 5
+        |      r0: Real
+        |      r1 = 0.0
+        |      r2: Real = 0.0
+        |      s0: String
+        |      s1 = "foo"
+        |      s2: String = "bar"
+        |      lat0: Top
+        |      lat1 = Top
+        |      lat2: Top = Left
+        |      enum0: Failure
+        |      enum1 = AFail
+        |      enum2: Failure = BFail
+        |      enum3: Error = Disconnected // checked with profile
+        |      enum4 = Disconnected        // checked with profile
+        |      rec0: R
+        |      rec1 = R(1, 2)
+        |      rec2: R = R(1, 2)
+        |      set0: Set[Integer]
+        |      set1 = Set(1, 2, 3)
+        |      set2: Set[Integer] = Set[Integer](1, 2, 3)
+        |      seq0: Seq[Integer]
+        |      seq1 = Seq(1, 2, 3)
+        |      seq2: Seq[Integer] = Seq[Integer](1, 2, 3)
+        |      map0: Map[Integer, Integer]
+        |      map1 = Map(1 -> 2, 2 -> 3, 3 -> 4)
+        |      map2: Map[Integer, Integer] =
+        |          Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
       """.stripMargin))
     ,
     ConditionTest("abcloop", parsePass(
@@ -107,26 +115,28 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |*/
         |
-        |component A
-        |  ports
-        |    in aIn
-        |    out aOut
+        |components
+        |  component A
+        |    ports
+        |      in aIn
+        |      out aOut
         |
-        |component B
-        |  ports
-        |    in bIn
-        |    out bOut
+        |  component B
+        |    ports
+        |      in bIn
+        |      out bOut
         |
-        |component C
-        |  ports
-        |    in cIn
-        |    out cOut
+        |  component C
+        |    ports
+        |      in cIn
+        |      out cOut
         |
-        |connection A -> B
-        |connection B -> C
-        |connection C -> A
+        |connections
+        |  connection A2B: A -> B
+        |  connection B2C: B -> C
+        |  connection C2A: C -> A
       """.stripMargin))
-    ,
+    /* , TODO: nested component
     ConditionTest("abNested", parsePass(
       """
         |/*
@@ -218,6 +228,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    abIn as enclosureIn
         |    abOut as enclosureOut
       """.stripMargin))
+     */
   )
 
   def parsePass(input: String): Boolean = {
