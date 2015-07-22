@@ -14,7 +14,7 @@ model
 
 unitDecl
   : namespaceDecl?
-    importEnumDecl*
+    importDecl*
     ( 'types' typeDecl* )?
     'components' componentDecl+
     ( 'connections' connectionDecl* )?
@@ -28,7 +28,7 @@ name
   : ID ( '::' ID )*
   ;
 
-importEnumDecl
+importDecl
   : 'import' name ( '.' elem=ID )? ( 'as' alias=ID )?
   ;
 
@@ -39,13 +39,13 @@ typeDecl
   ;
 
 componentDecl
-  : 'component' ID
+  : 'component'? ID
       ( 'ports' port* )?
       ( 'properties' property* )?
   ;
 
 connectionDecl
-  : 'connection' id=ID ':'
+  : 'connection'? id=ID ':'
     fromComponent=ID ( '.' fromPort=ID )?
     '->'
     toComponent=ID ( '.' toPort=ID )?

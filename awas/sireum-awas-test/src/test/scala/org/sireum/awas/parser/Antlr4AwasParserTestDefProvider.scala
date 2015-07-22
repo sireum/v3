@@ -54,7 +54,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    y: Integer
         |
         |components
-        |  component A
+        |  A
         |    ports
         |      in aIn
         |      out aOut
@@ -116,25 +116,25 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |*/
         |
         |components
-        |  component A
+        |  A
         |    ports
         |      in aIn
         |      out aOut
         |
-        |  component B
+        |  B
         |    ports
         |      in bIn
         |      out bOut
         |
-        |  component C
+        |  C
         |    ports
         |      in cIn
         |      out cOut
         |
         |connections
-        |  connection A2B: A -> B
-        |  connection B2C: B -> C
-        |  connection C2A: C -> A
+        |  A2B: A -> B
+        |  B2C: B -> C
+        |  C2A: C -> A
       """.stripMargin))
     /* , TODO: nested component
     ConditionTest("abNested", parsePass(
