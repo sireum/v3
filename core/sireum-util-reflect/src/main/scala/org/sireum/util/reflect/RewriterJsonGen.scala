@@ -34,6 +34,7 @@ object RewriterJsonGen {
   type Hierarchy = MMap[Symbol, ISet[Symbol]]
   final val anyType = typeOf[Any]
   final val anyValType = typeOf[AnyVal]
+  final val byteArrayType = typeOf[Array[Byte]]
   final val stringType = typeOf[String]
   final val optionType = typeOf[Option[_]].erasure
   final val vectorType = typeOf[Vector[_]].erasure
@@ -77,10 +78,10 @@ object RewriterJsonGen {
     //      new RewriterJsonGen(
     //        licenseOpt,
     //        Some("org.sireum.java.meta"),
-    //        "AnnotationJson",
-    //        typeOf[org.sireum.java.meta.MetaAnnotation],
-    //        ivector("TypeJson"),
-    //        ivector(classOf[org.sireum.java.meta.Type])
+    //        "EntityJson",
+    //        typeOf[org.sireum.java.meta.Entity],
+    //        ivector("EntityJson"),
+    //        ivector()
     //      ).generateJson()
     println(rewriter)
     println(json)
@@ -257,6 +258,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
         (s"$n: Any", false)
       case _ if t <:< anyValType =>
         (s"$n: ${anyValBoxMap(name(t))}", false)
+      case _ if t =:= byteArrayType =>
+        (s"$n: Array[Byte]", false)
       case _ if t =:= stringType =>
         (s"$n: String", false)
       case _ if t.dealias.erasure =:= optionType =>
@@ -277,6 +280,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
     t match {
       case _ if t <:< anyValType =>
         ("fromAnyVal", ivectorEmpty)
+      case _ if t =:= byteArrayType =>
+        ("fromByteArray", ivectorEmpty)
       case _ if t =:= stringType =>
         ("fromStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
@@ -307,6 +312,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
     t match {
       case _ if t <:< anyValType =>
         ("to" + name(t), ivectorEmpty)
+      case _ if t =:= byteArrayType =>
+        ("toByteArray", ivectorEmpty)
       case _ if t =:= stringType =>
         if (shouldInternString)
           ("toStrIntern", ivectorEmpty)

@@ -53,6 +53,9 @@ object Json {
       case v: Double => Js.Num(v)
     }
 
+  implicit final def fromByteArray(a: Array[Byte]): Js.Value =
+    Js.Str(a.map("%02X" format _).mkString)
+
   implicit final def fromStr(s: String): Js.Str = Js.Str(s)
 
   implicit final def fromSeq[T](c: CSeq[T])(
@@ -170,6 +173,14 @@ object Json {
     v match {
       case Js.Num(d) => d
       case _ => sys.error("Unexpected Js.Value for a Double: " + v)
+    }
+
+  implicit final def toByteArray(v: Js.Value): Array[Byte] =
+    v match {
+      case Js.Str(s) =>
+        s.replaceAll("[^0-9A-Fa-f]", "").sliding(2, 2).
+          toArray.map(Integer.parseInt(_, 16).toByte)
+      case _ => sys.error("Unexpected Js.Value for an Array[Byte]: " + v)
     }
 
   final def toStrIntern(v: Js.Value): String =
