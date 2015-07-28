@@ -8,4 +8,4 @@ ${SIREUM} util reflect cli -c org.sireum.Cli -d core/sireum-cli/src/main/scala -
 ${SIREUM} util reflect json -d java/sireum-java/src/main/scala -c org.sireum.java.meta.TypeJson -l license.txt org.sireum.java.meta.Type
 ${SIREUM} util reflect json -d java/sireum-java/src/main/scala -c org.sireum.java.meta.AnnotationJson -r org.sireum.java.meta.Type -i TypeJson -l license.txt org.sireum.java.meta.MetaAnnotation
 ${SIREUM} util reflect json -d java/sireum-java/src/main/scala -c org.sireum.java.meta.TypePathJson -l license.txt org.sireum.java.meta.MetaTypePath
-
+${SIREUM} util reflect json -d java/sireum-java/src/main/scala -c org.sireum.java.meta.EntityJson -l license.txt org.sireum.java.meta.Entity
