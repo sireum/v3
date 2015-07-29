@@ -75,7 +75,10 @@ sealed trait Id extends Node {
 
 @InternString
 private final case class
-_Id(value: String) extends Id
+_Id(value: String) extends Id {
+  override def toString =
+    s"Id($value)"
+}
 
 
 sealed trait Lit extends Node
