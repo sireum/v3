@@ -891,7 +891,7 @@ final class FastParserTestDefProvider(tf: TestFramework)
 
   private def parseLIT(s: String,
                        reporter: Reporter = ConsoleReporter) =
-    new FastParser(s, reporter, createLocInfo = false).parseLIT(noRecover)
+    new FastParser(s, reporter, createLocInfo = false).parseLIT(Id(""), noRecover)
 
   private def parseID(s: String,
                       reporter: Reporter = ConsoleReporter) =

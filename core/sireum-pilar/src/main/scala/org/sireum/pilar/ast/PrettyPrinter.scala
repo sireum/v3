@@ -56,13 +56,13 @@ final class PrettyPrinter(sb: StringBuilder) {
   def print(a: Annotation): Unit = {
     sb.append('@')
     print(a.id)
-    print(a.lit)
+    print(a.id, a.lit)
   }
 
   def print(id: Id): Unit = {
     import FastParser._
     val s = id.value
-    if (isOpIDFirstChar(s.charAt(0)) || isSimpleID(s)._1) {
+    if (isOpIDFirstChar(s.charAt(0)) || isSimpleID(s)) {
       sb.append(s)
     } else {
       sb.append('`')
@@ -71,9 +71,9 @@ final class PrettyPrinter(sb: StringBuilder) {
     }
   }
 
-  def print(lit: Lit): Unit = lit match {
+  def print(id: Id, lit: Lit): Unit = lit match {
     case lit: RawLit => print(lit)
-    case lit: ExtLit => print(RawLit(Json.externMap("ExtLit")._1(lit.value)))
+    case lit: ExtLit => print(RawLit(Json.externMap(id.value)._1(lit.value)))
   }
 
   def print(raw: RawLit): Unit = {
@@ -83,10 +83,10 @@ final class PrettyPrinter(sb: StringBuilder) {
         sb.append('\'')
         sb.append(s)
       } else {
-        sb.append('"')
+        sb.append(" \"")
         sb.append(
-          s.replaceAll("\\", """\\\\""").
-            replaceAll("\"", """\\""""))
+          s.replaceAll( """\\""", """\\\\""").
+            replaceAll( """\"""", """\\""""))
         sb.append('"')
       }
     }
@@ -329,7 +329,7 @@ final class PrettyPrinter(sb: StringBuilder) {
   def print(e: Exp): Unit = e match {
     case LiteralExp(id, raw) =>
       print(id)
-      print(raw)
+      print(id, raw)
     case IdExp(id) =>
       print(id)
     case TupleExp(es, annotations) =>
@@ -373,9 +373,10 @@ final class PrettyPrinter(sb: StringBuilder) {
     FastParser.isSimpleLITTrailingChar(c)
 
   @inline
-  private def isSimpleID(s: String) = {
+  private def isSimpleID(s: String): Boolean = {
     import FastParser._
-    peekOneStar(peek(s), 0, isJavaLetter, isJavaDigitOrLetter)
+    val (b, i) = peekOneStar(peek(s), 0, isJavaLetter, isJavaDigitOrLetter)
+    b && i == s.length
   }
 
   @inline

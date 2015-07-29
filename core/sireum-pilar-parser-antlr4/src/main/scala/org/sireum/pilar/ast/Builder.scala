@@ -40,7 +40,6 @@ import Builder._
 final class Builder {
 
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
-  private val toExtern = org.sireum.pilar.ast.Json.externMap("ExtLit")._2
 
   def build(ctx: ModelContext)(
     implicit reporter: Reporter): Model = {
@@ -54,13 +53,16 @@ final class Builder {
   }
 
   def build(ctx: AnnotationContext): Annotation = {
-    Annotation(buildID(ctx.ID()),
-      Option(ctx.LIT().getSymbol).map(buildLIT).
+    val id = buildID(ctx.ID())
+    Annotation(id,
+      Option(ctx.LIT().getSymbol).map(lit => buildLIT(id, lit)).
         getOrElse(RawLit(""))) at ctx
   }
 
-  def build(ctx: LitContext): (Id, Lit) =
-    (buildID(ctx.ID()), buildLIT(ctx.LIT()))
+  def build(ctx: LitContext): (Id, Lit) = {
+    val id = buildID(ctx.ID())
+    (id, buildLIT(id, ctx.LIT()))
+  }
 
   def buildID(n: Token): Id = {
     val text = n.getText
@@ -76,13 +78,14 @@ final class Builder {
       Id(text.intern())) at n
   }
 
-  def buildLIT(n: Token): Lit = {
+  def buildLIT(id: Id, n: Token): Lit = {
     val text = n.getText
     val raw =
       (if (text.charAt(0) == '\'') RawLit(text.substring(1))
       else RawLit(text.substring(1, text.length - 1).
         replaceAll( """\\\\""", "\\").
         replaceAll( """\\"""", "\""))) at n
+    val toExtern = org.sireum.pilar.ast.Json.externMap(id.value)._2
     if (toExtern.isDefinedAt(raw.value)) {
       val lit = ExtLit(toExtern(raw.value))
       nodeLocMap.get(raw) match {

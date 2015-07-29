@@ -40,7 +40,6 @@ final class FastParser(input: String,
   private val _max = if (max <= 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
-  private val toExtern = org.sireum.pilar.ast.Json.externMap("ExtLit")._2
 
   assert(offset <= _max)
 
@@ -1020,7 +1019,7 @@ final class FastParser(input: String,
 
     peek() match {
       case '\'' | '\"' =>
-        parseLIT(recover).map(raw =>
+        parseLIT(id, recover).map(raw =>
           LiteralExp(id, raw).at(line, column, offset))
       case _ =>
         val r = IdExp(id)
@@ -1108,7 +1107,7 @@ final class FastParser(input: String,
       raw <- {
         parseWhiteSpace()
         if (charEq(peek(), '\'') || charEq(peek(), '"'))
-          parseLIT(recover)
+          parseLIT(id, recover)
         else Some(RawLit(""))
       }) yield {
       Annotation(id, raw) at(line, column, offset)
@@ -1190,7 +1189,7 @@ final class FastParser(input: String,
     }
   }
 
-  private[parser] def parseLIT(recover: () => Unit): Option[Lit] = {
+  private[parser] def parseLIT(id: Id, recover: () => Unit): Option[Lit] = {
     parseWhiteSpace()
     val litOpt =
       peek() match {
@@ -1209,6 +1208,7 @@ final class FastParser(input: String,
           None
       }
     litOpt.map { raw =>
+      val toExtern = org.sireum.pilar.ast.Json.externMap(id.value)._2
       if (toExtern.isDefinedAt(raw.value)) {
         val lit = ExtLit(toExtern(raw.value))
         nodeLocMap.get(raw) match {
