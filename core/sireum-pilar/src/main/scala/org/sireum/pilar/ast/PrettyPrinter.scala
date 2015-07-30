@@ -375,6 +375,7 @@ final class PrettyPrinter(sb: StringBuilder) {
   @inline
   private def isSimpleID(s: String): Boolean = {
     import FastParser._
+    if (keywords.contains(s)) return false
     val (b, i) = peekOneStar(peek(s), 0, isJavaLetter, isJavaDigitOrLetter)
     b && i == s.length
   }
