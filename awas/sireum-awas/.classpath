@@ -14,6 +14,8 @@
   <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr-runtime/antlr-runtime-3.5.2-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr-runtime/antlr-runtime-3.5.2.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.yaml/snakeyaml/snakeyaml-1.15-sources.jar" kind="lib" path="../../lib_managed/bundles/org.yaml/snakeyaml/snakeyaml-1.15.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm/asm-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm/asm-5.0.4.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-commons/asm-commons-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-commons/asm-commons-5.0.4.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-tree/asm-tree-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-5.0.4.jar"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
   <classpathentry kind="output" path="bin"/>
 </classpath>
