@@ -51,7 +51,7 @@ object ClassBytecodeTranslator {
   }
 }
 
-import JavaProfile._
+import org.sireum.java.JavaProfile._
 import org.sireum.java.translator.ClassBytecodeTranslator._
 
 final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
@@ -159,7 +159,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                            desc: String,
                            signature: String,
                            exceptions: Array[String]): MethodVisitor =
-    null // TODO: new MethodTranslator(access, name, desc, signature, exceptions)
+  /* TODO:  new JSRInlinerAdapter(
+      new MethodTranslator(access, name, desc, signature, exceptions),
+      access, name, desc, signature, exceptions) */
+    null
 
   override def visitAnnotation(desc: String,
                                visible: Boolean): AnnotationVisitor = {
@@ -904,7 +907,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     private def tempVar(): String = {
       val n = varStack.size
       if (n > maxTempVar) maxTempVar = n
-      s"t$n"
+      s"$tempVarPrefix$n"
     }
 
     private def splitBlock(): Unit = {
@@ -1003,7 +1006,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     @inline
     private def newLabelName(): String = {
-      val r = s"L$labelCounter"
+      val r = s"$labelPrefix$labelCounter"
       labelCounter += 1
       r
     }

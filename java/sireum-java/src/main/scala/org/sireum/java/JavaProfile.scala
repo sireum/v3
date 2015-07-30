@@ -37,6 +37,8 @@ object JavaProfile {
   final val doubleDesc = "d"
   final val objectDesc = "o"
   final val typeDesc = "t"
+  final val labelPrefix = "L"
+  final val tempVarPrefix = "t$"
   final val addOp = "+"
   final val subOp = "-"
   final val mulOp = "*"
