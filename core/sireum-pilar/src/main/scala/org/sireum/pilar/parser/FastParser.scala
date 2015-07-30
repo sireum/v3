@@ -1208,7 +1208,7 @@ final class FastParser(input: String,
           None
       }
     litOpt.map { raw =>
-      val toExtern = org.sireum.pilar.ast.Json.externMap(id.value)._2
+      val toExtern = Node.externTo(id.value)
       if (toExtern.isDefinedAt(raw.value)) {
         val lit = ExtLit(toExtern(raw.value))
         nodeLocMap.get(raw) match {

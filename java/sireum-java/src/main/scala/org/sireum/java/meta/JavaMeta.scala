@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.java.meta
 
 import org.sireum.java.JavaProfile
+import org.sireum.pilar.ast.Node
 import org.sireum.util._
 import org.sireum.util.Json.InternString
 
@@ -50,10 +51,51 @@ object JavaMeta {
   def init(): Unit = {
     if (!initialized) {
       initialized = true
-      val m = org.sireum.pilar.ast.Json.externMap
-      m(JavaProfile.annotationClassDesc) = (pickle, unpickle)
-      m(JavaProfile.annotationTypeDesc) = (pickle, unpickle)
-      m(JavaProfile.typeDesc) = (pickle, unpickle)
+      val pickler = (pickle, unpickle)
+      Node.extern(JavaProfile.annotationClassDesc, pickler)
+      Node.extern(JavaProfile.annotationTypeDesc, pickler)
+      Node.extern(JavaProfile.typeDesc, pickler)
+      Node.extern(JavaProfile.handleDesc, pickler)
+      Node.extern(JavaProfile.byteDesc, ( {
+        case o: Byte => o.toString
+      }, {
+        case s => s.toByte
+      }))
+      Node.extern(JavaProfile.charDesc, ( {
+        case o: Char => o.toString
+      }, {
+        case s => s.head
+      }))
+      Node.extern(JavaProfile.shortDesc, ( {
+        case o: Short => o.toString
+      }, {
+        case s => s.toShort
+      }))
+      Node.extern(JavaProfile.intDesc, ( {
+        case o: Int => o.toString
+      }, {
+        case s => s.toInt
+      }))
+      Node.extern(JavaProfile.longDesc, ( {
+        case o: Long => o.toString
+      }, {
+        case s => s.toLong
+      }))
+      Node.extern(JavaProfile.floatDesc, ( {
+        case o: Float => o.toString
+      }, {
+        case s => s.toFloat
+      }))
+      Node.extern(JavaProfile.doubleDesc, ( {
+        case o: Char => o.toString
+      }, {
+        case s => s.toDouble
+      }))
+      Node.extern(JavaProfile.stringDesc, ( {
+        case o: String => o
+      }, {
+        case s => s
+      }))
     }
   }
 }

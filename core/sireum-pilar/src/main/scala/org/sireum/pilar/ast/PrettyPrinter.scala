@@ -73,7 +73,7 @@ final class PrettyPrinter(sb: StringBuilder) {
 
   def print(id: Id, lit: Lit): Unit = lit match {
     case lit: RawLit => print(lit)
-    case lit: ExtLit => print(RawLit(Json.externMap(id.value)._1(lit.value)))
+    case lit: ExtLit => print(RawLit(Node.externFrom(id.value)(lit.value)))
   }
 
   def print(raw: RawLit): Unit = {

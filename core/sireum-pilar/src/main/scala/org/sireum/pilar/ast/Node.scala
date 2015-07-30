@@ -31,11 +31,19 @@ import org.sireum.util.Json.{Extern, InternString}
 object Node {
   type Seq[T] = IVector[T]
 
-  def emptySeq[T] = ivectorEmpty[T]
+  final def emptySeq[T] = ivectorEmpty[T]
 
-  def seq[T](es: T*) = ivector(es: _*)
+  final def seq[T](es: T*) = ivector(es: _*)
 
-  def seq[T](es: Iterable[T]) = es.toVector
+  final def seq[T](es: Iterable[T]) = es.toVector
+
+  final def externFrom(name: String) = Json.externMap(name)._1
+
+  final def externTo(name: String) = Json.externMap(name)._2
+
+  final def extern(name: String, fg: (Any --\ String, String --\ Any)): Unit = {
+    Json.externMap(name) = fg
+  }
 }
 
 sealed trait Node extends Product

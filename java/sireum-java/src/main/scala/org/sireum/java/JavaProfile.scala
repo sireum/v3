@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.java
 
 object JavaProfile {
-  final val annotationClassDesc = "JavaClass"
+  final val annotationClassDesc = "Class"
   final val annotationTypeDesc = "Type"
   final val byteDesc = "b"
   final val charDesc = "c"
@@ -35,10 +35,15 @@ object JavaProfile {
   final val longDesc = "l"
   final val floatDesc = "f"
   final val doubleDesc = "d"
-  final val objectDesc = "o"
+  final val stringDesc = "str"
   final val typeDesc = "t"
+  final val handleDesc = "h"
+
+  final val objectDesc = "o"
   final val labelPrefix = "L"
   final val tempVarPrefix = "t$"
+  final val localVarPrefix = "l$"
+
   final val addOp = "+"
   final val subOp = "-"
   final val mulOp = "*"
@@ -62,6 +67,7 @@ object JavaProfile {
   final val throwOp = "throw"
   final val monitorEnterOp = "monitorEnter"
   final val monitorExitOp = "monitorExit"
+  final val newArrayOp = "newArray"
   final val iaddOp = opSuffix(addOp, intDesc)
   final val isubOp = opSuffix(subOp, intDesc)
   final val imulOp = opSuffix(mulOp, intDesc)
@@ -119,6 +125,14 @@ object JavaProfile {
   final val fcmpgOp = opSuffix(gtOp, floatDesc)
   final val dcmpgOp = opSuffix(gtOp, doubleDesc)
   final val topType = meta.ObjectType("java.lang.Object")
+  final val booleanArrayType = meta.ArrayType(meta.BooleanType)
+  final val byteArrayType = meta.ArrayType(meta.ByteType)
+  final val charArrayType = meta.ArrayType(meta.CharType)
+  final val shortArrayType = meta.ArrayType(meta.ShortType)
+  final val intArrayType = meta.ArrayType(meta.IntType)
+  final val longArrayType = meta.ArrayType(meta.LongType)
+  final val floatArrayType = meta.ArrayType(meta.FloatType)
+  final val doubleArrayType = meta.ArrayType(meta.DoubleType)
 
   @inline
   private def convOp(from: String, to: String) =
