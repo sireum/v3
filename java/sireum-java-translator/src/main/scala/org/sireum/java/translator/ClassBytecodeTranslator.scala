@@ -76,7 +76,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     Model(
       globalVarDecls,
       ivector(
-        Annotation(Id("JavaClass"),
+        Annotation(Id(annotationClassDesc),
           ExtLit(
             meta.Class(
               version,
@@ -635,6 +635,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         splitBlock()
         val (index, indexType) = varStack.pop()
         val (array, arrayType) = varStack.pop()
+        assert(isIntType(indexType) && isObjectType(arrayType))
         val t = tempVar()
         command(
           AssignAction(
@@ -647,11 +648,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         varStack.push((t, tipe))
       }
 
-      def arrayStore(tipe: meta.Type): Unit = {
+      def arrayStore(valueTypeCheck: meta.Type => Boolean,
+                     tipe: meta.Type): Unit = {
         splitBlock()
-        val (value, _) = varStack.pop()
-        val (index, _) = varStack.pop()
-        val (array, _) = varStack.pop()
+        val (value, valueType) = varStack.pop()
+        val (index, indexType) = varStack.pop()
+        val (array, arrayType) = varStack.pop()
+        assert(isIntType(indexType) && isObjectType(arrayType) &&
+          valueTypeCheck(valueType))
         command(
           AssignAction(
             ExtExp(IdExp(Id(array)), ivector(
@@ -700,14 +704,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.BALOAD => arrayLoad(meta.ByteType)
         case Opcodes.CALOAD => arrayLoad(meta.CharType)
         case Opcodes.SALOAD => arrayLoad(meta.ShortType)
-        case Opcodes.IASTORE => arrayStore(meta.IntType)
-        case Opcodes.LASTORE => arrayStore(meta.LongType)
-        case Opcodes.FASTORE => arrayStore(meta.FloatType)
-        case Opcodes.DASTORE => arrayStore(meta.DoubleType)
-        case Opcodes.AASTORE => arrayStore(topType)
-        case Opcodes.BASTORE => arrayStore(meta.ByteType)
-        case Opcodes.CASTORE => arrayStore(meta.CharType)
-        case Opcodes.SASTORE => arrayStore(meta.ShortType)
+        case Opcodes.IASTORE => arrayStore(isIntType, meta.IntType)
+        case Opcodes.LASTORE => arrayStore(isLongType, meta.LongType)
+        case Opcodes.FASTORE => arrayStore(isFloatType, meta.FloatType)
+        case Opcodes.DASTORE => arrayStore(isDoubleType, meta.DoubleType)
+        case Opcodes.AASTORE => arrayStore(isObjectType, topType)
+        case Opcodes.BASTORE => arrayStore(isIntType, meta.ByteType)
+        case Opcodes.CASTORE => arrayStore(isIntType, meta.CharType)
+        case Opcodes.SASTORE => arrayStore(isIntType, meta.ShortType)
         case Opcodes.POP => varStack.pop()
         case Opcodes.POP2 =>
           val (_, tipe) = varStack.pop()
@@ -728,7 +732,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           assert(isSingleWord(tipe1))
           val p2@(_, tipe2) = varStack.pop()
           if (isSingleWord(tipe2)) {
-            val p3@(_, tipe3) = varStack.pop()
+            val p3 = varStack.pop()
             varStack.push(p1)
             varStack.push(p3)
             varStack.push(p2)
@@ -741,7 +745,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.DUP2 =>
           val p1@(_, tipe1) = varStack.pop()
           if (isSingleWord(tipe1)) {
-            val p2@(_, tipe2) = varStack.pop()
+            val p2 = varStack.pop()
             varStack.push(p2)
             varStack.push(p1)
             varStack.push(p2)
@@ -752,7 +756,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.DUP2_X1 =>
           val p1@(_, tipe1) = varStack.pop()
           if (isSingleWord(tipe1)) {
-            val p2@(_, tipe2) = varStack.pop()
+            val p2 = varStack.pop()
             val p3@(_, tipe3) = varStack.pop()
             assert(isSingleWord(tipe3))
             varStack.push(p2)
@@ -770,10 +774,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.DUP2_X2 =>
           val p1@(_, tipe1) = varStack.pop()
           if (isSingleWord(tipe1)) {
-            val p2@(_, tipe2) = varStack.pop()
+            val p2 = varStack.pop()
             val p3@(_, tipe3) = varStack.pop()
             if (isSingleWord(tipe3)) {
-              val p4@(_, tipe4) = varStack.pop()
+              val p4 = varStack.pop()
               varStack.push(p2)
               varStack.push(p1)
               varStack.push(p4)
@@ -790,7 +794,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           } else {
             val p2@(_, tipe2) = varStack.pop()
             if (isSingleWord(tipe2)) {
-              val p3@(_, tipe3) = varStack.pop()
+              val p3 = varStack.pop()
               varStack.push(p1)
               varStack.push(p3)
               varStack.push(p2)
@@ -1004,4 +1008,5 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       r
     }
   }
+
 }

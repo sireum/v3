@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java.meta
 
+import org.sireum.java.JavaProfile
 import org.sireum.util._
 import org.sireum.util.Json.InternString
 
@@ -45,21 +46,22 @@ object JavaMeta {
       JavaMetaJson.toJavaMeta(upickle.json.read(o))
   }
 
+  @inline
   def init(): Unit = {
-    val m = org.sireum.pilar.ast.Json.externMap
-    m("JavaClass") = (pickle, unpickle)
-    m("Type") = (pickle, unpickle)
-    m("t") = (pickle, unpickle)
+    if (!initialized) {
+      initialized = true
+      val m = org.sireum.pilar.ast.Json.externMap
+      m(JavaProfile.annotationClassDesc) = (pickle, unpickle)
+      m(JavaProfile.annotationTypeDesc) = (pickle, unpickle)
+      m(JavaProfile.typeDesc) = (pickle, unpickle)
+    }
   }
 }
 
 import JavaMeta._
 
 sealed trait JavaMeta extends Product {
-  if (!initialized) {
-    initialized = true
-    JavaMeta.init()
-  }
+  JavaMeta.init()
 }
 
 final case class Class(version: Int,

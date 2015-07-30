@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.java
 
 object JavaProfile {
+  final val annotationClassDesc = "JavaClass"
   final val annotationTypeDesc = "Type"
   final val byteDesc = "b"
   final val charDesc = "c"
