@@ -30,14 +30,40 @@ import org.sireum.util.Json.InternString
 
 object JavaMeta {
   type Seq[T] = IVector[T]
+
+  private var initialized = false
+
+  val pickle: Any --\ String = {
+    case o: JavaMeta =>
+      upickle.json.write(JavaMetaJson.fromJavaMeta(o))
+  }
+
+  val unpickle = new PartialFunction[String, Any] {
+    override def isDefinedAt(o: String): Boolean = true
+
+    override def apply(o: String): Any =
+      JavaMetaJson.toJavaMeta(upickle.json.read(o))
+  }
+
+  def init(): Unit = {
+    val m = org.sireum.pilar.ast.Json.externMap
+    m("JavaClass") = (pickle, unpickle)
+    m("Type") = (pickle, unpickle)
+    m("t") = (pickle, unpickle)
+  }
 }
 
 import JavaMeta._
 
-sealed trait JavaMeta extends Product
+sealed trait JavaMeta extends Product {
+  if (!initialized) {
+    initialized = true
+    JavaMeta.init()
+  }
+}
 
 final case class Class(version: Int,
-                       modifiers: Seq[Modifier.Type],
+                       modifiers: Seq[ClassModifier.Type],
                        name: String,
                        signatureOpt: Option[String],
                        superNameOpt: Option[String],
@@ -45,8 +71,11 @@ final case class Class(version: Int,
                        sourceOpt: Option[String],
                        debugOpt: Option[String],
                        outerClassOpt: Option[OuterClass],
+                       annotations: Seq[EntityAnnotation],
+                       typeAnnotation: Seq[ClassTypeAnnotation],
+                       attributes: Seq[Attribute],
                        innerClasses: Seq[InnerClass],
-                       attributes: Seq[Attribute]) extends JavaMeta
+                       fields: Seq[Field]) extends JavaMeta
 
 final case class EntityAnnotation(annotation: Annotation,
                                   visible: Boolean) extends JavaMeta
@@ -57,49 +86,112 @@ final case class OuterClass(name: String,
 final case class InnerClass(name: String,
                             outerNameOpt: Option[String],
                             innerNameOpt: Option[String],
-                            modifiers: Seq[Modifier.Type])
+                            modifiers: Seq[ClassModifier.Type]) extends JavaMeta
 
-object Modifier extends Enum("") {
+object ClassModifier extends Enum("") {
   type Type = Value
-  final val Abstract = Value("Abstract")
-  final val Annotation = Value("Annotation")
-  final val Bridge = Value("Bridge")
-  final val Deprecated = Value("Deprecated")
-  final val Enum = Value("Enum")
-  final val Final = Value("Final")
-  final val Interface = Value("Interface")
-  final val Mandated = Value("Mandated")
-  final val Native = Value("Native")
+  final val Public = Value("Public")
   final val Private = Value("Private")
   final val Protected = Value("Protected")
-  final val Public = Value("Public")
-  final val Static = Value("Static")
-  final val Strict = Value("Strict")
+  final val Final = Value("Final")
   final val Super = Value("Super")
-  final val Synchronized = Value("Synchronized")
+  final val Interface = Value("Interface")
+  final val Abstract = Value("Abstract")
   final val Synthetic = Value("Synthetic")
-  final val Transient = Value("Transient")
-  final val VarArgs = Value("VarArgs")
-  final val Volatile = Value("Volatile")
+  final val Annotation = Value("Annotation")
+  final val Enum = Value("Enum")
+  final val Deprecated = Value("Deprecated")
 }
 
-sealed trait ClassTypeAnnotation extends JavaMeta {
+object MethodModifier extends Enum("") {
+  type Type = Value
+  final val Public = Value("Public")
+  final val Private = Value("Private")
+  final val Protected = Value("Protected")
+  final val Static = Value("Static")
+  final val Final = Value("Final")
+  final val Synchronized = Value("Synchronized")
+  final val Bridge = Value("Bridge")
+  final val VarArgs = Value("VarArgs")
+  final val Native = Value("Native")
+  final val Abstract = Value("Abstract")
+  final val Strict = Value("Strict")
+  final val Synthetic = Value("Synthetic")
+  final val Deprecated = Value("Deprecated")
+}
+
+object FieldModifier extends Enum("") {
+  type Type = Value
+  final val Public = Value("Public")
+  final val Private = Value("Private")
+  final val Protected = Value("Protected")
+  final val Static = Value("Static")
+  final val Final = Value("Final")
+  final val Volatile = Value("Volatile")
+  final val Transient = Value("Transient")
+  final val Synthetic = Value("Synthetic")
+  final val Enum = Value("Enum")
+  final val Deprecated = Value("Deprecated")
+}
+
+object ParameterModifier extends Enum("") {
+  type Type = Value
+  final val Final = Value("Final")
+  final val Synthetic = Value("Synthetic")
+  final val Mandated = Value("Mandated")
+}
+
+sealed trait TypeAnnotation extends JavaMeta {
   def typePathOpt: Option[TypePath]
 
   def annotation: EntityAnnotation
 }
 
-final case class ClassTypeParameterAnnotation(typePathOpt: Option[TypePath],
-                                              annotation: EntityAnnotation) extends ClassTypeAnnotation
+sealed trait ClassTypeAnnotation extends TypeAnnotation
 
-final case class ClassTypeParameterBoundAnnotation(typePathOpt: Option[TypePath],
-                                                   annotation: EntityAnnotation) extends ClassTypeAnnotation
+final case class ClassTypeParameterTypeAnnotation(typePathOpt: Option[TypePath],
+                                                  annotation: EntityAnnotation) extends ClassTypeAnnotation
 
-final case class ClassExtendsAnnotation(typePathOpt: Option[TypePath],
-                                        annotation: EntityAnnotation) extends ClassTypeAnnotation
+final case class ClassTypeParameterBoundTypeAnnotation(typePathOpt: Option[TypePath],
+                                                       annotation: EntityAnnotation) extends ClassTypeAnnotation
+
+final case class ClassExtendsTypeAnnotation(typePathOpt: Option[TypePath],
+                                            annotation: EntityAnnotation) extends ClassTypeAnnotation
 
 final case class Attribute(tipe: String,
                            value: Array[Byte]) extends JavaMeta
+
+final case class Field(modifiers: Seq[FieldModifier.Type],
+                       name: String,
+                       tipe: Type,
+                       signatureOpt: Option[String],
+                       value: Option[InitValue],
+                       annotations: Seq[EntityAnnotation],
+                       typeAnnotations: Seq[FieldTypeAnnotation],
+                       attributes: Seq[Attribute]) extends JavaMeta
+
+final case class FieldTypeAnnotation(typePathOpt: Option[TypePath],
+                                     annotation: EntityAnnotation) extends TypeAnnotation
+
+sealed trait MethodTypeAnnotation extends TypeAnnotation
+
+final case class MethodTypeParameterTypeAnnotation(typePathOpt: Option[TypePath],
+                                                   annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class MethodTypeParameterBoundTypeAnnotation(typePathOpt: Option[TypePath],
+                                                        annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class MethodReturnTypeAnnotation(typePathOpt: Option[TypePath],
+                                            annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class MethodReceiverTypeAnnotation(typePathOpt: Option[TypePath],
+                                              annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class MethodFormalParameterTypeAnnotation(typePathOpt: Option[TypePath],
+                                                     annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class ThrowsTypeAnnotation(typePathOpt: Option[TypePath],
+                                      annotation: EntityAnnotation) extends MethodTypeAnnotation
 
 sealed trait ArgValue extends JavaMeta
 
