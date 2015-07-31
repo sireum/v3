@@ -498,6 +498,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     private val lineNumberMap = mmapEmpty[String, MArray[Action]]
     private var localVars = msetEmpty[LocalVarDecl]
     private var metaLocalVars = ivectorEmpty[meta.LocalVar]
+    private var catches = ivectorEmpty[Annotation]
     private var initLabelName: String = _
     private var currentLabelName: String = _
     private var currentBlock: MArray[Command] = _
@@ -927,7 +928,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val p = ProcedureDecl(
         Id(qMethodName(className, methodName, desc)),
         params,
-        bodyOpt)
+        bodyOpt,
+        catches)
       procedures :+= p
     }
 
@@ -1008,9 +1010,16 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitTryCatchBlock(start: Label,
                                     end: Label,
                                     handler: Label,
-                                    `type`: String): Unit = {
-      handlerLabelNames += labelName(handler)
-      // TODO
+                                    exceptionType: String): Unit = {
+      val labelStart = labelName(start)
+      val labelEnd = labelName(end)
+      val labelHandler = labelName(handler)
+      handlerLabelNames += labelHandler
+      catches :+= Annotation(Id(annotationCatchDesc), ExtLit(
+        meta.Catch(labelStart, labelEnd, labelHandler,
+          Option(exceptionType).map(fromInternalName),
+          ivectorEmpty
+        )))
     }
 
     override def visitAnnotationDefault(): AnnotationVisitor = {

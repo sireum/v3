@@ -28,6 +28,7 @@ package org.sireum.java
 object JavaProfile {
   final val annotationClassDesc = "Class"
   final val annotationTypeDesc = "Type"
+  final val annotationCatchDesc = "Catch"
   final val byteDesc = "b"
   final val charDesc = "c"
   final val shortDesc = "s"

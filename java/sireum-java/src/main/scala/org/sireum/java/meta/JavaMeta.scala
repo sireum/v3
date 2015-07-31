@@ -54,6 +54,7 @@ object JavaMeta {
       val pickler = (pickle, unpickle)
       Node.extern(JavaProfile.annotationClassDesc, pickler)
       Node.extern(JavaProfile.annotationTypeDesc, pickler)
+      Node.extern(JavaProfile.annotationCatchDesc, pickler)
       Node.extern(JavaProfile.typeDesc, pickler)
       Node.extern(JavaProfile.handleDesc, pickler)
       Node.extern(JavaProfile.byteDesc, ( {
@@ -260,6 +261,12 @@ final case class LocalVar(name: String,
                           labelStart: String,
                           labelEnd: String,
                           annotations: Seq[EntityAnnotation]) extends JavaMeta
+
+final case class Catch(labelStart: String,
+                       labelEnd: String,
+                       labelHandler: String,
+                       tipeOpt: Option[String],
+                       annotations: Seq[EntityAnnotation]) extends JavaMeta
 
 sealed trait Handle extends JavaMeta {
   def className: String

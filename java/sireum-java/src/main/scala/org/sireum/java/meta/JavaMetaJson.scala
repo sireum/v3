@@ -75,6 +75,15 @@ object JavaMetaJson {
           (".class", Js.Str("ByteValue")),
           ("value", fromAnyVal(o.value))
         )
+      case o: org.sireum.java.meta.Catch =>
+        Js.Obj(
+          (".class", Js.Str("Catch")),
+          ("labelStart", fromStr(o.labelStart)),
+          ("labelEnd", fromStr(o.labelEnd)),
+          ("labelHandler", fromStr(o.labelHandler)),
+          ("tipeOpt", fromOption(o.tipeOpt)(fromStr)),
+          ("annotations", fromSeq(o.annotations)(fromJavaMeta))
+        )
       case org.sireum.java.meta.CharType =>
         Js.Obj((".class", Js.Str("CharType")))
       case o: org.sireum.java.meta.CharValue =>
@@ -401,6 +410,8 @@ object JavaMetaJson {
            case "ByteType" => org.sireum.java.meta.ByteType
            case "ByteValue" =>
              org.sireum.java.meta.ByteValue(toByte(o.value(1)._2))
+           case "Catch" =>
+             org.sireum.java.meta.Catch(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toOption(o.value(4)._2)(toStr), toVector(o.value(5)._2)(toJavaMeta[EntityAnnotation]))
            case "CharType" => org.sireum.java.meta.CharType
            case "CharValue" =>
              org.sireum.java.meta.CharValue(toChar(o.value(1)._2))
