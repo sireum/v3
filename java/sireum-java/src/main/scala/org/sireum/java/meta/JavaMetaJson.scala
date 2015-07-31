@@ -230,6 +230,16 @@ object JavaMetaJson {
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
+      case o: org.sireum.java.meta.LocalVar =>
+        Js.Obj(
+          (".class", Js.Str("LocalVar")),
+          ("name", fromStr(o.name)),
+          ("tipe", fromJavaMeta(o.tipe)),
+          ("signatureOpt", fromOption(o.signatureOpt)(fromStr)),
+          ("labelStart", fromStr(o.labelStart)),
+          ("labelEnd", fromStr(o.labelEnd)),
+          ("annotations", fromSeq(o.annotations)(fromJavaMeta))
+        )
       case org.sireum.java.meta.LongType =>
         Js.Obj((".class", Js.Str("LongType")))
       case o: org.sireum.java.meta.LongValue =>
@@ -249,7 +259,8 @@ object JavaMetaJson {
           ("annotationDefaultOpt", fromOption(o.annotationDefaultOpt)(fromJavaMeta)),
           ("annotations", fromSeq(o.annotations)(fromJavaMeta)),
           ("typeAnnotations", fromSeq(o.typeAnnotations)(fromJavaMeta)),
-          ("attributes", fromSeq(o.attributes)(fromJavaMeta))
+          ("attributes", fromSeq(o.attributes)(fromJavaMeta)),
+          ("localVars", fromSeq(o.localVars)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.MethodFormalParameterTypeAnnotation =>
         Js.Obj(
@@ -434,11 +445,13 @@ object JavaMetaJson {
              org.sireum.java.meta.InvokeStaticHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
            case "InvokeVirtualHandle" =>
              org.sireum.java.meta.InvokeVirtualHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
+           case "LocalVar" =>
+             org.sireum.java.meta.LocalVar(toStr(o.value(1)._2), toJavaMeta[Type](o.value(2)._2), toOption(o.value(3)._2)(toStr), toStr(o.value(4)._2), toStr(o.value(5)._2), toVector(o.value(6)._2)(toJavaMeta[EntityAnnotation]))
            case "LongType" => org.sireum.java.meta.LongType
            case "LongValue" =>
              org.sireum.java.meta.LongValue(toLong(o.value(1)._2))
            case "Method" =>
-             org.sireum.java.meta.Method(toVector(o.value(1)._2)(toStr), toStr(o.value(2)._2), toJavaMeta[MethodType](o.value(3)._2), toOption(o.value(4)._2)(toStr), toVector(o.value(5)._2)(toStr), toVector(o.value(6)._2)(toJavaMeta[Parameter]), toOption(o.value(7)._2)(toJavaMeta[Annotation]), toVector(o.value(8)._2)(toJavaMeta[EntityAnnotation]), toVector(o.value(9)._2)(toJavaMeta[MethodTypeAnnotation]), toVector(o.value(10)._2)(toJavaMeta[Attribute]))
+             org.sireum.java.meta.Method(toVector(o.value(1)._2)(toStr), toStr(o.value(2)._2), toJavaMeta[MethodType](o.value(3)._2), toOption(o.value(4)._2)(toStr), toVector(o.value(5)._2)(toStr), toVector(o.value(6)._2)(toJavaMeta[Parameter]), toOption(o.value(7)._2)(toJavaMeta[Annotation]), toVector(o.value(8)._2)(toJavaMeta[EntityAnnotation]), toVector(o.value(9)._2)(toJavaMeta[MethodTypeAnnotation]), toVector(o.value(10)._2)(toJavaMeta[Attribute]), toVector(o.value(11)._2)(toJavaMeta[LocalVar]))
            case "MethodFormalParameterTypeAnnotation" =>
              org.sireum.java.meta.MethodFormalParameterTypeAnnotation(toOption(o.value(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value(2)._2))
            case "MethodReceiverTypeAnnotation" =>

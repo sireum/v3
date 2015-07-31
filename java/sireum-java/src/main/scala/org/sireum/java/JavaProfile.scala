@@ -77,7 +77,7 @@ object JavaProfile {
   final val newMultiArrayOp = "newMultiArray"
   final val classOfOp = "classOf"
   final val methodTypeOp = "methodType"
-  final val lineNumberOp = "lineNumberOp"
+  final val lineNumberOp = "lineNumber"
   final val invokeVirtualOp = "invokeVirtual"
   final val invokeSpecialOp = "invokeSpecial"
   final val invokeStaticOp = "invokeStatic"

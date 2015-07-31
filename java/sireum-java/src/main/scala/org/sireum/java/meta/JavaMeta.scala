@@ -227,7 +227,8 @@ final case class Method(modifiers: Seq[MethodModifier.Type],
                         annotationDefaultOpt: Option[Annotation],
                         annotations: Seq[EntityAnnotation],
                         typeAnnotations: Seq[MethodTypeAnnotation],
-                        attributes: Seq[Attribute]) extends JavaMeta
+                        attributes: Seq[Attribute],
+                        localVars: Seq[LocalVar]) extends JavaMeta
 
 final case class Parameter(modifiers: Seq[ParameterModifier.Type],
                            nameOpt: Option[String],
@@ -252,6 +253,13 @@ final case class MethodFormalParameterTypeAnnotation(typePathOpt: Option[TypePat
 
 final case class ThrowsTypeAnnotation(typePathOpt: Option[TypePath],
                                       annotation: EntityAnnotation) extends MethodTypeAnnotation
+
+final case class LocalVar(name: String,
+                          tipe: Type,
+                          signatureOpt: Option[String],
+                          labelStart: String,
+                          labelEnd: String,
+                          annotations: Seq[EntityAnnotation]) extends JavaMeta
 
 sealed trait Handle extends JavaMeta {
   def className: String
