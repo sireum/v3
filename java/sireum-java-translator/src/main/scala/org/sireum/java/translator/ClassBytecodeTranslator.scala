@@ -526,13 +526,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         startLabelName,
         endLabelName,
         ivectorEmpty)
-      val ln = localVarName(index)
+      val ln = localVarName(index, raw = true)
       if (ln == name) return
       var bs = blocks.toVector.dropWhile(_._1 != startLabelName)
       bs = bs.reverse.dropWhile(_._1 != endLabelName)
       bs = bs.drop(1)
       val rw = org.sireum.pilar.ast.Rewriter.
-        build[Command]()({ case Id(value) if ln == value => Id(name) })
+        build[Command]()({ case Id(`ln`) => Id(name) })
       for ((l, block) <- bs) {
         for (i <- block.indices) {
           block(i) = rw(block(i))
@@ -1490,13 +1490,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       labelToNameMap.getOrElseUpdate(label, newLabelName())
 
     @inline
-    private def localVarName(index: Natural): String = {
+    private def localVarName(index: Natural, raw: Boolean = false): String = {
       val r = s"$localVarPrefix$index"
       if (index < paramNameModifiers.size) {
         val paramIndex =
           if (isStatic) index
           else if (index == 0) return thisLocalVarName
           else index
+        if (raw) return r
         paramNameModifiers(paramIndex)._1 match {
           case Some(name) => name
           case _ => r
