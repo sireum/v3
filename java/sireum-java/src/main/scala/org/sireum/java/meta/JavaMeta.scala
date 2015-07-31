@@ -237,6 +237,69 @@ final case class MethodFormalParameterTypeAnnotation(typePathOpt: Option[TypePat
 final case class ThrowsTypeAnnotation(typePathOpt: Option[TypePath],
                                       annotation: EntityAnnotation) extends MethodTypeAnnotation
 
+sealed trait Handle extends JavaMeta {
+  def className: String
+
+  def name: String
+
+  def desc: String
+
+  def tipe: Type
+}
+
+sealed trait FieldHandle extends Handle {
+  val fieldName = name
+}
+
+sealed trait MethodHandle extends Handle {
+  val methodName = name
+}
+
+final case class GetFieldHandle(className: String,
+                                name: String,
+                                desc: String,
+                                tipe: Type) extends FieldHandle
+
+final case class GetStaticFieldHandle(className: String,
+                                      name: String,
+                                      desc: String,
+                                      tipe: Type) extends FieldHandle
+
+final case class PutFieldHandle(className: String,
+                                name: String,
+                                desc: String,
+                                tipe: Type) extends FieldHandle
+
+final case class PutStaticFieldHandle(className: String,
+                                      name: String,
+                                      desc: String,
+                                      tipe: Type) extends FieldHandle
+
+final case class InvokeVirtualHandle(className: String,
+                                     name: String,
+                                     desc: String,
+                                     tipe: MethodType) extends MethodHandle
+
+final case class InvokeStaticHandle(className: String,
+                                    name: String,
+                                    desc: String,
+                                    tipe: MethodType) extends MethodHandle
+
+final case class InvokeSpecialHandle(className: String,
+                                     name: String,
+                                     desc: String,
+                                     tipe: MethodType) extends MethodHandle
+
+final case class NewInvokeSpecialHandle(className: String,
+                                        name: String,
+                                        desc: String,
+                                        tipe: MethodType) extends MethodHandle
+
+final case class InvokeInterfaceHandle(className: String,
+                                       name: String,
+                                       desc: String,
+                                       override val tipe: MethodType) extends MethodHandle
+
 sealed trait ArgValue extends JavaMeta
 
 final case class Annotation(tipe: String, args: JavaMeta.Seq[Arg]) extends ArgValue
@@ -269,6 +332,8 @@ final case class EnumValue(tipe: String,
                            value: String) extends ArgValue
 
 final case class ArrayValue(elements: JavaMeta.Seq[ArgValue]) extends ArgValue
+
+final case class TypeValue(tipe: Type) extends ArgValue
 
 sealed trait Type extends JavaMeta
 
@@ -306,6 +371,10 @@ private final case class _ObjectType(name: String) extends ObjectType {
 }
 
 final case class ArrayType(element: Type) extends Type
+
+final case class MethodType(desc: String,
+                            parameterTypes: Seq[Type],
+                            returnType: Type) extends Type
 
 final case class TypePath(steps: Seq[Step]) extends JavaMeta
 

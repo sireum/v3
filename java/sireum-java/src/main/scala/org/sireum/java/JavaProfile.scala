@@ -43,6 +43,7 @@ object JavaProfile {
   final val labelPrefix = "L"
   final val tempVarPrefix = "t$"
   final val localVarPrefix = "l$"
+  final val thisLocalVarName = "this"
 
   final val addOp = "+"
   final val subOp = "-"
@@ -63,11 +64,23 @@ object JavaProfile {
   final val geOp = ">="
   final val eqOp = "=="
   final val neOp = "!="
+  final val fieldAccessOp = "."
+  final val nullOp = "null"
+  final val isNullOp = "isNull"
+  final val isNonNullOp = "isNonNull"
   final val arrayLengthOp = "len"
   final val throwOp = "throw"
   final val monitorEnterOp = "monitorEnter"
   final val monitorExitOp = "monitorExit"
   final val newArrayOp = "newArray"
+  final val newMultiArrayOp = "newMultiArray"
+  final val classOfOp = "classOf"
+  final val methodTypeOp = "methodType"
+  final val lineNumberOp = "lineNumberOp"
+  final val invokeVirtualOp = "invokeVirtual"
+  final val invokeSpecialOp = "invokeSpecial"
+  final val invokeStaticOp = "invokeStatic"
+  final val invokeInterfaceOp = "invokeInterface"
   final val iaddOp = opSuffix(addOp, intDesc)
   final val isubOp = opSuffix(subOp, intDesc)
   final val imulOp = opSuffix(mulOp, intDesc)
@@ -119,6 +132,14 @@ object JavaProfile {
   final val i2bOp = convOp(intDesc, byteDesc)
   final val i2cOp = convOp(intDesc, charDesc)
   final val i2sOp = convOp(intDesc, shortDesc)
+  final val ieqOp = opSuffix(eqOp, intDesc)
+  final val ineOp = opSuffix(neOp, intDesc)
+  final val iltOp = opSuffix(ltOp, intDesc)
+  final val ileOp = opSuffix(leOp, intDesc)
+  final val igtOp = opSuffix(gtOp, intDesc)
+  final val igeOp = opSuffix(geOp, intDesc)
+  final val oeqOp = opSuffix(eqOp, objectDesc)
+  final val oneOp = opSuffix(neOp, objectDesc)
   final val lcmpOp = opSuffix(cmpOp, longDesc)
   final val fcmplOp = opSuffix(ltOp, floatDesc)
   final val dcmplOp = opSuffix(ltOp, doubleDesc)
@@ -141,4 +162,12 @@ object JavaProfile {
   @inline
   private def opSuffix(op: String, suffix: String) =
     s"${op}_$suffix"
+
+  @inline
+  def qFieldName(className: String, name: String) =
+    s"$className.$name"
+
+  @inline
+  def qMethodName(className: String, name: String, desc: String) =
+    s"$className.$name$desc"
 }

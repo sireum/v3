@@ -164,6 +164,22 @@ object JavaMetaJson {
           (".class", Js.Str("FloatValue")),
           ("value", fromAnyVal(o.value))
         )
+      case o: org.sireum.java.meta.GetFieldHandle =>
+        Js.Obj(
+          (".class", Js.Str("GetFieldHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
+      case o: org.sireum.java.meta.GetStaticFieldHandle =>
+        Js.Obj(
+          (".class", Js.Str("GetStaticFieldHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
       case o: org.sireum.java.meta.InnerClass =>
         Js.Obj(
           (".class", Js.Str("InnerClass")),
@@ -180,6 +196,38 @@ object JavaMetaJson {
         Js.Obj(
           (".class", Js.Str("IntValue")),
           ("value", fromAnyVal(o.value))
+        )
+      case o: org.sireum.java.meta.InvokeInterfaceHandle =>
+        Js.Obj(
+          (".class", Js.Str("InvokeInterfaceHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
+      case o: org.sireum.java.meta.InvokeSpecialHandle =>
+        Js.Obj(
+          (".class", Js.Str("InvokeSpecialHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
+      case o: org.sireum.java.meta.InvokeStaticHandle =>
+        Js.Obj(
+          (".class", Js.Str("InvokeStaticHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
+      case o: org.sireum.java.meta.InvokeVirtualHandle =>
+        Js.Obj(
+          (".class", Js.Str("InvokeVirtualHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
         )
       case org.sireum.java.meta.LongType =>
         Js.Obj((".class", Js.Str("LongType")))
@@ -206,6 +254,13 @@ object JavaMetaJson {
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
+      case o: org.sireum.java.meta.MethodType =>
+        Js.Obj(
+          (".class", Js.Str("MethodType")),
+          ("desc", fromStr(o.desc)),
+          ("parameterTypes", fromSeq(o.parameterTypes)(fromJavaMeta)),
+          ("returnType", fromJavaMeta(o.returnType))
+        )
       case o: org.sireum.java.meta.MethodTypeParameterBoundTypeAnnotation =>
         Js.Obj(
           (".class", Js.Str("MethodTypeParameterBoundTypeAnnotation")),
@@ -218,11 +273,35 @@ object JavaMetaJson {
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
+      case o: org.sireum.java.meta.NewInvokeSpecialHandle =>
+        Js.Obj(
+          (".class", Js.Str("NewInvokeSpecialHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
       case o: org.sireum.java.meta.OuterClass =>
         Js.Obj(
           (".class", Js.Str("OuterClass")),
           ("name", fromStr(o.name)),
           ("methodNameDescOpt", fromOption(o.methodNameDescOpt)(fromTuple2))
+        )
+      case o: org.sireum.java.meta.PutFieldHandle =>
+        Js.Obj(
+          (".class", Js.Str("PutFieldHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
+        )
+      case o: org.sireum.java.meta.PutStaticFieldHandle =>
+        Js.Obj(
+          (".class", Js.Str("PutStaticFieldHandle")),
+          ("className", fromStr(o.className)),
+          ("name", fromStr(o.name)),
+          ("desc", fromStr(o.desc)),
+          ("tipe", fromJavaMeta(o.tipe))
         )
       case org.sireum.java.meta.ShortType =>
         Js.Obj((".class", Js.Str("ShortType")))
@@ -253,6 +332,11 @@ object JavaMetaJson {
         Js.Obj(
           (".class", Js.Str("TypePath")),
           ("steps", fromSeq(o.steps)(fromJavaMeta))
+        )
+      case o: org.sireum.java.meta.TypeValue =>
+        Js.Obj(
+          (".class", Js.Str("TypeValue")),
+          ("tipe", fromJavaMeta(o.tipe))
         )
       case org.sireum.java.meta.VoidType =>
         Js.Obj((".class", Js.Str("VoidType")))
@@ -310,12 +394,24 @@ object JavaMetaJson {
            case "FloatType" => org.sireum.java.meta.FloatType
            case "FloatValue" =>
              org.sireum.java.meta.FloatValue(toFloat(o.value(1)._2))
+           case "GetFieldHandle" =>
+             org.sireum.java.meta.GetFieldHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[Type](o.value(4)._2))
+           case "GetStaticFieldHandle" =>
+             org.sireum.java.meta.GetStaticFieldHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[Type](o.value(4)._2))
            case "InnerClass" =>
              org.sireum.java.meta.InnerClass(toStr(o.value(1)._2), toOption(o.value(2)._2)(toStr), toOption(o.value(3)._2)(toStr), toVector(o.value(4)._2)(toStr))
            case "InnerType" => org.sireum.java.meta.InnerType
            case "IntType" => org.sireum.java.meta.IntType
            case "IntValue" =>
              org.sireum.java.meta.IntValue(toInt(o.value(1)._2))
+           case "InvokeInterfaceHandle" =>
+             org.sireum.java.meta.InvokeInterfaceHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
+           case "InvokeSpecialHandle" =>
+             org.sireum.java.meta.InvokeSpecialHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
+           case "InvokeStaticHandle" =>
+             org.sireum.java.meta.InvokeStaticHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
+           case "InvokeVirtualHandle" =>
+             org.sireum.java.meta.InvokeVirtualHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
            case "LongType" => org.sireum.java.meta.LongType
            case "LongValue" =>
              org.sireum.java.meta.LongValue(toLong(o.value(1)._2))
@@ -325,12 +421,20 @@ object JavaMetaJson {
              org.sireum.java.meta.MethodReceiverTypeAnnotation(toOption(o.value(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value(2)._2))
            case "MethodReturnTypeAnnotation" =>
              org.sireum.java.meta.MethodReturnTypeAnnotation(toOption(o.value(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value(2)._2))
+           case "MethodType" =>
+             org.sireum.java.meta.MethodType(toStr(o.value(1)._2), toVector(o.value(2)._2)(toJavaMeta[Type]), toJavaMeta[Type](o.value(3)._2))
            case "MethodTypeParameterBoundTypeAnnotation" =>
              org.sireum.java.meta.MethodTypeParameterBoundTypeAnnotation(toOption(o.value(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value(2)._2))
            case "MethodTypeParameterTypeAnnotation" =>
              org.sireum.java.meta.MethodTypeParameterTypeAnnotation(toOption(o.value(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value(2)._2))
+           case "NewInvokeSpecialHandle" =>
+             org.sireum.java.meta.NewInvokeSpecialHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[MethodType](o.value(4)._2))
            case "OuterClass" =>
              org.sireum.java.meta.OuterClass(toStr(o.value(1)._2), toOption(o.value(2)._2)(toTuple2))
+           case "PutFieldHandle" =>
+             org.sireum.java.meta.PutFieldHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[Type](o.value(4)._2))
+           case "PutStaticFieldHandle" =>
+             org.sireum.java.meta.PutStaticFieldHandle(toStr(o.value(1)._2), toStr(o.value(2)._2), toStr(o.value(3)._2), toJavaMeta[Type](o.value(4)._2))
            case "ShortType" => org.sireum.java.meta.ShortType
            case "ShortValue" =>
              org.sireum.java.meta.ShortValue(toShort(o.value(1)._2))
@@ -343,6 +447,8 @@ object JavaMetaJson {
              org.sireum.java.meta.TypeArgument(toInt(o.value(1)._2))
            case "TypePath" =>
              org.sireum.java.meta.TypePath(toVector(o.value(1)._2)(toJavaMeta[Step]))
+           case "TypeValue" =>
+             org.sireum.java.meta.TypeValue(toJavaMeta[Type](o.value(1)._2))
            case "VoidType" => org.sireum.java.meta.VoidType
            case "WildcardBound" => org.sireum.java.meta.WildcardBound
            case "_ObjectType" =>
