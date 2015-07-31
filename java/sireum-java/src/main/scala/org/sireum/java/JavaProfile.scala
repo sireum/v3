@@ -72,6 +72,7 @@ object JavaProfile {
   final val throwOp = "throw"
   final val monitorEnterOp = "monitorEnter"
   final val monitorExitOp = "monitorExit"
+  final val newOp = "new"
   final val newArrayOp = "newArray"
   final val newMultiArrayOp = "newMultiArray"
   final val classOfOp = "classOf"
@@ -81,6 +82,9 @@ object JavaProfile {
   final val invokeSpecialOp = "invokeSpecial"
   final val invokeStaticOp = "invokeStatic"
   final val invokeInterfaceOp = "invokeInterface"
+  final val invokeDynamicOp = "invokeDynamic"
+  final val checkCastOp = "checkCast"
+  final val instanceOfOp = "isInstanceOf"
   final val iaddOp = opSuffix(addOp, intDesc)
   final val isubOp = opSuffix(subOp, intDesc)
   final val imulOp = opSuffix(mulOp, intDesc)

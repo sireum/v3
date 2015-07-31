@@ -119,7 +119,8 @@ final case class Class(version: Int,
                        typeAnnotation: Seq[ClassTypeAnnotation],
                        attributes: Seq[Attribute],
                        innerClasses: Seq[InnerClass],
-                       fields: Seq[Field]) extends JavaMeta
+                       fields: Seq[Field],
+                       methods: Seq[Method]) extends JavaMeta
 
 final case class EntityAnnotation(annotation: Annotation,
                                   visible: Boolean) extends JavaMeta
@@ -216,6 +217,21 @@ final case class Field(modifiers: Seq[FieldModifier.Type],
 
 final case class FieldTypeAnnotation(typePathOpt: Option[TypePath],
                                      annotation: EntityAnnotation) extends TypeAnnotation
+
+final case class Method(modifiers: Seq[MethodModifier.Type],
+                        name: String,
+                        tipe: MethodType,
+                        signatureOpt: Option[String],
+                        exceptions: Seq[String],
+                        parameters: Seq[Parameter],
+                        annotationDefaultOpt: Option[Annotation],
+                        annotations: Seq[EntityAnnotation],
+                        typeAnnotations: Seq[MethodTypeAnnotation],
+                        attributes: Seq[Attribute]) extends JavaMeta
+
+final case class Parameter(modifiers: Seq[ParameterModifier.Type],
+                           nameOpt: Option[String],
+                           annotations: Seq[EntityAnnotation]) extends JavaMeta
 
 sealed trait MethodTypeAnnotation extends TypeAnnotation
 

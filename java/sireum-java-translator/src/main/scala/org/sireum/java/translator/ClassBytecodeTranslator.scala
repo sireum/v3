@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.java.translator
 
 import org.objectweb.asm._
+import org.objectweb.asm.commons.JSRInlinerAdapter
 import org.sireum.java._
 import org.sireum.pilar.ast._
 import org.sireum.util._
@@ -40,6 +41,8 @@ object ClassBytecodeTranslator {
     apply(new ClassReader(name))
 
   final def apply(cr: ClassReader): Model = {
+    //    val tcv = new TraceClassVisitor(new java.io.PrintWriter(System.out))
+    //    cr.accept(tcv, ClassReader.EXPAND_FRAMES)
     val cbt = new ClassBytecodeTranslator
     cr.accept(cbt, ClassReader.EXPAND_FRAMES)
     cbt.model()
@@ -56,7 +59,7 @@ import org.sireum.java.translator.ClassBytecodeTranslator._
 
 final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
-  private var version: Int = _
+  private var version: Natural = _
   private var modifiers = ivectorEmpty[meta.ClassModifier.Type]
   private var className: String = _
   private var signatureOpt: Option[String] = None
@@ -70,11 +73,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
   private var attributes = ivectorEmpty[meta.Attribute]
   private var innerClasses = ivectorEmpty[meta.InnerClass]
   private var fields = ivectorEmpty[meta.Field]
-  private var globalVarDecls = ivectorEmpty[GlobalVarDecl]
+  private var methods = ivectorEmpty[meta.Method]
+  private var globalVars = ivectorEmpty[GlobalVarDecl]
+  private var procedures = ivectorEmpty[ProcedureDecl]
 
   def model(): Model =
     Model(
-      globalVarDecls,
+      globalVars ++ procedures,
       ivector(
         Annotation(Id(annotationClassDesc),
           ExtLit(
@@ -92,7 +97,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
               typeAnnotations,
               attributes,
               innerClasses,
-              fields)
+              fields,
+              methods)
           )
         )
       )
@@ -158,11 +164,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                            name: String,
                            desc: String,
                            signature: String,
-                           exceptions: Array[String]): MethodVisitor =
-  /* TODO:  new JSRInlinerAdapter(
+                           exceptions: Array[String]): MethodVisitor = {
+    new JSRInlinerAdapter(
       new MethodTranslator(access, name, desc, signature, exceptions),
-      access, name, desc, signature, exceptions) */
-    null
+      access, name, desc, signature, exceptions)
+  }
 
   override def visitAnnotation(desc: String,
                                visible: Boolean): AnnotationVisitor = {
@@ -224,6 +230,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
   private def typeToType[T <: meta.Type](tipe: Type): T = {
     val t =
       tipe.getSort match {
+        case Type.VOID => meta.VoidType
         case Type.BOOLEAN => meta.BooleanType
         case Type.BYTE => meta.ByteType
         case Type.CHAR => meta.CharType
@@ -237,7 +244,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Type.METHOD =>
           meta.MethodType(
             tipe.getDescriptor,
-            tipe.getArgumentTypes.toVector.map(typeToType),
+            tipe.getArgumentTypes.toVector.map(typeToType[meta.Type]),
             typeToType(tipe.getReturnType))
       }
     t.asInstanceOf[T]
@@ -436,7 +443,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           attributes
         )
       if (modifiers.contains(meta.FieldModifier.Static)) {
-        globalVarDecls :+=
+        globalVars :+=
           GlobalVarDecl(Id(qFieldName(className, fieldName)),
             ivector(typeAnnotation(tipe)))
       }
@@ -480,9 +487,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     private var labelCounter = 0
     private val labelToNameMap = mmapEmpty[Label, String]
     private var blocks = ilinkedMapEmpty[String, MArray[Command]]
-    private var currentLabelName: String = null
-    private var currentBlock: MArray[Command] = null
+    private val lineNumberMap = mmapEmpty[String, Command]
+    private var localVars = msetEmpty[LocalVarDecl]
+    private var initLabelName: String = _
+    private var currentLabelName: String = _
+    private var currentBlock: MArray[Command] = _
     private val varStack = mstackEmpty[(String, meta.Type)]
+    private val handlerLabelNames = msetEmpty[String]
     private var maxLocalSlots = 0
     private var maxStackSlots = 0
     private var maxTempVar = 0
@@ -501,6 +512,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitCode(): Unit = {
       hasCode = true
+      newBlock(newLabelName())
+      initLabelName = currentLabelName
     }
 
     override def visitIincInsn(varIndex: Int,
@@ -516,10 +529,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     }
 
     override def visitLdcInsn(cst: scala.Any): Unit = cst match {
-      case cst: Int => const(intDesc, cst, meta.IntType)
-      case cst: Float => const(floatDesc, cst, meta.FloatType)
-      case cst: Long => const(longDesc, cst, meta.LongType)
-      case cst: Double => const(doubleDesc, cst, meta.DoubleType)
+      case cst: java.lang.Integer => const(intDesc, cst.toInt, meta.IntType)
+      case cst: java.lang.Float => const(floatDesc, cst.toFloat, meta.FloatType)
+      case cst: java.lang.Long => const(longDesc, cst.toLong, meta.LongType)
+      case cst: java.lang.Double => const(doubleDesc, cst.toDouble, meta.DoubleType)
       case cst: String => const(stringDesc, cst, topType)
       case cst: Type => cst.getSort match {
         case Type.OBJECT | Type.ARRAY | Type.METHOD =>
@@ -611,11 +624,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitLineNumber(line: Int, start: Label): Unit = {
       val ln = labelName(start)
-      val block = blocks(ln)
-      block.insert(0, ExtAction(
-        Id(lineNumberOp),
-        ivector(intLit(line)),
-        ivectorEmpty))
+      lineNumberMap(ln) =
+        ExtAction(
+          Id(lineNumberOp),
+          ivector(intLit(line)))
     }
 
     override def visitMultiANewArrayInsn(desc: String, dims: Int): Unit = {
@@ -689,7 +701,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                                  itf: Boolean): Unit = {
       splitBlock()
       val block = currentBlock
-      splitBlock(true)
+      splitBlock(force = true, addGoto = false)
 
       val methodName = qMethodName(fromInternalName(owner), name, desc)
       val methodType = descToType[meta.MethodType](desc)
@@ -774,11 +786,35 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           case Opcodes.IFNONNULL => ifn(isNonNullOp)
         }
       val block = currentBlock
-      splitBlock(true)
+      splitBlock(force = true, addGoto = false)
       block += IfJump(cond, Id(ln), Id(currentLabelName))
     }
 
-    override def visitVarInsn(opcode: Int, varIndex: Int): Unit = ???
+    override def visitVarInsn(opcode: Int, varIndex: Int): Unit = {
+      def load(tipe: meta.Type): Unit = {
+        varStack.push((localVarName(varIndex), tipe))
+      }
+      def store(argTypeCheck: meta.Type => Boolean): Unit = {
+        val (t, tipe) = varStack.pop()
+        assert(argTypeCheck(tipe))
+        command(AssignAction(
+          idExp(localVarName(varIndex)),
+          idExp(t)
+        ))
+      }
+      opcode match {
+        case Opcodes.ILOAD => load(meta.IntType)
+        case Opcodes.LLOAD => load(meta.LongType)
+        case Opcodes.FLOAD => load(meta.FloatType)
+        case Opcodes.DLOAD => load(meta.DoubleType)
+        case Opcodes.ALOAD => load(topType)
+        case Opcodes.ISTORE => store(isIntType)
+        case Opcodes.LSTORE => store(isLongType)
+        case Opcodes.FSTORE => store(isFloatType)
+        case Opcodes.DSTORE => store(isDoubleType)
+        case Opcodes.ASTORE => store(isObjectType)
+      }
+    }
 
     override def visitFrame(frameType: Int,
                             nLocal: Int,
@@ -786,14 +822,116 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                             nStack: Int,
                             stack: Array[AnyRef]): Unit = {
       // TODO
+      varStack.clear()
+      for (e <- stack) {
+        val tipe =
+          e match {
+            case Opcodes.INTEGER => meta.IntType
+            case Opcodes.FLOAT => meta.FloatType
+            case Opcodes.LONG => meta.LongType
+            case Opcodes.DOUBLE => meta.DoubleType
+            case _ => topType
+          }
+        varStack.push((tempVar(), tipe))
+      }
     }
 
-    override def visitEnd(): Unit = ???
+    override def visitEnd(): Unit = {
+      val methodType = descToType[meta.MethodType](desc)
+      var parameters = ivectorEmpty[meta.Parameter]
+      var params =
+        if (isStatic) ivectorEmpty[ParamDecl]
+        else ivector[ParamDecl](ParamDecl(Id(thisLocalVarName),
+          ivector(typeAnnotation(meta.ObjectType(className)))))
+      for (i <- paramNameModifiers.indices) {
+        val (nameOpt, modifiers) = paramNameModifiers(i)
+        parameters :+= meta.Parameter(modifiers, nameOpt, paramAnnotations(i))
+        val id = nameOpt match {
+          case Some(name) => Id(name)
+          case _ => Id(localVarName(i))
+        }
+        params :+= ParamDecl(id,
+          ivector(typeAnnotation(methodType.parameterTypes(i))))
+      }
+      val m = meta.Method(
+        modifiers,
+        methodName,
+        methodType,
+        Option(signature),
+        if (exceptions == null) ivectorEmpty
+        else exceptions.toVector.map(fromInternalName),
+        parameters,
+        annotationDefaultOpt,
+        annotations,
+        typeAnnotations,
+        attributes
+      )
+      methods :+= m
+      val blks =
+        if (blocks.last._2.isEmpty) blocks.toVector.dropRight(1)
+        else blocks.toVector
+      val bodyOpt =
+        if (hasCode) Some({
+          val locations = for ((l, block) <- blks) yield
+          BlockLocation(
+            Id(l),
+            block.toVector.dropRight(1).map(_.asInstanceOf[Action]),
+            block.last.asInstanceOf[Jump]
+          )
+          Visitor.build({ case Id(name) =>
+            if (name.startsWith(tempVarPrefix) || name.startsWith(localVarPrefix))
+              localVars += LocalVarDecl(Id(name))
+            false
+          })(locations)
+          ProcedureBody(localVars.toVector.sortBy(_.id.value), locations)
+        })
+        else None
+      val p = ProcedureDecl(
+        Id(qMethodName(className, methodName, desc)),
+        params,
+        bodyOpt)
+      procedures :+= p
+    }
 
     override def visitParameter(name: String, access: Int): Unit =
       paramNameModifiers :+=(Option(name), parameterModifiers(access))
 
-    override def visitTypeInsn(opcode: Int, `type`: String): Unit = ???
+    override def visitTypeInsn(opcode: Int, internalTypeName: String): Unit = {
+      val tipe = typeToType[meta.Type](Type.getObjectType(internalTypeName))
+      opcode match {
+        case Opcodes.NEW =>
+          val t = tempVar()
+          command(AssignAction(
+            idExp(t),
+            ExtExp(idExp(newOp),
+              ivector(stringLit(tipe.asInstanceOf[meta.ObjectType].name)))
+          ))
+          varStack.push((t, topType))
+        case Opcodes.ANEWARRAY =>
+          val (t1, tipe1) = varStack.pop()
+          assert(isIntType(tipe1))
+          val t = tempVar()
+          command(AssignAction(
+            idExp(t),
+            ExtExp(idExp(newArrayOp),
+              ivector(idExp(t1), typeLit(tipe)))
+          ))
+          varStack.push((t, topType))
+        case Opcodes.CHECKCAST =>
+          val (t1, _) = varStack.top
+          command(ExtAction(Id(checkCastOp),
+            ivector(idExp(t1), typeLit(tipe))))
+        case Opcodes.INSTANCEOF =>
+          val (t1, _) = varStack.pop()
+          val t = tempVar()
+          command(AssignAction(
+            idExp(t),
+            ExtExp(idExp(instanceOfOp),
+              ivector(idExp(t1), typeLit(tipe)))
+          ))
+          varStack.push((t, meta.IntType))
+      }
+    }
 
     override def visitAnnotation(desc: String, visible: Boolean): AnnotationVisitor = {
       import AnnotationTranslator._
@@ -833,6 +971,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                                     end: Label,
                                     handler: Label,
                                     `type`: String): Unit = {
+      handlerLabelNames += labelName(handler)
       // TODO
     }
 
@@ -1113,10 +1252,57 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitInvokeDynamicInsn(name: String,
                                         desc: String,
                                         bsm: Handle,
-                                        bsmArgs: AnyRef*): Unit = ???
+                                        bsmArgs: AnyRef*): Unit = {
+      splitBlock()
+      val block = currentBlock
+      splitBlock(force = true, addGoto = false)
+      val methodType = descToType[meta.MethodType](desc)
+      var args = ilist[Exp](idExp(currentLabelName))
+      for (bsmArg <- bsmArgs.reverse) {
+        val arg =
+          bsmArg match {
+            case bsmArg: java.lang.Integer => intLit(bsmArg)
+            case bsmArg: java.lang.Float => LiteralExp(Id(floatDesc), ExtLit(bsmArg.toFloat))
+            case bsmArg: java.lang.Long => LiteralExp(Id(longDesc), ExtLit(bsmArg.toLong))
+            case bsmArg: java.lang.Double => LiteralExp(Id(doubleDesc), ExtLit(bsmArg.toDouble))
+            case bsmArg: String => LiteralExp(Id(stringDesc), ExtLit(bsmArg))
+            case bsmArg: Type => LiteralExp(Id(typeDesc), ExtLit(typeToType[meta.Type](bsmArg)))
+            case bsmArg: Handle => LiteralExp(Id(handleDesc), ExtLit(handle(bsmArg)))
+          }
+        args = arg :: args
+      }
 
-    override def visitLabel(label: Label): Unit =
-      newBlock(labelName(label))
+      for (i <- methodType.parameterTypes.indices) {
+        val (t, _) = varStack.pop()
+        args = idExp(t) :: args
+      }
+      args = LiteralExp(Id(handleDesc), ExtLit(handle(bsm))) :: args
+      args = typeLit(methodType) :: args
+      args = stringLit(name) :: args
+      if (methodType.returnType != meta.VoidType) {
+        val t = tempVar()
+        args = idExp(t) :: args
+        varStack.push((t, methodType.returnType))
+      }
+
+      block += ExtJump(Id(invokeDynamicOp), args.toVector)
+    }
+
+    override def visitLabel(label: Label): Unit = {
+      val block = currentBlock
+      if (currentLabelName == initLabelName && currentBlock.isEmpty) {
+        labelToNameMap(label) = currentLabelName
+      } else {
+        newBlock(labelName(label))
+        if (block.isEmpty || !block.last.isInstanceOf[Jump]) {
+          block += GotoJump(Id(currentLabelName))
+        }
+      }
+      if (handlerLabelNames.contains(currentLabelName)) {
+        val t = tempVar()
+        varStack.push((t, topType))
+      }
+    }
 
     private def switchInsn(dflt: Label, kls: IVector[(Int, Label)]) = {
       val (t, tipe) = varStack.pop()
@@ -1136,12 +1322,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       s"$tempVarPrefix$n"
     }
 
-    private def splitBlock(force: Boolean = false): Unit = {
+    private def splitBlock(force: Boolean = false, addGoto: Boolean = true): Unit = {
       if (!force && currentBlock.isEmpty) return
       val oldBlock = currentBlock
       val ln = newLabelName()
       newBlock(ln)
-      oldBlock += GotoJump(Id(ln))
+      if (addGoto)
+        oldBlock += GotoJump(Id(ln))
     }
 
     private def newBlock(labelName: String): Unit = {
@@ -1233,7 +1420,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     @inline
     private def isIntType(tipe: meta.Type) =
-      tipe == meta.IntType || tipe == meta.ByteType ||
+      tipe == meta.IntType || tipe == meta.BooleanType || tipe == meta.ByteType ||
         tipe == meta.CharType || tipe == meta.ShortType
 
     @inline
@@ -1267,7 +1454,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       labelToNameMap.getOrElseUpdate(label, newLabelName())
 
     @inline
-    private def localVarName(index: Int): String = {
+    private def localVarName(index: Natural): String = {
       val r = s"$localVarPrefix$index"
       val size = paramNameModifiers.size + (if (isStatic) 0 else 1)
       if (index < size) {
