@@ -21,6 +21,7 @@
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm/asm-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm/asm-5.0.4.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-commons/asm-commons-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-commons/asm-commons-5.0.4.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-tree/asm-tree-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-5.0.4.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-util/asm-util-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-util/asm-util-5.0.4.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/com.novocode/junit-interface/junit-interface-0.11-sources.jar" kind="lib" path="../../lib_managed/jars/com.novocode/junit-interface/junit-interface-0.11.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/junit/junit/junit-4.11-sources.jar" kind="lib" path="../../lib_managed/jars/junit/junit/junit-4.11.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.hamcrest/hamcrest-core/hamcrest-core-1.3-sources.jar" kind="lib" path="../../lib_managed/jars/org.hamcrest/hamcrest-core/hamcrest-core-1.3.jar"/>

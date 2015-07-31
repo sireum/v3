@@ -151,7 +151,8 @@ object SireumBuild extends Build {
       "org.antlr" % "ST4" % "4.0.8",
       "org.yaml" % "snakeyaml" % "1.15",
       "org.ow2.asm" % "asm" % "5.0.4",
-      "org.ow2.asm" % "asm-commons" % "5.0.4"
+      "org.ow2.asm" % "asm-commons" % "5.0.4",
+      "org.ow2.asm" % "asm-util" % "5.0.4"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),

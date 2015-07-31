@@ -21,6 +21,7 @@
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm/asm-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm/asm-5.0.4.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-commons/asm-commons-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-commons/asm-commons-5.0.4.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-tree/asm-tree-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-5.0.4.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-util/asm-util-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-util/asm-util-5.0.4.jar"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
   <classpathentry kind="output" path="bin"/>
 </classpath>

@@ -40,5 +40,6 @@
     <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm-commons:5.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm-tree:5.0.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-util:5.0.4:jar" level="project" />
   </component>
 </module>
