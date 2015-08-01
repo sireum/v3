@@ -82,9 +82,12 @@ final class Builder {
     val text = n.getText
     val raw =
       (if (text.charAt(0) == '\'') RawLit(text.substring(1))
-      else RawLit(text.substring(1, text.length - 1).
-        replaceAll( """\\\\""", "\\").
-        replaceAll( """\\"""", "\""))) at n
+      else {
+        val s =
+          if (text.charAt(0) == '"') text.replaceAll("\"\"", "\"")
+          else text.replaceAll("»»", "»")
+        RawLit(s)
+      }) at n
     val toExtern = Node.externTo(id.value)
     if (toExtern.isDefinedAt(raw.value)) {
       val lit = ExtLit(toExtern(raw.value))

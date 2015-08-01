@@ -1106,7 +1106,7 @@ final class FastParser(input: String,
       id <- parseID(recover);
       raw <- {
         parseWhiteSpace()
-        if (charEq(peek(), '\'') || charEq(peek(), '"'))
+        if (charEq(peek(), '\'') || charEq(peek(), '"') || charEq(peek(), '«'))
           parseLIT(id, recover)
         else Some(RawLit(""))
       }) yield {
@@ -1196,7 +1196,7 @@ final class FastParser(input: String,
         case '\'' =>
           val (ok, i) = peekSimpleLIT()
           parseSimpleLIT(ok, i, recover)
-        case '"' =>
+        case '"' | '«' =>
           val (ok, i) = peekComplexLIT()
           parseComplexLIT(ok, i, recover)
         case c =>
@@ -1359,10 +1359,10 @@ final class FastParser(input: String,
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
-      Some(RawLit(input.substring(begin._3 + 1, offset - 1).
-        replaceAll( """\\\\""", "\\").
-        replaceAll( """\\"""", "\"")).
-        at(line, column, offset))
+      var s = input.substring(begin._3, offset)
+      s = if (s.charAt(0) == '"') s.replaceAll("\"\"", "\"")
+      else s.replaceAll("»»", "»")
+      Some(RawLit(s.substring(1, s.length - 1)).at(line, column, offset))
     } else {
       reporter.error(begin._1, begin._2, begin._3,
         s"Expected a multi-line string literal but found: '${
@@ -1376,9 +1376,10 @@ final class FastParser(input: String,
   @inline
   private def peekComplexLIT(offset: Natural = 0): (Boolean, Natural) = {
     // http://hackingoff.com/compilers/regular-expression-to-nfa-dfa
-    // "(N|S("|S))*"
-    // N is any char that is not "
-    // S is \
+    // B(N|EE)*E
+    // B is either " or «
+    // N is any char that is not " and not »
+    // E is either " or »
     var state = 0
     var i = 0
     var ok = true
@@ -1388,76 +1389,49 @@ final class FastParser(input: String,
       state match {
         case 0 =>
           c match {
-            case '"' =>
+            case '"' | '«' =>
               state = 1
               i += 1
             case _ => ok = false
           }
         case 1 =>
           c match {
-            case '"' =>
-              state = 2
-              i += 1
-            case '\\' =>
-              state = 4
+            case '"' | '»' =>
+              state = 3
               i += 1
             case _ =>
-              if (charNe(c, '"')) {
-                state = 3
+              if (charNe(c, '"') && charNe(c, '»')) {
+                state = 2
                 i += 1
               } else ok = false
           }
         case 2 =>
-          continue = false
+          c match {
+            case '"' | '»' =>
+              state = 3
+              i += 1
+            case _ =>
+              if (charNe(c, '"') && charNe(c, '»')) {
+                //state = 2
+                i += 1
+              } else ok = false
+          }
         case 3 =>
           c match {
-            case '"' =>
-              state = 2
-              i += 1
-            case '\\' =>
+            case '"' | '»' =>
               state = 4
               i += 1
             case _ =>
-              if (charNe(c, '"')) {
-                // state = 3
-                i += 1
-              } else ok = false
+              continue = false
           }
         case 4 =>
           c match {
-            case '"' =>
-              state = 5
-              i += 1
-            case '\\' =>
-              state = 6
-              i += 1
-            case _ => ok = false
-          }
-        case 5 =>
-          c match {
-            case '"' =>
-              state = 2
-              i += 1
-            case '\\' =>
-              state = 4
+            case '"' | '»' =>
+              state = 3
               i += 1
             case _ =>
-              if (charNe(c, '"')) {
-                state = 3
-                i += 1
-              } else ok = false
-          }
-        case 6 =>
-          c match {
-            case '"' =>
-              state = 2
-              i += 1
-            case '\\' =>
-              state = 4
-              i += 1
-            case _ =>
-              if (charNe(c, '"')) {
-                state = 3
+              if (charNe(c, '"') && charNe(c, '»')) {
+                state = 2
                 i += 1
               } else ok = false
           }
@@ -1583,7 +1557,7 @@ final class FastParser(input: String,
     var d = peek(i)
     while (d != EOF && charNe(d, ';')) {
       d match {
-        case '"' =>
+        case '"' | '«' =>
           val (ok, j) = peekComplexLIT(i)
           if (ok) i = j else i += 1
         case '\'' =>
@@ -1612,7 +1586,7 @@ final class FastParser(input: String,
     var d = peek(i)
     while (d != EOF && charNe(d, c) && !limits.contains(d)) {
       d match {
-        case '"' =>
+        case '"' | '«' =>
           val (ok, j) = peekComplexLIT(i)
           if (ok) i = j else i += 1
         case '\'' =>
@@ -1638,7 +1612,7 @@ final class FastParser(input: String,
     var d = peek(i)
     while (d != EOF && peekKeyword(i, m) == naturalSentinel) {
       d match {
-        case '"' =>
+        case '"' | '«' =>
           val (ok, j) = peekComplexLIT(i)
           if (ok) i = j else i += 1
         case '\'' =>
@@ -1833,7 +1807,7 @@ object FastParser {
   private[pilar] def isOpIDTrailingChar(c: CharSentinel) =
     c match {
       case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | '«' | EOF => false
       case _ => true
     }
 
@@ -1844,7 +1818,7 @@ object FastParser {
   private[pilar] def isSimpleLITTrailingChar(c: CharSentinel) =
     c match {
       case ' ' | '\r' | '\n' | '\t' | '\u000C' | ';' | '(' | ',' |
-           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | EOF => false
+           ')' | '{' | '}' | '\'' | '"' | '#' | '@' | '`' | ':' | '«' | EOF => false
       case _ => true
     }
 

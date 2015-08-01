@@ -56,7 +56,7 @@ final class PrettyPrinter(sb: StringBuilder) {
   def print(a: Annotation): Unit = {
     sb.append('@')
     print(a.id)
-    print(a.id, a.lit)
+    print(a.id, a.lit, isAnnotation = true)
   }
 
   def print(id: Id): Unit = {
@@ -71,22 +71,26 @@ final class PrettyPrinter(sb: StringBuilder) {
     }
   }
 
-  def print(id: Id, lit: Lit): Unit = lit match {
-    case lit: RawLit => print(lit)
-    case lit: ExtLit => print(RawLit(Node.externFrom(id.value)(lit.value)))
+  def print(id: Id, lit: Lit, isAnnotation: Boolean): Unit = lit match {
+    case lit: RawLit => print(lit, isAnnotation)
+    case lit: ExtLit => print(RawLit(Node.externFrom(id.value)(lit.value)), isAnnotation)
   }
 
-  def print(raw: RawLit): Unit = {
+  def print(raw: RawLit, isAnnotation: Boolean): Unit = {
     val s = raw.value
     if (s != "") {
       if (s.forall(isSimpleLITTrailingChar)) {
         sb.append('\'')
         sb.append(s)
+      } else if (s.indexOf('\"') > 0) {
+        if (isAnnotation) sb.append(' ')
+        sb.append("«")
+        sb.append(s.replaceAll("»", "»»"))
+        sb.append('»')
       } else {
-        sb.append(" \"")
-        sb.append(
-          s.replaceAll( """\\""", """\\\\""").
-            replaceAll( """\"""", """\\""""))
+        if (isAnnotation) sb.append(' ')
+        sb.append("\"")
+        sb.append(s.replaceAll("\"", "\"\""))
         sb.append('"')
       }
     }
@@ -329,7 +333,7 @@ final class PrettyPrinter(sb: StringBuilder) {
   def print(e: Exp): Unit = e match {
     case LiteralExp(id, raw) =>
       print(id)
-      print(id, raw)
+      print(id, raw, isAnnotation = false)
     case IdExp(id) =>
       print(id)
     case TupleExp(es, annotations) =>
