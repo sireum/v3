@@ -172,6 +172,8 @@ sealed trait Command extends Node with Annotated {
   final private[ast] def commandIndex_=(i: Natural): Unit = {
     _index = i
   }
+
+  def add(a: Annotation): Command
 }
 
 
@@ -182,26 +184,34 @@ final case class
 AssignAction(lhs: Exp,
              rhs: Exp,
              annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Action
+  extends Action {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
 AssertAction(exp: Exp,
              annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Action
+  extends Action {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
 AssumeAction(exp: Exp,
              annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Action
+  extends Action {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
 ExtAction(id: Id,
           args: Node.Seq[Exp],
           annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Action
+  extends Action {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 sealed trait Jump extends Command
@@ -210,7 +220,9 @@ sealed trait Jump extends Command
 final case class
 GotoJump(target: Id,
          annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Jump
+  extends Jump {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
@@ -218,13 +230,17 @@ IfJump(exp: Exp,
        tTarget: Id,
        fTarget: Id,
        annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Jump
+  extends Jump {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
 ReturnJump(expOpt: Option[Exp],
            annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Jump
+  extends Jump {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 final case class
@@ -237,6 +253,8 @@ SwitchJump(exp: Exp,
       assert(cases(i).expOpt.isDefined)
     }
   }
+
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
 }
 
 
@@ -249,7 +267,9 @@ final case class
 ExtJump(id: Id,
         args: Node.Seq[Exp],
         annotations: Node.Seq[Annotation] = Node.emptySeq)
-  extends Jump
+  extends Jump {
+  def add(a: Annotation) = copy(annotations = annotations :+ a)
+}
 
 
 sealed trait Exp extends Node

@@ -330,6 +330,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
   }
 
   @inline
+  private def typeAnnotation(ta: meta.TypeAnnotation): Annotation =
+    Annotation(Id(annotationTypeAnnotationDesc), ExtLit(ta))
+
+  @inline
   private def typeAnnotation(tipe: meta.Type): Annotation =
     Annotation(Id(annotationTypeDesc), ExtLit(tipe))
 
@@ -498,7 +502,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     private val lineNumberMap = mmapEmpty[String, MArray[Action]]
     private var localVars = msetEmpty[LocalVarDecl]
     private var metaLocalVars = ivectorEmpty[meta.LocalVar]
-    private var catches = ivectorEmpty[Annotation]
+    private var metalocalVarTypeAnnotations = ivectorEmpty[meta.LocalVarTypeAnnotation]
+    private var catches = ivectorEmpty[meta.Catch]
     private var initLabelName: String = _
     private var currentLabelName: String = _
     private var currentBlock: MArray[Command] = _
@@ -526,7 +531,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         Option(signature),
         startLabelName,
         endLabelName,
-        ivectorEmpty)
+        index)
       val ln = localVarName(index, raw = true)
       if (ln == name) return
       var bs = blocks.toVector.dropWhile(_._1 != startLabelName)
@@ -617,11 +622,30 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       switchInsn(dflt, (min to max).zip(labels).toVector)
 
     override def visitInsnAnnotation(typeRef: Int,
-                                     typePath: TypePath,
+                                     tp: TypePath,
                                      desc: String,
                                      visible: Boolean): AnnotationVisitor = {
-      // TODO: AnnotationTranslator
-      null
+      import AnnotationTranslator._
+      stack = stack.push(E(false, marrayEmpty, { args =>
+        val ea = meta.EntityAnnotation(meta.Annotation(fromDesc(desc),
+          args.toVector.map(_.asInstanceOf[meta.Arg])), visible)
+        val typePathOpt = Option(tp).map(typePath)
+        val ta =
+          typeRef match {
+            case TypeReference.INSTANCEOF => meta.InstanceOfTypeAnnotation(typePathOpt, ea)
+            case TypeReference.NEW => meta.NewTypeAnnotation(typePathOpt, ea)
+            case TypeReference.CONSTRUCTOR_REFERENCE => meta.ConstructorReferenceTypeAnnotation(typePathOpt, ea)
+            case TypeReference.METHOD_REFERENCE => meta.MethodReferenceTypeAnnotation(typePathOpt, ea)
+            case TypeReference.CAST => meta.CastTypeAnnotation(typePathOpt, ea)
+            case TypeReference.CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT => meta.ConstructorInvocationTypeArgumentTypeAnnotation(typePathOpt, ea)
+            case TypeReference.METHOD_INVOCATION_TYPE_ARGUMENT => meta.MethodInvocationTypeArgumentTypeAnnotation(typePathOpt, ea)
+            case TypeReference.CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT => meta.ConstructorReferenceTypeArgumentTypeAnnotation(typePathOpt, ea)
+            case TypeReference.METHOD_REFERENCE_TYPE_ARGUMENT => meta.MethodReferenceTypeArgumentTypeAnnotation(typePathOpt, ea)
+          }
+        val i = currentBlock.size - 1
+        currentBlock(i) = currentBlock(i).add(typeAnnotation(ta))
+      }))
+      AnnotationTranslator
     }
 
     override def visitLookupSwitchInsn(dflt: Label,
@@ -770,14 +794,30 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     }
 
     override def visitLocalVariableAnnotation(typeRef: Int,
-                                              typePath: TypePath,
+                                              tp: TypePath,
                                               start: Array[Label],
                                               end: Array[Label],
                                               index: Array[Int],
                                               desc: String,
                                               visible: Boolean): AnnotationVisitor = {
-      // TODO: AnnotationTranslator
-      null
+      import AnnotationTranslator._
+      stack = stack.push(E(false, marrayEmpty, { args =>
+        val ea = meta.EntityAnnotation(meta.Annotation(fromDesc(desc),
+          args.toVector.map(_.asInstanceOf[meta.Arg])), visible)
+        val typePathOpt = Option(tp).map(typePath)
+        val elements = start.zip(end).zip(index).map { t =>
+          meta.LocalVarAnnotationElement(
+            labelName(t._1._1),
+            labelName(t._1._2),
+            t._2)
+        }.toVector
+        val ta = typeRef match {
+          case TypeReference.LOCAL_VARIABLE => meta.LocalVariableTypeAnnotation(typePathOpt, ea, elements)
+          case TypeReference.RESOURCE_VARIABLE => meta.ResourceVariableTypeAnnotation(typePathOpt, ea, elements)
+        }
+        metalocalVarTypeAnnotations :+= ta
+      }))
+      AnnotationTranslator
     }
 
     override def visitJumpInsn(opcode: Int, label: Label): Unit = {
@@ -856,7 +896,6 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                             local: Array[AnyRef],
                             nStack: Int,
                             stack: Array[AnyRef]): Unit = {
-      // TODO
       varStack.clear()
       for (e <- stack) {
         val tipe =
@@ -896,7 +935,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         annotations,
         typeAnnotations,
         attributes,
-        metaLocalVars
+        metaLocalVars,
+        metalocalVarTypeAnnotations
       )
       methods :+= m
       val blks =
@@ -929,7 +969,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         Id(qMethodName(className, methodName, desc)),
         params,
         bodyOpt,
-        catches)
+        catches.map(c => Annotation(Id(annotationCatchDesc), ExtLit(c))))
       procedures :+= p
     }
 
@@ -1000,11 +1040,22 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     }
 
     override def visitTryCatchAnnotation(typeRef: Int,
-                                         typePath: TypePath,
+                                         tp: TypePath,
                                          desc: String,
                                          visible: Boolean): AnnotationVisitor = {
-      // TODO: AnnotationTranslator
-      null
+      import AnnotationTranslator._
+      stack = stack.push(E(false, marrayEmpty, { args =>
+        val ea = meta.EntityAnnotation(meta.Annotation(fromDesc(desc),
+          args.toVector.map(_.asInstanceOf[meta.Arg])), visible)
+        val typePathOpt = Option(tp).map(typePath)
+        val ta = typeRef match {
+          case TypeReference.EXCEPTION_PARAMETER => meta.ExceptionParameterTypeAnnotation(typePathOpt, ea)
+        }
+        val i = catches.size - 1
+        val c = catches(i)
+        catches = catches.updated(i, c.copy(annotations = c.annotations :+ ta))
+      }))
+      AnnotationTranslator
     }
 
     override def visitTryCatchBlock(start: Label,
@@ -1015,11 +1066,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val labelEnd = labelName(end)
       val labelHandler = labelName(handler)
       handlerLabelNames += labelHandler
-      catches :+= Annotation(Id(annotationCatchDesc), ExtLit(
+      catches :+=
         meta.Catch(labelStart, labelEnd, labelHandler,
           Option(exceptionType).map(fromInternalName),
           ivectorEmpty
-        )))
+        )
     }
 
     override def visitAnnotationDefault(): AnnotationVisitor = {

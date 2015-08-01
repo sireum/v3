@@ -229,7 +229,8 @@ final case class Method(modifiers: Seq[MethodModifier.Type],
                         annotations: Seq[EntityAnnotation],
                         typeAnnotations: Seq[MethodTypeAnnotation],
                         attributes: Seq[Attribute],
-                        localVars: Seq[LocalVar]) extends JavaMeta
+                        localVars: Seq[LocalVar],
+                        localVarTypeAnnotations: Seq[LocalVarTypeAnnotation]) extends JavaMeta
 
 final case class Parameter(modifiers: Seq[ParameterModifier.Type],
                            nameOpt: Option[String],
@@ -260,13 +261,61 @@ final case class LocalVar(name: String,
                           signatureOpt: Option[String],
                           labelStart: String,
                           labelEnd: String,
-                          annotations: Seq[EntityAnnotation]) extends JavaMeta
+                          index: Natural) extends JavaMeta
+
+sealed trait LocalVarTypeAnnotation extends TypeAnnotation {
+  def elements: Seq[LocalVarAnnotationElement]
+}
+
+final case class LocalVariableTypeAnnotation(typePathOpt: Option[TypePath],
+                                             annotation: EntityAnnotation,
+                                             elements: Seq[LocalVarAnnotationElement]) extends LocalVarTypeAnnotation
+
+final case class ResourceVariableTypeAnnotation(typePathOpt: Option[TypePath],
+                                                annotation: EntityAnnotation,
+                                                elements: Seq[LocalVarAnnotationElement]) extends LocalVarTypeAnnotation
+
+final case class LocalVarAnnotationElement(labelStart: String,
+                                           labelEnd: String,
+                                           index: Natural) extends JavaMeta
 
 final case class Catch(labelStart: String,
                        labelEnd: String,
                        labelHandler: String,
                        tipeOpt: Option[String],
-                       annotations: Seq[EntityAnnotation]) extends JavaMeta
+                       annotations: Seq[ExceptionParameterTypeAnnotation]) extends JavaMeta
+
+final case class ExceptionParameterTypeAnnotation(typePathOpt: Option[TypePath],
+                                                  annotation: EntityAnnotation) extends TypeAnnotation
+
+sealed trait InstructionTypeAnnotation extends TypeAnnotation
+
+final case class InstanceOfTypeAnnotation(typePathOpt: Option[TypePath],
+                                          annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class NewTypeAnnotation(typePathOpt: Option[TypePath],
+                                   annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class ConstructorReferenceTypeAnnotation(typePathOpt: Option[TypePath],
+                                                    annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class MethodReferenceTypeAnnotation(typePathOpt: Option[TypePath],
+                                               annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class CastTypeAnnotation(typePathOpt: Option[TypePath],
+                                    annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class ConstructorInvocationTypeArgumentTypeAnnotation(typePathOpt: Option[TypePath],
+                                                                 annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class MethodInvocationTypeArgumentTypeAnnotation(typePathOpt: Option[TypePath],
+                                                            annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class ConstructorReferenceTypeArgumentTypeAnnotation(typePathOpt: Option[TypePath],
+                                                                annotation: EntityAnnotation) extends InstructionTypeAnnotation
+
+final case class MethodReferenceTypeArgumentTypeAnnotation(typePathOpt: Option[TypePath],
+                                                           annotation: EntityAnnotation) extends InstructionTypeAnnotation
 
 sealed trait Handle extends JavaMeta {
   def className: String
