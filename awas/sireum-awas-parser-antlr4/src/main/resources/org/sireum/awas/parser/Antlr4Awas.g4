@@ -20,7 +20,6 @@ typeDecl
   | enumDecl
   | latticeDecl
   | recordDecl
-  | statesDecl
   ;
 
 componentDecl
@@ -62,10 +61,6 @@ recordDecl
 
 field
   : ID ':' type
-  ;
-
-statesDecl
-  : 'states' name '[' ID ( ',' ID )* ']'
   ;
 
 port

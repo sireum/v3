@@ -127,6 +127,8 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
     ,
     ConditionTest("PcaShutoff", parsePass(
       """
+        |// from https://github.com/santoslab/aadl-map-apps/tree/develop/pca-shutoff
+        |
         |types
         |
         |  alias Natural = Integer (0, _)
@@ -297,9 +299,9 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |	 lattice DeviceAlarmFailsOff extends InadequateSensorOperation
         |
-        |  states PatientStatus [ Healthy, Risk, Overdose ]
+        |  enum PatientStatus { Healthy, Risk, Overdose }
         |
-        |  states PumpAction [ PumpNormal, PumpMinimal ]
+        |  enum PumpAction { PumpNormal, PumpMinimal }
         |
         |constants
         |
