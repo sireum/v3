@@ -251,7 +251,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    description: String
         |    hazard: Hazard
         |
-        |  // Q: Sam, why are all these enum elements grouped into one enum type?
+        |  // Q.1: why are all these enum elements grouped into one enum type?
         |  enum KindsType {
         |    NotProviding, Providing, Early, Late, AppliedTooLong, StoppedTooSon,
         |
@@ -269,13 +269,12 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    interactionPoints: Seq[Port]
         |
         |  record OccurenceCause
-        |    errorType: ErrorType
+        |    errorType: Option[ErrorType]
         |    description: String
         |
         |  record Occurrence
         |    kind: KindsType
-        |    hazard: Hazard
-        |    violatedConstraint: Constraint
+        |    violatedConstraint: Option[Constraint]
         |    title: String
         |    cause: OccurrenceCause
         |    compensation: String
@@ -303,11 +302,11 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |	 lattice RespiratoryRateHigh extends RespiratoryRate
         |
-        |  lattice DeviceAlarmFailStatus extends InadequateSensorOperation // inserted to group sub lattice elements related to DeviceAlarm
+        |  lattice DeviceAlarmFailsStatus extends InadequateSensorOperation // inserted to group sub lattice elements related to DeviceAlarm
         |
-        |	 lattice DeviceAlarmFailsOn extends DeviceAlarmFailStatus
+        |	 lattice DeviceAlarmFailsOn extends DeviceAlarmFailsStatus
         |
-        |	 lattice DeviceAlarmFailsOff extends DeviceAlarmFailStatus
+        |	 lattice DeviceAlarmFailsOff extends DeviceAlarmFailsStatus
         |
         |  enum PatientStatus extends States { Healthy, Risk, Overdose }
         |
@@ -344,6 +343,141 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |	 DisplayMustShowPumpStatus: Constraint = Constraint(description = "The app must correctly inform the display of the pump command status.",
         |                                                     hazard = BadInfoGiven)
+        |
+        |
+        |components
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/Capnograph_Interface.aadl
+        |
+        |  Capnograph
+        |    ports
+        |      out ETCO2: ETCO2ValueHigh
+        |      out RespiratoryRate: RespiratoryRate
+        |      out DeviceError: DeviceAlarmFailsStatus
+        |    flows
+        |      ETCO2UnDetectableHighValueFlowSource: _ -> ETCO2{ETCO2ValueHigh}
+        |      RRUnDetectableHighValueFlowSource: _ -> RespiratoryRate{RespiratoryRateHigh}
+        |      RRUnDetectableLowValueFlowSource: _ -> RespiratoryRate{RespiratoryRateLow}
+        |      DeviceAlarmNotSent: _ -> DeviceError{DeviceAlarmFailsOff}
+        |      DeviceAlarmErroneouslySent: _ -> DeviceError{DeviceAlarmFailsOn}
+        |    properties
+        |      relevantStates: RelevantStates = PatientDeath // Q.2: what does "applies to PatientStatus" mean here?
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCAPump_Interface.aadl
+        |
+        |  PcaPump
+        |    ports
+        |      in PumpNormally: InadvertentPumpNormally
+        |    flows
+        |      ODCommand: PumpNormally{InadvertentPumpNormally} -> _
+        |    properties
+        |      componentKing: ComponentKind = ComponentKind.Actuator
+        |      relevantStates: RelevantStates = PatientDeath
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_Display.aadl
+        |
+        |  AppDisplay
+        |    ports
+        |      in SpO2: SpO2ValueHigh
+        |      in ETCO2 // Q.3: is this not used for hazard analysis? (likewise for the rest of untyped ports)
+        |      in RespiratoryRate
+        |      in CommandPumpNormal
+        |      in CapnographError
+        |      in PulseOxError
+        |      out Show
+        |    flows
+        |      HighSpO2MisleadsClinician: SpO2{SpO2ValueHigh} -> _
+        |    properties
+        |      processKind: ProcessKind = ProcessKind.Display
+        |      componentKind: ComponentKind = ComponentKind.Actuator
+        |      relevantStates: RelevantStates = PatientDeath
+        |
+        |  // https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_Logic.aadl
+        |
+        |  AppLogic
+        |    ports
+        |      in SpO2: SpO2ValueHigh
+        |      in ETCO2: ETCO2ValueHigh
+        |      in RespiratoryRate: RespiratoryRate
+        |      in CapnographError
+        |      in PulseOxError
+        |      out CommandPumpNormal: InadvertentPumpNormally
+        |    flows
+        |      HighSpO2LeadsToOD: SpO2{SpO2ValueHigh} -> CommandPumpNormal{InadvertentPumpNormally}
+        |      HighETCO2LeadsToOD: ETCO2{ETCO2ValueHigh} -> CommandPumpNormal{InadvertentPumpNormally}
+        |      LowRRLeadsToOD: RespiratoryRate{RespiratoryRateLow, RespiratoryRateHigh} -> CommandPumpNormal{InadvertentPumpNormally}
+        |    properties
+        |      relevantStates: RelevantStates = PatientDeath
+        |      protoHazard: ProtoHazard = ProtoHazard(harm = PatientDeath,
+        |                                             componentState = PumpAction.PumpNormal,
+        |                                             environmentState = PatientStatus.Risk,
+        |                                             interactionPoints = Seq[port](SpO2, ETCO2))
+        |      occurrence: Occurrence = Occurrence(kind = KindsType.Providing,
+        |                                          violatedConstraint = Some[Constraint](DontLetPumpRunWhenUnsafe),
+        |                                          title = "High Physio Params",
+        |                                          cause = OccurrenceCause(errorType = Some[ErrorType](InadvertentPumpNormally),
+        |                                                                  description = "One or more physiological parameters are too high, leading the app logic to incorrectly believe the patient is healthy"),
+        |                                          compensation = "Physiological values are cross-checked with others")
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PulseOx_Interface.aadl
+        |
+        |  PulseOx
+        |    ports
+        |      out SpO2: SpO2ValueHigh
+        |      out DeviceError: DeviceAlarmFailsStatus
+        |    flows
+        |      SpO2UnDetectableHighValueFlowSource: _ -> SpO2{SpO2ValueHigh}
+        |      DeviceAlarmNotSent: _ -> DeviceError{DeviceAlarmFailsOn}
+        |      DeviceAlarmErroneouslySent: _ -> DeviceError {DeviceAlarmFailsOff}
+        |    properties
+        |      relevantStates: RelevantStates = PatientDeath
+        |
+
+        |connections
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_System.aadl
+        |
+        |  Spo2Logic: PulseOx.SpO2{InadvertentPumpNormally} -> AppLogic.SpO2
+        |  // Q.4: Sam, what does https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_System.aadl#L49-L51 mean?
+        |  //      Specifically, what does error source on a connection mean?
+        |  //      Which port of the connection originates the error?
+        |  //      In the above, I put it in PulseOx.SpO2.
+        |
+        |  RespiratoryRateLogic: Capnograph.RespiratoryRate -> AppLogic.RespiratoryRate
+        |
+        |  PumpCommandLogic: AppLogic.CommandPumpNormal -> PcaPump.PumpNormally
+        |    properties
+        |      occurrence1: Occurrence = Occurrence(kind = KindsType.Providing,
+        |                                           violatedConstraint = Some[Constraint](DontLetPumpRunWhenUnsafe),
+        |                                           title = "High Physio Params",
+        |                                           cause = Cause(errorType = Some[ErrorType](InadvertentPumpNormally),
+        |                                                         description = "One or more physiological parameters are too high, leading the app logic to incorrectly believe the patient is healthy"),
+        |			                                      compensation = "Physiological values are cross-checked with others")
+        |      occurrence2: Occurrence = Occurrence(kind = KindsType.NotProviding,
+        |                                           violatedConstraint = None[Constraint],
+        |                                           title = "NotHazardous",
+        |                                           cause = Cause(errorType = None[ErrorType],
+        |                                                         description = "Not running the pump isn't unsafe (though it may be undesirable)"),
+        |			                                      compensation = "Not needed")
+        |
+        |  ETCO2Logic : Capnograph.ETCO2 -> AppLogic.ETCO2
+        |
+        |  CapnographFailLogic: Capnograph.DeviceError -> AppLogic.CapnographError
+        |
+        |  PulseoxFailLogic: PulseOx.DeviceError -> AppLogic.PulseOxError
+        |
+        |  Spo2Display: PulseOx.SpO2 -> appDisplay.SpO2
+        |
+        |	 RespiratoryRateDisplay: Capnograph.RespiratoryRate -> AppDisplay.RespiratoryRate
+        |
+        |	 PumpCommandDisplay: AppLogic.CommandPumpNormal -> AppDisplay.CommandPumpNormal
+        |
+        |  ETCO2Display: Capnograph.ETCO2 -> AppDisplay.ETCO2
+        |
+        |  CapnographFailDisplay: Capnograph.DeviceError -> AppDisplay.CapnographError
+        |
+        |  PulseOxFailDisplay: PulseOx.DeviceError -> AppDisplay.PulseOxError
+        |
       """.stripMargin))
     /* , TODO: nested component
     ConditionTest("abNested", parsePass(

@@ -23,16 +23,19 @@ typeDecl
   ;
 
 componentDecl
-  : 'component'? name
+  : name
       ( 'ports' port* )?
+      ( 'flows' flow* )?
       ( 'properties' property* )?
   ;
 
 connectionDecl
-  : 'connection'? name ':'
+  : name ':'
     fromComponent=name '.' fromPort=ID
+    ( '{' fromE+=name ( ',' fromE+=name )* '}' )?
     '->'
     toComponent=name '.' toPort=ID
+    ( '{' toE+=name ( ',' toE+=name )* '}' )?
       ( 'properties' property* )?
   ;
 
@@ -64,7 +67,14 @@ field
   ;
 
 port
-  : mod=( 'in' | 'out' ) ID
+  : mod=( 'in' | 'out' ) ID ( ':' name )?
+  ;
+
+flow
+  : id=ID ':'
+    ( from=ID '{' fromE+=name ( ',' fromE+=name )* '}' | '_' )
+    '->'
+    ( to=ID '{' toE+=name ( ',' toE+=name )* '}' | '_' )
   ;
 
 property
