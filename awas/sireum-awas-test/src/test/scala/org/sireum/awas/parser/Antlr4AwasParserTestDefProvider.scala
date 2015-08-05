@@ -133,6 +133,8 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  alias Natural = Integer (0, _)
         |
+        |  enum States
+        |
         |
         |  // from ErrorLibrary ?
         |
@@ -262,8 +264,8 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  record ProtoHazard
         |    harm: Accident
-        |    componentState: PumpAction // type refined for PCA Shutoff
-        |    environmentState: PatientStatus // type refined for PCA Shutoff
+        |    componentState: States
+        |    environmentState: States
         |    interactionPoints: Seq[Port]
         |
         |  record OccurenceCause
@@ -283,25 +285,33 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  lattice InadvertentPumpNormally extends InappropriateControlAction
         |
-        |	 lattice SpO2ValueHigh extends InadequateSensorOperation
+        |	 lattice SpO2Value extends InadequateSensorOperation // inserted to group sub lattice elements related to SpO2Value
         |
-        |	 lattice SpO2ValueLow extends InadequateSensorOperation
+        |	 lattice SpO2ValueHigh extends SpO2Value
         |
-        |	 lattice ETCO2ValueLow extends InadequateSensorOperation
+        |	 lattice SpO2ValueLow extends SpO2Value
         |
-        |	 lattice ETCO2ValueHigh extends InadequateSensorOperation
+        |  lattice ETCO2Value extends InadequateSensorOperation // inserted to group sub lattice elements related to ETCO2Value
         |
-        |	 lattice RespiratoryRateLow extends InadequateSensorOperation
+        |	 lattice ETCO2ValueLow extends ETCO2Value
         |
-        |	 lattice RespiratoryRateHigh extends InadequateSensorOperation
+        |	 lattice ETCO2ValueHigh extends ETCO2Value
         |
-        |	 lattice DeviceAlarmFailsOn extends InadequateSensorOperation
+        |  lattice RespiratoryRate extends InadequateSensorOperation // inserted to group sub lattice elements related to RespiratoryRate
         |
-        |	 lattice DeviceAlarmFailsOff extends InadequateSensorOperation
+        |	 lattice RespiratoryRateLow extends RespiratoryRate
         |
-        |  enum PatientStatus { Healthy, Risk, Overdose }
+        |	 lattice RespiratoryRateHigh extends RespiratoryRate
         |
-        |  enum PumpAction { PumpNormal, PumpMinimal }
+        |  lattice DeviceAlarmFailStatus extends InadequateSensorOperation // inserted to group sub lattice elements related to DeviceAlarm
+        |
+        |	 lattice DeviceAlarmFailsOn extends DeviceAlarmFailStatus
+        |
+        |	 lattice DeviceAlarmFailsOff extends DeviceAlarmFailStatus
+        |
+        |  enum PatientStatus extends States { Healthy, Risk, Overdose }
+        |
+        |  enum PumpAction extends States { PumpNormal, PumpMinimal }
         |
         |constants
         |
