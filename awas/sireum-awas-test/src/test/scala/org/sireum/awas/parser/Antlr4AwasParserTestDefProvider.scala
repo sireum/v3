@@ -266,7 +266,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    harm: Accident
         |    componentState: States
         |    environmentState: States
-        |    interactionPoints: Seq[Port]
+        |    interactionPoints: Seq[port]
         |
         |  record OccurenceCause
         |    errorType: Option[ErrorType]
@@ -311,6 +311,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |  enum PatientStatus extends States { Healthy, Risk, Overdose }
         |
         |  enum PumpAction extends States { PumpNormal, PumpMinimal }
+        |
         |
         |constants
         |
@@ -428,11 +429,11 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    flows
         |      SpO2UnDetectableHighValueFlowSource: _ -> SpO2{SpO2ValueHigh}
         |      DeviceAlarmNotSent: _ -> DeviceError{DeviceAlarmFailsOn}
-        |      DeviceAlarmErroneouslySent: _ -> DeviceError {DeviceAlarmFailsOff}
+        |      DeviceAlarmErroneouslySent: _ -> DeviceError{DeviceAlarmFailsOff}
         |    properties
         |      relevantStates: RelevantStates = PatientDeath
         |
-
+        |
         |connections
         |
         |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_System.aadl
@@ -460,7 +461,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |                                                         description = "Not running the pump isn't unsafe (though it may be undesirable)"),
         |                                           compensation = "Not needed")
         |
-        |  ETCO2Logic : Capnograph.ETCO2 -> AppLogic.ETCO2
+        |  ETCO2Logic: Capnograph.ETCO2 -> AppLogic.ETCO2
         |
         |  CapnographFailLogic: Capnograph.DeviceError -> AppLogic.CapnographError
         |
