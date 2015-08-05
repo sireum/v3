@@ -268,7 +268,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    environmentState: States
         |    interactionPoints: Seq[port]
         |
-        |  record OccurenceCause
+        |  record OccurrenceCause
         |    errorType: Option[ErrorType]
         |    description: String
         |
@@ -451,14 +451,14 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |      occurrence1: Occurrence = Occurrence(kind = KindsType.Providing,
         |                                           violatedConstraint = Some[Constraint](DontLetPumpRunWhenUnsafe),
         |                                           title = "High Physio Params",
-        |                                           cause = Cause(errorType = Some[ErrorType](InadvertentPumpNormally),
-        |                                                         description = "One or more physiological parameters are too high, leading the app logic to incorrectly believe the patient is healthy"),
+        |                                           cause = OccurrenceCause(errorType = Some[ErrorType](InadvertentPumpNormally),
+        |                                                                   description = "One or more physiological parameters are too high, leading the app logic to incorrectly believe the patient is healthy"),
         |                                           compensation = "Physiological values are cross-checked with others")
         |      occurrence2: Occurrence = Occurrence(kind = KindsType.NotProviding,
         |                                           violatedConstraint = None[Constraint],
         |                                           title = "NotHazardous",
-        |                                           cause = Cause(errorType = None[ErrorType],
-        |                                                         description = "Not running the pump isn't unsafe (though it may be undesirable)"),
+        |                                           cause = OccurrenceCause(errorType = None[ErrorType],
+        |                                                                   description = "Not running the pump isn't unsafe (though it may be undesirable)"),
         |                                           compensation = "Not needed")
         |
         |  ETCO2Logic: Capnograph.ETCO2 -> AppLogic.ETCO2
