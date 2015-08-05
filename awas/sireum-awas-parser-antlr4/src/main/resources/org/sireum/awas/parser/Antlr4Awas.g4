@@ -9,65 +9,54 @@ modelFile
   ;
 
 model
-  : unitDecl+
-  ;
-
-unitDecl
-  : namespaceDecl?
-    importDecl*
-    ( 'types' typeDecl* )?
-    'components' componentDecl+
+  : ( 'types' typeDecl* )?
+    ( 'constants' constantDecl* )?
+    ( 'components' componentDecl* )?
     ( 'connections' connectionDecl* )?
   ;
 
-namespaceDecl
-  : 'namespace' name
-  ;
-
-name
-  : ID ( '::' ID )*
-  ;
-
-importDecl
-  : 'import' name ( '.' elem=ID )? ( 'as' alias=ID )?
-  ;
-
 typeDecl
-  : enumDecl
+  : typeAliasDecl
+  | enumDecl
   | latticeDecl
   | recordDecl
+  | statesDecl
   ;
 
 componentDecl
-  : 'component'? ID
+  : 'component'? name
       ( 'ports' port* )?
       ( 'properties' property* )?
   ;
 
 connectionDecl
-  : 'connection'? id=ID ':'
-    fromComponent=ID ( '.' fromPort=ID )?
+  : 'connection'? name ':'
+    fromComponent=name '.' fromPort=ID
     '->'
-    toComponent=ID ( '.' toPort=ID )?
+    toComponent=name '.' toPort=ID
       ( 'properties' property* )?
+  ;
+
+typeAliasDecl
+  : 'alias' name '=' type
   ;
 
 enumDecl
   : // enum elements can be defined in the profile
-    'enum' id=ID
-    ( 'extends' supers+=ID ( ',' supers+=ID )* )?
+    'enum' n=name
+    ( 'extends' supers+=name ( ',' supers+=name )* )?
     (
       '{' elements+=ID ( ',' elements+=ID )* '}'
     )?
   ;
 
 latticeDecl
-  : 'lattice' id=ID
-    ( 'extends' supers+=ID ( ',' supers+=ID )* )?
+  : 'lattice' n=name
+    ( 'extends' supers+=name ( ',' supers+=name )* )?
   ;
 
 recordDecl
-  : 'record' ID
+  : 'record' name
       field+
   ;
 
@@ -75,6 +64,9 @@ field
   : ID ':' type
   ;
 
+statesDecl
+  : 'states' name '[' ID ( ',' ID )* ']'
+  ;
 
 port
   : mod=( 'in' | 'out' ) ID
@@ -82,7 +74,10 @@ port
 
 property
   : ID ':' type ( '=' init )?
-  | ID '=' init
+  ;
+
+constantDecl
+  : name ':' type '=' init
   ;
 
 type
@@ -95,10 +90,19 @@ type
 
 basicType
   : 'Boolean'                                        #BooleanType
-  | 'Integer'                                        #IntegerType
+  | 'Integer'
+     ( '(' lo=intConstant ',' hi=intConstant ')' )?  #IntegerType
   | 'Real'                                           #RealType
   | 'String'                                         #StringType
+  | 'component'                                      #ComponentType
+  | 'port'                                           #PortType
   | name                                             #NamedType
+  ;
+
+intConstant
+  : INTEGER                                          #LitIntConstant
+  | name                                             #NamedIntConstant
+  | '_'                                              #ArbitraryIntConstant
   ;
 
 init
@@ -107,21 +111,27 @@ init
   | INTEGER                                          #Integer
   | REAL                                             #Real
   | STRING                                           #String
-  | name '(' init ( ',' init )* ')'                  #Record
-  | name ( '.' ID )?                                 #EnumOrLattice
-  | 'None' ( '[' type ']' )?                         #None
-  | 'Some' ( '[' type ']' )? '(' init ')'            #Some
-  | 'Set' ( '[' type ']' )?
+  | name '(' ID '=' init ( ',' ID '=' init )* ')'    #Record
+  | name ( '.' ID )?                                 #EnumOrLatticeOrConstant
+  | 'component' name                                 #ComponentRef
+  | 'port' name '.' ID                               #PortRef
+  | 'None' '[' type ']'                              #None
+  | 'Some' '[' type ']' '(' init ')'                 #Some
+  | 'Set' '[' type ']'
     '(' ( init ( ',' init )* )? ')'                  #Set
-  | 'Seq' ( '[' type ']' )?
+  | 'Seq' '[' type ']'
     '(' ( init ( ',' init )* )? ')'                  #Seq
   | 'Map'
-     ( '[' basicType ',' type ']' )?
+     '[' basicType ',' type ']'
     '(' (  mapEntry ( ',' mapEntry )* )? ')'         #Map
   ;
 
 mapEntry
   : key=init '->' value=init
+  ;
+
+name
+  : ID ( '::' ID )*
   ;
 
 /* TODO: nested component
@@ -171,7 +181,7 @@ REAL
   ;
 
 STRING
-  : '\"' ( ~["] | '\\' ( '\\' | '"' ) )* '\"'
+  : '\"' ( ~["] | '"' '"' )* '\"'
   ;
 
 ID

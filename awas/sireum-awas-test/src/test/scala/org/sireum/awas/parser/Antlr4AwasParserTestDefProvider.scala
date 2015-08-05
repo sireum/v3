@@ -60,39 +60,27 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |      out aOut
         |    properties
         |      b0: Boolean
-        |      b1 = true
-        |      b2 = false
         |      b3: Boolean = true
         |      b4: Boolean = false
         |      x: Integer
-        |      y = 4
         |      z: Integer = 5
         |      r0: Real
-        |      r1 = 0.0
-        |      r2: Real = 0.0
+        |      r1: Real = 0.0
         |      s0: String
-        |      s1 = "foo"
-        |      s2: String = "bar"
+        |      s1: String = "bar"
         |      lat0: Top
-        |      lat1 = Top
-        |      lat2: Top = Left
+        |      lat1: Top = Left
         |      enum0: Failure
-        |      enum1 = AFail
-        |      enum2: Failure = BFail
-        |      enum3: Error = Disconnected // checked with profile
-        |      enum4 = Disconnected        // checked with profile
+        |      enum1: Failure = BFail
+        |      enum2: Error = Disconnected // checked with profile
         |      rec0: R
-        |      rec1 = R(1, 2)
-        |      rec2: R = R(1, 2)
+        |      rec2: R = R(x=1, y=2)
         |      set0: Set[Integer]
-        |      set1 = Set(1, 2, 3)
-        |      set2: Set[Integer] = Set[Integer](1, 2, 3)
+        |      set1: Set[Integer] = Set[Integer](1, 2, 3)
         |      seq0: Seq[Integer]
-        |      seq1 = Seq(1, 2, 3)
-        |      seq2: Seq[Integer] = Seq[Integer](1, 2, 3)
+        |      seq1: Seq[Integer] = Seq[Integer](1, 2, 3)
         |      map0: Map[Integer, Integer]
-        |      map1 = Map(1 -> 2, 2 -> 3, 3 -> 4)
-        |      map2: Map[Integer, Integer] =
+        |      map1: Map[Integer, Integer] =
         |          Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
       """.stripMargin))
     ,
@@ -132,9 +120,218 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |      out cOut
         |
         |connections
-        |  A2B: A -> B
-        |  B2C: B -> C
-        |  C2A: C -> A
+        |  A2B: A.aOut -> B.bIn
+        |  B2C: B.bOut -> C.cIn
+        |  C2A: C.cOut -> A.aIn
+      """.stripMargin))
+    ,
+    ConditionTest("PcaShutoff", parsePass(
+      """
+        |types
+        |
+        |  alias Natural = Integer (0, _)
+        |
+        |
+        |  // from ErrorLibrary ?
+        |
+        |  lattice ErrorType
+        |
+        |  lattice ItemCommission extends ErrorType
+        |
+        |  lattice ServiceError extends ErrorType
+        |
+        |  lattice SequenceOmission extends ErrorType
+        |
+        |  lattice ItemOmission extends ErrorType
+        |
+        |  lattice LateDelivery extends ErrorType
+        |
+        |  lattice OutOfRange extends ErrorType
+        |
+        |  lattice LateDate extends ErrorType
+        |
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/map-globals/packages/MAP_Errors.aadl
+        |
+        |  lattice ControlInputWrong extends ItemCommission
+        |
+        |  lattice ControlInputMissing extends ItemOmission
+        |
+        |  lattice IncorrectlyBuiltControlAlgorithm extends ServiceError
+        |
+        |	 lattice OutdatedControlAlgorithm extends ServiceError
+        |
+        |	 lattice IncorrectlyModifiedControlAlgorithm extends ServiceError
+        |
+        |	 lattice ProcessModelInconsistent extends ServiceError
+        |
+        |  lattice ProcessModelIncomplete extends ServiceError
+        |
+        |  lattice ProcessModelIncorrect extends ServiceError
+        |
+        |  lattice InappropriateControlAction extends SequenceCommission
+        |
+        |	 lattice IneffectiveControlAction extends ServiceError
+        |
+        |  lattice MissingControlAction extends ItemOmission
+        |
+        |  lattice InadequateActuatorOperation extends ServiceError
+        |
+        |  lattice DelayedOperation extends LateDelivery
+        |
+        |  lattice ComponentFailure extends ErrorType
+        |
+        |	 lattice ChangesOverTime extends ErrorType
+        |
+        |  lattice ConflictingControlActionsFromExternalController extends SequenceCommission
+        |
+        |  lattice ProcessInputMissing extends ItemOmission
+        |
+        |	 lattice ProcessInputWrong extends ItemCommission
+        |
+        |	 lattice UnidentifiedDisturbance extends ItemCommission
+        |
+        |	 lattice OutOfRangeDisturbance extends OutOfRange
+        |
+        |  lattice ProcessOutputContributesToSystemHazard extends ErrorType
+        |
+        |  lattice FeedbackDelayedFromProcess extends LateData
+        |
+        |	 lattice MesasurementInaccurate extends ServiceCommission
+        |
+        |	 lattice IncorrectInformationProvided extends ItemCommission
+        |
+        |	 lattice NoInformationProvided extends ItemOmission
+        |
+        |  lattice InadequateSensorOperation extends ServiceError
+        |
+        |  lattice FeedbackDelayedFromSensor extends LateData
+        |
+        |  lattice InadequateFeedback extends ItemCommission
+        |
+        |  lattice MissingFeedback extends ItemOmission
+        |
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/map-globals/propertysets/MAP_Properties.aadl
+        |
+        |  enum ProcessKind { Logic, Display }
+        |
+        |  enum ComponentKind { Top, Actuator, Sensor, Controller, ControlledProcess }
+        |
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/map-globals/propertysets/MAP_Error_Properties.aadl
+        |
+        |  alias Context = String
+        |
+        |  alias Assumption = String
+        |
+        |  record Abbreviation
+        |    full: String
+        |    definition: String
+        |
+        |  record AccidentLevel
+        |    level: Natural
+        |    description: String
+        |
+        |  record Accident
+        |    number: Natural
+        |    description: String
+        |    level: AccidentLevel
+        |
+        |  record Hazard
+        |    number: Natural
+        |    description: String
+        |    accident: Accident
+        |
+        |  record Constraint
+        |    description: String
+        |    hazard: Hazard
+        |
+        |  // Q: Sam, why are all these enum elements grouped into one enum type?
+        |  enum KindsType {
+        |    NotProviding, Providing, Early, Late, AppliedTooLong, StoppedTooSon,
+        |
+        |    ValueLow, ValueHigh,
+        |
+        |    ParamsMissing, ParamsWrong, ParamsOutOfOrder
+        |  }
+        |
+        |  alias RelevantStates = Accident
+        |
+        |  record ProtoHazard
+        |    harm: Accident
+        |    componentState: PumpAction // type refined for PCA Shutoff
+        |    environmentState: PatientStatus // type refined for PCA Shutoff
+        |    interactionPoints: Seq[Port]
+        |
+        |  record OccurenceCause
+        |    errorType: ErrorType
+        |    description: String
+        |
+        |  record Occurrence
+        |    kind: KindsType
+        |    hazard: Hazard
+        |    violatedConstraint: Constraint
+        |    title: String
+        |    cause: OccurrenceCause
+        |    compensation: String
+        |
+        |
+        |  // https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/packages/PCA_Shutoff_Errors.aadl
+        |
+        |  lattice InadvertentPumpNormally extends InappropriateControlAction
+        |
+        |	 lattice SpO2ValueHigh extends InadequateSensorOperation
+        |
+        |	 lattice SpO2ValueLow extends InadequateSensorOperation
+        |
+        |	 lattice ETCO2ValueLow extends InadequateSensorOperation
+        |
+        |	 lattice ETCO2ValueHigh extends InadequateSensorOperation
+        |
+        |	 lattice RespiratoryRateLow extends InadequateSensorOperation
+        |
+        |	 lattice RespiratoryRateHigh extends InadequateSensorOperation
+        |
+        |	 lattice DeviceAlarmFailsOn extends InadequateSensorOperation
+        |
+        |	 lattice DeviceAlarmFailsOff extends InadequateSensorOperation
+        |
+        |  states PatientStatus [ Healthy, Risk, Overdose ]
+        |
+        |  states PumpAction [ PumpNormal, PumpMinimal ]
+        |
+        |constants
+        |
+        |  // from https://github.com/santoslab/aadl-map-apps/blob/develop/pca-shutoff/propertysets/PCA_Shutoff_Error_Properties.aadl
+        |
+        |  Context: Context = "Example context"
+        |
+        |	 NoAlarms: Assumption = "There are no alarms that need forwarding"
+        |
+        |	 SpO2: Abbreviation = Abbreviation(full = "Blood-oxygen Saturation",
+        |		                                 definition = "The oxygenation of the patient's blood")
+        |
+        |	 Death: AccidentLevel = AccidentLevel(level = 1,
+        |		                                    description = "Results in the death of a human")
+        |
+        |	 PatientDeath: Accident = Accident(description = "Patient is killed ",
+        |		                                 level = Death)
+        |
+        |	 InadvertentPumpNormally: Hazard = Hazard(description = "The pump is ordered to run normally when it should not.",
+        |		                                        accident = PatientDeath)
+        |
+        |	 BadInfoGiven: Hazard = Hazard(description = "Incorrect information is sent to the display.",
+        |		                             accident = PatientDeath)
+        |
+        |	 DontLetPumpRunWhenUnsafe: Constraint = Constraint(description = "The app must command the pump to stop if the patient’s vital signs indicate over-infusion.",
+        |		                                                 hazard = InadvertentPumpNormally)
+        |
+        |  DisplayMustShowPatientStatus: Constraint = Constraint(description = "The app must correctly inform the display of the status of the patient’s vital signs.",
+        |		                                                     hazard = PCA_Shutoff_Error_Properties::BadInfoGiven)
+        |
+        |	 DisplayMustShowPumpStatus: Constraint = Constraint(description = "The app must correctly inform the display of the pump command status.",
+        |                                                     hazard = BadInfoGiven)
       """.stripMargin))
     /* , TODO: nested component
     ConditionTest("abNested", parsePass(
