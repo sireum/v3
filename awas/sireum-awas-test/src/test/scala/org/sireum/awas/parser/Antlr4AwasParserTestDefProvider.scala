@@ -163,11 +163,11 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  lattice IncorrectlyBuiltControlAlgorithm extends ServiceError
         |
-        |	 lattice OutdatedControlAlgorithm extends ServiceError
+        |  lattice OutdatedControlAlgorithm extends ServiceError
         |
-        |	 lattice IncorrectlyModifiedControlAlgorithm extends ServiceError
+        |  lattice IncorrectlyModifiedControlAlgorithm extends ServiceError
         |
-        |	 lattice ProcessModelInconsistent extends ServiceError
+        |  lattice ProcessModelInconsistent extends ServiceError
         |
         |  lattice ProcessModelIncomplete extends ServiceError
         |
@@ -175,7 +175,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  lattice InappropriateControlAction extends SequenceCommission
         |
-        |	 lattice IneffectiveControlAction extends ServiceError
+        |  lattice IneffectiveControlAction extends ServiceError
         |
         |  lattice MissingControlAction extends ItemOmission
         |
@@ -185,27 +185,27 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  lattice ComponentFailure extends ErrorType
         |
-        |	 lattice ChangesOverTime extends ErrorType
+        |  lattice ChangesOverTime extends ErrorType
         |
         |  lattice ConflictingControlActionsFromExternalController extends SequenceCommission
         |
         |  lattice ProcessInputMissing extends ItemOmission
         |
-        |	 lattice ProcessInputWrong extends ItemCommission
+        |  lattice ProcessInputWrong extends ItemCommission
         |
-        |	 lattice UnidentifiedDisturbance extends ItemCommission
+        |  lattice UnidentifiedDisturbance extends ItemCommission
         |
-        |	 lattice OutOfRangeDisturbance extends OutOfRange
+        |  lattice OutOfRangeDisturbance extends OutOfRange
         |
         |  lattice ProcessOutputContributesToSystemHazard extends ErrorType
         |
         |  lattice FeedbackDelayedFromProcess extends LateData
         |
-        |	 lattice MesasurementInaccurate extends ServiceCommission
+        |  lattice MesasurementInaccurate extends ServiceCommission
         |
-        |	 lattice IncorrectInformationProvided extends ItemCommission
+        |  lattice IncorrectInformationProvided extends ItemCommission
         |
-        |	 lattice NoInformationProvided extends ItemOmission
+        |  lattice NoInformationProvided extends ItemOmission
         |
         |  lattice InadequateSensorOperation extends ServiceError
         |
@@ -284,29 +284,29 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  lattice InadvertentPumpNormally extends InappropriateControlAction
         |
-        |	 lattice SpO2Value extends InadequateSensorOperation // inserted to group sub lattice elements related to SpO2Value
+        |  lattice SpO2Value extends InadequateSensorOperation // inserted to group sub lattice elements related to SpO2Value
         |
-        |	 lattice SpO2ValueHigh extends SpO2Value
+        |  lattice SpO2ValueHigh extends SpO2Value
         |
-        |	 lattice SpO2ValueLow extends SpO2Value
+        |  lattice SpO2ValueLow extends SpO2Value
         |
         |  lattice ETCO2Value extends InadequateSensorOperation // inserted to group sub lattice elements related to ETCO2Value
         |
-        |	 lattice ETCO2ValueLow extends ETCO2Value
+        |  lattice ETCO2ValueLow extends ETCO2Value
         |
-        |	 lattice ETCO2ValueHigh extends ETCO2Value
+        |  lattice ETCO2ValueHigh extends ETCO2Value
         |
         |  lattice RespiratoryRate extends InadequateSensorOperation // inserted to group sub lattice elements related to RespiratoryRate
         |
-        |	 lattice RespiratoryRateLow extends RespiratoryRate
+        |  lattice RespiratoryRateLow extends RespiratoryRate
         |
-        |	 lattice RespiratoryRateHigh extends RespiratoryRate
+        |  lattice RespiratoryRateHigh extends RespiratoryRate
         |
         |  lattice DeviceAlarmFailsStatus extends InadequateSensorOperation // inserted to group sub lattice elements related to DeviceAlarm
         |
-        |	 lattice DeviceAlarmFailsOn extends DeviceAlarmFailsStatus
+        |  lattice DeviceAlarmFailsOn extends DeviceAlarmFailsStatus
         |
-        |	 lattice DeviceAlarmFailsOff extends DeviceAlarmFailsStatus
+        |  lattice DeviceAlarmFailsOff extends DeviceAlarmFailsStatus
         |
         |  enum PatientStatus extends States { Healthy, Risk, Overdose }
         |
@@ -318,30 +318,30 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  Context: Context = "Example context"
         |
-        |	 NoAlarms: Assumption = "There are no alarms that need forwarding"
+        |  NoAlarms: Assumption = "There are no alarms that need forwarding"
         |
-        |	 SpO2: Abbreviation = Abbreviation(full = "Blood-oxygen Saturation",
-        |		                                 definition = "The oxygenation of the patient's blood")
+        |  SpO2: Abbreviation = Abbreviation(full = "Blood-oxygen Saturation",
+        |                                    definition = "The oxygenation of the patient's blood")
         |
-        |	 Death: AccidentLevel = AccidentLevel(level = 1,
-        |		                                    description = "Results in the death of a human")
+        |  Death: AccidentLevel = AccidentLevel(level = 1,
+        |                                       description = "Results in the death of a human")
         |
-        |	 PatientDeath: Accident = Accident(description = "Patient is killed ",
-        |		                                 level = Death)
+        |  PatientDeath: Accident = Accident(description = "Patient is killed ",
+        |                                    level = Death)
         |
-        |	 InadvertentPumpNormally: Hazard = Hazard(description = "The pump is ordered to run normally when it should not.",
-        |		                                        accident = PatientDeath)
+        |  InadvertentPumpNormally: Hazard = Hazard(description = "The pump is ordered to run normally when it should not.",
+        |                                           accident = PatientDeath)
         |
-        |	 BadInfoGiven: Hazard = Hazard(description = "Incorrect information is sent to the display.",
-        |		                             accident = PatientDeath)
+        |  BadInfoGiven: Hazard = Hazard(description = "Incorrect information is sent to the display.",
+        |                                accident = PatientDeath)
         |
-        |	 DontLetPumpRunWhenUnsafe: Constraint = Constraint(description = "The app must command the pump to stop if the patient’s vital signs indicate over-infusion.",
-        |		                                                 hazard = InadvertentPumpNormally)
+        |  DontLetPumpRunWhenUnsafe: Constraint = Constraint(description = "The app must command the pump to stop if the patient’s vital signs indicate over-infusion.",
+        |                                                    hazard = InadvertentPumpNormally)
         |
         |  DisplayMustShowPatientStatus: Constraint = Constraint(description = "The app must correctly inform the display of the status of the patient’s vital signs.",
-        |		                                                     hazard = PCA_Shutoff_Error_Properties::BadInfoGiven)
+        |                                                        hazard = PCA_Shutoff_Error_Properties::BadInfoGiven)
         |
-        |	 DisplayMustShowPumpStatus: Constraint = Constraint(description = "The app must correctly inform the display of the pump command status.",
+        |  DisplayMustShowPumpStatus: Constraint = Constraint(description = "The app must correctly inform the display of the pump command status.",
         |                                                     hazard = BadInfoGiven)
         |
         |
@@ -452,13 +452,13 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |                                           title = "High Physio Params",
         |                                           cause = Cause(errorType = Some[ErrorType](InadvertentPumpNormally),
         |                                                         description = "One or more physiological parameters are too high, leading the app logic to incorrectly believe the patient is healthy"),
-        |			                                      compensation = "Physiological values are cross-checked with others")
+        |                                           compensation = "Physiological values are cross-checked with others")
         |      occurrence2: Occurrence = Occurrence(kind = KindsType.NotProviding,
         |                                           violatedConstraint = None[Constraint],
         |                                           title = "NotHazardous",
         |                                           cause = Cause(errorType = None[ErrorType],
         |                                                         description = "Not running the pump isn't unsafe (though it may be undesirable)"),
-        |			                                      compensation = "Not needed")
+        |                                           compensation = "Not needed")
         |
         |  ETCO2Logic : Capnograph.ETCO2 -> AppLogic.ETCO2
         |
@@ -468,9 +468,9 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |
         |  Spo2Display: PulseOx.SpO2 -> appDisplay.SpO2
         |
-        |	 RespiratoryRateDisplay: Capnograph.RespiratoryRate -> AppDisplay.RespiratoryRate
+        |  RespiratoryRateDisplay: Capnograph.RespiratoryRate -> AppDisplay.RespiratoryRate
         |
-        |	 PumpCommandDisplay: AppLogic.CommandPumpNormal -> AppDisplay.CommandPumpNormal
+        |  PumpCommandDisplay: AppLogic.CommandPumpNormal -> AppDisplay.CommandPumpNormal
         |
         |  ETCO2Display: Capnograph.ETCO2 -> AppDisplay.ETCO2
         |
