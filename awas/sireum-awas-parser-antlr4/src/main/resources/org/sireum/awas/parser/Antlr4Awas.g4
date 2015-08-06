@@ -99,8 +99,8 @@ basicType
      ( '(' lo=intConstant ',' hi=intConstant ')' )?  #IntegerType
   | 'Real'                                           #RealType
   | 'String'                                         #StringType
-  | 'component'                                      #ComponentType
-  | 'port'                                           #PortType
+  | 'Component'                                      #ComponentType
+  | 'Port'                                           #PortType
   | name                                             #NamedType
   ;
 
@@ -117,9 +117,7 @@ init
   | REAL                                             #Real
   | STRING                                           #String
   | name '(' ID '=' init ( ',' ID '=' init )* ')'    #Record
-  | name ( '.' ID )?                                 #EnumOrLatticeOrConstant
-  | 'component' name                                 #ComponentRef
-  | 'port' name '.' ID                               #PortRef
+  | name ( '.' ID )?                                 #NameRef
   | 'None' '[' type ']'                              #None
   | 'Some' '[' type ']' '(' init ')'                 #Some
   | 'Set' '[' type ']'

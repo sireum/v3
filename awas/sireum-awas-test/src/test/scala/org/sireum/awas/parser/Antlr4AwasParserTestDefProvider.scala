@@ -266,7 +266,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |    harm: Accident
         |    componentState: States
         |    environmentState: States
-        |    interactionPoints: Seq[port]
+        |    interactionPoints: Seq[Port]
         |
         |  record OccurrenceCause
         |    errorType: Option[ErrorType]
@@ -412,7 +412,7 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |      protoHazard: ProtoHazard = ProtoHazard(harm = PatientDeath,
         |                                             componentState = PumpAction.PumpNormal,
         |                                             environmentState = PatientStatus.Risk,
-        |                                             interactionPoints = Seq[port](SpO2, ETCO2))
+        |                                             interactionPoints = Seq[Port](AppLogic.SpO2, AppLogic.ETCO2))
         |      occurrence: Occurrence = Occurrence(kind = KindsType.Providing,
         |                                          violatedConstraint = Some[Constraint](DontLetPumpRunWhenUnsafe),
         |                                          title = "High Physio Params",
