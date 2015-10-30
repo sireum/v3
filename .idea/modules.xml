@@ -18,6 +18,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java-translator.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java-translator.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-java-translator-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-java-translator-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-js.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-js.iml" />
@@ -32,6 +34,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar-parser-antlr4-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-jvm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-jvm-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-reflect.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-util-reflect-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-util-reflect-build.iml" />
     </modules>

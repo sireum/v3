@@ -23,44 +23,22 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.util
+package org.sireum.java.translator
 
-object StringUtil {
+import org.sireum.pilar.ast.PrettyPrinter
+import org.sireum.test._
+import org.sireum.util._
+import org.sireum.util.jvm.StringUtil
 
-  @inline
-  final def escape(c: Char,
-                   sb: StringBuilder): StringBuilder = {
-    c match {
-      case '\b' => sb.append("\\b")
-      case '\t' => sb.append("\\t")
-      case '\n' => sb.append("\\n")
-      case '\f' => sb.append("\\f")
-      case '\r' => sb.append("\\r")
-      case '\"' => sb.append("\\\"")
-      case '\'' => sb.append("\\\'")
-      case '\\' => sb.append("\\\\")
-      case _ =>
-        if ((0 <= c && c < 32) || (c > 255)) {
-          sb.append("\\u")
-          val s = c.toInt.toHexString
-          var i = 0
-          val n = 4 - s.length
-          while (i < n) {
-            sb.append('0')
-            i += 1
-          }
-          sb.append(s)
-        } else {
-          sb.append(c)
-        }
-    }
-    sb
-  }
+final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
 
-  @inline
-  final def escape(s: String,
-                   sb: StringBuilder = new StringBuilder): StringBuilder = {
-    for (c <- s) escape(c, sb)
-    sb
-  }
+  override def testDefs: ISeq[TestDef] = ivector(
+    EqualTest("ClassBytecodeTranslator",
+      translate("org.sireum.java.translator.ClassBytecodeTranslator"),
+      "a3b23dc5ae3e2fa6b43d53b085fc96c3")
+  )
+
+  private def translate(className: String): String =
+    StringUtil.md5(PrettyPrinter(ClassBytecodeTranslator(className)))
 }

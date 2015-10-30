@@ -91,15 +91,17 @@ object SireumBuild extends Build {
 
   lazy val subProjects = Seq(
     util, option, pilar,
-    coreTest,
-    awas,
-    awasTest
+    awas
   )
 
   lazy val subProjectsJvm = Seq(
+    utilJvm,
     cli, pilarParserAntlr4, utilReflect,
     java, javaTranslator,
-    awasParserAntlr4
+    awasParserAntlr4,
+    coreTest,
+    javaTest,
+    awasTest
   )
 
   lazy val subProjectsJs = Seq(
@@ -209,14 +211,19 @@ object SireumBuild extends Build {
   val awasParserAntlr4PI = new ProjectInfo("sireum-awas-parser-antlr4", AWAS_DIR, Seq(), utilPI, awasPI)
   lazy val awasParserAntlr4 = toSbtProject(awasParserAntlr4PI, sireumJvmSettings)
 
+  val utilJvmPI = new ProjectInfo("sireum-util-jvm", CORE_DIR, Seq(), utilPI)
   val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, javaPI)
   val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, utilReflectPI)
+  lazy val utilJvm = toSbtProject(utilJvmPI, sireumJvmSettings)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
   lazy val cli = toSbtProject(cliPI, sireumJvmSettings)
 
   // Jvm Test Projects
   val coreTestPI = new ProjectInfo("sireum-core-test", CORE_DIR, Seq(), utilPI, pilarPI, pilarParserAntlr4PI, optionPI, cliPI)
   lazy val coreTest = toSbtProject(coreTestPI, sireumJvmTestSettings)
+
+  val javaTestPI = new ProjectInfo("sireum-java-test", JAVA_DIR, Seq(), utilPI, utilJvmPI, optionPI, pilarPI, javaPI, javaTranslatorPI, coreTestPI)
+  lazy val javaTest = toSbtProject(javaTestPI, sireumJvmTestSettings) dependsOn (coreTest % "test->test")
 
   val awasTestPI = new ProjectInfo("sireum-awas-test", AWAS_DIR, Seq(), utilPI, awasPI, awasParserAntlr4PI, optionPI, cliPI, coreTestPI)
   lazy val awasTest = toSbtProject(awasTestPI, sireumJvmTestSettings) dependsOn (coreTest % "test->test")

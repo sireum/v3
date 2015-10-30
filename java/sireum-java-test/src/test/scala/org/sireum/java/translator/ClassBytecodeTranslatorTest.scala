@@ -23,44 +23,33 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.util
+package org.sireum.java.translator
 
-object StringUtil {
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+import org.sireum.test.{JUnitTestFramework, TestDef}
 
-  @inline
-  final def escape(c: Char,
-                   sb: StringBuilder): StringBuilder = {
-    c match {
-      case '\b' => sb.append("\\b")
-      case '\t' => sb.append("\\t")
-      case '\n' => sb.append("\\n")
-      case '\f' => sb.append("\\f")
-      case '\r' => sb.append("\\r")
-      case '\"' => sb.append("\\\"")
-      case '\'' => sb.append("\\\'")
-      case '\\' => sb.append("\\\\")
-      case _ =>
-        if ((0 <= c && c < 32) || (c > 255)) {
-          sb.append("\\u")
-          val s = c.toInt.toHexString
-          var i = 0
-          val n = 4 - s.length
-          while (i < n) {
-            sb.append('0')
-            i += 1
-          }
-          sb.append(s)
-        } else {
-          sb.append(c)
-        }
-    }
-    sb
-  }
-
-  @inline
-  final def escape(s: String,
-                   sb: StringBuilder = new StringBuilder): StringBuilder = {
-    for (c <- s) escape(c, sb)
-    sb
+@RunWith(value = classOf[Parameterized])
+final class ClassBytecodeTranslatorTest(name: String, td: TestDef) {
+  @Test
+  def test(): Unit = {
+    td.test(JUnitTestFramework)
   }
 }
+
+object ClassBytecodeTranslatorTest {
+  val provider = new ClassBytecodeTranslatorTestDefProvider(JUnitTestFramework)
+
+  @Parameters(name = "{0}")
+  def parameters = {
+    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
+    val r = new java.util.ArrayList[Array[Object]](ps.size)
+    for (p <- ps) {
+      r.add(p)
+    }
+    r
+  }
+}
+

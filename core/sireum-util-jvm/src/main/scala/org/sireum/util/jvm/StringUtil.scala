@@ -22,45 +22,21 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-package org.sireum.util
+package org.sireum.util.jvm
 
 object StringUtil {
 
-  @inline
-  final def escape(c: Char,
-                   sb: StringBuilder): StringBuilder = {
-    c match {
-      case '\b' => sb.append("\\b")
-      case '\t' => sb.append("\\t")
-      case '\n' => sb.append("\\n")
-      case '\f' => sb.append("\\f")
-      case '\r' => sb.append("\\r")
-      case '\"' => sb.append("\\\"")
-      case '\'' => sb.append("\\\'")
-      case '\\' => sb.append("\\\\")
-      case _ =>
-        if ((0 <= c && c < 32) || (c > 255)) {
-          sb.append("\\u")
-          val s = c.toInt.toHexString
-          var i = 0
-          val n = 4 - s.length
-          while (i < n) {
-            sb.append('0')
-            i += 1
-          }
-          sb.append(s)
-        } else {
-          sb.append(c)
-        }
-    }
-    sb
-  }
+  def md5(s: String): String = {
+    val md = java.security.MessageDigest.getInstance("MD5")
+    val digest = md.digest(s.getBytes)
 
-  @inline
-  final def escape(s: String,
-                   sb: StringBuilder = new StringBuilder): StringBuilder = {
-    for (c <- s) escape(c, sb)
-    sb
+    val result = new StringBuilder
+    for (i <- 0 until digest.length) {
+      val s = Integer.toString(digest(i) & 0xff, 16)
+      if (s.length == 1) result.append('0')
+      result.append(s)
+    }
+
+    result.toString()
   }
 }
