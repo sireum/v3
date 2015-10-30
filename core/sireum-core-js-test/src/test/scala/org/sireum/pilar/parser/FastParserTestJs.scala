@@ -370,8 +370,12 @@ object FastParserTestJs extends UTestTestFramework {
       test("SimpleLit")
     }
 
-    "StringLit" - {
-      test("StringLit")
+    "StringLit1" - {
+      test("StringLit1")
+    }
+
+    "StringLit2" - {
+      test("StringLit2")
     }
 
     "SwitchJump1" - {
