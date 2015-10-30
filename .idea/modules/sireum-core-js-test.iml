@@ -26,9 +26,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: com.lihaoyi:utest_sjs0.6_2.11:0.3.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-js:scalajs-test-interface_2.11:0.6.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_sjs0.6_2.11:0.2.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-js:scalajs-library_2.11:0.6.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.7:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:derive_sjs0.6_2.11:0.3.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_sjs0.6_2.11:0.3.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-js:scalajs-library_2.11:0.6.5:jar" level="project" />
   </component>
 </module>

@@ -13,7 +13,7 @@
     <profile name="SBT 3" modules="sireum-core-js-test">
       <option name="featureWarnings" value="true" />
       <plugins>
-        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.7/scalajs-compiler_2.11.7-0.6.4.jar" />
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.7/scalajs-compiler_2.11.7-0.6.5.jar" />
       </plugins>
     </profile>
   </component>

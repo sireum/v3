@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: com.lihaoyi:upickle_sjs0.6_2.11:0.3.6:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.3.6.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib_managed/docs/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.3.6-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.3.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

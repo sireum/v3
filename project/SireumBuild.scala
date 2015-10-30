@@ -145,11 +145,11 @@ object SireumBuild extends Build {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
-      "org.scala-lang.modules" %% "scala-java8-compat" % "0.5.0",
-      "com.lihaoyi" %% "upickle" % "0.2.8",
-      "org.antlr" % "antlr4-runtime" % "4.5.1",
+      "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
+      "com.lihaoyi" %% "upickle" % "0.3.6",
+      "org.antlr" % "antlr4-runtime" % "4.5.1-1",
       "org.antlr" % "ST4" % "4.0.8",
-      "org.yaml" % "snakeyaml" % "1.15",
+      "org.yaml" % "snakeyaml" % "1.16",
       "org.ow2.asm" % "asm" % "5.0.4",
       "org.ow2.asm" % "asm-commons" % "5.0.4",
       "org.ow2.asm" % "asm-util" % "5.0.4"
@@ -174,7 +174,7 @@ object SireumBuild extends Build {
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.2.8"
+      "com.lihaoyi" %%% "upickle" % "0.3.6"
     )
   )
 

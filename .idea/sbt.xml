@@ -43,7 +43,7 @@
         </option>
         <option name="resolveClassifiers" value="true" />
         <option name="resolveSbtClassifiers" value="true" />
-        <option name="sbtVersion" value="0.13.8" />
+        <option name="sbtVersion" value="0.13.9" />
       </SbtProjectSettings>
     </option>
     <option name="maximumHeapSize" value="1024" />

@@ -3,22 +3,21 @@ COMMANDS="wget unzip rm mv"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { echo "${COMMAND} command not found; aborting..."; exit 1; }
 done
-ZULU_RELEASE=2015-04-8.7
-ZULU_VERSION=1.8.0_45-8.7.0.5
-SBT_VERSION=0.13.8
-NODE_VERSION=0.12.5
+ZULU_VERSION=1.8.0_60-8.9.0.4
+SBT_VERSION=0.13.9
+NODE_VERSION=5.0.0
 if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
   PLATFORM=win
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/${ZULU_RELEASE}-bin/zulu${ZULU_VERSION}-win64.zip
+  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/x64/node.exe
 elif [ "$(uname)" == "Darwin" ]; then
   PLATFORM=lin
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/${ZULU_RELEASE}-bin/zulu${ZULU_VERSION}-macosx.zip
+  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-macosx.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   PLATFORM=mac
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/${ZULU_RELEASE}-bin/zulu${ZULU_VERSION}-x86lx64.zip
-  NODE_DROP_URL=https://nodejs.org/dist/v0.12.5/node-v${NODE_VERSION}-linux-x64.tar.gz
+  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-x86lx64.zip
+  NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz
 else
   echo "Sireum does not support: $(uname)"
   exit
