@@ -66,12 +66,12 @@ The jar will be located at `jvm/target/scala-2.11/sireum.jar`
 Running Sireum from the Fat Jar
 ===============================
 
-Let `sireum` be an alias for: `java -jar path/to/sireum.jar`
+Let `sireum` be an alias for: `platform/java/bin/java -jar path/to/sireum.jar`
 
 e.g., in bash:
 
 ```bash
-alias sireum="java -jar jvm/target/scala-2.11/sireum.jar"
+alias sireum="platform/java/bin/java -jar jvm/target/scala-2.11/sireum.jar"
 ```
 
 Run: `sireum`
@@ -85,6 +85,7 @@ Usage: sireum <mode>
 
 Available mode(s):
 
+java     Java tooling
 pilar    Pilar tooling
 util     Utility tooling
 ```
@@ -157,9 +158,9 @@ Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 version
 Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
-* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-14.1.4-custom-jdk-bundled.dmg
+* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-14.1.5-custom-jdk-bundled.dmg
 
-* Community Edition: http://download.jetbrains.com/idea/ideaIC-14.1.4-custom-jdk-bundled.dmg
+* Community Edition: http://download.jetbrains.com/idea/ideaIC-14.1.5-custom-jdk-bundled.dmg
 
 (The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
 inserted before the file extension.)

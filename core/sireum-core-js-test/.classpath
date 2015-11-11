@@ -5,8 +5,9 @@
   <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireum-v3-core-sireum-pilar-src-main-scala"/>
   <classpathentry output="bin" kind="src" path="-Users-robby-Repositories-Sireum-Private-sireum-v3-core-sireum-core-test-src-main-scala"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.7.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.2.8-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.2.8.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.5-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-js/scalajs-library_2.11/scalajs-library_2.11-0.6.5.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.3.6-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/upickle_sjs0.6_2.11/upickle_sjs0.6_2.11-0.3.6.jar"/>
+  <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/derive_sjs0.6_2.11/derive_sjs0.6_2.11-0.3.6-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/derive_sjs0.6_2.11/derive_sjs0.6_2.11-0.3.6.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/utest_sjs0.6_2.11/utest_sjs0.6_2.11-0.3.1-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/utest_sjs0.6_2.11/utest_sjs0.6_2.11-0.3.1.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-reflect/scala-reflect-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.11.7.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-js/scalajs-test-interface_2.11/scalajs-test-interface_2.11-0.6.1-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-js/scalajs-test-interface_2.11/scalajs-test-interface_2.11-0.6.1.jar"/>
