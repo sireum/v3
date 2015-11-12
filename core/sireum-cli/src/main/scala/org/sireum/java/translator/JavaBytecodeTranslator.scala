@@ -40,29 +40,51 @@ object JavaBytecodeTranslator {
 
   def run(option: JavaBytecodeTranslatorOption,
           outPrintln: String => Unit,
-          errPrintln: String => Unit): Boolean = {
+          errPrintln: String => Unit): Boolean =
+    new JavaBytecodeTranslator(option, outPrintln, errPrintln).run()
+}
+
+import JavaBytecodeTranslator._
+
+class JavaBytecodeTranslator(option: JavaBytecodeTranslatorOption,
+                             outPrintln: String => Unit,
+                             errPrintln: String => Unit) {
+
+  private def run(): Boolean = {
     val printUsage = option.getInputs.length == 0
 
     for (in <- option.getInputs) {
       val f = new File(in)
+      lazy val fPath = f.getAbsolutePath
       if (f.isFile) {
         val name = f.getName
         if (name.endsWith(CLASS_EXT)) {
           translateClassFile(f)
         } else if (name.endsWith(ZIP_EXT) || name.endsWith(JAR_EXT)) {
-          translateZip(f)
+          verbose(s"Translating file: $fPath ...")
+          translateZip(f) match {
+            case Some(o) =>
+              verbose(s"Translated file: $fPath, to: ${o.getAbsolutePath}")
+            case _ =>
+              errPrintln(s"Error translating: $fPath")
+          }
         } else {
-          errPrintln(s"Cannot translate file: ${f.getAbsolutePath}")
+          errPrintln(s"Cannot translate file: $fPath")
         }
       } else if (f.isDirectory) {
+        verbose(s"Translating directory: $fPath ...")
         translateDir(f)
+        verbose(s"Translated directory: $fPath ...")
       } else {
         try {
           Class.forName(in)
-          translate(in, outPrintln)
+          translate(in)
+          verbose(s"// Translated: $in")
         } catch {
-          case _: Exception =>
-            errPrintln(s"Cannot translate class: $in")
+          case e: ClassNotFoundException =>
+            errPrintln(s"Could not find class: $in")
+          case t: Throwable =>
+            errPrintln(s"Error translating class: $in")
         }
       }
     }
@@ -70,11 +92,16 @@ object JavaBytecodeTranslator {
     printUsage
   }
 
-  private def translateZip(f: File): Unit = {
+  private def verbose(msg: => String): Unit = {
+    if (option.verbose) outPrintln(msg)
+  }
+
+  private def translateZip(f: File): Option[File] = {
     import scala.collection.JavaConversions._
     val zf = new ZipFile(f)
     val o = new File(f.getParentFile, removeExt(f.getName) + PILAR_ZIP_EXT)
     val zof = new ZipOutputStream(new FileOutputStream(o))
+    var hasError = false
     try {
       for (ze: ZipEntry <- zf.entries) {
         val name = ze.getName
@@ -85,20 +112,32 @@ object JavaBytecodeTranslator {
           zis.read(buff)
         }
         if (name.endsWith(CLASS_EXT)) {
-          val ze2 = new ZipEntry(removeExt(name) + PILAR_EXT)
+          val pilarEntryName = removeExt(name) + PILAR_EXT
+          val ze2 = new ZipEntry(pilarEntryName)
           zof.putNextEntry(ze2)
-          zof.write(translate(buff))
+          try {
+            zof.write(translate(buff))
+          } catch {
+            case t: Throwable =>
+              errPrintln(s"Error translating: $name")
+              t.printStackTrace()
+              if (o.exists()) o.deleteOnExit()
+              hasError = true
+          }
           zof.closeEntry()
+          verbose(s"Translated file: $name, to: $pilarEntryName")
         } else {
           val ze2 = new ZipEntry(name)
           zof.putNextEntry(ze2)
           if (size != 0) zof.write(buff)
           zof.closeEntry()
+          verbose(s"Copied entry: $name")
         }
       }
+      if (hasError) None else Some(o)
     } finally {
-      zf.close()
       zof.close()
+      zf.close()
     }
   }
 
@@ -113,12 +152,18 @@ object JavaBytecodeTranslator {
     val d = f.getParentFile
     val buff = new Array[Byte](f.length.toInt)
     val fis = new FileInputStream(f)
+    lazy val fPath = f.getAbsolutePath
     try {
       if (fis.read(buff) != -1) {
         val o = new File(d, removeExt(f.getName) + PILAR_EXT)
         val fw = new FileWriter(o)
         try {
           translate(buff, fw)
+          verbose(s"Translated file: $fPath, to: .../${o.getName}")
+        } catch {
+          case t: Throwable =>
+            errPrintln(s"Error translating: $fPath")
+            t.printStackTrace()
         } finally {
           fw.close()
         }
@@ -139,6 +184,7 @@ object JavaBytecodeTranslator {
     w.flush()
   }
 
-  private def translate(className: String, outPrintln: String => Unit): Unit =
+  private def translate(className: String): Unit = {
     outPrintln(PrettyPrinter(ClassBytecodeTranslator(className)))
+  }
 }

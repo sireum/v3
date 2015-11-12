@@ -54,7 +54,10 @@ final case class JavaOption(@BeanProperty
   handler = "org.sireum.java.translator.JavaBytecodeTranslator"
 )
 final case class JavaBytecodeTranslatorOption(@BeanProperty
+                                              @Opt(shortKey = Some("v"), description = "Verbose mode")
+                                              var verbose: Boolean = false,
+                                              @BeanProperty
                                               @Arg(name = "{class-name,file.{class,zip,jar},dir-path}")
                                               var inputs: Array[String] = Array()) {
-  def this() = this(Array())
+  def this() = this(false, Array())
 }

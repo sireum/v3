@@ -34,9 +34,9 @@ import scala.beans.BeanProperty
   name = "util",
   header =
     """
-      |Sireum Utility Tooling
+      |Sireum Utility Tools
     """,
-  description = "Utility tooling"
+  description = "Utility Tools"
 )
 final case class UtilOption(@BeanProperty
                             var option: UtilOptionOption = UtilOptionOption(),

@@ -96,7 +96,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |java     Java tooling
           |pilar    Pilar tooling
-          |util     Utility tooling
+          |util     Utility Tools
         """.stripMargin.trim
       )
       return
@@ -111,7 +111,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     if (index < 0 || index >= args.length) {
       outPrintln(
         """
-          |Sireum Utility Tooling
+          |Sireum Utility Tools
           |
           |Usage: sireum util <mode>
           |
@@ -509,7 +509,9 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |
            |Usage: sireum java translator <{class-name,file.{class,zip,jar},dir-path}-1> ... <{class-name,file.{class,zip,jar},dir-path}-N>
            |
-           |
+           |Options:
+           |-v, --verbose    Verbose mode
+           |-h, --help       Display usage information
         """.stripMargin.trim
       )
     }
@@ -522,6 +524,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       args(i) match {
         case "-h" | "--help" =>
           foundHelp = true
+        case "-v" | "--verbose" =>
+          option.verbose = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")
