@@ -610,7 +610,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
                                       max: Int,
                                       dflt: Label,
                                       labels: Label*): Unit =
-      switchInsn(dflt, (min to max).zip(labels).toVector)
+      switchInsn(dflt, (min to max).zip(labels))
 
     override def visitInsnAnnotation(typeRef: Int,
                                      tp: TypePath,
@@ -642,7 +642,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitLookupSwitchInsn(dflt: Label,
                                        keys: Array[Int],
                                        labels: Array[Label]): Unit =
-      switchInsn(dflt, keys.zip(labels).toVector)
+      switchInsn(dflt, keys.zip(labels))
 
     override def visitIntInsn(opcode: Int, operand: Int): Unit = {
       opcode match {
@@ -662,11 +662,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
             case Opcodes.T_LONG => meta.LongType
           }
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            ExtExp(idExp(newArrayOp),
-              ivector(idExp(t1), typeLit(tipe)))
-          ))
+          command(NewArrayCmd(t, t1, tipe))
           varStack.push((t1, tipe))
       }
     }
@@ -674,10 +670,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitLineNumber(line: Int, start: Label): Unit = {
       val ln = labelName(start)
       val a = lineNumberMap.getOrElseUpdate(ln, marrayEmpty)
-      a +=
-        ExtAction(
-          Id(lineNumberOp),
-          ivector(intLit(line)))
+      a += LineNumberCmd(line)
     }
 
     override def visitMultiANewArrayInsn(desc: String, dims: Int): Unit = {
@@ -689,10 +682,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         args = idExp(t) :: args
       }
       val t = tempVar()
-      command(AssignAction(
-        idExp(t),
-        ExtExp(idExp(newMultiArrayOp), typeArg +: args.toVector)
-      ))
+      command(NewMultiArrayCmd(t, descToType(desc), args))
     }
 
     override def visitFieldInsn(opcode: Int,
@@ -705,21 +695,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       opcode match {
         case Opcodes.GETSTATIC =>
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            idExp(fieldName),
-            ivector(typeAnnotation(tipe))
-          ))
+          command(GetStaticCmd(t, fieldName, tipe))
           varStack.push((t, tipe))
         case Opcodes.PUTSTATIC =>
           val (t1, tipe1) = varStack.pop()
           assert(!isObjectType(tipe) || isObjectType(tipe1) ||
             (tipe == tipe1))
-          command(AssignAction(
-            idExp(fieldName),
-            idExp(t1),
-            ivector(typeAnnotation(tipe))
-          ))
+          command(PutStaticCmd(fieldName, t1, tipe))
         case Opcodes.GETFIELD =>
           val (t1, tipe1) = varStack.pop()
           assert(isObjectType(tipe1))
@@ -1393,7 +1375,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       }
     }
 
-    private def switchInsn(dflt: Label, kls: IVector[(Int, Label)]) = {
+    private def switchInsn(dflt: Label, kls: CSeq[(Int, Label)]) = {
       val (t, tipe) = varStack.pop()
       assert(isIntType(tipe))
 

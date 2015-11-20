@@ -33,6 +33,12 @@ object JavaProfile {
   final val annotationTypeDesc = "Type"
   final val annotationTypeAnnotationDesc = "TypeAnnotation"
   final val annotationCatchDesc = "Catch"
+  final val annotationGetDesc = "Get"
+  final val annotationPutDesc = "Put"
+
+  final val annotationGet = Annotation(Id(annotationGetDesc), RawLit(""))
+  final val annotationPut = Annotation(Id(annotationPutDesc), RawLit(""))
+
   final val byteDesc = "b"
   final val charDesc = "c"
   final val shortDesc = "s"
@@ -278,15 +284,112 @@ object JavaProfile {
           scs.last.target.value)
     }
 
-    def apply(varName: String, dflt: String, scs: IVector[(Int, String)]): SwitchJump =
+    final def apply(varName: String, dflt: String, scs: CSeq[(Int, String)]): SwitchJump =
       SwitchJump(
         idExp(varName),
-        scs.map(p =>
+        scs.toVector.map(p =>
           SwitchCase(Some(intLit(p._1)), Id(p._2))) :+
-          SwitchCase(None, Id(dflt)),
-        ivectorEmpty)
+          SwitchCase(None, Id(dflt)))
 
-    def unapply(c: Command): Option[(String, Seq[(Int, String)], String)] =
+    final def unapply(c: Command): Option[(String, Seq[(Int, String)], String)] =
+      applyOpt(extractor, c)
+  }
+
+  // IntInsn
+  object NewArrayCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`newArrayOp`)),
+      Seq(IdExp(Id(sizeVarName)), LiteralExp(_, ExtLit(tipe: meta.Type)))), _) =>
+        (varName, sizeVarName, tipe)
+    }
+
+    final def apply(varName: String, sizeVarName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(newArrayOp),
+          ivector(idExp(sizeVarName), typeLit(tipe))))
+
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // LineNumber
+  object LineNumberCmd extends CommandExtractor {
+    final val extractor: Command --\ Tuple1[Int] = {
+      case ExtAction(
+      Id(`lineNumberOp`),
+      Seq(LiteralExp(_, ExtLit(line: Int))), _) => Tuple1(line)
+    }
+
+    final def apply(line: Int): ExtAction =
+      ExtAction(Id(lineNumberOp), ivector(intLit(line)))
+
+    final def unapply(c: Command): Option[Int] =
+      applyOpt(extractor, c).map(_._1)
+  }
+
+  // MultiANewArrayInsn
+  object NewMultiArrayCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, meta.Type, CSeq[Exp]) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`newMultiArrayOp`)), args), _) =>
+        val LiteralExp(_, ExtLit(tipe: meta.Type)) = args.head
+        (varName, tipe, args.tail)
+    }
+
+    final def apply(varName: String, tipe: meta.Type, args: CSeq[Exp]): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(newMultiArrayOp), typeLit(tipe) +: args.toVector))
+
+    final def unapply(c: Command): Option[(String, meta.Type, CSeq[Exp])] =
+      applyOpt(extractor, c)
+  }
+
+  // FieldInsn
+  object GetStaticCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      IdExp(Id(fieldName)),
+      Seq(
+      `annotationGet`,
+      Annotation(_, ExtLit(tipe: meta.Type)))) =>
+        (varName, fieldName, tipe)
+    }
+
+    final def apply(varName: String, fieldName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        idExp(fieldName),
+        ivector(annotationGet, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // FieldInsn
+  object PutStaticCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(fieldName)),
+      IdExp(Id(varName)),
+      Seq(
+      `annotationPut`,
+      Annotation(_, ExtLit(tipe: meta.Type)))) =>
+        (fieldName, varName, tipe)
+    }
+
+    final def apply(fieldName: String, varName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(fieldName),
+        idExp(varName),
+        ivector(annotationPut, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
       applyOpt(extractor, c)
   }
 
@@ -302,4 +405,8 @@ object JavaProfile {
   @inline
   private def typeLit(tipe: meta.Type): LiteralExp =
     LiteralExp(Id(typeDesc), ExtLit(tipe))
+
+  @inline
+  private def typeAnnotation(tipe: meta.Type): Annotation =
+    Annotation(Id(annotationTypeDesc), ExtLit(tipe))
 }
