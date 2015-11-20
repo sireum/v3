@@ -706,11 +706,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           val (t1, tipe1) = varStack.pop()
           assert(isObjectType(tipe1))
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            BinaryExp(idExp(t1), Id(fieldAccessOp), idExp(fieldName)),
-            ivector(typeAnnotation(tipe))
-          ))
+          command(GetFieldCmd(t, t1, fieldName, tipe))
           varStack.push((t, tipe))
         case Opcodes.PUTFIELD =>
           val (t1, tipe1) = varStack.pop()
@@ -718,11 +714,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
             (tipe == tipe1))
           val (t2, tipe2) = varStack.pop()
           assert(isObjectType(tipe2))
-          command(AssignAction(
-            BinaryExp(idExp(t2), Id(fieldAccessOp), idExp(fieldName)),
-            idExp(t1),
-            ivector(typeAnnotation(tipe))
-          ))
+          command(PutFieldCmd(t2, fieldName, t1, tipe))
       }
     }
 

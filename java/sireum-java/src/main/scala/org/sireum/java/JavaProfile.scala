@@ -33,11 +33,11 @@ object JavaProfile {
   final val annotationTypeDesc = "Type"
   final val annotationTypeAnnotationDesc = "TypeAnnotation"
   final val annotationCatchDesc = "Catch"
-  final val annotationGetDesc = "Get"
-  final val annotationPutDesc = "Put"
+  final val annotationGetStaticDesc = "GetStatic"
+  final val annotationPutStaticDesc = "PutStatic"
 
-  final val annotationGet = Annotation(Id(annotationGetDesc), RawLit(""))
-  final val annotationPut = Annotation(Id(annotationPutDesc), RawLit(""))
+  final val annotationGet = Annotation(Id(annotationGetStaticDesc), RawLit(""))
+  final val annotationPut = Annotation(Id(annotationPutStaticDesc), RawLit(""))
 
   final val byteDesc = "b"
   final val charDesc = "c"
@@ -390,6 +390,46 @@ object JavaProfile {
         ivector(annotationPut, typeAnnotation(tipe)))
 
     final def unapply(c: Command): Option[(String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // FieldInsn
+  object GetFieldCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      BinaryExp(IdExp(Id(objectVarName)), Id(`fieldAccessOp`), IdExp(Id(fieldName))),
+      Seq(Annotation(_, ExtLit(tipe: meta.Type)))) =>
+        (varName, objectVarName, fieldName, tipe)
+    }
+
+    final def apply(varName: String, objectVarName: String, fieldName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        BinaryExp(idExp(objectVarName), Id(fieldAccessOp), idExp(fieldName)),
+        ivector(typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // FieldInsn
+  object PutFieldCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, String, meta.Type) = {
+      case AssignAction(
+      BinaryExp(IdExp(Id(objectVarName)), Id(`fieldAccessOp`), IdExp(Id(fieldName))),
+      IdExp(Id(varName)),
+      Seq(Annotation(_, ExtLit(tipe: meta.Type)))) =>
+        (objectVarName, fieldName, varName, tipe)
+    }
+
+    final def apply(objectVarName: String, fieldName: String, varName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        BinaryExp(idExp(objectVarName), Id(fieldAccessOp), idExp(fieldName)),
+        idExp(varName),
+        ivector(typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, String, meta.Type)] =
       applyOpt(extractor, c)
   }
 
