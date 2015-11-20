@@ -39,6 +39,9 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
       "a3b23dc5ae3e2fa6b43d53b085fc96c3")
   )
 
-  private def translate(className: String): String =
-    StringUtil.md5(PrettyPrinter(ClassBytecodeTranslator(className)))
+  private def translate(className: String): String = {
+    val pilar = PrettyPrinter(ClassBytecodeTranslator(className))
+    //println(pilar)
+    StringUtil.md5(pilar)
+  }
 }

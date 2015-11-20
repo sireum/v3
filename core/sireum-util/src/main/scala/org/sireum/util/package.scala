@@ -34,7 +34,7 @@ package object util {
 
   type Uri = String
 
-  type --\[D, I] = PartialFunction[D, I]
+  type --\[-D, +I] = PartialFunction[D, I]
 
   type VisitorFunction = Any --\ Boolean
   type RewriteFunction = Any --\ Any

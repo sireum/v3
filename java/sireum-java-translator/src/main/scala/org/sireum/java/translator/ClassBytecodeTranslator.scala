@@ -556,16 +556,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     }
 
     override def visitIincInsn(varIndex: Int,
-                               increment: Int): Unit = {
-      val name = localVarName(varIndex)
-      command(AssignAction(
-        idExp(name),
-        BinaryExp(
-          idExp(name),
-          Id(iaddOp),
-          intLit(increment))
-      ))
-    }
+                               increment: Int): Unit =
+      command(IincCmd(localVarName(varIndex), increment))
 
     override def visitLdcInsn(cst: scala.Any): Unit = cst match {
       case cst: java.lang.Integer => const(intDesc, cst.toInt, meta.IntType)
@@ -575,12 +567,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       case cst: String => const(stringDesc, cst, topType)
       case cst: Type => cst.getSort match {
         case Type.OBJECT | Type.ARRAY | Type.METHOD =>
-          val op = if (cst.getSort == Type.METHOD) methodTypeOp else classOfOp
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            ExtExp(idExp(op), ivector(typeLit(typeToType(cst))))
-          ))
+          command(
+            if (cst.getSort == Type.METHOD) MethodTypeCmd(t, typeToType(cst))
+            else ClassOfCmd(t, typeToType(cst))
+          )
           varStack.push((t, topType))
       }
       case cst: Handle => const(handleDesc, handle(cst), topType)
@@ -1406,12 +1397,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val (t, tipe) = varStack.pop()
       assert(isIntType(tipe))
 
-      command(SwitchJump(
-        idExp(t),
-        kls.map(p =>
-          SwitchCase(Some(intLit(p._1)), Id(labelName(p._2)))) :+
-          SwitchCase(None, Id(labelName(dflt))),
-        ivectorEmpty))
+      val kss = kls.map(p => (p._1, labelName(p._2)))
+      command(SwitchCmd(t, labelName(dflt), kss))
     }
 
     private def tempVar(): String =
@@ -1435,10 +1422,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     private def const(id: String, n: Any, tipe: meta.Type): Unit = {
       val t = tempVar()
-      command(
-        AssignAction(
-          idExp(t),
-          LiteralExp(Id(id), RawLit(n.toString))))
+      command(ConstCmd(t, id, n.toString))
       varStack.push((t, tipe))
     }
 

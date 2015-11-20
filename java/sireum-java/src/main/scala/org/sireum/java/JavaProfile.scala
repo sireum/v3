@@ -25,6 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java
 
+import org.sireum.pilar.ast._
+import org.sireum.util._
+
 object JavaProfile {
   final val annotationClassDesc = "Class"
   final val annotationTypeDesc = "Type"
@@ -176,4 +179,127 @@ object JavaProfile {
   @inline
   def qMethodName(className: String, name: String, desc: String) =
     s"$className.$name$desc"
+
+  import Node._
+  import PartialFunctionUtil.applyOpt
+
+  // IincInsn
+  object IincCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, Int) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      BinaryExp(
+      IdExp(Id(varName2)),
+      Id(`iaddOp`),
+      LiteralExp(_, ExtLit(increment: Int))), _)
+        if varName == varName2 =>
+        (varName, increment)
+    }
+
+    final def apply(varName: String, increment: Int): AssignAction =
+      AssignAction(
+        idExp(varName),
+        BinaryExp(
+          idExp(varName),
+          Id(iaddOp),
+          intLit(increment))
+      )
+
+    final def unapply(c: Command): Option[(String, Int)] =
+      applyOpt(extractor, c)
+  }
+
+  // LdcInsn, IntInsn, Insn
+  object ConstCmd extends CommandExtractor {
+
+    final val extractor: Command --\ (String, String, String) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      LiteralExp(Id(litId), RawLit(rawValue)), _) =>
+        (varName, litId, rawValue)
+    }
+
+    final def apply(varName: String, litId: String, rawValue: String): AssignAction =
+      AssignAction(
+        idExp(varName),
+        LiteralExp(Id(litId), RawLit(rawValue)))
+
+    final def unapply(c: Command): Option[(String, String, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // LdcInsn
+  object MethodTypeCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`methodTypeOp`)),
+      Seq(LiteralExp(_, ExtLit(tipe: meta.Type)))), _) =>
+        (varName, tipe)
+    }
+
+    final def apply(varName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(methodTypeOp), ivector(typeLit(tipe)))
+      )
+
+    final def unapply(c: Command): Option[(String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // LdcInsn
+  object ClassOfCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`classOfOp`)),
+      Seq(LiteralExp(_, ExtLit(tipe: meta.Type)))), _) =>
+        (varName, tipe)
+    }
+
+    final def apply(varName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(classOfOp), ivector(typeLit(tipe)))
+      )
+
+    final def unapply(c: Command): Option[(String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // TableSwitchInsn, LookupSwitchInsn
+  object SwitchCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, Seq[(Int, String)], String) = {
+      case SwitchJump(IdExp(Id(varName)), scs, _) =>
+        (varName,
+          for (sc@SwitchCase(Some(LiteralExp(_, ExtLit(n: Int))), Id(label)) <- scs)
+            yield (n, label),
+          scs.last.target.value)
+    }
+
+    def apply(varName: String, dflt: String, scs: IVector[(Int, String)]): SwitchJump =
+      SwitchJump(
+        idExp(varName),
+        scs.map(p =>
+          SwitchCase(Some(intLit(p._1)), Id(p._2))) :+
+          SwitchCase(None, Id(dflt)),
+        ivectorEmpty)
+
+    def unapply(c: Command): Option[(String, Seq[(Int, String)], String)] =
+      applyOpt(extractor, c)
+  }
+
+  @inline
+  private def idExp(name: String) = IdExp(Id(name))
+
+  @inline
+  private def stringLit(s: String) = LiteralExp(Id(stringDesc), ExtLit(s))
+
+  @inline
+  private def intLit(n: Int) = LiteralExp(Id(intDesc), ExtLit(n))
+
+  @inline
+  private def typeLit(tipe: meta.Type): LiteralExp =
+    LiteralExp(Id(typeDesc), ExtLit(tipe))
 }

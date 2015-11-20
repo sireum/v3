@@ -95,5 +95,10 @@ object PartialFunctionUtil {
           (f1 isDefinedAt a) || (f2 isDefinedAt a)
       }
 
+  def applyOpt[A, B](pf: A --\ B, arg: A): Option[B] = {
+    if (pf isDefinedAt arg) Some(pf(arg))
+    else None
+  }
+
   final class ChainUndefined extends NoStackTrace
 }

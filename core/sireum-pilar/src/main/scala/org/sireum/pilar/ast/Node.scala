@@ -44,6 +44,10 @@ object Node {
   final def extern(name: String, fg: (Any --\ String, String --\ Any)): Unit = {
     Json.externMap(name) = fg
   }
+
+  trait CommandExtractor {
+    def extractor: Command --\ Product
+  }
 }
 
 sealed trait Node extends Product
