@@ -169,6 +169,28 @@ object JavaProfile {
   final val longArrayType = meta.ArrayType(meta.LongType)
   final val floatArrayType = meta.ArrayType(meta.FloatType)
   final val doubleArrayType = meta.ArrayType(meta.DoubleType)
+  final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
+
+  final def isInvokeOp(op: String) = invokeOps.contains(op)
+
+  object InvokeOp extends Enumeration {
+    type Type = Value
+    final val Virtual, Special, Static, Interface = Value
+
+    def to(iop: InvokeOp.Type): String = iop match {
+      case InvokeOp.Interface => invokeInterfaceOp
+      case InvokeOp.Special => invokeSpecialOp
+      case InvokeOp.Static => invokeStaticOp
+      case InvokeOp.Virtual => invokeVirtualOp
+    }
+
+    def from(op: String): InvokeOp.Type = op match {
+      case `invokeInterfaceOp` => InvokeOp.Interface
+      case `invokeSpecialOp` => InvokeOp.Special
+      case `invokeStaticOp` => InvokeOp.Static
+      case `invokeVirtualOp` => InvokeOp.Virtual
+    }
+  }
 
   @inline
   private def convOp(from: String, to: String) =
@@ -431,6 +453,38 @@ object JavaProfile {
 
     final def unapply(c: Command): Option[(String, String, String, meta.Type)] =
       applyOpt(extractor, c)
+  }
+
+  // MethodInsn
+  object InvokeLoc extends LocationExtractor {
+    final val extractor: Location --\ (InvokeOp.Type, String, Option[String], String, Boolean, CSeq[Exp], String) = {
+      case CallLocation(Id(labelId), lhsOpt, Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _)), Id(nextLabelId), _) if isInvokeOp(op) =>
+        (InvokeOp.from(op), labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, if (n == 0) false else true, args, nextLabelId)
+    }
+
+    final def apply(labelId: String, lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, args: CSeq[Exp], nextLabelId: String): CallLocation = {
+      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector)), Id(nextLabelId))
+    }
+
+    final def unapply(l: Location): Option[(InvokeOp.Type, String, Option[String], String, Boolean, CSeq[Exp], String)] =
+      applyOpt(extractor, l)
+
+    private[java] final def apply(lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, args: CSeq[Exp], nextLabelId: String): ExtJump =
+      lhsOpt match {
+        case Some(varName) =>
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(varName), idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector), idExp(nextLabelId)))
+        case _ =>
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector), idExp(nextLabelId)))
+      }
+
+    private[java] final def unapply(c: Command): Option[(Option[String], InvokeOp.Type, String, Boolean, CSeq[Exp], String)] =
+      c match {
+        case ExtJump(Id(op), Seq(IdExp(Id(varName)), IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
+          Some((Some(varName), InvokeOp.from(op), methodName, if (n == 0) false else true, args, nextLabelId))
+        case ExtJump(Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
+          Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, args, nextLabelId))
+        case _ => None
+      }
   }
 
   @inline

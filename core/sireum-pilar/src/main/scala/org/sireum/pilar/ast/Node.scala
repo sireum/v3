@@ -48,6 +48,10 @@ object Node {
   trait CommandExtractor {
     def extractor: Command --\ Product
   }
+
+  trait LocationExtractor {
+    def extractor: Location --\ Product
+  }
 }
 
 sealed trait Node extends Product

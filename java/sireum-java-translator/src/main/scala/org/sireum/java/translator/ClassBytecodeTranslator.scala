@@ -730,14 +730,16 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val methodName = qMethodName(fromInternalName(owner), name, desc)
       val methodType = descToType[meta.MethodType](desc)
 
-      val (isStatic, op) = opcode match {
-        case Opcodes.INVOKEVIRTUAL => (false, invokeVirtualOp)
-        case Opcodes.INVOKESPECIAL => (false, invokeSpecialOp)
-        case Opcodes.INVOKESTATIC => (true, invokeStaticOp)
-        case Opcodes.INVOKEINTERFACE => (false, invokeInterfaceOp)
+      val (isStatic, iop) = opcode match {
+        case Opcodes.INVOKEVIRTUAL => (false, InvokeOp.Virtual)
+        case Opcodes.INVOKESPECIAL => (false, InvokeOp.Special)
+        case Opcodes.INVOKESTATIC => (true, InvokeOp.Static)
+        case Opcodes.INVOKEINTERFACE => (false, InvokeOp.Interface)
       }
 
-      var args = ilist[Exp](idExp(currentLabelName))
+      val nextLabelId = currentLabelName
+
+      var args = ilist[Exp]()
       val size = methodType.parameterTypes.size + (if (isStatic) 0 else 1)
 
       for (i <- 0 until size) {
@@ -745,17 +747,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         args = idExp(t) :: args
       }
 
-      args = stringLit(methodName) :: args
+      val lhsOpt =
+        if (methodType.returnType != meta.VoidType) {
+          val t = tempVar()
+          varStack.push((t, methodType.returnType))
+          Some(t)
+        } else None
 
-      args = intLit(if (itf) 1 else 0) :: args
-
-      if (methodType.returnType != meta.VoidType) {
-        val t = tempVar()
-        args = idExp(t) :: args
-        varStack.push((t, methodType.returnType))
-      }
-
-      block += ExtJump(Id(op), args.toVector)
+      block += InvokeLoc(lhsOpt, iop, methodName, itf, args.reverse, nextLabelId)
     }
 
     override def visitLocalVariableAnnotation(typeRef: Int,
@@ -910,12 +909,17 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val bodyOpt =
         if (hasCode) Some({
           val locations = for ((l, block) <- blks) yield
-          BlockLocation(
-            Id(l),
-            lineNumberMap.getOrElse(l, marrayEmpty).toVector ++
-              block.toVector.dropRight(1).map(_.asInstanceOf[Action]),
-            block.last.asInstanceOf[Jump]
-          )
+          block match {
+            case Seq(j@InvokeLoc(lhsOpt, iop, mName, itf, args, nextLabelId)) =>
+              InvokeLoc(l, lhsOpt, iop, mName, itf, args, nextLabelId).copy(annotations = j.annotations)
+            case _ =>
+              BlockLocation(
+                Id(l),
+                lineNumberMap.getOrElse(l, marrayEmpty).toVector ++
+                  block.toVector.dropRight(1).map(_.asInstanceOf[Action]),
+                block.last.asInstanceOf[Jump]
+              )
+          }
           Visitor.build({ case Id(name) =>
             if (name.startsWith(tempVarPrefix))
               localVars += LocalVarDecl(Id(name))
