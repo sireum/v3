@@ -35,9 +35,13 @@ object JavaProfile {
   final val annotationCatchDesc = "Catch"
   final val annotationGetStaticDesc = "GetStatic"
   final val annotationPutStaticDesc = "PutStatic"
+  final val annotationLoadDesc = "Load"
+  final val annotationStoreDesc = "Store"
 
-  final val annotationGet = Annotation(Id(annotationGetStaticDesc), RawLit(""))
-  final val annotationPut = Annotation(Id(annotationPutStaticDesc), RawLit(""))
+  final val annotationGetStatic = Annotation(Id(annotationGetStaticDesc), RawLit(""))
+  final val annotationPutStatic = Annotation(Id(annotationPutStaticDesc), RawLit(""))
+  final val annotationLoad = Annotation(Id(annotationLoadDesc), RawLit(""))
+  final val annotationStore = Annotation(Id(annotationStoreDesc), RawLit(""))
 
   final val byteDesc = "b"
   final val charDesc = "c"
@@ -418,8 +422,8 @@ object JavaProfile {
       IdExp(Id(varName)),
       IdExp(Id(fieldName)),
       Seq(
-      `annotationGet`,
-      Annotation(_, ExtLit(tipe: meta.Type)))) =>
+      `annotationGetStatic`,
+      Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
         (varName, fieldName, tipe)
     }
 
@@ -427,7 +431,7 @@ object JavaProfile {
       AssignAction(
         idExp(varName),
         idExp(fieldName),
-        ivector(annotationGet, typeAnnotation(tipe)))
+        ivector(annotationGetStatic, typeAnnotation(tipe)))
 
     final def unapply(c: Command): Option[(String, String, meta.Type)] =
       applyOpt(extractor, c)
@@ -440,8 +444,8 @@ object JavaProfile {
       IdExp(Id(fieldName)),
       IdExp(Id(varName)),
       Seq(
-      `annotationPut`,
-      Annotation(_, ExtLit(tipe: meta.Type)))) =>
+      `annotationPutStatic`,
+      Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
         (fieldName, varName, tipe)
     }
 
@@ -449,7 +453,7 @@ object JavaProfile {
       AssignAction(
         idExp(fieldName),
         idExp(varName),
-        ivector(annotationPut, typeAnnotation(tipe)))
+        ivector(annotationPutStatic, typeAnnotation(tipe)))
 
     final def unapply(c: Command): Option[(String, String, meta.Type)] =
       applyOpt(extractor, c)
@@ -461,7 +465,7 @@ object JavaProfile {
       case AssignAction(
       IdExp(Id(varName)),
       BinaryExp(IdExp(Id(objectVarName)), Id(`fieldAccessOp`), IdExp(Id(fieldName))),
-      Seq(Annotation(_, ExtLit(tipe: meta.Type)))) =>
+      Seq(Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
         (varName, objectVarName, fieldName, tipe)
     }
 
@@ -481,7 +485,7 @@ object JavaProfile {
       case AssignAction(
       BinaryExp(IdExp(Id(objectVarName)), Id(`fieldAccessOp`), IdExp(Id(fieldName))),
       IdExp(Id(varName)),
-      Seq(Annotation(_, ExtLit(tipe: meta.Type)))) =>
+      Seq(Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
         (objectVarName, fieldName, varName, tipe)
     }
 
@@ -597,6 +601,56 @@ object JavaProfile {
 
     final def unapply(c: Command): Option[String] =
       applyOpt(extractor, c).map(_._1)
+  }
+
+  // VarInsn
+  object Load extends CommandExtractor {
+    final val extractor: Command --\ (String, String, Option[meta.Type]) = {
+      case AssignAction(
+      IdExp(Id(lVarName)),
+      IdExp(Id(rVarName)),
+      Seq(`annotationLoad`, anns@_*)) =>
+        anns match {
+          case Seq(Annotation(Id(`annotationTypeDesc`), ExtLit(tipe: meta.Type)), _*) =>
+            (lVarName, rVarName, Some(tipe))
+          case _ =>
+            (lVarName, rVarName, None)
+        }
+    }
+
+    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(lVarName),
+        idExp(rVarName),
+        if (tipe == topType) ivector(annotationLoad) else ivector(annotationLoad, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, Option[meta.Type])] =
+      applyOpt(extractor, c)
+  }
+
+  // VarInsn
+  object Store extends CommandExtractor {
+    final val extractor: Command --\ (String, String, Option[meta.Type]) = {
+      case AssignAction(
+      IdExp(Id(lVarName)),
+      IdExp(Id(rVarName)),
+      Seq(`annotationStore`, anns@_*)) =>
+        anns match {
+          case Seq(Annotation(Id(`annotationTypeDesc`), ExtLit(tipe: meta.Type)), _*) =>
+            (lVarName, rVarName, Some(tipe))
+          case _ =>
+            (lVarName, rVarName, None)
+        }
+    }
+
+    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(lVarName),
+        idExp(rVarName),
+        if (tipe == topType) ivector(annotationStore) else ivector(annotationStore, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, Option[meta.Type])] =
+      applyOpt(extractor, c)
   }
 
   @inline

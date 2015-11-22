@@ -839,15 +839,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitVarInsn(opcode: Int, varIndex: Int): Unit = {
       def load(tipe: meta.Type): Unit = {
-        varStack.push((localVarName(varIndex), tipe))
+        val t = tempVar()
+        command(Load(t, localVarName(varIndex), tipe))
+        varStack.push((t, tipe))
       }
-      def store(argTypeCheck: meta.Type => Boolean): Unit = {
+      def store(tipe: meta.Type, argTypeCheck: meta.Type => Boolean): Unit = {
         val (t, tipe) = varStack.pop()
         assert(argTypeCheck(tipe))
-        command(AssignAction(
-          idExp(localVarName(varIndex)),
-          idExp(t)
-        ))
+        command(Store(localVarName(varIndex), t, tipe))
       }
       opcode match {
         case Opcodes.ILOAD => load(meta.IntType)
@@ -855,11 +854,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.FLOAD => load(meta.FloatType)
         case Opcodes.DLOAD => load(meta.DoubleType)
         case Opcodes.ALOAD => load(topType)
-        case Opcodes.ISTORE => store(isIntType)
-        case Opcodes.LSTORE => store(isLongType)
-        case Opcodes.FSTORE => store(isFloatType)
-        case Opcodes.DSTORE => store(isDoubleType)
-        case Opcodes.ASTORE => store(isObjectType)
+        case Opcodes.ISTORE => store(meta.IntType, isIntType)
+        case Opcodes.LSTORE => store(meta.LongType, isLongType)
+        case Opcodes.FSTORE => store(meta.FloatType, isFloatType)
+        case Opcodes.DSTORE => store(meta.DoubleType, isDoubleType)
+        case Opcodes.ASTORE => store(topType, isObjectType)
       }
     }
 
@@ -911,11 +910,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         metalocalVarTypeAnnotations
       )
       methods :+= m
-      val blks =
-        if (blocks.last._2.isEmpty) blocks.toVector.dropRight(1)
-        else blocks.toVector
       val bodyOpt =
         if (hasCode) Some({
+          val blks =
+            if (blocks.last._2.isEmpty) blocks.toVector.dropRight(1)
+            else blocks.toVector
           val locations = for ((l, block) <- blks) yield
           block match {
             case Seq(j@InvokeLoc(lhsOpt, iop, mName, itf, args, nextLabelId)) =>
