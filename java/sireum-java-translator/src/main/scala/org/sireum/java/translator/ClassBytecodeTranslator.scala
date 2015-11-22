@@ -560,11 +560,11 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       command(IincCmd(localVarName(varIndex), increment))
 
     override def visitLdcInsn(cst: scala.Any): Unit = cst match {
-      case cst: java.lang.Integer => const(intDesc, cst.toInt, meta.IntType)
-      case cst: java.lang.Float => const(floatDesc, cst.toFloat, meta.FloatType)
-      case cst: java.lang.Long => const(longDesc, cst.toLong, meta.LongType)
-      case cst: java.lang.Double => const(doubleDesc, cst.toDouble, meta.DoubleType)
-      case cst: String => const(stringDesc, cst, topType)
+      case cst: java.lang.Integer => const(ConstKind.Int, cst.toInt)
+      case cst: java.lang.Float => const(ConstKind.Float, cst.toFloat)
+      case cst: java.lang.Long => const(ConstKind.Long, cst.toLong)
+      case cst: java.lang.Double => const(ConstKind.Double, cst.toDouble)
+      case cst: String => const(ConstKind.String, cst)
       case cst: Type => cst.getSort match {
         case Type.OBJECT | Type.ARRAY | Type.METHOD =>
           val t = tempVar()
@@ -574,7 +574,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           )
           varStack.push((t, topType))
       }
-      case cst: Handle => const(handleDesc, handle(cst), topType)
+      case cst: Handle => const(ConstKind.Handle, handle(cst))
     }
 
     override def visitTypeAnnotation(typeRef: Int,
@@ -646,8 +646,8 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitIntInsn(opcode: Int, operand: Int): Unit = {
       opcode match {
-        case Opcodes.BIPUSH => const(byteDesc, operand, meta.ByteType)
-        case Opcodes.SIPUSH => const(shortDesc, operand, meta.ShortType)
+        case Opcodes.BIPUSH => const(ConstKind.Byte, operand)
+        case Opcodes.SIPUSH => const(ConstKind.Short, operand)
         case Opcodes.NEWARRAY =>
           val (t1, tipe1) = varStack.pop()
           assert(isIntType(tipe1))
@@ -675,7 +675,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitMultiANewArrayInsn(desc: String, dims: Int): Unit = {
       val typeArg = typeLit(descToType(desc))
-      var args = ilistEmpty[Exp]
+      var args = ilistEmpty[IdExp]
       for (i <- 0 until dims) {
         val (t, tipe) = varStack.pop()
         assert(isIntType(tipe))
@@ -739,7 +739,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
       val nextLabelId = currentLabelName
 
-      var args = ilist[Exp]()
+      var args = ilist[IdExp]()
       val size = methodType.parameterTypes.size + (if (isStatic) 0 else 1)
 
       for (i <- 0 until size) {
@@ -786,20 +786,20 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitJumpInsn(opcode: Int, label: Label): Unit = {
       val ln = labelName(label)
-      def ifi1(cop: CmpOp.Type): Unit = {
+      def ifi1(cop: IcmpOp.Type): Unit = {
         val (t, tipe) = varStack.pop()
         assert(isIntType(tipe))
         val block = currentBlock
         splitBlock(force = true, addGoto = false)
-        block += IfInt0(t, cop, ln, currentLabelName)
+        block += IfInt0Cmd(t, cop, ln, currentLabelName)
       }
-      def iif2(cop: CmpOp.Type): Unit = {
+      def iif2(cop: IcmpOp.Type): Unit = {
         val (t2, tipe2) = varStack.pop()
         val (t1, tipe1) = varStack.pop()
         assert(isIntType(tipe1) && isIntType(tipe2))
         val block = currentBlock
         splitBlock(force = true, addGoto = false)
-        block += IfInt(t1, cop, t2, ln, currentLabelName)
+        block += IfIntCmd(t1, cop, t2, ln, currentLabelName)
       }
       def oif2(isEq: Boolean): Unit = {
         val (t2, tipe2) = varStack.pop()
@@ -807,28 +807,28 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         assert(isObjectType(tipe1) && isObjectType(tipe2))
         val block = currentBlock
         splitBlock(force = true, addGoto = false)
-        block += IfObject(t1, isEq, t2, ln, currentLabelName)
+        block += IfObjectCmd(t1, isEq, t2, ln, currentLabelName)
       }
       def ifn(isNull: Boolean): Unit = {
         val (t, tipe) = varStack.pop()
         assert(isObjectType(tipe))
         val block = currentBlock
         splitBlock(force = true, addGoto = false)
-        block += IfNull(t, isNull, ln, currentLabelName)
+        block += IfNullCmd(t, isNull, ln, currentLabelName)
       }
       opcode match {
-        case Opcodes.IFEQ => ifi1(CmpOp.Eq)
-        case Opcodes.IFNE => ifi1(CmpOp.Ne)
-        case Opcodes.IFLT => ifi1(CmpOp.Lt)
-        case Opcodes.IFGE => ifi1(CmpOp.Ge)
-        case Opcodes.IFGT => ifi1(CmpOp.Gt)
-        case Opcodes.IFLE => ifi1(CmpOp.Le)
-        case Opcodes.IF_ICMPEQ => iif2(CmpOp.Eq)
-        case Opcodes.IF_ICMPNE => iif2(CmpOp.Ne)
-        case Opcodes.IF_ICMPLT => iif2(CmpOp.Lt)
-        case Opcodes.IF_ICMPGE => iif2(CmpOp.Ge)
-        case Opcodes.IF_ICMPGT => iif2(CmpOp.Gt)
-        case Opcodes.IF_ICMPLE => iif2(CmpOp.Le)
+        case Opcodes.IFEQ => ifi1(IcmpOp.Eq)
+        case Opcodes.IFNE => ifi1(IcmpOp.Ne)
+        case Opcodes.IFLT => ifi1(IcmpOp.Lt)
+        case Opcodes.IFGE => ifi1(IcmpOp.Ge)
+        case Opcodes.IFGT => ifi1(IcmpOp.Gt)
+        case Opcodes.IFLE => ifi1(IcmpOp.Le)
+        case Opcodes.IF_ICMPEQ => iif2(IcmpOp.Eq)
+        case Opcodes.IF_ICMPNE => iif2(IcmpOp.Ne)
+        case Opcodes.IF_ICMPLT => iif2(IcmpOp.Lt)
+        case Opcodes.IF_ICMPGE => iif2(IcmpOp.Ge)
+        case Opcodes.IF_ICMPGT => iif2(IcmpOp.Gt)
+        case Opcodes.IF_ICMPLE => iif2(IcmpOp.Le)
         case Opcodes.IF_ACMPEQ => oif2(isEq = true)
         case Opcodes.IF_ACMPNE => oif2(isEq = false)
         case Opcodes.GOTO => command(GotoJump(Id(ln)))
@@ -840,13 +840,13 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     override def visitVarInsn(opcode: Int, varIndex: Int): Unit = {
       def load(tipe: meta.Type): Unit = {
         val t = tempVar()
-        command(Load(t, localVarName(varIndex), tipe))
+        command(LoadCmd(t, localVarName(varIndex), tipe))
         varStack.push((t, tipe))
       }
       def store(tipe: meta.Type, argTypeCheck: meta.Type => Boolean): Unit = {
-        val (t, tipe) = varStack.pop()
-        assert(argTypeCheck(tipe))
-        command(Store(localVarName(varIndex), t, tipe))
+        val (t, tpe) = varStack.pop()
+        assert(argTypeCheck(tpe))
+        command(StoreCmd(localVarName(varIndex), t, tipe))
       }
       opcode match {
         case Opcodes.ILOAD => load(meta.IntType)
@@ -960,34 +960,21 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       opcode match {
         case Opcodes.NEW =>
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            ExtExp(idExp(newOp),
-              ivector(stringLit(tipe.asInstanceOf[meta.ObjectType].name)))
-          ))
+          command(NewCmd(t, tipe.asInstanceOf[meta.ObjectType]))
           varStack.push((t, topType))
         case Opcodes.ANEWARRAY =>
           val (t1, tipe1) = varStack.pop()
           assert(isIntType(tipe1))
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            ExtExp(idExp(newArrayOp),
-              ivector(idExp(t1), typeLit(tipe)))
-          ))
+          command(NewArrayCmd(t, t1, tipe))
           varStack.push((t, topType))
         case Opcodes.CHECKCAST =>
           val (t1, _) = varStack.top
-          command(ExtAction(Id(checkCastOp),
-            ivector(idExp(t1), typeLit(tipe))))
+          command(CheckCastCmd(t1, tipe))
         case Opcodes.INSTANCEOF =>
           val (t1, _) = varStack.pop()
           val t = tempVar()
-          command(AssignAction(
-            idExp(t),
-            ExtExp(idExp(instanceOfOp),
-              ivector(idExp(t1), typeLit(tipe)))
-          ))
+          command(InstanceOfCmd(t, t1, tipe))
           varStack.push((t, meta.IntType))
       }
     }
@@ -1112,20 +1099,20 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
               idExp(t),
               ExtExp(idExp(nullConstOp), ivectorEmpty)))
           varStack.push((t, topType))
-        case Opcodes.ICONST_M1 => const(intDesc, -1, meta.IntType)
-        case Opcodes.ICONST_0 => const(intDesc, 0, meta.IntType)
-        case Opcodes.ICONST_1 => const(intDesc, 1, meta.IntType)
-        case Opcodes.ICONST_2 => const(intDesc, 2, meta.IntType)
-        case Opcodes.ICONST_3 => const(intDesc, 3, meta.IntType)
-        case Opcodes.ICONST_4 => const(intDesc, 4, meta.IntType)
-        case Opcodes.ICONST_5 => const(intDesc, 5, meta.IntType)
-        case Opcodes.LCONST_0 => const(longDesc, 0l, meta.LongType)
-        case Opcodes.LCONST_1 => const(longDesc, 1l, meta.LongType)
-        case Opcodes.FCONST_0 => const(floatDesc, 0.0f, meta.FloatType)
-        case Opcodes.FCONST_1 => const(floatDesc, 1.0f, meta.FloatType)
-        case Opcodes.FCONST_2 => const(floatDesc, 2.0f, meta.FloatType)
-        case Opcodes.DCONST_0 => const(doubleDesc, 0.0d, meta.DoubleType)
-        case Opcodes.DCONST_1 => const(doubleDesc, 1.0d, meta.DoubleType)
+        case Opcodes.ICONST_M1 => const(ConstKind.Int, -1)
+        case Opcodes.ICONST_0 => const(ConstKind.Int, 0)
+        case Opcodes.ICONST_1 => const(ConstKind.Int, 1)
+        case Opcodes.ICONST_2 => const(ConstKind.Int, 2)
+        case Opcodes.ICONST_3 => const(ConstKind.Int, 3)
+        case Opcodes.ICONST_4 => const(ConstKind.Int, 4)
+        case Opcodes.ICONST_5 => const(ConstKind.Int, 5)
+        case Opcodes.LCONST_0 => const(ConstKind.Long, 0l)
+        case Opcodes.LCONST_1 => const(ConstKind.Long, 1l)
+        case Opcodes.FCONST_0 => const(ConstKind.Float, 0.0f)
+        case Opcodes.FCONST_1 => const(ConstKind.Float, 1.0f)
+        case Opcodes.FCONST_2 => const(ConstKind.Float, 2.0f)
+        case Opcodes.DCONST_0 => const(ConstKind.Double, 0.0d)
+        case Opcodes.DCONST_1 => const(ConstKind.Double, 1.0d)
         case Opcodes.IALOAD => arrayLoad(meta.IntType)
         case Opcodes.LALOAD => arrayLoad(meta.LongType)
         case Opcodes.FALOAD => arrayLoad(meta.FloatType)
@@ -1405,10 +1392,10 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       blocks = blocks + (currentLabelName -> currentBlock)
     }
 
-    private def const(id: String, n: Any, tipe: meta.Type): Unit = {
+    private def const(ck: ConstKind.Type, n: Any): Unit = {
       val t = tempVar()
-      command(ConstCmd(t, id, n.toString))
-      varStack.push((t, tipe))
+      command(ConstCmd(t, ck, n.toString))
+      varStack.push((t, ConstKind.toType(ck)))
     }
 
     private def unop(op: String,

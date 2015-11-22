@@ -173,8 +173,11 @@ object JavaProfile {
   final val longArrayType = meta.ArrayType(meta.LongType)
   final val floatArrayType = meta.ArrayType(meta.FloatType)
   final val doubleArrayType = meta.ArrayType(meta.DoubleType)
+
+  final val constDescs = Set(intDesc, floatDesc, longDesc, doubleDesc, stringDesc, handleDesc)
   final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
   final val iifOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
+  final val loadStoreTypes = Set(meta.IntType, meta.LongType, meta.FloatType, meta.DoubleType, topType)
 
   final def isInvokeOp(op: String) = invokeOps.contains(op)
 
@@ -194,45 +197,83 @@ object JavaProfile {
 
   final val intZeroLit = intLit(0)
 
+  object ConstKind extends Enumeration {
+    type Type = Value
+    final val Byte, Short, Int, Float, Long, Double, String, Handle = Value
+
+    final def to(ck: Type): String = ck match {
+      case Byte => byteDesc
+      case Short => shortDesc
+      case Int => intDesc
+      case Float => floatDesc
+      case Long => longDesc
+      case Double => doubleDesc
+      case String => stringDesc
+      case Handle => handleDesc
+    }
+
+    final def toType(ck: Type): meta.Type = ck match {
+      case Byte => meta.ByteType
+      case Short => meta.ShortType
+      case Int => meta.IntType
+      case Float => meta.FloatType
+      case Long => meta.LongType
+      case Double => meta.DoubleType
+      case String => topType
+      case Handle => topType
+    }
+
+    final def from(desc: String): Type = desc match {
+      case `byteDesc` => Byte
+      case `shortDesc` => Short
+      case `intDesc` => Int
+      case `floatDesc` => Float
+      case `longDesc` => Long
+      case `doubleDesc` => Double
+      case `stringDesc` => String
+      case `handleDesc` => Handle
+    }
+  }
+
   object InvokeOp extends Enumeration {
     type Type = Value
     final val Virtual, Special, Static, Interface = Value
 
-    def to(iop: InvokeOp.Type): String = iop match {
-      case InvokeOp.Interface => invokeInterfaceOp
-      case InvokeOp.Special => invokeSpecialOp
-      case InvokeOp.Static => invokeStaticOp
-      case InvokeOp.Virtual => invokeVirtualOp
+    final def to(iop: Type): String = iop match {
+      case Interface => invokeInterfaceOp
+      case Special => invokeSpecialOp
+      case Static => invokeStaticOp
+      case Virtual => invokeVirtualOp
     }
 
-    def from(op: String): InvokeOp.Type = op match {
-      case `invokeInterfaceOp` => InvokeOp.Interface
-      case `invokeSpecialOp` => InvokeOp.Special
-      case `invokeStaticOp` => InvokeOp.Static
-      case `invokeVirtualOp` => InvokeOp.Virtual
+    final def from(op: String): Type = op match {
+      case `invokeInterfaceOp` => Interface
+      case `invokeSpecialOp` => Special
+      case `invokeStaticOp` => Static
+      case `invokeVirtualOp` => Virtual
     }
   }
 
-  object CmpOp extends Enumeration {
+  object IcmpOp extends Enumeration {
     type Type = Value
     final val Eq, Ne, Lt, Ge, Gt, Le = Value
 
-    def to(cop: CmpOp.Type): String = cop match {
-      case CmpOp.Eq => ieqOp
-      case CmpOp.Ne => ineOp
-      case CmpOp.Lt => iltOp
-      case CmpOp.Ge => igeOp
-      case CmpOp.Gt => igtOp
-      case CmpOp.Le => ileOp
+    final def to(cop: IcmpOp.Type): String = cop match {
+      case IcmpOp.Eq => ieqOp
+      case IcmpOp.Ne => ineOp
+      case IcmpOp.Lt => iltOp
+      case IcmpOp.Ge => igeOp
+      case IcmpOp.Gt => igtOp
+      case IcmpOp.Le => ileOp
     }
 
-    def from(op: String): CmpOp.Type = op match {
-      case `ieqOp` => CmpOp.Eq
-      case `ineOp` => CmpOp.Ne
-      case `iltOp` => CmpOp.Lt
-      case `igeOp` => CmpOp.Ge
-      case `igtOp` => CmpOp.Gt
-      case `ileOp` => CmpOp.Le
+    final def from(op: String): IcmpOp.Type = op match {
+      case `ieqOp` => IcmpOp.Eq
+      case `ineOp` => IcmpOp.Ne
+      case `iltOp` => IcmpOp.Lt
+      case `igeOp` => IcmpOp.Ge
+      case `igtOp` => IcmpOp.Gt
+      case `ileOp` => IcmpOp.Le
     }
   }
 
@@ -256,6 +297,8 @@ object JavaProfile {
   import PartialFunctionUtil.applyOpt
 
   // IincInsn
+  //
+  // <varName> := <varName2> +_i <increment>;
   object IincCmd extends CommandExtractor {
     final val extractor: Command --\ (String, Int) = {
       case AssignAction(
@@ -282,25 +325,29 @@ object JavaProfile {
   }
 
   // LdcInsn, IntInsn, Insn
+  //
+  // <varName> := <litId> «<rawValue>»;
   object ConstCmd extends CommandExtractor {
 
-    final val extractor: Command --\ (String, String, String) = {
+    final val extractor: Command --\ (String, ConstKind.Type, String) = {
       case AssignAction(
       IdExp(Id(varName)),
       LiteralExp(Id(litId), RawLit(rawValue)), _) =>
-        (varName, litId, rawValue)
+        (varName, ConstKind.from(litId), rawValue)
     }
 
-    final def apply(varName: String, litId: String, rawValue: String): AssignAction =
+    final def apply(varName: String, ck: ConstKind.Type, rawValue: String): AssignAction =
       AssignAction(
         idExp(varName),
-        LiteralExp(Id(litId), RawLit(rawValue)))
+        LiteralExp(Id(ConstKind.to(ck)), RawLit(rawValue)))
 
-    final def unapply(c: Command): Option[(String, String, String)] =
+    final def unapply(c: Command): Option[(String, ConstKind.Type, String)] =
       applyOpt(extractor, c)
   }
 
   // LdcInsn
+  //
+  // <varName> := methodType(t«<tipe>»);
   object MethodTypeCmd extends CommandExtractor {
     final val extractor: Command --\ (String, meta.Type) = {
       case AssignAction(
@@ -321,6 +368,8 @@ object JavaProfile {
   }
 
   // LdcInsn
+  //
+  // <varName> := classOf(t«<tipe>»);
   object ClassOfCmd extends CommandExtractor {
     final val extractor: Command --\ (String, meta.Type) = {
       case AssignAction(
@@ -341,6 +390,12 @@ object JavaProfile {
   }
 
   // TableSwitchInsn, LookupSwitchInsn
+  //
+  // switch <varName>
+  //   case i'<n_1> : <label_1>
+  //   ...
+  //   case i'<n_N> : <label_N>
+  //   default      : <dflt>;
   object SwitchCmd extends CommandExtractor {
     final val extractor: Command --\ (String, Seq[(Int, String)], String) = {
       case SwitchJump(IdExp(Id(varName)), scs, _) =>
@@ -361,7 +416,9 @@ object JavaProfile {
       applyOpt(extractor, c)
   }
 
-  // IntInsn
+  // IntInsn, TypeInsn
+  //
+  // <varName> := newArray(<sizeVarName>, t«<tipe>»);
   object NewArrayCmd extends CommandExtractor {
     final val extractor: Command --\ (String, String, meta.Type) = {
       case AssignAction(
@@ -382,6 +439,8 @@ object JavaProfile {
   }
 
   // LineNumber
+  //
+  // ext lineNumber(<line>);
   object LineNumberCmd extends CommandExtractor {
     final val extractor: Command --\ Tuple1[Int] = {
       case ExtAction(
@@ -397,25 +456,29 @@ object JavaProfile {
   }
 
   // MultiANewArrayInsn
+  //
+  // <varName> := newMultiArray(t«<tipe>», <argVarName_1>, ..., <argVarName_N>);
   object NewMultiArrayCmd extends CommandExtractor {
-    final val extractor: Command --\ (String, meta.Type, CSeq[Exp]) = {
+    final val extractor: Command --\ (String, meta.Type, CSeq[IdExp]) = {
       case AssignAction(
       IdExp(Id(varName)),
-      ExtExp(IdExp(Id(`newMultiArrayOp`)), args), _) =>
-        val LiteralExp(_, ExtLit(tipe: meta.Type)) = args.head
-        (varName, tipe, args.tail)
+      ExtExp(IdExp(Id(`newMultiArrayOp`)),
+      Seq(LiteralExp(_, ExtLit(tipe: meta.Type)), args@_*)), _) =>
+        (varName, tipe, args.map(_.asInstanceOf[IdExp]))
     }
 
-    final def apply(varName: String, tipe: meta.Type, args: CSeq[Exp]): AssignAction =
+    final def apply(varName: String, tipe: meta.Type, argVarNames: CSeq[IdExp]): AssignAction =
       AssignAction(
         idExp(varName),
-        ExtExp(idExp(newMultiArrayOp), typeLit(tipe) +: args.toVector))
+        ExtExp(idExp(newMultiArrayOp), typeLit(tipe) +: argVarNames.toVector))
 
-    final def unapply(c: Command): Option[(String, meta.Type, CSeq[Exp])] =
+    final def unapply(c: Command): Option[(String, meta.Type, CSeq[IdExp])] =
       applyOpt(extractor, c)
   }
 
   // FieldInsn
+  //
+  // <varName> := <fieldName> @GetStatic @Type«<tipe>»;
   object GetStaticCmd extends CommandExtractor {
     final val extractor: Command --\ (String, String, meta.Type) = {
       case AssignAction(
@@ -438,6 +501,8 @@ object JavaProfile {
   }
 
   // FieldInsn
+  //
+  // <fieldName> := <varName> @PutStatic @Type«<tipe>»;
   object PutStaticCmd extends CommandExtractor {
     final val extractor: Command --\ (String, String, meta.Type) = {
       case AssignAction(
@@ -460,6 +525,8 @@ object JavaProfile {
   }
 
   // FieldInsn
+  //
+  // <varName> := <objectVarName> . <fieldName> @Type«<tipe>»;
   object GetFieldCmd extends CommandExtractor {
     final val extractor: Command --\ (String, String, String, meta.Type) = {
       case AssignAction(
@@ -480,6 +547,8 @@ object JavaProfile {
   }
 
   // FieldInsn
+  //
+  // <objectVarName> . <fieldName> := <varName> @Type«<tipe>»;
   object PutFieldCmd extends CommandExtractor {
     final val extractor: Command --\ (String, String, String, meta.Type) = {
       case AssignAction(
@@ -500,70 +569,88 @@ object JavaProfile {
   }
 
   // MethodInsn
+  //
+  // #<labelId> call [<lhsOpt> :=] <op>(<methodName>, <n>, (<argVarName_1>, ..., <argVarName_N>)) goto <nextLabelId>);
+  //
+  // where <op> ::= invokeVirtual | invokeSpecial | invokeStatic | invokeInterface
+  //       <n>  ::= 0, if <itf> is false
+  //              | 1, otherwise
   object InvokeLoc extends LocationExtractor {
-    final val extractor: Location --\ (InvokeOp.Type, String, Option[String], String, Boolean, CSeq[Exp], String) = {
-      case CallLocation(Id(labelId), lhsOpt, Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _)), Id(nextLabelId), _) if isInvokeOp(op) =>
-        (InvokeOp.from(op), labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, if (n == 0) false else true, args, nextLabelId)
+    final val extractor: Location --\ (InvokeOp.Type, String, Option[String], String, Boolean, CSeq[IdExp], String) = {
+      case CallLocation(Id(labelId), lhsOpt, Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _)), Id(nextLabelId), _) if isInvokeOp(op) =>
+        (InvokeOp.from(op), labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId)
     }
 
-    final def apply(labelId: String, lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, args: CSeq[Exp], nextLabelId: String): CallLocation = {
-      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector)), Id(nextLabelId))
+    final def apply(labelId: String, lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argsVarNames: CSeq[IdExp], nextLabelId: String): CallLocation = {
+      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argsVarNames.toVector)), Id(nextLabelId))
     }
 
-    final def unapply(l: Location): Option[(InvokeOp.Type, String, Option[String], String, Boolean, CSeq[Exp], String)] =
+    final def unapply(l: Location): Option[(InvokeOp.Type, String, Option[String], String, Boolean, CSeq[IdExp], String)] =
       applyOpt(extractor, l)
 
-    private[java] final def apply(lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, args: CSeq[Exp], nextLabelId: String): ExtJump =
+    private[java] final def apply(lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argVarNames: CSeq[IdExp], nextLabelId: String): ExtJump =
       lhsOpt match {
         case Some(varName) =>
-          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(varName), idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector), idExp(nextLabelId)))
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(varName), idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector), idExp(nextLabelId)))
         case _ =>
-          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(args.toVector), idExp(nextLabelId)))
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector), idExp(nextLabelId)))
       }
 
-    private[java] final def unapply(c: Command): Option[(Option[String], InvokeOp.Type, String, Boolean, CSeq[Exp], String)] =
+    private[java] final def unapply(c: Command): Option[(Option[String], InvokeOp.Type, String, Boolean, CSeq[IdExp], String)] =
       c match {
-        case ExtJump(Id(op), Seq(IdExp(Id(varName)), IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
-          Some((Some(varName), InvokeOp.from(op), methodName, if (n == 0) false else true, args, nextLabelId))
-        case ExtJump(Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(args, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
-          Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, args, nextLabelId))
+        case ExtJump(Id(op), Seq(IdExp(Id(varName)), IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
+          Some((Some(varName), InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId))
+        case ExtJump(Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
+          Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId))
         case _ => None
       }
   }
 
   // JumpInsn
-  // note: falseLabel should be next block's label
-  object IfInt0 extends CommandExtractor {
-    final val extractor: Command --\ (String, CmpOp.Type, String) = {
+  //
+  // if <varName> <op> i'0 then <trueLabel> else <falseLabel>;
+  //
+  // where <op> ::= ==_i | !=_i | >_i | >=_i | <_i | <=_i
+  //       <falseLabel> should be next block's label
+  object IfInt0Cmd extends CommandExtractor {
+    final val extractor: Command --\ (String, IcmpOp.Type, String) = {
       case IfJump(BinaryExp(IdExp(Id(varName)), Id(op), LiteralExp(_, ExtLit(0))), Id(trueLabel), _, _) if isIifOp(op) =>
-        (varName, CmpOp.from(op), trueLabel)
+        (varName, IcmpOp.from(op), trueLabel)
     }
 
-    final def apply(varName: String, cop: CmpOp.Type, trueLabel: String, falseLabel: String): IfJump =
-      IfJump(BinaryExp(idExp(varName), Id(CmpOp.to(cop)), intZeroLit), Id(trueLabel), Id(falseLabel))
+    final def apply(varName: String, cop: IcmpOp.Type, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName), Id(IcmpOp.to(cop)), intZeroLit), Id(trueLabel), Id(falseLabel))
 
-    final def unapply(c: Command): Option[(String, CmpOp.Type, String)] =
+    final def unapply(c: Command): Option[(String, IcmpOp.Type, String)] =
       applyOpt(extractor, c)
   }
 
   // JumpInsn
-  // note: falseLabel should be next block's label
-  object IfInt extends CommandExtractor {
-    final val extractor: Command --\ (String, CmpOp.Type, String, String) = {
+  //
+  // if <varName1> <op> <varName2> then <trueLabel> else <falseLabel>;
+  //
+  // where <op> ::= ==_i | !=_i | >_i | >=_i | <_i | <=_i
+  //       <falseLabel> should be next block's label
+  object IfIntCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, IcmpOp.Type, String, String) = {
       case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isIifOp(op) =>
-        (varName1, CmpOp.from(op), varName2, trueLabel)
+        (varName1, IcmpOp.from(op), varName2, trueLabel)
     }
 
-    final def apply(varName1: String, cop: CmpOp.Type, varName2: String, trueLabel: String, falseLabel: String): IfJump =
-      IfJump(BinaryExp(idExp(varName1), Id(CmpOp.to(cop)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
+    final def apply(varName1: String, cop: IcmpOp.Type, varName2: String, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName1), Id(IcmpOp.to(cop)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
 
-    final def unapply(c: Command): Option[(String, CmpOp.Type, String, String)] =
+    final def unapply(c: Command): Option[(String, IcmpOp.Type, String, String)] =
       applyOpt(extractor, c)
   }
 
   // JumpInsn
-  // note: falseLabel should be next block's label
-  object IfObject extends CommandExtractor {
+  //
+  // if <varName1> <op> <varName2> then <trueLabel> else <falseLabel>;
+  //
+  // where <op> ::= ==_o | !=_o
+  //       <falseLabel> should be next block's label
+  object IfObjectCmd extends CommandExtractor {
     final val extractor: Command --\ (String, Boolean, String, String) = {
       case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isOifOp(op) =>
         (varName1, fromOifOp(op), varName2, trueLabel)
@@ -577,7 +664,13 @@ object JavaProfile {
   }
 
   // JumpInsn
-  object IfNull extends CommandExtractor {
+  //
+  // if <op>(<varName>) then <trueLabel> else <falseLabel>;
+  //
+  // where <op> ::= isNull, if <isNull> is true
+  //              | isNonNull, otherwise
+  //       <falseLabel> should be next block's label
+  object IfNullCmd extends CommandExtractor {
     final val extractor: Command --\ (String, Boolean, String) = {
       case IfJump(ExtExp(IdExp(Id(op)), Seq(IdExp(Id(varName)))), Id(trueLabel), _, _) if isNullOp(op) =>
         (varName, fromNullOp(op), trueLabel)
@@ -591,7 +684,9 @@ object JavaProfile {
   }
 
   // JumpInsn
-  object Goto extends CommandExtractor {
+  //
+  // goto <label>;
+  object GotoCmd extends CommandExtractor {
     final val extractor: Command --\ Tuple1[String] = {
       case GotoJump(Id(label), _) => Tuple1(label)
     }
@@ -604,52 +699,126 @@ object JavaProfile {
   }
 
   // VarInsn
-  object Load extends CommandExtractor {
-    final val extractor: Command --\ (String, String, Option[meta.Type]) = {
+  //
+  // <lVarName> := <rVarName> @Load [@Type«<tipe>»];
+  //
+  // note: <tipe> is inserted if it is not an object type
+  object LoadCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
       case AssignAction(
       IdExp(Id(lVarName)),
       IdExp(Id(rVarName)),
       Seq(`annotationLoad`, anns@_*)) =>
         anns match {
           case Seq(Annotation(Id(`annotationTypeDesc`), ExtLit(tipe: meta.Type)), _*) =>
-            (lVarName, rVarName, Some(tipe))
+            (lVarName, rVarName, tipe)
           case _ =>
-            (lVarName, rVarName, None)
+            (lVarName, rVarName, topType)
         }
     }
 
-    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction =
+    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction = {
+      assert(loadStoreTypes.contains(tipe))
       AssignAction(
         idExp(lVarName),
         idExp(rVarName),
         if (tipe == topType) ivector(annotationLoad) else ivector(annotationLoad, typeAnnotation(tipe)))
+    }
 
-    final def unapply(c: Command): Option[(String, String, Option[meta.Type])] =
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
       applyOpt(extractor, c)
   }
 
   // VarInsn
-  object Store extends CommandExtractor {
-    final val extractor: Command --\ (String, String, Option[meta.Type]) = {
+  //
+  // <lVarName> := <rVarName> @Store [@Type«<tipe>»];
+  //
+  // note: <tipe> is inserted if it is not an object type
+  object StoreCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
       case AssignAction(
       IdExp(Id(lVarName)),
       IdExp(Id(rVarName)),
       Seq(`annotationStore`, anns@_*)) =>
         anns match {
           case Seq(Annotation(Id(`annotationTypeDesc`), ExtLit(tipe: meta.Type)), _*) =>
-            (lVarName, rVarName, Some(tipe))
+            (lVarName, rVarName, tipe)
           case _ =>
-            (lVarName, rVarName, None)
+            (lVarName, rVarName, topType)
         }
     }
 
-    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction =
+    final def apply(lVarName: String, rVarName: String, tipe: meta.Type): AssignAction = {
+      assert(loadStoreTypes.contains(tipe))
       AssignAction(
         idExp(lVarName),
         idExp(rVarName),
         if (tipe == topType) ivector(annotationStore) else ivector(annotationStore, typeAnnotation(tipe)))
+    }
 
-    final def unapply(c: Command): Option[(String, String, Option[meta.Type])] =
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // TypeInsn
+  //
+  // <varName> := new(t«<tipe>»);
+  object NewCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, meta.ObjectType) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`newOp`)),
+      Seq(LiteralExp(_, ExtLit(tipe: meta.ObjectType)))), _) =>
+        (varName, tipe)
+    }
+
+    final def apply(varName: String, tipe: meta.ObjectType): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(newOp),
+          ivector(typeLit(tipe))))
+
+    final def unapply(c: Command): Option[(String, meta.ObjectType)] =
+      applyOpt(extractor, c)
+  }
+
+  // TypeInsn
+  //
+  // ext checkCast(<varName>, t«<tipe>»);
+  object CheckCastCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, meta.Type) = {
+      case ExtAction(Id(`checkCastOp`),
+      Seq(IdExp(Id(varName)), LiteralExp(_, ExtLit(tipe: meta.Type))), _) =>
+        (varName, tipe)
+    }
+
+    final def apply(varName: String, tipe: meta.Type): ExtAction =
+      ExtAction(Id(checkCastOp),
+        ivector(idExp(varName), typeLit(tipe)))
+
+    final def unapply(c: Command): Option[(String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // TypeInsn
+  //
+  // <varName> := instanceOf(<objectVarName>, t«<tipe>»);
+  object InstanceOfCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`instanceOfOp`)),
+      Seq(IdExp(Id(objectVarName)), LiteralExp(_, ExtLit(tipe: meta.Type)))), _) =>
+        (varName, objectVarName, tipe)
+    }
+
+    final def apply(varName: String, objectVarName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(instanceOfOp),
+          ivector(idExp(objectVarName), typeLit(tipe))))
+
+    final def unapply(c: Command): Option[(String, String, meta.Type)] =
       applyOpt(extractor, c)
   }
 
