@@ -785,48 +785,56 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
     }
 
     override def visitJumpInsn(opcode: Int, label: Label): Unit = {
-      def ifi1(op: String): Exp = {
+      val ln = labelName(label)
+      def ifi1(cop: CmpOp.Type): Unit = {
         val (t, tipe) = varStack.pop()
         assert(isIntType(tipe))
-        BinaryExp(idExp(t), Id(op), intLit(0))
+        val block = currentBlock
+        splitBlock(force = true, addGoto = false)
+        block += IfInt0(t, cop, ln, currentLabelName)
       }
-      def if2(op: String, argTypeCheck: meta.Type => Boolean): Exp = {
+      def iif2(cop: CmpOp.Type): Unit = {
         val (t2, tipe2) = varStack.pop()
         val (t1, tipe1) = varStack.pop()
-        assert(argTypeCheck(tipe1) && argTypeCheck(tipe2))
-        BinaryExp(idExp(t1), Id(op), idExp(t2))
+        assert(isIntType(tipe1) && isIntType(tipe2))
+        val block = currentBlock
+        splitBlock(force = true, addGoto = false)
+        block += IfInt(t1, cop, t2, ln, currentLabelName)
       }
-      def ifn(op: String): Exp = {
+      def oif2(isEq: Boolean): Unit = {
+        val (t2, tipe2) = varStack.pop()
+        val (t1, tipe1) = varStack.pop()
+        assert(isObjectType(tipe1) && isObjectType(tipe2))
+        val block = currentBlock
+        splitBlock(force = true, addGoto = false)
+        block += IfObject(t1, isEq, t2, ln, currentLabelName)
+      }
+      def ifn(isNull: Boolean): Unit = {
         val (t, tipe) = varStack.pop()
         assert(isObjectType(tipe))
-        ExtExp(idExp(op), ivector(idExp(t)))
+        val block = currentBlock
+        splitBlock(force = true, addGoto = false)
+        block += IfNull(t, isNull, ln, currentLabelName)
       }
-      val ln = labelName(label)
-      val cond =
-        opcode match {
-          case Opcodes.IFEQ => ifi1(ieqOp)
-          case Opcodes.IFNE => ifi1(ineOp)
-          case Opcodes.IFLT => ifi1(iltOp)
-          case Opcodes.IFGE => ifi1(igeOp)
-          case Opcodes.IFGT => ifi1(igtOp)
-          case Opcodes.IFLE => ifi1(ileOp)
-          case Opcodes.IF_ICMPEQ => if2(ieqOp, isIntType)
-          case Opcodes.IF_ICMPNE => if2(ineOp, isIntType)
-          case Opcodes.IF_ICMPLT => if2(iltOp, isIntType)
-          case Opcodes.IF_ICMPGE => if2(igeOp, isIntType)
-          case Opcodes.IF_ICMPGT => if2(igtOp, isIntType)
-          case Opcodes.IF_ICMPLE => if2(ileOp, isIntType)
-          case Opcodes.IF_ACMPEQ => if2(oeqOp, isObjectType)
-          case Opcodes.IF_ACMPNE => if2(oneOp, isObjectType)
-          case Opcodes.GOTO =>
-            command(GotoJump(Id(ln)))
-            return
-          case Opcodes.IFNULL => ifn(isNullOp)
-          case Opcodes.IFNONNULL => ifn(isNonNullOp)
-        }
-      val block = currentBlock
-      splitBlock(force = true, addGoto = false)
-      block += IfJump(cond, Id(ln), Id(currentLabelName))
+      opcode match {
+        case Opcodes.IFEQ => ifi1(CmpOp.Eq)
+        case Opcodes.IFNE => ifi1(CmpOp.Ne)
+        case Opcodes.IFLT => ifi1(CmpOp.Lt)
+        case Opcodes.IFGE => ifi1(CmpOp.Ge)
+        case Opcodes.IFGT => ifi1(CmpOp.Gt)
+        case Opcodes.IFLE => ifi1(CmpOp.Le)
+        case Opcodes.IF_ICMPEQ => iif2(CmpOp.Eq)
+        case Opcodes.IF_ICMPNE => iif2(CmpOp.Ne)
+        case Opcodes.IF_ICMPLT => iif2(CmpOp.Lt)
+        case Opcodes.IF_ICMPGE => iif2(CmpOp.Ge)
+        case Opcodes.IF_ICMPGT => iif2(CmpOp.Gt)
+        case Opcodes.IF_ICMPLE => iif2(CmpOp.Le)
+        case Opcodes.IF_ACMPEQ => oif2(isEq = true)
+        case Opcodes.IF_ACMPNE => oif2(isEq = false)
+        case Opcodes.GOTO => command(GotoJump(Id(ln)))
+        case Opcodes.IFNULL => ifn(isNull = true)
+        case Opcodes.IFNONNULL => ifn(isNull = false)
+      }
     }
 
     override def visitVarInsn(opcode: Int, varIndex: Int): Unit = {
@@ -1103,7 +1111,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           command(
             AssignAction(
               idExp(t),
-              ExtExp(idExp(nullOp), ivectorEmpty)))
+              ExtExp(idExp(nullConstOp), ivectorEmpty)))
           varStack.push((t, topType))
         case Opcodes.ICONST_M1 => const(intDesc, -1, meta.IntType)
         case Opcodes.ICONST_0 => const(intDesc, 0, meta.IntType)

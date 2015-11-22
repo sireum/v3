@@ -76,9 +76,9 @@ object JavaProfile {
   final val eqOp = "=="
   final val neOp = "!="
   final val fieldAccessOp = "."
-  final val nullOp = "null"
-  final val isNullOp = "isNull"
-  final val isNonNullOp = "isNonNull"
+  final val nullConstOp = "null"
+  final val nullOp = "isNull"
+  final val nonNullOp = "isNonNull"
   final val arrayLengthOp = "len"
   final val throwOp = "throw"
   final val monitorEnterOp = "monitorEnter"
@@ -170,8 +170,25 @@ object JavaProfile {
   final val floatArrayType = meta.ArrayType(meta.FloatType)
   final val doubleArrayType = meta.ArrayType(meta.DoubleType)
   final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
+  final val iifOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
 
   final def isInvokeOp(op: String) = invokeOps.contains(op)
+
+  final def isIifOp(op: String) = iifOps.contains(op)
+
+  final def isOifOp(op: String) = op == oeqOp || op == oneOp
+
+  final def isNullOp(op: String) = op == nullOp || op == nonNullOp
+
+  final def toOifOp(b: Boolean): String = if (b) oeqOp else oneOp
+
+  final def toNullOp(b: Boolean): String = if (b) nullOp else nonNullOp
+
+  final def fromOifOp(op: String): Boolean = if (op == oeqOp) true else false
+
+  final def fromNullOp(op: String): Boolean = if (op == nullOp) true else false
+
+  final val intZeroLit = intLit(0)
 
   object InvokeOp extends Enumeration {
     type Type = Value
@@ -189,6 +206,29 @@ object JavaProfile {
       case `invokeSpecialOp` => InvokeOp.Special
       case `invokeStaticOp` => InvokeOp.Static
       case `invokeVirtualOp` => InvokeOp.Virtual
+    }
+  }
+
+  object CmpOp extends Enumeration {
+    type Type = Value
+    final val Eq, Ne, Lt, Ge, Gt, Le = Value
+
+    def to(cop: CmpOp.Type): String = cop match {
+      case CmpOp.Eq => ieqOp
+      case CmpOp.Ne => ineOp
+      case CmpOp.Lt => iltOp
+      case CmpOp.Ge => igeOp
+      case CmpOp.Gt => igtOp
+      case CmpOp.Le => ileOp
+    }
+
+    def from(op: String): CmpOp.Type = op match {
+      case `ieqOp` => CmpOp.Eq
+      case `ineOp` => CmpOp.Ne
+      case `iltOp` => CmpOp.Lt
+      case `igeOp` => CmpOp.Ge
+      case `igtOp` => CmpOp.Gt
+      case `ileOp` => CmpOp.Le
     }
   }
 
@@ -485,6 +525,78 @@ object JavaProfile {
           Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, args, nextLabelId))
         case _ => None
       }
+  }
+
+  // JumpInsn
+  // note: falseLabel should be next block's label
+  object IfInt0 extends CommandExtractor {
+    final val extractor: Command --\ (String, CmpOp.Type, String) = {
+      case IfJump(BinaryExp(IdExp(Id(varName)), Id(op), LiteralExp(_, ExtLit(0))), Id(trueLabel), _, _) if isIifOp(op) =>
+        (varName, CmpOp.from(op), trueLabel)
+    }
+
+    final def apply(varName: String, cop: CmpOp.Type, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName), Id(CmpOp.to(cop)), intZeroLit), Id(trueLabel), Id(falseLabel))
+
+    final def unapply(c: Command): Option[(String, CmpOp.Type, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // JumpInsn
+  // note: falseLabel should be next block's label
+  object IfInt extends CommandExtractor {
+    final val extractor: Command --\ (String, CmpOp.Type, String, String) = {
+      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isIifOp(op) =>
+        (varName1, CmpOp.from(op), varName2, trueLabel)
+    }
+
+    final def apply(varName1: String, cop: CmpOp.Type, varName2: String, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName1), Id(CmpOp.to(cop)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
+
+    final def unapply(c: Command): Option[(String, CmpOp.Type, String, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // JumpInsn
+  // note: falseLabel should be next block's label
+  object IfObject extends CommandExtractor {
+    final val extractor: Command --\ (String, Boolean, String, String) = {
+      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isOifOp(op) =>
+        (varName1, fromOifOp(op), varName2, trueLabel)
+    }
+
+    final def apply(varName1: String, isEq: Boolean, varName2: String, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName1), Id(toOifOp(isEq)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
+
+    final def unapply(c: Command): Option[(String, Boolean, String, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // JumpInsn
+  object IfNull extends CommandExtractor {
+    final val extractor: Command --\ (String, Boolean, String) = {
+      case IfJump(ExtExp(IdExp(Id(op)), Seq(IdExp(Id(varName)))), Id(trueLabel), _, _) if isNullOp(op) =>
+        (varName, fromNullOp(op), trueLabel)
+    }
+
+    final def apply(varName: String, isNull: Boolean, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(ExtExp(IdExp(Id(toNullOp(isNull))), ivector(IdExp(Id(varName)))), Id(trueLabel), Id(falseLabel))
+
+    final def unapply(c: Command): Option[(String, Boolean, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // JumpInsn
+  object Goto extends CommandExtractor {
+    final val extractor: Command --\ Tuple1[String] = {
+      case GotoJump(Id(label), _) => Tuple1(label)
+    }
+
+    final def apply(label: String): GotoJump =
+      GotoJump(Id(label))
+
+    final def unapply(c: Command): Option[String] =
+      applyOpt(extractor, c).map(_._1)
   }
 
   @inline
