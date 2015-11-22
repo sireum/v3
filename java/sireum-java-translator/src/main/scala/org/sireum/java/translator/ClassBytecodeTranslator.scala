@@ -786,14 +786,14 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitJumpInsn(opcode: Int, label: Label): Unit = {
       val ln = labelName(label)
-      def ifi1(cop: IcmpOp.Type): Unit = {
+      def ifi1(cop: ICmpOp.Type): Unit = {
         val (t, tipe) = varStack.pop()
         assert(isIntType(tipe))
         val block = currentBlock
         splitBlock(force = true, addGoto = false)
         block += IfInt0Cmd(t, cop, ln, currentLabelName)
       }
-      def iif2(cop: IcmpOp.Type): Unit = {
+      def iif2(cop: ICmpOp.Type): Unit = {
         val (t2, tipe2) = varStack.pop()
         val (t1, tipe1) = varStack.pop()
         assert(isIntType(tipe1) && isIntType(tipe2))
@@ -817,18 +817,18 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         block += IfNullCmd(t, isNull, ln, currentLabelName)
       }
       opcode match {
-        case Opcodes.IFEQ => ifi1(IcmpOp.Eq)
-        case Opcodes.IFNE => ifi1(IcmpOp.Ne)
-        case Opcodes.IFLT => ifi1(IcmpOp.Lt)
-        case Opcodes.IFGE => ifi1(IcmpOp.Ge)
-        case Opcodes.IFGT => ifi1(IcmpOp.Gt)
-        case Opcodes.IFLE => ifi1(IcmpOp.Le)
-        case Opcodes.IF_ICMPEQ => iif2(IcmpOp.Eq)
-        case Opcodes.IF_ICMPNE => iif2(IcmpOp.Ne)
-        case Opcodes.IF_ICMPLT => iif2(IcmpOp.Lt)
-        case Opcodes.IF_ICMPGE => iif2(IcmpOp.Ge)
-        case Opcodes.IF_ICMPGT => iif2(IcmpOp.Gt)
-        case Opcodes.IF_ICMPLE => iif2(IcmpOp.Le)
+        case Opcodes.IFEQ => ifi1(ICmpOp.Eq)
+        case Opcodes.IFNE => ifi1(ICmpOp.Ne)
+        case Opcodes.IFLT => ifi1(ICmpOp.Lt)
+        case Opcodes.IFGE => ifi1(ICmpOp.Ge)
+        case Opcodes.IFGT => ifi1(ICmpOp.Gt)
+        case Opcodes.IFLE => ifi1(ICmpOp.Le)
+        case Opcodes.IF_ICMPEQ => iif2(ICmpOp.Eq)
+        case Opcodes.IF_ICMPNE => iif2(ICmpOp.Ne)
+        case Opcodes.IF_ICMPLT => iif2(ICmpOp.Lt)
+        case Opcodes.IF_ICMPGE => iif2(ICmpOp.Ge)
+        case Opcodes.IF_ICMPGT => iif2(ICmpOp.Gt)
+        case Opcodes.IF_ICMPLE => iif2(ICmpOp.Le)
         case Opcodes.IF_ACMPEQ => oif2(isEq = true)
         case Opcodes.IF_ACMPNE => oif2(isEq = false)
         case Opcodes.GOTO => command(GotoJump(Id(ln)))
@@ -1054,14 +1054,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         val (array, arrayType) = varStack.pop()
         assert(isIntType(indexType) && isObjectType(arrayType))
         val t = tempVar()
-        command(
-          AssignAction(
-            idExp(t),
-            ExtExp(idExp(array), ivector(
-              idExp(index),
-              typeLit(tipe)))
-          )
-        )
+        command(ArrayLoadCmd(t, array, index, tipe))
         varStack.push((t, tipe))
       }
 
@@ -1073,31 +1066,20 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         val (array, arrayType) = varStack.pop()
         assert(isIntType(indexType) && isObjectType(arrayType) &&
           valueTypeCheck(valueType))
-        command(
-          AssignAction(
-            ExtExp(idExp(array), ivector(
-              idExp(index),
-              typeLit(tipe))),
-            idExp(value)
-          )
-        )
+        command(ArrayStoreCmd(array, index, value, tipe))
       }
 
-      def returnJump(argCheck: meta.Type => Boolean, tipe: meta.Type) = {
+      def returnJump(argCheck: meta.Type => Boolean) = {
         val (t, tipe2) = varStack.pop()
         assert(argCheck(tipe2))
-        command(ReturnJump(Some(idExp(t)),
-          if (isObjectType(tipe)) ivectorEmpty else ivector(typeAnnotation(tipe))))
+        command(ReturnCmd(Some(t)))
       }
 
       opcode match {
         case Opcodes.NOP => // skip
         case Opcodes.ACONST_NULL =>
           val t = tempVar()
-          command(
-            AssignAction(
-              idExp(t),
-              ExtExp(idExp(nullConstOp), ivectorEmpty)))
+          command(NullCmd(t))
           varStack.push((t, topType))
         case Opcodes.ICONST_M1 => const(ConstKind.Int, -1)
         case Opcodes.ICONST_0 => const(ConstKind.Int, 0)
@@ -1228,71 +1210,71 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
           assert(isSingleWord(tipe1) && isSingleWord(tipe2))
           varStack.push(p1)
           varStack.push(p2)
-        case Opcodes.IADD => binop(iaddOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LADD => binop(laddOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.FADD => binop(faddOp, isFloatType, isFloatType, meta.FloatType)
-        case Opcodes.DADD => binop(daddOp, isDoubleType, isDoubleType, meta.DoubleType)
-        case Opcodes.ISUB => binop(isubOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LSUB => binop(lsubOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.FSUB => binop(fsubOp, isFloatType, isFloatType, meta.FloatType)
-        case Opcodes.DSUB => binop(dsubOp, isDoubleType, isDoubleType, meta.DoubleType)
-        case Opcodes.IMUL => binop(imulOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LMUL => binop(lmulOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.FMUL => binop(fmulOp, isFloatType, isFloatType, meta.FloatType)
-        case Opcodes.DMUL => binop(dmulOp, isDoubleType, isDoubleType, meta.DoubleType)
-        case Opcodes.IDIV => binop(idivOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LDIV => binop(ldivOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.FDIV => binop(fdivOp, isFloatType, isFloatType, meta.FloatType)
-        case Opcodes.DDIV => binop(ddivOp, isDoubleType, isDoubleType, meta.DoubleType)
-        case Opcodes.IREM => binop(iremOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LREM => binop(lremOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.FREM => binop(fremOp, isFloatType, isFloatType, meta.FloatType)
-        case Opcodes.DREM => binop(dremOp, isDoubleType, isDoubleType, meta.DoubleType)
-        case Opcodes.INEG => unop(inegOp, isIntType, meta.IntType)
-        case Opcodes.LNEG => unop(lnegOp, isLongType, meta.LongType)
-        case Opcodes.FNEG => unop(fnegOp, isFloatType, meta.FloatType)
-        case Opcodes.DNEG => unop(dnegOp, isDoubleType, meta.DoubleType)
-        case Opcodes.ISHL => binop(ishlOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LSHL => binop(lshlOp, isLongType, isIntType, meta.LongType)
-        case Opcodes.ISHR => binop(ishrOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LSHR => binop(lshrOp, isLongType, isIntType, meta.LongType)
-        case Opcodes.IUSHR => binop(iushrOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LUSHR => binop(lushrOp, isLongType, isIntType, meta.LongType)
-        case Opcodes.IAND => binop(iandOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LAND => binop(landOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.IOR => binop(iorOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LOR => binop(lorOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.IXOR => binop(ixorOp, isIntType, isIntType, meta.IntType)
-        case Opcodes.LXOR => binop(lxorOp, isLongType, isLongType, meta.LongType)
-        case Opcodes.I2L => unop(i2lOp, isIntType, meta.LongType)
-        case Opcodes.I2F => unop(i2fOp, isIntType, meta.FloatType)
-        case Opcodes.I2D => unop(i2dOp, isIntType, meta.DoubleType)
-        case Opcodes.L2I => unop(l2iOp, isLongType, meta.IntType)
-        case Opcodes.L2F => unop(l2fOp, isLongType, meta.FloatType)
-        case Opcodes.L2D => unop(l2dOp, isLongType, meta.DoubleType)
-        case Opcodes.F2I => unop(f2iOp, isFloatType, meta.IntType)
-        case Opcodes.F2L => unop(f2lOp, isFloatType, meta.LongType)
-        case Opcodes.F2D => unop(f2dOp, isFloatType, meta.DoubleType)
-        case Opcodes.D2I => unop(d2iOp, isDoubleType, meta.IntType)
-        case Opcodes.D2L => unop(d2lOp, isDoubleType, meta.LongType)
-        case Opcodes.D2F => unop(d2fOp, isDoubleType, meta.FloatType)
-        case Opcodes.I2B => unop(i2bOp, isIntType, meta.ByteType)
-        case Opcodes.I2C => unop(i2cOp, isIntType, meta.CharType)
-        case Opcodes.I2S => unop(i2sOp, isIntType, meta.ShortType)
-        case Opcodes.LCMP => binop(lcmpOp, isLongType, isLongType, meta.IntType)
-        case Opcodes.FCMPL => binop(fcmplOp, isFloatType, isFloatType, meta.IntType)
-        case Opcodes.FCMPG => binop(fcmpgOp, isFloatType, isFloatType, meta.IntType)
-        case Opcodes.DCMPL => binop(dcmplOp, isDoubleType, isDoubleType, meta.IntType)
-        case Opcodes.DCMPG => binop(dcmpgOp, isDoubleType, isDoubleType, meta.IntType)
-        case Opcodes.IRETURN => returnJump(isIntType, meta.IntType)
-        case Opcodes.LRETURN => returnJump(isLongType, meta.LongType)
-        case Opcodes.FRETURN => returnJump(isFloatType, meta.FloatType)
-        case Opcodes.DRETURN => returnJump(isDoubleType, meta.DoubleType)
-        case Opcodes.ARETURN => returnJump(isObjectType, topType)
+        case Opcodes.IADD => binop(BinOp.IAdd, isIntType, isIntType, meta.IntType)
+        case Opcodes.LADD => binop(BinOp.LAdd, isLongType, isLongType, meta.LongType)
+        case Opcodes.FADD => binop(BinOp.FAdd, isFloatType, isFloatType, meta.FloatType)
+        case Opcodes.DADD => binop(BinOp.DAdd, isDoubleType, isDoubleType, meta.DoubleType)
+        case Opcodes.ISUB => binop(BinOp.ISub, isIntType, isIntType, meta.IntType)
+        case Opcodes.LSUB => binop(BinOp.LSub, isLongType, isLongType, meta.LongType)
+        case Opcodes.FSUB => binop(BinOp.FSub, isFloatType, isFloatType, meta.FloatType)
+        case Opcodes.DSUB => binop(BinOp.DSub, isDoubleType, isDoubleType, meta.DoubleType)
+        case Opcodes.IMUL => binop(BinOp.IMul, isIntType, isIntType, meta.IntType)
+        case Opcodes.LMUL => binop(BinOp.LMul, isLongType, isLongType, meta.LongType)
+        case Opcodes.FMUL => binop(BinOp.FMul, isFloatType, isFloatType, meta.FloatType)
+        case Opcodes.DMUL => binop(BinOp.DMul, isDoubleType, isDoubleType, meta.DoubleType)
+        case Opcodes.IDIV => binop(BinOp.IDiv, isIntType, isIntType, meta.IntType)
+        case Opcodes.LDIV => binop(BinOp.LDiv, isLongType, isLongType, meta.LongType)
+        case Opcodes.FDIV => binop(BinOp.FDiv, isFloatType, isFloatType, meta.FloatType)
+        case Opcodes.DDIV => binop(BinOp.DDiv, isDoubleType, isDoubleType, meta.DoubleType)
+        case Opcodes.IREM => binop(BinOp.IRem, isIntType, isIntType, meta.IntType)
+        case Opcodes.LREM => binop(BinOp.LRem, isLongType, isLongType, meta.LongType)
+        case Opcodes.FREM => binop(BinOp.FRem, isFloatType, isFloatType, meta.FloatType)
+        case Opcodes.DREM => binop(BinOp.DRem, isDoubleType, isDoubleType, meta.DoubleType)
+        case Opcodes.INEG => unop(UnOp.INeg, isIntType, meta.IntType)
+        case Opcodes.LNEG => unop(UnOp.LNeg, isLongType, meta.LongType)
+        case Opcodes.FNEG => unop(UnOp.FNeg, isFloatType, meta.FloatType)
+        case Opcodes.DNEG => unop(UnOp.DNeg, isDoubleType, meta.DoubleType)
+        case Opcodes.ISHL => binop(BinOp.IShl, isIntType, isIntType, meta.IntType)
+        case Opcodes.LSHL => binop(BinOp.LShl, isLongType, isIntType, meta.LongType)
+        case Opcodes.ISHR => binop(BinOp.IShr, isIntType, isIntType, meta.IntType)
+        case Opcodes.LSHR => binop(BinOp.LShr, isLongType, isIntType, meta.LongType)
+        case Opcodes.IUSHR => binop(BinOp.IUshr, isIntType, isIntType, meta.IntType)
+        case Opcodes.LUSHR => binop(BinOp.LUshr, isLongType, isIntType, meta.LongType)
+        case Opcodes.IAND => binop(BinOp.IAnd, isIntType, isIntType, meta.IntType)
+        case Opcodes.LAND => binop(BinOp.LAnd, isLongType, isLongType, meta.LongType)
+        case Opcodes.IOR => binop(BinOp.IOr, isIntType, isIntType, meta.IntType)
+        case Opcodes.LOR => binop(BinOp.LOr, isLongType, isLongType, meta.LongType)
+        case Opcodes.IXOR => binop(BinOp.IXor, isIntType, isIntType, meta.IntType)
+        case Opcodes.LXOR => binop(BinOp.LXor, isLongType, isLongType, meta.LongType)
+        case Opcodes.I2L => unop(UnOp.I2L, isIntType, meta.LongType)
+        case Opcodes.I2F => unop(UnOp.I2F, isIntType, meta.FloatType)
+        case Opcodes.I2D => unop(UnOp.I2D, isIntType, meta.DoubleType)
+        case Opcodes.L2I => unop(UnOp.L2I, isLongType, meta.IntType)
+        case Opcodes.L2F => unop(UnOp.L2F, isLongType, meta.FloatType)
+        case Opcodes.L2D => unop(UnOp.L2D, isLongType, meta.DoubleType)
+        case Opcodes.F2I => unop(UnOp.F2I, isFloatType, meta.IntType)
+        case Opcodes.F2L => unop(UnOp.F2L, isFloatType, meta.LongType)
+        case Opcodes.F2D => unop(UnOp.F2D, isFloatType, meta.DoubleType)
+        case Opcodes.D2I => unop(UnOp.D2I, isDoubleType, meta.IntType)
+        case Opcodes.D2L => unop(UnOp.D2L, isDoubleType, meta.LongType)
+        case Opcodes.D2F => unop(UnOp.D2F, isDoubleType, meta.FloatType)
+        case Opcodes.I2B => unop(UnOp.I2B, isIntType, meta.ByteType)
+        case Opcodes.I2C => unop(UnOp.I2C, isIntType, meta.CharType)
+        case Opcodes.I2S => unop(UnOp.I2S, isIntType, meta.ShortType)
+        case Opcodes.LCMP => binop(BinOp.LCmp, isLongType, isLongType, meta.IntType)
+        case Opcodes.FCMPL => binop(BinOp.FCmpl, isFloatType, isFloatType, meta.IntType)
+        case Opcodes.FCMPG => binop(BinOp.FCmpg, isFloatType, isFloatType, meta.IntType)
+        case Opcodes.DCMPL => binop(BinOp.DCmpl, isDoubleType, isDoubleType, meta.IntType)
+        case Opcodes.DCMPG => binop(BinOp.DCmpg, isDoubleType, isDoubleType, meta.IntType)
+        case Opcodes.IRETURN => returnJump(isIntType)
+        case Opcodes.LRETURN => returnJump(isLongType)
+        case Opcodes.FRETURN => returnJump(isFloatType)
+        case Opcodes.DRETURN => returnJump(isDoubleType)
+        case Opcodes.ARETURN => returnJump(isObjectType)
         case Opcodes.RETURN =>
           assert(varStack.isEmpty)
-          command(ReturnJump(None))
-        case Opcodes.ARRAYLENGTH => unop(arrayLengthOp, isObjectType, meta.IntType)
+          command(ReturnCmd(None))
+        case Opcodes.ARRAYLENGTH => unop(UnOp.ArrayLength, isObjectType, meta.IntType)
         case Opcodes.ATHROW =>
           val (t, tipe) = varStack.pop()
           assert(isObjectType(tipe))
@@ -1398,22 +1380,17 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       varStack.push((t, ConstKind.toType(ck)))
     }
 
-    private def unop(op: String,
+    private def unop(unop: UnOp.Type,
                      argTypeCheck: meta.Type => Boolean,
                      tipe: meta.Type): Unit = {
       val (t1, tipe1) = varStack.pop()
       assert(argTypeCheck(tipe1))
       val t = tempVar()
-      command(
-        AssignAction(
-          idExp(t),
-          ExtExp(
-            idExp(op),
-            ivector(idExp(t1)))))
+      command(UnaryCmd(t, unop, t1))
       varStack.push((t, tipe))
     }
 
-    private def binop(op: String,
+    private def binop(binop: BinOp.Type,
                       argTypeCheck1: meta.Type => Boolean,
                       argTypeCheck2: meta.Type => Boolean,
                       tipe: meta.Type): Unit = {
@@ -1421,13 +1398,7 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       val (t1, tipe1) = varStack.pop()
       assert(argTypeCheck1(tipe1) && argTypeCheck2(tipe2))
       val t = tempVar()
-      command(
-        AssignAction(
-          idExp(t),
-          BinaryExp(
-            idExp(t1),
-            Id(op),
-            idExp(t2))))
+      command(BinaryCmd(t, t1, binop, t2))
       varStack.push((t, tipe))
     }
 

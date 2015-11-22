@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java
 
+import jdk.internal.org.objectweb.asm.tree.InsnList
 import org.sireum.pilar.ast._
 import org.sireum.util._
 
@@ -37,11 +38,15 @@ object JavaProfile {
   final val annotationPutStaticDesc = "PutStatic"
   final val annotationLoadDesc = "Load"
   final val annotationStoreDesc = "Store"
+  final val annotationArrayLoadDesc = "ArrayLoad"
+  final val annotationArrayStoreDesc = "ArrayStore"
 
   final val annotationGetStatic = Annotation(Id(annotationGetStaticDesc), RawLit(""))
   final val annotationPutStatic = Annotation(Id(annotationPutStaticDesc), RawLit(""))
   final val annotationLoad = Annotation(Id(annotationLoadDesc), RawLit(""))
   final val annotationStore = Annotation(Id(annotationStoreDesc), RawLit(""))
+  final val annotationArrayLoad = Annotation(Id(annotationArrayLoadDesc), RawLit(""))
+  final val annotationArrayStore = Annotation(Id(annotationArrayStoreDesc), RawLit(""))
 
   final val byteDesc = "b"
   final val charDesc = "c"
@@ -176,26 +181,38 @@ object JavaProfile {
 
   final val constDescs = Set(intDesc, floatDesc, longDesc, doubleDesc, stringDesc, handleDesc)
   final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
-  final val iifOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
+  final val iIfOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
   final val loadStoreTypes = Set(meta.IntType, meta.LongType, meta.FloatType, meta.DoubleType, topType)
+  final val binOps =
+    Set(iaddOp, laddOp, faddOp, daddOp, isubOp, lsubOp, fsubOp, dsubOp,
+      imulOp, lmulOp, fmulOp, dmulOp, idivOp, ldivOp, fdivOp, ddivOp,
+      iremOp, lremOp, fremOp, dremOp, ishlOp, lshlOp, ishrOp, lshrOp, iushrOp, lushrOp,
+      iandOp, landOp, iorOp, lorOp, ixorOp, lxorOp, lcmpOp, fcmplOp, fcmpgOp, dcmplOp, dcmpgOp)
+  final val unOps =
+    Set(inegOp, lnegOp, fnegOp, dnegOp, i2lOp, i2fOp, i2dOp, l2iOp, l2fOp, l2dOp,
+      f2iOp, f2lOp, f2dOp, d2iOp, d2lOp, d2fOp, i2bOp, i2cOp, i2sOp, arrayLengthOp)
+
+  final val intZeroLit = intLit(0)
 
   final def isInvokeOp(op: String) = invokeOps.contains(op)
 
-  final def isIifOp(op: String) = iifOps.contains(op)
+  final def isIIfOp(op: String) = iIfOps.contains(op)
 
-  final def isOifOp(op: String) = op == oeqOp || op == oneOp
+  final def isOIfOp(op: String) = op == oeqOp || op == oneOp
 
   final def isNullOp(op: String) = op == nullOp || op == nonNullOp
 
-  final def toOifOp(b: Boolean): String = if (b) oeqOp else oneOp
+  final def toOIfOp(b: Boolean): String = if (b) oeqOp else oneOp
 
   final def toNullOp(b: Boolean): String = if (b) nullOp else nonNullOp
 
-  final def fromOifOp(op: String): Boolean = if (op == oeqOp) true else false
+  final def fromOIfOp(op: String): Boolean = if (op == oeqOp) true else false
 
   final def fromNullOp(op: String): Boolean = if (op == nullOp) true else false
 
-  final val intZeroLit = intLit(0)
+  final def isBinOp(op: String): Boolean = binOps.contains(op)
+
+  final def isUnOp(op: String): Boolean = unOps.contains(op)
 
   object ConstKind extends Enumeration {
     type Type = Value
@@ -254,26 +271,165 @@ object JavaProfile {
     }
   }
 
-  object IcmpOp extends Enumeration {
+  object ICmpOp extends Enumeration {
     type Type = Value
     final val Eq, Ne, Lt, Ge, Gt, Le = Value
 
-    final def to(cop: IcmpOp.Type): String = cop match {
-      case IcmpOp.Eq => ieqOp
-      case IcmpOp.Ne => ineOp
-      case IcmpOp.Lt => iltOp
-      case IcmpOp.Ge => igeOp
-      case IcmpOp.Gt => igtOp
-      case IcmpOp.Le => ileOp
+    final def to(cop: Type): String = cop match {
+      case Eq => ieqOp
+      case Ne => ineOp
+      case Lt => iltOp
+      case Ge => igeOp
+      case Gt => igtOp
+      case Le => ileOp
     }
 
-    final def from(op: String): IcmpOp.Type = op match {
-      case `ieqOp` => IcmpOp.Eq
-      case `ineOp` => IcmpOp.Ne
-      case `iltOp` => IcmpOp.Lt
-      case `igeOp` => IcmpOp.Ge
-      case `igtOp` => IcmpOp.Gt
-      case `ileOp` => IcmpOp.Le
+    final def from(op: String): ICmpOp.Type = op match {
+      case `ieqOp` => Eq
+      case `ineOp` => Ne
+      case `iltOp` => Lt
+      case `igeOp` => Ge
+      case `igtOp` => Gt
+      case `ileOp` => Le
+    }
+  }
+
+  object BinOp extends Enumeration {
+    type Type = Value
+    final val IAdd, LAdd, FAdd, DAdd, ISub, LSub, FSub, DSub, IMul, LMul, FMul, DMul,
+    IDiv, LDiv, FDiv, DDiv, IRem, LRem, FRem, DRem, IShl, LShl, IShr, LShr, IUshr, LUshr,
+    IAnd, LAnd, IOr, LOr, IXor, LXor, LCmp, FCmpl, FCmpg, DCmpl, DCmpg = Value
+
+    final def to(binop: Type): String = binop match {
+      case IAdd => iaddOp
+      case LAdd => laddOp
+      case FAdd => faddOp
+      case DAdd => daddOp
+      case ISub => isubOp
+      case LSub => lsubOp
+      case FSub => fsubOp
+      case DSub => dsubOp
+      case IMul => imulOp
+      case LMul => lmulOp
+      case FMul => fmulOp
+      case DMul => dmulOp
+      case IDiv => idivOp
+      case LDiv => ldivOp
+      case FDiv => fdivOp
+      case DDiv => ddivOp
+      case IRem => iremOp
+      case LRem => lremOp
+      case FRem => fremOp
+      case DRem => dremOp
+      case IShl => ishlOp
+      case LShl => lshlOp
+      case IShr => ishrOp
+      case LShr => lshrOp
+      case IUshr => iushrOp
+      case LUshr => lushrOp
+      case IAnd => iandOp
+      case LAnd => landOp
+      case IOr => iorOp
+      case LOr => lorOp
+      case IXor => ixorOp
+      case LXor => lxorOp
+      case LCmp => lcmpOp
+      case FCmpl => fcmplOp
+      case FCmpg => fcmpgOp
+      case DCmpl => dcmplOp
+      case DCmpg => dcmpgOp
+    }
+
+    final def from(op: String): Type = op match {
+      case `iaddOp` => IAdd
+      case `laddOp` => LAdd
+      case `faddOp` => FAdd
+      case `daddOp` => DAdd
+      case `isubOp` => ISub
+      case `lsubOp` => LSub
+      case `fsubOp` => FSub
+      case `dsubOp` => DSub
+      case `imulOp` => IMul
+      case `lmulOp` => LMul
+      case `fmulOp` => FMul
+      case `dmulOp` => DMul
+      case `idivOp` => IDiv
+      case `ldivOp` => LDiv
+      case `fdivOp` => FDiv
+      case `ddivOp` => DDiv
+      case `iremOp` => IRem
+      case `lremOp` => LRem
+      case `fremOp` => FRem
+      case `dremOp` => DRem
+      case `ishlOp` => IShl
+      case `lshlOp` => LShl
+      case `ishrOp` => IShr
+      case `lshrOp` => LShr
+      case `iushrOp` => IUshr
+      case `lushrOp` => LUshr
+      case `iandOp` => IAnd
+      case `landOp` => LAnd
+      case `iorOp` => IOr
+      case `lorOp` => LOr
+      case `ixorOp` => IXor
+      case `lxorOp` => LXor
+      case `lcmpOp` => LCmp
+      case `fcmplOp` => FCmpl
+      case `fcmpgOp` => FCmpg
+      case `dcmplOp` => DCmpl
+      case `dcmpgOp` => DCmpg
+    }
+  }
+
+  object UnOp extends Enumeration {
+    type Type = Value
+    final val INeg, LNeg, FNeg, DNeg, I2L, I2F, I2D, L2I, L2F, L2D,
+    F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S, ArrayLength = Value
+
+    final def to(unop: Type): String = unop match {
+      case INeg => inegOp
+      case LNeg => lnegOp
+      case FNeg => fnegOp
+      case DNeg => dnegOp
+      case I2L => i2lOp
+      case I2F => i2fOp
+      case I2D => i2dOp
+      case L2I => l2iOp
+      case L2F => l2fOp
+      case L2D => l2dOp
+      case F2I => f2iOp
+      case F2L => f2lOp
+      case F2D => f2dOp
+      case D2I => d2iOp
+      case D2L => d2lOp
+      case D2F => d2fOp
+      case I2B => i2bOp
+      case I2C => i2cOp
+      case I2S => i2sOp
+      case ArrayLength => arrayLengthOp
+    }
+
+    final def from(op: String): Type = op match {
+      case `inegOp` => INeg
+      case `lnegOp` => LNeg
+      case `fnegOp` => FNeg
+      case `dnegOp` => DNeg
+      case `i2lOp` => I2L
+      case `i2fOp` => I2F
+      case `i2dOp` => I2D
+      case `l2iOp` => L2I
+      case `l2fOp` => L2F
+      case `l2dOp` => L2D
+      case `f2iOp` => F2I
+      case `f2lOp` => F2L
+      case `f2dOp` => F2D
+      case `d2iOp` => D2I
+      case `d2lOp` => D2L
+      case `d2fOp` => D2F
+      case `i2bOp` => I2B
+      case `i2cOp` => I2C
+      case `i2sOp` => I2S
+      case `arrayLengthOp` => ArrayLength
     }
   }
 
@@ -613,15 +769,15 @@ object JavaProfile {
   // where <op> ::= ==_i | !=_i | >_i | >=_i | <_i | <=_i
   //       <falseLabel> should be next block's label
   object IfInt0Cmd extends CommandExtractor {
-    final val extractor: Command --\ (String, IcmpOp.Type, String) = {
-      case IfJump(BinaryExp(IdExp(Id(varName)), Id(op), LiteralExp(_, ExtLit(0))), Id(trueLabel), _, _) if isIifOp(op) =>
-        (varName, IcmpOp.from(op), trueLabel)
+    final val extractor: Command --\ (String, ICmpOp.Type, String) = {
+      case IfJump(BinaryExp(IdExp(Id(varName)), Id(op), LiteralExp(_, ExtLit(0))), Id(trueLabel), _, _) if isIIfOp(op) =>
+        (varName, ICmpOp.from(op), trueLabel)
     }
 
-    final def apply(varName: String, cop: IcmpOp.Type, trueLabel: String, falseLabel: String): IfJump =
-      IfJump(BinaryExp(idExp(varName), Id(IcmpOp.to(cop)), intZeroLit), Id(trueLabel), Id(falseLabel))
+    final def apply(varName: String, cop: ICmpOp.Type, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName), Id(ICmpOp.to(cop)), intZeroLit), Id(trueLabel), Id(falseLabel))
 
-    final def unapply(c: Command): Option[(String, IcmpOp.Type, String)] =
+    final def unapply(c: Command): Option[(String, ICmpOp.Type, String)] =
       applyOpt(extractor, c)
   }
 
@@ -632,15 +788,15 @@ object JavaProfile {
   // where <op> ::= ==_i | !=_i | >_i | >=_i | <_i | <=_i
   //       <falseLabel> should be next block's label
   object IfIntCmd extends CommandExtractor {
-    final val extractor: Command --\ (String, IcmpOp.Type, String, String) = {
-      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isIifOp(op) =>
-        (varName1, IcmpOp.from(op), varName2, trueLabel)
+    final val extractor: Command --\ (String, ICmpOp.Type, String, String) = {
+      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isIIfOp(op) =>
+        (varName1, ICmpOp.from(op), varName2, trueLabel)
     }
 
-    final def apply(varName1: String, cop: IcmpOp.Type, varName2: String, trueLabel: String, falseLabel: String): IfJump =
-      IfJump(BinaryExp(idExp(varName1), Id(IcmpOp.to(cop)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
+    final def apply(varName1: String, cop: ICmpOp.Type, varName2: String, trueLabel: String, falseLabel: String): IfJump =
+      IfJump(BinaryExp(idExp(varName1), Id(ICmpOp.to(cop)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
 
-    final def unapply(c: Command): Option[(String, IcmpOp.Type, String, String)] =
+    final def unapply(c: Command): Option[(String, ICmpOp.Type, String, String)] =
       applyOpt(extractor, c)
   }
 
@@ -652,12 +808,12 @@ object JavaProfile {
   //       <falseLabel> should be next block's label
   object IfObjectCmd extends CommandExtractor {
     final val extractor: Command --\ (String, Boolean, String, String) = {
-      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isOifOp(op) =>
-        (varName1, fromOifOp(op), varName2, trueLabel)
+      case IfJump(BinaryExp(IdExp(Id(varName1)), Id(op), IdExp(Id(varName2))), Id(trueLabel), _, _) if isOIfOp(op) =>
+        (varName1, fromOIfOp(op), varName2, trueLabel)
     }
 
     final def apply(varName1: String, isEq: Boolean, varName2: String, trueLabel: String, falseLabel: String): IfJump =
-      IfJump(BinaryExp(idExp(varName1), Id(toOifOp(isEq)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
+      IfJump(BinaryExp(idExp(varName1), Id(toOIfOp(isEq)), idExp(varName2)), Id(trueLabel), Id(falseLabel))
 
     final def unapply(c: Command): Option[(String, Boolean, String, String)] =
       applyOpt(extractor, c)
@@ -819,6 +975,151 @@ object JavaProfile {
           ivector(idExp(objectVarName), typeLit(tipe))))
 
     final def unapply(c: Command): Option[(String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // Insn
+  //
+  // <varName> := <arrayVarName>(<indexVarName>) @ArrayLoad @Type«<tipe>»
+  object ArrayLoadCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, String, meta.Type) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(arrayVarName)), Seq(
+      IdExp(Id(indexVarName)))),
+      Seq(`annotationArrayLoad`,
+      Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
+        (varName, arrayVarName, indexVarName, tipe)
+    }
+
+    final def apply(varName: String, arrayVarName: String, indexVarName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(arrayVarName), ivector(
+          idExp(indexVarName))),
+        ivector(annotationArrayLoad, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // Insn
+  //
+  // <arrayVarName>(<indexVarName>) := <varName> @ArrayStore @Type«<tipe>»
+  object ArrayStoreCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, String, meta.Type) = {
+      case AssignAction(
+      ExtExp(IdExp(Id(arrayVarName)), Seq(
+      IdExp(Id(indexVarName)))),
+      IdExp(Id(varName)),
+      Seq(`annotationArrayStore`,
+      Annotation(_, ExtLit(tipe: meta.Type)), _*)) =>
+        (arrayVarName, indexVarName, varName, tipe)
+    }
+
+    final def apply(arrayVarName: String, indexVarName: String, varName: String, tipe: meta.Type): AssignAction =
+      AssignAction(
+        ExtExp(idExp(arrayVarName), ivector(
+          idExp(indexVarName))),
+        idExp(varName),
+        ivector(annotationArrayLoad, typeAnnotation(tipe)))
+
+    final def unapply(c: Command): Option[(String, String, String, meta.Type)] =
+      applyOpt(extractor, c)
+  }
+
+  // Insn
+  //
+  // return [<varName>];
+  object ReturnCmd extends CommandExtractor {
+    final val extractor: Command --\ Option[String] = {
+      case ReturnJump(Some(IdExp(Id(varName))), _) =>
+        Some(varName)
+      case ReturnJump(None, _) =>
+        None
+    }
+
+    final def apply(varNameOpt: Option[String]): ReturnJump =
+      varNameOpt match {
+        case Some(varName) => ReturnJump(Some(idExp(varName)))
+        case _ => ReturnJump(None)
+      }
+
+    final def unapply(c: Command): Option[String] =
+      applyOpt(extractor, c).flatten
+  }
+
+  // Insn
+  //
+  // <varName> := null();
+  object NullCmd extends CommandExtractor {
+    final val extractor: Command --\ Tuple1[String] = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      ExtExp(IdExp(Id(`nullConstOp`)), _), _) =>
+        Tuple1(varName)
+    }
+
+    final def apply(varName: String): AssignAction =
+      AssignAction(
+        idExp(varName),
+        ExtExp(idExp(nullConstOp), ivectorEmpty))
+
+    final def unapply(c: Command): Option[String] =
+      applyOpt(extractor, c).map(_._1)
+  }
+
+  // Insn
+  //
+  // <varName> := <varName1> <op> <varName2>;
+  //
+  // where isBinOp(<op>) is true
+  object BinaryCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, String, BinOp.Type, String) = {
+      case AssignAction(
+      IdExp(Id(varName)),
+      BinaryExp(
+      IdExp(Id(varName1)),
+      Id(op),
+      IdExp(Id(varName2))), _) if isBinOp(op) =>
+        (varName, varName1, BinOp.from(op), varName2)
+    }
+
+    final def apply(varName: String, varName1: String, binop: BinOp.Type, varName2: String) =
+      AssignAction(
+        idExp(varName),
+        BinaryExp(
+          idExp(varName1),
+          Id(BinOp.to(binop)),
+          idExp(varName2)))
+
+    final def unapply(c: Command): Option[(String, String, BinOp.Type, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // Insn
+  //
+  // <lVarName> := <op>(<rVarName>);
+  //
+  // where isUnOp(<op>) is true
+  object UnaryCmd extends CommandExtractor {
+    final val extractor: Command --\ (String, UnOp.Type, String) = {
+      case AssignAction(
+      IdExp(Id(lVarName)),
+      ExtExp(
+      IdExp(Id(op)),
+      Seq(IdExp(Id(rVarName)))), _) if isUnOp(op) =>
+        (lVarName, UnOp.from(op), rVarName)
+    }
+
+    final def apply(lVarName: String, unop: UnOp.Type, rVarName: String): AssignAction =
+      AssignAction(
+        idExp(lVarName),
+        ExtExp(
+          idExp(UnOp.to(unop)),
+          ivector(idExp(rVarName))))
+
+    final def unapply(c: Command): Option[(String, UnOp.Type, String)] =
       applyOpt(extractor, c)
   }
 
