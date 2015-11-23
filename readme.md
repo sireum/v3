@@ -188,7 +188,7 @@ You need to install some plugins for Sireum v3 development
 * ASM Bytecode Outline
 * BashSupport
 * gfm
-* Markdown support
+* MultiMarkdown
 * Python
 * ReStructuredText Support
 * SBT ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) (**see notes below**)
