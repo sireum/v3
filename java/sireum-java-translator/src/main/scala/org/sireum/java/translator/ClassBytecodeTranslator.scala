@@ -1278,17 +1278,17 @@ final private class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.ATHROW =>
           val (t, tipe) = varStack.pop()
           assert(isObjectType(tipe))
-          command(ExtJump(Id(throwOp), ivector(idExp(t))))
+          command(ThrowCmd(t))
         case Opcodes.MONITORENTER =>
           splitBlock()
           val (t, tipe) = varStack.pop()
           assert(isObjectType(tipe))
-          command(ExtAction(Id(monitorEnterOp), ivector(idExp(t))))
+          command(MonitorCmd(isEnter = true, t))
         case Opcodes.MONITOREXIT =>
           splitBlock()
           val (t, tipe) = varStack.pop()
           assert(isObjectType(tipe))
-          command(ExtAction(Id(monitorExitOp), ivector(idExp(t))))
+          command(MonitorCmd(isEnter = false, t))
       }
     }
 

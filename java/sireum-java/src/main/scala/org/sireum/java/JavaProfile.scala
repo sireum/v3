@@ -206,13 +206,19 @@ object JavaProfile {
 
   final def toNullOp(b: Boolean): String = if (b) nullOp else nonNullOp
 
-  final def fromOIfOp(op: String): Boolean = if (op == oeqOp) true else false
+  final def fromOIfOp(op: String): Boolean = op == oeqOp
 
-  final def fromNullOp(op: String): Boolean = if (op == nullOp) true else false
+  final def fromNullOp(op: String): Boolean = op == nullOp
 
   final def isBinOp(op: String): Boolean = binOps.contains(op)
 
   final def isUnOp(op: String): Boolean = unOps.contains(op)
+
+  final def isMonitorOp(op: String): Boolean = op == monitorEnterOp || op == monitorExitOp
+
+  final def toMonitorOp(b: Boolean): String = if (b) monitorEnterOp else monitorExitOp
+
+  final def fromMonitorOp(op: String): Boolean = op == monitorEnterOp
 
   object ConstKind extends Enumeration {
     type Type = Value
@@ -1120,6 +1126,41 @@ object JavaProfile {
           ivector(idExp(rVarName))))
 
     final def unapply(c: Command): Option[(String, UnOp.Type, String)] =
+      applyOpt(extractor, c)
+  }
+
+  // Insn
+  //
+  // jext throw(<varName>);
+  object ThrowCmd extends CommandExtractor {
+    final val extractor: Command --\ Tuple1[String] = {
+      case ExtJump(Id(`throwOp`), Seq(IdExp(Id(varName))), _) =>
+        Tuple1(varName)
+    }
+
+    final def apply(varName: String): ExtJump =
+      ExtJump(Id(throwOp), ivector(idExp(varName)))
+
+    final def unapply(c: Command): Option[String] =
+      applyOpt(extractor, c).map(_._1)
+  }
+
+  // Insn
+  //
+  // ext <op>(<varName>);
+  //
+  // where <op> ::= monitorEnter, if isEnter is true
+  //              | monitorExit, otherwise
+  object MonitorCmd extends CommandExtractor {
+    final val extractor: Command --\ (Boolean, String) = {
+      case ExtAction(Id(op), Seq(IdExp(Id(varName))), _) if isMonitorOp(op) =>
+        (fromMonitorOp(op), varName)
+    }
+
+    final def apply(isEnter: Boolean, varName: String) =
+      ExtAction(Id(toMonitorOp(isEnter)), ivector(idExp(varName)))
+
+    final def unapply(c: Command): Option[(Boolean, String)] =
       applyOpt(extractor, c)
   }
 
