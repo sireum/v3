@@ -87,7 +87,7 @@ Available mode(s):
 
 java     Java tooling
 pilar    Pilar tooling
-util     Utility tooling
+util     Utility tools
 ```
 
 Another example: `sireum pilar` (or simply `sireum p`)
@@ -158,9 +158,9 @@ Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 version
 Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
-* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-14.1.5-custom-jdk-bundled.dmg
+* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.1-custom-jdk-bundled.dmg
 
-* Community Edition: http://download.jetbrains.com/idea/ideaIC-14.1.5-custom-jdk-bundled.dmg
+* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.1-custom-jdk-bundled.dmg
 
 (The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
 inserted before the file extension.)
@@ -220,7 +220,19 @@ Preferences
 * IntelliJ uses `make` as the default build system.
   For Scala projects, this means that it often misses some dependencies when compiling Scala codebase.
   To address this, use the SBT ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) plugin.
+  
+  **Note: the plugin is currently incompatible with IntelliJ 15; build a snapshot as follows:**
 
+  ```bash
+  git clone https://github.com/orfjackal/idea-sbt-plugin.git
+  cd idea-sbt-plugin
+  mvn -Didea.version=143.382 -Didea.home="/Applications/IntelliJ\ IDEA\ 15.app/Contents" package
+  ```
+
+  Install `sbt-dist/target/idea-sbt-plugin-1.7.1-SNAPSHOT.zip` in IntelliJ 15.
+  
+  Once installed:
+  
   * Set `idea-sbt-plugin` settings by opening `IntelliJ`->`Preference`->`Other Settings`->`SBT`
 
     * `VM parameters`: `-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled`
