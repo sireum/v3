@@ -17,6 +17,8 @@
     <option name="PASS_PARENT_ENVS" value="true" />
     <module name="sireum-cli" />
     <envs />
-    <method />
+    <method>
+      <option name="SBT.BeforeRunTask" enabled="false" action="products" runInCurrentModule="true" />
+    </method>
   </configuration>
 </component>

@@ -48,9 +48,49 @@
         <option name="resolveClassifiers" value="true" />
         <option name="resolveSbtClassifiers" value="true" />
         <option name="sbtVersion" value="0.13.9" />
+        <option name="myModules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-parser-antlr4" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-test" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas-test/project" />
+            <option value="$PROJECT_DIR$/awas/sireum-awas/project" />
+            <option value="$PROJECT_DIR$/core/sireum-cli" />
+            <option value="$PROJECT_DIR$/core/sireum-cli/project" />
+            <option value="$PROJECT_DIR$/core/sireum-core-js-test" />
+            <option value="$PROJECT_DIR$/core/sireum-core-js-test/project" />
+            <option value="$PROJECT_DIR$/core/sireum-core-test" />
+            <option value="$PROJECT_DIR$/core/sireum-core-test/project" />
+            <option value="$PROJECT_DIR$/core/sireum-option" />
+            <option value="$PROJECT_DIR$/core/sireum-option/project" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/core/sireum-pilar/project" />
+            <option value="$PROJECT_DIR$/core/sireum-util" />
+            <option value="$PROJECT_DIR$/core/sireum-util-jvm" />
+            <option value="$PROJECT_DIR$/core/sireum-util-jvm/project" />
+            <option value="$PROJECT_DIR$/core/sireum-util-reflect" />
+            <option value="$PROJECT_DIR$/core/sireum-util-reflect/project" />
+            <option value="$PROJECT_DIR$/core/sireum-util/project" />
+            <option value="$PROJECT_DIR$/java/sireum-java" />
+            <option value="$PROJECT_DIR$/java/sireum-java-test" />
+            <option value="$PROJECT_DIR$/java/sireum-java-test/project" />
+            <option value="$PROJECT_DIR$/java/sireum-java-translator" />
+            <option value="$PROJECT_DIR$/java/sireum-java-translator/project" />
+            <option value="$PROJECT_DIR$/java/sireum-java/project" />
+            <option value="$PROJECT_DIR$/js" />
+            <option value="$PROJECT_DIR$/js/project" />
+            <option value="$PROJECT_DIR$/jvm" />
+            <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/project" />
+          </set>
+        </option>
       </SbtProjectSettings>
     </option>
-    <option name="maximumHeapSize" value="1024" />
+    <option name="maximumHeapSize" value="4096" />
     <option name="vmParameters" value="-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled" />
   </component>
 </project>

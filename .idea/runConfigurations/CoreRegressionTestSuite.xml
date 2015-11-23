@@ -23,6 +23,8 @@
     </option>
     <envs />
     <patterns />
-    <method />
+    <method>
+      <option name="SBT.BeforeRunTask" enabled="false" action="test:products" runInCurrentModule="true" />
+    </method>
   </configuration>
 </component>

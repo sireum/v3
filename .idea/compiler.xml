@@ -18,5 +18,22 @@
         <processorPath useClasspath="true" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="sireum-awas" target="1.8" />
+      <module name="sireum-awas-parser-antlr4" target="1.8" />
+      <module name="sireum-awas-test" target="1.8" />
+      <module name="sireum-cli" target="1.8" />
+      <module name="sireum-core-test" target="1.8" />
+      <module name="sireum-java" target="1.8" />
+      <module name="sireum-java-test" target="1.8" />
+      <module name="sireum-java-translator" target="1.8" />
+      <module name="sireum-jvm" target="1.8" />
+      <module name="sireum-option" target="1.8" />
+      <module name="sireum-pilar" target="1.8" />
+      <module name="sireum-pilar-parser-antlr4" target="1.8" />
+      <module name="sireum-util" target="1.8" />
+      <module name="sireum-util-jvm" target="1.8" />
+      <module name="sireum-util-reflect" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

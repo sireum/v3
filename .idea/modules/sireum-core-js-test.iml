@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module external.linked.project.id="sireum-core-js-test" external.linked.project.path="$MODULE_DIR$/../../core/sireum-core-js-test" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/classes" />
     <output-test url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/test-classes" />
     <exclude-output />
@@ -17,9 +17,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target/scala-2.11/resource_managed/test" type="java-test-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-core-test/src/main/scala" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-pilar/src/main/scala" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../core/sireum-util/src/main/scala" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../core/sireum-core-js-test/target" />
     </content>
     <orderEntry type="inheritedJdk" />
