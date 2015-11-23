@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java
 
-import jdk.internal.org.objectweb.asm.tree.InsnList
 import org.sireum.pilar.ast._
 import org.sireum.util._
 
@@ -223,81 +222,35 @@ object JavaProfile {
   object ConstKind extends Enumeration {
     type Type = Value
     final val Byte, Short, Int, Float, Long, Double, String, Handle = Value
-
-    final def to(ck: Type): String = ck match {
-      case Byte => byteDesc
-      case Short => shortDesc
-      case Int => intDesc
-      case Float => floatDesc
-      case Long => longDesc
-      case Double => doubleDesc
-      case String => stringDesc
-      case Handle => handleDesc
-    }
-
-    final def toType(ck: Type): meta.Type = ck match {
-      case Byte => meta.ByteType
-      case Short => meta.ShortType
-      case Int => meta.IntType
-      case Float => meta.FloatType
-      case Long => meta.LongType
-      case Double => meta.DoubleType
-      case String => topType
-      case Handle => topType
-    }
-
-    final def from(desc: String): Type = desc match {
-      case `byteDesc` => Byte
-      case `shortDesc` => Short
-      case `intDesc` => Int
-      case `floatDesc` => Float
-      case `longDesc` => Long
-      case `doubleDesc` => Double
-      case `stringDesc` => String
-      case `handleDesc` => Handle
-    }
+    final val to: IMap[Type, String] = Map(
+      Byte -> byteDesc, Short -> shortDesc, Int -> intDesc, Float -> floatDesc,
+      Long -> longDesc, Double -> doubleDesc, String -> stringDesc, Handle -> handleDesc
+    )
+    final val toType: IMap[Type, meta.Type] = Map(
+      Byte -> meta.ByteType, Short -> meta.ShortType, Int -> meta.IntType,
+      Float -> meta.FloatType, Long -> meta.LongType, Double -> meta.DoubleType,
+      String -> topType, Handle -> topType
+    )
+    final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
 
   object InvokeOp extends Enumeration {
     type Type = Value
     final val Virtual, Special, Static, Interface = Value
-
-    final def to(iop: Type): String = iop match {
-      case Interface => invokeInterfaceOp
-      case Special => invokeSpecialOp
-      case Static => invokeStaticOp
-      case Virtual => invokeVirtualOp
-    }
-
-    final def from(op: String): Type = op match {
-      case `invokeInterfaceOp` => Interface
-      case `invokeSpecialOp` => Special
-      case `invokeStaticOp` => Static
-      case `invokeVirtualOp` => Virtual
-    }
+    final val to: IMap[Type, String] = Map(
+      Interface -> invokeInterfaceOp, Special -> invokeSpecialOp,
+      Static -> invokeStaticOp, Virtual -> invokeVirtualOp
+    )
+    final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
 
   object ICmpOp extends Enumeration {
     type Type = Value
     final val Eq, Ne, Lt, Ge, Gt, Le = Value
-
-    final def to(cop: Type): String = cop match {
-      case Eq => ieqOp
-      case Ne => ineOp
-      case Lt => iltOp
-      case Ge => igeOp
-      case Gt => igtOp
-      case Le => ileOp
-    }
-
-    final def from(op: String): ICmpOp.Type = op match {
-      case `ieqOp` => Eq
-      case `ineOp` => Ne
-      case `iltOp` => Lt
-      case `igeOp` => Ge
-      case `igtOp` => Gt
-      case `ileOp` => Le
-    }
+    final val to: IMap[Type, String] = Map(
+      Eq -> ieqOp, Ne -> ineOp, Lt -> iltOp, Ge -> igeOp, Gt -> igtOp, Le -> ileOp
+    )
+    final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
 
   object BinOp extends Enumeration {
@@ -305,138 +258,30 @@ object JavaProfile {
     final val IAdd, LAdd, FAdd, DAdd, ISub, LSub, FSub, DSub, IMul, LMul, FMul, DMul,
     IDiv, LDiv, FDiv, DDiv, IRem, LRem, FRem, DRem, IShl, LShl, IShr, LShr, IUshr, LUshr,
     IAnd, LAnd, IOr, LOr, IXor, LXor, LCmp, FCmpl, FCmpg, DCmpl, DCmpg = Value
-
-    final def to(binop: Type): String = binop match {
-      case IAdd => iaddOp
-      case LAdd => laddOp
-      case FAdd => faddOp
-      case DAdd => daddOp
-      case ISub => isubOp
-      case LSub => lsubOp
-      case FSub => fsubOp
-      case DSub => dsubOp
-      case IMul => imulOp
-      case LMul => lmulOp
-      case FMul => fmulOp
-      case DMul => dmulOp
-      case IDiv => idivOp
-      case LDiv => ldivOp
-      case FDiv => fdivOp
-      case DDiv => ddivOp
-      case IRem => iremOp
-      case LRem => lremOp
-      case FRem => fremOp
-      case DRem => dremOp
-      case IShl => ishlOp
-      case LShl => lshlOp
-      case IShr => ishrOp
-      case LShr => lshrOp
-      case IUshr => iushrOp
-      case LUshr => lushrOp
-      case IAnd => iandOp
-      case LAnd => landOp
-      case IOr => iorOp
-      case LOr => lorOp
-      case IXor => ixorOp
-      case LXor => lxorOp
-      case LCmp => lcmpOp
-      case FCmpl => fcmplOp
-      case FCmpg => fcmpgOp
-      case DCmpl => dcmplOp
-      case DCmpg => dcmpgOp
-    }
-
-    final def from(op: String): Type = op match {
-      case `iaddOp` => IAdd
-      case `laddOp` => LAdd
-      case `faddOp` => FAdd
-      case `daddOp` => DAdd
-      case `isubOp` => ISub
-      case `lsubOp` => LSub
-      case `fsubOp` => FSub
-      case `dsubOp` => DSub
-      case `imulOp` => IMul
-      case `lmulOp` => LMul
-      case `fmulOp` => FMul
-      case `dmulOp` => DMul
-      case `idivOp` => IDiv
-      case `ldivOp` => LDiv
-      case `fdivOp` => FDiv
-      case `ddivOp` => DDiv
-      case `iremOp` => IRem
-      case `lremOp` => LRem
-      case `fremOp` => FRem
-      case `dremOp` => DRem
-      case `ishlOp` => IShl
-      case `lshlOp` => LShl
-      case `ishrOp` => IShr
-      case `lshrOp` => LShr
-      case `iushrOp` => IUshr
-      case `lushrOp` => LUshr
-      case `iandOp` => IAnd
-      case `landOp` => LAnd
-      case `iorOp` => IOr
-      case `lorOp` => LOr
-      case `ixorOp` => IXor
-      case `lxorOp` => LXor
-      case `lcmpOp` => LCmp
-      case `fcmplOp` => FCmpl
-      case `fcmpgOp` => FCmpg
-      case `dcmplOp` => DCmpl
-      case `dcmpgOp` => DCmpg
-    }
+    final val to: IMap[Type, String] = Map(
+      IAdd -> iaddOp, LAdd -> laddOp, FAdd -> faddOp, DAdd -> daddOp, ISub -> isubOp,
+      LSub -> lsubOp, FSub -> fsubOp, DSub -> dsubOp, IMul -> imulOp, LMul -> lmulOp,
+      FMul -> fmulOp, DMul -> dmulOp, IDiv -> idivOp, LDiv -> ldivOp, FDiv -> fdivOp,
+      DDiv -> ddivOp, IRem -> iremOp, LRem -> lremOp, FRem -> fremOp, DRem -> dremOp,
+      IShl -> ishlOp, LShl -> lshlOp, IShr -> ishrOp, LShr -> lshrOp, IUshr -> iushrOp,
+      LUshr -> lushrOp, IAnd -> iandOp, LAnd -> landOp, IOr -> iorOp, LOr -> lorOp,
+      IXor -> ixorOp, LXor -> lxorOp, LCmp -> lcmpOp, FCmpl -> fcmplOp, FCmpg -> fcmpgOp,
+      DCmpl -> dcmplOp, DCmpg -> dcmpgOp
+    )
+    final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
 
   object UnOp extends Enumeration {
     type Type = Value
     final val INeg, LNeg, FNeg, DNeg, I2L, I2F, I2D, L2I, L2F, L2D,
     F2I, F2L, F2D, D2I, D2L, D2F, I2B, I2C, I2S, ArrayLength = Value
-
-    final def to(unop: Type): String = unop match {
-      case INeg => inegOp
-      case LNeg => lnegOp
-      case FNeg => fnegOp
-      case DNeg => dnegOp
-      case I2L => i2lOp
-      case I2F => i2fOp
-      case I2D => i2dOp
-      case L2I => l2iOp
-      case L2F => l2fOp
-      case L2D => l2dOp
-      case F2I => f2iOp
-      case F2L => f2lOp
-      case F2D => f2dOp
-      case D2I => d2iOp
-      case D2L => d2lOp
-      case D2F => d2fOp
-      case I2B => i2bOp
-      case I2C => i2cOp
-      case I2S => i2sOp
-      case ArrayLength => arrayLengthOp
-    }
-
-    final def from(op: String): Type = op match {
-      case `inegOp` => INeg
-      case `lnegOp` => LNeg
-      case `fnegOp` => FNeg
-      case `dnegOp` => DNeg
-      case `i2lOp` => I2L
-      case `i2fOp` => I2F
-      case `i2dOp` => I2D
-      case `l2iOp` => L2I
-      case `l2fOp` => L2F
-      case `l2dOp` => L2D
-      case `f2iOp` => F2I
-      case `f2lOp` => F2L
-      case `f2dOp` => F2D
-      case `d2iOp` => D2I
-      case `d2lOp` => D2L
-      case `d2fOp` => D2F
-      case `i2bOp` => I2B
-      case `i2cOp` => I2C
-      case `i2sOp` => I2S
-      case `arrayLengthOp` => ArrayLength
-    }
+    final val to: IMap[Type, String] = Map(
+      INeg -> inegOp, LNeg -> lnegOp, FNeg -> fnegOp, DNeg -> dnegOp, I2L -> i2lOp,
+      I2F -> i2fOp, I2D -> i2dOp, L2I -> l2iOp, L2F -> l2fOp, L2D -> l2dOp,
+      F2I -> f2iOp, F2L -> f2lOp, F2D -> f2dOp, D2I -> d2iOp, D2L -> d2lOp,
+      D2F -> d2fOp, I2B -> i2bOp, I2C -> i2cOp, I2S -> i2sOp, ArrayLength -> arrayLengthOp
+    )
+    final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
 
   @inline
@@ -1166,9 +1011,6 @@ object JavaProfile {
 
   @inline
   private def idExp(name: String) = IdExp(Id(name))
-
-  @inline
-  private def stringLit(s: String) = LiteralExp(Id(stringDesc), ExtLit(s))
 
   @inline
   private def intLit(n: Int) = LiteralExp(Id(intDesc), ExtLit(n))
