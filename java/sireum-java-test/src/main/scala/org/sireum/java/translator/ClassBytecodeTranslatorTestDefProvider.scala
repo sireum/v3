@@ -36,7 +36,7 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] = ivector(
     EqualTest("ClassBytecodeTranslator",
       translate("org.sireum.java.translator.ClassBytecodeTranslator"),
-      "9d73f900d02cd497cdc5b3bc8edfc845")
+      "3ce943180dcfc955fb41ea08faf9cae7")
   )
 
   private def translate(className: String): String = {

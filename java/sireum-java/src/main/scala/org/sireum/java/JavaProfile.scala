@@ -29,195 +29,246 @@ import org.sireum.pilar.ast._
 import org.sireum.util._
 
 object JavaProfile {
-  final val annotationClassDesc = "Class"
-  final val annotationTypeDesc = "Type"
-  final val annotationTypeAnnotationDesc = "TypeAnnotation"
-  final val annotationCatchDesc = "Catch"
-  final val annotationGetStaticDesc = "GetStatic"
-  final val annotationPutStaticDesc = "PutStatic"
-  final val annotationLoadDesc = "Load"
-  final val annotationStoreDesc = "Store"
-  final val annotationArrayLoadDesc = "ArrayLoad"
-  final val annotationArrayStoreDesc = "ArrayStore"
 
-  final val annotationGetStatic = Annotation(Id(annotationGetStaticDesc), RawLit(""))
-  final val annotationPutStatic = Annotation(Id(annotationPutStaticDesc), RawLit(""))
-  final val annotationLoad = Annotation(Id(annotationLoadDesc), RawLit(""))
-  final val annotationStore = Annotation(Id(annotationStoreDesc), RawLit(""))
-  final val annotationArrayLoad = Annotation(Id(annotationArrayLoadDesc), RawLit(""))
-  final val annotationArrayStore = Annotation(Id(annotationArrayStoreDesc), RawLit(""))
+  private[java] object Helper {
+    final val annotationClassDesc = "Class"
+    final val annotationTypeDesc = "Type"
+    final val annotationTypeAnnotationDesc = "TypeAnnotation"
+    final val annotationCatchDesc = "Catch"
+    final val annotationGetStaticDesc = "GetStatic"
+    final val annotationPutStaticDesc = "PutStatic"
+    final val annotationLoadDesc = "Load"
+    final val annotationStoreDesc = "Store"
+    final val annotationArrayLoadDesc = "ArrayLoad"
+    final val annotationArrayStoreDesc = "ArrayStore"
 
-  final val byteDesc = "b"
-  final val charDesc = "c"
-  final val shortDesc = "s"
-  final val intDesc = "i"
-  final val longDesc = "l"
-  final val floatDesc = "f"
-  final val doubleDesc = "d"
-  final val stringDesc = "str"
-  final val typeDesc = "t"
-  final val handleDesc = "h"
+    final val annotationGetStatic = Annotation(Id(annotationGetStaticDesc), RawLit(""))
+    final val annotationPutStatic = Annotation(Id(annotationPutStaticDesc), RawLit(""))
+    final val annotationLoad = Annotation(Id(annotationLoadDesc), RawLit(""))
+    final val annotationStore = Annotation(Id(annotationStoreDesc), RawLit(""))
+    final val annotationArrayLoad = Annotation(Id(annotationArrayLoadDesc), RawLit(""))
+    final val annotationArrayStore = Annotation(Id(annotationArrayStoreDesc), RawLit(""))
 
-  final val objectDesc = "o"
-  final val labelPrefix = "L"
-  final val tempVarPrefix = "t$"
-  final val localVarPrefix = "l$"
-  final val thisLocalVarName = "this"
+    final val byteDesc = "b"
+    final val charDesc = "c"
+    final val shortDesc = "s"
+    final val intDesc = "i"
+    final val longDesc = "l"
+    final val floatDesc = "f"
+    final val doubleDesc = "d"
+    final val stringDesc = "str"
+    final val typeDesc = "t"
+    final val handleDesc = "h"
 
-  final val addOp = "+"
-  final val subOp = "-"
-  final val mulOp = "*"
-  final val divOp = "/"
-  final val remOp = "%"
-  final val negOp = "-"
-  final val shlOp = "<<"
-  final val shrOp = ">>"
-  final val ushrOp = ">>>"
-  final val andOp = "&"
-  final val orOp = "|"
-  final val xorOp = "^"
-  final val cmpOp = ">=<"
-  final val ltOp = "<"
-  final val leOp = "<="
-  final val gtOp = ">"
-  final val geOp = ">="
-  final val eqOp = "=="
-  final val neOp = "!="
-  final val fieldAccessOp = "."
-  final val nullConstOp = "null"
-  final val nullOp = "isNull"
-  final val nonNullOp = "isNonNull"
-  final val arrayLengthOp = "len"
-  final val throwOp = "throw"
-  final val monitorEnterOp = "monitorEnter"
-  final val monitorExitOp = "monitorExit"
-  final val newOp = "new"
-  final val newArrayOp = "newArray"
-  final val newMultiArrayOp = "newMultiArray"
-  final val classOfOp = "classOf"
-  final val methodTypeOp = "methodType"
-  final val lineNumberOp = "lineNumber"
-  final val invokeVirtualOp = "invokeVirtual"
-  final val invokeSpecialOp = "invokeSpecial"
-  final val invokeStaticOp = "invokeStatic"
-  final val invokeInterfaceOp = "invokeInterface"
-  final val invokeDynamicOp = "invokeDynamic"
-  final val checkCastOp = "checkCast"
-  final val instanceOfOp = "isInstanceOf"
-  final val iaddOp = opSuffix(addOp, intDesc)
-  final val isubOp = opSuffix(subOp, intDesc)
-  final val imulOp = opSuffix(mulOp, intDesc)
-  final val idivOp = opSuffix(divOp, intDesc)
-  final val iremOp = opSuffix(addOp, intDesc)
-  final val laddOp = opSuffix(addOp, longDesc)
-  final val lsubOp = opSuffix(subOp, longDesc)
-  final val lmulOp = opSuffix(mulOp, longDesc)
-  final val ldivOp = opSuffix(divOp, longDesc)
-  final val lremOp = opSuffix(addOp, longDesc)
-  final val faddOp = opSuffix(addOp, floatDesc)
-  final val fsubOp = opSuffix(subOp, floatDesc)
-  final val fmulOp = opSuffix(mulOp, floatDesc)
-  final val fdivOp = opSuffix(divOp, floatDesc)
-  final val fremOp = opSuffix(addOp, floatDesc)
-  final val daddOp = opSuffix(addOp, doubleDesc)
-  final val dsubOp = opSuffix(subOp, doubleDesc)
-  final val dmulOp = opSuffix(mulOp, doubleDesc)
-  final val ddivOp = opSuffix(divOp, doubleDesc)
-  final val dremOp = opSuffix(addOp, doubleDesc)
-  final val inegOp = opSuffix(negOp, intDesc)
-  final val lnegOp = opSuffix(negOp, longDesc)
-  final val fnegOp = opSuffix(negOp, floatDesc)
-  final val dnegOp = opSuffix(negOp, doubleDesc)
-  final val ishlOp = opSuffix(shlOp, intDesc)
-  final val lshlOp = opSuffix(shlOp, longDesc)
-  final val ishrOp = opSuffix(shrOp, intDesc)
-  final val lshrOp = opSuffix(shrOp, longDesc)
-  final val iushrOp = opSuffix(ushrOp, intDesc)
-  final val lushrOp = opSuffix(ushrOp, longDesc)
-  final val iandOp = opSuffix(andOp, intDesc)
-  final val landOp = opSuffix(andOp, longDesc)
-  final val iorOp = opSuffix(orOp, intDesc)
-  final val lorOp = opSuffix(orOp, longDesc)
-  final val ixorOp = opSuffix(xorOp, intDesc)
-  final val lxorOp = opSuffix(xorOp, longDesc)
-  final val i2lOp = convOp(intDesc, longDesc)
-  final val i2fOp = convOp(intDesc, floatDesc)
-  final val i2dOp = convOp(intDesc, doubleDesc)
-  final val l2iOp = convOp(longDesc, intDesc)
-  final val l2fOp = convOp(longDesc, floatDesc)
-  final val l2dOp = convOp(longDesc, doubleDesc)
-  final val f2iOp = convOp(floatDesc, intDesc)
-  final val f2lOp = convOp(floatDesc, longDesc)
-  final val f2dOp = convOp(floatDesc, doubleDesc)
-  final val d2iOp = convOp(doubleDesc, intDesc)
-  final val d2lOp = convOp(doubleDesc, longDesc)
-  final val d2fOp = convOp(doubleDesc, floatDesc)
-  final val i2bOp = convOp(intDesc, byteDesc)
-  final val i2cOp = convOp(intDesc, charDesc)
-  final val i2sOp = convOp(intDesc, shortDesc)
-  final val ieqOp = opSuffix(eqOp, intDesc)
-  final val ineOp = opSuffix(neOp, intDesc)
-  final val iltOp = opSuffix(ltOp, intDesc)
-  final val ileOp = opSuffix(leOp, intDesc)
-  final val igtOp = opSuffix(gtOp, intDesc)
-  final val igeOp = opSuffix(geOp, intDesc)
-  final val oeqOp = opSuffix(eqOp, objectDesc)
-  final val oneOp = opSuffix(neOp, objectDesc)
-  final val lcmpOp = opSuffix(cmpOp, longDesc)
-  final val fcmplOp = opSuffix(ltOp, floatDesc)
-  final val dcmplOp = opSuffix(ltOp, doubleDesc)
-  final val fcmpgOp = opSuffix(gtOp, floatDesc)
-  final val dcmpgOp = opSuffix(gtOp, doubleDesc)
-  final val topType = meta.ObjectType("java.lang.Object")
-  final val booleanArrayType = meta.ArrayType(meta.BooleanType)
-  final val byteArrayType = meta.ArrayType(meta.ByteType)
-  final val charArrayType = meta.ArrayType(meta.CharType)
-  final val shortArrayType = meta.ArrayType(meta.ShortType)
-  final val intArrayType = meta.ArrayType(meta.IntType)
-  final val longArrayType = meta.ArrayType(meta.LongType)
-  final val floatArrayType = meta.ArrayType(meta.FloatType)
-  final val doubleArrayType = meta.ArrayType(meta.DoubleType)
+    final val objectDesc = "o"
+    final val labelPrefix = "L"
+    final val tempVarPrefix = "t$"
+    final val localVarPrefix = "l$"
+    final val thisLocalVarName = "this"
 
-  final val constDescs = Set(intDesc, floatDesc, longDesc, doubleDesc, stringDesc, handleDesc)
-  final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
-  final val iIfOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
-  final val loadStoreTypes = Set(meta.IntType, meta.LongType, meta.FloatType, meta.DoubleType, topType)
-  final val binOps =
-    Set(iaddOp, laddOp, faddOp, daddOp, isubOp, lsubOp, fsubOp, dsubOp,
-      imulOp, lmulOp, fmulOp, dmulOp, idivOp, ldivOp, fdivOp, ddivOp,
-      iremOp, lremOp, fremOp, dremOp, ishlOp, lshlOp, ishrOp, lshrOp, iushrOp, lushrOp,
-      iandOp, landOp, iorOp, lorOp, ixorOp, lxorOp, lcmpOp, fcmplOp, fcmpgOp, dcmplOp, dcmpgOp)
-  final val unOps =
-    Set(inegOp, lnegOp, fnegOp, dnegOp, i2lOp, i2fOp, i2dOp, l2iOp, l2fOp, l2dOp,
-      f2iOp, f2lOp, f2dOp, d2iOp, d2lOp, d2fOp, i2bOp, i2cOp, i2sOp, arrayLengthOp)
+    final val addOp = "+"
+    final val subOp = "-"
+    final val mulOp = "*"
+    final val divOp = "/"
+    final val remOp = "%"
+    final val negOp = "-"
+    final val shlOp = "<<"
+    final val shrOp = ">>"
+    final val ushrOp = ">>>"
+    final val andOp = "&"
+    final val orOp = "|"
+    final val xorOp = "^"
+    final val cmpOp = ">=<"
+    final val ltOp = "<"
+    final val leOp = "<="
+    final val gtOp = ">"
+    final val geOp = ">="
+    final val eqOp = "=="
+    final val neOp = "!="
+    final val fieldAccessOp = "."
+    final val nullConstOp = "null"
+    final val nullOp = "isNull"
+    final val nonNullOp = "isNonNull"
+    final val arrayLengthOp = "len"
+    final val throwOp = "throw"
+    final val monitorEnterOp = "monitorEnter"
+    final val monitorExitOp = "monitorExit"
+    final val newOp = "new"
+    final val newArrayOp = "newArray"
+    final val newMultiArrayOp = "newMultiArray"
+    final val classOfOp = "classOf"
+    final val methodTypeOp = "methodType"
+    final val lineNumberOp = "lineNumber"
+    final val invokeVirtualOp = "invokeVirtual"
+    final val invokeSpecialOp = "invokeSpecial"
+    final val invokeStaticOp = "invokeStatic"
+    final val invokeInterfaceOp = "invokeInterface"
+    final val invokeDynamicOp = "invokeDynamic"
+    final val checkCastOp = "checkCast"
+    final val instanceOfOp = "isInstanceOf"
+    final val iaddOp = opSuffix(addOp, intDesc)
+    final val isubOp = opSuffix(subOp, intDesc)
+    final val imulOp = opSuffix(mulOp, intDesc)
+    final val idivOp = opSuffix(divOp, intDesc)
+    final val iremOp = opSuffix(addOp, intDesc)
+    final val laddOp = opSuffix(addOp, longDesc)
+    final val lsubOp = opSuffix(subOp, longDesc)
+    final val lmulOp = opSuffix(mulOp, longDesc)
+    final val ldivOp = opSuffix(divOp, longDesc)
+    final val lremOp = opSuffix(addOp, longDesc)
+    final val faddOp = opSuffix(addOp, floatDesc)
+    final val fsubOp = opSuffix(subOp, floatDesc)
+    final val fmulOp = opSuffix(mulOp, floatDesc)
+    final val fdivOp = opSuffix(divOp, floatDesc)
+    final val fremOp = opSuffix(addOp, floatDesc)
+    final val daddOp = opSuffix(addOp, doubleDesc)
+    final val dsubOp = opSuffix(subOp, doubleDesc)
+    final val dmulOp = opSuffix(mulOp, doubleDesc)
+    final val ddivOp = opSuffix(divOp, doubleDesc)
+    final val dremOp = opSuffix(addOp, doubleDesc)
+    final val inegOp = opSuffix(negOp, intDesc)
+    final val lnegOp = opSuffix(negOp, longDesc)
+    final val fnegOp = opSuffix(negOp, floatDesc)
+    final val dnegOp = opSuffix(negOp, doubleDesc)
+    final val ishlOp = opSuffix(shlOp, intDesc)
+    final val lshlOp = opSuffix(shlOp, longDesc)
+    final val ishrOp = opSuffix(shrOp, intDesc)
+    final val lshrOp = opSuffix(shrOp, longDesc)
+    final val iushrOp = opSuffix(ushrOp, intDesc)
+    final val lushrOp = opSuffix(ushrOp, longDesc)
+    final val iandOp = opSuffix(andOp, intDesc)
+    final val landOp = opSuffix(andOp, longDesc)
+    final val iorOp = opSuffix(orOp, intDesc)
+    final val lorOp = opSuffix(orOp, longDesc)
+    final val ixorOp = opSuffix(xorOp, intDesc)
+    final val lxorOp = opSuffix(xorOp, longDesc)
+    final val i2lOp = convOp(intDesc, longDesc)
+    final val i2fOp = convOp(intDesc, floatDesc)
+    final val i2dOp = convOp(intDesc, doubleDesc)
+    final val l2iOp = convOp(longDesc, intDesc)
+    final val l2fOp = convOp(longDesc, floatDesc)
+    final val l2dOp = convOp(longDesc, doubleDesc)
+    final val f2iOp = convOp(floatDesc, intDesc)
+    final val f2lOp = convOp(floatDesc, longDesc)
+    final val f2dOp = convOp(floatDesc, doubleDesc)
+    final val d2iOp = convOp(doubleDesc, intDesc)
+    final val d2lOp = convOp(doubleDesc, longDesc)
+    final val d2fOp = convOp(doubleDesc, floatDesc)
+    final val i2bOp = convOp(intDesc, byteDesc)
+    final val i2cOp = convOp(intDesc, charDesc)
+    final val i2sOp = convOp(intDesc, shortDesc)
+    final val ieqOp = opSuffix(eqOp, intDesc)
+    final val ineOp = opSuffix(neOp, intDesc)
+    final val iltOp = opSuffix(ltOp, intDesc)
+    final val ileOp = opSuffix(leOp, intDesc)
+    final val igtOp = opSuffix(gtOp, intDesc)
+    final val igeOp = opSuffix(geOp, intDesc)
+    final val oeqOp = opSuffix(eqOp, objectDesc)
+    final val oneOp = opSuffix(neOp, objectDesc)
+    final val lcmpOp = opSuffix(cmpOp, longDesc)
+    final val fcmplOp = opSuffix(ltOp, floatDesc)
+    final val dcmplOp = opSuffix(ltOp, doubleDesc)
+    final val fcmpgOp = opSuffix(gtOp, floatDesc)
+    final val dcmpgOp = opSuffix(gtOp, doubleDesc)
+    final val topType = meta.ObjectType("java.lang.Object")
+    final val booleanArrayType = meta.ArrayType(meta.BooleanType)
+    final val byteArrayType = meta.ArrayType(meta.ByteType)
+    final val charArrayType = meta.ArrayType(meta.CharType)
+    final val shortArrayType = meta.ArrayType(meta.ShortType)
+    final val intArrayType = meta.ArrayType(meta.IntType)
+    final val longArrayType = meta.ArrayType(meta.LongType)
+    final val floatArrayType = meta.ArrayType(meta.FloatType)
+    final val doubleArrayType = meta.ArrayType(meta.DoubleType)
 
-  final val intZeroLit = intLit(0)
+    final val constDescs = Set(intDesc, floatDesc, longDesc, doubleDesc, stringDesc, handleDesc)
+    final val invokeOps = Set(invokeInterfaceOp, invokeSpecialOp, invokeStaticOp, invokeVirtualOp)
+    final val iIfOps = Set(ieqOp, ineOp, iltOp, igeOp, igtOp, ileOp)
+    final val loadStoreTypes = Set(meta.IntType, meta.LongType, meta.FloatType, meta.DoubleType, topType)
+    final val binOps =
+      Set(iaddOp, laddOp, faddOp, daddOp, isubOp, lsubOp, fsubOp, dsubOp,
+        imulOp, lmulOp, fmulOp, dmulOp, idivOp, ldivOp, fdivOp, ddivOp,
+        iremOp, lremOp, fremOp, dremOp, ishlOp, lshlOp, ishrOp, lshrOp, iushrOp, lushrOp,
+        iandOp, landOp, iorOp, lorOp, ixorOp, lxorOp, lcmpOp, fcmplOp, fcmpgOp, dcmplOp, dcmpgOp)
+    final val unOps =
+      Set(inegOp, lnegOp, fnegOp, dnegOp, i2lOp, i2fOp, i2dOp, l2iOp, l2fOp, l2dOp,
+        f2iOp, f2lOp, f2dOp, d2iOp, d2lOp, d2fOp, i2bOp, i2cOp, i2sOp, arrayLengthOp)
 
-  final def isInvokeOp(op: String) = invokeOps.contains(op)
+    final val intZeroLit = intLit(0)
 
-  final def isIIfOp(op: String) = iIfOps.contains(op)
+    @inline
+    final def isInvokeOp(op: String) = invokeOps.contains(op)
 
-  final def isOIfOp(op: String) = op == oeqOp || op == oneOp
+    @inline
+    final def isIIfOp(op: String) = iIfOps.contains(op)
 
-  final def isNullOp(op: String) = op == nullOp || op == nonNullOp
+    @inline
+    final def isOIfOp(op: String) = op == oeqOp || op == oneOp
 
-  final def toOIfOp(b: Boolean): String = if (b) oeqOp else oneOp
+    @inline
+    final def isNullOp(op: String) = op == nullOp || op == nonNullOp
 
-  final def toNullOp(b: Boolean): String = if (b) nullOp else nonNullOp
+    @inline
+    final def toOIfOp(b: Boolean): String = if (b) oeqOp else oneOp
 
-  final def fromOIfOp(op: String): Boolean = op == oeqOp
+    @inline
+    final def toNullOp(b: Boolean): String = if (b) nullOp else nonNullOp
 
-  final def fromNullOp(op: String): Boolean = op == nullOp
+    @inline
+    final def fromOIfOp(op: String): Boolean = op == oeqOp
 
-  final def isBinOp(op: String): Boolean = binOps.contains(op)
+    @inline
+    final def fromNullOp(op: String): Boolean = op == nullOp
 
-  final def isUnOp(op: String): Boolean = unOps.contains(op)
+    @inline
+    final def isBinOp(op: String): Boolean = binOps.contains(op)
 
-  final def isMonitorOp(op: String): Boolean = op == monitorEnterOp || op == monitorExitOp
+    @inline
+    final def isUnOp(op: String): Boolean = unOps.contains(op)
 
-  final def toMonitorOp(b: Boolean): String = if (b) monitorEnterOp else monitorExitOp
+    @inline
+    final def isMonitorOp(op: String): Boolean = op == monitorEnterOp || op == monitorExitOp
 
-  final def fromMonitorOp(op: String): Boolean = op == monitorEnterOp
+    @inline
+    final def toMonitorOp(b: Boolean): String = if (b) monitorEnterOp else monitorExitOp
+
+    @inline
+    final def fromMonitorOp(op: String): Boolean = op == monitorEnterOp
+
+    @inline
+    final def idExp(name: String) = IdExp(Id(name))
+
+    @inline
+    final def intLit(n: Int) = LiteralExp(Id(intDesc), ExtLit(n))
+
+    @inline
+    final def stringLit(s: String) = LiteralExp(Id(stringDesc), ExtLit(s))
+
+    @inline
+    final def typeLit(tipe: meta.Type): LiteralExp =
+      LiteralExp(Id(typeDesc), ExtLit(tipe))
+
+    @inline
+    final def typeAnnotation(tipe: meta.Type): Annotation =
+      Annotation(Id(annotationTypeDesc), ExtLit(tipe))
+
+    @inline
+    final def convOp(from: String, to: String) =
+      s"${from}2$$ to"
+
+    @inline
+    final def opSuffix(op: String, suffix: String) =
+      s"${op}_$suffix"
+
+    @inline
+    final def qFieldName(className: String, name: String) =
+      s"$className.$name"
+
+    @inline
+    final def qMethodName(className: String, name: String, desc: String) =
+      s"$className.$name$desc"
+  }
+
+  import Helper._
 
   object ConstKind extends Enumeration {
     type Type = Value
@@ -283,22 +334,6 @@ object JavaProfile {
     )
     final val from: IMap[String, Type] = to.map(p => (p._2, p._1))
   }
-
-  @inline
-  private def convOp(from: String, to: String) =
-    s"${from}2$$ to"
-
-  @inline
-  private def opSuffix(op: String, suffix: String) =
-    s"${op}_$suffix"
-
-  @inline
-  def qFieldName(className: String, name: String) =
-    s"$className.$name"
-
-  @inline
-  def qMethodName(className: String, name: String, desc: String) =
-    s"$className.$name$desc"
 
   import Node._
   import PartialFunctionUtil.applyOpt
@@ -466,20 +501,20 @@ object JavaProfile {
   //
   // <varName> := newMultiArray(t«<tipe>», <argVarName_1>, ..., <argVarName_N>);
   object NewMultiArrayCmd extends CommandExtractor {
-    final val extractor: Command --\ (String, meta.Type, CSeq[IdExp]) = {
+    final val extractor: Command --\ (String, meta.Type, CSeq[String]) = {
       case AssignAction(
       IdExp(Id(varName)),
       ExtExp(IdExp(Id(`newMultiArrayOp`)),
       Seq(LiteralExp(_, ExtLit(tipe: meta.Type)), args@_*)), _) =>
-        (varName, tipe, args.map(_.asInstanceOf[IdExp]))
+        (varName, tipe, args.map(_.asInstanceOf[IdExp].id.value))
     }
 
-    final def apply(varName: String, tipe: meta.Type, argVarNames: CSeq[IdExp]): AssignAction =
+    final def apply(varName: String, tipe: meta.Type, argVarNames: CSeq[String]): AssignAction =
       AssignAction(
         idExp(varName),
-        ExtExp(idExp(newMultiArrayOp), typeLit(tipe) +: argVarNames.toVector))
+        ExtExp(idExp(newMultiArrayOp), typeLit(tipe) +: argVarNames.toVector.map(idExp)))
 
-    final def unapply(c: Command): Option[(String, meta.Type, CSeq[IdExp])] =
+    final def unapply(c: Command): Option[(String, meta.Type, CSeq[String])] =
       applyOpt(extractor, c)
   }
 
@@ -583,32 +618,32 @@ object JavaProfile {
   //       <n>  ::= 0, if <itf> is false
   //              | 1, otherwise
   object InvokeLoc extends LocationExtractor {
-    final val extractor: Location --\ (InvokeOp.Type, String, Option[String], String, Boolean, CSeq[IdExp], String) = {
+    final val extractor: Location --\ (InvokeOp.Type, String, Option[String], String, Boolean, CSeq[String], String) = {
       case CallLocation(Id(labelId), lhsOpt, Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _)), Id(nextLabelId), _) if isInvokeOp(op) =>
-        (InvokeOp.from(op), labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId)
+        (InvokeOp.from(op), labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp].id.value), nextLabelId)
     }
 
-    final def apply(labelId: String, lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argsVarNames: CSeq[IdExp], nextLabelId: String): CallLocation = {
-      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argsVarNames.toVector)), Id(nextLabelId))
+    final def apply(labelId: String, lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argsVarNames: CSeq[String], nextLabelId: String): CallLocation = {
+      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argsVarNames.toVector.map(idExp))), Id(nextLabelId))
     }
 
-    final def unapply(l: Location): Option[(InvokeOp.Type, String, Option[String], String, Boolean, CSeq[IdExp], String)] =
+    final def unapply(l: Location): Option[(InvokeOp.Type, String, Option[String], String, Boolean, CSeq[String], String)] =
       applyOpt(extractor, l)
 
-    private[java] final def apply(lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argVarNames: CSeq[IdExp], nextLabelId: String): ExtJump =
+    private[java] final def apply(lhsOpt: Option[String], iop: InvokeOp.Type, methodName: String, itf: Boolean, argVarNames: CSeq[String], nextLabelId: String): ExtJump =
       lhsOpt match {
         case Some(varName) =>
-          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(varName), idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector), idExp(nextLabelId)))
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(varName), idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector.map(idExp)), idExp(nextLabelId)))
         case _ =>
-          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector), idExp(nextLabelId)))
+          ExtJump(Id(InvokeOp.to(iop)), ivector(idExp(methodName), intLit(if (itf) 1 else 0), TupleExp(argVarNames.toVector.map(idExp)), idExp(nextLabelId)))
       }
 
-    private[java] final def unapply(c: Command): Option[(Option[String], InvokeOp.Type, String, Boolean, CSeq[IdExp], String)] =
+    private[java] final def unapply(c: Command): Option[(Option[String], InvokeOp.Type, String, Boolean, CSeq[String], String)] =
       c match {
         case ExtJump(Id(op), Seq(IdExp(Id(varName)), IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
-          Some((Some(varName), InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId))
+          Some((Some(varName), InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp].id.value), nextLabelId))
         case ExtJump(Id(op), Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(n: Int)), TupleExp(argVarNames, _), IdExp(Id(nextLabelId))), _) if isInvokeOp(op) =>
-          Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp]), nextLabelId))
+          Some((None, InvokeOp.from(op), methodName, if (n == 0) false else true, argVarNames.map(_.asInstanceOf[IdExp].id.value), nextLabelId))
         case _ => None
       }
   }
@@ -1009,17 +1044,106 @@ object JavaProfile {
       applyOpt(extractor, c)
   }
 
-  @inline
-  private def idExp(name: String) = IdExp(Id(name))
+  // InvokeDynamicInsn
+  //
+  // call [<lhsOpt> :=] invokeDynamic(<objectVarName>, <methodName>, t«<methodTipe>», h«<bsm>», (<bsmArg-1>, ..., <bsmArg-N), (<arg-1>, ..., <arg-M>)) goto <nextLabelId>;
+  object InvokeDynamicLoc extends LocationExtractor {
+    final val extractor: Location --\ (String, Option[String], String, meta.Type, meta.Handle, CSeq[BsmArg], CSeq[String], String) = {
+      case CallLocation(Id(labelId), lhsOpt, Id(`invokeDynamicOp`),
+      Seq(IdExp(Id(methodName)), LiteralExp(_, ExtLit(methodType: meta.Type)),
+      LiteralExp(_, ExtLit(bsm: meta.Handle)),
+      TupleExp(bArgs, _), TupleExp(args, _)),
+      Id(nextLabelId), _) =>
+        (labelId, for (lhs@IdExp(Id(varName)) <- lhsOpt) yield varName, methodName, methodType, bsm, bArgs.map(BsmArg.from), args.map(_.asInstanceOf[IdExp].id.value), nextLabelId)
+    }
 
-  @inline
-  private def intLit(n: Int) = LiteralExp(Id(intDesc), ExtLit(n))
+    final def apply(labelId: String, lhsOpt: Option[String], methodName: String, methodType: meta.Type, bsm: meta.Handle, bArgs: CSeq[BsmArg], args: CSeq[String], nextLabelId: String): CallLocation =
+      CallLocation(Id(labelId), lhsOpt.map(idExp), Id(`invokeDynamicOp`),
+        ivector(idExp(methodName), typeLit(methodType), LiteralExp(Id(handleDesc), ExtLit(bsm)),
+          TupleExp(bArgs.toVector.map(_.to)), TupleExp(args.toVector.map(idExp))),
+        Id(nextLabelId))
 
-  @inline
-  private def typeLit(tipe: meta.Type): LiteralExp =
-    LiteralExp(Id(typeDesc), ExtLit(tipe))
+    final def unapply(l: Location): Option[(String, Option[String], String, meta.Type, meta.Handle, CSeq[BsmArg], CSeq[String], String)] =
+      applyOpt(extractor, l)
 
-  @inline
-  private def typeAnnotation(tipe: meta.Type): Annotation =
-    Annotation(Id(annotationTypeDesc), ExtLit(tipe))
+    private[java] final def apply(lhsOpt: Option[String], methodName: String, methodType: meta.Type, bsm: meta.Handle, bsmArgs: CSeq[BsmArg], args: CSeq[String], nextLabelId: String) =
+      lhsOpt match {
+        case Some(varName) =>
+          ExtJump(Id(invokeDynamicOp), ivector(
+            idExp(varName), idExp(methodName), typeLit(methodType),
+            LiteralExp(Id(handleDesc), ExtLit(bsm)),
+            TupleExp(bsmArgs.toVector.map(_.to)), TupleExp(args.toVector.map(idExp)),
+            idExp(nextLabelId)))
+        case _ =>
+          ExtJump(Id(invokeDynamicOp), ivector(
+            idExp(methodName), typeLit(methodType),
+            LiteralExp(Id(handleDesc), ExtLit(bsm)),
+            TupleExp(bsmArgs.toVector.map(_.to)), TupleExp(args.toVector.map(idExp)),
+            idExp(nextLabelId)))
+      }
+
+    private[java] final def unapply(c: Command): Option[(Option[String], String, meta.Type, meta.Handle, CSeq[BsmArg], CSeq[String], String)] =
+      c match {
+        case ExtJump(Id(`invokeDynamicOp`), Seq(
+        IdExp(Id(varName)), IdExp(Id(methodName)), LiteralExp(_, ExtLit(methodType: meta.Type)),
+        LiteralExp(_, ExtLit(bsm: meta.Handle)),
+        TupleExp(bsmArgs, _), TupleExp(args, _),
+        IdExp(Id(nextLabelId))), _) =>
+          Some((Some(varName), methodName, methodType, bsm, bsmArgs.map(BsmArg.from), args.map(_.asInstanceOf[IdExp].id.value), nextLabelId))
+        case ExtJump(Id(`invokeDynamicOp`), Seq(
+        IdExp(Id(methodName)), LiteralExp(_, ExtLit(methodType: meta.Type)),
+        LiteralExp(_, ExtLit(bsm: meta.Handle)),
+        TupleExp(bsmArgs, _), TupleExp(args, _),
+        IdExp(Id(nextLabelId))), _) =>
+          Some((None, methodName, methodType, bsm, bsmArgs.map(BsmArg.from), args.map(_.asInstanceOf[IdExp].id.value), nextLabelId))
+        case _ => None
+      }
+
+    sealed trait BsmArg {
+      def to: Exp
+    }
+
+    object BsmArg {
+      def from(e: Exp): BsmArg =
+        (e: @unchecked) match {
+          case LiteralExp(_, ExtLit(value: Int)) => IntBsmArg(value)
+          case LiteralExp(_, ExtLit(value: Float)) => FloatBsmArg(value)
+          case LiteralExp(_, ExtLit(value: Double)) => DoubleBsmArg(value)
+          case LiteralExp(_, ExtLit(value: Long)) => LongBsmArg(value)
+          case LiteralExp(_, ExtLit(value: String)) => StringBsmArg(value)
+          case LiteralExp(_, ExtLit(value: meta.Type)) => TypeBsmArg(value)
+          case LiteralExp(_, ExtLit(value: meta.Handle)) => HandleBsmArg(value)
+        }
+    }
+
+    final case class IntBsmArg(value: Int) extends BsmArg {
+      def to: Exp = intLit(value)
+    }
+
+    final case class FloatBsmArg(value: Float) extends BsmArg {
+      def to: Exp = LiteralExp(Id(floatDesc), ExtLit(value))
+    }
+
+    final case class DoubleBsmArg(value: Double) extends BsmArg {
+      def to: Exp = LiteralExp(Id(doubleDesc), ExtLit(value))
+    }
+
+    final case class LongBsmArg(value: Long) extends BsmArg {
+      def to: Exp = LiteralExp(Id(longDesc), ExtLit(value))
+    }
+
+    final case class StringBsmArg(value: String) extends BsmArg {
+      def to: Exp = stringLit(value)
+    }
+
+    final case class TypeBsmArg(value: meta.Type) extends BsmArg {
+      def to: Exp = LiteralExp(Id(typeDesc), ExtLit(value))
+    }
+
+    final case class HandleBsmArg(value: meta.Handle) extends BsmArg {
+      def to: Exp = LiteralExp(Id(handleDesc), ExtLit(value))
+    }
+
+  }
+
 }

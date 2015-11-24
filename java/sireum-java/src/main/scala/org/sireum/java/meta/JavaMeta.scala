@@ -49,50 +49,51 @@ object JavaMeta {
 
   @inline
   def init(): Unit = {
+    import JavaProfile.Helper._
     if (!initialized) {
       initialized = true
       val pickler = (pickle, unpickle)
-      Node.extern(JavaProfile.annotationClassDesc, pickler)
-      Node.extern(JavaProfile.annotationTypeDesc, pickler)
-      Node.extern(JavaProfile.annotationCatchDesc, pickler)
-      Node.extern(JavaProfile.typeDesc, pickler)
-      Node.extern(JavaProfile.handleDesc, pickler)
-      Node.extern(JavaProfile.byteDesc, ( {
+      Node.extern(annotationClassDesc, pickler)
+      Node.extern(annotationTypeDesc, pickler)
+      Node.extern(annotationCatchDesc, pickler)
+      Node.extern(typeDesc, pickler)
+      Node.extern(handleDesc, pickler)
+      Node.extern(byteDesc, ( {
         case o: Byte => o.toString
       }, {
         case s => s.toByte
       }))
-      Node.extern(JavaProfile.charDesc, ( {
+      Node.extern(charDesc, ( {
         case o: Char => o.toString
       }, {
         case s => s.head
       }))
-      Node.extern(JavaProfile.shortDesc, ( {
+      Node.extern(shortDesc, ( {
         case o: Short => o.toString
       }, {
         case s => s.toShort
       }))
-      Node.extern(JavaProfile.intDesc, ( {
+      Node.extern(intDesc, ( {
         case o: Int => o.toString
       }, {
         case s => s.toInt
       }))
-      Node.extern(JavaProfile.longDesc, ( {
+      Node.extern(longDesc, ( {
         case o: Long => o.toString
       }, {
         case s => s.toLong
       }))
-      Node.extern(JavaProfile.floatDesc, ( {
+      Node.extern(floatDesc, ( {
         case o: Float => o.toString
       }, {
         case s => s.toFloat
       }))
-      Node.extern(JavaProfile.doubleDesc, ( {
+      Node.extern(doubleDesc, ( {
         case o: Char => o.toString
       }, {
         case s => s.toDouble
       }))
-      Node.extern(JavaProfile.stringDesc, ( {
+      Node.extern(stringDesc, ( {
         case o: String => o
       }, {
         case s => s
