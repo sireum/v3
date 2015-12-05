@@ -221,18 +221,6 @@ Preferences
   For Scala projects, this means that it often misses some dependencies when compiling Scala codebase.
   To address this, use the SBT ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) plugin.
   
-  **Note: the plugin is currently incompatible with IntelliJ 15; build a snapshot as follows:**
-
-  ```bash
-  git clone https://github.com/orfjackal/idea-sbt-plugin.git
-  cd idea-sbt-plugin
-  mvn -Didea.version=143.382 -Didea.home="/Applications/IntelliJ\ IDEA\ 15.app/Contents" package
-  ```
-
-  Install `sbt-dist/target/idea-sbt-plugin-1.7.1-SNAPSHOT.zip` in IntelliJ 15.
-  
-  Once installed:
-  
   * Set `idea-sbt-plugin` settings by opening `IntelliJ`->`Preference`->`Other Settings`->`SBT`
 
     * `VM parameters`: `-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled`
