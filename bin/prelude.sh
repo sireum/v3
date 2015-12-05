@@ -3,9 +3,9 @@ COMMANDS="wget unzip rm mv"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { echo "${COMMAND} command not found; aborting..."; exit 1; }
 done
-ZULU_VERSION=1.8.0_60-8.9.0.4
+ZULU_VERSION=1.8.0_66-8.11.0.1
 SBT_VERSION=0.13.9
-NODE_VERSION=5.0.0
+NODE_VERSION=5.1.1
 if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
   PLATFORM=win
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
