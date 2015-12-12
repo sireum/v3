@@ -26,6 +26,12 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-jvm.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-jvm-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika-parser-antlr4.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika-parser-antlr4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika-parser-antlr4-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika-parser-antlr4-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-logika-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-logika-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-option.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-option.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-option-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-option-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-pilar.iml" />

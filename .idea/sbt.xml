@@ -42,6 +42,12 @@
             <option value="$PROJECT_DIR$/js/project" />
             <option value="$PROJECT_DIR$/jvm" />
             <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-parser-antlr4" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-test" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-test/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika/project" />
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
@@ -85,6 +91,12 @@
             <option value="$PROJECT_DIR$/js/project" />
             <option value="$PROJECT_DIR$/jvm" />
             <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-parser-antlr4" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-test" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika-test/project" />
+            <option value="$PROJECT_DIR$/logika/sireum-logika/project" />
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
