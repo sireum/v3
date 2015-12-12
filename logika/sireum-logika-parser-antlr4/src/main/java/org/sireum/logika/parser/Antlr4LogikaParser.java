@@ -130,14 +130,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_sequent; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterSequent(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitSequent(this);
-		}
 	}
 
 	public final SequentContext sequent() throws RecognitionException {
@@ -220,14 +212,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_proof; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterProof(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitProof(this);
-		}
 	}
 
 	public final ProofContext proof() throws RecognitionException {
@@ -293,14 +277,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ProofStepContext.class,i);
 		}
 		public SubProofContext(ProofStepContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterSubProof(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitSubProof(this);
-		}
 	}
 	public static class StepContext extends ProofStepContext {
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
@@ -311,14 +287,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(JustificationContext.class,0);
 		}
 		public StepContext(ProofStepContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterStep(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitStep(this);
-		}
 	}
 
 	public final ProofStepContext proofStep() throws RecognitionException {
@@ -425,14 +393,6 @@ public class Antlr4LogikaParser extends Parser {
 	public static class VarContext extends FormulaContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public VarContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterVar(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitVar(this);
-		}
 	}
 	public static class ApplyContext extends FormulaContext {
 		public Token fun;
@@ -444,25 +404,9 @@ public class Antlr4LogikaParser extends Parser {
 		}
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public ApplyContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterApply(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitApply(this);
-		}
 	}
 	public static class BottomContext extends FormulaContext {
 		public BottomContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterBottom(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitBottom(this);
-		}
 	}
 	public static class BinaryContext extends FormulaContext {
 		public FormulaContext l;
@@ -478,14 +422,6 @@ public class Antlr4LogikaParser extends Parser {
 		public TerminalNode OR() { return getToken(Antlr4LogikaParser.OR, 0); }
 		public TerminalNode IMPLIES() { return getToken(Antlr4LogikaParser.IMPLIES, 0); }
 		public BinaryContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterBinary(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitBinary(this);
-		}
 	}
 	public static class UnaryContext extends FormulaContext {
 		public Token op;
@@ -494,65 +430,25 @@ public class Antlr4LogikaParser extends Parser {
 		}
 		public TerminalNode NOT() { return getToken(Antlr4LogikaParser.NOT, 0); }
 		public UnaryContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterUnary(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitUnary(this);
-		}
 	}
 	public static class IntContext extends FormulaContext {
 		public TerminalNode INT() { return getToken(Antlr4LogikaParser.INT, 0); }
 		public IntContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterInt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitInt(this);
-		}
 	}
 	public static class ParenContext extends FormulaContext {
 		public FormulaContext formula() {
 			return getRuleContext(FormulaContext.class,0);
 		}
 		public ParenContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterParen(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitParen(this);
-		}
 	}
 	public static class ResultContext extends FormulaContext {
 		public ResultContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterResult(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitResult(this);
-		}
 	}
 	public static class QuantContext extends FormulaContext {
 		public QformulaContext qformula() {
 			return getRuleContext(QformulaContext.class,0);
 		}
 		public QuantContext(FormulaContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterQuant(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitQuant(this);
-		}
 	}
 
 	public final FormulaContext formula() throws RecognitionException {
@@ -849,14 +745,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_qformula; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterQformula(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitQformula(this);
-		}
 	}
 
 	public final QformulaContext qformula() throws RecognitionException {
@@ -934,14 +822,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(NumOrIdContext.class,i);
 		}
 		public ForallElimContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterForallElim(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitForallElim(this);
-		}
 	}
 	public static class ExistsIntroContext extends JustificationContext {
 		public NumOrIdContext stepOrFact;
@@ -956,14 +836,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.ID, i);
 		}
 		public ExistsIntroContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterExistsIntro(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitExistsIntro(this);
-		}
 	}
 	public static class AndIntroContext extends JustificationContext {
 		public Token lStep;
@@ -974,95 +846,39 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
 		public AndIntroContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAndIntro(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAndIntro(this);
-		}
 	}
 	public static class ForallIntroContext extends JustificationContext {
 		public Token subProof;
 		public TerminalNode FORALLI() { return getToken(Antlr4LogikaParser.FORALLI, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public ForallIntroContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterForallIntro(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitForallIntro(this);
-		}
 	}
 	public static class ImpliesElimContext extends JustificationContext {
 		public Token impliesStep;
 		public TerminalNode IMPLIESE() { return getToken(Antlr4LogikaParser.IMPLIESE, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public ImpliesElimContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterImpliesElim(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitImpliesElim(this);
-		}
 	}
 	public static class PremiseContext extends JustificationContext {
 		public PremiseContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterPremise(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitPremise(this);
-		}
 	}
 	public static class AndElim2Context extends JustificationContext {
 		public Token andStep;
 		public TerminalNode ANDE2() { return getToken(Antlr4LogikaParser.ANDE2, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public AndElim2Context(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAndElim2(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAndElim2(this);
-		}
 	}
 	public static class OrIntro2Context extends JustificationContext {
 		public Token orStep;
 		public TerminalNode ORI2() { return getToken(Antlr4LogikaParser.ORI2, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public OrIntro2Context(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterOrIntro2(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitOrIntro2(this);
-		}
 	}
 	public static class NegIntroContext extends JustificationContext {
 		public Token step;
 		public TerminalNode NOTI() { return getToken(Antlr4LogikaParser.NOTI, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public NegIntroContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterNegIntro(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitNegIntro(this);
-		}
 	}
 	public static class NegElimContext extends JustificationContext {
 		public Token step;
@@ -1073,27 +889,11 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
 		public NegElimContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterNegElim(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitNegElim(this);
-		}
 	}
 	public static class PbcContext extends JustificationContext {
 		public Token subProof;
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public PbcContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterPbc(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitPbc(this);
-		}
 	}
 	public static class AutoContext extends JustificationContext {
 		public NumOrIdContext numOrId;
@@ -1105,42 +905,18 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(NumOrIdContext.class,i);
 		}
 		public AutoContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAuto(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAuto(this);
-		}
 	}
 	public static class OrIntro1Context extends JustificationContext {
 		public Token orStep;
 		public TerminalNode ORI1() { return getToken(Antlr4LogikaParser.ORI1, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public OrIntro1Context(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterOrIntro1(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitOrIntro1(this);
-		}
 	}
 	public static class AndElim1Context extends JustificationContext {
 		public Token andStep;
 		public TerminalNode ANDE1() { return getToken(Antlr4LogikaParser.ANDE1, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public AndElim1Context(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAndElim1(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAndElim1(this);
-		}
 	}
 	public static class AlgebraContext extends JustificationContext {
 		public Token NUM;
@@ -1150,14 +926,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
 		public AlgebraContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAlgebra(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAlgebra(this);
-		}
 	}
 	public static class ExistsContext extends JustificationContext {
 		public Token existsStep;
@@ -1168,27 +936,11 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
 		public ExistsContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterExists(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitExists(this);
-		}
 	}
 	public static class BottomElimContext extends JustificationContext {
 		public Token bottomStep;
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public BottomElimContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterBottomElim(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitBottomElim(this);
-		}
 	}
 	public static class OrElimContext extends JustificationContext {
 		public Token orStep;
@@ -1200,28 +952,12 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
 		public OrElimContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterOrElim(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitOrElim(this);
-		}
 	}
 	public static class ImpliesIntroContext extends JustificationContext {
 		public Token impliesStep;
 		public TerminalNode IMPLIESI() { return getToken(Antlr4LogikaParser.IMPLIESI, 0); }
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public ImpliesIntroContext(JustificationContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterImpliesIntro(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitImpliesIntro(this);
-		}
 	}
 
 	public final JustificationContext justification() throws RecognitionException {
@@ -1518,14 +1254,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_numOrId; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterNumOrId(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitNumOrId(this);
-		}
 	}
 
 	public final NumOrIdContext numOrId() throws RecognitionException {
@@ -1573,14 +1301,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterProgram(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitProgram(this);
-		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -1658,14 +1378,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,i);
 		}
 		public MethodInvocationStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterMethodInvocationStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitMethodInvocationStmt(this);
-		}
 	}
 	public static class AssignVarStmtContext extends StmtContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
@@ -1673,14 +1385,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public AssignVarStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAssignVarStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAssignVarStmt(this);
-		}
 	}
 	public static class IfStmtContext extends StmtContext {
 		public StmtContext stmt;
@@ -1696,14 +1400,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(StmtContext.class,i);
 		}
 		public IfStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterIfStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitIfStmt(this);
-		}
 	}
 	public static class PrintStmtContext extends StmtContext {
 		public List<TerminalNode> ID() { return getTokens(Antlr4LogikaParser.ID); }
@@ -1711,28 +1407,12 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.ID, i);
 		}
 		public PrintStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterPrintStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitPrintStmt(this);
-		}
 	}
 	public static class MethodDeclStmtContext extends StmtContext {
 		public MethodDeclContext methodDecl() {
 			return getRuleContext(MethodDeclContext.class,0);
 		}
 		public MethodDeclStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterMethodDeclStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitMethodDeclStmt(this);
-		}
 	}
 	public static class AssignArrayStmtContext extends StmtContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
@@ -1743,14 +1423,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,i);
 		}
 		public AssignArrayStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAssignArrayStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAssignArrayStmt(this);
-		}
 	}
 	public static class WhileStmtContext extends StmtContext {
 		public ExpContext exp() {
@@ -1766,27 +1438,11 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(StmtContext.class,i);
 		}
 		public WhileStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterWhileStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitWhileStmt(this);
-		}
 	}
 	public static class ReadIntStmtContext extends StmtContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public TerminalNode STRING() { return getToken(Antlr4LogikaParser.STRING, 0); }
 		public ReadIntStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterReadIntStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitReadIntStmt(this);
-		}
 	}
 	public static class LogikaStmtContext extends StmtContext {
 		public ProofContext proof() {
@@ -1802,14 +1458,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(FactsContext.class,0);
 		}
 		public LogikaStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterLogikaStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitLogikaStmt(this);
-		}
 	}
 	public static class VarDeclStmtContext extends StmtContext {
 		public Token access;
@@ -1821,14 +1469,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public VarDeclStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterVarDeclStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitVarDeclStmt(this);
-		}
 	}
 	public static class ArrayCloneStmtContext extends StmtContext {
 		public List<TerminalNode> ID() { return getTokens(Antlr4LogikaParser.ID); }
@@ -1836,28 +1476,12 @@ public class Antlr4LogikaParser extends Parser {
 			return getToken(Antlr4LogikaParser.ID, i);
 		}
 		public ArrayCloneStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterArrayCloneStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitArrayCloneStmt(this);
-		}
 	}
 	public static class AssertStmtContext extends StmtContext {
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public AssertStmtContext(StmtContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterAssertStmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitAssertStmt(this);
-		}
 	}
 
 	public final StmtContext stmt() throws RecognitionException {
@@ -2236,40 +1860,16 @@ public class Antlr4LogikaParser extends Parser {
 	public static class IdExpContext extends ExpContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public IdExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterIdExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitIdExp(this);
-		}
 	}
 	public static class ParenExpContext extends ExpContext {
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public ParenExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterParenExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitParenExp(this);
-		}
 	}
 	public static class BigIntExpContext extends ExpContext {
 		public TerminalNode STRING() { return getToken(Antlr4LogikaParser.STRING, 0); }
 		public BigIntExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterBigIntExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitBigIntExp(this);
-		}
 	}
 	public static class UnaryExpContext extends ExpContext {
 		public Token op;
@@ -2277,26 +1877,10 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,0);
 		}
 		public UnaryExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterUnaryExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitUnaryExp(this);
-		}
 	}
 	public static class IntExpContext extends ExpContext {
 		public TerminalNode INT() { return getToken(Antlr4LogikaParser.INT, 0); }
 		public IntExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterIntExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitIntExp(this);
-		}
 	}
 	public static class SeqExpContext extends ExpContext {
 		public List<ExpContext> exp() {
@@ -2306,14 +1890,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,i);
 		}
 		public SeqExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterSeqExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitSeqExp(this);
-		}
 	}
 	public static class BinaryExpContext extends ExpContext {
 		public ExpContext l;
@@ -2326,14 +1902,6 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(ExpContext.class,i);
 		}
 		public BinaryExpContext(ExpContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterBinaryExp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitBinaryExp(this);
-		}
 	}
 
 	public final ExpContext exp() throws RecognitionException {
@@ -2598,25 +2166,9 @@ public class Antlr4LogikaParser extends Parser {
 	}
 	public static class IntSeqTypeContext extends TypeContext {
 		public IntSeqTypeContext(TypeContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterIntSeqType(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitIntSeqType(this);
-		}
 	}
 	public static class IntTypeContext extends TypeContext {
 		public IntTypeContext(TypeContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterIntType(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitIntType(this);
-		}
 	}
 
 	public final TypeContext type() throws RecognitionException {
@@ -2673,14 +2225,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_loopInvariant; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterLoopInvariant(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitLoopInvariant(this);
-		}
 	}
 
 	public final LoopInvariantContext loopInvariant() throws RecognitionException {
@@ -2721,14 +2265,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_modifies; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterModifies(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitModifies(this);
-		}
 	}
 
 	public final ModifiesContext modifies() throws RecognitionException {
@@ -2823,14 +2359,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_methodDecl; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterMethodDecl(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitMethodDecl(this);
-		}
 	}
 
 	public final MethodDeclContext methodDecl() throws RecognitionException {
@@ -2945,14 +2473,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_param; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterParam(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitParam(this);
-		}
 	}
 
 	public final ParamContext param() throws RecognitionException {
@@ -2994,14 +2514,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_methodContract; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterMethodContract(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitMethodContract(this);
-		}
 	}
 
 	public final MethodContractContext methodContract() throws RecognitionException {
@@ -3070,14 +2582,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_invariants; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterInvariants(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitInvariants(this);
-		}
 	}
 
 	public final InvariantsContext invariants() throws RecognitionException {
@@ -3131,14 +2635,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_facts; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterFacts(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitFacts(this);
-		}
 	}
 
 	public final FactsContext facts() throws RecognitionException {
@@ -3190,14 +2686,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_fact; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterFact(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitFact(this);
-		}
 	}
 
 	public final FactContext fact() throws RecognitionException {
@@ -3237,14 +2725,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_sequentFile; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterSequentFile(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitSequentFile(this);
-		}
 	}
 
 	public final SequentFileContext sequentFile() throws RecognitionException {
@@ -3289,14 +2769,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_proofFile; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterProofFile(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitProofFile(this);
-		}
 	}
 
 	public final ProofFileContext proofFile() throws RecognitionException {
@@ -3331,14 +2803,6 @@ public class Antlr4LogikaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_programFile; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).enterProgramFile(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof Antlr4LogikaListener ) ((Antlr4LogikaListener)listener).exitProgramFile(this);
-		}
 	}
 
 	public final ProgramFileContext programFile() throws RecognitionException {
