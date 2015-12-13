@@ -25,11 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 grammar Antlr4Logika;
 
-
-@header {
-// @formatter:off
-}
-
 /*
 ========================================
 Symbol    Unicode    ASCII
@@ -48,16 +43,27 @@ Symbol    Unicode    ASCII
 ========================================
 */
 
+@header {
+// @formatter:off
+}
+
+sequentFile
+  : sequent proof? EOF ;
+
+proofFile
+  : proof EOF ;
+
+programFile
+  : program EOF ;
 
 sequent
-  : ( premises+=formula ( ',' premises+=formula )* )?
-    ( '|-' | '⊢' )
-    conclusions+=formula ( ',' conclusions+=formula )*
+  : ( premises+=formula ( ','? premises+=formula )* )?
+    ( '|-' | '⊢' | HLINE )
+    conclusions+=formula ( ','? conclusions+=formula )*
   ;
 
 proof
-  : '{' proofStep* '}'
-  ;
+  : '{' proofStep* '}' ;
 
 proofStep
   : NUM '.' formula justification                       #Step
@@ -87,42 +93,70 @@ formula
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
   | l=formula ( 'and' | '&&' | '∧' ) r=formula          #Binary  // propositional logic
   | l=formula ( 'or' | '||' | '∨' ) r=formula           #Binary  // propositional logic
-  | l=formula ( 'implies' | '⇒' ) r=formula             #Binary  // propositional logic
+  | l=formula ( 'implies' | '⇒' | '=>' ) r=formula     #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
 
 qformula
   : q=( 'forall' | 'all' | '∀'
       | 'exists' | 'some' | '∃' )
-    qVar+=ID ( ',' qVar+=ID )* '|' formula
+    qVar+=ID ( ',' qVar+=ID )*
+    '|'
+    formula
   ;
 
 justification
   : 'premise'                                           #Premise
-  | ( 'andi' | '&&i' | '∧i' ) lStep=NUM rStep=NUM       #AndIntro
-  | ( 'ande1' | '&&e1' | '∧e1') andStep=NUM             #AndElim1
-  | ( 'ande2' | '&&e2' | '∧e2' )  andStep=NUM           #AndElim2
-  | ( 'ori1' | '||i1' | '∨i1' ) orStep=NUM              #OrIntro1
-  | ( 'ori2' | '||i2' | '∨i2' ) orStep=NUM              #OrIntro2
-  | ( 'ore' | '||e' | '∨e' )
+  | ( 'andi' | ( '&&' | '∧') ruleIntro )
+    lStep=NUM rStep=NUM                                 #AndIntro
+  | ( 'ande1' | ( '&&' | '∧' ) ruleElim1 )
+    andStep=NUM                                         #AndElim1
+  | ( 'ande2' | ( '&&' | '∧' ) ruleElim2 )
+    andStep=NUM                                         #AndElim2
+  | ( 'ori1' | ( '||' | '∨' ) ruleIntro1 )
+    orStep=NUM                                          #OrIntro1
+  | ( 'ori2' | ( '||' | '∨' ) ruleIntro2 )
+    orStep=NUM                                          #OrIntro2
+  | ( 'ore' | ( '||' | '∨' ) ruleElim )
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
-  | ( 'impliesi' | '⇒i' )  impliesStep=NUM              #ImpliesIntro
-  | ( 'impliese' | '⇒e' ) impliesStep=NUM               #ImpliesElim
-  | ( 'noti' | '!i' | '~i' | '¬i' ) step=NUM            #NegIntro
-  | ( 'note' | '!e' | '~e' | '¬e' )
+  | ( 'impliesi' | ( '⇒' | '=>' ) ruleIntro )
+    impliesStep=NUM                                     #ImpliesIntro
+  | ( 'impliese' | ( '⇒' | '=>' ) ruleElim )
+    impliesStep=NUM                                     #ImpliesElim
+  | ( 'noti' | ( '!' | '~' | '¬' ) ruleIntro )
+    step=NUM                                            #NegIntro
+  | ( 'note' | ( '!' | '~' | '¬' ) ruleElim )
     step=NUM notStep=NUM                                #NegElim
-  | ( '_|_e' | '⊥e' ) bottomStep=NUM                    #BottomElim
+  | ( '_|_' | '⊥' ) ruleElim bottomStep=NUM            #BottomElim
   | 'Pbc' subProof=NUM                                  #Pbc
-  | ( 'foalli' | 'alli' | '∀i' ) subProof=NUM           #ForallIntro
-  | ( 'foalle' | 'alle' | '∀e' )
+  | ( 'foalli' | 'alli' | '∀' ruleIntro ) subProof=NUM  #ForallIntro
+  | ( 'foalle' | 'alle' | '∀' ruleElim )
     stepOrFact=numOrId args+=numOrId+                   #ForallElim
-  | ( 'existsi' | 'somei' | '∃i' )
+  | ( 'existsi' | 'somei' | '∃' ruleIntro )
     stepOrFact=numOrId args+=ID+                        #ExistsIntro
-  | ( 'existse' | 'somee' | '∃e' )
+  | ( 'existse' | 'somee' | '∃' ruleElim )
     existsStep=NUM subproof=NUM                         #Exists
   | 'algebra' steps+=NUM*                               #Algebra
   | 'auto' stepOrFact+=numOrId*                         #Auto
   ;
+
+ruleIntro
+  : i=ID { "i".equals($i.text) }? ;
+
+ruleIntro1
+  : i1=ID { "i1".equals($i1.text) }? ;
+
+ruleIntro2
+  : i2=ID { "i2".equals($i2.text) }? ;
+
+ruleElim
+  : e=ID { "e".equals($e.text) }? ;
+
+ruleElim1
+  : e1=ID { "e1".equals($e1.text) }? ;
+
+ruleElim2
+  : e2=ID { "e2".equals($e2.text) }? ;
 
 numOrId
   : NUM
@@ -131,23 +165,29 @@ numOrId
 
 program
   : 'import' org=ID '.' sireum=ID '.' logika=ID '.' '_'
-    stmt*
+    stmts
+    { "org".equals($org.text) &&
+      "sireum".equals($sireum.text) &&
+      "logika".equals($logika.text) }?
   ;
+
+stmts
+  : stmt? ( ( ';' | NL+ ) stmt? )* ;
 
 stmt
   : modifier=( 'var' | 'val' ) ID ':' type '=' exp      #VarDeclStmt
   | ID '=' exp                                          #AssignVarStmt
   | 'assert' '(' exp ')'                                #AssertStmt
-  | 'if' '(' exp ')' '{' ( ts+=stmt )* '}'
-    'else' '{' (fs+=stmt )* '}'                         #IfStmt
-  | 'while' '(' exp ')' '{'
+  | 'if' '(' exp ')' NL* '{' ts=stmts '}'
+    'else' '{' fs=stmts '}'                             #IfStmt
+  | 'while' '(' exp ')' NL* '{'
     ( 'l' '"""' loopInvariant '"""' )?
-    stmt*
+    stmts
     '}'                                                 #WhileStmt
   | ID '=' 'readInt' '(' STRING? ')'                    #ReadIntStmt
   | op=('print' | 'println' ) '(' 's' STRING ')'        #PrintStmt
   | ( l=ID '=' )? r=ID '(' ( exp ( ','exp )* )? ')'     #MethodInvocationStmt
-  | ID '=' ID '.' 'clone'                               #ArrayCloneStmt
+  | ID '=' ID '.' 'clone'                               #SeqCloneStmt
   | ID '(' exp ')' '=' exp                              #AssignArrayStmt
   | methodDecl                                          #MethodDeclStmt
   | 'l' '"""'
@@ -159,23 +199,26 @@ stmt
   ;
 
 exp
-  : ID                                                  #IdExp
+  : 'true'                                              #TrueExp
+  | 'false'                                             #FalseExp
   | INT                                                 #IntExp
+  | ID ( '(' exp ')' )?                                 #IdExp
   | 'BigInt' '(' STRING ')'                             #BigIntExp
   | 'Seq' '(' exp ( ',' exp )? ')'                      #SeqExp
   | '(' exp ')'                                         #ParenExp
   | op=( '-' | '!' ) exp                                #UnaryExp
-  | l=exp op=( '*' | '/' | '%' ) r=exp                  #BinaryExp
-  | l=exp op=( '+' | '-' ) r=exp                        #BinaryExp
-  | l=exp op=( '>' | '>=' | '<' | '<=' ) r=exp          #BinaryExp
-  | l=exp op=( '==' | '!=' ) r=exp                      #BinaryExp
-  | l=exp ( '&&' ) r=exp                                #BinaryExp
-  | l=exp ( '||' ) r=exp                                #BinaryExp
+  | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
+  | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
+  | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
+  | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
+  | l=exp ( '&&' ) NL? r=exp                            #BinaryExp
+  | l=exp ( '||' ) NL? r=exp                            #BinaryExp
   ;
 
 type
-  : 'BigInt'                                            #IntType
-  | 'Seq' '[' 'BigInt' ']'                              #IntSeqType
+  : 'Boolean'                                           #Boolean
+  | 'BigInt'                                            #IntType
+  | 'Seq' '[' NL* 'BigInt' NL* ']'                      #IntSeqType
   ;
 
 loopInvariant
@@ -186,22 +229,20 @@ loopInvariant
   ;
 
 modifies
-  : 'modifies' ( ID* | ID ( ',' ID )* )
-  ;
+  : 'modifies' ( ID* | ID ( ',' ID )* ) ;
 
 methodDecl
-  : 'def' ID
+  : 'def' ID  NL?
     '(' ( param ( ',' param )* )? ')' ':' type '='
     '{'
     ( 'l' '"""' methodContract '"""' )?
-    stmt*
-    'return' exp?
+    stmts
+    'return' exp? NL*
     '}'
   ;
 
 param
-  : ID ':' type
-  ;
+  : ID ':' type ;
 
 methodContract
   : '{'
@@ -212,58 +253,56 @@ methodContract
   ;
 
 invariants
-  : '{' 'invariant' formula+ '}'
-  ;
+  : '{' 'invariant' formula+ '}' ;
 
 facts
-  : '{' 'fact' fact+ '}'
-  ;
+  : '{' 'fact' fact+ '}' ;
 
 fact
-  : ID '.' qformula
-  ;
+  : ID '.' qformula ;
 
-sequentFile
-  : sequent proof? EOF
-  ;
 
-proofFile
-  : proof EOF
+HLINE
+  : '-' '-' '-'+
   ;
-
-programFile
-  : program EOF
-  ;
-
 
 INT
-  : '0' | '-'? [1-9] [0-9]*
-  ;
+  : '0' | '-'? [1-9] [0-9]* ;
 
 NUM
-  : '0' | [1-9] [0-9]*
-  ;
+  : '0' | [1-9] [0-9]* ;
 
 ID
-  : [a-zA-Z] [a-zA-Z0-9]*
-  ;
+  : [a-zA-Z] [a-zA-Z0-9]* ;
 
 STRING
-  : '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' // all printable chars and no escape chars
-  ;
+  : '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' ; // all printable chars and no escape chars
 
 LINE_COMMENT
-  : '//' ~[\r\n]* -> skip
-  ;
+  : '//' ~[\r\n]* -> skip ;
 
 COMMENT
-  : '/*' .*? '*/' -> skip
+  : '/*' .*? '*/' -> skip ;
+
+NL
+  : '\r'? '\n' // newlines are processed after lexing according to:
+               // http://www.scala-lang.org/files/archive/spec/2.11/01-lexical-syntax.html#newline-characters
   ;
 
 WS
-  : [ \r\n\t\u000C]+ -> skip
+  : [ \t\u000C]+ -> skip ;
+
+RESERVED
+  : 'abstract' | 'case' | 'catch' | 'class'
+  | 'do' | 'extends' | 'final'
+  | 'finally' | 'for' | 'forSome' | 'implicit'
+  | 'lazy' | 'macro' | 'match' | 'new'
+  | 'null' | 'object' | 'override' | 'package' | 'private'
+  | 'protected' | 'sealed' | 'super' | 'this'
+  | 'throw' | 'trait' | 'try' | 'type'
+  | 'with' | 'yield'
+  | '<-' | '<:' | '<%' | '>:' | '#' | '@'
   ;
 
 ERROR_CHAR
-  : .
-  ;
+  : . ;
