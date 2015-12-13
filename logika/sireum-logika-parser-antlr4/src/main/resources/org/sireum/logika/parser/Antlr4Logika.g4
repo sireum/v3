@@ -30,10 +30,28 @@ grammar Antlr4Logika;
 // @formatter:off
 }
 
+/*
+========================================
+Symbol    Unicode    ASCII
+----------------------------------------
+  ⊥        22A5      _|_
+  ≤        2264      <=
+  ≥        2265      >=
+  ≠        2260      !=
+  ¬        00AC      not      !      ~
+  ∧        2227      and      &&
+  ∨        2228      or       ||
+  ⇒        21D2      implies
+  ∀        2200      forall   all
+  ∃        2203      exists   some
+  ⊢        22A2      |-
+========================================
+*/
+
 
 sequent
   : ( premises+=formula ( ',' premises+=formula )* )?
-    '|-'
+    ( '|-' | '⊢' )
     conclusions+=formula ( ',' conclusions+=formula )*
   ;
 
@@ -53,7 +71,7 @@ proofStep
   ;
 
 formula
-  : '_|_'                                               #Bottom  // propositional logic
+  : ( '_|_' | '⊥' )                                     #Bottom  // propositional logic
   | ID                                                  #Var     // propositional logic
   | '(' formula ')'                                     #Paren   // propositional logic
   | '$result'                                           #Result  // program logic
@@ -61,39 +79,47 @@ formula
   | INT                                                 #Int     // algebra
   | l=formula op=( '*' | '/' | '%' ) r=formula          #Binary  // algebra
   | l=formula op=( '+' | '-' ) r=formula                #Binary  // algebra
-  | l=formula op=( '>' | '>=' | '<' | '<=' ) r=formula  #Binary  // algebra
-  | l=formula op=( '==' | '!=' ) r=formula              #Binary  // algebra
+  | l=formula
+    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' )
+    r=formula                                           #Binary  // algebra
+  | l=formula op=( '==' | '!=' | '≠' ) r=formula        #Binary  // algebra
   | op='-' formula                                      #Unary   // algebra
-  | op=NOT formula                                      #Unary   // propositional logic
-  | l=formula AND r=formula                             #Binary  // propositional logic
-  | l=formula OR r=formula                              #Binary  // propositional logic
-  | l=formula IMPLIES r=formula                         #Binary  // propositional logic
+  | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
+  | l=formula ( 'and' | '&&' | '∧' ) r=formula          #Binary  // propositional logic
+  | l=formula ( 'or' | '||' | '∨' ) r=formula           #Binary  // propositional logic
+  | l=formula ( 'implies' | '⇒' ) r=formula             #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
 
 qformula
-  : q=( FORALL | EXISTS )
+  : q=( 'forall' | 'all' | '∀'
+      | 'exists' | 'some' | '∃' )
     qVar+=ID ( ',' qVar+=ID )* '|' formula
   ;
 
 justification
   : 'premise'                                           #Premise
-  | ANDI lStep=NUM rStep=NUM                            #AndIntro
-  | ANDE1 andStep=NUM                                   #AndElim1
-  | ANDE2 andStep=NUM                                   #AndElim2
-  | ORI1 orStep=NUM                                     #OrIntro1
-  | ORI2 orStep=NUM                                     #OrIntro2
-  | ORE orStep=NUM lSubProof=NUM rSubProof=NUM          #OrElim
-  | IMPLIESI impliesStep=NUM                            #ImpliesIntro
-  | IMPLIESE impliesStep=NUM                            #ImpliesElim
-  | NOTI step=NUM                                       #NegIntro
-  | NOTE step=NUM notStep=NUM                           #NegElim
-  | '_|_e' bottomStep=NUM                               #BottomElim
+  | ( 'andi' | '&&i' | '∧i' ) lStep=NUM rStep=NUM       #AndIntro
+  | ( 'ande1' | '&&e1' | '∧e1') andStep=NUM             #AndElim1
+  | ( 'ande2' | '&&e2' | '∧e2' )  andStep=NUM           #AndElim2
+  | ( 'ori1' | '||i1' | '∨i1' ) orStep=NUM              #OrIntro1
+  | ( 'ori2' | '||i2' | '∨i2' ) orStep=NUM              #OrIntro2
+  | ( 'ore' | '||e' | '∨e' )
+    orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
+  | ( 'impliesi' | '⇒i' )  impliesStep=NUM              #ImpliesIntro
+  | ( 'impliese' | '⇒e' ) impliesStep=NUM               #ImpliesElim
+  | ( 'noti' | '!i' | '~i' | '¬i' ) step=NUM            #NegIntro
+  | ( 'note' | '!e' | '~e' | '¬e' )
+    step=NUM notStep=NUM                                #NegElim
+  | ( '_|_e' | '⊥e' ) bottomStep=NUM                    #BottomElim
   | 'Pbc' subProof=NUM                                  #Pbc
-  | FORALLI subProof=NUM                                #ForallIntro
-  | FORALLE stepOrFact=numOrId args+=numOrId+           #ForallElim
-  | EXISTSI stepOrFact=numOrId args+=ID+                #ExistsIntro
-  | EXISTSE existsStep=NUM subproof=NUM                 #Exists
+  | ( 'foalli' | 'alli' | '∀i' ) subProof=NUM           #ForallIntro
+  | ( 'foalle' | 'alle' | '∀e' )
+    stepOrFact=numOrId args+=numOrId+                   #ForallElim
+  | ( 'existsi' | 'somei' | '∃i' )
+    stepOrFact=numOrId args+=ID+                        #ExistsIntro
+  | ( 'existse' | 'somee' | '∃e' )
+    existsStep=NUM subproof=NUM                         #Exists
   | 'algebra' steps+=NUM*                               #Algebra
   | 'auto' stepOrFact+=numOrId*                         #Auto
   ;
@@ -109,7 +135,7 @@ program
   ;
 
 stmt
-  : access=( 'var' | 'val' ) ID ':' type '=' exp        #VarDeclStmt
+  : modifier=( 'var' | 'val' ) ID ':' type '=' exp      #VarDeclStmt
   | ID '=' exp                                          #AssignVarStmt
   | 'assert' '(' exp ')'                                #AssertStmt
   | 'if' '(' exp ')' '{' ( ts+=stmt )* '}'
@@ -119,7 +145,7 @@ stmt
     stmt*
     '}'                                                 #WhileStmt
   | ID '=' 'readInt' '(' STRING? ')'                    #ReadIntStmt
-  | 'println' '(' ( ID ( ',' ID )* )? ')'               #PrintStmt
+  | op=('print' | 'println' ) '(' 's' STRING ')'        #PrintStmt
   | ( l=ID '=' )? r=ID '(' ( exp ( ','exp )* )? ')'     #MethodInvocationStmt
   | ID '=' ID '.' 'clone'                               #ArrayCloneStmt
   | ID '(' exp ')' '=' exp                              #AssignArrayStmt
@@ -128,8 +154,8 @@ stmt
     ( proof
     | sequent
     | invariants
-    | facts
-    ) '"""'                                             #LogikaStmt
+    | facts      )
+    '"""'                                               #LogikaStmt
   ;
 
 exp
@@ -209,86 +235,6 @@ programFile
   : program EOF
   ;
 
-
-NOT
-  : 'not' | '~' | '!'
-  ;
-
-AND
-  : 'and' | '^' | '&&'
-  ;
-
-OR
-  : 'or' | 'v' | '||'
-  ;
-
-IMPLIES
-  : 'implies' | '=>'| '==>' | '-->'
-  ;
-
-FORALL
-  : 'forall' | 'all' | 'A' | '∀' // Unicode 2200
-  ;
-
-EXISTS
-  : 'exists' | 'some' | 'E' | '∃' // Unicode 2203
-  ;
-
-ANDI
-  : 'andi' | '^i' | '&&i'
-  ;
-
-ANDE1
-  : 'ande1' | '^e1' | '&&e1'
-  ;
-
-ANDE2
-  : 'ande2' | '^e2' | '&&e2'
-  ;
-
-ORI1
-  : 'ori1' | 'vi1' | '||i1'
-  ;
-
-ORI2
-  : 'ori2' | 'vi2' | '||i2'
-  ;
-
-ORE
-  : 'ore' | 've' | '||e'
-  ;
-
-IMPLIESI
-  : 'impliesi' | '=>i' | '==>i' | '-->i'
-  ;
-
-IMPLIESE
-  : 'impliese' | '=>e' | '==>e' | '-->e'
-  ;
-
-NOTI
-  : 'noti' | '~i' | '!i'
-  ;
-
-NOTE
-  : 'note' | '~e' | '!e'
-  ;
-
-FORALLI
-  : 'foalli' | 'alli' | 'Ai' | '∀i'
-  ;
-
-FORALLE
-  : 'foalle' | 'alle' | 'Ae' | '∀e'
-  ;
-
-EXISTSI
-  : 'existsi' | 'somei' | 'Ei' | '∃i'
-  ;
-
-EXISTSE
-  : 'existse' | 'somee' | 'Ee' | '∃e'
-  ;
 
 INT
   : '0' | '-'? [1-9] [0-9]*
