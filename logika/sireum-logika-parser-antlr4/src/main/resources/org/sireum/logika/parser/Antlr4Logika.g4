@@ -29,18 +29,21 @@ grammar Antlr4Logika;
 ========================================
 Symbol    Unicode    ASCII
 ----------------------------------------
-  ⊥        22A5      _|_
+  ⊥        22A5      _|_      false  F
+  ⊤        22A4      true     T
   ≤        2264      <=
   ≥        2265      >=
   ≠        2260      !=
   ¬        00AC      not      !      ~
   ∧        2227      and      &&
   ∨        2228      or       ||
-  ⇒        21D2      implies
-  ∀        2200      forall   all
-  ∃        2203      exists   some
-  ⊢        22A2      |-
+  ⇒        21D2      implies  =>
+  ∀        2200      forall   all    A
+  ∃        2203      exists   some   E
+  ⊢        22A2      |-       ---+
 ========================================
+
+Note: ---+ means at least three minus (-) characters
 */
 
 @header {
@@ -57,9 +60,12 @@ programFile
   : program EOF ;
 
 sequent
-  : ( premises+=formula ( ','? premises+=formula )* )?
-    ( '|-' | '⊢' | HLINE )
-    conclusions+=formula ( ','? conclusions+=formula )*
+  : ( premises+=formula ( ',' premises+=formula )* )?
+    ( '|-' | '⊢' )
+    conclusions+=formula ( ',' conclusions+=formula )*
+  | premises+=formula*
+    HLINE
+    conclusions+=formula+
   ;
 
 proof
@@ -67,17 +73,17 @@ proof
 
 proofStep
   : NUM '.' formula justification                       #Step
-  | '{'
-    NUM '.'
+  | sub=NUM '.' '{'
+    assume=NUM '.'
     ( fresh=ID
-    | fresh=ID? formula 'assume'
-    )
+    | fresh=ID? formula 'assume' )
     proofStep*
     '}'                                                 #SubProof
   ;
 
 formula
-  : ( '_|_' | '⊥' )                                     #Bottom  // propositional logic
+  : ( 'false' | 'F' | '_|_' | '⊥' )                     #False   // propositional logic
+  | ( 'true' | 'T' )                                    #True    // propositional logic
   | ID                                                  #Var     // propositional logic
   | '(' formula ')'                                     #Paren   // propositional logic
   | '$result'                                           #Result  // program logic
@@ -88,7 +94,7 @@ formula
   | l=formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' )
     r=formula                                           #Binary  // algebra
-  | l=formula op=( '==' | '!=' | '≠' ) r=formula        #Binary  // algebra
+  | l=formula op=( '=' |'==' | '!=' | '≠' ) r=formula   #Binary  // algebra
   | op='-' formula                                      #Unary   // algebra
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
   | l=formula ( 'and' | '&&' | '∧' ) r=formula          #Binary  // propositional logic
@@ -98,8 +104,8 @@ formula
   ;
 
 qformula
-  : q=( 'forall' | 'all' | '∀'
-      | 'exists' | 'some' | '∃' )
+  : q=( 'forall' | 'all' | 'A' | '∀'
+      | 'exists' | 'some' | 'E' | '∃' )
     qVar+=ID ( ',' qVar+=ID )*
     '|'
     formula
@@ -107,8 +113,8 @@ qformula
 
 justification
   : 'premise'                                           #Premise
-  | ( 'andi' | ( '&&' | '∧') ruleIntro )
-    lStep=NUM rStep=NUM                                 #AndIntro
+  | ( 'andi' | ( '&&' | '∧' ) ruleIntro )
+    lStep=NUM ',' rStep=NUM                             #AndIntro
   | ( 'ande1' | ( '&&' | '∧' ) ruleElim1 )
     andStep=NUM                                         #AndElim1
   | ( 'ande2' | ( '&&' | '∧' ) ruleElim2 )
@@ -118,7 +124,7 @@ justification
   | ( 'ori2' | ( '||' | '∨' ) ruleIntro2 )
     orStep=NUM                                          #OrIntro2
   | ( 'ore' | ( '||' | '∨' ) ruleElim )
-    orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
+    orStep=NUM ',' lSubProof=NUM ',' rSubProof=NUM      #OrElim
   | ( 'impliesi' | ( '⇒' | '=>' ) ruleIntro )
     impliesStep=NUM                                     #ImpliesIntro
   | ( 'impliese' | ( '⇒' | '=>' ) ruleElim )
@@ -126,18 +132,19 @@ justification
   | ( 'noti' | ( '!' | '~' | '¬' ) ruleIntro )
     step=NUM                                            #NegIntro
   | ( 'note' | ( '!' | '~' | '¬' ) ruleElim )
-    step=NUM notStep=NUM                                #NegElim
-  | ( '_|_' | '⊥' ) ruleElim bottomStep=NUM            #BottomElim
+    step=NUM ',' notStep=NUM                            #NegElim
+  | ( 'falsee' | '_|_' | '⊥' ) ruleElim bottomStep=NUM  #BottomElim
   | 'Pbc' subProof=NUM                                  #Pbc
-  | ( 'foalli' | 'alli' | '∀' ruleIntro ) subProof=NUM  #ForallIntro
-  | ( 'foalle' | 'alle' | '∀' ruleElim )
-    stepOrFact=numOrId args+=numOrId+                   #ForallElim
-  | ( 'existsi' | 'somei' | '∃' ruleIntro )
-    stepOrFact=numOrId args+=ID+                        #ExistsIntro
-  | ( 'existse' | 'somee' | '∃' ruleElim )
-    existsStep=NUM subproof=NUM                         #Exists
-  | 'algebra' steps+=NUM*                               #Algebra
-  | 'auto' stepOrFact+=numOrId*                         #Auto
+  | ( 'foalli' | 'alli' | 'Ai' | '∀' ruleIntro )
+    subProof=NUM                                        #ForallIntro
+  | ( 'foalle' | 'alle' | 'Ae' | '∀' ruleElim )
+    stepOrFact=numOrId ',' args=numOrIds                #ForallElim
+  | ( 'existsi' | 'somei' | 'Ei' | '∃' ruleIntro )
+    existsStep=NUM ',' args=ids                         #ExistsIntro
+  | ( 'existse' | 'somee' | 'Ee' | '∃' ruleElim )
+    stepOrFact=numOrId ',' subproof=NUM                 #Exists
+  | 'algebra' steps=nums?                               #Algebra
+  | 'auto' stepOrFact=numOrIds?                         #Auto
   ;
 
 ruleIntro
@@ -158,9 +165,19 @@ ruleElim1
 ruleElim2
   : e2=ID { "e2".equals($e2.text) }? ;
 
+nums
+  : NUM ( ',' NUM )* ;
+
+numOrIds
+  : numOrId ( ',' numOrId )* ;
+
 numOrId
   : NUM
   | ID
+  ;
+
+ids
+  : ID ( ',' ID )*
   ;
 
 program
@@ -168,7 +185,7 @@ program
     stmts
     { "org".equals($org.text) &&
       "sireum".equals($sireum.text) &&
-      "logika".equals($logika.text) }?
+      "logika".equals($logika.text)    }?
   ;
 
 stmts
@@ -229,7 +246,7 @@ loopInvariant
   ;
 
 modifies
-  : 'modifies' ( ID* | ID ( ',' ID )* ) ;
+  : 'modifies' ID ( ',' ID )* ;
 
 methodDecl
   : 'def' ID  NL?
