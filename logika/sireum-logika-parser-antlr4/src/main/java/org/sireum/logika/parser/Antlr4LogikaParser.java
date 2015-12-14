@@ -1173,14 +1173,6 @@ public class Antlr4LogikaParser extends Parser {
 		}
 		public ExistsContext(JustificationContext ctx) { copyFrom(ctx); }
 	}
-	public static class BottomElimContext extends JustificationContext {
-		public Token bottomStep;
-		public RuleElimContext ruleElim() {
-			return getRuleContext(RuleElimContext.class,0);
-		}
-		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
-		public BottomElimContext(JustificationContext ctx) { copyFrom(ctx); }
-	}
 	public static class OrElimContext extends JustificationContext {
 		public Token orStep;
 		public Token lSubProof;
@@ -1193,6 +1185,14 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(RuleElimContext.class,0);
 		}
 		public OrElimContext(JustificationContext ctx) { copyFrom(ctx); }
+	}
+	public static class FalseElimContext extends JustificationContext {
+		public Token falseStep;
+		public RuleElimContext ruleElim() {
+			return getRuleContext(RuleElimContext.class,0);
+		}
+		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
+		public FalseElimContext(JustificationContext ctx) { copyFrom(ctx); }
 	}
 	public static class ImpliesIntroContext extends JustificationContext {
 		public Token impliesStep;
@@ -1567,7 +1567,7 @@ public class Antlr4LogikaParser extends Parser {
 				}
 				break;
 			case 12:
-				_localctx = new BottomElimContext(_localctx);
+				_localctx = new FalseElimContext(_localctx);
 				enterOuterAlt(_localctx, 12);
 				{
 				setState(282);
@@ -1580,7 +1580,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(283);
 				ruleElim();
 				setState(284);
-				((BottomElimContext)_localctx).bottomStep = match(NUM);
+				((FalseElimContext)_localctx).falseStep = match(NUM);
 				}
 				break;
 			case 13:

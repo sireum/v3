@@ -133,7 +133,7 @@ justification
     step=NUM                                            #NegIntro
   | ( 'note' | ( '!' | '~' | '¬' ) ruleElim )
     step=NUM ',' notStep=NUM                            #NegElim
-  | ( 'falsee' | '_|_' | '⊥' ) ruleElim bottomStep=NUM  #BottomElim
+  | ( 'falsee' | '_|_' | '⊥' ) ruleElim falseStep=NUM   #FalseElim
   | 'Pbc' subProof=NUM                                  #Pbc
   | ( 'foalli' | 'alli' | 'Ai' | '∀' ruleIntro )
     subProof=NUM                                        #ForallIntro
