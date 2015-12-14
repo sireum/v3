@@ -338,7 +338,7 @@ final case class MethodDecl(id: Id,
 
 final case class MethodContract(requiresOpt: Option[Exp],
                                 modifies: Node.Seq[Id],
-                                ensures: Option[Exp])
+                                ensures: Option[Exp]) extends Stmt
 
 final case class Param(id: Id,
                        tipe: Type) extends Node
