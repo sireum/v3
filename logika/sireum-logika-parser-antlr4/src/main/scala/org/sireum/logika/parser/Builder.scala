@@ -65,7 +65,6 @@ object Builder {
     val inputStream = new ANTLRInputStream(sr)
     val lexer = new Antlr4LogikaLexer(inputStream)
     val tokenStream = new CommonTokenStream(lexer)
-    fixNewlines(tokenStream)
     val parser = new Antlr4LogikaParser(tokenStream)
     parser.removeErrorListeners()
     var success = true
@@ -88,30 +87,39 @@ object Builder {
         }
       }
     })
+    orientNewlines(tokenStream, isSequent = false)
     parser.programFile()
   }
 
-  private def fixNewlines(cts: CommonTokenStream): Unit = {
-    import Antlr4LogikaLexer._
-    import scala.collection.JavaConversions._
+  private def orientNewlines(cts: CommonTokenStream, isSequent: Boolean): Unit = {
+    import Antlr4LogikaLexer.{NL, ID, INT}
     cts.fill()
-    val tokens: CSeq[Token] = cts.getTokens
-    cts.reset()
+    val tokens: CSeq[Token] = {
+      import scala.collection.JavaConversions._
+      cts.getTokens
+    }
     if (tokens.isEmpty) {
       return
     }
+
+    if (isSequent) {
+      var stop = false
+      for (t <- tokens if !stop) {
+        if (t.getText == "{") stop = true
+        else if (t.getType == NL) hide(t)
+      }
+    }
+
     var i = 0
     var parens = 0
-    var multiline = false
     val size = tokens.size
     while (tokens(i).getType != IntStream.EOF) {
       val token = tokens(i)
       token.getText match {
         case "(" => parens += 1
         case ")" if parens > 0 => parens -= 1
-        case "\"\"\"" => multiline = !multiline
         case text if token.getType == NL =>
-          if (parens > 0 || multiline) {
+          if (parens > 0) {
             token.asInstanceOf[CommonToken].setChannel(Token.HIDDEN_CHANNEL)
           } else {
             var skip = true

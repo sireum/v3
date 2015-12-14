@@ -50,16 +50,13 @@ Note: ---+ means at least three minus (-) characters
 // @formatter:off
 }
 
-sequentFile
-  : sequent proof? EOF ;
+sequentFile: sequent proof? NL* EOF ;
 
-proofFile
-  : proof EOF ;
+proofFile: proof EOF ;
 
-programFile
-  : program EOF ;
+programFile: program EOF ;
 
-sequent
+sequent // note: all newlines inside a sequent are whitespaces
   : ( premises+=formula ( ',' premises+=formula )* )?
     ( '|-' | '⊢' )
     conclusions+=formula ( ',' conclusions+=formula )*
@@ -68,16 +65,15 @@ sequent
     conclusions+=formula+
   ;
 
-proof
-  : '{' proofStep* '}' ;
+proof: '{' proofStep? ( NL+ proofStep? )* '}' ;
 
 proofStep
   : NUM '.' formula justification                       #Step
-  | sub=NUM '.' '{'
+  | sub=NUM '.' '{' NL*
     assume=NUM '.'
     ( fresh=ID
     | fresh=ID? formula 'assume' )
-    proofStep*
+    ( NL+ proofStep )*
     '}'                                                 #SubProof
   ;
 
@@ -89,107 +85,98 @@ formula
   | '$result'                                           #Result  // program logic
   | fun=ID '(' formula ( ',' formula )* ')'             #Apply   // predicate logic
   | INT                                                 #Int     // algebra
-  | l=formula op=( '*' | '/' | '%' ) r=formula          #Binary  // algebra
-  | l=formula op=( '+' | '-' ) r=formula                #Binary  // algebra
+  | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
+  | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
   | l=formula
-    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' )
+    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
     r=formula                                           #Binary  // algebra
-  | l=formula op=( '=' |'==' | '!=' | '≠' ) r=formula   #Binary  // algebra
+  | l=formula
+    op=( '=' |'==' | '!=' | '≠' ) NL?
+    r=formula                                           #Binary  // algebra
   | op='-' formula                                      #Unary   // algebra
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
-  | l=formula ( 'and' | '&&' | '∧' ) r=formula          #Binary  // propositional logic
-  | l=formula ( 'or' | '||' | '∨' ) r=formula           #Binary  // propositional logic
-  | l=formula ( 'implies' | '⇒' | '=>' ) r=formula     #Binary  // propositional logic
+  | l=formula ( 'and' | '&&' | '∧' ) NL? r=formula      #Binary  // propositional logic
+  | l=formula ( 'or' | '||' | '∨' ) NL? r=formula       #Binary  // propositional logic
+  | l=formula ( 'implies' | '⇒' | '=>' ) NL? r=formula  #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
 
 qformula
   : q=( 'forall' | 'all' | 'A' | '∀'
       | 'exists' | 'some' | 'E' | '∃' )
-    qVar+=ID ( ',' qVar+=ID )*
-    '|'
+    qVars+=ID ( ',' qVars+=ID )*
+    '|' NL?
     formula
   ;
 
 justification
   : 'premise'                                           #Premise
-  | ( 'andi' | ( '&&' | '∧' ) ruleIntro )
+  | ( 'andi' | ( '&&' | '∧' ) INTRO )
     lStep=NUM ',' rStep=NUM                             #AndIntro
-  | ( 'ande1' | ( '&&' | '∧' ) ruleElim1 )
+  | ( 'ande1' | ( '&&' | '∧' ) ELIM1 )
     andStep=NUM                                         #AndElim1
-  | ( 'ande2' | ( '&&' | '∧' ) ruleElim2 )
+  | ( 'ande2' | ( '&&' | '∧' ) ELIM2 )
     andStep=NUM                                         #AndElim2
-  | ( 'ori1' | ( '||' | '∨' ) ruleIntro1 )
+  | ( 'ori1' | ( '||' | '∨' ) INTRO1 )
     orStep=NUM                                          #OrIntro1
-  | ( 'ori2' | ( '||' | '∨' ) ruleIntro2 )
+  | ( 'ori2' | ( '||' | '∨' ) INTRO2 )
     orStep=NUM                                          #OrIntro2
-  | ( 'ore' | ( '||' | '∨' ) ruleElim )
+  | ( 'ore' | ( '||' | '∨' ) ELIM )
     orStep=NUM ',' lSubProof=NUM ',' rSubProof=NUM      #OrElim
-  | ( 'impliesi' | ( '⇒' | '=>' ) ruleIntro )
+  | ( 'impliesi' | ( '⇒' | '=>' ) INTRO )
     impliesStep=NUM                                     #ImpliesIntro
-  | ( 'impliese' | ( '⇒' | '=>' ) ruleElim )
+  | ( 'impliese' | ( '⇒' | '=>' ) ELIM )
     impliesStep=NUM                                     #ImpliesElim
-  | ( 'noti' | ( '!' | '~' | '¬' ) ruleIntro )
+  | ( 'noti' | ( '!' | '~' | '¬' ) INTRO )
     step=NUM                                            #NegIntro
-  | ( 'note' | ( '!' | '~' | '¬' ) ruleElim )
+  | ( 'note' | ( '!' | '~' | '¬' ) ELIM )
     step=NUM ',' notStep=NUM                            #NegElim
-  | ( 'falsee' | '_|_' | '⊥' ) ruleElim falseStep=NUM   #FalseElim
+  | ( 'falsee' | '_|_' | '⊥' ) ELIM falseStep=NUM       #FalseElim
   | 'Pbc' subProof=NUM                                  #Pbc
-  | ( 'foalli' | 'alli' | 'Ai' | '∀' ruleIntro )
+  | ( 'foralli' | 'alli' | 'Ai' | '∀' INTRO )
     subProof=NUM                                        #ForallIntro
-  | ( 'foalle' | 'alle' | 'Ae' | '∀' ruleElim )
+  | ( 'foralle' | 'alle' | 'Ae' | '∀' ELIM )
     stepOrFact=numOrId ',' args=numOrIds                #ForallElim
-  | ( 'existsi' | 'somei' | 'Ei' | '∃' ruleIntro )
+  | ( 'existsi' | 'somei' | 'Ei' | '∃' INTRO )
     existsStep=NUM ',' args=ids                         #ExistsIntro
-  | ( 'existse' | 'somee' | 'Ee' | '∃' ruleElim )
+  | ( 'existse' | 'somee' | 'Ee' | '∃' ELIM )
     stepOrFact=numOrId ',' subproof=NUM                 #Exists
   | 'algebra' steps=nums?                               #Algebra
   | 'auto' stepOrFact=numOrIds?                         #Auto
   ;
 
-ruleIntro
-  : i=ID { "i".equals($i.text) }? ;
+INTRO: 'i' -> type(ID) ;
 
-ruleIntro1
-  : i1=ID { "i1".equals($i1.text) }? ;
+INTRO1: 'i1' -> type(ID) ;
 
-ruleIntro2
-  : i2=ID { "i2".equals($i2.text) }? ;
+INTRO2: 'i2' -> type(ID) ;
 
-ruleElim
-  : e=ID { "e".equals($e.text) }? ;
+ELIM: 'e' -> type(ID) ;
 
-ruleElim1
-  : e1=ID { "e1".equals($e1.text) }? ;
+ELIM1: 'e1' -> type(ID) ;
 
-ruleElim2
-  : e2=ID { "e2".equals($e2.text) }? ;
+ELIM2: 'e2' -> type(ID) ;
 
-nums
-  : NUM ( ',' NUM )* ;
+nums: NUM ( ',' NUM )* ;
 
-numOrIds
-  : numOrId ( ',' numOrId )* ;
+numOrIds: numOrId ( ',' numOrId )* ;
 
-numOrId
-  : NUM
-  | ID
-  ;
+numOrId: NUM | ID ;
 
-ids
-  : ID ( ',' ID )*
-  ;
+ids: ID ( ',' ID )* ;
 
 program
-  : 'import' org=ID '.' sireum=ID '.' logika=ID '.' '_'
+  : 'import' ORG '.' SIREUM '.' LOGIKA '.' '_'
     stmts
-    { "org".equals($org.text) &&
-      "sireum".equals($sireum.text) &&
-      "logika".equals($logika.text)    }?
   ;
 
-stmts
-  : stmt? ( ( ';' | NL+ ) stmt? )* ;
+ORG: 'org' -> type(ID) ;
+
+SIREUM: 'sireum' -> type(ID) ;
+
+LOGIKA: 'logika' -> type(ID) ;
+
+stmts: stmt? ( NL+ stmt? )* ;
 
 stmt
   : modifier=( 'var' | 'val' ) ID ':' type '=' exp      #VarDeclStmt
@@ -198,7 +185,7 @@ stmt
   | 'if' '(' exp ')' NL* '{' ts=stmts '}'
     'else' '{' fs=stmts '}'                             #IfStmt
   | 'while' '(' exp ')' NL* '{'
-    ( 'l' '"""' loopInvariant '"""' )?
+    ( NL* 'l' '"""' NL* loopInvariant NL* '"""' )?
     stmts
     '}'                                                 #WhileStmt
   | ID '=' 'readInt' '(' STRING? ')'                    #ReadIntStmt
@@ -207,12 +194,12 @@ stmt
   | ID '=' ID '.' 'clone'                               #SeqCloneStmt
   | ID '(' exp ')' '=' exp                              #AssignArrayStmt
   | methodDecl                                          #MethodDeclStmt
-  | 'l' '"""'
+  | 'l' '"""' NL*
     ( proof
     | sequent
     | invariants
     | facts      )
-    '"""'                                               #LogikaStmt
+    NL* '"""'                                           #LogikaStmt
   ;
 
 exp
@@ -223,7 +210,7 @@ exp
   | 'BigInt' '(' STRING ')'                             #BigIntExp
   | 'Seq' '(' exp ( ',' exp )? ')'                      #SeqExp
   | '(' exp ')'                                         #ParenExp
-  | op=( '-' | '!' ) exp                                #UnaryExp
+  | op=( '-' | '!' ) NL? exp                            #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
   | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
@@ -239,9 +226,9 @@ type
   ;
 
 loopInvariant
-  : '{'
-    'invariant' formula
-    modifies
+  : '{' NL*
+    'invariant' formula? ( NL+ formula? )*
+    modifies NL*
     '}'
   ;
 
@@ -252,62 +239,47 @@ methodDecl
   : 'def' ID  NL?
     '(' ( param ( ',' param )* )? ')' ':' type '='
     '{'
-    ( 'l' '"""' methodContract '"""' )?
+    ( NL* 'l' '"""' NL* methodContract NL* '"""' )?
     stmts
     'return' exp? NL*
     '}'
   ;
 
-param
-  : ID ':' type ;
+param: ID ':' type ;
 
 methodContract
-  : '{'
-    ( 'requires' formula )?
-    modifies?
-    ( 'ensures' formula )?
+  : '{' NL*
+    ( 'requires' formula )? NL*
+    modifies? NL*
+    ( 'ensures' formula )? NL*
     '}'
   ;
 
-invariants
-  : '{' 'invariant' formula+ '}' ;
+invariants: '{' NL* 'invariant' formula? ( NL+ formula? )* '}' ;
 
-facts
-  : '{' 'fact' fact+ '}' ;
+facts: '{' NL* 'fact' fact? ( NL+ fact? )* '}' ;
 
-fact
-  : ID '.' qformula ;
+fact: ID '.' qformula ;
 
+HLINE: '-' '-' '-'+ ;
 
-HLINE
-  : '-' '-' '-'+
-  ;
+INT: '0' | '-'? [1-9] [0-9]* ;
 
-INT
-  : '0' | '-'? [1-9] [0-9]* ;
+NUM: '0' | [1-9] [0-9]* ;
 
-NUM
-  : '0' | [1-9] [0-9]* ;
+ID: [a-zA-Z] [a-zA-Z0-9]* ;
 
-ID
-  : [a-zA-Z] [a-zA-Z0-9]* ;
+STRING: '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' ; // all printable chars and no escape chars
 
-STRING
-  : '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' ; // all printable chars and no escape chars
+LINE_COMMENT: '//' ~[\r\n]* -> skip ;
 
-LINE_COMMENT
-  : '//' ~[\r\n]* -> skip ;
+COMMENT: '/*' .*? '*/' -> skip ;
 
-COMMENT
-  : '/*' .*? '*/' -> skip ;
+NL: '\r'? '\n' ;
+// newlines are processed after lexing according to:
+// http://www.scala-lang.org/files/archive/spec/2.11/01-lexical-syntax.html#newline-characters
 
-NL
-  : '\r'? '\n' // newlines are processed after lexing according to:
-               // http://www.scala-lang.org/files/archive/spec/2.11/01-lexical-syntax.html#newline-characters
-  ;
-
-WS
-  : [ \t\u000C]+ -> skip ;
+WS: [ \t\u000C]+ -> skip ;
 
 RESERVED
   : 'abstract' | 'case' | 'catch' | 'class'
@@ -321,5 +293,4 @@ RESERVED
   | '<-' | '<:' | '<%' | '>:' | '#' | '@'
   ;
 
-ERROR_CHAR
-  : . ;
+ERROR_CHAR: . ;
