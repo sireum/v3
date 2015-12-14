@@ -220,7 +220,7 @@ object SireumBuild extends Build {
   val awasParserAntlr4PI = new ProjectInfo("sireum-awas-parser-antlr4", AWAS_DIR, Seq(), utilPI, awasPI)
   lazy val awasParserAntlr4 = toSbtProject(awasParserAntlr4PI, sireumJvmSettings)
 
-  val logikaParserAntlr4PI = new ProjectInfo("sireum-logika-parser-antlr4", LOGIKA_DIR, Seq(), utilPI)
+  val logikaParserAntlr4PI = new ProjectInfo("sireum-logika-parser-antlr4", LOGIKA_DIR, Seq(), utilPI, logikaPI)
   lazy val logikaParserAntlr4 = toSbtProject(logikaParserAntlr4PI, sireumJvmSettings)
 
   val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, pilarParserAntlr4PI, javaPI)

@@ -39,5 +39,6 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.16:jar" level="project" />
+    <orderEntry type="module" module-name="sireum-logika" exported="" />
   </component>
 </module>

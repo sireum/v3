@@ -27,7 +27,7 @@ package org.sireum.logika.parser
 
 import java.io.StringReader
 
-import org.antlr.v4.runtime._
+import org.sireum.logika.ast._
 import org.sireum.util._
 
 object Builder {
@@ -38,6 +38,11 @@ object Builder {
     "catch", "else", "extends", "finally", "forSome", "match", "with", "yield",
     ",", ".", ":", "=", "=>", "⇒", "[", ")", "]", "}", "<-", "<:", "<%", ">:", "#"
   )
+
+  private final val (sequentType, proofType, programType) = {
+    import scala.reflect.runtime.universe._
+    (typeOf[Sequent], typeOf[Proof], typeOf[Program])
+  }
 
   trait Reporter {
     def error(line: PosInteger,
@@ -56,9 +61,13 @@ object Builder {
     }
   }
 
-  def apply(input: String,
-            maxErrors: Natural = 0,
-            reporter: Reporter = ConsoleReporter) = {
+  import org.antlr.v4.runtime._
+  import scala.reflect.runtime.universe._
+
+  def apply[T <: UnitNode](input: String,
+                           maxErrors: Natural = 0,
+                           reporter: Reporter = ConsoleReporter)
+                          (implicit tag: TypeTag[T]) = {
     class ParsingEscape extends RuntimeException
 
     val sr = new StringReader(input)
@@ -87,8 +96,17 @@ object Builder {
         }
       }
     })
-    orientNewlines(tokenStream, isSequent = false)
-    parser.programFile()
+    tag.tpe match {
+      case `sequentType` =>
+        orientNewlines(tokenStream, isSequent = true)
+        parser.sequentFile()
+      case `proofType` =>
+        orientNewlines(tokenStream, isSequent = false)
+        parser.proofFile()
+      case `programType` =>
+        orientNewlines(tokenStream, isSequent = false)
+        parser.programFile()
+    }
   }
 
   private def orientNewlines(cts: CommonTokenStream, isSequent: Boolean): Unit = {
@@ -139,7 +157,9 @@ object Builder {
                 skip = false
               }
             }
-            if (skip) hide(token)
+            if (skip) {
+              hide(token)
+            }
           }
         case _ =>
       }

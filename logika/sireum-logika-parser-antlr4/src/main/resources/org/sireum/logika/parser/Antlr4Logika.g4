@@ -38,6 +38,7 @@ Symbol    Unicode    ASCII
   ∧        2227      and      &&
   ∨        2228      or       ||
   ⇒        21D2      implies  =>
+  →        2192      implies  ->
   ∀        2200      forall   all    A
   ∃        2203      exists   some   E
   ⊢        22A2      |-       ---+
@@ -97,7 +98,8 @@ formula
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
   | l=formula ( 'and' | '&&' | '∧' ) NL? r=formula      #Binary  // propositional logic
   | l=formula ( 'or' | '||' | '∨' ) NL? r=formula       #Binary  // propositional logic
-  | l=formula ( 'implies' | '⇒' | '=>' ) NL? r=formula  #Binary  // propositional logic
+  | l=formula ( 'implies' | '->' | '=>' | '→' | '⇒' )
+    NL? r=formula                                       #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
 
@@ -123,12 +125,12 @@ justification
     orStep=NUM                                          #OrIntro2
   | ( 'ore' | ( '||' | '∨' ) ELIM )
     orStep=NUM ',' lSubProof=NUM ',' rSubProof=NUM      #OrElim
-  | ( 'impliesi' | ( '⇒' | '=>' ) INTRO )
+  | ( 'impliesi' | ( '->' | '=>' | '→' | '⇒' ) INTRO )
     impliesStep=NUM                                     #ImpliesIntro
-  | ( 'impliese' | ( '⇒' | '=>' ) ELIM )
-    impliesStep=NUM                                     #ImpliesElim
+  | ( 'impliese' | ( '->' | '=>' | '→' | '⇒' ) ELIM )
+    impliesStep=NUM ',' antecedentStep=NUM              #ImpliesElim
   | ( 'noti' | ( '!' | '~' | '¬' ) INTRO )
-    step=NUM                                            #NegIntro
+    subProof=NUM                                        #NegIntro
   | ( 'note' | ( '!' | '~' | '¬' ) ELIM )
     step=NUM ',' notStep=NUM                            #NegElim
   | ( 'falsee' | '_|_' | '⊥' ) ELIM falseStep=NUM       #FalseElim
@@ -136,13 +138,13 @@ justification
   | ( 'foralli' | 'alli' | 'Ai' | '∀' INTRO )
     subProof=NUM                                        #ForallIntro
   | ( 'foralle' | 'alle' | 'Ae' | '∀' ELIM )
-    stepOrFact=numOrId ',' args=numOrIds                #ForallElim
+    stepOrFact=numOrId ',' args=formulae                #ForallElim
   | ( 'existsi' | 'somei' | 'Ei' | '∃' INTRO )
-    existsStep=NUM ',' args=ids                         #ExistsIntro
+    existsStep=NUM ',' args=formulae                    #ExistsIntro
   | ( 'existse' | 'somee' | 'Ee' | '∃' ELIM )
     stepOrFact=numOrId ',' subproof=NUM                 #Exists
   | 'algebra' steps=nums?                               #Algebra
-  | 'auto' stepOrFact=numOrIds?                         #Auto
+  | 'auto' stepOrFacts=numOrIds?                         #Auto
   ;
 
 INTRO: 'i' -> type(ID) ;
@@ -163,7 +165,7 @@ numOrIds: numOrId ( ',' numOrId )* ;
 
 numOrId: NUM | ID ;
 
-ids: ID ( ',' ID )* ;
+formulae: formula ( ',' formula )* ;
 
 program
   : 'import' ORG '.' SIREUM '.' LOGIKA '.' '_'
@@ -188,11 +190,13 @@ stmt
     ( NL* 'l' '"""' NL* loopInvariant NL* '"""' )?
     stmts
     '}'                                                 #WhileStmt
-  | ID '=' 'readInt' '(' STRING? ')'                    #ReadIntStmt
-  | op=('print' | 'println' ) '(' 's' STRING ')'        #PrintStmt
-  | ( l=ID '=' )? r=ID '(' ( exp ( ','exp )* )? ')'     #MethodInvocationStmt
-  | ID '=' ID '.' 'clone'                               #SeqCloneStmt
-  | ID '(' exp ')' '=' exp                              #AssignArrayStmt
+  | ID '=' READINT '(' STRING? ')'                      #ReadIntStmt
+  | op=( PRINT | PRINTLN ) '(' 's' STRING ')'           #PrintStmt
+  | ( id=ID '=' )? m=ID '(' ( exp ( ','exp )* )? ')'    #MethodInvocationStmt
+  | ID '=' ID '.' CLONE                                 #SeqCloneStmt
+  | ID '(' exp ')' '=' exp                              #SeqAssignStmt
+  | id=ID '=' exp op='+:' seq=ID                        #SeqPendStmt
+  | id=ID '=' seq=ID op=':+' exp                        #SeqPendStmt
   | methodDecl                                          #MethodDeclStmt
   | 'l' '"""' NL*
     ( proof
@@ -202,14 +206,23 @@ stmt
     NL* '"""'                                           #LogikaStmt
   ;
 
+READINT: 'readInt' -> type(ID);
+
+PRINT: 'print' -> type(ID);
+
+PRINTLN: 'println' -> type(ID);
+
+CLONE: 'clone' -> type(ID) ;
+
 exp
   : 'true'                                              #TrueExp
   | 'false'                                             #FalseExp
   | INT                                                 #IntExp
-  | ID ( '(' exp ')' )?                                 #IdExp
+  | ID ( '(' exp ')' | '.' SIZE )?                      #IdExp
   | 'BigInt' '(' STRING ')'                             #BigIntExp
-  | 'Seq' '(' exp ( ',' exp )? ')'                      #SeqExp
-  | '(' exp ')'                                         #ParenExp
+  | 'Seq' '(' exp ( ',' exp )? ')'
+    ( '(' exp ')' | '.' SIZE )?                         #SeqExp
+  | '(' exp ')' ( '(' exp ')' | '.' SIZE )?             #ParenExp
   | op=( '-' | '!' ) NL? exp                            #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
   | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
@@ -218,6 +231,8 @@ exp
   | l=exp ( '&&' ) NL? r=exp                            #BinaryExp
   | l=exp ( '||' ) NL? r=exp                            #BinaryExp
   ;
+
+SIZE: 'size' -> type(ID) ;
 
 type
   : 'Boolean'                                           #Boolean
@@ -237,7 +252,7 @@ modifies
 
 methodDecl
   : 'def' ID  NL?
-    '(' ( param ( ',' param )* )? ')' ':' type '='
+    '(' ( param ( ',' param )* )? ')' ':' ( type | 'Unit' ) '='
     '{'
     ( NL* 'l' '"""' NL* methodContract NL* '"""' )?
     stmts
