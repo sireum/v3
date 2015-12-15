@@ -366,7 +366,7 @@ final case class Param(id: Id,
 
 final case class ProofStmt(proof: Proof) extends Stmt
 
-final case class Inv(invs: Node.Seq[Exp]) extends Stmt
+final case class Inv(exps: Node.Seq[Exp]) extends Stmt
 
 final case class Fact(exps: Node.Seq[Quant]) extends Stmt
 
