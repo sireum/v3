@@ -98,18 +98,19 @@ object Builder {
     })
     tag.tpe match {
       case `sequentType` =>
-        orientNewlines(tokenStream, isSequent = true)
+        orientNewlines(tokenStream, isProgram = false)
         parser.sequentFile()
       case `proofType` =>
-        orientNewlines(tokenStream, isSequent = false)
+        orientNewlines(tokenStream, isProgram = false)
         parser.proofFile()
       case `programType` =>
-        orientNewlines(tokenStream, isSequent = false)
+        orientNewlines(tokenStream, isProgram = true)
         parser.programFile()
     }
   }
 
-  private def orientNewlines(cts: CommonTokenStream, isSequent: Boolean): Unit = {
+  private def orientNewlines(cts: CommonTokenStream,
+                             isProgram: Boolean): Unit = {
     import Antlr4LogikaLexer.{NL, ID, INT}
     cts.fill()
     val tokens: CSeq[Token] = {
@@ -120,7 +121,7 @@ object Builder {
       return
     }
 
-    if (isSequent) {
+    if (!isProgram) {
       var stop = false
       for (t <- tokens if !stop) {
         if (t.getText == "{") stop = true
@@ -138,12 +139,14 @@ object Builder {
         case ")" if parens > 0 => parens -= 1
         case text if token.getType == NL =>
           if (parens > 0) {
-            token.asInstanceOf[CommonToken].setChannel(Token.HIDDEN_CHANNEL)
+            token.asInstanceOf[CommonToken].
+              setChannel(Token.HIDDEN_CHANNEL)
           } else {
             var skip = true
             if (i > 0) {
               val prevToken = tokens(i - 1)
-              if (terminateStmtTokens.contains(prevToken.getText)) {
+              if (terminateStmtTokens.
+                contains(prevToken.getText)) {
                 skip = false
               } else
                 prevToken.getType match {

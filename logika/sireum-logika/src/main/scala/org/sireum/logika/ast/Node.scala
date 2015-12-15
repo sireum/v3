@@ -51,7 +51,8 @@ final case class Sequent(premises: Node.Seq[Exp],
                          conclusions: Node.Seq[Exp],
                          proof: Option[Proof]) extends UnitNode
 
-final case class Proof(proofSteps: Node.Seq[ProofStep]) extends UnitNode
+final case class Proof(proofSteps: Node.Seq[ProofStep])
+  extends UnitNode
 
 sealed trait ProofStep extends Node {
   def num: Num
@@ -93,12 +94,14 @@ final case class OrElim(num: Num,
 
 final case class ImpliesIntro(num: Num,
                               exp: Exp,
-                              impliesStep: Num) extends RegularStep
+                              impliesStep: Num)
+  extends RegularStep
 
 final case class ImpliesElim(num: Num,
                              exp: Exp,
                              impliesStep: Num,
-                             antecedentStep: Num) extends RegularStep
+                             antecedentStep: Num)
+  extends RegularStep
 
 final case class NegIntro(num: Num,
                           exp: Exp,
@@ -119,17 +122,20 @@ final case class Pbc(num: Num,
 
 final case class ForallIntro(num: Num,
                              exp: Exp,
-                             subProof: Num) extends RegularStep
+                             subProof: Num)
+  extends RegularStep
 
 final case class ForallElim(num: Num,
                             exp: Exp,
                             stepOrFact: NumOrId,
-                            args: Node.Seq[Exp]) extends RegularStep
+                            args: Node.Seq[Exp])
+  extends RegularStep
 
 final case class ExistsIntro(num: Num,
                              exp: Exp,
                              stepOrFact: NumOrId,
-                             args: Node.Seq[Exp]) extends RegularStep
+                             args: Node.Seq[Exp])
+  extends RegularStep
 
 final case class ExistsElim(num: Num,
                             exp: Exp,
@@ -139,15 +145,18 @@ final case class ExistsElim(num: Num,
 final case class Algebra(num: Num,
                          exp: Exp,
                          stepOrFact: NumOrId,
-                         nums: Node.Seq[Num]) extends RegularStep
+                         nums: Node.Seq[Num])
+  extends RegularStep
 
 final case class Auto(num: Num,
                       exp: Exp,
-                      stepOrFacts: Node.Seq[NumOrId]) extends RegularStep
+                      stepOrFacts: Node.Seq[NumOrId])
+  extends RegularStep
 
 final case class SubProof(num: Num,
                           assume: AssumeStep,
-                          steps: Node.Seq[ProofStep]) extends UnitNode
+                          steps: Node.Seq[ProofStep])
+  extends UnitNode
 
 sealed trait AssumeStep extends ProofStep
 
@@ -268,13 +277,15 @@ sealed trait Quant extends Node {
   def exp: Exp
 }
 
-final case class All(ids: Node.Seq[Id], exp: Exp) extends Quant {
+final case class All(ids: Node.Seq[Id], exp: Exp)
+  extends Quant {
   val op = "all"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
 }
 
-final case class Some(ids: Node.Seq[Id], exp: Exp) extends Quant {
+final case class Some(ids: Node.Seq[Id], exp: Exp)
+  extends Quant {
   val op = "some"
 }
 
@@ -301,13 +312,14 @@ final case class If(exp: Exp,
 
 final case class While(exp: Exp,
                        block: Block,
-                       loopInvOpt: Option[LoopInv]) extends Stmt
+                       loopInv: LoopInv) extends Stmt
 
-final case class LoopInv(invariants: Node.Seq[Exp],
-                         modifies: Node.Seq[Id]) extends Node
+final case class LoopInv(invariant: Inv,
+                         modifies: Modifies) extends Node
 
 final case class ReadInt(id: Id,
-                         msgOpt: Option[StringLit]) extends Stmt
+                         msgOpt: Option[StringLit])
+  extends Stmt
 
 final case class Print(isNewline: Boolean,
                        msg: StringLit) extends Stmt
@@ -316,7 +328,8 @@ final case class StringLit(value: String) extends Stmt
 
 final case class MethodInvoke(idOpt: Option[Id],
                               methodId: Id,
-                              args: Node.Seq[Exp]) extends Stmt
+                              args: Node.Seq[Exp])
+  extends Stmt
 
 final case class SeqClone(lhs: Id,
                           rhs: Id) extends Stmt
@@ -334,22 +347,28 @@ final case class MethodDecl(id: Id,
                             returnType: Option[Type],
                             contract: MethodContract,
                             block: Block,
-                            returnExp: Option[Exp]) extends Stmt
+                            returnExp: Option[Exp])
+  extends Stmt
 
-final case class MethodContract(requiresOpt: Option[Exp],
-                                modifies: Node.Seq[Id],
-                                ensures: Option[Exp]) extends Stmt
+final case class MethodContract(requires: Requires,
+                                modifies: Modifies,
+                                ensures: Ensures)
+  extends Stmt
+
+final case class Requires(exps: Node.Seq[Exp]) extends Node
+
+final case class Modifies(ids: Node.Seq[Id]) extends Node
+
+final case class Ensures(exps: Node.Seq[Exp]) extends Node
 
 final case class Param(id: Id,
                        tipe: Type) extends Node
 
 final case class ProofStmt(proof: Proof) extends Stmt
 
-final case class SequentStmt(sequent: Sequent) extends Stmt
+final case class Inv(invs: Node.Seq[Exp]) extends Stmt
 
-final case class InvStmt(invs: Node.Seq[Exp]) extends Stmt
-
-final case class FactStmt(exps: Node.Seq[Quant]) extends Stmt
+final case class Fact(exps: Node.Seq[Quant]) extends Stmt
 
 sealed trait Type extends Node
 
