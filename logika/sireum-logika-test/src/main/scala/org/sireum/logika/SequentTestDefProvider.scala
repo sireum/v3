@@ -325,6 +325,149 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 10. p ∨ ¬p                   Pbc 1
           |}
         """.stripMargin, LogicMode.Propositional))
+    ,
+    ConditionTest("predicate-1",
+      ast(
+        """∀x | Human(x) → Mortal(x),  Human(Socrates)  ⊢
+          |  Mortal(Socrates)
+          |{
+          |  1. ∀x | Human(x) → Mortal(x)             premise
+          |  2. Human(Socrates)                       premise
+          |  3. Human(Socrates) → Mortal(Socrates)    ∀e 1 Socrates
+          |  4. Mortal(Socrates)                      →e 3 2
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-2",
+      ast(
+        """∀x | gt(inc(x), x)     ∀x | gt(x, dec(x))
+          |-----------------------------------------
+          |    ∀x | gt(inc(x), x) ∧ gt(x, dec(x))
+          |{
+          |  1. ∀x | gt(inc(x), x)                    premise
+          |  2. ∀x | gt(x, dec(x))                    premise
+          |  3. {
+          |       4. a                                assume
+          |       5. gt(inc(a), a)                    ∀e 1 a
+          |       6. gt(a, dec(a))                    ∀e 2 a
+          |       7. gt(inc(a), a) ∧ gt(a, dec(a))    ∧i 5 6
+          |     }
+          |  8. ∀x | gt(inc(x), x) ∧ gt(x, dec(x))    ∀i 3
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-3",
+      ast(
+        """∀x | Human(x) → Mortal(x),  ∀y | Mortal(y) → Soul(y)  ⊢
+          |  ∀x | Human(x) → Soul(x)
+          |{
+          |  1. ∀x | Human(x) → Mortal(x)             premise
+          |  2. ∀y | Mortal(y) → Soul(y)              premise
+          |  3. {
+          |       4. a
+          |       5. {
+          |            6. Human(a)                    assume
+          |            7. Human(a) → Mortal(a)        ∀e 1 a
+          |            8. Mortal(a)                   →e 7 6
+          |            9. Mortal(a) → Soul(a)         ∀e 2 a
+          |           10. Soul(a)                     →e 9 8
+          |          }
+          |      11. Human(a) → Soul(a)               →i 5
+          |     }
+          | 12. ∀x | Human(x) → Soul(x)               ∀i 3
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-4",
+      ast(
+        """∀x | Healthy(x) → Happy(x)  ⊢
+          |  (∀y | Healthy(y)) → ∀x | Happy(x)
+          |{
+          |  1. ∀x | Healthy(x) → Happy(x)            premise
+          |  2. {
+          |       3. ∀y | Healthy(y)                  assume
+          |       4. {
+          |            5. a
+          |            6. Healthy(a)                  ∀e 3 a
+          |            7. Healthy(a) → Happy(a)       ∀e 1 a
+          |            8. Happy(a)                    →e 7 6
+          |          }
+          |       9. ∀x | Happy(x)                    ∀i 4
+          |     }
+          | 10. (∀y | Healthy(y)) → ∀x | Happy(x)     →i 2
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-5",
+      ast(
+        """Human(Socrates),  Mortal(Socrates)  ⊢
+          |  ∃x | Human(x) ∧ Mortal(x)
+          |{
+          |  1. Human(Socrates)                       premise
+          |  2. Mortal(Socrates)                      premise
+          |  3. Human(Socrates) ∧ Mortal(Socrates)    ∧i 1 2
+          |  4. ∃x | Human(x) ∧ Mortal(x)             ∃i 3 Socrates
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-6",
+      ast(
+        """Vowel(e),  Holds(square14, e)  ⊢
+          |  ∃y | Vowel(y) ∧ ∃x | Holds(x, y)
+          |{
+          |  1. Vowel(e)                              premise
+          |  2. Holds(square14, e)                    premise
+          |  3. ∃x | Holds(x, e)                      ∃i 2 square14
+          |  4. Vowel(e) ∧ ∃x | Holds(x, e)           ∧i 1 3
+          |  5. ∃y | Vowel(y) ∧ ∃x | Holds(x, y)      ∃i 4 y
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-7",
+      ast(
+        """Vowel(e),  Holds(square14, e)  ⊢
+          |  ∃y,x | Vowel(y) ∧ Holds(x, y)
+          |{
+          |  1. Vowel(e)                              premise
+          |  2. Holds(square14, e)                    premise
+          |  3. Vowel(e) ∧ Holds(square14, e)         ∧i 1 3
+          |  4. ∃y,x | Vowel(y) ∧ Holds(x, y)         ∃i 3 e square14
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-8",
+      ast(
+        """∀x | Human(x) → Mortal(x),  ∃y | Human(y)  ⊢
+          |  ∃z | Mortal(z)
+          |{
+          |  1. ∀x | Human(x) → Mortal(x)             premise
+          |  2. ∃y | Human(y)                         premise
+          |  3. {
+          |       4. a  Human(a)                      assume
+          |       5. Human(a) → Mortal(a)            ∀e 1 a
+          |       6. Mortal(a)                        →e 5 4
+          |       7. ∃z | Mortal(z)                   ∃i 6 a
+          |     }
+          |  8. ∃z | Mortal(z)                        ∃e 2 3
+          |}
+        """.stripMargin, LogicMode.Predicate))
+    ,
+    ConditionTest("predicate-9",
+      ast(
+        """∃s | Covered(s) ∧ (∃c | Vowel(c) ∧ Holds(s, c)),
+          |(∃x | Covered(x)) → ¬GameOver  ⊢  ¬GameOver
+          |{
+          |  1. ∃s | Covered(s) ∧ (∃c | Vowel(c) ∧ Holds(s, c))     premise
+          |  2. (∃x | Covered(x)) → ¬GameOver                       premise
+          |  3. {
+          |       4. a  Covered(a) ∧ (∃c | Vowel(c) ∧ Holds(a, c))  assume
+          |       5. Covered(a)                                     ∧e1 4
+          |       6. ∃x | Covered(x)                                ∃i 5 a
+          |      }
+          |  7. ∃x | Covered(x)                                     ∃e 1 3
+          |  8. ¬GameOver                                           →e 2 7
+          |}
+        """.stripMargin, LogicMode.Predicate))
   )
 
   def ast(text: String, m: LogicMode): Boolean = {

@@ -176,12 +176,12 @@ final private class Builder(reporter: Reporter) {
       if (ctx.ate != null)
         if (ctx.ID != null)
           ExistsAssumeStep(assume, buildId(ctx.ID),
-            build(ctx.formula())) at(ctx.assume, ctx.ate)
+            build(ctx.formula)) at(ctx.assume, ctx.ate)
         else
           PlainAssumeStep(assume,
-            build(ctx.formula())) at(ctx.assume, ctx.ate)
+            build(ctx.formula)) at(ctx.assume, ctx.ate)
       else
-        ForallAssumeStep(assume, buildId(ctx.ID)) at(ctx.assume, ctx.ID)
+        ForallAssumeStep(assume, buildId(ctx.ID)) at ctx.ID
     SubProof(num, assumeStep, Option(ctx.proofStep).map(_.map(build)).
       getOrElse(Node.emptySeq)) at ctx
   }

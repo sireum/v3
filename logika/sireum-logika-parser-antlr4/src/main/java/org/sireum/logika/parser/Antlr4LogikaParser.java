@@ -542,12 +542,12 @@ public class Antlr4LogikaParser extends Parser {
 	public static class SubProofContext extends ProofStepContext {
 		public Token sub;
 		public Token assume;
-		public Token fresh;
 		public Token ate;
 		public List<TerminalNode> NUM() { return getTokens(Antlr4LogikaParser.NUM); }
 		public TerminalNode NUM(int i) {
 			return getToken(Antlr4LogikaParser.NUM, i);
 		}
+		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public FormulaContext formula() {
 			return getRuleContext(FormulaContext.class,0);
 		}
@@ -555,7 +555,6 @@ public class Antlr4LogikaParser extends Parser {
 		public TerminalNode NL(int i) {
 			return getToken(Antlr4LogikaParser.NL, i);
 		}
-		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public List<ProofStepContext> proofStep() {
 			return getRuleContexts(ProofStepContext.class);
 		}
@@ -644,7 +643,7 @@ public class Antlr4LogikaParser extends Parser {
 				case 1:
 					{
 					setState(153);
-					((SubProofContext)_localctx).fresh = match(ID);
+					match(ID);
 					}
 					break;
 				case 2:
@@ -654,7 +653,7 @@ public class Antlr4LogikaParser extends Parser {
 					case 1:
 						{
 						setState(154);
-						((SubProofContext)_localctx).fresh = match(ID);
+						match(ID);
 						}
 						break;
 					}

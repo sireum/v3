@@ -71,8 +71,8 @@ proofStep
   : NUM '.' formula justification                       #Step
   | sub=NUM '.' NL* '{' NL*
     assume=NUM '.'
-    ( fresh=ID
-    | fresh=ID? formula ate='assume' )
+    ( ID
+    | ID? formula ate='assume' )
     ( NL+ proofStep? )*
     '}'                                                 #SubProof
   ;
