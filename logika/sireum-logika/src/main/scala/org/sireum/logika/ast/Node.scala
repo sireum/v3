@@ -38,16 +38,17 @@ object Node {
   final def seq[T](es: Iterable[T]) = es.toVector
 
   final private[ast] def detectMode(unitNode: UnitNode): Unit = {
-    import LogicMode._
-    var m = Propositional
+    var m = LogicMode.Propositional
     Visitor.build({
-      case n: Mul | Div | Rem | Add | Sub | Lt | Le | Gt | Ge |
-           Minus | IntLit | IntType | SeqLit | IntSeqType if
-      m.ordinal < Algebra.ordinal =>
-        m = Algebra
+      case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
+           _: Lt | _: Le | _: Gt | _: Ge |
+           _: Minus | _: IntLit | _: IntType |
+           _: SeqLit | _: IntSeqType if
+      m.ordinal < LogicMode.Algebra.ordinal =>
+        m = LogicMode.Algebra
         false
-      case n: Quant if m.ordinal < Predicate.ordinal =>
-        m = Predicate
+      case _: Quant if m.ordinal < LogicMode.Predicate.ordinal =>
+        m = LogicMode.Predicate
         false
     })(unitNode)
     unitNode.mode = m
@@ -89,7 +90,8 @@ object LogicMode {
     Program.value -> Program
   )
 
-  def valueOf(index: Int) = valueOf.keys.toSeq(index)
+  def valueOf(index: Int): LogicMode =
+    valueOf.values.toSeq(index)
 }
 
 final case class LogicMode private(value: String) {

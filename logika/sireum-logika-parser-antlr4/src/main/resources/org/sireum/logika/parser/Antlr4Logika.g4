@@ -35,8 +35,8 @@ grammar Antlr4Logika;
    ≥         2265      >=
    ≠         2260      !=
    ¬         00AC      not        !        ~
-   ∧         2227      and        &&
-   ∨         2228      or         ||
+   ∧         2227      and        &&       ^
+   ∨         2228      or         ||       V
    →         21D2      implies    ->
    ∀         2200      forall     all      A
    ∃         2203      exists     some     E
@@ -73,7 +73,7 @@ proofStep
     assume=NUM '.'
     ( fresh=ID
     | fresh=ID? formula ate='assume' )
-    ( NL+ proofStep )*
+    ( NL+ proofStep? )*
     '}'                                                 #SubProof
   ;
 
@@ -81,7 +81,7 @@ formula
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean // propositional logic
   | tb=ID ( '.' te=ID /* $te.text=="size" */ )?         #Var     // propositional logic
-  | '(' formula ')      '                               #Paren   // propositional logic
+  | '(' formula ')'                                     #Paren   // propositional logic
   | '$result'                                           #Result  // program logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
   | NUM                                                 #Int     // algebra
@@ -95,9 +95,12 @@ formula
     r=formula                                           #Binary  // algebra
   | op='-' formula                                      #Unary   // algebra
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
-  | l=formula ( 'and' | '&&' | '∧' ) NL? r=formula      #Binary  // propositional logic
-  | l=formula ( 'or' | '||' | '∨' ) NL? r=formula       #Binary  // propositional logic
-  | l=formula ( 'implies' | '->' | '→' ) NL? r=formula  #Binary  // propositional logic
+  | l=formula
+    op=( 'and' | '&&' | '^' | '∧' ) NL? r=formula       #Binary  // propositional logic
+  | l=formula
+    op=( 'or' | '||' | 'V' | '∨' ) NL? r=formula        #Binary  // propositional logic
+  | l=formula
+    op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
 
@@ -117,15 +120,16 @@ type
 
 justification
   : t='premise'                                         #Premise
-  | ( tb='andi' | tb=( '&&' | '∧' ) ID ) // ID=="i"
+  | ( tb=('andi' | '^i' ) | tb=( '&&' | '∧' ) ID ) // ID=="i"
     lStep=NUM rStep=NUM                                 #AndIntro
-  | ( tb=('ande1' | 'ande2' )
+  | ( tb=('ande1' | '^e1' | 'ande2' | '^e2' )
     | tb=( '&&' | '∧' ) ID ) // ID=="e1" or ID=="e2"
     andStep=NUM                                         #AndElim
-  | ( tb=( 'ori1' | 'ori2' )
+  | ( tb=( 'ori1' | 'Vi1' | 'ori2' | 'Vi2' )
     | tb=( '||' | '∨' ) ID ) // ID=="i1" or ID=="i2"
     orStep=NUM                                          #OrIntro
-  | ( tb='ore' | tb=( '||' | '∨' ) ID ) // ID=="e"
+  | ( tb=( 'ore' | 'Ve' )
+    | tb=( '||' | '∨' ) ID ) // ID=="e"
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
   | ( tb='impliesi' | tb=( '->' | '→' ) ID ) // ID=="i"
     impliesStep=NUM                                     #ImpliesIntro
@@ -240,8 +244,8 @@ exp
   | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
-  | l=exp ( '&&' ) NL? r=exp                            #BinaryExp
-  | l=exp ( '||' ) NL? r=exp                            #BinaryExp
+  | l=exp op='&&' NL? r=exp                             #BinaryExp
+  | l=exp op='||' NL? r=exp                             #BinaryExp
   ;
 
 loopInvariant

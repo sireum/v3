@@ -38,26 +38,26 @@ import org.sireum.util.jvm.Antlr4Util._
 
 final private class Builder(reporter: Reporter) {
 
-  private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+  private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
 
   private def build(ctx: SequentFileContext): Sequent = {
     val r =
       if (ctx.proof != null) build(ctx.sequent).
         copy(proofOpt = Some(build(ctx.proof))) at ctx
       else build(ctx.sequent)
-    r.nodeLocMap = nodeLocMap
+    r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
   private def build(ctx: ProofFileContext): Proof = {
     val r = build(ctx.proof)
-    r.nodeLocMap = nodeLocMap
+    r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
   private def build(ctx: ProgramFileContext): Program = {
     val r = build(ctx.program)
-    r.nodeLocMap = nodeLocMap
+    r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
@@ -83,13 +83,13 @@ final private class Builder(reporter: Reporter) {
       ctx.justification match {
         case ctx: PremiseContext => Premise(num, exp)
         case ctx: AndIntroContext =>
-          errorIf(ctx.ID, ctx.tb, "i", "andi")
+          errorIf(ctx.ID, ctx.tb, "i", "andi", "^i")
           AndIntro(num, exp, buildNum(ctx.lStep), buildNum(ctx.rStep))
         case ctx: AndElimContext =>
           val andStep = buildNum(ctx.andStep)
           ctx.tb.getText match {
-            case "ande1" => AndElim1(num, exp, andStep)
-            case "ande2" => AndElim2(num, exp, andStep)
+            case "ande1" | "^e1" => AndElim1(num, exp, andStep)
+            case "ande2" | "^e2" => AndElim2(num, exp, andStep)
             case tb => ctx.ID.getText match {
               case "e1" => AndElim1(num, exp, andStep)
               case "e2" => AndElim2(num, exp, andStep)
@@ -101,21 +101,21 @@ final private class Builder(reporter: Reporter) {
         case ctx: OrIntroContext =>
           val orStep = buildNum(ctx.orStep)
           ctx.tb.getText match {
-            case "ori1" => OrIntro1(num, exp, orStep)
-            case "ori2" => OrIntro2(num, exp, orStep)
+            case "ori1" | "Vi1" => OrIntro1(num, exp, orStep)
+            case "ori2" | "Vi2" => OrIntro2(num, exp, orStep)
             case tb => ctx.ID.getText match {
               case "i1" => OrIntro1(num, exp, orStep)
               case "i2" => OrIntro2(num, exp, orStep)
               case id =>
                 error(ctx.tb, s"Unrecognized justification: $tb$id")
-                AndElim1(num, exp, orStep)
+                OrIntro1(num, exp, orStep)
             }
           }
         case ctx: OrElimContext =>
           val orStep = buildNum(ctx.orStep)
           val lSubProof = buildNum(ctx.lSubProof)
           val rSubProof = buildNum(ctx.rSubProof)
-          errorIf(ctx.ID, ctx.tb, "e", "ore")
+          errorIf(ctx.ID, ctx.tb, "e", "ore", "Ve")
           OrElim(num, exp, orStep, lSubProof, rSubProof)
         case ctx: ImpliesIntroContext =>
           val impliesStep = buildNum(ctx.impliesStep)
@@ -195,7 +195,7 @@ final private class Builder(reporter: Reporter) {
         }
       case ctx: VarContext =>
         val r = buildId(ctx.tb)
-        if (ctx.te.getText != null) {
+        if (ctx.te != null) {
           errorIf(ctx.te, "size")
           Size(r)
         } else r
@@ -534,7 +534,7 @@ object Builder {
       }
     r match {
       case Some(un) =>
-        Node.checkWellFormed(un)
+        Node.checkWellFormed(un)(reporter)
         if (success) r else None
       case None => None
     }

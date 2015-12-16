@@ -39,7 +39,7 @@ import org.sireum.util.jvm.Antlr4Util._
 
 final class Builder private() {
 
-  private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+  private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
 
   def build(ctx: ModelContext): Model = {
     val r =
@@ -47,7 +47,7 @@ final class Builder private() {
         ctx.modelElement().map(build),
         ctx.annotation().map(build)
       ) at ctx
-    r.nodeLocMap = nodeLocMap
+    r.nodeLocMap = midmapEmpty.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
