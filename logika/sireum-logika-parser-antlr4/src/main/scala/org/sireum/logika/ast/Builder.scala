@@ -40,17 +40,25 @@ final private class Builder(reporter: Builder.Reporter) {
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
   private def build(ctx: SequentFileContext): Sequent = {
-    val sequent = build(ctx.sequent)
-    if (ctx.proof != null) {
-      sequent.copy(proofOpt = Some(build(ctx.proof))) at ctx
-    } else {
-      sequent
-    }
+    val r =
+      if (ctx.proof != null) build(ctx.sequent).
+        copy(proofOpt = Some(build(ctx.proof))) at ctx
+      else build(ctx.sequent)
+    r.nodeLocMap = nodeLocMap
+    r
   }
 
-  private def build(ctx: ProofFileContext): Proof = build(ctx.proof)
+  private def build(ctx: ProofFileContext): Proof = {
+    val r = build(ctx.proof)
+    r.nodeLocMap = nodeLocMap
+    r
+  }
 
-  private def build(ctx: ProgramFileContext): Program = build(ctx.program)
+  private def build(ctx: ProgramFileContext): Program = {
+    val r = build(ctx.program)
+    r.nodeLocMap = nodeLocMap
+    r
+  }
 
   private def build(ctx: SequentContext): Sequent =
     Sequent(
