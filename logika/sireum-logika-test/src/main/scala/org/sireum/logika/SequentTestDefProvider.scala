@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.logika
 
-import org.sireum.logika.ast.{Builder, LogicMode, Program, Sequent}
+import org.sireum.logika.ast._
 import org.sireum.test._
 import org.sireum.util._
 
