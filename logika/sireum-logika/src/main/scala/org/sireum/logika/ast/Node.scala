@@ -144,7 +144,6 @@ final case class ExistsElim(num: Num,
 
 final case class Algebra(num: Num,
                          exp: Exp,
-                         stepOrFact: NumOrId,
                          nums: Node.Seq[Num])
   extends RegularStep
 
@@ -154,9 +153,9 @@ final case class Auto(num: Num,
   extends RegularStep
 
 final case class SubProof(num: Num,
-                          assume: AssumeStep,
+                          assumeStep: AssumeStep,
                           steps: Node.Seq[ProofStep])
-  extends UnitNode
+  extends ProofStep
 
 sealed trait AssumeStep extends ProofStep
 
@@ -174,7 +173,11 @@ final case class ExistsAssumeStep(num: Num,
 
 sealed trait Exp extends Node
 
+final case class BooleanLit(value: Boolean) extends Exp
+
 final case class Id(value: String) extends Exp with NumOrId
+
+final case class Size(id: Id) extends Exp
 
 final case class Paren(exp: Exp) extends Exp {
   override def hashCode(): Int = exp.hashCode()
@@ -182,7 +185,7 @@ final case class Paren(exp: Exp) extends Exp {
   override def equals(other: Any): Boolean = exp.equals(other)
 }
 
-case object Result extends Exp
+final case class Result() extends Exp
 
 final case class Apply(id: Id,
                        args: Node.Seq[Exp]) extends Exp
@@ -267,29 +270,32 @@ final case class Minus(exp: Exp) extends UnaryExp {
   val op = "-"
 }
 
-sealed trait Quant extends Node {
+sealed trait Quant extends Exp {
   def op: String
 
   def ids: Node.Seq[Id]
 
+  def typeOpt: Option[Type]
+
   def exp: Exp
 }
 
-final case class ForAll(ids: Node.Seq[Id], exp: Exp)
+final case class ForAll(ids: Node.Seq[Id], typeOpt: Option[Type], exp: Exp)
   extends Quant {
   val op = "all"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
 }
 
-final case class Exists(ids: Node.Seq[Id], exp: Exp)
+final case class Exists(ids: Node.Seq[Id], typeOpt: Option[Type], exp: Exp)
   extends Quant {
   val op = "some"
 }
 
-final case class Seq(args: Node.Seq[Exp]) extends Exp
+final case class SeqLit(args: Node.Seq[Exp]) extends Exp
 
-final case class Program(block: Block) extends UnitNode
+final case class Program(fact: Facts,
+                         block: Block) extends UnitNode
 
 final case class Block(stmts: Node.Seq[Stmt]) extends Node
 
@@ -366,12 +372,25 @@ final case class ProofStmt(proof: Proof) extends Stmt
 
 final case class SequentStmt(sequent: Sequent) extends Stmt
 
-final case class Inv(exps: Node.Seq[Exp]) extends Stmt
+final case class InvStmt(inv: Inv) extends Stmt
 
-final case class Fact(exps: Node.Seq[Quant]) extends Stmt
+final case class Inv(exps: Node.Seq[Exp]) extends Node
+
+final case class Facts(factOrFunDecls: Node.Seq[FactOrFun]) extends Node
+
+sealed trait FactOrFun extends Node
+
+final case class Fact(id: Id,
+                      quant: Quant) extends FactOrFun
+
+final case class Fun(id: Id,
+                     params: Node.Seq[Param],
+                     returnType: Type) extends FactOrFun
 
 sealed trait Type extends Node
 
-case object IntType extends Type
+final case class BooleanType() extends Type
 
-case object IntSeqType extends Type
+final case class IntType() extends Type
+
+final case class IntSeqType() extends Type

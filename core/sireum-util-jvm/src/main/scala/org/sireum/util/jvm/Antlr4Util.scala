@@ -57,6 +57,55 @@ object Antlr4Util {
       n
     }
 
+    def at(start: Token, stop: AnyRef)(
+      implicit nodeLocMap: MIdMap[AnyRef, LocationInfo]): T = {
+      val stopLi = nodeLocMap(stop)
+      nodeLocMap(n) =
+        LocationInfo(
+          offset = start.getStartIndex,
+          length = stopLi.offset + stopLi.length - start.getStartIndex,
+          lineBegin = start.getLine,
+          columnBegin = start.getCharPositionInLine,
+          lineEnd = stopLi.lineEnd,
+          columnEnd = stopLi.columnEnd
+        )
+      n
+    }
+
+    def at(start: AnyRef, stop: Token)(
+      implicit nodeLocMap: MIdMap[AnyRef, LocationInfo]): T = {
+      val startLi = nodeLocMap(start)
+      val lb = stop.getLine
+      val cb = stop.getCharPositionInLine
+      val (le, ce) = end(lb, cb, stop.getText)
+      nodeLocMap(n) =
+        LocationInfo(
+          offset = startLi.offset,
+          length = stop.getStopIndex - startLi.offset + 1,
+          lineBegin = startLi.lineBegin,
+          columnBegin = startLi.columnBegin,
+          lineEnd = le,
+          columnEnd = ce
+        )
+      n
+    }
+
+    def at(start: AnyRef, stop: AnyRef)(
+      implicit nodeLocMap: MIdMap[AnyRef, LocationInfo]): T = {
+      val startLi = nodeLocMap(start)
+      val stopLi = nodeLocMap(stop)
+      nodeLocMap(n) =
+        LocationInfo(
+          offset = startLi.offset,
+          length = stopLi.offset + stopLi.length - startLi.offset,
+          lineBegin = startLi.lineBegin,
+          columnBegin = startLi.columnBegin,
+          lineEnd = stopLi.lineEnd,
+          columnEnd = stopLi.columnEnd
+        )
+      n
+    }
+
     @inline
     private def end(lineBegin: PosInteger,
                     columnBegin: PosInteger,
