@@ -46,7 +46,7 @@ object Node {
            _: SeqLit | _: IntSeqType =>
         m = LogicMode.Program
         false
-      case _: Quant if m.ordinal < LogicMode.Predicate.ordinal =>
+      case _: Quant if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
