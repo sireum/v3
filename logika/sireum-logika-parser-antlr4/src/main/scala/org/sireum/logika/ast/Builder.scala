@@ -23,12 +23,67 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.logika.parser
+package org.sireum.logika.ast
+
+import org.antlr.v4.runtime._
+import org.antlr.v4.runtime.tree._
 
 import java.io.StringReader
 
-import org.sireum.logika.ast._
+import org.sireum.logika.parser.Antlr4LogikaParser._
+import org.sireum.logika.parser._
 import org.sireum.util._
+import org.sireum.util.jvm.Antlr4Util._
+
+final class Builder private(reporter: Builder.Reporter) {
+
+  private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
+
+  def build(ctx: SequentFileContext): Sequent = {
+    val sequent = build(ctx.sequent)
+    if (ctx.proof != null) {
+      sequent.copy(proofOpt = Some(build(ctx.proof))) at ctx
+    } else {
+      sequent
+    }
+  }
+
+  def build(ctx: ProofFileContext): Proof = build(ctx.proof)
+
+  def build(ctx: ProgramFileContext): Program = build(ctx.program)
+
+  def build(ctx: SequentContext): Sequent =
+    Sequent(
+      Option(ctx.premises).map(_.map(build)).getOrElse(Node.emptySeq),
+      ctx.conclusions.map(build),
+      None) at ctx
+
+  def build(ctx: ProofContext): Proof =
+    Proof(Option(ctx.proofStep).map(_.map(build)).
+      getOrElse(Node.emptySeq)) at(ctx.tb, ctx.te)
+
+  def build(ctx: ProofStepContext): ProofStep = ctx match {
+    case ctx: StepContext => build(ctx)
+    case ctx: SubProofContext => build(ctx)
+  }
+
+  def build(ctx: StepContext): RegularStep = ???
+
+  def build(ctx: SubProofContext): SubProof = ???
+
+  def build(ctx: FormulaContext): Exp = ???
+
+  def build(ctx: ProgramContext): Program = ???
+
+  import scala.language.implicitConversions
+
+  @inline
+  private implicit def toNodeSeq[T](ns: java.lang.Iterable[T]): Node.Seq[T] =
+    Node.seq[T](scala.collection.JavaConversions.iterableAsScalaIterable(ns))
+
+  @inline
+  private implicit def toToken(n: TerminalNode): Token = n.getSymbol
+}
 
 object Builder {
   private final val terminateStmtTokens = Set(
@@ -62,12 +117,13 @@ object Builder {
   }
 
   import org.antlr.v4.runtime._
+
   import scala.reflect.runtime.universe._
 
   def apply[T <: UnitNode](input: String,
                            maxErrors: Natural = 0,
                            reporter: Reporter = ConsoleReporter)
-                          (implicit tag: TypeTag[T]) = {
+                          (implicit tag: TypeTag[T]): ParserRuleContext = {
     class ParsingEscape extends RuntimeException
 
     val sr = new StringReader(input)
@@ -111,7 +167,7 @@ object Builder {
 
   private def orientNewlines(cts: CommonTokenStream,
                              isProgram: Boolean): Unit = {
-    import Antlr4LogikaLexer.{NL, ID, INT}
+    import Antlr4LogikaLexer.{ID, NL, NUM}
     cts.fill()
     val tokens: CSeq[Token] = {
       import scala.collection.JavaConversions._
@@ -150,7 +206,7 @@ object Builder {
                 skip = false
               } else
                 prevToken.getType match {
-                  case ID | INT => skip = false
+                  case ID | NUM => skip = false
                   case _ =>
                 }
             }

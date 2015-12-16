@@ -45,5 +45,6 @@
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.16:jar" level="project" />
     <orderEntry type="module" module-name="sireum-java" exported="" />
     <orderEntry type="module" module-name="sireum-java-translator" exported="" />
+    <orderEntry type="module" module-name="sireum-util-jvm" exported="" />
   </component>
 </module>

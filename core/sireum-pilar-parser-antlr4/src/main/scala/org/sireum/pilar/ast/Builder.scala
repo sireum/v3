@@ -35,14 +35,13 @@ import org.sireum.pilar.parser.Antlr4PilarParser._
 import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.tree._
 
-import Builder._
+import org.sireum.util.jvm.Antlr4Util._
 
-final class Builder {
+final class Builder private() {
 
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
-  def build(ctx: ModelContext)(
-    implicit reporter: Reporter): Model = {
+  def build(ctx: ModelContext): Model = {
     val r =
       Model(
         ctx.modelElement().map(build),
@@ -101,8 +100,7 @@ final class Builder {
     } else raw
   }
 
-  def build(ctx: ModelElementContext)(
-    implicit reporter: Reporter): ModelElement =
+  def build(ctx: ModelElementContext): ModelElement =
     ctx match {
       case ctx: GlobalVarContext => build(ctx.globalVarDecl())
       case ctx: ProcedureContext => build(ctx.procDecl())
@@ -111,8 +109,7 @@ final class Builder {
   def build(ctx: GlobalVarDeclContext): GlobalVarDecl =
     GlobalVarDecl(buildID(ctx.ID()), ctx.annotation().map(build)) at ctx
 
-  def build(ctx: ProcDeclContext)(
-    implicit reporter: Reporter): ProcedureDecl =
+  def build(ctx: ProcDeclContext): ProcedureDecl =
     ProcedureDecl(
       buildID(ctx.ID()),
       Option(ctx.param()).map(_.map(build)).
@@ -127,8 +124,7 @@ final class Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  def build(ctx: ProcBodyContext)(
-    implicit reporter: Reporter): ProcedureBody =
+  def build(ctx: ProcBodyContext): ProcedureBody =
     ProcedureBody(
       Option(ctx.localVarDecl).
         map(_.map(build)).getOrElse(Node.emptySeq),
@@ -141,8 +137,7 @@ final class Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  def build(ctx: LocationContext)(
-    implicit reporter: Reporter): Location =
+  def build(ctx: LocationContext): Location =
     ctx.transformation() match {
       case ctxT: CallContext =>
         CallLocation(
@@ -198,8 +193,7 @@ final class Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  def build(ctx: JumpContext)(
-    implicit reporter: Reporter): Jump =
+  def build(ctx: JumpContext): Jump =
     ctx match {
       case ctx: GotoJumpContext => build(ctx)
       case ctx: IfJumpContext => build(ctx)
@@ -228,8 +222,7 @@ final class Builder {
       ctx.annotation().map(build)
     ) at ctx
 
-  def build(ctx: SwitchJumpContext)(
-    implicit reporter: Reporter): SwitchJump =
+  def build(ctx: SwitchJumpContext): SwitchJump =
     SwitchJump(
       build(ctx.exp()),
       ctx.switchCase().map { ctxSC =>
@@ -380,49 +373,7 @@ object Builder {
           }
       }
     if (success)
-      mfOpt.map(mf => new Builder().build(mf.model())(reporter))
+      mfOpt.map(mf => new Builder().build(mf.model()))
     else None
   }
-
-  private[ast] final implicit class At[T <: Node](val n: T) extends AnyVal {
-    @inline
-    def at(ctx: ParserRuleContext)(
-      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T =
-      at(ctx.getStart, ctx.getStop)
-
-    @inline
-    def at(t: Token)(
-      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = at(t, t)
-
-    def at(start: Token, stop: Token)(
-      implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = {
-      val lb = stop.getLine
-      val cb = stop.getCharPositionInLine
-      val (le, ce) = end(lb, cb, stop.getText)
-      nodeLocMap(n) =
-        LocationInfo(
-          offset = start.getStartIndex,
-          length = stop.getStopIndex - start.getStartIndex + 1,
-          lineBegin = start.getLine,
-          columnBegin = start.getCharPositionInLine,
-          lineEnd = le,
-          columnEnd = ce)
-      n
-    }
-
-    @inline
-    private def end(lineBegin: PosInteger,
-                    columnBegin: PosInteger,
-                    text: String): (PosInteger, PosInteger) = {
-      val i = text.lastIndexOf('\n')
-      if (i < 0)
-        (lineBegin, columnBegin + text.length - 1)
-      else {
-        var lines = 0
-        for (c <- text if c == '\n') lines += 1
-        (lineBegin + lines, text.length - i - 3)
-      }
-    }
-  }
-
 }

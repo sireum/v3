@@ -49,7 +49,7 @@ sealed trait UnitNode extends Node {
 
 final case class Sequent(premises: Node.Seq[Exp],
                          conclusions: Node.Seq[Exp],
-                         proof: Option[Proof]) extends UnitNode
+                         proofOpt: Option[Proof]) extends UnitNode
 
 final case class Proof(proofSteps: Node.Seq[ProofStep])
   extends UnitNode
@@ -112,9 +112,9 @@ final case class NegElim(num: Num,
                          step: Num,
                          negStep: Num) extends RegularStep
 
-final case class FalseElim(num: Num,
-                           exp: Exp,
-                           falseStep: Num) extends RegularStep
+final case class BottomElim(num: Num,
+                            exp: Exp,
+                            falseStep: Num) extends RegularStep
 
 final case class Pbc(num: Num,
                      exp: Exp,
@@ -173,8 +173,6 @@ final case class ExistsAssumeStep(num: Num,
   extends AssumeStep with RegularStep
 
 sealed trait Exp extends Node
-
-final case class BooleanLit(value: Boolean) extends Exp
 
 final case class Id(value: String) extends Exp with NumOrId
 
@@ -277,14 +275,14 @@ sealed trait Quant extends Node {
   def exp: Exp
 }
 
-final case class All(ids: Node.Seq[Id], exp: Exp)
+final case class ForAll(ids: Node.Seq[Id], exp: Exp)
   extends Quant {
   val op = "all"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
 }
 
-final case class Some(ids: Node.Seq[Id], exp: Exp)
+final case class Exists(ids: Node.Seq[Id], exp: Exp)
   extends Quant {
   val op = "some"
 }
@@ -366,13 +364,13 @@ final case class Param(id: Id,
 
 final case class ProofStmt(proof: Proof) extends Stmt
 
+final case class SequentStmt(sequent: Sequent) extends Stmt
+
 final case class Inv(exps: Node.Seq[Exp]) extends Stmt
 
 final case class Fact(exps: Node.Seq[Quant]) extends Stmt
 
 sealed trait Type extends Node
-
-case object BooleanType extends Type
 
 case object IntType extends Type
 
