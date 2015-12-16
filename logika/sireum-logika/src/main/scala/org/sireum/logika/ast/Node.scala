@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.logika.ast
 
+import org.sireum.logika.util._
 import org.sireum.util._
 
 object Node {
@@ -35,6 +36,73 @@ object Node {
   final def seq[T](es: T*) = ivector(es: _*)
 
   final def seq[T](es: Iterable[T]) = es.toVector
+
+  final private[ast] def detectMode(unitNode: UnitNode): Unit = {
+    import LogicMode._
+    var m = Propositional
+    Visitor.build({
+      case n: Mul | Div | Rem | Add | Sub | Lt | Le | Gt | Ge |
+           Minus | IntLit | IntType | SeqLit | IntSeqType if
+      m.ordinal < Algebra.ordinal =>
+        m = Algebra
+        false
+      case n: Quant if m.ordinal < Predicate.ordinal =>
+        m = Predicate
+        false
+    })(unitNode)
+    unitNode.mode = m
+  }
+
+  final private[ast] def checkWellFormed(unitNode: UnitNode)
+                                        (implicit reporter: Reporter): Unit = {
+    val reqType = unitNode.mode.requireType
+    val nodeLocMap = unitNode.nodeLocMap
+    val isPredicate = unitNode.mode == LogicMode.Predicate
+    Visitor.build({
+      case n: Quant =>
+        if (isPredicate) n.typeOpt match {
+          case None | Some(_: BooleanType) =>
+          case _ =>
+            val li = nodeLocMap(n.ids.last)
+            reporter.error(li.lineBegin, li.columnBegin, li.offset,
+              s"Predicate logic mode only allows (explicit) boolean type specification in quantifications.")
+        } else if (reqType && n.typeOpt.isEmpty) {
+          val li = nodeLocMap(n.ids.last)
+          reporter.error(li.lineBegin, li.columnBegin, li.offset,
+            s"Algebra, sequence, or program logic modes require explicit type specification in quantifications.")
+        }
+        true
+    })(unitNode)
+  }
+}
+
+object LogicMode {
+  private var counter = 0
+  final val Propositional = LogicMode("Propositional")
+  final val Predicate = LogicMode("Predicate")
+  final val Algebra = LogicMode("Algebra")
+  final val Program = LogicMode("Program")
+  val valueOf: ILinkedMap[String, LogicMode] = ilinkedMap(
+    Propositional.value -> Propositional,
+    Predicate.value -> Predicate,
+    Algebra.value -> Algebra,
+    Program.value -> Program
+  )
+
+  def valueOf(index: Int) = valueOf.keys.toSeq(index)
+}
+
+final case class LogicMode private(value: String) {
+  val ordinal = {
+    val o = LogicMode.counter
+    LogicMode.counter += 1
+    o
+  }
+
+  def requireType: Boolean =
+    this == LogicMode.Program || this == LogicMode.Algebra
+
+  override def toString = value
 }
 
 sealed trait Node extends Product
@@ -45,14 +113,20 @@ final case class Num(value: Natural) extends NumOrId
 
 sealed trait UnitNode extends Node {
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
+  var mode = LogicMode.Program
 }
 
 final case class Sequent(premises: Node.Seq[Exp],
                          conclusions: Node.Seq[Exp],
-                         proofOpt: Option[Proof]) extends UnitNode
+                         proofOpt: Option[Proof])
+  extends UnitNode {
+  Node.detectMode(this)
+}
 
 final case class Proof(proofSteps: Node.Seq[ProofStep])
-  extends UnitNode
+  extends UnitNode {
+  Node.detectMode(this)
+}
 
 sealed trait ProofStep extends Node {
   def num: Num

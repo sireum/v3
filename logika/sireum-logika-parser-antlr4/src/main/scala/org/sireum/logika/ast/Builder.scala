@@ -32,10 +32,11 @@ import java.io.StringReader
 
 import org.sireum.logika.parser.Antlr4LogikaParser._
 import org.sireum.logika.parser._
+import org.sireum.logika.util._
 import org.sireum.util._
 import org.sireum.util.jvm.Antlr4Util._
 
-final private class Builder(reporter: Builder.Reporter) {
+final private class Builder(reporter: Reporter) {
 
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
 
@@ -469,25 +470,7 @@ object Builder {
     (typeOf[Sequent], typeOf[Proof], typeOf[Program])
   }
 
-  trait Reporter {
-    def error(line: PosInteger,
-              column: PosInteger,
-              offset: Natural,
-              message: String): Unit
-  }
-
-  object ConsoleReporter extends Reporter {
-    override def error(line: PosInteger,
-                       column: PosInteger,
-                       offset: Natural,
-                       message: String): Unit = {
-      Console.err.println(s"[$line, $column] $message")
-      Console.err.flush()
-    }
-  }
-
   import org.antlr.v4.runtime._
-
   import scala.reflect.runtime.universe._
 
   def apply[T <: UnitNode](input: String,
@@ -522,31 +505,38 @@ object Builder {
         }
       }
     })
-    tag.tpe match {
-      case `sequentType` =>
-        orientNewlines(tokenStream, isProgram = false)
-        val parseTree = parser.sequentFile()
-        if (success) {
-          val ast = new Builder(reporter).build(parseTree)
-          if (success) Some(ast.asInstanceOf[T])
-          else None
-        } else None
-      case `proofType` =>
-        orientNewlines(tokenStream, isProgram = false)
-        val parseTree = parser.proofFile()
-        if (success) {
-          val ast = new Builder(reporter).build(parseTree)
-          if (success) Some(ast.asInstanceOf[T])
-          else None
-        } else None
-      case `programType` =>
-        orientNewlines(tokenStream, isProgram = true)
-        val parseTree = parser.programFile()
-        if (success) {
-          val ast = new Builder(reporter).build(parseTree)
-          if (success) Some(ast.asInstanceOf[T])
-          else None
-        } else None
+    val r =
+      tag.tpe match {
+        case `sequentType` =>
+          orientNewlines(tokenStream, isProgram = false)
+          val parseTree = parser.sequentFile()
+          if (success) {
+            val ast = new Builder(reporter).build(parseTree)
+            if (success) Some(ast.asInstanceOf[T])
+            else None
+          } else None
+        case `proofType` =>
+          orientNewlines(tokenStream, isProgram = false)
+          val parseTree = parser.proofFile()
+          if (success) {
+            val ast = new Builder(reporter).build(parseTree)
+            if (success) Some(ast.asInstanceOf[T])
+            else None
+          } else None
+        case `programType` =>
+          orientNewlines(tokenStream, isProgram = true)
+          val parseTree = parser.programFile()
+          if (success) {
+            val ast = new Builder(reporter).build(parseTree)
+            if (success) Some(ast.asInstanceOf[T])
+            else None
+          } else None
+      }
+    r match {
+      case Some(un) =>
+        Node.checkWellFormed(un)
+        if (success) r else None
+      case None => None
     }
   }
 
