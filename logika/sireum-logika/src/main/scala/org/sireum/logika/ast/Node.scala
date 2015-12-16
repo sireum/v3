@@ -43,9 +43,8 @@ object Node {
       case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
            _: Lt | _: Le | _: Gt | _: Ge |
            _: Minus | _: IntLit | _: IntType |
-           _: SeqLit | _: IntSeqType if
-      m.ordinal < LogicMode.Algebra.ordinal =>
-        m = LogicMode.Algebra
+           _: SeqLit | _: IntSeqType =>
+        m = LogicMode.Program
         false
       case _: Quant if m.ordinal < LogicMode.Predicate.ordinal =>
         m = LogicMode.Predicate
@@ -62,18 +61,23 @@ object Node {
     Visitor.build({
       case n: Quant =>
         if (isPredicate) n.typeOpt match {
-          case None | Some(_: BooleanType) =>
-          case _ =>
+          case Some(_) =>
             val li = nodeLocMap(n.ids.last)
             reporter.error(li.lineBegin, li.columnBegin, li.offset,
-              s"Predicate logic mode only allows (explicit) boolean type specification in quantifications.")
+              s"Predicate logic mode disallows explicit type specification in quantifications.")
+          case _ =>
         } else if (reqType && n.typeOpt.isEmpty) {
           val li = nodeLocMap(n.ids.last)
           reporter.error(li.lineBegin, li.columnBegin, li.offset,
-            s"Algebra, sequence, or program logic modes require explicit type specification in quantifications.")
+            s"Program logic mode requires explicit type specification in quantifications.")
         }
         true
     })(unitNode)
+    if (unitNode.mode == LogicMode.Program) unitNode match {
+      case _: Program =>
+      case _ =>
+        reporter.error(s"Standalone sequent cannot use algebra.")
+    }
   }
 }
 
@@ -81,12 +85,10 @@ object LogicMode {
   private var counter = 0
   final val Propositional = LogicMode("Propositional")
   final val Predicate = LogicMode("Predicate")
-  final val Algebra = LogicMode("Algebra")
   final val Program = LogicMode("Program")
   val valueOf: ILinkedMap[String, LogicMode] = ilinkedMap(
     Propositional.value -> Propositional,
     Predicate.value -> Predicate,
-    Algebra.value -> Algebra,
     Program.value -> Program
   )
 
@@ -102,7 +104,7 @@ final case class LogicMode private(value: String) {
   }
 
   def requireType: Boolean =
-    this == LogicMode.Program || this == LogicMode.Algebra
+    this == LogicMode.Program
 
   override def toString = value
 }

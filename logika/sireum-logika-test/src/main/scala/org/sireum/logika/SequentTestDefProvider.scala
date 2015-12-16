@@ -328,13 +328,13 @@ final class SequentTestDefProvider(tf: TestFramework)
     ,
     ConditionTest("predicate-1",
       ast(
-        """∀x | Human(x) → Mortal(x),  Human(Socrates)  ⊢
-          |  Mortal(Socrates)
+        """∀x | human(x) → mortal(x),  human(Socrates)  ⊢
+          |  mortal(Socrates)
           |{
-          |  1. ∀x | Human(x) → Mortal(x)             premise
-          |  2. Human(Socrates)                       premise
-          |  3. Human(Socrates) → Mortal(Socrates)    ∀e 1 Socrates
-          |  4. Mortal(Socrates)                      →e 3 2
+          |  1. ∀x | human(x) → mortal(x)             premise
+          |  2. human(Socrates)                       premise
+          |  3. human(Socrates) → mortal(Socrates)    ∀e 1 Socrates
+          |  4. mortal(Socrates)                      →e 3 2
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
@@ -358,114 +358,114 @@ final class SequentTestDefProvider(tf: TestFramework)
     ,
     ConditionTest("predicate-3",
       ast(
-        """∀x | Human(x) → Mortal(x),  ∀y | Mortal(y) → Soul(y)  ⊢
-          |  ∀x | Human(x) → Soul(x)
+        """∀x | human(x) → mortal(x),  ∀y | mortal(y) → soul(y)  ⊢
+          |  ∀x | human(x) → soul(x)
           |{
-          |  1. ∀x | Human(x) → Mortal(x)             premise
-          |  2. ∀y | Mortal(y) → Soul(y)              premise
+          |  1. ∀x | human(x) → mortal(x)             premise
+          |  2. ∀y | mortal(y) → soul(y)              premise
           |  3. {
           |       4. a
           |       5. {
-          |            6. Human(a)                    assume
-          |            7. Human(a) → Mortal(a)        ∀e 1 a
-          |            8. Mortal(a)                   →e 7 6
-          |            9. Mortal(a) → Soul(a)         ∀e 2 a
-          |           10. Soul(a)                     →e 9 8
+          |            6. human(a)                    assume
+          |            7. human(a) → mortal(a)        ∀e 1 a
+          |            8. mortal(a)                   →e 7 6
+          |            9. mortal(a) → soul(a)         ∀e 2 a
+          |           10. soul(a)                     →e 9 8
           |          }
-          |      11. Human(a) → Soul(a)               →i 5
+          |      11. human(a) → soul(a)               →i 5
           |     }
-          | 12. ∀x | Human(x) → Soul(x)               ∀i 3
+          | 12. ∀x | human(x) → soul(x)               ∀i 3
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-4",
       ast(
-        """∀x | Healthy(x) → Happy(x)  ⊢
-          |  (∀y | Healthy(y)) → ∀x | Happy(x)
+        """∀x | healthy(x) → happy(x)  ⊢
+          |  (∀y | healthy(y)) → ∀x | happy(x)
           |{
-          |  1. ∀x | Healthy(x) → Happy(x)            premise
+          |  1. ∀x | healthy(x) → happy(x)            premise
           |  2. {
-          |       3. ∀y | Healthy(y)                  assume
+          |       3. ∀y | healthy(y)                  assume
           |       4. {
           |            5. a
-          |            6. Healthy(a)                  ∀e 3 a
-          |            7. Healthy(a) → Happy(a)       ∀e 1 a
-          |            8. Happy(a)                    →e 7 6
+          |            6. healthy(a)                  ∀e 3 a
+          |            7. healthy(a) → happy(a)       ∀e 1 a
+          |            8. happy(a)                    →e 7 6
           |          }
-          |       9. ∀x | Happy(x)                    ∀i 4
+          |       9. ∀x | happy(x)                    ∀i 4
           |     }
-          | 10. (∀y | Healthy(y)) → ∀x | Happy(x)     →i 2
+          | 10. (∀y | healthy(y)) → ∀x | happy(x)     →i 2
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-5",
       ast(
-        """Human(Socrates),  Mortal(Socrates)  ⊢
-          |  ∃x | Human(x) ∧ Mortal(x)
+        """human(Socrates),  mortal(Socrates)  ⊢
+          |  ∃x | human(x) ∧ mortal(x)
           |{
-          |  1. Human(Socrates)                       premise
-          |  2. Mortal(Socrates)                      premise
-          |  3. Human(Socrates) ∧ Mortal(Socrates)    ∧i 1 2
-          |  4. ∃x | Human(x) ∧ Mortal(x)             ∃i 3 Socrates
+          |  1. human(Socrates)                       premise
+          |  2. mortal(Socrates)                      premise
+          |  3. human(Socrates) ∧ mortal(Socrates)    ∧i 1 2
+          |  4. ∃x | human(x) ∧ mortal(x)             ∃i 3 Socrates
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-6",
       ast(
-        """Vowel(e),  Holds(square14, e)  ⊢
-          |  ∃y | Vowel(y) ∧ ∃x | Holds(x, y)
+        """vowel(e),  holds(square14, e)  ⊢
+          |  ∃y | vowel(y) ∧ ∃x | holds(x, y)
           |{
-          |  1. Vowel(e)                              premise
-          |  2. Holds(square14, e)                    premise
-          |  3. ∃x | Holds(x, e)                      ∃i 2 square14
-          |  4. Vowel(e) ∧ ∃x | Holds(x, e)           ∧i 1 3
-          |  5. ∃y | Vowel(y) ∧ ∃x | Holds(x, y)      ∃i 4 y
+          |  1. vowel(e)                              premise
+          |  2. holds(square14, e)                    premise
+          |  3. ∃x | holds(x, e)                      ∃i 2 square14
+          |  4. vowel(e) ∧ ∃x | holds(x, e)           ∧i 1 3
+          |  5. ∃y | vowel(y) ∧ ∃x | holds(x, y)      ∃i 4 y
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-7",
       ast(
-        """Vowel(e),  Holds(square14, e)  ⊢
-          |  ∃y,x | Vowel(y) ∧ Holds(x, y)
+        """vowel(e),  holds(square14, e)  ⊢
+          |  ∃y,x | vowel(y) ∧ holds(x, y)
           |{
-          |  1. Vowel(e)                              premise
-          |  2. Holds(square14, e)                    premise
-          |  3. Vowel(e) ∧ Holds(square14, e)         ∧i 1 3
-          |  4. ∃y,x | Vowel(y) ∧ Holds(x, y)         ∃i 3 e square14
+          |  1. vowel(e)                              premise
+          |  2. holds(square14, e)                    premise
+          |  3. vowel(e) ∧ holds(square14, e)         ∧i 1 3
+          |  4. ∃y,x | vowel(y) ∧ holds(x, y)         ∃i 3 e square14
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-8",
       ast(
-        """∀x | Human(x) → Mortal(x),  ∃y | Human(y)  ⊢
-          |  ∃z | Mortal(z)
+        """∀x | human(x) → mortal(x),  ∃y | human(y)  ⊢
+          |  ∃z | mortal(z)
           |{
-          |  1. ∀x | Human(x) → Mortal(x)             premise
-          |  2. ∃y | Human(y)                         premise
+          |  1. ∀x | human(x) → mortal(x)             premise
+          |  2. ∃y | human(y)                         premise
           |  3. {
-          |       4. a  Human(a)                      assume
-          |       5. Human(a) → Mortal(a)            ∀e 1 a
-          |       6. Mortal(a)                        →e 5 4
-          |       7. ∃z | Mortal(z)                   ∃i 6 a
+          |       4. a  human(a)                      assume
+          |       5. human(a) → mortal(a)            ∀e 1 a
+          |       6. mortal(a)                        →e 5 4
+          |       7. ∃z | mortal(z)                   ∃i 6 a
           |     }
-          |  8. ∃z | Mortal(z)                        ∃e 2 3
+          |  8. ∃z | mortal(z)                        ∃e 2 3
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-9",
       ast(
-        """∃s | Covered(s) ∧ (∃c | Vowel(c) ∧ Holds(s, c)),
-          |(∃x | Covered(x)) → ¬GameOver  ⊢  ¬GameOver
+        """∃s | covered(s) ∧ (∃c | vowel(c) ∧ holds(s, c)),
+          |(∃x | covered(x)) → ¬gameOver  ⊢  ¬gameOver
           |{
-          |  1. ∃s | Covered(s) ∧ (∃c | Vowel(c) ∧ Holds(s, c))     premise
-          |  2. (∃x | Covered(x)) → ¬GameOver                       premise
+          |  1. ∃s | covered(s) ∧ (∃c | vowel(c) ∧ holds(s, c))     premise
+          |  2. (∃x | covered(x)) → ¬gameOver                       premise
           |  3. {
-          |       4. a  Covered(a) ∧ (∃c | Vowel(c) ∧ Holds(a, c))  assume
-          |       5. Covered(a)                                     ∧e1 4
-          |       6. ∃x | Covered(x)                                ∃i 5 a
+          |       4. a  covered(a) ∧ (∃c | vowel(c) ∧ holds(a, c))  assume
+          |       5. covered(a)                                     ∧e1 4
+          |       6. ∃x | covered(x)                                ∃i 5 a
           |      }
-          |  7. ∃x | Covered(x)                                     ∃e 1 3
-          |  8. ¬GameOver                                           →e 2 7
+          |  7. ∃x | covered(x)                                     ∃e 1 3
+          |  8. ¬gameOver                                           →e 2 7
           |}
         """.stripMargin, LogicMode.Predicate))
   )
