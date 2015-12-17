@@ -34,6 +34,20 @@ trait Reporter {
             column: PosInteger,
             offset: Natural,
             message: String): Unit
+
+  def info(message: String): Unit
+
+  def info(line: PosInteger,
+           column: PosInteger,
+           offset: Natural,
+           message: String): Unit
+
+  def warn(message: String): Unit
+
+  def warn(line: PosInteger,
+           column: PosInteger,
+           offset: Natural,
+           message: String): Unit
 }
 
 object ConsoleReporter extends Reporter {
@@ -49,6 +63,28 @@ object ConsoleReporter extends Reporter {
     Console.err.println(s"[$line, $column] $message")
     Console.err.flush()
   }
+
+  override def info(message: String): Unit = {
+    Console.out.println(message)
+    Console.out.flush()
+  }
+
+  override def warn(message: String): Unit = {
+    Console.out.println(message)
+    Console.out.flush()
+  }
+
+  override def warn(line: PosInteger, column: PosInteger,
+                    offset: Natural, message: String): Unit = {
+    Console.out.println(s"[$line, $column] $message")
+    Console.out.flush()
+  }
+
+  override def info(line: PosInteger, column: PosInteger,
+                    offset: Natural, message: String): Unit = {
+    Console.out.println(s"[$line, $column] $message")
+    Console.out.flush()
+  }
 }
 
 object ErrorCountingReporter extends Reporter {
@@ -62,4 +98,14 @@ object ErrorCountingReporter extends Reporter {
                      offset: Natural,
                      message: String): Unit =
     errors += 1
+
+  override def info(message: String): Unit = {}
+
+  override def warn(message: String): Unit = {}
+
+  override def warn(line: PosInteger, column: PosInteger,
+                    offset: Natural, message: String): Unit = {}
+
+  override def info(line: PosInteger, column: PosInteger,
+                    offset: Natural, message: String): Unit = {}
 }

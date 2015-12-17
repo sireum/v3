@@ -41,8 +41,11 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          check(proof, ProofContext(s.mode, s.premises.toSet, vars,
+          val r = check(proof, ProofContext(s.mode, s.premises.toSet, vars,
             imapEmpty, imapEmpty)).isDefined
+          if (r) reporter.info("Proof is accepted.")
+          else reporter.error("Proof is rejected.")
+          r
         case _ =>
           ???
       }

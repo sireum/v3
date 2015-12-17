@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.logika
 
 import org.sireum.logika.ast._
-import org.sireum.logika.util.ConsoleReporter
+import org.sireum.logika.util.{ErrorCountingReporter, ConsoleReporter}
 import org.sireum.test._
 import org.sireum.util._
 
@@ -473,10 +473,10 @@ final class SequentTestDefProvider(tf: TestFramework)
   )
 
   def ast(text: String, m: LogicMode): Boolean = {
-    val sequentOpt = Builder[Sequent](text)
+    val sequentOpt = Builder[Sequent](input = text, reporter = ErrorCountingReporter)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
     if (!r) return false
-    implicit val reporter = ConsoleReporter
+    implicit val reporter = ErrorCountingReporter
     Checker.check(sequentOpt.get)
   }
 }
