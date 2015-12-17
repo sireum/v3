@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.logika
 
 import org.sireum.logika.ast._
-import org.sireum.logika.util.{ErrorCountingReporter, ConsoleReporter}
+import org.sireum.logika.util._
 import org.sireum.test._
 import org.sireum.util._
 
@@ -35,7 +35,7 @@ final class SequentTestDefProvider(tf: TestFramework)
 
   override def testDefs: ISeq[TestDef] = ivector(
     ConditionTest("intro-nat-ded-1",
-      ast(
+      check(
         """p ∨ q, r  ⊢  (p ∧ r) ∨ (q ∧ r)
           |{
           |  1. p ∨ q                    premise
@@ -55,7 +55,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("and-1",
-      ast(
+      check(
         """p, q, r  ⊢  r ∧ (q ∧ p)
           |{
           |  1. p                      premise
@@ -67,7 +67,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("and-2",
-      ast(
+      check(
         """p ∧ (q ∧ r)  ⊢  r ∧ p
           |{
           |  1. p ∧ (q ∧ r)              premise
@@ -79,7 +79,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("or-1",
-      ast(
+      check(
         """p  ⊢  p ∨ q
           |{
           |  1. p                        premise
@@ -88,7 +88,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("or-2a",
-      ast(
+      check(
         """p ∧ q  ⊢  p ∨ q
           |{
           |  1. p ∧ q                    premise
@@ -98,7 +98,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("or-2b",
-      ast(
+      check(
         """p ∧ q  ⊢  p ∨ q
           |{
           |  1. p ∧ q                    premise
@@ -108,7 +108,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("or-3",
-      ast(
+      check(
         """p ∨ q,  r  ⊢  (p ∧ r) ∨ (q ∧ r)
           |{
           |  1. p ∨ q                    premise
@@ -128,7 +128,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("implies-1",
-      ast(
+      check(
         """(p ∧ q) → r,  p → q,  p  ⊢  r
           |{
           |  1. (p ∧ q) → r              premise
@@ -141,7 +141,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("implies-2",
-      ast(
+      check(
         """(p ∨ q) → r,  q  ⊢  r
           |{
           |  1. (p ∨ q) → r              premise
@@ -152,7 +152,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("implies-3a",
-      ast(
+      check(
         """q  ⊢  p → q
           |{
           |  1. q                        premise
@@ -165,7 +165,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("implies-3b",
-      ast(
+      check(
         """q  ⊢  p → q
           |{
           |  1. {
@@ -177,7 +177,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("implies-4",
-      ast(
+      check(
         """p → r,  q → r  ⊢  (p ∨ q) → r
           |{
           |  1. p → r                    premise
@@ -472,8 +472,9 @@ final class SequentTestDefProvider(tf: TestFramework)
         */
   )
 
-  def ast(text: String, m: LogicMode): Boolean = {
-    val sequentOpt = Builder[Sequent](input = text, reporter = ErrorCountingReporter)
+  def check(text: String, m: LogicMode): Boolean = {
+    val sequentOpt = Builder[Sequent](input = text,
+      reporter = ErrorCountingReporter)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
     if (!r) return false
     implicit val reporter = ErrorCountingReporter

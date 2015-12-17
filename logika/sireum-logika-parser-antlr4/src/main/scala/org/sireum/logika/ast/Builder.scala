@@ -569,6 +569,20 @@ object Builder {
         success = false
         reporter.error(line, column, offset, message)
       }
+
+      override def info(message: String): Unit =
+        reporter.info(message)
+
+      override def warn(message: String): Unit =
+        reporter.warn(message)
+
+      override def warn(line: PosInteger, column: PosInteger,
+                        offset: Natural, message: String): Unit =
+        reporter.warn(line, column, offset, message)
+
+      override def info(line: PosInteger, column: PosInteger,
+                        offset: Natural, message: String): Unit =
+        reporter.info(line, column, offset, message)
     }
     try {
       val r =
