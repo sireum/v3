@@ -132,7 +132,7 @@ final private class Builder(implicit reporter: Reporter) {
           errorIf(ctx.ID, ctx.tb, "e", "ore", "Ve")
           OrElim(num, exp, orStep, lSubProof, rSubProof)
         case ctx: ImpliesIntroContext =>
-          val impliesStep = buildNum(ctx.impliesStep)
+          val subProof = buildNum(ctx.subProof)
           errorIf(ctx.ID, ctx.tb, "i", "impliesi")
           val e = exp match {
             case exp: Implies => exp
@@ -140,7 +140,7 @@ final private class Builder(implicit reporter: Reporter) {
               error(ctx.tb, "Implies-intro requires an implication.")
               Implies(exp, exp)
           }
-          ImpliesIntro(num, e, impliesStep)
+          ImpliesIntro(num, e, subProof)
         case ctx: ImpliesElimContext =>
           val impliesStep = buildNum(ctx.impliesStep)
           val antecedentStep = buildNum(ctx.antecedentStep)

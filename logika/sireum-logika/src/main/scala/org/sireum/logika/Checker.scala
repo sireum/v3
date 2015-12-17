@@ -183,6 +183,52 @@ ProofContext(mode: LogicMode,
           case _ =>
             error(orStep, s"Or-elim requires a disjunction in step # ${orStep.value}.")
         }
+      case ImpliesIntro(_, Implies(antecedent, conclusion), subProof) =>
+        findSubProof(subProof) match {
+          case Some(sp) =>
+            var hasError = false
+            (sp.first, sp.last) match {
+              case (fs: PlainAssumeStep, ls: RegularStep) =>
+                if (fs.exp != antecedent) {
+                  error(antecedent, s"The antecedent of step #$num does not match the assumption of #${subProof.value} for Implies-intro.")
+                  hasError = true
+                }
+                if (ls.exp != conclusion) {
+                  error(antecedent, s"The consequent of step #$num does not match the conclusion of #${subProof.value} for Implies-intro.")
+                  hasError = true
+                }
+              case (fs, ls) =>
+                if (fs.isInstanceOf[PlainAssumeStep]) {
+                  error(sp, s"Wrong form for Implies-intro assumption.")
+                  hasError = true
+                }
+                if (ls.isInstanceOf[RegularStep]) {
+                  error(sp, s"Wrong form for Implies-intro conclusion.")
+                  hasError = true
+                }
+            }
+            if (hasError) None else addProvedStep(step)
+          case _ => None
+        }
+      case ImpliesElim(_, exp, impliesStep, antecedentStep) =>
+        (findRegularStepExp(impliesStep),
+          findRegularStepExp(antecedentStep)) match {
+          case (Some(Implies(a, c)), Some(antecedent)) =>
+            var hasError = false
+            if (a != antecedent) {
+              error(step, s"The expression in #${antecedentStep.value} does not match the antecedent in #${impliesStep.value} for Implies-elim of step #$num.")
+              hasError = true
+            }
+            if (c != exp) {
+              error(exp, s"The conclusion in #${impliesStep.value} does not match the expression in #$num for Implies-elim.")
+              hasError = true
+            }
+            if (hasError) None else addProvedStep(step)
+          case (Some(_), _) =>
+            error(impliesStep, s"Implies-elim requires an implication.")
+            None
+          case _ => None
+        }
     }
   }
 

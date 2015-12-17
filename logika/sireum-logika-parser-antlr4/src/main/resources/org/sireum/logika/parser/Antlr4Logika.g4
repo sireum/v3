@@ -134,7 +134,7 @@ justification
     | tb=( '||' | '∨' ) ID ) // ID=="e"
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
   | ( tb='impliesi' | tb=( '->' | '→' ) ID ) // ID=="i"
-    impliesStep=NUM                                     #ImpliesIntro
+    subProof=NUM                                        #ImpliesIntro
   | ( tb='impliese' | tb=( '->' | '→' ) ID ) // ID=="e"
     impliesStep=NUM antecedentStep=NUM                  #ImpliesElim
   | ( tb=( 'noti' | 'negi' )

@@ -126,7 +126,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 11. (p ∧ r) ∨ (q ∧ r)        ∨e 1 3 7
           |}
         """.stripMargin, LogicMode.Propositional))
-    /*,
+    ,
     ConditionTest("implies-1",
       ast(
         """(p ∧ q) → r,  p → q,  p  ⊢  r
@@ -146,7 +146,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |{
           |  1. (p ∨ q) → r              premise
           |  2. q                        premise
-          |  3. p ∨ q                    ∨i1 2
+          |  3. p ∨ q                    ∨i2 2
           |  4. r                        →e 1 3
           |}
         """.stripMargin, LogicMode.Propositional))
@@ -197,7 +197,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 12. (p ∨ q) → r             →i 3
           |}
         """.stripMargin, LogicMode.Propositional))
-    ,
+    /*,
     ConditionTest("negation-1",
       ast(
         """p ∨ q,  ¬p  ⊢  q

@@ -184,7 +184,7 @@ final case class OrElim(num: Num,
 
 final case class ImpliesIntro(num: Num,
                               exp: Implies,
-                              impliesStep: Num)
+                              subProof: Num)
   extends RegularStep
 
 final case class ImpliesElim(num: Num,
