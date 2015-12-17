@@ -1539,7 +1539,7 @@ public class Antlr4LogikaParser extends Parser {
 	}
 	public static class OrIntroContext extends JustificationContext {
 		public Token tb;
-		public Token orStep;
+		public Token step;
 		public TerminalNode NUM() { return getToken(Antlr4LogikaParser.NUM, 0); }
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public OrIntroContext(JustificationContext ctx) { copyFrom(ctx); }
@@ -1802,7 +1802,7 @@ public class Antlr4LogikaParser extends Parser {
 					throw new NoViableAltException(this);
 				}
 				setState(333);
-				((OrIntroContext)_localctx).orStep = match(NUM);
+				((OrIntroContext)_localctx).step = match(NUM);
 				}
 				break;
 			case 5:

@@ -127,13 +127,25 @@ final case class Sequent(premises: Node.Seq[Exp],
   Node.detectMode(this)
 }
 
-final case class Proof(proofSteps: Node.Seq[ProofStep])
-  extends UnitNode {
-  Node.detectMode(this)
-}
-
 sealed trait ProofStep extends Node {
   def num: Num
+}
+
+sealed trait ProofGroup extends Node {
+  def steps: Node.Seq[ProofStep]
+
+  def first: ProofStep
+
+  def last: ProofStep
+}
+
+final case class Proof(steps: Node.Seq[ProofStep])
+  extends UnitNode with ProofGroup {
+  Node.detectMode(this)
+
+  override def first = steps.head
+
+  override def last = steps.last
 }
 
 sealed trait RegularStep extends ProofStep {
@@ -144,7 +156,7 @@ final case class Premise(num: Num,
                          exp: Exp) extends RegularStep
 
 final case class AndIntro(num: Num,
-                          exp: Exp,
+                          exp: And,
                           leftStep: Num,
                           rightStep: Num) extends RegularStep
 
@@ -157,12 +169,12 @@ final case class AndElim2(num: Num,
                           andStep: Num) extends RegularStep
 
 final case class OrIntro1(num: Num,
-                          exp: Exp,
-                          orStep: Num) extends RegularStep
+                          exp: Or,
+                          step: Num) extends RegularStep
 
 final case class OrIntro2(num: Num,
-                          exp: Exp,
-                          orStep: Num) extends RegularStep
+                          exp: Or,
+                          step: Num) extends RegularStep
 
 final case class OrElim(num: Num,
                         exp: Exp,
@@ -171,7 +183,7 @@ final case class OrElim(num: Num,
                         rightSubProof: Num) extends RegularStep
 
 final case class ImpliesIntro(num: Num,
-                              exp: Exp,
+                              exp: Implies,
                               impliesStep: Num)
   extends RegularStep
 
@@ -182,7 +194,7 @@ final case class ImpliesElim(num: Num,
   extends RegularStep
 
 final case class NegIntro(num: Num,
-                          exp: Exp,
+                          exp: Not,
                           subProof: Num) extends RegularStep
 
 final case class NegElim(num: Num,
@@ -198,19 +210,19 @@ final case class Pbc(num: Num,
                      exp: Exp,
                      subProof: Num) extends RegularStep
 
-final case class ForallIntro(num: Num,
-                             exp: Exp,
+final case class ForAllIntro(num: Num,
+                             exp: ForAll,
                              subProof: Num)
   extends RegularStep
 
-final case class ForallElim(num: Num,
+final case class ForAllElim(num: Num,
                             exp: Exp,
                             stepOrFact: NumOrId,
                             args: Node.Seq[Exp])
   extends RegularStep
 
 final case class ExistsIntro(num: Num,
-                             exp: Exp,
+                             exp: Exists,
                              stepOrFact: NumOrId,
                              args: Node.Seq[Exp])
   extends RegularStep
@@ -237,7 +249,12 @@ final case class Auto(num: Num,
 final case class SubProof(num: Num,
                           assumeStep: AssumeStep,
                           steps: Node.Seq[ProofStep])
-  extends ProofStep
+  extends ProofStep with ProofGroup {
+  override def first = assumeStep
+
+  override def last =
+    if (steps.isEmpty) assumeStep else steps.last
+}
 
 sealed trait AssumeStep extends ProofStep
 
@@ -253,7 +270,9 @@ final case class ExistsAssumeStep(num: Num,
                                   exp: Exp)
   extends AssumeStep with RegularStep
 
-sealed trait Exp extends Node
+sealed trait Exp extends Node {
+  private[ast] var hasParen = false
+}
 
 final case class BooleanLit(value: Boolean) extends Exp
 
@@ -262,12 +281,6 @@ final case class Id(value: String) extends Exp with NumOrId
 final case class Size(id: Id) extends Exp
 
 final case class Clone(id: Id) extends Exp
-
-final case class Paren(exp: Exp) extends Exp {
-  override def hashCode(): Int = exp.hashCode()
-
-  override def equals(other: Any): Boolean = exp.equals(other)
-}
 
 final case class Result() extends Exp
 

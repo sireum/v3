@@ -129,7 +129,7 @@ justification
     andStep=NUM                                         #AndElim
   | ( tb=( 'ori1' | 'Vi1' | 'ori2' | 'Vi2' )
     | tb=( '||' | '∨' ) ID ) // ID=="i1" or ID=="i2"
-    orStep=NUM                                          #OrIntro
+    step=NUM                                            #OrIntro
   | ( tb=( 'ore' | 'Ve' )
     | tb=( '||' | '∨' ) ID ) // ID=="e"
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim

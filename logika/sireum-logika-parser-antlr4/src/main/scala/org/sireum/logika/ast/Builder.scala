@@ -84,7 +84,14 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: PremiseContext => Premise(num, exp)
         case ctx: AndIntroContext =>
           errorIf(ctx.ID, ctx.tb, "i", "andi", "^i")
-          AndIntro(num, exp, buildNum(ctx.lStep), buildNum(ctx.rStep))
+          exp match {
+            case exp: And =>
+              AndIntro(num, exp, buildNum(ctx.lStep), buildNum(ctx.rStep))
+            case _ =>
+              error(ctx.tb, "And-intro requires a conjunction.")
+              AndIntro(num, And(exp, exp), buildNum(ctx.lStep),
+                buildNum(ctx.rStep))
+          }
         case ctx: AndElimContext =>
           val andStep = buildNum(ctx.andStep)
           ctx.tb.getText match {
@@ -99,16 +106,23 @@ final private class Builder(implicit reporter: Reporter) {
             }
           }
         case ctx: OrIntroContext =>
-          val orStep = buildNum(ctx.orStep)
-          ctx.tb.getText match {
-            case "ori1" | "Vi1" => OrIntro1(num, exp, orStep)
-            case "ori2" | "Vi2" => OrIntro2(num, exp, orStep)
-            case tb => ctx.ID.getText match {
-              case "i1" => OrIntro1(num, exp, orStep)
-              case "i2" => OrIntro2(num, exp, orStep)
+          val orStep = buildNum(ctx.step)
+          val e = exp match {
+            case exp: Or => exp
+            case _ =>
+              error(ctx.tb, "Or-intro requires a disjunction.")
+              Or(exp, exp)
+          }
+          val tb = ctx.tb.getText
+          tb match {
+            case "ori1" | "Vi1" => OrIntro1(num, e, orStep)
+            case "ori2" | "Vi2" => OrIntro2(num, e, orStep)
+            case _ => ctx.ID.getText match {
+              case "i1" => OrIntro1(num, e, orStep)
+              case "i2" => OrIntro2(num, e, orStep)
               case id =>
                 error(ctx.tb, s"Unrecognized justification: $tb$id")
-                OrIntro1(num, exp, orStep)
+                OrIntro1(num, e, orStep)
             }
           }
         case ctx: OrElimContext =>
@@ -120,7 +134,13 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: ImpliesIntroContext =>
           val impliesStep = buildNum(ctx.impliesStep)
           errorIf(ctx.ID, ctx.tb, "i", "impliesi")
-          ImpliesIntro(num, exp, impliesStep)
+          val e = exp match {
+            case exp: Implies => exp
+            case _ =>
+              error(ctx.tb, "Implies-intro requires an implication.")
+              Implies(exp, exp)
+          }
+          ImpliesIntro(num, e, impliesStep)
         case ctx: ImpliesElimContext =>
           val impliesStep = buildNum(ctx.impliesStep)
           val antecedentStep = buildNum(ctx.antecedentStep)
@@ -129,7 +149,13 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: NegIntroContext =>
           val subProof = buildNum(ctx.subProof)
           errorIf(ctx.ID, ctx.tb, "i", "noti", "negi")
-          NegIntro(num, exp, subProof)
+          val e = exp match {
+            case exp: Not => exp
+            case _ =>
+              error(ctx.tb, "Negation-intro requires a negation.")
+              Not(exp)
+          }
+          NegIntro(num, e, subProof)
         case ctx: NegElimContext =>
           val step = buildNum(ctx.step)
           val notStep = buildNum(ctx.negStep)
@@ -145,15 +171,27 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: ForallIntroContext =>
           val subProof = buildNum(ctx.subProof)
           errorIf(ctx.ID, ctx.tb, "i", "foralli", "alli", "Ai")
-          ForallIntro(num, exp, subProof)
+          val e = exp match {
+            case exp: ForAll => exp
+            case _ =>
+              error(ctx.tb, "Forall-intro requires a universal quantification.")
+              ForAll(Node.emptySeq, None, exp)
+          }
+          ForAllIntro(num, e, subProof)
         case ctx: ForallElimContext =>
           val stepOrFact = build(ctx.stepOrFact)
           errorIf(ctx.ID, ctx.tb, "e", "foralle", "alle", "Ae")
-          ForallElim(num, exp, stepOrFact, ctx.formula.map(build))
+          ForAllElim(num, exp, stepOrFact, ctx.formula.map(build))
         case ctx: ExistsIntroContext =>
           val existsStep = buildNum(ctx.existsStep)
           errorIf(ctx.ID, ctx.tb, "i", "existsi", "somei", "Ei")
-          ExistsIntro(num, exp, existsStep, ctx.formula.map(build))
+          val e = exp match {
+            case exp: Exists => exp
+            case _ =>
+              error(ctx.tb, "Exists-intro requires an existensial quantification.")
+              Exists(Node.emptySeq, None, exp)
+          }
+          ExistsIntro(num, e, existsStep, ctx.formula.map(build))
         case ctx: ExistsElimContext =>
           val stepOrFact = build(ctx.stepOrFact)
           val subProof = buildNum(ctx.subProof)
@@ -201,7 +239,10 @@ final private class Builder(implicit reporter: Reporter) {
           errorIf(ctx.te, "size")
           Size(r)
         } else r
-      case ctx: ParenContext => Paren(build(ctx.formula))
+      case ctx: ParenContext =>
+        val r = build(ctx.formula)
+        r.hasParen = true
+        r
       case ctx: ResultContext => Result()
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
@@ -367,7 +408,10 @@ final private class Builder(implicit reporter: Reporter) {
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
       case ctx: ReadIntExpContext =>
         ReadInt(Option(ctx.STRING).map(x => StringLit(x.getText)))
-      case ctx: ParenExpContext => Paren(build(ctx.exp))
+      case ctx: ParenExpContext =>
+        val r = build(ctx.exp)
+        r.hasParen = true
+        r
       case ctx: UnaryExpContext =>
         val apply =
           ctx.op.getText match {
