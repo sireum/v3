@@ -104,13 +104,13 @@ ProofContext(mode: LogicMode,
               rExp <- findRegularStepExp(rStep)) yield {
           val expected = And(lExp, rExp)
           if (expected == step.exp) addProvedStep(step)
-          else error(and, s"And-intro in step #$num does not produce the expressed form.")
+          else error(and, s"And-intro in step #$num with #${lStep.value} on the left and #${rStep.value} on the right does not produce the expressed form.")
         }).flatten
       case AndElim1(_, exp, andStep) =>
         findRegularStepExp(andStep) match {
           case Some(And(expected, _)) =>
             if (expected == exp) addProvedStep(step)
-            else error(exp, s"And-elim1 in step #$num does not produce the expressed form.")
+            else error(exp, s"The conjunction's left sub-expression in step #${andStep.value} does not match #$num for And-elim1.")
           case Some(_) => error(andStep, "And-elim1 requires a conjunction.")
           case _ => None
         }
@@ -118,7 +118,7 @@ ProofContext(mode: LogicMode,
         findRegularStepExp(andStep) match {
           case Some(And(_, expected)) =>
             if (expected == exp) addProvedStep(step)
-            else error(exp, s"And-elim2 in step #$num does not produce the expressed form.")
+            else error(exp, s"The conjunction's right sub-expression in step #${andStep.value} does not match #$num for And-elim2.")
           case Some(_) => error(andStep, "And-elim2 requires a conjunction.")
           case _ => None
         }
@@ -126,14 +126,14 @@ ProofContext(mode: LogicMode,
         findRegularStepExp(step2) match {
           case Some(expected) =>
             if (expected == lExp) addProvedStep(step)
-            else error(or, s"Or-intro1 in step #$num does not produce the expressed form.")
+            else error(lExp, s"The disjunction's left sub-expression in step #$num does not match #${step2.value} for Or-intro1.")
           case _ => None
         }
       case OrIntro2(_, or@Or(_, rExp), step2) =>
         findRegularStepExp(step2) match {
           case Some(expected) =>
             if (expected == rExp) addProvedStep(step)
-            else error(or, s"Or-intro2 in step #$num does not produce the expressed form.")
+            else error(rExp, s"The disjunction's right sub-expression in step #$num does not match #${step2.value} for Or-intro2.")
           case _ => None
         }
       case OrElim(_, exp, orStep, lSubProof, rSubProof) =>
