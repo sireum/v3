@@ -85,6 +85,8 @@ formula
   | 'result'                                            #Result  // program logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
   | NUM                                                 #Int     // algebra
+  | ( 'BigInt' | 'Z' ) '(' STRING ')'                   #BigInt  // algebra
+  | ( 'Seq' | 'ZS' ) '(' ( exp ( ',' exp )* )? ')'      #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
   | l=formula
@@ -161,6 +163,7 @@ justification
   | tb='∃' t=ID // ID=="e"
     stepOrFact=numOrId subProof=NUM                     #ExistsElim
   | tb='algebra' steps+=numOrId*                        #Algebra
+  | tb='invariant'                                      #Invariant
   | tb='auto' stepOrFacts+=numOrId*                     #Auto
   ;
 
@@ -259,9 +262,11 @@ modifies
 
 methodContract
   : tb='{' NL*
-    ( 'requires' NL* rs+=formula ( NL+ rs+=formula? )* )? NL*
+    ( ( 'requires' | 'pre' ) NL*
+      rs+=formula ( NL+ rs+=formula? )* )? NL*
     modifies?
-    ( 'ensures' NL* es+=formula ( NL+ es+=formula? )* )? NL*
+    ( ( 'ensures' | 'post' ) NL*
+      es+=formula ( NL+ es+=formula? )* )? NL*
     te='}' NL*
   ;
 

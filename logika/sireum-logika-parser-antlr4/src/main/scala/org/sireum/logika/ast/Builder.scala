@@ -162,6 +162,8 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: AlgebraContext =>
           Algebra(num, exp, Option(ctx.steps).map(_.map(build)).
             getOrElse(Node.emptySeq))
+        case ctx: InvariantContext =>
+          Invariant(num, exp)
         case ctx: AutoContext =>
           Auto(num, exp, Option(ctx.stepOrFacts).map(_.map(build)).
             getOrElse(Node.emptySeq))
@@ -204,6 +206,9 @@ final private class Builder(implicit reporter: Reporter) {
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
       case ctx: IntContext => IntLit(BigInt(ctx.NUM.getText))
+      case ctx: BigIntContext => IntLit(BigInt(ctx.STRING.getText))
+      case ctx: SeqContext =>
+        SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
       case ctx: BinaryContext =>
         val apply =
           ctx.op.getText match {
@@ -477,7 +482,7 @@ object Builder {
   import scala.reflect.runtime.universe._
 
   def apply[T <: UnitNode](input: String,
-                           maxErrors: Natural = 1,
+                           maxErrors: Natural = 0,
                            reporter: Reporter = ConsoleReporter)
                           (implicit tag: TypeTag[T]): Option[T] = {
     class ParsingEscape extends RuntimeException

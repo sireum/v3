@@ -51,6 +51,10 @@ final class ProgramTestDefProvider(tf: TestFramework)
       (1 to 3).toVector.map { x =>
         val name = f"function-to-loop-$x%d"
         ConditionTest(name, ast(name))
+      } ++
+      (0 to 3).toVector.map { x =>
+        val name = f"seq-$x%d"
+        ConditionTest(name, ast(name))
       } :+
       ConditionTest("bank", ast("bank"))
 

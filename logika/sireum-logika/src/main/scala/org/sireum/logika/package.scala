@@ -28,7 +28,7 @@ package org.sireum
 package object logika {
   type B = Boolean
   type Z = BigInt
-  type ZS = Seq[Z]
+  type ZS = scala.collection.mutable.Seq[Z]
 
   final val T = true
   final val F = false
@@ -56,11 +56,15 @@ package object logika {
     def ==(other: Int): Boolean = n == BigInt(other)
   }
 
-  final def ZS(zs: Z*): ZS = Seq(zs: _*)
+  final def ZS(zs: Z*): ZS = scala.collection.mutable.Seq(zs: _*)
 
   final def readInt(msg: String = "Enter an integer: "): Z = {
     Console.out.print(msg)
     Console.out.flush()
     BigInt(Console.in.readLine())
   }
+
+  import scala.language.implicitConversions
+
+  implicit def z2i(n: Z): Int = n.toInt
 }

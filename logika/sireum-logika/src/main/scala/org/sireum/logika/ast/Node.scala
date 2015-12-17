@@ -225,6 +225,10 @@ final case class Algebra(num: Num,
                          nums: Node.Seq[NumOrId])
   extends RegularStep
 
+final case class Invariant(num: Num,
+                           exp: Exp)
+  extends RegularStep
+
 final case class Auto(num: Num,
                       exp: Exp,
                       stepOrFacts: Node.Seq[NumOrId])
