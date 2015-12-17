@@ -222,7 +222,7 @@ final case class ExistsElim(num: Num,
 
 final case class Algebra(num: Num,
                          exp: Exp,
-                         nums: Node.Seq[Num])
+                         nums: Node.Seq[NumOrId])
   extends RegularStep
 
 final case class Auto(num: Num,
@@ -401,6 +401,8 @@ final case class Assign(id: Id,
 
 final case class Assert(exp: Exp) extends Stmt
 
+final case class ExpStmt(exp: Exp) extends Stmt
+
 final case class If(exp: Exp,
                     trueBlock: Block,
                     falseBlock: Block) extends Stmt
@@ -461,7 +463,7 @@ final case class Facts(factOrFunDecls: Node.Seq[FactOrFun]) extends Node
 sealed trait FactOrFun extends Node
 
 final case class Fact(id: Id,
-                      quant: Quant) extends FactOrFun
+                      exp: Exp) extends FactOrFun
 
 final case class Fun(id: Id,
                      params: Node.Seq[Param],

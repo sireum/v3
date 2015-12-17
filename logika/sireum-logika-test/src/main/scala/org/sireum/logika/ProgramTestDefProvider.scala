@@ -39,7 +39,20 @@ final class ProgramTestDefProvider(tf: TestFramework)
     (1 to 14).toVector.map { x =>
       val name = f"assignment-$x%02d"
       ConditionTest(name, ast(name))
-    }
+    } ++
+      (1 to 1).toVector.map { x =>
+        val name = f"conditional-$x%d"
+        ConditionTest(name, ast(name))
+      } ++
+      (2 to 3).toVector.map { x =>
+        val name = f"function-$x%d"
+        ConditionTest(name, ast(name))
+      } ++
+      (1 to 3).toVector.map { x =>
+        val name = f"function-to-loop-$x%d"
+        ConditionTest(name, ast(name))
+      } :+
+      ConditionTest("bank", ast("bank"))
 
   def ast(filename: String): Boolean = {
     val r = new InputStreamReader(

@@ -82,7 +82,7 @@ formula
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean // propositional logic
   | tb=ID ( '.' te=ID /* $te.text=="size" */ )?         #Var     // propositional logic
   | '(' formula ')'                                     #Paren   // propositional logic
-  | '$result'                                           #Result  // program logic
+  | 'result'                                            #Result  // program logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
   | NUM                                                 #Int     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
@@ -160,16 +160,17 @@ justification
     tb='∃' ID existsStep=NUM formula+                   #ExistsIntro
   | tb='∃' t=ID // ID=="e"
     stepOrFact=numOrId subProof=NUM                     #ExistsElim
-  | tb='algebra' steps+=NUM*                            #Algebra
+  | tb='algebra' steps+=numOrId*                        #Algebra
   | tb='auto' stepOrFacts+=numOrId*                     #Auto
   ;
 
 numOrId: t=( NUM | ID );
 
 program
-  : ( tb='import' org=ID '.' sireum=ID '.' 'logika' '.' te='_' NL+
+  : NL*
+    ( tb='import' org=ID '.' sireum=ID '.' 'logika' '.' te='_' NL+
       // org=="org" && sireum="sireum"
-      ( lgk '"""' facts te='"""' )?
+      ( lgk '"""' facts te='"""' NL* )?
       stmts
     )?
   ;
@@ -184,7 +185,7 @@ facts
 
 factOrFun: fact | fun ;
 
-fact: ID '.' qformula ;
+fact: ID '.' formula ;
 
 fun
   : tb='def' ID  NL?
@@ -200,7 +201,7 @@ stmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assert' '(' exp ')'                                #AssertStmt
   | 'if' '(' exp ')' NL* '{' ts=stmts '}'
-    'else' NL* '{' fs=stmts '}'                         #IfStmt
+     ( 'else' NL* '{' fs=stmts '}' )?                   #IfStmt
   | 'while' '(' exp ')' NL* '{'
     ( NL* lgk '"""' loopInvariant '"""' )?
     stmts
@@ -214,13 +215,14 @@ stmt
     '{'
     ( NL* lgk '"""' methodContract NL* '"""' )?
     stmts
-    rtb='return' exp? NL*
+    ( rtb='return' exp NL* )?
     '}'                                                 #MethodDeclStmt
   | lgk '"""'
     ( proof
     | sequent
     | invariants
     ) '"""'                                             #LogikaStmt
+  | exp                                                 #ExpStmt
   ;
 
 exp
@@ -271,7 +273,7 @@ invariants
 
 HLINE: '-' '-' '-'+ ;
 
-NUM: '0' | '-'? [1-9] [0-9]* ;
+NUM: '0' | [1-9] [0-9]* ;
 
 ID: [a-zA-Z] [a-zA-Z0-9_]* ;
 

@@ -160,7 +160,7 @@ final private class Builder(implicit reporter: Reporter) {
           errorIf(ctx.ID, ctx.tb, "e", "existse", "somee", "Ee")
           ExistsElim(num, exp, stepOrFact, subProof)
         case ctx: AlgebraContext =>
-          Algebra(num, exp, Option(ctx.steps).map(_.map(buildNum)).
+          Algebra(num, exp, Option(ctx.steps).map(_.map(build)).
             getOrElse(Node.emptySeq))
         case ctx: AutoContext =>
           Auto(num, exp, Option(ctx.stepOrFacts).map(_.map(build)).
@@ -281,7 +281,7 @@ final private class Builder(implicit reporter: Reporter) {
     if (ctx.fact != null) build(ctx.fact) else build(ctx.fun)
 
   private def build(ctx: FactContext): Fact =
-    Fact(buildId(ctx.ID), build(ctx.qformula)) at ctx
+    Fact(buildId(ctx.ID), build(ctx.formula)) at ctx
 
   private def build(ctx: FunContext): Fun =
     Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`)) at ctx
@@ -303,7 +303,8 @@ final private class Builder(implicit reporter: Reporter) {
           Assign(buildId(ctx.ID), build(ctx.exp))
         case ctx: AssertStmtContext => Assert(build(ctx.exp))
         case ctx: IfStmtContext =>
-          If(build(ctx.exp), build(ctx.ts), build(ctx.fs))
+          If(build(ctx.exp), build(ctx.ts),
+            Option(ctx.fs).map(build).getOrElse(Block(Node.emptySeq)))
         case ctx: WhileStmtContext =>
           While(build(ctx.exp), build(ctx.stmts),
             Option(ctx.loopInvariant).map(build).getOrElse(
@@ -328,6 +329,7 @@ final private class Builder(implicit reporter: Reporter) {
             case (null, sequent, null) => SequentStmt(build(sequent))
             case (null, null, invariants) => InvStmt(build(invariants))
           }
+        case ctx: ExpStmtContext => ExpStmt(build(ctx.exp))
       }
     r at ctx
   }
@@ -453,7 +455,8 @@ final private class Builder(implicit reporter: Reporter) {
     Node.seq[T](scala.collection.JavaConversions.iterableAsScalaIterable(ns))
 
   @inline
-  private implicit def toToken(n: TerminalNode): Token = n.getSymbol
+  private implicit def toToken(n: TerminalNode): Token =
+    if (n == null) null else n.getSymbol
 }
 
 object Builder {
@@ -474,7 +477,7 @@ object Builder {
   import scala.reflect.runtime.universe._
 
   def apply[T <: UnitNode](input: String,
-                           maxErrors: Natural = 0,
+                           maxErrors: Natural = 1,
                            reporter: Reporter = ConsoleReporter)
                           (implicit tag: TypeTag[T]): Option[T] = {
     class ParsingEscape extends RuntimeException
@@ -518,38 +521,42 @@ object Builder {
         reporter.error(line, column, offset, message)
       }
     }
-    val r =
-      tag.tpe match {
-        case `sequentType` =>
-          orientNewlines(tokenStream, isProgram = false)
-          val parseTree = parser.sequentFile()
-          if (success) {
-            val ast = new Builder().build(parseTree)
-            if (success) Some(ast.asInstanceOf[T])
-            else None
-          } else None
-        case `proofType` =>
-          orientNewlines(tokenStream, isProgram = false)
-          val parseTree = parser.proofFile()
-          if (success) {
-            val ast = new Builder().build(parseTree)
-            if (success) Some(ast.asInstanceOf[T])
-            else None
-          } else None
-        case `programType` =>
-          orientNewlines(tokenStream, isProgram = true)
-          val parseTree = parser.programFile()
-          if (success) {
-            val ast = new Builder().build(parseTree)
-            if (success) Some(ast.asInstanceOf[T])
-            else None
-          } else None
+    try {
+      val r =
+        tag.tpe match {
+          case `sequentType` =>
+            orientNewlines(tokenStream, isProgram = false)
+            val parseTree = parser.sequentFile()
+            if (success) {
+              val ast = new Builder().build(parseTree)
+              if (success) Some(ast.asInstanceOf[T])
+              else None
+            } else None
+          case `proofType` =>
+            orientNewlines(tokenStream, isProgram = false)
+            val parseTree = parser.proofFile()
+            if (success) {
+              val ast = new Builder().build(parseTree)
+              if (success) Some(ast.asInstanceOf[T])
+              else None
+            } else None
+          case `programType` =>
+            orientNewlines(tokenStream, isProgram = true)
+            val parseTree = parser.programFile()
+            if (success) {
+              val ast = new Builder().build(parseTree)
+              if (success) Some(ast.asInstanceOf[T])
+              else None
+            } else None
+        }
+      r match {
+        case Some(un) =>
+          Node.checkWellFormed(un)
+          if (success) r else None
+        case None => None
       }
-    r match {
-      case Some(un) =>
-        Node.checkWellFormed(un)
-        if (success) r else None
-      case None => None
+    } catch {
+      case _: ParsingEscape => None
     }
   }
 
