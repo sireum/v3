@@ -90,14 +90,20 @@ object ConsoleReporter extends Reporter {
 object ErrorCountingReporter extends Reporter {
   var errors = 0
 
-  override def error(message: String): Unit =
+  override def error(message: String): Unit = {
+    Console.err.println(message)
+    Console.err.flush()
     errors += 1
+  }
 
   override def error(line: PosInteger,
                      column: PosInteger,
                      offset: Natural,
-                     message: String): Unit =
+                     message: String): Unit = {
+    Console.err.println(s"[$line, $column] $message")
+    Console.err.flush()
     errors += 1
+  }
 
   override def info(message: String): Unit = {}
 

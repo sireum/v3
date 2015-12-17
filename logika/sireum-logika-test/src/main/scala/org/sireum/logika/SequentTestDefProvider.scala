@@ -58,11 +58,11 @@ final class SequentTestDefProvider(tf: TestFramework)
       check(
         """p, q, r  ⊢  r ∧ (q ∧ p)
           |{
-          |  1. p                      premise
-          |  2. q                      premise
-          |  3. r                      premise
-          |  4. q ∧ p                  ∧i 2 1
-          |  5. r ∧ (q ∧ p)            ∧i 3 4
+          |  1. p                        premise
+          |  2. q                        premise
+          |  3. r                        premise
+          |  4. q ∧ p                    ∧i 2 1
+          |  5. r ∧ (q ∧ p)              ∧i 3 4
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
@@ -197,9 +197,9 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 12. (p ∨ q) → r             →i 3
           |}
         """.stripMargin, LogicMode.Propositional))
-    /*,
+    ,
     ConditionTest("negation-1",
-      ast(
+      check(
         """p ∨ q,  ¬p  ⊢  q
           |{
           |  1. p ∨ q                    premise
@@ -217,7 +217,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-2",
-      ast(
+      check(
         """¬p  ⊢  p → q
           |{
           |  1. ¬p                       premise
@@ -231,7 +231,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-3",
-      ast(
+      check(
         """p → ¬q  ⊢  ¬(p ∧ q)
           |{
           |  1. p → ¬q                   premise
@@ -242,12 +242,12 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       6. ¬q                  →e 1 4
           |       7. ⊥                   ¬e 5 6
           |     }
-          |  6. ¬(p ∧ q)                 ¬i 2
+          |  8. ¬(p ∧ q)                 ¬i 2
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-4",
-      ast(
+      check(
         """p, q → ¬p  ⊢  ¬q
           |{
           |  1. p                        premise
@@ -262,7 +262,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-5",
-      ast(
+      check(
         """p  ⊢  ¬¬p
           |{
           |  1. p                        premise
@@ -275,7 +275,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-6",
-      ast(
+      check(
         """¬¬p  ⊢  p
           |{
           |  1. ¬¬p                      premise
@@ -288,7 +288,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-7",
-      ast(
+      check(
         """¬(¬p ∨ ¬q)  ⊢  p ∧ q
           |{
           |  1. ¬(¬p ∨ ¬q)               premise
@@ -297,19 +297,19 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       4. ¬p ∨ ¬q             ∨i1 3
           |       5. ⊥                   ¬e 4 1
           |     }
-          |  5. p                        Pbc 2
-          |  6. {
-          |       7. ¬q                  assume
-          |       8. ¬p ∨ ¬q             ∨i2 7
-          |       9. ⊥                   ¬e 8 1
+          |  6. p                        Pbc 2
+          |  7. {
+          |       8. ¬q                  assume
+          |       9. ¬p ∨ ¬q             ∨i2 8
+          |      10. ⊥                   ¬e 9 1
           |     }
-          | 10. q                        Pbc 6
-          | 11. p ∧ q                    ∧i 5 10
+          | 11. q                        Pbc 7
+          | 12. p ∧ q                    ∧i 6 11
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
     ConditionTest("negation-8",
-      ast(
+      check(
         """⊢  p ∨ ¬p
           |{
           |  1. {
@@ -320,15 +320,15 @@ final class SequentTestDefProvider(tf: TestFramework)
           |            6. ⊥              ¬e 5 2
           |          }
           |       7. ¬p                  ¬i 3
-          |       8. p ∨ ¬p              ∨i2 3
+          |       8. p ∨ ¬p              ∨i2 7
           |       9. ⊥                   ¬e 8 2
           |     }
           | 10. p ∨ ¬p                   Pbc 1
           |}
         """.stripMargin, LogicMode.Propositional))
-    ,
+    /*,
     ConditionTest("predicate-1",
-      ast(
+      check(
         """∀x | human(x) → mortal(x),  human(Socrates)  ⊢
           |  mortal(Socrates)
           |{
@@ -340,7 +340,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-2",
-      ast(
+      check(
         """∀x | gt(inc(x), x)     ∀x | gt(x, dec(x))
           |-----------------------------------------
           |    ∀x | gt(inc(x), x) ∧ gt(x, dec(x))
@@ -358,7 +358,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-3",
-      ast(
+      check(
         """∀x | human(x) → mortal(x),  ∀y | mortal(y) → soul(y)  ⊢
           |  ∀x | human(x) → soul(x)
           |{
@@ -380,7 +380,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-4",
-      ast(
+      check(
         """∀x | healthy(x) → happy(x)  ⊢
           |  (∀y | healthy(y)) → ∀x | happy(x)
           |{
@@ -400,7 +400,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-5",
-      ast(
+      check(
         """human(Socrates),  mortal(Socrates)  ⊢
           |  ∃x | human(x) ∧ mortal(x)
           |{
@@ -412,7 +412,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-6",
-      ast(
+      check(
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y | vowel(y) ∧ ∃x | holds(x, y)
           |{
@@ -425,7 +425,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-7",
-      ast(
+      check(
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y,x | vowel(y) ∧ holds(x, y)
           |{
@@ -437,7 +437,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-8",
-      ast(
+      check(
         """∀x | human(x) → mortal(x),  ∃y | human(y)  ⊢
           |  ∃z | mortal(z)
           |{
@@ -454,7 +454,7 @@ final class SequentTestDefProvider(tf: TestFramework)
         """.stripMargin, LogicMode.Predicate))
     ,
     ConditionTest("predicate-9",
-      ast(
+      check(
         """∃s | covered(s) ∧ (∃c | vowel(c) ∧ holds(s, c)),
           |(∃x | covered(x)) → ¬gameOver  ⊢  ¬gameOver
           |{

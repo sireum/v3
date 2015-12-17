@@ -30,6 +30,8 @@ import org.sireum.logika.util._
 import org.sireum.util._
 
 object Checker {
+  private[logika] final val bottom = BooleanLit(false)
+
   final def check(unitNode: UnitNode)(
     implicit reporter: Reporter): Boolean = unitNode match {
     case s: Sequent =>
@@ -103,14 +105,14 @@ ProofContext(mode: LogicMode,
         if (premises.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the claimed premise in step #$num.")
       case AndIntro(_, and, lStep, rStep) =>
-        (for (lExp <- findRegularStepExp(lStep);
-              rExp <- findRegularStepExp(rStep)) yield {
+        (for (lExp <- findRegularStepExp(lStep, num);
+              rExp <- findRegularStepExp(rStep, num)) yield {
           val expected = And(lExp, rExp)
           if (expected == step.exp) addProvedStep(step)
           else error(and, s"And-intro in step #$num with #${lStep.value} on the left and #${rStep.value} on the right does not produce the expressed form.")
         }).flatten
       case AndElim1(_, exp, andStep) =>
-        findRegularStepExp(andStep) match {
+        findRegularStepExp(andStep, num) match {
           case Some(And(expected, _)) =>
             if (expected == exp) addProvedStep(step)
             else error(exp, s"The conjunction's left sub-expression in step #${andStep.value} does not match #$num for And-elim1.")
@@ -118,7 +120,7 @@ ProofContext(mode: LogicMode,
           case _ => None
         }
       case AndElim2(_, exp, andStep) =>
-        findRegularStepExp(andStep) match {
+        findRegularStepExp(andStep, num) match {
           case Some(And(_, expected)) =>
             if (expected == exp) addProvedStep(step)
             else error(exp, s"The conjunction's right sub-expression in step #${andStep.value} does not match #$num for And-elim2.")
@@ -126,25 +128,25 @@ ProofContext(mode: LogicMode,
           case _ => None
         }
       case OrIntro1(_, or@Or(lExp, _), step2) =>
-        findRegularStepExp(step2) match {
+        findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == lExp) addProvedStep(step)
             else error(lExp, s"The disjunction's left sub-expression in step #$num does not match #${step2.value} for Or-intro1.")
           case _ => None
         }
       case OrIntro2(_, or@Or(_, rExp), step2) =>
-        findRegularStepExp(step2) match {
+        findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == rExp) addProvedStep(step)
             else error(rExp, s"The disjunction's right sub-expression in step #$num does not match #${step2.value} for Or-intro2.")
           case _ => None
         }
       case OrElim(_, exp, orStep, lSubProof, rSubProof) =>
-        findRegularStepExp(orStep) match {
+        findRegularStepExp(orStep, num) match {
           case Some(Or(lExp, rExp)) =>
             val r =
-              for (lsp <- findSubProof(lSubProof);
-                   rsp <- findSubProof(rSubProof)) yield {
+              for (lsp <- findSubProof(lSubProof, num);
+                   rsp <- findSubProof(rSubProof, num)) yield {
                 var hasError = false
                 (lsp.first, rsp.first, lsp.last, rsp.last) match {
                   case (lfs: PlainAssumeStep, rfs: PlainAssumeStep,
@@ -187,7 +189,7 @@ ProofContext(mode: LogicMode,
             error(orStep, s"Or-elim requires a disjunction in step # ${orStep.value}.")
         }
       case ImpliesIntro(_, Implies(antecedent, conclusion), subProof) =>
-        findSubProof(subProof) match {
+        findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = false
             (sp.first, sp.last) match {
@@ -201,11 +203,11 @@ ProofContext(mode: LogicMode,
                   hasError = true
                 }
               case (fs, ls) =>
-                if (fs.isInstanceOf[PlainAssumeStep]) {
+                if (!fs.isInstanceOf[PlainAssumeStep]) {
                   error(sp, s"Wrong form for Implies-intro assumption.")
                   hasError = true
                 }
-                if (ls.isInstanceOf[RegularStep]) {
+                if (!ls.isInstanceOf[RegularStep]) {
                   error(sp, s"Wrong form for Implies-intro conclusion.")
                   hasError = true
                 }
@@ -214,8 +216,8 @@ ProofContext(mode: LogicMode,
           case _ => None
         }
       case ImpliesElim(_, exp, impliesStep, antecedentStep) =>
-        (findRegularStepExp(impliesStep),
-          findRegularStepExp(antecedentStep)) match {
+        (findRegularStepExp(impliesStep, num),
+          findRegularStepExp(antecedentStep, num)) match {
           case (Some(Implies(a, c)), Some(antecedent)) =>
             var hasError = false
             if (a != antecedent) {
@@ -230,6 +232,86 @@ ProofContext(mode: LogicMode,
           case (Some(_), _) =>
             error(impliesStep, s"Implies-elim requires an implication.")
             None
+          case _ => None
+        }
+      case NegIntro(_, exp, subProof) =>
+        findSubProof(subProof, num) match {
+          case Some(sp) =>
+            var hasError = false
+            (sp.first, sp.last) match {
+              case (fs: PlainAssumeStep, ls: RegularStep) =>
+                if (fs.exp != exp.exp) {
+                  error(exp.exp, s"The assumption in step #${subProof.value} does not match the non-negated expression of #$num for Negation-intro.")
+                  hasError = true
+                }
+                if (ls.exp != Checker.bottom) {
+                  error(ls.exp, s"The conclusion in step #${subProof.value} is expected to be a falsicum (⊥) for Negation-intro of #$num.")
+                  hasError = true
+                }
+              case (fs, ls) =>
+                if (!fs.isInstanceOf[PlainAssumeStep]) {
+                  error(sp, s"Wrong form for Negation-intro assumption.")
+                }
+                if (!ls.isInstanceOf[RegularStep]) {
+                  error(sp, s"Wrong form for Negation-intro conclusion.")
+                }
+                hasError = true
+            }
+            if (hasError) None else addProvedStep(step)
+          case _ => None
+        }
+      case NegElim(_, exp, step2, negStep) =>
+        (findRegularStepExp(step2, num), findRegularStepExp(negStep, num)) match {
+          case (Some(e1), Some(e2: Not)) =>
+            var hasError = false
+            if (e1 != e2.exp) {
+              error(step, s"The negated expression of step #${step2.value} does not match #${negStep.value} for Negation-elim in #$num.")
+              hasError = true
+            }
+            if (exp != Checker.bottom) {
+              error(exp, s"The expression of step #$num is expected to be a falsicum (⊥) for Negation-elim.")
+              hasError = true
+            }
+            if (hasError) None else addProvedStep(step)
+          case (_, Some(e2)) =>
+            error(negStep, s"The second expression argument of step #${negStep.value} for Negation-elim in step #$num has to be negation.")
+            None
+          case _ => None
+        }
+      case BottomElim(_, exp, falseStep) =>
+        findRegularStepExp(falseStep, num) match {
+          case Some(e) =>
+            if (e != Checker.bottom) {
+              error(e, s"The expression of step #${falseStep.value} is expected to be a falsicum (⊥) for Bottom-elim of #$num.")
+              None
+            } else addProvedStep(step)
+          case _ => None
+        }
+      case Pbc(_, exp, subProof) =>
+        findSubProof(subProof, num) match {
+          case Some(sp: SubProof) =>
+            var hasError = false
+            (sp.first, sp.last) match {
+              case (fs: PlainAssumeStep, ls: RegularStep) =>
+                if (fs.exp != Not(exp)) {
+                  error(exp, s"The negated expression in step #$num does not match the assumption in #${subProof.value} for Pbc.")
+                  hasError = true
+                }
+                if (ls.exp != Checker.bottom) {
+                  error(ls.exp, s"The conclusion of step #${subProof.value} is expected to be a falsicum (⊥) for Pbc of #$num.")
+                  hasError = true
+                }
+              case (fs, ls) =>
+                if (!fs.isInstanceOf[PlainAssumeStep]) {
+                  error(sp, s"Wrong form for Pbc assumption.")
+                  hasError = true
+                }
+                if (ls.isInstanceOf[RegularStep]) {
+                  error(sp, s"Wrong form for Pbc conclusion.")
+                  hasError = true
+                }
+            }
+            if (hasError) None else addProvedStep(step)
           case _ => None
         }
     }
@@ -260,7 +342,7 @@ ProofContext(mode: LogicMode,
     (li.lineBegin, li.columnBegin, li.offset)
   }
 
-  def findSubProof(num: Num): Option[SubProof] = {
+  def findSubProof(num: Num, stepNum: Int): Option[SubProof] = {
     provedSteps.get(num.value) match {
       case Some(r: SubProof) => Some(r)
       case Some(_) =>
@@ -269,17 +351,17 @@ ProofContext(mode: LogicMode,
         None
       case _ =>
         val (l, c, o) = lineColumnOffset(num)
-        reporter.error(l, c, o, s"Could not find the referenced sub-proof #${num.value}.")
+        reporter.error(l, c, o, s"Could not find the referenced sub-proof #${num.value} in #$stepNum.")
         None
     }
   }
 
-  def findRegularStepExp(num: Num): Option[Exp] =
+  def findRegularStepExp(num: Num, stepNum: Int): Option[Exp] =
     provedSteps.get(num.value) match {
       case Some(r: RegularStep) => Some(r.exp)
       case _ =>
         val (l, c, o) = lineColumnOffset(num)
-        reporter.error(l, c, o, s"Could not find the referenced step #${num.value}.")
+        reporter.error(l, c, o, s"Could not find the referenced step #${num.value} in #$stepNum.")
         None
     }
 
