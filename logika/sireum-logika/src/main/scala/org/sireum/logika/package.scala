@@ -23,17 +23,44 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika._
+package object logika {
+  type B = Boolean
+  type Z = BigInt
+  type ZS = Seq[Z]
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[ProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+  final val T = true
+  final val F = false
+
+  final implicit class Logika(val sc: StringContext) extends AnyVal {
+    def logika(args: Any*): Unit = {}
+
+    def l(args: Any*): Unit = logika(args: _*)
+  }
+
+  final implicit class ZLiteral(val sc: StringContext) extends AnyVal {
+    def Z(args: Any*): Z = {
+      assert(args.isEmpty)
+      val strings = sc.parts.iterator
+      val buf = new StringBuilder(strings.next)
+      while (strings.hasNext) {
+        buf.append(strings.next)
+      }
+      val text = buf.toString
+      BigInt(text)
+    }
+  }
+
+  final implicit class ZHelper(val n: Z) extends AnyVal {
+    def ==(other: Int): Boolean = n == BigInt(other)
+  }
+
+  final def ZS(zs: Z*): ZS = Seq(zs: _*)
+
+  final def readInt(msg: String = "Enter an integer: "): Z = {
+    Console.out.print(msg)
+    Console.out.flush()
+    BigInt(Console.in.readLine())
+  }
+}

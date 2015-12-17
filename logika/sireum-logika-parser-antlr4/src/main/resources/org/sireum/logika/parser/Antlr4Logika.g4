@@ -205,14 +205,9 @@ stmt
     ( NL* lgk '"""' loopInvariant '"""' )?
     stmts
     '}'                                                 #WhileStmt
-  | ID '=' NL? 'readInt' '(' STRING? ')'                #ReadIntStmt
   | op=( 'print' | 'println' )
     '(' s=ID STRING ')'                                 #PrintStmt
-  | ( id=ID '=' NL?)? m=ID '(' ( exp ( ','exp )* )? ')' #MethodInvocationStmt
-  | tb=ID '=' NL? s=ID '.' te=ID /* te=="clone" */      #SeqCloneStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
-  | id=ID '=' NL? exp op='+:' NL? seq=ID                #SeqPendStmt
-  | id=ID '=' NL?  seq=ID op=':+' NL? exp               #SeqPendStmt
   | 'def' ID  NL?
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
@@ -233,15 +228,17 @@ exp
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
   | tb=ID
-    ( '(' exp ')'
-    | '.' te=ID // te=="size"
+    ( '(' ( exp ( ',' exp )* )? ')'
+    | '.' te=ID // te=="size" or te =="clone"
     )?                                                  #IdExp
   | ( 'BigInt' | 'Z' ) '(' STRING ')'                   #BigIntExp
-  | ( 'Seq' | 'Zs' ) '(' ( exp ( ',' exp )* )? ')'      #SeqExp
+  | ( 'Seq' | 'ZS' ) '(' ( exp ( ',' exp )* )? ')'      #SeqExp
+  | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
   | op=( '-' | '!' ) exp                                #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
-  | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
+  | l=exp op=( '+' | '-' | '+:' )  NL? r=exp            #BinaryExp
+  | l=exp op='+:' NL? r=exp                             #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
   | l=exp op='&&' NL? r=exp                             #BinaryExp
@@ -276,7 +273,7 @@ HLINE: '-' '-' '-'+ ;
 
 NUM: '0' | '-'? [1-9] [0-9]* ;
 
-ID: [a-zA-Z] [a-zA-Z0-9]* ;
+ID: [a-zA-Z] [a-zA-Z0-9_]* ;
 
 STRING: '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' ; // all printable chars and no escape chars
 

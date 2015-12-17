@@ -257,6 +257,8 @@ final case class Id(value: String) extends Exp with NumOrId
 
 final case class Size(id: Id) extends Exp
 
+final case class Clone(id: Id) extends Exp
+
 final case class Paren(exp: Exp) extends Exp {
   override def hashCode(): Int = exp.hashCode()
 
@@ -267,6 +269,9 @@ final case class Result() extends Exp
 
 final case class Apply(id: Id,
                        args: Node.Seq[Exp]) extends Exp
+
+final case class ReadInt(msgOpt: Option[StringLit])
+  extends Exp
 
 final case class IntLit(value: BigInt) extends Exp
 
@@ -320,6 +325,14 @@ final case class Eq(left: Exp, right: Exp) extends Exp {
 
 final case class Ne(left: Exp, right: Exp) extends Exp {
   val op = "!="
+}
+
+final case class Append(left: Exp, right: Exp) extends Exp {
+  val op = "+:"
+}
+
+final case class Prepend(left: Exp, right: Exp) extends Exp {
+  val op = ":+"
 }
 
 final case class And(left: Exp, right: Exp) extends Exp {
@@ -399,10 +412,6 @@ final case class While(exp: Exp,
 final case class LoopInv(invariant: Inv,
                          modifies: Modifies) extends Node
 
-final case class ReadInt(id: Id,
-                         msgOpt: Option[StringLit])
-  extends Stmt
-
 final case class Print(isNewline: Boolean,
                        msg: StringLit) extends Stmt
 
@@ -413,16 +422,9 @@ final case class MethodInvoke(idOpt: Option[Id],
                               args: Node.Seq[Exp])
   extends Stmt
 
-final case class SeqClone(lhs: Id,
-                          rhs: Id) extends Stmt
-
 final case class SeqAssign(id: Id,
                            index: Exp,
                            exp: Exp) extends Stmt
-
-final case class SeqPend(isPrepend: Boolean,
-                         id: Id,
-                         exp: Exp) extends Stmt
 
 final case class MethodDecl(id: Id,
                             params: Node.Seq[Param],

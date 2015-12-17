@@ -36,7 +36,7 @@ import org.sireum.logika.util._
 import org.sireum.util._
 import org.sireum.util.jvm.Antlr4Util._
 
-final private class Builder(reporter: Reporter) {
+final private class Builder(implicit reporter: Reporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
 
@@ -308,22 +308,11 @@ final private class Builder(reporter: Reporter) {
           While(build(ctx.exp), build(ctx.stmts),
             Option(ctx.loopInvariant).map(build).getOrElse(
               LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq))))
-        case ctx: ReadIntStmtContext =>
-          ReadInt(buildId(ctx.ID), Option(ctx.STRING).
-            map(x => StringLit(x.getText)))
         case ctx: PrintStmtContext =>
           errorIf(ctx.s, "s")
           Print(ctx.op.getText == "println", StringLit(ctx.STRING.getText))
-        case ctx: MethodInvocationStmtContext =>
-          MethodInvoke(Option(ctx.id).map(buildId), buildId(ctx.m),
-            Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
-        case ctx: SeqCloneStmtContext =>
-          errorIf(ctx.te, "clone")
-          SeqClone(buildId(ctx.tb), buildId(ctx.s))
         case ctx: SeqAssignStmtContext =>
           SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r))
-        case ctx: SeqPendStmtContext =>
-          SeqPend(ctx.op.getText == "+:", buildId(ctx.id), build(ctx.exp))
         case ctx: MethodDeclStmtContext =>
           MethodDecl(buildId(ctx.ID),
             Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
@@ -354,14 +343,23 @@ final private class Builder(reporter: Reporter) {
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
         if (ctx.exp != null) {
-          Apply(r, Node.seq(build(ctx.exp)))
-        } else if (ctx.te.getText != null) {
-          errorIf(ctx.te, "size")
-          Size(r)
-        } else r
+          Apply(r,
+            Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        } else ctx.te match {
+          case te if te.getText == "size" => Size(r)
+          case te if te.getText == "clone" => Clone(r)
+          case null => r
+          case te =>
+            reporter.error(ctx.te.getLine, ctx.te.getCharPositionInLine,
+              ctx.te.getStartIndex,
+              s"Expecting size or clone instead of ${te.getText}")
+            r
+        }
       case ctx: BigIntExpContext => IntLit(BigInt(ctx.STRING.getText))
       case ctx: SeqExpContext =>
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+      case ctx: ReadIntExpContext =>
+        ReadInt(Option(ctx.STRING).map(x => StringLit(x.getText)))
       case ctx: ParenExpContext => Paren(build(ctx.exp))
       case ctx: UnaryExpContext =>
         val apply =
@@ -386,6 +384,8 @@ final private class Builder(reporter: Reporter) {
             case "!=" => Ne
             case "&&" => And
             case "||" => Or
+            case ":+" => Append
+            case "+:" => Prepend
           }
         apply(build(ctx.l), build(ctx.r))
     }
@@ -505,13 +505,26 @@ object Builder {
         }
       }
     })
+    implicit val rptr = new Reporter {
+      override def error(message: String): Unit = {
+        success = false
+        reporter.error(message)
+      }
+
+      override def error(line: PosInteger, column: PosInteger,
+                         offset: Natural,
+                         message: String): Unit = {
+        success = false
+        reporter.error(line, column, offset, message)
+      }
+    }
     val r =
       tag.tpe match {
         case `sequentType` =>
           orientNewlines(tokenStream, isProgram = false)
           val parseTree = parser.sequentFile()
           if (success) {
-            val ast = new Builder(reporter).build(parseTree)
+            val ast = new Builder().build(parseTree)
             if (success) Some(ast.asInstanceOf[T])
             else None
           } else None
@@ -519,7 +532,7 @@ object Builder {
           orientNewlines(tokenStream, isProgram = false)
           val parseTree = parser.proofFile()
           if (success) {
-            val ast = new Builder(reporter).build(parseTree)
+            val ast = new Builder().build(parseTree)
             if (success) Some(ast.asInstanceOf[T])
             else None
           } else None
@@ -527,14 +540,14 @@ object Builder {
           orientNewlines(tokenStream, isProgram = true)
           val parseTree = parser.programFile()
           if (success) {
-            val ast = new Builder(reporter).build(parseTree)
+            val ast = new Builder().build(parseTree)
             if (success) Some(ast.asInstanceOf[T])
             else None
           } else None
       }
     r match {
       case Some(un) =>
-        Node.checkWellFormed(un)(reporter)
+        Node.checkWellFormed(un)
         if (success) r else None
       case None => None
     }

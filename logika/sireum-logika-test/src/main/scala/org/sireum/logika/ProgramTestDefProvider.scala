@@ -23,17 +23,30 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.logika
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika._
+import java.io.InputStreamReader
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[ProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+import org.sireum.logika.ast._
+import org.sireum.test._
+import org.sireum.util._
+import org.sireum.util.jvm.FileUtil
+
+final class ProgramTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
+
+  override def testDefs: ISeq[TestDef] =
+    (1 to 14).toVector.map { x =>
+      val name = f"assignment-$x%02d"
+      ConditionTest(name, ast(name))
+    }
+
+  def ast(filename: String): Boolean = {
+    val r = new InputStreamReader(
+      getClass.getResourceAsStream(filename + ".scala"))
+    val text = FileUtil.readFile(r)
+    r.close()
+    val programOpt = Builder[Program](text)
+    programOpt.isDefined
+  }
+}
