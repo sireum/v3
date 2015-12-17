@@ -2,7 +2,7 @@ import org.sireum.logika._
 
 val x: Z = readInt("Enter x: ")
 
-val y: Z = readInt("Enter y (> x): ")
+val y: Z = readInt("Enter y (< x): ")
 
 assert(x > y)
 l"""{ 1.  x > y      premise     }"""
