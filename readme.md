@@ -179,9 +179,11 @@ The proof checker will make use a high-performing SMT solver such as
 
 Some examples are available at the following links:
 
-* [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala) (status: **all verified**)
+* [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala)
+  (status: **all verified**)
 
-* [Programming Logic](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika) (status: parsed and ast built, all examples runnable by the Scala interpreter)
+* [Programming Logic](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
+  (status: parsed and ast built; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 The propositional and predicate logic proof checker can be run via the command line.
 Here is an example:
