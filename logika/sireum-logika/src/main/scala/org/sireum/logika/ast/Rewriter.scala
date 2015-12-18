@@ -111,8 +111,8 @@ object Rewriter {
       org.sireum.logika.ast.Eq(left, right)
     }),
     ("Exists", { es =>
-      val Seq(ids: IVector[_], typeOpt: Option[_], exp: Exp) = es
-      org.sireum.logika.ast.Exists(cast(ids), cast(typeOpt), exp)
+      val Seq(ids: IVector[_], domainOpt: Option[_], exp: Exp) = es
+      org.sireum.logika.ast.Exists(cast(ids), cast(domainOpt), exp)
     }),
     ("ExistsAssumeStep", { es =>
       val Seq(num: Num, id: Id, exp: Exp) = es
@@ -139,8 +139,8 @@ object Rewriter {
       org.sireum.logika.ast.Facts(cast(factOrFunDecls))
     }),
     ("ForAll", { es =>
-      val Seq(ids: IVector[_], typeOpt: Option[_], exp: Exp) = es
-      org.sireum.logika.ast.ForAll(cast(ids), cast(typeOpt), exp)
+      val Seq(ids: IVector[_], domainOpt: Option[_], exp: Exp) = es
+      org.sireum.logika.ast.ForAll(cast(ids), cast(domainOpt), exp)
     }),
     ("ForAllElim", { es =>
       val Seq(num: Num, exp: Exp, stepOrFact: NumOrId, args: IVector[_]) = es
@@ -187,7 +187,7 @@ object Rewriter {
       org.sireum.logika.ast.ImpliesIntro(num, exp, subProof)
     }),
     ("IntLit", { es =>
-      val Seq(value: BigInt) = es
+      val Seq(value: String) = es
       org.sireum.logika.ast.IntLit(value)
     }),
     ("IntSeqType", { es =>
@@ -318,6 +318,10 @@ object Rewriter {
       val Seq(proof: Proof) = es
       org.sireum.logika.ast.ProofStmt(proof)
     }),
+    ("RangeDomain", { es =>
+      val Seq(lo: Exp, hi: Exp) = es
+      org.sireum.logika.ast.RangeDomain(lo, hi)
+    }),
     ("ReadInt", { es =>
       val Seq(msgOpt: Option[_]) = es
       org.sireum.logika.ast.ReadInt(cast(msgOpt))
@@ -365,6 +369,10 @@ object Rewriter {
     ("SubProof", { es =>
       val Seq(num: Num, assumeStep: AssumeStep, steps: IVector[_]) = es
       org.sireum.logika.ast.SubProof(num, assumeStep, cast(steps))
+    }),
+    ("TypeDomain", { es =>
+      val Seq(tpe: Type) = es
+      org.sireum.logika.ast.TypeDomain(tpe)
     }),
     ("VarDecl", { es =>
       val Seq(isVar: java.lang.Boolean, id: Id, tipe: Type) = es

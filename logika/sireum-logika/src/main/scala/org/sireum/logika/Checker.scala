@@ -434,9 +434,9 @@ ProofContext(mode: LogicMode,
     else if (r.size < q.ids.size) {
       q match {
         case q: ForAll =>
-          Some((r, ForAll(q.ids.slice(r.size, q.ids.size), q.typeOpt, q.exp)))
+          Some((r, ForAll(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
         case q: Exists =>
-          Some((r, Exists(q.ids.slice(r.size, q.ids.size), q.typeOpt, q.exp)))
+          Some((r, Exists(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
       }
     } else if (r.size < args.size) {
       q.exp match {

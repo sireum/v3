@@ -60,13 +60,13 @@ object Node {
     val isPredicate = unitNode.mode == LogicMode.Predicate
     Visitor.build({
       case n: Quant =>
-        if (isPredicate) n.typeOpt match {
+        if (isPredicate) n.domainOpt match {
           case Some(_) =>
             val li = nodeLocMap(n.ids.last)
             reporter.error(li.lineBegin, li.columnBegin, li.offset,
               s"Predicate logic mode disallows explicit type specification in quantifications.")
           case _ =>
-        } else if (reqType && n.typeOpt.isEmpty) {
+        } else if (reqType && n.domainOpt.isEmpty) {
           val li = nodeLocMap(n.ids.last)
           reporter.error(li.lineBegin, li.columnBegin, li.offset,
             s"Program logic mode requires explicit type specification in quantifications.")
@@ -290,7 +290,7 @@ final case class Apply(id: Id,
 final case class ReadInt(msgOpt: Option[StringLit])
   extends Exp
 
-final case class IntLit(value: BigInt) extends Exp
+final case class IntLit(value: String) extends Exp
 
 sealed trait BinaryExp {
   def left: Exp
@@ -383,22 +383,32 @@ sealed trait Quant extends Exp {
 
   def ids: Node.Seq[Id]
 
-  def typeOpt: Option[Type]
+  def domainOpt: Option[QuantDomain]
 
   def exp: Exp
 }
 
-final case class ForAll(ids: Node.Seq[Id], typeOpt: Option[Type], exp: Exp)
+final case class ForAll(ids: Node.Seq[Id],
+                        domainOpt: Option[QuantDomain],
+                        exp: Exp)
   extends Quant {
   val op = "all"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
 }
 
-final case class Exists(ids: Node.Seq[Id], typeOpt: Option[Type], exp: Exp)
+final case class Exists(ids: Node.Seq[Id],
+                        domainOpt: Option[QuantDomain],
+                        exp: Exp)
   extends Quant {
   val op = "some"
 }
+
+sealed trait QuantDomain extends Node
+
+final case class TypeDomain(tpe: Type) extends QuantDomain
+
+final case class RangeDomain(lo: Exp, hi: Exp) extends QuantDomain
 
 final case class SeqLit(args: Node.Seq[Exp]) extends Exp
 

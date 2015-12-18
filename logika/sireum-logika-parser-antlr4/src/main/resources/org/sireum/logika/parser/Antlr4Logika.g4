@@ -83,11 +83,11 @@ formula
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean // propositional logic
   | tb=ID ( '.' te=ID /* $te.text=="size" */ )?         #Var     // propositional logic
   | '(' formula ')'                                     #Paren   // propositional logic
-  | 'result'                                            #Result  // program logic
+  | 'result'                                            #Result  // programming logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
   | NUM                                                 #Int     // algebra
-  | ( 'BigInt' | 'Z' ) '(' STRING ')'                   #BigInt  // algebra
-  | ( 'Seq' | 'ZS' ) '(' ( exp ( ',' exp )* )? ')'      #Seq     // algebra
+  | 'Z' '(' STRING ')'                                  #BigInt  // algebra
+  | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
   | l=formula
@@ -110,14 +110,16 @@ formula
 qformula
   : q=( 'forall' | 'all' | 'A' | '∀'
       | 'exists' | 'some' | 'E' | '∃' )
-    vars+=ID ( ',' vars+=ID )* ( ':' type )? '|' NL?
+    vars+=ID ( ',' vars+=ID )*
+    ( ':' type
+    | ':' lo=exp '..' hi=exp
+    )? '|' NL?
     formula
   ;
 
 type
-  : t=( 'Boolean' | 'B' )                               #BooleanType
-  | t=( 'BigInt' | 'Z' )                                #IntType
-  | tb='Seq' '[' NL* ( 'BigInt' | 'Z' ) NL* te=']'      #IntSeqType
+  : t='B'                                               #BooleanType
+  | t='Z'                                               #IntType
   | t='ZS'                                              #IntSeqType
   ;
 
@@ -237,8 +239,8 @@ exp
     ( '(' ( exp ( ',' exp )* )? ')'
     | '.' te=ID // te=="size" or te =="clone"
     )?                                                  #IdExp
-  | ( 'BigInt' | 'Z' ) '(' STRING ')'                   #BigIntExp
-  | ( 'Seq' | 'ZS' ) '(' ( exp ( ',' exp )* )? ')'      #SeqExp
+  | 'Z' '(' STRING ')'                                  #BigIntExp
+  | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #SeqExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
   | op=( '-' | '!' ) exp                                #UnaryExp

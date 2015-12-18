@@ -5,7 +5,7 @@ l"""{ fact
         base. all a: ZS | sum(a, 0) == 0
         rec.  all a: ZS |
                 all n: Z |
-                  sum(a, n + 1) == sum(n) + a(n)         }"""
+                  sum(a, n + 1) == sum(a, n) + a(n)      }"""
 def add(a: ZS): Z = {
   l"""{ post   result == sum(a, a.size)                  }"""
 
