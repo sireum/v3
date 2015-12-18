@@ -254,9 +254,9 @@ Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 version
 Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
-* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.1-custom-jdk-bundled.dmg
+* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.2-custom-jdk-bundled.dmg
 
-* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.1-custom-jdk-bundled.dmg
+* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.2-custom-jdk-bundled.dmg
 
 (The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
 inserted before the file extension.)
