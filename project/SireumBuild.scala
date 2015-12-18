@@ -92,7 +92,7 @@ object SireumBuild extends Build {
 
   lazy val subProjects = Seq(
     util, option, pilar,
-    awas
+    awas, logika
   )
 
   lazy val subProjectsJvm = Seq(
@@ -100,9 +100,11 @@ object SireumBuild extends Build {
     cli, pilarParserAntlr4, utilReflect,
     java, javaTranslator,
     awasParserAntlr4,
+    logikaParserAntlr4,
     coreTest,
     javaTest,
-    awasTest
+    awasTest,
+    logikaTest
   )
 
   lazy val subProjectsJs = Seq(
@@ -255,8 +257,8 @@ object SireumBuild extends Build {
       settings = settings,
       base = pi.baseDir).
       dependsOn(pi.dependencies.map { p =>
-      new ClasspathDependency(new LocalProject(p.id), None)
-    }: _*).
+        new ClasspathDependency(new LocalProject(p.id), None)
+      }: _*).
       settings(name := pi.name).disablePlugins(AssemblyPlugin)
 
   def toSbtJsProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project = {
@@ -274,6 +276,6 @@ object SireumBuild extends Build {
       ),
       base = pi.baseDir).dependsOn(jsPIs.map(p =>
       new ClasspathDependency(new LocalProject(p.id), None)): _*
-      ).enablePlugins(ScalaJSPlugin).disablePlugins(AssemblyPlugin)
+    ).enablePlugins(ScalaJSPlugin).disablePlugins(AssemblyPlugin)
   }
 }

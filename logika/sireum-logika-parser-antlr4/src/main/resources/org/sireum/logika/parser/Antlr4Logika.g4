@@ -72,7 +72,8 @@ proofStep
   | sub=NUM '.' NL* '{' NL*
     assume=NUM '.'
     ( ID
-    | ID? formula ate='assume' )
+    | formula ate='assume'
+    | ID formula ate='assume' )
     ( NL+ proofStep? )*
     '}'                                                 #SubProof
   ;

@@ -326,7 +326,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 10. p ∨ ¬p                   Pbc 1
           |}
         """.stripMargin, LogicMode.Propositional))
-    /*,
+    ,
     ConditionTest("predicate-1",
       check(
         """∀x | human(x) → mortal(x),  human(Socrates)  ⊢
@@ -348,7 +348,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |  1. ∀x | gt(inc(x), x)                    premise
           |  2. ∀x | gt(x, dec(x))                    premise
           |  3. {
-          |       4. a                                assume
+          |       4. a
           |       5. gt(inc(a), a)                    ∀e 1 a
           |       6. gt(a, dec(a))                    ∀e 2 a
           |       7. gt(inc(a), a) ∧ gt(a, dec(a))    ∧i 5 6
@@ -398,7 +398,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 10. (∀y | healthy(y)) → ∀x | happy(x)     →i 2
           |}
         """.stripMargin, LogicMode.Predicate))
-    ,
+    /*,
     ConditionTest("predicate-5",
       check(
         """human(Socrates),  mortal(Socrates)  ⊢

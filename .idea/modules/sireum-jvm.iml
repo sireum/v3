@@ -52,5 +52,8 @@
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.16:jar" level="project" />
     <orderEntry type="module" module-name="sireum-java-test" exported="" />
     <orderEntry type="module" module-name="sireum-util-jvm" exported="" />
+    <orderEntry type="module" module-name="sireum-logika" exported="" />
+    <orderEntry type="module" module-name="sireum-logika-parser-antlr4" exported="" />
+    <orderEntry type="module" module-name="sireum-logika-test" exported="" />
   </component>
 </module>

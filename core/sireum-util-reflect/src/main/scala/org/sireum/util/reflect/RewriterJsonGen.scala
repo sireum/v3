@@ -41,6 +41,7 @@ object RewriterJsonGen {
   final val tuple2Type = typeOf[(_, _)].erasure
   final val tuple3Type = typeOf[(_, _, _)].erasure
   final val productType = typeOf[Product]
+  final val bigIntType = typeOf[BigInt]
   final val anyValBoxMap = Map(
     "Boolean" -> "java.lang.Boolean",
     "Byte" -> "java.lang.Byte",
@@ -260,6 +261,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
         (s"$n: ${anyValBoxMap(name(t))}", false)
       case _ if t =:= byteArrayType =>
         (s"$n: Array[Byte]", false)
+      case _ if t =:= bigIntType =>
+        (s"$n: BigInt", false)
       case _ if t =:= stringType =>
         (s"$n: String", false)
       case _ if t.dealias.erasure =:= optionType =>
@@ -282,6 +285,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
         ("fromAnyVal", ivectorEmpty)
       case _ if t =:= byteArrayType =>
         ("fromByteArray", ivectorEmpty)
+      case _ if t =:= bigIntType =>
+        ("fromBigInt", ivectorEmpty)
       case _ if t =:= stringType =>
         ("fromStr", ivectorEmpty)
       case _ if t.dealias.erasure =:= optionType =>
@@ -314,6 +319,8 @@ final class RewriterJsonGen(licenseOpt: Option[String],
         ("to" + name(t), ivectorEmpty)
       case _ if t =:= byteArrayType =>
         ("toByteArray", ivectorEmpty)
+      case _ if t =:= bigIntType =>
+        ("toBigInt", ivectorEmpty)
       case _ if t =:= stringType =>
         if (shouldInternString)
           ("toStrIntern", ivectorEmpty)
