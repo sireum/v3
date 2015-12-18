@@ -218,7 +218,7 @@ the one that is expected as follows:
 ```bash
 sireum logika -s "¬(¬p ∨ ¬q) ⊢ p ∧ q" test.txt
 ```
-If the provided sequent is different than, the tool rejects it. For example:
+If the provided sequent is different than the one in the file, the tool rejects it. For example:
 ```bash
 sireum logika -s "p, q ⊢ p ∧ q" test.txt
 ```
