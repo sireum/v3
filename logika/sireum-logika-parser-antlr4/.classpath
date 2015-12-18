@@ -1,6 +1,10 @@
 <classpath>
   <classpathentry output="bin" kind="src" path="src/main/scala"/>
+  <classpathentry output="bin" kind="src" path="src/main/java"/>
+  <classpathentry output="bin" kind="src" path="src/main/resources"/>
   <classpathentry kind="src" path="/sireum-util" exported="true" combineaccessrules="false"/>
+  <classpathentry kind="src" path="/sireum-logika" exported="true" combineaccessrules="false"/>
+  <classpathentry kind="src" path="/sireum-util-jvm" exported="true" combineaccessrules="false"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-compiler/scala-compiler-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-compiler/scala-compiler-2.11.7.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.7.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-reflect/scala-reflect-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.11.7.jar"/>

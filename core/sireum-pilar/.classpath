@@ -1,23 +1,10 @@
 <classpath>
   <classpathentry output="bin" kind="src" path="src/main/scala"/>
   <classpathentry kind="src" path="/sireum-util" exported="true" combineaccessrules="false"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-compiler/scala-compiler-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-compiler/scala-compiler-2.11.7.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-library/scala-library-2.11.7.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang/scala-reflect/scala-reflect-2.11.7-sources.jar" kind="lib" path="../../lib_managed/jars/org.scala-lang/scala-reflect/scala-reflect-2.11.7.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang.modules/scala-xml_2.11/scala-xml_2.11-1.0.4-sources.jar" kind="lib" path="../../lib_managed/bundles/org.scala-lang.modules/scala-xml_2.11/scala-xml_2.11-1.0.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4-sources.jar" kind="lib" path="../../lib_managed/bundles/org.scala-lang.modules/scala-parser-combinators_2.11/scala-parser-combinators_2.11-1.0.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.scala-lang.modules/scala-java8-compat_2.11/scala-java8-compat_2.11-0.7.0-sources.jar" kind="lib" path="../../lib_managed/bundles/org.scala-lang.modules/scala-java8-compat_2.11/scala-java8-compat_2.11-0.7.0.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/upickle_2.11/upickle_2.11-0.3.6-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/upickle_2.11/upickle_2.11-0.3.6.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/com.lihaoyi/derive_2.11/derive_2.11-0.3.6-sources.jar" kind="lib" path="../../lib_managed/jars/com.lihaoyi/derive_2.11/derive_2.11-0.3.6.jar"/>
   <classpathentry sourcepath="../../lib_managed/srcs/org.spire-math/jawn-parser_2.11/jawn-parser_2.11-0.7.0-sources.jar" kind="lib" path="../../lib_managed/jars/org.spire-math/jawn-parser_2.11/jawn-parser_2.11-0.7.0.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr4-runtime/antlr4-runtime-4.5.1-1-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr4-runtime/antlr4-runtime-4.5.1-1.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/ST4/ST4-4.0.8-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/ST4/ST4-4.0.8.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.antlr/antlr-runtime/antlr-runtime-3.5.2-sources.jar" kind="lib" path="../../lib_managed/jars/org.antlr/antlr-runtime/antlr-runtime-3.5.2.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.yaml/snakeyaml/snakeyaml-1.16-sources.jar" kind="lib" path="../../lib_managed/bundles/org.yaml/snakeyaml/snakeyaml-1.16.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm/asm-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm/asm-5.0.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-commons/asm-commons-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-commons/asm-commons-5.0.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-tree/asm-tree-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-5.0.4.jar"/>
-  <classpathentry sourcepath="../../lib_managed/srcs/org.ow2.asm/asm-util/asm-util-5.0.4-sources.jar" kind="lib" path="../../lib_managed/jars/org.ow2.asm/asm-util/asm-util-5.0.4.jar"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
   <classpathentry kind="output" path="bin"/>
 </classpath>
