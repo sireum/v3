@@ -46,5 +46,7 @@
     <orderEntry type="module" module-name="sireum-java" exported="" />
     <orderEntry type="module" module-name="sireum-java-translator" exported="" />
     <orderEntry type="module" module-name="sireum-util-jvm" exported="" />
+    <orderEntry type="module" module-name="sireum-logika" exported="" />
+    <orderEntry type="module" module-name="sireum-logika-parser-antlr4" exported="" />
   </component>
 </module>

@@ -228,7 +228,8 @@ object SireumBuild extends Build {
   val utilReflectPI = new ProjectInfo("sireum-util-reflect", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI, javaPI)
   lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
 
-  val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI, utilReflectPI, javaPI, javaTranslatorPI)
+  val cliPI = new ProjectInfo("sireum-cli", CORE_DIR, Seq(), utilPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI,
+    utilReflectPI, javaPI, javaTranslatorPI, logikaParserAntlr4PI, logikaPI)
   lazy val cli = toSbtProject(cliPI, sireumJvmSettings)
 
   // Jvm Test Projects

@@ -264,8 +264,8 @@ final private class Builder(implicit reporter: Reporter) {
             case ">=" | "≥" => Ge
             case "=" | "==" => Eq
             case "!=" | "≠" => Ne
-            case "and" | "&&" | "∧" => And
-            case "or" | "||" | "∨" => Or
+            case "and" | "&&" | "∧" | "^" => And
+            case "or" | "||" | "∨" | "V" => Or
             case "implies" | "->" | "→" => Implies
           }
         apply(build(ctx.l), build(ctx.r))

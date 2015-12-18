@@ -61,7 +61,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   val modeSireumOptionMap: M = Vector(
     ("util", parseUtilOption _),
     ("java", parseJavaOption _),
-    ("pilar", parsePilarOption _)
+    ("pilar", parsePilarOption _),
+    ("logika", parseLogikaOption _)
   )
   val modeUtilOptionMap: M = Vector(
     ("option", parseUtilOptionOption _),
@@ -94,9 +95,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |Available mode(s):
           |
-          |java     Java tooling
-          |pilar    Pilar tooling
-          |util     Utility Tools
+          |java      Java tooling
+          |logika    Logika Proof Checker
+          |pilar     Pilar tooling
+          |util      Utility Tools
         """.stripMargin.trim
       )
       return
@@ -652,6 +654,67 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
 
     if (foundHelp || org.sireum.pilar.parser.Parser.run(option, outPrintln, errPrintln)) {
+      printUsage()
+    }
+  }
+
+  def parseLogikaOption(args: CSeq[String],
+                             index: Int,
+                             o: Product = org.sireum.option.LogikaOption()): Unit = {
+    val option = o.asInstanceOf[org.sireum.option.LogikaOption]
+    def printUsage(): Unit = {
+      outPrintln(
+        s"""
+           |Sireum Logika -- A Natural Deduction Proof Checker
+           |... for Propositional, Predicate, and Programming Logic
+           |
+           |Usage: sireum logika <{file.txt, file.scala}>
+           |
+           |Options:
+           |-s, --sequent    Sequent matching the input file's
+           |-h, --help       Display usage information
+        """.stripMargin.trim
+      )
+    }
+    val len = args.length
+    var foundHelp = false
+
+    var i = index
+    var processingOptions = true
+    while (i < len && processingOptions) {
+      args(i) match {
+        case "-h" | "--help" =>
+          foundHelp = true
+        case "-s" | "--sequent" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) =>
+              option.sequent = org.sireum.util.some(arg)
+            case _ =>
+              errPrintln("Expecting a value for sequent")
+              return
+          }
+        case arg =>
+          if (arg.startsWith("--") || arg.startsWith("-")) {
+            errPrintln(s"Unrecognized option: '$arg'")
+          }
+          processingOptions = false
+      }
+
+      if (processingOptions) i += 1
+    }
+
+    if (i < len) {
+      option.input = args(i)
+      i += 1
+    } else {
+      printUsage()
+      outPrintln("")
+      errPrintln("Expected a value for input")
+      return
+    }
+
+    if (foundHelp || org.sireum.logika.ProofChecker.run(option, outPrintln, errPrintln)) {
       printUsage()
     }
   }
