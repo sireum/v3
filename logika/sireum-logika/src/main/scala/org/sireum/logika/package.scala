@@ -28,10 +28,13 @@ package org.sireum
 package object logika {
   type B = Boolean
   type Z = BigInt
-  type ZS = scala.collection.mutable.Seq[Z]
 
   final val T = true
   final val F = false
+
+  final def Z(s: String): Z = BigInt(s)
+
+  final def Z(i: Int): Z = BigInt(i)
 
   final implicit class Logika(val sc: StringContext) extends AnyVal {
     def logika(args: Any*): Unit = {}
@@ -39,32 +42,82 @@ package object logika {
     def l(args: Any*): Unit = logika(args: _*)
   }
 
-  final implicit class ZLiteral(val sc: StringContext) extends AnyVal {
-    def Z(args: Any*): Z = {
-      assert(args.isEmpty)
-      val strings = sc.parts.iterator
-      val buf = new StringBuilder(strings.next)
-      while (strings.hasNext) {
-        buf.append(strings.next)
+  final implicit class ZHelper(val n: Z) extends AnyVal {
+    def ==(other: Int): Boolean = n == Z(other)
+  }
+
+  import scala.collection.mutable.{ListMap => LM}
+
+  object ZS {
+    def apply(args: Z*): ZS = {
+      val lm = LM[Z, Z]()
+      var i = BigInt(0)
+      for (e <- args) {
+        lm(i) = e
+        i += 1
       }
-      val text = buf.toString
-      BigInt(text)
+      new ZS(lm, i)
     }
   }
 
-  final implicit class ZHelper(val n: Z) extends AnyVal {
-    def ==(other: Int): Boolean = n == BigInt(other)
-  }
+  final class ZS private[logika](lmArg: LM[Z, Z], lmSize: Z) {
+    private[logika] val lm: LM[Z, Z] = lmArg
 
-  final def ZS(zs: Z*): ZS = scala.collection.mutable.Seq(zs: _*)
+    val size: Z = lmSize
+
+    def apply(index: Z): Z = {
+      lm.get(index) match {
+        case Some(value) => value
+        case _ => throw new IndexOutOfBoundsException(index.toString)
+      }
+    }
+
+    def update(index: Z, value: Z): Unit = {
+      if (lm.contains(index)) lm(index) = value
+      else throw new IndexOutOfBoundsException(index.toString)
+    }
+
+    def :+(value: Z): ZS = {
+      val lm = LM[Z, Z]()
+      for ((i, v) <- this.lm) {
+        lm(i) = v
+      }
+      lm(BigInt(lm.size)) = value
+      new ZS(lm, this.lm.size + 1)
+    }
+
+    def +:(value: Z): ZS = {
+      val lm = LM[Z, Z]()
+      lm(BigInt(0)) = value
+      for ((i, v) <- this.lm) {
+        lm(i + 1) = v
+      }
+      new ZS(lm, this.lm.size + 1)
+    }
+
+    override def clone: ZS = new ZS(lm.clone, size)
+
+    override def toString: String = {
+      val sb = new StringBuilder
+      sb.append('[')
+      if (lm.nonEmpty) {
+        var i: Z = 0
+        sb.append(lm(i))
+        i += 1
+        while (i < size) {
+          sb.append(", ")
+          sb.append(lm(i))
+          i += 1
+        }
+      }
+      sb.append(']')
+      sb.toString
+    }
+  }
 
   final def readInt(msg: String = "Enter an integer: "): Z = {
     Console.out.print(msg)
     Console.out.flush()
-    BigInt(Console.in.readLine())
+    Z(Console.in.readLine())
   }
-
-  import scala.language.implicitConversions
-
-  implicit def z2i(n: Z): Int = n.toInt
 }
