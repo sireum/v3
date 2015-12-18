@@ -182,7 +182,7 @@ Some examples are available at the following links:
 * [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala)
   (status: **all verified**)
 
-* [Programming Logic](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
+* [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
   (status: parsed and ast built; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 The propositional and predicate logic proof checker can be run via the command line.
@@ -268,7 +268,7 @@ Anytime that you are asked for a JDK, point it to `platform/java`.
 To do so, exit IntelliJ (if it is running), then, for OS X:
 
 ```bash
-cd "/Applications/IntelliJ IDEA 14.app/Contents/jre/jdk/Contents"
+cd "/Applications/IntelliJ IDEA 15.app/Contents/jre/jdk/Contents"
 sudo rm -fR Home
 sudo ln -s absolute/path/of/platform/java Home
 ```
