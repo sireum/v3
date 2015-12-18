@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.logika.ast
 
 import org.sireum.logika.util._
+import org.sireum.util.Visitor.TraversalMode
 import org.sireum.util._
 
 object Node {
@@ -60,6 +61,21 @@ object Node {
     val isPredicate = unitNode.mode == LogicMode.Predicate
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
+    val constMap = MIdMap[Node, BigInt]()
+    val zero = BigInt(0)
+    val maxInt = BigInt(Int.MaxValue)
+    val minInt = BigInt(Int.MinValue)
+    def checkIntMaxMin(n: Node, value: BigInt): Unit = {
+      if (value < minInt) {
+        val nodeLi = nodeLocMap(n)
+        reporter.error(nodeLi.lineBegin, nodeLi.columnBegin, nodeLi.offset,
+          s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      } else if (value > maxInt) {
+        val nodeLi = nodeLocMap(n)
+        reporter.error(nodeLi.lineBegin, nodeLi.columnBegin, nodeLi.offset,
+          s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      }
+    }
     Visitor.build({
       case n: Quant =>
         if (isPredicate) n.domainOpt match {
@@ -88,7 +104,55 @@ object Node {
           }
         }
         true
-    })(unitNode)
+      case e@Sub(lExp, rExp) =>
+        for (lN <- constMap.get(lExp);
+             rN <- constMap.get(rExp)) {
+          checkIntMaxMin(e, lN - rN)
+        }
+        true
+      case e@Add(lExp, rExp) =>
+        for (lN <- constMap.get(lExp);
+             rN <- constMap.get(rExp)) {
+          checkIntMaxMin(e, lN + rN)
+        }
+        true
+      case e@Rem(lExp, rExp) =>
+        for (lN <- constMap.get(lExp);
+             rN <- constMap.get(rExp)) {
+          if (rN == zero) {
+            val rExpLi = nodeLocMap(rExp)
+            reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+              s"Modulo by zero detected.")
+          } else checkIntMaxMin(e, lN % rN)
+        }
+        true
+      case e@Div(lExp, rExp) =>
+        for (lN <- constMap.get(lExp);
+             rN <- constMap.get(rExp)) {
+          if (rN == zero) {
+            val rExpLi = nodeLocMap(rExp)
+            reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+              s"Divide by zero detected.")
+          } else checkIntMaxMin(e, lN / rN)
+        }
+        true
+      case e@Mul(lExp, rExp) =>
+        for (lN <- constMap.get(lExp);
+             rN <- constMap.get(rExp)) {
+          checkIntMaxMin(e, lN * rN)
+        }
+        true
+      case e@Minus(exp) =>
+        constMap.get(exp) match {
+          case Some(n) =>
+            checkIntMaxMin(e, -n)
+          case _ =>
+        }
+        true
+      case lit@IntLit(n) if lit.primitive =>
+        constMap(lit) = BigInt(n)
+        true
+    }, TraversalMode.BOTTOM_UP)(unitNode)
     if (unitNode.mode == LogicMode.Programming) unitNode match {
       case _: Program =>
       case _ =>
@@ -306,7 +370,9 @@ final case class Apply(id: Id,
 final case class ReadInt(msgOpt: Option[StringLit])
   extends Exp
 
-final case class IntLit(value: String) extends Exp
+final case class IntLit(value: String) extends Exp {
+  private[logika] var primitive = false
+}
 
 sealed trait BinaryExp {
   def left: Exp

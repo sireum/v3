@@ -406,7 +406,10 @@ final private class Builder(implicit reporter: Reporter) {
           case "true" | "T" | "⊤" => BooleanLit(true)
           case "false" | "F" | "_|_" | "⊥" => BooleanLit(false)
         }
-      case ctx: IntExpContext => buildInt(ctx.NUM)
+      case ctx: IntExpContext =>
+        val r = buildInt(ctx.NUM)
+        r.primitive = true
+        r
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
         if (ctx.exp != null && !ctx.exp.isEmpty) {
