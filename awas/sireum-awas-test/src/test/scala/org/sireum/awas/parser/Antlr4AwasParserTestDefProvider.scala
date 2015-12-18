@@ -125,6 +125,71 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |  C2A: C.cOut -> A.aIn
       """.stripMargin))
     ,
+    ConditionTest("Isolette_model", parsePass(
+      """
+        |components
+        |  Thermostat
+        |    ports
+        |      out heater_ctrl
+        |      in settings
+        |      in sensed_temp
+        |      out feedback
+        |  HeatSource
+        |    ports
+        |      in on_heater
+        |      out heater_output
+        |  Air
+        |    ports
+        |      in from_heater
+        |      out to_infant
+        |      in from_infant
+        |      out to_sensor
+        |  TempSensor
+        |    ports
+        |      in air_heat
+        |      out air_temp
+        |  OperatorInterface
+        |    ports
+        |      in feedback_in
+        |      out feedback_out
+        |      in settings_in
+        |      out settings_out
+        |  Infant
+        |    ports
+        |      in heat_in
+        |      out heat_out
+        |  Nurse
+        |    ports
+        |      out set_params
+        |      in monitor
+        |connections
+        |  t1: Thermostat.heater_ctrl -> HeatSource.on_heater
+        |  h1: HeatSource.heater_output -> Air.from_heater
+        |  h2: Air.to_sensor -> TempSensor.air_heat
+        |  t2: TempSensor.air_temp -> Thermostat.sensed_temp
+        |  i1: Air.to_infant -> Infant.heat_in
+        |  i2: Infant.heat_out -> Air.from_infant
+        |  o1: OperatorInterface.settings_out -> Thermostat.settings
+        |  o2: Thermostat.feedback -> OperatorInterface.feedback_in
+        |  o3: OperatorInterface.feedback_out -> Nurse.monitor
+        |  o4: Nurse.set_params -> OperatorInterface.settings_in
+      """.stripMargin
+    )),
+    ConditionTest("AccidentLevel_Annex_D_14971", parsePass(
+      """
+        |types
+        |  record AccidentLevel
+        |    level: Natural
+        |    description: String
+        |constants
+        |  Catastrophic: AccidentLevel = AccidentLevel(level = 1, description = "Results in infants death")
+        |  Critical: AccidentLevel = AccidentLevel(level = 2, description = "Results in permanent impairment or life-threatening injury")
+        |  Serious: AccidentLevel = AccidentLevel(level = 3, description = "Results in injury or impairment requiring professional medical intervention")
+        |  Minor: AccidentLevel = AccidentLevel(level = 4, description = "Results in temporary injurt or impairment not requiring professional medical intervention")
+        |  Negligible: AccidentLevel = AccidentLevel(level = 5, description = "Inconvenience or temporary discomfort")
+      """.stripMargin
+    ))
+    ,
     ConditionTest("PcaShutoff", parsePass(
       """
         |// from https://github.com/santoslab/aadl-map-apps/tree/develop/pca-shutoff
