@@ -80,7 +80,7 @@ class ProofChecker(option: LogikaOption,
           Checker.check(s)(ConsoleReporter)
         } else {
           val li = s.nodeLocMap(s.conclusions.last)
-          errPrintln("The specified sequent is different than the one in the file.")
+          errPrintln(s"The specified sequent is different than the one in the file.")
           errPrintln("Specified:")
           errPrintln(option.sequent.get)
           errPrintln("File:")

@@ -409,13 +409,13 @@ final private class Builder(implicit reporter: Reporter) {
       case ctx: IntExpContext => buildInt(ctx.NUM)
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
-        if (ctx.exp != null) {
+        if (ctx.exp != null && !ctx.exp.isEmpty) {
           Apply(r,
             Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
         } else ctx.te match {
+          case null => r
           case te if te.getText == "size" => Size(r)
           case te if te.getText == "clone" => Clone(r)
-          case null => r
           case te =>
             reporter.error(ctx.te.getLine, ctx.te.getCharPositionInLine,
               ctx.te.getStartIndex,

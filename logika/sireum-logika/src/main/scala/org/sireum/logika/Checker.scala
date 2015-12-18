@@ -46,8 +46,8 @@ object Checker {
           implicit val nodeLocMap = s.nodeLocMap
           val r = check(proof, ProofContext(s.mode, s.premises.toSet, vars,
             imapEmpty, imapEmpty)).isDefined
-          if (r) reporter.info("Proof is accepted.")
-          else reporter.error("Proof is rejected.")
+          if (r) reporter.info(s"${unitNode.mode.value} logic proof is accepted.")
+          else reporter.error(s"${unitNode.mode.value} logic proof is rejected.")
           r
         case _ =>
           ???

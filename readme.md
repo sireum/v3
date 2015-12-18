@@ -213,7 +213,7 @@ sireum logika test.txt
 ```
 which will show:
 ```
-Proof is accepted.
+Propositional logic proof is accepted.
 ```
 One can specify the sequent to prove as a command line to ensure that the proof in the file is
 the one that is expected as follows:
@@ -236,7 +236,7 @@ If one introduced a bug in the proof, such as using ∨i1 instead of ∨i2 in st
 Logika will output:
 ```
 [12, 10] The disjunction's left sub-expression in step #9 does not match #8 for Or-intro1.
-Proof is rejected.
+Propositional logic proof is rejected.
 ```
 
 Development Environment

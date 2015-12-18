@@ -44,7 +44,7 @@ object Node {
            _: Lt | _: Le | _: Gt | _: Ge |
            _: Minus | _: IntLit | _: IntType |
            _: SeqLit | _: IntSeqType =>
-        m = LogicMode.Program
+        m = LogicMode.Programming
         false
       case _: Quant if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
@@ -58,6 +58,8 @@ object Node {
     val reqType = unitNode.mode.requireType
     val nodeLocMap = unitNode.nodeLocMap
     val isPredicate = unitNode.mode == LogicMode.Predicate
+    val isProgram = unitNode.mode == LogicMode.Programming
+    var applyMap = imapEmpty[String, Apply]
     Visitor.build({
       case n: Quant =>
         if (isPredicate) n.domainOpt match {
@@ -72,8 +74,22 @@ object Node {
             s"Program logic mode requires explicit type specification in quantifications.")
         }
         true
+      case a@Apply(Id(id), args) if !isProgram =>
+        if ("readInt" != id) {
+          applyMap.get(id) match {
+            case Some(a2) =>
+              if (a2.args.size != a.args.size) {
+                val aLi = nodeLocMap(a)
+                val a2Li = nodeLocMap(a2)
+                reporter.error(aLi.lineBegin, aLi.columnBegin, aLi.offset,
+                  s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
+              }
+            case _ => applyMap += (id -> a)
+          }
+        }
+        true
     })(unitNode)
-    if (unitNode.mode == LogicMode.Program) unitNode match {
+    if (unitNode.mode == LogicMode.Programming) unitNode match {
       case _: Program =>
       case _ =>
         reporter.error(s"Standalone sequent cannot use algebra.")
@@ -85,11 +101,11 @@ object LogicMode {
   private var counter = 0
   final val Propositional = LogicMode("Propositional")
   final val Predicate = LogicMode("Predicate")
-  final val Program = LogicMode("Program")
+  final val Programming = LogicMode("Program")
   val valueOf: ILinkedMap[String, LogicMode] = ilinkedMap(
     Propositional.value -> Propositional,
     Predicate.value -> Predicate,
-    Program.value -> Program
+    Programming.value -> Programming
   )
 
   def valueOf(index: Int): LogicMode =
@@ -104,7 +120,7 @@ final case class LogicMode private(value: String) {
   }
 
   def requireType: Boolean =
-    this == LogicMode.Program
+    this == LogicMode.Programming
 
   override def toString = value
 }
@@ -117,7 +133,7 @@ final case class Num(value: Natural) extends NumOrId
 
 sealed trait UnitNode extends Node {
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
-  var mode = LogicMode.Program
+  var mode = LogicMode.Programming
 }
 
 final case class Sequent(premises: Node.Seq[Exp],

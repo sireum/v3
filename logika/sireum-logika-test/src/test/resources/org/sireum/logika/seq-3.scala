@@ -23,13 +23,13 @@ def add(a: ZS): Z = {
     l"""{ invariant  answer == sum(a, i)
           modifies   answer, i                           }"""
 
-    l"""{ 1. answer == sum(i)               premise      }"""
+    l"""{ 1. answer == sum(a, i)            premise      }"""
     answer = answer + a(i)
     l"""{ 1. answer == answer_old + a(i)    premise
           2. answer_old == sum(a, i)        premise
           3. answer == sum(a, i) + a(i)     algebra 2 1
           4. sum(a,i+1) == sum(a,i) + a(i)  alle rec a i
-          5. answer == sum(i+1)             algebra 4 3  }"""
+          5. answer == sum(a, i+1)          algebra 4 3  }"""
 
     i = i + 1
     l"""{ 1. answer == sum(a, i_old+1)      premise
@@ -39,6 +39,6 @@ def add(a: ZS): Z = {
   l"""{ 1. answer == sum(a,i)               premise
         2. not (i != a.size)                premise
         3. i == a.size                      algebra 2
-        4. answer == sum(a.size)            algebra 3 1  }"""
+        4. answer == sum(a, a.size)         algebra 3 1  }"""
   return answer
 }
