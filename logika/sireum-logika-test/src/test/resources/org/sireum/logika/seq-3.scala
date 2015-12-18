@@ -7,8 +7,7 @@ l"""{ fact
                 all n: Z |
                   sum(a, n + 1) == sum(n) + a(n)         }"""
 def add(a: ZS): Z = {
-  l"""{ pre    len(a) >= 0
-        post   result == sum(a, a.size)                  }"""
+  l"""{ post   result == sum(a, a.size)                  }"""
 
   var answer: Z = 0
 
