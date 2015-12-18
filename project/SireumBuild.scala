@@ -92,13 +92,13 @@ object SireumBuild extends Build {
 
   lazy val subProjects = Seq(
     util, option, pilar,
-    awas, logika
+    java, awas, logika
   )
 
   lazy val subProjectsJvm = Seq(
     utilJvm,
     cli, pilarParserAntlr4, utilReflect,
-    java, javaTranslator,
+    javaTranslator,
     awasParserAntlr4,
     logikaParserAntlr4,
     coreTest,

@@ -220,12 +220,11 @@ ProofContext(mode: LogicMode,
               case (fs, ls) =>
                 if (!fs.isInstanceOf[PlainAssumeStep]) {
                   error(sp, s"Wrong form for Implies-intro assumption in step #$num.")
-                  hasError = true
                 }
                 if (!ls.isInstanceOf[RegularStep]) {
                   error(sp, s"Wrong form for Implies-intro conclusion in step #$num.")
-                  hasError = true
                 }
+                hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
@@ -319,12 +318,11 @@ ProofContext(mode: LogicMode,
               case (fs, ls) =>
                 if (!fs.isInstanceOf[PlainAssumeStep]) {
                   error(sp, s"Wrong form for Pbc assumption in step #$num.")
-                  hasError = true
                 }
                 if (ls.isInstanceOf[RegularStep]) {
                   error(sp, s"Wrong form for Pbc conclusion in step #$num.")
-                  hasError = true
                 }
+                hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
@@ -343,16 +341,16 @@ ProofContext(mode: LogicMode,
                   Checker.subst(exp.exp, Map(exp.ids.head -> Id(freshVar)))
                 if (expected != ls.exp) {
                   error(exp, s"Supplying $freshVar for ${exp.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
+                  hasError = true
                 }
               case (fs, ls) =>
                 if (!fs.isInstanceOf[ForallAssumeStep]) {
                   error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
-                  hasError = true
                 }
                 if (!ls.isInstanceOf[RegularStep]) {
-                  error(sp, s"Wrong form for Forall-intro in step #$num conclusion.")
-                  hasError = true
+                  error(sp, s"Wrong form for Forall-intro conclusion in step #$num.")
                 }
+                hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
@@ -364,14 +362,67 @@ ProofContext(mode: LogicMode,
               case Some((m, e)) =>
                 val expected = Checker.subst(e, m)
                 if (exp != expected) {
-                  error(step, s"Forall-elim does not produce the expressed form in step #$num.")
+                  error(exp, s"Supplying the specified arguments to the quantification ${text(stepOrFact)} does not produce matching expression in #$num for Forall-elim.")
                   None
                 } else addProvedStep(step)
               case _ =>
-                error(step, s"The number of quantifiers and arguments do not match in Forall-elim of step #$num.")
+                error(step, s"The numbers of quantified variables and arguments do not match in Forall-elim of step #$num.")
             }
           case Some(_) =>
             error(stepOrFact, s"Forall-elim in $num requires a universal quantification ${text(stepOrFact)}.")
+          case _ => None
+        }
+      case ExistsIntro(_, exp, step2, args) =>
+        findRegularStepExp(step2, num) match {
+          case Some(result) =>
+            buildSubstMap(exp, args) match {
+              case Some((m, e)) =>
+                val expected = Checker.subst(e, m)
+                if (result != expected) {
+                  error(exp, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
+                  None
+                } else addProvedStep(step)
+              case _ =>
+                error(step, s"The numbers of quantified variables and arguments do not match in Exists-intro of step #$num.")
+            }
+          case _ => None
+        }
+      case ExistsElim(_, exp, stepOrFact, subProof) =>
+        findRegularStepOrFactExp(stepOrFact, num) match {
+          case Some(q: Exists) =>
+            findSubProof(subProof, num) match {
+              case Some(sp) =>
+                var hasError = false
+                (sp.first, sp.last) match {
+                  case (fs: ExistsAssumeStep, ls: RegularStep) =>
+                    val freshVar = fs.id.value
+                    val expected = Checker.subst(q.exp, Map(q.ids.head -> Id(freshVar)))
+                    if (expected != fs.exp) {
+                      error(exp, s"Supplying $freshVar for ${q.ids.head} ${text(stepOrFact)} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
+                      hasError = true
+                    }
+                    if (exp != ls.exp) {
+                      error(exp, s"The conclusion of step #${subProof.value} does not match the expression in #$num for Exists-elim.")
+                      hasError = true
+                    }
+                    if (Checker.collectVars(exp).contains(freshVar)) {
+                      error(exp, s"The expression in step #$num should not contain $freshVar for Exists-elim.")
+                      hasError = true
+                    }
+                  case (fs, ls) =>
+                    if (!fs.isInstanceOf[ExistsAssumeStep]) {
+                      error(sp, s"Wrong form for Exists-elim assumption in step #$num that is expected to have a fresh variable and a formula.")
+                    }
+                    if (!fs.isInstanceOf[RegularStep]) {
+                      error(sp, s"Wrong form for Exists-elim conclusion in step #$num.")
+                    }
+                    hasError = true
+                }
+                if (hasError) None else addProvedStep(step)
+              case _ => None
+            }
+          case Some(_) =>
+            error(stepOrFact, s"Exists-elim in $num requires an existensial quantification ${text(stepOrFact)}.")
           case _ => None
         }
     }
@@ -379,7 +430,8 @@ ProofContext(mode: LogicMode,
 
   def buildSubstMap(q: Quant, args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
     val r = imapEmpty[Node, Node] ++ q.ids.zip(args)
-    if (r.size < q.ids.size) {
+    if (r.isEmpty) None
+    else if (r.size < q.ids.size) {
       q match {
         case q: ForAll =>
           Some((r, ForAll(q.ids.slice(r.size, q.ids.size), q.typeOpt, q.exp)))

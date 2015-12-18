@@ -123,8 +123,8 @@ object Rewriter {
       org.sireum.logika.ast.ExistsElim(num, exp, stepOrFact, subProof)
     }),
     ("ExistsIntro", { es =>
-      val Seq(num: Num, exp: Exists, stepOrFact: NumOrId, args: IVector[_]) = es
-      org.sireum.logika.ast.ExistsIntro(num, exp, stepOrFact, cast(args))
+      val Seq(num: Num, exp: Exists, step: Num, args: IVector[_]) = es
+      org.sireum.logika.ast.ExistsIntro(num, exp, step, cast(args))
     }),
     ("ExpStmt", { es =>
       val Seq(exp: Exp) = es

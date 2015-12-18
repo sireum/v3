@@ -223,7 +223,7 @@ final case class ForAllElim(num: Num,
 
 final case class ExistsIntro(num: Num,
                              exp: Exists,
-                             stepOrFact: NumOrId,
+                             step: Num,
                              args: Node.Seq[Exp])
   extends RegularStep
 

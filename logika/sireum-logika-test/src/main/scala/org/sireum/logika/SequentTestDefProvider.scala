@@ -398,7 +398,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           | 10. (∀y | healthy(y)) → ∀x | happy(x)     →i 2
           |}
         """.stripMargin, LogicMode.Predicate))
-    /*,
+    ,
     ConditionTest("predicate-5",
       check(
         """human(Socrates),  mortal(Socrates)  ⊢
@@ -420,7 +420,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |  2. holds(square14, e)                    premise
           |  3. ∃x | holds(x, e)                      ∃i 2 square14
           |  4. vowel(e) ∧ ∃x | holds(x, e)           ∧i 1 3
-          |  5. ∃y | vowel(y) ∧ ∃x | holds(x, y)      ∃i 4 y
+          |  5. ∃y | vowel(y) ∧ ∃x | holds(x, y)      ∃i 4 e
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
@@ -431,7 +431,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |{
           |  1. vowel(e)                              premise
           |  2. holds(square14, e)                    premise
-          |  3. vowel(e) ∧ holds(square14, e)         ∧i 1 3
+          |  3. vowel(e) ∧ holds(square14, e)         ∧i 1 2
           |  4. ∃y,x | vowel(y) ∧ holds(x, y)         ∃i 3 e square14
           |}
         """.stripMargin, LogicMode.Predicate))
@@ -469,7 +469,6 @@ final class SequentTestDefProvider(tf: TestFramework)
           |  8. ¬gameOver                                           →e 2 7
           |}
         """.stripMargin, LogicMode.Predicate))
-        */
   )
 
   def check(text: String, m: LogicMode): Boolean = {
