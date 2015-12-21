@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.logika.ast
 
 import org.sireum.logika.util._
-import org.sireum.util.Visitor.TraversalMode
 import org.sireum.util._
 
 object Node {
