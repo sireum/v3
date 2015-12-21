@@ -46,6 +46,17 @@ object Checker {
           implicit val nodeLocMap = s.nodeLocMap
           val r = check(proof, ProofContext(s.mode, s.premises.toSet, vars,
             imapEmpty, imapEmpty)).isDefined
+          val exps = proof.steps.flatMap(_ match {
+            case s: RegularStep => Some(s.exp)
+            case _ => None
+          }).toSet
+          for (c <- s.conclusions) {
+            if (!exps.contains(c)) {
+              val cLi = nodeLocMap(c)
+              reporter.error(cLi.lineBegin, cLi.columnBegin, cLi.offset,
+                s"The sequent conclusion has not been proved.")
+            }
+          }
           if (r) reporter.info(s"${unitNode.mode.value} logic proof is accepted.")
           else reporter.error(s"${unitNode.mode.value} logic proof is rejected.")
           r

@@ -88,6 +88,33 @@ object Node {
           }
         }
         true
+      case w: While =>
+        for (s <- w.block.stmts) s match {
+          case _: MethodDecl =>
+            val sLi = nodeLocMap(s)
+            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
+              s"Methods cannot be defined inside a while-block.")
+          case _ =>
+        }
+        true
+      case i: If =>
+        for (s <- i.trueBlock.stmts ++ i.falseBlock.stmts) s match {
+          case _: MethodDecl =>
+            val sLi = nodeLocMap(s)
+            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
+              s"Methods cannot be defined inside an if-block.")
+          case _ =>
+        }
+        true
+      case m: MethodDecl =>
+        for (s <- m.block.stmts) s match {
+          case _: MethodDecl =>
+            val sLi = nodeLocMap(s)
+            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
+              s"Methods cannot be defined inside another method.")
+          case _ =>
+        }
+        true
     })(unitNode)
     if (unitNode.mode == LogicMode.Programming) unitNode match {
       case _: Program =>
@@ -127,10 +154,6 @@ final case class LogicMode private(value: String) {
 
 sealed trait Node extends Product
 
-sealed trait NumOrId extends Node
-
-final case class Num(value: Natural) extends NumOrId
-
 sealed trait UnitNode extends Node {
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
   var mode = LogicMode.Programming
@@ -140,12 +163,19 @@ final case class Sequent(premises: Node.Seq[Exp],
                          conclusions: Node.Seq[Exp],
                          proofOpt: Option[Proof])
   extends UnitNode {
+  private val eqs = (premises.toSet, conclusions.toSet)
+  override val hashCode: Int = eqs.hashCode
+
   Node.detectMode(this)
 }
 
 sealed trait ProofStep extends Node {
   def num: Num
 }
+
+sealed trait NumOrId extends Node
+
+final case class Num(value: Natural) extends NumOrId
 
 sealed trait ProofGroup extends Node {
   def steps: Node.Seq[ProofStep]
@@ -308,7 +338,7 @@ final case class ReadInt(msgOpt: Option[StringLit])
 
 final case class IntLit(value: String) extends Exp
 
-sealed trait BinaryExp {
+sealed trait BinaryExp extends Exp {
   def left: Exp
 
   def op: String
@@ -316,67 +346,67 @@ sealed trait BinaryExp {
   def right: Exp
 }
 
-final case class Mul(left: Exp, right: Exp) extends Exp {
+final case class Mul(left: Exp, right: Exp) extends BinaryExp {
   val op = "*"
 }
 
-final case class Div(left: Exp, right: Exp) extends Exp {
+final case class Div(left: Exp, right: Exp) extends BinaryExp {
   val op = "/"
 }
 
-final case class Rem(left: Exp, right: Exp) extends Exp {
+final case class Rem(left: Exp, right: Exp) extends BinaryExp {
   val op = "%"
 }
 
-final case class Add(left: Exp, right: Exp) extends Exp {
+final case class Add(left: Exp, right: Exp) extends BinaryExp {
   val op = "+"
 }
 
-final case class Sub(left: Exp, right: Exp) extends Exp {
+final case class Sub(left: Exp, right: Exp) extends BinaryExp {
   val op = "-"
 }
 
-final case class Lt(left: Exp, right: Exp) extends Exp {
+final case class Lt(left: Exp, right: Exp) extends BinaryExp {
   val op = "<"
 }
 
-final case class Le(left: Exp, right: Exp) extends Exp {
+final case class Le(left: Exp, right: Exp) extends BinaryExp {
   val op = "<="
 }
 
-final case class Gt(left: Exp, right: Exp) extends Exp {
+final case class Gt(left: Exp, right: Exp) extends BinaryExp {
   val op = ">"
 }
 
-final case class Ge(left: Exp, right: Exp) extends Exp {
+final case class Ge(left: Exp, right: Exp) extends BinaryExp {
   val op = ">="
 }
 
-final case class Eq(left: Exp, right: Exp) extends Exp {
+final case class Eq(left: Exp, right: Exp) extends BinaryExp {
   val op = "=="
 }
 
-final case class Ne(left: Exp, right: Exp) extends Exp {
+final case class Ne(left: Exp, right: Exp) extends BinaryExp {
   val op = "!="
 }
 
-final case class Append(left: Exp, right: Exp) extends Exp {
+final case class Append(left: Exp, right: Exp) extends BinaryExp {
   val op = "+:"
 }
 
-final case class Prepend(left: Exp, right: Exp) extends Exp {
+final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
   val op = ":+"
 }
 
-final case class And(left: Exp, right: Exp) extends Exp {
+final case class And(left: Exp, right: Exp) extends BinaryExp {
   val op = "&&"
 }
 
-final case class Or(left: Exp, right: Exp) extends Exp {
+final case class Or(left: Exp, right: Exp) extends BinaryExp {
   val op = "||"
 }
 
-final case class Implies(left: Exp, right: Exp) extends Exp {
+final case class Implies(left: Exp, right: Exp) extends BinaryExp {
   val op = "->"
 }
 
@@ -473,7 +503,7 @@ final case class SeqAssign(id: Id,
 
 final case class MethodDecl(id: Id,
                             params: Node.Seq[Param],
-                            returnType: Option[Type],
+                            returnTypeOpt: Option[Type],
                             contract: MethodContract,
                             block: Block,
                             returnExp: Option[Exp])

@@ -39,6 +39,10 @@ object Tipe {
 
 sealed trait Tipe
 
+case object UnitTipe extends Tipe {
+  override def toString = "Unit"
+}
+
 case object B extends Tipe
 
 case object Z extends Tipe
@@ -55,5 +59,18 @@ case object ZS extends Fn {
 }
 
 final case class FunTipe(params: Tipe.Seq[Tipe], result: Tipe)
-  extends Fn
+  extends Fn {
+  override def toString: String = {
+    val sb = new StringBuilder
+    if (params.size == 1) {
+      sb.append(params.head)
+      sb.append(" => ")
+    } else {
+      sb.append('(')
+      sb.append(") => ")
+    }
+    sb.append(result)
+    sb.toString
+  }
+}
 

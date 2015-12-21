@@ -182,7 +182,7 @@ Some examples are available at the following links:
 * [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala)
   (status: **all verified**)
 
-* [Programming Logic](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
+* [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
   (status: parsed and ast built; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 The propositional and predicate logic proof checker can be run via the command line.
@@ -254,9 +254,9 @@ Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 version
 Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
-* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.1-custom-jdk-bundled.dmg
+* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.2-custom-jdk-bundled.dmg
 
-* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.1-custom-jdk-bundled.dmg
+* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.2-custom-jdk-bundled.dmg
 
 (The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
 inserted before the file extension.)
@@ -268,7 +268,7 @@ Anytime that you are asked for a JDK, point it to `platform/java`.
 To do so, exit IntelliJ (if it is running), then, for OS X:
 
 ```bash
-cd "/Applications/IntelliJ IDEA 14.app/Contents/jre/jdk/Contents"
+cd "/Applications/IntelliJ IDEA 15.app/Contents/jre/jdk/Contents"
 sudo rm -fR Home
 sudo ln -s absolute/path/of/platform/java Home
 ```
