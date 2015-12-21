@@ -189,6 +189,20 @@ final class Antlr4AwasParserTestDefProvider(tf: TestFramework)
         |  Negligible: AccidentLevel = AccidentLevel(level = 5, description = "Inconvenience or temporary discomfort")
       """.stripMargin
     ))
+    , ConditionTest("Isolette_Accident", parsePass(
+      """
+        |types
+        |  record Accident
+        |    description: String
+        |    level: AccidentLevel
+        |
+        |constants
+        |  Serious_injury: Accident = Accident(description = "Prolonged exposure of Infant to unsafe heat leads to serious injury or death", level = Catastrophic)
+        |  Short_term: Accident = Accident(description = "Burst(Shorten) exposure of Infant to unsafe heat causes skin burns / skin damages", level = Critical)
+        |  unsafe_cold: Accident = Accident(description = "Exposure of Infant to unsafe cold", level = Catastrophic)
+
+      """.stripMargin
+    ))
     ,
     ConditionTest("PcaShutoff", parsePass(
       """
