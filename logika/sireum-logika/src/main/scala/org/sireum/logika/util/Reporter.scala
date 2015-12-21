@@ -70,13 +70,13 @@ object ConsoleReporter extends Reporter {
   }
 
   override def warn(message: String): Unit = {
-    Console.out.println(message)
+    Console.out.println(s"Warning: $message")
     Console.out.flush()
   }
 
   override def warn(line: PosInteger, column: PosInteger,
                     offset: Natural, message: String): Unit = {
-    Console.out.println(s"[$line, $column] $message")
+    Console.out.println(s"[$line, $column] Warning: $message")
     Console.out.flush()
   }
 
