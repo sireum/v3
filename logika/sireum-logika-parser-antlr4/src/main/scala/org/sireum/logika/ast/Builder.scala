@@ -39,6 +39,10 @@ import org.sireum.util.jvm.Antlr4Util._
 final private class Builder(implicit reporter: Reporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
+  val constMap = MIdMap[Node, BigInt]()
+  val zero = BigInt(0)
+  val maxInt = BigInt(Int.MaxValue)
+  val minInt = BigInt(Int.MinValue)
 
   private def build(ctx: SequentFileContext): Sequent = {
     val r =
@@ -247,50 +251,81 @@ final private class Builder(implicit reporter: Reporter) {
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
       case ctx: IntContext =>
-        buildInt(ctx.NUM)
+        val r = buildInt(ctx.NUM)
+        constMap(r) = BigInt(r.value)
+        r
       case ctx: BigIntContext => IntLit(ctx.STRING.getText)
       case ctx: SeqContext =>
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
       case ctx: BinaryContext =>
-        val apply =
-          ctx.op.getText match {
-            case "*" => Mul
-            case "/" => Div
-            case "%" => Rem
-            case "+" => Add
-            case "-" => Sub
-            case "<" => Lt
-            case "<=" | "≤" => Le
-            case ">" => Gt
-            case ">=" | "≥" => Ge
-            case "=" | "==" => Eq
-            case "!=" | "≠" => Ne
-            case "and" | "&&" | "∧" | "^" => And
-            case "or" | "||" | "∨" | "V" => Or
-            case "implies" | "->" | "→" => Implies
-          }
-        apply(build(ctx.l), build(ctx.r))
+        val lExp = build(ctx.l)
+        val rExp = build(ctx.r)
+        ctx.op.getText match {
+          case "*" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN * rN)
+            }
+            Mul(lExp, rExp)
+          case "/" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              if (rN == zero) {
+                val rExpLi = nodeLocMap(rExp)
+                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+                  s"Divide by zero detected.")
+              } else checkIntMaxMin(ctx.op, lN / rN)
+            }
+            Div(lExp, rExp)
+          case "%" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              if (rN == zero) {
+                val rExpLi = nodeLocMap(rExp)
+                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+                  s"Modulo by zero detected.")
+              } else checkIntMaxMin(ctx.op, lN % rN)
+            }
+            Rem(lExp, rExp)
+          case "+" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN + rN)
+            }
+            Add(lExp, rExp)
+          case "-" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN - rN)
+            }
+            Sub(lExp, rExp)
+          case "<" => Lt(lExp, rExp)
+          case "<=" | "≤" => Le(lExp, rExp)
+          case ">" => Gt(lExp, rExp)
+          case ">=" | "≥" => Ge(lExp, rExp)
+          case "=" | "==" => Eq(lExp, rExp)
+          case "!=" | "≠" => Ne(lExp, rExp)
+          case "and" | "&&" | "∧" | "^" => And(lExp, rExp)
+          case "or" | "||" | "∨" | "V" => Or(lExp, rExp)
+          case "implies" | "->" | "→" => Implies(lExp, rExp)
+        }
       case ctx: UnaryContext =>
-        val apply =
-          ctx.op.getText match {
-            case "-" => Minus
-            case "not" | "!" | "~" | "¬" => Not
-          }
-        apply(build(ctx.formula))
+        val exp = build(ctx.formula)
+        ctx.op.getText match {
+          case "-" =>
+            constMap.get(exp) match {
+              case Some(n) => checkIntMaxMin(ctx.op, -n)
+              case _ =>
+            }
+            Minus(exp)
+          case "not" | "!" | "~" | "¬" => Not(exp)
+        }
       case ctx: QuantContext => build(ctx.qformula)
     }
     r at ctx
   }
 
-  private def buildInt(t: Token): IntLit = {
-    val text = t.getText
-    val v = BigInt(text)
-    if (v > Int.MaxValue) {
-      error(t,
-        s""""Integer value requiring more than 32-bit has to be constructed using Z, i.e., Z("$text").""")
-    }
-    IntLit(text)
-  }
+  private def buildInt(t: Token): IntLit = IntLit(t.getText)
 
   private def build(ctx: QformulaContext): Quant = {
     val apply =
@@ -408,7 +443,7 @@ final private class Builder(implicit reporter: Reporter) {
         }
       case ctx: IntExpContext =>
         val r = buildInt(ctx.NUM)
-        r.primitive = true
+        constMap(r) = BigInt(r.value)
         r
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
@@ -435,32 +470,68 @@ final private class Builder(implicit reporter: Reporter) {
         r.hasParen = true
         r
       case ctx: UnaryExpContext =>
-        val apply =
-          ctx.op.getText match {
-            case "-" => Minus
-            case "!" => Not
-          }
-        apply(build(ctx.exp))
+        val exp = build(ctx.exp)
+        ctx.op.getText match {
+          case "-" =>
+            constMap.get(exp) match {
+              case Some(n) => checkIntMaxMin(ctx.op, -n)
+              case _ =>
+            }
+            Minus(exp)
+          case "not" | "!" | "~" | "¬" => Not(exp)
+        }
       case ctx: BinaryExpContext =>
-        val apply =
-          ctx.op.getText match {
-            case "*" => Mul
-            case "/" => Div
-            case "%" => Rem
-            case "+" => Add
-            case "-" => Sub
-            case "<" => Lt
-            case "<=" => Le
-            case ">" => Gt
-            case ">=" => Ge
-            case "==" => Eq
-            case "!=" => Ne
-            case "&&" => And
-            case "||" => Or
-            case ":+" => Append
-            case "+:" => Prepend
-          }
-        apply(build(ctx.l), build(ctx.r))
+        val lExp = build(ctx.l)
+        val rExp = build(ctx.r)
+        ctx.op.getText match {
+          case "*" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN * rN)
+            }
+            Mul(lExp, rExp)
+          case "/" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              if (rN == zero) {
+                val rExpLi = nodeLocMap(rExp)
+                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+                  s"Divide by zero detected.")
+              } else checkIntMaxMin(ctx.op, lN / rN)
+            }
+            Div(lExp, rExp)
+          case "%" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              if (rN == zero) {
+                val rExpLi = nodeLocMap(rExp)
+                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+                  s"Modulo by zero detected.")
+              } else checkIntMaxMin(ctx.op, lN % rN)
+            }
+            Rem(lExp, rExp)
+          case "+" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN + rN)
+            }
+            Add(lExp, rExp)
+          case "-" =>
+            for (lN <- constMap.get(lExp);
+                 rN <- constMap.get(rExp)) {
+              checkIntMaxMin(ctx.op, lN - rN)
+            }
+            Sub(lExp, rExp)
+          case "<" => Lt(lExp, rExp)
+          case "<=" | "≤" => Le(lExp, rExp)
+          case ">" => Gt(lExp, rExp)
+          case ">=" | "≥" => Ge(lExp, rExp)
+          case "=" | "==" => Eq(lExp, rExp)
+          case "!=" | "≠" => Ne(lExp, rExp)
+          case "and" | "&&" | "∧" | "^" => And(lExp, rExp)
+          case "or" | "||" | "∨" | "V" => Or(lExp, rExp)
+          case "implies" | "->" | "→" => Implies(lExp, rExp)
+        }
     }
     r at ctx
   }
@@ -502,6 +573,16 @@ final private class Builder(implicit reporter: Reporter) {
       error(t, "Proof step numbers should not be negative.")
     }
     num
+  }
+
+  private def checkIntMaxMin(t: Token, value: BigInt): Unit = {
+    if (value < minInt) {
+      reporter.error(t.getLine, t.getCharPositionInLine, t.getStartIndex,
+        s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+    } else if (value > maxInt) {
+      reporter.error(t.getLine, t.getCharPositionInLine, t.getStartIndex,
+        s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+    }
   }
 
   private def errorIf(t: Token, tText: String): Unit = {
