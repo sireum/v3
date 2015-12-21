@@ -127,7 +127,7 @@ object Rewriter {
       org.sireum.logika.ast.ExistsIntro(num, exp, step, cast(args))
     }),
     ("ExpStmt", { es =>
-      val Seq(exp: Exp) = es
+      val Seq(exp: Apply) = es
       org.sireum.logika.ast.ExpStmt(exp)
     }),
     ("Fact", { es =>
@@ -227,12 +227,8 @@ object Rewriter {
       org.sireum.logika.ast.MethodContract(requires, modifies, ensures)
     }),
     ("MethodDecl", { es =>
-      val Seq(id: Id, params: IVector[_], returnType: Option[_], contract: MethodContract, block: Block, returnExp: Option[_]) = es
-      org.sireum.logika.ast.MethodDecl(id, cast(params), cast(returnType), contract, block, cast(returnExp))
-    }),
-    ("MethodInvoke", { es =>
-      val Seq(idOpt: Option[_], methodId: Id, args: IVector[_]) = es
-      org.sireum.logika.ast.MethodInvoke(cast(idOpt), methodId, cast(args))
+      val Seq(id: Id, params: IVector[_], returnTypeOpt: Option[_], contract: MethodContract, block: Block, returnExpOpt: Option[_]) = es
+      org.sireum.logika.ast.MethodDecl(id, cast(params), cast(returnTypeOpt), contract, block, cast(returnExpOpt))
     }),
     ("Minus", { es =>
       val Seq(exp: Exp) = es
@@ -283,8 +279,8 @@ object Rewriter {
       org.sireum.logika.ast.OrIntro2(num, exp, step)
     }),
     ("Param", { es =>
-      val Seq(id: Id, tipe: Type) = es
-      org.sireum.logika.ast.Param(id, tipe)
+      val Seq(id: Id, tpe: Type) = es
+      org.sireum.logika.ast.Param(id, tpe)
     }),
     ("Pbc", { es =>
       val Seq(num: Num, exp: Exp, subProof: Num) = es
@@ -375,8 +371,8 @@ object Rewriter {
       org.sireum.logika.ast.TypeDomain(tpe)
     }),
     ("VarDecl", { es =>
-      val Seq(isVar: java.lang.Boolean, id: Id, tipe: Type) = es
-      org.sireum.logika.ast.VarDecl(isVar, id, tipe)
+      val Seq(isVar: java.lang.Boolean, id: Id, tpe: Type) = es
+      org.sireum.logika.ast.VarDecl(isVar, id, tpe)
     }),
     ("While", { es =>
       val Seq(exp: Exp, block: Block, loopInv: LoopInv) = es

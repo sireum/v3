@@ -429,7 +429,15 @@ final private class Builder(implicit reporter: Reporter) {
             case (null, sequent, null) => SequentStmt(build(sequent))
             case (null, null, invariants) => InvStmt(build(invariants))
           }
-        case ctx: ExpStmtContext => ExpStmt(build(ctx.exp))
+        case ctx: ExpStmtContext =>
+          build(ctx.exp) match {
+            case e: Apply => ExpStmt(e)
+            case e =>
+              val li = nodeLocMap(e)
+              reporter.error(li.lineBegin, li.columnBegin, li.offset,
+                s"Only method invocation expression is allowed as a statement.")
+              ExpStmt(Apply(Id("???"), Node.seq(e)))
+          }
       }
     r at ctx
   }

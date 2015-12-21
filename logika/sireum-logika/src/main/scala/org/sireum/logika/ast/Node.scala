@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.logika.ast
 
 import org.sireum.logika.util._
+import org.sireum.logika.tipe._
 import org.sireum.util._
 
 object Node {
@@ -180,6 +181,8 @@ final case class Num(value: Natural) extends NumOrId
 sealed trait ProofGroup extends Node {
   def steps: Node.Seq[ProofStep]
 
+  def allSteps: Node.Seq[ProofStep]
+
   def first: ProofStep
 
   def last: ProofStep
@@ -188,6 +191,8 @@ sealed trait ProofGroup extends Node {
 final case class Proof(steps: Node.Seq[ProofStep])
   extends UnitNode with ProofGroup {
   Node.detectMode(this)
+
+  override def allSteps = steps
 
   override def first = steps.head
 
@@ -296,6 +301,9 @@ final case class SubProof(num: Num,
                           assumeStep: AssumeStep,
                           steps: Node.Seq[ProofStep])
   extends ProofStep with ProofGroup {
+
+  override def allSteps = assumeStep +: steps
+
   override def first = assumeStep
 
   override def last =
@@ -467,14 +475,14 @@ sealed trait Stmt extends Node
 
 final case class VarDecl(isVar: Boolean,
                          id: Id,
-                         tipe: Type) extends Stmt
+                         tpe: Type) extends Stmt
 
 final case class Assign(id: Id,
                         exp: Exp) extends Stmt
 
 final case class Assert(exp: Exp) extends Stmt
 
-final case class ExpStmt(exp: Exp) extends Stmt
+final case class ExpStmt(exp: Apply) extends Stmt
 
 final case class If(exp: Exp,
                     trueBlock: Block,
@@ -492,11 +500,6 @@ final case class Print(isNewline: Boolean,
 
 final case class StringLit(value: String) extends Stmt
 
-final case class MethodInvoke(idOpt: Option[Id],
-                              methodId: Id,
-                              args: Node.Seq[Exp])
-  extends Stmt
-
 final case class SeqAssign(id: Id,
                            index: Exp,
                            exp: Exp) extends Stmt
@@ -506,7 +509,7 @@ final case class MethodDecl(id: Id,
                             returnTypeOpt: Option[Type],
                             contract: MethodContract,
                             block: Block,
-                            returnExp: Option[Exp])
+                            returnExpOpt: Option[Exp])
   extends Stmt
 
 final case class MethodContract(requires: Requires,
@@ -521,11 +524,15 @@ final case class Modifies(ids: Node.Seq[Id]) extends Node
 final case class Ensures(exps: Node.Seq[Exp]) extends Node
 
 final case class Param(id: Id,
-                       tipe: Type) extends Node
+                       tpe: Type) extends Node
 
-final case class ProofStmt(proof: Proof) extends Stmt
+final case class ProofStmt(proof: Proof) extends Stmt {
+  var typeMap: IMap[String, Tipe] = imapEmpty
+}
 
-final case class SequentStmt(sequent: Sequent) extends Stmt
+final case class SequentStmt(sequent: Sequent) extends Stmt {
+  var typeMap: IMap[String, Tipe] = imapEmpty
+}
 
 final case class InvStmt(inv: Inv) extends Stmt
 
