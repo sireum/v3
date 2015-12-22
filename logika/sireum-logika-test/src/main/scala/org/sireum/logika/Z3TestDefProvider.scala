@@ -23,18 +23,43 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.logika
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika._
+import java.io._
+import org.sireum.logika.ast._
+import org.sireum.logika.tipe._
+import org.sireum.logika.util._
+import org.sireum.test._
+import org.sireum.util._
+import org.sireum.util.jvm._
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[Z3Test],
-    classOf[ProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+final class Z3TestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
+
+  override def testDefs: ISeq[TestDef] =
+    (1 to 1).toVector.map { x =>
+      val name = f"z3-$x%02d"
+      ConditionTest(name, check(name))
+    }
+
+  def check(filename: String): Boolean = {
+    val r = new InputStreamReader(
+      getClass.getResourceAsStream(filename + ".scala"))
+    val text = FileUtil.readFile(r)
+    r.close()
+    implicit val reporter = ErrorCountingReporter
+    Builder[Program](text).exists { p =>
+      val hasError = !TypeChecker.check(p)
+      if (hasError) return false
+      p match {
+        case Program(_, Block(Seq(MethodDecl(_, _, _, MethodContract(
+        Requires(Seq(e1)),
+        _,
+        Ensures(Seq(e2))), _, _)))) =>
+          implicit val nlm = p.nodeLocMap
+          Z3.isValid(Implies(e1, e2))
+        case _ => false
+      }
+    }
+  }
+}

@@ -336,6 +336,8 @@ Preferences
 
     * Add `SBT` in `Before launch:` then select either `products` (for apps) or `test:products` (for tests) and
       check `Run in current module...`
+      
+    * Add `SIREUM_HOME` environment variable and set it to the absolute path of the directory containing this file.
 
 
 Alternative IDE

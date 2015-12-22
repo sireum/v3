@@ -499,8 +499,7 @@ sealed trait Quant extends Exp {
   def exp: Exp
 
   final def simplify
-  (implicit nlm: IMap[Node, LocationInfo]): (Quant, IMap[Node, LocationInfo]) = {
-    implicit val nodeLocMap = mmapEmpty ++ nlm
+  (implicit nodeLocMap: MIdMap[Node, LocationInfo]): Quant = {
     domainOpt match {
       case Some(rd@RangeDomain(lo, hi)) =>
         val loLi = nodeLocMap(lo)
@@ -516,10 +515,9 @@ sealed trait Quant extends Exp {
           antecedent = And(antecedent, range(id, lo, hi)) at(idLi, rdLi)
         }
         val expLi = nodeLocMap(exp)
-        (apply(ids, Some(TypeDomain(IntType())),
-          Implies(antecedent, exp) at(rdLi, expLi)),
-          imapEmpty ++ nodeLocMap)
-      case _ => (this, imapEmpty ++ nodeLocMap)
+        apply(ids, Some(TypeDomain(IntType())),
+          Implies(antecedent, exp) at(rdLi, expLi))
+      case _ => this
     }
   }
 }

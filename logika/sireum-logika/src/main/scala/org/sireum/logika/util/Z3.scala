@@ -36,12 +36,23 @@ object Z3 {
   val stg: STGroup = new STGroupFile(getClass.
     getResource("z3.stg"), "UTF-8", '$', '$')
 
+  val z3: String = {
+    import java.io._
+    val z3Filename = OsUtil.detect match {
+      case OsArch.Win => "z3.exe"
+      case _ => "z3"
+    }
+    val z3Bin = new File(System.getenv("SIREUM_HOME"), s"/apps/z3/bin/$z3Filename")
+    if (z3Bin.canExecute) z3Bin.getAbsolutePath
+    else z3Filename
+  }
+
   def isValid(exp: Exp)(
-    implicit nodeLocMap: IMap[Node, LocationInfo]) =
+    implicit nodeLocMap: MIdMap[Node, LocationInfo]) =
     new Z3().isValid(exp)
 }
 
-private final class Z3(implicit var nodeLocMap: IMap[Node, LocationInfo]) {
+private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   import Z3._
 
@@ -68,9 +79,9 @@ private final class Z3(implicit var nodeLocMap: IMap[Node, LocationInfo]) {
       val input =
         OsUtil.detect match {
           case OsArch.Win =>
-            ivector("z3", "/smt2", "/in")
+            ivector(z3, "/smt2", "/in")
           case _ =>
-            ivector("z3", "-smt2", "-in")
+            ivector(z3, "-smt2", "-in")
         }
       new Exec().run(0, input, Some(z3Script), None)
     }
@@ -97,9 +108,9 @@ private final class Z3(implicit var nodeLocMap: IMap[Node, LocationInfo]) {
   }
 
   def translate(e: Exp): ST =
-    e match {
+    (e: @unchecked) match {
       case BooleanLit(value) =>
-        stg.getInstanceOf(if (value) "true" else "false")
+        stg.getInstanceOf(if (value) "truelit" else "falselit")
       case id: Id =>
         typeMap(id.value) = id.tipe
         stg.getInstanceOf("id").add("value", id.value)
@@ -138,7 +149,7 @@ private final class Z3(implicit var nodeLocMap: IMap[Node, LocationInfo]) {
         stg.getInstanceOf("a").add("c", c)
       case e: BinaryExp =>
         val op =
-          e match {
+          (e: @unchecked) match {
             case Ne(left, right) => return translate(Not(Eq(left, right)))
             case e: Mul => "*"
             case e: Div => "div"
@@ -166,9 +177,7 @@ private final class Z3(implicit var nodeLocMap: IMap[Node, LocationInfo]) {
         val isForAll = e.isInstanceOf[ForAll]
         val stType = (e.domainOpt: @unchecked) match {
           case Some(RangeDomain(lo, hi)) =>
-            val (e2, nlm) = e.simplify(nodeLocMap)
-            nodeLocMap = nlm
-            return translate(e2)
+            return translate(e.simplify)
           case Some(TypeDomain(tpe)) => translate(tpe)
         }
         val st = stg.getInstanceOf("quant").

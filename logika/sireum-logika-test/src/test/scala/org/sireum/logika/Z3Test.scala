@@ -23,18 +23,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.sireum.test
+package org.sireum.logika
 
+import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika._
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+import org.sireum.test.{JUnitTestFramework, TestDef}
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[Z3Test],
-    classOf[ProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+@RunWith(value = classOf[Parameterized])
+final class Z3Test(name: String, td: TestDef) {
+  @Test
+  def test(): Unit = {
+    td.test(JUnitTestFramework)
+  }
+}
+
+object Z3Test {
+  val provider = new Z3TestDefProvider(JUnitTestFramework)
+
+  @Parameters(name = "{0}")
+  def parameters = {
+    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
+    val r = new java.util.ArrayList[Array[Object]](ps.size)
+    for (p <- ps) {
+      r.add(p)
+    }
+    r
+  }
+}
