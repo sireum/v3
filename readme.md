@@ -1,7 +1,14 @@
 Requirements
 ============
 
-Supported platforms: x86-64 OS X, Linux, Windows
+Supported platforms:
+
+* x86-64 OS X (tested on El Capitan -- 10.11)
+
+* Linux (tested on Ubuntu 14.04)
+
+* Windows (tested on Windows 7)
+
 
 All Supported Platforms
 -----------------------

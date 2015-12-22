@@ -5,19 +5,23 @@ for COMMAND in ${COMMANDS}; do
 done
 ZULU_VERSION=1.8.0_66-8.11.0.1
 SBT_VERSION=0.13.9
-NODE_VERSION=5.1.1
+NODE_VERSION=5.3.0
+Z3_VERSION=4.4.1
 if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
   PLATFORM=win
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/x64/node.exe
+  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-win.zip
 elif [ "$(uname)" == "Darwin" ]; then
   PLATFORM=lin
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-macosx.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
+  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   PLATFORM=mac
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-x86lx64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz
+  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-ubuntu-14.04.zip
 else
   echo "Sireum does not support: $(uname)"
   exit
@@ -102,4 +106,26 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     mv ${NODE_DIR} node
     echo "${NODE_VERSION}" > node/VER
   fi
+fi
+Z3_DROP="${Z3_DROP_URL##*/}"
+Z3_DIR="${Z3_DROP%.*}"
+grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
+if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
+  if [ ! -f ${Z3_DROP} ]; then
+    echo
+    echo "Downloading ${Z3_DROP}"
+    echo
+    wget ${Z3_DROP_URL}
+  fi
+  echo
+  echo "Extracting ${Z3_DROP}"
+  unzip -oq ${Z3_DROP}
+  echo
+  echo "Deleting ${Z3_DROP}"
+  rm ${Z3_DROP}
+  echo
+  echo "Moving ${Z3_DIR} to z3"
+  rm -fR z3
+  mv ${Z3_DIR} z3
+  echo "${Z3_VERSION}" > z3/VER
 fi
