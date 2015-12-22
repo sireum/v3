@@ -266,7 +266,7 @@ Download
 --------
 
 Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 versions,
-Jetbrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
+JetBrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
 * Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.2-custom-jdk-bundled.dmg
@@ -312,15 +312,11 @@ Other plugins that you might be interested are:
 * Docker integration
 * Haskell
 * LaTeX
-* MPS BaseLanguage support
-* MPS Build languages
-* MPS Core
-* MPS Version Control support
 * nginx Support
 * Vagrant
 
-Preferences
------------
+Setting Preferences
+-------------------
 
 * Set IntelliJ's Sbt’s preferences by opening `IntelliJ`->`Preference`->`Build, Execution, Deployment`->`Build Tools`->`SBT`
 
