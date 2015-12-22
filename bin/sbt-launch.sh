@@ -1,11 +1,10 @@
 #!/bin/bash
-SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
-REPO=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
-PRELUDE=${SCRIPT_HOME}/prelude.sh
-/bin/bash ${SCRIPT_HOME}/prelude.sh
-JAVA=${REPO}/platform/java/bin/java
-SBT_JAR=${REPO}/platform/sbt/bin/sbt-launch.jar
-NODE_BIN=${REPO}/platform/node/bin
+export SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
+PRELUDE=${SIREUM_HOME}/bin/prelude.sh
+/bin/bash ${SIREUM_HOME}/bin/prelude.sh
+JAVA=${SIREUM_HOME}/platform/java/bin/java
+SBT_JAR=${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar
+NODE_BIN=${SIREUM_HOME}/platform/node/bin
 if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ]; then
   echo
   echo "Could not find ${JAVA}, ${SBT_JAR}, or ${NODE_BIN}; aborting..."

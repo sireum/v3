@@ -35,12 +35,14 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
 
   override def testDefs: ISeq[TestDef] = ivector(
     EqualTest("ClassBytecodeTranslator",
-      translate("org.sireum.java.translator.ClassBytecodeTranslator"),
+      translate(classOf[ClassBytecodeTranslator]),
       "10b378742318d7f51acde86ec2acecd1")
   )
 
-  private def translate(className: String): String = {
-    val pilar = PrettyPrinter(ClassBytecodeTranslator(className))
+  private def translate(c: Class[_]): String = {
+    val s = c.getResourceAsStream(c.getSimpleName + ".class")
+    val pilar = PrettyPrinter(ClassBytecodeTranslator(new org.objectweb.asm.ClassReader(s)))
+    s.close()
     //println(pilar)
     StringUtil.md5(pilar)
   }
