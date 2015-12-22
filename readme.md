@@ -31,11 +31,21 @@ Run: `./sireum`
 
 (If this is your first time running the script, it first:
 
-* downloads Zulu JDK 8, Node.js, and Sbt, and then installs them under the `platform` directory;
+* downloads
+  [Zulu JDK](https://www.azul.com/products/zulu/), 
+  [Node.js](https://nodejs.org/)
+  and 
+  [Sbt](http://www.scala-sbt.org),
+  and then installs them under the `platform` directory;
 
-* downloads Z3 and installs it under the `apps` directory; and
+* downloads
+  [Z3](https://github.com/Z3Prover/z3/wiki) 
+  and installs it under the `apps` directory; and
 
-* [builds](#building-and-testing-sireum-using-sbt) and [assembles](#assembling-sireum-jar) Sireum.)
+* [builds](#building-and-testing-sireum-using-sbt)
+  and
+  [assembles](#assembling-sireum-jar)
+  Sireum.)
 
 ```
 Sireum: A Software Analysis Platform (v3)
