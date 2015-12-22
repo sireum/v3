@@ -107,6 +107,8 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     echo "${NODE_VERSION}" > node/VER
   fi
 fi
+mkdir -p ${REPO}/apps
+cd ${REPO}/apps
 Z3_DROP="${Z3_DROP_URL##*/}"
 Z3_DIR="${Z3_DROP%.*}"
 grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
