@@ -32,8 +32,8 @@ import org.sireum.util._
 object TypeChecker {
   final def check(program: Program)(
     implicit reporter: Reporter): Boolean = {
+    var hasError = false
     val r2 = new Reporter {
-      var hasError = false
 
       override def error(message: String): Unit = {
         hasError = true
@@ -64,13 +64,15 @@ object TypeChecker {
     implicit val nodeLocMap = program.nodeLocMap
     var typeMap = imapEmpty[String, (Tipe, Node)]
     for (f@Fun(id, _, _) <- program.fact.factOrFunDecls) {
-      typeMap += id.value ->(tipe(f), f)
+      id.tipe = tipe(f)
+      typeMap += id.value ->(id.tipe, f)
     }
     for (m@MethodDecl(id, _, _, _, _, _) <- program.block.stmts) {
-      typeMap += id.value ->(tipe(m), m)
+      id.tipe = tipe(m)
+      typeMap += id.value ->(id.tipe, m)
     }
     TypeContext(typeMap)(nodeLocMap, r2).check(program.block)
-    !r2.hasError
+    !hasError
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
@@ -79,11 +81,11 @@ object TypeChecker {
     case t: IntSeqType => ZS
   }
 
-  private final def tipe(m: MethodDecl): FunTipe =
+  private[tipe] final def tipe(m: MethodDecl): FunTipe =
     FunTipe(m.params.map(p => tipe(p.tpe)),
       m.returnTypeOpt.map(tipe).getOrElse(UnitTipe))
 
-  private final def tipe(f: Fun): FunTipe =
+  private[tipe] final def tipe(f: Fun): FunTipe =
     FunTipe(f.params.map(p => tipe(p.tpe)),
       tipe(f.returnType))
 }
@@ -110,11 +112,13 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
 
   def check(stmt: Stmt): TypeContext = stmt match {
     case VarDecl(_, id, t) =>
-      TypeContext(addId(id, TypeChecker.tipe(t), stmt, typeMap))
+      id.tipe = TypeChecker.tipe(t)
+      TypeContext(addId(id, id.tipe, stmt, typeMap))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false))
         typeMap.get(id.value) match {
           case Some((tId, VarDecl(true, _, _))) =>
+            id.tipe = tId
             if (tId != tExp)
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
           case _ =>
@@ -138,6 +142,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
     case _: Print => this
     case SeqAssign(id, index, exp) =>
       zs(id)(allowFun = false)
+      id.tipe = ZS
       z(index)(allowFun = false)
       z(exp)(allowFun = false)
       this
@@ -167,12 +172,8 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
         }
       }
       this
-    case stmt@ProofStmt(proof) =>
-      stmt.typeMap = typeMap.map(p => (p._1, p._2._1))
-      check(proof)
-      this
+    case ProofStmt(proof) => check(proof); this
     case stmt@SequentStmt(sequent) =>
-      stmt.typeMap = typeMap.map(p => (p._1, p._2._1))
       for (e <- sequent.premises) b(e)(allowFun = true)
       for (e <- sequent.conclusions) b(e)(allowFun = true)
       sequent.proofOpt.foreach(check)
@@ -225,13 +226,14 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
     implicit allowFun: Boolean): Option[Tipe] =
     e match {
       case _: BooleanLit => someB
-      case e: Id => tipe(e)
+      case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
       case e: Size => zs(e.id); someZ
       case e: Clone =>
         if (!allowMethod) error(e.id, s"ZS clone is only allowed at statement level.")
         zs(e.id)
         someZS
-      case e: Result => tipe(Id("result"))
+      case e: Result =>
+        val r = tipe(Id("result")); r.foreach(e.tipe = _); r
       case e: Apply =>
         val isMethod =
           typeMap.get(e.id.value) match {
@@ -263,7 +265,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             Some(t.result)
           case Some(t) =>
             if (e.args.size == 1)
-              error(e.id, s"Expecting a function/seq type, but found $t.")
+              error(e.id, s"Expecting a function/ZS type, but found $t.")
             else
               error(e.id, s"Expecting a function type, but found $t.")
             None
@@ -283,8 +285,18 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $t1 and $t2, respectively.")
               }
             someB
-          case _: Append => zs(e.left); z(e.right); someZS
-          case _: Prepend => z(e.left); zs(e.right); someZS
+          case _: Append =>
+            if (!allowMethod)
+              error(e, s"Append (:+) is only allowed at statement level.")
+            zs(e.left)
+            z(e.right)
+            someZS
+          case _: Prepend =>
+            if (!allowMethod)
+              error(e, s"Prepend (+:) is only allowed at statement level.")
+            z(e.left)
+            zs(e.right)
+            someZS
           case _: And | _: Or | _: Implies =>
             b(e.left); b(e.right); someB
         }
@@ -297,7 +309,10 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             z(lo); z(hi); Z
         }
         var tm = typeMap
-        for (id <- e.ids) tm = addId(id, t, e, tm)
+        for (id <- e.ids) {
+          tm = addId(id, t, e, tm)
+          id.tipe = t
+        }
         TypeContext(tm).check(e.exp)
         someB
       case e: SeqLit => for (arg <- e.args) z(arg); someZS

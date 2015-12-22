@@ -42,17 +42,37 @@ object Node {
     var m = LogicMode.Propositional
     Visitor.build({
       case _: IntType | _: BooleanType | _: IntSeqType |
-           _: BooleanLit | _: SeqLit =>
+           _: IntLit | _: SeqLit |
+           _: Mul | _: Div | _: Rem | _: Add | _: Sub |
+           _: Lt | _: Le | _: Gt | _: Ge |
+           _: Minus =>
         m = LogicMode.Programming
         false
-      case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
-           _: Lt | _: Le | _: Gt | _: Ge |
-           _: Minus | _: IntLit |
-           _: Apply | _: Quant if m == LogicMode.Propositional =>
+      case _: Apply | _: Quant if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
     unitNode.mode = m
+  }
+
+  implicit class At[T <: Node](n: Node)(
+    implicit val nodeLocMap: MMap[Node, LocationInfo]) {
+    def at(li: LocationInfo): T = {
+      nodeLocMap(n) = li
+      n.asInstanceOf[T]
+    }
+
+    def at(liBegin: LocationInfo, liEnd: LocationInfo): T = {
+      nodeLocMap(n) = LocationInfo(
+        lineBegin = liBegin.lineBegin,
+        columnBegin = liBegin.columnBegin,
+        offset = liBegin.offset,
+        lineEnd = liEnd.lineEnd,
+        columnEnd = liEnd.columnEnd,
+        length = liEnd.offset + liEnd.length - liBegin.offset
+      )
+      n.asInstanceOf[T]
+    }
   }
 
   final private[ast] def checkWellFormed(unitNode: UnitNode)
@@ -363,13 +383,17 @@ sealed trait Exp extends Node {
 
 final case class BooleanLit(value: Boolean) extends Exp
 
-final case class Id(value: String) extends Exp with NumOrId
+final case class Id(value: String) extends Exp with NumOrId {
+  var tipe: Tipe = _
+}
 
 final case class Size(id: Id) extends Exp
 
 final case class Clone(id: Id) extends Exp
 
-final case class Result() extends Exp
+final case class Result() extends Exp {
+  var tipe: Tipe = _
+}
 
 final case class Apply(id: Id,
                        args: Node.Seq[Exp]) extends Exp
@@ -473,6 +497,31 @@ sealed trait Quant extends Exp {
   def domainOpt: Option[QuantDomain]
 
   def exp: Exp
+
+  final def simplify
+  (implicit nlm: IMap[Node, LocationInfo]): (Quant, IMap[Node, LocationInfo]) = {
+    implicit val nodeLocMap = mmapEmpty ++ nlm
+    domainOpt match {
+      case Some(rd@RangeDomain(lo, hi)) =>
+        val loLi = nodeLocMap(lo)
+        val hiLi = nodeLocMap(hi)
+        val rdLi = nodeLocMap(rd)
+        val isForAll = isInstanceOf[ForAll]
+        def range(id: Id, l: Exp, h: Exp) =
+          And(Le(l, id) at loLi, Le(id, h) at hiLi) at rdLi
+        val apply = if (isForAll) ForAll else Exists
+        var antecedent = range(ids.head, lo, hi)
+        for (id <- ids.tail) {
+          val idLi = nodeLocMap(id)
+          antecedent = And(antecedent, range(id, lo, hi)) at(idLi, rdLi)
+        }
+        val expLi = nodeLocMap(exp)
+        (apply(ids, Some(TypeDomain(IntType())),
+          Implies(antecedent, exp) at(rdLi, expLi)),
+          imapEmpty ++ nodeLocMap)
+      case _ => (this, imapEmpty ++ nodeLocMap)
+    }
+  }
 }
 
 final case class ForAll(ids: Node.Seq[Id],
@@ -559,13 +608,9 @@ final case class Ensures(exps: Node.Seq[Exp]) extends Node
 final case class Param(id: Id,
                        tpe: Type) extends Node
 
-final case class ProofStmt(proof: Proof) extends Stmt {
-  var typeMap: IMap[String, Tipe] = imapEmpty
-}
+final case class ProofStmt(proof: Proof) extends Stmt
 
-final case class SequentStmt(sequent: Sequent) extends Stmt {
-  var typeMap: IMap[String, Tipe] = imapEmpty
-}
+final case class SequentStmt(sequent: Sequent) extends Stmt
 
 final case class InvStmt(inv: Inv) extends Stmt
 

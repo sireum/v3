@@ -28,6 +28,7 @@
       <module name="sireum-java-test" target="1.8" />
       <module name="sireum-java-translator" target="1.8" />
       <module name="sireum-jvm" target="1.8" />
+      <module name="sireum-logika" target="1.8" />
       <module name="sireum-logika-parser-antlr4" target="1.8" />
       <module name="sireum-logika-test" target="1.8" />
       <module name="sireum-option" target="1.8" />

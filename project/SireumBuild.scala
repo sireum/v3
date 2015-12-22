@@ -92,7 +92,7 @@ object SireumBuild extends Build {
 
   lazy val subProjects = Seq(
     util, option, pilar,
-    java, awas, logika
+    java, awas
   )
 
   lazy val subProjectsJvm = Seq(
@@ -101,6 +101,7 @@ object SireumBuild extends Build {
     javaTranslator,
     awasParserAntlr4,
     logikaParserAntlr4,
+    logika,
     coreTest,
     javaTest,
     awasTest,
@@ -206,9 +207,6 @@ object SireumBuild extends Build {
   val awasPI = new ProjectInfo("sireum-awas", AWAS_DIR, Seq(), utilPI)
   lazy val awas = toSbtProject(awasPI, sireumSettings)
 
-  val logikaPI = new ProjectInfo("sireum-logika", LOGIKA_DIR, Seq(), utilPI)
-  lazy val logika = toSbtProject(logikaPI, sireumSettings)
-
   // Jvm Projects
   val utilJvmPI = new ProjectInfo("sireum-util-jvm", CORE_DIR, Seq(), utilPI)
   lazy val utilJvm = toSbtProject(utilJvmPI, sireumJvmSettings)
@@ -221,6 +219,9 @@ object SireumBuild extends Build {
 
   val awasParserAntlr4PI = new ProjectInfo("sireum-awas-parser-antlr4", AWAS_DIR, Seq(), utilPI, awasPI)
   lazy val awasParserAntlr4 = toSbtProject(awasParserAntlr4PI, sireumJvmSettings)
+
+  val logikaPI = new ProjectInfo("sireum-logika", LOGIKA_DIR, Seq(), utilPI, utilJvmPI)
+  lazy val logika = toSbtProject(logikaPI, sireumJvmSettings)
 
   val logikaParserAntlr4PI = new ProjectInfo("sireum-logika-parser-antlr4", LOGIKA_DIR, Seq(), utilPI, logikaPI, utilJvmPI)
   lazy val logikaParserAntlr4 = toSbtProject(logikaParserAntlr4PI, sireumJvmSettings)

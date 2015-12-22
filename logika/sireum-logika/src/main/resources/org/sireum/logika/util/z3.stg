@@ -1,0 +1,115 @@
+main(d, a, e) ::= <<
+(define-sort B () Bool)
+(define-sort Z () Int)
+(define-sort ZS () (Array Z Z))
+(declare-fun _size (ZS) Z)
+(assert (forall ((a ZS)) (>= (_size a) 0)))
+(declare-const _empty ZS)
+(assert (= _empty ((as const ZS) 0)))
+(assert (= (_size _empty) 0))
+$d$
+$a$
+(assert (not $e$))
+(check-sat)
+>>
+
+bconst(name) ::= <<
+(declare-const $name$ B)
+>>
+
+zconst(name) ::= <<
+(declare-const $name$ Z)
+>>
+
+zsconst(name) ::= <<
+(declare-const $name$ ZS)
+>>
+
+fun(name, param, result) ::= <<
+(declare-fun $name$ ($param; separator=" ""$) $result$)
+>>
+
+true() ::= <<
+true
+>>
+
+false() ::= <<
+false
+>>
+
+id(value) ::= <<
+$value$
+>>
+
+size(id) ::= <<
+(_size $id$)
+>>
+
+index(a, i) ::= <<
+(select $a$ $i$)
+>>
+
+apply(id, exp) ::= <<
+($id$ $exp; separator=" "$)
+>>
+
+int(value) ::= <<
+$value$
+>>
+
+binary(op, left, right) ::= <<
+($op$ $left$ $right)
+
+unary(op, exp) ::= <<
+($op$ $exp$)
+>>
+
+quant(op, param, exp) ::= <<
+($op$ ($param; separator=" ""$) $exp$)
+>>
+
+param(id, tipe) ::= <<
+($id$ $tipe$)
+>>
+
+a(c) ::= <<
+a$c$
+>>
+
+zs(c, exp) ::= <<
+(declare-const _a!$c$ ZS)
+(assert (= _a!$c$ $exp$))
+(assert (= (_size _a!$c$) 3))
+>>
+
+zsexp(a, i, v) ::= <<
+(store $if(a)$$a$$else$_empty$endif$ $i$ $v$)
+>>
+
+prepend(c, a, v) ::= <<
+(declare-const _a!$c$ ZS)
+(assert (= (_size _a!$c$) (+ (_size $a$) 1)))
+(assert (= (select _a!$c$ 0) $v$))
+(assert
+  (forall ((_i Z))
+    (=>
+      (and (< 0 i) (< _i (_size _a!$c$)))
+      (= (select _a!$c$ i) (select $a$ (- _i 1)))
+    )
+  )
+)
+>>
+
+append(c, a, v) ::= <<
+(declare-const _a!$c$ ZS)
+(assert (= (_size _a!$c$) (+ (_size $a$) 1)))
+(assert (= (select _a!$c$ (_size $a$)) $v$))
+(assert
+  (forall ((_i Z))
+    (=>
+      (and (<= 0 i) (< _i (_size $a$)))
+      (= (select _a!$c$ i) (select $a$ i))
+    )
+  )
+)
+>>
