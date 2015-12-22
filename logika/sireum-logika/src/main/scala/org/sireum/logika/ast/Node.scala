@@ -41,13 +41,13 @@ object Node {
   final private[ast] def detectMode(unitNode: UnitNode): Unit = {
     var m = LogicMode.Propositional
     Visitor.build({
-      case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
-           _: Lt | _: Le | _: Gt | _: Ge |
-           _: Minus | _: IntLit | _: IntType |
-           _: SeqLit | _: IntSeqType =>
+      case _: IntType | _: BooleanType | _: IntSeqType |
+           _: BooleanLit | _: SeqLit =>
         m = LogicMode.Programming
         false
-      case _: Quant if m == LogicMode.Propositional =>
+      case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
+           _: Lt | _: Le | _: Gt | _: Ge |
+           _: Minus | _: IntLit | _: Quant if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
@@ -56,11 +56,11 @@ object Node {
 
   final private[ast] def checkWellFormed(unitNode: UnitNode)
                                         (implicit reporter: Reporter): Unit = {
-    val nodeLocMap = unitNode.nodeLocMap
+    val nodeLocMap = unitNode.nodeLocMap.clone
     val isPredicate = unitNode.mode == LogicMode.Predicate
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
-    Visitor.build({
+    lazy val v: Any => Boolean = Visitor.build({
       case n: Quant =>
         if (isPredicate) n.domainOpt match {
           case Some(_) =>
@@ -87,20 +87,33 @@ object Node {
             s"Program logic mode requires explicit type specification in quantifications.")
         }
         true
-      case a@Apply(Id(id), args) if !isProgram =>
-        if ("readInt" != id) {
-          applyMap.get(id) match {
-            case Some(a2) =>
-              if (a2.args.size != a.args.size) {
-                val aLi = nodeLocMap(a)
-                val a2Li = nodeLocMap(a2)
-                reporter.error(aLi.lineBegin, aLi.columnBegin, aLi.offset,
-                  s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
-              }
-            case _ => applyMap += (id -> a)
-          }
+      case n@Id(id) if !isProgram =>
+        applyMap.get(id) match {
+          case Some(a) =>
+            if (a.args.nonEmpty) {
+              val a2Li = nodeLocMap(a)
+              reporter.error(a2Li.lineBegin, a2Li.columnBegin, a2Li.offset,
+                s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
+            }
+          case _ =>
+            val a = Apply(n, Node.emptySeq)
+            nodeLocMap(a) = nodeLocMap(n)
+            applyMap += (id -> a)
         }
-        true
+        false
+      case a@Apply(Id(id), args) if !isProgram =>
+        applyMap.get(id) match {
+          case Some(a2) =>
+            if (a2.args.size != a.args.size) {
+              val aLi = nodeLocMap(a)
+              val a2Li = nodeLocMap(a2)
+              reporter.error(aLi.lineBegin, aLi.columnBegin, aLi.offset,
+                s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
+            }
+          case _ => applyMap += (id -> a)
+        }
+        for (arg <- args) v(arg)
+        false
       case w: While =>
         for (s <- w.block.stmts) s match {
           case _: MethodDecl =>
@@ -128,7 +141,8 @@ object Node {
           case _ =>
         }
         true
-    })(unitNode)
+    })
+    v(unitNode)
     if (unitNode.mode == LogicMode.Programming) unitNode match {
       case _: Program =>
       case _ =>
