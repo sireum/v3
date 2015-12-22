@@ -341,4 +341,8 @@ Preferences
 Alternative IDE
 ---------------
 You can also use Eclipse that is shipped in [Sireum v2 Shortcake](http://sireum.org/software.html#shortcake).
-Just import the existing projects into your Eclipse workspace (after setting up some preferences).
+Run:
+```bash
+bin/sbt-eclipse.sh
+```
+Then, import the existing projects into your Eclipse workspace (after setting up some preferences).
