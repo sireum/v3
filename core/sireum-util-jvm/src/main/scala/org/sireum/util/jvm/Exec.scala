@@ -52,35 +52,33 @@ final class Exec {
   def run(waitTime: Long, args: Seq[String], input: Option[String],
           dir: Option[File], extraEnv: (String, String)*): Exec.Result = {
     import scala.sys.process._
-    val p = Process({
-      val pb = new java.lang.ProcessBuilder(args: _*)
-      pb.redirectErrorStream(true)
-      dir.foreach(d => pb.directory(d))
-      val m = pb.environment
-      for ((k, v) <- env ++ extraEnv) {
-        m.put(k, v)
-      }
-      pb
-    }).run(new ProcessIO(inputF(input), outputF, errorF))
+    import scala.concurrent._
+    import scala.concurrent.duration._
+    import scala.concurrent.ExecutionContext.Implicits.global
+    try {
+      val p = Process({
+        val pb = new java.lang.ProcessBuilder(args: _*)
+        pb.redirectErrorStream(true)
+        dir.foreach(d => pb.directory(d))
+        val m = pb.environment
+        for ((k, v) <- env ++ extraEnv) {
+          m.put(k, v)
+        }
+        pb
+      }).run(new ProcessIO(inputF(input), outputF, errorF))
+      if (waitTime <= 0) {
+        val x = p.exitValue
+        Exec.StringResult(sb.toString, x)
+      } else {
 
-    if (waitTime <= 0) {
-      val x = p.exitValue
-      Exec.StringResult(sb.toString, x)
-    } else {
-      import scala.concurrent._
-      import scala.concurrent.duration._
-      import scala.concurrent.ExecutionContext.Implicits.global
-
-      try {
         val x = Await.result(Future {
           p.exitValue
         }, waitTime.millis)
         Exec.StringResult(sb.toString, x)
-      } catch {
-        case _: TimeoutException =>
-          p.destroy
-          Exec.Timeout
       }
+    } catch {
+      case _: TimeoutException => Exec.Timeout
+      case e: Exception => Exec.ExceptionRaised(e)
     }
   }
 
