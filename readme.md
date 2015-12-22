@@ -172,8 +172,8 @@ run by using the regular Scala interpreter.
 
 Currently, the propositional and predicate logic proof checker portion of the tool has been fully
 implemented; the programming logic checker still requires the following components to be
-implemented: (a) symbol table, (b) type checker, (c) proof checker,
-(d) runtime assertion compiler to regular Scala programs that embed contracts as assertions.
+implemented: (a) proof checker, (b) runtime assertion compiler to regular Scala programs that embed 
+contracts as assertions.
 The proof checker will make use a high-performing SMT solver such as 
 [Z3](https://github.com/Z3Prover/z3).
 
@@ -183,7 +183,7 @@ Some examples are available at the following links:
   (status: **all verified**)
 
 * [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
-  (status: parsed and ast built; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
+  (status: parsed, ast built, symbol resolved, type checked; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 The propositional and predicate logic proof checker can be run via the command line.
 Here is an example:

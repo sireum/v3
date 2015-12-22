@@ -21,12 +21,12 @@ def deposit(amount: Z): B = {
   l"""{ 1. amount ≥ 0                            premise
         2. balance == balance_in                 premise
         3. balance ≥ 0                           premise
-        4. elite == 0 ∨ balance ≥ eliteMin       premise     }"""
+        4. ¬elite ∨ balance ≥ eliteMin           premise     }"""
   balance = balance + amount
 
   l"""{ 1.  balance == balance_old + amount      premise
         2.  balance_old ≥ 0                      premise
-        3.  elite == 0 ∨ balance_old ≥ eliteMin  premise
+        3.  ¬elite ∨ balance_old ≥ eliteMin      premise
         4.  balance_old == balance_in            premise
         5.  amount ≥ 0                           premise
         6.  balance_old == balance - amount      algebra 1
@@ -42,7 +42,7 @@ def deposit(amount: Z): B = {
     l"""{ 1. balance ≥ 0                         premise
           2. balance_in == balance - amount      premise
           3. balance ≥ eliteMin                  premise
-          4. elite == 0 ∨ balance ≥ eliteMin     ∨i2 3       }"""
+          4. ¬elite ∨ balance ≥ eliteMin         ∨i2 3       }"""
 
   } else {
 
@@ -51,17 +51,20 @@ def deposit(amount: Z): B = {
     elite = false
     l"""{ 1. balance ≥ 0                         premise
           2. balance_in == balance - amount      premise
-          3. elite == 0                          premise
-          4. elite == 0 ∨ balance ≥ eliteMin     ∨i1 3       }"""
+          3. elite == false                      premise
+          4. ¬elite                              algebra 3
+          5. ¬elite ∨ balance ≥ eliteMin         ∨i1 4       }"""
   }
 
   l"""{ 1. balance_in == balance - amount        premise
         2. balance ≥ 0                           premise
-        3. elite == 0 ∨ balance ≥ eliteMin       premise     }"""
+        3. ¬elite ∨ balance ≥ eliteMin           premise     }"""
   return elite
 }
 
 def withdraw(amount: Z): B = {
+  l"""{ modifies  balance, elite                             }"""
+
   balance = balance - amount
 
   if (balance >= eliteMin) {

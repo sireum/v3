@@ -56,7 +56,6 @@ object Node {
 
   final private[ast] def checkWellFormed(unitNode: UnitNode)
                                         (implicit reporter: Reporter): Unit = {
-    val reqType = unitNode.mode.requireType
     val nodeLocMap = unitNode.nodeLocMap
     val isPredicate = unitNode.mode == LogicMode.Predicate
     val isProgram = unitNode.mode == LogicMode.Programming
@@ -69,8 +68,21 @@ object Node {
             reporter.error(li.lineBegin, li.columnBegin, li.offset,
               s"Predicate logic mode disallows explicit type specification in quantifications.")
           case _ =>
-        } else if (reqType && n.domainOpt.isEmpty) {
+        } else if (isProgram && n.domainOpt.isEmpty) {
           val li = nodeLocMap(n.ids.last)
+          reporter.error(li.lineBegin, li.columnBegin, li.offset,
+            s"Program logic mode requires explicit type specification in quantifications.")
+        }
+        true
+      case n: QuantAssumeStep =>
+        if (isPredicate) n.typeOpt match {
+          case Some(_) =>
+            val li = nodeLocMap(n.id)
+            reporter.error(li.lineBegin, li.columnBegin, li.offset,
+              s"Predicate logic mode disallows explicit type specification in quantifications.")
+          case _ =>
+        } else if (isProgram && n.typeOpt.isEmpty) {
+          val li = nodeLocMap(n.id)
           reporter.error(li.lineBegin, li.columnBegin, li.offset,
             s"Program logic mode requires explicit type specification in quantifications.")
         }
@@ -146,9 +158,6 @@ final case class LogicMode private(value: String) {
     LogicMode.counter += 1
     o
   }
-
-  def requireType: Boolean =
-    this == LogicMode.Programming
 
   override def toString = value
 }
@@ -316,13 +325,22 @@ final case class PlainAssumeStep(num: Num,
                                  exp: Exp)
   extends AssumeStep with RegularStep
 
-final case class ForallAssumeStep(num: Num,
-                                  id: Id) extends AssumeStep
+sealed trait QuantAssumeStep extends AssumeStep {
+  def id: Id
+
+  def typeOpt: Option[Type]
+}
+
+final case class ForAllAssumeStep(num: Num,
+                                  id: Id,
+                                  typeOpt: Option[Type])
+  extends QuantAssumeStep
 
 final case class ExistsAssumeStep(num: Num,
                                   id: Id,
+                                  typeOpt: Option[Type],
                                   exp: Exp)
-  extends AssumeStep with RegularStep
+  extends QuantAssumeStep with RegularStep
 
 sealed trait Exp extends Node {
   private[ast] var hasParen = false

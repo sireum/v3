@@ -90,6 +90,8 @@ object ConsoleReporter extends Reporter {
 object ErrorCountingReporter extends Reporter {
   var errors = 0
 
+  def hasError = errors > 0
+
   override def error(message: String): Unit = {
     Console.err.println(message)
     Console.err.flush()

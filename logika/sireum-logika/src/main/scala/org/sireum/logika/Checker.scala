@@ -77,10 +77,10 @@ object Checker {
             p.assumeStep match {
               case PlainAssumeStep(_, exp) =>
                 pc.addProvedStep(p.assumeStep)
-              case ForallAssumeStep(num, id) =>
+              case ForAllAssumeStep(num, id, _) =>
                 addedVars += id.value
                 pc.addVar(id, num.value)
-              case ExistsAssumeStep(num, id, exp) =>
+              case ExistsAssumeStep(num, id, exp, _) =>
                 addedVars += id.value
                 pc.addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
             }
@@ -343,7 +343,7 @@ ProofContext(mode: LogicMode,
           case Some(sp) =>
             var hasError = false
             (sp.first, sp.last) match {
-              case (fs: ForallAssumeStep, ls: RegularStep) =>
+              case (fs: ForAllAssumeStep, ls: RegularStep) =>
                 val freshVar = fs.id.value
                 if (!Checker.collectVars(ls.exp).contains(freshVar)) {
                   warn(ls.exp, s"The conclusion in step #${subProof.value} does not use the fresh variable $freshVar introducted in #${fs.num.value}.")
@@ -355,7 +355,7 @@ ProofContext(mode: LogicMode,
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[ForallAssumeStep]) {
+                if (!fs.isInstanceOf[ForAllAssumeStep]) {
                   error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
                 }
                 if (!ls.isInstanceOf[RegularStep]) {

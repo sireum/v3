@@ -4,7 +4,7 @@ val a: ZS = ZS(2, 4, 6, 0)
 
 l"""{ 1. a == ZS(2,4,6,0)                   premise
       2. {
-           3. i
+           3. i: Z
            4. {
                 5. 0 <= i && i <= 2         assume
                 6. a(i) > 1                 algebra 5 1
@@ -17,7 +17,7 @@ a(3) = 5
 l"""{ 1. all j: 0 .. 2 | a(j) > 1           premise
       2. a(3) == 5                          premise
       3. {
-           4. i
+           4. i: Z
            5. 0 <= i && i <= 2 -> a(i) > 1  alle 1 i
            6. {
                 7. 0 <= i && i <= 3         assume

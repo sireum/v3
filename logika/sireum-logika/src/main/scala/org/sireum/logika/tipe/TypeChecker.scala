@@ -31,7 +31,36 @@ import org.sireum.util._
 
 object TypeChecker {
   final def check(program: Program)(
-    implicit reporter: Reporter): Unit = {
+    implicit reporter: Reporter): Boolean = {
+    val r2 = new Reporter {
+      var hasError = false
+
+      override def error(message: String): Unit = {
+        hasError = true
+        reporter.error(message)
+      }
+
+      override def warn(message: String): Unit =
+        reporter.warn(message)
+
+      override def warn(line: PosInteger,
+                        column: PosInteger,
+                        offset: Natural, message: String): Unit =
+        reporter.warn(line, column, offset, message)
+
+      override def error(line: PosInteger,
+                         column: PosInteger,
+                         offset: Natural, message: String): Unit = {
+        hasError = true
+        reporter.error(line, column, offset, message)
+      }
+
+      override def info(message: String): Unit =
+        reporter.info(message)
+
+      override def info(line: PosInteger, column: PosInteger, offset: Natural, message: String): Unit =
+        reporter.info(line, column, offset, message)
+    }
     implicit val nodeLocMap = program.nodeLocMap
     var typeMap = imapEmpty[String, (Tipe, Node)]
     for (f@Fun(id, _, _) <- program.fact.factOrFunDecls) {
@@ -40,7 +69,8 @@ object TypeChecker {
     for (m@MethodDecl(id, _, _, _, _, _) <- program.block.stmts) {
       typeMap += id.value ->(tipe(m), m)
     }
-    TypeContext(typeMap).check(program.block)
+    TypeContext(typeMap)(nodeLocMap, r2).check(program.block)
+    !r2.hasError
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
@@ -72,9 +102,10 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
     check(p.block)
   }
 
-  def check(b: Block): Unit = {
+  def check(b: Block): TypeContext = {
     var tc = this
-    for (stmt <- b.stmts) tc = check(stmt)
+    for (stmt <- b.stmts) tc = tc.check(stmt)
+    tc
   }
 
   def check(stmt: Stmt): TypeContext = stmt match {
@@ -90,41 +121,51 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             error(stmt, s"Can only assign to a variable.")
         }
       this
-    case Assert(exp) => b(exp); this
+    case Assert(exp) => b(exp)(allowFun = false); this
     case ExpStmt(exp) =>
       check(exp, allowMethod = true)(allowFun = false); this
     case If(exp, trueBlock, falseBlock) =>
-      b(exp); check(trueBlock); check(falseBlock); this
+      b(exp)(allowFun = false)
+      check(trueBlock)
+      check(falseBlock)
+      this
     case While(exp, block, loopInv) =>
-      for (iExp <- loopInv.invariant.exps) b(iExp)
+      for (iExp <- loopInv.invariant.exps) b(iExp)(allowFun = true)
       checkModifies(loopInv.modifies, block, stmt)
-      b(exp)
+      b(exp)(allowFun = false)
       check(block)
       this
+    case _: Print => this
     case SeqAssign(id, index, exp) =>
-      zs(id); z(index); z(exp); this
+      zs(id)(allowFun = false)
+      z(index)(allowFun = false)
+      z(exp)(allowFun = false)
+      this
     case md: MethodDecl =>
       var tm = typeMap
       for (p <- md.params)
         tm = addId(p.id, TypeChecker.tipe(p.tpe), p, tm)
+      var tc = TypeContext(tm)
+      for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true)
+      checkModifies(md.contract.modifies, md.block, md)
+      for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true)
+      tc = tc.check(md.block)
       for (rt <- md.returnTypeOpt) {
         val t = TypeChecker.tipe(rt)
         tm = addId(Id("result"), t, md, tm)
         md.returnExpOpt match {
           case Some(e) =>
-            check(e, allowMethod = false)(allowFun = false) match {
+            tc.check(e, allowMethod = false)(allowFun = false) match {
               case Some(t2) =>
                 if (t != t2)
                   error(e, s"Expecting return type $t, but found $t2.")
               case _ =>
             }
+          case _ =>
+            if (md.returnTypeOpt.isEmpty)
+              error(md.returnExpOpt.get, s"Unexpected return expression.")
         }
       }
-      if (md.returnExpOpt.isDefined && md.returnTypeOpt.isEmpty)
-        error(md.returnExpOpt.get, s"Unexpected return expression.")
-      for (e <- md.contract.requires.exps) b(e)
-      checkModifies(md.contract.modifies, md.block, md)
-      for (e <- md.contract.ensures.exps) b(e)
       this
     case stmt@ProofStmt(proof) =>
       stmt.typeMap = typeMap.map(p => (p._1, p._2._1))
@@ -132,17 +173,22 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       this
     case stmt@SequentStmt(sequent) =>
       stmt.typeMap = typeMap.map(p => (p._1, p._2._1))
-      for (e <- sequent.premises) b(e)
-      for (e <- sequent.conclusions) b(e)
+      for (e <- sequent.premises) b(e)(allowFun = true)
+      for (e <- sequent.conclusions) b(e)(allowFun = true)
       sequent.proofOpt.foreach(check)
       this
-    case InvStmt(inv) => for (e <- inv.exps) b(e); this
+    case InvStmt(inv) => for (e <- inv.exps) b(e)(allowFun = true); this
   }
 
   def check(p: ProofGroup): Unit = {
+    var tc = this
     for (step <- p.allSteps) step match {
-      case step: RegularStep => b(step.exp)
-      case step: ProofGroup => check(step)
+      case step: RegularStep =>
+        tc.b(step.exp)(allowFun = true)
+      case step: QuantAssumeStep =>
+        tc = TypeContext(addId(step.id,
+          TypeChecker.tipe(step.typeOpt.get), step, typeMap))
+      case step: ProofGroup => tc.check(step)
       case _ =>
     }
   }
@@ -156,14 +202,22 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       modifiedVars += id
       typeMap.get(id.value) match {
         case Some((_, VarDecl(true, _, _))) =>
+        case Some((_, VarDecl(false, _, IntSeqType()))) =>
         case Some(_) =>
-          error(id, s"Only variable that can be modified.")
+          error(id, s"Only variable or sequence value can be modified.")
         case _ => tipe(id)
       }
     }
-    for (id <- collectAssignedVars(block) -- modifiedVars) {
-      val li = nodeLocMap(id)
-      error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop-modifies clause.")
+    if (node.isInstanceOf[While])
+      for (id <- collectAssignedVars(block) -- modifiedVars) {
+        val li = nodeLocMap(id)
+        error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause.")
+      }
+    else {
+      for (id <- (collectAssignedVars(block) & typeMap.keySet.map(Id)) -- modifiedVars) {
+        val li = nodeLocMap(id)
+        error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] but not declared in the function modifies clause.")
+      }
     }
   }
 
@@ -270,22 +324,22 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
     r
   }
 
-  def b(e: Exp): Unit =
-    check(e)(allowFun = false) match {
+  def b(e: Exp)(implicit allowFun: Boolean): Unit =
+    check(e)(allowFun) match {
       case Some(B) =>
       case Some(t) => error(e, s"Expecting an expression of type B, but found $t.")
       case _ =>
     }
 
-  def z(e: Exp): Unit =
-    check(e)(allowFun = false) match {
+  def z(e: Exp)(implicit allowFun: Boolean): Unit =
+    check(e) match {
       case Some(Z) =>
       case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
       case _ =>
     }
 
-  def zs(e: Exp): Unit =
-    check(e)(allowFun = false) match {
+  def zs(e: Exp)(implicit allowFun: Boolean): Unit =
+    check(e) match {
       case Some(ZS) =>
       case Some(t) => error(e, s"Expecting an expression of type ZS, but found $t.")
       case _ =>
@@ -294,6 +348,17 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
   def tipe(id: Id): Option[Tipe] = typeMap.get(id.value) match {
     case Some((t, _)) => Some(t)
     case _ =>
+      if (id.value.endsWith("_old")) {
+        typeMap.get(id.value.substring(0, id.value.length - 4)) match {
+          case Some((t, _)) => return Some(t)
+          case _ =>
+        }
+      } else if (id.value.endsWith("_in")) {
+        typeMap.get(id.value.substring(0, id.value.length - 3)) match {
+          case Some((t, _)) => return Some(t)
+          case _ =>
+        }
+      }
       error(id, s"Undeclared identifier ${id.value}.")
       None
   }

@@ -220,12 +220,14 @@ final private class Builder(implicit reporter: Reporter) {
       if (ctx.ate != null)
         if (ctx.ID != null)
           ExistsAssumeStep(assume, buildId(ctx.ID),
+            Option(ctx.`type`).map(build),
             build(ctx.formula)) at(ctx.assume, ctx.ate)
         else
           PlainAssumeStep(assume,
             build(ctx.formula)) at(ctx.assume, ctx.ate)
       else
-        ForallAssumeStep(assume, buildId(ctx.ID)) at ctx.ID
+        ForAllAssumeStep(assume,
+          buildId(ctx.ID), Option(ctx.`type`).map(build)) at ctx.ID
     SubProof(num, assumeStep, Option(ctx.proofStep).map(_.map(build)).
       getOrElse(Node.emptySeq)) at ctx
   }
@@ -411,7 +413,9 @@ final private class Builder(implicit reporter: Reporter) {
               LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq))))
         case ctx: PrintStmtContext =>
           errorIf(ctx.s, "s")
-          Print(ctx.op.getText == "println", StringLit(ctx.STRING.getText))
+          val text = ctx.STRING.getText
+          Print(ctx.op.getText == "println",
+            StringLit(text.substring(1, text.length - 1)))
         case ctx: SeqAssignStmtContext =>
           SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r))
         case ctx: MethodDeclStmtContext =>
@@ -472,7 +476,10 @@ final private class Builder(implicit reporter: Reporter) {
       case ctx: SeqExpContext =>
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
       case ctx: ReadIntExpContext =>
-        ReadInt(Option(ctx.STRING).map(x => StringLit(x.getText)))
+        ReadInt(Option(ctx.STRING).map { x =>
+          val text = x.getText
+          StringLit(text.substring(1, text.length - 1))
+        })
       case ctx: ParenExpContext =>
         val r = build(ctx.exp)
         r.hasParen = true
@@ -636,10 +643,9 @@ object Builder {
   import org.antlr.v4.runtime._
   import scala.reflect.runtime.universe._
 
-  def apply[T <: UnitNode](input: String,
-                           maxErrors: Natural = 0,
-                           reporter: Reporter = ConsoleReporter)
-                          (implicit tag: TypeTag[T]): Option[T] = {
+  def apply[T <: UnitNode](input: String, maxErrors: Natural = 0)(
+    implicit tag: TypeTag[T],
+    reporter: Reporter = ConsoleReporter): Option[T] = {
     class ParsingEscape extends RuntimeException
 
     val sr = new StringReader(input)
@@ -702,7 +708,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.sequentFile()
             if (success) {
-              val ast = new Builder().build(parseTree)
+              val ast = new Builder()(rptr).build(parseTree)
               if (success) Some(ast.asInstanceOf[T])
               else None
             } else None
@@ -710,7 +716,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.proofFile()
             if (success) {
-              val ast = new Builder().build(parseTree)
+              val ast = new Builder()(rptr).build(parseTree)
               if (success) Some(ast.asInstanceOf[T])
               else None
             } else None
@@ -718,14 +724,14 @@ object Builder {
             orientNewlines(tokenStream, isProgram = true)
             val parseTree = parser.programFile()
             if (success) {
-              val ast = new Builder().build(parseTree)
+              val ast = new Builder()(rptr).build(parseTree)
               if (success) Some(ast.asInstanceOf[T])
               else None
             } else None
         }
       r match {
         case Some(un) =>
-          Node.checkWellFormed(un)
+          Node.checkWellFormed(un)(rptr)
           if (success) r else None
         case None => None
       }

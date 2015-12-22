@@ -21,9 +21,9 @@ def factorial(n: Z): Z = {
     l"""{ 1. sub == f(n - 1)        premise        }"""
     ans = n * sub
     l"""{ 1. ans == n * sub         premise
-          2. sub == mult(n-1)       premise
-          3. ans == n * mult(n-1)   algebra 2 1
-          4. ans == mult(n-1) * n   algebra 3
+          2. sub == f(n-1)          premise
+          3. ans == n * f(n-1)      algebra 2 1
+          4. ans == f(n-1) * n      algebra 3
           5. f(n) == f(n-1) * n     foralle base n
           6. ans == f(n)            algebra 5 4    }"""
   }

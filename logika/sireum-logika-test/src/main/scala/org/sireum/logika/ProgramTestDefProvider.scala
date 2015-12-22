@@ -28,6 +28,8 @@ package org.sireum.logika
 import java.io.InputStreamReader
 
 import org.sireum.logika.ast._
+import org.sireum.logika.tipe.TypeChecker
+import org.sireum.logika.util.ErrorCountingReporter
 import org.sireum.test._
 import org.sireum.util._
 import org.sireum.util.jvm.FileUtil
@@ -38,32 +40,32 @@ final class ProgramTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] =
     (1 to 14).toVector.map { x =>
       val name = f"assignment-$x%02d"
-      ConditionTest(name, ast(name))
+      ConditionTest(name, check(name))
     } ++
       (1 to 1).toVector.map { x =>
         val name = f"conditional-$x%d"
-        ConditionTest(name, ast(name))
+        ConditionTest(name, check(name))
       } ++
       (2 to 3).toVector.map { x =>
         val name = f"function-$x%d"
-        ConditionTest(name, ast(name))
+        ConditionTest(name, check(name))
       } ++
       (1 to 3).toVector.map { x =>
         val name = f"function-to-loop-$x%d"
-        ConditionTest(name, ast(name))
+        ConditionTest(name, check(name))
       } ++
       (0 to 3).toVector.map { x =>
         val name = f"seq-$x%d"
-        ConditionTest(name, ast(name))
+        ConditionTest(name, check(name))
       } :+
-      ConditionTest("bank", ast("bank"))
+      ConditionTest("bank", check("bank"))
 
-  def ast(filename: String): Boolean = {
+  def check(filename: String): Boolean = {
     val r = new InputStreamReader(
       getClass.getResourceAsStream(filename + ".scala"))
     val text = FileUtil.readFile(r)
     r.close()
-    val programOpt = Builder[Program](text)
-    programOpt.isDefined
+    implicit val reporter = ErrorCountingReporter
+    Builder[Program](text).exists(TypeChecker.check)
   }
 }

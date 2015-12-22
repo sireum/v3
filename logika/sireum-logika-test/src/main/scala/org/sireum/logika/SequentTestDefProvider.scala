@@ -472,11 +472,10 @@ final class SequentTestDefProvider(tf: TestFramework)
   )
 
   def check(text: String, m: LogicMode): Boolean = {
-    val sequentOpt = Builder[Sequent](input = text,
-      reporter = ErrorCountingReporter)
+    implicit val reporter = ErrorCountingReporter
+    val sequentOpt = Builder[Sequent](input = text)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
     if (!r) return false
-    implicit val reporter = ErrorCountingReporter
     Checker.check(sequentOpt.get)
   }
 }

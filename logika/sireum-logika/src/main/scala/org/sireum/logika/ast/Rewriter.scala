@@ -115,8 +115,8 @@ object Rewriter {
       org.sireum.logika.ast.Exists(cast(ids), cast(domainOpt), exp)
     }),
     ("ExistsAssumeStep", { es =>
-      val Seq(num: Num, id: Id, exp: Exp) = es
-      org.sireum.logika.ast.ExistsAssumeStep(num, id, exp)
+      val Seq(num: Num, id: Id, typeOpt: Option[_], exp: Exp) = es
+      org.sireum.logika.ast.ExistsAssumeStep(num, id, cast(typeOpt), exp)
     }),
     ("ExistsElim", { es =>
       val Seq(num: Num, exp: Exp, stepOrFact: NumOrId, subProof: Num) = es
@@ -142,6 +142,10 @@ object Rewriter {
       val Seq(ids: IVector[_], domainOpt: Option[_], exp: Exp) = es
       org.sireum.logika.ast.ForAll(cast(ids), cast(domainOpt), exp)
     }),
+    ("ForAllAssumeStep", { es =>
+      val Seq(num: Num, id: Id, typeOpt: Option[_]) = es
+      org.sireum.logika.ast.ForAllAssumeStep(num, id, cast(typeOpt))
+    }),
     ("ForAllElim", { es =>
       val Seq(num: Num, exp: Exp, stepOrFact: NumOrId, args: IVector[_]) = es
       org.sireum.logika.ast.ForAllElim(num, exp, stepOrFact, cast(args))
@@ -149,10 +153,6 @@ object Rewriter {
     ("ForAllIntro", { es =>
       val Seq(num: Num, exp: ForAll, subProof: Num) = es
       org.sireum.logika.ast.ForAllIntro(num, exp, subProof)
-    }),
-    ("ForallAssumeStep", { es =>
-      val Seq(num: Num, id: Id) = es
-      org.sireum.logika.ast.ForallAssumeStep(num, id)
     }),
     ("Fun", { es =>
       val Seq(id: Id, params: IVector[_], returnType: Type) = es
