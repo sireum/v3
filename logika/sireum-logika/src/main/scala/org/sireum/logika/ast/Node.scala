@@ -47,7 +47,8 @@ object Node {
         false
       case _: Mul | _: Div | _: Rem | _: Add | _: Sub |
            _: Lt | _: Le | _: Gt | _: Ge |
-           _: Minus | _: IntLit | _: Quant if m == LogicMode.Propositional =>
+           _: Minus | _: IntLit |
+           _: Apply | _: Quant if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
