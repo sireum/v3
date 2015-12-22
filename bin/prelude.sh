@@ -1,5 +1,5 @@
 #!/bin/bash
-COMMANDS="wget unzip rm mv"
+COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { echo "${COMMAND} command not found; aborting..."; exit 1; }
 done

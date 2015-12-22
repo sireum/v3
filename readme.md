@@ -1,9 +1,9 @@
 Requirements
 ============
 
-Supported platforms:
+Supported platforms (64-bit only):
 
-* x86-64 OS X (tested on El Capitan -- 10.11)
+* OS X (tested on El Capitan -- 10.11)
 
 * Linux (tested on Ubuntu 14.04)
 
@@ -13,75 +13,29 @@ Supported platforms:
 All Supported Platforms
 -----------------------
 
-* Tools: `bash`, `git`, `unzip`, `wget`
+* Required tools: `bash`, `git`, `unzip`, `wget`
 
 Windows
 -------
 
-* [MSYS2](https://msys2.github.io)
+* Required tools: [MSYS2](https://msys2.github.io)
 
   ```bash
   pacman -S git unzip wget
   ```
+  
+Running Sireum
+==============
 
-Building and Testing Sireum using Sbt
-=====================================
+Run: `./sireum`
 
-Run: `bin/sbt-launch.sh test`
+(If this is your first time running the script, it first:
 
-(If this is your first time running the script, it first downloads Zulu JDK 8, Node.js, and Sbt, and then
-it installs them under the `platform` directory.)
+* downloads Zulu JDK 8, Node.js, and Sbt, and then installs them under the `platform` directory;
 
-**Warning:** If you use Gradle (on other projects), your Ivy2 cache might be corrupted.
-In such case, Sbt will complain about unresolved dependencies, e.g.:
+* downloads Z3 and installs it under the `apps` directory; and
 
-```
-...
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn] 	::          UNRESOLVED DEPENDENCIES         ::
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn] 	:: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn]
-[warn] 	Note: Unresolved dependencies path:
-[warn] 		junit:junit:4.11
-[warn] 		  +- com.novocode:junit-interface:0.11 (/Users/rvprasad/Workspace/sireum-v3/project/SireumBuild.scala#L163)
-[warn] 		  +- org.sireum:sireum-core-test_2.11:3.0-SNAPSHOT ()
-...
-sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
-	at sbt.IvyActions$.sbt$IvyActions$$resolve(IvyActions.scala:291)
-	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:188)
-	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:165)
-  ...
-```
-
-To fix it, you need to delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
-corrupted library cache such as junit for the example above; in the worst case, delete all cache).
-
-Once you deleted the corrupted cache, run Sbt again and it should work.
-You can then check that your Gradle builds still work once Sbt fixed/recreated your Ivy2 cache.
-
-
-Assembling a Fat Jar
-====================
-
-Run: `bin/sbt-launch.sh assembly`
- 
-The jar will be located at `jvm/target/scala-2.11/sireum.jar`
-
-
-Running Sireum from the Fat Jar
-===============================
-
-Let `sireum` be an alias for: `platform/java/bin/java -jar path/to/sireum.jar`
-
-e.g., in bash:
-
-```bash
-alias sireum="platform/java/bin/java -jar jvm/target/scala-2.11/sireum.jar"
-```
-
-Run: `sireum`
+* [builds](#building-and-testing-sireum-using-sbt) and [assembles](#assembling-sireum-jar) Sireum.)
 
 ```
 Sireum: A Software Analysis Platform (v3)
@@ -245,6 +199,50 @@ Logika will output:
 [12, 10] The disjunction's left sub-expression in step #9 does not match #8 for Or-intro1.
 Propositional logic proof is rejected.
 ```
+
+
+Building and Testing Sireum using Sbt
+=====================================
+
+Run: `bin/sbt-launch.sh test`
+
+**Warning:** If you use Gradle (on other projects), your Ivy2 cache might be corrupted.
+In such case, Sbt will complain about unresolved dependencies, e.g.:
+
+```
+...
+[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
+[warn] 	::          UNRESOLVED DEPENDENCIES         ::
+[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
+[warn] 	:: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
+[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
+[warn]
+[warn] 	Note: Unresolved dependencies path:
+[warn] 		junit:junit:4.11
+[warn] 		  +- com.novocode:junit-interface:0.11 (/Users/rvprasad/Workspace/sireum-v3/project/SireumBuild.scala#L163)
+[warn] 		  +- org.sireum:sireum-core-test_2.11:3.0-SNAPSHOT ()
+...
+sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
+	at sbt.IvyActions$.sbt$IvyActions$$resolve(IvyActions.scala:291)
+	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:188)
+	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:165)
+  ...
+```
+
+To fix it, you need to delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
+corrupted library cache such as junit for the example above; in the worst case, delete all cache).
+
+Once you deleted the corrupted cache, run Sbt again and it should work.
+You can then check that your Gradle builds still work once Sbt fixed/recreated your Ivy2 cache.
+
+
+Assembling Sireum Jar
+=====================
+
+Run: `bin/sbt-launch.sh assembly`
+ 
+The jar will be located at `jvm/target/scala-2.11/sireum.jar`
+
 
 Development Environment
 =======================
