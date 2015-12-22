@@ -257,8 +257,9 @@ The jar will be located at `jvm/target/scala-2.11/sireum.jar`
 Development Environment
 =======================
 
-IntelliJ is the recommended IDE for Sireum v3 development.
-Jetbrains has graciously provided free licenses for IntelliJ Ultimate for Sireum project members
+[IntelliJ IDEA](https://www.jetbrains.com/idea/) 
+is the recommended IDE for Sireum v3 development.
+JetBrains has graciously provided free licenses for IntelliJ Ultimate for Sireum project members
 (claim a license [here](https://docs.google.com/document/d/1YC1KY4qALJ10VoHfF9KAdqP9vGq5v5MlOvGAKKL697U/edit#));
 however, you can also use IntelliJ Community Edition.
 
