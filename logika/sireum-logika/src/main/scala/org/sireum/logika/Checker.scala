@@ -61,7 +61,8 @@ object Checker {
           else reporter.error(s"${unitNode.mode.value} logic proof is rejected.")
           r
         case _ =>
-          ???
+          reporter.error(s"${unitNode.mode.value} logic proof is yet to be done.")
+          false
       }
   }
 
