@@ -121,8 +121,14 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             id.tipe = tId
             if (tId != tExp)
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
+            else if (tId == ZS)
+              exp match {
+                case _: SeqLit | _: Clone | _: Prepend | _: Append =>
+                case _ =>
+                  error(stmt, s"Assignment to a var of ZS type can only be done from a ZS literal, clone, prepend (+:), or append (:+).")
+              }
           case _ =>
-            error(stmt, s"Can only assign to a variable.")
+            error(stmt, s"Can only assign to a var.")
         }
       this
     case Assert(exp) => b(exp)(allowFun = false); this
