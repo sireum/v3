@@ -21,7 +21,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="sireum-option" exported="" />
     <orderEntry type="module" module-name="sireum-pilar" exported="" />
     <orderEntry type="module" module-name="sireum-util" exported="" />
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />

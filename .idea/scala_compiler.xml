@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <profile name="SBT" modules="sireum,sireum-awas,sireum-option,sireum-pilar,sireum-util,sireum-java,sireum-js" />
-    <profile name="SBT" modules="sireum-awas-parser-antlr4,sireum-awas-test,sireum-cli,sireum-core-test,sireum-pilar-parser-antlr4,sireum-util-jvm,sireum-util-reflect,sireum-java-test,sireum-java-translator,sireum-jvm,sireum-logika,sireum-logika-parser-antlr4,sireum-logika-test">
+    <profile name="SBT" modules="sireum-awas-parser-antlr4,sireum-awas-test,sireum-cli,sireum-cli-test,sireum-util-reflect,sireum-core-test,sireum-pilar-parser-antlr4,sireum-util-jvm,sireum-java-test,sireum-java-translator,sireum-jvm,sireum-logika,sireum-logika-parser-antlr4,sireum-logika-test">
       <option name="featureWarnings" value="true" />
       <parameters>
         <parameter value="-target:jvm-1.8" />

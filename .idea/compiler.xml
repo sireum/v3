@@ -23,6 +23,7 @@
       <module name="sireum-awas-parser-antlr4" target="1.8" />
       <module name="sireum-awas-test" target="1.8" />
       <module name="sireum-cli" target="1.8" />
+      <module name="sireum-cli-test" target="1.8" />
       <module name="sireum-core-test" target="1.8" />
       <module name="sireum-java" target="1.8" />
       <module name="sireum-java-test" target="1.8" />

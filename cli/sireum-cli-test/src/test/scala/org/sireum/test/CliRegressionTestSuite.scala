@@ -27,16 +27,12 @@ package org.sireum.test
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.sireum.pilar.ast.{PrettyPrinterTest, AstTest}
-import org.sireum.pilar.parser.{Antlr4PilarParserTest, FastParserTest}
+import org.sireum.util.reflect.ReflectionTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
-    classOf[FastParserTest],
-    classOf[Antlr4PilarParserTest],
-    classOf[AstTest],
-    classOf[PrettyPrinterTest]
+    classOf[ReflectionTest]
   )
 )
-final class CoreRegressionTestSuite
+final class CliRegressionTestSuite

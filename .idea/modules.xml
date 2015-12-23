@@ -12,6 +12,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-cli-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-cli-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-js-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-js-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-js-test-build.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-js-test-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" filepath="$PROJECT_DIR$/.idea/modules/sireum-core-test.iml" />

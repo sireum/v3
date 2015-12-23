@@ -31,7 +31,6 @@
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
     <orderEntry type="module" module-name="sireum-pilar-parser-antlr4" exported="" />
-    <orderEntry type="module" module-name="sireum-cli" exported="" />
     <orderEntry type="module" module-name="sireum-option" exported="" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm:5.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.7:jar" level="project" />
@@ -48,5 +47,6 @@
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.11:0.7.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.16:jar" level="project" />
     <orderEntry type="module" module-name="sireum-util-jvm" exported="" />
+    <orderEntry type="module" module-name="sireum-util-reflect" exported="" />
   </component>
 </module>
