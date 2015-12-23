@@ -154,12 +154,26 @@ object Node {
         }
         true
       case m: MethodDecl =>
-        for (s <- m.block.stmts) s match {
-          case _: MethodDecl =>
-            val sLi = nodeLocMap(s)
-            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
-              s"Methods cannot be defined inside another method.")
-          case _ =>
+        for (s <- m.block.stmts) {
+          s match {
+            case _: MethodDecl =>
+              val sLi = nodeLocMap(s)
+              reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
+                s"Methods cannot be defined inside another method.")
+            case _ =>
+          }
+          Visitor.build({
+            case n: InvStmt =>
+              val nLi = nodeLocMap(s)
+              reporter.error(nLi.lineBegin, nLi.columnBegin, nLi.offset,
+                s"Invariants cannot be defined inside a method.")
+              false
+            case n: Invariant =>
+              val nLi = nodeLocMap(s)
+              reporter.error(nLi.lineBegin, nLi.columnBegin, nLi.offset,
+                s"Invariant justification cannot be used inside a method.")
+              false
+          })(s)
         }
         true
     })
