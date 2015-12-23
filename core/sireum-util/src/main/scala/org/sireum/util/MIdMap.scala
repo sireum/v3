@@ -43,4 +43,7 @@ final class MIdMap[K <: AnyRef, V] extends scala.collection.mutable.HashMap[K, V
 
   override protected def elemHashCode(key: K): Int =
     System.identityHashCode(key)
+
+  override def clone: MIdMap[K, V] =
+    MIdMap[K, V](this.toSeq: _*)
 }
