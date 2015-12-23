@@ -6,7 +6,11 @@ SIREUM_JAR=${SIREUM_HOME}/jvm/target/scala-2.11/sireum.jar
 SIREUM_VERSION=$( git log -n 1 --pretty=format:"%H" )
 grep -q "${SIREUM_VERSION}" bin/VER &> /dev/null && BUILD_SIREUM=false || BUILD_SIREUM=true
 if [ ! -f ${SIREUM_JAR} ] || [ "$(git status -s)" != "" ] || [ ${BUILD_SIREUM} = "true" ]; then
-  /bin/bash ${SIREUM_HOME}/bin/sbt-launch.sh assembly
+  if [ "$(git status -s)" != "" ]; then
+    SIREUM_RELEASE=true ${SIREUM_HOME}/bin/sbt-launch.sh assembly
+  else
+    SIREUM_RELEASE=true ${SIREUM_HOME}/bin/sbt-launch.sh clean assembly
+  fi
   echo "${SIREUM_VERSION}" > bin/VER
 else
   /bin/bash ${SIREUM_HOME}/bin/prelude.sh
