@@ -277,7 +277,11 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             None
           case _ => None
         }
-      case _: ReadInt | _: IntLit => someZ
+      case _: ReadInt =>
+        if (!allowMethod)
+          error(e, s"Invoking readInt is only allowed at statement level.")
+        someZ
+      case _: IntLit => someZ
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
