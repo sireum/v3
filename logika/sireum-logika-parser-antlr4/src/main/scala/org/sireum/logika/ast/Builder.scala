@@ -329,7 +329,7 @@ final private class Builder(implicit reporter: Reporter) {
 
   private def buildInt(t: Token): IntLit = IntLit(t.getText)
 
-  private def build(ctx: QformulaContext): Quant = {
+  private def build(ctx: QformulaContext): Quant[_] = {
     val apply =
       ctx.q.getText match {
         case "forall" | "all" | "A" | "∀" => ForAll

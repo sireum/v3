@@ -64,7 +64,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
   def isValid(e: Exp): Boolean = {
     stMain.add("e", translate(e))
     Visitor.build({
-      case q: Quant =>
+      case q: Quant[_] =>
         for (id <- q.ids) {
           typeMap -= id.value
         }
@@ -173,7 +173,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
       case Minus(exp) =>
         stg.getInstanceOf("unary").add("op", "-").
           add("exp", translate(exp))
-      case e: Quant =>
+      case e: Quant[_] =>
         val isForAll = e.isInstanceOf[ForAll]
         val stType = (e.domainOpt: @unchecked) match {
           case Some(RangeDomain(lo, hi)) =>

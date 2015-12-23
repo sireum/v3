@@ -48,7 +48,7 @@ object Node {
            _: Minus =>
         m = LogicMode.Programming
         false
-      case _: Apply | _: Quant if m == LogicMode.Propositional =>
+      case _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
@@ -82,7 +82,7 @@ object Node {
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
     lazy val v: Any => Boolean = Visitor.build({
-      case n: Quant =>
+      case n: Quant[_] =>
         if (isPredicate) n.domainOpt match {
           case Some(_) =>
             val li = nodeLocMap(n.ids.last)
@@ -489,7 +489,7 @@ final case class Minus(exp: Exp) extends UnaryExp {
   val op = "-"
 }
 
-sealed trait Quant extends Exp {
+sealed trait Quant[T <: Quant[T]] extends Exp {
   def op: String
 
   def ids: Node.Seq[Id]
@@ -498,34 +498,39 @@ sealed trait Quant extends Exp {
 
   def exp: Exp
 
+  private var simplified: T = _
+
   final def simplify
-  (implicit nodeLocMap: MIdMap[Node, LocationInfo]): Quant = {
-    domainOpt match {
-      case Some(rd@RangeDomain(lo, hi)) =>
-        val loLi = nodeLocMap(lo)
-        val hiLi = nodeLocMap(hi)
-        val rdLi = nodeLocMap(rd)
-        val isForAll = isInstanceOf[ForAll]
-        def range(id: Id, l: Exp, h: Exp) =
-          And(Le(l, id) at loLi, Le(id, h) at hiLi) at rdLi
-        val apply = if (isForAll) ForAll else Exists
-        var antecedent = range(ids.head, lo, hi)
-        for (id <- ids.tail) {
-          val idLi = nodeLocMap(id)
-          antecedent = And(antecedent, range(id, lo, hi)) at(idLi, rdLi)
-        }
-        val expLi = nodeLocMap(exp)
-        apply(ids, Some(TypeDomain(IntType())),
-          Implies(antecedent, exp) at(rdLi, expLi))
-      case _ => this
-    }
+  (implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = {
+    if (simplified != null) return simplified
+    simplified =
+      domainOpt match {
+        case Some(rd@RangeDomain(lo, hi)) =>
+          val loLi = nodeLocMap(lo)
+          val hiLi = nodeLocMap(hi)
+          val rdLi = nodeLocMap(rd)
+          val isForAll = isInstanceOf[ForAll]
+          def range(id: Id, l: Exp, h: Exp) =
+            And(Le(l, id) at loLi, Le(id, h) at hiLi) at rdLi
+          val apply = if (isForAll) ForAll else Exists
+          var antecedent = range(ids.head, lo, hi)
+          for (id <- ids.tail) {
+            val idLi = nodeLocMap(id)
+            antecedent = And(antecedent, range(id, lo, hi)) at(idLi, rdLi)
+          }
+          val expLi = nodeLocMap(exp)
+          apply(ids, Some(TypeDomain(IntType())),
+            Implies(antecedent, exp) at(rdLi, expLi)).asInstanceOf[T]
+        case _ => this.asInstanceOf[T]
+      }
+    simplified
   }
 }
 
 final case class ForAll(ids: Node.Seq[Id],
                         domainOpt: Option[QuantDomain],
                         exp: Exp)
-  extends Quant {
+  extends Quant[ForAll] {
   val op = "all"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
@@ -534,7 +539,7 @@ final case class ForAll(ids: Node.Seq[Id],
 final case class Exists(ids: Node.Seq[Id],
                         domainOpt: Option[QuantDomain],
                         exp: Exp)
-  extends Quant {
+  extends Quant[Exists] {
   val op = "some"
 }
 

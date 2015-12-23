@@ -170,7 +170,7 @@ ProofContext(mode: LogicMode,
         }
       case OrElim(_, exp, orStep, lSubProof, rSubProof) =>
         findRegularStepExp(orStep, num) match {
-          case Some(Or(lExp, rExp)) =>
+          case someE@Some(_: Or | _: Le | _: Ge) =>
             val r =
               for (lsp <- findSubProof(lSubProof, num);
                    rsp <- findSubProof(rSubProof, num)) yield {
@@ -178,6 +178,12 @@ ProofContext(mode: LogicMode,
                 (lsp.first, rsp.first, lsp.last, rsp.last) match {
                   case (lfs: PlainAssumeStep, rfs: PlainAssumeStep,
                   lls: RegularStep, rls: RegularStep) =>
+                    val (lExp, rExp) =
+                      (someE.x: @unchecked) match {
+                        case Or(le, re) => (le, re)
+                        case Le(le, re) => (Lt(le, re), Eq(le, re))
+                        case Ge(le, re) => (Gt(le, re), Eq(le, re))
+                      }
                     if (lfs.exp != lExp) {
                       error(lSubProof, s"Assumed expression does not match the left sub-expression of #${orStep.value} for Or-elim in step #$num.")
                       hasError = true
@@ -339,20 +345,20 @@ ProofContext(mode: LogicMode,
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case ForAllIntro(_, exp, subProof) =>
+      case ForAllIntro(_, q, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = false
             (sp.first, sp.last) match {
               case (fs: ForAllAssumeStep, ls: RegularStep) =>
-                val freshVar = fs.id.value
+                val freshVarId = fs.id
+                val freshVar = freshVarId.value
                 if (!Checker.collectVars(ls.exp).contains(freshVar)) {
                   warn(ls.exp, s"The conclusion in step #${subProof.value} does not use the fresh variable $freshVar introducted in #${fs.num.value}.")
                 }
-                val expected =
-                  Checker.subst(exp.exp, Map(exp.ids.head -> Id(freshVar)))
+                val expected = Checker.subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
                 if (expected != ls.exp) {
-                  error(exp, s"Supplying $freshVar for ${exp.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
+                  error(q, s"Supplying $freshVar for ${q.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
                   hasError = true
                 }
               case (fs, ls) =>
@@ -370,7 +376,7 @@ ProofContext(mode: LogicMode,
       case ForAllElim(_, exp, stepOrFact, args) =>
         findRegularStepOrFactExp(stepOrFact, num) match {
           case Some(q: ForAll) =>
-            buildSubstMap(q, args) match {
+            buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = Checker.subst(e, m)
                 if (exp != expected) {
@@ -384,14 +390,14 @@ ProofContext(mode: LogicMode,
             error(stepOrFact, s"Forall-elim in $num requires a universal quantification ${text(stepOrFact)}.")
           case _ => None
         }
-      case ExistsIntro(_, exp, step2, args) =>
+      case ExistsIntro(_, q, step2, args) =>
         findRegularStepExp(step2, num) match {
           case Some(result) =>
-            buildSubstMap(exp, args) match {
+            buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = Checker.subst(e, m)
                 if (result != expected) {
-                  error(exp, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
+                  error(q, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
                   None
                 } else addProvedStep(step)
               case _ =>
@@ -408,7 +414,7 @@ ProofContext(mode: LogicMode,
                 (sp.first, sp.last) match {
                   case (fs: ExistsAssumeStep, ls: RegularStep) =>
                     val freshVar = fs.id.value
-                    val expected = Checker.subst(q.exp, Map(q.ids.head -> Id(freshVar)))
+                    val expected = Checker.subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
                     if (expected != fs.exp) {
                       error(exp, s"Supplying $freshVar for ${q.ids.head} ${text(stepOrFact)} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
@@ -440,7 +446,7 @@ ProofContext(mode: LogicMode,
     }
   }
 
-  def buildSubstMap(q: Quant, args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
+  def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
     val r = imapEmpty[Node, Node] ++ q.ids.zip(args)
     if (r.isEmpty) None
     else if (r.size < q.ids.size) {
@@ -452,7 +458,7 @@ ProofContext(mode: LogicMode,
       }
     } else if (r.size < args.size) {
       q.exp match {
-        case q2: Quant =>
+        case q2: Quant[_] =>
           buildSubstMap(q2, args.slice(r.size, args.size)) match {
             case Some((m, e)) => Some((r ++ m, e))
             case _ => None
