@@ -142,11 +142,8 @@ The programming input language is a restricted subset of the Scala programming l
 run by using the regular Scala interpreter.
 
 Currently, the propositional and predicate logic proof checker portion of the tool has been fully
-implemented; the programming logic checker still requires the following components to be
-implemented: (a) proof checker, (b) runtime assertion compiler to regular Scala programs that embeds 
-contracts as Scala assertions.
-The proof checker will make use a high-performing SMT solver such as 
-[Z3](https://github.com/Z3Prover/z3).
+implemented; the programming logic proof checker has been implemented up to the type checking phase
+and the interface to the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver.
 
 Some examples are available at the following links:
 
@@ -154,7 +151,8 @@ Some examples are available at the following links:
   (status: **all verified**)
 
 * [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
-  (status: parsed, ast built, symbol resolved, type checked; all examples runnable by the Scala interpreter, requires [Logika runtime lib](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
+  (status: parsed, AST built, symbol resolved, type checked, and Z3 interface implemented; all examples runnable by the Scala interpreter, which requires 
+  the [Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 Running Logika
 --------------
