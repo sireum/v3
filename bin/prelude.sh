@@ -49,7 +49,11 @@ if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   echo "Moving ${ZULU_DIR} to java"
   rm -fR java
   mv ${ZULU_DIR} java
-  echo "${ZULU_VERSION}" > java/VER
+  if [ -d "java/bin" ]; then
+    echo "${ZULU_VERSION}" > java/VER
+  else
+    echo "Could not install Zulu JDK ${ZULU_VERSION}."
+  fi
 fi
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
@@ -68,7 +72,11 @@ if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   echo
   echo "Deleting ${SBT_DROP}"
   rm ${SBT_DROP}
-  echo "${SBT_VERSION}" > sbt/VER
+  if [ -d "sbt/bin" ]; then
+    echo "${SBT_VERSION}" > sbt/VER
+  else
+    echo "Could not install Sbt ${SBT_VERSION}."
+  fi
 fi
 grep -q ${NODE_VERSION} node/VER &> /dev/null && NODE_UPDATE=false || NODE_UPDATE=true
 if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
@@ -84,7 +92,11 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     echo
     wget ${NODE_DROP_URL}
     cd ../..
-    echo "${NODE_VERSION}" > node/VER
+    if [ -d "node/bin" ]; then
+      echo "${NODE_VERSION}" > node/VER
+    else
+      echo "Could not install Node.js ${NODE_VERSION}."
+    fi
   else
     NODE_DROP="${NODE_DROP_URL##*/}"
     NODE_DIR="${NODE_DROP%.tar.gz}"
@@ -104,7 +116,11 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     echo "Moving ${NODE_DIR} to node"
     rm -fR node
     mv ${NODE_DIR} node
-    echo "${NODE_VERSION}" > node/VER
+    if [ -d "node/bin" ]; then
+      echo "${NODE_VERSION}" > node/VER
+    else
+      echo "Could not install Node.js ${NODE_VERSION}."
+    fi
   fi
 fi
 mkdir -p ${REPO}/apps
@@ -129,5 +145,9 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   echo "Moving ${Z3_DIR} to z3"
   rm -fR z3
   mv ${Z3_DIR} z3
-  echo "${Z3_VERSION}" > z3/VER
+  if [ -d "z3/bin" ]; then
+    echo "${Z3_VERSION}" > z3/VER
+  else
+    echo "Could not install Z3 ${Z3_VERSION}."
+  fi
 fi
