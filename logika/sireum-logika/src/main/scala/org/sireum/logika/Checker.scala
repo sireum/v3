@@ -31,6 +31,7 @@ import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
 
 object Checker {
+  private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
 
   final def check(unitNode: UnitNode)(
@@ -129,7 +130,7 @@ ProofContext(mode: LogicMode,
     val num = step.num.value
     step match {
       case Premise(_, exp) =>
-        if (premises.contains(exp)) addProvedStep(step)
+        if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
         else error(exp, s"Could not find the claimed premise in step #$num.")
       case AndIntro(_, and, lStep, rStep) =>
         (for (lExp <- findRegularStepExp(lStep, num);
