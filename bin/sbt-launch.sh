@@ -12,5 +12,5 @@ if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ]; then
 fi
 PATH=${NODE_BIN}:${PATH}
 : ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled}
-: ${JAVA_PROPERTIES:=-Dsbt.log.format=false}
+: ${JAVA_PROPERTIES:=-Dsbt.log.format=false -Dfile.encoding=UTF-8}
 ${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -jar ${SBT_JAR} "$@"

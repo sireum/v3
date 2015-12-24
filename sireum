@@ -16,5 +16,5 @@ else
   /bin/bash ${SIREUM_HOME}/bin/prelude.sh
 fi
 : ${JAVA_OPTIONS:=-Xmx1G -XX:+UseG1GC}
-: ${JAVA_PROPERTIES:=}
+: ${JAVA_PROPERTIES:=-Dfile.encoding=UTF-8}
 ${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -jar ${SIREUM_JAR} "$@"
