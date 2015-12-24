@@ -131,7 +131,7 @@ Logika is inspired by:
 
 * The [Floyd-Hoare Program Logic Proof Checker](http://people.cis.ksu.edu/~schmidt/301s14/cis301.zip)
   and the [Programming Logic](http://people.cis.ksu.edu/~schmidt/301s14/Lectures/home.html)
-  lecture notes by Professor Emeritus David Schmidt.
+  lecture notes by Distinguished Professor Emeritus David Schmidt.
 
 Logika is a combination of both tools; it uses the same
 [input language](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-parser-antlr4/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
