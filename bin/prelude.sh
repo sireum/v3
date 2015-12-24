@@ -10,7 +10,7 @@ Z3_VERSION=4.4.1
 if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
   PLATFORM=win
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
-  NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/x64/node.exe
+  NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-win.zip
 elif [ "$(uname)" == "Darwin" ]; then
   PLATFORM=lin
