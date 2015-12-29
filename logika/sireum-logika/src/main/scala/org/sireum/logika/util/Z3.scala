@@ -197,8 +197,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
       case e: Quant[_] =>
         val isForAll = e.isInstanceOf[ForAll]
         val stType = e.domainOpt match {
-          case Some(RangeDomain(lo, hi)) =>
-            return translate(e.simplify)
+          case Some(_: RangeDomain) => return translate(e.simplify)
           case Some(TypeDomain(tpe)) => translate(tpe)
           case None => assert(assertion = false, "Unexpected situation.")
         }

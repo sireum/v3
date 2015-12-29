@@ -1,13 +1,7 @@
 Logika To-Do
 ============
 
-* Add ..<, <.., and <..< integer ranges in quantifications
-  (requires modification to Quant.simplify)
-
-* Add subst1 and subst2 justifications
-  (rework examples to use them)
-
-* Add option to enable auto justification
+* Rework programming logic examples to use subst1 and subst2 whenever applicable
 
 * Implement proof checker
 
@@ -23,3 +17,5 @@ Logika To-Do
 * Add sequence of trait/class
 
 * Add match statement with pattern matching on trait/class
+
+* Add support for multiple program files (?)

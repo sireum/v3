@@ -315,8 +315,8 @@ object Rewriter {
       org.sireum.logika.ast.ProofStmt(proof)
     }),
     ("RangeDomain", { es =>
-      val Seq(lo: Exp, hi: Exp) = es
-      org.sireum.logika.ast.RangeDomain(lo, hi)
+      val Seq(lo: Exp, hi: Exp, loLt: java.lang.Boolean, hiLt: java.lang.Boolean) = es
+      org.sireum.logika.ast.RangeDomain(lo, hi, loLt, hiLt)
     }),
     ("ReadInt", { es =>
       val Seq(msgOpt: Option[_]) = es
@@ -365,6 +365,14 @@ object Rewriter {
     ("SubProof", { es =>
       val Seq(num: Num, assumeStep: AssumeStep, steps: IVector[_]) = es
       org.sireum.logika.ast.SubProof(num, assumeStep, cast(steps))
+    }),
+    ("Subst1", { es =>
+      val Seq(num: Num, exp: Exp, eqStep: NumOrId, step: Num) = es
+      org.sireum.logika.ast.Subst1(num, exp, eqStep, step)
+    }),
+    ("Subst2", { es =>
+      val Seq(num: Num, exp: Exp, eqStep: NumOrId, step: Num) = es
+      org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
     }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es

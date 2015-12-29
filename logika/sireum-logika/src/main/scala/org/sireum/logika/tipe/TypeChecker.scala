@@ -319,7 +319,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       case e: Quant[_] =>
         val t = e.domainOpt match {
           case Some(TypeDomain(tpe)) => TypeChecker.tipe(tpe)
-          case Some(RangeDomain(lo, hi)) => z(lo); z(hi); Z
+          case Some(RangeDomain(lo, hi, _, _)) => z(lo); z(hi); Z
           case None => assert(assertion = false, "Unexpected situation."); Z
         }
         var tm = typeMap

@@ -46,8 +46,8 @@ object Checker {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
           val r = check(proof, ProofContext(s.mode,
-            isetEmpty, s.premises.toSet, vars,
-            imapEmpty, imapEmpty)).isDefined
+            autoEnabled = false, isetEmpty, s.premises.toSet,
+            vars, imapEmpty, imapEmpty)).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
             case _ => None
@@ -122,6 +122,7 @@ object Checker {
 
 private final case class
 ProofContext(mode: LogicMode,
+             autoEnabled: Boolean,
              invariants: ISet[Exp],
              premises: ISet[Exp],
              vars: ISet[String],
@@ -206,25 +207,20 @@ ProofContext(mode: LogicMode,
                       hasError = true
                     }
                   case (lfs, rfs, lls, rls) =>
-                    if (!lfs.isInstanceOf[PlainAssumeStep]) {
+                    if (!lfs.isInstanceOf[PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim left assumption in step #$num.")
-                    }
-                    if (!rfs.isInstanceOf[PlainAssumeStep]) {
+                    if (!rfs.isInstanceOf[PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim right assumption in step #$num.")
-                    }
-                    if (!lls.isInstanceOf[RegularStep]) {
+                    if (!lls.isInstanceOf[RegularStep])
                       error(lSubProof, s"Wrong form for Or-elim left conclusion in step #$num.")
-                    }
-                    if (!rls.isInstanceOf[RegularStep]) {
+                    if (!rls.isInstanceOf[RegularStep])
                       error(lSubProof, s"Wrong form for Or-elim right conclusion in step #$num.")
-                    }
                     hasError = true
                 }
                 if (hasError) None else addProvedStep(step)
               }
             r.flatten
-          case _ =>
-            error(orStep, s"Or-elim in step #$num requires a disjunction in step # ${orStep.value}.")
+          case _ => error(orStep, s"Or-elim in step #$num requires a disjunction in step # ${orStep.value}.")
         }
       case ImpliesIntro(_, Implies(antecedent, conclusion), subProof) =>
         findSubProof(subProof, num) match {
@@ -241,12 +237,10 @@ ProofContext(mode: LogicMode,
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep]) {
+                if (!fs.isInstanceOf[PlainAssumeStep])
                   error(sp, s"Wrong form for Implies-intro assumption in step #$num.")
-                }
-                if (!ls.isInstanceOf[RegularStep]) {
+                if (!ls.isInstanceOf[RegularStep])
                   error(sp, s"Wrong form for Implies-intro conclusion in step #$num.")
-                }
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
@@ -286,12 +280,10 @@ ProofContext(mode: LogicMode,
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep]) {
+                if (!fs.isInstanceOf[PlainAssumeStep])
                   error(sp, s"Wrong form for Negation-intro assumption in step #$num.")
-                }
-                if (!ls.isInstanceOf[RegularStep]) {
+                if (!ls.isInstanceOf[RegularStep])
                   error(sp, s"Wrong form for Negation-intro conclusion in step #$num.")
-                }
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
@@ -339,17 +331,57 @@ ProofContext(mode: LogicMode,
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep]) {
+                if (!fs.isInstanceOf[PlainAssumeStep])
                   error(sp, s"Wrong form for Pbc assumption in step #$num.")
-                }
-                if (ls.isInstanceOf[RegularStep]) {
+                if (ls.isInstanceOf[RegularStep])
                   error(sp, s"Wrong form for Pbc conclusion in step #$num.")
-                }
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
+      case Subst1(_, exp, eqStep, step2) =>
+        var hasError = true
+        (findRegularStepOrFactExp(eqStep, num),
+          findRegularStepExp(step2, num)) match {
+          case (Some(Eq(exp1, exp2)), Some(e)) =>
+            val expected =
+              org.sireum.logika.ast.Rewriter.build[Exp]()({
+                case `exp2` => exp1
+              })(e)
+            if (expected != exp) {
+              val eqStepText = text(eqStep)
+              error(exp, s"The expression in step #$num does not match the substituted expression of [left of #$eqStepText/right of #$eqStepText]#${step2.value} for Subst1.")
+            }
+          case (Some(_), Some(_)) =>
+            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst1 in step #$num has to be an equality.")
+            hasError = true
+          case _ => hasError = true
+        }
+        if (hasError) None else addProvedStep(step)
+      case Subst2(_, exp, eqStep, step2) =>
+        var hasError = true
+        (findRegularStepOrFactExp(eqStep, num),
+          findRegularStepExp(step2, num)) match {
+          case (Some(Eq(exp1, exp2)), Some(e)) =>
+            val expected =
+              org.sireum.logika.ast.Rewriter.build[Exp]()({
+                case `exp1` => exp2
+              })(e)
+            if (expected != exp) {
+              val eqStepText = text(eqStep)
+              error(exp, s"The expression in step #$num does not match the substituted expression of [right of #$eqStepText/left of #$eqStepText]#${step2.value} for Subst2.")
+            }
+          case (Some(_), Some(_)) =>
+            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst2 in step #$num has to be an equality.")
+            hasError = true
+          case _ => hasError = true
+        }
+        if (hasError) None else addProvedStep(step)
+      case Algebra(_, exp, stepOrFacts) =>
+        if (deduce(num, exp, stepOrFacts, checkAlgebraExp))
+          addProvedStep(step)
+        else None
       case ForAllIntro(_, q, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
@@ -358,21 +390,18 @@ ProofContext(mode: LogicMode,
               case (fs: ForAllAssumeStep, ls: RegularStep) =>
                 val freshVarId = fs.id
                 val freshVar = freshVarId.value
-                if (!Checker.collectVars(ls.exp).contains(freshVar)) {
+                if (!Checker.collectVars(ls.exp).contains(freshVar))
                   warn(ls.exp, s"The conclusion in step #${subProof.value} does not use the fresh variable $freshVar introducted in #${fs.num.value}.")
-                }
                 val expected = Checker.subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
                 if (expected != ls.exp) {
                   error(q, s"Supplying $freshVar for ${q.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[ForAllAssumeStep]) {
+                if (!fs.isInstanceOf[ForAllAssumeStep])
                   error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
-                }
-                if (!ls.isInstanceOf[RegularStep]) {
+                if (!ls.isInstanceOf[RegularStep])
                   error(sp, s"Wrong form for Forall-intro conclusion in step #$num.")
-                }
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
@@ -388,11 +417,9 @@ ProofContext(mode: LogicMode,
                   error(exp, s"Supplying the specified arguments to the quantification ${text(stepOrFact)} does not produce matching expression in #$num for Forall-elim.")
                   None
                 } else addProvedStep(step)
-              case _ =>
-                error(step, s"The numbers of quantified variables and arguments do not match in Forall-elim of step #$num.")
+              case _ => error(step, s"The numbers of quantified variables and arguments do not match in Forall-elim of step #$num.")
             }
-          case Some(_) =>
-            error(stepOrFact, s"Forall-elim in $num requires a universal quantification ${text(stepOrFact)}.")
+          case Some(_) => error(stepOrFact, s"Forall-elim in $num requires a universal quantification ${text(stepOrFact)}.")
           case _ => None
         }
       case ExistsIntro(_, q, step2, args) =>
@@ -405,8 +432,7 @@ ProofContext(mode: LogicMode,
                   error(q, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
                   None
                 } else addProvedStep(step)
-              case _ =>
-                error(step, s"The numbers of quantified variables and arguments do not match in Exists-intro of step #$num.")
+              case _ => error(step, s"The numbers of quantified variables and arguments do not match in Exists-intro of step #$num.")
             }
           case _ => None
         }
@@ -433,28 +459,22 @@ ProofContext(mode: LogicMode,
                       hasError = true
                     }
                   case (fs, ls) =>
-                    if (!fs.isInstanceOf[ExistsAssumeStep]) {
+                    if (!fs.isInstanceOf[ExistsAssumeStep])
                       error(sp, s"Wrong form for Exists-elim assumption in step #$num that is expected to have a fresh variable and a formula.")
-                    }
-                    if (!fs.isInstanceOf[RegularStep]) {
+                    if (!fs.isInstanceOf[RegularStep])
                       error(sp, s"Wrong form for Exists-elim conclusion in step #$num.")
-                    }
                     hasError = true
                 }
                 if (hasError) None else addProvedStep(step)
               case _ => None
             }
-          case Some(_) =>
-            error(stepOrFact, s"Exists-elim in $num requires an existensial quantification ${text(stepOrFact)}.")
+          case Some(_) => error(stepOrFact, s"Exists-elim in step #$num requires an existensial quantification ${text(stepOrFact)}.")
           case _ => None
         }
-      case Algebra(_, exp, stepOrFacts) =>
-        if (deduce(num, exp, stepOrFacts, checkAlgebraExp))
-          addProvedStep(step)
-        else None
       case Auto(_, exp, stepOrFacts) =>
-        if (deduce(num, exp, stepOrFacts, e => true))
-          addProvedStep(step)
+        if (!autoEnabled)
+          error(step, s"Auto is not enabled, but used in step #$num.")
+        if (deduce(num, exp, stepOrFacts, e => true)) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
         if (premises.contains(exp)) addProvedStep(step)

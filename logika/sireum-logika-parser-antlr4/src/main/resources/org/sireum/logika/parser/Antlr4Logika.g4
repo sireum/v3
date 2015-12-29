@@ -112,7 +112,7 @@ qformula
       | 'exists' | 'some' | 'E' | '∃' )
     vars+=ID ( ',' vars+=ID )*
     ( ':' type
-    | ':' lo=exp '..' hi=exp
+    | ':' lo=exp ll='<'? '..' lh='<'? hi=exp
     )? '|' NL?
     formula
   ;
@@ -150,6 +150,9 @@ justification
     | tb=('_|_' | '⊥' ) ID // ID=="e"
     ) bottomStep=NUM                                    #BottomElim
   | tb='Pbc' subProof=NUM                               #Pbc
+  | tb='subst1' eqStep=numOrId step=NUM                 #Subst1
+  | tb='subst2' eqStep=numOrId step=NUM                 #Subst2
+  | tb='algebra' steps+=numOrId*                        #Algebra
   | ( tb='foralli' | tb='alli' | tb='Ai'
     | tb='∀' ID // ID=="i"
     ) subProof=NUM                                      #ForallIntro
@@ -165,7 +168,6 @@ justification
     tb='∃' ID existsStep=NUM formula+                   #ExistsIntro
   | tb='∃' t=ID // ID=="e"
     stepOrFact=numOrId subProof=NUM                     #ExistsElim
-  | tb='algebra' steps+=numOrId*                        #Algebra
   | tb='invariant'                                      #Invariant
   | tb='auto' stepOrFacts+=numOrId*                     #Auto
   ;

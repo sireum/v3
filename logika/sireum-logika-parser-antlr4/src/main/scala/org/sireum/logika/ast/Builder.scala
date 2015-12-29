@@ -172,6 +172,13 @@ final private class Builder(implicit reporter: Reporter) {
         case ctx: PbcContext =>
           val subProof = buildNum(ctx.subProof)
           Pbc(num, exp, subProof)
+        case ctx: Subst1Context =>
+          Subst1(num, exp, build(ctx.eqStep), buildNum(ctx.step))
+        case ctx: Subst2Context =>
+          Subst2(num, exp, build(ctx.eqStep), buildNum(ctx.step))
+        case ctx: AlgebraContext =>
+          Algebra(num, exp, Option(ctx.steps).map(_.map(build)).
+            getOrElse(Node.emptySeq))
         case ctx: ForallIntroContext =>
           val subProof = buildNum(ctx.subProof)
           errorIf(num, ctx.ID, ctx.tb, "i", "foralli", "alli", "Ai")
@@ -201,9 +208,6 @@ final private class Builder(implicit reporter: Reporter) {
           val subProof = buildNum(ctx.subProof)
           errorIf(num, ctx.ID, ctx.tb, "e", "existse", "somee", "Ee")
           ExistsElim(num, exp, stepOrFact, subProof)
-        case ctx: AlgebraContext =>
-          Algebra(num, exp, Option(ctx.steps).map(_.map(build)).
-            getOrElse(Node.emptySeq))
         case ctx: InvariantContext =>
           Invariant(num, exp)
         case ctx: AutoContext =>
@@ -339,7 +343,9 @@ final private class Builder(implicit reporter: Reporter) {
       if (ctx.`type` != null)
         Some(TypeDomain(build(ctx.`type`)))
       else if (ctx.lo != null)
-        Some(RangeDomain(build(ctx.lo), build(ctx.hi)))
+        Some(
+          RangeDomain(build(ctx.lo), build(ctx.hi),
+            ctx.ll != null, ctx.lh != null))
       else None
     apply(ctx.vars.map(buildId), domain,
       build(ctx.formula)) at ctx

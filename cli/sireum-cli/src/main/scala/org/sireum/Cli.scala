@@ -671,6 +671,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Usage: sireum logika <{file.txt, file.scala}>
            |
            |Options:
+           |-a, --auto       Enable auto in programming logic proof step justification
            |-s, --sequent    Sequent matching the input file's
            |-h, --help       Display usage information
         """.stripMargin.trim
@@ -694,6 +695,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               errPrintln("Expecting a value for sequent")
               return
           }
+        case "-a" | "--auto" =>
+          option.auto = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

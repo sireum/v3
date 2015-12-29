@@ -43,9 +43,11 @@ import scala.beans.BeanProperty
 final case class LogikaOption(@BeanProperty
                               @Opt(shortKey = Some("s"), description = "Sequent matching the input file's")
                               var sequent: OptionBean[String] = none(),
-
+                              @BeanProperty
+                              @Opt(shortKey = Some("a"), description = "Enable auto in programming logic proof step justification")
+                              var auto: Boolean = false,
                               @BeanProperty
                               @Arg(name = "{file.txt, file.scala}")
                               var input: String = "") {
-  def this() = this(none(), "")
+  def this() = this(none(), false, "")
 }

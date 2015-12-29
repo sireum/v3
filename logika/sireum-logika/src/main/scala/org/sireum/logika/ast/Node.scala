@@ -319,6 +319,21 @@ final case class Pbc(num: Num,
                      exp: Exp,
                      subProof: Num) extends RegularStep
 
+final case class Subst1(num: Num,
+                        exp: Exp,
+                        eqStep: NumOrId,
+                        step: Num) extends RegularStep
+
+final case class Subst2(num: Num,
+                        exp: Exp,
+                        eqStep: NumOrId,
+                        step: Num) extends RegularStep
+
+final case class Algebra(num: Num,
+                         exp: Exp,
+                         nums: Node.Seq[NumOrId])
+  extends RegularStep
+
 final case class ForAllIntro(num: Num,
                              exp: ForAll,
                              subProof: Num)
@@ -340,11 +355,6 @@ final case class ExistsElim(num: Num,
                             exp: Exp,
                             stepOrFact: NumOrId,
                             subProof: Num) extends RegularStep
-
-final case class Algebra(num: Num,
-                         exp: Exp,
-                         nums: Node.Seq[NumOrId])
-  extends RegularStep
 
 final case class Invariant(num: Num,
                            exp: Exp)
@@ -519,13 +529,16 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
     if (simplified != null) return simplified
     simplified =
       domainOpt match {
-        case Some(rd@RangeDomain(lo, hi)) =>
+        case Some(rd@RangeDomain(lo, hi, loLt, hiLt)) =>
           val loLi = nodeLocMap(lo)
           val hiLi = nodeLocMap(hi)
           val rdLi = nodeLocMap(rd)
           val isForAll = isInstanceOf[ForAll]
-          def range(id: Id, l: Exp, h: Exp) =
-            And(Le(l, id) at loLi, Le(id, h) at hiLi) at rdLi
+          def range(id: Id, l: Exp, h: Exp) = {
+            val lApply = if (loLt) Lt else Le
+            val rApply = if (hiLt) Lt else Le
+            And(lApply(l, id) at loLi, rApply(id, h) at hiLi) at rdLi
+          }
           val apply = if (isForAll) ForAll else Exists
           var antecedent = range(ids.head, lo, hi)
           for (id <- ids.tail) {
@@ -561,7 +574,10 @@ sealed trait QuantDomain extends Node
 
 final case class TypeDomain(tpe: Type) extends QuantDomain
 
-final case class RangeDomain(lo: Exp, hi: Exp) extends QuantDomain
+final case class RangeDomain(lo: Exp,
+                             hi: Exp,
+                             loLt: Boolean,
+                             hiLt: Boolean) extends QuantDomain
 
 final case class SeqLit(args: Node.Seq[Exp]) extends Exp
 
