@@ -9,7 +9,7 @@ main(d, a, e) ::= <<
 (assert (= (_size _empty) 0))
 $d$
 $a$
-(assert (not $e$))
+(assert $e$)
 (check-sat)
 >>
 

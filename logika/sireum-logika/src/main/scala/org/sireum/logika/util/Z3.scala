@@ -33,6 +33,19 @@ import org.sireum.util._
 import org.stringtemplate.v4._
 
 object Z3 {
+
+  sealed trait CheckResult
+
+  case object Sat extends CheckResult
+
+  case object Unsat extends CheckResult
+
+  case object Unknown extends CheckResult
+
+  case object Timeout extends CheckResult
+
+  case object Error extends CheckResult
+
   val stg: STGroup = new STGroupFile(getClass.
     getResource("z3.stg"), "UTF-8", '$', '$')
 
@@ -62,6 +75,11 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
   val stMain = stg.getInstanceOf("main")
 
   def isValid(e: Exp): Boolean = {
+    val result = check(Not(e))
+    result == Unsat
+  }
+
+  def check(e: Exp): CheckResult = {
     stMain.add("e", translate(e))
     Visitor.build({
       case q: Quant[_] =>
@@ -89,26 +107,27 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
     result match {
       case Exec.StringResult(s, _) =>
         s.substring(0, s.indexOf('\n')).trim match {
-          case "unsat" => true
-          case "unknown" | "sat" => false
+          case "unsat" => Unsat
+          case "unknown" => Unknown
+          case "sat" => Sat
           case _ =>
             Console.err.println("Error occurred when calling Z3 for the following script.")
             Console.err.println(z3Script)
             Console.err.println(s)
             Console.err.flush()
-            false
+            Error
         }
-      case Exec.Timeout => false
+      case Exec.Timeout => Timeout
       case Exec.ExceptionRaised(err) =>
         Console.err.println(s"Error occurred when calling Z3 for the following script: ${err.getMessage}")
         Console.err.println(z3Script)
         Console.err.flush()
-        false
+        Error
     }
   }
 
   def translate(e: Exp): ST =
-    (e: @unchecked) match {
+    e match {
       case BooleanLit(value) =>
         stg.getInstanceOf(if (value) "truelit" else "falselit")
       case id: Id =>
@@ -120,6 +139,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
         val id = Id("result")
         id.tipe = e.tipe
         translate(id)
+      case Clone(exp) => translate(exp)
       case e: Apply =>
         if (e.id.tipe == ZS)
           stg.getInstanceOf("index").add("a", translate(e.id)).
@@ -149,7 +169,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
         stg.getInstanceOf("a").add("c", c)
       case e: BinaryExp =>
         val op =
-          (e: @unchecked) match {
+          e match {
             case Ne(left, right) => return translate(Not(Eq(left, right)))
             case e: Mul => "*"
             case e: Div => "div"
@@ -164,21 +184,23 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
             case e: And => "and"
             case e: Or => "or"
             case e: Implies => "=>"
+            case _: Append | _: Prepend => assert(assertion = false, "Unexpected situation.")
           }
         stg.getInstanceOf("binary").add("op", op).
           add("left", translate(e.left)).add("right", translate(e.right))
       case Not(exp) =>
-        stg.getInstanceOf("unary").add("op", "!").
+        stg.getInstanceOf("unary").add("op", "not").
           add("exp", translate(exp))
       case Minus(exp) =>
         stg.getInstanceOf("unary").add("op", "-").
           add("exp", translate(exp))
       case e: Quant[_] =>
         val isForAll = e.isInstanceOf[ForAll]
-        val stType = (e.domainOpt: @unchecked) match {
+        val stType = e.domainOpt match {
           case Some(RangeDomain(lo, hi)) =>
             return translate(e.simplify)
           case Some(TypeDomain(tpe)) => translate(tpe)
+          case None => assert(assertion = false, "Unexpected situation.")
         }
         val st = stg.getInstanceOf("quant").
           add("op", if (isForAll) "forall" else "exists").
@@ -215,7 +237,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
   }
 
   def translate(name: String, tipe: Tipe): ST =
-    (tipe: @unchecked) match {
+    tipe match {
       case B => stg.getInstanceOf("bconst").add("name", name)
       case Z => stg.getInstanceOf("zconst").add("name", name)
       case ZS => stg.getInstanceOf("zsconst").add("name", name)
@@ -226,12 +248,16 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
           st.add("param", translate(p))
         }
         st
+      case UnitTipe =>
+        assert(assertion = false, "Unexpected situation."); null
     }
 
-  def translate(tipe: Tipe): String = (tipe: @unchecked) match {
+  def translate(tipe: Tipe): String = tipe match {
     case B => "B"
     case Z => "Z"
     case ZS => "ZS"
+    case _: FunTipe | UnitTipe =>
+      assert(assertion = false, "Unexpected situation."); "???"
   }
 
   def translate(tpe: Type): String = tpe match {
