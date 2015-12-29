@@ -5,7 +5,7 @@ l"""{ invariant g(0) == 0           }"""
 
 def f(): Z = {
   l"""{ modifies  g
-        ensures   ans == 0          }"""
+        ensures   result == 0       }"""
 
   l"""{ 1. g(0) == 0    premise     }"""
   val ans: Z = g(0)
@@ -15,4 +15,4 @@ def f(): Z = {
   return ans
 }
 val x: Z = f()
-l"""{ 1. x == 0          premise     }"""
+l"""{ 1. x == 0          premise    }"""
