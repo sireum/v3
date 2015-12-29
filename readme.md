@@ -3,11 +3,11 @@ Requirements
 
 Supported platforms (64-bit only):
 
-* OS X (tested on El Capitan -- 10.11)
+* OS X (test platform: El Capitan -- 10.11)
 
-* Linux (tested on Ubuntu 14.04)
+* Linux (test platform: Ubuntu 14.04)
 
-* Windows (tested on Windows 7)
+* Windows (test platform: Windows 10)
 
 
 All Supported Platforms
