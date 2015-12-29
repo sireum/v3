@@ -45,7 +45,8 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = check(proof, ProofContext(s.mode, s.premises.toSet, vars,
+          val r = check(proof, ProofContext(s.mode,
+            isetEmpty, s.premises.toSet, vars,
             imapEmpty, imapEmpty)).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
@@ -65,6 +66,7 @@ object Checker {
           reporter.error(s"${unitNode.mode.value} logic proof is yet to be done.")
           false
       }
+    case _: Proof => assert(assertion = false, "Unexpected situation."); false
   }
 
   private def
@@ -90,9 +92,10 @@ object Checker {
         case _ => Some(pc)
       }
     for (step <- proofGroup.steps if pcOpt.isDefined)
-      (step: @unchecked) match {
+      step match {
         case p: RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
         case p: SubProof => pcOpt = check(p, pcOpt.get)
+        case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
       }
     pcOpt.map(pc => pc.copy(vars = pc.vars -- addedVars))
   }
@@ -119,6 +122,7 @@ object Checker {
 
 private final case class
 ProofContext(mode: LogicMode,
+             invariants: ISet[Exp],
              premises: ISet[Exp],
              vars: ISet[String],
              facts: IMap[String, Exp],
@@ -444,7 +448,69 @@ ProofContext(mode: LogicMode,
             error(stepOrFact, s"Exists-elim in $num requires an existensial quantification ${text(stepOrFact)}.")
           case _ => None
         }
+      case Algebra(_, exp, stepOrFacts) =>
+        if (deduce(num, exp, stepOrFacts, checkAlgebraExp))
+          addProvedStep(step)
+        else None
+      case Auto(_, exp, stepOrFacts) =>
+        if (deduce(num, exp, stepOrFacts, e => true))
+          addProvedStep(step)
+        else None
+      case Invariant(_, exp) =>
+        if (premises.contains(exp)) addProvedStep(step)
+        else error(exp, s"Could not find the invariant in step #$num.")
+      case _: ExistsAssumeStep | _: PlainAssumeStep =>
+        assert(assertion = false, "Unexpected situation.")
+        None
     }
+  }
+
+  def deduce(num: Int, exp: Exp, stepOrFacts: Node.Seq[NumOrId],
+             f: Exp => Boolean): Boolean = {
+    var antecedents = Node.emptySeq[Exp]
+    var hasError = false
+    for (numOrId <- stepOrFacts)
+      findRegularStepOrFactExp(numOrId, num) match {
+        case Some(e) => if (f(e)) antecedents :+= e
+        case _ => hasError = true
+      }
+    if (hasError) return false
+    val claim =
+      if (antecedents.nonEmpty) {
+        var antecedent = antecedents.head
+        for (e <- antecedents.tail) {
+          antecedent = And(antecedent, e)
+        }
+        Implies(antecedent, exp)
+      } else exp
+    if (Z3.isValid(claim)) true
+    else {
+      error(exp, s"Could not deduce the claim in step#$num.")
+      false
+    }
+  }
+
+  def checkAlgebraExp(e: Exp): Boolean = {
+    var hasError = false
+    Visitor.build({
+      case e: And =>
+        hasError = true
+        error(e, "Algebra justification cannot be used for conjunction.")
+        true
+      case e: Or =>
+        hasError = true
+        error(e, "Algebra justification cannot be used for disjunction.")
+        true
+      case e: Implies =>
+        hasError = true
+        error(e, "Algebra justification cannot be used for implication.")
+        true
+      case q: Quant[_] =>
+        hasError = true
+        error(e, "Algebra justification cannot be used for quantification.")
+        true
+    })(e)
+    !hasError
   }
 
   def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {

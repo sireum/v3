@@ -597,7 +597,7 @@ final case class LoopInv(invariant: Inv,
 final case class Print(isNewline: Boolean,
                        msg: StringLit) extends Stmt
 
-final case class StringLit(value: String) extends Stmt
+final case class StringLit(value: String) extends Node
 
 final case class SeqAssign(id: Id,
                            index: Exp,
@@ -614,7 +614,7 @@ final case class MethodDecl(id: Id,
 final case class MethodContract(requires: Requires,
                                 modifies: Modifies,
                                 ensures: Ensures)
-  extends Stmt
+  extends Node
 
 final case class Requires(exps: Node.Seq[Exp]) extends Node
 

@@ -363,17 +363,11 @@ final private class Builder(implicit reporter: Reporter) {
         error(ctx.org, s"Can only import from org.sireum.logika.")
 
       val block = build(ctx.stmts)
-      lgk(ctx.lgk)
       val r =
-        if (ctx.lgk != null) Program(build(ctx.facts), block)
+        if (ctx.facts != null) Program(build(ctx.facts), block)
         else Program(Facts(Node.emptySeq), block)
       r at ctx
     } else Program(Facts(Node.emptySeq), Block(Node.emptySeq))
-
-  private def lgk(ctx: LgkContext): Unit = {
-    if (ctx != null && ctx.ID != null)
-      errorIf(ctx.ID, "l")
-  }
 
   private def build(ctx: FactsContext): Facts =
     Facts(Option(ctx.factOrFun).map(_.map(build)).
@@ -385,11 +379,17 @@ final private class Builder(implicit reporter: Reporter) {
   private def build(ctx: FactContext): Fact =
     Fact(buildId(ctx.ID), build(ctx.formula)) at ctx
 
-  private def build(ctx: FunContext): Fun =
+  private def build(ctx: FunContext): Fun = {
+    if (ctx.ID.getText.indexOf('_') >= 0)
+      error(ctx.ID, s"Underscore is a reserved character for fun identifier.")
     Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`)) at ctx
+  }
 
-  private def build(ctx: ParamContext): Param =
+  private def build(ctx: ParamContext): Param = {
+    if (ctx.ID.getText.indexOf('_') >= 0)
+      error(ctx.ID, s"Underscore is a reserved character for parameter identifier.")
     Param(buildId(ctx.ID), build(ctx.`type`)) at ctx
+  }
 
   private def build(ctx: StmtsContext): Block =
     Block(Option(ctx.stmt).map(_.map(build)).
@@ -399,7 +399,13 @@ final private class Builder(implicit reporter: Reporter) {
     val r =
       ctx match {
         case ctx: VarDeclStmtContext =>
-          VarDecl(ctx.modifier.getText == "var", buildId(ctx.ID),
+          val isVar = ctx.modifier.getText == "var"
+          if (ctx.ID.getText.indexOf('_') >= 0)
+            if (isVar)
+              error(ctx.ID, s"Underscore is a reserved character for var identifier.")
+            else
+              error(ctx.ID, s"Underscore is a reserved character for val identifier.")
+          VarDecl(isVar, buildId(ctx.ID),
             build(ctx.`type`))
         case ctx: AssignVarStmtContext =>
           Assign(buildId(ctx.ID), build(ctx.exp))
@@ -412,13 +418,14 @@ final private class Builder(implicit reporter: Reporter) {
             Option(ctx.loopInvariant).map(build).getOrElse(
               LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq))))
         case ctx: PrintStmtContext =>
-          errorIf(ctx.s, "s")
-          val text = ctx.STRING.getText
+          val text = ctx.SSTRING.getText
           Print(ctx.op.getText == "println",
-            StringLit(text.substring(1, text.length - 1)))
+            StringLit(text.substring(2, text.length - 1)))
         case ctx: SeqAssignStmtContext =>
           SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r))
         case ctx: MethodDeclStmtContext =>
+          if (ctx.ID.getText.indexOf('_') >= 0)
+            error(ctx.ID, s"Underscore is a reserved character for method identifier.")
           MethodDecl(buildId(ctx.ID),
             Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
             Option(ctx.`type`).map(build),
@@ -570,7 +577,7 @@ final private class Builder(implicit reporter: Reporter) {
     MethodContract(
       Requires(Option(ctx.rs).map(_.map(build)).getOrElse(Node.emptySeq)),
       Option(ctx.modifies).map(build).getOrElse(Modifies(Node.emptySeq)),
-      Ensures(Option(ctx.rs).map(_.map(build)).getOrElse(Node.emptySeq))) at
+      Ensures(Option(ctx.es).map(_.map(build)).getOrElse(Node.emptySeq))) at
       (ctx.tb, ctx.te)
 
   private def build(ctx: InvariantsContext): Inv =

@@ -159,23 +159,27 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       var tc = TypeContext(tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true)
       checkModifies(md.contract.modifies, md.block, md)
-      for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true)
       tc = tc.check(md.block)
-      for (rt <- md.returnTypeOpt) {
-        val t = TypeChecker.tipe(rt)
-        tm = addId(Id("result"), t, md, tm)
-        md.returnExpOpt match {
-          case Some(e) =>
-            tc.check(e, allowMethod = false)(allowFun = false) match {
-              case Some(t2) =>
-                if (t != t2)
-                  error(e, s"Expecting return type $t, but found $t2.")
-              case _ =>
-            }
-          case _ =>
-            if (md.returnTypeOpt.isEmpty)
-              error(md.returnExpOpt.get, s"Unexpected return expression.")
-        }
+      md.returnTypeOpt match {
+        case Some(rt) =>
+          val t = TypeChecker.tipe(rt)
+          val tcPost = TypeContext(addId(Id("result"), t, md, tm))
+          for (e <- md.contract.ensures.exps)
+            tcPost.b(e)(allowFun = true)
+          md.returnExpOpt match {
+            case Some(e) =>
+              tc.check(e, allowMethod = false)(allowFun = false) match {
+                case Some(t2) =>
+                  if (t != t2)
+                    error(e, s"Expecting return type $t, but found $t2.")
+                case _ =>
+              }
+            case _ =>
+              if (md.returnTypeOpt.isEmpty)
+                error(md.returnExpOpt.get, s"Unexpected return expression.")
+          }
+        case _ =>
+          for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true)
       }
       this
     case ProofStmt(proof) => check(proof); this
@@ -313,10 +317,10 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       case e: Not => b(e.exp); someB
       case e: Minus => z(e.exp); someZ
       case e: Quant[_] =>
-        val t = (e.domainOpt: @unchecked) match {
+        val t = e.domainOpt match {
           case Some(TypeDomain(tpe)) => TypeChecker.tipe(tpe)
-          case Some(RangeDomain(lo, hi)) =>
-            z(lo); z(hi); Z
+          case Some(RangeDomain(lo, hi)) => z(lo); z(hi); Z
+          case None => assert(assertion = false, "Unexpected situation."); Z
         }
         var tm = typeMap
         for (id <- e.ids) {
