@@ -176,12 +176,10 @@ program
   : NL*
     ( tb='import' org=ID '.' sireum=ID '.' 'logika' '.' te='_' NL+
       // org=="org" && sireum="sireum"
-      ( lgk '"""' facts te='"""' NL* )?
+      ( 'l"""' facts te='"""' NL* )?
       stmts
     )?
   ;
-
-lgk: ID | 'logika' ; // ID=="l"
 
 facts
   : '{' NL*
@@ -209,21 +207,21 @@ stmt
   | 'if' '(' exp ')' NL* '{' ts=stmts '}'
      ( 'else' NL* '{' fs=stmts '}' )?                   #IfStmt
   | 'while' '(' exp ')' NL* '{'
-    ( NL* lgk '"""' loopInvariant '"""' )?
+    ( NL* 'l"""' loopInvariant '"""' )?
     stmts
     '}'                                                 #WhileStmt
   | op=( 'print' | 'println' )
-    '(' s=ID STRING ')'                                 #PrintStmt
+    '(' SSTRING ')'                                     #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
   | 'def' ID  NL?
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
     '{'
-    ( NL* lgk '"""' methodContract NL* '"""' )?
+    ( NL* 'l"""' methodContract NL* '"""' )?
     stmts
     ( rtb='return' exp NL* )?
     '}'                                                 #MethodDeclStmt
-  | lgk '"""'
+  | 'l"""'
     ( proof
     | sequent
     | invariants
@@ -284,6 +282,8 @@ HLINE: '-' '-' '-'+ ;
 NUM: '0' | [1-9] [0-9]* ;
 
 ID: [a-zA-Z] [a-zA-Z0-9_]* ;
+
+SSTRING: 's' STRING ;
 
 STRING: '"' ('\u0020'| '\u0021'|'\u0023' .. '\u007F')* '"' ; // all printable chars and no escape chars
 
