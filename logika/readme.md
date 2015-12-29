@@ -61,7 +61,8 @@ Here is an example:
 }
 ```
 To run Logika, save the above example in a file (e.g., `test.txt`) and then issue the command
-(provided that you follow the instructions above to build and run Sireum):
+(provided that you follow the instructions above to build and run Sireum; for the remainder of this
+document, replace `sireum` with the path to Sireum script file, e.g., `../sireum`):
 ```bash
 sireum logika test.txt
 ```
