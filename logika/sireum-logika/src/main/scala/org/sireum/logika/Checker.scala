@@ -34,7 +34,7 @@ object Checker {
   private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
 
-  final def check(unitNode: UnitNode)(
+  final def check(unitNode: UnitNode, autoEnabled: Boolean)(
     implicit reporter: Reporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -45,9 +45,9 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = check(proof, ProofContext(s.mode,
+          val r = ProofContext(s.mode,
             autoEnabled = false, isetEmpty, s.premises.toSet,
-            vars, imapEmpty, imapEmpty)).isDefined
+            vars, imapEmpty, imapEmpty).check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
             case _ => None
@@ -66,38 +66,15 @@ object Checker {
           reporter.error(s"${unitNode.mode.value} logic proof is yet to be done.")
           false
       }
+    case program: Program =>
+      implicit val nodeLocMap = program.nodeLocMap
+      ProofContext(program.mode,
+        autoEnabled, isetEmpty, isetEmpty, isetEmpty,
+        imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
+          case f: Fact => Some(f.id.value -> f.exp)
+          case _ => None
+        }), imapEmpty).check(program)
     case _: Proof => assert(assertion = false, "Unexpected situation."); false
-  }
-
-  private def
-  check(proofGroup: ProofGroup, pc: ProofContext)(
-    implicit reporter: Reporter,
-    nodeLocMap: MIdMap[Node, LocationInfo]): Option[ProofContext] = {
-    var addedVars = isetEmpty[String]
-    var pcOpt: Option[ProofContext] =
-      proofGroup match {
-        case p: SubProof =>
-          val popt =
-            p.assumeStep match {
-              case PlainAssumeStep(_, exp) =>
-                pc.addProvedStep(p.assumeStep)
-              case ForAllAssumeStep(num, id, _) =>
-                addedVars += id.value
-                pc.addVar(id, num.value)
-              case ExistsAssumeStep(num, id, exp, _) =>
-                addedVars += id.value
-                pc.addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
-            }
-          popt.flatMap(_.addProvedStep(p))
-        case _ => Some(pc)
-      }
-    for (step <- proofGroup.steps if pcOpt.isDefined)
-      step match {
-        case p: RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
-        case p: SubProof => pcOpt = check(p, pcOpt.get)
-        case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
-      }
-    pcOpt.map(pc => pc.copy(vars = pc.vars -- addedVars))
   }
 
   private[logika] final def collectVars(e: Exp): ISet[String] = {
@@ -109,33 +86,117 @@ object Checker {
     })(e)
     result
   }
-
-  private[logika] final def subst(e: Exp,
-                                  m: IMap[Node, Node]): Exp = {
-    val r =
-      org.sireum.logika.ast.Rewriter.build[Exp](TraversalMode.BOTTOM_UP) {
-        case n: Node => m.getOrElse(n, n)
-      }
-    r(e)
-  }
 }
 
 private final case class
 ProofContext(mode: LogicMode,
              autoEnabled: Boolean,
              invariants: ISet[Exp],
-             isPremise: Exp => Boolean,
+             premises: ISet[Exp],
              vars: ISet[String],
              facts: IMap[String, Exp],
              provedSteps: IMap[Int, ProofStep])
             (implicit reporter: Reporter,
              nodeLocMap: MIdMap[Node, LocationInfo]) {
 
+  def check(program: Program): Boolean = {
+    Z3.checkSat(facts.values.toVector: _*) match {
+      case Z3.Sat =>
+      case Z3.Unsat =>
+        reporter.error("The set of facts are unsatisfiable.")
+        return false
+      case Z3.Unknown => reporter.warn("The set of facts might not be satisfiable.")
+      case Z3.Timeout => reporter.warn("Could not determine the satisfiability of facts due to timeout.")
+      case Z3.Error => return false
+    }
+    check(program.block).isDefined
+  }
+
+  def check(block: Block): Option[ProofContext] = {
+    var hasError = false
+    var pcOpt: Option[ProofContext] = Some(this)
+    for (stmt <- block.stmts if pcOpt.isDefined) {
+      val pc =
+        if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
+        else pcOpt.get.cleanup
+      stmt match {
+        case ProofStmt(proof) =>
+          pcOpt = pc.check(proof) match {
+            case Some(pc2) =>
+              Some(pc2.copy(premises =
+                filter(proof.steps.flatMap(_ match {
+                  case step: RegularStep => Some(step.exp)
+                  case _ => None
+                }).toSet), provedSteps = imapEmpty))
+            case _ => None
+          }
+        case Assert(e) =>
+          pcOpt = Some(pc.copy(premises = pc.premises + e))
+        case VarAssign(id, exp) =>
+          exp match {
+            case _: ReadInt =>
+            case exp: Clone => pcOpt = pc.assign(id, exp.id)
+            case exp: Apply => ???
+            case _ => pcOpt = pc.assign(id, exp)
+          }
+      }
+    }
+    if (hasError) None else pcOpt
+  }
+
+  def assign(id: Id, exp: Exp): Option[ProofContext] = {
+    val sst = expRewriter(Map[Node, Node](id -> Id(id.value + "_old")))
+    Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+  }
+
+  def cleanup: ProofContext = copy(premises = filter(premises), provedSteps = imapEmpty)
+
+  def filter(premises: ISet[Exp]): ISet[Exp] = {
+    def keep(e: Exp) = {
+      var r = true
+      Visitor.build({
+        case Id(value) =>
+          if (value.endsWith("_old") || value.endsWith("_result"))
+            r = false
+          false
+      })(e)
+      r
+    }
+    premises.filter(keep)
+  }
+
+  def check(proofGroup: ProofGroup): Option[ProofContext] = {
+    var addedVars = isetEmpty[String]
+    var pcOpt: Option[ProofContext] =
+      proofGroup match {
+        case p: SubProof =>
+          val popt = p.assumeStep match {
+            case PlainAssumeStep(_, exp) =>
+              addProvedStep(p.assumeStep)
+            case ForAllAssumeStep(num, id, _) =>
+              addedVars += id.value
+              addVar(id, num.value)
+            case ExistsAssumeStep(num, id, exp, _) =>
+              addedVars += id.value
+              addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
+          }
+          popt.flatMap(_.addProvedStep(p))
+        case _ => Some(this)
+      }
+    for (step <- proofGroup.steps if pcOpt.isDefined)
+      step match {
+        case p: RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
+        case p: SubProof => pcOpt = pcOpt.get.check(p)
+        case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
+      }
+    pcOpt.map(pc => pc.copy(vars = pc.vars -- addedVars))
+  }
+
   def check(step: RegularStep): Option[ProofContext] = {
     val num = step.num.value
     step match {
       case Premise(_, exp) =>
-        if (isPremise(exp) || exp == Checker.top) addProvedStep(step)
+        if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
         else error(exp, s"Could not find the claimed premise in step #$num.")
       case AndIntro(_, and, lStep, rStep) =>
         (for (lExp <- findRegularStepExp(lStep, num);
@@ -392,7 +453,7 @@ ProofContext(mode: LogicMode,
                 val freshVar = freshVarId.value
                 if (!Checker.collectVars(ls.exp).contains(freshVar))
                   warn(ls.exp, s"The conclusion in step #${subProof.value} does not use the fresh variable $freshVar introducted in #${fs.num.value}.")
-                val expected = Checker.subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
+                val expected = subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
                 if (expected != ls.exp) {
                   error(q, s"Supplying $freshVar for ${q.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
                   hasError = true
@@ -412,7 +473,7 @@ ProofContext(mode: LogicMode,
           case Some(q: ForAll) =>
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
-                val expected = Checker.subst(e, m)
+                val expected = subst(e, m)
                 if (exp != expected) {
                   error(exp, s"Supplying the specified arguments to the quantification ${text(stepOrFact)} does not produce matching expression in #$num for Forall-elim.")
                   None
@@ -427,7 +488,7 @@ ProofContext(mode: LogicMode,
           case Some(result) =>
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
-                val expected = Checker.subst(e, m)
+                val expected = subst(e, m)
                 if (result != expected) {
                   error(q, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
                   None
@@ -445,7 +506,7 @@ ProofContext(mode: LogicMode,
                 (sp.first, sp.last) match {
                   case (fs: ExistsAssumeStep, ls: RegularStep) =>
                     val freshVar = fs.id.value
-                    val expected = Checker.subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
+                    val expected = subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
                     if (expected != fs.exp) {
                       error(exp, s"Supplying $freshVar for ${q.ids.head} ${text(stepOrFact)} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
@@ -477,7 +538,7 @@ ProofContext(mode: LogicMode,
         if (deduce(num, exp, stepOrFacts, e => true)) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
-        if (isPremise(exp)) addProvedStep(step)
+        if (premises.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
       case _: ExistsAssumeStep | _: PlainAssumeStep =>
         assert(assertion = false, "Unexpected situation.")
@@ -524,6 +585,13 @@ ProofContext(mode: LogicMode,
     })(e)
     !hasError
   }
+
+  def expRewriter(m: IMap[Node, Node]): Exp => Exp =
+    org.sireum.logika.ast.Rewriter.build[Exp](TraversalMode.BOTTOM_UP) {
+      case n: Node => m.getOrElse(n, n)
+    }
+
+  def subst(e: Exp, m: IMap[Node, Node]): Exp = expRewriter(m)(e)
 
   def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
     val r = imapEmpty[Node, Node] ++ q.ids.zip(args)

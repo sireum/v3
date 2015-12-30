@@ -475,7 +475,8 @@ final class SequentTestDefProvider(tf: TestFramework)
     implicit val reporter = ErrorCountingReporter
     val sequentOpt = Builder[Sequent](input = text)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
-    if (!r) return false
-    Checker.check(sequentOpt.get)
+    assert(r)
+    assert(Checker.check(sequentOpt.get, autoEnabled = false))
+    true
   }
 }

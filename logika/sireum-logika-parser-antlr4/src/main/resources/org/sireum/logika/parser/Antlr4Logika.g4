@@ -236,7 +236,7 @@ exp
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
   | tb=ID
-    ( '(' ( exp ( ',' exp )* )? ')'
+    ( t='(' ( exp ( ',' exp )* )? ')'
     | '.' te=ID // te=="size" or te =="clone"
     )?                                                  #IdExp
   | 'Z' '(' STRING ')'                                  #BigIntExp

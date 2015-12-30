@@ -3540,6 +3540,7 @@ public class Antlr4LogikaParser extends Parser {
 	}
 	public static class IdExpContext extends ExpContext {
 		public Token tb;
+		public Token t;
 		public Token te;
 		public List<TerminalNode> ID() { return getTokens(Antlr4LogikaParser.ID); }
 		public TerminalNode ID(int i) {
@@ -3684,7 +3685,7 @@ public class Antlr4LogikaParser extends Parser {
 				case 1:
 					{
 					setState(733);
-					match(T__15);
+					((IdExpContext)_localctx).t = match(T__15);
 					setState(742);
 					_la = _input.LA(1);
 					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__8) | (1L << T__9) | (1L << T__10) | (1L << T__11) | (1L << T__12) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << T__18) | (1L << T__19) | (1L << T__24) | (1L << T__36))) != 0) || ((((_la - 118)) & ~0x3f) == 0 && ((1L << (_la - 118)) & ((1L << (T__117 - 118)) | (1L << (NUM - 118)) | (1L << (ID - 118)))) != 0)) {

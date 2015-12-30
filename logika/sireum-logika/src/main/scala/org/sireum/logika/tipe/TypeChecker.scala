@@ -113,13 +113,16 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
 
   def check(stmt: Stmt)(
     implicit mOpt: Option[MethodDecl]): TypeContext = stmt match {
-    case VarDecl(_, id, t) =>
+    case VarDecl(isVar, id, t, exp) =>
       id.tipe = TypeChecker.tipe(t)
+      check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
+        if (id.tipe != tExp)
+          error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively."))
       TypeContext(addId(id, id.tipe, stmt, typeMap))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
         typeMap.get(id.value) match {
-          case Some((tId, VarDecl(true, _, _))) =>
+          case Some((tId, VarDecl(true, _, _, _))) =>
             id.tipe = tId
             if (tId != tExp)
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
@@ -215,8 +218,8 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       }
       modifiedVars += id
       typeMap.get(id.value) match {
-        case Some((_, VarDecl(true, _, _))) =>
-        case Some((_, VarDecl(false, _, IntSeqType()))) =>
+        case Some((_, VarDecl(true, _, _, _))) =>
+        case Some((_, VarDecl(false, _, _: IntSeqType, _))) =>
         case Some(_) =>
           error(id, s"Only variable or sequence value can be modified.")
         case _ => tipe(id)

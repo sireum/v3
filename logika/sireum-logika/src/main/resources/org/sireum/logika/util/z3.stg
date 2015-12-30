@@ -13,7 +13,7 @@ $e$
 (check-sat)
 >>
 
-assert(e) ::= <<
+assertion(e) ::= <<
 (assert $e$)
 >>
 

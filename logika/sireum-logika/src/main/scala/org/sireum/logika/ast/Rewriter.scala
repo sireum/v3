@@ -379,8 +379,8 @@ object Rewriter {
       org.sireum.logika.ast.TypeDomain(tpe)
     }),
     ("VarDecl", { es =>
-      val Seq(isVar: java.lang.Boolean, id: Id, tpe: Type) = es
-      org.sireum.logika.ast.VarDecl(isVar, id, tpe)
+      val Seq(isVar: java.lang.Boolean, id: Id, tpe: Type, exp: Exp) = es
+      org.sireum.logika.ast.VarDecl(isVar, id, tpe, exp)
     }),
     ("While", { es =>
       val Seq(exp: Exp, block: Block, loopInv: LoopInv) = es

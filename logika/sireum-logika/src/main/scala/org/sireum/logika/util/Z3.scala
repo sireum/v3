@@ -46,9 +46,6 @@ object Z3 {
 
   case object Error extends CheckResult
 
-  val stg: STGroup = new STGroupFile(getClass.
-    getResource("z3.stg"), "UTF-8", '$', '$')
-
   val z3: String = {
     import java.io._
     val z3Filename = OsUtil.detect match {
@@ -61,14 +58,19 @@ object Z3 {
   }
 
   def isValid(premises: ISeq[Exp], conclusions: ISeq[Exp])(
-    implicit nodeLocMap: MIdMap[Node, LocationInfo]) =
+    implicit nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
     new Z3().isValid(premises, conclusions)
+
+  def checkSat(es: Exp*)(
+    implicit nodeLocMap: MIdMap[Node, LocationInfo]): CheckResult =
+    new Z3().checkSat(es: _*)
 }
 
 private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   import Z3._
 
+  val stg = new STGroupFile(getClass.getResource("z3.stg"), "UTF-8", '$', '$')
   val typeMap: MMap[String, Tipe] = mmapEmpty[String, Tipe]
   val lineSep = scala.util.Properties.lineSeparator
   var zsCounter = 0
@@ -83,7 +85,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   def checkSat(es: Exp*): CheckResult = {
     for (e <- es)
-      stMain.add("e", stg.getInstanceOf("assert").add("e", translate(e)))
+      stMain.add("e", stg.getInstanceOf("assertion").add("e", translate(e)))
     Visitor.build({
       case q: Quant[_] =>
         for (id <- q.ids) typeMap -= id.value

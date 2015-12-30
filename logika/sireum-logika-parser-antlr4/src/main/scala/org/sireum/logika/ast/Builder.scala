@@ -412,7 +412,7 @@ final private class Builder(implicit reporter: Reporter) {
             else
               error(ctx.ID, s"Underscore is a reserved character for val identifier.")
           VarDecl(isVar, buildId(ctx.ID),
-            build(ctx.`type`))
+            build(ctx.`type`), build(ctx.exp))
         case ctx: AssignVarStmtContext =>
           Assign(buildId(ctx.ID), build(ctx.exp))
         case ctx: AssertStmtContext => Assert(build(ctx.exp))
@@ -472,7 +472,7 @@ final private class Builder(implicit reporter: Reporter) {
         r
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
-        if (ctx.exp != null && !ctx.exp.isEmpty) {
+        if (ctx.exp != null && ctx.t != null) {
           Apply(r,
             Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
         } else ctx.te match {

@@ -614,12 +614,28 @@ final case class Block(stmts: Node.Seq[Stmt]) extends Node
 
 sealed trait Stmt extends Node
 
+sealed trait VarAssign extends Stmt {
+  def id: Id
+
+  def exp: Exp
+}
+
+object VarAssign {
+  def unapply(stmt: Stmt): Option[(Id, Exp)] =
+    stmt match {
+      case VarDecl(_, id, _, exp) => Some((id, exp))
+      case Assign(id, exp) => Some((id, exp))
+      case _ => None
+    }
+}
+
 final case class VarDecl(isVar: Boolean,
                          id: Id,
-                         tpe: Type) extends Stmt
+                         tpe: Type,
+                         exp: Exp) extends VarAssign
 
 final case class Assign(id: Id,
-                        exp: Exp) extends Stmt
+                        exp: Exp) extends VarAssign
 
 final case class Assert(exp: Exp) extends Stmt
 

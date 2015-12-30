@@ -66,6 +66,16 @@ final class ProgramTestDefProvider(tf: TestFramework)
     val text = FileUtil.readFile(r)
     r.close()
     implicit val reporter = ErrorCountingReporter
-    Builder[Program](text).exists(TypeChecker.check)
+
+    val programOpt = Builder[Program](text)
+    if (programOpt.isEmpty) assert(false)
+
+    val program = programOpt.get
+
+    if (!TypeChecker.check(program)) assert(false)
+
+    if (filename.startsWith("assignment-"))
+      Checker.check(program, autoEnabled = false)
+    else true
   }
 }
