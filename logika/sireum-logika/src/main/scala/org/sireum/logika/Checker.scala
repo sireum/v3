@@ -119,44 +119,84 @@ ProofContext(mode: LogicMode,
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
         else pcOpt.get.cleanup
-      stmt match {
-        case ProofStmt(proof) =>
-          pcOpt = pc.check(proof) match {
-            case Some(pc2) =>
-              Some(pc2.copy(premises =
-                filter(proof.steps.flatMap(_ match {
-                  case step: RegularStep => Some(step.exp)
-                  case _ => None
-                }).toSet), provedSteps = imapEmpty))
-            case _ => None
-          }
-        case Assert(e) =>
-          pcOpt = Some(pc.copy(premises = pc.premises + e))
-        case VarAssign(id, exp) =>
-          exp match {
-            case _: ReadInt =>
-            case exp: Clone => pcOpt = pc.assign(id, exp.id)
-            case exp: Apply => ???
-            case _ => pcOpt = pc.assign(id, exp)
-          }
-      }
+      pcOpt =
+        stmt match {
+          case ProofStmt(proof) =>
+            pc.check(proof) match {
+              case Some(pc2) =>
+                Some(pc2.copy(
+                  premises = filter(extractClaims(proof)),
+                  provedSteps = imapEmpty))
+              case _ => None
+            }
+          case SequentStmt(sequent) =>
+            var i = 1
+            for (premise <- sequent.premises) {
+              if (!pc.premises.contains(premise)) {
+                hasError = true
+                error(premise, s"Could not find claimed premise #$i.")
+              }
+              i += 1
+            }
+            if (!autoEnabled) {
+              hasError = true
+              error(stmt, s"Auto is not enabled, but sequent is used.")
+            }
+            if (!Z3.isValid(sequent.premises, sequent.conclusions)) {
+              hasError = true
+              error(stmt, "Could not automatically deduce validity of the specified sequent.")
+            }
+            Some(pc.copy(premises = sequent.conclusions.toSet))
+          case Assert(e) =>
+            Some(pc.copy(premises = pc.premises + e))
+          case VarAssign(id, exp) =>
+            exp match {
+              case _: ReadInt => pcOpt
+              case exp: Clone => pc.assign(id, exp.id)
+              case exp: Apply => ???
+              case _ => pc.assign(id, exp)
+            }
+          case If(exp, thenBlock, elseBlock) =>
+            val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
+            val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
+            (thenPcOpt, elsePcOpt) match {
+              case (Some(thenPc), Some(elsePc)) =>
+                Some(copy(premises =
+                  orClaims(thenPc.premises, elsePc.premises)))
+              case _ => None
+            }
+        }
     }
-    if (hasError) None else pcOpt
+    if (hasError) None else pcOpt.map(_.cleanup)
   }
+
+  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ISet[Exp] =
+    (for (e1 <- es1; e2 <- es2) yield
+      ivector(Or(e1, e2)) ++
+        (if (e1 != e2) ivectorEmpty else ivector(e1))).
+      flatten.toSet
+
+  def extractClaims(pg: ProofGroup): ISet[Exp] =
+    pg.allSteps.flatMap(_ match {
+      case step: RegularStep => Some(step.exp)
+      case _ => None
+    }).toSet
 
   def assign(id: Id, exp: Exp): Option[ProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> Id(id.value + "_old")))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
-  def cleanup: ProofContext = copy(premises = filter(premises), provedSteps = imapEmpty)
+  def cleanup: ProofContext =
+    copy(premises = filter(premises), provedSteps = imapEmpty)
 
   def filter(premises: ISet[Exp]): ISet[Exp] = {
     def keep(e: Exp) = {
       var r = true
       Visitor.build({
         case Id(value) =>
-          if (value.endsWith("_old") || value.endsWith("_result"))
+          if (value.endsWith("_old") ||
+            value.endsWith("_result") || value.startsWith("_"))
             r = false
           false
       })(e)
@@ -242,9 +282,8 @@ ProofContext(mode: LogicMode,
               for (lsp <- findSubProof(lSubProof, num);
                    rsp <- findSubProof(rSubProof, num)) yield {
                 var hasError = false
-                (lsp.first, rsp.first, lsp.last, rsp.last) match {
-                  case (lfs: PlainAssumeStep, rfs: PlainAssumeStep,
-                  lls: RegularStep, rls: RegularStep) =>
+                (lsp.first, rsp.first) match {
+                  case (lfs: PlainAssumeStep, rfs: PlainAssumeStep) =>
                     val (lExp, rExp) =
                       (someE.x: @unchecked) match {
                         case Or(le, re) => (le, re)
@@ -259,23 +298,17 @@ ProofContext(mode: LogicMode,
                       error(lSubProof, s"Assumed expression does not match the right sub-expression of #${orStep.value} for Or-elim in step #$num.")
                       hasError = true
                     }
-                    if (lls.exp != exp) {
-                      error(lSubProof, s"Conclusion of the left sub-proof does not match the expression in #$num for Or-elim.")
+                    val expectedClaims =
+                      orClaims(extractClaims(lsp), extractClaims(rsp))
+                    if (!expectedClaims.contains(exp)) {
+                      error(exp, s"Could not find the expression in step #$num in #${lSubProof.value} or #${rSubProof.value} for Or-elim.")
                       hasError = true
                     }
-                    if (rls.exp != exp) {
-                      error(lSubProof, s"Conclusion of the right sub-proof does not match the expression in #$num for Or-elim.")
-                      hasError = true
-                    }
-                  case (lfs, rfs, lls, rls) =>
+                  case (lfs, rfs) =>
                     if (!lfs.isInstanceOf[PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim left assumption in step #$num.")
                     if (!rfs.isInstanceOf[PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim right assumption in step #$num.")
-                    if (!lls.isInstanceOf[RegularStep])
-                      error(lSubProof, s"Wrong form for Or-elim left conclusion in step #$num.")
-                    if (!rls.isInstanceOf[RegularStep])
-                      error(lSubProof, s"Wrong form for Or-elim right conclusion in step #$num.")
                     hasError = true
                 }
                 if (hasError) None else addProvedStep(step)
@@ -287,21 +320,19 @@ ProofContext(mode: LogicMode,
         findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = false
-            (sp.first, sp.last) match {
-              case (fs: PlainAssumeStep, ls: RegularStep) =>
+            sp.first match {
+              case fs: PlainAssumeStep =>
                 if (fs.exp != antecedent) {
                   error(antecedent, s"The antecedent of step #$num does not match the assumption of #${subProof.value} for Implies-intro.")
                   hasError = true
                 }
-                if (ls.exp != conclusion) {
-                  error(antecedent, s"The consequent of step #$num does not match the conclusion of #${subProof.value} for Implies-intro.")
+                val expectedClaims = extractClaims(sp)
+                if (!expectedClaims.contains(conclusion)) {
+                  error(antecedent, s"Could not find the consequent of step #$num in #${subProof.value} for Implies-intro.")
                   hasError = true
                 }
-              case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep])
-                  error(sp, s"Wrong form for Implies-intro assumption in step #$num.")
-                if (!ls.isInstanceOf[RegularStep])
-                  error(sp, s"Wrong form for Implies-intro conclusion in step #$num.")
+              case fs =>
+                error(sp, s"Wrong form for Implies-intro assumption in step #$num.")
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
@@ -503,27 +534,25 @@ ProofContext(mode: LogicMode,
             findSubProof(subProof, num) match {
               case Some(sp) =>
                 var hasError = false
-                (sp.first, sp.last) match {
-                  case (fs: ExistsAssumeStep, ls: RegularStep) =>
+                sp.first match {
+                  case fs: ExistsAssumeStep =>
                     val freshVar = fs.id.value
                     val expected = subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
                     if (expected != fs.exp) {
                       error(exp, s"Supplying $freshVar for ${q.ids.head} ${text(stepOrFact)} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
                     }
-                    if (exp != ls.exp) {
-                      error(exp, s"The conclusion of step #${subProof.value} does not match the expression in #$num for Exists-elim.")
+                    val expectedClaims = extractClaims(sp)
+                    if (!expectedClaims.contains(exp)) {
+                      error(exp, s"Could not find the expression in step #$num in #${subProof.value} for Exists-elim.")
                       hasError = true
                     }
                     if (Checker.collectVars(exp).contains(freshVar)) {
                       error(exp, s"The expression in step #$num should not contain $freshVar for Exists-elim.")
                       hasError = true
                     }
-                  case (fs, ls) =>
-                    if (!fs.isInstanceOf[ExistsAssumeStep])
-                      error(sp, s"Wrong form for Exists-elim assumption in step #$num that is expected to have a fresh variable and a formula.")
-                    if (!fs.isInstanceOf[RegularStep])
-                      error(sp, s"Wrong form for Exists-elim conclusion in step #$num.")
+                  case fs =>
+                    error(sp, s"Wrong form for Exists-elim assumption in step #$num that is expected to have a fresh variable and a formula.")
                     hasError = true
                 }
                 if (hasError) None else addProvedStep(step)
@@ -538,7 +567,7 @@ ProofContext(mode: LogicMode,
         if (deduce(num, exp, stepOrFacts, e => true)) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
-        if (premises.contains(exp)) addProvedStep(step)
+        if (invariants.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
       case _: ExistsAssumeStep | _: PlainAssumeStep =>
         assert(assertion = false, "Unexpected situation.")
@@ -558,7 +587,7 @@ ProofContext(mode: LogicMode,
     if (hasError) return false
     if (Z3.isValid(antecedents, ivector(exp))) true
     else {
-      error(exp, s"Could not deduce the claim in step#$num.")
+      error(exp, s"Could not automatically deduce the claim in step#$num.")
       false
     }
   }

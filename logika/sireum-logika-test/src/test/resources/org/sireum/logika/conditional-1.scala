@@ -38,7 +38,7 @@ l"""{  1. ((max >= x and max >= y) and max == x) or
        6. {
             7. (max >= x and max >= y) and max == y        assume
             8. max >= x and max >= y                       ande1 7
-            9. max == y                                    ande2 8
+            9. max == y                                    ande2 7
           }
-       9. max >= x and max >= y                            ore 1 2 6
-      10. max == x or max == y                             ore 1 2 6   }"""
+      10. max >= x and max >= y                            ore 1 2 6
+      11. max == x or max == y                             ore 1 2 6   }"""
