@@ -30,7 +30,7 @@ def deposit(amount: Z): B = {
         4.  balance_old == balance_in            premise
         5.  amount ≥ 0                           premise
         6.  balance_old == balance - amount      algebra 1
-        7.  balance_in == balance - amount       algebra 6 4
+        7.  balance_in == balance - amount       subst1 6 4
         8.  balance - amount ≥ 0                 algebra 6 2
         9.  balance ≥ 0                          algebra 8 5 }"""
   if (balance >= eliteMin) {

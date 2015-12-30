@@ -620,15 +620,6 @@ sealed trait VarAssign extends Stmt {
   def exp: Exp
 }
 
-object VarAssign {
-  def unapply(stmt: Stmt): Option[(Id, Exp)] =
-    stmt match {
-      case VarDecl(_, id, _, exp) => Some((id, exp))
-      case Assign(id, exp) => Some((id, exp))
-      case _ => None
-    }
-}
-
 final case class VarDecl(isVar: Boolean,
                          id: Id,
                          tpe: Type,

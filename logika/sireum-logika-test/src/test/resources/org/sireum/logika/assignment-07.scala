@@ -1,7 +1,7 @@
 import org.sireum.logika._
 
 val x: Z = 1
-l"""{ 1. x == 1             premise}"""
+l"""{ 1. x == 1             premise }"""
 
 val y: Z = 2
 l"""{ 1. x == 1             premise

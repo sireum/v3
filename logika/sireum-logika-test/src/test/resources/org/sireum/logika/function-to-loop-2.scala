@@ -24,17 +24,17 @@ while (i != n) {
   l"""{ 1. i == i_old + 1        premise
          2. i_old == i - 1       algebra 1
          3. r == f(i_old)        premise
-         4. r == f(i-1)          algebra 2 3       }"""
+         4. r == f(i-1)          subst1 2 3        }"""
   r = r * i
   l"""{ 1. r == r_old * i        premise
          2. r_old == f(i-1)      premise
          3. r == f(i-1) * i      algebra 2 1
          4. f(i) == f(i-1) * i   foralle base i
-         5. r == f(i)            algebra 3 4       }"""
+         5. r == f(i)            subst2 4 3        }"""
 }
 
 l"""{ 1. not(i != n)             premise
       2. i == n                  algebra 1
       3. r == f(i)               premise
-      4. r == f(n)               algebra 2 3       }"""
+      4. r == f(n)               subst1 2 3        }"""
 println(s"$n, $r")

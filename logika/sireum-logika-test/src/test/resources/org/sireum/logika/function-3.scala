@@ -6,7 +6,7 @@ var c: Z = 0
 def circumference(diameter: Z): Unit = {
   l"""{ requires  diameter >= 0 and pi >= 3
         modifies  c
-        ensures   c == pi * diameter        }"""
+        ensures   c == pi * diameter   }"""
   c = pi * diameter
 }
 
@@ -19,4 +19,4 @@ l"""{ 1. d >= 0              premise
 // we proved the precondition for circumference
 circumference(d)
 // we get to assume its postcondition
-l"""{ 1.  c == pi * d        premise    }"""
+l"""{ 1.  c == pi * d        premise   }"""

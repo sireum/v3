@@ -12,7 +12,7 @@ def absValue(x: Z): Z = {
     l"""{ 1. x < 0         premise
           2. ans == 0 - x  premise
           3. ans + x == 0  algebra 2
-          4. x < ans + x   algebra 3 1
+          4. x < ans + x   subst2 3 1
           5. ans > 0       algebra 4   }"""
   } else {
     l"""{ 1. x != 0        premise
@@ -22,9 +22,9 @@ def absValue(x: Z): Z = {
     ans = x
     l"""{ 1. ans == x      premise
           2. x > 0         premise
-          3. ans > 0       algebra 1 2 }"""
+          3. ans > 0       subst2 1 2  }"""
   }
-  l"""{ 1. ans > 0          premise     }"""
+  l"""{ 1. ans > 0         premise     }"""
   return ans
 }
 

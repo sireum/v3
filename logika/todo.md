@@ -1,14 +1,8 @@
 Logika To-Do
 ============
 
-* Rework programming logic examples to use subst1 and subst2 whenever applicable
-
 * Implement proof checker
 
-  * Check fact satisfiability first
-  
-  * Check method pre/post-condition satisfiability
-  
 * Add Z3 timeout option
 
 * Add helper methods

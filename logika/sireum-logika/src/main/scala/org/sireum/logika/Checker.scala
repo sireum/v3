@@ -149,12 +149,14 @@ ProofContext(mode: LogicMode,
             Some(pc.copy(premises = sequent.conclusions.toSet))
           case Assert(e) =>
             Some(pc.copy(premises = pc.premises + e))
-          case VarAssign(id, exp) =>
-            exp match {
+          case a: VarAssign =>
+            a.exp match {
               case _: ReadInt => pcOpt
-              case exp: Clone => pc.assign(id, exp.id)
+              case exp: Clone => pc.assign(a.id, exp.id)
               case exp: Apply => ???
-              case _ => pc.assign(id, exp)
+              case exp: Append => ???
+              case exp: Prepend => ???
+              case _ => pc.assign(a.id, a.exp)
             }
           case If(exp, thenBlock, elseBlock) =>
             val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
@@ -165,6 +167,12 @@ ProofContext(mode: LogicMode,
                   orClaims(thenPc.premises, elsePc.premises)))
               case _ => None
             }
+          case stmt: MethodDecl => ???
+          case InvStmt(inv) => ???
+          case ExpStmt(exp) => ???
+          case While(exp, block, loopInv) => ???
+          case SeqAssign(id, index, exp) => ???
+          case _: Print => pcOpt
         }
     }
     if (hasError) None else pcOpt.map(_.cleanup)
@@ -433,26 +441,7 @@ ProofContext(mode: LogicMode,
           case _ => None
         }
       case Subst1(_, exp, eqStep, step2) =>
-        var hasError = true
-        (findRegularStepOrFactExp(eqStep, num),
-          findRegularStepExp(step2, num)) match {
-          case (Some(Eq(exp1, exp2)), Some(e)) =>
-            val expected =
-              org.sireum.logika.ast.Rewriter.build[Exp]()({
-                case `exp2` => exp1
-              })(e)
-            if (expected != exp) {
-              val eqStepText = text(eqStep)
-              error(exp, s"The expression in step #$num does not match the substituted expression of [left of #$eqStepText/right of #$eqStepText]#${step2.value} for Subst1.")
-            }
-          case (Some(_), Some(_)) =>
-            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst1 in step #$num has to be an equality.")
-            hasError = true
-          case _ => hasError = true
-        }
-        if (hasError) None else addProvedStep(step)
-      case Subst2(_, exp, eqStep, step2) =>
-        var hasError = true
+        var hasError = false
         (findRegularStepOrFactExp(eqStep, num),
           findRegularStepExp(step2, num)) match {
           case (Some(Eq(exp1, exp2)), Some(e)) =>
@@ -462,7 +451,28 @@ ProofContext(mode: LogicMode,
               })(e)
             if (expected != exp) {
               val eqStepText = text(eqStep)
-              error(exp, s"The expression in step #$num does not match the substituted expression of [right of #$eqStepText/left of #$eqStepText]#${step2.value} for Subst2.")
+              error(exp, s"The expression in step #$num does not match the substituted expression of [left/right $eqStepText]#${step2.value} for Subst1.")
+              hasError = true
+            }
+          case (Some(_), Some(_)) =>
+            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst1 in step #$num has to be an equality.")
+            hasError = true
+          case _ => hasError = true
+        }
+        if (hasError) None else addProvedStep(step)
+      case Subst2(_, exp, eqStep, step2) =>
+        var hasError = false
+        (findRegularStepOrFactExp(eqStep, num),
+          findRegularStepExp(step2, num)) match {
+          case (Some(Eq(exp1, exp2)), Some(e)) =>
+            val expected =
+              org.sireum.logika.ast.Rewriter.build[Exp]()({
+                case `exp2` => exp1
+              })(e)
+            if (expected != exp) {
+              val eqStepText = text(eqStep)
+              error(exp, s"The expression in step #$num does not match the substituted expression of [right/left $eqStepText]#${step2.value} for Subst2.")
+              hasError = true
             }
           case (Some(_), Some(_)) =>
             error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst2 in step #$num has to be an equality.")
