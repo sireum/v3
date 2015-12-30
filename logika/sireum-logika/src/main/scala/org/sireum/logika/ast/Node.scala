@@ -420,7 +420,9 @@ final case class Result() extends Exp {
 }
 
 final case class Apply(id: Id,
-                       args: Node.Seq[Exp]) extends Exp
+                       args: Node.Seq[Exp]) extends Exp {
+  var contractOpt: Option[MethodContract] = None
+}
 
 final case class ReadInt(msgOpt: Option[StringLit])
   extends Exp
@@ -491,8 +493,32 @@ final case class And(left: Exp, right: Exp) extends BinaryExp {
   val op = "&&"
 }
 
+object And {
+  def apply(args: ISeq[Exp]): Exp =
+    if (args.isEmpty) BooleanLit(value = true)
+    else {
+      var r = args.head
+      for (arg <- args.tail) {
+        r = And(arg, r)
+      }
+      r
+    }
+}
+
 final case class Or(left: Exp, right: Exp) extends BinaryExp {
   val op = "||"
+}
+
+object Or {
+  def apply(args: ISeq[Exp]): Exp =
+    if (args.isEmpty) BooleanLit(value = false)
+    else {
+      var r = args.head
+      for (arg <- args.tail) {
+        r = Or(arg, r)
+      }
+      r
+    }
 }
 
 final case class Implies(left: Exp, right: Exp) extends BinaryExp {

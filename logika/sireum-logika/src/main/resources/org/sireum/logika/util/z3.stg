@@ -9,8 +9,12 @@ main(d, a, e) ::= <<
 (assert (= (_size _empty) 0))
 $d$
 $a$
-(assert $e$)
+$e$
 (check-sat)
+>>
+
+assert(e) ::= <<
+(assert $e$)
 >>
 
 bconst(name) ::= <<

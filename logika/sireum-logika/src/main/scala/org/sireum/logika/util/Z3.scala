@@ -60,9 +60,9 @@ object Z3 {
     else z3Filename
   }
 
-  def isValid(exp: Exp)(
+  def isValid(premises: ISeq[Exp], conclusions: ISeq[Exp])(
     implicit nodeLocMap: MIdMap[Node, LocationInfo]) =
-    new Z3().isValid(exp)
+    new Z3().isValid(premises, conclusions)
 }
 
 private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
@@ -74,24 +74,25 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
   var zsCounter = 0
   val stMain = stg.getInstanceOf("main")
 
-  def isValid(e: Exp): Boolean = {
-    val result = check(Not(e))
-    result == Unsat
+  def isValid(premises: ISeq[Exp], conclusions: ISeq[Exp]): Boolean = {
+    val r =
+      if (premises.isEmpty) checkSat(Not(And(conclusions)))
+      else checkSat(Not(Implies(And(premises), And(conclusions))))
+    r == Unsat
   }
 
-  def check(e: Exp): CheckResult = {
-    stMain.add("e", translate(e))
+  def checkSat(es: Exp*): CheckResult = {
+    for (e <- es)
+      stMain.add("e", stg.getInstanceOf("assert").add("e", translate(e)))
     Visitor.build({
       case q: Quant[_] =>
-        for (id <- q.ids) {
-          typeMap -= id.value
-        }
+        for (id <- q.ids) typeMap -= id.value
         true
     })
-    for ((name, tipe) <- typeMap) {
+    for ((name, tipe) <- typeMap)
       stMain.add("d", translate(name, tipe)).
         add("d", lineSep)
-    }
+
     val z3Script = stMain.render()
     val result = {
       val input =
@@ -139,7 +140,6 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
         val id = Id("result")
         id.tipe = e.tipe
         translate(id)
-      case Clone(exp) => translate(exp)
       case e: Apply =>
         if (e.id.tipe == ZS)
           stg.getInstanceOf("index").add("a", translate(e.id)).
@@ -227,6 +227,9 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
+      case _: ReadInt | _: Clone =>
+        assert(assertion = false, "Unexpected situation.")
+        null
     }
 
   def zs(): Int = {

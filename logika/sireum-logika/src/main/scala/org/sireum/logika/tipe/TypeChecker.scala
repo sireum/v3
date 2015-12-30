@@ -71,7 +71,7 @@ object TypeChecker {
       id.tipe = tipe(m)
       typeMap += id.value ->(id.tipe, m)
     }
-    TypeContext(typeMap)(nodeLocMap, r2).check(program.block)
+    TypeContext(typeMap)(nodeLocMap, r2).check(program.block)(None)
     !hasError
   }
 
@@ -100,22 +100,24 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
 
   def check(p: Program): Unit = {
     for (Fact(_, e) <- p.fact.factOrFunDecls)
-      check(e, allowMethod = false)(allowFun = true)
-    check(p.block)
+      check(e, allowMethod = false)(allowFun = true, None)
+    check(p.block)(None)
   }
 
-  def check(b: Block): TypeContext = {
+  def check(b: Block)(
+    implicit mOpt: Option[MethodDecl]): TypeContext = {
     var tc = this
     for (stmt <- b.stmts) tc = tc.check(stmt)
     tc
   }
 
-  def check(stmt: Stmt): TypeContext = stmt match {
+  def check(stmt: Stmt)(
+    implicit mOpt: Option[MethodDecl]): TypeContext = stmt match {
     case VarDecl(_, id, t) =>
       id.tipe = TypeChecker.tipe(t)
       TypeContext(addId(id, id.tipe, stmt, typeMap))
     case Assign(id, exp) =>
-      for (tExp <- check(exp, allowMethod = true)(allowFun = false))
+      for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
         typeMap.get(id.value) match {
           case Some((tId, VarDecl(true, _, _))) =>
             id.tipe = tId
@@ -131,44 +133,45 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             error(stmt, s"Can only assign to a var.")
         }
       this
-    case Assert(exp) => b(exp)(allowFun = false); this
+    case Assert(exp) => b(exp)(allowFun = false, mOpt); this
     case ExpStmt(exp) =>
-      check(exp, allowMethod = true)(allowFun = false); this
+      check(exp, allowMethod = true)(allowFun = false, mOpt); this
     case If(exp, trueBlock, falseBlock) =>
-      b(exp)(allowFun = false)
+      b(exp)(allowFun = false, mOpt)
       check(trueBlock)
       check(falseBlock)
       this
     case While(exp, block, loopInv) =>
-      for (iExp <- loopInv.invariant.exps) b(iExp)(allowFun = true)
+      for (iExp <- loopInv.invariant.exps) b(iExp)(allowFun = true, mOpt)
       checkModifies(loopInv.modifies, block, stmt)
-      b(exp)(allowFun = false)
+      b(exp)(allowFun = false, mOpt)
       check(block)
       this
     case _: Print => this
     case SeqAssign(id, index, exp) =>
-      zs(id)(allowFun = false)
+      zs(id)(allowFun = false, mOpt)
       id.tipe = ZS
-      z(index)(allowFun = false)
-      z(exp)(allowFun = false)
+      z(index)(allowFun = false, mOpt)
+      z(exp)(allowFun = false, mOpt)
       this
     case md: MethodDecl =>
       var tm = typeMap
       for (p <- md.params)
         tm = addId(p.id, TypeChecker.tipe(p.tpe), p, tm)
       var tc = TypeContext(tm)
-      for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true)
+      for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
       checkModifies(md.contract.modifies, md.block, md)
-      tc = tc.check(md.block)
+      tc = tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(rt)
           val tcPost = TypeContext(addId(Id("result"), t, md, tm))
           for (e <- md.contract.ensures.exps)
-            tcPost.b(e)(allowFun = true)
+            tcPost.b(e)(allowFun = true, mOpt)
           md.returnExpOpt match {
             case Some(e) =>
-              tc.check(e, allowMethod = false)(allowFun = false) match {
+              tc.check(e, allowMethod = false)(
+                allowFun = false, mOpt) match {
                 case Some(t2) =>
                   if (t != t2)
                     error(e, s"Expecting return type $t, but found $t2.")
@@ -179,23 +182,23 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
                 error(md.returnExpOpt.get, s"Unexpected return expression.")
           }
         case _ =>
-          for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true)
+          for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true, mOpt)
       }
       this
     case ProofStmt(proof) => check(proof); this
     case stmt@SequentStmt(sequent) =>
-      for (e <- sequent.premises) b(e)(allowFun = true)
-      for (e <- sequent.conclusions) b(e)(allowFun = true)
+      for (e <- sequent.premises) b(e)(allowFun = true, mOpt)
+      for (e <- sequent.conclusions) b(e)(allowFun = true, mOpt)
       sequent.proofOpt.foreach(check)
       this
-    case InvStmt(inv) => for (e <- inv.exps) b(e)(allowFun = true); this
+    case InvStmt(inv) => for (e <- inv.exps) b(e)(allowFun = true, mOpt); this
   }
 
   def check(p: ProofGroup): Unit = {
     var tc = this
     for (step <- p.allSteps) step match {
       case step: RegularStep =>
-        tc.b(step.exp)(allowFun = true)
+        tc.b(step.exp)(allowFun = true, None)
       case step: QuantAssumeStep =>
         tc = TypeContext(addId(step.id,
           TypeChecker.tipe(step.typeOpt.get), step, typeMap))
@@ -233,7 +236,8 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
   }
 
   def check(e: Exp, allowMethod: Boolean = false)(
-    implicit allowFun: Boolean): Option[Tipe] =
+    implicit allowFun: Boolean,
+    mOpt: Option[MethodDecl]): Option[Tipe] =
     e match {
       case _: BooleanLit => someB
       case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
@@ -250,6 +254,22 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             case Some((_, md: MethodDecl)) =>
               if (!allowMethod)
                 error(e.id, s"Method invocation is only allowed at statement level.")
+              mOpt match {
+                case Some(caller) =>
+                  val ids = md.contract.modifies.ids.toSet -- caller.contract.modifies.ids.toSet
+                  ids.size match {
+                    case 0 =>
+                    case 1 => error(e.id, s"Variable ${ids.head.value} is modified by method ${md.id.value} but not in the modifies clause of method ${caller.id.value} which invokes ${md.id.value}.")
+                    case _ =>
+                      val sb = new StringBuilder(ids.head.value)
+                      for (id <- ids.tail) {
+                        sb.append(", ")
+                        sb.append(id)
+                      }
+                      error(e.id, s"Variables $sb are modified by method ${md.id.value} but not in the modifies clause of method ${caller.id.value} which invokes ${md.id.value}.")
+                  }
+                case _ =>
+              }
               true
             case Some((_, fun: Fun)) =>
               if (!allowFun)
@@ -353,21 +373,21 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
     r
   }
 
-  def b(e: Exp)(implicit allowFun: Boolean): Unit =
-    check(e)(allowFun) match {
+  def b(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
+    check(e) match {
       case Some(B) =>
       case Some(t) => error(e, s"Expecting an expression of type B, but found $t.")
       case _ =>
     }
 
-  def z(e: Exp)(implicit allowFun: Boolean): Unit =
+  def z(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
     check(e) match {
       case Some(Z) =>
       case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
       case _ =>
     }
 
-  def zs(e: Exp)(implicit allowFun: Boolean): Unit =
+  def zs(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
     check(e) match {
       case Some(ZS) =>
       case Some(t) => error(e, s"Expecting an expression of type ZS, but found $t.")

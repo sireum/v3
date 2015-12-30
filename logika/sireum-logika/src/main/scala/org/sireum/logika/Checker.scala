@@ -124,7 +124,7 @@ private final case class
 ProofContext(mode: LogicMode,
              autoEnabled: Boolean,
              invariants: ISet[Exp],
-             premises: ISet[Exp],
+             isPremise: Exp => Boolean,
              vars: ISet[String],
              facts: IMap[String, Exp],
              provedSteps: IMap[Int, ProofStep])
@@ -135,7 +135,7 @@ ProofContext(mode: LogicMode,
     val num = step.num.value
     step match {
       case Premise(_, exp) =>
-        if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
+        if (isPremise(exp) || exp == Checker.top) addProvedStep(step)
         else error(exp, s"Could not find the claimed premise in step #$num.")
       case AndIntro(_, and, lStep, rStep) =>
         (for (lExp <- findRegularStepExp(lStep, num);
@@ -477,7 +477,7 @@ ProofContext(mode: LogicMode,
         if (deduce(num, exp, stepOrFacts, e => true)) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
-        if (premises.contains(exp)) addProvedStep(step)
+        if (isPremise(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
       case _: ExistsAssumeStep | _: PlainAssumeStep =>
         assert(assertion = false, "Unexpected situation.")
@@ -495,15 +495,7 @@ ProofContext(mode: LogicMode,
         case _ => hasError = true
       }
     if (hasError) return false
-    val claim =
-      if (antecedents.nonEmpty) {
-        var antecedent = antecedents.head
-        for (e <- antecedents.tail) {
-          antecedent = And(antecedent, e)
-        }
-        Implies(antecedent, exp)
-      } else exp
-    if (Z3.isValid(claim)) true
+    if (Z3.isValid(antecedents, ivector(exp))) true
     else {
       error(exp, s"Could not deduce the claim in step#$num.")
       false
