@@ -178,17 +178,17 @@ ProofContext(mode: LogicMode,
             if (sequent.premises.nonEmpty) {
               if (!Z3.isValid(timeoutInMs, pc.premises.toVector, sequent.premises)) {
                 hasError = true
-                error(stmt, "Could not automatically deduce validity of the specified sequent's premises.")
+                error(stmt, "Could not automatically deduce the specified sequent's premises.")
               }
               if (!Z3.isValid(timeoutInMs,
                 sequent.premises, sequent.conclusions)) {
                 hasError = true
-                error(stmt, "Could not automatically deduce validity of the specified sequent's conclusions from its premises.")
+                error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
               }
             } else if (!Z3.isValid(timeoutInMs,
               pc.premises.toVector, sequent.conclusions)) {
               hasError = true
-              error(stmt, "Could not automatically deduce validity of the specified sequent's conclusions.")
+              error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
             }
             Some(pc.copy(premises =
               filter(sequent.premises.toSet) ++
@@ -254,12 +254,25 @@ ProofContext(mode: LogicMode,
                 unknownMsg = s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.",
                 timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
               ) || hasError
-            val mods = stmt.contract.modifies.ids.map(id =>
+            val modifiedIds = stmt.contract.modifies.ids.toSet
+            val mods = modifiedIds.map(id =>
               Eq(id, newId(id.value + "_in", id.tipe)))
             pc.copy(premises = effectivePre ++ mods).
               check(stmt.block) match {
               case Some(pc2) =>
-                for (e <- pc.invariants)
+                var modifiedInvariants = isetEmpty[Exp]
+                for (e <- pc.invariants) {
+                  var modified = false
+                  Visitor.build({
+                    case id: Id =>
+                      if (modifiedIds.contains(id)) {
+                        modified = true
+                      }
+                      false
+                  })(e)
+                  if (modified) modifiedInvariants += e
+                }
+                for (e <- modifiedInvariants)
                   if (!pc2.premises.contains(e)) {
                     error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
                     hasError = true
@@ -300,6 +313,17 @@ ProofContext(mode: LogicMode,
             Some(pc.copy(invariants = pc.invariants ++ inv.exps))
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
+            var j = 1
+            for (e <- es) {
+              if (!pc.premises.contains(e)) {
+                if (es.size == 1)
+                  error(e, s"The loop invariant has not been proved at the beginning of the loop.")
+                else
+                  error(e, s"Loop invariant #$j has not been proved at the end of the loop.")
+                hasError = true
+              }
+              j += 1
+            }
             pc.copy(premises = pc.premises ++ es + exp).
               check(loopBlock) match {
               case Some(pc2) =>

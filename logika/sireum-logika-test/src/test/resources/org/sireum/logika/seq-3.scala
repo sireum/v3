@@ -20,7 +20,8 @@ def add(a: ZS): Z = {
         2. i == 0                           premise
         3. answer == sum(a, i)              subst2 2 1
         4. 0 <= a.size                      algebra
-        5. i <= a.size                      subst2 2 4   }"""
+        5. i <= a.size                      subst2 2 4
+        6. 0 <= i                           algebra 2    }"""
   while (i != a.size) {
     l"""{ invariant  answer == sum(a, i)
                      0 <= i
