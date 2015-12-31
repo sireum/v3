@@ -1,5 +1,10 @@
 # Sireum: A Software Analysis Platform (v3)
 
+## Available Products
+
+* [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](logika/readme.md)
+
+
 ## Requirements
 
 Supported platforms (64-bit only):
@@ -132,10 +137,6 @@ class":"BlockLocation","label":{".class":"Id","value":"L1"},"actions":[],"jump":
 x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
 }
 ```
-
-## Main Projects
-
-* [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](logika/readme.md)
 
 ## Building and Testing Sireum using Sbt
 
