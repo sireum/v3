@@ -712,7 +712,7 @@ ProofContext(mode: LogicMode,
         }
         if (hasError) None else addProvedStep(step)
       case Algebra(_, exp, stepOrFacts) =>
-        if (deduce(num, exp, stepOrFacts, checkAlgebraExp))
+        if (deduce(num, exp, stepOrFacts, checkAlgebraExp, "apply algebra"))
           addProvedStep(step)
         else None
       case ForAllIntro(_, q, subProof) =>
@@ -805,7 +805,7 @@ ProofContext(mode: LogicMode,
       case Auto(_, exp, stepOrFacts) =>
         if (!autoEnabled)
           error(step, s"Auto is not enabled, but used in step #$num.")
-        if (deduce(num, exp, stepOrFacts, e => true)) addProvedStep(step)
+        if (deduce(num, exp, stepOrFacts, e => true, "automatically")) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
         if (invariants.contains(exp)) addProvedStep(step)
@@ -817,7 +817,7 @@ ProofContext(mode: LogicMode,
   }
 
   def deduce(num: Int, exp: Exp, stepOrFacts: Node.Seq[NumOrId],
-             f: Exp => Boolean): Boolean = {
+             f: Exp => Boolean, method: String): Boolean = {
     var antecedents = Node.emptySeq[Exp]
     var hasError = false
     for (numOrId <- stepOrFacts)
@@ -829,7 +829,7 @@ ProofContext(mode: LogicMode,
     if (Z3.isValid(timeoutInMs,
       antecedents ++ facts.values, ivector(exp))) true
     else {
-      error(exp, s"Could not automatically deduce the claim in step#$num.")
+      error(exp, s"Could not $method deduce the claim in step#$num.")
       false
     }
   }
