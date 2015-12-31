@@ -82,7 +82,7 @@ object Checker {
           hasProof = true; false
       })(program)
       if (!hasProof) {
-        reporter.error("No program proof element found.")
+        reporter.error("No programming logic proof element found.")
         false
       } else {
         val r =
@@ -272,11 +272,21 @@ ProofContext(mode: LogicMode,
                   })(e)
                   if (modified) modifiedInvariants += e
                 }
-                for (e <- modifiedInvariants)
-                  if (!pc2.premises.contains(e)) {
-                    error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
+                if (autoEnabled) {
+                  if (modifiedInvariants.nonEmpty &&
+                    !Z3.isValid(timeoutInMs, pc2.premises.toVector,
+                      modifiedInvariants.toVector)) {
+                    val locs = buildLocs(modifiedInvariants)
+                    error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${stmt.id.value}.")
                     hasError = true
                   }
+                } else {
+                  for (e <- modifiedInvariants)
+                    if (!pc2.premises.contains(e)) {
+                      error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
+                      hasError = true
+                    }
+                }
                 val post = stmt.contract.ensures.exps
                 val postPremises = stmt.returnExpOpt match {
                   case Some(e) =>
@@ -284,59 +294,91 @@ ProofContext(mode: LogicMode,
                     pc2.premises.map(e => subst(e, m))
                   case _ => pc2.premises
                 }
-                var i = 1
-                for (e <- post) {
-                  if (!postPremises.contains(e)) {
-                    if (post.size == 1)
-                      error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
-                    else
-                      error(e, s"Post-condition #$i of method ${stmt.id.value} has not been proven.")
+                if (autoEnabled) {
+                  if (post.nonEmpty &&
+                    !Z3.isValid(timeoutInMs, postPremises.toVector, post)) {
                     hasError = true
+                    val locs = buildLocs(post)
+                    error(post.head, s"Could not automatically deduce method ${stmt.id.value}'s post-condition(s) defined at $locs.")
                   }
-                  i += 1
+                } else {
+                  var i = 1
+                  for (e <- post) {
+                    if (!postPremises.contains(e)) {
+                      if (post.size == 1)
+                        error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
+                      else
+                        error(e, s"Post-condition #$i of method ${stmt.id.value} has not been proven.")
+                      hasError = true
+                    }
+                    i += 1
+                  }
                 }
               case _ => hasError = true
             }
             pcOpt
           case InvStmt(inv) =>
             var i = 1
-            for (e <- inv.exps) {
-              if (!pc.premises.contains(e)) {
-                if (inv.exps.size == 1)
-                  error(e, s"The global invariant has not been proven.")
-                else
-                  error(e, s"The global invariant #$i has not been proved.")
+            if (autoEnabled) {
+              if (!Z3.isValid(timeoutInMs, pc.premises.toVector, inv.exps)) {
                 hasError = true
+                error(stmt, s"Could not automatically deduce the global invariant(s).")
               }
-              i += 1
+            } else {
+              for (e <- inv.exps) {
+                if (!pc.premises.contains(e)) {
+                  if (inv.exps.size == 1)
+                    error(e, s"The global invariant has not been proven.")
+                  else
+                    error(e, s"The global invariant #$i has not been proved.")
+                  hasError = true
+                }
+                i += 1
+              }
             }
             Some(pc.copy(invariants = pc.invariants ++ inv.exps))
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
-            var j = 1
-            for (e <- es) {
-              if (!pc.premises.contains(e)) {
-                if (es.size == 1)
-                  error(e, s"The loop invariant has not been proved at the beginning of the loop.")
-                else
-                  error(e, s"Loop invariant #$j has not been proved at the end of the loop.")
+            if (autoEnabled) {
+              if (es.nonEmpty && !Z3.isValid(timeoutInMs,
+                pc.premises.toVector, es)) {
                 hasError = true
+                error(loopInv, s"Could not automatically deduce the loop invariant(s) at the beginning of the loop.")
               }
-              j += 1
+            } else {
+              var i = 1
+              for (e <- es) {
+                if (!pc.premises.contains(e)) {
+                  if (es.size == 1)
+                    error(e, s"The loop invariant has not been proved at the beginning of the loop.")
+                  else
+                    error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+                  hasError = true
+                }
+                i += 1
+              }
             }
             pc.copy(premises = pc.premises ++ es + exp).
               check(loopBlock) match {
               case Some(pc2) =>
-                var i = 1
-                for (e <- es) {
-                  if (!pc2.premises.contains(e)) {
-                    if (es.size == 1)
-                      error(e, s"The loop invariant has not been proved at the end of the loop.")
-                    else
-                      error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+                if (autoEnabled) {
+                  if (es.nonEmpty && !Z3.isValid(timeoutInMs,
+                    pc2.premises.toVector, es)) {
                     hasError = true
+                    error(loopInv, s"Could not automatically deduce the loop invariant(s) at the end of the loop.")
                   }
-                  i += 1
+                } else {
+                  var i = 1
+                  for (e <- es) {
+                    if (!pc2.premises.contains(e)) {
+                      if (es.size == 1)
+                        error(e, s"The loop invariant has not been proved at the end of the loop.")
+                      else
+                        error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+                      hasError = true
+                    }
+                    i += 1
+                  }
                 }
                 Some(pc.copy(premises = es.toSet + Not(exp)))
               case _ => None
@@ -345,6 +387,25 @@ ProofContext(mode: LogicMode,
         }
     }
     if (hasError) None else pcOpt.map(_.cleanup)
+  }
+
+  def buildLocs(it: Iterable[Node]): String = {
+    val sb = new StringBuilder
+    val locs =
+      it.toVector.map(n => nodeLocMap(n)).sortWith((li1, li2) =>
+        if (li1.lineBegin < li2.lineBegin) true
+        else if (li1.lineBegin > li2.lineBegin) false
+        else li1.columnBegin < li2.columnBegin)
+    sb.append(s"[${locs.head.lineBegin}, ${locs.head.columnBegin}]")
+    var i = 1
+    val size = locs.size
+    for (loc <- locs.tail) {
+      if (i == size - 1) sb.append(", and ")
+      else sb.append(", ")
+      sb.append(s"[${loc.lineBegin}, ${loc.columnBegin}]")
+      i += 1
+    }
+    sb.toString
   }
 
   def newId(x: String, t: tipe.Tipe) = {
@@ -358,16 +419,24 @@ ProofContext(mode: LogicMode,
     val md = a.declOpt.get
     var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
-    var i = 1
-    for (pre <- pres) {
-      if (!premises.contains(pre)) {
-        if (pres.size == 1)
-          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
-        else
-          error(a, s"Pre-condition #$i of method ${md.id.value} has not been proven.")
+    if (autoEnabled) {
+      if (pres.nonEmpty && !Z3.isValid(timeoutInMs,
+        premises.toVector, pres)) {
         hasError = true
+        error(a, s"Could not automatically deduce the pre-condition(s) of the method.")
       }
-      i += 1
+    } else {
+      var i = 1
+      for (pre <- pres) {
+        if (!premises.contains(pre)) {
+          if (pres.size == 1)
+            error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
+          else
+            error(a, s"Pre-condition #$i of method ${md.id.value} has not been proven.")
+          hasError = true
+        }
+        i += 1
+      }
     }
     val (lhs, postSubstMap) = lhsOpt match {
       case Some(x) =>
@@ -391,8 +460,11 @@ ProofContext(mode: LogicMode,
     var hasError = false
     def divisor(e: Exp): Boolean = {
       val req = Ne(e, Checker.zero)
-      if (autoEnabled &&
-        Z3.isValid(timeoutInMs, premises.toVector, ivector(req))) {
+      if (autoEnabled) {
+        if (!Z3.isValid(timeoutInMs, premises.toVector, ivector(req))) {
+          error(e, s"Could not automatically deduce that the divisor is non-zero.")
+          hasError = true
+        }
       } else if (!premises.contains(req)) {
         error(e, s"Divisor has to be proven to be non-zero (... != 0).")
         hasError = true
@@ -402,22 +474,19 @@ ProofContext(mode: LogicMode,
     def index(id: Id, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
-      val lMsg = "The sequence index has to be proven non-negative (0 <= ...)"
-      lazy val rMsg = s"The sequence index has to be proven less than the sequence size (... < ${id.value}.size)"
       if (autoEnabled) {
         if (!Z3.isValid(timeoutInMs, premises.toVector, ivector(req1, req2))) {
           hasError = true
-          error(e, lMsg)
-          error(e, rMsg)
+          error(e, s"Could not automatically deduce that the index is not out of bound of ${id.value}.")
         }
       } else {
         if (!premises.contains(req1)) {
           hasError = true
-          error(e, lMsg)
+          error(e, "The sequence index has to be proven non-negative (0 <= ...)")
         }
         if (!premises.contains(req2)) {
           hasError = true
-          error(e, rMsg)
+          error(e, s"The sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
         }
       }
       true
