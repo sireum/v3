@@ -476,7 +476,7 @@ final class SequentTestDefProvider(tf: TestFramework)
     val sequentOpt = Builder[Sequent](input = text)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
     assert(r)
-    assert(Checker.check(sequentOpt.get, autoEnabled = false, 2000))
+    assert(Checker.check(sequentOpt.get))
     true
   }
 }

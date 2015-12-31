@@ -41,16 +41,18 @@ import scala.beans.BeanProperty
   handler = "org.sireum.logika.ProofChecker"
 )
 final case class LogikaOption(@BeanProperty
-                              @Opt(shortKey = Some("s"), description = "Sequent matching the input file's")
-                              var sequent: OptionBean[String] = none(),
-                              @BeanProperty
-                              @Opt(shortKey = Some("a"), description = "Enable auto in programming logic proof step justification")
+                              @Opt(shortKey = Some("a"), description = "Enable auto mode (programming logic)")
                               var auto: Boolean = false,
                               @BeanProperty
-                              @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto justifications (milliseconds)")
+                              @Opt(shortKey = None, description = "Enable sat checking of facts and method contracts")
+                              var sat: Boolean = false,
+                              @BeanProperty
+                              @Opt(shortKey = Some("s"), description = "Sequent matching the propositional/predicate logic input file's")
+                              var sequent: OptionBean[String] = none(), @BeanProperty
+                              @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)")
                               var timeout: Int = 2000,
                               @BeanProperty
                               @Arg(name = "{file.txt, file.scala}")
                               var input: String = "") {
-  def this() = this(none(), false, 2000, "")
+  def this() = this(false, false, none(), 2000, "")
 }

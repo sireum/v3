@@ -72,7 +72,8 @@ class ProofChecker(option: LogikaOption,
       Builder[Program](fText) match {
         case Some(program) =>
           if (tipe.TypeChecker.check(program)(ConsoleReporter))
-            Checker.check(program, autoEnabled = option.auto, option.timeout)(ConsoleReporter)
+            Checker.check(program, option.auto,
+              option.timeout, option.sat)(ConsoleReporter)
         case _ =>
       }
 
@@ -91,7 +92,8 @@ class ProofChecker(option: LogikaOption,
             errPrintln(fText.substring(0, li.offset + li.length))
           }
         case (None, Some(s)) if !hasError =>
-          Checker.check(s, autoEnabled = false, option.timeout)(ConsoleReporter)
+          Checker.check(s, autoEnabled = false,
+            option.timeout, option.sat)(ConsoleReporter)
         case _ =>
       }
     }

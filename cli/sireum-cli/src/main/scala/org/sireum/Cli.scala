@@ -671,10 +671,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Usage: sireum logika <{file.txt, file.scala}>
            |
            |Options:
-           |-a, --auto       Enable auto in programming logic proof step justification
-           |-s, --sequent    Sequent matching the input file's
-           |-t, --timeout    Timeout for algebra and auto justifications (milliseconds)
+           |-a, --auto       Enable auto mode (programming logic)
+           |-s, --sequent    Sequent matching the propositional/predicate logic input file's
+           |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
+           |    --sat        Enable sat checking of facts and method contracts
            |-h, --help       Display usage information
         """.stripMargin.trim
       )
@@ -688,6 +689,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       args(i) match {
         case "-h" | "--help" =>
           foundHelp = true
+        case "-a" | "--auto" =>
+          option.auto = true
+        case "--sat" =>
+          option.sat = true
         case "-s" | "--sequent" =>
           i += 1
           args.at(i) match {
@@ -697,8 +702,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               errPrintln("Expecting a value for sequent")
               return
           }
-        case "-a" | "--auto" =>
-          option.auto = true
         case "-t" | "--timeout" =>
           i += 1
           args.at(i) match {

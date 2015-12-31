@@ -35,8 +35,9 @@ object Checker {
   private[logika] final val bottom = BooleanLit(false)
   private[logika] final val zero = IntLit("0")
 
-  final def check(unitNode: UnitNode, autoEnabled: Boolean, timeoutInMs: Int)(
-    implicit reporter: Reporter): Boolean = unitNode match {
+  final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
+                  timeoutInMs: Int = 2000, checkSat: Boolean = false)(
+                   implicit reporter: Reporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
         s.mode == LogicMode.Predicate)
@@ -46,9 +47,8 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = ProofContext(s.mode, autoEnabled = false,
-            timeoutInMs, isetEmpty, s.premises.toSet,
-            vars, imapEmpty, imapEmpty, imapEmpty).check(proof).isDefined
+          val r = ProofContext(s.mode, autoEnabled, timeoutInMs,
+            checkSat, premises = s.premises.toSet).check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
             case _ => None
@@ -86,12 +86,8 @@ object Checker {
         false
       } else {
         val r =
-          ProofContext(program.mode,
-            autoEnabled, timeoutInMs, isetEmpty, isetEmpty, isetEmpty,
-            imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
-              case f: Fact => Some(f.id.value -> f.exp)
-              case _ => None
-            }), imapEmpty, imapEmpty).check(program)
+          ProofContext(program.mode, autoEnabled, timeoutInMs,
+            checkSat).check(program)
         if (r) reporter.info(s"Programming logic proof is accepted.")
         else reporter.error(s"Programming logic proof is rejected.")
         r
@@ -114,31 +110,44 @@ private final case class
 ProofContext(mode: LogicMode,
              autoEnabled: Boolean,
              timeoutInMs: Int,
-             invariants: ISet[Exp],
-             premises: ISet[Exp],
-             vars: ISet[String],
-             facts: IMap[String, Exp],
-             provedSteps: IMap[Natural, ProofStep],
-             declaredStepNumbers: IMap[Natural, LocationInfo])
+             checkSat: Boolean,
+             invariants: ISet[Exp] = isetEmpty,
+             premises: ISet[Exp] = isetEmpty,
+             vars: ISet[String] = isetEmpty,
+             facts: IMap[String, Exp] = imapEmpty,
+             provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+             declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
             (implicit reporter: Reporter,
              nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
   def check(program: Program): Boolean = {
-    if (facts.nonEmpty)
+    if (facts.nonEmpty && !checkSat(facts.values,
+      unsatMsg = "The specified set of facts are unsatisfiable.",
+      unknownMsg = "The set of facts might not be satisfiable.",
+      timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
+    )) return false
+    copy(facts = facts ++ program.fact.factOrFunDecls.
+      flatMap(_ match {
+        case f: Fact => Some(f.id.value -> f.exp)
+        case _ => None
+      })
+    ).check(program.block).isDefined
+  }
+
+  def checkSat(exps: Iterable[Exp], unsatMsg: => String,
+               unknownMsg: => String, timeoutMsg: => String): Boolean =
+    if (checkSat)
       Z3.checkSat(satTimeoutInMs,
         facts.values.toVector: _*) match {
-        case Z3.Sat =>
-        case Z3.Unsat =>
-          error(facts.head._2, "The specified set of facts are unsatisfiable.")
-          return false
-        case Z3.Unknown => reporter.warn("The set of facts might not be satisfiable.")
-        case Z3.Timeout =>
-        case Z3.Error => return false
+        case Z3.Sat => true
+        case Z3.Unsat => error(facts.head._2, unsatMsg); false
+        case Z3.Unknown => reporter.warn(unknownMsg); true
+        case Z3.Timeout => reporter.warn(timeoutMsg); true
+        case Z3.Error => false
       }
-    check(program.block).isDefined
-  }
+    else false
 
   def check(block: Block): Option[ProofContext] = {
     var hasError = false
@@ -162,22 +171,24 @@ ProofContext(mode: LogicMode,
               case _ => None
             }
           case SequentStmt(sequent) =>
-            var i = 1
-            for (premise <- sequent.premises) {
-              if (!pc.premises.contains(premise)) {
-                hasError = true
-                error(premise, s"Could not find claimed premise #$i.")
-              }
-              i += 1
-            }
             if (!autoEnabled) {
               hasError = true
               error(stmt, s"Auto is not enabled, but sequent is used.")
             }
-            if (!Z3.isValid(timeoutInMs,
-              sequent.premises, sequent.conclusions)) {
+            if (sequent.premises.nonEmpty) {
+              if (!Z3.isValid(timeoutInMs, pc.premises.toVector, sequent.premises)) {
+                hasError = true
+                error(stmt, "Could not automatically deduce validity of the specified sequent's premises.")
+              }
+              if (!Z3.isValid(timeoutInMs,
+                sequent.premises, sequent.conclusions)) {
+                hasError = true
+                error(stmt, "Could not automatically deduce validity of the specified sequent's conclusions from its premises.")
+              }
+            } else if (!Z3.isValid(timeoutInMs,
+              pc.premises.toVector, sequent.conclusions)) {
               hasError = true
-              error(stmt, "Could not automatically deduce validity of the specified sequent.")
+              error(stmt, "Could not automatically deduce validity of the specified sequent's conclusions.")
             }
             Some(pc.copy(premises =
               filter(sequent.premises.toSet) ++
@@ -229,32 +240,20 @@ ProofContext(mode: LogicMode,
               case _ => None
             }
           case stmt: MethodDecl =>
-            val effectivePre =
-              pc.invariants ++ stmt.contract.requires.exps
-            val effectivePost =
-              pc.invariants ++ stmt.contract.ensures.exps
-            Z3.checkSat(satTimeoutInMs, effectivePre.toSeq: _*) match {
-              case Z3.Sat =>
-              case Z3.Unsat =>
-                error(stmt, s"The effective pre-condition of method ${stmt.id.value} is unsatisfiable.")
-                hasError = true
-              case Z3.Unknown =>
-                warn(stmt, s"The effective pre-condition of method ${stmt.id.value} might not be satisfiable.")
-              case Z3.Timeout =>
-                warn(stmt, s"Could not check satisfiability of the effective pre-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms).")
-              case Z3.Error => hasError = true
-            }
-            Z3.checkSat(satTimeoutInMs, effectivePost.toSeq: _*) match {
-              case Z3.Sat =>
-              case Z3.Unsat =>
-                error(stmt, s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.")
-                hasError = true
-              case Z3.Unknown =>
-                warn(stmt, s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.")
-              case Z3.Timeout =>
-                warn(stmt, s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout  (${timeoutInMs}ms).")
-              case Z3.Error => hasError = true
-            }
+            val effectivePre = pc.invariants ++ stmt.contract.requires.exps
+            val effectivePost = pc.invariants ++ stmt.contract.ensures.exps
+            hasError =
+              checkSat(effectivePre,
+                unsatMsg = s"The effective pre-condition of method ${stmt.id.value} is unsatisfiable.",
+                unknownMsg = s"The effective pre-condition of method ${stmt.id.value} might not be satisfiable.",
+                timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
+              ) || hasError
+            hasError =
+              checkSat(effectivePost,
+                unsatMsg = s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.",
+                unknownMsg = s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.",
+                timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
+              ) || hasError
             val mods = stmt.contract.modifies.ids.map(id =>
               Eq(id, newId(id.value + "_in", id.tipe)))
             pc.copy(premises = effectivePre ++ mods).
@@ -379,16 +378,22 @@ ProofContext(mode: LogicMode,
     def index(id: Id, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
-      if (autoEnabled &&
-        Z3.isValid(timeoutInMs, premises.toVector, ivector(req1, req2))) {
+      val lMsg = "The sequence index has to be proven non-negative (0 <= ...)"
+      lazy val rMsg = s"The sequence index has to be proven less than the sequence size (... < ${id.value}.size)"
+      if (autoEnabled) {
+        if (!Z3.isValid(timeoutInMs, premises.toVector, ivector(req1, req2))) {
+          hasError = true
+          error(e, lMsg)
+          error(e, rMsg)
+        }
       } else {
         if (!premises.contains(req1)) {
           hasError = true
-          error(e, s"Sequence index has to be proven non-negative (0 <= ...)")
+          error(e, lMsg)
         }
         if (!premises.contains(req2)) {
           hasError = true
-          error(e, s"Sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
+          error(e, rMsg)
         }
       }
       true
@@ -937,7 +942,10 @@ ProofContext(mode: LogicMode,
         None
       case _ =>
         val (l, c, o) = lineColumnOffset(num)
-        reporter.error(l, c, o, s"Could not find the referenced sub-proof #${num.value} in #$stepNum.")
+        if (declaredStepNumbers.contains(num.value))
+          reporter.error(l, c, o, s"Step #${num.value} is out of scope from #$stepNum.")
+        else
+          reporter.error(l, c, o, s"Could not find the referenced sub-proof #${num.value} in #$stepNum.")
         None
     }
   }
@@ -947,7 +955,10 @@ ProofContext(mode: LogicMode,
       case Some(r: RegularStep) => Some(r.exp)
       case _ =>
         val (l, c, o) = lineColumnOffset(num)
-        reporter.error(l, c, o, s"Could not find the referenced step #${num.value} in #$stepNum.")
+        if (declaredStepNumbers.contains(num.value))
+          reporter.error(l, c, o, s"Step #${num.value} is out of scope from #$stepNum.")
+        else
+          reporter.error(l, c, o, s"Could not find the referenced step #${num.value} in #$stepNum.")
         None
     }
 

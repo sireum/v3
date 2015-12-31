@@ -74,6 +74,6 @@ final class ProgramTestDefProvider(tf: TestFramework)
 
     if (!TypeChecker.check(program)) assert(false)
 
-    Checker.check(program, autoEnabled = false, 2000)
+    Checker.check(program)
   }
 }

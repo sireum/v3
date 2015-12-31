@@ -57,7 +57,7 @@ object Z3 {
     else z3Filename
   }
 
-  def isValid(timeoutInMs: Int, premises: ISeq[Exp], conclusions: ISeq[Exp])(
+  def isValid(timeoutInMs: Int, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
     implicit nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
     new Z3(timeoutInMs).isValid(premises, conclusions)
 
@@ -76,7 +76,7 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
   var zsCounter = 0
   val stMain = stg.getInstanceOf("main")
 
-  def isValid(premises: ISeq[Exp], conclusions: ISeq[Exp]): Boolean = {
+  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): Boolean = {
     val r =
       if (premises.isEmpty) checkSat(Not(And(conclusions)))
       else checkSat(Not(Implies(And(premises), And(conclusions))))
