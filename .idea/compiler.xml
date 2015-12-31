@@ -35,6 +35,10 @@
       <module name="sireum-option" target="1.8" />
       <module name="sireum-pilar" target="1.8" />
       <module name="sireum-pilar-parser-antlr4" target="1.8" />
+      <module name="sireum-pilar-test" target="1.8" />
+      <module name="sireum-pilar-test-jvm" target="1.8" />
+      <module name="sireum-test" target="1.8" />
+      <module name="sireum-test-jvm" target="1.8" />
       <module name="sireum-util" target="1.8" />
       <module name="sireum-util-jvm" target="1.8" />
       <module name="sireum-util-reflect" target="1.8" />

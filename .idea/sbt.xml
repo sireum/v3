@@ -22,18 +22,6 @@
             <option value="$PROJECT_DIR$/cli/sireum-option/project" />
             <option value="$PROJECT_DIR$/cli/sireum-util-reflect" />
             <option value="$PROJECT_DIR$/cli/sireum-util-reflect/project" />
-            <option value="$PROJECT_DIR$/core/sireum-core-js-test" />
-            <option value="$PROJECT_DIR$/core/sireum-core-js-test/project" />
-            <option value="$PROJECT_DIR$/core/sireum-core-test" />
-            <option value="$PROJECT_DIR$/core/sireum-core-test/project" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4/project" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar/project" />
-            <option value="$PROJECT_DIR$/core/sireum-util" />
-            <option value="$PROJECT_DIR$/core/sireum-util-jvm" />
-            <option value="$PROJECT_DIR$/core/sireum-util-jvm/project" />
-            <option value="$PROJECT_DIR$/core/sireum-util/project" />
             <option value="$PROJECT_DIR$/java/sireum-java" />
             <option value="$PROJECT_DIR$/java/sireum-java-test" />
             <option value="$PROJECT_DIR$/java/sireum-java-test/project" />
@@ -50,7 +38,27 @@
             <option value="$PROJECT_DIR$/logika/sireum-logika-test" />
             <option value="$PROJECT_DIR$/logika/sireum-logika-test/project" />
             <option value="$PROJECT_DIR$/logika/sireum-logika/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-parser-antlr4" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-js" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-js/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-jvm" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-jvm/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar/project" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test" />
+            <option value="$PROJECT_DIR$/test/sireum-test-js" />
+            <option value="$PROJECT_DIR$/test/sireum-test-js/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test-jvm" />
+            <option value="$PROJECT_DIR$/test/sireum-test-jvm/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test/project" />
+            <option value="$PROJECT_DIR$/util/sireum-util" />
+            <option value="$PROJECT_DIR$/util/sireum-util-jvm" />
+            <option value="$PROJECT_DIR$/util/sireum-util-jvm/project" />
+            <option value="$PROJECT_DIR$/util/sireum-util/project" />
           </set>
         </option>
         <option name="resolveClassifiers" value="true" />
@@ -73,18 +81,6 @@
             <option value="$PROJECT_DIR$/cli/sireum-option/project" />
             <option value="$PROJECT_DIR$/cli/sireum-util-reflect" />
             <option value="$PROJECT_DIR$/cli/sireum-util-reflect/project" />
-            <option value="$PROJECT_DIR$/core/sireum-core-js-test" />
-            <option value="$PROJECT_DIR$/core/sireum-core-js-test/project" />
-            <option value="$PROJECT_DIR$/core/sireum-core-test" />
-            <option value="$PROJECT_DIR$/core/sireum-core-test/project" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar-parser-antlr4/project" />
-            <option value="$PROJECT_DIR$/core/sireum-pilar/project" />
-            <option value="$PROJECT_DIR$/core/sireum-util" />
-            <option value="$PROJECT_DIR$/core/sireum-util-jvm" />
-            <option value="$PROJECT_DIR$/core/sireum-util-jvm/project" />
-            <option value="$PROJECT_DIR$/core/sireum-util/project" />
             <option value="$PROJECT_DIR$/java/sireum-java" />
             <option value="$PROJECT_DIR$/java/sireum-java-test" />
             <option value="$PROJECT_DIR$/java/sireum-java-test/project" />
@@ -101,7 +97,27 @@
             <option value="$PROJECT_DIR$/logika/sireum-logika-test" />
             <option value="$PROJECT_DIR$/logika/sireum-logika-test/project" />
             <option value="$PROJECT_DIR$/logika/sireum-logika/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-parser-antlr4" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-parser-antlr4/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-js" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-js/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-jvm" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test-jvm/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar-test/project" />
+            <option value="$PROJECT_DIR$/pilar/sireum-pilar/project" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test" />
+            <option value="$PROJECT_DIR$/test/sireum-test-js" />
+            <option value="$PROJECT_DIR$/test/sireum-test-js/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test-jvm" />
+            <option value="$PROJECT_DIR$/test/sireum-test-jvm/project" />
+            <option value="$PROJECT_DIR$/test/sireum-test/project" />
+            <option value="$PROJECT_DIR$/util/sireum-util" />
+            <option value="$PROJECT_DIR$/util/sireum-util-jvm" />
+            <option value="$PROJECT_DIR$/util/sireum-util-jvm/project" />
+            <option value="$PROJECT_DIR$/util/sireum-util/project" />
           </set>
         </option>
       </SbtProjectSettings>

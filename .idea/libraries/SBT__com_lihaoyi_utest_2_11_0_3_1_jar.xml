@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: com.lihaoyi:utest_2.11:0.3.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/utest_2.11/utest_2.11-0.3.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib_managed/docs/com.lihaoyi/utest_2.11/utest_2.11-0.3.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/utest_2.11/utest_2.11-0.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

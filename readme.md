@@ -133,8 +133,11 @@ x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
 }
 ```
 
-Building and Testing Sireum using Sbt
-=====================================
+## Main Projects
+
+* [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](logika/readme.md)
+
+## Building and Testing Sireum using Sbt
 
 Run: `sireum-v3/bin/sbt-launch.sh test`
 
@@ -168,16 +171,14 @@ Once you deleted the corrupted cache, run Sbt again and it should work.
 You can then check that your Gradle builds still work once Sbt fixed/recreated your Ivy2 cache.
 
 
-Assembling Sireum Jar
-=====================
+## Assembling Sireum Jar
 
 Run: `sireum-v3/bin/sbt-launch.sh assembly`
  
 The jar will be located at `sireum-v3/jvm/target/scala-2.11/sireum.jar`
 
 
-Development Environment
-=======================
+## Development Environment
 
 [IntelliJ IDEA](https://www.jetbrains.com/idea/) 
 is the recommended IDE for Sireum v3 development.
@@ -185,8 +186,7 @@ JetBrains has graciously provided free licenses for IntelliJ Ultimate for Sireum
 (claim a license [here](https://docs.google.com/document/d/1YC1KY4qALJ10VoHfF9KAdqP9vGq5v5MlOvGAKKL697U/edit#));
 however, you can also use IntelliJ Community Edition.
 
-Download
---------
+### Download
 
 Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 versions,
 JetBrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
@@ -211,8 +211,7 @@ sudo rm -fR Home
 sudo ln -s absolute/path/of/platform/java Home
 ```
 
-Plugins
--------
+### Plugins
 
 You need to install some plugins for Sireum v3 development
 (by opening `IntelliJ`->`Preference`->`Plugin` and click "Browse repositories..."):
@@ -235,8 +234,7 @@ Other plugins that you might be interested are:
 * Docker integration
 * LaTeX
 
-Setting Preferences
--------------------
+### Setting Preferences
 
 * Set IntelliJ's Sbt’s preferences by opening `IntelliJ`->`Preference`->`Build, Execution, Deployment`->`Build Tools`->`SBT`
 
@@ -264,8 +262,8 @@ Setting Preferences
     * Add `SIREUM_HOME` environment variable and set it to the absolute path of the directory containing this file.
 
 
-Alternative IDE
----------------
+### Alternative IDE
+
 You can also use Eclipse that is shipped in [Sireum v2 Shortcake](http://sireum.org/software.html#shortcake).
 Run:
 ```bash

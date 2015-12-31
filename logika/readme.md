@@ -1,9 +1,8 @@
-# Sireum Logika
+# Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics 
 
-Logika is a natural deduction proof checker for propositional, predicate, and programming logic being
-developed for teaching [K-State CIS 301: Logical Foundations of Programming](http://proglogics.santoslab.org).
-
-Logika is inspired by:
+Logika is being developed for teaching 
+[K-State CIS 301: Logical Foundations of Programming](http://proglogics.santoslab.org).
+It is inspired by:
 
 * The [Natural Deduction Proof Checker (NDPC)](http://people.cis.ksu.edu/~schmidt/301s14/NDPC/ndpc-pe.jar)
   tool ([User's Guide](http://people.cis.ksu.edu/~schmidt/301s14/NDPC/user_manual.pdf))
@@ -16,25 +15,24 @@ Logika is inspired by:
 
 Logika is a combination of both tools; it uses the same
 [input language](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-parser-antlr4/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
-for reasoning about propositional, predicate, and programming logic (i.e., the propositional logic 
+for reasoning about propositional, predicate, and programming logics (i.e., the propositional logic 
 input language is a subset of the predicate logic input language, which in turn, is a subset of the
 programming logic input language).
-The programming input language is a restricted subset of the Scala programming language that can be
-run by using the regular Scala interpreter.
+The programming logic input language is a restricted subset of the Scala programming language that 
+can be run by using the regular Scala interpreter (requires the 
+[Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala).
 
-Currently, the tool has been implemented up with feature sets on par with the two tools above.
+Currently, the tool has been implemented with feature sets on par (actually, slightly beyond) 
+the two tools above. 
 Logika uses the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver for checking
-programming logic formula validity/satisfiability.
+validity/satisfiability.
 More features are planned (see [todo.md](todo.md)).
 
 Some examples are available at the following links:
 
 * [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala)
-  (status: **all verified**)
 
 * [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
-  (status: **all verified**; all examples runnable by the Scala interpreter, which requires 
-  the [Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 
 ## Installing and Running Logika
