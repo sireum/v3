@@ -206,7 +206,8 @@ object Rewriter {
     @tailrec
     def isEmpty: Boolean = {
       if (_stack.isEmpty) true
-      else if (_stack.head.hasNext) false
+      else if (_stack.head.hasNext)
+        false
       else {
         val p = pop
         if (_stack.isEmpty) result = p._2
@@ -227,11 +228,13 @@ object Rewriter {
       }
 
       def add(n: Any) {
-        val r = if (hasPre && f.isDefinedAt(n)) f(n) else n
+        val (shouldPush, r) =
+          if (hasPre && f.isDefinedAt(n)) (false, f(n)) else (true, n)
         if (_stack.isEmpty) push(r)
         else {
           peek.newChild(peek.currIndex, n, r)
-          push(r)
+          if (shouldPush)
+            push(r)
         }
       }
 
