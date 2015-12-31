@@ -340,13 +340,15 @@ final private class Builder(implicit reporter: Reporter) {
         case "exists" | "some" | "E" | "∃" => Exists
       }
     val domain =
-      if (ctx.`type` != null)
-        Some(TypeDomain(build(ctx.`type`)))
-      else if (ctx.lo != null)
+      if (ctx.`type` != null) {
+        Some(TypeDomain(build(ctx.`type`)) at ctx.`type`)
+      } else if (ctx.lo != null) {
+        val lo = build(ctx.lo)
+        val hi = build(ctx.hi)
         Some(
-          RangeDomain(build(ctx.lo), build(ctx.hi),
-            ctx.ll != null, ctx.lh != null))
-      else None
+          RangeDomain(lo, hi, ctx.ll != null,
+            ctx.lh != null) at(lo, hi))
+      } else None
     apply(ctx.vars.map(buildId), domain,
       build(ctx.formula)) at ctx
   }
@@ -550,6 +552,24 @@ final private class Builder(implicit reporter: Reporter) {
               checkIntMaxMin(ctx.op, lN - rN)
             }
             Sub(lExp, rExp)
+          case ":+" =>
+            lExp match {
+              case lExp: Id => Append(lExp, rExp)
+              case _ =>
+                val lExpLi = nodeLocMap(lExp)
+                reporter.error(lExpLi.lineBegin, lExpLi.columnBegin, lExpLi.offset,
+                  s"The left hand-side argument of append (+:) should be an identifier.")
+                Append(Id("???"), rExp)
+            }
+          case "+:" =>
+            rExp match {
+              case rExp: Id => Prepend(lExp, rExp)
+              case _ =>
+                val rExpLi = nodeLocMap(rExp)
+                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
+                  s"The right hand-side argument of prepend (:+) should be an identifier.")
+                Prepend(lExp, Id("???"))
+            }
           case "<" => Lt(lExp, rExp)
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)

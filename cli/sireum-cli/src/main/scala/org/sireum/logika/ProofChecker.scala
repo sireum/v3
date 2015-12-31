@@ -77,7 +77,7 @@ class ProofChecker(option: LogikaOption,
       case (Some(sequent), Some(s)) if !hasError =>
         if (s.premises == sequent.premises &&
           s.conclusions == sequent.conclusions) {
-          Checker.check(s, autoEnabled = false)(ConsoleReporter)
+          Checker.check(s, autoEnabled = false, 2000)(ConsoleReporter)
         } else {
           val li = s.nodeLocMap(s.conclusions.last)
           errPrintln(s"The specified sequent is different than the one in the file.")
@@ -87,7 +87,7 @@ class ProofChecker(option: LogikaOption,
           errPrintln(fText.substring(0, li.offset + li.length))
         }
       case (None, Some(s)) if !hasError =>
-        Checker.check(s, autoEnabled = false)(ConsoleReporter)
+        Checker.check(s, autoEnabled = false, 2000)(ConsoleReporter)
       case _ =>
     }
 

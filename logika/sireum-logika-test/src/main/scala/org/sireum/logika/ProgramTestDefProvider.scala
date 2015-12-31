@@ -74,7 +74,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
 
     if (!TypeChecker.check(program)) assert(false)
 
-    if (!filename.startsWith("seq-"))
+    if (!filename.startsWith("seq-2"))
       Checker.check(program, autoEnabled = false, 2000)
     else true
   }

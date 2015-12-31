@@ -481,12 +481,12 @@ final case class Ne(left: Exp, right: Exp) extends BinaryExp {
   val op = "!="
 }
 
-final case class Append(left: Exp, right: Exp) extends BinaryExp {
-  val op = "+:"
+final case class Append(left: Id, right: Exp) extends BinaryExp {
+  val op = ":+"
 }
 
-final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
-  val op = ":+"
+final case class Prepend(left: Exp, right: Id) extends BinaryExp {
+  val op = "+:"
 }
 
 final case class And(left: Exp, right: Exp) extends BinaryExp {
@@ -560,7 +560,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
           val hiLi = nodeLocMap(hi)
           val rdLi = nodeLocMap(rd)
           val isForAll = isInstanceOf[ForAll]
-          def range(id: Id, l: Exp, h: Exp) = {
+          def range(id: Id, l: Exp, h: Exp): And = {
             val lApply = if (loLt) Lt else Le
             val rApply = if (hiLt) Lt else Le
             And(lApply(l, id) at loLi, rApply(id, h) at hiLi) at rdLi
@@ -674,11 +674,13 @@ final case class Ensures(exps: Node.Seq[Exp]) extends Node
 final case class Param(id: Id,
                        tpe: Type) extends Node
 
-final case class ProofStmt(proof: Proof) extends Stmt
+sealed trait ProofElementStmt extends Stmt
 
-final case class SequentStmt(sequent: Sequent) extends Stmt
+final case class ProofStmt(proof: Proof) extends ProofElementStmt
 
-final case class InvStmt(inv: Inv) extends Stmt
+final case class SequentStmt(sequent: Sequent) extends ProofElementStmt
+
+final case class InvStmt(inv: Inv) extends ProofElementStmt
 
 final case class Inv(exps: Node.Seq[Exp]) extends Node
 

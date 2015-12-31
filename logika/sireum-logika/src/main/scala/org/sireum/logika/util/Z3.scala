@@ -216,7 +216,8 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
         st
       case e: SeqLit =>
         val c = zs()
-        val stZs = stg.getInstanceOf("zs").add("c", c)
+        val stZs = stg.getInstanceOf("zs").add("c", c).
+          add("size", e.args.size)
         if (e.args.isEmpty)
           stZs.add("exp", "_empty")
         else {
@@ -229,7 +230,7 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
               add("v", translate(arg)).add("a", stZsExp)
             i -= 1
           }
-
+          stZs.add("exp", stZsExp)
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
@@ -271,6 +272,6 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
   def translate(tpe: Type): String = tpe match {
     case _: BooleanType => "B"
     case _: IntType => "Z"
-    case _: IntSeqType => "SZ"
+    case _: IntSeqType => "ZS"
   }
 }

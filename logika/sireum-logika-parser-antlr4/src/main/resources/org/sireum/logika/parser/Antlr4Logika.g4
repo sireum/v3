@@ -246,7 +246,7 @@ exp
   | op=( '-' | '!' ) exp                                #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
   | l=exp op=( '+' | '-' | '+:' )  NL? r=exp            #BinaryExp
-  | l=exp op='+:' NL? r=exp                             #BinaryExp
+  | l=exp op=':+' NL? r=exp                             #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
   | l=exp op='&&' NL? r=exp                             #BinaryExp

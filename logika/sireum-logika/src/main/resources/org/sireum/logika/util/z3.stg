@@ -78,13 +78,13 @@ param(id, tipe) ::= <<
 >>
 
 a(c) ::= <<
-a$c$
+_a!$c$
 >>
 
-zs(c, exp) ::= <<
+zs(c, exp, size) ::= <<
 (declare-const _a!$c$ ZS)
 (assert (= _a!$c$ $exp$))
-(assert (= (_size _a!$c$) 3))
+(assert (= (_size _a!$c$) $size$))
 >>
 
 zsexp(a, i, v) ::= <<

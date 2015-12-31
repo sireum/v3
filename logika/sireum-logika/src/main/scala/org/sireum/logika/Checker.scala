@@ -142,7 +142,9 @@ ProofContext(mode: LogicMode,
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
         else pcOpt.get.cleanup
-      hasError = pc.checkRuntimeError(stmt) || hasError
+      if (!stmt.isInstanceOf[ProofElementStmt]) {
+        hasError = pc.checkRuntimeError(stmt) || hasError
+      }
       pcOpt =
         stmt match {
           case ProofStmt(proof) =>
@@ -171,10 +173,30 @@ ProofContext(mode: LogicMode,
               hasError = true
               error(stmt, "Could not automatically deduce validity of the specified sequent.")
             }
-            Some(pc.copy(premises = sequent.conclusions.toSet))
+            Some(pc.copy(premises =
+              filter(sequent.premises.toSet) ++
+                filter(sequent.conclusions.toSet)))
           case Assert(e) =>
             Some(pc.copy(premises = pc.premises + e))
-          case SeqAssign(id, index, exp) => ???
+          case SeqAssign(id, index, exp) =>
+            val old = newId(id.value + "_old", id.tipe)
+            val m = imapEmpty[Node, Node] + (id -> old)
+            val qVar = newId("q_i", tipe.Z)
+            Some(pc.copy(premises =
+              pc.premises.map(e => subst(e, m)) ++
+                ivector(
+                  Eq(Size(id), Size(old)),
+                  Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
+                  ForAll(
+                    Node.seq(qVar),
+                    Some(RangeDomain(Checker.zero, Size(id),
+                      loLt = false, hiLt = true)),
+                    Implies(
+                      Ne(qVar, index),
+                      Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                    )
+                  )
+                )))
           case ExpStmt(exp) =>
             val (he, pc2) = pc.invoke(exp, None)
             hasError ||= he
@@ -185,12 +207,10 @@ ProofContext(mode: LogicMode,
             exp match {
               case _: ReadInt => pcOpt
               case exp: Clone => pc.assign(id, exp.id)
-              case exp: Apply =>
-                val (he, pc2) = pc.invoke(exp, Some(id.value))
+              case exp: Apply if exp.id.tipe != tipe.ZS =>
+                val (he, pc2) = pc.invoke(exp, Some(id))
                 hasError ||= he
                 Some(pc2)
-              case exp: Append => ???
-              case exp: Prepend => ???
               case _ => pc.assign(id, exp)
             }
           case If(exp, thenBlock, elseBlock) =>
@@ -230,7 +250,7 @@ ProofContext(mode: LogicMode,
               case Z3.Error => hasError = true
             }
             val mods = stmt.contract.modifies.ids.map(id =>
-              Eq(id, Id(id.value + "_in")))
+              Eq(id, newId(id.value + "_in", id.tipe)))
             pc.copy(premises = effectivePre ++ mods).
               check(stmt.block) match {
               case Some(pc2) =>
@@ -298,7 +318,13 @@ ProofContext(mode: LogicMode,
     if (hasError) None else pcOpt.map(_.cleanup)
   }
 
-  def invoke(a: Apply, lhsOpt: Option[String]): (Boolean, ProofContext) = {
+  def newId(x: String, t: tipe.Tipe) = {
+    val r = Id(x)
+    r.tipe = t
+    r
+  }
+
+  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, ProofContext) = {
     var hasError = false
     val md = a.declOpt.get
     var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
@@ -315,12 +341,16 @@ ProofContext(mode: LogicMode,
       i += 1
     }
     val (lhs, postSubstMap) = lhsOpt match {
-      case Some(x) => (x, imapEmpty[Node, Node] + (Id(x) -> Id(x + "_old")))
-      case _ => (md.id.value + "_result", imapEmpty[Node, Node])
+      case Some(x) =>
+        (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
+      case _ =>
+        (newId(md.id.value + "_result",
+          md.id.tipe.asInstanceOf[tipe.Fn].result),
+          imapEmpty[Node, Node])
     }
-    substMap += Result() -> Id(lhs)
-    for (Id(g) <- md.contract.modifies.ids) {
-      substMap += Id(g + "_in") -> Id(g + "_old")
+    substMap += Result() -> lhs
+    for (id@Id(g) <- md.contract.modifies.ids) {
+      substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
     }
     (hasError, copy(premises =
       premises.map(e => subst(e, postSubstMap)) ++
@@ -331,25 +361,39 @@ ProofContext(mode: LogicMode,
   def checkRuntimeError(stmt: Stmt): Boolean = {
     var hasError = false
     def divisor(e: Exp): Boolean = {
-      if (!premises.contains(Ne(e, Checker.zero))) {
+      val req = Ne(e, Checker.zero)
+      if (autoEnabled &&
+        Z3.isValid(timeoutInMs, premises.toVector, ivector(req))) {
+      } else if (!premises.contains(req)) {
         error(e, s"Divisor has to be proven to be non-zero (... != 0).")
         hasError = true
       }
       true
     }
     def index(id: Id, e: Exp): Boolean = {
-      if (!premises.contains(Le(Checker.zero, e)))
-        error(e, s"Sequence index has to be proven non-negative (0 <= ...)")
-      if (!premises.contains(Lt(e, Size(id))))
-        error(e, s"Sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
+      val req1 = Le(Checker.zero, e)
+      val req2 = Lt(e, Size(id))
+      if (autoEnabled &&
+        Z3.isValid(timeoutInMs, premises.toVector, ivector(req1, req2))) {
+      } else {
+        if (!premises.contains(req1)) {
+          hasError = true
+          error(e, s"Sequence index has to be proven non-negative (0 <= ...)")
+        }
+        if (!premises.contains(req2)) {
+          hasError = true
+          error(e, s"Sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
+        }
+      }
       true
     }
     Visitor.build({
+      case _: Block => false
       case Div(_, e2) => divisor(e2)
       case Rem(_, e2) => divisor(e2)
       case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
       case SeqAssign(id, e, _) => index(id, e)
-    }, Visitor.TraversalMode.BOTTOM_UP)(stmt)
+    })(stmt)
     hasError
   }
 
@@ -366,7 +410,7 @@ ProofContext(mode: LogicMode,
     }).toSet
 
   def assign(id: Id, exp: Exp): Option[ProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> Id(id.value + "_old")))
+    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
@@ -379,7 +423,7 @@ ProofContext(mode: LogicMode,
       Visitor.build({
         case Id(value) =>
           if (value.endsWith("_old") ||
-            value.endsWith("_result") || value.startsWith("_"))
+            value.endsWith("_result") || value == "q_i")
             r = false
           false
       })(e)
