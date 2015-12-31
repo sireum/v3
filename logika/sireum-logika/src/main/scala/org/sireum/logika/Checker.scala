@@ -176,17 +176,15 @@ ProofContext(mode: LogicMode,
               error(stmt, s"Auto is not enabled, but sequent is used.")
             }
             if (sequent.premises.nonEmpty) {
-              if (!Z3.isValid(timeoutInMs, pc.premises.toVector, sequent.premises)) {
+              if (!isValid(pc.premises, sequent.premises)) {
                 hasError = true
                 error(stmt, "Could not automatically deduce the specified sequent's premises.")
               }
-              if (!Z3.isValid(timeoutInMs,
-                sequent.premises, sequent.conclusions)) {
+              if (!isValid(sequent.premises, sequent.conclusions)) {
                 hasError = true
                 error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
               }
-            } else if (!Z3.isValid(timeoutInMs,
-              pc.premises.toVector, sequent.conclusions)) {
+            } else if (!isValid(pc.premises, sequent.conclusions)) {
               hasError = true
               error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
             }
@@ -274,8 +272,7 @@ ProofContext(mode: LogicMode,
                 }
                 if (autoEnabled) {
                   if (modifiedInvariants.nonEmpty &&
-                    !Z3.isValid(timeoutInMs, pc2.premises.toVector,
-                      modifiedInvariants.toVector)) {
+                    !isValid(pc2.premises, modifiedInvariants)) {
                     val locs = buildLocs(modifiedInvariants)
                     error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${stmt.id.value}.")
                     hasError = true
@@ -295,8 +292,7 @@ ProofContext(mode: LogicMode,
                   case _ => pc2.premises
                 }
                 if (autoEnabled) {
-                  if (post.nonEmpty &&
-                    !Z3.isValid(timeoutInMs, postPremises.toVector, post)) {
+                  if (post.nonEmpty && !isValid(postPremises, post)) {
                     hasError = true
                     val locs = buildLocs(post)
                     error(post.head, s"Could not automatically deduce method ${stmt.id.value}'s post-condition(s) defined at $locs.")
@@ -320,7 +316,7 @@ ProofContext(mode: LogicMode,
           case InvStmt(inv) =>
             var i = 1
             if (autoEnabled) {
-              if (!Z3.isValid(timeoutInMs, pc.premises.toVector, inv.exps)) {
+              if (!isValid(pc.premises, inv.exps)) {
                 hasError = true
                 error(stmt, s"Could not automatically deduce the global invariant(s).")
               }
@@ -340,8 +336,7 @@ ProofContext(mode: LogicMode,
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
             if (autoEnabled) {
-              if (es.nonEmpty && !Z3.isValid(timeoutInMs,
-                pc.premises.toVector, es)) {
+              if (es.nonEmpty && !isValid(pc.premises, es)) {
                 hasError = true
                 error(loopInv, s"Could not automatically deduce the loop invariant(s) at the beginning of the loop.")
               }
@@ -362,8 +357,7 @@ ProofContext(mode: LogicMode,
               check(loopBlock) match {
               case Some(pc2) =>
                 if (autoEnabled) {
-                  if (es.nonEmpty && !Z3.isValid(timeoutInMs,
-                    pc2.premises.toVector, es)) {
+                  if (es.nonEmpty && !isValid(pc2.premises, es)) {
                     hasError = true
                     error(loopInv, s"Could not automatically deduce the loop invariant(s) at the end of the loop.")
                   }
@@ -408,6 +402,9 @@ ProofContext(mode: LogicMode,
     sb.toString
   }
 
+  def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
+    Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
+
   def newId(x: String, t: tipe.Tipe) = {
     val r = Id(x)
     r.tipe = t
@@ -420,8 +417,7 @@ ProofContext(mode: LogicMode,
     var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
     if (autoEnabled) {
-      if (pres.nonEmpty && !Z3.isValid(timeoutInMs,
-        premises.toVector, pres)) {
+      if (pres.nonEmpty && !isValid(premises, pres)) {
         hasError = true
         error(a, s"Could not automatically deduce the pre-condition(s) of the method.")
       }
@@ -461,7 +457,7 @@ ProofContext(mode: LogicMode,
     def divisor(e: Exp): Boolean = {
       val req = Ne(e, Checker.zero)
       if (autoEnabled) {
-        if (!Z3.isValid(timeoutInMs, premises.toVector, ivector(req))) {
+        if (!isValid(premises, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
           hasError = true
         }
@@ -475,7 +471,7 @@ ProofContext(mode: LogicMode,
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
       if (autoEnabled) {
-        if (!Z3.isValid(timeoutInMs, premises.toVector, ivector(req1, req2))) {
+        if (!isValid(premises, ivector(req1, req2))) {
           hasError = true
           error(e, s"Could not automatically deduce that the index is not out of bound of ${id.value}.")
         }
@@ -924,8 +920,7 @@ ProofContext(mode: LogicMode,
         case _ => hasError = true
       }
     if (hasError) return false
-    if (Z3.isValid(timeoutInMs,
-      antecedents ++ facts.values, ivector(exp))) true
+    if (isValid(antecedents ++ facts.values, ivector(exp))) true
     else {
       error(exp, s"Could not $method deduce the claim in step#$num.")
       false
