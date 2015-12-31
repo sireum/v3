@@ -1,6 +1,10 @@
 import org.sireum.logika._
 
 val g: ZS = ZS(2, 4)
+l"""{ 1. g == ZS(2, 4)                           premise
+      2. g(0) > 0                                algebra 1
+      3. g.size >= 1                             algebra 1
+      4. g(0) > 0 and g.size >= 1                andi 2 3    }"""
 l"""{ invariant  g(0) > 0 and g.size >= 1                    }"""
 
 def f(x: Z, y: Z): Z = {
@@ -9,7 +13,11 @@ def f(x: Z, y: Z): Z = {
         post     g(0) > result                               }"""
 
   l"""{ 1. g(0) > 0 and g.size >= 1              premise
-        2. x == 0 and y > x                      premise     }"""
+        2. x == 0 and y > x                      premise
+        3. x == 0                                ande1 2
+        4. 0 <= x                                algebra 3
+        5. g.size >= 1                           ande2 1
+        6. x < g.size                            algebra 3 5 }"""
   g(x) = y
   l"""{  1. g(x) == y                            premise
          2. g_old(0) > 0 and g_old.size >= 1     premise

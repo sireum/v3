@@ -98,8 +98,8 @@ prepend(c, a, v) ::= <<
 (assert
   (forall ((_i Z))
     (=>
-      (and (< 0 i) (< _i (_size _a!$c$)))
-      (= (select _a!$c$ i) (select $a$ (- _i 1)))
+      (and (< 0 _i) (< _i (_size _a!$c$)))
+      (= (select _a!$c$ _i) (select $a$ (- _i 1)))
     )
   )
 )
@@ -112,8 +112,21 @@ append(c, a, v) ::= <<
 (assert
   (forall ((_i Z))
     (=>
-      (and (<= 0 i) (< _i (_size $a$)))
-      (= (select _a!$c$ i) (select $a$ i))
+      (and (<= 0 _i) (< _i (_size $a$)))
+      (= (select _a!$c$ _i) (select $a$ _i))
+    )
+  )
+)
+>>
+
+
+zsequal(a1, a2) ::= <<
+(and
+  (= (_size $a1$) (_size $a2$))
+  (forall ((_i Z))
+    (=>
+      (and (<= 0 _i) (< _i (_size $a1$)))
+      (= (select $a1$ _i) (select $a2$ _i))
     )
   )
 )

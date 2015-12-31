@@ -54,7 +54,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
         val name = f"function-to-loop-$x%d"
         ConditionTest(name, check(name))
       } ++
-      (0 to 3).toVector.map { x =>
+      (0 to 4).toVector.map { x =>
         val name = f"seq-$x%d"
         ConditionTest(name, check(name))
       } :+
@@ -74,8 +74,6 @@ final class ProgramTestDefProvider(tf: TestFramework)
 
     if (!TypeChecker.check(program)) assert(false)
 
-    if (!filename.startsWith("seq-2"))
-      Checker.check(program, autoEnabled = false, 2000)
-    else true
+    Checker.check(program, autoEnabled = false, 2000)
   }
 }

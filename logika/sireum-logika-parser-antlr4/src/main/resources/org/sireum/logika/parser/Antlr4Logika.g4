@@ -89,7 +89,8 @@ formula
   | 'Z' '(' STRING ')'                                  #BigInt  // algebra
   | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
-  | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
+  | l=formula op=( '+' | '-' | '+:' ) NL? r=formula     #Binary  // algebra
+  | l=formula op=':+' NL? r=formula                     #Binary  // algebra
   | l=formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
     r=formula                                           #Binary  // algebra

@@ -48,7 +48,7 @@ object Checker {
           implicit val nodeLocMap = s.nodeLocMap
           val r = ProofContext(s.mode, autoEnabled = false,
             timeoutInMs, isetEmpty, s.premises.toSet,
-            vars, imapEmpty, imapEmpty).check(proof).isDefined
+            vars, imapEmpty, imapEmpty, imapEmpty).check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
             case _ => None
@@ -83,14 +83,19 @@ object Checker {
       })(program)
       if (!hasProof) {
         reporter.error("No program proof element found.")
+        false
+      } else {
+        val r =
+          ProofContext(program.mode,
+            autoEnabled, timeoutInMs, isetEmpty, isetEmpty, isetEmpty,
+            imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
+              case f: Fact => Some(f.id.value -> f.exp)
+              case _ => None
+            }), imapEmpty, imapEmpty).check(program)
+        if (r) reporter.info(s"Programming logic proof is accepted.")
+        else reporter.error(s"Programming logic proof is rejected.")
+        r
       }
-      hasProof &&
-        ProofContext(program.mode,
-          autoEnabled, timeoutInMs, isetEmpty, isetEmpty, isetEmpty,
-          imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
-            case f: Fact => Some(f.id.value -> f.exp)
-            case _ => None
-          }), imapEmpty).check(program)
     case _: Proof => assert(assertion = false, "Unexpected situation."); false
   }
 
@@ -113,7 +118,8 @@ ProofContext(mode: LogicMode,
              premises: ISet[Exp],
              vars: ISet[String],
              facts: IMap[String, Exp],
-             provedSteps: IMap[Int, ProofStep])
+             provedSteps: IMap[Natural, ProofStep],
+             declaredStepNumbers: IMap[Natural, LocationInfo])
             (implicit reporter: Reporter,
              nodeLocMap: MIdMap[Node, LocationInfo]) {
 
@@ -129,7 +135,6 @@ ProofContext(mode: LogicMode,
           return false
         case Z3.Unknown => reporter.warn("The set of facts might not be satisfiable.")
         case Z3.Timeout =>
-          reporter.warn(s"Could not check the satisfiability of the set of facts due to timeout (${timeoutInMs}ms).")
         case Z3.Error => return false
       }
     check(program.block).isDefined
@@ -142,7 +147,8 @@ ProofContext(mode: LogicMode,
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
         else pcOpt.get.cleanup
-      if (!stmt.isInstanceOf[ProofElementStmt]) {
+      if (!stmt.isInstanceOf[ProofElementStmt] &&
+        !stmt.isInstanceOf[MethodDecl]) {
         hasError = pc.checkRuntimeError(stmt) || hasError
       }
       pcOpt =
@@ -239,7 +245,7 @@ ProofContext(mode: LogicMode,
               case Z3.Error => hasError = true
             }
             Z3.checkSat(satTimeoutInMs, effectivePost.toSeq: _*) match {
-              case Z3.Sat | Z3.Timeout =>
+              case Z3.Sat =>
               case Z3.Unsat =>
                 error(stmt, s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.")
                 hasError = true
@@ -415,7 +421,8 @@ ProofContext(mode: LogicMode,
   }
 
   def cleanup: ProofContext =
-    copy(premises = filter(premises), provedSteps = imapEmpty)
+    copy(premises = filter(premises), provedSteps = imapEmpty,
+      declaredStepNumbers = imapEmpty)
 
   def filter(premises: ISet[Exp]): ISet[Exp] = {
     def keep(e: Exp) = {
@@ -434,6 +441,7 @@ ProofContext(mode: LogicMode,
 
   def check(proofGroup: ProofGroup): Option[ProofContext] = {
     var addedVars = isetEmpty[String]
+    var addedSteps = isetEmpty[Natural]
     var pcOpt: Option[ProofContext] =
       proofGroup match {
         case p: SubProof =>
@@ -450,13 +458,17 @@ ProofContext(mode: LogicMode,
           popt.flatMap(_.addProvedStep(p))
         case _ => Some(this)
       }
-    for (step <- proofGroup.steps if pcOpt.isDefined)
+    for (step <- proofGroup.steps if pcOpt.isDefined) {
+      addedSteps += step.num.value
       step match {
         case p: RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
         case p: SubProof => pcOpt = pcOpt.get.check(p)
         case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
       }
-    pcOpt.map(pc => pc.copy(vars = pc.vars -- addedVars))
+    }
+    pcOpt.map(pc => pc.copy(
+      vars = pc.vars -- addedVars,
+      provedSteps = pc.provedSteps -- addedSteps))
   }
 
   def check(step: RegularStep): Option[ProofContext] = {
@@ -893,13 +905,13 @@ ProofContext(mode: LogicMode,
 
   def addProvedStep(step: ProofStep): Option[ProofContext] = {
     val num = step.num.value
-    provedSteps.get(num) match {
-      case Some(other) =>
-        val (l, c, _) = lineColumnOffset(other)
-        error(step, s"Step #$num has already been used in at line $l, column $c.")
+    declaredStepNumbers.get(num) match {
+      case Some(li) =>
+        error(step, s"Step #$num has already been used in at line ${li.lineBegin}, column ${li.columnBegin}.")
         None
       case _ =>
-        Some(copy(provedSteps = provedSteps + (num -> step)))
+        Some(copy(provedSteps = provedSteps + (num -> step),
+          declaredStepNumbers = declaredStepNumbers + (num -> nodeLocMap(step))))
     }
   }
 

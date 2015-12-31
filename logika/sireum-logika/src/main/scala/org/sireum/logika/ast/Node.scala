@@ -473,19 +473,23 @@ final case class Ge(left: Exp, right: Exp) extends BinaryExp {
   val op = ">="
 }
 
-final case class Eq(left: Exp, right: Exp) extends BinaryExp {
+sealed trait Equality extends BinaryExp {
+  var tipe: Tipe = _
+}
+
+final case class Eq(left: Exp, right: Exp) extends Equality {
   val op = "=="
 }
 
-final case class Ne(left: Exp, right: Exp) extends BinaryExp {
+final case class Ne(left: Exp, right: Exp) extends Equality {
   val op = "!="
 }
 
-final case class Append(left: Id, right: Exp) extends BinaryExp {
+final case class Append(left: Exp, right: Exp) extends BinaryExp {
   val op = ":+"
 }
 
-final case class Prepend(left: Exp, right: Id) extends BinaryExp {
+final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
   val op = "+:"
 }
 

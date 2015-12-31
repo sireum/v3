@@ -33,7 +33,7 @@ Some examples are available at the following links:
   (status: **all verified**)
 
 * [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
-  (status: parsed, AST built, symbol resolved, type checked, and Z3 interface implemented; all examples runnable by the Scala interpreter, which requires 
+  (status: **all verified**; all examples runnable by the Scala interpreter, which requires 
   the [Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 Running Logika
@@ -92,4 +92,8 @@ Specified:
 p, q ⊢ p ∧ q
 File:
 ¬(¬p ∨ ¬q) ⊢ p ∧ q
+```
+You can run all programming logic examples from the directory containing this file as follows:
+```bash
+for i in sireum-logika-test/src/test/resources/org/sireum/logika/*.scala; do echo "Checking ${i}"; ../sireum logika "${i}"; done
 ```

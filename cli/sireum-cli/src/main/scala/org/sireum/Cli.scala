@@ -673,6 +673,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Options:
            |-a, --auto       Enable auto in programming logic proof step justification
            |-s, --sequent    Sequent matching the input file's
+           |-t, --timeout    Timeout for algebra and auto justifications (milliseconds)
+           |                   Default: ${option.timeout}
            |-h, --help       Display usage information
         """.stripMargin.trim
       )
@@ -697,6 +699,20 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           }
         case "-a" | "--auto" =>
           option.auto = true
+        case "-t" | "--timeout" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) =>
+              try {
+                option.timeout = arg.toInt
+              } catch {
+                case t: Throwable =>
+                  errPrintln(s"Invalid integer for timeout: '$arg'")
+                  return
+              }
+            case _ =>
+              errPrintln("Expected an integer value for timeout")
+          }
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

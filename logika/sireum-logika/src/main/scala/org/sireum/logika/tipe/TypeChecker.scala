@@ -316,21 +316,23 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             z(e.left); z(e.right); someZ
           case _: Lt | _: Le | _: Gt | _: Ge =>
             z(e.left); z(e.right); someB
-          case _: Eq | _: Ne =>
+          case e: Equality =>
             for (t1 <- check(e.left); t2 <- check(e.right))
               if (t1 != t2) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $t1 and $t2, respectively.")
+              } else {
+                e.tipe = t1
               }
             someB
           case _: Append =>
-            if (!allowMethod)
+            if (!allowMethod && !allowFun)
               error(e, s"Append (:+) is only allowed at statement level.")
             zs(e.left)
             z(e.right)
             someZS
           case _: Prepend =>
-            if (!allowMethod)
+            if (!allowMethod && !allowFun)
               error(e, s"Prepend (+:) is only allowed at statement level.")
             z(e.left)
             zs(e.right)

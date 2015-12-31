@@ -175,7 +175,10 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
       case e: BinaryExp =>
         val op =
           e match {
-            case Ne(left, right) => return translate(Not(Eq(left, right)))
+            case e@Ne(left, right) =>
+              val eq = Eq(left, right)
+              eq.tipe = e.tipe
+              return translate(Not(eq))
             case e: Mul => "*"
             case e: Div => "div"
             case e: Rem => "rem"
@@ -185,7 +188,11 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
             case e: Le => "<="
             case e: Gt => ">"
             case e: Ge => ">="
-            case e: Eq => "="
+            case e: Eq =>
+              if (e.tipe == ZS)
+                return stg.getInstanceOf("zsequal").add("a1", translate(e.left)).
+                  add("a2", translate(e.right))
+              else "="
             case e: And => "and"
             case e: Or => "or"
             case e: Implies => "=>"
@@ -221,14 +228,15 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
         if (e.args.isEmpty)
           stZs.add("exp", "_empty")
         else {
-          val args = e.args.reverse
-          var i = e.args.size - 2
-          var stZsExp = stg.getInstanceOf("zsexp").add("i", i + 1).
+          val args = e.args
+          var i = 0
+          var stZsExp = stg.getInstanceOf("zsexp").add("i", i).
             add("v", translate(args.head))
+          i += 1
           for (arg <- args.tail) {
             stZsExp = stg.getInstanceOf("zsexp").add("i", i).
               add("v", translate(arg)).add("a", stZsExp)
-            i -= 1
+            i += 1
           }
           stZs.add("exp", stZsExp)
         }

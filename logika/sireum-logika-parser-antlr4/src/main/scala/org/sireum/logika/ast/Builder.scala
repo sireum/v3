@@ -305,6 +305,8 @@ final private class Builder(implicit reporter: Reporter) {
               checkIntMaxMin(ctx.op, lN - rN)
             }
             Sub(lExp, rExp)
+          case ":+" => Append(lExp, rExp)
+          case "+:" => Prepend(lExp, rExp)
           case "<" => Lt(lExp, rExp)
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)
@@ -552,24 +554,8 @@ final private class Builder(implicit reporter: Reporter) {
               checkIntMaxMin(ctx.op, lN - rN)
             }
             Sub(lExp, rExp)
-          case ":+" =>
-            lExp match {
-              case lExp: Id => Append(lExp, rExp)
-              case _ =>
-                val lExpLi = nodeLocMap(lExp)
-                reporter.error(lExpLi.lineBegin, lExpLi.columnBegin, lExpLi.offset,
-                  s"The left hand-side argument of append (+:) should be an identifier.")
-                Append(Id("???"), rExp)
-            }
-          case "+:" =>
-            rExp match {
-              case rExp: Id => Prepend(lExp, rExp)
-              case _ =>
-                val rExpLi = nodeLocMap(rExp)
-                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
-                  s"The right hand-side argument of prepend (:+) should be an identifier.")
-                Prepend(lExp, Id("???"))
-            }
+          case ":+" => Append(lExp, rExp)
+          case "+:" => Prepend(lExp, rExp)
           case "<" => Lt(lExp, rExp)
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)

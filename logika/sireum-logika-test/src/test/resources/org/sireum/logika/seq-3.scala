@@ -48,7 +48,7 @@ def add(a: ZS): Z = {
           4. 0 <= i_old                     premise
           5. 0 <= i                         algebra 2 4
           6. i_old < a.size                 premise
-          7. i <= a.size                    algebra 2 6 }"""
+          7. i <= a.size                    algebra 2 6  }"""
   }
   l"""{ 1. answer == sum(a,i)               premise
         2. not (i != a.size)                premise

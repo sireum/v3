@@ -59,7 +59,7 @@ object Rewriter {
       org.sireum.logika.ast.AndIntro(num, exp, leftStep, rightStep)
     }),
     ("Append", { es =>
-      val Seq(left: Id, right: Exp) = es
+      val Seq(left: Exp, right: Exp) = es
       org.sireum.logika.ast.Append(left, right)
     }),
     ("Apply", { es =>
@@ -295,7 +295,7 @@ object Rewriter {
       org.sireum.logika.ast.Premise(num, exp)
     }),
     ("Prepend", { es =>
-      val Seq(left: Exp, right: Id) = es
+      val Seq(left: Exp, right: Exp) = es
       org.sireum.logika.ast.Prepend(left, right)
     }),
     ("Print", { es =>

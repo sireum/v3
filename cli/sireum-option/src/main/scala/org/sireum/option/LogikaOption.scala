@@ -47,7 +47,10 @@ final case class LogikaOption(@BeanProperty
                               @Opt(shortKey = Some("a"), description = "Enable auto in programming logic proof step justification")
                               var auto: Boolean = false,
                               @BeanProperty
+                              @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto justifications (milliseconds)")
+                              var timeout: Int = 2000,
+                              @BeanProperty
                               @Arg(name = "{file.txt, file.scala}")
                               var input: String = "") {
-  def this() = this(none(), false, "")
+  def this() = this(none(), false, 2000, "")
 }

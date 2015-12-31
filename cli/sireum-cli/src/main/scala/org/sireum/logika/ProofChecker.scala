@@ -69,26 +69,31 @@ class ProofChecker(option: LogikaOption,
     val fText = FileUtil.readFile(fr)
     fr.close()
     if (f.getName.endsWith(".scala")) {
-      outPrintln("Programming logic checker is coming soon.")
-      return false
-    }
+      Builder[Program](fText) match {
+        case Some(program) =>
+          if (tipe.TypeChecker.check(program)(ConsoleReporter))
+            Checker.check(program, autoEnabled = option.auto, option.timeout)(ConsoleReporter)
+        case _ =>
+      }
 
-    (sequentOpt, Builder[Sequent](fText)) match {
-      case (Some(sequent), Some(s)) if !hasError =>
-        if (s.premises == sequent.premises &&
-          s.conclusions == sequent.conclusions) {
-          Checker.check(s, autoEnabled = false, 2000)(ConsoleReporter)
-        } else {
-          val li = s.nodeLocMap(s.conclusions.last)
-          errPrintln(s"The specified sequent is different than the one in the file.")
-          errPrintln("Specified:")
-          errPrintln(option.sequent.get)
-          errPrintln("File:")
-          errPrintln(fText.substring(0, li.offset + li.length))
-        }
-      case (None, Some(s)) if !hasError =>
-        Checker.check(s, autoEnabled = false, 2000)(ConsoleReporter)
-      case _ =>
+    } else {
+      (sequentOpt, Builder[Sequent](fText)) match {
+        case (Some(sequent), Some(s)) if !hasError =>
+          if (s.premises == sequent.premises &&
+            s.conclusions == sequent.conclusions) {
+            Checker.check(s, autoEnabled = false, option.timeout)(ConsoleReporter)
+          } else {
+            val li = s.nodeLocMap(s.conclusions.last)
+            errPrintln(s"The specified sequent is different than the one in the file.")
+            errPrintln("Specified:")
+            errPrintln(option.sequent.get)
+            errPrintln("File:")
+            errPrintln(fText.substring(0, li.offset + li.length))
+          }
+        case (None, Some(s)) if !hasError =>
+          Checker.check(s, autoEnabled = false, option.timeout)(ConsoleReporter)
+        case _ =>
+      }
     }
 
     false
