@@ -71,7 +71,7 @@ object TypeChecker {
       id.tipe = tipe(m)
       typeMap += id.value ->(id.tipe, m)
     }
-    TypeContext(typeMap)(nodeLocMap, r2).check(program.block)(None)
+    TypeContext(typeMap)(nodeLocMap, r2).check(program)
     !hasError
   }
 
@@ -257,6 +257,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
             case Some((_, md: MethodDecl)) =>
               if (!allowMethod)
                 error(e.id, s"Method invocation is only allowed at statement level.")
+              e.declOpt = Some(md)
               mOpt match {
                 case Some(caller) =>
                   val ids = md.contract.modifies.ids.toSet -- caller.contract.modifies.ids.toSet

@@ -18,19 +18,19 @@ assertion(e) ::= <<
 >>
 
 bconst(name) ::= <<
-(declare-const $name$ B)
+(declare-const l_$name$ B)
 >>
 
 zconst(name) ::= <<
-(declare-const $name$ Z)
+(declare-const l_$name$ Z)
 >>
 
 zsconst(name) ::= <<
-(declare-const $name$ ZS)
+(declare-const l_$name$ ZS)
 >>
 
 fun(name, param, result) ::= <<
-(declare-fun $name$ ($param; separator=" "$) $result$)
+(declare-fun l_$name$ ($param; separator=" "$) $result$)
 >>
 
 truelit() ::= <<
@@ -42,7 +42,7 @@ false
 >>
 
 id(value) ::= <<
-$value$
+l_$value$
 >>
 
 size(id) ::= <<

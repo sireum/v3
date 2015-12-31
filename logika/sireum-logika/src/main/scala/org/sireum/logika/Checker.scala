@@ -33,8 +33,9 @@ import org.sireum.util._
 object Checker {
   private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
+  private[logika] final val zero = IntLit("0")
 
-  final def check(unitNode: UnitNode, autoEnabled: Boolean)(
+  final def check(unitNode: UnitNode, autoEnabled: Boolean, timeoutInMs: Int)(
     implicit reporter: Reporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -45,8 +46,8 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = ProofContext(s.mode,
-            autoEnabled = false, isetEmpty, s.premises.toSet,
+          val r = ProofContext(s.mode, autoEnabled = false,
+            timeoutInMs, isetEmpty, s.premises.toSet,
             vars, imapEmpty, imapEmpty).check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
@@ -68,12 +69,28 @@ object Checker {
       }
     case program: Program =>
       implicit val nodeLocMap = program.nodeLocMap
-      ProofContext(program.mode,
-        autoEnabled, isetEmpty, isetEmpty, isetEmpty,
-        imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
-          case f: Fact => Some(f.id.value -> f.exp)
-          case _ => None
-        }), imapEmpty).check(program)
+      var hasProof = false
+      Visitor.build({
+        case _: ProofStmt => hasProof = true; false
+        case InvStmt(inv) if inv.exps.nonEmpty =>
+          hasProof = true; false
+        case Requires(exps) if exps.nonEmpty =>
+          hasProof = true; false
+        case Ensures(exps) if exps.nonEmpty =>
+          hasProof = true; false
+        case LoopInv(inv, _) if inv.exps.nonEmpty =>
+          hasProof = true; false
+      })(program)
+      if (!hasProof) {
+        reporter.error("No program proof element found.")
+      }
+      hasProof &&
+        ProofContext(program.mode,
+          autoEnabled, timeoutInMs, isetEmpty, isetEmpty, isetEmpty,
+          imapEmpty ++ program.fact.factOrFunDecls.flatMap(_ match {
+            case f: Fact => Some(f.id.value -> f.exp)
+            case _ => None
+          }), imapEmpty).check(program)
     case _: Proof => assert(assertion = false, "Unexpected situation."); false
   }
 
@@ -91,6 +108,7 @@ object Checker {
 private final case class
 ProofContext(mode: LogicMode,
              autoEnabled: Boolean,
+             timeoutInMs: Int,
              invariants: ISet[Exp],
              premises: ISet[Exp],
              vars: ISet[String],
@@ -99,16 +117,21 @@ ProofContext(mode: LogicMode,
             (implicit reporter: Reporter,
              nodeLocMap: MIdMap[Node, LocationInfo]) {
 
+  val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
+
   def check(program: Program): Boolean = {
-    Z3.checkSat(facts.values.toVector: _*) match {
-      case Z3.Sat =>
-      case Z3.Unsat =>
-        reporter.error("The set of facts are unsatisfiable.")
-        return false
-      case Z3.Unknown => reporter.warn("The set of facts might not be satisfiable.")
-      case Z3.Timeout => reporter.warn("Could not determine the satisfiability of facts due to timeout.")
-      case Z3.Error => return false
-    }
+    if (facts.nonEmpty)
+      Z3.checkSat(satTimeoutInMs,
+        facts.values.toVector: _*) match {
+        case Z3.Sat =>
+        case Z3.Unsat =>
+          error(facts.head._2, "The specified set of facts are unsatisfiable.")
+          return false
+        case Z3.Unknown => reporter.warn("The set of facts might not be satisfiable.")
+        case Z3.Timeout =>
+          reporter.warn(s"Could not check the satisfiability of the set of facts due to timeout (${timeoutInMs}ms).")
+        case Z3.Error => return false
+      }
     check(program.block).isDefined
   }
 
@@ -119,6 +142,7 @@ ProofContext(mode: LogicMode,
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
         else pcOpt.get.cleanup
+      hasError = pc.checkRuntimeError(stmt) || hasError
       pcOpt =
         stmt match {
           case ProofStmt(proof) =>
@@ -142,40 +166,191 @@ ProofContext(mode: LogicMode,
               hasError = true
               error(stmt, s"Auto is not enabled, but sequent is used.")
             }
-            if (!Z3.isValid(sequent.premises, sequent.conclusions)) {
+            if (!Z3.isValid(timeoutInMs,
+              sequent.premises, sequent.conclusions)) {
               hasError = true
               error(stmt, "Could not automatically deduce validity of the specified sequent.")
             }
             Some(pc.copy(premises = sequent.conclusions.toSet))
           case Assert(e) =>
             Some(pc.copy(premises = pc.premises + e))
+          case SeqAssign(id, index, exp) => ???
+          case ExpStmt(exp) =>
+            val (he, pc2) = pc.invoke(exp, None)
+            hasError ||= he
+            Some(pc2)
           case a: VarAssign =>
-            a.exp match {
+            val id = a.id
+            val exp = a.exp
+            exp match {
               case _: ReadInt => pcOpt
-              case exp: Clone => pc.assign(a.id, exp.id)
-              case exp: Apply => ???
+              case exp: Clone => pc.assign(id, exp.id)
+              case exp: Apply =>
+                val (he, pc2) = pc.invoke(exp, Some(id.value))
+                hasError ||= he
+                Some(pc2)
               case exp: Append => ???
               case exp: Prepend => ???
-              case _ => pc.assign(a.id, a.exp)
+              case _ => pc.assign(id, exp)
             }
           case If(exp, thenBlock, elseBlock) =>
-            val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
-            val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
+            val thenPcOpt = pc.copy(premises = pc.premises + exp).check(thenBlock)
+            val elsePcOpt = pc.copy(premises = pc.premises + Not(exp)).check(elseBlock)
             (thenPcOpt, elsePcOpt) match {
               case (Some(thenPc), Some(elsePc)) =>
-                Some(copy(premises =
+                Some(pc.copy(premises =
                   orClaims(thenPc.premises, elsePc.premises)))
               case _ => None
             }
-          case stmt: MethodDecl => ???
-          case InvStmt(inv) => ???
-          case ExpStmt(exp) => ???
-          case While(exp, block, loopInv) => ???
-          case SeqAssign(id, index, exp) => ???
+          case stmt: MethodDecl =>
+            val effectivePre =
+              pc.invariants ++ stmt.contract.requires.exps
+            val effectivePost =
+              pc.invariants ++ stmt.contract.ensures.exps
+            Z3.checkSat(satTimeoutInMs, effectivePre.toSeq: _*) match {
+              case Z3.Sat =>
+              case Z3.Unsat =>
+                error(stmt, s"The effective pre-condition of method ${stmt.id.value} is unsatisfiable.")
+                hasError = true
+              case Z3.Unknown =>
+                warn(stmt, s"The effective pre-condition of method ${stmt.id.value} might not be satisfiable.")
+              case Z3.Timeout =>
+                warn(stmt, s"Could not check satisfiability of the effective pre-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms).")
+              case Z3.Error => hasError = true
+            }
+            Z3.checkSat(satTimeoutInMs, effectivePost.toSeq: _*) match {
+              case Z3.Sat | Z3.Timeout =>
+              case Z3.Unsat =>
+                error(stmt, s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.")
+                hasError = true
+              case Z3.Unknown =>
+                warn(stmt, s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.")
+              case Z3.Timeout =>
+                warn(stmt, s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout  (${timeoutInMs}ms).")
+              case Z3.Error => hasError = true
+            }
+            val mods = stmt.contract.modifies.ids.map(id =>
+              Eq(id, Id(id.value + "_in")))
+            pc.copy(premises = effectivePre ++ mods).
+              check(stmt.block) match {
+              case Some(pc2) =>
+                for (e <- pc.invariants)
+                  if (!pc2.premises.contains(e)) {
+                    error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
+                    hasError = true
+                  }
+                val post = stmt.contract.ensures.exps
+                val postPremises = stmt.returnExpOpt match {
+                  case Some(e) =>
+                    val m = imapEmpty[Node, Node] + (e -> Result())
+                    pc2.premises.map(e => subst(e, m))
+                  case _ => pc2.premises
+                }
+                var i = 1
+                for (e <- post) {
+                  if (!postPremises.contains(e)) {
+                    if (post.size == 1)
+                      error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
+                    else
+                      error(e, s"Post-condition #$i of method ${stmt.id.value} has not been proven.")
+                    hasError = true
+                  }
+                  i += 1
+                }
+              case _ => hasError = true
+            }
+            pcOpt
+          case InvStmt(inv) =>
+            var i = 1
+            for (e <- inv.exps) {
+              if (!pc.premises.contains(e)) {
+                if (inv.exps.size == 1)
+                  error(e, s"The global invariant has not been proven.")
+                else
+                  error(e, s"The global invariant #$i has not been proved.")
+                hasError = true
+              }
+              i += 1
+            }
+            Some(pc.copy(invariants = pc.invariants ++ inv.exps))
+          case While(exp, loopBlock, loopInv) =>
+            val es = loopInv.invariant.exps
+            pc.copy(premises = pc.premises ++ es + exp).
+              check(loopBlock) match {
+              case Some(pc2) =>
+                var i = 1
+                for (e <- es) {
+                  if (!pc2.premises.contains(e)) {
+                    if (es.size == 1)
+                      error(e, s"The loop invariant has not been proved at the end of the loop.")
+                    else
+                      error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+                    hasError = true
+                  }
+                  i += 1
+                }
+                Some(pc.copy(premises = es.toSet + Not(exp)))
+              case _ => None
+            }
           case _: Print => pcOpt
         }
     }
     if (hasError) None else pcOpt.map(_.cleanup)
+  }
+
+  def invoke(a: Apply, lhsOpt: Option[String]): (Boolean, ProofContext) = {
+    var hasError = false
+    val md = a.declOpt.get
+    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
+    val pres = md.contract.requires.exps.map(e => subst(e, substMap))
+    var i = 1
+    for (pre <- pres) {
+      if (!premises.contains(pre)) {
+        if (pres.size == 1)
+          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
+        else
+          error(a, s"Pre-condition #$i of method ${md.id.value} has not been proven.")
+        hasError = true
+      }
+      i += 1
+    }
+    val (lhs, postSubstMap) = lhsOpt match {
+      case Some(x) => (x, imapEmpty[Node, Node] + (Id(x) -> Id(x + "_old")))
+      case _ => (md.id.value + "_result", imapEmpty[Node, Node])
+    }
+    substMap += Result() -> Id(lhs)
+    for (Id(g) <- md.contract.modifies.ids) {
+      substMap += Id(g + "_in") -> Id(g + "_old")
+    }
+    (hasError, copy(premises =
+      premises.map(e => subst(e, postSubstMap)) ++
+        md.contract.ensures.exps.map(e => subst(e, substMap))
+    ))
+  }
+
+  def checkRuntimeError(stmt: Stmt): Boolean = {
+    var hasError = false
+    def divisor(e: Exp): Boolean = {
+      if (!premises.contains(Ne(e, Checker.zero))) {
+        error(e, s"Divisor has to be proven to be non-zero (... != 0).")
+        hasError = true
+      }
+      true
+    }
+    def index(id: Id, e: Exp): Boolean = {
+      if (!premises.contains(Le(Checker.zero, e)))
+        error(e, s"Sequence index has to be proven non-negative (0 <= ...)")
+      if (!premises.contains(Lt(e, Size(id))))
+        error(e, s"Sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
+      true
+    }
+    Visitor.build({
+      case Div(_, e2) => divisor(e2)
+      case Rem(_, e2) => divisor(e2)
+      case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
+      case SeqAssign(id, e, _) => index(id, e)
+    }, Visitor.TraversalMode.BOTTOM_UP)(stmt)
+    hasError
   }
 
   def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ISet[Exp] =
@@ -595,7 +770,8 @@ ProofContext(mode: LogicMode,
         case _ => hasError = true
       }
     if (hasError) return false
-    if (Z3.isValid(antecedents, ivector(exp))) true
+    if (Z3.isValid(timeoutInMs,
+      antecedents ++ facts.values, ivector(exp))) true
     else {
       error(exp, s"Could not automatically deduce the claim in step#$num.")
       false

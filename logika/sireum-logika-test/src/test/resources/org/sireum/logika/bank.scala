@@ -6,8 +6,15 @@
 import org.sireum.logika._
 
 var balance: Z = 0
-var elite: B = true
+var elite: B = false
 val eliteMin: Z = 1000000 // $1M is the minimum balance for elite members
+
+l"""{ 1. balance == 0                            premise
+      2. elite == false                          premise
+      3. balance ≥ 0                             algebra 1
+      4. ¬elite                                  algebra 2
+      5. ¬elite ∨ balance ≥ eliteMin             ori1 4      }"""
+
 l"""{ invariant
         balance ≥ 0
         ¬elite ∨ balance ≥ eliteMin                          }"""
@@ -30,7 +37,7 @@ def deposit(amount: Z): B = {
         4.  balance_old == balance_in            premise
         5.  amount ≥ 0                           premise
         6.  balance_old == balance - amount      algebra 1
-        7.  balance_in == balance - amount       subst1 6 4
+        7.  balance_in == balance - amount       algebra 6 4
         8.  balance - amount ≥ 0                 algebra 6 2
         9.  balance ≥ 0                          algebra 8 5 }"""
   if (balance >= eliteMin) {
@@ -62,6 +69,7 @@ def deposit(amount: Z): B = {
   return elite
 }
 
+/*
 def withdraw(amount: Z): B = {
   l"""{ modifies  balance, elite                             }"""
 
@@ -75,3 +83,4 @@ def withdraw(amount: Z): B = {
 
   return elite
 }
+*/

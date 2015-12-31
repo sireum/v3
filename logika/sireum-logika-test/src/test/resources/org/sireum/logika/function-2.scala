@@ -10,7 +10,7 @@ def absValue(x: Z): Z = {
           2. x < 0         premise     }"""
     ans = -x
     l"""{ 1. x < 0         premise
-          2. ans == 0 - x  premise
+          2. ans == -x     premise
           3. ans + x == 0  algebra 2
           4. x < ans + x   subst2 3 1
           5. ans > 0       algebra 4   }"""

@@ -421,7 +421,7 @@ final case class Result() extends Exp {
 
 final case class Apply(id: Id,
                        args: Node.Seq[Exp]) extends Exp {
-  var contractOpt: Option[MethodContract] = None
+  var declOpt: Option[MethodDecl] = None
 }
 
 final case class ReadInt(msgOpt: Option[StringLit])

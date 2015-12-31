@@ -57,16 +57,16 @@ object Z3 {
     else z3Filename
   }
 
-  def isValid(premises: ISeq[Exp], conclusions: ISeq[Exp])(
+  def isValid(timeoutInMs: Int, premises: ISeq[Exp], conclusions: ISeq[Exp])(
     implicit nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
-    new Z3().isValid(premises, conclusions)
+    new Z3(timeoutInMs).isValid(premises, conclusions)
 
-  def checkSat(es: Exp*)(
+  def checkSat(timeoutInMs: Int, es: Exp*)(
     implicit nodeLocMap: MIdMap[Node, LocationInfo]): CheckResult =
-    new Z3().checkSat(es: _*)
+    new Z3(timeoutInMs).checkSat(es: _*)
 }
 
-private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
+private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   import Z3._
 
@@ -85,7 +85,9 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   def checkSat(es: Exp*): CheckResult = {
     for (e <- es)
-      stMain.add("e", stg.getInstanceOf("assertion").add("e", translate(e)))
+      stMain.add("e",
+        stg.getInstanceOf("assertion").
+          add("e", translate(e))).add("e", lineSep)
     Visitor.build({
       case q: Quant[_] =>
         for (id <- q.ids) typeMap -= id.value
@@ -100,9 +102,9 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
       val input =
         OsUtil.detect match {
           case OsArch.Win =>
-            ivector(z3, "/smt2", "/in")
+            ivector(z3, "/smt2", s"/t:$timeout", "/in")
           case _ =>
-            ivector(z3, "-smt2", "-in")
+            ivector(z3, "-smt2", s"-t:$timeout", "-in")
         }
       new Exec().run(0, input, Some(z3Script), None)
     }
@@ -113,6 +115,7 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
           case "unsat" => Unsat
           case "unknown" => Unknown
           case "sat" => Sat
+          case "timeout" => Timeout
           case _ =>
             Console.err.println("Error occurred when calling Z3 for the following script.")
             Console.err.println(z3Script)
@@ -207,8 +210,9 @@ private final class Z3(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
           add("op", if (isForAll) "forall" else "exists").
           add("exp", translate(e.exp))
         for (id <- e.ids)
-          stg.getInstanceOf("param").add("id", translate(id)).
-            add("tipe", stType)
+          st.add("param",
+            stg.getInstanceOf("param").add("id", translate(id)).
+              add("tipe", stType))
         st
       case e: SeqLit =>
         val c = zs()
