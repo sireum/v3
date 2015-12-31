@@ -1,14 +1,10 @@
 Logika To-Do
 ============
 
-* Add helper methods that do not assume and prove invariants 
+* Add helper methods that do not require and ensure invariants
 
-* Add inductively defined datatypes using trait and case class (with multiple trait inheritance)
-  
-  * distinguish immutable/mutable case classes
-  
-  * examples: list, nat, ...
-
+* Add inductively defined datatypes using traits and case classes (with multiple trait inheritance)
+ 
   * requires modifications on the type checker (assignable based on subtyping)
   
     * assignment
@@ -16,11 +12,14 @@ Logika To-Do
     * method call
     
     * equality/inequality ops
+
+* Add match statement for pattern matching traits/case classes
+
+* create examples such as list, nat, etc. as inductive types and prove their properties (ala Coq)
   
-* Add sequence of trait/class
+* Add first class sequence of trait/case class
 
-* Add match statement with pattern matching on trait/class
-
-* Add type inference (B, Z, ZS) for predicate logic to enable auto validity sequent checking
+* Add type inference (boolean, integer, sequence of integer, uninterpreted function) 
+  for predicate logic + algebra sequent to enable auto validity checking
 
 * Add support for multiple program files

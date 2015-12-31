@@ -23,9 +23,10 @@ programming logic input language).
 The programming input language is a restricted subset of the Scala programming language that can be
 run by using the regular Scala interpreter.
 
-Currently, the propositional and predicate logic proof checker portion of the tool has been fully
-implemented; the programming logic proof checker has been implemented up to the type checking phase
-and the interface to the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver.
+Currently, the tool has been implemented up with feature sets on par with the two tools above.
+Logika uses the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver for checking
+programming logic formula validity/satisfiability.
+More features are planned (see [todo.md](todo.md)).
 
 Some examples are available at the following links:
 
@@ -35,6 +36,7 @@ Some examples are available at the following links:
 * [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
   (status: **all verified**; all examples runnable by the Scala interpreter, which requires 
   the [Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
+
 
 Running Logika
 --------------
