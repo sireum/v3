@@ -1,5 +1,6 @@
-Requirements
-============
+# Sireum: A Software Analysis Platform (v3)
+
+## Requirements
 
 Supported platforms (64-bit only):
 
@@ -10,13 +11,11 @@ Supported platforms (64-bit only):
 * Windows (test platform: Windows 10)
 
 
-All Supported Platforms
------------------------
+### All Supported Platforms
 
 * Required tools: `bash`, `git`, `unzip`, `wget`
 
-Windows
--------
+### Windows
 
 * Required tools: [MSYS2](https://msys2.github.io)
 
@@ -24,10 +23,27 @@ Windows
   pacman -S git unzip wget
   ```
   
-Running Sireum
-==============
+## Installing Sireum
 
-Run: `./sireum`
+* Using HTTPS:
+
+  ```bash
+  git clone https://github.com/santoslab/sireum-v3.git
+  ```
+
+* Using SSH:
+ 
+  ```bash
+  git clone git@github.com:santoslab/sireum-v3.git
+  ```
+
+## Running Sireum
+
+Run:
+
+```bash
+sireum-v3/sireum
+```
 
 (If this is your first time running the script, it first:
 
@@ -61,6 +77,8 @@ logika    Logika Proof Checker
 pilar     Pilar tooling
 util      Utility Tools
 ```
+
+The rest of this document assumes `sireum` refers to `sireum-v3/sireum`.
 
 Another example: `sireum pilar` (or simply `sireum p`)
 
@@ -118,7 +136,7 @@ x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
 Building and Testing Sireum using Sbt
 =====================================
 
-Run: `bin/sbt-launch.sh test`
+Run: `sireum-v3/bin/sbt-launch.sh test`
 
 **Warning:** If you use Gradle (on other projects), your Ivy2 cache might be corrupted.
 In such case, Sbt will complain about unresolved dependencies, e.g.:
@@ -153,9 +171,9 @@ You can then check that your Gradle builds still work once Sbt fixed/recreated y
 Assembling Sireum Jar
 =====================
 
-Run: `bin/sbt-launch.sh assembly`
+Run: `sireum-v3/bin/sbt-launch.sh assembly`
  
-The jar will be located at `jvm/target/scala-2.11/sireum.jar`
+The jar will be located at `sireum-v3/jvm/target/scala-2.11/sireum.jar`
 
 
 Development Environment
@@ -182,7 +200,7 @@ JetBrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 
 inserted before the file extension.)
 
 Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository.
-Anytime that you are asked for a JDK, point it to `platform/java`.
+Anytime that you are asked for a JDK, point it to `sireum-v3/platform/java`.
 
 **Note:** You can opt to use the Zulu JDK that Sireum uses to run IntelliJ instead of IntelliJ's custom JDK.
 To do so, exit IntelliJ (if it is running), then, for OS X:
@@ -215,10 +233,7 @@ Other plugins that you might be interested are:
 * ColourChooser
 * Compare Directories
 * Docker integration
-* Haskell
 * LaTeX
-* nginx Support
-* Vagrant
 
 Setting Preferences
 -------------------
@@ -254,6 +269,6 @@ Alternative IDE
 You can also use Eclipse that is shipped in [Sireum v2 Shortcake](http://sireum.org/software.html#shortcake).
 Run:
 ```bash
-bin/sbt-eclipse.sh
+sireum-v3/bin/sbt-eclipse.sh
 ```
 Then, import the existing projects into your Eclipse workspace (after setting up some preferences).

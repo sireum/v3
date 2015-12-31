@@ -1,5 +1,4 @@
-Sireum Logika
-=============
+# Sireum Logika
 
 Logika is a natural deduction proof checker for propositional, predicate, and programming logic being
 developed for teaching [K-State CIS 301: Logical Foundations of Programming](http://proglogics.santoslab.org).
@@ -38,8 +37,15 @@ Some examples are available at the following links:
   the [Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala))
 
 
-Running Logika
---------------
+## Installing and Running Logika
+
+Please see the Sireum 
+[system requirements](../readme.md#requirements),
+[installation](../readme.md#installing-sireum),
+and [running](../readme.md#running-sireum) instructions.
+
+
+## Examples
 
 The propositional and predicate logic proof checker can be run via the command line.
 Here is an example:
@@ -64,7 +70,8 @@ Here is an example:
 ```
 To run Logika, save the above example in a file (e.g., `test.txt`) and then issue the command
 (provided that you follow the instructions above to build and run Sireum; for the remainder of this
-document, replace `sireum` with the path to Sireum script file, e.g., `../sireum`):
+document, replace `sireum` with the path to Sireum script file, e.g., `../sireum` if running
+from the directory containing this file):
 ```bash
 sireum logika test.txt
 ```
