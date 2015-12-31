@@ -29,5 +29,9 @@
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.7:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
     <orderEntry type="module" module-name="sireum-test" exported="" />
+    <orderEntry type="module" module-name="sireum-util" exported="" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.11:0.3.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.3.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
   </component>
 </module>

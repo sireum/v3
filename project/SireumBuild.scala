@@ -282,21 +282,11 @@ object SireumBuild extends Build {
       settings(name := pi.name).disablePlugins(AssemblyPlugin)
 
   def toSbtJsProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project = {
-    val (jsPIs, purePIs) = pi.dependencies.partition(p => p.id.contains("-js"))
     Project(
       id = pi.id,
-      settings = settings ++ Seq(
-        name := pi.name,
-        unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
-          purePIs.flatMap { pi =>
-            Seq(
-              base / base.getAbsoluteFile.toPath.relativize((pi.baseDir / "src/main/scala").
-                getAbsoluteFile.toPath).toString
-            )
-          }
-        }
-      ),
-      base = pi.baseDir).dependsOn(jsPIs.map(p =>
+      settings = settings,
+      base = pi.baseDir).
+      dependsOn(pi.dependencies.map(p =>
       new ClasspathDependency(new LocalProject(p.id), None)): _*
     ).enablePlugins(ScalaJSPlugin).disablePlugins(AssemblyPlugin)
   }
