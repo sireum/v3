@@ -1,6 +1,8 @@
 Logika To-Do
 ============
 
+* Make return keyword optional 
+
 * Add helper methods that do not require and ensure invariants
 
 * Add randomInt() and randomInt(lo: Z, hi: Z)
