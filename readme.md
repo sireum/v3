@@ -70,7 +70,7 @@ sireum-v3/sireum
 
 ```
 Sireum: A Software Analysis Platform (v3)
-(c) 2011-2015, SAnToS Laboratory, Kansas State University
+(c) 2011-2016, SAnToS Laboratory, Kansas State University
 http://sireum.org
 
 Usage: sireum <mode>
