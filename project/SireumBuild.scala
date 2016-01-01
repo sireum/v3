@@ -1,27 +1,27 @@
 /*
-Copyright (c) 2011-2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 import com.typesafe.sbteclipse.core.EclipsePlugin._
 import org.scalajs.sbtplugin.ScalaJSPlugin
@@ -30,7 +30,7 @@ import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.Keys._
 import sbt._
 import sbt.complete.Parsers._
-import sbtassembly.{MergeStrategy, PathList, AssemblyPlugin}
+import sbtassembly.{AssemblyUtils, MergeStrategy, PathList, AssemblyPlugin}
 import sbtassembly.AssemblyPlugin._
 import sbtassembly.AssemblyKeys._
 
@@ -64,7 +64,7 @@ object SireumBuild extends Build {
       publishLocal := {}
     ),
     base = file(".")
-  ).aggregate(sireumJvm, sireumJs)
+  ).aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
 
   lazy val sireumJvm =
     Project(
@@ -75,8 +75,22 @@ object SireumBuild extends Build {
           mainClass in assembly := Some("org.Sireum"),
           assemblyJarName in assembly := "sireum.jar",
           test in assembly := {},
+          logLevel in assembly := Level.Error,
           assemblyMergeStrategy in assembly := {
-            case PathList("org", "sireum", xs@_*) => MergeStrategy.first
+            case PathList("org", "sireum", xs@_*) => new MergeStrategy {
+              override def name: String = "sireum"
+
+              override def apply(tempDir: File, path: String,
+                                 files: Seq[File]): Either[String, Seq[(File, String)]] = {
+                if (files.size == 1) return Right(Seq(files.head -> path))
+                val nonSharedFiles =
+                  files.flatMap { f =>
+                    val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
+                    if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
+                  }
+                Right(Seq(nonSharedFiles.head -> path))
+              }
+            }
             case x =>
               val oldStrategy = (assemblyMergeStrategy in assembly).value
               oldStrategy(x)
@@ -125,8 +139,9 @@ object SireumBuild extends Build {
     EclipseKeys.useProjectId := true,
     EclipseKeys.withBundledScalaContainers := false,
     EclipseKeys.eclipseOutput := Some("bin"),
-    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method", "-feature") ++
-      (if (isRelease) Seq("-optimize", "-Yinline-warnings") else Seq())),
+    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode",
+      "-Ydelambdafy:method", "-feature", "-Xexperimental") ++
+      (if (isRelease) Seq("-optimize", "-Yopt:l:classpath") else Seq())),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(
@@ -171,6 +186,7 @@ object SireumBuild extends Build {
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVer,
       "com.lihaoyi" %%% "utest" % "0.3.1"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")

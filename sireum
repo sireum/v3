@@ -28,23 +28,24 @@ JAVA_HOME=${SIREUM_HOME}/platform/java
 JAVA=${JAVA_HOME}/bin/java
 SIREUM_JAR=${SIREUM_HOME}/jvm/target/scala-2.11/sireum.jar
 SIREUM_VERSION=$( git log -n 1 --pretty=format:"%H" )
+SBT=${SIREUM_HOME}/bin/sbt-launch.sh
 if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
   if [ ! -f ${SIREUM_JAR} ]; then
-    echo "Please wait while building Sireum..."
+    echo "Please wait while building Sireum; this might take a while..."
     echo
-    SIREUM_RELEASE=true ${SIREUM_HOME}/bin/sbt-launch.sh clean assembly
+    SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' assembly
     echo
   elif grep -q "${SIREUM_VERSION}" ${SIREUM_HOME}/bin/VER; then
     echo "New changes detected; please wait while re-building Sireum..."
     echo
-    SIREUM_RELEASE=true ${SIREUM_HOME}/bin/sbt-launch.sh clean assembly
+    SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' assembly
     echo
   else
     CHANGES="$(git status -s)"
     if [[ "${CHANGES}" == *.scala* ]] || [[ "${CHANGES}" == *.java* ]] || [[ "${CHANGES}" == *.stg* ]]; then
       echo "Local source changes detected; please wait while re-building Sireum..."
       echo
-      SIREUM_RELEASE=true ${SIREUM_HOME}/bin/sbt-launch.sh assembly
+      SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' assembly
       echo
     else
       /bin/bash ${SIREUM_HOME}/bin/prelude.sh
