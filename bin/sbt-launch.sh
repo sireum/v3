@@ -37,6 +37,11 @@ fi
 PATH=${NODE_BIN}:${PATH}
 : ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled}
 : ${JAVA_PROPERTIES:=-Dsbt.log.format=false}
-pushd ${SIREUM_HOME} > /dev/null
+cd ${SIREUM_HOME}
+for i in "$@" ; do
+  if [[ ${i} == "clean" ]]; then
+    rm -fR `find . -path "*/target/scala-2.??"`
+    break
+  fi
+done
 ${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"
-popd > /dev/null

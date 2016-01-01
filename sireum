@@ -33,13 +33,11 @@ if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
   if [ ! -f ${SIREUM_JAR} ]; then
     echo "Please wait while building Sireum; this might take a while..."
     echo
-    rm -fR `find . -path "*/target/scala-2.??"`
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
   elif grep -q "${SIREUM_VERSION}" ${SIREUM_HOME}/bin/VER; then
     echo "New changes detected; please wait while re-building Sireum..."
     echo
-    rm -fR `find . -path "*/target/scala-2.??"`
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
   else
@@ -47,7 +45,6 @@ if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
     if [[ "${CHANGES}" == *.scala* ]] || [[ "${CHANGES}" == *.java* ]] || [[ "${CHANGES}" == *.stg* ]]; then
       echo "Local source changes detected; please wait while re-building Sireum..."
       echo
-      rm -fR `find . -path "*/target/scala-2.??"`
       SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
       echo
     else
