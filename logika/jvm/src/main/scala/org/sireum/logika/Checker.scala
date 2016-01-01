@@ -1,27 +1,27 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.logika
 
@@ -272,7 +272,7 @@ ProofContext(mode: LogicMode,
                 }
                 if (autoEnabled) {
                   if (modifiedInvariants.nonEmpty &&
-                    !isValid(pc2.premises, modifiedInvariants)) {
+                    !isValid(pc2.premises ++ pc2.facts.values, modifiedInvariants)) {
                     val locs = buildLocs(modifiedInvariants)
                     error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${stmt.id.value}.")
                     hasError = true
@@ -292,7 +292,7 @@ ProofContext(mode: LogicMode,
                   case _ => pc2.premises
                 }
                 if (autoEnabled) {
-                  if (post.nonEmpty && !isValid(postPremises, post)) {
+                  if (post.nonEmpty && !isValid(postPremises ++ pc2.facts.values, post)) {
                     hasError = true
                     val locs = buildLocs(post)
                     error(post.head, s"Could not automatically deduce method ${stmt.id.value}'s post-condition(s) defined at $locs.")
@@ -316,7 +316,7 @@ ProofContext(mode: LogicMode,
           case InvStmt(inv) =>
             var i = 1
             if (autoEnabled) {
-              if (!isValid(pc.premises, inv.exps)) {
+              if (!isValid(pc.premises ++ pc.facts.values, inv.exps)) {
                 hasError = true
                 error(stmt, s"Could not automatically deduce the global invariant(s).")
               }
@@ -336,7 +336,7 @@ ProofContext(mode: LogicMode,
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
             if (autoEnabled) {
-              if (es.nonEmpty && !isValid(pc.premises, es)) {
+              if (es.nonEmpty && !isValid(pc.premises ++ pc.facts.values, es)) {
                 hasError = true
                 error(loopInv, s"Could not automatically deduce the loop invariant(s) at the beginning of the loop.")
               }
@@ -357,7 +357,7 @@ ProofContext(mode: LogicMode,
               check(loopBlock) match {
               case Some(pc2) =>
                 if (autoEnabled) {
-                  if (es.nonEmpty && !isValid(pc2.premises, es)) {
+                  if (es.nonEmpty && !isValid(pc2.premises ++ pc2.facts.values, es)) {
                     hasError = true
                     error(loopInv, s"Could not automatically deduce the loop invariant(s) at the end of the loop.")
                   }
@@ -417,7 +417,7 @@ ProofContext(mode: LogicMode,
     var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
     if (autoEnabled) {
-      if (pres.nonEmpty && !isValid(premises, pres)) {
+      if (pres.nonEmpty && !isValid(premises ++ facts.values, pres)) {
         hasError = true
         error(a, s"Could not automatically deduce the pre-condition(s) of the method.")
       }
@@ -457,7 +457,7 @@ ProofContext(mode: LogicMode,
     def divisor(e: Exp): Boolean = {
       val req = Ne(e, Checker.zero)
       if (autoEnabled) {
-        if (!isValid(premises, ivector(req))) {
+        if (!isValid(premises ++ facts.values, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
           hasError = true
         }
@@ -471,7 +471,7 @@ ProofContext(mode: LogicMode,
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
       if (autoEnabled) {
-        if (!isValid(premises, ivector(req1, req2))) {
+        if (!isValid(premises ++ facts.values, ivector(req1, req2))) {
           hasError = true
           error(e, s"Could not automatically deduce that the index is not out of bound of ${id.value}.")
         }
@@ -806,7 +806,7 @@ ProofContext(mode: LogicMode,
         }
         if (hasError) None else addProvedStep(step)
       case Algebra(_, exp, stepOrFacts) =>
-        if (deduce(num, exp, stepOrFacts, checkAlgebraExp, "apply algebra"))
+        if (deduce(num, exp, stepOrFacts, isAuto = false))
           addProvedStep(step)
         else None
       case ForAllIntro(_, q, subProof) =>
@@ -899,7 +899,7 @@ ProofContext(mode: LogicMode,
       case Auto(_, exp, stepOrFacts) =>
         if (!autoEnabled)
           error(step, s"Auto is not enabled, but used in step #$num.")
-        if (deduce(num, exp, stepOrFacts, e => true, "automatically")) addProvedStep(step)
+        if (deduce(num, exp, stepOrFacts, isAuto = true)) addProvedStep(step)
         else None
       case Invariant(_, exp) =>
         if (invariants.contains(exp)) addProvedStep(step)
@@ -911,15 +911,26 @@ ProofContext(mode: LogicMode,
   }
 
   def deduce(num: Int, exp: Exp, stepOrFacts: Node.Seq[NumOrId],
-             f: Exp => Boolean, method: String): Boolean = {
-    var antecedents = Node.emptySeq[Exp]
-    var hasError = false
-    for (numOrId <- stepOrFacts)
-      findRegularStepOrFactExp(numOrId, num) match {
-        case Some(e) => if (f(e)) antecedents :+= e
-        case _ => hasError = true
-      }
-    if (hasError) return false
+             isAuto: Boolean): Boolean = {
+    val antecedents =
+      if (stepOrFacts.nonEmpty) {
+        var as = Node.emptySeq[Exp]
+        var hasError = false
+        for (numOrId <- stepOrFacts)
+          findRegularStepOrFactExp(numOrId, num) match {
+            case Some(e) =>
+              if (!isAuto) {
+                if (checkAlgebraExp(e)) as :+= e
+                else {
+                  error(numOrId, s"Could not apply algebra on formula with any logical connective other than negation.")
+                  hasError = true
+                }
+              } else as :+= e
+            case _ => hasError = true
+          }
+        if (hasError) return false else as
+      } else if (isAuto) premises else Node.emptySeq[Exp]
+    val method = if (isAuto) "automatically" else "apply algebra to"
     if (isValid(antecedents ++ facts.values, ivector(exp))) true
     else {
       error(exp, s"Could not $method deduce the claim in step#$num.")
