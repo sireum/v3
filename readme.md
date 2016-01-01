@@ -1,5 +1,7 @@
 # Sireum: A Software Analysis Platform (v3)
 
+[Simplified BSD License](license.md)
+
 ## Available Products
 
 * [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](logika/readme.md)
@@ -200,7 +202,8 @@ JetBrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 
 (The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
 inserted before the file extension.)
 
-Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository.
+Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository
+(see [IntelliJ's doc](https://www.jetbrains.com/idea/help/getting-started-with-sbt.html#import_project)).
 Anytime that you are asked for a JDK, point it to `sireum-v3/platform/java`.
 
 **Note:** You can opt to use the Zulu JDK that Sireum uses to run IntelliJ instead of IntelliJ's custom JDK.
