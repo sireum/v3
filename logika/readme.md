@@ -30,9 +30,9 @@ More features are planned (see [todo.md](todo.md)).
 
 Some examples are available at the following links:
 
-* [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-test/src/main/scala/org/sireum/logika/SequentTestDefProvider.scala)
+* [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/jvm/src/test/scala/org/sireum/logika/test/SequentTestDefProvider.scala)
 
-* [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/sireum-logika-test/src/test/resources/org/sireum/logika)
+* [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/jvm/src/test/resources/org/sireum/logika/test/example)
 
 
 ## Installing and Running Logika
