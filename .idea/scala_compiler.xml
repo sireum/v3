@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="SBT" modules="sireum,sireum-awas,sireum-option,sireum-java,sireum-js,sireum-pilar,sireum-pilar-test,sireum-test,sireum-util" />
-    <profile name="SBT" modules="sireum-core-test,sireum-awas-parser-antlr4,sireum-awas-test,sireum-cli,sireum-cli-test,sireum-util-reflect,sireum-java-test,sireum-java-translator,sireum-jvm,sireum-logika,sireum-logika-parser-antlr4,sireum-logika-test,sireum-pilar-parser-antlr4,sireum-pilar-test-jvm,sireum-test-jvm,sireum-util-jvm">
+    <profile name="SBT" modules="sireum-awas,sireum-option,sireum-java,sireum-pilar,sireum-pilar-test,sireum-test,sireum-util" />
+    <profile name="SBT" modules="sireum-core-test,sireum-awas-parser-antlr4,sireum-awas-test,sireum-cli,sireum-cli-test,sireum-util-reflect,sireum-java-test,sireum-java-translator,sireum-logika,sireum-logika-parser-antlr4,sireum-logika-test,sireum-pilar-parser-antlr4,sireum-pilar-test-jvm,sireum-test-jvm,sireum-util-jvm,sireum,awas,cli,java,sireum-js,sireum-jvm,logika,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
       <option name="featureWarnings" value="true" />
       <parameters>
         <parameter value="-target:jvm-1.8" />
@@ -18,6 +18,17 @@
     </profile>
     <profile name="SBT 4" modules="sireum-pilar-test-js">
       <option name="featureWarnings" value="true" />
+    </profile>
+    <profile name="SBT 5" modules="pilar-js,test-js,util-js">
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-Ybackend:GenBCode" />
+        <parameter value="-Ydelambdafy:method" />
+      </parameters>
+      <plugins>
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.7/scalajs-compiler_2.11.7-0.6.5.jar" />
+      </plugins>
     </profile>
   </component>
 </project>

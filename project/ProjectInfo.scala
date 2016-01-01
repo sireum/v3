@@ -11,8 +11,8 @@ import scala.collection.mutable.ArrayBuffer
 import java.io.PrintWriter
 
 /**
- * @author <a href="mailto:robby@k-state.edu">Robby</a>
- */
+  * @author <a href="mailto:robby@k-state.edu">Robby</a>
+  */
 object ProjectInfo {
   var projectInfos = Vector[ProjectInfo]()
   val ignoredFiles = Set[String](
@@ -68,45 +68,16 @@ object ProjectInfo {
 }
 
 /**
- * @author <a href="mailto:robby@k-state.edu">Robby</a>
- */
-final case class ProjectInfo(name: String, dir: String,
-                             depFeatures: Seq[String],
+  * @author <a href="mailto:robby@k-state.edu">Robby</a>
+  */
+final case class ProjectInfo(name: String, isCross: Boolean,
                              dependencies: ProjectInfo*) {
 
   import ProjectInfo._
 
   projectInfos = projectInfos.:+(this)
   val id = name.toLowerCase.replace(" ", "-")
-  val baseDir = file(dir + id)
-  lazy val (libFiles, srcFiles, licensesFiles) = {
-    val libs = ArrayBuffer[File]()
-    val srcs = ArrayBuffer[File]()
-    val licenses = ArrayBuffer[File]()
-
-    def mineFiles(dir: File) {
-      if (dir.exists) {
-        for (f <- dir.listFiles) {
-          if (f.isDirectory)
-            mineFiles(f)
-          else {
-            val fName = f.getName
-            if (!ProjectInfo.ignoredFiles.contains(fName)) {
-              if (fName.endsWith("-src.jar") || fName.endsWith("-src.zip"))
-                srcs += f
-              else if (fName.endsWith(".jar"))
-                libs += f
-              else if (fName.endsWith("-license.txt"))
-                licenses += f
-            }
-          }
-        }
-      }
-    }
-    mineFiles(baseDir / "lib")
-    mineFiles(baseDir / "target")
-    (libs, srcs, licenses)
-  }
+  val baseDir = file(id)
 
   def genDot(seen: scala.collection.mutable.Set[String], pw: PrintWriter): Unit = {
     if (seen.contains(name)) return
@@ -123,12 +94,8 @@ final case class ProjectInfo(name: String, dir: String,
       else "\n" + t.foldLeft("")((s, o) => s + "* " + o.toString + "\n")
     s"""
 Project Name:         $name
-Project Directory:    $dir
-Feature Dependencies: ${h(depFeatures)}
+Project Directory:    ${baseDir.getPath}
 Project Dependencies: ${h(dependencies.map(_.name))}
-Library Files:        ${h(libFiles)}
-Source Files:         ${h(srcFiles)}
-License Files:        ${h(licensesFiles)}
       """
   }
 }

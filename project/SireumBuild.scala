@@ -26,10 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import com.typesafe.sbteclipse.core.EclipsePlugin._
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.Keys._
 import sbt._
 import sbt.complete.Parsers._
-import sbtassembly.AssemblyPlugin
+import sbtassembly.{MergeStrategy, PathList, AssemblyPlugin}
 import sbtassembly.AssemblyPlugin._
 import sbtassembly.AssemblyKeys._
 
@@ -41,13 +42,6 @@ object SireumBuild extends Build {
   final val sireumVer = "3.0-SNAPSHOT"
 
   final val BUILD_FILENAME = "BUILD"
-  final val UTIL_DIR = "util/"
-  final val PILAR_DIR = "pilar/"
-  final val TEST_DIR = "test/"
-  final val CLI_DIR = "cli/"
-  final val JAVA_DIR = "java/"
-  final val AWAS_DIR = "awas/"
-  final val LOGIKA_DIR = "logika/"
 
   import ProjectInfo._
 
@@ -55,7 +49,7 @@ object SireumBuild extends Build {
 
   lazy val sireum = Project(
     id = "sireum",
-    settings = sireumSettings ++ Seq(
+    settings = sireumSharedSettings ++ Seq(
       name := "Sireum",
       depDot := {
         val args = spaceDelimited("<arg>").parsed
@@ -65,7 +59,9 @@ object SireumBuild extends Build {
         val required = "1.8"
         val current = sys.props("java.specification.version")
         assert(current == required, s"Unsupported Java version: $current (required: $required)")
-      }
+      },
+      publish := {},
+      publishLocal := {}
     ),
     base = file(".")
   ).aggregate(sireumJvm, sireumJs)
@@ -78,7 +74,14 @@ object SireumBuild extends Build {
           name := "Sireum.jvm",
           mainClass in assembly := Some("org.Sireum"),
           assemblyJarName in assembly := "sireum.jar",
-          test in assembly := {}),
+          test in assembly := {},
+          assemblyMergeStrategy in assembly := {
+            case PathList("org", "sireum", xs@_*) => MergeStrategy.first
+            case x =>
+              val oldStrategy = (assemblyMergeStrategy in assembly).value
+              oldStrategy(x)
+          }
+        ),
       base = file("jvm")).
       aggregate(subProjectJvmReferences: _*).
       dependsOn(subProjectJvmClasspathDeps: _*)
@@ -86,47 +89,32 @@ object SireumBuild extends Build {
   lazy val sireumJs =
     Project(
       id = "sireum-js",
-      settings = sireumSettings ++
+      settings = sireumSharedSettings ++
         Seq(
           name := "Sireum.js"),
       base = file("js")).
       aggregate(subProjectJsReferences: _*).
       disablePlugins(AssemblyPlugin)
 
-  lazy val subProjects = Seq(
-    util, option,
-    java, awas,
-    tst, pilar, pilarTest
-  )
-
   lazy val subProjectsJvm = Seq(
-    utilJvm,
-    cli, pilarParserAntlr4, utilReflect,
-    javaTranslator,
-    awasParserAntlr4,
-    logikaParserAntlr4,
-    logika,
-    testJvm,
-    pilarTestJvm,
-    javaTest,
-    awasTest,
-    logikaTest
+    utilJvm, testJvm, pilarJvm,
+    logika, java, cli, awas
   )
 
   lazy val subProjectsJs = Seq(
-    testJs, pilarTestJs
+    utilJs, testJs, pilarJs
   )
 
   lazy val subProjectJvmReferences =
-    (subProjects ++ subProjectsJvm).map(x => x: ProjectReference)
+    subProjectsJvm.map(x => x: ProjectReference)
 
   lazy val subProjectJvmClasspathDeps =
-    (subProjects ++ subProjectsJvm).map(x => x: ClasspathDep[ProjectReference])
+    subProjectsJvm.map(x => x: ClasspathDep[ProjectReference])
 
   lazy val subProjectJsReferences =
     subProjectsJs.map(x => x: ProjectReference)
 
-  val sireumSettings = Seq(
+  val sireumSharedSettings = Seq(
     organization := "org.sireum",
     version := sireumVer,
     incOptions := incOptions.value.withNameHashing(true),
@@ -137,6 +125,10 @@ object SireumBuild extends Build {
     EclipseKeys.useProjectId := true,
     EclipseKeys.withBundledScalaContainers := false,
     EclipseKeys.eclipseOutput := Some("bin"),
+    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method", "-feature") ++
+      (if (isRelease) Seq("-optimize", "-Yinline-warnings") else Seq())),
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+    javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % "0.3.6"
     ),
@@ -145,7 +137,7 @@ object SireumBuild extends Build {
     apiURL := Some(url("http://sireum.org/api/"))
   )
 
-  val sireumJvmSettings = sireumSettings ++ Seq(
+  val sireumJvmSettings = sireumSharedSettings ++ Seq(
     artifactName := { (config: ScalaVersion, module: ModuleID, artifact: Artifact) =>
       artifact.name + (
         artifact.classifier match {
@@ -154,9 +146,6 @@ object SireumBuild extends Build {
           case _ => ""
         }) + "." + artifact.extension
     },
-    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method", "-feature") ++
-      (if (isRelease) Seq("-optimize", "-Yinline-warnings") else Seq())),
-    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
@@ -168,10 +157,6 @@ object SireumBuild extends Build {
       "org.ow2.asm" % "asm-commons" % "5.0.4",
       "org.ow2.asm" % "asm-util" % "5.0.4"
     ),
-    javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource")
-  )
-
-  val sireumJvmTestSettings = sireumJvmSettings ++ Seq(
     parallelExecution in Test := true,
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
     libraryDependencies ++= Seq(
@@ -179,15 +164,12 @@ object SireumBuild extends Build {
     )
   )
 
-  val sireumJsSettings = sireumSettings ++ Seq(
+  val sireumJsSettings = sireumSharedSettings ++ Seq(
     scalacOptions ++= Seq("-feature"),
     parallelExecution in Test := false,
     relativeSourceMaps := true,
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
-    postLinkJSEnv := NodeJSEnv().value
-  )
-
-  val sireumJsTestSettings = sireumJsSettings ++ Seq(
+    postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "utest" % "0.3.1"
     ),
@@ -195,99 +177,78 @@ object SireumBuild extends Build {
   )
 
   // Cross Projects
-  val utilPI = new ProjectInfo("sireum-util", UTIL_DIR, Seq())
-  lazy val util = toSbtProject(utilPI, sireumSettings)
+  val utilPI = new ProjectInfo("util", isCross = true)
+  lazy val (utilShared, utilJvm, utilJs) = toSbtCrossProject(utilPI)
 
-  val testPI = new ProjectInfo("sireum-test", TEST_DIR, Seq(), utilPI)
-  lazy val tst = toSbtProject(testPI, sireumSettings)
+  val testPI = new ProjectInfo("test", isCross = true, utilPI)
+  lazy val (testShared, testJvm, testJs) = toSbtCrossProject(testPI)
 
-  val pilarPI = new ProjectInfo("sireum-pilar", PILAR_DIR, Seq(), utilPI)
-  lazy val pilar = toSbtProject(pilarPI, sireumSettings)
-
-  val pilarTestPI = new ProjectInfo("sireum-pilar-test", PILAR_DIR, Seq(), utilPI, pilarPI, testPI)
-  lazy val pilarTest = toSbtProject(pilarTestPI, sireumSettings)
-
-  val optionPI = new ProjectInfo("sireum-option", CLI_DIR, Seq(), utilPI)
-  lazy val option = toSbtProject(optionPI, sireumSettings)
-
-  val javaPI = new ProjectInfo("sireum-java", JAVA_DIR, Seq(), utilPI, pilarPI)
-  lazy val java = toSbtProject(javaPI, sireumSettings)
-
-  val awasPI = new ProjectInfo("sireum-awas", AWAS_DIR, Seq(), utilPI)
-  lazy val awas = toSbtProject(awasPI, sireumSettings)
+  val pilarPI = new ProjectInfo("pilar", isCross = true, utilPI, testPI)
+  lazy val (pilarShared, pilarJvm, pilarJs) = toSbtCrossProject(pilarPI)
 
   // Jvm Projects
-  val utilJvmPI = new ProjectInfo("sireum-util-jvm", UTIL_DIR, Seq(), utilPI)
-  lazy val utilJvm = toSbtProject(utilJvmPI, sireumJvmSettings)
 
-  val pilarParserAntlr4PI = new ProjectInfo("sireum-pilar-parser-antlr4", PILAR_DIR, Seq(), utilPI, pilarPI, utilJvmPI)
-  lazy val pilarParserAntlr4 = toSbtProject(pilarParserAntlr4PI, sireumJvmSettings)
+  val logikaPI = new ProjectInfo("logika", isCross = false, utilPI, testPI)
+  lazy val logika = toSbtJvmProject(logikaPI)
 
-  val javaTranslatorPI = new ProjectInfo("sireum-java-translator", JAVA_DIR, Seq(), utilPI, pilarPI, javaPI)
-  lazy val javaTranslator = toSbtProject(javaTranslatorPI, sireumJvmSettings)
+  val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
+  lazy val java = toSbtJvmProject(javaPI)
 
-  val awasParserAntlr4PI = new ProjectInfo("sireum-awas-parser-antlr4", AWAS_DIR, Seq(), utilPI, awasPI)
-  lazy val awasParserAntlr4 = toSbtProject(awasParserAntlr4PI, sireumJvmSettings)
+  val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI)
+  lazy val cli = toSbtJvmProject(cliPI)
 
-  val logikaPI = new ProjectInfo("sireum-logika", LOGIKA_DIR, Seq(), utilPI, utilJvmPI)
-  lazy val logika = toSbtProject(logikaPI, sireumJvmSettings)
-
-  val logikaParserAntlr4PI = new ProjectInfo("sireum-logika-parser-antlr4", LOGIKA_DIR, Seq(), utilPI, logikaPI, utilJvmPI)
-  lazy val logikaParserAntlr4 = toSbtProject(logikaParserAntlr4PI, sireumJvmSettings)
-
-  val utilReflectPI = new ProjectInfo("sireum-util-reflect", CLI_DIR, Seq(), utilPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI, javaPI)
-  lazy val utilReflect = toSbtProject(utilReflectPI, sireumJvmSettings)
-
-  val cliPI = new ProjectInfo("sireum-cli", CLI_DIR, Seq(), utilPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI,
-    utilReflectPI, javaPI, javaTranslatorPI, logikaParserAntlr4PI, logikaPI)
-  lazy val cli = toSbtProject(cliPI, sireumJvmSettings)
-
-  // Jvm Test Projects
-  val testJvmPI = new ProjectInfo("sireum-test-jvm", TEST_DIR, Seq(), utilPI, testPI)
-  lazy val testJvm = toSbtProject(testJvmPI, sireumJvmTestSettings)
-
-  val pilarTestJvmPI = new ProjectInfo("sireum-pilar-test-jvm", PILAR_DIR, Seq(), utilPI, testPI, utilReflectPI, optionPI, pilarPI, pilarTestPI, utilJvmPI, pilarParserAntlr4PI, testJvmPI)
-  lazy val pilarTestJvm = toSbtProject(pilarTestJvmPI, sireumJvmTestSettings)
-
-  val cliTestPI = new ProjectInfo("sireum-cli-test", CLI_DIR, Seq(), utilPI, testPI, utilReflectPI, optionPI, pilarPI, utilJvmPI, pilarParserAntlr4PI)
-  lazy val cliTest = toSbtProject(cliTestPI, sireumJvmTestSettings)
-
-  val javaTestPI = new ProjectInfo("sireum-java-test", JAVA_DIR, Seq(), utilPI, testPI, utilJvmPI, pilarPI, javaPI, javaTranslatorPI, testJvmPI)
-  lazy val javaTest = toSbtProject(javaTestPI, sireumJvmTestSettings)
-
-  val awasTestPI = new ProjectInfo("sireum-awas-test", AWAS_DIR, Seq(), utilPI, testPI, awasPI, awasParserAntlr4PI, testJvmPI)
-  lazy val awasTest = toSbtProject(awasTestPI, sireumJvmTestSettings)
-
-  val logikaTestPI = new ProjectInfo("sireum-logika-test", LOGIKA_DIR, Seq(), utilPI, testPI, logikaPI, utilJvmPI, logikaParserAntlr4PI, testJvmPI)
-  lazy val logikaTest = toSbtProject(logikaTestPI, sireumJvmTestSettings)
+  val awasPI = new ProjectInfo("awas", isCross = false, utilPI, testPI)
+  lazy val awas = toSbtJvmProject(awasPI)
 
   // Js Projects
 
-  // Js Test Projects
-  val testJsPI = new ProjectInfo("sireum-test-js", TEST_DIR, Seq(), utilPI, testPI)
-  lazy val testJs = toSbtJsProject(testJsPI, sireumJsTestSettings)
+  //
 
-  val pilarTestJsPI = new ProjectInfo("sireum-pilar-test-js", PILAR_DIR, Seq(), utilPI, testPI, pilarTestPI)
-  lazy val pilarTestJs = toSbtProject(pilarTestJsPI, sireumJsTestSettings) dependsOn (testJs % "test->test")
-
-
-  def toSbtProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project =
+  def toSbtJvmProject(pi: ProjectInfo): Project =
     Project(
       id = pi.id,
-      settings = settings,
-      base = pi.baseDir).
+      settings = sireumJvmSettings,
+      base = pi.baseDir / "jvm").
+      dependsOn(pi.dependencies.flatMap { p =>
+        if (p.isCross)
+          Seq(new ClasspathDependency(new LocalProject(p.id), None),
+            new ClasspathDependency(new LocalProject(p.id + "-jvm"), None))
+        else Seq(new ClasspathDependency(new LocalProject(p.id), None))
+      }: _*).
+      settings(name := pi.name).disablePlugins(AssemblyPlugin)
+
+  def toSbtCrossProject(pi: ProjectInfo): (Project, Project, Project) = {
+    val shared = Project(
+      id = pi.id,
+      settings = sireumSharedSettings,
+      base = pi.baseDir / "shared").
       dependsOn(pi.dependencies.map { p =>
         new ClasspathDependency(new LocalProject(p.id), None)
       }: _*).
       settings(name := pi.name).disablePlugins(AssemblyPlugin)
-
-  def toSbtJsProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]]): Project = {
-    Project(
-      id = pi.id,
-      settings = settings,
-      base = pi.baseDir).
-      dependsOn(pi.dependencies.map(p =>
-      new ClasspathDependency(new LocalProject(p.id), None)): _*
-    ).enablePlugins(ScalaJSPlugin).disablePlugins(AssemblyPlugin)
+    val cp = CrossProject(
+      jvmId = pi.id + "-jvm",
+      jsId = pi.id + "-js",
+      base = pi.baseDir,
+      crossType = CrossType.Full)
+    val jvm =
+      cp.jvm.settings(sireumJvmSettings).disablePlugins(AssemblyPlugin).
+        dependsOn(shared).
+        dependsOn(pi.dependencies.map { p =>
+          new ClasspathDependency(new LocalProject(p.id), None)
+        }: _*).
+        dependsOn(pi.dependencies.map { p =>
+          new ClasspathDependency(new LocalProject(p.id + "-jvm"), None)
+        }: _*)
+    val js =
+      cp.js.settings(sireumJsSettings).disablePlugins(AssemblyPlugin).
+        dependsOn(shared).
+        dependsOn(pi.dependencies.map { p =>
+          new ClasspathDependency(new LocalProject(p.id), None)
+        }: _*).
+        dependsOn(pi.dependencies.map { p =>
+          new ClasspathDependency(new LocalProject(p.id + "-js"), None)
+        }: _*).enablePlugins(ScalaJSPlugin)
+    (shared, jvm, js)
   }
 }
