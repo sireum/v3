@@ -1,3 +1,5 @@
+# Modified IsabelleText Font
+
 Last updated: Dec 13, 2015
 
 Source:
