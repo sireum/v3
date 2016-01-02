@@ -47,7 +47,7 @@ class ProofChecker(option: LogikaOption,
 
     if (option.input.isEmpty) {
       errPrintln("No input provided.")
-      return false
+      return true
     }
 
     if (option.input.length > 1 && option.sequent.nonEmpty) {
