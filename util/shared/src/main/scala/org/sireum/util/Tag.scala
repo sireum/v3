@@ -47,6 +47,84 @@ sealed trait LocationInfoTag extends Tag {
   def offset: Natural
 
   def length: Natural
+
+  def toFileLocationError(fileUriOpt: Option[FileResourceUri],
+                          kind: String, msg: String) =
+    fileUriOpt match {
+      case Some(fileUri) =>
+        FileLocationInfoErrorMessage(
+          kind = kind,
+          uri = fileUri,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+      case _ =>
+        LocationInfoErrorMessage(
+          kind = kind,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+    }
+
+  def toFileLocationWarning(fileUriOpt: Option[FileResourceUri],
+                            kind: String, msg: String) =
+    fileUriOpt match {
+      case Some(fileUri) =>
+        FileLocationInfoWarningMessage(
+          kind = kind,
+          uri = fileUri,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+      case _ =>
+        LocationInfoWarningMessage(
+          kind = kind,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+    }
+
+  def toFileLocationInfo(fileUriOpt: Option[FileResourceUri],
+                         kind: String, msg: String) =
+    fileUriOpt match {
+      case Some(fileUri) =>
+        FileLocationInfoInfoMessage(
+          kind = kind,
+          uri = fileUri,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+      case _ =>
+        LocationInfoInfoMessage(
+          kind = kind,
+          lineBegin = lineBegin,
+          columnBegin = columnBegin,
+          lineEnd = lineEnd,
+          columnEnd = columnEnd,
+          offset = offset,
+          length = length,
+          message = msg)
+    }
 }
 
 sealed trait SeverityTag extends Tag

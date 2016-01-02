@@ -26,7 +26,6 @@
 package org.sireum.logika
 
 import java.io._
-import org.sireum.logika.util.ConsoleReporter
 import org.sireum.option.LogikaOption
 import org.sireum.logika.ast._
 import org.sireum.util._
@@ -43,11 +42,14 @@ class ProofChecker(option: LogikaOption,
                    outPrintln: String => Unit,
                    errPrintln: String => Unit) {
   def run(): Boolean = {
+    if (option.ide) return runIde()
+    val fileUriOpt: Option[FileResourceUri] = None
     var hasError = false
+    implicit val reporter = new ConsoleTagReporter
     val sequentOpt: Option[Sequent] = option.sequent.flatMap {
       text =>
         val r: Option[Sequent] =
-          Builder[Sequent](text) match {
+          Builder[Sequent](fileUriOpt, text) match {
             case Some(s) => Some(s)
             case _ =>
               hasError = true
@@ -55,58 +57,56 @@ class ProofChecker(option: LogikaOption,
           }
         r
     }
-    val (text, isProgramming, reporter) =
-      if (option.input == none()) {
-        if (!option.ideprog && !option.ide) {
-          outPrintln("No input provided.")
-          return true
-        }
-        (scala.io.Source.stdin.getLines().
-          mkString(System.lineSeparator()), option.ideprog, ConsoleReporter)
-      } else {
-        val f = new File(option.input.get)
-        if (!f.exists) {
-          errPrintln(s"File ${f.getAbsolutePath} does not exist.")
-          hasError = true
-        }
+    if (option.input == none()) {
+      errPrintln("No input provided.")
+      return true
+    }
 
-        if (hasError) return false
+    val f = new File(option.input.get)
+    if (!f.exists) {
+      errPrintln(s"File ${f.getAbsolutePath} does not exist.")
+      hasError = true
+    }
+    if (hasError) return false
 
-        val fr = new FileReader(f)
-        val fText = FileUtil.readFile(fr)
-        fr.close()
-        (fText, f.getName.endsWith(".scala") || f.getName.endsWith(".sc"),
-          ConsoleReporter)
-      }
-    if (isProgramming) {
-      Builder[Program](text) match {
+    val fr = new FileReader(f)
+    val fText = FileUtil.readFile(fr)
+    fr.close()
+    if (f.getName.endsWith(".scala") || f.getName.endsWith(".sc")) {
+      Builder[Program](fileUriOpt, fText) match {
         case Some(program) =>
-          if (tipe.TypeChecker.check(program)(reporter))
+          if (tipe.TypeChecker.check(program))
             Checker.check(program, option.auto,
-              option.timeout, option.sat)(reporter)
+              option.timeout, option.sat)
         case _ =>
       }
     } else {
-      (sequentOpt, Builder[Sequent](text)) match {
+      (sequentOpt, Builder[Sequent](fileUriOpt, fText)) match {
         case (Some(sequent), Some(s)) if !hasError =>
           if (s.premises == sequent.premises &&
             s.conclusions == sequent.conclusions) {
-            Checker.check(s, autoEnabled = false, option.timeout)(ConsoleReporter)
+            Checker.check(s, autoEnabled = false, option.timeout)(new ConsoleTagReporter)
           } else {
             val li = s.nodeLocMap(s.conclusions.last)
-            errPrintln(s"The specified sequent is different than the one in the file.")
-            errPrintln("Specified:")
-            errPrintln(option.sequent.get)
-            errPrintln("File:")
-            errPrintln(text.substring(0, li.offset + li.length))
+            outPrintln(
+              s"""The specified sequent is different than the one in the file.
+                  |Specified:
+                  |${option.sequent.get}
+                  |File:
+                  |${fText.substring(0, li.offset + li.length)}""".stripMargin)
           }
         case (None, Some(s)) if !hasError =>
           Checker.check(s, autoEnabled = false,
-            option.timeout, option.sat)(ConsoleReporter)
+            option.timeout, option.sat)(reporter)
         case _ =>
       }
     }
 
+    false
+  }
+
+  def runIde(): Boolean = {
+    val kind = "CLI"
     false
   }
 }

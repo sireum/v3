@@ -34,13 +34,15 @@ object Checker {
   private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
   private[logika] final val zero = IntLit("0")
+  private[logika] final val kind = "Proof Checker"
 
   final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
                   timeoutInMs: Int = 2000, checkSat: Boolean = false)(
-                   implicit reporter: Reporter): Boolean = unitNode match {
+                   implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
         s.mode == LogicMode.Predicate)
+      implicit val fileUriOpt = s.fileUriOpt
       var vars = isetEmpty[String]
       for (e <- s.premises ++ s.conclusions)
         vars ++= collectVars(e)
@@ -53,21 +55,18 @@ object Checker {
             case s: RegularStep => Some(s.exp)
             case _ => None
           }).toSet
-          for (c <- s.conclusions) {
-            if (!exps.contains(c)) {
-              val cLi = nodeLocMap(c)
-              reporter.error(cLi.lineBegin, cLi.columnBegin, cLi.offset,
-                s"The sequent conclusion has not been proved.")
-            }
-          }
-          if (r) reporter.info(s"${unitNode.mode.value} logic proof is accepted.")
-          else reporter.error(s"${unitNode.mode.value} logic proof is rejected.")
+          for (c <- s.conclusions)
+            if (!exps.contains(c))
+              error(fileUriOpt, nodeLocMap(c), s"The sequent conclusion has not been proved.")
+          if (r) reporter.report(InfoMessage(kind, s"${unitNode.mode.value} logic proof is accepted."))
+          else reporter.report(ErrorMessage(kind, s"${unitNode.mode.value} logic proof is rejected."))
           r
         case _ =>
-          reporter.error(s"${unitNode.mode.value} logic proof is yet to be done.")
+          reporter.report(ErrorMessage(kind, s"${unitNode.mode.value} logic proof is yet to be done."))
           false
       }
     case program: Program =>
+      implicit val fileUriOpt = program.fileUriOpt
       implicit val nodeLocMap = program.nodeLocMap
       var hasProof = false
       Visitor.build({
@@ -82,14 +81,14 @@ object Checker {
           hasProof = true; false
       })(program)
       if (!hasProof) {
-        reporter.error("No programming logic proof element found.")
+        reporter.report(WarningMessage(kind, "No programming logic proof element found."))
         false
       } else {
         val r =
           ProofContext(program.mode, autoEnabled, timeoutInMs,
             checkSat).check(program)
-        if (r) reporter.info(s"Programming logic proof is accepted.")
-        else reporter.error(s"Programming logic proof is rejected.")
+        if (r) reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
+        else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
         r
       }
     case _: Proof => assert(assertion = false, "Unexpected situation."); false
@@ -104,6 +103,12 @@ object Checker {
     })(e)
     result
   }
+
+  private[logika] def error(fileUriOpt: Option[FileResourceUri],
+                            li: LocationInfo, msg: String)(
+                             implicit reporter: AccumulatingTagReporter): Unit = {
+    reporter.report(li.toFileLocationError(fileUriOpt, kind, msg))
+  }
 }
 
 private final case class
@@ -117,7 +122,8 @@ ProofContext(mode: LogicMode,
              facts: IMap[String, Exp] = imapEmpty,
              provedSteps: IMap[Natural, ProofStep] = imapEmpty,
              declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
-            (implicit reporter: Reporter,
+            (implicit reporter: AccumulatingTagReporter,
+             fileUriOpt: Option[FileResourceUri],
              nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
@@ -143,8 +149,8 @@ ProofContext(mode: LogicMode,
         facts.values.toVector: _*) match {
         case Z3.Sat => true
         case Z3.Unsat => error(facts.head._2, unsatMsg); false
-        case Z3.Unknown => reporter.warn(unknownMsg); true
-        case Z3.Timeout => reporter.warn(timeoutMsg); true
+        case Z3.Unknown => reporter.report(WarningMessage(Checker.kind, unknownMsg)); true
+        case Z3.Timeout => reporter.report(WarningMessage(Checker.kind, timeoutMsg)); true
         case Z3.Error => false
       }
     else false
@@ -1001,8 +1007,7 @@ ProofContext(mode: LogicMode,
       case id: Id => facts.get(id.value) match {
         case eOpt@Some(_) => eOpt
         case _ =>
-          val (l, c, o) = lineColumnOffset(stepOrFact)
-          reporter.error(l, c, o, s"Could not find the referenced fact ${id.value} in #$stepNum.")
+          error(stepOrFact, s"Could not find the referenced fact ${id.value} in #$stepNum.")
           None
       }
     }
@@ -1027,24 +1032,17 @@ ProofContext(mode: LogicMode,
     } else Some(copy(vars = vars + varId))
   }
 
-  def lineColumnOffset(n: Node): (Int, Int, Int) = {
-    val li = nodeLocMap(n)
-    (li.lineBegin, li.columnBegin, li.offset)
-  }
-
   def findSubProof(num: Num, stepNum: Int): Option[SubProof] = {
     provedSteps.get(num.value) match {
       case Some(r: SubProof) => Some(r)
       case Some(_) =>
-        val (l, c, o) = lineColumnOffset(num)
-        reporter.error(l, c, o, s"#${num.value} should be a sub-proof.")
+        error(num, s"#${num.value} should be a sub-proof.")
         None
       case _ =>
-        val (l, c, o) = lineColumnOffset(num)
         if (declaredStepNumbers.contains(num.value))
-          reporter.error(l, c, o, s"Step #${num.value} is out of scope from #$stepNum.")
+          error(num, s"Step #${num.value} is out of scope from #$stepNum.")
         else
-          reporter.error(l, c, o, s"Could not find the referenced sub-proof #${num.value} in #$stepNum.")
+          error(num, s"Could not find the referenced sub-proof #${num.value} in #$stepNum.")
         None
     }
   }
@@ -1053,23 +1051,18 @@ ProofContext(mode: LogicMode,
     provedSteps.get(num.value) match {
       case Some(r: RegularStep) => Some(r.exp)
       case _ =>
-        val (l, c, o) = lineColumnOffset(num)
         if (declaredStepNumbers.contains(num.value))
-          reporter.error(l, c, o, s"Step #${num.value} is out of scope from #$stepNum.")
+          error(num, s"Step #${num.value} is out of scope from #$stepNum.")
         else
-          reporter.error(l, c, o, s"Could not find the referenced step #${num.value} in #$stepNum.")
+          error(num, s"Could not find the referenced step #${num.value} in #$stepNum.")
         None
     }
 
   def error(n: Node, msg: String): Option[ProofContext] = {
-    val (l, c, o) = lineColumnOffset(n)
-    reporter.error(l, c, o, msg)
+    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, Checker.kind, msg))
     None
   }
 
-  def warn(n: Node, msg: String): Option[ProofContext] = {
-    val (l, c, o) = lineColumnOffset(n)
-    reporter.warn(l, c, o, msg)
-    None
-  }
+  def warn(n: Node, msg: String): Unit =
+    reporter.report(nodeLocMap(n).toFileLocationWarning(fileUriOpt, Checker.kind, msg))
 }

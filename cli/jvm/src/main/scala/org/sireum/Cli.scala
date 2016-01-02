@@ -675,8 +675,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
-           |    --ide        Enable IDE proposition/predicate logic mode
-           |    --ideprog    Enable IDE programming logic mode
+           |    --ide        Enable IDE mode
            |    --sat        Enable sat checking of facts and method contracts
            |-h, --help       Display usage information
         """.stripMargin.trim
@@ -720,8 +719,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           }
         case "--ide" =>
           option.ide = true
-        case "--ideprog" =>
-          option.ideprog = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

@@ -30,7 +30,6 @@ import java.io.InputStreamReader
 import org.sireum.logika.Checker
 import org.sireum.logika.ast._
 import org.sireum.logika.tipe.TypeChecker
-import org.sireum.logika.util.ErrorCountingReporter
 import org.sireum.test._
 import org.sireum.util._
 import org.sireum.util.jvm.FileUtil
@@ -62,13 +61,20 @@ final class ProgramTestDefProvider(tf: TestFramework)
       ConditionTest("bank", check("bank"))
 
   def check(filename: String): Boolean = {
+    val uri = s"example/$filename.scala"
     val r = new InputStreamReader(
-      getClass.getResourceAsStream(s"example/$filename.scala"))
+      getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)
     r.close()
-    implicit val reporter = ErrorCountingReporter
+    implicit val reporter = new ConsoleTagReporter {
+      override def info(msg: String): Unit = {
+      }
 
-    val programOpt = Builder[Program](text)
+      override def warn(msg: String): Unit = {
+      }
+    }
+
+    val programOpt = Builder[Program](Some(uri), text)
     if (programOpt.isEmpty) assert(false)
 
     val program = programOpt.get

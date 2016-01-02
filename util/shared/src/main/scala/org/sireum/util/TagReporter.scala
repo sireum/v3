@@ -32,6 +32,8 @@ trait TagReporter {
 class AccumulatingTagReporter extends TagReporter {
   var tags: ISeq[Tag] = ivectorEmpty
 
+  def hasError: Boolean = tags.exists(_.isInstanceOf[ErrorTag])
+
   override def report(tag: Tag): Unit = {
     tags :+= tag
   }
@@ -53,10 +55,10 @@ class ConsoleTagReporter extends AccumulatingTagReporter {
         info(s"[${t.lineBegin}, ${t.columnBegin}] Something has happened.")
       case t: FileLocationInfoErrorMessage =>
         uri(t.uri)
-        error(s"* Error: [${t.lineBegin}, ${t.columnBegin}] ${t.message}")
+        error(s"* [${t.lineBegin}, ${t.columnBegin}] ${t.message}")
       case t: FileLocationInfoWarningMessage =>
         uri(t.uri)
-        warn(s"* Warning: [${t.lineBegin}, ${t.columnBegin}] ${t.message}")
+        warn(s"* [${t.lineBegin}, ${t.columnBegin}] ${t.message}")
       case t: FileLocationInfoInfoMessage =>
         uri(t.uri)
         info(s"* [${t.lineBegin}, ${t.columnBegin}] ${t.message}")
@@ -67,11 +69,11 @@ class ConsoleTagReporter extends AccumulatingTagReporter {
       case t: LocationInfoInfoMessage =>
         info(s"[${t.lineBegin}, ${t.columnBegin}] ${t.message}")
       case t: InternalErrorMessage =>
-        internalError(s"Internal Error: ${t.message}")
+        internalError(s"${t.message}")
       case t: ErrorMessage =>
-        error(s"Error: ${t.message}")
+        error(s"${t.message}")
       case t: WarningMessage =>
-        warn(s"Warning: ${t.message}")
+        warn(s"${t.message}")
       case t: InfoMessage =>
         info(s"${t.message}")
     }
@@ -93,7 +95,7 @@ class ConsoleTagReporter extends AccumulatingTagReporter {
   }
 
   def internalError(msg: String): Unit = {
-    Console.err.println(msg)
+    Console.err.println("[Internal Error] " + msg)
     Console.err.flush()
   }
 }

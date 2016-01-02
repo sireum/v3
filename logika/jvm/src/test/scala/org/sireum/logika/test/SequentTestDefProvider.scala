@@ -473,8 +473,14 @@ final class SequentTestDefProvider(tf: TestFramework)
   )
 
   def check(text: String, m: LogicMode): Boolean = {
-    implicit val reporter = ErrorCountingReporter
-    val sequentOpt = Builder[Sequent](input = text)
+    implicit val reporter = new ConsoleTagReporter {
+      override def info(msg: String): Unit = {
+      }
+
+      override def warn(msg: String): Unit = {
+      }
+    }
+    val sequentOpt = Builder[Sequent](None, input = text)
     val r = sequentOpt.isDefined && m == sequentOpt.get.mode
     assert(r)
     assert(Checker.check(sequentOpt.get))

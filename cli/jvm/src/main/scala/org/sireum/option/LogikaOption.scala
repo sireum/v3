@@ -52,12 +52,10 @@ final case class LogikaOption(@BeanProperty
                               @BeanProperty
                               @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)")
                               var timeout: Int = 2000,
-                              @Opt(shortKey = None, description = "Enable IDE proposition/predicate logic mode")
+                              @Opt(shortKey = None, description = "Enable IDE mode")
                               var ide: Boolean = false,
-                              @Opt(shortKey = None, description = "Enable IDE programming logic mode")
-                              var ideprog: Boolean = false,
                               @BeanProperty
                               @Arg(name = "{file.logika, file.scala, file.lgk, file.sc}")
                               var input: OptionBean[String] = none()) {
-  def this() = this(false, false, none(), 2000, false, false, none())
+  def this() = this(false, false, none(), 2000, false, none())
 }

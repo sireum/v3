@@ -1,31 +1,30 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.logika.ast
 
-import org.sireum.logika.util._
 import org.sireum.logika.tipe._
 import org.sireum.util._
 
@@ -76,45 +75,42 @@ object Node {
   }
 
   final private[ast] def checkWellFormed(unitNode: UnitNode)
-                                        (implicit reporter: Reporter): Unit = {
+                                        (implicit reporter: AccumulatingTagReporter): Unit = {
     val nodeLocMap = unitNode.nodeLocMap.clone
+    def error(n: Node, msg: String): Unit =
+      reporter.report(nodeLocMap(n).toFileLocationError(
+        unitNode.fileUriOpt, "Semantics", msg))
+
     val isPredicate = unitNode.mode == LogicMode.Predicate
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
     lazy val v: Any => Boolean = Visitor.build({
       case n: Quant[_] =>
-        if (isPredicate) n.domainOpt match {
-          case Some(_) =>
-            val li = nodeLocMap(n.ids.last)
-            reporter.error(li.lineBegin, li.columnBegin, li.offset,
-              s"Predicate logic mode disallows explicit type specification in quantifications.")
-          case _ =>
-        } else if (isProgram && n.domainOpt.isEmpty) {
-          val li = nodeLocMap(n.ids.last)
-          reporter.error(li.lineBegin, li.columnBegin, li.offset,
-            s"Program logic mode requires explicit type specification in quantifications.")
-        }
+        if (isPredicate)
+          n.domainOpt match {
+            case Some(d) =>
+              error(d, s"Predicate logic mode disallows explicit type specification in quantifications.")
+            case _ =>
+          }
+        else if (isProgram && n.domainOpt.isEmpty)
+          error(n, s"Program logic mode requires explicit type specification in quantifications.")
         true
       case n: QuantAssumeStep =>
-        if (isPredicate) n.typeOpt match {
-          case Some(_) =>
-            val li = nodeLocMap(n.id)
-            reporter.error(li.lineBegin, li.columnBegin, li.offset,
-              s"Predicate logic mode disallows explicit type specification in quantifications.")
-          case _ =>
-        } else if (isProgram && n.typeOpt.isEmpty) {
-          val li = nodeLocMap(n.id)
-          reporter.error(li.lineBegin, li.columnBegin, li.offset,
-            s"Program logic mode requires explicit type specification in quantifications.")
-        }
+        if (isPredicate)
+          n.typeOpt match {
+            case Some(t) =>
+              error(t, s"Predicate logic mode disallows explicit type specification in quantifications.")
+            case _ =>
+          }
+        else if (isProgram && n.typeOpt.isEmpty)
+          error(n, s"Program logic mode requires explicit type specification in quantifications.")
         true
       case n@Id(id) if !isProgram =>
         applyMap.get(id) match {
           case Some(a) =>
             if (a.args.nonEmpty) {
-              val a2Li = nodeLocMap(a)
-              reporter.error(a2Li.lineBegin, a2Li.columnBegin, a2Li.offset,
-                s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
+              val aLi = nodeLocMap(a)
+              error(n, s"Identifier $id is used as a variable here but it was at [${aLi.lineBegin}, ${aLi.columnBegin}] as an uninterpreted function.")
             }
           case _ =>
             val a = Apply(n, Node.emptySeq)
@@ -126,10 +122,8 @@ object Node {
         applyMap.get(id) match {
           case Some(a2) =>
             if (a2.args.size != a.args.size) {
-              val aLi = nodeLocMap(a)
               val a2Li = nodeLocMap(a2)
-              reporter.error(aLi.lineBegin, aLi.columnBegin, aLi.offset,
-                s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
+              error(a, s"The number of arguments for $id differs from the one at [${a2Li.lineBegin}, ${a2Li.columnBegin}].")
             }
           case _ => applyMap += (id -> a)
         }
@@ -138,18 +132,14 @@ object Node {
       case w: While =>
         for (s <- w.block.stmts) s match {
           case _: MethodDecl =>
-            val sLi = nodeLocMap(s)
-            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
-              s"Methods cannot be defined inside a while-block.")
+            error(s, s"Methods cannot be defined inside a while-block.")
           case _ =>
         }
         true
       case i: If =>
         for (s <- i.trueBlock.stmts ++ i.falseBlock.stmts) s match {
           case _: MethodDecl =>
-            val sLi = nodeLocMap(s)
-            reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
-              s"Methods cannot be defined inside an if-block.")
+            error(s, s"Methods cannot be defined inside an if-block.")
           case _ =>
         }
         true
@@ -157,21 +147,15 @@ object Node {
         for (s <- m.block.stmts) {
           s match {
             case _: MethodDecl =>
-              val sLi = nodeLocMap(s)
-              reporter.error(sLi.lineBegin, sLi.columnBegin, sLi.offset,
-                s"Methods cannot be defined inside another method.")
+              error(s, s"Methods cannot be defined inside another method.")
             case _ =>
           }
           Visitor.build({
             case n: InvStmt =>
-              val nLi = nodeLocMap(s)
-              reporter.error(nLi.lineBegin, nLi.columnBegin, nLi.offset,
-                s"Invariants cannot be defined inside a method.")
+              error(s, s"Invariants cannot be defined inside a method.")
               false
             case n: Invariant =>
-              val nLi = nodeLocMap(s)
-              reporter.error(nLi.lineBegin, nLi.columnBegin, nLi.offset,
-                s"Invariant justification cannot be used inside a method.")
+              error(s, s"Invariant justification cannot be used inside a method.")
               false
           })(s)
         }
@@ -181,7 +165,7 @@ object Node {
     if (unitNode.mode == LogicMode.Programming) unitNode match {
       case _: Program =>
       case _ =>
-        reporter.error(s"Standalone sequent cannot use algebra.")
+        reporter.report(ErrorMessage("Semantics", "Standalone sequent cannot use algebra."))
     }
   }
 }
@@ -214,6 +198,7 @@ final case class LogicMode private(value: String) {
 sealed trait Node extends Product
 
 sealed trait UnitNode extends Node {
+  var fileUriOpt: Option[FileResourceUri] = None
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
   var mode = LogicMode.Programming
 }

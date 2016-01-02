@@ -1,27 +1,27 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.logika.ast
 
@@ -32,11 +32,11 @@ import java.io.StringReader
 
 import org.sireum.logika.parser.Antlr4LogikaParser._
 import org.sireum.logika.parser._
-import org.sireum.logika.util._
 import org.sireum.util._
 import org.sireum.util.jvm.Antlr4Util._
 
-final private class Builder(implicit reporter: Reporter) {
+final private class Builder(fileUriOpt: Option[FileResourceUri])(
+  implicit reporter: AccumulatingTagReporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
   val constMap = MIdMap[Node, BigInt]()
@@ -49,18 +49,21 @@ final private class Builder(implicit reporter: Reporter) {
       if (ctx.proof != null) build(ctx.sequent).
         copy(proofOpt = Some(build(ctx.proof))) at ctx
       else build(ctx.sequent)
+    r.fileUriOpt = fileUriOpt
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
   private def build(ctx: ProofFileContext): Proof = {
     val r = build(ctx.proof)
+    r.fileUriOpt = fileUriOpt
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
   private def build(ctx: ProgramFileContext): Program = {
     val r = build(ctx.program)
+    r.fileUriOpt = fileUriOpt
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
@@ -276,34 +279,26 @@ final private class Builder(implicit reporter: Reporter) {
           case "/" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) {
-                val rExpLi = nodeLocMap(rExp)
-                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
-                  s"Divide by zero detected.")
-              } else checkIntMaxMin(ctx.op, lN / rN)
+              if (rN == zero) error(rExp, s"Divide by zero detected.")
+              else checkIntMaxMin(ctx.op, lN / rN)
             }
             Div(lExp, rExp)
           case "%" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) {
-                val rExpLi = nodeLocMap(rExp)
-                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
-                  s"Modulo by zero detected.")
-              } else checkIntMaxMin(ctx.op, lN % rN)
+              if (rN == zero) error(rExp, s"Modulo by zero detected.")
+              else checkIntMaxMin(ctx.op, lN % rN)
             }
             Rem(lExp, rExp)
           case "+" =>
             for (lN <- constMap.get(lExp);
-                 rN <- constMap.get(rExp)) {
+                 rN <- constMap.get(rExp))
               checkIntMaxMin(ctx.op, lN + rN)
-            }
             Add(lExp, rExp)
           case "-" =>
             for (lN <- constMap.get(lExp);
-                 rN <- constMap.get(rExp)) {
+                 rN <- constMap.get(rExp))
               checkIntMaxMin(ctx.op, lN - rN)
-            }
             Sub(lExp, rExp)
           case ":+" => Append(lExp, rExp)
           case "+:" => Prepend(lExp, rExp)
@@ -454,9 +449,7 @@ final private class Builder(implicit reporter: Reporter) {
           build(ctx.exp) match {
             case e: Apply => ExpStmt(e)
             case e =>
-              val li = nodeLocMap(e)
-              reporter.error(li.lineBegin, li.columnBegin, li.offset,
-                s"Only method invocation expression is allowed as a statement.")
+              error(e, s"Only method invocation expression is allowed as a statement.")
               ExpStmt(Apply(Id("???"), Node.seq(e)))
           }
       }
@@ -484,9 +477,7 @@ final private class Builder(implicit reporter: Reporter) {
           case te if te.getText == "size" => Size(r)
           case te if te.getText == "clone" => Clone(r)
           case te =>
-            reporter.error(ctx.te.getLine, ctx.te.getCharPositionInLine,
-              ctx.te.getStartIndex,
-              s"Expecting size or clone instead of ${te.getText}")
+            error(ctx.te, s"Expecting size or clone instead of ${te.getText}")
             r
         }
       case ctx: BigIntExpContext => IntLit(ctx.STRING.getText)
@@ -518,41 +509,32 @@ final private class Builder(implicit reporter: Reporter) {
         ctx.op.getText match {
           case "*" =>
             for (lN <- constMap.get(lExp);
-                 rN <- constMap.get(rExp)) {
+                 rN <- constMap.get(rExp))
               checkIntMaxMin(ctx.op, lN * rN)
-            }
             Mul(lExp, rExp)
           case "/" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) {
-                val rExpLi = nodeLocMap(rExp)
-                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
-                  s"Divide by zero detected.")
-              } else checkIntMaxMin(ctx.op, lN / rN)
+              if (rN == zero) error(rExp, s"Divide by zero detected.")
+              else checkIntMaxMin(ctx.op, lN / rN)
             }
             Div(lExp, rExp)
           case "%" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) {
-                val rExpLi = nodeLocMap(rExp)
-                reporter.error(rExpLi.lineBegin, rExpLi.columnBegin, rExpLi.offset,
-                  s"Modulo by zero detected.")
-              } else checkIntMaxMin(ctx.op, lN % rN)
+              if (rN == zero) error(rExp, s"Modulo by zero detected.")
+              else checkIntMaxMin(ctx.op, lN % rN)
             }
             Rem(lExp, rExp)
           case "+" =>
             for (lN <- constMap.get(lExp);
-                 rN <- constMap.get(rExp)) {
+                 rN <- constMap.get(rExp))
               checkIntMaxMin(ctx.op, lN + rN)
-            }
             Add(lExp, rExp)
           case "-" =>
             for (lN <- constMap.get(lExp);
-                 rN <- constMap.get(rExp)) {
+                 rN <- constMap.get(rExp))
               checkIntMaxMin(ctx.op, lN - rN)
-            }
             Sub(lExp, rExp)
           case ":+" => Append(lExp, rExp)
           case "+:" => Prepend(lExp, rExp)
@@ -611,11 +593,9 @@ final private class Builder(implicit reporter: Reporter) {
 
   private def checkIntMaxMin(t: Token, value: BigInt): Unit = {
     if (value < minInt) {
-      reporter.error(t.getLine, t.getCharPositionInLine, t.getStartIndex,
-        s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      error(t, s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
     } else if (value > maxInt) {
-      reporter.error(t.getLine, t.getCharPositionInLine, t.getStartIndex,
-        s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
     }
   }
 
@@ -632,7 +612,10 @@ final private class Builder(implicit reporter: Reporter) {
   }
 
   private def error(t: Token, msg: String): Unit =
-    reporter.error(t.getLine, t.getCharPositionInLine, t.getStartIndex, msg)
+    Builder.error("AST", fileUriOpt, t, msg)
+
+  private def error(n: Node, msg: String): Unit =
+    Builder.error("AST", fileUriOpt, n, msg)
 
   import scala.language.implicitConversions
 
@@ -653,7 +636,6 @@ object Builder {
     "catch", "else", "extends", "finally", "forSome", "match", "with", "yield",
     ",", ".", ":", "=", "=>", "⇒", "[", ")", "]", "}", "<-", "<:", "<%", ">:", "#"
   )
-
   private final val (sequentType, proofType, programType) = {
     import scala.reflect.runtime.universe._
     (typeOf[Sequent], typeOf[Proof], typeOf[Program])
@@ -662,9 +644,10 @@ object Builder {
   import org.antlr.v4.runtime._
   import scala.reflect.runtime.universe._
 
-  def apply[T <: UnitNode](input: String, maxErrors: Natural = 0)(
-    implicit tag: TypeTag[T],
-    reporter: Reporter = ConsoleReporter): Option[T] = {
+  def apply[T <: UnitNode](fileUriOpt: Option[FileResourceUri],
+                           input: String, maxErrors: Natural = 0)(
+                            implicit tag: TypeTag[T],
+                            reporter: AccumulatingTagReporter): Option[T] = {
     class ParsingEscape extends RuntimeException
 
     val sr = new StringReader(input)
@@ -673,7 +656,6 @@ object Builder {
     val tokenStream = new CommonTokenStream(lexer)
     val parser = new Antlr4LogikaParser(tokenStream)
     parser.removeErrorListeners()
-    var success = true
     parser.addErrorListener(new BaseErrorListener {
       var errors = 0
 
@@ -683,75 +665,46 @@ object Builder {
                                charPositionInLine: PosInteger,
                                msg: String,
                                e: RecognitionException): Unit = {
-        success = false
         val token = offendingSymbol.asInstanceOf[Token]
-        val start = token.getStartIndex
-        reporter.error(line, charPositionInLine, start, msg)
+        error("Parser", fileUriOpt, token, msg)
         errors += 1
         if (maxErrors > 0 && errors >= maxErrors) {
           throw new ParsingEscape
         }
       }
     })
-    implicit val rptr = new Reporter {
-      override def error(message: String): Unit = {
-        success = false
-        reporter.error(message)
-      }
-
-      override def error(line: PosInteger, column: PosInteger,
-                         offset: Natural,
-                         message: String): Unit = {
-        success = false
-        reporter.error(line, column, offset, message)
-      }
-
-      override def info(message: String): Unit =
-        reporter.info(message)
-
-      override def warn(message: String): Unit =
-        reporter.warn(message)
-
-      override def warn(line: PosInteger, column: PosInteger,
-                        offset: Natural, message: String): Unit =
-        reporter.warn(line, column, offset, message)
-
-      override def info(line: PosInteger, column: PosInteger,
-                        offset: Natural, message: String): Unit =
-        reporter.info(line, column, offset, message)
-    }
     try {
       val r =
         tag.tpe match {
           case `sequentType` =>
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.sequentFile()
-            if (success) {
-              val ast = new Builder()(rptr).build(parseTree)
-              if (success) Some(ast.asInstanceOf[T])
+            if (!reporter.hasError) {
+              val ast = new Builder(fileUriOpt).build(parseTree)
+              if (!reporter.hasError) Some(ast.asInstanceOf[T])
               else None
             } else None
           case `proofType` =>
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.proofFile()
-            if (success) {
-              val ast = new Builder()(rptr).build(parseTree)
-              if (success) Some(ast.asInstanceOf[T])
+            if (!reporter.hasError) {
+              val ast = new Builder(fileUriOpt).build(parseTree)
+              if (!reporter.hasError) Some(ast.asInstanceOf[T])
               else None
             } else None
           case `programType` =>
             orientNewlines(tokenStream, isProgram = true)
             val parseTree = parser.programFile()
-            if (success) {
-              val ast = new Builder()(rptr).build(parseTree)
-              if (success) Some(ast.asInstanceOf[T])
+            if (!reporter.hasError) {
+              val ast = new Builder(fileUriOpt).build(parseTree)
+              if (!reporter.hasError) Some(ast.asInstanceOf[T])
               else None
             } else None
         }
       r match {
         case Some(un) =>
-          Node.checkWellFormed(un)(rptr)
-          if (success) r else None
+          Node.checkWellFormed(un)
+          if (!reporter.hasError) r else None
         case None => None
       }
     } catch {
@@ -817,6 +770,48 @@ object Builder {
         case _ =>
       }
       i += 1
+    }
+  }
+
+  private def error(kind: String, fileUriOpt: Option[FileResourceUri],
+                    n: Node, msg: String)(
+                     implicit reporter: AccumulatingTagReporter,
+                     nodeLocMap: MIdMap[AnyRef, LocationInfo]): Unit =
+    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, kind, msg))
+
+  private def error(kind: String, fileUriOpt: Option[FileResourceUri],
+                    t: Token, msg: String)(
+                     implicit reporter: AccumulatingTagReporter): Unit = {
+    val lb = t.getLine
+    val cb = t.getCharPositionInLine
+    val off = t.getStartIndex
+    val len = t.getStopIndex - t.getStartIndex + 1
+    val (le, ce) = end(t.getLine, t.getCharPositionInLine,
+      t.getText)
+    fileUriOpt match {
+      case Some(fileUri) =>
+        reporter.report(
+          FileLocationInfoErrorMessage(
+            kind = kind,
+            uri = fileUri,
+            lineBegin = lb,
+            columnBegin = cb,
+            lineEnd = le,
+            columnEnd = ce,
+            offset = off,
+            length = len,
+            message = msg))
+      case _ =>
+        reporter.report(
+          LocationInfoErrorMessage(
+            kind = kind,
+            lineBegin = lb,
+            columnBegin = cb,
+            lineEnd = le,
+            columnEnd = ce,
+            offset = off,
+            length = len,
+            message = msg))
     }
   }
 

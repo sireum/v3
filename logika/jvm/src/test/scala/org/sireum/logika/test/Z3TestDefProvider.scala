@@ -43,12 +43,19 @@ final class Z3TestDefProvider(tf: TestFramework)
     }
 
   def check(filename: String): Boolean = {
+    val uri = s"example/$filename.scala"
     val r = new InputStreamReader(
-      getClass.getResourceAsStream(s"example/$filename.scala"))
+      getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)
     r.close()
-    implicit val reporter = ErrorCountingReporter
-    Builder[Program](text).exists { p =>
+    implicit val reporter = new ConsoleTagReporter {
+      override def info(msg: String): Unit = {
+      }
+
+      override def warn(msg: String): Unit = {
+      }
+    }
+    Builder[Program](Some(uri), text).exists { p =>
       val hasError = !TypeChecker.check(p)
       if (hasError) return false
       p match {

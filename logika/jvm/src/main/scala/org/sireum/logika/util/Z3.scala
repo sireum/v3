@@ -1,29 +1,31 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.logika.util
+
+import java.io.StringWriter
 
 import org.sireum.logika.ast._
 import org.sireum.logika.tipe._
@@ -58,15 +60,17 @@ object Z3 {
   }
 
   def isValid(timeoutInMs: Int, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
-    implicit nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
     new Z3(timeoutInMs).isValid(premises, conclusions)
 
   def checkSat(timeoutInMs: Int, es: Exp*)(
-    implicit nodeLocMap: MIdMap[Node, LocationInfo]): CheckResult =
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): CheckResult =
     new Z3(timeoutInMs).checkSat(es: _*)
 }
 
-private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationInfo]) {
+private final class Z3(timeout: Int)(
+  implicit reporter: TagReporter,
+  nodeLocMap: MIdMap[Node, LocationInfo]) {
 
   import Z3._
 
@@ -117,17 +121,20 @@ private final class Z3(timeout: Int)(implicit nodeLocMap: MIdMap[Node, LocationI
           case "sat" => Sat
           case "timeout" => Timeout
           case _ =>
-            Console.err.println("Error occurred when calling Z3 for the following script.")
-            Console.err.println(z3Script)
-            Console.err.println(s)
-            Console.err.flush()
+            reporter.report(InternalErrorMessage("Z3",
+              s"""Error occurred when calling Z3 for the following script:
+$z3Script
+Z3 output:
+$s"""))
             Error
         }
       case Exec.Timeout => Timeout
       case Exec.ExceptionRaised(err) =>
-        Console.err.println(s"Error occurred when calling Z3 for the following script: ${err.getMessage}")
-        Console.err.println(z3Script)
-        Console.err.flush()
+        val sw = new java.io.PrintWriter(new StringWriter)
+        sw.append("Error occurred when calling Z3:")
+        sw.append(lineSep)
+        err.printStackTrace(sw)
+        reporter.report(InternalErrorMessage("Z3", sw.toString))
         Error
     }
   }

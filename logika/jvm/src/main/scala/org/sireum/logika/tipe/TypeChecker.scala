@@ -1,66 +1,36 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.logika.tipe
 
 import org.sireum.logika.ast._
-import org.sireum.logika.util._
 import org.sireum.util._
 
 object TypeChecker {
   final def check(program: Program)(
-    implicit reporter: Reporter): Boolean = {
-    var hasError = false
-    val r2 = new Reporter {
-
-      override def error(message: String): Unit = {
-        hasError = true
-        reporter.error(message)
-      }
-
-      override def warn(message: String): Unit =
-        reporter.warn(message)
-
-      override def warn(line: PosInteger,
-                        column: PosInteger,
-                        offset: Natural, message: String): Unit =
-        reporter.warn(line, column, offset, message)
-
-      override def error(line: PosInteger,
-                         column: PosInteger,
-                         offset: Natural, message: String): Unit = {
-        hasError = true
-        reporter.error(line, column, offset, message)
-      }
-
-      override def info(message: String): Unit =
-        reporter.info(message)
-
-      override def info(line: PosInteger, column: PosInteger, offset: Natural, message: String): Unit =
-        reporter.info(line, column, offset, message)
-    }
+    implicit reporter: AccumulatingTagReporter): Boolean = {
     implicit val nodeLocMap = program.nodeLocMap
     var typeMap = imapEmpty[String, (Tipe, Node)]
     for (f@Fun(id, _, _) <- program.fact.factOrFunDecls) {
@@ -71,8 +41,9 @@ object TypeChecker {
       id.tipe = tipe(m)
       typeMap += id.value ->(id.tipe, m)
     }
-    TypeContext(typeMap)(nodeLocMap, r2).check(program)
-    !hasError
+    TypeContext(typeMap, program.fileUriOpt, nodeLocMap, reporter).
+      check(program)
+    !reporter.hasError
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
@@ -90,9 +61,10 @@ object TypeChecker {
       tipe(f.returnType))
 }
 
-private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
-  implicit val nodeLocMap: MIdMap[Node, LocationInfo],
-  reporter: Reporter) {
+private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
+                                     fileUriOpt: Option[FileResourceUri],
+                                     nodeLocMap: MIdMap[Node, LocationInfo],
+                                     reporter: AccumulatingTagReporter) {
 
   private val someB = Some(B)
   private val someZ = Some(Z)
@@ -118,7 +90,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
         if (id.tipe != tExp)
           error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively."))
-      TypeContext(addId(id, id.tipe, stmt, typeMap))
+      copy(typeMap = addId(id, id.tipe, stmt, typeMap))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
         typeMap.get(id.value) match {
@@ -161,14 +133,14 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       var tm = typeMap
       for (p <- md.params)
         tm = addId(p.id, TypeChecker.tipe(p.tpe), p, tm)
-      var tc = TypeContext(tm)
+      var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
       checkModifies(md.contract.modifies, md.block, md)
       tc = tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(rt)
-          val tcPost = TypeContext(addId(Id("result"), t, md, tm))
+          val tcPost = copy(typeMap = addId(Id("result"), t, md, tm))
           for (e <- md.contract.ensures.exps)
             tcPost.b(e)(allowFun = true, mOpt)
           md.returnExpOpt match {
@@ -203,7 +175,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       case step: RegularStep =>
         tc.b(step.exp)(allowFun = true, None)
       case step: QuantAssumeStep =>
-        tc = TypeContext(addId(step.id,
+        tc = copy(typeMap = addId(step.id,
           TypeChecker.tipe(step.typeOpt.get), step, typeMap))
       case step: ProofGroup => tc.check(step)
       case _ =>
@@ -353,7 +325,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
           tm = addId(id, t, e, tm)
           id.tipe = t
         }
-        TypeContext(tm).check(e.exp)
+        copy(typeMap = tm).check(e.exp)
         someB
       case e: SeqLit => for (arg <- e.args) z(arg); someZS
     }
@@ -418,15 +390,11 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)])(
       None
   }
 
-  def warn(n: Node, msg: String): Unit = {
-    val li = nodeLocMap(n)
-    reporter.warn(li.lineBegin, li.columnBegin, li.offset, msg)
-  }
+  def warn(n: Node, msg: String): Unit =
+    reporter.report(nodeLocMap(n).toFileLocationWarning(fileUriOpt, "Type Checker", msg))
 
-  def error(n: Node, msg: String): Unit = {
-    val li = nodeLocMap(n)
-    reporter.error(li.lineBegin, li.columnBegin, li.offset, msg)
-  }
+  def error(n: Node, msg: String): Unit =
+    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, "Type Checker", msg))
 }
 
 
