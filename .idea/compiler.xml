@@ -23,6 +23,8 @@
       <module name="cli" target="1.8" />
       <module name="java" target="1.8" />
       <module name="logika" target="1.8" />
+      <module name="logika-js" target="1.8" />
+      <module name="logika-jvm" target="1.8" />
       <module name="pilar" target="1.8" />
       <module name="pilar-js" target="1.8" />
       <module name="pilar-jvm" target="1.8" />

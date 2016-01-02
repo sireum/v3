@@ -112,11 +112,11 @@ object SireumBuild extends Build {
 
   lazy val subProjectsJvm = Seq(
     utilJvm, testJvm, pilarJvm,
-    logika, java, cli, awas
+    logikaJvm, java, cli, awas
   )
 
   lazy val subProjectsJs = Seq(
-    utilJs, testJs, pilarJs
+    utilJs, testJs, pilarJs, logikaJs
   )
 
   lazy val subProjectJvmReferences =
@@ -202,10 +202,10 @@ object SireumBuild extends Build {
   val pilarPI = new ProjectInfo("pilar", isCross = true, utilPI, testPI)
   lazy val (pilarShared, pilarJvm, pilarJs) = toSbtCrossProject(pilarPI)
 
-  // Jvm Projects
+  val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
+  lazy val (logikaShared, logikaJvm, logikaJs) = toSbtCrossProject(logikaPI)
 
-  val logikaPI = new ProjectInfo("logika", isCross = false, utilPI, testPI)
-  lazy val logika = toSbtJvmProject(logikaPI)
+  // Jvm Projects
 
   val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
   lazy val java = toSbtJvmProject(javaPI)

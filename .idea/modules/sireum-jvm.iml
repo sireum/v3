@@ -48,6 +48,6 @@
     <orderEntry type="module" module-name="awas" exported="" />
     <orderEntry type="module" module-name="cli" exported="" />
     <orderEntry type="module" module-name="java" exported="" />
-    <orderEntry type="module" module-name="logika" exported="" />
+    <orderEntry type="module" module-name="logika-jvm" exported="" />
   </component>
 </module>

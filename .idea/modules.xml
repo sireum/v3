@@ -10,6 +10,10 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/java-build.iml" filepath="$PROJECT_DIR$/.idea/modules/java-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika.iml" filepath="$PROJECT_DIR$/.idea/modules/logika.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-js.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-js.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-js-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-build.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-js.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-js.iml" />

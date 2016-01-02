@@ -19,7 +19,7 @@
     <profile name="SBT 4" modules="sireum-pilar-test-js">
       <option name="featureWarnings" value="true" />
     </profile>
-    <profile name="SBT 6" modules="sireum,awas,cli,java,sireum-js,sireum-jvm,logika,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
+    <profile name="SBT 6" modules="sireum,awas,cli,java,sireum-js,sireum-jvm,logika-jvm,logika,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
       <option name="experimental" value="true" />
       <option name="featureWarnings" value="true" />
       <parameters>
@@ -28,7 +28,7 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
-    <profile name="SBT 7" modules="pilar-js,test-js,util-js">
+    <profile name="SBT 7" modules="logika-js,pilar-js,test-js,util-js">
       <option name="experimental" value="true" />
       <option name="featureWarnings" value="true" />
       <parameters>
