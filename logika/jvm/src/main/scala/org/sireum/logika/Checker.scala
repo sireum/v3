@@ -37,8 +37,8 @@ object Checker {
   private[logika] final val zero = IntLit("0")
   private[logika] final val kind = "Proof Checker"
 
-  final def check(m: message.Check): message.Result = {
-    implicit val reporter = new AccumulatingTagReporter
+  final def check(m: message.Check)(
+    implicit reporter: AccumulatingTagReporter): message.Result = {
     var unitNodes = ivectorEmpty[UnitNode]
     for ((fileUriOpt, text) <- m.proofs) {
       if (m.isProgramming) Builder[Program](fileUriOpt, text).foreach(unitNodes :+= _)

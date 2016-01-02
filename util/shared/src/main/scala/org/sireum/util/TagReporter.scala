@@ -80,8 +80,8 @@ class ConsoleTagReporter extends AccumulatingTagReporter {
   }
 
   def info(msg: String): Unit = {
-    Console.err.println(msg)
-    Console.err.flush()
+    Console.out.println(msg)
+    Console.out.flush()
   }
 
   def warn(msg: String): Unit = {

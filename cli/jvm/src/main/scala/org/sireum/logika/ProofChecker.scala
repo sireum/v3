@@ -118,6 +118,7 @@ class ProofChecker(option: LogikaOption,
   def runIde(): Boolean = {
     var line = Console.in.readLine()
     var exit = false
+    implicit val reporter = new ConsoleTagReporter
     while (!exit && line != null) {
       try {
         message.Message.unpickleInput[message.InputMessage](line) match {

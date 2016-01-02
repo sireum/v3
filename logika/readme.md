@@ -108,5 +108,5 @@ File:
 ```
 You can run all programming logic examples from the directory containing this file as follows:
 ```bash
-for i in sireum-logika-test/src/test/resources/org/sireum/logika/*.scala; do echo "Checking ${i}"; ../sireum logika "${i}"; done
+for i in jvm/src/test/resources/org/sireum/logika/test/example/*.scala; do echo "Checking ${i}"; ../sireum logika "${i}"; done
 ```
