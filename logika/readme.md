@@ -72,12 +72,12 @@ Here is an example:
  12. p ∧ q              ∧i 6 11
 }
 ```
-To run Logika, save the above example in a file (e.g., `test.txt`) and then issue the command
+To run Logika, save the above example in a file (e.g., `test.logika`) and then issue the command
 (provided that you follow the instructions above to build and run Sireum; for the remainder of this
 document, replace `sireum` with the path to Sireum script file, e.g., `../sireum` if running
 from the directory containing this file):
 ```bash
-sireum logika test.txt
+sireum logika test.logika
 ```
 which will show:
 ```
@@ -86,17 +86,17 @@ Propositional logic proof is accepted.
 If one introduced a "bug" in the proof, such as using ∨i1 instead of ∨i2 in step #9 in the above example,
 Logika will output:
 ```
-[12, 10] The disjunction's left sub-expression in step #9 does not match #8 for Or-intro1.
+[11, 10] The disjunction's left sub-expression in step #9 does not match #8 for Or-intro1.
 Propositional logic proof is rejected.
 ```
 One can specify the sequent to prove as a command line to ensure that the proof in the file is
 the one that is expected as follows:
 ```bash
-sireum logika -s "¬(¬p ∨ ¬q) ⊢ p ∧ q" test.txt
+sireum logika -s "¬(¬p ∨ ¬q) ⊢ p ∧ q" test.logika
 ```
 If the provided sequent is different than the one in the file, the tool rejects it. For example:
 ```bash
-sireum logika -s "p, q ⊢ p ∧ q" test.txt
+sireum logika -s "p, q ⊢ p ∧ q" test.logika
 ```
 will result:
 ```
