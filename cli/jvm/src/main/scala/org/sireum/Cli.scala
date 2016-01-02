@@ -202,7 +202,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         s"""
            |Sireum Option Printer
            |
-           |Usage: sireum util option 
+           |Usage: sireum util option [option] 
            |
            |
         """.stripMargin.trim
@@ -242,7 +242,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         s"""
            |Sireum Command-Line Interface (CLI) Generator
            |
-           |Usage: sireum util reflect cli <root-class-name>
+           |Usage: sireum util reflect cli [option] <root-class-name>
            |
            |Options:
            |-c, --class-name      Output fully-qualified class name
@@ -322,7 +322,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         s"""
            |Sireum JSON Binding Generator
            |
-           |Usage: sireum util reflect json <root-class-name>
+           |Usage: sireum util reflect json [option] <root-class-name>
            |
            |Options:
            |-c, --class-name      Output fully-qualified class name
@@ -420,7 +420,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         s"""
            |Sireum Rewriter Generator
            |
-           |Usage: sireum util reflect rewriter <root-class-name>
+           |Usage: sireum util reflect rewriter [option] <root-class-name>
            |
            |Options:
            |-c, --class-name      Output fully-qualified class name
@@ -509,7 +509,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         s"""
            |Sireum Java Bytecode Translator
            |
-           |Usage: sireum java translator <{class-name,file.{class,zip,jar},dir-path}-1> ... <{class-name,file.{class,zip,jar},dir-path}-N>
+           |Usage: sireum java translator [option] <{class-name,file.{class,zip,jar},dir-path}-1> ... <{class-name,file.{class,zip,jar},dir-path}-N>
            |
            |Options:
            |-v, --verbose    Verbose mode
@@ -558,7 +558,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Pilar Parser
            |... and pretty printer and JSON de/serializer
            |
-           |Usage: sireum pilar parser <file-1> ... <file-N>
+           |Usage: sireum pilar parser [option] <file-1> ... <file-N>
            |
            |Options:
            | -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
@@ -668,7 +668,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Sireum Logika -- A Natural Deduction Proof Checker
            |... for Propositional, Predicate, and Programming Logic
            |
-           |Usage: sireum logika <{file.logika, file.scala, file.lgk, file.sc}-1> ... <{file.logika, file.scala, file.lgk, file.sc}-N>
+           |Usage: sireum logika [option] <{file.logika, file.scala, file.lgk, file.sc}-1> ... <{file.logika, file.scala, file.lgk, file.sc}-N>
            |
            |Options:
            |-a, --auto       Enable auto mode (programming logic)

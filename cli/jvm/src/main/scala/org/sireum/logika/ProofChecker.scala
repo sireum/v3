@@ -45,10 +45,8 @@ class ProofChecker(option: LogikaOption,
   def run(): Boolean = {
     if (option.ide) return runIde()
 
-    if (option.input.isEmpty) {
-      errPrintln("No input provided.")
+    if (option.input.isEmpty)
       return true
-    }
 
     if (option.input.length > 1 && option.sequent.nonEmpty) {
       errPrintln("Sequent cannot provided when checking multiple files.")

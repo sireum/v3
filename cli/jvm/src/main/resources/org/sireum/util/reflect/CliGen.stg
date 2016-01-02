@@ -112,7 +112,7 @@ def parse%className%(args: CSeq[String],
 mainUsage(header, command, arg, option) ::= <<
 |%header; separator="\n|"%
 |
-|Usage: %command; separator=" "% %arg; separator=" "%
+|Usage: %command; separator=" "% [option] %arg; separator=" "%
 |
 |%option; separator="\n|\n|"%
 >>
