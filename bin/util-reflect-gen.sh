@@ -27,6 +27,7 @@ SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
 /bin/bash ${SCRIPT_HOME}/sbt-launch.sh assembly
 SIREUM="${SIREUM_HOME}/platform/java/bin/java -jar ${SIREUM_HOME}/jvm/target/scala-2.11/sireum.jar"
+${SIREUM} util reflect json -d ${SIREUM_HOME}/util/shared/src/main/scala -c org.sireum.util.TagJson -l ${SIREUM_HOME}/license.txt org.sireum.util.Tag
 ${SIREUM} util reflect rewriter -d ${SIREUM_HOME}/pilar/shared/src/main/scala -c org.sireum.pilar.ast.Rewriter -l ${SIREUM_HOME}/license.txt org.sireum.pilar.ast.Node
 ${SIREUM} util reflect json -d ${SIREUM_HOME}/pilar/shared/src/main/scala -c org.sireum.pilar.ast.Json -l ${SIREUM_HOME}/license.txt org.sireum.pilar.ast.Node
 ${SIREUM} util reflect cli -c org.sireum.Cli -d ${SIREUM_HOME}/cli/jvm/src/main/scala -l ${SIREUM_HOME}/license.txt org.sireum.option.SireumOption

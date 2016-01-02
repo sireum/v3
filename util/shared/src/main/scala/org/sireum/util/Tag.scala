@@ -1,39 +1,41 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
-All rights reserved.
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.sireum.util
 
-sealed trait Tag {
+sealed trait Tag extends Product
+
+sealed trait KindTag extends Tag {
   def kind: String
 }
 
-sealed trait UriTag {
+sealed trait UriTag extends Tag {
   def uri: Uri
 }
 
-sealed trait LocationInfoTag {
+sealed trait LocationInfoTag extends Tag {
   def lineBegin: PosInteger
 
   def columnBegin: PosInteger
@@ -47,7 +49,9 @@ sealed trait LocationInfoTag {
   def length: Natural
 }
 
-sealed trait SeverityTag
+sealed trait SeverityTag extends Tag
+
+sealed trait InternalErrorTag extends SeverityTag
 
 sealed trait ErrorTag extends SeverityTag
 
@@ -55,7 +59,7 @@ sealed trait WarningTag extends SeverityTag
 
 sealed trait InfoTag extends SeverityTag
 
-sealed trait MessageTag {
+sealed trait MessageTag extends Tag {
   def message: String
 }
 
@@ -155,6 +159,13 @@ LocationInfoInfoMessage(kind: String,
                         message: String)
   extends LocationInfoTag
   with InfoTag
+  with MessageTag
+
+
+final case class
+InternalErrorMessage(kind: String,
+                     message: String)
+  extends InternalErrorTag
   with MessageTag
 
 
