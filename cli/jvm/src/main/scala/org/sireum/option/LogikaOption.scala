@@ -41,6 +41,9 @@ import scala.beans.BeanProperty
   handler = "org.sireum.logika.ProofChecker"
 )
 final case class LogikaOption(@BeanProperty
+                              @Opt(shortKey = Some("l"), description = "Check last program only")
+                              var last: Boolean = false,
+                              @BeanProperty
                               @Opt(shortKey = Some("a"), description = "Enable auto mode (programming logic)")
                               var auto: Boolean = false,
                               @BeanProperty
@@ -56,6 +59,6 @@ final case class LogikaOption(@BeanProperty
                               var ide: Boolean = false,
                               @BeanProperty
                               @Arg(name = "{file.logika, file.scala, file.lgk, file.sc}")
-                              var input: OptionBean[String] = none()) {
-  def this() = this(false, false, none(), 2000, false, none())
+                              var input: Array[String] = Array()) {
+  def this() = this(false, false, false, none(), 2000, false, Array())
 }

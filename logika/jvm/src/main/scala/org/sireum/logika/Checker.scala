@@ -26,6 +26,7 @@
 package org.sireum.logika
 
 import org.sireum.logika.ast._
+import org.sireum.logika.tipe.TypeChecker
 import org.sireum.logika.util._
 import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
@@ -35,6 +36,30 @@ object Checker {
   private[logika] final val bottom = BooleanLit(false)
   private[logika] final val zero = IntLit("0")
   private[logika] final val kind = "Proof Checker"
+
+  final def check(m: message.Check): message.Result = {
+    implicit val reporter = new AccumulatingTagReporter
+    var unitNodes = ivectorEmpty[UnitNode]
+    for ((fileUriOpt, text) <- m.proofs) {
+      if (m.isProgramming) Builder[Program](fileUriOpt, text).foreach(unitNodes :+= _)
+      else Builder[Sequent](fileUriOpt, text).foreach(unitNodes :+= _)
+    }
+    if (reporter.hasError) return message.Result(reporter.tags.toVector)
+    if (m.isProgramming) {
+      val programs = unitNodes.map(_.asInstanceOf[Program])
+      if (TypeChecker.check(programs: _*))
+        if (m.lastOnly)
+          check(programs.last, m.autoEnabled, m.timeout, m.checkSat)
+        else
+          for (program <- programs)
+            check(program, m.autoEnabled, m.timeout, m.checkSat)
+    } else {
+      val sequents = unitNodes.map(_.asInstanceOf[Sequent])
+      for (sequent <- sequents)
+        check(sequent, autoEnabled = false, m.timeout, m.checkSat)
+    }
+    message.Result(reporter.tags.toVector)
+  }
 
   final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
                   timeoutInMs: Int = 2000, checkSat: Boolean = false)(
@@ -107,7 +132,7 @@ object Checker {
   private[logika] def error(fileUriOpt: Option[FileResourceUri],
                             li: LocationInfo, msg: String)(
                              implicit reporter: AccumulatingTagReporter): Unit = {
-    reporter.report(li.toFileLocationError(fileUriOpt, kind, msg))
+    reporter.report(li.toLocationError(fileUriOpt, kind, msg))
   }
 }
 
@@ -1059,10 +1084,10 @@ ProofContext(mode: LogicMode,
     }
 
   def error(n: Node, msg: String): Option[ProofContext] = {
-    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, Checker.kind, msg))
+    reporter.report(nodeLocMap(n).toLocationError(fileUriOpt, Checker.kind, msg))
     None
   }
 
   def warn(n: Node, msg: String): Unit =
-    reporter.report(nodeLocMap(n).toFileLocationWarning(fileUriOpt, Checker.kind, msg))
+    reporter.report(nodeLocMap(n).toLocationWarning(fileUriOpt, Checker.kind, msg))
 }

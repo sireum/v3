@@ -27,7 +27,7 @@ package org.sireum.logika.test
 
 import org.sireum.logika.Checker
 import org.sireum.logika.ast._
-import org.sireum.logika.util._
+import org.sireum.logika.message.Check
 import org.sireum.test._
 import org.sireum.util._
 
@@ -480,10 +480,9 @@ final class SequentTestDefProvider(tf: TestFramework)
       override def warn(msg: String): Unit = {
       }
     }
-    val sequentOpt = Builder[Sequent](None, input = text)
-    val r = sequentOpt.isDefined && m == sequentOpt.get.mode
-    assert(r)
-    assert(Checker.check(sequentOpt.get))
-    true
+    Checker.check(Check(isProgramming = false,
+      ivector((None, text)), lastOnly = false,
+      autoEnabled = false, 2000, checkSat = false))
+    !reporter.hasError
   }
 }

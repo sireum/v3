@@ -78,7 +78,7 @@ object Node {
                                         (implicit reporter: AccumulatingTagReporter): Unit = {
     val nodeLocMap = unitNode.nodeLocMap.clone
     def error(n: Node, msg: String): Unit =
-      reporter.report(nodeLocMap(n).toFileLocationError(
+      reporter.report(nodeLocMap(n).toLocationError(
         unitNode.fileUriOpt, "Semantics", msg))
 
     val isPredicate = unitNode.mode == LogicMode.Predicate

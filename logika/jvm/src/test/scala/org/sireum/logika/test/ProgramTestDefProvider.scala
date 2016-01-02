@@ -28,8 +28,7 @@ package org.sireum.logika.test
 import java.io.InputStreamReader
 
 import org.sireum.logika.Checker
-import org.sireum.logika.ast._
-import org.sireum.logika.tipe.TypeChecker
+import org.sireum.logika.message.Check
 import org.sireum.test._
 import org.sireum.util._
 import org.sireum.util.jvm.FileUtil
@@ -73,14 +72,11 @@ final class ProgramTestDefProvider(tf: TestFramework)
       override def warn(msg: String): Unit = {
       }
     }
-
-    val programOpt = Builder[Program](Some(uri), text)
-    if (programOpt.isEmpty) assert(false)
-
-    val program = programOpt.get
-
-    if (!TypeChecker.check(program)) assert(false)
-
-    Checker.check(program)
+    Checker.check(
+      Check
+      (isProgramming = true, ivector((Some(uri), text)),
+        lastOnly = false, autoEnabled = false, 2000,
+        checkSat = false))
+    !reporter.hasError
   }
 }

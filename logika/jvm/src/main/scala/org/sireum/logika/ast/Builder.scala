@@ -777,7 +777,7 @@ object Builder {
                     n: Node, msg: String)(
                      implicit reporter: AccumulatingTagReporter,
                      nodeLocMap: MIdMap[AnyRef, LocationInfo]): Unit =
-    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, kind, msg))
+    reporter.report(nodeLocMap(n).toLocationError(fileUriOpt, kind, msg))
 
   private def error(kind: String, fileUriOpt: Option[FileResourceUri],
                     t: Token, msg: String)(

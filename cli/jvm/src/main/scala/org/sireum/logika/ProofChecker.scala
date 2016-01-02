@@ -25,7 +25,8 @@
 
 package org.sireum.logika
 
-import java.io._
+import java.io.StringWriter
+
 import org.sireum.option.LogikaOption
 import org.sireum.logika.ast._
 import org.sireum.util._
@@ -43,13 +44,40 @@ class ProofChecker(option: LogikaOption,
                    errPrintln: String => Unit) {
   def run(): Boolean = {
     if (option.ide) return runIde()
-    val fileUriOpt: Option[FileResourceUri] = None
+
+    if (option.input.isEmpty) {
+      errPrintln("No input provided.")
+      return false
+    }
+
+    if (option.input.length > 1 && option.sequent.nonEmpty) {
+      errPrintln("Sequent cannot provided when checking multiple files.")
+      return false
+    }
+
     var hasError = false
+    val proofs =
+      option.input.toVector.flatMap { filename =>
+        import java.io._
+        val f = new File(option.input.head)
+        if (!f.exists) {
+          errPrintln(s"File ${f.getAbsolutePath} does not exist.")
+          hasError = true
+          None
+        } else {
+          val fr = new FileReader(f)
+          val fText = FileUtil.readFile(fr)
+          fr.close()
+          Some((if (option.input.length == 1) None else Some(filename), fText))
+        }
+      }
+    if (hasError) return false
+
     implicit val reporter = new ConsoleTagReporter
     val sequentOpt: Option[Sequent] = option.sequent.flatMap {
       text =>
         val r: Option[Sequent] =
-          Builder[Sequent](fileUriOpt, text) match {
+          Builder[Sequent](None, text) match {
             case Some(s) => Some(s)
             case _ =>
               hasError = true
@@ -57,47 +85,29 @@ class ProofChecker(option: LogikaOption,
           }
         r
     }
-    if (option.input == none()) {
-      errPrintln("No input provided.")
-      return true
-    }
-
-    val f = new File(option.input.get)
-    if (!f.exists) {
-      errPrintln(s"File ${f.getAbsolutePath} does not exist.")
-      hasError = true
-    }
     if (hasError) return false
 
-    val fr = new FileReader(f)
-    val fText = FileUtil.readFile(fr)
-    fr.close()
-    if (f.getName.endsWith(".scala") || f.getName.endsWith(".sc")) {
-      Builder[Program](fileUriOpt, fText) match {
-        case Some(program) =>
-          if (tipe.TypeChecker.check(program))
-            Checker.check(program, option.auto,
-              option.timeout, option.sat)
-        case _ =>
-      }
-    } else {
-      (sequentOpt, Builder[Sequent](fileUriOpt, fText)) match {
-        case (Some(sequent), Some(s)) if !hasError =>
-          if (s.premises == sequent.premises &&
-            s.conclusions == sequent.conclusions) {
-            Checker.check(s, autoEnabled = false, option.timeout)(new ConsoleTagReporter)
-          } else {
+    val isProgramming = option.input.exists(f => f.endsWith(".scala") || f.endsWith(".sc"))
+    Checker.check(message.Check(
+      isProgramming, proofs, option.last, option.auto, option.timeout, option.sat)
+    )
+
+    if (hasError) return false
+
+    if (sequentOpt.nonEmpty) {
+      Builder[Sequent](None, proofs.head._2) match {
+        case Some(s) if !hasError =>
+          val sequent = sequentOpt.get
+          if (!(s.premises == sequent.premises &&
+            s.conclusions == sequent.conclusions)) {
             val li = s.nodeLocMap(s.conclusions.last)
             outPrintln(
               s"""The specified sequent is different than the one in the file.
                   |Specified:
                   |${option.sequent.get}
                   |File:
-                  |${fText.substring(0, li.offset + li.length)}""".stripMargin)
+                  |${proofs.head._2.substring(0, li.offset + li.length)}""".stripMargin)
           }
-        case (None, Some(s)) if !hasError =>
-          Checker.check(s, autoEnabled = false,
-            option.timeout, option.sat)(reporter)
         case _ =>
       }
     }
@@ -106,7 +116,28 @@ class ProofChecker(option: LogikaOption,
   }
 
   def runIde(): Boolean = {
-    val kind = "CLI"
+    var line = Console.in.readLine()
+    var exit = false
+    while (!exit && line != null) {
+      try {
+        message.Message.unpickleInput[message.InputMessage](line) match {
+          case message.Terminate => exit = true
+          case m: message.Check =>
+            Console.out.println(message.Message.pickleOutput(Checker.check(m)))
+            Console.out.flush()
+        }
+      } catch {
+        case t: Throwable =>
+          val sw = new StringWriter
+          sw.append("An error was thrown when processing the input message.")
+          sw.append(scala.util.Properties.lineSeparator)
+          t.printStackTrace(new java.io.PrintWriter(sw))
+          Console.out.println(message.Message.pickleOutput(message.Result(
+            ivector(InternalErrorMessage("CLI", sw.toString)))))
+          Console.out.flush()
+      }
+      line = Console.in.readLine()
+    }
     false
   }
 }

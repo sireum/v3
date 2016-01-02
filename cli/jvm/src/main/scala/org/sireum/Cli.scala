@@ -668,10 +668,11 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Sireum Logika -- A Natural Deduction Proof Checker
            |... for Propositional, Predicate, and Programming Logic
            |
-           |Usage: sireum logika [{file.logika, file.scala, file.lgk, file.sc}]
+           |Usage: sireum logika <{file.logika, file.scala, file.lgk, file.sc}-1> ... <{file.logika, file.scala, file.lgk, file.sc}-N>
            |
            |Options:
            |-a, --auto       Enable auto mode (programming logic)
+           |-l, --last       Check last program only
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
@@ -690,6 +691,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       args(i) match {
         case "-h" | "--help" =>
           foundHelp = true
+        case "-l" | "--last" =>
+          option.last = true
         case "-a" | "--auto" =>
           option.auto = true
         case "--sat" =>
@@ -729,8 +732,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       if (processingOptions) i += 1
     }
 
-    if (i < len) {
-      option.input = org.sireum.util.some(args(i))
+    while (i < len) {
+      option.input = option.input :+ args(i)
       i += 1
     }
 

@@ -47,6 +47,7 @@ case object Terminate extends InputMessage
 
 final case class Check(isProgramming: Boolean,
                        proofs: Vector[(Option[FileResourceUri], String)],
+                       lastOnly: Boolean,
                        autoEnabled: Boolean,
                        timeout: Int,
                        checkSat: Boolean)

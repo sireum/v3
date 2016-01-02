@@ -48,8 +48,8 @@ sealed trait LocationInfoTag extends Tag {
 
   def length: Natural
 
-  def toFileLocationError(fileUriOpt: Option[FileResourceUri],
-                          kind: String, msg: String) =
+  def toLocationError(fileUriOpt: Option[FileResourceUri],
+                      kind: String, msg: String) =
     fileUriOpt match {
       case Some(fileUri) =>
         FileLocationInfoErrorMessage(
@@ -74,8 +74,8 @@ sealed trait LocationInfoTag extends Tag {
           message = msg)
     }
 
-  def toFileLocationWarning(fileUriOpt: Option[FileResourceUri],
-                            kind: String, msg: String) =
+  def toLocationWarning(fileUriOpt: Option[FileResourceUri],
+                        kind: String, msg: String) =
     fileUriOpt match {
       case Some(fileUri) =>
         FileLocationInfoWarningMessage(
@@ -100,8 +100,8 @@ sealed trait LocationInfoTag extends Tag {
           message = msg)
     }
 
-  def toFileLocationInfo(fileUriOpt: Option[FileResourceUri],
-                         kind: String, msg: String) =
+  def toLocationInfo(fileUriOpt: Option[FileResourceUri],
+                     kind: String, msg: String) =
     fileUriOpt match {
       case Some(fileUri) =>
         FileLocationInfoInfoMessage(

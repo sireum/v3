@@ -29,21 +29,41 @@ import org.sireum.logika.ast._
 import org.sireum.util._
 
 object TypeChecker {
-  final def check(program: Program)(
+  val kind = "Type Checker"
+
+  final def check(programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
-    implicit val nodeLocMap = program.nodeLocMap
-    var typeMap = imapEmpty[String, (Tipe, Node)]
-    for (f@Fun(id, _, _) <- program.fact.factOrFunDecls) {
-      id.tipe = tipe(f)
-      typeMap += id.value ->(id.tipe, f)
+    var typeMap = imapEmpty[String, (Tipe, Node, Program)]
+    for (program <- programs) {
+      for (f@Fun(id, _, _) <- program.fact.factOrFunDecls)
+        typeMap = addId(typeMap, program, id, tipe(f), f)
+      for (m@MethodDecl(id, _, _, _, _, _) <- program.block.stmts)
+        typeMap = addId(typeMap, program, id, tipe(m), m)
     }
-    for (m@MethodDecl(id, _, _, _, _, _) <- program.block.stmts) {
-      id.tipe = tipe(m)
-      typeMap += id.value ->(id.tipe, m)
-    }
-    TypeContext(typeMap, program.fileUriOpt, nodeLocMap, reporter).
-      check(program)
+    if (reporter.hasError) return false
+    for (program <- programs)
+      TypeContext(typeMap, program).check(program)
     !reporter.hasError
+  }
+
+  private[tipe] def addId(typeMap: IMap[String, (Tipe, Node, Program)],
+                          program: Program, id: Id, tipe: Tipe, decl: Node)(
+                           implicit reporter: AccumulatingTagReporter): IMap[String, (Tipe, Node, Program)] = {
+    id.tipe = tipe
+    typeMap.get(id.value) match {
+      case Some((_, other, otherProgram)) =>
+        val otherLi = otherProgram.nodeLocMap(other)
+        val message =
+          if ((program eq otherProgram) || otherProgram.fileUriOpt.isEmpty)
+            s"Identifier ${id.value} has been declared at [${otherLi.lineBegin}, ${otherLi.columnBegin}]."
+          else
+            s"Identifier ${id.value} has been declared at [${otherLi.lineBegin}, ${otherLi.columnBegin}] of ${otherProgram.fileUriOpt.get}."
+        reporter.report(
+          program.nodeLocMap(id).toLocationError(otherProgram.fileUriOpt,
+            kind, message))
+        typeMap
+      case _ => typeMap + (id.value ->(id.tipe, decl, program))
+    }
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
@@ -61,10 +81,10 @@ object TypeChecker {
       tipe(f.returnType))
 }
 
-private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
-                                     fileUriOpt: Option[FileResourceUri],
-                                     nodeLocMap: MIdMap[Node, LocationInfo],
-                                     reporter: AccumulatingTagReporter) {
+private final case class
+TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
+            program: Program)(
+             implicit reporter: AccumulatingTagReporter) {
 
   private val someB = Some(B)
   private val someZ = Some(Z)
@@ -90,11 +110,11 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
         if (id.tipe != tExp)
           error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively."))
-      copy(typeMap = addId(id, id.tipe, stmt, typeMap))
+      copy(typeMap = TypeChecker.addId(typeMap, program, id, id.tipe, stmt))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
         typeMap.get(id.value) match {
-          case Some((tId, VarDecl(true, _, _, _))) =>
+          case Some((tId, vd: VarDecl, _)) if vd.isVar =>
             id.tipe = tId
             if (tId != tExp)
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
@@ -132,7 +152,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
     case md: MethodDecl =>
       var tm = typeMap
       for (p <- md.params)
-        tm = addId(p.id, TypeChecker.tipe(p.tpe), p, tm)
+        tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
       checkModifies(md.contract.modifies, md.block, md)
@@ -140,7 +160,8 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(rt)
-          val tcPost = copy(typeMap = addId(Id("result"), t, md, tm))
+          val tcPost = copy(
+            typeMap = TypeChecker.addId(tm, program, Id("result"), t, md))
           for (e <- md.contract.ensures.exps)
             tcPost.b(e)(allowFun = true, mOpt)
           md.returnExpOpt match {
@@ -175,8 +196,9 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
       case step: RegularStep =>
         tc.b(step.exp)(allowFun = true, None)
       case step: QuantAssumeStep =>
-        tc = copy(typeMap = addId(step.id,
-          TypeChecker.tipe(step.typeOpt.get), step, typeMap))
+        tc = copy(typeMap =
+          TypeChecker.addId(typeMap, program, step.id,
+            TypeChecker.tipe(step.typeOpt.get), step))
       case step: ProofGroup => tc.check(step)
       case _ =>
     }
@@ -190,8 +212,8 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
       }
       modifiedVars += id
       typeMap.get(id.value) match {
-        case Some((_, VarDecl(true, _, _, _))) =>
-        case Some((_, VarDecl(false, _, _: IntSeqType, _))) =>
+        case Some((_, VarDecl(true, _, _, _), _)) =>
+        case Some((_, VarDecl(false, _, _: IntSeqType, _), _)) =>
         case Some(_) =>
           error(id, s"Only variable or sequence value can be modified.")
         case _ => tipe(id)
@@ -199,12 +221,12 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
     }
     if (node.isInstanceOf[While])
       for (id <- collectAssignedVars(block) -- modifiedVars) {
-        val li = nodeLocMap(id)
+        val li = program.nodeLocMap(id)
         error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause.")
       }
     else {
       for (id <- (collectAssignedVars(block) & typeMap.keySet.map(Id)) -- modifiedVars) {
-        val li = nodeLocMap(id)
+        val li = program.nodeLocMap(id)
         error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] but not declared in the function modifies clause.")
       }
     }
@@ -226,7 +248,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
       case e: Apply =>
         val isMethod =
           typeMap.get(e.id.value) match {
-            case Some((_, md: MethodDecl)) =>
+            case Some((_, md: MethodDecl, _)) =>
               if (!allowMethod)
                 error(e.id, s"Method invocation is only allowed at statement level.")
               e.declOpt = Some(md)
@@ -247,7 +269,7 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
                 case _ =>
               }
               true
-            case Some((_, fun: Fun)) =>
+            case Some((_, fun: Fun, _)) =>
               if (!allowFun)
                 error(e.id, s"Use of proof function is only allowed in proof context.")
               false
@@ -322,25 +344,13 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
         }
         var tm = typeMap
         for (id <- e.ids) {
-          tm = addId(id, t, e, tm)
+          tm = TypeChecker.addId(tm, program, id, t, e)
           id.tipe = t
         }
         copy(typeMap = tm).check(e.exp)
         someB
       case e: SeqLit => for (arg <- e.args) z(arg); someZS
     }
-
-  def addId(id: Id, t: Tipe, n: Node, typeMap: IMap[String, (Tipe, Node)]) = {
-    var r = typeMap
-    typeMap.get(id.value) match {
-      case Some((_, n2)) =>
-        val li = nodeLocMap(n2)
-        error(id, s"Identifier ${id.value} has already been declared at [${li.lineBegin}, ${li.columnBegin}].")
-      case _ =>
-        r += id.value -> ((t, n))
-    }
-    r
-  }
 
   def collectAssignedVars(b: Block): ISet[Id] = {
     var r = isetEmpty[Id]
@@ -373,16 +383,16 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
     }
 
   def tipe(id: Id): Option[Tipe] = typeMap.get(id.value) match {
-    case Some((t, _)) => Some(t)
+    case Some((t, _, _)) => Some(t)
     case _ =>
       if (id.value.endsWith("_old")) {
         typeMap.get(id.value.substring(0, id.value.length - 4)) match {
-          case Some((t, _)) => return Some(t)
+          case Some((t, _, _)) => return Some(t)
           case _ =>
         }
       } else if (id.value.endsWith("_in")) {
         typeMap.get(id.value.substring(0, id.value.length - 3)) match {
-          case Some((t, _)) => return Some(t)
+          case Some((t, _, _)) => return Some(t)
           case _ =>
         }
       }
@@ -391,10 +401,12 @@ private final case class TypeContext(typeMap: IMap[String, (Tipe, Node)],
   }
 
   def warn(n: Node, msg: String): Unit =
-    reporter.report(nodeLocMap(n).toFileLocationWarning(fileUriOpt, "Type Checker", msg))
+    reporter.report(program.nodeLocMap(n).
+      toLocationWarning(program.fileUriOpt, TypeChecker.kind, msg))
 
   def error(n: Node, msg: String): Unit =
-    reporter.report(nodeLocMap(n).toFileLocationError(fileUriOpt, "Type Checker", msg))
+    reporter.report(program.nodeLocMap(n).
+      toLocationError(program.fileUriOpt, TypeChecker.kind, msg))
 }
 
 

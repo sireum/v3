@@ -26,6 +26,4 @@ Logika To-Do
 * Add type inference (boolean, integer, sequence of integer, uninterpreted function) 
   for predicate logic + algebra sequent to enable auto validity checking
 
-* Add support for multiple program files
-  
 * Add first-class (immutable) option, tuple, sequence, set, and map

@@ -41,6 +41,7 @@ object InputMessageJson {
           (".class", Js.Str("Check")),
           ("isProgramming", fromAnyVal(o.isProgramming)),
           ("proofs", fromSeq(o.proofs)(fromTuple2)),
+          ("lastOnly", fromAnyVal(o.lastOnly)),
           ("autoEnabled", fromAnyVal(o.autoEnabled)),
           ("timeout", fromAnyVal(o.timeout)),
           ("checkSat", fromAnyVal(o.checkSat))
@@ -54,7 +55,7 @@ object InputMessageJson {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Check" =>
-             org.sireum.logika.message.Check(toBoolean(o.value(1)._2), toVector(o.value(2)._2)(toTuple2), toBoolean(o.value(3)._2), toInt(o.value(4)._2), toBoolean(o.value(5)._2))
+             org.sireum.logika.message.Check(toBoolean(o.value(1)._2), toVector(o.value(2)._2)(toTuple2), toBoolean(o.value(3)._2), toBoolean(o.value(4)._2), toInt(o.value(5)._2), toBoolean(o.value(6)._2))
            case "Terminate" => org.sireum.logika.message.Terminate
          }).asInstanceOf[T]
     }
