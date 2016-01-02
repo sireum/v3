@@ -1,4 +1,4 @@
-# Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics 
+# <img src="logika/logika-logo.png" width="128"> Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics 
 
 Logika is being developed for teaching 
 [K-State CIS 301: Logical Foundations of Programming](http://proglogics.santoslab.org).
