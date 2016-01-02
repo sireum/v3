@@ -239,9 +239,9 @@ if (i < len) {
 }
 >>
 
-argOptString(fieldName) ::= <<
+argOptString(fieldName, someClass) ::= <<
 if (i < len) {
-  option.%fieldName% = args(i)
+  option.%fieldName% = %someClass%(args(i))
   i += 1
 }
 >>
