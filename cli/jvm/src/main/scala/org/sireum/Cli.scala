@@ -668,13 +668,15 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Sireum Logika -- A Natural Deduction Proof Checker
            |... for Propositional, Predicate, and Programming Logic
            |
-           |Usage: sireum logika <{file.txt, file.scala}>
+           |Usage: sireum logika [{file.logika, file.scala, file.lgk, file.sc}]
            |
            |Options:
            |-a, --auto       Enable auto mode (programming logic)
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
+           |    --ide        Enable IDE proposition/predicate logic mode
+           |    --ideprog    Enable IDE programming logic mode
            |    --sat        Enable sat checking of facts and method contracts
            |-h, --help       Display usage information
         """.stripMargin.trim
@@ -716,6 +718,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case _ =>
               errPrintln("Expected an integer value for timeout")
           }
+        case "--ide" =>
+          option.ide = true
+        case "--ideprog" =>
+          option.ideprog = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")
@@ -727,13 +733,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
 
     if (i < len) {
-      option.input = args(i)
+      option.input = org.sireum.util.some(args(i))
       i += 1
-    } else {
-      printUsage()
-      outPrintln("")
-      errPrintln("Expected a value for input")
-      return
     }
 
     if (foundHelp || org.sireum.logika.ProofChecker.run(option, outPrintln, errPrintln)) {
