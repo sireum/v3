@@ -33,4 +33,6 @@ ${SIREUM} util reflect json -d ${SIREUM_HOME}/pilar/shared/src/main/scala -c org
 ${SIREUM} util reflect cli -c org.sireum.Cli -d ${SIREUM_HOME}/cli/jvm/src/main/scala -l ${SIREUM_HOME}/license.txt org.sireum.option.SireumOption
 ${SIREUM} util reflect json -d ${SIREUM_HOME}/java/jvm/src/main/scala -c org.sireum.java.meta.JavaMetaJson -l ${SIREUM_HOME}/license.txt org.sireum.java.meta.JavaMeta
 ${SIREUM} util reflect rewriter -d ${SIREUM_HOME}/logika/jvm/src/main/scala -c org.sireum.logika.ast.Rewriter -l ${SIREUM_HOME}/license.txt org.sireum.logika.ast.Node
+${SIREUM} util reflect json -d ${SIREUM_HOME}/logika/shared/src/main/scala -c org.sireum.logika.message.InputMessageJson -l ${SIREUM_HOME}/license.txt org.sireum.logika.message.InputMessage
+${SIREUM} util reflect json -d ${SIREUM_HOME}/logika/shared/src/main/scala -c org.sireum.logika.message.OutputMessageJson -l ${SIREUM_HOME}/license.txt  -i "org.sireum.util,org.sireum.util.TagJson" org.sireum.logika.message.OutputMessage
 /bin/bash ${SCRIPT_HOME}/sbt-launch.sh assembly

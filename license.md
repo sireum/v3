@@ -1,4 +1,4 @@
-Copyright (c) 2011-2016, Robby, Kansas State University
+Copyright (c) 2016, Robby, Kansas State University
 
 All rights reserved.
 
