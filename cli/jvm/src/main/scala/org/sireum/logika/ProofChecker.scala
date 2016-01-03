@@ -27,6 +27,7 @@ package org.sireum.logika
 
 import java.io.StringWriter
 
+import org.sireum.logika.message.ProofFile
 import org.sireum.option.LogikaOption
 import org.sireum.logika.ast._
 import org.sireum.util._
@@ -66,7 +67,7 @@ class ProofChecker(option: LogikaOption,
           val fr = new FileReader(f)
           val fText = FileUtil.readFile(fr)
           fr.close()
-          Some((if (option.input.length == 1) None else Some(filename), fText))
+          Some(message.ProofFile(if (option.input.length == 1) None else Some(filename), fText))
         }
       }
     if (hasError) return false
@@ -86,14 +87,14 @@ class ProofChecker(option: LogikaOption,
     if (hasError) return false
 
     val isProgramming = option.input.exists(f => f.endsWith(".scala") || f.endsWith(".sc"))
-    Checker.check(message.Check(
+    Checker.check(message.Check("", isSilent = false,
       isProgramming, proofs, option.last, option.auto, option.timeout, option.sat)
     )
 
     if (hasError) return false
 
     if (sequentOpt.nonEmpty) {
-      Builder[Sequent](None, proofs.head._2) match {
+      Builder[Sequent](None, proofs.head.content) match {
         case Some(s) if !hasError =>
           val sequent = sequentOpt.get
           if (!(s.premises == sequent.premises &&
@@ -104,7 +105,7 @@ class ProofChecker(option: LogikaOption,
                   |Specified:
                   |${option.sequent.get}
                   |File:
-                  |${proofs.head._2.substring(0, li.offset + li.length)}""".stripMargin)
+                  |${proofs.head.content.substring(0, li.offset + li.length)}""".stripMargin)
           }
         case _ =>
       }
@@ -116,14 +117,15 @@ class ProofChecker(option: LogikaOption,
   def runIde(): Boolean = {
     var line = Console.in.readLine()
     var exit = false
-    implicit val reporter = new ConsoleTagReporter
     while (!exit && line != null) {
       try {
         message.Message.unpickleInput[message.InputMessage](line) match {
           case message.Terminate => exit = true
           case m: message.Check =>
+            implicit val reporter = new AccumulatingTagReporter
             Console.out.println(message.Message.pickleOutput(Checker.check(m)))
             Console.out.flush()
+          case m: ProofFile => assert(false)
         }
       } catch {
         case t: Throwable =>
@@ -132,10 +134,11 @@ class ProofChecker(option: LogikaOption,
           sw.append(scala.util.Properties.lineSeparator)
           t.printStackTrace(new java.io.PrintWriter(sw))
           Console.out.println(message.Message.pickleOutput(message.Result(
-            ivector(InternalErrorMessage("CLI", sw.toString)))))
+            "", isSilent = false, ivector(InternalErrorMessage("CLI", sw.toString)))))
           Console.out.flush()
       }
-      line = Console.in.readLine()
+      if (!exit)
+        line = Console.in.readLine()
     }
     false
   }

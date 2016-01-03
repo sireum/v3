@@ -40,11 +40,12 @@ object Checker {
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
     var unitNodes = ivectorEmpty[UnitNode]
-    for ((fileUriOpt, text) <- m.proofs) {
+    for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
       if (m.isProgramming) Builder[Program](fileUriOpt, text).foreach(unitNodes :+= _)
       else Builder[Sequent](fileUriOpt, text).foreach(unitNodes :+= _)
     }
-    if (reporter.hasError) return message.Result(reporter.tags.toVector)
+    if (reporter.hasError)
+      return message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
     if (m.isProgramming) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*))
@@ -58,7 +59,7 @@ object Checker {
       for (sequent <- sequents)
         check(sequent, autoEnabled = false, m.timeout, m.checkSat)
     }
-    message.Result(reporter.tags.toVector)
+    message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
   }
 
   final def check(unitNode: UnitNode, autoEnabled: Boolean = false,

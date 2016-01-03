@@ -39,12 +39,20 @@ object InputMessageJson {
       case o: org.sireum.logika.message.Check =>
         Js.Obj(
           (".class", Js.Str("Check")),
+          ("requestId", fromStr(o.requestId)),
+          ("isSilent", fromAnyVal(o.isSilent)),
           ("isProgramming", fromAnyVal(o.isProgramming)),
-          ("proofs", fromSeq(o.proofs)(fromTuple2)),
+          ("proofs", fromSeq(o.proofs)(fromInputMessage)),
           ("lastOnly", fromAnyVal(o.lastOnly)),
           ("autoEnabled", fromAnyVal(o.autoEnabled)),
           ("timeout", fromAnyVal(o.timeout)),
           ("checkSat", fromAnyVal(o.checkSat))
+        )
+      case o: org.sireum.logika.message.ProofFile =>
+        Js.Obj(
+          (".class", Js.Str("ProofFile")),
+          ("fileUriOpt", fromOption(o.fileUriOpt)(fromStr)),
+          ("content", fromStr(o.content))
         )
       case org.sireum.logika.message.Terminate =>
         Js.Obj((".class", Js.Str("Terminate")))
@@ -55,7 +63,9 @@ object InputMessageJson {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Check" =>
-             org.sireum.logika.message.Check(toBoolean(o.value(1)._2), toVector(o.value(2)._2)(toTuple2), toBoolean(o.value(3)._2), toBoolean(o.value(4)._2), toInt(o.value(5)._2), toBoolean(o.value(6)._2))
+             org.sireum.logika.message.Check(toStr(o.value(1)._2), toBoolean(o.value(2)._2), toBoolean(o.value(3)._2), toVector(o.value(4)._2)(toInputMessage[ProofFile]), toBoolean(o.value(5)._2), toBoolean(o.value(6)._2), toInt(o.value(7)._2), toBoolean(o.value(8)._2))
+           case "ProofFile" =>
+             org.sireum.logika.message.ProofFile(toOption(o.value(1)._2)(toStr), toStr(o.value(2)._2))
            case "Terminate" => org.sireum.logika.message.Terminate
          }).asInstanceOf[T]
     }
