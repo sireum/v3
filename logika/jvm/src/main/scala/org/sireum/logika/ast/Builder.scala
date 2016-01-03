@@ -108,7 +108,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
               case "e1" => AndElim1(num, exp, andStep)
               case "e2" => AndElim2(num, exp, andStep)
               case id =>
-                error(ctx.tb, s"Unrecognized justification $tb$id in step #${num.value}.")
+                error(ctx.tb, ctx.ID, s"Unrecognized justification $tb$id in step #${num.value}.")
                 AndElim1(num, exp, andStep)
             }
           }
@@ -128,7 +128,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
               case "i1" => OrIntro1(num, e, orStep)
               case "i2" => OrIntro2(num, e, orStep)
               case id =>
-                error(ctx.tb, s"Unrecognized justification $tb$id in step #${num.value}.")
+                error(ctx.tb, ctx.ID, s"Unrecognized justification $tb$id in step #${num.value}.")
                 OrIntro1(num, e, orStep)
             }
           }
@@ -607,12 +607,15 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
   private def errorIf(num: Num, id: Token, op: Token,
                       idText: String, opTexts: String*): Unit = {
     if (!(opTexts.contains(op.getText) || id.getText == idText))
-      error(op,
+      error(op, id,
         s"Unrecognized justification ${op.getText}${id.getText} in step #${num.value}.")
   }
 
   private def error(t: Token, msg: String): Unit =
-    Builder.error("AST", fileUriOpt, t, msg)
+    Builder.error("AST", fileUriOpt, t, t, msg)
+
+  private def error(t: Token, t2: Token, msg: String): Unit =
+    Builder.error("AST", fileUriOpt, t, t2, msg)
 
   private def error(n: Node, msg: String): Unit =
     Builder.error("AST", fileUriOpt, n, msg)
@@ -781,13 +784,17 @@ object Builder {
 
   private def error(kind: String, fileUriOpt: Option[FileResourceUri],
                     t: Token, msg: String)(
+                     implicit reporter: AccumulatingTagReporter): Unit =
+    error(kind, fileUriOpt, t, t, msg)
+
+  private def error(kind: String, fileUriOpt: Option[FileResourceUri],
+                    t: Token, t2: Token, msg: String)(
                      implicit reporter: AccumulatingTagReporter): Unit = {
     val lb = t.getLine
     val cb = t.getCharPositionInLine
     val off = t.getStartIndex
-    val len = t.getStopIndex - t.getStartIndex + 1
-    val (le, ce) = end(t.getLine, t.getCharPositionInLine,
-      t.getText)
+    val len = t2.getStopIndex - t.getStartIndex + 1
+    val (le, ce) = end(t2.getLine, t2.getCharPositionInLine, t2.getText)
     fileUriOpt match {
       case Some(fileUri) =>
         reporter.report(
