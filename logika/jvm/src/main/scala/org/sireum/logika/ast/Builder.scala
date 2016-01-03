@@ -279,14 +279,14 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           case "/" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) error(rExp, s"Divide by zero detected.")
+              if (rN == zero) error(rExp, s"Division by zero detected.")
               else checkIntMaxMin(ctx.op, lN / rN)
             }
             Div(lExp, rExp)
           case "%" =>
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              if (rN == zero) error(rExp, s"Modulo by zero detected.")
+              if (rN == zero) error(rExp, s"Division by zero detected.")
               else checkIntMaxMin(ctx.op, lN % rN)
             }
             Rem(lExp, rExp)
