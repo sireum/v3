@@ -44,7 +44,7 @@ class ProofChecker(option: LogikaOption,
                    outPrintln: String => Unit,
                    errPrintln: String => Unit) {
   def run(): Boolean = {
-    if (option.ide) return runIde()
+    if (option.server) return runIde()
 
     if (option.input.isEmpty)
       return true
@@ -119,14 +119,15 @@ class ProofChecker(option: LogikaOption,
     var exit = false
     while (!exit && line != null) {
       try {
-        message.Message.unpickleInput[message.InputMessage](line) match {
-          case message.Terminate => exit = true
-          case m: message.Check =>
-            implicit val reporter = new AccumulatingTagReporter
-            Console.out.println(message.Message.pickleOutput(Checker.check(m)))
-            Console.out.flush()
-          case m: ProofFile => assert(false)
-        }
+        if (line.trim != "")
+          message.Message.unpickleInput[message.InputMessage](line) match {
+            case message.Terminate => exit = true
+            case m: message.Check =>
+              implicit val reporter = new AccumulatingTagReporter
+              Console.out.println(message.Message.pickleOutput(Checker.check(m)))
+              Console.out.flush()
+            case m: ProofFile => assert(false)
+          }
       } catch {
         case t: Throwable =>
           val sw = new StringWriter

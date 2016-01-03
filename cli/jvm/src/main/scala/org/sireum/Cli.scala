@@ -676,8 +676,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
-           |    --ide        Enable IDE mode
            |    --sat        Enable sat checking of facts and method contracts
+           |    --server     Enable server mode
            |-h, --help       Display usage information
         """.stripMargin.trim
       )
@@ -720,8 +720,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case _ =>
               errPrintln("Expected an integer value for timeout")
           }
-        case "--ide" =>
-          option.ide = true
+        case "--server" =>
+          option.server = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

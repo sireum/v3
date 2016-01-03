@@ -55,8 +55,8 @@ final case class LogikaOption(@BeanProperty
                               @BeanProperty
                               @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)")
                               var timeout: Int = 2000,
-                              @Opt(shortKey = None, description = "Enable IDE mode")
-                              var ide: Boolean = false,
+                              @Opt(shortKey = None, description = "Enable server mode")
+                              var server: Boolean = false,
                               @BeanProperty
                               @Arg(name = "{file.logika, file.scala, file.lgk, file.sc}")
                               var input: Array[String] = Array()) {
