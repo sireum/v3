@@ -161,7 +161,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       3. p                   assume
           |       4. q                   premise
           |     }
-          |  5. p → q                   →i 2
+          |  5. p → q                    →i 2
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
@@ -173,7 +173,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       2. p                   assume
           |       3. q                   premise
           |     }
-          |  4. p → q                   →i 1
+          |  4. p → q                    →i 1
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
@@ -195,7 +195,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |          }
           |      11. r                   ∨e 4 5 8
           |     }
-          | 12. (p ∨ q) → r             →i 3
+          | 12. (p ∨ q) → r              →i 3
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
@@ -328,7 +328,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
-    ConditionTest("predicate-1",
+    ConditionTest("universal-1",
       check(
         """∀x | human(x) → mortal(x),  human(Socrates)  ⊢
           |  mortal(Socrates)
@@ -340,7 +340,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-2",
+    ConditionTest("universal-2",
       check(
         """∀x | gt(inc(x), x)     ∀x | gt(x, dec(x))
           |-----------------------------------------
@@ -358,7 +358,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-3",
+    ConditionTest("universal-3",
       check(
         """∀x | human(x) → mortal(x),  ∀y | mortal(y) → soul(y)  ⊢
           |  ∀x | human(x) → soul(x)
@@ -380,7 +380,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-4",
+    ConditionTest("universal-4",
       check(
         """∀x | healthy(x) → happy(x)  ⊢
           |  (∀y | healthy(y)) → ∀x | happy(x)
@@ -400,7 +400,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-5",
+    ConditionTest("existensial-1",
       check(
         """human(Socrates),  mortal(Socrates)  ⊢
           |  ∃x | human(x) ∧ mortal(x)
@@ -412,7 +412,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-6",
+    ConditionTest("existensial-2",
       check(
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y | vowel(y) ∧ ∃x | holds(x, y)
@@ -425,7 +425,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-7",
+    ConditionTest("existensial-3",
       check(
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y,x | vowel(y) ∧ holds(x, y)
@@ -437,7 +437,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-8",
+    ConditionTest("existensial-4",
       check(
         """∀x | human(x) → mortal(x),  ∃y | human(y)  ⊢
           |  ∃z | mortal(z)
@@ -446,7 +446,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |  2. ∃y | human(y)                         premise
           |  3. {
           |       4. a  human(a)                      assume
-          |       5. human(a) → mortal(a)            ∀e 1 a
+          |       5. human(a) → mortal(a)             ∀e 1 a
           |       6. mortal(a)                        →e 5 4
           |       7. ∃z | mortal(z)                   ∃i 6 a
           |     }
@@ -454,7 +454,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |}
         """.stripMargin, LogicMode.Predicate))
     ,
-    ConditionTest("predicate-9",
+    ConditionTest("existensial-5",
       check(
         """∃s | covered(s) ∧ (∃c | vowel(c) ∧ holds(s, c)),
           |(∃x | covered(x)) → ¬gameOver  ⊢  ¬gameOver
