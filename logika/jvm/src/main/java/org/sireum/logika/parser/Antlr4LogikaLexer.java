@@ -1,4 +1,29 @@
-// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/logika/sireum-logika-parser-antlr4/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.5.1
+/*
+ Copyright (c) 2016, Robby, Kansas State University
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.5.1
 package org.sireum.logika.parser;
 
 // @formatter:off
@@ -520,9 +545,9 @@ public class Antlr4LogikaLexer extends Lexer {
 		"\u0410\3\2\2\2\u0413\u0414\7,\2\2\u0414\u0415\7\61\2\2\u0415\u0416\3\2"+
 		"\2\2\u0416\u0417\b\u0087\2\2\u0417\u010e\3\2\2\2\u0418\u041a\t\t\2\2\u0419"+
 		"\u0418\3\2\2\2\u041a\u041b\3\2\2\2\u041b\u0419\3\2\2\2\u041b\u041c\3\2"+
-		"\2\2\u041c\u041d\3\2\2\2\u041d\u041e\b\u0088\2\2\u041e\u0110\3\2\2\2\u041f"+
+		"\2\2\u041c\u041d\3\2\2\2\u041d\u041e\b\u0088\3\2\u041e\u0110\3\2\2\2\u041f"+
 		"\u0420\13\2\2\2\u0420\u0112\3\2\2\2\r\2\u0330\u0337\u033a\u0340\u034a"+
-		"\u03f8\u03fb\u0405\u0410\u041b\3\b\2\2";
+		"\u03f8\u03fb\u0405\u0410\u041b\4\2\3\2\b\2\2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

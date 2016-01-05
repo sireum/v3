@@ -306,9 +306,9 @@ NL: '\r'? '\n' ;
 // newlines are processed after lexing according to:
 // http://www.scala-lang.org/files/archive/spec/2.11/01-lexical-syntax.html#newline-characters
 
-LINE_COMMENT: '//' ~[\r\n]* -> skip ;
+LINE_COMMENT: '//' ~[\r\n]* -> channel(1) ;
 
-COMMENT: '/*' .*? '*/' -> skip ;
+COMMENT: '/*' .*? '*/' -> channel(1) ;
 
 WS: [ \t\u000C]+ -> skip ;
 
