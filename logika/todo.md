@@ -1,11 +1,17 @@
 Logika To-Do
 ============
 
-* Make return keyword optional 
-
-* Add helper methods that do not require and ensure invariants
+* Add assume
 
 * Add randomInt() and randomInt(lo: Z, hi: Z)
+
+* Make return keyword optional
+
+* Add hint mode
+
+* Add truth table and circuit output for propositional logic 
+
+* Add helper methods that do not require and ensure invariants
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
