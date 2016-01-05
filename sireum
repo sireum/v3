@@ -27,19 +27,23 @@ export SIREUM_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 JAVA_HOME=${SIREUM_HOME}/platform/java
 JAVA=${JAVA_HOME}/bin/java
 SIREUM_JAR=${SIREUM_HOME}/jvm/target/scala-2.11/sireum.jar
+pushd ${SIREUM_HOME} > /dev/null
 SIREUM_VERSION=$( git log -n 1 --pretty=format:"%H" )
-SBT=${SIREUM_HOME}/bin/sbt-launch.sh
+grep -q ${SIREUM_VERSION} bin/VER &> /dev/null && SIREUM_UPDATE=false || SIREUM_UPDATE=true
+SBT=bin/sbt-launch.sh
 if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
   if [ ! -f ${SIREUM_JAR} ]; then
     echo "Please wait while building Sireum; this might take a while..."
     echo
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
-  elif grep -q "${SIREUM_VERSION}" ${SIREUM_HOME}/bin/VER; then
+    echo "${SIREUM_VERSION}" > bin/VER
+  elif [ "${SIREUM_UPDATE}" = true ]; then
     echo "New changes detected; please wait while re-building Sireum..."
     echo
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
+    echo "${SIREUM_VERSION}" > bin/VER
   else
     CHANGES="$(git status -s)"
     if [[ "${CHANGES}" == *.scala* ]] || [[ "${CHANGES}" == *.java* ]] || [[ "${CHANGES}" == *.stg* ]]; then
@@ -47,11 +51,13 @@ if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
       echo
       SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
       echo
+      echo "${SIREUM_VERSION}" > bin/VER
     else
-      /bin/bash ${SIREUM_HOME}/bin/prelude.sh
+      /bin/bash bin/prelude.sh
     fi
   fi
 fi
+popd /dev/null
 : ${JAVA_OPTIONS:=-Xmx1G -XX:+UseG1GC}
 : ${JAVA_PROPERTIES:=}
 ${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -Dfile.encoding=UTF-8 -jar ${SIREUM_JAR} "$@"
