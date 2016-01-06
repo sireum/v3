@@ -37,7 +37,7 @@ object TypeChecker {
     for (program <- programs) {
       for (f@Fun(id, _, _) <- program.fact.factOrFunDecls)
         typeMap = addId(typeMap, program, id, tipe(f), f)
-      for (m@MethodDecl(id, _, _, _, _, _) <- program.block.stmts)
+      for (m@MethodDecl(_, id, _, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(m), m)
     }
     if (reporter.hasError) return false
@@ -94,6 +94,20 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     for (Fact(_, e) <- p.fact.factOrFunDecls)
       check(e, allowMethod = false)(allowFun = true, None)
     check(p.block)(None)
+    for (stmt <- p.block.stmts) {
+      val applyOpt =
+        stmt match {
+          case VarDecl(_, _, _, a: Apply) => Some(a)
+          case Assign(_, a: Apply) => Some(a)
+          case ExpStmt(a) => Some(a)
+          case _ => None
+        }
+      applyOpt.foreach(_.declOpt.foreach { d =>
+        if (d.isHelper) {
+          error(applyOpt.get, s"Cannot directly call a helper method in the program main level.")
+        }
+      })
+    }
   }
 
   def check(b: Block)(
@@ -128,6 +142,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             error(stmt, s"Can only assign to a var.")
         }
       this
+    case Assume(exp) => b(exp)(allowFun = false, mOpt); this
     case Assert(exp) => b(exp)(allowFun = false, mOpt); this
     case ExpStmt(exp) =>
       check(exp, allowMethod = true)(allowFun = false, mOpt); this
@@ -299,6 +314,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             None
           case _ => None
         }
+      case _: RandomInt =>
+        if (!allowMethod)
+          error(e, s"Invoking randomInt is only allowed at statement level.")
+        someZ
       case _: ReadInt =>
         if (!allowMethod)
           error(e, s"Invoking readInt is only allowed at statement level.")

@@ -407,6 +407,8 @@ final case class Apply(id: Id,
   var declOpt: Option[MethodDecl] = None
 }
 
+final case class RandomInt() extends Exp
+
 final case class ReadInt(msgOpt: Option[StringLit])
   extends Exp
 
@@ -615,6 +617,8 @@ final case class VarDecl(isVar: Boolean,
 final case class Assign(id: Id,
                         exp: Exp) extends VarAssign
 
+final case class Assume(exp: Exp) extends Stmt
+
 final case class Assert(exp: Exp) extends Stmt
 
 final case class ExpStmt(exp: Apply) extends Stmt
@@ -639,7 +643,8 @@ final case class SeqAssign(id: Id,
                            index: Exp,
                            exp: Exp) extends Stmt
 
-final case class MethodDecl(id: Id,
+final case class MethodDecl(isHelper: Boolean,
+                            id: Id,
                             params: Node.Seq[Param],
                             returnTypeOpt: Option[Type],
                             contract: MethodContract,

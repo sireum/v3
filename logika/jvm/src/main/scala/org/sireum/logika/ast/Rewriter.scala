@@ -227,8 +227,8 @@ object Rewriter {
       org.sireum.logika.ast.MethodContract(requires, modifies, ensures)
     }),
     ("MethodDecl", { es =>
-      val Seq(id: Id, params: IVector[_], returnTypeOpt: Option[_], contract: MethodContract, block: Block, returnExpOpt: Option[_]) = es
-      org.sireum.logika.ast.MethodDecl(id, cast(params), cast(returnTypeOpt), contract, block, cast(returnExpOpt))
+      val Seq(isHelper: java.lang.Boolean, id: Id, params: IVector[_], returnTypeOpt: Option[_], contract: MethodContract, block: Block, returnExpOpt: Option[_]) = es
+      org.sireum.logika.ast.MethodDecl(isHelper, id, cast(params), cast(returnTypeOpt), contract, block, cast(returnExpOpt))
     }),
     ("Minus", { es =>
       val Seq(exp: Exp) = es

@@ -226,6 +226,32 @@ ProofContext(mode: LogicMode,
               filter(sequent.premises.toSet) ++
                 filter(sequent.conclusions.toSet)))
           case Assert(e) =>
+            if (autoEnabled) {
+              if (!isValid(pc.premises ++ pc.facts.values, ivector(e))) {
+                error(stmt, s"Could not automatically deduce the assertion validity.")
+                hasError = true
+                checkSat(ivector(e),
+                  unsatMsg = s"The assertion is unsatisfiable.",
+                  unknownMsg = s"The assertion might not be satisfiable.",
+                  timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
+              }
+            } else {
+              if (!pc.premises.contains(e)) {
+                error(e, s"The assertion has not been proven.")
+                hasError = true
+                checkSat(ivector(e),
+                  unsatMsg = s"The assertion is unsatisfiable.",
+                  unknownMsg = s"The assertion might not be satisfiable.",
+                  timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
+              }
+            }
+            Some(pc.copy(premises = pc.premises + e))
+          case Assume(e) =>
+            hasError = !checkSat(ivector(e),
+              unsatMsg = s"The assumption is unsatisfiable.",
+              unknownMsg = s"The assumption might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
+            ) || hasError
             Some(pc.copy(premises = pc.premises + e))
           case SeqAssign(id, index, exp) =>
             val old = newId(id.value + "_old", id.tipe)
@@ -255,6 +281,7 @@ ProofContext(mode: LogicMode,
             val exp = a.exp
             exp match {
               case _: ReadInt => pcOpt
+              case _: RandomInt => pcOpt
               case exp: Clone => pc.assign(id, exp.id)
               case exp: Apply if exp.id.tipe != tipe.ZS =>
                 val (he, pc2) = pc.invoke(exp, Some(id))
@@ -272,19 +299,32 @@ ProofContext(mode: LogicMode,
               case _ => None
             }
           case stmt: MethodDecl =>
-            val effectivePre = pc.invariants ++ stmt.contract.requires.exps
-            val effectivePost = pc.invariants ++ stmt.contract.ensures.exps
+            val invs = if (stmt.isHelper) isetEmpty else pc.invariants
+            val effectivePre = invs ++ stmt.contract.requires.exps
+            val effectivePost = invs ++ stmt.contract.ensures.exps
             hasError =
               !checkSat(effectivePre,
-                unsatMsg = s"The effective pre-condition of method ${stmt.id.value} is unsatisfiable.",
-                unknownMsg = s"The effective pre-condition of method ${stmt.id.value} might not be satisfiable.",
-                timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
+                unsatMsg = s"The effective pre-condition of method ${
+                  stmt.id.value
+                } is unsatisfiable.",
+                unknownMsg = s"The effective pre-condition of method ${
+                  stmt.id.value
+                } might not be satisfiable.",
+                timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${
+                  stmt.id.value
+                } due to timeout."
               ) || hasError
             hasError =
               !checkSat(effectivePost,
-                unsatMsg = s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.",
-                unknownMsg = s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.",
-                timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
+                unsatMsg = s"The effective post-condition of method ${
+                  stmt.id.value
+                } is unsatisfiable.",
+                unknownMsg = s"The effective post-condition of method ${
+                  stmt.id.value
+                } might not be satisfiable.",
+                timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${
+                  stmt.id.value
+                } due to timeout."
               ) || hasError
             val modifiedIds = stmt.contract.modifies.ids.toSet
             val mods = modifiedIds.map(id =>
@@ -293,7 +333,7 @@ ProofContext(mode: LogicMode,
               check(stmt.block) match {
               case Some(pc2) =>
                 var modifiedInvariants = isetEmpty[Exp]
-                for (e <- pc.invariants) {
+                for (e <- invs) {
                   var modified = false
                   Visitor.build({
                     case id: Id =>
@@ -308,13 +348,17 @@ ProofContext(mode: LogicMode,
                   if (modifiedInvariants.nonEmpty &&
                     !isValid(pc2.premises ++ pc2.facts.values, modifiedInvariants)) {
                     val locs = buildLocs(modifiedInvariants)
-                    error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${stmt.id.value}.")
+                    error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${
+                      stmt.id.value
+                    }.")
                     hasError = true
                   }
                 } else {
                   for (e <- modifiedInvariants)
                     if (!pc2.premises.contains(e)) {
-                      error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
+                      error(e, s"The global invariant has not been proven at the end of method ${
+                        stmt.id.value
+                      }.")
                       hasError = true
                     }
                 }
@@ -329,16 +373,22 @@ ProofContext(mode: LogicMode,
                   if (post.nonEmpty && !isValid(postPremises ++ pc2.facts.values, post)) {
                     hasError = true
                     val locs = buildLocs(post)
-                    error(post.head, s"Could not automatically deduce method ${stmt.id.value}'s post-condition(s) defined at $locs.")
+                    error(post.head, s"Could not automatically deduce method ${
+                      stmt.id.value
+                    }'s post-condition(s) defined at $locs.")
                   }
                 } else {
                   var i = 1
                   for (e <- post) {
                     if (!postPremises.contains(e)) {
                       if (post.size == 1)
-                        error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
+                        error(e, s"The post-condition of method ${
+                          stmt.id.value
+                        } has not been proven.")
                       else
-                        error(e, s"Post-condition #$i of method ${stmt.id.value} has not been proven.")
+                        error(e, s"Post-condition #$i of method ${
+                          stmt.id.value
+                        } has not been proven.")
                       hasError = true
                     }
                     i += 1
@@ -353,6 +403,10 @@ ProofContext(mode: LogicMode,
               if (!isValid(pc.premises ++ pc.facts.values, inv.exps)) {
                 hasError = true
                 error(stmt, s"Could not automatically deduce the global invariant(s).")
+                checkSat(inv.exps,
+                  unsatMsg = s"The global invariant(s) are unsatisfiable.",
+                  unknownMsg = s"The global invariant(s) might not be satisfiable.",
+                  timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
               }
             } else {
               for (e <- inv.exps) {
@@ -365,6 +419,11 @@ ProofContext(mode: LogicMode,
                 }
                 i += 1
               }
+              if (hasError)
+                checkSat(inv.exps,
+                  unsatMsg = s"The global invariant(s) are unsatisfiable.",
+                  unknownMsg = s"The global invariant(s) might not be satisfiable.",
+                  timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
             }
             Some(pc.copy(invariants = pc.invariants ++ inv.exps))
           case While(exp, loopBlock, loopInv) =>

@@ -414,6 +414,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
             build(ctx.`type`), build(ctx.exp))
         case ctx: AssignVarStmtContext =>
           Assign(buildId(ctx.ID), build(ctx.exp))
+        case ctx: AssumeStmtContext => Assume(build(ctx.exp))
         case ctx: AssertStmtContext => Assert(build(ctx.exp))
         case ctx: IfStmtContext =>
           If(build(ctx.exp), build(ctx.ts),
@@ -429,9 +430,15 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
         case ctx: SeqAssignStmtContext =>
           SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r))
         case ctx: MethodDeclStmtContext =>
-          if (ctx.ID.getText.indexOf('_') >= 0)
-            error(ctx.ID, s"Underscore is a reserved character for method identifier.")
-          MethodDecl(buildId(ctx.ID),
+          if (ctx.id.getText.indexOf('_') >= 0)
+            error(ctx.id, s"Underscore is a reserved character for method identifier.")
+          val isHelper =
+            if (ctx.helper != null) {
+              if (ctx.helper.getText != "helper")
+                error(ctx.helper, s"Only helper annotation is allowed instead of ${ctx.helper.getText}.")
+              true
+            } else false
+          MethodDecl(isHelper, buildId(ctx.id),
             Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
             Option(ctx.`type`).map(build),
             Option(ctx.methodContract).map(build).getOrElse(
@@ -483,6 +490,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
       case ctx: BigIntExpContext => IntLit(ctx.STRING.getText)
       case ctx: SeqExpContext =>
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+      case ctx: RandomIntExpContext => RandomInt()
       case ctx: ReadIntExpContext =>
         ReadInt(Option(ctx.STRING).map { x =>
           val text = x.getText

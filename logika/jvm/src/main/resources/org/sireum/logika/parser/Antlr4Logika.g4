@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015, Robby, Kansas State University
+Copyright (c) 2016, Robby, Kansas State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -205,6 +205,7 @@ stmts: stmt? ( NL+ stmt? )* ;
 stmt
   : modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
   | ID '=' NL? exp                                      #AssignVarStmt
+  | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
   | 'if' '(' exp ')' NL* '{' ts=stmts '}'
      ( 'else' NL* '{' fs=stmts '}' )?                   #IfStmt
@@ -215,13 +216,13 @@ stmt
   | op=( 'print' | 'println' )
     '(' SSTRING ')'                                     #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
-  | 'def' ID  NL?
+  | ( '@' helper=ID )? 'def' id=ID  NL?
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
     '{'
     ( NL* 'l"""' methodContract NL* '"""' )?
     stmts
-    ( rtb='return' exp NL* )?
+    ( rtb='return' exp? NL* )?
     '}'                                                 #MethodDeclStmt
   | 'l"""'
     ( proof
@@ -241,6 +242,7 @@ exp
     )?                                                  #IdExp
   | 'Z' '(' STRING ')'                                  #BigIntExp
   | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #SeqExp
+  | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
   | op=( '-' | '!' ) exp                                #UnaryExp

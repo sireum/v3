@@ -3,21 +3,15 @@ Logika To-Dos
 
 * Support configurable file types
 
-* Add assume
-
-* Add randomInt()
-
-* Add helper methods that do not require and ensure invariants
-
 * Add hint mode
-
-* Add truth table and logic gates circuit output for propositional logic 
 
 * Create website with user manual
 
 
 Future Work
 ===========
+
+* Add truth table and logic gates circuit output for propositional logic 
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
