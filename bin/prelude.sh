@@ -31,18 +31,26 @@ ZULU_VERSION=1.8.0_66-8.11.0.1
 SBT_VERSION=0.13.9
 NODE_VERSION=5.3.0
 Z3_VERSION=4.4.1
-if [ -n "$COMSPEC" -a -x "$COMSPEC" ] || [ "${PLATFORM}" = "win"  ]; then
-  PLATFORM=win
+if [ -n "${PLATFORM}" ]; then
+  DISTROS=true
+else
+  if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
+    PLATFORM=win
+  elif [ "$(uname)" == "Darwin" ]; then
+    PLATFORM=mac
+  elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    PLATFORM=linux
+  fi
+fi
+if [ "${PLATFORM}" = "win"  ]; then
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-win.zip
-elif [ "$(uname)" == "Darwin" ] || [ "${PLATFORM}" = "mac"  ]; then
-  PLATFORM=mac
+elif [ "${PLATFORM}" = "mac"  ]; then
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-macosx.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ] || [ "${PLATFORM}" = "lin"  ]; then
-  PLATFORM=lin
+elif [ "${PLATFORM}" = "linux"  ]; then
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-x86lx64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-ubuntu-14.04.zip
@@ -78,6 +86,37 @@ if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   else
     echo "Could not install Zulu JDK ${ZULU_VERSION}."
   fi
+fi
+mkdir -p ${REPO}/apps
+cd ${REPO}/apps
+Z3_DROP="${Z3_DROP_URL##*/}"
+Z3_DIR="${Z3_DROP%.*}"
+grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
+if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
+  if [ ! -f ${Z3_DROP} ]; then
+    echo
+    echo "Downloading ${Z3_DROP}"
+    echo
+    wget ${Z3_DROP_URL}
+  fi
+  echo
+  echo "Extracting ${Z3_DROP}"
+  unzip -oq ${Z3_DROP}
+  echo
+  echo "Deleting ${Z3_DROP}"
+  rm ${Z3_DROP}
+  echo
+  echo "Moving ${Z3_DIR} to z3"
+  rm -fR z3
+  mv ${Z3_DIR} z3
+  if [ -d "z3/bin" ]; then
+    echo "${Z3_VERSION}" > z3/VER
+  else
+    echo "Could not install Z3 ${Z3_VERSION}."
+  fi
+fi
+if [ "${DISTROS}" = "true" ]; then
+  exit
 fi
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
@@ -145,33 +184,5 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     else
       echo "Could not install Node.js ${NODE_VERSION}."
     fi
-  fi
-fi
-mkdir -p ${REPO}/apps
-cd ${REPO}/apps
-Z3_DROP="${Z3_DROP_URL##*/}"
-Z3_DIR="${Z3_DROP%.*}"
-grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
-if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
-  if [ ! -f ${Z3_DROP} ]; then
-    echo
-    echo "Downloading ${Z3_DROP}"
-    echo
-    wget ${Z3_DROP_URL}
-  fi
-  echo
-  echo "Extracting ${Z3_DROP}"
-  unzip -oq ${Z3_DROP}
-  echo
-  echo "Deleting ${Z3_DROP}"
-  rm ${Z3_DROP}
-  echo
-  echo "Moving ${Z3_DIR} to z3"
-  rm -fR z3
-  mv ${Z3_DIR} z3
-  if [ -d "z3/bin" ]; then
-    echo "${Z3_VERSION}" > z3/VER
-  else
-    echo "Could not install Z3 ${Z3_VERSION}."
   fi
 fi

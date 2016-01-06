@@ -39,18 +39,22 @@ object SireumBuild extends Build {
 
   final val scalaVer = "2.11.7"
 
-  final val sireumVer = "3.0-SNAPSHOT"
+  final val sireumVer = "3"
 
   final val BUILD_FILENAME = "BUILD"
 
   import ProjectInfo._
 
+  val distros = TaskKey[Unit]("distros", "Build Sireum distributions")
   val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
   lazy val sireum = Project(
     id = "sireum",
     settings = sireumSharedSettings ++ Seq(
       name := "Sireum",
+      distros := {
+        Distros.build()
+      },
       depDot := {
         val args = spaceDelimited("<arg>").parsed
         dotDependency(args)

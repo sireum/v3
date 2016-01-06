@@ -5,6 +5,7 @@
 /sbt
 /lib_managed
 /project/project
+/distros
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionaries
