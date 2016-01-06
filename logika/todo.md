@@ -1,17 +1,25 @@
 Logika To-Do
 ============
 
+* Add mode auto-detect based on file content instead of ext
+
+* Move sireum.jar to top-level directory
+
 * Add assume
 
-* Add randomInt() and randomInt(lo: Z, hi: Z)
+* Add randomInt()
 
-* Make return keyword optional
+* Add helper methods that do not require and ensure invariants
 
 * Add hint mode
 
 * Add truth table and circuit output for propositional logic 
 
-* Add helper methods that do not require and ensure invariants
+* Create webpage with user manual
+
+
+Future Work
+-----------
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
