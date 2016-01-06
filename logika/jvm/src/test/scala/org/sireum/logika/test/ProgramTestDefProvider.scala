@@ -68,7 +68,6 @@ final class ProgramTestDefProvider(tf: TestFramework)
     implicit val reporter = new ConsoleTagReporter {
       override def info(msg: String): Unit = {
       }
-
       override def warn(msg: String): Unit = {
       }
     }
@@ -76,7 +75,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
       Check("", isSilent = false,
         isProgramming = true, ivector(ProofFile(Some(uri), text)),
         lastOnly = false, autoEnabled = false, 2000,
-        checkSat = false))
+        checkSat = true))
     !reporter.hasError
   }
 }

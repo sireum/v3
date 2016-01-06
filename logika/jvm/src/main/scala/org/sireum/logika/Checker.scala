@@ -155,31 +155,35 @@ ProofContext(mode: LogicMode,
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
   def check(program: Program): Boolean = {
+    val facts = this.facts ++ program.fact.factOrFunDecls.
+      flatMap(_ match {
+        case f: Fact => Some(f.id.value -> f.exp)
+        case _ => None
+      })
     if (facts.nonEmpty && !checkSat(facts.values,
       unsatMsg = "The specified set of facts are unsatisfiable.",
       unknownMsg = "The set of facts might not be satisfiable.",
       timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
     )) return false
-    copy(facts = facts ++ program.fact.factOrFunDecls.
-      flatMap(_ match {
-        case f: Fact => Some(f.id.value -> f.exp)
-        case _ => None
-      })
-    ).check(program.block).isDefined
+    copy(facts = facts).check(program.block).isDefined
   }
 
   def checkSat(exps: Iterable[Exp], unsatMsg: => String,
-               unknownMsg: => String, timeoutMsg: => String): Boolean =
-    if (checkSat)
-      Z3.checkSat(satTimeoutInMs,
-        facts.values.toVector: _*) match {
-        case Z3.Sat => true
-        case Z3.Unsat => error(facts.head._2, unsatMsg); false
-        case Z3.Unknown => reporter.report(WarningMessage(Checker.kind, unknownMsg)); true
-        case Z3.Timeout => reporter.report(WarningMessage(Checker.kind, timeoutMsg)); true
-        case Z3.Error => false
-      }
-    else false
+               unknownMsg: => String, timeoutMsg: => String): Boolean = {
+    val es = (exps ++ facts.values).toVector
+    !checkSat || (Z3.checkSat(satTimeoutInMs, es: _*) match {
+      case Z3.Sat =>
+        true
+      case Z3.Unsat =>
+        error(es.head, unsatMsg); false
+      case Z3.Unknown =>
+        warn(es.head, unknownMsg); true
+      case Z3.Timeout =>
+        warn(es.head, timeoutMsg); true
+      case Z3.Error =>
+        false
+    })
+  }
 
   def check(block: Block): Option[ProofContext] = {
     var hasError = false
@@ -273,13 +277,13 @@ ProofContext(mode: LogicMode,
             val effectivePre = pc.invariants ++ stmt.contract.requires.exps
             val effectivePost = pc.invariants ++ stmt.contract.ensures.exps
             hasError =
-              checkSat(effectivePre,
+              !checkSat(effectivePre,
                 unsatMsg = s"The effective pre-condition of method ${stmt.id.value} is unsatisfiable.",
                 unknownMsg = s"The effective pre-condition of method ${stmt.id.value} might not be satisfiable.",
                 timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
               ) || hasError
             hasError =
-              checkSat(effectivePost,
+              !checkSat(effectivePost,
                 unsatMsg = s"The effective post-condition of method ${stmt.id.value} is unsatisfiable.",
                 unknownMsg = s"The effective post-condition of method ${stmt.id.value} might not be satisfiable.",
                 timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${stmt.id.value} due to timeout (${timeoutInMs}ms)."
