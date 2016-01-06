@@ -73,7 +73,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
     }
     Checker.check(
       Check("", isSilent = false,
-        isProgramming = true, ivector(ProofFile(Some(uri), text)),
+        hintEnabled = true, ivector(ProofFile(Some(uri), text)),
         lastOnly = false, autoEnabled = false, 2000,
         checkSat = true))
     !reporter.hasError

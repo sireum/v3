@@ -130,10 +130,11 @@ $s"""))
         }
       case Exec.Timeout => Timeout
       case Exec.ExceptionRaised(err) =>
-        val sw = new java.io.PrintWriter(new StringWriter)
-        sw.append("Error occurred when calling Z3:")
-        sw.append(lineSep)
-        err.printStackTrace(sw)
+        val sw = new StringWriter
+        val pw = new java.io.PrintWriter(sw)
+        pw.append("Error occurred when calling Z3:")
+        pw.append(lineSep)
+        err.printStackTrace(pw)
         reporter.report(InternalErrorMessage("Z3", sw.toString))
         Error
     }

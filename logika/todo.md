@@ -1,8 +1,6 @@
 Logika To-Dos
 =============
 
-* Add mode auto-detect based on file content instead of file extension
-
 * Support configurable file types
 
 * Add assume

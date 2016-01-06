@@ -47,7 +47,7 @@ case object Terminate extends InputMessage
 
 final case class Check(requestId: String,
                        isSilent: Boolean,
-                       isProgramming: Boolean,
+                       hintEnabled: Boolean,
                        proofs: Vector[ProofFile],
                        lastOnly: Boolean,
                        autoEnabled: Boolean,

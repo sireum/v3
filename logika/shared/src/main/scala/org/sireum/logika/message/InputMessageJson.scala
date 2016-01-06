@@ -41,7 +41,7 @@ object InputMessageJson {
           (".class", Js.Str("Check")),
           ("requestId", fromStr(o.requestId)),
           ("isSilent", fromAnyVal(o.isSilent)),
-          ("isProgramming", fromAnyVal(o.isProgramming)),
+          ("hintEnabled", fromAnyVal(o.hintEnabled)),
           ("proofs", fromSeq(o.proofs)(fromInputMessage)),
           ("lastOnly", fromAnyVal(o.lastOnly)),
           ("autoEnabled", fromAnyVal(o.autoEnabled)),

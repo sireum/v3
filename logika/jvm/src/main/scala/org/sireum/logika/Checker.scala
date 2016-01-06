@@ -41,12 +41,11 @@ object Checker {
     implicit reporter: AccumulatingTagReporter): message.Result = {
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      if (m.isProgramming) Builder[Program](fileUriOpt, text).foreach(unitNodes :+= _)
-      else Builder[Sequent](fileUriOpt, text).foreach(unitNodes :+= _)
+      Builder(fileUriOpt, text).foreach(unitNodes :+= _)
     }
     if (reporter.hasError)
       return message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
-    if (m.isProgramming) {
+    if (m.hintEnabled) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*))
         if (m.lastOnly)
@@ -117,7 +116,6 @@ object Checker {
         else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
         r
       }
-    case _: Proof => assert(assertion = false, "Unexpected situation."); false
   }
 
   private[logika] final def collectVars(e: Exp): ISet[String] = {

@@ -47,7 +47,7 @@ final case class LogikaOption(@BeanProperty
                               @Opt(shortKey = Some("a"), description = "Enable auto mode (programming logic)")
                               var auto: Boolean = false,
                               @BeanProperty
-                              @Opt(shortKey = None, description = "Enable sat checking of facts and method contracts")
+                              @Opt(shortKey = None, description = "Enable sat checking of facts and contracts")
                               var sat: Boolean = false,
                               @BeanProperty
                               @Opt(shortKey = Some("s"), description = "Sequent matching the propositional/predicate logic input file's")
@@ -58,7 +58,7 @@ final case class LogikaOption(@BeanProperty
                               @Opt(shortKey = None, description = "Enable server mode")
                               var server: Boolean = false,
                               @BeanProperty
-                              @Arg(name = "{file.logika, file.scala, file.lgk, file.sc}")
+                              @Arg(name = "filename")
                               var input: Array[String] = Array()) {
   def this() = this(false, false, false, none(), 2000, false, Array())
 }

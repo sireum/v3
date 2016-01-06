@@ -50,11 +50,10 @@ Note: ---+ means at least three minus (-) characters
 // @formatter:off
 }
 
-sequentFile: sequent NL* proof? NL* EOF ;
-
-proofFile: proof EOF ;
-
-programFile: program EOF ;
+file
+  : sequent NL* proof? NL* EOF                          #SequentFile
+  | program EOF                                         #ProgramFile
+  ;
 
 sequent // note: all newlines inside a sequent are whitespaces
   : ( premises+=formula ( ',' premises+=formula )* )?

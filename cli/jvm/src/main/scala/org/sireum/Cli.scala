@@ -668,7 +668,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Sireum Logika -- A Natural Deduction Proof Checker
            |... for Propositional, Predicate, and Programming Logic
            |
-           |Usage: sireum logika [option] <{file.logika, file.scala, file.lgk, file.sc}-1> ... <{file.logika, file.scala, file.lgk, file.sc}-N>
+           |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |
            |Options:
            |-a, --auto       Enable auto mode (programming logic)
@@ -676,7 +676,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
-           |    --sat        Enable sat checking of facts and method contracts
+           |    --sat        Enable sat checking of facts and contracts
            |    --server     Enable server mode
            |-h, --help       Display usage information
         """.stripMargin.trim

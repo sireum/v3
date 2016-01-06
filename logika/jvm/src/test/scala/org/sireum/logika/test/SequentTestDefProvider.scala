@@ -481,7 +481,7 @@ final class SequentTestDefProvider(tf: TestFramework)
       }
     }
     Checker.check(Check("", isSilent = false,
-      isProgramming = false, ivector(ProofFile(None, text)),
+      hintEnabled = false, ivector(ProofFile(None, text)),
       lastOnly = false, autoEnabled = false, 2000, checkSat = false))
     !reporter.hasError
   }

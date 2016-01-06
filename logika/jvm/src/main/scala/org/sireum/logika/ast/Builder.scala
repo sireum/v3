@@ -44,18 +44,18 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
   val maxInt = BigInt(Int.MaxValue)
   val minInt = BigInt(Int.MinValue)
 
+  private def build(ctx: FileContext): UnitNode = {
+    ctx match {
+      case ctx: SequentFileContext => build(ctx)
+      case ctx: ProgramFileContext => build(ctx)
+    }
+  }
+
   private def build(ctx: SequentFileContext): Sequent = {
     val r =
       if (ctx.proof != null) build(ctx.sequent).
         copy(proofOpt = Some(build(ctx.proof))) at ctx
       else build(ctx.sequent)
-    r.fileUriOpt = fileUriOpt
-    r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
-    r
-  }
-
-  private def build(ctx: ProofFileContext): Proof = {
-    val r = build(ctx.proof)
     r.fileUriOpt = fileUriOpt
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
@@ -639,24 +639,37 @@ object Builder {
     "catch", "else", "extends", "finally", "forSome", "match", "with", "yield",
     ",", ".", ":", "=", "=>", "⇒", "[", ")", "]", "}", "<-", "<:", "<%", ">:", "#"
   )
-  private final val (sequentType, proofType, programType) = {
-    import scala.reflect.runtime.universe._
-    (typeOf[Sequent], typeOf[Proof], typeOf[Program])
-  }
 
   import org.antlr.v4.runtime._
-  import scala.reflect.runtime.universe._
 
-  def apply[T <: UnitNode](fileUriOpt: Option[FileResourceUri],
-                           input: String, maxErrors: Natural = 0)(
-                            implicit tag: TypeTag[T],
-                            reporter: AccumulatingTagReporter): Option[T] = {
+  def apply(fileUriOpt: Option[FileResourceUri],
+            input: String, maxErrors: Natural = 0)(
+             implicit reporter: AccumulatingTagReporter): Option[UnitNode] = {
     class ParsingEscape extends RuntimeException
+    object Mode extends Enumeration {
+      val Sequent, Program = Value
+    }
 
     val sr = new StringReader(input)
     val inputStream = new ANTLRInputStream(sr)
     val lexer = new Antlr4LogikaLexer(inputStream)
     val tokenStream = new CommonTokenStream(lexer)
+    tokenStream.fill()
+    val mode = {
+      import scala.collection.JavaConversions._
+      var firstTokenOpt: Option[Token] = None
+      for (t <- tokenStream.getTokens() if firstTokenOpt.isEmpty) {
+        if (t.getType != Antlr4LogikaLexer.NL &&
+          t.getChannel == Lexer.DEFAULT_TOKEN_CHANNEL)
+          firstTokenOpt = Some(t)
+      }
+      firstTokenOpt match {
+        case Some(t) =>
+          if (t.getText == "import") Mode.Program
+          else Mode.Sequent
+        case _ => Mode.Program
+      }
+    }
     val parser = new Antlr4LogikaParser(tokenStream)
     parser.removeErrorListeners()
     parser.addErrorListener(new BaseErrorListener {
@@ -676,31 +689,25 @@ object Builder {
         }
       }
     })
+
+
     try {
       val r =
-        tag.tpe match {
-          case `sequentType` =>
+        mode match {
+          case Mode.Sequent =>
             orientNewlines(tokenStream, isProgram = false)
-            val parseTree = parser.sequentFile()
+            val parseTree = parser.file()
             if (!reporter.hasError) {
               val ast = new Builder(fileUriOpt).build(parseTree)
-              if (!reporter.hasError) Some(ast.asInstanceOf[T])
+              if (!reporter.hasError) Some(ast)
               else None
             } else None
-          case `proofType` =>
-            orientNewlines(tokenStream, isProgram = false)
-            val parseTree = parser.proofFile()
-            if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt).build(parseTree)
-              if (!reporter.hasError) Some(ast.asInstanceOf[T])
-              else None
-            } else None
-          case `programType` =>
+          case Mode.Program =>
             orientNewlines(tokenStream, isProgram = true)
-            val parseTree = parser.programFile()
+            val parseTree = parser.file()
             if (!reporter.hasError) {
               val ast = new Builder(fileUriOpt).build(parseTree)
-              if (!reporter.hasError) Some(ast.asInstanceOf[T])
+              if (!reporter.hasError) Some(ast)
               else None
             } else None
         }
@@ -718,7 +725,6 @@ object Builder {
   private def orientNewlines(cts: CommonTokenStream,
                              isProgram: Boolean): Unit = {
     import Antlr4LogikaLexer.{ID, NL, NUM}
-    cts.fill()
     val tokens: CSeq[Token] = {
       import scala.collection.JavaConversions._
       cts.getTokens

@@ -232,9 +232,7 @@ sealed trait ProofGroup extends Node {
 }
 
 final case class Proof(steps: Node.Seq[ProofStep])
-  extends UnitNode with ProofGroup {
-  Node.detectMode(this)
-
+  extends ProofGroup {
   override def allSteps = steps
 
   override def first = steps.head

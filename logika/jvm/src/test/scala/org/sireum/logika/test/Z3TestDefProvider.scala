@@ -55,18 +55,19 @@ final class Z3TestDefProvider(tf: TestFramework)
       override def warn(msg: String): Unit = {
       }
     }
-    Builder[Program](Some(uri), text).exists { p =>
-      val hasError = !TypeChecker.check(p)
-      if (hasError) return false
-      p match {
-        case Program(_, Block(Seq(MethodDecl(_, _, _, MethodContract(
-        Requires(Seq(e1)),
-        _,
-        Ensures(Seq(e2))), _, _)))) =>
-          implicit val nlm = p.nodeLocMap
-          Z3.isValid(2000, ivector(e1), ivector(e2))
-        case _ => false
+    Builder(Some(uri), text).map(_.asInstanceOf[Program]).
+      exists { p =>
+        val hasError = !TypeChecker.check(p)
+        if (hasError) return false
+        p match {
+          case Program(_, Block(Seq(MethodDecl(_, _, _, MethodContract(
+          Requires(Seq(e1)),
+          _,
+          Ensures(Seq(e2))), _, _)))) =>
+            implicit val nlm = p.nodeLocMap
+            Z3.isValid(2000, ivector(e1), ivector(e2))
+          case _ => false
+        }
       }
-    }
   }
 }
