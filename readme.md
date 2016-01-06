@@ -224,6 +224,8 @@ You need to install some plugins for Sireum v3 development
 * ANTLR v4 grammar plugin
 * ASM Bytecode Outline
 * BashSupport
+* Batch Scripts Support
+* CMD
 * gfm
 * MultiMarkdown
 * Python
