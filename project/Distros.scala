@@ -49,7 +49,7 @@ object Distros {
     }
     cp(cwd / 'bin / "sireum.jar", cwd / 'distros / "sireum-v3" / 'bin / "sireum.jar")
     cp(cwd / 'bin / "prelude.sh", cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh")
-    %('bash, cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh", PLATFORM = platform)
+    %('bash, cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh", PLATFORM = platform, DISTROS = "true")
     rm ! cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh"
     %('zip, "-qr", s"sireum-v3-${platform}64.zip", "sireum-v3")(cwd / 'distros)
     rm ! cwd / 'distros / "sireum-v3"
