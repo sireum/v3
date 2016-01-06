@@ -17,6 +17,8 @@ Logika To-Do
 
 * Create webpage with user manual
 
+* Add distro builds
+
 
 Future Work
 -----------
