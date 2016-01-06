@@ -73,7 +73,7 @@ object SireumBuild extends Build {
         Seq(
           name := "Sireum.jvm",
           mainClass in assembly := Some("org.Sireum"),
-          assemblyJarName in assembly := "sireum.jar",
+          assemblyOutputPath in assembly := file("bin/sireum.jar"),
           test in assembly := {},
           logLevel in assembly := Level.Error,
           assemblyMergeStrategy in assembly := {

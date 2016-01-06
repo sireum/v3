@@ -64,6 +64,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.scalactic/scalactic_2.10/bundles/scalactic_2.10-2.2.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/envjs/jars/envjs-1.2.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.10.5/org.scala-sbt/sbt/0.13.9/paranamer-2.6.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.lihaoyi/ammonite-ops_2.10/jars/ammonite-ops_2.10-0.5.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/scala_2.10/sbt_0.13/org.scala-js/sbt-scalajs/jars/sbt-scalajs-0.6.5.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.10.5/org.scala-sbt/sbt/0.13.9/test-interface-1.0.jar!/" />
           <root url="jar://$USER_HOME$/.sbt/boot/scala-2.10.5/org.scala-sbt/sbt/0.13.9/classpath-0.13.9.jar!/" />
@@ -130,10 +131,12 @@
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.hamcrest/hamcrest-core/hamcrest-core-1.1-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-js/scalajs-ir_2.10/scalajs-ir_2.10-0.6.5-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/precompiled-2_9_2/precompiled-2_9_2-0.13.9-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.10.6-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-js/sbt-scalajs/scala_2.10/sbt_0.13/sbt-scalajs-0.6.5-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/persist/persist-0.13.9-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/test-interface/test-interface-1.0-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/classpath/classpath-0.13.9-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/com.lihaoyi/ammonite-ops_2.10/ammonite-ops_2.10-0.5.2-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-js/scalajs-tools_2.10/scalajs-tools_2.10-0.6.5-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/com.google.javascript/closure-compiler/closure-compiler-v20130603-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/command/command-0.13.9-sources.jar!/" />
@@ -155,7 +158,6 @@
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/io.apigee/rhino/rhino-1.7R5pre4-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-tools.sbinary/sbinary_2.10/sbinary_2.10-0.4.2-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scalaz/scalaz-effect_2.10/scalaz-effect_2.10-7.1.0-sources.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.10.5-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/cross/cross-0.13.9-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.spire-math/jawn-parser_2.10/jawn-parser_2.10-0.6.0-sources.jar!/" />
           <root url="jar://$MODULE_DIR$/../../lib_managed/srcs/org.scala-sbt/completion/completion-0.13.9-sources.jar!/" />

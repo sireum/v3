@@ -31,18 +31,18 @@ ZULU_VERSION=1.8.0_66-8.11.0.1
 SBT_VERSION=0.13.9
 NODE_VERSION=5.3.0
 Z3_VERSION=4.4.1
-if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
+if [ -n "$COMSPEC" -a -x "$COMSPEC" ] || [ "${PLATFORM}" = "win"  ]; then
   PLATFORM=win
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-win.zip
-elif [ "$(uname)" == "Darwin" ]; then
-  PLATFORM=lin
+elif [ "$(uname)" == "Darwin" ] || [ "${PLATFORM}" = "mac"  ]; then
+  PLATFORM=mac
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-macosx.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-  PLATFORM=mac
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ] || [ "${PLATFORM}" = "lin"  ]; then
+  PLATFORM=lin
   ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-x86lx64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-ubuntu-14.04.zip

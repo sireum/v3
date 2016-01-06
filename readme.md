@@ -178,7 +178,7 @@ You can then check that your Gradle builds still work once Sbt fixed/recreated y
 
 Run: `sireum-v3/bin/sbt-launch.sh assembly`
  
-The jar will be located at `sireum-v3/jvm/target/scala-2.11/sireum.jar`
+The jar will be located at `sireum-v3/bin/sireum.jar`
 
 
 ## Development Environment
