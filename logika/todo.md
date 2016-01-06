@@ -1,9 +1,9 @@
-Logika To-Do
-============
+Logika To-Dos
+=============
 
-* Add mode auto-detect based on file content instead of ext
+* Add mode auto-detect based on file content instead of file extension
 
-* Move sireum.jar to top-level directory
+* Support configurable file types
 
 * Add assume
 
@@ -13,15 +13,13 @@ Logika To-Do
 
 * Add hint mode
 
-* Add truth table and circuit output for propositional logic 
+* Add truth table and logic gates circuit output for propositional logic 
 
-* Create webpage with user manual
-
-* Add distro builds
+* Create website with user manual
 
 
 Future Work
------------
+===========
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
@@ -40,6 +38,6 @@ Future Work
 * create examples such as list, nat, etc. as inductive types and prove their properties (ala Coq)
 
 * Add type inference (boolean, integer, sequence of integer, uninterpreted function) 
-  for predicate logic + algebra sequent to enable auto validity checking
+  for predicate logic (+ algebra) to enable auto validity checking
 
 * Add first-class (immutable) option, tuple, sequence, set, and map

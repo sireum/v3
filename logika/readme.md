@@ -12,12 +12,14 @@ It is inspired by:
 
 * The [Natural Deduction Proof Checker (NDPC)](http://people.cis.ksu.edu/~schmidt/301s14/NDPC/ndpc-pe.jar)
   tool ([User's Guide](http://people.cis.ksu.edu/~schmidt/301s14/NDPC/user_manual.pdf))
-  for propositional and predicate logic developed by Mr. Brian Mulanda, Dr. Rodney Howell, and 
+  for propositional and predicate logic developed by Mr. Brian Mulanda, 
+  [Dr. Rodney Howell](http://people.cis.ksu.edu/~rhowell/), and 
   Mr. James Thompson.
 
 * The [Floyd-Hoare Program Logic Proof Checker](http://people.cis.ksu.edu/~schmidt/301s14/cis301.zip)
   and the [Programming Logic](http://people.cis.ksu.edu/~schmidt/301s14/Lectures/home.html)
-  lecture notes by Distinguished Professor Emeritus David Schmidt.
+  lecture notes by 
+  [Distinguished Professor Emeritus David A. Schmidt](http://people.cis.ksu.edu/~schmidt/).
 
 Logika is a combination of both tools; it uses the same
 [input language](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-parser-antlr4/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
@@ -26,10 +28,9 @@ input language is a subset of the predicate logic input language, which in turn,
 programming logic input language).
 The programming logic input language is a restricted subset of the Scala programming language that 
 can be run by using the regular Scala interpreter (requires the 
-[Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala).
+[Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala)).
 
-Currently, the tool has been implemented with feature sets on par (actually, slightly beyond) 
-the two tools above. 
+Currently, the tool has been implemented with feature sets on par with the two tools above. 
 Logika uses the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver for checking
 validity/satisfiability.
 More features are planned (see [todo.md](todo.md)).

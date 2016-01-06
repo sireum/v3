@@ -1,5 +1,7 @@
-To-Do
-=====
+Sireum To-Dos
+=============
+
+* Revise Sireum website
 
 * Document Pilar
 
