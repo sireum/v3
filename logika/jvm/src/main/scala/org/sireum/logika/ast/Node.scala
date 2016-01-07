@@ -201,6 +201,7 @@ sealed trait UnitNode extends Node {
   var fileUriOpt: Option[FileResourceUri] = None
   var nodeLocMap: MIdMap[Node, LocationInfo] = midmapEmpty
   var mode = LogicMode.Programming
+  var input: String = ""
 }
 
 final case class Sequent(premises: Node.Seq[Exp],
@@ -384,35 +385,96 @@ final case class ExistsAssumeStep(num: Num,
                                   exp: Exp)
   extends QuantAssumeStep with RegularStep
 
+object Exp {
+  final def toString(e: Exp): String = {
+    val sb = new StringBuilder
+    e.buildString(sb)
+    sb.toString
+  }
+}
+
 sealed trait Exp extends Node {
   private[ast] var hasParen = false
+
+  def buildString(sb: StringBuilder): Unit
+
+  def precedence: Int
 }
 
-final case class BooleanLit(value: Boolean) extends Exp
-
-final case class Id(value: String) extends Exp with NumOrId {
-  var tipe: Tipe = _
+sealed trait PrimaryExp extends Exp {
+  final override def precedence: Int = 0
 }
 
-final case class Size(id: Id) extends Exp
+final case class BooleanLit(value: Boolean) extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append(value)
+}
 
-final case class Clone(id: Id) extends Exp
-
-final case class Result() extends Exp {
+final case class Id(value: String) extends PrimaryExp with NumOrId {
   var tipe: Tipe = _
+
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append(value)
+}
+
+final case class Size(id: Id) extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    id.buildString(sb)
+    sb.append(".size")
+  }
+}
+
+final case class Clone(id: Id) extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    id.buildString(sb)
+    sb.append(".clone")
+  }
+}
+
+final case class Result() extends PrimaryExp {
+  var tipe: Tipe = _
+
+  override def buildString(sb: StringBuilder): Unit = {
+    sb.append("result")
+  }
 }
 
 final case class Apply(id: Id,
-                       args: Node.Seq[Exp]) extends Exp {
+                       args: Node.Seq[Exp]) extends PrimaryExp {
   var declOpt: Option[MethodDecl] = None
+
+  override def buildString(sb: StringBuilder): Unit = {
+    id.buildString(sb)
+    sb.append('(')
+    if (args.nonEmpty) {
+      args.head.buildString(sb)
+      for (arg <- args.tail) {
+        sb.append(", ")
+        arg.buildString(sb)
+      }
+    }
+    sb.append(')')
+  }
 }
 
-final case class RandomInt() extends Exp
+final case class RandomInt() extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    sb.append("randomInt()")
+  }
+}
 
 final case class ReadInt(msgOpt: Option[StringLit])
-  extends Exp
+  extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    sb.append("readInt()")
+  }
+}
 
-final case class IntLit(value: String) extends Exp
+final case class IntLit(value: String) extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    sb.append(value)
+  }
+}
 
 sealed trait BinaryExp extends Exp {
   def left: Exp
@@ -420,66 +482,106 @@ sealed trait BinaryExp extends Exp {
   def op: String
 
   def right: Exp
+
+  final override def buildString(sb: StringBuilder): Unit = {
+    if (left.precedence > precedence) {
+      sb.append('(')
+      left.buildString(sb)
+      sb.append(')')
+    } else {
+      left.buildString(sb)
+    }
+    sb.append(' ')
+    sb.append(op)
+    sb.append(' ')
+    if (right.precedence > precedence) {
+      sb.append('(')
+      right.buildString(sb)
+      sb.append(')')
+    } else {
+      right.buildString(sb)
+    }
+  }
 }
 
-final case class Mul(left: Exp, right: Exp) extends BinaryExp {
+sealed trait MultiplicativeExp extends BinaryExp {
+  final override val precedence = 10
+}
+
+final case class Mul(left: Exp, right: Exp) extends MultiplicativeExp {
   val op = "*"
 }
 
-final case class Div(left: Exp, right: Exp) extends BinaryExp {
+final case class Div(left: Exp, right: Exp) extends MultiplicativeExp {
   val op = "/"
 }
 
-final case class Rem(left: Exp, right: Exp) extends BinaryExp {
+final case class Rem(left: Exp, right: Exp) extends MultiplicativeExp {
   val op = "%"
 }
 
-final case class Add(left: Exp, right: Exp) extends BinaryExp {
+sealed trait AdditiveExp extends BinaryExp {
+  final override val precedence = 20
+}
+
+final case class Add(left: Exp, right: Exp) extends AdditiveExp {
   val op = "+"
 }
 
-final case class Sub(left: Exp, right: Exp) extends BinaryExp {
+final case class Sub(left: Exp, right: Exp) extends AdditiveExp {
   val op = "-"
 }
 
-final case class Lt(left: Exp, right: Exp) extends BinaryExp {
+sealed trait InequalityExp extends BinaryExp {
+  final override val precedence = 50
+}
+
+final case class Lt(left: Exp, right: Exp) extends InequalityExp {
   val op = "<"
 }
 
-final case class Le(left: Exp, right: Exp) extends BinaryExp {
-  val op = "<="
+final case class Le(left: Exp, right: Exp) extends InequalityExp {
+  val op = "≤"
 }
 
-final case class Gt(left: Exp, right: Exp) extends BinaryExp {
+final case class Gt(left: Exp, right: Exp) extends InequalityExp {
   val op = ">"
 }
 
-final case class Ge(left: Exp, right: Exp) extends BinaryExp {
-  val op = ">="
+final case class Ge(left: Exp, right: Exp) extends InequalityExp {
+  val op = "≥"
 }
 
-sealed trait Equality extends BinaryExp {
+sealed trait EqualityExp extends BinaryExp {
   var tipe: Tipe = _
+
+  final override val precedence = 40
 }
 
-final case class Eq(left: Exp, right: Exp) extends Equality {
+final case class Eq(left: Exp, right: Exp) extends EqualityExp {
   val op = "=="
 }
 
-final case class Ne(left: Exp, right: Exp) extends Equality {
+final case class Ne(left: Exp, right: Exp) extends EqualityExp {
   val op = "!="
 }
 
 final case class Append(left: Exp, right: Exp) extends BinaryExp {
   val op = ":+"
+
+  override val precedence = 40
 }
 
 final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
   val op = "+:"
+
+  override val precedence = 30
 }
 
 final case class And(left: Exp, right: Exp) extends BinaryExp {
-  val op = "&&"
+  val op = "∧"
+
+  override val precedence = 60
 }
 
 object And {
@@ -495,7 +597,9 @@ object And {
 }
 
 final case class Or(left: Exp, right: Exp) extends BinaryExp {
-  val op = "||"
+  val op = "∨"
+
+  override val precedence = 80
 }
 
 object Or {
@@ -512,20 +616,35 @@ object Or {
 
 final case class Implies(left: Exp, right: Exp) extends BinaryExp {
   val op = "->"
+
+  override val precedence = 90
 }
 
 sealed trait UnaryExp extends Exp {
   def op: String
 
   def exp: Exp
+
+  final override def buildString(sb: StringBuilder): Unit = {
+    sb.append(op)
+    if (exp.precedence > precedence) {
+      sb.append('(')
+      exp.buildString(sb)
+      sb.append(')')
+    } else exp.buildString(sb)
+  }
 }
 
 final case class Not(exp: Exp) extends UnaryExp {
-  val op = "!"
+  val op = "¬"
+
+  override def precedence: Int = 40
 }
 
 final case class Minus(exp: Exp) extends UnaryExp {
   val op = "-"
+
+  override def precedence: Int = 20
 }
 
 sealed trait Quant[T <: Quant[T]] extends Exp {
@@ -536,6 +655,34 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
   def domainOpt: Option[QuantDomain]
 
   def exp: Exp
+
+  override val precedence = 100
+
+  override final def buildString(sb: StringBuilder): Unit = {
+    sb.append(op)
+    sb.append(' ')
+    ids.head.buildString(sb)
+    for (id <- ids.tail) {
+      sb.append(", ")
+      id.buildString(sb)
+    }
+    sb.append(' ')
+    domainOpt match {
+      case Some(t: TypeDomain) =>
+        sb.append(": ")
+        t.tpe.buildString(sb)
+        sb.append(' ')
+      case Some(r: RangeDomain) =>
+        sb.append(": ")
+        r.lo.buildString(sb)
+        sb.append(" .. ")
+        r.hi.buildString(sb)
+        sb.append(' ')
+      case None =>
+    }
+    sb.append("| ")
+    exp.buildString(sb)
+  }
 
   private var simplified: T = _
 
@@ -573,7 +720,7 @@ final case class ForAll(ids: Node.Seq[Id],
                         domainOpt: Option[QuantDomain],
                         exp: Exp)
   extends Quant[ForAll] {
-  val op = "all"
+  val op = "∀"
   val ids2 = ids :+ Id("x")
   val ids3 = Id("x") +: ids
 }
@@ -582,7 +729,7 @@ final case class Exists(ids: Node.Seq[Id],
                         domainOpt: Option[QuantDomain],
                         exp: Exp)
   extends Quant[Exists] {
-  val op = "some"
+  val op = "∃"
 }
 
 sealed trait QuantDomain extends Node
@@ -594,7 +741,19 @@ final case class RangeDomain(lo: Exp,
                              loLt: Boolean,
                              hiLt: Boolean) extends QuantDomain
 
-final case class SeqLit(args: Node.Seq[Exp]) extends Exp
+final case class SeqLit(args: Node.Seq[Exp]) extends PrimaryExp {
+  override def buildString(sb: StringBuilder): Unit = {
+    sb.append("ZS(")
+    if (args.nonEmpty) {
+      args.head.buildString(sb)
+      for (arg <- args.tail) {
+        sb.append(", ")
+        arg.buildString(sb)
+      }
+      sb.append(')')
+    }
+  }
+}
 
 final case class Program(fact: Facts,
                          block: Block) extends UnitNode
@@ -687,10 +846,29 @@ final case class Fun(id: Id,
                      params: Node.Seq[Param],
                      returnType: Type) extends FactOrFun
 
-sealed trait Type extends Node
+object Type {
+  final def toString(t: Type): String = {
+    val sb = new StringBuilder
+    t.buildString(sb)
+    sb.toString
+  }
+}
 
-final case class BooleanType() extends Type
+sealed trait Type extends Node {
+  def buildString(sb: StringBuilder): Unit
+}
 
-final case class IntType() extends Type
+final case class BooleanType() extends Type {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("B")
+}
 
-final case class IntSeqType() extends Type
+final case class IntType() extends Type {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z")
+}
+
+final case class IntSeqType() extends Type {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("ZS")
+}

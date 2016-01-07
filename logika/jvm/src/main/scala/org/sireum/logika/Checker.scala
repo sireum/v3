@@ -45,24 +45,27 @@ object Checker {
     }
     if (reporter.hasError)
       return message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
-    if (m.hintEnabled) {
+    if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*))
         if (m.lastOnly)
-          check(programs.last, m.autoEnabled, m.timeout, m.checkSat)
+          check(programs.last, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
         else
           for (program <- programs)
-            check(program, m.autoEnabled, m.timeout, m.checkSat)
-    } else {
+            check(program, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
+    } else if (unitNodes.forall(_.isInstanceOf[Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[Sequent])
       for (sequent <- sequents)
-        check(sequent, autoEnabled = false, m.timeout, m.checkSat)
+        check(sequent, autoEnabled = false, m.timeout, m.checkSat, m.hintEnabled)
+    } else {
+      reporter.report(ErrorMessage("AST", "Cannot check mixed programs and sequents."))
     }
     message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
   }
 
   final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
-                  timeoutInMs: Int = 2000, checkSat: Boolean = false)(
+                  timeoutInMs: Int = 2000, checkSat: Boolean = false,
+                  hintEnabled: Boolean = false)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -74,8 +77,9 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = ProofContext(s.mode, autoEnabled, timeoutInMs,
-            checkSat, premises = s.premises.toSet).check(proof).isDefined
+          val r = ProofContext(s, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled, premises = ilinkedSetEmpty ++ s.premises).
+            check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
             case _ => None
@@ -110,8 +114,8 @@ object Checker {
         false
       } else {
         val r =
-          ProofContext(program.mode, autoEnabled, timeoutInMs,
-            checkSat).check(program)
+          ProofContext(program, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled).check(program)
         if (r) reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
         else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
         r
@@ -136,19 +140,22 @@ object Checker {
 }
 
 private final case class
-ProofContext(mode: LogicMode,
+ProofContext(unitNode: UnitNode,
              autoEnabled: Boolean,
              timeoutInMs: Int,
              checkSat: Boolean,
-             invariants: ISet[Exp] = isetEmpty,
-             premises: ISet[Exp] = isetEmpty,
+             hintEnabled: Boolean,
+             invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
+             premises: ILinkedSet[Exp] = ilinkedSetEmpty,
              vars: ISet[String] = isetEmpty,
              facts: IMap[String, Exp] = imapEmpty,
              provedSteps: IMap[Natural, ProofStep] = imapEmpty,
              declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
-            (implicit reporter: AccumulatingTagReporter,
-             fileUriOpt: Option[FileResourceUri],
-             nodeLocMap: MIdMap[Node, LocationInfo]) {
+            (implicit reporter: AccumulatingTagReporter) {
+
+  val mode = unitNode.mode
+  val fileUriOpt = unitNode.fileUriOpt
+  implicit val nodeLocMap = unitNode.nodeLocMap
 
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
@@ -223,8 +230,7 @@ ProofContext(mode: LogicMode,
               error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
             }
             Some(pc.copy(premises =
-              filter(sequent.premises.toSet) ++
-                filter(sequent.conclusions.toSet)))
+              filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
           case Assert(e) =>
             if (autoEnabled) {
               if (!isValid(pc.premises ++ pc.facts.values, ivector(e))) {
@@ -299,7 +305,7 @@ ProofContext(mode: LogicMode,
               case _ => None
             }
           case stmt: MethodDecl =>
-            val invs = if (stmt.isHelper) isetEmpty else pc.invariants
+            val invs = if (stmt.isHelper) ilinkedSetEmpty else pc.invariants
             val effectivePre = invs ++ stmt.contract.requires.exps
             val effectivePost = invs ++ stmt.contract.ensures.exps
             hasError =
@@ -329,10 +335,10 @@ ProofContext(mode: LogicMode,
             val modifiedIds = stmt.contract.modifies.ids.toSet
             val mods = modifiedIds.map(id =>
               Eq(id, newId(id.value + "_in", id.tipe)))
-            pc.copy(premises = effectivePre ++ mods).
+            pc.copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods).
               check(stmt.block) match {
               case Some(pc2) =>
-                var modifiedInvariants = isetEmpty[Exp]
+                var modifiedInvariants = ilinkedSetEmpty[Exp]
                 for (e <- invs) {
                   var modified = false
                   Visitor.build({
@@ -467,11 +473,53 @@ ProofContext(mode: LogicMode,
                     i += 1
                   }
                 }
-                Some(pc.copy(premises = es.toSet + Not(exp)))
+                Some(pc.copy(premises = (ilinkedSetEmpty ++ es) + Not(exp)))
               case _ => None
             }
           case _: Print => pcOpt
         }
+      val beforePremises = pc.premises
+      val afterPremises = pcOpt.map(_.premises).getOrElse(ilinkedSetEmpty)
+      if (hintEnabled && (beforePremises.nonEmpty || afterPremises.nonEmpty) &&
+        !stmt.isInstanceOf[MethodDecl]) {
+        val input = unitNode.input
+        val li = nodeLocMap(stmt)
+        var startOffset = input.lastIndexOf('\n', li.offset) + 1
+        if (startOffset < 1) startOffset = 0
+        var endOffset = input.indexOf('\n', li.offset + li.length)
+        if (endOffset < 0) endOffset = input.length
+        val sb = new StringBuilder
+        def indent(): Unit = {
+          for (i <- 0 until li.columnBegin) {
+            sb.append(' ')
+          }
+        }
+        indent()
+        sb.append("{\n")
+        for (e <- beforePremises) {
+          indent()
+          sb.append("  ")
+          sb.append(Exp.toString(e))
+          sb.append('\n')
+        }
+        indent()
+        sb.append("}\n")
+        sb.append(input.substring(startOffset, endOffset).
+          replaceAll("\r", ""))
+        sb.append('\n')
+        indent()
+        sb.append("{\n")
+        for (e <- afterPremises) {
+          indent()
+          sb.append("  ")
+          sb.append(Exp.toString(e))
+          sb.append('\n')
+        }
+        indent()
+        sb.append("}")
+        reporter.report(li.toLocationInfo(fileUriOpt, "hint", sb.toString))
+      }
+
     }
     if (hasError) None else pcOpt.map(_.cleanup)
   }
@@ -590,17 +638,21 @@ ProofContext(mode: LogicMode,
     hasError
   }
 
-  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ISet[Exp] =
-    (for (e1 <- es1; e2 <- es2) yield
-      ivector(Or(e1, e2)) ++
-        (if (e1 != e2) ivectorEmpty else ivector(e1))).
-      flatten.toSet
+  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
+    var r = ilinkedSetEmpty[Exp]
+    for (e1 <- es1; e2 <- es2) {
+      r += Or(e1, e2)
+      if (e1 == e2)
+        r += e1
+    }
+    r
+  }
 
-  def extractClaims(pg: ProofGroup): ISet[Exp] =
-    pg.allSteps.flatMap(_ match {
+  def extractClaims(pg: ProofGroup): ILinkedSet[Exp] =
+    ilinkedSetEmpty ++ pg.allSteps.flatMap(_ match {
       case step: RegularStep => Some(step.exp)
       case _ => None
-    }).toSet
+    })
 
   def assign(id: Id, exp: Exp): Option[ProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
@@ -611,7 +663,7 @@ ProofContext(mode: LogicMode,
     copy(premises = filter(premises), provedSteps = imapEmpty,
       declaredStepNumbers = imapEmpty)
 
-  def filter(premises: ISet[Exp]): ISet[Exp] = {
+  def filter(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
     def keep(e: Exp) = {
       var r = true
       Visitor.build({

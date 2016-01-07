@@ -74,6 +74,10 @@ object Rewriter {
       val Seq(id: Id, exp: Exp) = es
       org.sireum.logika.ast.Assign(id, exp)
     }),
+    ("Assume", { es =>
+      val Seq(exp: Exp) = es
+      org.sireum.logika.ast.Assume(exp)
+    }),
     ("Auto", { es =>
       val Seq(num: Num, exp: Exp, stepOrFacts: IVector[_]) = es
       org.sireum.logika.ast.Auto(num, exp, cast(stepOrFacts))
@@ -313,6 +317,10 @@ object Rewriter {
     ("ProofStmt", { es =>
       val Seq(proof: Proof) = es
       org.sireum.logika.ast.ProofStmt(proof)
+    }),
+    ("RandomInt", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.RandomInt()
     }),
     ("RangeDomain", { es =>
       val Seq(lo: Exp, hi: Exp, loLt: java.lang.Boolean, hiLt: java.lang.Boolean) = es

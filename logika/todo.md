@@ -1,10 +1,6 @@
 Logika To-Dos
 =============
 
-* Support configurable file types
-
-* Add hint mode
-
 * Create website with user manual
 
 

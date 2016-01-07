@@ -72,6 +72,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
     implicit val reporter = new ConsoleTagReporter {
       override def info(msg: String): Unit = {
       }
+
       override def warn(msg: String): Unit = {
       }
     }

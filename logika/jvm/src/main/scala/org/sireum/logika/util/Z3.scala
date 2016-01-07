@@ -250,7 +250,7 @@ $s"""))
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case _: ReadInt | _: Clone =>
+      case _: RandomInt | _: ReadInt | _: Clone =>
         assert(assertion = false, "Unexpected situation.")
         null
     }

@@ -89,15 +89,15 @@ formula
   | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
   | l=formula op=( '+' | '-' | '+:' ) NL? r=formula     #Binary  // algebra
+  | op='-' formula                                      #Unary   // algebra
   | l=formula op=':+' NL? r=formula                     #Binary  // algebra
-  | l=formula
-    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
-    r=formula                                           #Binary  // algebra
   | l=formula
     op=( '=' |'==' | '!=' | '≠' ) NL?
     r=formula                                           #Binary  // algebra
-  | op='-' formula                                      #Unary   // algebra
   | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
+  | l=formula
+    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
+    r=formula                                           #Binary  // algebra
   | l=formula
     op=( 'and' | '&&' | '^' | '∧' ) NL? r=formula       #Binary  // propositional logic
   | l=formula

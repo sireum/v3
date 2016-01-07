@@ -45,28 +45,23 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
   val minInt = BigInt(Int.MinValue)
 
   private def build(ctx: FileContext): UnitNode = {
-    ctx match {
-      case ctx: SequentFileContext => build(ctx)
-      case ctx: ProgramFileContext => build(ctx)
-    }
-  }
-
-  private def build(ctx: SequentFileContext): Sequent = {
     val r =
-      if (ctx.proof != null) build(ctx.sequent).
-        copy(proofOpt = Some(build(ctx.proof))) at ctx
-      else build(ctx.sequent)
+      ctx match {
+        case ctx: SequentFileContext => build(ctx)
+        case ctx: ProgramFileContext => build(ctx)
+      }
     r.fileUriOpt = fileUriOpt
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
 
-  private def build(ctx: ProgramFileContext): Program = {
-    val r = build(ctx.program)
-    r.fileUriOpt = fileUriOpt
-    r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
-    r
-  }
+  private def build(ctx: SequentFileContext): Sequent =
+    if (ctx.proof != null) build(ctx.sequent).
+      copy(proofOpt = Some(build(ctx.proof))) at ctx
+    else build(ctx.sequent)
+
+  private def build(ctx: ProgramFileContext): Program =
+    build(ctx.program)
 
   private def build(ctx: SequentContext): Sequent =
     Sequent(
@@ -721,6 +716,7 @@ object Builder {
         }
       r match {
         case Some(un) =>
+          un.input = input
           Node.checkWellFormed(un)
           if (!reporter.hasError) r else None
         case None => None

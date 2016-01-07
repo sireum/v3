@@ -160,7 +160,8 @@ FileLocationInfoErrorMessage(kind: String,
                              offset: Natural,
                              length: Natural,
                              message: String)
-  extends UriTag
+  extends KindTag
+  with UriTag
   with LocationInfoTag
   with ErrorTag
   with MessageTag
@@ -176,7 +177,8 @@ FileLocationInfoWarningMessage(kind: String,
                                offset: Natural,
                                length: Natural,
                                message: String)
-  extends UriTag
+  extends KindTag
+  with UriTag
   with LocationInfoTag
   with WarningTag
   with MessageTag
@@ -192,7 +194,8 @@ FileLocationInfoInfoMessage(kind: String,
                             offset: Natural,
                             length: Natural,
                             message: String)
-  extends UriTag
+  extends KindTag
+  with UriTag
   with LocationInfoTag
   with InfoTag
   with MessageTag
@@ -207,7 +210,8 @@ LocationInfoErrorMessage(kind: String,
                          offset: Natural,
                          length: Natural,
                          message: String)
-  extends LocationInfoTag
+  extends KindTag
+  with LocationInfoTag
   with ErrorTag
   with MessageTag
 
@@ -221,7 +225,8 @@ LocationInfoWarningMessage(kind: String,
                            offset: Natural,
                            length: Natural,
                            message: String)
-  extends LocationInfoTag
+  extends KindTag
+  with LocationInfoTag
   with WarningTag
   with MessageTag
 
@@ -235,7 +240,8 @@ LocationInfoInfoMessage(kind: String,
                         offset: Natural,
                         length: Natural,
                         message: String)
-  extends LocationInfoTag
+  extends KindTag
+  with LocationInfoTag
   with InfoTag
   with MessageTag
 
@@ -244,6 +250,7 @@ final case class
 InternalErrorMessage(kind: String,
                      message: String)
   extends InternalErrorTag
+  with KindTag
   with MessageTag
 
 
@@ -251,6 +258,7 @@ final case class
 ErrorMessage(kind: String,
              message: String)
   extends ErrorTag
+  with KindTag
   with MessageTag
 
 
@@ -258,6 +266,7 @@ final case class
 WarningMessage(kind: String,
                message: String)
   extends WarningTag
+  with KindTag
   with MessageTag
 
 
@@ -265,4 +274,5 @@ final case class
 InfoMessage(kind: String,
             message: String)
   extends InfoTag
+  with KindTag
   with MessageTag

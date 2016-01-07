@@ -115,6 +115,15 @@ class ProofChecker(option: LogikaOption,
   }
 
   def runIde(): Boolean = {
+    def internalError(requestId: String, t: Throwable): Unit = {
+      val sw = new StringWriter
+      sw.append("An error was thrown when processing the input message.")
+      sw.append(scala.util.Properties.lineSeparator)
+      t.printStackTrace(new java.io.PrintWriter(sw))
+      Console.out.println(message.Message.pickleOutput(message.Result(
+        "", isSilent = false, ivector(InternalErrorMessage("CLI", sw.toString)))))
+      Console.out.flush()
+    }
     var line = Console.in.readLine()
     var exit = false
     while (!exit && line != null) {
@@ -124,19 +133,16 @@ class ProofChecker(option: LogikaOption,
             case message.Terminate => exit = true
             case m: message.Check =>
               implicit val reporter = new AccumulatingTagReporter
-              Console.out.println(message.Message.pickleOutput(Checker.check(m)))
-              Console.out.flush()
+              try {
+                Console.out.println(message.Message.pickleOutput(Checker.check(m)))
+                Console.out.flush()
+              } catch {
+                case t: Throwable => internalError(m.requestId, t)
+              }
             case m: ProofFile => assert(false)
           }
       } catch {
-        case t: Throwable =>
-          val sw = new StringWriter
-          sw.append("An error was thrown when processing the input message.")
-          sw.append(scala.util.Properties.lineSeparator)
-          t.printStackTrace(new java.io.PrintWriter(sw))
-          Console.out.println(message.Message.pickleOutput(message.Result(
-            "", isSilent = false, ivector(InternalErrorMessage("CLI", sw.toString)))))
-          Console.out.flush()
+        case t: Throwable => internalError("", t)
       }
       if (!exit)
         line = Console.in.readLine()

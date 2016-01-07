@@ -99,6 +99,7 @@ package object util {
   type ILinkedMap[K, V] = scala.collection.immutable.ListMap[K, V]
   type ISortedMap[K, V] = scala.collection.immutable.SortedMap[K, V]
   type ISet[T] = scala.collection.immutable.Set[T]
+  type ILinkedSet[T] = scala.collection.immutable.ListSet[T]
   type ISortedSet[T] = scala.collection.immutable.SortedSet[T]
   type IStack[T] = scala.collection.immutable.List[T]
 
@@ -143,6 +144,9 @@ package object util {
 
   @inline
   final def isetEmpty[T]: ISet[T] = scala.collection.immutable.Set.empty[T]
+
+  @inline
+  final def ilinkedSetEmpty[T]: ILinkedSet[T] = scala.collection.immutable.ListSet.empty[T]
 
   @inline
   final def isortedSetEmpty[T](implicit ord: Ordering[T]): ISortedSet[T] = scala.collection.immutable.SortedSet.empty[T]

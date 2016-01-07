@@ -329,7 +329,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             z(e.left); z(e.right); someZ
           case _: Lt | _: Le | _: Gt | _: Ge =>
             z(e.left); z(e.right); someB
-          case e: Equality =>
+          case e: EqualityExp =>
             for (t1 <- check(e.left); t2 <- check(e.right))
               if (t1 != t2) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
