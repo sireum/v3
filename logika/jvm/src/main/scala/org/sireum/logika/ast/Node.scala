@@ -386,9 +386,9 @@ final case class ExistsAssumeStep(num: Num,
   extends QuantAssumeStep with RegularStep
 
 object Exp {
-  final def toString(e: Exp): String = {
+  final def toString(e: Exp, inProof: Boolean): String = {
     val sb = new StringBuilder
-    e.buildString(sb)
+    e.buildString(sb, inProof)
     sb.toString
   }
 }
@@ -396,7 +396,7 @@ object Exp {
 sealed trait Exp extends Node {
   private[ast] var hasParen = false
 
-  def buildString(sb: StringBuilder): Unit
+  def buildString(sb: StringBuilder, inProof: Boolean): Unit
 
   def precedence: Int
 }
@@ -406,27 +406,31 @@ sealed trait PrimaryExp extends Exp {
 }
 
 final case class BooleanLit(value: Boolean) extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit =
-    sb.append(value)
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit =
+    sb.append(if (value) "T" else "F")
 }
 
 final case class Id(value: String) extends PrimaryExp with NumOrId {
   var tipe: Tipe = _
 
-  override def buildString(sb: StringBuilder): Unit =
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit =
     sb.append(value)
 }
 
 final case class Size(id: Id) extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
-    id.buildString(sb)
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    id.buildString(sb, inProof)
     sb.append(".size")
   }
 }
 
 final case class Clone(id: Id) extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
-    id.buildString(sb)
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    id.buildString(sb, inProof)
     sb.append(".clone")
   }
 }
@@ -434,7 +438,8 @@ final case class Clone(id: Id) extends PrimaryExp {
 final case class Result() extends PrimaryExp {
   var tipe: Tipe = _
 
-  override def buildString(sb: StringBuilder): Unit = {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
     sb.append("result")
   }
 }
@@ -443,14 +448,15 @@ final case class Apply(id: Id,
                        args: Node.Seq[Exp]) extends PrimaryExp {
   var declOpt: Option[MethodDecl] = None
 
-  override def buildString(sb: StringBuilder): Unit = {
-    id.buildString(sb)
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    id.buildString(sb, inProof)
     sb.append('(')
     if (args.nonEmpty) {
-      args.head.buildString(sb)
+      args.head.buildString(sb, inProof)
       for (arg <- args.tail) {
         sb.append(", ")
-        arg.buildString(sb)
+        arg.buildString(sb, inProof)
       }
     }
     sb.append(')')
@@ -458,48 +464,57 @@ final case class Apply(id: Id,
 }
 
 final case class RandomInt() extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
     sb.append("randomInt()")
   }
 }
 
 final case class ReadInt(msgOpt: Option[StringLit])
   extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
     sb.append("readInt()")
   }
 }
 
 final case class IntLit(value: String) extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
-    sb.append(value)
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    val n = BigInt(value)
+    if (n < Int.MinValue || n > Int.MaxValue) {
+      sb.append("Z(\"")
+      sb.append(value)
+      sb.append("\")")
+    } else sb.append(value)
   }
 }
 
 sealed trait BinaryExp extends Exp {
   def left: Exp
 
-  def op: String
+  def op(inProof: Boolean): String
 
   def right: Exp
 
-  final override def buildString(sb: StringBuilder): Unit = {
+  final override def buildString(sb: StringBuilder,
+                                 inProof: Boolean): Unit = {
     if (left.precedence > precedence) {
       sb.append('(')
-      left.buildString(sb)
+      left.buildString(sb, inProof)
       sb.append(')')
     } else {
-      left.buildString(sb)
+      left.buildString(sb, inProof)
     }
     sb.append(' ')
-    sb.append(op)
+    sb.append(op(inProof))
     sb.append(' ')
     if (right.precedence > precedence) {
       sb.append('(')
-      right.buildString(sb)
+      right.buildString(sb, inProof)
       sb.append(')')
     } else {
-      right.buildString(sb)
+      right.buildString(sb, inProof)
     }
   }
 }
@@ -509,15 +524,15 @@ sealed trait MultiplicativeExp extends BinaryExp {
 }
 
 final case class Mul(left: Exp, right: Exp) extends MultiplicativeExp {
-  val op = "*"
+  def op(inProof: Boolean) = "*"
 }
 
 final case class Div(left: Exp, right: Exp) extends MultiplicativeExp {
-  val op = "/"
+  def op(inProof: Boolean) = "/"
 }
 
 final case class Rem(left: Exp, right: Exp) extends MultiplicativeExp {
-  val op = "%"
+  def op(inProof: Boolean) = "%"
 }
 
 sealed trait AdditiveExp extends BinaryExp {
@@ -525,11 +540,11 @@ sealed trait AdditiveExp extends BinaryExp {
 }
 
 final case class Add(left: Exp, right: Exp) extends AdditiveExp {
-  val op = "+"
+  def op(inProof: Boolean) = "+"
 }
 
 final case class Sub(left: Exp, right: Exp) extends AdditiveExp {
-  val op = "-"
+  def op(inProof: Boolean) = "-"
 }
 
 sealed trait InequalityExp extends BinaryExp {
@@ -537,19 +552,19 @@ sealed trait InequalityExp extends BinaryExp {
 }
 
 final case class Lt(left: Exp, right: Exp) extends InequalityExp {
-  val op = "<"
+  def op(inProof: Boolean) = "<"
 }
 
 final case class Le(left: Exp, right: Exp) extends InequalityExp {
-  val op = "≤"
+  def op(inProof: Boolean) = if (inProof) "≤" else "<="
 }
 
 final case class Gt(left: Exp, right: Exp) extends InequalityExp {
-  val op = ">"
+  def op(inProof: Boolean) = ">"
 }
 
 final case class Ge(left: Exp, right: Exp) extends InequalityExp {
-  val op = "≥"
+  def op(inProof: Boolean) = if (inProof) "≥" else ">="
 }
 
 sealed trait EqualityExp extends BinaryExp {
@@ -559,27 +574,27 @@ sealed trait EqualityExp extends BinaryExp {
 }
 
 final case class Eq(left: Exp, right: Exp) extends EqualityExp {
-  val op = "=="
+  def op(inProof: Boolean) = "=="
 }
 
 final case class Ne(left: Exp, right: Exp) extends EqualityExp {
-  val op = "!="
+  def op(inProof: Boolean) = if (inProof) "≠" else "!="
 }
 
 final case class Append(left: Exp, right: Exp) extends BinaryExp {
-  val op = ":+"
+  def op(inProof: Boolean) = ":+"
 
   override val precedence = 40
 }
 
 final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
-  val op = "+:"
+  def op(inProof: Boolean) = "+:"
 
   override val precedence = 30
 }
 
 final case class And(left: Exp, right: Exp) extends BinaryExp {
-  val op = "∧"
+  def op(inProof: Boolean) = if (inProof) "∧" else "&"
 
   override val precedence = 60
 }
@@ -597,7 +612,7 @@ object And {
 }
 
 final case class Or(left: Exp, right: Exp) extends BinaryExp {
-  val op = "∨"
+  def op(inProof: Boolean) = if (inProof) "∨" else "|"
 
   override val precedence = 80
 }
@@ -615,34 +630,35 @@ object Or {
 }
 
 final case class Implies(left: Exp, right: Exp) extends BinaryExp {
-  val op = "->"
+  def op(inProof: Boolean) = if (inProof) "→" else "->"
 
   override val precedence = 90
 }
 
 sealed trait UnaryExp extends Exp {
-  def op: String
+  def op(inProof: Boolean): String
 
   def exp: Exp
 
-  final override def buildString(sb: StringBuilder): Unit = {
-    sb.append(op)
+  final override def buildString(sb: StringBuilder,
+                                 inProof: Boolean): Unit = {
+    sb.append(op(inProof))
     if (exp.precedence > precedence) {
       sb.append('(')
-      exp.buildString(sb)
+      exp.buildString(sb, inProof)
       sb.append(')')
-    } else exp.buildString(sb)
+    } else exp.buildString(sb, inProof)
   }
 }
 
 final case class Not(exp: Exp) extends UnaryExp {
-  val op = "¬"
+  def op(inProof: Boolean) = if (inProof) "¬" else "!"
 
   override def precedence: Int = 40
 }
 
 final case class Minus(exp: Exp) extends UnaryExp {
-  val op = "-"
+  def op(inProof: Boolean) = "-"
 
   override def precedence: Int = 20
 }
@@ -658,13 +674,14 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
 
   override val precedence = 100
 
-  override final def buildString(sb: StringBuilder): Unit = {
+  override final def buildString(sb: StringBuilder,
+                                 inProof: Boolean): Unit = {
     sb.append(op)
     sb.append(' ')
-    ids.head.buildString(sb)
+    ids.head.buildString(sb, inProof)
     for (id <- ids.tail) {
       sb.append(", ")
-      id.buildString(sb)
+      id.buildString(sb, inProof)
     }
     sb.append(' ')
     domainOpt match {
@@ -673,15 +690,14 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
         t.tpe.buildString(sb)
         sb.append(' ')
       case Some(r: RangeDomain) =>
-        sb.append(": ")
-        r.lo.buildString(sb)
+        sb.append(": (")
+        r.lo.buildString(sb, inProof)
         sb.append(" .. ")
-        r.hi.buildString(sb)
-        sb.append(' ')
+        r.hi.buildString(sb, inProof)
+        sb.append(") ")
       case None =>
     }
-    sb.append("| ")
-    exp.buildString(sb)
+    exp.buildString(sb, inProof)
   }
 
   private var simplified: T = _
@@ -742,13 +758,14 @@ final case class RangeDomain(lo: Exp,
                              hiLt: Boolean) extends QuantDomain
 
 final case class SeqLit(args: Node.Seq[Exp]) extends PrimaryExp {
-  override def buildString(sb: StringBuilder): Unit = {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
     sb.append("ZS(")
     if (args.nonEmpty) {
-      args.head.buildString(sb)
+      args.head.buildString(sb, inProof)
       for (arg <- args.tail) {
         sb.append(", ")
-        arg.buildString(sb)
+        arg.buildString(sb, inProof)
       }
       sb.append(')')
     }

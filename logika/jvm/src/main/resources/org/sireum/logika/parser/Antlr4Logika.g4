@@ -35,15 +35,16 @@ grammar Antlr4Logika;
    ≥         2265      >=
    ≠         2260      !=
    ¬         00AC      not        !        ~
-   ∧         2227      and        &&       ^
-   ∨         2228      or         ||       V
+   ∧         2227      and        &        ^
+   ∨         2228      or         |        V
    →         21D2      implies    ->
    ∀         2200      forall     all      A
    ∃         2203      exists     some     E
-   ⊢         22A2      |-         ---+
+   ⊢         22A2      |-
 ==============================================
 
 Note: ---+ means at least three minus (-) characters
+and it is used for a different form of sequent
 */
 
 @header {
@@ -99,9 +100,9 @@ formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
     r=formula                                           #Binary  // algebra
   | l=formula
-    op=( 'and' | '&&' | '^' | '∧' ) NL? r=formula       #Binary  // propositional logic
+    op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary  // propositional logic
   | l=formula
-    op=( 'or' | '||' | 'V' | '∨' ) NL? r=formula        #Binary  // propositional logic
+    op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary  // propositional logic
   | l=formula
     op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
@@ -112,8 +113,8 @@ qformula
       | 'exists' | 'some' | 'E' | '∃' )
     vars+=ID ( ',' vars+=ID )*
     ( ':' type
-    | ':' lo=exp ll='<'? '..' lh='<'? hi=exp
-    )? '|' NL?
+    | ':' '(' lo=exp ll='<'? '..' lh='<'? hi=exp ')'
+    )? NL?
     formula
   ;
 
@@ -125,16 +126,16 @@ type
 
 justification
   : t='premise'                                         #Premise
-  | ( tb=('andi' | '^i' ) | tb=( '&&' | '∧' ) ID ) // ID=="i"
+  | ( tb=('andi' | '^i' ) | tb=( '&' | '∧' ) ID ) // ID=="i"
     lStep=NUM rStep=NUM                                 #AndIntro
   | ( tb=('ande1' | '^e1' | 'ande2' | '^e2' )
-    | tb=( '&&' | '∧' ) ID ) // ID=="e1" or ID=="e2"
+    | tb=( '&' | '∧' ) ID ) // ID=="e1" or ID=="e2"
     andStep=NUM                                         #AndElim
   | ( tb=( 'ori1' | 'Vi1' | 'ori2' | 'Vi2' )
-    | tb=( '||' | '∨' ) ID ) // ID=="i1" or ID=="i2"
+    | tb=( '|' | '∨' ) ID ) // ID=="i1" or ID=="i2"
     step=NUM                                            #OrIntro
   | ( tb=( 'ore' | 'Ve' )
-    | tb=( '||' | '∨' ) ID ) // ID=="e"
+    | tb=( '|' | '∨' ) ID ) // ID=="e"
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
   | ( tb='impliesi' | tb=( '->' | '→' ) ID ) // ID=="i"
     subProof=NUM                                        #ImpliesIntro
@@ -251,8 +252,8 @@ exp
   | l=exp op=':+' NL? r=exp                             #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
-  | l=exp op='&&' NL? r=exp                             #BinaryExp
-  | l=exp op='||' NL? r=exp                             #BinaryExp
+  | l=exp op='&' NL? r=exp                              #BinaryExp
+  | l=exp op='|' NL? r=exp                              #BinaryExp
   ;
 
 loopInvariant

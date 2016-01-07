@@ -499,7 +499,7 @@ ProofContext(unitNode: UnitNode,
         for (e <- beforePremises) {
           indent()
           sb.append("  ")
-          sb.append(Exp.toString(e))
+          sb.append(Exp.toString(e, inProof = true))
           sb.append('\n')
         }
         indent()
@@ -512,7 +512,7 @@ ProofContext(unitNode: UnitNode,
         for (e <- afterPremises) {
           indent()
           sb.append("  ")
-          sb.append(Exp.toString(e))
+          sb.append(Exp.toString(e, inProof = true))
           sb.append('\n')
         }
         indent()

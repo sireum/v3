@@ -303,8 +303,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           case ">=" | "≥" => Ge(lExp, rExp)
           case "=" | "==" => Eq(lExp, rExp)
           case "!=" | "≠" => Ne(lExp, rExp)
-          case "and" | "&&" | "∧" | "^" => And(lExp, rExp)
-          case "or" | "||" | "∨" | "V" => Or(lExp, rExp)
+          case "and" | "&" | "∧" | "^" => And(lExp, rExp)
+          case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }
       case ctx: UnaryContext =>
@@ -547,8 +547,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           case ">=" | "≥" => Ge(lExp, rExp)
           case "=" | "==" => Eq(lExp, rExp)
           case "!=" | "≠" => Ne(lExp, rExp)
-          case "and" | "&&" | "∧" | "^" => And(lExp, rExp)
-          case "or" | "||" | "∨" | "V" => Or(lExp, rExp)
+          case "and" | "&" | "∧" | "^" => And(lExp, rExp)
+          case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }
     }
