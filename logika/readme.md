@@ -22,13 +22,13 @@ It is inspired by:
   [Distinguished Professor Emeritus David A. Schmidt](http://people.cis.ksu.edu/~schmidt/).
 
 Logika is a combination of both tools; it uses the same
-[input language](logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
+[input language](jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
 for reasoning about propositional, predicate, and programming logics (i.e., the propositional logic 
 input language is a subset of the predicate logic input language, which in turn, is a subset of the
 programming logic input language).
 The programming logic input language is a restricted subset of the Scala programming language that 
 can be run by using the regular Scala interpreter (requires the 
-[Logika runtime library](logika/jvm/src/main/scala/org/sireum/logika/package.scala)).
+[Logika runtime library](jvm/src/main/scala/org/sireum/logika/package.scala)).
 
 Currently, the tool has been implemented with feature sets on par with the two tools above. 
 Logika uses the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver for checking
