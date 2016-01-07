@@ -212,7 +212,7 @@ To do so, exit IntelliJ (if it is running), then, for OS X:
 ```bash
 cd "/Applications/IntelliJ IDEA 15.app/Contents/jre/jdk/Contents"
 sudo rm -fR Home
-sudo ln -s absolute/path/of/platform/java Home
+sudo ln -s /absolute/path/of/sireum-v3/platform/java Home
 ```
 
 ### Plugins
@@ -249,8 +249,7 @@ Other plugins that you might be interested are:
   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled`
 
 * IntelliJ uses `make` as the default build system.
-  For Scala projects, this means that it often misses some dependencies when compiling Scala codebase.
-  To address this, use the SBT ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) plugin.
+  For Scala projects, it is best to Sbt using the ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) plugin.
   
   * Set `idea-sbt-plugin` settings by opening `IntelliJ`->`Preference`->`Other Settings`->`SBT`
 
