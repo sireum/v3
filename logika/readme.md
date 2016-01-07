@@ -22,13 +22,13 @@ It is inspired by:
   [Distinguished Professor Emeritus David A. Schmidt](http://people.cis.ksu.edu/~schmidt/).
 
 Logika is a combination of both tools; it uses the same
-[input language](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika-parser-antlr4/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
+[input language](logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4)
 for reasoning about propositional, predicate, and programming logics (i.e., the propositional logic 
 input language is a subset of the predicate logic input language, which in turn, is a subset of the
 programming logic input language).
 The programming logic input language is a restricted subset of the Scala programming language that 
 can be run by using the regular Scala interpreter (requires the 
-[Logika runtime library](https://github.com/santoslab/sireum-v3/blob/master/logika/sireum-logika/src/main/scala/org/sireum/logika/package.scala)).
+[Logika runtime library](logika/jvm/src/main/scala/org/sireum/logika/package.scala)).
 
 Currently, the tool has been implemented with feature sets on par with the two tools above. 
 Logika uses the [Z3](https://github.com/Z3Prover/z3) high-performing SMT solver for checking
@@ -37,9 +37,9 @@ More features are planned (see [todo.md](todo.md)).
 
 Some examples are available at the following links:
 
-* [Propositional and predicate logic examples](https://github.com/santoslab/sireum-v3/blob/master/logika/jvm/src/test/scala/org/sireum/logika/test/SequentTestDefProvider.scala)
+* [Propositional and predicate logic examples](jvm/src/test/scala/org/sireum/logika/test/SequentTestDefProvider.scala)
 
-* [Programming logic examples](https://github.com/santoslab/sireum-v3/tree/master/logika/jvm/src/test/resources/org/sireum/logika/test/example)
+* [Programming logic examples](jvm/src/test/resources/org/sireum/logika/test/example)
 
 
 ## Installing and Running Logika
@@ -109,5 +109,5 @@ File:
 ```
 You can run all programming logic examples from the directory containing this file as follows:
 ```bash
-for i in jvm/src/test/resources/org/sireum/logika/test/example/*.scala; do echo "Checking ${i}"; ../sireum logika "${i}"; done
+for i in jvm/src/test/resources/org/sireum/logika/test/example/*.logika; do echo "Checking ${i}"; ../sireum logika "${i}"; done
 ```

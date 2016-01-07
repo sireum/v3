@@ -35,13 +35,13 @@ Supported platforms (64-bit only):
 * Using HTTPS:
 
   ```bash
-  git clone https://github.com/santoslab/sireum-v3.git
+  git clone https://github.com/sireum/v3.git sireum-v3
   ```
 
 * Using SSH:
  
   ```bash
-  git clone git@github.com:santoslab/sireum-v3.git
+  git clone git@github.com:sireum/v3.git sireum-v3
   ```
 
 ## Running Sireum
@@ -157,7 +157,7 @@ In such case, Sbt will complain about unresolved dependencies, e.g.:
 [warn]
 [warn] 	Note: Unresolved dependencies path:
 [warn] 		junit:junit:4.11
-[warn] 		  +- com.novocode:junit-interface:0.11 (/Users/rvprasad/Workspace/sireum-v3/project/SireumBuild.scala#L163)
+[warn] 		  +- com.novocode:junit-interface:0.11 (.../Workspace/sireum-v3/project/SireumBuild.scala#L163)
 [warn] 		  +- org.sireum:sireum-core-test_2.11:3.0-SNAPSHOT ()
 ...
 sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
@@ -191,8 +191,7 @@ however, you can also use IntelliJ Community Edition.
 
 ### Download
 
-Since Sireum uses Java 8 and IntelliJ might not run on some Oracle JDK 8 versions,
-JetBrains provided a custom build for IntelliJ that includes a custom OpenJDK 8 build
+JetBrains provides IntelliJ that includes a custom OpenJDK 8 build
 (this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
 
 * Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.2-custom-jdk-bundled.dmg
@@ -204,7 +203,8 @@ inserted before the file extension.)
 
 Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository
 (see [IntelliJ's doc](https://www.jetbrains.com/idea/help/getting-started-with-sbt.html#import_project)).
-Anytime that you are asked for a JDK, point it to `sireum-v3/platform/java`.
+Anytime that you are asked for a JDK, point it to `sireum-v3/platform/java`
+(note: you need to run Sireum at least once).
 
 **Note:** You can opt to use the Zulu JDK that Sireum uses to run IntelliJ instead of IntelliJ's custom JDK.
 To do so, exit IntelliJ (if it is running), then, for OS X:
