@@ -116,6 +116,7 @@ fi
 if [ "${DISTROS}" = "true" ]; then
   exit
 fi
+cd ${REPO}/platform
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
