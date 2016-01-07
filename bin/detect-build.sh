@@ -24,8 +24,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
-SIREUM_JAR=${SIREUM_HOME}/bin/sireum.jar
 cd ${SIREUM_HOME}
+/bin/bash bin/prelude.sh
+SIREUM_JAR=${SIREUM_HOME}/bin/sireum.jar
 SIREUM_VERSION=$( git log -n 1 --pretty=format:"%H" )
 grep -q ${SIREUM_VERSION} bin/VER &> /dev/null && SIREUM_UPDATE=false || SIREUM_UPDATE=true
 SBT=bin/sbt-launch.sh
@@ -50,8 +51,6 @@ if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
       SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
       echo
       echo "${SIREUM_VERSION}" > bin/VER
-    else
-      /bin/bash bin/prelude.sh
     fi
   fi
 fi
