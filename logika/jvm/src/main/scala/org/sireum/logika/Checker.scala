@@ -630,6 +630,7 @@ ProofContext(unitNode: UnitNode,
     }
     Visitor.build({
       case _: Block => false
+      case _: LoopInv => false
       case Div(_, e2) => divisor(e2)
       case Rem(_, e2) => divisor(e2)
       case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
