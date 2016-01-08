@@ -170,7 +170,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
-      checkModifies(md.contract.modifies, md.block, md)
+      tc.checkModifies(md.contract.modifies, md.block, md)
       tc = tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
         case Some(rt) =>
