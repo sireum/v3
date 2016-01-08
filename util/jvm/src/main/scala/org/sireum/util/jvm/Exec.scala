@@ -50,7 +50,7 @@ final class Exec {
   def process(args: Seq[String],
               writeInput: OutputStream => Unit,
               processOutput: InputStream => Unit,
-              extraEnv: (String, String)*): Unit = {
+              extraEnv: (String, String)*): scala.sys.process.Process = {
     scala.sys.process.Process({
       val pb = new java.lang.ProcessBuilder(args: _*)
       pb.redirectErrorStream(true)
