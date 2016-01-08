@@ -4,7 +4,7 @@
 
 ## Available Products
 
-* [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](logika/readme.md)
+* [Sireum Logika: A Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](http://logika.sireum.org)
 
 
 ## Requirements
