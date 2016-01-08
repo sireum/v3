@@ -685,7 +685,8 @@ object Builder {
                                msg: String,
                                e: RecognitionException): Unit = {
         val token = offendingSymbol.asInstanceOf[Token]
-        error("Parser", fileUriOpt, token, msg)
+        error("Parser", fileUriOpt, token,
+          msg.replace("no viable alternative", "invalid syntax starting"))
         errors += 1
         if (maxErrors > 0 && errors >= maxErrors) {
           throw new ParsingEscape

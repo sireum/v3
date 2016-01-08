@@ -137,16 +137,32 @@ justification
   | ( tb=( 'ore' | 'Ve' )
     | tb=( '|' | '∨' ) ID ) // ID=="e"
     orStep=NUM lSubProof=NUM rSubProof=NUM              #OrElim
-  | ( tb='impliesi' | tb=( '->' | '→' ) ID ) // ID=="i"
+  | tb='impliesi' subProof=NUM                          #ImpliesIntro
+  | tb='impliese' impliesStep=NUM antecedentStep=NUM    #ImpliesElim
+  | {("->".equals(_input.LT(1).getText()) ||
+      "→".equals(_input.LT(1).getText())) &&
+     "i".equals(_input.LT(2).getText())}?
+    tb=( '->' | '→' ) ID // ID=="i"
     subProof=NUM                                        #ImpliesIntro
-  | ( tb='impliese' | tb=( '->' | '→' ) ID ) // ID=="e"
+  | {("->".equals(_input.LT(1).getText()) ||
+      "→".equals(_input.LT(1).getText())) &&
+      "e".equals(_input.LT(2).getText())}?
+    tb=( '->' | '→' ) ID // ID=="e"
     impliesStep=NUM antecedentStep=NUM                  #ImpliesElim
-  | ( tb=( 'noti' | 'negi' )
-    | tb=( '!' | '~' | '¬' ) ID // ID=="i"
-    ) subProof=NUM                                      #NegIntro
-  | ( tb='note' | tb='nege'
-    | tb=( '!' | '~' | '¬' ) ID // ID=="e"
-    ) step=NUM negStep=NUM                              #NegElim
+  | tb=( 'noti' | 'negi' ) subProof=NUM                 #NegIntro
+  | tb=('note' | 'nege') step=NUM negStep=NUM           #NegElim
+  | {("!".equals(_input.LT(1).getText()) ||
+      "~".equals(_input.LT(1).getText()) ||
+      "¬".equals(_input.LT(1).getText())) &&
+     "i".equals(_input.LT(2).getText())}?
+    tb=( '!' | '~' | '¬' ) ID // ID=="i"
+    subProof=NUM                                        #NegIntro
+  | {("!".equals(_input.LT(1).getText()) ||
+      "~".equals(_input.LT(1).getText()) ||
+      "¬".equals(_input.LT(1).getText())) &&
+     "e".equals(_input.LT(2).getText())}?
+    tb=( '!' | '~' | '¬' ) ID // ID=="e"
+    step=NUM negStep=NUM                                #NegElim
   | ( tb=( 'bottome' | 'falsee' )
     | tb=('_|_' | '⊥' ) ID // ID=="e"
     ) bottomStep=NUM                                    #BottomElim
@@ -154,12 +170,17 @@ justification
   | tb='subst1' eqStep=numOrId step=NUM                 #Subst1
   | tb='subst2' eqStep=numOrId step=NUM                 #Subst2
   | tb='algebra' steps+=numOrId*                        #Algebra
-  | ( tb='foralli' | tb='alli' | tb='Ai'
-    | tb='∀' ID // ID=="i"
-    ) subProof=NUM                                      #ForallIntro
-  | ( tb='foralle' | tb='alle' | tb='Ae'
-    | tb='∀' ID // ID=="e"
-    ) stepOrFact=numOrId formula+                       #ForallElim
+  | tb=('foralli' | 'alli' | 'Ai') subProof=NUM         #ForallIntro
+  | tb=('foralle' | 'alle' | 'Ae')
+    stepOrFact=numOrId formula+                         #ForallElim
+  | {"∀".equals(_input.LT(1).getText()) &&
+     "i".equals(_input.LT(2).getText())}?
+    tb='∀' ID // ID=="i"
+    subProof=NUM                                        #ForallIntro
+  | {"∀".equals(_input.LT(1).getText()) &&
+     "e".equals(_input.LT(2).getText())}?
+    tb='∀' ID // ID=="e"
+    stepOrFact=numOrId formula+                         #ForallElim
   | tb=( 'existsi' | 'somei' | 'Ei' )
     existsStep=NUM formula+                             #ExistsIntro
   | tb=( 'existse' | 'somee' | 'Ee' )
@@ -167,7 +188,9 @@ justification
   | {"∃".equals(_input.LT(1).getText()) &&
      "i".equals(_input.LT(2).getText())}?
     tb='∃' ID existsStep=NUM formula+                   #ExistsIntro
-  | tb='∃' t=ID // ID=="e"
+  | {"∃".equals(_input.LT(1).getText()) &&
+     "e".equals(_input.LT(2).getText())}?
+    tb='∃' t=ID // ID=="e"
     stepOrFact=numOrId subProof=NUM                     #ExistsElim
   | tb='invariant'                                      #Invariant
   | tb='auto' stepOrFacts+=numOrId*                     #Auto
