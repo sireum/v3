@@ -207,7 +207,9 @@ ProofContext(unitNode: UnitNode,
             pc.check(proof) match {
               case Some(pc2) =>
                 Some(pc2.copy(
-                  premises = filter(extractClaims(proof)),
+                  premises = filter(
+                    (if (autoEnabled) pc.premises else ilinkedSetEmpty) ++
+                      extractClaims(proof)),
                   provedSteps = imapEmpty))
               case _ => None
             }
@@ -1075,9 +1077,10 @@ ProofContext(unitNode: UnitNode,
             case _ => hasError = true
           }
         if (hasError) return false else as
-      } else if (isAuto) premises else Node.emptySeq[Exp]
+      } else if (isAuto) premises ++ facts.values
+      else Node.emptySeq[Exp]
     val method = if (isAuto) "automatically" else "apply algebra to"
-    if (isValid(antecedents ++ facts.values, ivector(exp))) true
+    if (isValid(antecedents, ivector(exp))) true
     else {
       error(exp, s"Could not $method deduce the claim in step#$num.")
       false
