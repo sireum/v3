@@ -23,6 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+set -e
 SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
 cd ${SIREUM_HOME}
 /bin/bash bin/prelude.sh
@@ -33,13 +34,11 @@ SBT=bin/sbt-launch.sh
 if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
   if [ ! -f ${SIREUM_JAR} ]; then
     echo "Please wait while building Sireum; this might take a while..."
-    echo
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
     echo "${SIREUM_VERSION}" > bin/VER
   elif [ "${SIREUM_UPDATE}" = true ]; then
     echo "New changes detected; please wait while re-building Sireum..."
-    echo
     SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
     echo
     echo "${SIREUM_VERSION}" > bin/VER
@@ -47,7 +46,6 @@ if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
     CHANGES="$(git status -s)"
     if [[ "${CHANGES}" == *.scala* ]] || [[ "${CHANGES}" == *.java* ]] || [[ "${CHANGES}" == *.stg* ]]; then
       echo "Local source changes detected; please wait while re-building Sireum..."
-      echo
       SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
       echo
       echo "${SIREUM_VERSION}" > bin/VER

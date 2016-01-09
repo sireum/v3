@@ -23,16 +23,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+set -e
 export SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
 PRELUDE=${SIREUM_HOME}/bin/prelude.sh
-/bin/bash ${SIREUM_HOME}/bin/prelude.sh
+${SIREUM_HOME}/bin/prelude.sh
 JAVA=${SIREUM_HOME}/platform/java/bin/java
 SBT_JAR=${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar
 NODE_BIN=${SIREUM_HOME}/platform/node/bin
-if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ]; then
-  echo
-  echo "Could not find ${JAVA}, ${SBT_JAR}, or ${NODE_BIN}; aborting..."
-  exit
+Z3=${SIREUM_HOME}/apps/z3/bin/z3
+if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ] || [ ! -x ${Z3} ]; then
+  >&2 echo "Could not find ${JAVA}, ${SBT_JAR}, ${NODE_BIN}, or ${Z3}."
+  exit 1
 fi
 PATH=${NODE_BIN}:${PATH}
 : ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled}

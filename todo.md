@@ -1,8 +1,6 @@
 Sireum To-Dos
 =============
 
-* Clean up script
-
 * Revise Sireum website
 
 * Document Pilar

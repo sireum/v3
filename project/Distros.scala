@@ -42,7 +42,7 @@ object Distros {
     platform match {
       case "win" =>
         write(cwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\r\n"))
-        cp(cwd / "sireum.bat", cwd / 'distros / "sireum-v3" / "sireum.bat")
+        cp(cwd / 'resources / 'distro / "sireum.bat", cwd / 'distros / "sireum-v3" / "sireum.bat")
       case _ =>
         write(cwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\n"))
         cp(cwd / "sireum", cwd / 'distros / "sireum-v3" / "sireum")
