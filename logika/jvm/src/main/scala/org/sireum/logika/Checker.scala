@@ -160,11 +160,13 @@ ProofContext(unitNode: UnitNode,
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
   def check(program: Program): Boolean = {
-    val facts = this.facts ++ program.fact.factOrFunDecls.
-      flatMap(_ match {
+    val facts = this.facts ++ program.block.stmts.flatMap(_ match {
+      case FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
         case f: Fact => Some(f.id.value -> f.exp)
         case _ => None
       })
+      case _ => ivectorEmpty
+    })
     if (facts.nonEmpty && !checkSat(facts.values,
       unsatMsg = "The specified set of facts are unsatisfiable.",
       unknownMsg = "The set of facts might not be satisfiable.",
@@ -434,6 +436,7 @@ ProofContext(unitNode: UnitNode,
                   timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
             }
             Some(pc.copy(invariants = pc.invariants ++ inv.exps))
+          case _: FactStmt => pcOpt
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
             if (autoEnabled) {

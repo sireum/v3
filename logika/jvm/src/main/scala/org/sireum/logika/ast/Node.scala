@@ -151,6 +151,9 @@ object Node {
             case _ =>
           }
           Visitor.build({
+            case n: FactStmt =>
+              error(s, s"Facts cannot be defined inside a method.")
+              false
             case n: InvStmt =>
               error(s, s"Invariants cannot be defined inside a method.")
               false
@@ -772,8 +775,7 @@ final case class SeqLit(args: Node.Seq[Exp]) extends PrimaryExp {
   }
 }
 
-final case class Program(fact: Facts,
-                         block: Block) extends UnitNode
+final case class Program(block: Block) extends UnitNode
 
 final case class Block(stmts: Node.Seq[Stmt]) extends Node
 
@@ -851,6 +853,8 @@ final case class SequentStmt(sequent: Sequent) extends ProofElementStmt
 final case class InvStmt(inv: Inv) extends ProofElementStmt
 
 final case class Inv(exps: Node.Seq[Exp]) extends Node
+
+final case class FactStmt(fact: Facts) extends ProofElementStmt
 
 final case class Facts(factOrFunDecls: Node.Seq[FactOrFun]) extends Node
 

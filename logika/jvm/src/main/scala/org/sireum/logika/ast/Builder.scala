@@ -358,16 +358,15 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
     Option(ctx.ID).map(buildId).getOrElse(buildNum(ctx.NUM))
 
   private def build(ctx: ProgramContext): Program =
-    if (ctx.tb != null) {
-      if (!("org" == ctx.org.getText && "sireum" == ctx.sireum.getText))
-        error(ctx.org, s"Can only import from org.sireum.logika.")
+    if (ctx.impor != null) {
+      checkImport(ctx.impor)
+      Program(build(ctx.stmts)) at ctx
+    } else Program(Block(Node.emptySeq))
 
-      val block = build(ctx.stmts)
-      val r =
-        if (ctx.facts != null) Program(build(ctx.facts), block)
-        else Program(Facts(Node.emptySeq), block)
-      r at ctx
-    } else Program(Facts(Node.emptySeq), Block(Node.emptySeq))
+  private def checkImport(ctx: ImporContext): Unit =
+    if (!("org" == ctx.org.getText && "sireum" == ctx.sireum.getText &&
+      "logika" == ctx.logika.getText))
+      error(ctx.org, s"Can only import from org.sireum.logika.")
 
   private def build(ctx: FactsContext): Facts =
     Facts(Option(ctx.factOrFun).map(_.map(build)).
@@ -392,11 +391,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
   }
 
   private def build(ctx: StmtsContext): Block =
-    Block(Option(ctx.stmt).map(_.map(build)).
-      getOrElse(Node.emptySeq))
+    Block(Option(ctx.stmt) match {
+      case Some(stmts) => for (stmt <- stmts; s <- build(stmt)) yield s
+      case None => Node.emptySeq
+    })
 
-  private def build(ctx: StmtContext): Stmt = {
-    val r =
+  private def build(ctx: StmtContext): Option[Stmt] = {
+    val rOpt: Option[Stmt] =
       ctx match {
         case ctx: VarDeclStmtContext =>
           val isVar = ctx.modifier.getText == "var"
@@ -405,25 +406,25 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
               error(ctx.ID, s"Underscore is a reserved character for var identifier.")
             else
               error(ctx.ID, s"Underscore is a reserved character for val identifier.")
-          VarDecl(isVar, buildId(ctx.ID),
-            build(ctx.`type`), build(ctx.exp))
+          Some(VarDecl(isVar, buildId(ctx.ID),
+            build(ctx.`type`), build(ctx.exp)))
         case ctx: AssignVarStmtContext =>
-          Assign(buildId(ctx.ID), build(ctx.exp))
-        case ctx: AssumeStmtContext => Assume(build(ctx.exp))
-        case ctx: AssertStmtContext => Assert(build(ctx.exp))
+          Some(Assign(buildId(ctx.ID), build(ctx.exp)))
+        case ctx: AssumeStmtContext => Some(Assume(build(ctx.exp)))
+        case ctx: AssertStmtContext => Some(Assert(build(ctx.exp)))
         case ctx: IfStmtContext =>
-          If(build(ctx.exp), build(ctx.ts),
-            Option(ctx.fs).map(build).getOrElse(Block(Node.emptySeq)))
+          Some(If(build(ctx.exp), build(ctx.ts),
+            Option(ctx.fs).map(build).getOrElse(Block(Node.emptySeq))))
         case ctx: WhileStmtContext =>
-          While(build(ctx.exp), build(ctx.stmts),
+          Some(While(build(ctx.exp), build(ctx.stmts),
             Option(ctx.loopInvariant).map(build).getOrElse(
-              LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq))))
+              LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq)))))
         case ctx: PrintStmtContext =>
           val text = ctx.SSTRING.getText
-          Print(ctx.op.getText == "println",
-            StringLit(text.substring(2, text.length - 1)))
+          Some(Print(ctx.op.getText == "println",
+            StringLit(text.substring(2, text.length - 1))))
         case ctx: SeqAssignStmtContext =>
-          SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r))
+          Some(SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r)))
         case ctx: MethodDeclStmtContext =>
           if (ctx.id.getText.indexOf('_') >= 0)
             error(ctx.id, s"Underscore is a reserved character for method identifier.")
@@ -433,29 +434,31 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
                 error(ctx.helper, s"Only helper annotation is allowed instead of ${ctx.helper.getText}.")
               true
             } else false
-          MethodDecl(isHelper, buildId(ctx.id),
+          Some(MethodDecl(isHelper, buildId(ctx.id),
             Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
             Option(ctx.`type`).map(build),
             Option(ctx.methodContract).map(build).getOrElse(
               MethodContract(Requires(Node.emptySeq),
                 Modifies(Node.emptySeq),
                 Ensures(Node.emptySeq))),
-            build(ctx.stmts), Option(ctx.exp).map(build))
+            build(ctx.stmts), Option(ctx.exp).map(build)))
         case ctx: LogikaStmtContext =>
-          (ctx.proof, ctx.sequent, ctx.invariants) match {
-            case (proof, null, null) => ProofStmt(build(proof))
-            case (null, sequent, null) => SequentStmt(build(sequent))
-            case (null, null, invariants) => InvStmt(build(invariants))
-          }
+          Some((ctx.proof, ctx.sequent, ctx.invariants, ctx.facts) match {
+            case (proof, null, null, null) => ProofStmt(build(proof))
+            case (null, sequent, null, null) => SequentStmt(build(sequent))
+            case (null, null, invariants, null) => InvStmt(build(invariants))
+            case (null, null, null, facts) => FactStmt(build(facts))
+          })
+        case ctx: ImportStmtContext => checkImport(ctx.impor); None
         case ctx: ExpStmtContext =>
-          build(ctx.exp) match {
+          Some(build(ctx.exp) match {
             case e: Apply => ExpStmt(e)
             case e =>
               error(e, s"Only method invocation expression is allowed as a statement.")
               ExpStmt(Apply(Id("???"), Node.seq(e)))
-          }
+          })
       }
-    r at ctx
+    rOpt.map(_ at ctx)
   }
 
   private def build(ctx: ExpContext): Exp = {

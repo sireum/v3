@@ -35,7 +35,11 @@ object TypeChecker {
     implicit reporter: AccumulatingTagReporter): Boolean = {
     var typeMap = imapEmpty[String, (Tipe, Node, Program)]
     for (program <- programs) {
-      for (f@Fun(id, _, _) <- program.fact.factOrFunDecls)
+      val factOrFunDecls = program.block.stmts.flatMap(_ match {
+        case stmt: FactStmt => Some(stmt.fact.factOrFunDecls)
+        case _ => None
+      }).flatten
+      for (f@Fun(id, _, _) <- factOrFunDecls)
         typeMap = addId(typeMap, program, id, tipe(f), f)
       for (m@MethodDecl(_, id, _, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(m), m)
@@ -91,8 +95,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   private val someZS = Some(ZS)
 
   def check(p: Program): Unit = {
-    for (Fact(_, e) <- p.fact.factOrFunDecls)
-      check(e, allowMethod = false)(allowFun = true, None)
     check(p.block)(None)
     for (stmt <- p.block.stmts) {
       val applyOpt =
@@ -203,6 +205,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       sequent.proofOpt.foreach(check)
       this
     case InvStmt(inv) => for (e <- inv.exps) b(e)(allowFun = true, mOpt); this
+    case FactStmt(facts) =>
+      for (Fact(_, e) <- facts.factOrFunDecls)
+        check(e, allowMethod = false)(allowFun = true, None)
+      this
   }
 
   def check(p: ProofGroup): Unit = {
@@ -339,14 +345,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               }
             someB
           case _: Append =>
-            if (!allowMethod && !allowFun)
-              error(e, s"Append (:+) is only allowed at statement level.")
             zs(e.left)
             z(e.right)
             someZS
           case _: Prepend =>
-            if (!allowMethod && !allowFun)
-              error(e, s"Prepend (+:) is only allowed at statement level.")
             z(e.left)
             zs(e.right)
             someZS

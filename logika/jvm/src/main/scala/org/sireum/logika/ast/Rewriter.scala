@@ -138,6 +138,10 @@ object Rewriter {
       val Seq(id: Id, exp: Exp) = es
       org.sireum.logika.ast.Fact(id, exp)
     }),
+    ("FactStmt", { es =>
+      val Seq(fact: Facts) = es
+      org.sireum.logika.ast.FactStmt(fact)
+    }),
     ("Facts", { es =>
       val Seq(factOrFunDecls: IVector[_]) = es
       org.sireum.logika.ast.Facts(cast(factOrFunDecls))
@@ -307,8 +311,8 @@ object Rewriter {
       org.sireum.logika.ast.Print(isNewline, msg)
     }),
     ("Program", { es =>
-      val Seq(fact: Facts, block: Block) = es
-      org.sireum.logika.ast.Program(fact, block)
+      val Seq(block: Block) = es
+      org.sireum.logika.ast.Program(block)
     }),
     ("Proof", { es =>
       val Seq(steps: IVector[_]) = es

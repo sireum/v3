@@ -198,13 +198,11 @@ justification
 
 numOrId: t=( NUM | ID );
 
-program
-  : NL*
-    ( tb='import' org=ID '.' sireum=ID '.' 'logika' '.' te='_' NL+
-      // org=="org" && sireum="sireum"
-      ( 'l"""' facts te='"""' NL* )?
-      stmts
-    )?
+program: NL* ( impor NL+ stmts )? ;
+
+impor
+  : tb='import' org=ID '.' sireum=ID '.' logika=ID '.' te='_'
+    // org=="org" && sireum=="sireum" && logika=="logika"
   ;
 
 facts
@@ -252,7 +250,9 @@ stmt
     ( proof
     | sequent
     | invariants
+    | facts
     ) '"""'                                             #LogikaStmt
+  | impor                                               #ImportStmt
   | exp                                                 #ExpStmt
   ;
 

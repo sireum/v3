@@ -60,7 +60,7 @@ final class Z3TestDefProvider(tf: TestFramework)
         val hasError = !TypeChecker.check(p)
         if (hasError) return false
         p match {
-          case Program(_, Block(Seq(MethodDecl(_, _, _, _, MethodContract(
+          case Program(Block(Seq(MethodDecl(_, _, _, _, MethodContract(
           Requires(Seq(e1)),
           _,
           Ensures(Seq(e2))), _, _)))) =>
