@@ -7,7 +7,25 @@ Logika To-Dos
 Future Work
 ===========
 
-* Add truth table and logic gates circuit output for propositional logic 
+* Add truth table input language and checker, e.g.,
+
+  ```
+            *
+  -------------- 
+   p  q | p ∧ q 
+  --------------
+   T  T |   T  
+   T  F |   F
+   F  T |   F
+   F  F |   F
+  --------------
+  Contingent
+    T on (T, T)
+    F on (T, F), (F, T), (F, F)
+  Valid
+  ```
+  
+* Add logic gates circuit output for propositional logic 
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
@@ -19,13 +37,12 @@ Future Work
     
     * equality/inequality ops
     
-  * need to gen equality ops for Z3
+    * etc.
+    
+  * need to gen equality ops on complex types for Z3
     
 * Add match statement for pattern matching traits/case classes
 
 * create examples such as list, nat, etc. as inductive types and prove their properties (ala Coq)
-
-* Add type inference (boolean, integer, sequence of integer, uninterpreted function) 
-  for predicate logic (+ algebra) to enable auto validity checking
 
 * Add first-class (immutable) option, tuple, sequence, set, and map
