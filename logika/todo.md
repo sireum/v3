@@ -7,6 +7,8 @@ Logika To-Dos
 Future Work
 ===========
 
+* Add option to specify default range for integers
+
 * Add truth table input language and checker, e.g.,
 
   ```
