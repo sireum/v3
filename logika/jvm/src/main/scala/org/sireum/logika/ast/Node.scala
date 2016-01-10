@@ -690,7 +690,6 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
       sb.append(", ")
       id.buildString(sb, inProof)
     }
-    sb.append(' ')
     domainOpt match {
       case Some(t: TypeDomain) =>
         sb.append(": ")
@@ -707,6 +706,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
         r.hi.buildString(sb, inProof)
         sb.append(") ")
       case None =>
+        sb.append(' ')
     }
     exp.buildString(sb, inProof)
   }
