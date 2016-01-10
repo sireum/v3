@@ -305,7 +305,7 @@ ProofContext(unitNode: UnitNode,
             (thenPcOpt, elsePcOpt) match {
               case (Some(thenPc), Some(elsePc)) =>
                 Some(pc.copy(premises =
-                  orClaims(thenPc.premises, elsePc.premises)))
+                  orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
               case _ => None
             }
           case stmt: MethodDecl =>
@@ -391,7 +391,7 @@ ProofContext(unitNode: UnitNode,
                 }
               case _ => hasError = true
             }
-            pcOpt
+            pcOpt.map(_.cleanup)
           case InvStmt(inv) =>
             if (autoEnabled) {
               val ps = pc.premises ++ pc.facts.values
@@ -513,7 +513,7 @@ ProofContext(unitNode: UnitNode,
       }
 
     }
-    if (hasError) None else pcOpt.map(_.cleanup)
+    if (hasError) None else pcOpt
   }
 
   def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
