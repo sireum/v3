@@ -355,20 +355,16 @@ ProofContext(unitNode: UnitNode,
                   if (modified) modifiedInvariants += e
                 }
                 if (autoEnabled) {
-                  if (modifiedInvariants.nonEmpty &&
-                    !isValid(pc2.premises ++ pc2.facts.values, modifiedInvariants)) {
-                    val locs = buildLocs(modifiedInvariants)
-                    error(stmt, s"Could not automatically deduce the global invariant(s) at $locs at the end of method ${
-                      stmt.id.value
-                    }.")
-                    hasError = true
-                  }
+                  val ps = pc2.premises ++ pc2.facts.values
+                  for (e <- modifiedInvariants)
+                    if (!isValid(ps, ivector(e))) {
+                      error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
+                      hasError = true
+                    }
                 } else {
                   for (e <- modifiedInvariants)
                     if (!pc2.premises.contains(e)) {
-                      error(e, s"The global invariant has not been proven at the end of method ${
-                        stmt.id.value
-                      }.")
+                      error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
                       hasError = true
                     }
                 }
@@ -380,55 +376,41 @@ ProofContext(unitNode: UnitNode,
                   case _ => pc2.premises
                 }
                 if (autoEnabled) {
-                  if (post.nonEmpty && !isValid(postPremises ++ pc2.facts.values, post)) {
-                    hasError = true
-                    val locs = buildLocs(post)
-                    error(post.head, s"Could not automatically deduce method ${
-                      stmt.id.value
-                    }'s post-condition(s) defined at $locs.")
-                  }
-                } else {
-                  var i = 1
-                  for (e <- post) {
-                    if (!postPremises.contains(e)) {
-                      if (post.size == 1)
-                        error(e, s"The post-condition of method ${
-                          stmt.id.value
-                        } has not been proven.")
-                      else
-                        error(e, s"Post-condition #$i of method ${
-                          stmt.id.value
-                        } has not been proven.")
+                  val ps = postPremises ++ pc2.facts.values
+                  for (e <- post)
+                    if (!isValid(ps, ivector(e))) {
+                      error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
                       hasError = true
                     }
-                    i += 1
-                  }
+                } else {
+                  for (e <- post)
+                    if (!postPremises.contains(e)) {
+                      error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
+                      hasError = true
+                    }
                 }
               case _ => hasError = true
             }
             pcOpt
           case InvStmt(inv) =>
-            var i = 1
             if (autoEnabled) {
-              if (!isValid(pc.premises ++ pc.facts.values, inv.exps)) {
-                hasError = true
-                error(stmt, s"Could not automatically deduce the global invariant(s).")
+              val ps = pc.premises ++ pc.facts.values
+              for (e <- inv.exps)
+                if (!isValid(ps, ivector(e))) {
+                  error(e, s"Could not automatically deduce the global invariant.")
+                  hasError = true
+                }
+              if (hasError)
                 checkSat(inv.exps,
                   unsatMsg = s"The global invariant(s) are unsatisfiable.",
                   unknownMsg = s"The global invariant(s) might not be satisfiable.",
                   timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
-              }
             } else {
-              for (e <- inv.exps) {
+              for (e <- inv.exps)
                 if (!pc.premises.contains(e)) {
-                  if (inv.exps.size == 1)
-                    error(e, s"The global invariant has not been proven.")
-                  else
-                    error(e, s"The global invariant #$i has not been proved.")
+                  error(e, s"The global invariant has not been proven.")
                   hasError = true
                 }
-                i += 1
-              }
               if (hasError)
                 checkSat(inv.exps,
                   unsatMsg = s"The global invariant(s) are unsatisfiable.",
@@ -440,45 +422,50 @@ ProofContext(unitNode: UnitNode,
           case While(exp, loopBlock, loopInv) =>
             val es = loopInv.invariant.exps
             if (autoEnabled) {
-              if (es.nonEmpty && !isValid(pc.premises ++ pc.facts.values, es)) {
-                hasError = true
-                error(loopInv, s"Could not automatically deduce the loop invariant(s) at the beginning of the loop.")
-              }
-            } else {
-              var i = 1
-              for (e <- es) {
-                if (!pc.premises.contains(e)) {
-                  if (es.size == 1)
-                    error(e, s"The loop invariant has not been proved at the beginning of the loop.")
-                  else
-                    error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+              val ps = pc.premises ++ pc.facts.values
+              for (e <- es)
+                if (!isValid(ps, ivector(e))) {
+                  error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
                   hasError = true
                 }
-                i += 1
+            } else {
+              for (e <- es)
+                if (!pc.premises.contains(e)) {
+                  error(e, s"The loop invariant has not been proved at the beginning of the loop.")
+                  hasError = true
+                }
+            }
+            var ps = ilinkedSetEmpty ++ es
+            if (autoEnabled) {
+              val modifiedIds = loopInv.modifies.ids.toSet
+              for (premise <- pc.premises) {
+                var propagate = true
+                Visitor.build({
+                  case id: Id =>
+                    if (modifiedIds.contains(id)) propagate = false
+                    false
+                })(premise)
+                if (propagate) ps += premise
               }
             }
-            pc.copy(premises = (ilinkedSetEmpty ++ es) + exp).
+            pc.copy(premises = ps + exp).
               check(loopBlock) match {
               case Some(pc2) =>
                 if (autoEnabled) {
-                  if (es.nonEmpty && !isValid(pc2.premises ++ pc2.facts.values, es)) {
-                    hasError = true
-                    error(loopInv, s"Could not automatically deduce the loop invariant(s) at the end of the loop.")
-                  }
-                } else {
-                  var i = 1
-                  for (e <- es) {
-                    if (!pc2.premises.contains(e)) {
-                      if (es.size == 1)
-                        error(e, s"The loop invariant has not been proved at the end of the loop.")
-                      else
-                        error(e, s"Loop invariant #$i has not been proved at the end of the loop.")
+                  val ps = pc2.premises ++ pc2.facts.values
+                  for (e <- es)
+                    if (!isValid(ps, ivector(e))) {
+                      error(e, s"Could not deduce the loop invariant at the end of the loop.")
                       hasError = true
                     }
-                    i += 1
-                  }
+                } else {
+                  for (e <- es)
+                    if (!pc2.premises.contains(e)) {
+                      error(e, s"The loop invariant has not been proved at the end of the loop.")
+                      hasError = true
+                    }
                 }
-                Some(pc.copy(premises = (ilinkedSetEmpty ++ es) + Not(exp)))
+                Some(pc.copy(premises = ps + Not(exp)))
               case _ => None
             }
           case _: Print => pcOpt
@@ -529,25 +516,6 @@ ProofContext(unitNode: UnitNode,
     if (hasError) None else pcOpt.map(_.cleanup)
   }
 
-  def buildLocs(it: Iterable[Node]): String = {
-    val sb = new StringBuilder
-    val locs =
-      it.toVector.map(n => nodeLocMap(n)).sortWith((li1, li2) =>
-        if (li1.lineBegin < li2.lineBegin) true
-        else if (li1.lineBegin > li2.lineBegin) false
-        else li1.columnBegin < li2.columnBegin)
-    sb.append(s"[${locs.head.lineBegin}, ${locs.head.columnBegin}]")
-    var i = 1
-    val size = locs.size
-    for (loc <- locs.tail) {
-      if (i == size - 1) sb.append(", and ")
-      else sb.append(", ")
-      sb.append(s"[${loc.lineBegin}, ${loc.columnBegin}]")
-      i += 1
-    }
-    sb.toString
-  }
-
   def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
     Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
 
@@ -563,22 +531,18 @@ ProofContext(unitNode: UnitNode,
     var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
     if (autoEnabled) {
-      if (pres.nonEmpty && !isValid(premises ++ facts.values, pres)) {
-        hasError = true
-        error(a, s"Could not automatically deduce the pre-condition(s) of the method.")
-      }
-    } else {
-      var i = 1
-      for (pre <- pres) {
-        if (!premises.contains(pre)) {
-          if (pres.size == 1)
-            error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
-          else
-            error(a, s"Pre-condition #$i of method ${md.id.value} has not been proven.")
+      val ps = premises ++ facts.values
+      for (pre <- pres)
+        if (!isValid(ps, ivector(pre))) {
+          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value}.")
           hasError = true
         }
-        i += 1
-      }
+    } else {
+      for (pre <- pres)
+        if (!premises.contains(pre)) {
+          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
+          hasError = true
+        }
     }
     val (lhs, postSubstMap) = lhsOpt match {
       case Some(x) =>
@@ -617,9 +581,14 @@ ProofContext(unitNode: UnitNode,
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
       if (autoEnabled) {
-        if (!isValid(premises ++ facts.values, ivector(req1, req2))) {
+        val ps = premises ++ facts.values
+        if (!isValid(ps, ivector(req1))) {
           hasError = true
-          error(e, s"Could not automatically deduce that the index is not out of bound of ${id.value}.")
+          error(e, "Could not automatically deduce that the sequence index is non-negative.")
+        }
+        if (!isValid(ps, ivector(req2))) {
+          hasError = true
+          error(e, s"Could not automatically deduce that the index is less than the sequence size.")
         }
       } else {
         if (!premises.contains(req1)) {
