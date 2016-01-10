@@ -713,30 +713,24 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
 
   private var simplified: T = _
 
-  final def simplify
-  (implicit nodeLocMap: MIdMap[Node, LocationInfo]): T = {
+  final def simplify: T = {
     if (simplified != null) return simplified
     simplified =
       domainOpt match {
         case Some(rd@RangeDomain(lo, hi, loLt, hiLt)) =>
-          val loLi = nodeLocMap(lo)
-          val hiLi = nodeLocMap(hi)
-          val rdLi = nodeLocMap(rd)
           val isForAll = isInstanceOf[ForAll]
           def range(id: Id, l: Exp, h: Exp): And = {
             val lApply = if (loLt) Lt else Le
             val rApply = if (hiLt) Lt else Le
-            And(lApply(l, id) at loLi, rApply(id, h) at hiLi) at rdLi
+            And(lApply(l, id), rApply(id, h))
           }
           val apply = if (isForAll) ForAll else Exists
           var antecedent = range(ids.head, lo, hi)
           for (id <- ids.tail) {
-            val idLi = nodeLocMap(id)
-            antecedent = And(antecedent, range(id, lo, hi)) at(idLi, rdLi)
+            antecedent = And(antecedent, range(id, lo, hi))
           }
-          val expLi = nodeLocMap(exp)
           apply(ids, Some(TypeDomain(IntType())),
-            Implies(antecedent, exp) at(rdLi, expLi)).asInstanceOf[T]
+            Implies(antecedent, exp)).asInstanceOf[T]
         case _ => this.asInstanceOf[T]
       }
     simplified
