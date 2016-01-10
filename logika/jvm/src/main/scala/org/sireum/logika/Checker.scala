@@ -457,7 +457,7 @@ ProofContext(unitNode: UnitNode,
                 i += 1
               }
             }
-            pc.copy(premises = pc.premises ++ es + exp).
+            pc.copy(premises = (ilinkedSetEmpty ++ es) + exp).
               check(loopBlock) match {
               case Some(pc2) =>
                 if (autoEnabled) {
