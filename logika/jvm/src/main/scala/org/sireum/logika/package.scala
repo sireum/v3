@@ -39,10 +39,16 @@ package object logika {
   final def Z(i: Int): Z = BigInt(i)
 
   final implicit class Logika(val sc: StringContext) extends AnyVal {
-    def logika(args: Any*): Unit = {}
 
-    def l(args: Any*): Unit = logika(args: _*)
+    import scala.language.experimental.macros
+
+    def l(args: Any*): Unit = macro _lImpl
+
   }
+
+  final def _lImpl(c: scala.reflect.macros.blackbox.Context)(
+    args: c.Expr[Any]*): c.Expr[Unit] =
+    c.universe.reify {}
 
   final implicit class ZHelper(val n: Z) extends AnyVal {
     def ==(other: Int): Boolean = n == Z(other)
@@ -51,7 +57,7 @@ package object logika {
   import scala.collection.mutable.{ListMap => LM}
 
   object ZS {
-    def apply(args: Z*): ZS = {
+    final def apply(args: Z*): ZS = {
       val lm = LM[Z, Z]()
       var i = BigInt(0)
       for (e <- args) {
@@ -118,13 +124,34 @@ package object logika {
   }
 
   final def readInt(msg: String = "Enter an integer: "): Z = {
-    Console.out.print(msg)
-    Console.out.flush()
-    Z(Console.in.readLine())
+    while (true) {
+      Console.out.print(msg)
+      Console.out.flush()
+      val s = Console.in.readLine()
+      try {
+        return Z(s)
+      } catch {
+        case _: Throwable =>
+          Console.err.println(s"Invalid integer format: $s.")
+          Console.err.flush()
+      }
+    }
+    Z(0)
   }
 
-  final def randomInt(): Z =
-    BigInt(128, new scala.util.Random())
+  final def println(as: Any*): Unit = {
+    print(as: _*)
+    scala.Predef.println()
+  }
 
-  class helper extends Annotation
+  final def print(as: Any*): Unit =
+    for (a <- as) scala.Predef.print(a)
+
+  final def randomInt(): Z =
+    BigInt(
+      numbits = new scala.util.Random().nextInt(1024),
+      rnd = new scala.util.Random())
+
+  final class helper extends Annotation
+
 }
