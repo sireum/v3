@@ -66,7 +66,7 @@ grep -q ${ZULU_VERSION} java/VER &> /dev/null && ZULU_UPDATE=false || ZULU_UPDAT
 if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   if [ ! -f ${ZULU_DROP} ]; then
     echo "Please wait while downloading Zulu JDK ${ZULU_VERSION}..."
-    wget -q --show-progress --referer=http://www.azulsystems.com/products/zulu/downloads ${ZULU_DROP_URL}
+    wget -q --referer=http://www.azulsystems.com/products/zulu/downloads ${ZULU_DROP_URL}
     echo
   fi
   unzip -oq ${ZULU_DROP}
@@ -88,7 +88,7 @@ grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
 if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   if [ ! -f ${Z3_DROP} ]; then
     echo "Please wait while downloading Z3 ${Z3_VERSION}..."
-    wget -q --show-progress ${Z3_DROP_URL}
+    wget -q ${Z3_DROP_URL}
     echo
   fi
   unzip -oq ${Z3_DROP}
@@ -112,7 +112,7 @@ grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=tr
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   if [ ! -f ${SBT_DROP} ]; then
     echo "Please wait while downloading sbt ${SBT_VERSION}..."
-    wget -q --show-progress ${SBT_DROP_URL}
+    wget -q ${SBT_DROP_URL}
     echo
   fi
   rm -fR sbt
@@ -133,7 +133,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     mkdir -p node/bin
     cd node/bin
     echo "Please wait while downloading ${NODE_DROP}..."
-    wget -q --show-progress ${NODE_DROP_URL}
+    wget -q ${NODE_DROP_URL}
     echo
     cd ../..
     if [ -d "node/bin" ]; then
@@ -147,7 +147,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     NODE_DIR="${NODE_DROP%.tar.gz}"
     if [ ! -f ${NODE_DROP} ]; then
       echo "Downloading ${NODE_DROP}"
-      wget -q --show-progress ${NODE_DROP_URL}
+      wget -q ${NODE_DROP_URL}
       echo
     fi
     tar xfz ${NODE_DROP}
