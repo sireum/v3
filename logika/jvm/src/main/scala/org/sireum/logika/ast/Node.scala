@@ -396,7 +396,11 @@ object Exp {
   }
 }
 
-sealed trait Exp extends Node {
+sealed trait StringOrExp extends Node
+
+final case class StringLit(value: String) extends StringOrExp
+
+sealed trait Exp extends StringOrExp {
   private[ast] var hasParen = false
 
   def buildString(sb: StringBuilder, inProof: Boolean): Unit
@@ -817,9 +821,7 @@ final case class LoopInv(invariant: Inv,
                          modifies: Modifies) extends Node
 
 final case class Print(isNewline: Boolean,
-                       msg: StringLit) extends Stmt
-
-final case class StringLit(value: String) extends Node
+                       args: Node.Seq[StringOrExp]) extends Stmt
 
 final case class SeqAssign(id: Id,
                            index: Exp,

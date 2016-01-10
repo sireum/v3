@@ -159,7 +159,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       b(exp)(allowFun = false, mOpt)
       check(block)
       this
-    case _: Print => this
+    case p: Print =>
+      for (arg <- p.args) arg match {
+        case exp: Exp => check(exp, allowMethod = false)(allowFun = false, mOpt)
+        case _ =>
+      }
+      this
     case SeqAssign(id, index, exp) =>
       zs(id)(allowFun = false, mOpt)
       id.tipe = ZS

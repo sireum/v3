@@ -420,9 +420,17 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
             Option(ctx.loopInvariant).map(build).getOrElse(
               LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq)))))
         case ctx: PrintStmtContext =>
-          val text = ctx.SSTRING.getText
-          Some(Print(ctx.op.getText == "println",
-            StringLit(text.substring(2, text.length - 1))))
+          val args = Option(ctx.stringOrExp) match {
+            case Some(stringOrExps) =>
+              stringOrExps.toVector.map { stringOrExp =>
+                if (stringOrExp.STRING != null) {
+                  val text = stringOrExp.STRING.getText
+                  StringLit(text.substring(1, text.length - 1)) at stringOrExp.STRING
+                } else build(stringOrExp.exp)
+              }
+            case None => Node.emptySeq
+          }
+          Some(Print(ctx.op.getText == "println", args))
         case ctx: SeqAssignStmtContext =>
           Some(SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r)))
         case ctx: MethodDeclStmtContext =>

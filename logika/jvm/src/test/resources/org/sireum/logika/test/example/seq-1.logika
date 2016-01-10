@@ -71,4 +71,4 @@ l"""{ 1. b(0) == 1                                      premise
       5. 0 <= 3                                         algebra
       6. 0 <= 0 & 0 <= 3                                andi 4 5
       7. a(0) > 1                                       ->e 3 6          }"""
-println(s"$a, $b")
+println(a, ", ", b)

@@ -308,7 +308,7 @@ object Rewriter {
     }),
     ("Print", { es =>
       val Seq(isNewline: java.lang.Boolean, msg: StringLit) = es
-      org.sireum.logika.ast.Print(isNewline, msg)
+      org.sireum.logika.ast.Print(isNewline, ivector(msg))
     }),
     ("Program", { es =>
       val Seq(block: Block) = es
