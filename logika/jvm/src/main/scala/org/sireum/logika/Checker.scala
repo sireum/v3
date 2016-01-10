@@ -111,15 +111,15 @@ object Checker {
       })(program)
       if (!hasProof) {
         reporter.report(WarningMessage(kind, "No programming logic proof element found."))
-        false
-      } else {
-        val r =
-          ProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled).check(program)
-        if (r) reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
-        else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
-        r
       }
+      val r =
+        ProofContext(program, autoEnabled, timeoutInMs,
+          checkSat, hintEnabled).check(program)
+      if (r) {
+        if (hasProof)
+          reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
+      } else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
+      r
   }
 
   private[logika] final def collectVars(e: Exp): ISet[String] = {
@@ -608,7 +608,7 @@ ProofContext(unitNode: UnitNode,
           hasError = true
         }
       } else if (!premises.contains(req)) {
-        error(e, s"Divisor has to be proven to be non-zero (... != 0).")
+        error(e, s"Divisor has to be proven to be non-zero.")
         hasError = true
       }
       true
@@ -624,11 +624,11 @@ ProofContext(unitNode: UnitNode,
       } else {
         if (!premises.contains(req1)) {
           hasError = true
-          error(e, "The sequence index has to be proven non-negative (0 <= ...)")
+          error(e, "The sequence index has to be proven non-negative.")
         }
         if (!premises.contains(req2)) {
           hasError = true
-          error(e, s"The sequence index has to be proven less than the sequence size (... < ${id.value}.size)")
+          error(e, s"The sequence index has to be proven less than the sequence size.")
         }
       }
       true
