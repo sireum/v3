@@ -238,11 +238,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       }
       modifiedVars += id
       typeMap.get(id.value) match {
-        case Some((_, VarDecl(true, _, _, _), _)) =>
-        case Some((ZS, _, _)) =>
+        case Some((t, VarDecl(true, _, _, _), _)) => id.tipe = t
+        case Some((ZS, _, _)) => id.tipe = ZS
         case Some(_) =>
           error(id, s"Only variable or sequence value can be modified.")
-        case _ => tipe(id)
+        case _ => tipe(id).foreach(id.tipe = _)
       }
     }
     if (node.isInstanceOf[While])
