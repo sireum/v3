@@ -45,8 +45,11 @@ object TypeChecker {
         typeMap = addId(typeMap, program, id, tipe(m), m)
     }
     if (reporter.hasError) return false
-    for (program <- programs)
-      TypeContext(typeMap, program).check(program)
+    if (programs.nonEmpty) {
+      var tc = TypeContext(typeMap, programs.head).check(programs.head)
+      for (program <- programs.tail)
+        tc = tc.copy(program = program).check(program)
+    }
     !reporter.hasError
   }
 
@@ -94,8 +97,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   private val someZ = Some(Z)
   private val someZS = Some(ZS)
 
-  def check(p: Program): Unit = {
-    check(p.block)(None)
+  def check(p: Program): TypeContext = {
+    val r = check(p.block)(None)
     for (stmt <- p.block.stmts) {
       val applyOpt =
         stmt match {
@@ -110,6 +113,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         }
       })
     }
+    r
   }
 
   def check(b: Block)(
