@@ -79,7 +79,7 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = ProofContext(s, autoEnabled, timeoutInMs,
+          val r = DefaultProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
@@ -115,7 +115,7 @@ object Checker {
         reporter.report(WarningMessage(kind, "No programming logic proof element found."))
       }
       val r =
-        ProofContext(program, autoEnabled, timeoutInMs,
+        DefaultProofContext(program, autoEnabled, timeoutInMs,
           checkSat, hintEnabled).check(program)
       if (r) {
         if (hasProof)
@@ -141,41 +141,40 @@ object Checker {
   }
 }
 
-private final case class
-ProofContext(unitNode: UnitNode,
-             autoEnabled: Boolean,
-             timeoutInMs: Int,
-             checkSat: Boolean,
-             hintEnabled: Boolean,
-             invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
-             premises: ILinkedSet[Exp] = ilinkedSetEmpty,
-             vars: ISet[String] = isetEmpty,
-             facts: IMap[String, Exp] = imapEmpty,
-             provedSteps: IMap[Natural, ProofStep] = imapEmpty,
-             declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
-            (implicit reporter: AccumulatingTagReporter) {
+private abstract class
+ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   val mode = unitNode.mode
   val fileUriOpt = unitNode.fileUriOpt
   implicit val nodeLocMap = unitNode.nodeLocMap
-
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
-  def check(program: Program): Boolean = {
-    val facts = this.facts ++ program.block.stmts.flatMap(_ match {
-      case FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
-        case f: Fact => Some(f.id.value -> f.exp)
-        case _ => None
-      })
-      case _ => ivectorEmpty
-    })
-    if (facts.nonEmpty && !checkSat(facts.values,
-      unsatMsg = "The specified set of facts are unsatisfiable.",
-      unknownMsg = "The set of facts might not be satisfiable.",
-      timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
-    )) return false
-    copy(facts = facts).check(program.block).isDefined
-  }
+  def unitNode: UnitNode
+
+  def premises: ILinkedSet[Exp]
+
+  def vars: ISet[String]
+
+  def provedSteps: IMap[Natural, ProofStep]
+
+  def declaredStepNumbers: IMap[Natural, LocationInfo]
+
+  def timeoutInMs: Natural
+
+  def checkSat: Boolean
+
+  def hintEnabled: Boolean
+
+  def invariants: ILinkedSet[Exp]
+
+  def facts: IMap[String, Exp]
+
+  def autoEnabled: Boolean
+
+  def make(vars: ISet[String] = vars,
+           provedSteps: IMap[Natural, ProofStep] = provedSteps,
+           declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
+           premises: ILinkedSet[Exp] = premises): T
 
   def checkSat(exps: Iterable[Exp], unsatMsg: => String,
                unknownMsg: => String, timeoutMsg: => String): Boolean = {
@@ -194,471 +193,10 @@ ProofContext(unitNode: UnitNode,
     })
   }
 
-  def check(block: Block): Option[ProofContext] = {
-    var hasError = false
-    var pcOpt: Option[ProofContext] = Some(this)
-    for (stmt <- block.stmts if pcOpt.isDefined) {
-      val pc =
-        if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
-        else pcOpt.get.cleanup
-      if (!stmt.isInstanceOf[ProofElementStmt] &&
-        !stmt.isInstanceOf[MethodDecl]) {
-        hasError = pc.checkRuntimeError(stmt) || hasError
-      }
-      pcOpt =
-        stmt match {
-          case ProofStmt(proof) =>
-            pc.check(proof) match {
-              case Some(pc2) =>
-                Some(pc2.copy(
-                  premises = filter(
-                    (if (autoEnabled) pc.premises else ilinkedSetEmpty) ++
-                      extractClaims(proof)),
-                  provedSteps = imapEmpty))
-              case _ => None
-            }
-          case SequentStmt(sequent) =>
-            if (!autoEnabled) {
-              hasError = true
-              error(stmt, s"Auto is not enabled, but sequent is used.")
-            }
-            if (sequent.premises.nonEmpty) {
-              if (!isValid(pc.premises, sequent.premises)) {
-                hasError = true
-                error(stmt, "Could not automatically deduce the specified sequent's premises.")
-              }
-              if (!isValid(sequent.premises, sequent.conclusions)) {
-                hasError = true
-                error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
-              }
-            } else if (!isValid(pc.premises, sequent.conclusions)) {
-              hasError = true
-              error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
-            }
-            Some(pc.copy(premises =
-              filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
-          case Assert(e) =>
-            if (autoEnabled) {
-              if (!isValid(pc.premises ++ pc.facts.values, ivector(e))) {
-                error(stmt, s"Could not automatically deduce the assertion validity.")
-                hasError = true
-                checkSat(ivector(e),
-                  unsatMsg = s"The assertion is unsatisfiable.",
-                  unknownMsg = s"The assertion might not be satisfiable.",
-                  timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
-              }
-            } else {
-              if (!pc.premises.contains(e)) {
-                error(e, s"The assertion has not been proven.")
-                hasError = true
-                checkSat(ivector(e),
-                  unsatMsg = s"The assertion is unsatisfiable.",
-                  unknownMsg = s"The assertion might not be satisfiable.",
-                  timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
-              }
-            }
-            Some(pc.copy(premises = pc.premises + e))
-          case Assume(e) =>
-            hasError = !checkSat(ivector(e),
-              unsatMsg = s"The assumption is unsatisfiable.",
-              unknownMsg = s"The assumption might not be satisfiable.",
-              timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
-            ) || hasError
-            Some(pc.copy(premises = pc.premises + e))
-          case SeqAssign(id, index, exp) =>
-            val old = newId(id.value + "_old", id.tipe)
-            val m = imapEmpty[Node, Node] + (id -> old)
-            val qVar = newId("q_i", tipe.Z)
-            Some(pc.copy(premises =
-              pc.premises.map(e => subst(e, m)) ++
-                ivector(
-                  Eq(Size(id), Size(old)),
-                  Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
-                  ForAll(
-                    Node.seq(qVar),
-                    Some(RangeDomain(Checker.zero, Size(id),
-                      loLt = false, hiLt = true)),
-                    Implies(
-                      Ne(qVar, index),
-                      Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
-                    )
-                  )
-                )))
-          case ExpStmt(exp) =>
-            val (he, pc2) = pc.invoke(exp, None)
-            hasError ||= he
-            Some(pc2)
-          case a: VarAssign =>
-            val id = a.id
-            val exp = a.exp
-            exp match {
-              case _: ReadInt => pcOpt
-              case _: RandomInt => pcOpt
-              case exp: Clone => pc.assign(id, exp.id)
-              case exp: Apply if exp.id.tipe != tipe.ZS =>
-                val (he, pc2) = pc.invoke(exp, Some(id))
-                hasError ||= he
-                Some(pc2)
-              case _ => pc.assign(id, exp)
-            }
-          case If(exp, thenBlock, elseBlock) =>
-            val thenPcOpt = pc.copy(premises = pc.premises + exp).check(thenBlock)
-            val elsePcOpt = pc.copy(premises = pc.premises + Not(exp)).check(elseBlock)
-            (thenPcOpt, elsePcOpt) match {
-              case (Some(thenPc), Some(elsePc)) =>
-                Some(pc.copy(premises =
-                  orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
-              case _ => None
-            }
-          case stmt: MethodDecl =>
-            val invs = if (stmt.isHelper) ilinkedSetEmpty else pc.invariants
-            val effectivePre = invs ++ stmt.contract.requires.exps
-            val effectivePost = invs ++ stmt.contract.ensures.exps
-            hasError =
-              !checkSat(effectivePre,
-                unsatMsg = s"The effective pre-condition of method ${
-                  stmt.id.value
-                } is unsatisfiable.",
-                unknownMsg = s"The effective pre-condition of method ${
-                  stmt.id.value
-                } might not be satisfiable.",
-                timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${
-                  stmt.id.value
-                } due to timeout."
-              ) || hasError
-            hasError =
-              !checkSat(effectivePost,
-                unsatMsg = s"The effective post-condition of method ${
-                  stmt.id.value
-                } is unsatisfiable.",
-                unknownMsg = s"The effective post-condition of method ${
-                  stmt.id.value
-                } might not be satisfiable.",
-                timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${
-                  stmt.id.value
-                } due to timeout."
-              ) || hasError
-            val modifiedIds = stmt.contract.modifies.ids.toSet
-            val mods = modifiedIds.map(id =>
-              Eq(id, newId(id.value + "_in", id.tipe)))
-            pc.copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods).
-              check(stmt.block) match {
-              case Some(pc2) =>
-                var modifiedInvariants = ilinkedSetEmpty[Exp]
-                for (e <- invs) {
-                  var modified = false
-                  Visitor.build({
-                    case id: Id =>
-                      if (modifiedIds.contains(id)) {
-                        modified = true
-                      }
-                      false
-                  })(e)
-                  if (modified) modifiedInvariants += e
-                }
-                if (autoEnabled) {
-                  val ps = pc2.premises ++ pc2.facts.values
-                  for (e <- modifiedInvariants)
-                    if (!isValid(ps, ivector(e))) {
-                      error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
-                      hasError = true
-                    }
-                } else {
-                  for (e <- modifiedInvariants)
-                    if (!pc2.premises.contains(e)) {
-                      error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
-                      hasError = true
-                    }
-                }
-                val post = stmt.contract.ensures.exps
-                val postPremises = stmt.returnExpOpt match {
-                  case Some(e) =>
-                    val m = imapEmpty[Node, Node] + (e -> Result())
-                    pc2.premises.map(e => subst(e, m))
-                  case _ => pc2.premises
-                }
-                if (autoEnabled) {
-                  val ps = postPremises ++ pc2.facts.values
-                  for (e <- post)
-                    if (!isValid(ps, ivector(e))) {
-                      error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
-                      hasError = true
-                    }
-                } else {
-                  for (e <- post)
-                    if (!postPremises.contains(e)) {
-                      error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
-                      hasError = true
-                    }
-                }
-              case _ => hasError = true
-            }
-            pcOpt.map(_.cleanup)
-          case InvStmt(inv) =>
-            if (autoEnabled) {
-              val ps = pc.premises ++ pc.facts.values
-              for (e <- inv.exps)
-                if (!isValid(ps, ivector(e))) {
-                  error(e, s"Could not automatically deduce the global invariant.")
-                  hasError = true
-                }
-              if (hasError)
-                checkSat(inv.exps,
-                  unsatMsg = s"The global invariant(s) are unsatisfiable.",
-                  unknownMsg = s"The global invariant(s) might not be satisfiable.",
-                  timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
-            } else {
-              for (e <- inv.exps)
-                if (!pc.premises.contains(e)) {
-                  error(e, s"The global invariant has not been proven.")
-                  hasError = true
-                }
-              if (hasError)
-                checkSat(inv.exps,
-                  unsatMsg = s"The global invariant(s) are unsatisfiable.",
-                  unknownMsg = s"The global invariant(s) might not be satisfiable.",
-                  timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
-            }
-            Some(pc.copy(invariants = pc.invariants ++ inv.exps))
-          case _: FactStmt => pcOpt
-          case While(exp, loopBlock, loopInv) =>
-            val es = loopInv.invariant.exps
-            if (autoEnabled) {
-              val ps = pc.premises ++ pc.facts.values
-              for (e <- es)
-                if (!isValid(ps, ivector(e))) {
-                  error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
-                  hasError = true
-                }
-            } else {
-              for (e <- es)
-                if (!pc.premises.contains(e)) {
-                  error(e, s"The loop invariant has not been proved at the beginning of the loop.")
-                  hasError = true
-                }
-            }
-            var ps = ilinkedSetEmpty ++ es
-            if (autoEnabled) {
-              val modifiedIds = loopInv.modifies.ids.toSet
-              for (premise <- pc.premises) {
-                var propagate = true
-                Visitor.build({
-                  case id: Id =>
-                    if (modifiedIds.contains(id)) propagate = false
-                    false
-                })(premise)
-                if (propagate) ps += premise
-              }
-            }
-            pc.copy(premises = ps + exp).
-              check(loopBlock) match {
-              case Some(pc2) =>
-                if (autoEnabled) {
-                  val ps = pc2.premises ++ pc2.facts.values
-                  for (e <- es)
-                    if (!isValid(ps, ivector(e))) {
-                      error(e, s"Could not deduce the loop invariant at the end of the loop.")
-                      hasError = true
-                    }
-                } else {
-                  for (e <- es)
-                    if (!pc2.premises.contains(e)) {
-                      error(e, s"The loop invariant has not been proved at the end of the loop.")
-                      hasError = true
-                    }
-                }
-                Some(pc.copy(premises = ps + Not(exp)))
-              case _ => None
-            }
-          case _: Print => pcOpt
-        }
-      val beforePremises = pc.premises
-      val afterPremises = pcOpt.map(_.premises).getOrElse(ilinkedSetEmpty)
-      if (hintEnabled && (beforePremises.nonEmpty || afterPremises.nonEmpty) &&
-        !stmt.isInstanceOf[MethodDecl]) {
-        val input = unitNode.input
-        val li = nodeLocMap(stmt)
-        var startOffset = input.lastIndexOf('\n', li.offset) + 1
-        if (startOffset < 1) startOffset = 0
-        var endOffset = input.indexOf('\n', li.offset + li.length)
-        if (endOffset < 0) endOffset = input.length
-        val sb = new StringBuilder
-        def indent(): Unit = {
-          for (i <- 0 until li.columnBegin) {
-            sb.append(' ')
-          }
-        }
-        indent()
-        sb.append("{\n")
-        for (e <- beforePremises) {
-          indent()
-          sb.append("  ")
-          sb.append(Exp.toString(e, inProof = true))
-          sb.append('\n')
-        }
-        indent()
-        sb.append("}\n")
-        sb.append(input.substring(startOffset, endOffset).
-          replaceAll("\r", ""))
-        sb.append('\n')
-        indent()
-        sb.append("{\n")
-        for (e <- afterPremises) {
-          indent()
-          sb.append("  ")
-          sb.append(Exp.toString(e, inProof = true))
-          sb.append('\n')
-        }
-        indent()
-        sb.append("}")
-        reporter.report(li.toLocationInfo(fileUriOpt, "hint", sb.toString))
-      }
-
-    }
-    if (hasError) None else pcOpt
-  }
-
-  def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
-    Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
-
-  def newId(x: String, t: tipe.Tipe) = {
-    val r = Id(x)
-    r.tipe = t
-    r
-  }
-
-  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, ProofContext) = {
-    var hasError = false
-    val md = a.declOpt.get
-    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
-    val pres = md.contract.requires.exps.map(e => subst(e, substMap))
-    if (autoEnabled) {
-      val ps = premises ++ facts.values
-      for (pre <- pres)
-        if (!isValid(ps, ivector(pre))) {
-          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value}.")
-          hasError = true
-        }
-    } else {
-      for (pre <- pres)
-        if (!premises.contains(pre)) {
-          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
-          hasError = true
-        }
-    }
-    val (lhs, postSubstMap) = lhsOpt match {
-      case Some(x) =>
-        (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
-      case _ =>
-        (newId(md.id.value + "_result",
-          md.id.tipe.asInstanceOf[tipe.Fn].result),
-          imapEmpty[Node, Node])
-    }
-    substMap += Result() -> lhs
-    for (id@Id(g) <- md.contract.modifies.ids) {
-      substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
-    }
-    (hasError, copy(premises =
-      premises.map(e => subst(e, postSubstMap)) ++
-        md.contract.ensures.exps.map(e => subst(e, substMap))
-    ))
-  }
-
-  def checkRuntimeError(stmt: Stmt): Boolean = {
-    var hasError = false
-    def divisor(e: Exp): Boolean = {
-      val req = Ne(e, Checker.zero)
-      if (autoEnabled) {
-        if (!isValid(premises ++ facts.values, ivector(req))) {
-          error(e, s"Could not automatically deduce that the divisor is non-zero.")
-          hasError = true
-        }
-      } else if (!premises.contains(req)) {
-        error(e, s"Divisor has to be proven to be non-zero.")
-        hasError = true
-      }
-      true
-    }
-    def index(id: Id, e: Exp): Boolean = {
-      val req1 = Le(Checker.zero, e)
-      val req2 = Lt(e, Size(id))
-      if (autoEnabled) {
-        val ps = premises ++ facts.values
-        if (!isValid(ps, ivector(req1))) {
-          hasError = true
-          error(e, "Could not automatically deduce that the sequence index is non-negative.")
-        }
-        if (!isValid(ps, ivector(req2))) {
-          hasError = true
-          error(e, s"Could not automatically deduce that the index is less than the sequence size.")
-        }
-      } else {
-        if (!premises.contains(req1)) {
-          hasError = true
-          error(e, "The sequence index has to be proven non-negative.")
-        }
-        if (!premises.contains(req2)) {
-          hasError = true
-          error(e, s"The sequence index has to be proven less than the sequence size.")
-        }
-      }
-      true
-    }
-    Visitor.build({
-      case _: Block => false
-      case _: LoopInv => false
-      case Div(_, e2) => divisor(e2)
-      case Rem(_, e2) => divisor(e2)
-      case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
-      case SeqAssign(id, e, _) => index(id, e)
-    })(stmt)
-    hasError
-  }
-
-  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
-    var r = ilinkedSetEmpty[Exp]
-    for (e1 <- es1; e2 <- es2) {
-      r += Or(e1, e2)
-      if (e1 == e2)
-        r += e1
-    }
-    r
-  }
-
-  def extractClaims(pg: ProofGroup): ILinkedSet[Exp] =
-    ilinkedSetEmpty ++ pg.allSteps.flatMap(_ match {
-      case step: RegularStep => Some(step.exp)
-      case _ => None
-    })
-
-  def assign(id: Id, exp: Exp): Option[ProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
-    Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
-  }
-
-  def cleanup: ProofContext =
-    copy(premises = filter(premises), provedSteps = imapEmpty,
-      declaredStepNumbers = imapEmpty)
-
-  def filter(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
-    def keep(e: Exp) = {
-      var r = true
-      Visitor.build({
-        case Id(value) =>
-          if (value.endsWith("_old") ||
-            value.endsWith("_result") || value == "q_i")
-            r = false
-          false
-      })(e)
-      r
-    }
-    premises.filter(keep)
-  }
-
-  def check(proofGroup: ProofGroup): Option[ProofContext] = {
+  def check(proofGroup: ProofGroup): Option[T] = {
     var addedVars = isetEmpty[String]
     var addedSteps = isetEmpty[Natural]
-    var pcOpt: Option[ProofContext] =
+    var pcOpt: Option[T] =
       proofGroup match {
         case p: SubProof =>
           val popt = p.assumeStep match {
@@ -672,7 +210,7 @@ ProofContext(unitNode: UnitNode,
               addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
           }
           popt.flatMap(_.addProvedStep(p))
-        case _ => Some(this)
+        case _ => Some(this.asInstanceOf[T])
       }
     for (step <- proofGroup.steps if pcOpt.isDefined) {
       addedSteps += step.num.value
@@ -682,12 +220,12 @@ ProofContext(unitNode: UnitNode,
         case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
       }
     }
-    pcOpt.map(pc => pc.copy(
+    pcOpt.map(pc => pc.make(
       vars = pc.vars -- addedVars,
       provedSteps = pc.provedSteps -- addedSteps))
   }
 
-  def check(step: RegularStep): Option[ProofContext] = {
+  def check(step: RegularStep): Option[T] = {
     val num = step.num.value
     step match {
       case Premise(_, exp) =>
@@ -1129,24 +667,33 @@ ProofContext(unitNode: UnitNode,
       }
     }
 
-  def addProvedStep(step: ProofStep): Option[ProofContext] = {
+  def addProvedStep(step: ProofStep): Option[T] = {
     val num = step.num.value
     declaredStepNumbers.get(num) match {
       case Some(li) =>
         error(step, s"Step #$num has already been used in at line ${li.lineBegin}, column ${li.columnBegin}.")
         None
       case _ =>
-        Some(copy(provedSteps = provedSteps + (num -> step),
+        Some(make(provedSteps = provedSteps + (num -> step),
           declaredStepNumbers = declaredStepNumbers + (num -> nodeLocMap(step))))
     }
   }
 
-  def addVar(id: Id, stepNum: Int): Option[ProofContext] = {
+  def addVar(id: Id, stepNum: Int): Option[T] = {
     val varId = id.value
     if (vars.contains(varId)) {
       error(id, s"The variable $varId in step #$stepNum, is not fresh.")
       None
-    } else Some(copy(vars = vars + varId))
+    } else Some(make(vars = vars + varId))
+  }
+
+  def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
+    Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
+
+  def newId(x: String, t: tipe.Tipe) = {
+    val r = Id(x)
+    r.tipe = t
+    r
   }
 
   def findSubProof(num: Num, stepNum: Int): Option[SubProof] = {
@@ -1175,11 +722,509 @@ ProofContext(unitNode: UnitNode,
         None
     }
 
-  def error(n: Node, msg: String): Option[ProofContext] = {
+  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
+    var r = ilinkedSetEmpty[Exp]
+    for (e1 <- es1; e2 <- es2) {
+      r += Or(e1, e2)
+      if (e1 == e2)
+        r += e1
+    }
+    r
+  }
+
+  def extractClaims(pg: ProofGroup): ILinkedSet[Exp] =
+    ilinkedSetEmpty ++ pg.allSteps.flatMap(_ match {
+      case step: RegularStep => Some(step.exp)
+      case _ => None
+    })
+
+  def checkRuntimeError(stmt: Stmt): Boolean = {
+    var hasError = false
+    def divisor(e: Exp): Boolean = {
+      val req = Ne(e, Checker.zero)
+      if (autoEnabled) {
+        if (!isValid(premises ++ facts.values, ivector(req))) {
+          error(e, s"Could not automatically deduce that the divisor is non-zero.")
+          hasError = true
+        }
+      } else if (!premises.contains(req)) {
+        error(e, s"Divisor has to be proven to be non-zero.")
+        hasError = true
+      }
+      true
+    }
+    def index(id: Id, e: Exp): Boolean = {
+      val req1 = Le(Checker.zero, e)
+      val req2 = Lt(e, Size(id))
+      if (autoEnabled) {
+        val ps = premises ++ facts.values
+        if (!isValid(ps, ivector(req1))) {
+          hasError = true
+          error(e, "Could not automatically deduce that the sequence index is non-negative.")
+        }
+        if (!isValid(ps, ivector(req2))) {
+          hasError = true
+          error(e, s"Could not automatically deduce that the index is less than the sequence size.")
+        }
+      } else {
+        if (!premises.contains(req1)) {
+          hasError = true
+          error(e, "The sequence index has to be proven non-negative.")
+        }
+        if (!premises.contains(req2)) {
+          hasError = true
+          error(e, s"The sequence index has to be proven less than the sequence size.")
+        }
+      }
+      true
+    }
+    Visitor.build({
+      case _: Block => false
+      case _: LoopInv => false
+      case Div(_, e2) => divisor(e2)
+      case Rem(_, e2) => divisor(e2)
+      case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
+      case SeqAssign(id, e, _) => index(id, e)
+    })(stmt)
+    hasError
+  }
+
+  def generateHint(beforePremises: ILinkedSet[Exp],
+                   stmt: Stmt,
+                   afterPremises: ILinkedSet[Exp]): Unit = {
+    if (hintEnabled && (beforePremises.nonEmpty || afterPremises.nonEmpty) &&
+      !stmt.isInstanceOf[MethodDecl]) {
+      val input = unitNode.input
+      val li = nodeLocMap(stmt)
+      var startOffset = input.lastIndexOf('\n', li.offset) + 1
+      if (startOffset < 1) startOffset = 0
+      var endOffset = input.indexOf('\n', li.offset + li.length)
+      if (endOffset < 0) endOffset = input.length
+      val sb = new StringBuilder
+      def indent(): Unit = {
+        for (i <- 0 until li.columnBegin) {
+          sb.append(' ')
+        }
+      }
+      indent()
+      sb.append("{\n")
+      for (e <- beforePremises) {
+        indent()
+        sb.append("  ")
+        sb.append(Exp.toString(e, inProof = true))
+        sb.append('\n')
+      }
+      indent()
+      sb.append("}\n")
+      sb.append(input.substring(startOffset, endOffset).
+        replaceAll("\r", ""))
+      sb.append('\n')
+      indent()
+      sb.append("{\n")
+      for (e <- afterPremises) {
+        indent()
+        sb.append("  ")
+        sb.append(Exp.toString(e, inProof = true))
+        sb.append('\n')
+      }
+      indent()
+      sb.append("}")
+      reporter.report(li.toLocationInfo(fileUriOpt, "hint", sb.toString))
+    }
+  }
+
+  def error(n: Node, msg: String): Option[T] = {
     reporter.report(nodeLocMap(n).toLocationError(fileUriOpt, Checker.kind, msg))
     None
   }
 
   def warn(n: Node, msg: String): Unit =
     reporter.report(nodeLocMap(n).toLocationWarning(fileUriOpt, Checker.kind, msg))
+}
+
+private final case class
+DefaultProofContext(unitNode: UnitNode,
+                    autoEnabled: Boolean,
+                    timeoutInMs: Int,
+                    checkSat: Boolean,
+                    hintEnabled: Boolean,
+                    invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
+                    premises: ILinkedSet[Exp] = ilinkedSetEmpty,
+                    vars: ISet[String] = isetEmpty,
+                    facts: IMap[String, Exp] = imapEmpty,
+                    provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+                    declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
+                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[DefaultProofContext] {
+
+  def check(program: Program): Boolean = {
+    val facts = this.facts ++ program.block.stmts.flatMap(_ match {
+      case FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
+        case f: Fact => Some(f.id.value -> f.exp)
+        case _ => None
+      })
+      case _ => ivectorEmpty
+    })
+    if (facts.nonEmpty && !checkSat(facts.values,
+      unsatMsg = "The specified set of facts are unsatisfiable.",
+      unknownMsg = "The set of facts might not be satisfiable.",
+      timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
+    )) return false
+    copy(facts = facts).check(program.block).isDefined
+  }
+
+  def check(block: Block): Option[DefaultProofContext] = {
+    var pcOpt: Option[DefaultProofContext] = Some(this)
+    for (stmt <- block.stmts if pcOpt.isDefined) {
+      val pc =
+        if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
+        else pcOpt.get.cleanup
+      pcOpt = pc.check(stmt)
+    }
+    pcOpt
+  }
+
+  def check(stmt: Stmt): Option[DefaultProofContext] = {
+    var hasError = false
+    if (!stmt.isInstanceOf[ProofElementStmt] &&
+      !stmt.isInstanceOf[MethodDecl]) {
+      hasError = checkRuntimeError(stmt) || hasError
+    }
+    val pcOpt = stmt match {
+      case ProofStmt(proof) =>
+        check(proof) match {
+          case Some(pc2) =>
+            Some(pc2.copy(
+              premises = filter(
+                (if (autoEnabled) premises else ilinkedSetEmpty) ++
+                  extractClaims(proof)),
+              provedSteps = imapEmpty))
+          case _ => None
+        }
+      case SequentStmt(sequent) =>
+        if (!autoEnabled) {
+          hasError = true
+          error(stmt, s"Auto is not enabled, but sequent is used.")
+        }
+        if (sequent.premises.nonEmpty) {
+          if (!isValid(premises, sequent.premises)) {
+            hasError = true
+            error(stmt, "Could not automatically deduce the specified sequent's premises.")
+          }
+          if (!isValid(sequent.premises, sequent.conclusions)) {
+            hasError = true
+            error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
+          }
+        } else if (!isValid(premises, sequent.conclusions)) {
+          hasError = true
+          error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
+        }
+        Some(copy(premises =
+          filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
+      case Assert(e) =>
+        if (autoEnabled) {
+          if (!isValid(premises ++ facts.values, ivector(e))) {
+            error(stmt, s"Could not automatically deduce the assertion validity.")
+            hasError = true
+            checkSat(ivector(e),
+              unsatMsg = s"The assertion is unsatisfiable.",
+              unknownMsg = s"The assertion might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
+          }
+        } else {
+          if (!premises.contains(e)) {
+            error(e, s"The assertion has not been proven.")
+            hasError = true
+            checkSat(ivector(e),
+              unsatMsg = s"The assertion is unsatisfiable.",
+              unknownMsg = s"The assertion might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
+          }
+        }
+        Some(copy(premises = premises + e))
+      case Assume(e) =>
+        hasError = !checkSat(ivector(e),
+          unsatMsg = s"The assumption is unsatisfiable.",
+          unknownMsg = s"The assumption might not be satisfiable.",
+          timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
+        ) || hasError
+        Some(copy(premises = premises + e))
+      case SeqAssign(id, index, exp) =>
+        val old = newId(id.value + "_old", id.tipe)
+        val m = imapEmpty[Node, Node] + (id -> old)
+        val qVar = newId("q_i", tipe.Z)
+        Some(copy(premises =
+          premises.map(e => subst(e, m)) ++
+            ivector(
+              Eq(Size(id), Size(old)),
+              Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
+              ForAll(
+                Node.seq(qVar),
+                Some(RangeDomain(Checker.zero, Size(id),
+                  loLt = false, hiLt = true)),
+                Implies(
+                  Ne(qVar, index),
+                  Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                )
+              )
+            )))
+      case ExpStmt(exp) =>
+        val (he, pc2) = invoke(exp, None)
+        hasError ||= he
+        Some(pc2)
+      case a: VarAssign =>
+        val id = a.id
+        val exp = a.exp
+        exp match {
+          case _: ReadInt => Some(this)
+          case _: RandomInt => Some(this)
+          case exp: Clone => assign(id, exp.id)
+          case exp: Apply if exp.id.tipe != tipe.ZS =>
+            val (he, pc2) = invoke(exp, Some(id))
+            hasError ||= he
+            Some(pc2)
+          case _ => assign(id, exp)
+        }
+      case If(exp, thenBlock, elseBlock) =>
+        val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
+        val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
+        (thenPcOpt, elsePcOpt) match {
+          case (Some(thenPc), Some(elsePc)) =>
+            Some(copy(premises =
+              orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
+          case _ => None
+        }
+      case stmt: MethodDecl =>
+        val invs = if (stmt.isHelper) ilinkedSetEmpty else invariants
+        val effectivePre = invs ++ stmt.contract.requires.exps
+        val effectivePost = invs ++ stmt.contract.ensures.exps
+        hasError =
+          !checkSat(effectivePre,
+            unsatMsg = s"The effective pre-condition of method ${
+              stmt.id.value
+            } is unsatisfiable.",
+            unknownMsg = s"The effective pre-condition of method ${
+              stmt.id.value
+            } might not be satisfiable.",
+            timeoutMsg = s"Could not check satisfiability of the effective pre-condition of method ${
+              stmt.id.value
+            } due to timeout."
+          ) || hasError
+        hasError =
+          !checkSat(effectivePost,
+            unsatMsg = s"The effective post-condition of method ${
+              stmt.id.value
+            } is unsatisfiable.",
+            unknownMsg = s"The effective post-condition of method ${
+              stmt.id.value
+            } might not be satisfiable.",
+            timeoutMsg = s"Could not check satisfiability of the effective post-condition of method ${
+              stmt.id.value
+            } due to timeout."
+          ) || hasError
+        val modifiedIds = stmt.contract.modifies.ids.toSet
+        val mods = modifiedIds.map(id =>
+          Eq(id, newId(id.value + "_in", id.tipe)))
+        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods).
+          check(stmt.block) match {
+          case Some(pc2) =>
+            var modifiedInvariants = ilinkedSetEmpty[Exp]
+            for (e <- invs) {
+              var modified = false
+              Visitor.build({
+                case id: Id =>
+                  if (modifiedIds.contains(id)) {
+                    modified = true
+                  }
+                  false
+              })(e)
+              if (modified) modifiedInvariants += e
+            }
+            if (autoEnabled) {
+              val ps = pc2.premises ++ pc2.facts.values
+              for (e <- modifiedInvariants)
+                if (!isValid(ps, ivector(e))) {
+                  error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
+                  hasError = true
+                }
+            } else {
+              for (e <- modifiedInvariants)
+                if (!pc2.premises.contains(e)) {
+                  error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
+                  hasError = true
+                }
+            }
+            val post = stmt.contract.ensures.exps
+            val postPremises = stmt.returnExpOpt match {
+              case Some(e) =>
+                val m = imapEmpty[Node, Node] + (e -> Result())
+                pc2.premises.map(e => subst(e, m))
+              case _ => pc2.premises
+            }
+            if (autoEnabled) {
+              val ps = postPremises ++ pc2.facts.values
+              for (e <- post)
+                if (!isValid(ps, ivector(e))) {
+                  error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
+                  hasError = true
+                }
+            } else {
+              for (e <- post)
+                if (!postPremises.contains(e)) {
+                  error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
+                  hasError = true
+                }
+            }
+          case _ => hasError = true
+        }
+        Some(this.cleanup)
+      case InvStmt(inv) =>
+        if (autoEnabled) {
+          val ps = premises ++ facts.values
+          for (e <- inv.exps)
+            if (!isValid(ps, ivector(e))) {
+              error(e, s"Could not automatically deduce the global invariant.")
+              hasError = true
+            }
+          if (hasError)
+            checkSat(inv.exps,
+              unsatMsg = s"The global invariant(s) are unsatisfiable.",
+              unknownMsg = s"The global invariant(s) might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
+        } else {
+          for (e <- inv.exps)
+            if (!premises.contains(e)) {
+              error(e, s"The global invariant has not been proven.")
+              hasError = true
+            }
+          if (hasError)
+            checkSat(inv.exps,
+              unsatMsg = s"The global invariant(s) are unsatisfiable.",
+              unknownMsg = s"The global invariant(s) might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
+        }
+        Some(copy(invariants = invariants ++ inv.exps))
+      case _: FactStmt => Some(this)
+      case While(exp, loopBlock, loopInv) =>
+        val es = loopInv.invariant.exps
+        if (autoEnabled) {
+          val ps = premises ++ facts.values
+          for (e <- es)
+            if (!isValid(ps, ivector(e))) {
+              error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
+              hasError = true
+            }
+        } else {
+          for (e <- es)
+            if (!premises.contains(e)) {
+              error(e, s"The loop invariant has not been proved at the beginning of the loop.")
+              hasError = true
+            }
+        }
+        var ps = ilinkedSetEmpty ++ es
+        if (autoEnabled) {
+          val modifiedIds = loopInv.modifies.ids.toSet
+          for (premise <- premises) {
+            var propagate = true
+            Visitor.build({
+              case id: Id =>
+                if (modifiedIds.contains(id)) propagate = false
+                false
+            })(premise)
+            if (propagate) ps += premise
+          }
+        }
+        copy(premises = ps + exp).
+          check(loopBlock) match {
+          case Some(pc2) =>
+            if (autoEnabled) {
+              val ps = pc2.premises ++ pc2.facts.values
+              for (e <- es)
+                if (!isValid(ps, ivector(e))) {
+                  error(e, s"Could not deduce the loop invariant at the end of the loop.")
+                  hasError = true
+                }
+            } else {
+              for (e <- es)
+                if (!pc2.premises.contains(e)) {
+                  error(e, s"The loop invariant has not been proved at the end of the loop.")
+                  hasError = true
+                }
+            }
+            Some(copy(premises = ps + Not(exp)))
+          case _ => None
+        }
+      case _: Print => Some(this)
+    }
+    generateHint(premises, stmt,
+      pcOpt.map(_.premises).getOrElse(ilinkedSetEmpty))
+    if (hasError) None else pcOpt
+  }
+
+  def assign(id: Id, exp: Exp): Option[DefaultProofContext] = {
+    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+  }
+
+  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, DefaultProofContext) = {
+    var hasError = false
+    val md = a.declOpt.get
+    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
+    val pres = md.contract.requires.exps.map(e => subst(e, substMap))
+    if (autoEnabled) {
+      val ps = premises ++ facts.values
+      for (pre <- pres)
+        if (!isValid(ps, ivector(pre))) {
+          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value}.")
+          hasError = true
+        }
+    } else {
+      for (pre <- pres)
+        if (!premises.contains(pre)) {
+          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
+          hasError = true
+        }
+    }
+    val (lhs, postSubstMap) = lhsOpt match {
+      case Some(x) =>
+        (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
+      case _ =>
+        (newId(md.id.value + "_result",
+          md.id.tipe.asInstanceOf[tipe.Fn].result),
+          imapEmpty[Node, Node])
+    }
+    substMap += Result() -> lhs
+    for (id@Id(g) <- md.contract.modifies.ids) {
+      substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
+    }
+    (hasError, make(premises =
+      premises.map(e => subst(e, postSubstMap)) ++
+        md.contract.ensures.exps.map(e => subst(e, substMap))
+    ))
+  }
+
+  def cleanup: DefaultProofContext =
+    copy(premises = filter(premises), provedSteps = imapEmpty,
+      declaredStepNumbers = imapEmpty)
+
+  def filter(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
+    def keep(e: Exp) = {
+      var r = true
+      Visitor.build({
+        case Id(value) =>
+          if (value.endsWith("_old") ||
+            value.endsWith("_result") || value == "q_i")
+            r = false
+          false
+      })(e)
+      r
+    }
+    premises.filter(keep)
+  }
+
+  def make(vars: ISet[String],
+           provedSteps: IMap[Natural, ProofStep],
+           declaredStepNumbers: IMap[Natural, LocationInfo],
+           premises: ILinkedSet[Exp]): DefaultProofContext =
+    copy(vars = vars, provedSteps = provedSteps,
+      declaredStepNumbers = declaredStepNumbers, premises = premises)
 }
