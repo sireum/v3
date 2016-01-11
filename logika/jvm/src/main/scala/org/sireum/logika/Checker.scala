@@ -43,16 +43,25 @@ object Checker {
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
       Builder(fileUriOpt, text).foreach(unitNodes :+= _)
     }
-    if (reporter.hasError)
+    if (reporter.hasError) {
+      reporter.report(ErrorMessage("AST",
+        if (m.proofs.size > 1) "The inputs are ill-formed."
+        else "The input is ill-formed."))
       return message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
+    }
     if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
-      if (TypeChecker.check(programs: _*))
+      if (TypeChecker.check(programs: _*)) {
         if (m.lastOnly)
           check(programs.last, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
         else
           for (program <- programs)
             check(program, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
+      } else {
+        reporter.report(ErrorMessage(TypeChecker.kind,
+          if (m.proofs.size > 1) "The programs are ill-typed."
+          else "The program is ill-typed."))
+      }
     } else if (unitNodes.forall(_.isInstanceOf[Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[Sequent])
       if (m.lastOnly)
