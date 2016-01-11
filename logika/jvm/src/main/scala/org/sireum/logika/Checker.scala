@@ -79,7 +79,7 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          val r = DefaultProofContext(s, autoEnabled, timeoutInMs,
+          var r = DefaultProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
@@ -87,8 +87,10 @@ object Checker {
             case _ => None
           }).toSet
           for (c <- s.conclusions)
-            if (!exps.contains(c))
+            if (!exps.contains(c)) {
+              r = false
               error(fileUriOpt, nodeLocMap(c), s"The sequent conclusion has not been proved.")
+            }
           if (r) reporter.report(InfoMessage(kind, s"${unitNode.mode.value} logic proof is accepted."))
           else reporter.report(ErrorMessage(kind, s"${unitNode.mode.value} logic proof is rejected."))
           r
