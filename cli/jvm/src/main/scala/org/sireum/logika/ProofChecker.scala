@@ -58,7 +58,7 @@ class ProofChecker(option: LogikaOption,
     val proofs =
       option.input.toVector.flatMap { filename =>
         import java.io._
-        val f = new File(option.input.head)
+        val f = new File(filename)
         if (!f.exists) {
           errPrintln(s"File ${f.getAbsolutePath} does not exist.")
           hasError = true
