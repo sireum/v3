@@ -55,6 +55,8 @@ object Checker {
             check(program, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
     } else if (unitNodes.forall(_.isInstanceOf[Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[Sequent])
+      if (m.lastOnly)
+        reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
       for (sequent <- sequents)
         check(sequent, autoEnabled = false, m.timeout, m.checkSat, m.hintEnabled)
     } else {
