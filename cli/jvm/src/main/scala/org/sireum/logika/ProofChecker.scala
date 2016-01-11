@@ -86,9 +86,9 @@ class ProofChecker(option: LogikaOption,
     }
     if (hasError) return false
 
-    val isProgramming = option.input.exists(f => f.endsWith(".scala") || f.endsWith(".sc"))
     Checker.check(message.Check("", isSilent = false,
-      isProgramming, proofs, option.last, option.auto, option.timeout, option.sat)
+      hintEnabled = false, proofs, lastOnly = option.last,
+      autoEnabled = option.auto, timeout = option.timeout, checkSat = option.sat)
     )
 
     if (hasError) return false
