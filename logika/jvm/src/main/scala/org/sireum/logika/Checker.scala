@@ -371,8 +371,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                   error(exp.exp, s"The assumption in step #${subProof.value} does not match the non-negated expression of #$num for Negation-intro.")
                   hasError = true
                 }
-                if (ls.exp != Checker.bottom) {
-                  error(ls.exp, s"The conclusion in step #${subProof.value} is expected to be a falsicum (⊥) for Negation-intro of #$num.")
+                val expectedClaims = extractClaims(sp)
+                if (!expectedClaims.contains(Checker.bottom)) {
+                  error(ls.exp, s"Could not find falsicum (⊥) in step #${subProof.value} for Negation-intro of #$num.")
                   hasError = true
                 }
               case (fs, ls) =>
@@ -422,8 +423,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                   error(exp, s"The negated expression in step #$num does not match the assumption in #${subProof.value} for Pbc.")
                   hasError = true
                 }
-                if (ls.exp != Checker.bottom) {
-                  error(ls.exp, s"The conclusion of step #${subProof.value} is expected to be a falsicum (⊥) for Pbc of #$num.")
+                val expectedClaims = extractClaims(sp)
+                if (!expectedClaims.contains(Checker.bottom)) {
+                  error(ls.exp, s"Could not find falsicum (⊥) in step #${subProof.value} for Pbc of #$num.")
                   hasError = true
                 }
               case (fs, ls) =>
