@@ -1,6 +1,8 @@
 Logika To-Dos
 =============
 
+* Ensure transitivity of modifies clause checking
+
 * Create website with user manual
 
 
