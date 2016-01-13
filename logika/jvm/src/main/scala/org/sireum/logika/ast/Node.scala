@@ -43,7 +43,7 @@ object Node {
       case _: IntType | _: BooleanType | _: IntSeqType |
            _: IntLit | _: SeqLit |
            _: Mul | _: Div | _: Rem | _: Add | _: Sub |
-           _: Lt | _: Le | _: Gt | _: Ge |
+           _: Lt | _: Le | _: Gt | _: Ge | _: Eq | _: Ne |
            _: Minus =>
         m = LogicMode.Programming
         false
