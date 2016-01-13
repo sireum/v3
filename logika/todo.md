@@ -1,6 +1,8 @@
 Logika To-Dos
 =============
 
+* Disallow block comment in proof statement
+
 * Ensure transitivity of modifies clause checking
 
 * Create website with user manual
