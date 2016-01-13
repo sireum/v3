@@ -1,6 +1,8 @@
 Logika To-Dos
 =============
 
+* Add well-formed-ness check for predicate logic
+
 * Disallow block comment in proof statement
 
 * Ensure transitivity of modifies clause checking
@@ -10,6 +12,8 @@ Logika To-Dos
 
 Future Work
 ===========
+
+* Add automatic check of propositional and predicate logic sequents
 
 * Add option to specify default range for integers
 
