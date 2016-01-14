@@ -485,24 +485,22 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       case ForAllIntro(_, q, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
-            var hasError = false
-            (sp.first, sp.last) match {
-              case (fs: ForAllAssumeStep, ls: RegularStep) =>
+            var hasError = true
+            sp.first match {
+              case fs: ForAllAssumeStep =>
                 val freshVarId = fs.id
                 val freshVar = freshVarId.value
-                if (!Checker.collectVars(ls.exp).contains(freshVar))
-                  warn(ls.exp, s"The conclusion in step #${subProof.value} does not use the fresh variable $freshVar introducted in #${fs.num.value}.")
-                val expected = subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
-                if (expected != ls.exp) {
-                  error(q, s"Supplying $freshVar for ${q.ids.head} in step #$num does not produce matching expression in #${ls.num.value} for Forall-intro.")
-                  hasError = true
+                for (step <- sp.steps.reverse if hasError) step match {
+                  case step: RegularStep if Checker.collectVars(step.exp).contains(freshVar) =>
+                    val expected = subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
+                    if (expected == step.exp) hasError = false
+                  case _ =>
                 }
-              case (fs, ls) =>
-                if (!fs.isInstanceOf[ForAllAssumeStep])
-                  error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
-                if (!ls.isInstanceOf[RegularStep])
-                  error(sp, s"Wrong form for Forall-intro conclusion in step #$num.")
-                hasError = true
+                if (hasError) {
+                  error(step, s"Could not find a suitable expression in #${subProof.value} for Forall-intro.")
+                }
+              case fs =>
+                error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
@@ -738,18 +736,22 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
     var r = ilinkedSetEmpty[Exp]
     for (e1 <- es1; e2 <- es2) {
-      r += Or(e1, e2)
       if (e1 == e2)
         r += e1
+      r += Or(e1, e2)
     }
     r
   }
 
-  def extractClaims(pg: ProofGroup): ILinkedSet[Exp] =
-    ilinkedSetEmpty ++ pg.allSteps.flatMap(_ match {
+  def extractClaims(pg: ProofGroup,
+                    reverse: Boolean = true): ILinkedSet[Exp] = {
+    var steps = pg.allSteps
+    if (reverse) steps = steps.reverse
+    ilinkedSetEmpty ++ steps.flatMap(_ match {
       case step: RegularStep => Some(step.exp)
       case _ => None
     })
+  }
 
   def checkRuntimeError(stmt: Stmt): Boolean = {
     var hasError = false
@@ -909,7 +911,7 @@ DefaultProofContext(unitNode: UnitNode,
             Some(pc2.copy(
               premises = filter(
                 (if (autoEnabled) premises else ilinkedSetEmpty) ++
-                  extractClaims(proof)),
+                  extractClaims(proof, reverse = false)),
               provedSteps = imapEmpty))
           case _ => None
         }
