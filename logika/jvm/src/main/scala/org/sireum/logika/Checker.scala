@@ -641,7 +641,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def subst(e: Exp, m: IMap[Node, Node]): Exp = expRewriter(m)(e)
 
   def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
-    val r = imapEmpty[Node, Node] ++ q.ids.zip(args)
+    val r = imapEmpty[Node, Node] ++ q.ids.zip(args).reverse
     if (r.isEmpty) None
     else if (r.size < q.ids.size) {
       q match {
