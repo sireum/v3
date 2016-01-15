@@ -1,13 +1,13 @@
 Logika To-Dos
 =============
 
+* Document programming logic input language
+
 * Add well-formed-ness check for predicate logic
 
 * Disallow block comment in proof statement
 
 * Ensure transitivity of modifies clause checking
-
-* Create website with user manual
 
 
 Future Work
@@ -36,6 +36,8 @@ Future Work
   ```
   
 * Add logic gates circuit output for propositional logic 
+
+* Add jago tactic
 
 * Add inductively defined datatypes using traits and immutable case classes (with multiple trait inheritance)
  
