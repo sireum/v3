@@ -166,7 +166,7 @@ justification
   | ( tb=( 'bottome' | 'falsee' )
     | tb=('_|_' | '⊥' ) ID // ID=="e"
     ) bottomStep=NUM                                    #BottomElim
-  | tb='Pbc' subProof=NUM                               #Pbc
+  | tb='pbc' subProof=NUM                               #Pbc
   | tb='subst1' eqStep=numOrId step=NUM                 #Subst1
   | tb='subst2' eqStep=numOrId step=NUM                 #Subst2
   | tb='algebra' steps+=numOrId*                        #Algebra

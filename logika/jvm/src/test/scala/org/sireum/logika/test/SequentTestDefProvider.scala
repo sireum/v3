@@ -284,7 +284,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       3. ¬p                  assume
           |       4. ⊥                   ¬e 3 1
           |     }
-          |  5. p                        Pbc 2
+          |  5. p                        pbc 2
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
@@ -298,13 +298,13 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       4. ¬p ∨ ¬q             ∨i1 3
           |       5. ⊥                   ¬e 4 1
           |     }
-          |  6. p                        Pbc 2
+          |  6. p                        pbc 2
           |  7. {
           |       8. ¬q                  assume
           |       9. ¬p ∨ ¬q             ∨i2 8
           |      10. ⊥                   ¬e 9 1
           |     }
-          | 11. q                        Pbc 7
+          | 11. q                        pbc 7
           | 12. p ∧ q                    ∧i 6 11
           |}
         """.stripMargin, LogicMode.Propositional))
@@ -324,7 +324,7 @@ final class SequentTestDefProvider(tf: TestFramework)
           |       8. p ∨ ¬p              ∨i2 7
           |       9. ⊥                   ¬e 8 2
           |     }
-          | 10. p ∨ ¬p                   Pbc 1
+          | 10. p ∨ ¬p                   pbc 1
           |}
         """.stripMargin, LogicMode.Propositional))
     ,
