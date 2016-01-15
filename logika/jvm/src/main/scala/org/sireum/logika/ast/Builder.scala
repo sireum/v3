@@ -85,7 +85,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
       ctx.justification match {
         case ctx: PremiseContext => Premise(num, exp)
         case ctx: AndIntroContext =>
-          errorIf(num, ctx.ID, ctx.tb, "i", "andi", "^i")
+          errorIf(num, ctx.ID, ctx.tb, "i", "andi")
           exp match {
             case exp: And =>
               AndIntro(num, exp, buildNum(ctx.lStep), buildNum(ctx.rStep))
@@ -97,8 +97,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
         case ctx: AndElimContext =>
           val andStep = buildNum(ctx.andStep)
           ctx.tb.getText match {
-            case "ande1" | "^e1" => AndElim1(num, exp, andStep)
-            case "ande2" | "^e2" => AndElim2(num, exp, andStep)
+            case "ande1" => AndElim1(num, exp, andStep)
+            case "ande2" => AndElim2(num, exp, andStep)
             case tb => ctx.ID.getText match {
               case "e1" => AndElim1(num, exp, andStep)
               case "e2" => AndElim2(num, exp, andStep)
@@ -515,7 +515,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
               case _ =>
             }
             Minus(exp)
-          case "not" | "!" | "~" | "¬" => Not(exp)
+          case "not" | "neg" | "!" | "~" | "¬" => Not(exp)
         }
       case ctx: BinaryExpContext =>
         val lExp = build(ctx.l)

@@ -34,7 +34,7 @@ grammar Antlr4Logika;
    ≤         2264      <=
    ≥         2265      >=
    ≠         2260      !=
-   ¬         00AC      not        !        ~
+   ¬         00AC      not   neg  !        ~
    ∧         2227      and        &        ^
    ∨         2228      or         |        V
    →         21D2      implies    ->
@@ -95,7 +95,7 @@ formula
   | l=formula
     op=( '=' |'==' | '!=' | '≠' ) NL?
     r=formula                                           #Binary  // algebra
-  | op=( 'not' | '!' | '~' | '¬' ) formula              #Unary   // propositional logic
+  | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary   // propositional logic
   | l=formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
     r=formula                                           #Binary  // algebra
@@ -126,10 +126,10 @@ type
 
 justification
   : t='premise'                                         #Premise
-  | ( tb=('andi' | '^i' ) | tb=( '&' | '∧' ) ID ) // ID=="i"
+  | ( tb='andi'  | tb=( '&' | '∧' | '^' ) ID ) // ID=="i"
     lStep=NUM rStep=NUM                                 #AndIntro
-  | ( tb=('ande1' | '^e1' | 'ande2' | '^e2' )
-    | tb=( '&' | '∧' ) ID ) // ID=="e1" or ID=="e2"
+  | ( tb=('ande1' | 'ande2' )
+    | tb=( '&' | '∧' | '^' ) ID ) // ID=="e1" or ID=="e2"
     andStep=NUM                                         #AndElim
   | ( tb=( 'ori1' | 'Vi1' | 'ori2' | 'Vi2' )
     | tb=( '|' | '∨' ) ID ) // ID=="i1" or ID=="i2"
