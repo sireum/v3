@@ -59,8 +59,8 @@ object Checker {
             check(program, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
-          if (m.proofs.size > 1) "The programs are ill-typed."
-          else "The program is ill-typed."))
+          if (m.proofs.size > 1) "The programs are ill-formed."
+          else "The program is ill-formed."))
       }
     } else if (unitNodes.forall(_.isInstanceOf[Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[Sequent])

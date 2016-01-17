@@ -207,7 +207,7 @@ impor
 facts
   : '{' NL*
     ftb='fact' NL*
-    factOrFun? ( NL+ factOrFun? )*
+    factOrFun ( NL+ factOrFun? )*
     te='}' NL* ;
 
 factOrFun: fact | fun ;
@@ -285,13 +285,16 @@ exp
 
 loopInvariant
   : tb='{' NL*
-    itb='invariant' NL* formula? ( NL+ formula? )*
     modifies
+    te='}' NL*
+  | tb='{' NL*
+    itb='invariant' NL* formula ( NL+ formula? )*
+    modifies?
     te='}' NL*
   ;
 
 modifies
-  : tb='modifies' ( ID ( ',' ID )* )? NL* ;
+  : tb='modifies' ID ( ',' ID )* NL* ;
 
 methodContract
   : tb='{' NL*
@@ -305,7 +308,7 @@ methodContract
 
 invariants
   : tb='{' NL*
-    'invariant' NL* formula? ( NL+ formula? )*
+    'invariant' NL* formula ( NL+ formula? )*
     te='}' NL*
   ;
 

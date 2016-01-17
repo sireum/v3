@@ -368,8 +368,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
       error(ctx.org, s"Can only import from org.sireum.logika.")
 
   private def build(ctx: FactsContext): Facts =
-    Facts(Option(ctx.factOrFun).map(_.map(build)).
-      getOrElse(Node.emptySeq) at(ctx.ftb, ctx.te))
+    Facts(ctx.factOrFun.map(build)) at(ctx.ftb, ctx.te)
 
   private def build(ctx: FactOrFunContext): FactOrFun =
     if (ctx.fact != null) build(ctx.fact) else build(ctx.fun)
@@ -570,9 +569,10 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
       getOrElse(Node.emptySeq))
 
     LoopInv(
-      if (inv.exps.isEmpty) inv at ctx.itb
+      if (inv.exps.isEmpty) inv
       else inv at(ctx.itb, inv.exps.last),
-      build(ctx.modifies)) at(ctx.tb, ctx.te)
+      Option(ctx.modifies).map(build).
+        getOrElse(Modifies(Node.emptySeq))) at(ctx.tb, ctx.te)
   }
 
   private def build(ctx: ModifiesContext): Modifies = {
@@ -588,8 +588,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
       (ctx.tb, ctx.te)
 
   private def build(ctx: InvariantsContext): Inv =
-    Inv(Option(ctx.formula).map(_.map(build)).getOrElse(Node.emptySeq)) at
-      (ctx.tb, ctx.te)
+    Inv(ctx.formula.map(build)) at(ctx.tb, ctx.te)
 
   private def buildId(tn: TerminalNode): Id = buildId(tn.getSymbol)
 
