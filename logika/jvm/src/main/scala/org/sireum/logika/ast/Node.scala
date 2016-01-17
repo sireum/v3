@@ -221,9 +221,7 @@ sealed trait ProofStep extends Node {
   def num: Num
 }
 
-sealed trait NumOrId extends Node
-
-final case class Num(value: Natural) extends NumOrId
+final case class Num(value: Natural) extends Node
 
 sealed trait ProofGroup extends Node {
   def steps: Node.Seq[ProofStep]
@@ -308,17 +306,17 @@ final case class Pbc(num: Num,
 
 final case class Subst1(num: Num,
                         exp: Exp,
-                        eqStep: NumOrId,
+                        eqStep: Num,
                         step: Num) extends RegularStep
 
 final case class Subst2(num: Num,
                         exp: Exp,
-                        eqStep: NumOrId,
+                        eqStep: Num,
                         step: Num) extends RegularStep
 
 final case class Algebra(num: Num,
                          exp: Exp,
-                         nums: Node.Seq[NumOrId])
+                         nums: Node.Seq[Num])
   extends RegularStep
 
 final case class ForAllIntro(num: Num,
@@ -328,7 +326,7 @@ final case class ForAllIntro(num: Num,
 
 final case class ForAllElim(num: Num,
                             exp: Exp,
-                            stepOrFact: NumOrId,
+                            step: Num,
                             args: Node.Seq[Exp])
   extends RegularStep
 
@@ -340,16 +338,21 @@ final case class ExistsIntro(num: Num,
 
 final case class ExistsElim(num: Num,
                             exp: Exp,
-                            stepOrFact: NumOrId,
+                            step: Num,
                             subProof: Num) extends RegularStep
 
 final case class Invariant(num: Num,
                            exp: Exp)
   extends RegularStep
 
+final case class FactJust(num: Num,
+                          exp: Exp,
+                          id: Id)
+  extends RegularStep
+
 final case class Auto(num: Num,
                       exp: Exp,
-                      stepOrFacts: Node.Seq[NumOrId])
+                      steps: Node.Seq[Num])
   extends RegularStep
 
 final case class SubProof(num: Num,
@@ -418,7 +421,7 @@ final case class BooleanLit(value: Boolean) extends PrimaryExp {
     sb.append(if (value) "T" else "F")
 }
 
-final case class Id(value: String) extends PrimaryExp with NumOrId {
+final case class Id(value: String) extends PrimaryExp {
   var tipe: Tipe = _
 
   override def buildString(sb: StringBuilder,

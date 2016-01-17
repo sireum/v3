@@ -45,7 +45,6 @@
             <option value="$PROJECT_DIR$/util/shared/project" />
           </set>
         </option>
-        <option name="resolveClassifiers" value="true" />
         <option name="resolveSbtClassifiers" value="true" />
         <option name="sbtVersion" value="0.13.9" />
         <option name="myModules">

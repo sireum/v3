@@ -79,8 +79,8 @@ object Rewriter {
       org.sireum.logika.ast.Assume(exp)
     }),
     ("Auto", { es =>
-      val Seq(num: Num, exp: Exp, stepOrFacts: IVector[_]) = es
-      org.sireum.logika.ast.Auto(num, exp, cast(stepOrFacts))
+      val Seq(num: Num, exp: Exp, steps: IVector[_]) = es
+      org.sireum.logika.ast.Auto(num, exp, cast(steps))
     }),
     ("Block", { es =>
       val Seq(stmts: IVector[_]) = es
@@ -123,8 +123,8 @@ object Rewriter {
       org.sireum.logika.ast.ExistsAssumeStep(num, id, cast(typeOpt), exp)
     }),
     ("ExistsElim", { es =>
-      val Seq(num: Num, exp: Exp, stepOrFact: NumOrId, subProof: Num) = es
-      org.sireum.logika.ast.ExistsElim(num, exp, stepOrFact, subProof)
+      val Seq(num: Num, exp: Exp, step: Num, subProof: Num) = es
+      org.sireum.logika.ast.ExistsElim(num, exp, step, subProof)
     }),
     ("ExistsIntro", { es =>
       val Seq(num: Num, exp: Exists, step: Num, args: IVector[_]) = es
@@ -137,6 +137,10 @@ object Rewriter {
     ("Fact", { es =>
       val Seq(id: Id, exp: Exp) = es
       org.sireum.logika.ast.Fact(id, exp)
+    }),
+    ("FactJust", { es =>
+      val Seq(num: Num, exp: Exp, id: Id) = es
+      org.sireum.logika.ast.FactJust(num, exp, id)
     }),
     ("FactStmt", { es =>
       val Seq(fact: Facts) = es
@@ -155,8 +159,8 @@ object Rewriter {
       org.sireum.logika.ast.ForAllAssumeStep(num, id, cast(typeOpt))
     }),
     ("ForAllElim", { es =>
-      val Seq(num: Num, exp: Exp, stepOrFact: NumOrId, args: IVector[_]) = es
-      org.sireum.logika.ast.ForAllElim(num, exp, stepOrFact, cast(args))
+      val Seq(num: Num, exp: Exp, step: Num, args: IVector[_]) = es
+      org.sireum.logika.ast.ForAllElim(num, exp, step, cast(args))
     }),
     ("ForAllIntro", { es =>
       val Seq(num: Num, exp: ForAll, subProof: Num) = es
@@ -307,8 +311,8 @@ object Rewriter {
       org.sireum.logika.ast.Prepend(left, right)
     }),
     ("Print", { es =>
-      val Seq(isNewline: java.lang.Boolean, msg: StringLit) = es
-      org.sireum.logika.ast.Print(isNewline, ivector(msg))
+      val Seq(isNewline: java.lang.Boolean, args: IVector[_]) = es
+      org.sireum.logika.ast.Print(isNewline, cast(args))
     }),
     ("Program", { es =>
       val Seq(block: Block) = es
@@ -379,11 +383,11 @@ object Rewriter {
       org.sireum.logika.ast.SubProof(num, assumeStep, cast(steps))
     }),
     ("Subst1", { es =>
-      val Seq(num: Num, exp: Exp, eqStep: NumOrId, step: Num) = es
+      val Seq(num: Num, exp: Exp, eqStep: Num, step: Num) = es
       org.sireum.logika.ast.Subst1(num, exp, eqStep, step)
     }),
     ("Subst2", { es =>
-      val Seq(num: Num, exp: Exp, eqStep: NumOrId, step: Num) = es
+      val Seq(num: Num, exp: Exp, eqStep: Num, step: Num) = es
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
     }),
     ("TypeDomain", { es =>

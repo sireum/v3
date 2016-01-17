@@ -167,12 +167,12 @@ justification
     | tb=('_|_' | '⊥' ) ID // ID=="e"
     ) bottomStep=NUM                                    #BottomElim
   | tb='pbc' subProof=NUM                               #Pbc
-  | tb='subst1' eqStep=numOrId step=NUM                 #Subst1
-  | tb='subst2' eqStep=numOrId step=NUM                 #Subst2
-  | tb='algebra' steps+=numOrId*                        #Algebra
+  | tb='subst1' eqStep=NUM step=NUM                     #Subst1
+  | tb='subst2' eqStep=NUM step=NUM                     #Subst2
+  | tb='algebra' steps+=NUM*                            #Algebra
   | tb=('foralli' | 'alli' | 'Ai') subProof=NUM         #ForallIntro
   | tb=('foralle' | 'alle' | 'Ae')
-    stepOrFact=numOrId formula+                         #ForallElim
+    step=NUM formula+                                   #ForallElim
   | {"∀".equals(_input.LT(1).getText()) &&
      "i".equals(_input.LT(2).getText())}?
     tb='∀' ID // ID=="i"
@@ -180,23 +180,22 @@ justification
   | {"∀".equals(_input.LT(1).getText()) &&
      "e".equals(_input.LT(2).getText())}?
     tb='∀' ID // ID=="e"
-    stepOrFact=numOrId formula+                         #ForallElim
+    step=NUM formula+                                   #ForallElim
   | tb=( 'existsi' | 'somei' | 'Ei' )
     existsStep=NUM formula+                             #ExistsIntro
   | tb=( 'existse' | 'somee' | 'Ee' )
-    stepOrFact=numOrId subproof=NUM                     #ExistsElim
+    step=NUM subproof=NUM                               #ExistsElim
   | {"∃".equals(_input.LT(1).getText()) &&
      "i".equals(_input.LT(2).getText())}?
     tb='∃' ID existsStep=NUM formula+                   #ExistsIntro
   | {"∃".equals(_input.LT(1).getText()) &&
      "e".equals(_input.LT(2).getText())}?
     tb='∃' t=ID // ID=="e"
-    stepOrFact=numOrId subProof=NUM                     #ExistsElim
+    step=NUM subProof=NUM                               #ExistsElim
   | tb='invariant'                                      #Invariant
-  | tb='auto' stepOrFacts+=numOrId*                     #Auto
+  | tb='fact' ID                                        #Fct
+  | tb='auto' steps+=NUM*                               #Auto
   ;
-
-numOrId: t=( NUM | ID );
 
 program: NL* ( impor NL+ stmts )? ;
 

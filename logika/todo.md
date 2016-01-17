@@ -5,7 +5,7 @@ Logika To-Dos
 
 * Add well-formed-ness check for predicate logic
 
-* Disallow block comment in proof statement
+* Disallow block comment and $ char in proof statement
 
 * Ensure transitivity of modifies clause checking
 

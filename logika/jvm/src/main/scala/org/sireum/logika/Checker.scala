@@ -440,7 +440,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         }
       case Subst1(_, exp, eqStep, step2) =>
         var hasError = false
-        (findRegularStepOrFactExp(eqStep, num),
+        (findRegularStepExp(eqStep, num),
           findRegularStepExp(step2, num)) match {
           case (Some(Eq(exp1, exp2)), Some(e)) =>
             val expected =
@@ -448,19 +448,18 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 case `exp1` => exp2
               })(e)
             if (expected != exp) {
-              val eqStepText = text(eqStep)
-              error(exp, s"The expression in step #$num does not match the substituted expression of [left/right $eqStepText]#${step2.value} for Subst1.")
+              error(exp, s"The expression in step #$num does not match the substituted expression of [left/right of ${eqStep.value}]#${step2.value} for Subst1.")
               hasError = true
             }
           case (Some(_), Some(_)) =>
-            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst1 in step #$num has to be an equality.")
+            error(eqStep, s"The first expression argument of step #${eqStep.value} for Subst1 in step #$num has to be an equality.")
             hasError = true
           case _ => hasError = true
         }
         if (hasError) None else addProvedStep(step)
       case Subst2(_, exp, eqStep, step2) =>
         var hasError = false
-        (findRegularStepOrFactExp(eqStep, num),
+        (findRegularStepExp(eqStep, num),
           findRegularStepExp(step2, num)) match {
           case (Some(Eq(exp1, exp2)), Some(e)) =>
             val expected =
@@ -468,18 +467,17 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 case `exp2` => exp1
               })(e)
             if (expected != exp) {
-              val eqStepText = text(eqStep)
-              error(exp, s"The expression in step #$num does not match the substituted expression of [right/left $eqStepText]#${step2.value} for Subst2.")
+              error(exp, s"The expression in step #$num does not match the substituted expression of [right/left of #${eqStep.value}]#${step2.value} for Subst2.")
               hasError = true
             }
           case (Some(_), Some(_)) =>
-            error(eqStep, s"The second expression argument of step #${text(eqStep)} for Subst2 in step #$num has to be an equality.")
+            error(eqStep, s"The first expression argument of step #${eqStep.value} for Subst2 in step #$num has to be an equality.")
             hasError = true
           case _ => hasError = true
         }
         if (hasError) None else addProvedStep(step)
-      case Algebra(_, exp, stepOrFacts) =>
-        if (deduce(num, exp, stepOrFacts, isAuto = false))
+      case Algebra(_, exp, steps) =>
+        if (deduce(num, exp, steps, isAuto = false))
           addProvedStep(step)
         else None
       case ForAllIntro(_, q, subProof) =>
@@ -505,19 +503,19 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case ForAllElim(_, exp, stepOrFact, args) =>
-        findRegularStepOrFactExp(stepOrFact, num) match {
+      case ForAllElim(_, exp, step2, args) =>
+        findRegularStepExp(step2, num) match {
           case Some(q: ForAll) =>
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = subst(e, m)
                 if (exp != expected) {
-                  error(exp, s"Supplying the specified arguments to the quantification ${text(stepOrFact)} does not produce matching expression in #$num for Forall-elim.")
+                  error(exp, s"Supplying the specified arguments to the quantification in step #${step2.value} does not produce matching expression in #$num for Forall-elim.")
                   None
                 } else addProvedStep(step)
               case _ => error(step, s"The numbers of quantified variables and arguments do not match in Forall-elim of step #$num.")
             }
-          case Some(_) => error(stepOrFact, s"Forall-elim in $num requires a universal quantification ${text(stepOrFact)}.")
+          case Some(_) => error(step2, s"Forall-elim in step #$num requires a universal quantification in #${step2.value}.")
           case _ => None
         }
       case ExistsIntro(_, q, step2, args) =>
@@ -534,8 +532,8 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             }
           case _ => None
         }
-      case ExistsElim(_, exp, stepOrFact, subProof) =>
-        findRegularStepOrFactExp(stepOrFact, num) match {
+      case ExistsElim(_, exp, step2, subProof) =>
+        findRegularStepExp(step2, num) match {
           case Some(q: Exists) =>
             findSubProof(subProof, num) match {
               case Some(sp) =>
@@ -545,7 +543,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                     val freshVar = fs.id.value
                     val expected = subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
                     if (expected != fs.exp) {
-                      error(exp, s"Supplying $freshVar for ${q.ids.head} ${text(stepOrFact)} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
+                      error(exp, s"Supplying $freshVar for ${q.ids.head} in step #${step2.value} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
                     }
                     val expectedClaims = extractClaims(sp)
@@ -564,14 +562,21 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 if (hasError) None else addProvedStep(step)
               case _ => None
             }
-          case Some(_) => error(stepOrFact, s"Exists-elim in step #$num requires an existensial quantification ${text(stepOrFact)}.")
+          case Some(_) => error(step2, s"Exists-elim in step #$num requires an existensial quantification in #${step2.value}.")
           case _ => None
         }
-      case Auto(_, exp, stepOrFacts) =>
+      case Auto(_, exp, steps) =>
         if (!autoEnabled)
           error(step, s"Auto is not enabled, but used in step #$num.")
-        if (deduce(num, exp, stepOrFacts, isAuto = true)) addProvedStep(step)
+        if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
         else None
+      case FactJust(_, exp, id) =>
+        facts.get(id.value) match {
+          case Some(expected) =>
+            if (expected == exp) addProvedStep(step)
+            else error(exp, s"The expression in step #$num does not match the one in fact ${id.value}.")
+          case _ => error(id, s"Could not find a fact ${id.value}.")
+        }
       case Invariant(_, exp) =>
         if (invariants.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
@@ -581,14 +586,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def deduce(num: Int, exp: Exp, stepOrFacts: Node.Seq[NumOrId],
+  def deduce(num: Int, exp: Exp, steps: Node.Seq[Num],
              isAuto: Boolean): Boolean = {
     val antecedents =
-      if (stepOrFacts.nonEmpty) {
+      if (steps.nonEmpty) {
         var as = Node.emptySeq[Exp]
         var hasError = false
-        for (numOrId <- stepOrFacts)
-          findRegularStepOrFactExp(numOrId, num) match {
+        for (numOrId <- steps)
+          findRegularStepExp(numOrId, num) match {
             case Some(e) =>
               if (!isAuto) {
                 if (checkAlgebraExp(e)) as :+= e
@@ -661,22 +666,6 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       }
     } else Some((r, q.exp))
   }
-
-  def text(stepOrFact: NumOrId): String = stepOrFact match {
-    case Num(num) => s"in #$num"
-    case Id(id) => s"fact named $id"
-  }
-
-  def findRegularStepOrFactExp(stepOrFact: NumOrId, stepNum: Int): Option[Exp] =
-    stepOrFact match {
-      case num: Num => findRegularStepExp(num, stepNum)
-      case id: Id => facts.get(id.value) match {
-        case eOpt@Some(_) => eOpt
-        case _ =>
-          error(stepOrFact, s"Could not find the referenced fact ${id.value} in #$stepNum.")
-          None
-      }
-    }
 
   def addProvedStep(step: ProofStep): Option[T] = {
     val num = step.num.value

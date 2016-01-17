@@ -1,19 +1,20 @@
 import org.sireum.logika._
 
 l"""{ fact
-        def sum(a: ZS, i: Z): Z
-        base. all a: ZS  sum(a, 0) == 0
-        rec.  all a: ZS
+        def sum(zs: ZS, n: Z): Z
+        base. all zs: ZS  sum(zs, 0) == 0
+        rec.  all zs: ZS
                 all n: Z
-                  sum(a, n + 1) == sum(a, n) + a(n)      }"""
+                  sum(zs, n + 1) == sum(zs, n) + zs(n)   }"""
 def add(a: ZS): Z = {
   l"""{ post   result == sum(a, a.size)                  }"""
 
   var answer: Z = 0
 
   l"""{ 1. answer == 0                      premise
-        2. sum(a, 0) == 0                   alle base a
-        3. answer == sum(a, 0)              subst2 2 1   }"""
+        2. all zs: ZS  sum(zs, 0) == 0      fact base
+        3. sum(a, 0) == 0                   alle 2 a
+        4. answer == sum(a, 0)              subst2 3 1   }"""
   var i: Z = 0
 
   l"""{ 1. answer == sum(a, 0)              premise
@@ -37,10 +38,14 @@ def add(a: ZS): Z = {
     l"""{ 1. answer == answer_old + a(i)    premise
           2. answer_old == sum(a, i)        premise
           3. answer == sum(a, i) + a(i)     algebra 2 1
-          4. sum(a,i+1) == sum(a,i) + a(i)  alle rec a i
-          5. answer == sum(a, i+1)          subst2 4 3
-          6. i < a.size                     premise
-          7. 0 <= i                         premise      }"""
+          4. all zs: ZS
+               all n: Z
+                 sum(zs, n + 1) ==
+                   sum(zs, n) + zs(n)       fact rec
+          5. sum(a,i+1) == sum(a,i) + a(i)  alle 4 a i
+          6. answer == sum(a, i+1)          subst2 5 3
+          7. i < a.size                     premise
+          8. 0 <= i                         premise      }"""
 
     i = i + 1
     l"""{ 1. answer == sum(a, i_old+1)      premise

@@ -102,8 +102,8 @@ public class Antlr4LogikaLexer extends Lexer {
 		"'ore'", "'Ve'", "'impliesi'", "'impliese'", "'noti'", "'negi'", "'note'", 
 		"'nege'", "'bottome'", "'falsee'", "'pbc'", "'subst1'", "'subst2'", "'algebra'", 
 		"'foralli'", "'alli'", "'Ai'", "'foralle'", "'alle'", "'Ae'", "'existsi'", 
-		"'somei'", "'Ei'", "'existse'", "'somee'", "'Ee'", "'invariant'", "'auto'", 
-		"'import'", "'_'", "'fact'", "'def'", "'var'", "'val'", "'assert'", "'if'", 
+		"'somei'", "'Ei'", "'existse'", "'somee'", "'Ee'", "'invariant'", "'fact'", 
+		"'auto'", "'import'", "'_'", "'def'", "'var'", "'val'", "'assert'", "'if'", 
 		"'else'", "'while'", "'l\"\"\"'", "'\"\"\"'", "'print'", "'println'", 
 		"'@'", "'Unit'", "'return'", "'randomInt'", "'readInt'", "'modifies'", 
 		"'requires'", "'pre'", "'ensures'", "'post'"
@@ -213,7 +213,7 @@ public class Antlr4LogikaLexer extends Lexer {
 		"\3W\3W\3W\3W\3W\3W\3X\3X\3X\3X\3X\3Y\3Y\3Y\3Z\3Z\3Z\3Z\3Z\3Z\3Z\3Z\3["+
 		"\3[\3[\3[\3[\3\\\3\\\3\\\3]\3]\3]\3]\3]\3]\3]\3]\3^\3^\3^\3^\3^\3^\3_"+
 		"\3_\3_\3`\3`\3`\3`\3`\3`\3`\3`\3a\3a\3a\3a\3a\3a\3b\3b\3b\3c\3c\3c\3c"+
-		"\3c\3c\3c\3c\3c\3c\3d\3d\3d\3d\3d\3e\3e\3e\3e\3e\3e\3e\3f\3f\3g\3g\3g"+
+		"\3c\3c\3c\3c\3c\3c\3d\3d\3d\3d\3d\3e\3e\3e\3e\3e\3f\3f\3f\3f\3f\3f\3f"+
 		"\3g\3g\3h\3h\3h\3h\3i\3i\3i\3i\3j\3j\3j\3j\3k\3k\3k\3k\3k\3k\3k\3l\3l"+
 		"\3l\3m\3m\3m\3m\3m\3n\3n\3n\3n\3n\3n\3o\3o\3o\3o\3o\3p\3p\3p\3p\3q\3q"+
 		"\3q\3q\3q\3q\3r\3r\3r\3r\3r\3r\3r\3r\3s\3s\3t\3t\3t\3t\3t\3u\3u\3u\3u"+
@@ -313,7 +313,7 @@ public class Antlr4LogikaLexer extends Lexer {
 		"\2\2\u00b3\u025f\3\2\2\2\u00b5\u0267\3\2\2\2\u00b7\u026c\3\2\2\2\u00b9"+
 		"\u026f\3\2\2\2\u00bb\u0277\3\2\2\2\u00bd\u027d\3\2\2\2\u00bf\u0280\3\2"+
 		"\2\2\u00c1\u0288\3\2\2\2\u00c3\u028e\3\2\2\2\u00c5\u0291\3\2\2\2\u00c7"+
-		"\u029b\3\2\2\2\u00c9\u02a0\3\2\2\2\u00cb\u02a7\3\2\2\2\u00cd\u02a9\3\2"+
+		"\u029b\3\2\2\2\u00c9\u02a0\3\2\2\2\u00cb\u02a5\3\2\2\2\u00cd\u02ac\3\2"+
 		"\2\2\u00cf\u02ae\3\2\2\2\u00d1\u02b2\3\2\2\2\u00d3\u02b6\3\2\2\2\u00d5"+
 		"\u02ba\3\2\2\2\u00d7\u02c1\3\2\2\2\u00d9\u02c4\3\2\2\2\u00db\u02c9\3\2"+
 		"\2\2\u00dd\u02cf\3\2\2\2\u00df\u02d4\3\2\2\2\u00e1\u02d8\3\2\2\2\u00e3"+
@@ -427,12 +427,12 @@ public class Antlr4LogikaLexer extends Lexer {
 		"\u028f\7G\2\2\u028f\u0290\7g\2\2\u0290\u00c4\3\2\2\2\u0291\u0292\7k\2"+
 		"\2\u0292\u0293\7p\2\2\u0293\u0294\7x\2\2\u0294\u0295\7c\2\2\u0295\u0296"+
 		"\7t\2\2\u0296\u0297\7k\2\2\u0297\u0298\7c\2\2\u0298\u0299\7p\2\2\u0299"+
-		"\u029a\7v\2\2\u029a\u00c6\3\2\2\2\u029b\u029c\7c\2\2\u029c\u029d\7w\2"+
-		"\2\u029d\u029e\7v\2\2\u029e\u029f\7q\2\2\u029f\u00c8\3\2\2\2\u02a0\u02a1"+
-		"\7k\2\2\u02a1\u02a2\7o\2\2\u02a2\u02a3\7r\2\2\u02a3\u02a4\7q\2\2\u02a4"+
-		"\u02a5\7t\2\2\u02a5\u02a6\7v\2\2\u02a6\u00ca\3\2\2\2\u02a7\u02a8\7a\2"+
-		"\2\u02a8\u00cc\3\2\2\2\u02a9\u02aa\7h\2\2\u02aa\u02ab\7c\2\2\u02ab\u02ac"+
-		"\7e\2\2\u02ac\u02ad\7v\2\2\u02ad\u00ce\3\2\2\2\u02ae\u02af\7f\2\2\u02af"+
+		"\u029a\7v\2\2\u029a\u00c6\3\2\2\2\u029b\u029c\7h\2\2\u029c\u029d\7c\2"+
+		"\2\u029d\u029e\7e\2\2\u029e\u029f\7v\2\2\u029f\u00c8\3\2\2\2\u02a0\u02a1"+
+		"\7c\2\2\u02a1\u02a2\7w\2\2\u02a2\u02a3\7v\2\2\u02a3\u02a4\7q\2\2\u02a4"+
+		"\u00ca\3\2\2\2\u02a5\u02a6\7k\2\2\u02a6\u02a7\7o\2\2\u02a7\u02a8\7r\2"+
+		"\2\u02a8\u02a9\7q\2\2\u02a9\u02aa\7t\2\2\u02aa\u02ab\7v\2\2\u02ab\u00cc"+
+		"\3\2\2\2\u02ac\u02ad\7a\2\2\u02ad\u00ce\3\2\2\2\u02ae\u02af\7f\2\2\u02af"+
 		"\u02b0\7g\2\2\u02b0\u02b1\7h\2\2\u02b1\u00d0\3\2\2\2\u02b2\u02b3\7x\2"+
 		"\2\u02b3\u02b4\7c\2\2\u02b4\u02b5\7t\2\2\u02b5\u00d2\3\2\2\2\u02b6\u02b7"+
 		"\7x\2\2\u02b7\u02b8\7c\2\2\u02b8\u02b9\7n\2\2\u02b9\u00d4\3\2\2\2\u02ba"+

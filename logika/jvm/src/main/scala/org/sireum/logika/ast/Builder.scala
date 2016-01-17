@@ -171,11 +171,11 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           val subProof = buildNum(ctx.subProof)
           Pbc(num, exp, subProof)
         case ctx: Subst1Context =>
-          Subst1(num, exp, build(ctx.eqStep), buildNum(ctx.step))
+          Subst1(num, exp, buildNum(ctx.eqStep), buildNum(ctx.step))
         case ctx: Subst2Context =>
-          Subst2(num, exp, build(ctx.eqStep), buildNum(ctx.step))
+          Subst2(num, exp, buildNum(ctx.eqStep), buildNum(ctx.step))
         case ctx: AlgebraContext =>
-          Algebra(num, exp, Option(ctx.steps).map(_.map(build)).
+          Algebra(num, exp, Option(ctx.steps).map(_.map(buildNum)).
             getOrElse(Node.emptySeq))
         case ctx: ForallIntroContext =>
           val subProof = buildNum(ctx.subProof)
@@ -188,9 +188,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           }
           ForAllIntro(num, e, subProof)
         case ctx: ForallElimContext =>
-          val stepOrFact = build(ctx.stepOrFact)
+          val step = buildNum(ctx.step)
           errorIf(num, ctx.ID, ctx.tb, "e", "foralle", "alle", "Ae")
-          ForAllElim(num, exp, stepOrFact, ctx.formula.map(build))
+          ForAllElim(num, exp, step, ctx.formula.map(build))
         case ctx: ExistsIntroContext =>
           val existsStep = buildNum(ctx.existsStep)
           errorIf(num, ctx.ID, ctx.tb, "i", "existsi", "somei", "Ei")
@@ -202,14 +202,16 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           }
           ExistsIntro(num, e, existsStep, ctx.formula.map(build))
         case ctx: ExistsElimContext =>
-          val stepOrFact = build(ctx.stepOrFact)
+          val step = buildNum(ctx.step)
           val subProof = buildNum(ctx.subProof)
           errorIf(num, ctx.ID, ctx.tb, "e", "existse", "somee", "Ee")
-          ExistsElim(num, exp, stepOrFact, subProof)
+          ExistsElim(num, exp, step, subProof)
         case ctx: InvariantContext =>
           Invariant(num, exp)
+        case ctx: FctContext =>
+          FactJust(num, exp, buildId(ctx.ID))
         case ctx: AutoContext =>
-          Auto(num, exp, Option(ctx.stepOrFacts).map(_.map(build)).
+          Auto(num, exp, Option(ctx.steps).map(_.map(buildNum)).
             getOrElse(Node.emptySeq))
       }
     r at ctx
@@ -353,9 +355,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
     }
     r at ctx
   }
-
-  private def build(ctx: NumOrIdContext): NumOrId =
-    Option(ctx.ID).map(buildId).getOrElse(buildNum(ctx.NUM))
 
   private def build(ctx: ProgramContext): Program =
     if (ctx.impor != null) {
