@@ -646,7 +646,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def subst(e: Exp, m: IMap[Node, Node]): Exp = expRewriter(m)(e)
 
   def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
-    val r = imapEmpty[Node, Node] ++ q.ids.zip(args).reverse
+    val r = imapEmpty[Node, Node] ++ q.ids.zip(args)
     if (r.isEmpty) None
     else if (r.size < q.ids.size) {
       q match {
@@ -1172,7 +1172,7 @@ DefaultProofContext(unitNode: UnitNode,
   def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, DefaultProofContext) = {
     var hasError = false
     val md = a.declOpt.get
-    var substMap = md.params.map(_.id).zip(a.args).reverse.toMap[Node, Node]
+    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
     val isHelper = md.isHelper
     var invs = ivectorEmpty[Exp]
@@ -1224,7 +1224,12 @@ DefaultProofContext(unitNode: UnitNode,
           imapEmpty[Node, Node])
     }
     substMap += Result() -> lhs
-    for (id@Id(g) <- md.contract.modifies.ids) {
+    var modParams = isetEmpty[String]
+    for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
+      modParams += p
+      substMap += newId(x + "_in", arg.tipe) -> newId(x + "_old", arg.tipe)
+    }
+    for (id@Id(g) <- md.contract.modifies.ids if !modParams.contains(g)) {
       substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
     }
     (hasError, make(premises =
