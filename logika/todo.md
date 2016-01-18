@@ -3,8 +3,6 @@ Logika To-Dos
 
 * Document programming logic input language
 
-* Add well-formed-ness check for predicate logic
-
 * Ensure transitivity of modifies clause checking
 
 

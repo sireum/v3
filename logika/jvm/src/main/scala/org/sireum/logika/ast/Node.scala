@@ -82,6 +82,7 @@ object Node {
         unitNode.fileUriOpt, "Semantics", msg))
 
     val isPredicate = unitNode.mode == LogicMode.Predicate
+    if (isPredicate) checkWellFormedPredicate(unitNode.asInstanceOf[Sequent])
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
     lazy val v: Any => Boolean = Visitor.build({
@@ -170,6 +171,47 @@ object Node {
       case _ =>
         reporter.report(ErrorMessage("Semantics", "Standalone sequent cannot use algebra."))
     }
+  }
+
+  final private[ast]
+  def checkWellFormedPredicate(unitNode: Sequent)
+                              (implicit reporter: AccumulatingTagReporter): Unit = {
+    var freeIds = imapEmpty[String, Id]
+    val nodeLocMap = unitNode.nodeLocMap
+    def error(n: Node, msg: String): Unit =
+      reporter.report(nodeLocMap(n).toLocationError(
+        unitNode.fileUriOpt, "Semantics", msg))
+    def collectFreeIds(node: Node, declIds: IMap[String, Id]): Unit = {
+      Visitor.build({
+        case node: Quant[_] =>
+          for (id <- node.ids)
+            declIds.get(id.value) match {
+              case Some(otherId) =>
+                val li = nodeLocMap(otherId)
+                error(id, s"Identifier ${id.value} has been declared at [${li.lineBegin}, ${li.columnBegin}].")
+              case _ =>
+            }
+          collectFreeIds(node.exp, declIds ++ node.ids.map(id => id.value -> id))
+          false
+        case node: Id =>
+          val nodeValue = node.value
+          if (!declIds.contains(nodeValue) && !freeIds.contains(nodeValue))
+            freeIds += nodeValue -> node
+          false
+      })(node)
+    }
+    collectFreeIds(unitNode, imapEmpty)
+    Visitor.build({
+      case node: Quant[_] =>
+        for (id <- node.ids)
+          freeIds.get(id.value) match {
+            case Some(otherId) =>
+              val li = nodeLocMap(otherId)
+              error(id, s"Identifier ${id.value} has been used as a free variable at [${li.lineBegin}, ${li.columnBegin}].")
+            case _ =>
+          }
+        true
+    })(unitNode)
   }
 }
 
