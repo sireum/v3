@@ -35,7 +35,8 @@ def f(x: Z, y: Z): Z = {
 }
 l"""{ 1. 0 == 0                                  algebra
       2. 2 > 0                                   algebra
-      3. (0 == 0) and (2 > 0)                    andi 1 2    }"""
+      3. (0 == 0) and (2 > 0)                    andi 1 2
+      4. g(0) > 0 and g.size >= 1                invariant }"""
 f(0, 2)
-l"""{ 1. g(0) > 0 and g.size >= 1                invariant
+l"""{ 1. g(0) > 0 and g.size >= 1                premise
       2. g(0) > 0                                ande1 1     }"""

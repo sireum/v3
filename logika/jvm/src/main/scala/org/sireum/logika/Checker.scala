@@ -1172,19 +1172,46 @@ DefaultProofContext(unitNode: UnitNode,
   def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, DefaultProofContext) = {
     var hasError = false
     val md = a.declOpt.get
-    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
+    var substMap = md.params.map(_.id).zip(a.args).reverse.toMap[Node, Node]
     val pres = md.contract.requires.exps.map(e => subst(e, substMap))
+    val isHelper = md.isHelper
+    var invs = ivectorEmpty[Exp]
+    val modIds = md.contract.modifies.ids.map(_.value).toSet
+    for (inv <- invariants if !isHelper) {
+      var mod = false
+      Visitor.build({
+        case id: Id =>
+          if (modIds.contains(id.value))
+            mod = true
+          false
+      })(inv)
+      if (mod) invs :+= inv
+    }
     if (autoEnabled) {
       val ps = premises ++ facts.values
+      for (inv <- invs)
+        if (!isValid(ps, ivector(inv))) {
+          val li = nodeLocMap(inv)
+          error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
+          hasError = true
+        }
       for (pre <- pres)
         if (!isValid(ps, ivector(pre))) {
-          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value}.")
+          val li = nodeLocMap(pre)
+          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
         }
     } else {
+      for (inv <- invs)
+        if (!premises.contains(inv)) {
+          val li = nodeLocMap(inv)
+          error(a, s"The invariant defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
+          hasError = true
+        }
       for (pre <- pres)
         if (!premises.contains(pre)) {
-          error(a, s"The pre-condition of method ${md.id.value} has not been proven.")
+          val li = nodeLocMap(pre)
+          error(a, s"The pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
           hasError = true
         }
     }
@@ -1201,7 +1228,7 @@ DefaultProofContext(unitNode: UnitNode,
       substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
     }
     (hasError, make(premises =
-      premises.map(e => subst(e, postSubstMap)) ++
+      premises.map(e => subst(e, postSubstMap)) ++ invs ++
         md.contract.ensures.exps.map(e => subst(e, substMap))
     ))
   }
