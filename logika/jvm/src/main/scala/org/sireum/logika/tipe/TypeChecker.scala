@@ -159,9 +159,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       this
     case While(exp, block, loopInv) =>
       for (iExp <- loopInv.invariant.exps) b(iExp)(allowFun = true, mOpt)
-      checkModifies(loopInv.modifies, block, stmt)
       b(exp)(allowFun = false, mOpt)
       check(block)
+      checkModifies(loopInv.modifies, block, stmt)
       this
     case p: Print =>
       for (arg <- p.args) arg match {
@@ -181,8 +181,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
-      tc.checkModifies(md.contract.modifies, md.block, md)
       tc = tc.check(md.block)(Some(md))
+      tc.checkModifies(md.contract.modifies, md.block, md)
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(rt)
@@ -245,19 +245,23 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         case Some((t, VarDecl(true, _, _, _), _)) => id.tipe = t
         case Some((ZS, _, _)) => id.tipe = ZS
         case Some(_) =>
-          error(id, s"Only variable or sequence value can be modified.")
+          error(id, s"Only variable or ZS value can be modified.")
         case _ => tipe(id).foreach(id.tipe = _)
       }
     }
     if (node.isInstanceOf[While])
       for (id <- collectAssignedVars(block) -- modifiedVars) {
         val li = program.nodeLocMap(id)
-        error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause.")
+        error(node, s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause.")
       }
     else {
+      var localIds = isetEmpty[Id]
+      Visitor.build({
+        case VarDecl(true, id, _, _) => localIds += id; false
+      })(block)
       for (id <- (collectAssignedVars(block) & typeMap.keySet.map(Id)) -- modifiedVars) {
         val li = program.nodeLocMap(id)
-        error(node, s"Identifier ${id.value} is assigned at [${li.lineBegin}, ${li.columnBegin}] but not declared in the function modifies clause.")
+        error(node, s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] but not declared in the method's modifies clause.")
       }
     }
   }
@@ -282,22 +286,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               if (!allowMethod)
                 error(e.id, s"Method invocation is only allowed at statement level.")
               e.declOpt = Some(md)
-              mOpt match {
-                case Some(caller) =>
-                  val ids = md.contract.modifies.ids.toSet -- caller.contract.modifies.ids.toSet
-                  ids.size match {
-                    case 0 =>
-                    case 1 => error(e.id, s"Variable ${ids.head.value} is modified by method ${md.id.value} but not in the modifies clause of method ${caller.id.value} which invokes ${md.id.value}.")
-                    case _ =>
-                      val sb = new StringBuilder(ids.head.value)
-                      for (id <- ids.tail) {
-                        sb.append(", ")
-                        sb.append(id)
-                      }
-                      error(e.id, s"Variables $sb are modified by method ${md.id.value} but not in the modifies clause of method ${caller.id.value} which invokes ${md.id.value}.")
-                  }
-                case _ =>
-              }
               true
             case Some((_, fun: Fun, _)) =>
               if (!allowFun)
@@ -384,9 +372,23 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
 
   def collectAssignedVars(b: Block): ISet[Id] = {
     var r = isetEmpty[Id]
+    var lids = isetEmpty[Id]
+    def collect(e: Exp): Unit = e match {
+      case a@Apply(id, args) if a.declOpt.isDefined =>
+        val md = a.declOpt.get
+        val paramIds = md.params.map(_.id)
+        val modifiedIds = md.contract.modifies.ids.toSet
+        r ++= (modifiedIds -- paramIds)
+        for ((argId@Id(_), paramId) <- a.args.zip(paramIds) if
+        argId.tipe == ZS && modifiedIds.contains(paramId))
+          r += argId
+      case _ =>
+    }
     Visitor.build({
-      case Assign(id, _) => r += id; false
+      case VarDecl(_, id, _, e) => lids += id; collect(e); false
+      case Assign(id, e) if !lids.contains(id) => r += id; collect(e); false
       case SeqAssign(id, _, _) => r += id; false
+      case w: While => r ++= (w.loopInv.modifies.ids.toSet -- lids); false
     })(b)
     r
   }

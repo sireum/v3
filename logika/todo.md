@@ -1,9 +1,7 @@
 Logika To-Dos
 =============
 
-* Document programming logic input language
-
-* Ensure transitivity of modifies clause checking
+* Document programming logic input language 
 
 
 Future Work
