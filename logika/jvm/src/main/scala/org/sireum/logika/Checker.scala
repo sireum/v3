@@ -979,8 +979,8 @@ DefaultProofContext(unitNode: UnitNode,
         val id = a.id
         val exp = a.exp
         exp match {
-          case _: ReadInt => Some(this)
-          case _: RandomInt => Some(this)
+          case _: ReadInt => assign(id)
+          case _: RandomInt => assign(id)
           case exp: Clone => assign(id, exp.id)
           case exp: Apply if exp.id.tipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))
@@ -1167,6 +1167,11 @@ DefaultProofContext(unitNode: UnitNode,
   def assign(id: Id, exp: Exp): Option[DefaultProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+  }
+
+  def assign(id: Id): Option[DefaultProofContext] = {
+    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    Some(copy(premises = premises.map(sst)))
   }
 
   def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, DefaultProofContext) = {
