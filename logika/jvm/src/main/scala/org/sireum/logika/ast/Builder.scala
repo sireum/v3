@@ -682,6 +682,25 @@ object Builder {
         case _ => Mode.Program
       }
     }
+    {
+      import scala.collection.JavaConversions._
+      var inLogikaStmt = false
+      lexer.reset()
+      val tokens = lexer.getAllTokens
+      for (t <- tokens) {
+        val tText = t.getText
+        if (tText == "l\"\"\"")
+          inLogikaStmt = true
+        else if (tText == "\"\"\"")
+          inLogikaStmt = false
+        else if (inLogikaStmt) {
+          if (t.getType == Antlr4LogikaLexer.COMMENT)
+            error("Parser", fileUriOpt, t, "Block comment cannot appear inside l\"\"\" ... \"\"\"")
+          else if (tText.exists(_ == '$'))
+            error("Parser", fileUriOpt, t, "$ cannot appear inside l\"\"\" ... \"\"\"")
+        }
+      }
+    }
     val parser = new Antlr4LogikaParser(tokenStream)
     parser.removeErrorListeners()
     parser.addErrorListener(new BaseErrorListener {
