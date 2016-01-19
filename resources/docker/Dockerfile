@@ -1,7 +1,7 @@
 FROM ubuntu:14.04
 MAINTAINER Robby <robby@santoslab.org>
 RUN apt-get update && \
-    apt-get install -y wget git unzip && \
+    apt-get install -y wget git unzip libgomp1 coq && \
     cd /opt && \
     git clone https://github.com/sireum/v3.git sireum-v3 && \
     sireum-v3/bin/sbt-launch.sh clean test:compile test && \
