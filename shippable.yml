@@ -1,0 +1,11 @@
+cache: true
+
+script:
+  - cd /opt/sireum-v3
+  - git pull
+  - bin/sbt-launch.sh clean test:compile test
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
