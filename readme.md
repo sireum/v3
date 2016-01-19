@@ -14,11 +14,13 @@
 
 Supported platforms (64-bit only):
 
-* OS X (test platform: El Capitan -- 10.11)
+* OS X (test platform: [El Capitan](http://www.apple.com/osx/) -- 10.11)
 
-* Linux (test platform: Ubuntu 14.04)
+* Linux (test platform: [Manjaro](https://manjaro.github.io))
 
-* Windows (test platform: Windows 10)
+* Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
+
+* [Docker](https://hub.docker.com/r/sireum/v3/) (based on [Ubuntu](http://www.ubuntu.com) 14.04)
 
 
 ### All Supported Platforms
