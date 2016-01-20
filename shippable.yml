@@ -1,5 +1,3 @@
-cache: true
-
 script:
   - cd /opt/sireum-v3
   - git pull
