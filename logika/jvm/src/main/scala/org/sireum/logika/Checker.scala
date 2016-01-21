@@ -1177,8 +1177,8 @@ DefaultProofContext(unitNode: UnitNode,
   def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, DefaultProofContext) = {
     var hasError = false
     val md = a.declOpt.get
-    var substMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
-    val pres = md.contract.requires.exps.map(e => subst(e, substMap))
+    var postSubstMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
+    val pres = md.contract.requires.exps.map(e => subst(e, postSubstMap))
     val isHelper = md.isHelper
     var invs = ivectorEmpty[Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
@@ -1228,23 +1228,24 @@ DefaultProofContext(unitNode: UnitNode,
           md.id.tipe.asInstanceOf[tipe.Fn].result),
           imapEmpty[Node, Node])
     }
-    var postSubstMap = psm
-    substMap += Result() -> lhs
+    var premiseSubstMap = psm
+    postSubstMap += Result() -> lhs
     var modParams = isetEmpty[String]
     for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
       modParams += p
-      substMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
-      substMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
+      premiseSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
+      premiseSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
       postSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
       postSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
+      postSubstMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
     }
     for (id@Id(g) <- md.contract.modifies.ids if !modParams.contains(g)) {
-      substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
-      postSubstMap += newId(g, id.tipe) -> newId(g + "_old", id.tipe)
+      premiseSubstMap += newId(g, id.tipe) -> newId(g + "_old", id.tipe)
+      postSubstMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
     }
     (hasError, make(premises =
-      premises.map(e => subst(e, postSubstMap)) ++ invs ++
-        md.contract.ensures.exps.map(e => subst(e, substMap))
+      premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
+        md.contract.ensures.exps.map(e => subst(e, postSubstMap))
     ))
   }
 
