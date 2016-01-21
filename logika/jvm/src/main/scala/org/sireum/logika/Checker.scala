@@ -1220,7 +1220,7 @@ DefaultProofContext(unitNode: UnitNode,
           hasError = true
         }
     }
-    val (lhs, postSubstMap) = lhsOpt match {
+    val (lhs, psm) = lhsOpt match {
       case Some(x) =>
         (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
       case _ =>
@@ -1228,14 +1228,19 @@ DefaultProofContext(unitNode: UnitNode,
           md.id.tipe.asInstanceOf[tipe.Fn].result),
           imapEmpty[Node, Node])
     }
+    var postSubstMap = psm
     substMap += Result() -> lhs
     var modParams = isetEmpty[String]
     for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
       modParams += p
-      substMap += newId(x + "_in", arg.tipe) -> newId(x + "_old", arg.tipe)
+      substMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
+      substMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
+      postSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
+      postSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
     }
     for (id@Id(g) <- md.contract.modifies.ids if !modParams.contains(g)) {
       substMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
+      postSubstMap += newId(g, id.tipe) -> newId(g + "_old", id.tipe)
     }
     (hasError, make(premises =
       premises.map(e => subst(e, postSubstMap)) ++ invs ++
