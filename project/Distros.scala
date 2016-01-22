@@ -28,7 +28,7 @@ import ammonite.ops._
 object Distros {
   implicit val wd = cwd
   lazy val VER = {
-    %%('git, 'log, "-n", "1", "--pretty=format:\"%H\"").out.lines.head.trim
+    %%('git, 'log, "-n", "1", "--pretty=format:%H").out.lines.head.trim
   }
 
   def build(): Unit = {
