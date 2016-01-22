@@ -43,6 +43,8 @@ object SireumBuild extends Build {
 
   final val BUILD_FILENAME = "BUILD"
 
+  final val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
+
   import ProjectInfo._
 
   val distros = TaskKey[Unit]("distros", "Build Sireum distributions")
@@ -154,7 +156,7 @@ object SireumBuild extends Build {
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     autoAPIMappings := true,
     apiURL := Some(url("http://v3.sireum.org/api/")),
-    parallelExecution in Global := false
+    parallelExecution in Global := isParallelBuild
   )
 
   val sireumJvmSettings = sireumSharedSettings ++ Seq(
