@@ -1234,7 +1234,6 @@ DefaultProofContext(unitNode: UnitNode,
     for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
       modParams += p
       premiseSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
-      premiseSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
       postSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
       postSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
       postSubstMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
