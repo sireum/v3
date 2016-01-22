@@ -26,7 +26,10 @@
 import ammonite.ops._
 
 object Distros {
-  lazy val VER = %%('git, 'log, "-n", "1", "--pretty=format:\"%H\"").out.lines.head.trim
+  implicit val wd = cwd
+  lazy val VER = {
+    %%('git, 'log, "-n", "1", "--pretty=format:\"%H\"").out.lines.head.trim
+  }
 
   def build(): Unit = {
     rm ! cwd / 'distros
@@ -37,7 +40,6 @@ object Distros {
   }
 
   def build(platform: String): Unit = {
-    implicit val wd = cwd
     mkdir ! cwd / 'distros / "sireum-v3" / 'bin
     write(cwd / 'distros / "sireum-v3" / 'bin / 'VER, VER)
     val licenseLines = read.lines ! cwd / "license.txt"
