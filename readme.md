@@ -1,6 +1,6 @@
 # Sireum: A Software Analysis Platform (v3)
 
-[![Build Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge/master)](https://app.shippable.com/projects/569e46641895ca44747022a7)
+[]([![Build Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge/master)](https://app.shippable.com/projects/569e46641895ca44747022a7))
 
 [Simplified BSD License](license.md)
 
