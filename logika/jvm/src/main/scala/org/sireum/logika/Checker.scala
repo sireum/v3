@@ -857,7 +857,8 @@ DefaultProofContext(unitNode: UnitNode,
                     vars: ISet[String] = isetEmpty,
                     facts: IMap[String, Exp] = imapEmpty,
                     provedSteps: IMap[Natural, ProofStep] = imapEmpty,
-                    declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty)
+                    declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
+                    methodOpt: Option[MethodDecl] = None)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[DefaultProofContext] {
 
   def check(program: Program): Boolean = {
@@ -1028,7 +1029,7 @@ DefaultProofContext(unitNode: UnitNode,
         val modifiedIds = stmt.contract.modifies.ids.toSet
         val mods = modifiedIds.map(id =>
           Eq(id, newId(id.value + "_in", id.tipe)))
-        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods).
+        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, methodOpt = Some(stmt)).
           check(stmt.block) match {
           case Some(pc2) =>
             var modifiedInvariants = ilinkedSetEmpty[Exp]
@@ -1058,22 +1059,20 @@ DefaultProofContext(unitNode: UnitNode,
                 }
             }
             val post = stmt.contract.ensures.exps
-            val postPremises = stmt.returnExpOpt match {
-              case Some(e) =>
-                val m = imapEmpty[Node, Node] + (e -> Result())
-                pc2.premises.map(e => subst(e, m))
-              case _ => pc2.premises
+            val postSubstMap = stmt.returnExpOpt match {
+              case Some(e) => imapEmpty[Node, Node] + (Result() -> e)
+              case _ => imapEmpty[Node, Node]
             }
             if (autoEnabled) {
-              val ps = postPremises ++ pc2.facts.values
+              val ps = pc2.premises ++ pc2.facts.values
               for (e <- post)
-                if (!isValid(ps, ivector(e))) {
+                if (!isValid(ps, ivector(subst(e, postSubstMap)))) {
                   error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
                   hasError = true
                 }
             } else {
               for (e <- post)
-                if (!postPremises.contains(e)) {
+                if (!pc2.premises.contains(subst(e, postSubstMap))) {
                   error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
                   hasError = true
                 }
@@ -1178,7 +1177,6 @@ DefaultProofContext(unitNode: UnitNode,
     var hasError = false
     val md = a.declOpt.get
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
-    val pres = md.contract.requires.exps.map(e => subst(e, postSubstMap))
     val isHelper = md.isHelper
     var invs = ivectorEmpty[Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
@@ -1194,14 +1192,14 @@ DefaultProofContext(unitNode: UnitNode,
     }
     if (autoEnabled) {
       val ps = premises ++ facts.values
-      for (inv <- invs)
+      for (inv <- invs if methodOpt.isDefined)
         if (!isValid(ps, ivector(inv))) {
           val li = nodeLocMap(inv)
           error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
         }
-      for (pre <- pres)
-        if (!isValid(ps, ivector(pre))) {
+      for (pre <- md.contract.requires.exps)
+        if (!isValid(ps, ivector(subst(pre, postSubstMap)))) {
           val li = nodeLocMap(pre)
           error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
@@ -1213,8 +1211,8 @@ DefaultProofContext(unitNode: UnitNode,
           error(a, s"The invariant defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
           hasError = true
         }
-      for (pre <- pres)
-        if (!premises.contains(pre)) {
+      for (pre <- md.contract.requires.exps)
+        if (!premises.contains(subst(pre, postSubstMap))) {
           val li = nodeLocMap(pre)
           error(a, s"The pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
           hasError = true
