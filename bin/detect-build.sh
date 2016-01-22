@@ -34,19 +34,19 @@ SBT=bin/sbt-launch.sh
 if [ "${SIREUM_SKIP_BUILD}" != "true" ]; then
   if [ ! -f ${SIREUM_JAR} ]; then
     echo "Please wait while building Sireum; this might take a while..."
-    SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
+    (export SIREUM_RELEASE=true; export SIREUM_PARALLEL_BUILD=false; ${SBT} --error 'set showSuccess := false' clean assembly)
     echo
     echo "${SIREUM_VERSION}" > bin/VER
   elif [ "${SIREUM_UPDATE}" = true ]; then
     echo "New changes detected; please wait while re-building Sireum..."
-    SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
+    (export SIREUM_RELEASE=true; export SIREUM_PARALLEL_BUILD=false; ${SBT} --error 'set showSuccess := false' clean assembly)
     echo
     echo "${SIREUM_VERSION}" > bin/VER
   else
     CHANGES="$(git status -s)"
     if [[ "${CHANGES}" == *.scala* ]] || [[ "${CHANGES}" == *.java* ]] || [[ "${CHANGES}" == *.stg* ]]; then
       echo "Local source changes detected; please wait while re-building Sireum..."
-      SIREUM_RELEASE=true ${SBT} --error 'set showSuccess := false' clean assembly
+      (export SIREUM_RELEASE=true; export SIREUM_PARALLEL_BUILD=false; ${SBT} --error 'set showSuccess := false' clean assembly)
       echo
       echo "${SIREUM_VERSION}" > bin/VER
     fi
