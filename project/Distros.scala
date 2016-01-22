@@ -26,9 +26,11 @@
 import ammonite.ops._
 
 object Distros {
+  lazy val VER = %%('git, 'log, "-n", "1", "--pretty=format:\"%H\"").out.lines.head.trim
 
   def build(): Unit = {
     rm ! cwd / 'distros
+    write(cwd / 'distros / "sireum-v3-VER", VER)
     build("mac")
     build("win")
     build("linux")
@@ -37,7 +39,7 @@ object Distros {
   def build(platform: String): Unit = {
     implicit val wd = cwd
     mkdir ! cwd / 'distros / "sireum-v3" / 'bin
-    write(cwd / 'distros / "sireum-v3" / 'bin / 'VER, %%('git, 'log, "-n", "1", "--pretty=format:\"%H\"").out.lines.head)
+    write(cwd / 'distros / "sireum-v3" / 'bin / 'VER, VER)
     val licenseLines = read.lines ! cwd / "license.txt"
     platform match {
       case "win" =>
