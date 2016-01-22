@@ -153,7 +153,8 @@ object SireumBuild extends Build {
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     autoAPIMappings := true,
-    apiURL := Some(url("http://sireum.org/api/"))
+    apiURL := Some(url("http://v3.sireum.org/api/")),
+    parallelExecution in Global := false
   )
 
   val sireumJvmSettings = sireumSharedSettings ++ Seq(
