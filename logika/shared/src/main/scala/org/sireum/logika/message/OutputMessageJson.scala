@@ -42,7 +42,7 @@ object OutputMessageJson {
         Js.Obj(
           (".class", Js.Str("Result")),
           ("requestId", fromStr(o.requestId)),
-          ("isSilent", fromAnyVal(o.isSilent)),
+          ("isBackground", fromAnyVal(o.isBackground)),
           ("tags", fromSeq(o.tags)(fromTag))
         )
     }

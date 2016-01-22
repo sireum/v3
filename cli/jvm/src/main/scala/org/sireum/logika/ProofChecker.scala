@@ -86,9 +86,16 @@ class ProofChecker(option: LogikaOption,
     }
     if (hasError) return false
 
-    Checker.check(message.Check("", isSilent = false,
-      hintEnabled = false, proofs, lastOnly = option.last,
-      autoEnabled = option.auto, timeout = option.timeout, checkSat = option.sat)
+    Checker.check(message.Check(
+      requestId = "",
+      isBackground = false,
+      hintEnabled = false,
+      inscribeSummoningsEnabled = false,
+      proofs = proofs,
+      lastOnly = option.last,
+      autoEnabled = option.auto,
+      timeout = option.timeout,
+      checkSatEnabled = option.sat)
     )
 
     if (hasError) return false
@@ -121,7 +128,7 @@ class ProofChecker(option: LogikaOption,
       sw.append(scala.util.Properties.lineSeparator)
       t.printStackTrace(new java.io.PrintWriter(sw))
       Console.out.println(message.Message.pickleOutput(message.Result(
-        "", isSilent = false, ivector(InternalErrorMessage("CLI", sw.toString)))))
+        "", isBackground = false, ivector(InternalErrorMessage("CLI", sw.toString)))))
       Console.out.flush()
     }
     var line = Console.in.readLine()

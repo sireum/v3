@@ -77,10 +77,15 @@ final class ProgramTestDefProvider(tf: TestFramework)
       }
     }
     Checker.check(
-      Check("", isSilent = false,
-        hintEnabled = true, ivector(ProofFile(Some(uri), text)),
-        lastOnly = false, autoEnabled = false, 2000,
-        checkSat = true))
+      Check(requestId = "",
+        isBackground = false,
+        hintEnabled = true,
+        inscribeSummoningsEnabled = true,
+        proofs = ivector(ProofFile(Some(uri), text)),
+        lastOnly = false,
+        autoEnabled = false,
+        timeout = 2000,
+        checkSatEnabled = true))
     !reporter.hasError
   }
 }

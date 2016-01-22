@@ -1,16 +1,24 @@
 main(d, a, e) ::= <<
-(define-sort B () Bool)
-(define-sort Z () Int)
-(define-sort ZS () (Array Z Z))
-(declare-fun _size (ZS) Z)
-(assert (forall ((a ZS)) (>= (_size a) 0)))
-(declare-const _empty ZS)
-(assert (= _empty ((as const ZS) 0)))
-(assert (= (_size _empty) 0))
+; Preamble
+(define-sort B () Bool)                      ; Logika's B type
+(define-sort Z () Int)                       ; Logika's Z type
+(define-sort ZS () (Array Z Z))              ; Logika's ZS type
+(declare-fun _size (ZS) Z)                   ; ZS _size proof function
+(assert (forall ((a ZS)) (>= (_size a) 0)))  ; ZS _size axiom: _size of any ZS must be non-negative
+(declare-const _empty ZS)                    ; ZS _empty constant
+(assert (= _empty ((as const ZS) 0)))        ; ZS _empty axiom: no element in _empty
+(assert (= (_size _empty) 0))                ; ZS _size and _empty axiom: _size of _empty is 0
+
+; Type Declarations
 $d$
+; Auxiliaries
+$if(a)$
 $a$
-$e$
-(check-sat)
+$else$
+
+$endif$
+; Axioms and Query
+$e$(check-sat)
 >>
 
 assertion(e) ::= <<

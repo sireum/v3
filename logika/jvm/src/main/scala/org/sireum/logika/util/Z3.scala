@@ -60,11 +60,11 @@ object Z3 {
   }
 
   def isValid(timeoutInMs: Int, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): Boolean =
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, Boolean) =
     new Z3(timeoutInMs).isValid(premises, conclusions)
 
   def checkSat(timeoutInMs: Int, es: Exp*)(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): CheckResult =
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
     new Z3(timeoutInMs).checkSat(es: _*)
 }
 
@@ -80,14 +80,14 @@ private final class Z3(timeout: Int)(
   var zsCounter = 0
   val stMain = stg.getInstanceOf("main")
 
-  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): Boolean = {
+  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Boolean) = {
     val r =
       if (premises.isEmpty) checkSat(Not(And(conclusions)))
       else checkSat(Not(Implies(And(premises), And(conclusions))))
-    r == Unsat
+    (r._1, r._2 == Unsat)
   }
 
-  def checkSat(es: Exp*): CheckResult = {
+  def checkSat(es: Exp*): (String, CheckResult) = {
     for (e <- es)
       stMain.add("e",
         stg.getInstanceOf("assertion").
@@ -113,31 +113,33 @@ private final class Z3(timeout: Int)(
       new Exec().run(0, input, Some(z3Script), None)
     }
 
-    result match {
-      case Exec.StringResult(s, _) =>
-        s.substring(0, s.indexOf('\n')).trim match {
-          case "unsat" => Unsat
-          case "unknown" => Unknown
-          case "sat" => Sat
-          case "timeout" => Timeout
-          case _ =>
-            reporter.report(InternalErrorMessage("Z3",
-              s"""Error occurred when calling Z3 for the following script:
+    val r =
+      result match {
+        case Exec.StringResult(s, _) =>
+          s.substring(0, s.indexOf('\n')).trim match {
+            case "unsat" => Unsat
+            case "unknown" => Unknown
+            case "sat" => Sat
+            case "timeout" => Timeout
+            case _ =>
+              reporter.report(InternalErrorMessage("Z3",
+                s"""Error occurred when calling Z3 for the following script:
 $z3Script
 Z3 output:
 $s"""))
-            Error
-        }
-      case Exec.Timeout => Timeout
-      case Exec.ExceptionRaised(err) =>
-        val sw = new StringWriter
-        val pw = new java.io.PrintWriter(sw)
-        pw.append("Error occurred when calling Z3:")
-        pw.append(lineSep)
-        err.printStackTrace(pw)
-        reporter.report(InternalErrorMessage("Z3", sw.toString))
-        Error
-    }
+              Error
+          }
+        case Exec.Timeout => Timeout
+        case Exec.ExceptionRaised(err) =>
+          val sw = new StringWriter
+          val pw = new java.io.PrintWriter(sw)
+          pw.append("Error occurred when calling Z3:")
+          pw.append(lineSep)
+          err.printStackTrace(pw)
+          reporter.report(InternalErrorMessage("Z3", sw.toString))
+          Error
+      }
+    (z3Script, r)
   }
 
   def translate(e: Exp): ST =

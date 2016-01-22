@@ -480,9 +480,15 @@ final class SequentTestDefProvider(tf: TestFramework)
       override def warn(msg: String): Unit = {
       }
     }
-    Checker.check(Check("", isSilent = false,
-      hintEnabled = false, ivector(ProofFile(None, text)),
-      lastOnly = false, autoEnabled = false, 2000, checkSat = false))
+    Checker.check(Check("",
+      isBackground = false,
+      hintEnabled = false,
+      inscribeSummoningsEnabled = false,
+      proofs = ivector(ProofFile(None, text)),
+      lastOnly = false,
+      autoEnabled = false,
+      timeout = 2000,
+      checkSatEnabled = false))
     !reporter.hasError
   }
 }

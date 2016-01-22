@@ -47,16 +47,18 @@ object Checker {
       reporter.report(ErrorMessage("AST",
         if (m.proofs.size > 1) "The inputs are ill-formed."
         else "The input is ill-formed."))
-      return message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
+      return message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
     }
     if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*)) {
         if (m.lastOnly)
-          check(programs.last, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
+          check(programs.last, m.autoEnabled, m.timeout, m.checkSatEnabled, m.hintEnabled,
+            m.inscribeSummoningsEnabled)
         else
           for (program <- programs)
-            check(program, m.autoEnabled, m.timeout, m.checkSat, m.hintEnabled)
+            check(program, m.autoEnabled, m.timeout, m.checkSatEnabled, m.hintEnabled,
+              m.inscribeSummoningsEnabled)
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
           if (m.proofs.size > 1) "The programs are ill-formed."
@@ -67,16 +69,17 @@ object Checker {
       if (m.lastOnly)
         reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
       for (sequent <- sequents)
-        check(sequent, autoEnabled = false, m.timeout, m.checkSat, m.hintEnabled)
+        check(sequent, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
     } else {
       reporter.report(ErrorMessage("AST", "Cannot check mixed programs and sequents."))
     }
-    message.Result(m.requestId, m.isSilent, reporter.tags.toVector)
+    message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
   }
 
   final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
                   timeoutInMs: Int = 2000, checkSat: Boolean = false,
-                  hintEnabled: Boolean = false)(
+                  hintEnabled: Boolean = false,
+                  inscribeSummoningsEnabled: Boolean = false)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -89,7 +92,8 @@ object Checker {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
           var r = DefaultProofContext(s, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, premises = ilinkedSetEmpty ++ s.premises).
+            checkSat, hintEnabled, inscribeSummoningsEnabled,
+            premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
             case s: RegularStep => Some(s.exp)
@@ -127,7 +131,7 @@ object Checker {
       }
       val r =
         DefaultProofContext(program, autoEnabled, timeoutInMs,
-          checkSat, hintEnabled).check(program)
+          checkSat, hintEnabled, inscribeSummoningsEnabled).check(program)
       if (r) {
         if (hasProof)
           reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
@@ -182,26 +186,50 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def autoEnabled: Boolean
 
+  def inscribeSummoningsEnabled: Boolean
+
   def make(vars: ISet[String] = vars,
            provedSteps: IMap[Natural, ProofStep] = provedSteps,
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
            premises: ILinkedSet[Exp] = premises): T
 
-  def checkSat(exps: Iterable[Exp], unsatMsg: => String,
-               unknownMsg: => String, timeoutMsg: => String): Boolean = {
-    val es = (exps ++ facts.values).toVector
-    !checkSat || (Z3.checkSat(satTimeoutInMs, es: _*) match {
-      case Z3.Sat =>
-        true
-      case Z3.Unsat =>
-        error(es.head, unsatMsg); false
-      case Z3.Unknown =>
-        warn(es.head, unknownMsg); true
-      case Z3.Timeout =>
-        warn(es.head, timeoutMsg); true
-      case Z3.Error =>
-        false
-    })
+  def checkSat(title: String, li: LocationInfo, exps: Iterable[Exp],
+               unsatMsg: => String, unknownMsg: => String,
+               timeoutMsg: => String): Boolean = {
+    val es = exps.toVector
+    if (checkSat) {
+      val (script, r) = Z3.checkSat(satTimeoutInMs, es: _*)
+      if (inscribeSummoningsEnabled) {
+        val lineSep = scala.util.Properties.lineSeparator
+        val sb = new StringBuilder
+        if ("" == title) sb.append("; Satisfiability: ")
+        else sb.append(s"; Satisfiability of $title: ")
+        sb.append(r)
+        sb.append(lineSep)
+        for (e <- es) {
+          sb.append(";   ")
+          sb.append(Exp.toString(e, inProof = true))
+          sb.append(lineSep)
+        }
+        sb.append(lineSep)
+        sb.append(script)
+        reporter.report(li.toLocationInfo(fileUriOpt, "summoning", sb.toString))
+      }
+      r match {
+        case Z3.Sat =>
+          true
+        case Z3.Unsat =>
+          error(li, unsatMsg); false
+        case Z3.Unknown =>
+          reporter.report(li.toLocationWarning(fileUriOpt, "checksat", unknownMsg))
+          true
+        case Z3.Timeout =>
+          reporter.report(li.toLocationWarning(fileUriOpt, "checksat", timeoutMsg))
+          true
+        case Z3.Error =>
+          false
+      }
+    } else true
   }
 
   def check(proofGroup: ProofGroup): Option[T] = {
@@ -608,7 +636,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       } else if (isAuto) premises ++ facts.values
       else Node.emptySeq[Exp]
     val method = if (isAuto) "automatically" else "apply algebra to"
-    if (isValid(antecedents, ivector(exp))) true
+    if (isValid("", nodeLocMap(exp), antecedents, ivector(exp))) true
     else {
       error(exp, s"Could not $method deduce the claim in step#$num.")
       false
@@ -687,8 +715,40 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     } else Some(make(vars = vars + varId))
   }
 
-  def isValid(premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean =
-    Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
+  def isValid(title: String, li: LocationInfo,
+              premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+    val (script, r) = Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
+    if (inscribeSummoningsEnabled) {
+      val lineSep = scala.util.Properties.lineSeparator
+      val sb = new StringBuilder
+      if ("" == title) sb.append("; Validity: ")
+      else sb.append(s"; Validity of $title: ")
+      sb.append(r)
+      sb.append(lineSep)
+      var i = 0
+      for (p <- premises) {
+        sb.append(";   ")
+        sb.append(Exp.toString(p, inProof = true))
+        if (i + 1 != premises.size) sb.append(',')
+        sb.append(lineSep)
+        i += 1
+      }
+      sb.append(";     ⊢")
+      sb.append(lineSep)
+      i = 0
+      for (c <- conclusions) {
+        sb.append(";   ")
+        sb.append(Exp.toString(c, inProof = true))
+        if (i + 1 != conclusions.size) sb.append(',')
+        sb.append(lineSep)
+        i += 1
+      }
+      sb.append(lineSep)
+      sb.append(script)
+      reporter.report(li.toLocationInfo(fileUriOpt, "summoning", sb.toString))
+    }
+    r
+  }
 
   def newId(x: String, t: tipe.Tipe) = {
     val r = Id(x)
@@ -747,7 +807,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     def divisor(e: Exp): Boolean = {
       val req = Ne(e, Checker.zero)
       if (autoEnabled) {
-        if (!isValid(premises ++ facts.values, ivector(req))) {
+        if (!isValid("division", nodeLocMap(e), premises ++ facts.values, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
           hasError = true
         }
@@ -762,11 +822,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       val req2 = Lt(e, Size(id))
       if (autoEnabled) {
         val ps = premises ++ facts.values
-        if (!isValid(ps, ivector(req1))) {
+        if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
           hasError = true
           error(e, "Could not automatically deduce that the sequence index is non-negative.")
         }
-        if (!isValid(ps, ivector(req2))) {
+        if (!isValid("indexing high-bound", nodeLocMap(e), ps, ivector(req2))) {
           hasError = true
           error(e, s"Could not automatically deduce that the index is less than the sequence size.")
         }
@@ -837,13 +897,17 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def error(n: Node, msg: String): Option[T] = {
-    reporter.report(nodeLocMap(n).toLocationError(fileUriOpt, Checker.kind, msg))
+  def error(n: Node, msg: String): Option[T] = error(nodeLocMap(n), msg)
+
+  def error(li: LocationInfo, msg: String): Option[T] = {
+    reporter.report(li.toLocationError(fileUriOpt, Checker.kind, msg))
     None
   }
 
-  def warn(n: Node, msg: String): Unit =
-    reporter.report(nodeLocMap(n).toLocationWarning(fileUriOpt, Checker.kind, msg))
+  def warn(n: Node, msg: String): Unit = warn(nodeLocMap(n), msg)
+
+  def warn(li: LocationInfo, msg: String): Unit =
+    reporter.report(li.toLocationWarning(fileUriOpt, Checker.kind, msg))
 }
 
 private final case class
@@ -852,6 +916,7 @@ DefaultProofContext(unitNode: UnitNode,
                     timeoutInMs: Int,
                     checkSat: Boolean,
                     hintEnabled: Boolean,
+                    inscribeSummoningsEnabled: Boolean,
                     invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
                     premises: ILinkedSet[Exp] = ilinkedSetEmpty,
                     vars: ISet[String] = isetEmpty,
@@ -869,7 +934,7 @@ DefaultProofContext(unitNode: UnitNode,
       })
       case _ => ivectorEmpty
     })
-    if (facts.nonEmpty && !checkSat(facts.values,
+    if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
       unsatMsg = "The specified set of facts are unsatisfiable.",
       unknownMsg = "The set of facts might not be satisfiable.",
       timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
@@ -911,15 +976,15 @@ DefaultProofContext(unitNode: UnitNode,
           error(stmt, s"Auto is not enabled, but sequent is used.")
         }
         if (sequent.premises.nonEmpty) {
-          if (!isValid(premises, sequent.premises)) {
+          if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
             hasError = true
             error(stmt, "Could not automatically deduce the specified sequent's premises.")
           }
-          if (!isValid(sequent.premises, sequent.conclusions)) {
+          if (!isValid("sequent conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
             hasError = true
             error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
           }
-        } else if (!isValid(premises, sequent.conclusions)) {
+        } else if (!isValid("sequent conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
           hasError = true
           error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
         }
@@ -927,10 +992,10 @@ DefaultProofContext(unitNode: UnitNode,
           filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
       case Assert(e) =>
         if (autoEnabled) {
-          if (!isValid(premises ++ facts.values, ivector(e))) {
+          if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
             error(stmt, s"Could not automatically deduce the assertion validity.")
             hasError = true
-            checkSat(ivector(e),
+            checkSat("", nodeLocMap(stmt), ivector(e),
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -939,7 +1004,7 @@ DefaultProofContext(unitNode: UnitNode,
           if (!premises.contains(e)) {
             error(e, s"The assertion has not been proven.")
             hasError = true
-            checkSat(ivector(e),
+            checkSat("", nodeLocMap(stmt), ivector(e),
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -947,7 +1012,7 @@ DefaultProofContext(unitNode: UnitNode,
         }
         Some(copy(premises = premises + e))
       case Assume(e) =>
-        hasError = !checkSat(ivector(e),
+        hasError = !checkSat("", nodeLocMap(stmt), ivector(e),
           unsatMsg = s"The assumption is unsatisfiable.",
           unknownMsg = s"The assumption might not be satisfiable.",
           timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -1002,8 +1067,11 @@ DefaultProofContext(unitNode: UnitNode,
         val invs = if (stmt.isHelper) ilinkedSetEmpty else invariants
         val effectivePre = invs ++ stmt.contract.requires.exps
         val effectivePost = invs ++ stmt.contract.ensures.exps
+        val preLi = nodeLocMap(
+          if (stmt.contract.requires.exps.isEmpty) stmt
+          else stmt.contract.requires.exps.head)
         hasError =
-          !checkSat(effectivePre,
+          !checkSat("effective precondition", preLi, effectivePre,
             unsatMsg = s"The effective pre-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -1014,8 +1082,11 @@ DefaultProofContext(unitNode: UnitNode,
               stmt.id.value
             } due to timeout."
           ) || hasError
+        val postLi = nodeLocMap(
+          if (stmt.contract.ensures.exps.isEmpty) stmt
+          else stmt.contract.ensures.exps.head)
         hasError =
-          !checkSat(effectivePost,
+          !checkSat("effective postcondition", postLi, effectivePost,
             unsatMsg = s"The effective post-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -1047,7 +1118,7 @@ DefaultProofContext(unitNode: UnitNode,
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
               for (e <- modifiedInvariants)
-                if (!isValid(ps, ivector(e))) {
+                if (!isValid(s"global invariant", nodeLocMap(stmt), ps, ivector(e))) {
                   error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
                   hasError = true
                 }
@@ -1066,7 +1137,7 @@ DefaultProofContext(unitNode: UnitNode,
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
               for (e <- post)
-                if (!isValid(ps, ivector(subst(e, postSubstMap)))) {
+                if (!isValid("postcondition", nodeLocMap(e), ps, ivector(subst(e, postSubstMap)))) {
                   error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
                   hasError = true
                 }
@@ -1084,27 +1155,22 @@ DefaultProofContext(unitNode: UnitNode,
         if (autoEnabled) {
           val ps = premises ++ facts.values
           for (e <- inv.exps)
-            if (!isValid(ps, ivector(e))) {
+            if (!isValid("", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the global invariant.")
               hasError = true
             }
-          if (hasError)
-            checkSat(inv.exps,
-              unsatMsg = s"The global invariant(s) are unsatisfiable.",
-              unknownMsg = s"The global invariant(s) might not be satisfiable.",
-              timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         } else {
           for (e <- inv.exps)
             if (!premises.contains(e)) {
               error(e, s"The global invariant has not been proven.")
               hasError = true
             }
-          if (hasError)
-            checkSat(inv.exps,
-              unsatMsg = s"The global invariant(s) are unsatisfiable.",
-              unknownMsg = s"The global invariant(s) might not be satisfiable.",
-              timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         }
+        if (hasError)
+          checkSat("global invariant", nodeLocMap(stmt), inv.exps,
+            unsatMsg = s"The global invariant(s) are unsatisfiable.",
+            unknownMsg = s"The global invariant(s) might not be satisfiable.",
+            timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         Some(copy(invariants = invariants ++ inv.exps))
       case _: FactStmt => Some(this)
       case While(exp, loopBlock, loopInv) =>
@@ -1112,7 +1178,7 @@ DefaultProofContext(unitNode: UnitNode,
         if (autoEnabled) {
           val ps = premises ++ facts.values
           for (e <- es)
-            if (!isValid(ps, ivector(e))) {
+            if (!isValid("loop invariant (beginning)", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
               hasError = true
             }
@@ -1142,7 +1208,7 @@ DefaultProofContext(unitNode: UnitNode,
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
               for (e <- es)
-                if (!isValid(ps, ivector(e))) {
+                if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
                   error(e, s"Could not deduce the loop invariant at the end of the loop.")
                   hasError = true
                 }
@@ -1193,13 +1259,13 @@ DefaultProofContext(unitNode: UnitNode,
     if (autoEnabled) {
       val ps = premises ++ facts.values
       for (inv <- invs if methodOpt.isDefined)
-        if (!isValid(ps, ivector(inv))) {
+        if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
           val li = nodeLocMap(inv)
           error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
         }
       for (pre <- md.contract.requires.exps)
-        if (!isValid(ps, ivector(subst(pre, postSubstMap)))) {
+        if (!isValid("precondition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
           val li = nodeLocMap(pre)
           error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true

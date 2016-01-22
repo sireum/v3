@@ -46,13 +46,14 @@ sealed trait InputMessage extends Product
 case object Terminate extends InputMessage
 
 final case class Check(requestId: String,
-                       isSilent: Boolean,
+                       isBackground: Boolean,
                        hintEnabled: Boolean,
+                       inscribeSummoningsEnabled: Boolean,
                        proofs: Vector[ProofFile],
                        lastOnly: Boolean,
                        autoEnabled: Boolean,
                        timeout: Int,
-                       checkSat: Boolean)
+                       checkSatEnabled: Boolean)
   extends InputMessage
 
 final case class ProofFile(fileUriOpt: Option[FileResourceUri],
@@ -61,5 +62,5 @@ final case class ProofFile(fileUriOpt: Option[FileResourceUri],
 sealed trait OutputMessage extends Product
 
 final case class Result(requestId: String,
-                        isSilent: Boolean,
+                        isBackground: Boolean,
                         tags: Vector[Tag]) extends OutputMessage
