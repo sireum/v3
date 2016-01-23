@@ -923,7 +923,8 @@ DefaultProofContext(unitNode: UnitNode,
                     facts: IMap[String, Exp] = imapEmpty,
                     provedSteps: IMap[Natural, ProofStep] = imapEmpty,
                     declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                    methodOpt: Option[MethodDecl] = None)
+                    methodOpt: Option[MethodDecl] = None,
+                    satFacts: Boolean = true)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[DefaultProofContext] {
 
   def check(program: Program): Boolean = {
@@ -934,12 +935,19 @@ DefaultProofContext(unitNode: UnitNode,
       })
       case _ => ivectorEmpty
     })
+    var isSat = true
     if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
       unsatMsg = "The specified set of facts are unsatisfiable.",
-      unknownMsg = "The set of facts might not be satisfiable.",
-      timeoutMsg = "Could not check satisfiability of the set of facts due to timeout."
+      unknownMsg = {
+        isSat = false
+        "The set of facts might not be satisfiable."
+      },
+      timeoutMsg = {
+        isSat = false
+        "Could not check satisfiability of the set of facts due to timeout."
+      }
     )) return false
-    copy(facts = facts).check(program.block).isDefined
+    copy(facts = facts, satFacts = isSat).check(program.block).isDefined
   }
 
   def check(block: Block): Option[DefaultProofContext] = {
@@ -1071,7 +1079,8 @@ DefaultProofContext(unitNode: UnitNode,
           if (stmt.contract.requires.exps.isEmpty) stmt
           else stmt.contract.requires.exps.head)
         hasError =
-          !checkSat("effective precondition", preLi, effectivePre,
+          !checkSat("effective precondition", preLi,
+            (if (satFacts) facts.values else ivectorEmpty) ++ effectivePre,
             unsatMsg = s"The effective pre-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -1086,7 +1095,8 @@ DefaultProofContext(unitNode: UnitNode,
           if (stmt.contract.ensures.exps.isEmpty) stmt
           else stmt.contract.ensures.exps.head)
         hasError =
-          !checkSat("effective postcondition", postLi, effectivePost,
+          !checkSat("effective postcondition", postLi,
+            (if (satFacts) facts.values else ivectorEmpty) ++ effectivePost,
             unsatMsg = s"The effective post-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -1167,7 +1177,8 @@ DefaultProofContext(unitNode: UnitNode,
             }
         }
         if (hasError)
-          checkSat("global invariant", nodeLocMap(stmt), inv.exps,
+          checkSat("global invariant", nodeLocMap(stmt),
+            (if (satFacts) facts.values else ivectorEmpty) ++ inv.exps,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
