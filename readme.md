@@ -149,8 +149,24 @@ x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
 
 Run: `sireum-v3/bin/sbt-launch.sh test`
 
-**Warning:** If you use Gradle (on other projects), your Ivy2 cache might be corrupted.
-In such case, Sbt will complain about unresolved dependencies, e.g.:
+### Troubleshooting
+
+#### Workaround for Sbt Issue [#2156](https://github.com/sbt/sbt/issues/2156)
+
+If the Sbt builds fails with: ``Could not create directory ...``, then you are
+affected by [sbt/sbt#2156](https://github.com/sbt/sbt/issues/2156).
+
+As a workaround, set the ``SIREUM_PARALLEL_BUILD`` environment variable to
+``false`` as follows:
+
+```bash
+export SIREUM_PARALLEL_BUILD=false
+```
+
+#### Ivy2 Cache Corruption
+ 
+In the case that your Ivy2 cache is corrupted;
+Sbt will complain about unresolved dependencies, e.g.:
 
 ```
 ...
@@ -162,7 +178,7 @@ In such case, Sbt will complain about unresolved dependencies, e.g.:
 [warn]
 [warn] 	Note: Unresolved dependencies path:
 [warn] 		junit:junit:4.11
-[warn] 		  +- com.novocode:junit-interface:0.11 (.../Workspace/sireum-v3/project/SireumBuild.scala#L163)
+[warn] 		  +- com.novocode:junit-interface:0.11 (.../sireum-v3/project/SireumBuild.scala#...)
 [warn] 		  +- org.sireum:sireum-core-test_2.11:3.0-SNAPSHOT ()
 ...
 sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
@@ -172,12 +188,14 @@ sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not
   ...
 ```
 
-To fix it, you need to delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
+To fix it, you can delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
 corrupted library cache such as junit for the example above; in the worst case, delete all cache).
 
 Once you deleted the corrupted cache, run Sbt again and it should work.
-You can then check that your Gradle builds still work once Sbt fixed/recreated your Ivy2 cache.
 
+#### Other Issues?
+
+Please file a [new GitHub issue](https://github.com/sireum/v3/issues).
 
 ## Assembling Sireum Jar
 
