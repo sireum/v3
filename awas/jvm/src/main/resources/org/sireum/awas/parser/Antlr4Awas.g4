@@ -16,10 +16,10 @@ model
   ;
 
 typeDecl
-  : typeAliasDecl
-  | enumDecl
-  | latticeDecl
-  | recordDecl
+  : typeAliasDecl                 #AliasTypeDecl
+  | enumDecl                      #EnumTypeDecl
+  | latticeDecl                   #LatticeTypeDecl
+  | recordDecl                    #RecordTypeDecl
   ;
 
 componentDecl
@@ -30,7 +30,7 @@ componentDecl
   ;
 
 connectionDecl
-  : name ':'
+  : connName=name ':'
     fromComponent=name '.' fromPort=ID
     ( '{' fromE+=name ( ',' fromE+=name )* '}' )?
     '->'

@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum-Private/sireum-v3/awas/sireum-awas-parser-antlr4/src/main/resources/org/sireum/awas/parser/Antlr4Awas.g4 by ANTLR 4.5.1
+// Generated from /Users/kdd/Documents/Workspace/sireum-v3/awas/jvm/src/main/resources/org/sireum/awas/parser/Antlr4Awas.g4 by ANTLR 4.5.1
 package org.sireum.awas.parser;
 
 // @formatter:off
@@ -282,22 +282,39 @@ public class Antlr4AwasParser extends Parser {
 	}
 
 	public static class TypeDeclContext extends ParserRuleContext {
-		public TypeAliasDeclContext typeAliasDecl() {
-			return getRuleContext(TypeAliasDeclContext.class,0);
-		}
-		public EnumDeclContext enumDecl() {
-			return getRuleContext(EnumDeclContext.class,0);
-		}
-		public LatticeDeclContext latticeDecl() {
-			return getRuleContext(LatticeDeclContext.class,0);
-		}
-		public RecordDeclContext recordDecl() {
-			return getRuleContext(RecordDeclContext.class,0);
-		}
 		public TypeDeclContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_typeDecl; }
+	 
+		public TypeDeclContext() { }
+		public void copyFrom(TypeDeclContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class EnumTypeDeclContext extends TypeDeclContext {
+		public EnumDeclContext enumDecl() {
+			return getRuleContext(EnumDeclContext.class,0);
+		}
+		public EnumTypeDeclContext(TypeDeclContext ctx) { copyFrom(ctx); }
+	}
+	public static class LatticeTypeDeclContext extends TypeDeclContext {
+		public LatticeDeclContext latticeDecl() {
+			return getRuleContext(LatticeDeclContext.class,0);
+		}
+		public LatticeTypeDeclContext(TypeDeclContext ctx) { copyFrom(ctx); }
+	}
+	public static class AliasTypeDeclContext extends TypeDeclContext {
+		public TypeAliasDeclContext typeAliasDecl() {
+			return getRuleContext(TypeAliasDeclContext.class,0);
+		}
+		public AliasTypeDeclContext(TypeDeclContext ctx) { copyFrom(ctx); }
+	}
+	public static class RecordTypeDeclContext extends TypeDeclContext {
+		public RecordDeclContext recordDecl() {
+			return getRuleContext(RecordDeclContext.class,0);
+		}
+		public RecordTypeDeclContext(TypeDeclContext ctx) { copyFrom(ctx); }
 	}
 
 	public final TypeDeclContext typeDecl() throws RecognitionException {
@@ -307,6 +324,7 @@ public class Antlr4AwasParser extends Parser {
 			setState(83);
 			switch (_input.LA(1)) {
 			case T__13:
+				_localctx = new AliasTypeDeclContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(79);
@@ -314,6 +332,7 @@ public class Antlr4AwasParser extends Parser {
 				}
 				break;
 			case T__15:
+				_localctx = new EnumTypeDeclContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(80);
@@ -321,6 +340,7 @@ public class Antlr4AwasParser extends Parser {
 				}
 				break;
 			case T__17:
+				_localctx = new LatticeTypeDeclContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(81);
@@ -328,6 +348,7 @@ public class Antlr4AwasParser extends Parser {
 				}
 				break;
 			case T__18:
+				_localctx = new RecordTypeDeclContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(82);
@@ -474,6 +495,7 @@ public class Antlr4AwasParser extends Parser {
 	}
 
 	public static class ConnectionDeclContext extends ParserRuleContext {
+		public NameContext connName;
 		public NameContext fromComponent;
 		public Token fromPort;
 		public NameContext name;
@@ -512,7 +534,7 @@ public class Antlr4AwasParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(113);
-			name();
+			((ConnectionDeclContext)_localctx).connName = name();
 			setState(114);
 			match(T__7);
 			setState(115);
