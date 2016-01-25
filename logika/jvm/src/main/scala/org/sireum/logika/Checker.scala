@@ -41,7 +41,7 @@ object Checker {
     implicit reporter: AccumulatingTagReporter): message.Result = {
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      Builder(fileUriOpt, text).foreach(unitNodes :+= _)
+      Builder(fileUriOpt, text, m.autoEnabled).foreach(unitNodes :+= _)
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
@@ -594,8 +594,6 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case _ => None
         }
       case Auto(_, exp, steps) =>
-        if (!autoEnabled)
-          error(step, s"Auto is not enabled, but used in step #$num.")
         if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
         else None
       case FactJust(_, exp, id) =>
@@ -979,10 +977,6 @@ DefaultProofContext(unitNode: UnitNode,
           case _ => None
         }
       case SequentStmt(sequent) =>
-        if (!autoEnabled) {
-          hasError = true
-          error(stmt, s"Auto is not enabled, but sequent is used.")
-        }
         if (sequent.premises.nonEmpty) {
           if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
             hasError = true

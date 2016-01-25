@@ -76,7 +76,7 @@ class ProofChecker(option: LogikaOption,
     val sequentOpt: Option[Sequent] = option.sequent.flatMap {
       text =>
         val r: Option[Sequent] =
-          Builder(None, text) match {
+          Builder(None, text, isAutoEnabled = false) match {
             case Some(s: Sequent) => Some(s)
             case _ =>
               hasError = true
@@ -101,7 +101,7 @@ class ProofChecker(option: LogikaOption,
     if (hasError) return false
 
     if (sequentOpt.nonEmpty) {
-      Builder(None, proofs.head.content) match {
+      Builder(None, proofs.head.content, isAutoEnabled = false) match {
         case Some(s: Sequent) if !hasError =>
           val sequent = sequentOpt.get
           if (!(s.premises == sequent.premises &&

@@ -74,7 +74,7 @@ object Node {
     }
   }
 
-  final private[ast] def checkWellFormed(unitNode: UnitNode)
+  final private[ast] def checkWellFormed(unitNode: UnitNode, isAutoEnabled: Boolean)
                                         (implicit reporter: AccumulatingTagReporter): Unit = {
     val nodeLocMap = unitNode.nodeLocMap.clone
     def error(n: Node, msg: String): Unit =
@@ -164,6 +164,12 @@ object Node {
           })(s)
         }
         true
+      case n: Auto =>
+        if (!isAutoEnabled) error(n, s"Auto is not enabled, but auto summoning is used.")
+        true
+      case n: SequentStmt =>
+        if (!isAutoEnabled) error(n, s"Auto is not enabled, but sequent is used.")
+        true
     })
     v(unitNode)
     if (unitNode.mode == LogicMode.Programming) unitNode match {
@@ -183,6 +189,9 @@ object Node {
         unitNode.fileUriOpt, "Semantics", msg))
     def collectFreeIds(node: Node, declIds: IMap[String, Id]): Unit = {
       Visitor.build({
+        case n: Auto =>
+          error(n, s"Auto is only available in programming logic.")
+          true
         case node: Quant[_] =>
           for (id <- node.ids)
             declIds.get(id.value) match {

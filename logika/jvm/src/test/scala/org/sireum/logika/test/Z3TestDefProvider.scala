@@ -55,7 +55,7 @@ final class Z3TestDefProvider(tf: TestFramework)
       override def warn(msg: String): Unit = {
       }
     }
-    Builder(Some(uri), text).map(_.asInstanceOf[Program]).
+    Builder(Some(uri), text, isAutoEnabled = false).map(_.asInstanceOf[Program]).
       exists { p =>
         val hasError = !TypeChecker.check(p)
         if (hasError) return false

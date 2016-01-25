@@ -655,7 +655,7 @@ object Builder {
   import org.antlr.v4.runtime._
 
   def apply(fileUriOpt: Option[FileResourceUri],
-            input: String, maxErrors: Natural = 0)(
+            input: String, isAutoEnabled: Boolean, maxErrors: Natural = 0)(
              implicit reporter: AccumulatingTagReporter): Option[UnitNode] = {
     class ParsingEscape extends RuntimeException
     object Mode extends Enumeration {
@@ -746,7 +746,7 @@ object Builder {
       r match {
         case Some(un) =>
           un.input = input
-          Node.checkWellFormed(un)
+          Node.checkWellFormed(un, isAutoEnabled = isAutoEnabled)
           if (!reporter.hasError) r else None
         case None => None
       }
