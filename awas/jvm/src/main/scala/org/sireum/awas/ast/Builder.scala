@@ -101,7 +101,7 @@ final class Builder private() {
   }
 
   def build(ctx: PortContext): Port = {
-    val mod = ctx.mod.getText().equals("in")
+    val mod = ctx.mod.getText.equals("in")
     Port(mod, buildId(ctx.ID()),
       if (ctx.name() != null) Some(build(ctx.name())) else None) at ctx
   }
@@ -117,7 +117,7 @@ final class Builder private() {
   def arbitraryToken(n: Token): Option[Id] = {
     n match {
       case null => None
-      case n => n.getText() match {
+      case n => n.getText match {
         case "_" => None
         case _ => Some(buildId(n))
       }
@@ -151,7 +151,7 @@ final class Builder private() {
     ctx match {
       case ctx: BooleanTypeContext => BooleanTypeDecl() at ctx
       case ctx: IntegerTypeContext => IntegerTypeDecl(
-        if (ctx.hi != null) Some((build(ctx.hi), build(ctx.lo))) else None) at ctx
+        if (ctx.hi != null) Some((build(ctx.lo), build(ctx.hi))) else None) at ctx
       case ctx: RealTypeContext => RealTypeDecl() at ctx
       case ctx: StringTypeContext => StringTypeDecl() at ctx
       case ctx: ComponentTypeContext => ComponentTypeDecl() at ctx
@@ -174,7 +174,9 @@ final class Builder private() {
       case ctx: FalseContext => BooleanInit(false) at ctx
       case ctx: IntegerContext => IntegerInit(ctx.INTEGER().getText.toInt) at ctx
       case ctx: RealContext => RealInit(ctx.REAL().getText.toDouble) at ctx
-      case ctx: StringContext => StringInit(ctx.STRING().getText) at ctx
+      case ctx: StringContext =>
+        val text = ctx.STRING().getText
+        StringInit(text.substring(1, text.length-1).intern()) at ctx
       case ctx: RecordContext => RecordInit(build(ctx.name()), ctx.ID().map(t => buildId(t) ->
         build(ctx.init(ctx.ID().indexOf(t))))(breakOut): IMap[Id, Init]) at ctx
       case ctx: NameRefContext => NameRefInit(build(ctx.name()),
@@ -183,13 +185,12 @@ final class Builder private() {
       case ctx: SomeContext => SomeInit(build(ctx.`type`()), build(ctx.init())) at ctx
       case ctx: SetContext => SetInit(build(ctx.`type`()), ctx.init().map(build).toSet) at ctx
       case ctx: SeqContext => SeqInit(build(ctx.`type`()), ctx.init().map(build)) at ctx
-      case ctx: MapContext => {
+      case ctx: MapContext =>
         var mapinit = imapEmpty[Init, Init]
         ctx.mapEntry().forEach(mp => {
           mapinit = mapinit + (build(mp.key) -> build(mp.value))
         })
         MapInit(build(ctx.basicType()), build(ctx.`type`()), mapinit) at ctx
-      }
     }
   }
 

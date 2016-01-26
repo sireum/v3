@@ -31,9 +31,7 @@ import org.sireum.util._
 
 object Antlr4AwasParserTestDefProvider {
   final val properties =
-    """
-      |types
-      |
+    """|types
       |  lattice Top
       |
       |  lattice Left extends Top
@@ -44,11 +42,11 @@ object Antlr4AwasParserTestDefProvider {
       |
       |  enum Error
       |
-      |  enum Failure { AFail, BFail, CFail }
+      |  enum Failure {AFail, BFail, CFail}
       |
       |  record R
-      |    x: Integer
-      |    y: Integer
+      |    x : Integer
+      |    y : Integer
       |
       |components
       |  A
@@ -56,50 +54,46 @@ object Antlr4AwasParserTestDefProvider {
       |      in aIn
       |      out aOut
       |    properties
-      |      b0: Boolean
-      |      b3: Boolean = true
-      |      b4: Boolean = false
-      |      x: Integer
-      |      z: Integer = 5
-      |      r0: Real
-      |      r1: Real = 0.0
-      |      s0: String
-      |      s1: String = "bar"
-      |      lat0: Top
-      |      lat1: Top = Left
-      |      enum0: Failure
-      |      enum1: Failure = BFail
-      |      enum2: Error = Disconnected // checked with profile
-      |      rec0: R
-      |      rec2: R = R(x=1, y=2)
-      |      set0: Set[Integer]
-      |      set1: Set[Integer] = Set[Integer](1, 2, 3)
-      |      seq0: Seq[Integer]
-      |      seq1: Seq[Integer] = Seq[Integer](1, 2, 3)
-      |      map0: Map[Integer, Integer]
-      |      map1: Map[Integer, Integer] =
-      |          Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)
-    """.stripMargin
+      |      b0 : Boolean
+      |      b3 : Boolean = true
+      |      b4 : Boolean = false
+      |      x : Integer
+      |      z : Integer = 5
+      |      r0 : Real
+      |      r1 : Real = 0.0
+      |      s0 : String
+      |      s1 : String = "bar"
+      |      lat0 : Top
+      |      lat1 : Top = Left
+      |      enum0 : Failure
+      |      enum1 : Failure = BFail
+      |      enum2 : Error = Disconnected
+      |      rec0 : R
+      |      rec2 : R = R(x = 1, y = 2)
+      |      set0 : Set[Integer]
+      |      set1 : Set[Integer] = Set[Integer](1, 2, 3)
+      |      seq0 : Seq[Integer]
+      |      seq1 : Seq[Integer] = Seq[Integer](1, 2, 3)
+      |      map0 : Map[Integer, Integer]
+      |      map1 : Map[Integer, Integer] = Map[Integer, Integer](1 -> 2, 2 -> 3, 3 -> 4)""".stripMargin
+  /*
+
+      ┌──── A ────┐       ┌──── B ────┐
+      │           │       │           │
+  ┌───▷aIn    aOut▷───────▷bIn    bOut▷──┐
+  │   │           │       │           │  │
+  │   └───────────┘       └───────────┘  │
+  │                                      │
+  │                                      │
+  │             ┌──── C ────┐            │
+  │             │           │            │
+  └─────────────◁cOut    cIn◁────────────┘
+                │           │
+                └───────────┘
+
+*/
   final val abcloop =
-    """
-      |/*
-      |
-      |      ┌──── A ────┐       ┌──── B ────┐
-      |      │           │       │           │
-      |  ┌───▷aIn    aOut▷───────▷bIn    bOut▷──┐
-      |  │   │           │       │           │  │
-      |  │   └───────────┘       └───────────┘  │
-      |  │                                      │
-      |  │                                      │
-      |  │             ┌──── C ────┐            │
-      |  │             │           │            │
-      |  └─────────────◁cOut    cIn◁────────────┘
-      |                │           │
-      |                └───────────┘
-      |
-      |*/
-      |
-      |components
+    """components
       |  A
       |    ports
       |      in aIn
@@ -116,85 +110,96 @@ object Antlr4AwasParserTestDefProvider {
       |      out cOut
       |
       |connections
-      |  A2B: A.aOut -> B.bIn
-      |  B2C: B.bOut -> C.cIn
-      |  C2A: C.cOut -> A.aIn
-    """.stripMargin
+      |  A2B : A.aOut -> B.bIn
+      |
+      |  B2C : B.bOut -> C.cIn
+      |
+      |  C2A : C.cOut -> A.aIn""".stripMargin
   final val isolette_model =
-    """
-      |components
+    """|components
       |  Thermostat
       |    ports
       |      out heater_ctrl
       |      in settings
       |      in sensed_temp
       |      out feedback
+      |
       |  HeatSource
       |    ports
       |      in on_heater
       |      out heater_output
+      |
       |  Air
       |    ports
       |      in from_heater
       |      out to_infant
       |      in from_infant
       |      out to_sensor
+      |
       |  TempSensor
       |    ports
       |      in air_heat
       |      out air_temp
+      |
       |  OperatorInterface
       |    ports
       |      in feedback_in
       |      out feedback_out
       |      in settings_in
       |      out settings_out
+      |
       |  Infant
       |    ports
       |      in heat_in
       |      out heat_out
+      |
       |  Nurse
       |    ports
       |      out set_params
       |      in monitor
+      |
       |connections
-      |  t1: Thermostat.heater_ctrl -> HeatSource.on_heater
-      |  h1: HeatSource.heater_output -> Air.from_heater
-      |  h2: Air.to_sensor -> TempSensor.air_heat
-      |  t2: TempSensor.air_temp -> Thermostat.sensed_temp
-      |  i1: Air.to_infant -> Infant.heat_in
-      |  i2: Infant.heat_out -> Air.from_infant
-      |  o1: OperatorInterface.settings_out -> Thermostat.settings
-      |  o2: Thermostat.feedback -> OperatorInterface.feedback_in
-      |  o3: OperatorInterface.feedback_out -> Nurse.monitor
-      |  o4: Nurse.set_params -> OperatorInterface.settings_in
-    """.stripMargin
+      |  t1 : Thermostat.heater_ctrl -> HeatSource.on_heater
+      |
+      |  h1 : HeatSource.heater_output -> Air.from_heater
+      |
+      |  h2 : Air.to_sensor -> TempSensor.air_heat
+      |
+      |  t2 : TempSensor.air_temp -> Thermostat.sensed_temp
+      |
+      |  i1 : Air.to_infant -> Infant.heat_in
+      |
+      |  i2 : Infant.heat_out -> Air.from_infant
+      |
+      |  o1 : OperatorInterface.settings_out -> Thermostat.settings
+      |
+      |  o2 : Thermostat.feedback -> OperatorInterface.feedback_in
+      |
+      |  o3 : OperatorInterface.feedback_out -> Nurse.monitor
+      |
+      |  o4 : Nurse.set_params -> OperatorInterface.settings_in""".stripMargin
   final val isolette_accident_level =
-    """
-      |types
+    """|types
       |  record AccidentLevel
-      |    level: Natural
-      |    description: String
-      |constants
-      |  Catastrophic: AccidentLevel = AccidentLevel(level = 1, description = "Results in infants death")
-      |  Critical: AccidentLevel = AccidentLevel(level = 2, description = "Results in permanent impairment or life-threatening injury")
-      |  Serious: AccidentLevel = AccidentLevel(level = 3, description = "Results in injury or impairment requiring professional medical intervention")
-      |  Minor: AccidentLevel = AccidentLevel(level = 4, description = "Results in temporary injurt or impairment not requiring professional medical intervention")
-      |  Negligible: AccidentLevel = AccidentLevel(level = 5, description = "Inconvenience or temporary discomfort")
-    """.stripMargin
-  final val isolette_accident =
-    """
-      |types
-      |  record Accident
-      |    description: String
-      |    level: AccidentLevel
+      |    level : Natural
+      |    description : String
       |
       |constants
-      |  Serious_injury: Accident = Accident(description = "Prolonged exposure of Infant to unsafe heat leads to serious injury or death", level = Catastrophic)
-      |  Short_term: Accident = Accident(description = "Burst(Shorten) exposure of Infant to unsafe heat causes skin burns / skin damages", level = Critical)
-      |  unsafe_cold: Accident = Accident(description = "Exposure of Infant to unsafe cold", level = Catastrophic)
-
-    """.stripMargin
+      |  Catastrophic : AccidentLevel = AccidentLevel(level = 1, description = "Results in infants death")
+      |  Critical : AccidentLevel = AccidentLevel(level = 2, description = "Results in permanent impairment or life-threatening injury")
+      |  Serious : AccidentLevel = AccidentLevel(level = 3, description = "Results in injury or impairment requiring professional medical intervention")
+      |  Minor : AccidentLevel = AccidentLevel(level = 4, description = "Results in temporary injurt or impairment not requiring professional medical intervention")
+      |  Negligible : AccidentLevel = AccidentLevel(level = 5, description = "Inconvenience or temporary discomfort")""".stripMargin
+  final val isolette_accident =
+    """|types
+      |  record Accident
+      |    description : String
+      |    level : AccidentLevel
+      |
+      |constants
+      |  Serious_injury : Accident = Accident(description = "Prolonged exposure of Infant to unsafe heat leads to serious injury or death", level = Catastrophic)
+      |  Short_term : Accident = Accident(description = "Burst(Shorten) exposure of Infant to unsafe heat causes skin burns / skin damages", level = Critical)
+      |  unsafe_cold : Accident = Accident(description = "Exposure of Infant to unsafe cold", level = Catastrophic)""".stripMargin
   final val pcashutOff =
     """
       |// from https://github.com/santoslab/aadl-map-apps/tree/develop/pca-shutoff

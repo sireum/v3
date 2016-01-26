@@ -72,7 +72,7 @@ final case class Flow(id: Id,
                       to:Option[Id],
                       toE: Node.Seq[Name]) extends Node
 
-final case class Property(id: Id, PropType: Type, value: Option[Init]) extends Node
+final case class Property(id: Id, propType: Type, value: Option[Init]) extends Node
 
 final case class AliasDecl(name: Name, typeName: Type) extends TypeDecl
 

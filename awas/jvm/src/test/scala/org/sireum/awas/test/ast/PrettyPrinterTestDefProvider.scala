@@ -25,8 +25,10 @@
 
 package org.sireum.awas.test.ast
 
+import org.sireum.awas.ast.{PrettyPrinter, Builder}
 import org.sireum.test._
 import org.sireum.util._
+import org.sireum.awas.test.parser.Antlr4AwasParserTestDefProvider._
 
 object PrettyPrinterTestDefProvider {
 }
@@ -35,7 +37,20 @@ final class PrettyPrinterTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] = ivector(
+    EqualOptTest("abcloop", printAndParse(abcloop), abcloop),
+    EqualOptTest("properties", printAndParse(properties), properties),
+    EqualOptTest("isolette_model", printAndParse(isolette_model), isolette_model),
+    EqualOptTest("isolette_accident_level", printAndParse(isolette_accident_level), isolette_accident_level),
+    EqualOptTest("isolette_accident", printAndParse(isolette_accident), isolette_accident),
+    ConditionTest("PcaShutoff", Builder(printAndParse(pcashutOff).get).isDefined)
   )
 
-  def printAndParse(model: String) = ???
+  def printAndParse(model: String) : Option[String]= {
+    Builder(model) match {
+      case None => None
+      case Some(e) =>
+        val result = PrettyPrinter(e)
+        Some(result)
+    }
+  }
 }
