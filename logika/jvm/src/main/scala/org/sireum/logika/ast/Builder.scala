@@ -35,7 +35,7 @@ import org.sireum.logika.parser._
 import org.sireum.util._
 import org.sireum.util.jvm.Antlr4Util._
 
-final private class Builder(fileUriOpt: Option[FileResourceUri])(
+final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
   implicit reporter: AccumulatingTagReporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
@@ -554,8 +554,24 @@ final private class Builder(fileUriOpt: Option[FileResourceUri])(
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)
           case ">=" | "≥" => Ge(lExp, rExp)
-          case "=" | "==" => Eq(lExp, rExp)
-          case "!=" | "≠" => Ne(lExp, rExp)
+          case "=" => Eq(lExp, rExp)
+          case "==" =>
+            if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
+              val lit = constMap(lExp).toString
+              val li = nodeLocMap(rExp)
+              val e = input.substring(li.offset, li.offset + li.length)
+              error(rExp, s"Logika does not support $lit == $e; please rewrite it to $e == $lit.")
+            }
+            Eq(lExp, rExp)
+          case "≠" => Ne(lExp, rExp)
+          case "!=" =>
+            if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
+              val lit = constMap(lExp).toString
+              val li = nodeLocMap(rExp)
+              val e = input.substring(li.offset, li.offset + li.length)
+              error(rExp, s"Logika does not support $lit != $e; please rewrite it to $e != $lit.")
+            }
+            Ne(lExp, rExp)
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
@@ -730,7 +746,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.file()
             if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt).build(parseTree)
+              val ast = new Builder(fileUriOpt, input).build(parseTree)
               if (!reporter.hasError) Some(ast)
               else None
             } else None
@@ -738,7 +754,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = true)
             val parseTree = parser.file()
             if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt).build(parseTree)
+              val ast = new Builder(fileUriOpt, input).build(parseTree)
               if (!reporter.hasError) Some(ast)
               else None
             } else None
