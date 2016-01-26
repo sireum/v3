@@ -6,7 +6,7 @@ RUN locale-gen en_US en_US.UTF-8 && \
     apt-get install -y wget git unzip libgomp1 coq&& \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
-    git clone https://github.com/sireum/v3.git sireum-v3 && \
+    git clone -b master https://github.com/sireum/v3.git sireum-v3 && \
     sireum-v3/bin/sbt-launch.sh clean test:compile test && \
     sireum-v3/sireum
 ENV JAVA_HOME /opt/sireum-v3/platform/java
