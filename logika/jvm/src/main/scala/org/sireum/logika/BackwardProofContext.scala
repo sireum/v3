@@ -69,6 +69,8 @@ BackwardProofContext(unitNode: Program,
     copy(facts = facts, satFacts = isSat).check(program.block).isDefined
   }
 
+  def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
+
   def check(block: Block): Option[BackwardProofContext] = {
     var pcOpt: Option[BackwardProofContext] = Some(this)
     for (stmt <- block.stmts if pcOpt.isDefined) {
@@ -143,7 +145,7 @@ BackwardProofContext(unitNode: Program,
         ) || hasError
         Some(copy(premises = premises + e))
       case SeqAssign(id, index, exp) =>
-        val old = newId(id.value + "_old", id.tipe)
+        val old = oldId(id)
         val m = imapEmpty[Node, Node] + (id -> old)
         val qVar = newId("q_i", tipe.Z)
         Some(copy(premises =
@@ -357,12 +359,12 @@ BackwardProofContext(unitNode: Program,
   }
 
   def assign(id: Id, exp: Exp): Option[BackwardProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
   def assign(id: Id): Option[BackwardProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst)))
   }
 
@@ -413,7 +415,7 @@ BackwardProofContext(unitNode: Program,
     }
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
-        (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
+        (x, imapEmpty[Node, Node] + (x -> oldId(x)))
       case _ =>
         (newId(md.id.value + "_result",
           md.id.tipe.asInstanceOf[tipe.Fn].result),
@@ -422,16 +424,20 @@ BackwardProofContext(unitNode: Program,
     var premiseSubstMap = psm
     postSubstMap += Result() -> lhs
     var modParams = isetEmpty[String]
-    for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
-      modParams += p
-      premiseSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
-      postSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
-      postSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
-      postSubstMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
+    for ((p, arg@Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
+      modParams += p.value
+      val arg_old = oldId(arg)
+      val p_in = newId(p.value + "_in", p.tipe)
+      premiseSubstMap += arg -> arg_old
+      postSubstMap += arg -> arg_old
+      postSubstMap += p -> arg
+      postSubstMap += p_in -> arg_old
     }
-    for (id@Id(g) <- md.contract.modifies.ids if !modParams.contains(g)) {
-      premiseSubstMap += newId(g, id.tipe) -> newId(g + "_old", id.tipe)
-      postSubstMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
+    for (g <- md.contract.modifies.ids if !modParams.contains(g.value)) {
+      val g_old = oldId(g)
+      val g_in = newId(g.value + "_in", g.tipe)
+      premiseSubstMap += g -> g_old
+      postSubstMap += g_in -> g_old
     }
     (hasError, make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
@@ -447,10 +453,8 @@ BackwardProofContext(unitNode: Program,
     def keep(e: Exp) = {
       var r = true
       Visitor.build({
-        case Id(value) =>
-          if (value.endsWith("_old") ||
-            value.endsWith("_result") || value == "q_i")
-            r = false
+        case Id(value) if value.endsWith("_old") || value.endsWith("_result") =>
+          r = false
           false
       })(e)
       r
