@@ -43,7 +43,7 @@ final class Z3TestDefProvider(tf: TestFramework)
     }
 
   def check(filename: String): Boolean = {
-    val uri = s"example/$filename.logika"
+    val uri = s"example/z3/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)

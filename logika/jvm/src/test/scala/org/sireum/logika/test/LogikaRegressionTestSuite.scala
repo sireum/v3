@@ -34,7 +34,7 @@ import org.sireum.logika.test._
   Array(
     classOf[SequentTest],
     classOf[Z3Test],
-    classOf[ProgramTest]
+    classOf[ForwardProgramTest]
   )
 )
 final class LogikaRegressionTestSuite

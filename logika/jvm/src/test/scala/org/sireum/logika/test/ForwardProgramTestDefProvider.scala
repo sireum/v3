@@ -33,7 +33,7 @@ import org.sireum.test._
 import org.sireum.util._
 import org.sireum.util.jvm.FileUtil
 
-final class ProgramTestDefProvider(tf: TestFramework)
+final class ForwardProgramTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] =
@@ -64,7 +64,7 @@ final class ProgramTestDefProvider(tf: TestFramework)
       ConditionTest("bank", check("bank"))
 
   def check(filename: String): Boolean = {
-    val uri = s"example/$filename.logika"
+    val uri = s"example/forward/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)

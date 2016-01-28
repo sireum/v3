@@ -32,15 +32,15 @@ import org.junit.runners.Parameterized.Parameters
 import org.sireum.test.{JUnitTestFramework, TestDef}
 
 @RunWith(value = classOf[Parameterized])
-final class ProgramTest(name: String, td: TestDef) {
+final class ForwardProgramTest(name: String, td: TestDef) {
   @Test
   def test(): Unit = {
     td.test(JUnitTestFramework)
   }
 }
 
-object ProgramTest {
-  val provider = new ProgramTestDefProvider(JUnitTestFramework)
+object ForwardProgramTest {
+  val provider = new ForwardProgramTestDefProvider(JUnitTestFramework)
 
   @Parameters(name = "{0}")
   def parameters = {
