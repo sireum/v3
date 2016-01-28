@@ -1,16 +1,16 @@
 /*
  Copyright (c) 2016, Robby, Kansas State University
  All rights reserved.
-
+ 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
-
+ 
  1. Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
  2. Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
-
+ 
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,20 +23,32 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.logika.test
+package org.sireum.logika
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika.test._
+import org.sireum.logika.ast._
+import org.sireum.util._
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[Z3Test],
-    classOf[ForwardProgramTest],
-    classOf[BackwardProgramTest],
-    classOf[SymExeProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+private final case class
+SequentProofContext(unitNode: UnitNode,
+                    autoEnabled: Boolean,
+                    timeoutInMs: Int,
+                    checkSat: Boolean,
+                    hintEnabled: Boolean,
+                    inscribeSummoningsEnabled: Boolean,
+                    invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
+                    premises: ILinkedSet[Exp] = ilinkedSetEmpty,
+                    vars: ISet[String] = isetEmpty,
+                    facts: IMap[String, Exp] = imapEmpty,
+                    provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+                    declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
+                    methodOpt: Option[MethodDecl] = None,
+                    satFacts: Boolean = true)
+                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[SequentProofContext] {
+
+  def make(vars: ISet[String],
+           provedSteps: IMap[Natural, ProofStep],
+           declaredStepNumbers: IMap[Natural, LocationInfo],
+           premises: ILinkedSet[Exp]): SequentProofContext =
+    copy(vars = vars, provedSteps = provedSteps,
+      declaredStepNumbers = declaredStepNumbers, premises = premises)
+}

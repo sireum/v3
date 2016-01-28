@@ -29,21 +29,21 @@ import org.sireum.logika.ast._
 import org.sireum.util._
 
 private final case class
-ForwardProofContext(unitNode: Program,
-                    autoEnabled: Boolean,
-                    timeoutInMs: Int,
-                    checkSat: Boolean,
-                    hintEnabled: Boolean,
-                    inscribeSummoningsEnabled: Boolean,
-                    invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
-                    premises: ILinkedSet[Exp] = ilinkedSetEmpty,
-                    vars: ISet[String] = isetEmpty,
-                    facts: IMap[String, Exp] = imapEmpty,
-                    provedSteps: IMap[Natural, ProofStep] = imapEmpty,
-                    declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                    methodOpt: Option[MethodDecl] = None,
-                    satFacts: Boolean = true)
-                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[ForwardProofContext] {
+SymExeProofContext(unitNode: Program,
+                   autoEnabled: Boolean,
+                   timeoutInMs: Int,
+                   checkSat: Boolean,
+                   hintEnabled: Boolean,
+                   inscribeSummoningsEnabled: Boolean,
+                   invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
+                   premises: ILinkedSet[Exp] = ilinkedSetEmpty,
+                   vars: ISet[String] = isetEmpty,
+                   facts: IMap[String, Exp] = imapEmpty,
+                   provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+                   declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
+                   methodOpt: Option[MethodDecl] = None,
+                   satFacts: Boolean = true)
+                  (implicit reporter: AccumulatingTagReporter) extends ProofContext[SymExeProofContext] {
 
   def check: Boolean = {
     val program = unitNode
@@ -69,8 +69,8 @@ ForwardProofContext(unitNode: Program,
     copy(facts = facts, satFacts = isSat).check(program.block).isDefined
   }
 
-  def check(block: Block): Option[ForwardProofContext] = {
-    var pcOpt: Option[ForwardProofContext] = Some(this)
+  def check(block: Block): Option[SymExeProofContext] = {
+    var pcOpt: Option[SymExeProofContext] = Some(this)
     for (stmt <- block.stmts if pcOpt.isDefined) {
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
@@ -80,7 +80,8 @@ ForwardProofContext(unitNode: Program,
     pcOpt
   }
 
-  def check(stmt: Stmt): Option[ForwardProofContext] = {
+  // TODO: Rework this
+  def check(stmt: Stmt): Option[SymExeProofContext] = {
     var hasError = false
     if (!stmt.isInstanceOf[ProofElementStmt] &&
       !stmt.isInstanceOf[MethodDecl]) {
@@ -355,17 +356,17 @@ ForwardProofContext(unitNode: Program,
     if (hasError) None else pcOpt
   }
 
-  def assign(id: Id, exp: Exp): Option[ForwardProofContext] = {
+  def assign(id: Id, exp: Exp): Option[SymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
-  def assign(id: Id): Option[ForwardProofContext] = {
+  def assign(id: Id): Option[SymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
     Some(copy(premises = premises.map(sst)))
   }
 
-  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, ForwardProofContext) = {
+  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, SymExeProofContext) = {
     var hasError = false
     val md = a.declOpt.get
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
@@ -438,7 +439,7 @@ ForwardProofContext(unitNode: Program,
     ))
   }
 
-  def cleanup: ForwardProofContext =
+  def cleanup: SymExeProofContext =
     copy(premises = filter(premises), provedSteps = imapEmpty,
       declaredStepNumbers = imapEmpty)
 
@@ -460,7 +461,7 @@ ForwardProofContext(unitNode: Program,
   def make(vars: ISet[String],
            provedSteps: IMap[Natural, ProofStep],
            declaredStepNumbers: IMap[Natural, LocationInfo],
-           premises: ILinkedSet[Exp]): ForwardProofContext =
+           premises: ILinkedSet[Exp]): SymExeProofContext =
     copy(vars = vars, provedSteps = provedSteps,
       declaredStepNumbers = declaredStepNumbers, premises = premises)
 }

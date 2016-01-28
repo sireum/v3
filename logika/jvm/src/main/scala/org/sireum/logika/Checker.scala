@@ -53,12 +53,12 @@ object Checker {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*)) {
         if (m.lastOnly)
-          check(programs.last, m.autoEnabled, m.timeout, m.checkSatEnabled, m.hintEnabled,
-            m.inscribeSummoningsEnabled)
+          check(programs.last, m.kind, m.autoEnabled, m.timeout, m.checkSatEnabled,
+            m.hintEnabled, m.inscribeSummoningsEnabled)
         else
           for (program <- programs)
-            check(program, m.autoEnabled, m.timeout, m.checkSatEnabled, m.hintEnabled,
-              m.inscribeSummoningsEnabled)
+            check(program, m.kind, m.autoEnabled, m.timeout, m.checkSatEnabled,
+              m.hintEnabled, m.inscribeSummoningsEnabled)
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
           if (m.proofs.size > 1) "The programs are ill-formed."
@@ -69,14 +69,15 @@ object Checker {
       if (m.lastOnly)
         reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
       for (sequent <- sequents)
-        check(sequent, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
+        check(sequent, m.kind, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
     } else {
       reporter.report(ErrorMessage("AST", "Cannot check mixed programs and sequents."))
     }
     message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
   }
 
-  final def check(unitNode: UnitNode, autoEnabled: Boolean = false,
+  final def check(unitNode: UnitNode, checkerKind: message.CheckerKind.Value,
+                  autoEnabled: Boolean = false,
                   timeoutInMs: Int = 2000, checkSat: Boolean = false,
                   hintEnabled: Boolean = false,
                   inscribeSummoningsEnabled: Boolean = false)(
@@ -91,7 +92,7 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          var r = ForwardProofContext(s, autoEnabled, timeoutInMs,
+          var r = new SequentProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled,
             premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
@@ -129,9 +130,17 @@ object Checker {
       if (!hasProof) {
         reporter.report(WarningMessage(kind, "No programming logic proof element found."))
       }
-      val r =
-        ForwardProofContext(program, autoEnabled, timeoutInMs,
-          checkSat, hintEnabled, inscribeSummoningsEnabled).check(program)
+      val r = checkerKind match {
+        case message.CheckerKind.Forward =>
+          ForwardProofContext(program, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+        case message.CheckerKind.Backward =>
+          BackwardProofContext(program, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+        case message.CheckerKind.SymExe =>
+          SymExeProofContext(program, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+      }
       if (r) {
         if (hasProof)
           reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))

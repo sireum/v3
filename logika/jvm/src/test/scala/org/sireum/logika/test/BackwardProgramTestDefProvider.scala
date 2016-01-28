@@ -25,18 +25,48 @@
 
 package org.sireum.logika.test
 
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika.test._
+import java.io.InputStreamReader
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[SequentTest],
-    classOf[Z3Test],
-    classOf[ForwardProgramTest],
-    classOf[BackwardProgramTest],
-    classOf[SymExeProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+import org.sireum.logika.Checker
+import org.sireum.logika.message.{Check, CheckerKind, ProofFile}
+import org.sireum.test._
+import org.sireum.util._
+import org.sireum.util.jvm.FileUtil
+
+final class BackwardProgramTestDefProvider(tf: TestFramework)
+  extends TestDefProvider {
+
+  override def testDefs: ISeq[TestDef] =
+    (1 to 1).toVector.map { x =>
+      val name = f"assignment-$x%02d"
+      ConditionTest(name, check(name))
+    }
+
+  def check(filename: String): Boolean = {
+    val uri = s"example/backward/$filename.logika"
+    val r = new InputStreamReader(
+      getClass.getResourceAsStream(uri))
+    val text = FileUtil.readFile(r)
+    r.close()
+    implicit val reporter = new ConsoleTagReporter {
+      override def info(msg: String): Unit = {
+      }
+
+      override def warn(msg: String): Unit = {
+      }
+    }
+    Checker.check(
+      Check(requestId = "",
+        isBackground = false,
+        kind = CheckerKind.Backward,
+        hintEnabled = true,
+        inscribeSummoningsEnabled = true,
+        proofs = ivector(ProofFile(Some(uri), text)),
+        lastOnly = false,
+        autoEnabled = false,
+        timeout = 2000,
+        checkSatEnabled = true,
+        bitWidth = 0))
+    !reporter.hasError
+  }
+}
