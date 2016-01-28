@@ -47,14 +47,22 @@ case object Terminate extends InputMessage
 
 final case class Check(requestId: String,
                        isBackground: Boolean,
+                       kind: CheckerKind.Value,
                        hintEnabled: Boolean,
                        inscribeSummoningsEnabled: Boolean,
                        proofs: Vector[ProofFile],
                        lastOnly: Boolean,
                        autoEnabled: Boolean,
                        timeout: Int,
-                       checkSatEnabled: Boolean)
+                       checkSatEnabled: Boolean,
+                       bitWidth: Int)
   extends InputMessage
+
+object CheckerKind extends Enum {
+  final val Forward = Value("forward")
+  final val Backward = Value("backward")
+  final val SymExe = Value("symexe")
+}
 
 final case class ProofFile(fileUriOpt: Option[FileResourceUri],
                            content: String) extends InputMessage

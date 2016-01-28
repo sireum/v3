@@ -27,7 +27,7 @@ package org.sireum.logika.test
 
 import org.sireum.logika.Checker
 import org.sireum.logika.ast._
-import org.sireum.logika.message.{ProofFile, Check}
+import org.sireum.logika.message.{CheckerKind, ProofFile, Check}
 import org.sireum.test._
 import org.sireum.util._
 
@@ -482,13 +482,15 @@ final class SequentTestDefProvider(tf: TestFramework)
     }
     Checker.check(Check("",
       isBackground = false,
+      kind = CheckerKind.Forward,
       hintEnabled = false,
       inscribeSummoningsEnabled = false,
       proofs = ivector(ProofFile(None, text)),
       lastOnly = false,
       autoEnabled = false,
       timeout = 2000,
-      checkSatEnabled = false))
+      checkSatEnabled = false,
+      bitWidth = 0))
     !reporter.hasError
   }
 }

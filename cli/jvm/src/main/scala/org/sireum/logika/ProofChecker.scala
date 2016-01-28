@@ -89,13 +89,15 @@ class ProofChecker(option: LogikaOption,
     Checker.check(message.Check(
       requestId = "",
       isBackground = false,
+      kind = message.CheckerKind.Forward,
       hintEnabled = false,
       inscribeSummoningsEnabled = false,
       proofs = proofs,
       lastOnly = option.last,
       autoEnabled = option.auto,
       timeout = option.timeout,
-      checkSatEnabled = option.sat)
+      checkSatEnabled = option.sat,
+      bitWidth = 0)
     )
 
     if (hasError) return false

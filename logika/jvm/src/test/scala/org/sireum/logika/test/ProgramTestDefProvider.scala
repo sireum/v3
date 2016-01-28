@@ -28,7 +28,7 @@ package org.sireum.logika.test
 import java.io.InputStreamReader
 
 import org.sireum.logika.Checker
-import org.sireum.logika.message.{ProofFile, Check}
+import org.sireum.logika.message.{CheckerKind, ProofFile, Check}
 import org.sireum.test._
 import org.sireum.util._
 import org.sireum.util.jvm.FileUtil
@@ -79,13 +79,15 @@ final class ProgramTestDefProvider(tf: TestFramework)
     Checker.check(
       Check(requestId = "",
         isBackground = false,
+        kind = CheckerKind.Forward,
         hintEnabled = true,
         inscribeSummoningsEnabled = true,
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = false,
         timeout = 2000,
-        checkSatEnabled = true))
+        checkSatEnabled = true,
+        bitWidth = 0))
     !reporter.hasError
   }
 }
