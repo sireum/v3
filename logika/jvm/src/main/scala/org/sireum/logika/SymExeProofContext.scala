@@ -28,6 +28,12 @@ package org.sireum.logika
 import org.sireum.logika.ast._
 import org.sireum.util._
 
+private object SymExeProofContext {
+  private val varCounter = new scala.util.DynamicVariable(mmapEmpty[String, Natural])
+}
+
+import SymExeProofContext._
+
 private final case class
 SymExeProofContext(unitNode: Program,
                    autoEnabled: Boolean,
@@ -44,6 +50,7 @@ SymExeProofContext(unitNode: Program,
                    methodOpt: Option[MethodDecl] = None,
                    satFacts: Boolean = true)
                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[SymExeProofContext] {
+
 
   def check: Boolean = {
     val program = unitNode
@@ -66,7 +73,9 @@ SymExeProofContext(unitNode: Program,
         "Could not check satisfiability of the set of facts due to timeout."
       }
     )) return false
-    copy(facts = facts, satFacts = isSat).check(program.block).isDefined
+    varCounter.withValue(mmapEmpty) {
+      copy(facts = facts, satFacts = isSat).check(program.block).isDefined
+    }
   }
 
   def check(block: Block): Option[SymExeProofContext] = {
@@ -80,7 +89,11 @@ SymExeProofContext(unitNode: Program,
     pcOpt
   }
 
-  // TODO: Rework this
+  def oldId(id: Id): Id = {
+    val c = varCounter.value.getOrElseUpdate(id.value, 0)
+    newId(s"${id.value}_$c", id.tipe)
+  }
+
   def check(stmt: Stmt): Option[SymExeProofContext] = {
     var hasError = false
     if (!stmt.isInstanceOf[ProofElementStmt] &&
@@ -92,9 +105,7 @@ SymExeProofContext(unitNode: Program,
         check(proof) match {
           case Some(pc2) =>
             Some(pc2.copy(
-              premises = filter(
-                (if (autoEnabled) premises else ilinkedSetEmpty) ++
-                  extractClaims(proof, reverse = false)),
+              premises = filter(premises ++ extractClaims(proof, reverse = false)),
               provedSteps = imapEmpty))
           case _ => None
         }
@@ -115,24 +126,13 @@ SymExeProofContext(unitNode: Program,
         Some(copy(premises =
           filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
       case Assert(e) =>
-        if (autoEnabled) {
-          if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
-            error(stmt, s"Could not automatically deduce the assertion validity.")
-            hasError = true
-            checkSat("", nodeLocMap(stmt), ivector(e),
-              unsatMsg = s"The assertion is unsatisfiable.",
-              unknownMsg = s"The assertion might not be satisfiable.",
-              timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
-          }
-        } else {
-          if (!premises.contains(e)) {
-            error(e, s"The assertion has not been proven.")
-            hasError = true
-            checkSat("", nodeLocMap(stmt), ivector(e),
-              unsatMsg = s"The assertion is unsatisfiable.",
-              unknownMsg = s"The assertion might not be satisfiable.",
-              timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
-          }
+        if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
+          error(stmt, s"Could not automatically deduce the assertion validity.")
+          hasError = true
+          checkSat("", nodeLocMap(stmt), ivector(e),
+            unsatMsg = s"The assertion is unsatisfiable.",
+            unknownMsg = s"The assertion might not be satisfiable.",
+            timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
         }
         Some(copy(premises = premises + e))
       case Assume(e) =>
@@ -143,7 +143,7 @@ SymExeProofContext(unitNode: Program,
         ) || hasError
         Some(copy(premises = premises + e))
       case SeqAssign(id, index, exp) =>
-        val old = newId(id.value + "_old", id.tipe)
+        val old = oldId(id)
         val m = imapEmpty[Node, Node] + (id -> old)
         val qVar = newId("q_i", tipe.Z)
         Some(copy(premises =
@@ -224,8 +224,7 @@ SymExeProofContext(unitNode: Program,
             } due to timeout."
           ) || hasError
         val modifiedIds = stmt.contract.modifies.ids.toSet
-        val mods = modifiedIds.map(id =>
-          Eq(id, newId(id.value + "_in", id.tipe)))
+        val mods = modifiedIds.map(id => Eq(id, newId(id.value + "_in", id.tipe)))
         copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, methodOpt = Some(stmt)).
           check(stmt.block) match {
           case Some(pc2) =>
@@ -241,57 +240,32 @@ SymExeProofContext(unitNode: Program,
               })(e)
               if (modified) modifiedInvariants += e
             }
-            if (autoEnabled) {
-              val ps = pc2.premises ++ pc2.facts.values
-              for (e <- modifiedInvariants)
-                if (!isValid(s"global invariant", nodeLocMap(stmt), ps, ivector(e))) {
-                  error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            } else {
-              for (e <- modifiedInvariants)
-                if (!pc2.premises.contains(e)) {
-                  error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            }
+            val ps = pc2.premises ++ pc2.facts.values
+            for (e <- modifiedInvariants)
+              if (!isValid(s"global invariant", nodeLocMap(stmt), ps, ivector(e))) {
+                error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
+                hasError = true
+              }
             val post = stmt.contract.ensures.exps
             val postSubstMap = stmt.returnExpOpt match {
               case Some(e) => imapEmpty[Node, Node] + (Result() -> e)
               case _ => imapEmpty[Node, Node]
             }
-            if (autoEnabled) {
-              val ps = pc2.premises ++ pc2.facts.values
-              for (e <- post)
-                if (!isValid("postcondition", nodeLocMap(e), ps, ivector(subst(e, postSubstMap)))) {
-                  error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            } else {
-              for (e <- post)
-                if (!pc2.premises.contains(subst(e, postSubstMap))) {
-                  error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
-                  hasError = true
-                }
-            }
+            for (e <- post)
+              if (!isValid("postcondition", nodeLocMap(e), ps, ivector(subst(e, postSubstMap)))) {
+                error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
+                hasError = true
+              }
           case _ => hasError = true
         }
         Some(this.cleanup)
       case InvStmt(inv) =>
-        if (autoEnabled) {
-          val ps = premises ++ facts.values
-          for (e <- inv.exps)
-            if (!isValid("", nodeLocMap(e), ps, ivector(e))) {
-              error(e, s"Could not automatically deduce the global invariant.")
-              hasError = true
-            }
-        } else {
-          for (e <- inv.exps)
-            if (!premises.contains(e)) {
-              error(e, s"The global invariant has not been proven.")
-              hasError = true
-            }
-        }
+        val ps = premises ++ facts.values
+        for (e <- inv.exps)
+          if (!isValid("", nodeLocMap(e), ps, ivector(e))) {
+            error(e, s"Could not automatically deduce the global invariant.")
+            hasError = true
+          }
         if (hasError)
           checkSat("global invariant", nodeLocMap(stmt),
             (if (satFacts) facts.values else ivectorEmpty) ++ inv.exps,
@@ -302,50 +276,32 @@ SymExeProofContext(unitNode: Program,
       case _: FactStmt => Some(this)
       case While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
-        if (autoEnabled) {
-          val ps = premises ++ facts.values
-          for (e <- es)
-            if (!isValid("loop invariant (beginning)", nodeLocMap(e), ps, ivector(e))) {
-              error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
-              hasError = true
-            }
-        } else {
-          for (e <- es)
-            if (!premises.contains(e)) {
-              error(e, s"The loop invariant has not been proved at the beginning of the loop.")
-              hasError = true
-            }
-        }
-        var ps = ilinkedSetEmpty ++ es
-        if (autoEnabled) {
-          val modifiedIds = loopInv.modifies.ids.toSet
-          for (premise <- premises) {
-            var propagate = true
-            Visitor.build({
-              case id: Id =>
-                if (modifiedIds.contains(id)) propagate = false
-                false
-            })(premise)
-            if (propagate) ps += premise
+        val lps = premises ++ facts.values
+        for (e <- es)
+          if (!isValid("loop invariant (beginning)", nodeLocMap(e), lps, ivector(e))) {
+            error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
+            hasError = true
           }
+        var ps = ilinkedSetEmpty ++ es
+        val modifiedIds = loopInv.modifies.ids.toSet
+        for (premise <- premises) {
+          var propagate = true
+          Visitor.build({
+            case id: Id =>
+              if (modifiedIds.contains(id)) propagate = false
+              false
+          })(premise)
+          if (propagate) ps += premise
         }
         copy(premises = ps + exp).
           check(loopBlock) match {
           case Some(pc2) =>
-            if (autoEnabled) {
-              val ps = pc2.premises ++ pc2.facts.values
-              for (e <- es)
-                if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
-                  error(e, s"Could not deduce the loop invariant at the end of the loop.")
-                  hasError = true
-                }
-            } else {
-              for (e <- es)
-                if (!pc2.premises.contains(e)) {
-                  error(e, s"The loop invariant has not been proved at the end of the loop.")
-                  hasError = true
-                }
-            }
+            val ps = pc2.premises ++ pc2.facts.values
+            for (e <- es)
+              if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
+                error(e, s"Could not deduce the loop invariant at the end of the loop.")
+                hasError = true
+              }
             Some(copy(premises = ps + Not(exp)))
           case _ => None
         }
@@ -357,12 +313,12 @@ SymExeProofContext(unitNode: Program,
   }
 
   def assign(id: Id, exp: Exp): Option[SymExeProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
   def assign(id: Id): Option[SymExeProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> newId(id.value + "_old", id.tipe)))
+    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst)))
   }
 
@@ -383,37 +339,22 @@ SymExeProofContext(unitNode: Program,
       })(inv)
       if (mod) invs :+= inv
     }
-    if (autoEnabled) {
-      val ps = premises ++ facts.values
-      for (inv <- invs if methodOpt.isDefined)
-        if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
-          val li = nodeLocMap(inv)
-          error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-          hasError = true
-        }
-      for (pre <- md.contract.requires.exps)
-        if (!isValid("precondition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
-          val li = nodeLocMap(pre)
-          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-          hasError = true
-        }
-    } else {
-      for (inv <- invs)
-        if (!premises.contains(inv)) {
-          val li = nodeLocMap(inv)
-          error(a, s"The invariant defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
-          hasError = true
-        }
-      for (pre <- md.contract.requires.exps)
-        if (!premises.contains(subst(pre, postSubstMap))) {
-          val li = nodeLocMap(pre)
-          error(a, s"The pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
-          hasError = true
-        }
-    }
+    val ps = premises ++ facts.values
+    for (inv <- invs if methodOpt.isDefined)
+      if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
+        val li = nodeLocMap(inv)
+        error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
+        hasError = true
+      }
+    for (pre <- md.contract.requires.exps)
+      if (!isValid("precondition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
+        val li = nodeLocMap(pre)
+        error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
+        hasError = true
+      }
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
-        (x, imapEmpty[Node, Node] + (x -> newId(x.value + "_old", x.tipe)))
+        (x, imapEmpty[Node, Node] + (x -> oldId(x)))
       case _ =>
         (newId(md.id.value + "_result",
           md.id.tipe.asInstanceOf[tipe.Fn].result),
@@ -422,16 +363,20 @@ SymExeProofContext(unitNode: Program,
     var premiseSubstMap = psm
     postSubstMap += Result() -> lhs
     var modParams = isetEmpty[String]
-    for ((pid@Id(p), arg@Id(x)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p)) {
-      modParams += p
-      premiseSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
-      postSubstMap += newId(x, arg.tipe) -> newId(x + "_old", arg.tipe)
-      postSubstMap += newId(p, pid.tipe) -> newId(x, arg.tipe)
-      postSubstMap += newId(p + "_in", pid.tipe) -> newId(x + "_old", arg.tipe)
+    for ((p, arg@Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
+      modParams += p.value
+      val arg_old = oldId(arg)
+      val p_in = newId(p.value + "_in", p.tipe)
+      premiseSubstMap += arg -> arg_old
+      postSubstMap += arg -> arg_old
+      postSubstMap += p -> arg
+      postSubstMap += p_in -> oldId(arg)
     }
-    for (id@Id(g) <- md.contract.modifies.ids if !modParams.contains(g)) {
-      premiseSubstMap += newId(g, id.tipe) -> newId(g + "_old", id.tipe)
-      postSubstMap += newId(g + "_in", id.tipe) -> newId(g + "_old", id.tipe)
+    for (g <- md.contract.modifies.ids if !modParams.contains(g.value)) {
+      val g_old = oldId(g)
+      val g_in = newId(g.value + "_in", g.tipe)
+      premiseSubstMap += g -> g_old
+      postSubstMap += g_in -> g_old
     }
     (hasError, make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
@@ -447,10 +392,8 @@ SymExeProofContext(unitNode: Program,
     def keep(e: Exp) = {
       var r = true
       Visitor.build({
-        case Id(value) =>
-          if (value.endsWith("_old") ||
-            value.endsWith("_result") || value == "q_i")
-            r = false
+        case Id(value) if value.endsWith("_result") =>
+          r = false
           false
       })(e)
       r

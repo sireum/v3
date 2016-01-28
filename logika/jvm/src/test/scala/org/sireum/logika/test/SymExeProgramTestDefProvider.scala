@@ -40,7 +40,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
     (1 to 1).toVector.map { x =>
       val name = f"assignment-$x%02d"
       ConditionTest(name, check(name))
-    }
+    } :+ ConditionTest("square", check("square"))
 
   def check(filename: String): Boolean = {
     val uri = s"example/symexe/$filename.logika"
@@ -63,7 +63,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         inscribeSummoningsEnabled = true,
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
-        autoEnabled = false,
+        autoEnabled = true,
         timeout = 2000,
         checkSatEnabled = true,
         bitWidth = 0))

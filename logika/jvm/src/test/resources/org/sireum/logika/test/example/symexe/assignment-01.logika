@@ -1,5 +1,9 @@
 import org.sireum.logika._
 
-val x: Z = 0
+var x: Z = 0
 
 val y: Z = 2 + x
+
+x = x + 3
+
+l"""⊢ y == 2 + x - 3, x == 3"""

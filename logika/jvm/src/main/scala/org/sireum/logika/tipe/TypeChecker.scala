@@ -417,19 +417,37 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   def tipe(id: Id): Option[Tipe] = typeMap.get(id.value) match {
     case Some((t, _, _)) => Some(t)
     case _ =>
-      if (id.value.endsWith("_old")) {
-        typeMap.get(id.value.substring(0, id.value.length - 4)) match {
-          case Some((t, _, _)) => return Some(t)
+      nameOfSymExeOld(id.value) match {
+        case Some(x) => typeMap.get(x) match {
+          case Some((t, _, _)) => Some(t)
           case _ =>
+            error(id, s"Undeclared identifier ${id.value}.")
+            None
         }
-      } else if (id.value.endsWith("_in")) {
-        typeMap.get(id.value.substring(0, id.value.length - 3)) match {
-          case Some((t, _, _)) => return Some(t)
-          case _ =>
-        }
+        case _ =>
+          if (id.value.endsWith("_old")) {
+            typeMap.get(id.value.substring(0, id.value.length - 4)) match {
+              case Some((t, _, _)) => return Some(t)
+              case _ =>
+            }
+          } else if (id.value.endsWith("_in")) {
+            typeMap.get(id.value.substring(0, id.value.length - 3)) match {
+              case Some((t, _, _)) => return Some(t)
+              case _ =>
+            }
+          }
+          error(id, s"Undeclared identifier ${id.value}.")
+          None
       }
-      error(id, s"Undeclared identifier ${id.value}.")
-      None
+  }
+
+  def nameOfSymExeOld(x: String): Option[String] = {
+    val i = x.indexOf('_')
+    if (i < 0) return None
+    for (j <- i until x.length)
+      if (!x.charAt(j).isDigit)
+        return None
+    Some(x.substring(0, i))
   }
 
   def warn(n: Node, msg: String): Unit =

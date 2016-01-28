@@ -39,9 +39,10 @@ object Checker {
 
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
+    val autoEnabled = m.autoEnabled || m.kind == message.CheckerKind.SymExe
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      Builder(fileUriOpt, text, m.autoEnabled).foreach(unitNodes :+= _)
+      Builder(fileUriOpt, text, autoEnabled).foreach(unitNodes :+= _)
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
@@ -53,11 +54,11 @@ object Checker {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*)) {
         if (m.lastOnly)
-          check(programs.last, m.kind, m.autoEnabled, m.timeout, m.checkSatEnabled,
+          check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
             m.hintEnabled, m.inscribeSummoningsEnabled)
         else
           for (program <- programs)
-            check(program, m.kind, m.autoEnabled, m.timeout, m.checkSatEnabled,
+            check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
               m.hintEnabled, m.inscribeSummoningsEnabled)
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
@@ -117,6 +118,7 @@ object Checker {
       implicit val nodeLocMap = program.nodeLocMap
       var hasProof = false
       Visitor.build({
+        case _: SequentStmt => hasProof = true; false
         case _: ProofStmt => hasProof = true; false
         case InvStmt(inv) if inv.exps.nonEmpty =>
           hasProof = true; false
