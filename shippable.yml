@@ -10,5 +10,5 @@ notifications:
   email:
     recipients:
       - v3@sireum.org
-    on_success: change
+    on_success: never
     on_failure: always
