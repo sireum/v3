@@ -552,7 +552,9 @@ final case class IntLit(value: String) extends PrimaryExp {
 }
 
 final case class IntMin(bitWidth: Int) extends PrimaryExp {
-  val value = BigInt(-2).pow(bitWidth - 1)
+  val value =
+    if (bitWidth == 0) BigInt(0)
+    else BigInt(-2).pow(bitWidth - 1)
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
@@ -560,7 +562,9 @@ final case class IntMin(bitWidth: Int) extends PrimaryExp {
 }
 
 final case class IntMax(bitWidth: Int) extends PrimaryExp {
-  val value = BigInt(2).pow(bitWidth - 1) - 1
+  val value =
+    if (bitWidth == 0) BigInt(0)
+    else BigInt(2).pow(bitWidth - 1) - 1
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
