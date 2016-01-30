@@ -42,7 +42,7 @@ object Checker {
     val autoEnabled = m.autoEnabled || m.kind == message.CheckerKind.SymExe
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      Builder(fileUriOpt, text, autoEnabled).foreach(unitNodes :+= _)
+      Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
@@ -55,11 +55,11 @@ object Checker {
       if (TypeChecker.check(programs: _*)) {
         if (m.lastOnly)
           check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-            m.hintEnabled, m.inscribeSummoningsEnabled)
+            m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
         else
           for (program <- programs)
             check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-              m.hintEnabled, m.inscribeSummoningsEnabled)
+              m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
           if (m.proofs.size > 1) "The programs are ill-formed."
@@ -81,7 +81,8 @@ object Checker {
                   autoEnabled: Boolean = false,
                   timeoutInMs: Int = 2000, checkSat: Boolean = false,
                   hintEnabled: Boolean = false,
-                  inscribeSummoningsEnabled: Boolean = false)(
+                  inscribeSummoningsEnabled: Boolean = false,
+                  bitWidth: Int = 0)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -141,7 +142,7 @@ object Checker {
             checkSat, hintEnabled, inscribeSummoningsEnabled).check
         case message.CheckerKind.SymExe =>
           SymExeProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, bitWidth).check
       }
       if (r) {
         if (hasProof)
@@ -811,12 +812,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     })
   }
 
-  def checkRuntimeError(stmt: Stmt): Boolean = {
+  def hasRuntimeError(stmt: Stmt): Boolean = {
     var hasError = false
+    lazy val ps = premises ++ facts.values
     def divisor(e: Exp): Boolean = {
       val req = Ne(e, Checker.zero)
       if (autoEnabled) {
-        if (!isValid("division", nodeLocMap(e), premises ++ facts.values, ivector(req))) {
+        if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
           hasError = true
         }
@@ -830,7 +832,6 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       val req1 = Le(Checker.zero, e)
       val req2 = Lt(e, Size(id))
       if (autoEnabled) {
-        val ps = premises ++ facts.values
         if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
           hasError = true
           error(e, "Could not automatically deduce that the sequence index is non-negative.")

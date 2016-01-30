@@ -166,6 +166,10 @@ $s"""))
         }
       case IntLit(value) =>
         stg.getInstanceOf("int").add("value", value)
+      case e: IntMin =>
+        stg.getInstanceOf("int").add("value", s"(- ${-e.value})")
+      case e: IntMax =>
+        stg.getInstanceOf("int").add("value", e.value)
       case Prepend(left, right) =>
         val c = zs()
         val a = translate(right)

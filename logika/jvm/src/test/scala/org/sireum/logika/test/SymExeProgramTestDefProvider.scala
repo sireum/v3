@@ -39,10 +39,13 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] =
     (1 to 1).toVector.map { x =>
       val name = f"assignment-$x%02d"
-      ConditionTest(name, check(name))
-    } :+ ConditionTest("square", check("square"))
+      ConditionTest(name, check(name, 0))
+    } :+
+      ConditionTest("square", check("square", 0)) :+
+      ConditionTest("max", check("max", 0)) :+
+      ConditionTest("abs", check("abs", 8))
 
-  def check(filename: String): Boolean = {
+  def check(filename: String, bitWidth: Int): Boolean = {
     val uri = s"example/symexe/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
@@ -66,7 +69,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         autoEnabled = true,
         timeout = 2000,
         checkSatEnabled = true,
-        bitWidth = 0))
+        bitWidth = bitWidth))
     !reporter.hasError
   }
 }

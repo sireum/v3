@@ -86,7 +86,7 @@ ForwardProofContext(unitNode: Program,
     var hasError = false
     if (!stmt.isInstanceOf[ProofElementStmt] &&
       !stmt.isInstanceOf[MethodDecl]) {
-      hasError = checkRuntimeError(stmt) || hasError
+      hasError = hasRuntimeError(stmt) || hasError
     }
     val pcOpt = stmt match {
       case ProofStmt(proof) =>

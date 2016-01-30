@@ -1,0 +1,12 @@
+import org.sireum.logika._
+
+def abs(n: Z): Z = {
+  l"""{ requires n > Z.Min }"""
+  var r: Z = 0
+  if (n > 0) {
+    r = n
+  } else {
+    r = -n
+  }
+  return n
+}

@@ -41,7 +41,7 @@ object Node {
     var m = LogicMode.Propositional
     Visitor.build({
       case _: IntType | _: BooleanType | _: IntSeqType |
-           _: IntLit | _: SeqLit |
+           _: IntLit | _: IntMin | _: IntMax | _: SeqLit |
            _: Mul | _: Div | _: Rem | _: Add | _: Sub |
            _: Lt | _: Le | _: Gt | _: Ge | _: Eq | _: Ne |
            _: Minus =>
@@ -551,12 +551,30 @@ final case class IntLit(value: String) extends PrimaryExp {
   }
 }
 
+final case class IntMin(bitWidth: Int) extends PrimaryExp {
+  val value = BigInt(-2).pow(bitWidth - 1)
+
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit =
+    sb.append("Z.Min")
+}
+
+final case class IntMax(bitWidth: Int) extends PrimaryExp {
+  val value = BigInt(2).pow(bitWidth - 1) - 1
+
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit =
+    sb.append("Z.Max")
+}
+
 sealed trait BinaryExp extends Exp {
   def left: Exp
 
   def op(inProof: Boolean): String
 
   def right: Exp
+
+  var tipe: Tipe = _
 
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {
@@ -629,8 +647,6 @@ final case class Ge(left: Exp, right: Exp) extends InequalityExp {
 }
 
 sealed trait EqualityExp extends BinaryExp {
-  var tipe: Tipe = _
-
   final override val precedence = 40
 }
 
@@ -700,6 +716,8 @@ sealed trait UnaryExp extends Exp {
   def op(inProof: Boolean): String
 
   def exp: Exp
+
+  var tipe: Tipe = _
 
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {

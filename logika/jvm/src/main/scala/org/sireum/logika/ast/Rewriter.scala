@@ -202,6 +202,14 @@ object Rewriter {
       val Seq(value: String) = es
       org.sireum.logika.ast.IntLit(value)
     }),
+    ("IntMax", { es =>
+      val Seq(bitWidth: java.lang.Integer) = es
+      org.sireum.logika.ast.IntMax(bitWidth)
+    }),
+    ("IntMin", { es =>
+      val Seq(bitWidth: java.lang.Integer) = es
+      org.sireum.logika.ast.IntMin(bitWidth)
+    }),
     ("IntSeqType", { es =>
       val Seq() = es
       org.sireum.logika.ast.IntSeqType()

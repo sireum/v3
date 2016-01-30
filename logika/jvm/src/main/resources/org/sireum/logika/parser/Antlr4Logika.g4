@@ -87,6 +87,7 @@ formula
   | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
   | NUM                                                 #Int     // algebra
   | 'Z' '(' STRING ')'                                  #BigInt  // algebra
+  | 'Z' '.' ID /* ID == "Min" || ID == "Max" */         #IntMnx  // algebra
   | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
   | l=formula op=( '+' | '-' | '+:' ) NL? r=formula     #Binary  // algebra
@@ -264,6 +265,7 @@ exp
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
+  | 'Z' '.' ID /* ID == "Min" || ID == "Max" */         #IntMnxExp
   | tb=ID
     ( t='(' ( exp ( ',' exp )* )? ')'
     | '.' te=ID // te=="size" or te =="clone"

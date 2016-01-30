@@ -41,6 +41,7 @@ SymExeProofContext(unitNode: Program,
                    checkSat: Boolean,
                    hintEnabled: Boolean,
                    inscribeSummoningsEnabled: Boolean,
+                   bitWidth: Int,
                    invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
                    premises: ILinkedSet[Exp] = ilinkedSetEmpty,
                    vars: ISet[String] = isetEmpty,
@@ -51,6 +52,79 @@ SymExeProofContext(unitNode: Program,
                    satFacts: Boolean = true)
                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[SymExeProofContext] {
 
+  var validCache = imapEmpty[(ISeq[Exp], ISeq[Exp]), Boolean]
+  val unboundedBitWidth = bitWidth == 0
+  lazy val zMin = IntMin(bitWidth)
+  lazy val zMax = IntMax(bitWidth)
+
+  override def isValid(title: String, li: LocationInfo,
+                       premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+    val key = (premises.toVector, conclusions.toVector)
+    validCache.get(key) match {
+      case Some(r) => r
+      case _ =>
+        val r = super.isValid(title, li, premises, conclusions)
+        validCache += key -> r
+        r
+    }
+  }
+
+  override def hasRuntimeError(stmt: Stmt): Boolean = {
+    if (super.hasRuntimeError(stmt)) return true
+    else if (unboundedBitWidth) return false
+    val rw = ast.Rewriter.build[Exp]()({
+      case ForAll(ids, Some(TypeDomain(_: IntType)), e) =>
+        ForAll(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
+      case Exists(ids, Some(TypeDomain(_: IntType)), e) =>
+        Exists(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
+    })
+    var ps = ivectorEmpty[Exp]
+    var zIds = isetEmpty[String]
+    val visitor = Visitor.build({
+      case id: Id if id.tipe == tipe.Z && !zIds.contains(id.value) =>
+        ps :+= And(Le(zMin, id), Le(id, zMax))
+        zIds += id.value
+        false
+    })
+    for (p <- facts.values.toVector ++ premises) {
+      ps :+= rw(p)
+      visitor(p)
+    }
+    var hasError = false
+    def boundCheck(n: Node, e: Exp, min: Exp, max: Exp): Boolean = {
+      val oldPs = ps
+      val oldIds = zIds
+      visitor(e)
+      val lReq = Le(min, e)
+      if (!isValid("Z.Min", nodeLocMap(e), ps, ivector(lReq))) {
+        error(n, s"Could not automatically deduce that the operation does not underflow (${Exp.toString(min, inProof = false)}).")
+        hasError = true
+      }
+      val hReq = Le(e, max)
+      if (!isValid("Z.Max", nodeLocMap(e), ps, ivector(hReq))) {
+        error(n, s"Could not automatically deduce that the operation does not overflow (${Exp.toString(max, inProof = false)}).")
+        hasError = true
+      }
+      ps = oldPs
+      zIds = oldIds
+      true
+    }
+
+    Visitor.build({
+      case _: Block => false
+      case _: LoopInv => false
+      case a: SeqAssign => boundCheck(a, a.exp, zMin, zMax)
+      case a: Assign if a.id.tipe == tipe.Z => boundCheck(a, a.exp, zMin, zMax)
+      case a: VarDecl if a.id.tipe == tipe.Z => boundCheck(a, a.exp, zMin, zMax)
+      case e: Add if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Sub if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Mul if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Div if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Rem if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Minus if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+    })(stmt)
+    hasError
+  }
 
   def check: Boolean = {
     val program = unitNode
@@ -98,7 +172,7 @@ SymExeProofContext(unitNode: Program,
     var hasError = false
     if (!stmt.isInstanceOf[ProofElementStmt] &&
       !stmt.isInstanceOf[MethodDecl]) {
-      hasError = checkRuntimeError(stmt) || hasError
+      hasError = hasRuntimeError(stmt) || hasError
     }
     val pcOpt = stmt match {
       case ProofStmt(proof) =>

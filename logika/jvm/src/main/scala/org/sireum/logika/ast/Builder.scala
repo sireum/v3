@@ -35,7 +35,7 @@ import org.sireum.logika.parser._
 import org.sireum.util._
 import org.sireum.util.jvm.Antlr4Util._
 
-final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
+final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, bitWidth: Int)(
   implicit reporter: AccumulatingTagReporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
@@ -260,6 +260,15 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
         val r = buildInt(ctx.NUM)
         constMap(r) = BigInt(r.value)
         r
+      case ctx: IntMnxContext =>
+        val r = ctx.ID.getText match {
+          case "Min" => checkBitWidth(ctx.ID); IntMin(bitWidth)
+          case "Max" => checkBitWidth(ctx.ID); IntMax(bitWidth)
+          case s =>
+            error(ctx.ID, s"Expecting Min or Max instead of $s.")
+            IntMin(8)
+        }
+        r
       case ctx: BigIntContext => IntLit(ctx.STRING.getText)
       case ctx: SeqContext =>
         SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
@@ -478,6 +487,15 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
         val r = buildInt(ctx.NUM)
         constMap(r) = BigInt(r.value)
         r
+      case ctx: IntMnxExpContext =>
+        val r = ctx.ID.getText match {
+          case "Min" => checkBitWidth(ctx.ID); IntMin(bitWidth)
+          case "Max" => checkBitWidth(ctx.ID); IntMax(bitWidth)
+          case s =>
+            error(ctx.ID, s"Expecting Min or Max instead of $s.")
+            IntMin(8)
+        }
+        r
       case ctx: IdExpContext =>
         val r = buildId(ctx.tb)
         if (ctx.exp != null && ctx.t != null) {
@@ -488,7 +506,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
           case te if te.getText == "size" => Size(r)
           case te if te.getText == "clone" => Clone(r)
           case te =>
-            error(ctx.te, s"Expecting size or clone instead of ${te.getText}")
+            error(ctx.te, s"Expecting size or clone instead of ${te.getText}.")
             r
         }
       case ctx: BigIntExpContext => IntLit(ctx.STRING.getText)
@@ -619,18 +637,18 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String)(
     num
   }
 
-  private def checkIntMaxMin(t: Token, value: BigInt): Unit = {
-    if (value < minInt) {
-      error(t, s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
-    } else if (value > maxInt) {
-      error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
-    }
-  }
+  private def checkBitWidth(t: TerminalNode): Unit =
+    if (bitWidth == 0) error(t, s"Z.${t.getText} is used, but bit-width is unbounded.")
 
-  private def errorIf(t: Token, tText: String): Unit = {
+  private def checkIntMaxMin(t: Token, value: BigInt): Unit =
+    if (value < minInt)
+      error(t, s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+    else if (value > maxInt)
+      error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+
+  private def errorIf(t: Token, tText: String): Unit =
     if (t.getText != tText)
       error(t, s"Expecting $tText instead of ${t.getText}")
-  }
 
   private def errorIf(num: Num, id: Token, op: Token,
                       idText: String, opTexts: String*): Unit = {
@@ -671,7 +689,8 @@ object Builder {
   import org.antlr.v4.runtime._
 
   def apply(fileUriOpt: Option[FileResourceUri],
-            input: String, isAutoEnabled: Boolean, maxErrors: Natural = 0)(
+            input: String, bitWidth: Int,
+            isAutoEnabled: Boolean, maxErrors: Natural = 0)(
              implicit reporter: AccumulatingTagReporter): Option[UnitNode] = {
     class ParsingEscape extends RuntimeException
     object Mode extends Enumeration {
@@ -746,7 +765,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = false)
             val parseTree = parser.file()
             if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt, input).build(parseTree)
+              val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
               if (!reporter.hasError) Some(ast)
               else None
             } else None
@@ -754,7 +773,7 @@ object Builder {
             orientNewlines(tokenStream, isProgram = true)
             val parseTree = parser.file()
             if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt, input).build(parseTree)
+              val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
               if (!reporter.hasError) Some(ast)
               else None
             } else None
