@@ -177,7 +177,8 @@ object SireumBuild extends Build {
       "org.yaml" % "snakeyaml" % "1.16",
       "org.ow2.asm" % "asm" % "5.0.4",
       "org.ow2.asm" % "asm-commons" % "5.0.4",
-      "org.ow2.asm" % "asm-util" % "5.0.4"
+      "org.ow2.asm" % "asm-util" % "5.0.4",
+      "com.assembla.scala-incubator" % "graph-core_2.11" % "1.10.1"
     ),
     parallelExecution in Test := true,
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),

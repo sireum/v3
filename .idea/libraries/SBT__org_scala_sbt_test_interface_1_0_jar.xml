@@ -6,8 +6,6 @@
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/lib_managed/docs/org.scala-sbt/test-interface/test-interface-1.0-javadoc.jar!/" />
     </JAVADOC>
-    <SOURCES>
-      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scala-sbt/test-interface/test-interface-1.0-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

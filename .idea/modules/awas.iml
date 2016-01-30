@@ -46,5 +46,7 @@
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.16:jar" level="project" />
     <orderEntry type="module" module-name="test" exported="" />
     <orderEntry type="module" module-name="util" exported="" />
+    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-core_2.11:1.10.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalacheck:scalacheck_2.11:1.12.5:jar" level="project" />
   </component>
 </module>
