@@ -200,10 +200,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                 case _ =>
               }
             case _ =>
-              if (md.returnTypeOpt.isEmpty)
-                error(md.returnExpOpt.get, s"Unexpected return expression.")
+              error(rt, s"Expecting a return value.")
           }
         case _ =>
+          if (md.returnExpOpt.isDefined)
+            error(md.returnExpOpt.get, s"Unexpected return expression.")
           for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true, mOpt)
       }
       this
@@ -326,12 +327,14 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           error(e, s"Invoking readInt is only allowed at statement level.")
         someZ
       case _: IntLit => someZ
+      case _: IntMin => someZ
+      case _: IntMax => someZ
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
-            z(e.left); z(e.right); someZ
+            z(e.left); z(e.right); e.tipe = Z; someZ
           case _: Lt | _: Le | _: Gt | _: Ge =>
-            z(e.left); z(e.right); someB
+            z(e.left); z(e.right); e.tipe = Z; someB
           case e: EqualityExp =>
             for (t1 <- check(e.left); t2 <- check(e.right))
               if (t1 != t2) {
@@ -344,16 +347,18 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           case _: Append =>
             zs(e.left)
             z(e.right)
+            e.tipe = ZS
             someZS
           case _: Prepend =>
             z(e.left)
             zs(e.right)
+            e.tipe = ZS
             someZS
           case _: And | _: Or | _: Implies =>
-            b(e.left); b(e.right); someB
+            b(e.left); b(e.right); e.tipe = B; someB
         }
-      case e: Not => b(e.exp); someB
-      case e: Minus => z(e.exp); someZ
+      case e: Not => b(e.exp); e.tipe = B; someB
+      case e: Minus => z(e.exp); e.tipe = Z; someZ
       case e: Quant[_] =>
         val t = e.domainOpt match {
           case Some(TypeDomain(tpe)) => TypeChecker.tipe(tpe)
