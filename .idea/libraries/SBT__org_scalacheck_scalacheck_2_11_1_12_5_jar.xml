@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.scalacheck:scalacheck_2.11:1.12.5:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.scalacheck/scalacheck_2.11/scalacheck_2.11-1.12.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scalacheck/scalacheck_2.11/scalacheck_2.11-1.12.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.assembla.scala-incubator:graph-core_2.11:1.10.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.assembla.scala-incubator/graph-core_2.11/graph-core_2.11-1.10.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.assembla.scala-incubator/graph-core_2.11/graph-core_2.11-1.10.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

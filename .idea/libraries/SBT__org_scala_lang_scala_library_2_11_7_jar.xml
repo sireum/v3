@@ -13,6 +13,8 @@
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/lib_managed/docs/org.scala-lang/scala-library/scala-library-2.11.7-javadoc.jar!/" />
     </JAVADOC>
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scala-lang/scala-library/scala-library-2.11.7-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>
