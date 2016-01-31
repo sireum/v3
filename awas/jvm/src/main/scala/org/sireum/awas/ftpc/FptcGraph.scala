@@ -60,7 +60,7 @@ object FptcGraph {
   }
 
   private class Fg[Node] extends FptcGraph[Node] {
-    val graph = Graph()
+    val graph = Graph[Node, AwasEdge]()
   }
 }
 
