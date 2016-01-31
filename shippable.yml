@@ -1,14 +1,10 @@
 cache: true
 
 script:
-  - cd /opt/sireum-v3
-  - git pull
   - export SIREUM_PARALLEL_BUILD=false
   - bin/sbt-launch.sh clean test:compile test
 
 notifications:
   email:
-    recipients:
-      - v3@sireum.org
-    on_success: never
+    on_success: change
     on_failure: always
