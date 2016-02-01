@@ -7,7 +7,6 @@ before_script:
   - bin/sbt-launch.sh clean test:compile
 
 script:
-  - export SIREUM_PARALLEL_BUILD=false
   - bin/sbt-launch.sh clean test:compile test
 
 notifications:
