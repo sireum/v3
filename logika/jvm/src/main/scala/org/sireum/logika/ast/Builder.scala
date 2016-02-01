@@ -277,43 +277,70 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val rExp = build(ctx.r)
         ctx.op.getText match {
           case "*" =>
+            val r = Mul(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
-              checkIntMaxMin(ctx.op, lN * rN)
+              checkIntMaxMin(ctx.op, lN * rN, r)
             }
-            Mul(lExp, rExp)
+            r
           case "/" =>
+            val r = Div(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
               if (rN == zero) error(rExp, s"Division by zero detected.")
-              else checkIntMaxMin(ctx.op, lN / rN)
+              else checkIntMaxMin(ctx.op, lN / rN, r)
             }
-            Div(lExp, rExp)
+            r
           case "%" =>
+            val r = Rem(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
               if (rN == zero) error(rExp, s"Division by zero detected.")
-              else checkIntMaxMin(ctx.op, lN % rN)
+              else checkIntMaxMin(ctx.op, lN % rN, r)
             }
-            Rem(lExp, rExp)
+            r
           case "+" =>
+            val r = Add(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp))
-              checkIntMaxMin(ctx.op, lN + rN)
-            Add(lExp, rExp)
+              checkIntMaxMin(ctx.op, lN + rN, r)
+            r
           case "-" =>
+            val r = Sub(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp))
-              checkIntMaxMin(ctx.op, lN - rN)
-            Sub(lExp, rExp)
+              checkIntMaxMin(ctx.op, lN - rN, r)
+            r
           case ":+" => Append(lExp, rExp)
           case "+:" => Prepend(lExp, rExp)
           case "<" => Lt(lExp, rExp)
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)
           case ">=" | "≥" => Ge(lExp, rExp)
-          case "=" | "==" => Eq(lExp, rExp)
-          case "!=" | "≠" => Ne(lExp, rExp)
+          case "=" => Eq(lExp, rExp)
+          case "==" =>
+            val r = Eq(lExp, rExp)
+            if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
+              val lLi = nodeLocMap(lExp)
+              val rLi = nodeLocMap(rExp)
+              val lExpS = input.substring(lLi.offset, lLi.offset + lLi.length)
+              val rExpS = input.substring(rLi.offset, rLi.offset + rLi.length)
+              r at ctx
+              error(r, s"Logika does not support $lExpS == $rExpS; please rewrite it to $rExpS == $lExpS.")
+            }
+            r
+          case "≠" => Ne(lExp, rExp)
+          case "!=" =>
+            val r = Ne(lExp, rExp)
+            if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
+              val lLi = nodeLocMap(lExp)
+              val rLi = nodeLocMap(rExp)
+              val lExpS = input.substring(lLi.offset, lLi.offset + lLi.length)
+              val rExpS = input.substring(rLi.offset, rLi.offset + rLi.length)
+              r at ctx
+              error(r, s"Logika does not support $lExpS != $rExpS; please rewrite it to $rExpS != $lExpS.")
+            }
+            r
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
@@ -322,11 +349,12 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val exp = build(ctx.formula)
         ctx.op.getText match {
           case "-" =>
+            val r = Minus(exp)
             constMap.get(exp) match {
-              case Some(n) => checkIntMaxMin(ctx.op, -n)
+              case Some(n) => checkIntMaxMin(ctx.op, -n, r)
               case _ =>
             }
-            Minus(exp)
+            r
           case "not" | "!" | "~" | "¬" => Not(exp)
         }
       case ctx: QuantContext => build(ctx.qformula)
@@ -526,11 +554,12 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val exp = build(ctx.exp)
         ctx.op.getText match {
           case "-" =>
+            val r = Minus(exp)
             constMap.get(exp) match {
-              case Some(n) => checkIntMaxMin(ctx.op, -n)
+              case Some(n) => checkIntMaxMin(ctx.op, -n, r)
               case _ =>
             }
-            Minus(exp)
+            r
           case "not" | "neg" | "!" | "~" | "¬" => Not(exp)
         }
       case ctx: BinaryExpContext =>
@@ -538,34 +567,39 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val rExp = build(ctx.r)
         ctx.op.getText match {
           case "*" =>
+            val r = Mul(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp))
-              checkIntMaxMin(ctx.op, lN * rN)
-            Mul(lExp, rExp)
+              checkIntMaxMin(ctx.op, lN * rN, r)
+            r
           case "/" =>
+            val r = Div(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
               if (rN == zero) error(rExp, s"Divide by zero detected.")
-              else checkIntMaxMin(ctx.op, lN / rN)
+              else checkIntMaxMin(ctx.op, lN / rN, r)
             }
-            Div(lExp, rExp)
+            r
           case "%" =>
+            val r = Rem(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp)) {
               if (rN == zero) error(rExp, s"Modulo by zero detected.")
-              else checkIntMaxMin(ctx.op, lN % rN)
+              else checkIntMaxMin(ctx.op, lN % rN, r)
             }
-            Rem(lExp, rExp)
+            r
           case "+" =>
+            val r = Add(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp))
-              checkIntMaxMin(ctx.op, lN + rN)
-            Add(lExp, rExp)
+              checkIntMaxMin(ctx.op, lN + rN, r)
+            r
           case "-" =>
+            val r = Sub(lExp, rExp)
             for (lN <- constMap.get(lExp);
                  rN <- constMap.get(rExp))
-              checkIntMaxMin(ctx.op, lN - rN)
-            Sub(lExp, rExp)
+              checkIntMaxMin(ctx.op, lN - rN, r)
+            r
           case ":+" => Append(lExp, rExp)
           case "+:" => Prepend(lExp, rExp)
           case "<" => Lt(lExp, rExp)
@@ -574,22 +608,28 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case ">=" | "≥" => Ge(lExp, rExp)
           case "=" => Eq(lExp, rExp)
           case "==" =>
+            val r = Eq(lExp, rExp)
             if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
-              val lit = constMap(lExp).toString
-              val li = nodeLocMap(rExp)
-              val e = input.substring(li.offset, li.offset + li.length)
-              error(rExp, s"Logika does not support $lit == $e; please rewrite it to $e == $lit.")
+              val lLi = nodeLocMap(lExp)
+              val rLi = nodeLocMap(rExp)
+              val lExpS = input.substring(lLi.offset, lLi.offset + lLi.length)
+              val rExpS = input.substring(rLi.offset, rLi.offset + rLi.length)
+              r at ctx
+              error(r, s"Logika does not support $lExpS == $rExpS; please rewrite it to $rExpS == $lExpS.")
             }
-            Eq(lExp, rExp)
+            r
           case "≠" => Ne(lExp, rExp)
           case "!=" =>
+            val r = Ne(lExp, rExp)
             if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
-              val lit = constMap(lExp).toString
-              val li = nodeLocMap(rExp)
-              val e = input.substring(li.offset, li.offset + li.length)
-              error(rExp, s"Logika does not support $lit != $e; please rewrite it to $e != $lit.")
+              val lLi = nodeLocMap(lExp)
+              val rLi = nodeLocMap(rExp)
+              val lExpS = input.substring(lLi.offset, lLi.offset + lLi.length)
+              val rExpS = input.substring(rLi.offset, rLi.offset + rLi.length)
+              r at ctx
+              error(r, s"Logika does not support $lExpS != $rExpS; please rewrite it to $rExpS != $lExpS.")
             }
-            Ne(lExp, rExp)
+            r
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
@@ -640,11 +680,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   private def checkBitWidth(t: TerminalNode): Unit =
     if (bitWidth == 0) error(t, s"Z.${t.getText} is used, but bit-width is unbounded.")
 
-  private def checkIntMaxMin(t: Token, value: BigInt): Unit =
+  private def checkIntMaxMin(t: Token, value: BigInt, e: Exp): Unit = {
     if (value < minInt)
       error(t, s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
     else if (value > maxInt)
       error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+    else constMap(e) = value
+  }
 
   private def errorIf(t: Token, tText: String): Unit =
     if (t.getText != tText)
