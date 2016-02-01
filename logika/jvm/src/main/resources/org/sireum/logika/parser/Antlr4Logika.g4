@@ -90,7 +90,8 @@ formula
   | 'Z' '.' ID /* ID == "Min" || ID == "Max" */         #IntMnx  // algebra
   | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
-  | l=formula op=( '+' | '-' | '+:' ) NL? r=formula     #Binary  // algebra
+  | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
+  | <assoc=right> l=formula op='+:' NL? r=formula       #Binary  // algebra
   | op='-' formula                                      #Unary   // algebra
   | l=formula op=':+' NL? r=formula                     #Binary  // algebra
   | l=formula
@@ -277,7 +278,8 @@ exp
   | '(' exp ')'                                         #ParenExp
   | op=( '-' | '!' ) exp                                #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
-  | l=exp op=( '+' | '-' | '+:' )  NL? r=exp            #BinaryExp
+  | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
+  | <assoc=right> l=exp op='+:' NL? r=exp               #BinaryExp
   | l=exp op=':+' NL? r=exp                             #BinaryExp
   | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
