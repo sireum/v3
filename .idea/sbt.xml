@@ -5,8 +5,88 @@
       <SbtProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="jdk" value="1.8" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/awas/jvm" />
+            <option value="$PROJECT_DIR$/awas/jvm/project" />
+            <option value="$PROJECT_DIR$/cli/jvm" />
+            <option value="$PROJECT_DIR$/cli/jvm/project" />
+            <option value="$PROJECT_DIR$/java/jvm" />
+            <option value="$PROJECT_DIR$/java/jvm/project" />
+            <option value="$PROJECT_DIR$/js" />
+            <option value="$PROJECT_DIR$/js/project" />
+            <option value="$PROJECT_DIR$/jvm" />
+            <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/js" />
+            <option value="$PROJECT_DIR$/logika/js/project" />
+            <option value="$PROJECT_DIR$/logika/jvm" />
+            <option value="$PROJECT_DIR$/logika/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/shared" />
+            <option value="$PROJECT_DIR$/logika/shared/project" />
+            <option value="$PROJECT_DIR$/pilar/js" />
+            <option value="$PROJECT_DIR$/pilar/js/project" />
+            <option value="$PROJECT_DIR$/pilar/jvm" />
+            <option value="$PROJECT_DIR$/pilar/jvm/project" />
+            <option value="$PROJECT_DIR$/pilar/shared" />
+            <option value="$PROJECT_DIR$/pilar/shared/project" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/test/js" />
+            <option value="$PROJECT_DIR$/test/js/project" />
+            <option value="$PROJECT_DIR$/test/jvm" />
+            <option value="$PROJECT_DIR$/test/jvm/project" />
+            <option value="$PROJECT_DIR$/test/shared" />
+            <option value="$PROJECT_DIR$/test/shared/project" />
+            <option value="$PROJECT_DIR$/util/js" />
+            <option value="$PROJECT_DIR$/util/js/project" />
+            <option value="$PROJECT_DIR$/util/jvm" />
+            <option value="$PROJECT_DIR$/util/jvm/project" />
+            <option value="$PROJECT_DIR$/util/shared" />
+            <option value="$PROJECT_DIR$/util/shared/project" />
+          </set>
+        </option>
         <option name="resolveSbtClassifiers" value="true" />
         <option name="sbtVersion" value="0.13.9" />
+        <option name="myModules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/awas/jvm" />
+            <option value="$PROJECT_DIR$/awas/jvm/project" />
+            <option value="$PROJECT_DIR$/cli/jvm" />
+            <option value="$PROJECT_DIR$/cli/jvm/project" />
+            <option value="$PROJECT_DIR$/java/jvm" />
+            <option value="$PROJECT_DIR$/java/jvm/project" />
+            <option value="$PROJECT_DIR$/js" />
+            <option value="$PROJECT_DIR$/js/project" />
+            <option value="$PROJECT_DIR$/jvm" />
+            <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/js" />
+            <option value="$PROJECT_DIR$/logika/js/project" />
+            <option value="$PROJECT_DIR$/logika/jvm" />
+            <option value="$PROJECT_DIR$/logika/jvm/project" />
+            <option value="$PROJECT_DIR$/logika/shared" />
+            <option value="$PROJECT_DIR$/logika/shared/project" />
+            <option value="$PROJECT_DIR$/pilar/js" />
+            <option value="$PROJECT_DIR$/pilar/js/project" />
+            <option value="$PROJECT_DIR$/pilar/jvm" />
+            <option value="$PROJECT_DIR$/pilar/jvm/project" />
+            <option value="$PROJECT_DIR$/pilar/shared" />
+            <option value="$PROJECT_DIR$/pilar/shared/project" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/test/js" />
+            <option value="$PROJECT_DIR$/test/js/project" />
+            <option value="$PROJECT_DIR$/test/jvm" />
+            <option value="$PROJECT_DIR$/test/jvm/project" />
+            <option value="$PROJECT_DIR$/test/shared" />
+            <option value="$PROJECT_DIR$/test/shared/project" />
+            <option value="$PROJECT_DIR$/util/js" />
+            <option value="$PROJECT_DIR$/util/js/project" />
+            <option value="$PROJECT_DIR$/util/jvm" />
+            <option value="$PROJECT_DIR$/util/jvm/project" />
+            <option value="$PROJECT_DIR$/util/shared" />
+            <option value="$PROJECT_DIR$/util/shared/project" />
+          </set>
+        </option>
       </SbtProjectSettings>
     </option>
     <option name="maximumHeapSize" value="4096" />
