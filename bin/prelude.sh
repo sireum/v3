@@ -146,7 +146,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     NODE_DROP="${NODE_DROP_URL##*/}"
     NODE_DIR="${NODE_DROP%.tar.gz}"
     if [ ! -f ${NODE_DROP} ]; then
-      echo "Downloading ${NODE_DROP}"
+      echo "Please wait while downloading ${NODE_DROP}"
       wget -q ${NODE_DROP_URL}
       echo
     fi
