@@ -47,7 +47,7 @@ object SireumBuild extends Build {
 
   import ProjectInfo._
 
-  val distros = TaskKey[Unit]("distros", "Build Sireum distributions")
+  val distros = TaskKey[Unit]("distros", "Build Sireum distributions.")
   val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
   lazy val sireum = Project(
@@ -160,14 +160,6 @@ object SireumBuild extends Build {
   )
 
   val sireumJvmSettings = sireumSharedSettings ++ Seq(
-    artifactName := { (config: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-      artifact.name + (
-        artifact.classifier match {
-          case Some("sources") => "-src"
-          case Some("javadoc") => "-doc"
-          case _ => ""
-        }) + "." + artifact.extension
-    },
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
