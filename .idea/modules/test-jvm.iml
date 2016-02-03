@@ -47,5 +47,6 @@
     <orderEntry type="module" module-name="test" exported="" />
     <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-core_2.11:1.10.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalacheck:scalacheck_2.11:1.12.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-dot_2.11:1.10.1:jar" level="project" />
   </component>
 </module>

@@ -178,13 +178,12 @@ object SireumBuild extends Build {
       "org.ow2.asm" % "asm" % "5.0.4",
       "org.ow2.asm" % "asm-commons" % "5.0.4",
       "org.ow2.asm" % "asm-util" % "5.0.4",
-      "com.assembla.scala-incubator" % "graph-core_2.11" % "1.10.1"
+      "com.assembla.scala-incubator" %% "graph-core" % "1.10.1",
+      "com.assembla.scala-incubator" %% "graph-dot" % "1.10.1",
+      "com.novocode" % "junit-interface" % "0.11"
     ),
     parallelExecution in Test := true,
-    testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v"),
-    libraryDependencies ++= Seq(
-      "com.novocode" % "junit-interface" % "0.11"
-    )
+    testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
   )
 
   val sireumJsSettings = sireumSharedSettings ++ Seq(
