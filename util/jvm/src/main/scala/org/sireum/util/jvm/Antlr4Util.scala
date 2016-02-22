@@ -51,7 +51,7 @@ object Antlr4Util {
           offset = start.getStartIndex,
           length = stop.getStopIndex - start.getStartIndex + 1,
           lineBegin = start.getLine,
-          columnBegin = start.getCharPositionInLine,
+          columnBegin = start.getCharPositionInLine + 1,
           lineEnd = le,
           columnEnd = ce)
       n
@@ -65,7 +65,7 @@ object Antlr4Util {
           offset = start.getStartIndex,
           length = stopLi.offset + stopLi.length - start.getStartIndex,
           lineBegin = start.getLine,
-          columnBegin = start.getCharPositionInLine,
+          columnBegin = start.getCharPositionInLine + 1,
           lineEnd = stopLi.lineEnd,
           columnEnd = stopLi.columnEnd
         )
@@ -112,11 +112,11 @@ object Antlr4Util {
           text: String): (PosInteger, PosInteger) = {
     val i = text.lastIndexOf('\n')
     if (i < 0)
-      (lineBegin, columnBegin + text.length - 1)
+      (lineBegin, columnBegin + text.length)
     else {
       var lines = 0
       for (c <- text if c == '\n') lines += 1
-      (lineBegin + lines, text.length - i - 3)
+      (lineBegin + lines, text.length - i - 1)
     }
   }
 }
