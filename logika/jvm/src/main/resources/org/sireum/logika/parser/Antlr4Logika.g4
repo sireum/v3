@@ -105,7 +105,7 @@ formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary  // propositional logic
   | l=formula
     op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary  // propositional logic
-  | l=formula
+  | <assoc=right> l=formula
     op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary  // propositional logic
   | qformula                                            #Quant   // predicate logic
   ;
