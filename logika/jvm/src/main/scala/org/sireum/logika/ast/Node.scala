@@ -47,7 +47,7 @@ object Node {
            _: Minus =>
         m = LogicMode.Programming
         false
-      case _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
+      case _: QuantAssumeStep | _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
         m = LogicMode.Predicate
         false
     })(unitNode)
@@ -81,8 +81,11 @@ object Node {
       reporter.report(nodeLocMap(n).toLocationError(
         unitNode.fileUriOpt, "Semantics", msg))
 
+    unitNode match {
+      case unitNode: Sequent => checkWellFormedSequent(unitNode)
+      case _ =>
+    }
     val isPredicate = unitNode.mode == LogicMode.Predicate
-    if (isPredicate) checkWellFormedPredicate(unitNode.asInstanceOf[Sequent])
     val isProgram = unitNode.mode == LogicMode.Programming
     var applyMap = imapEmpty[String, Apply]
     lazy val v: Any => Boolean = Visitor.build({
@@ -180,8 +183,8 @@ object Node {
   }
 
   final private[ast]
-  def checkWellFormedPredicate(unitNode: Sequent)
-                              (implicit reporter: AccumulatingTagReporter): Unit = {
+  def checkWellFormedSequent(unitNode: Sequent)
+                            (implicit reporter: AccumulatingTagReporter): Unit = {
     var freeIds = imapEmpty[String, Id]
     val nodeLocMap = unitNode.nodeLocMap
     def error(n: Node, msg: String): Unit =
@@ -211,6 +214,14 @@ object Node {
     }
     collectFreeIds(unitNode, imapEmpty)
     Visitor.build({
+      case n: QuantAssumeStep =>
+        freeIds.get(n.id.value) match {
+          case Some(id) =>
+            val li = nodeLocMap(id)
+            error(n, s"The variable ${id.value} in step #${n.num.value}, is not fresh as it has been used at [${li.lineBegin}, ${li.columnBegin}].")
+          case _ =>
+        }
+        true
       case node: Quant[_] =>
         for (id <- node.ids)
           freeIds.get(id.value) match {

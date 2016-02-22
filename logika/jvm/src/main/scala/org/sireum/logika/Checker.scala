@@ -719,10 +719,8 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def addVar(id: Id, stepNum: Int): Option[T] = {
     val varId = id.value
-    if (vars.contains(varId)) {
-      error(id, s"The variable $varId in step #$stepNum, is not fresh.")
-      None
-    } else Some(make(vars = vars + varId))
+    assert(!vars.contains(varId))
+    Some(make(vars = vars + varId))
   }
 
   def isValid(title: String, li: LocationInfo,
