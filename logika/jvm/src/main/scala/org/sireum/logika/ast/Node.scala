@@ -216,7 +216,7 @@ object Node {
     Visitor.build({
       case n: QuantAssumeStep =>
         freeIds.get(n.id.value) match {
-          case Some(id) =>
+          case Some(id) if n.id ne id =>
             val li = nodeLocMap(id)
             error(n, s"The variable ${id.value} in step #${n.num.value}, is not fresh as it has been used at [${li.lineBegin}, ${li.columnBegin}].")
           case _ =>
