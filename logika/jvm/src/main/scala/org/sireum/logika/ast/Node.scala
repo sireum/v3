@@ -618,30 +618,20 @@ final case class IntMax(bitWidth: Int,
   }
 }
 
-final case class Random(t: Type) extends PrimaryExp {
+final case class Random(tpe: Type) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
-    t.buildString(sb)
+    tpe.buildString(sb)
     sb.append(".random")
   }
 }
 
-final case class Read(t: Type, msgOpt: Option[String]) extends PrimaryExp {
-  override def buildString(sb: StringBuilder,
-                           inProof: Boolean): Unit = {
-    t.buildString(sb)
-    sb.append(".read(")
-    msgOpt.foreach(sb.append)
-    sb.append(")")
-  }
-}
-
-final case class ToIntegral(e: Exp, t: IntegralType) extends PrimaryExp {
+final case class ToIntegral(e: Exp, tpe: IntegralType) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     e.buildString(sb, inProof)
     sb.append(".to")
-    t.buildString(sb)
+    tpe.buildString(sb)
   }
 }
 

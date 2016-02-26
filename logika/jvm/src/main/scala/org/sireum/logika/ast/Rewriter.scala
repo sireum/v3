@@ -399,8 +399,8 @@ object Rewriter {
       org.sireum.logika.ast.RType()
     }),
     ("Random", { es =>
-      val Seq(t: Type) = es
-      org.sireum.logika.ast.Random(t)
+      val Seq(tpe: Type) = es
+      org.sireum.logika.ast.Random(tpe)
     }),
     ("RandomInt", { es =>
       val Seq() = es
@@ -409,10 +409,6 @@ object Rewriter {
     ("RangeDomain", { es =>
       val Seq(lo: Exp, hi: Exp, loLt: java.lang.Boolean, hiLt: java.lang.Boolean) = es
       org.sireum.logika.ast.RangeDomain(lo, hi, loLt, hiLt)
-    }),
-    ("Read", { es =>
-      val Seq(t: Type, msgOpt: Option[_]) = es
-      org.sireum.logika.ast.Read(t, cast(msgOpt))
     }),
     ("ReadInt", { es =>
       val Seq(msgOpt: Option[_]) = es
@@ -515,8 +511,8 @@ object Rewriter {
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
     }),
     ("ToIntegral", { es =>
-      val Seq(e: Exp, t: IntegralType) = es
-      org.sireum.logika.ast.ToIntegral(e, t)
+      val Seq(e: Exp, tpe: IntegralType) = es
+      org.sireum.logika.ast.ToIntegral(e, tpe)
     }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es

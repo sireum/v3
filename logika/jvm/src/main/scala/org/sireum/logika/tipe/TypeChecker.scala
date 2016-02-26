@@ -30,6 +30,7 @@ import org.sireum.util._
 
 object TypeChecker {
   val kind = "Type Checker"
+  val integerTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
 
   final def check(programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
@@ -74,9 +75,50 @@ object TypeChecker {
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
-    case t: BType => B
-    case t: ZType => Z
-    case t: ZSType => ZS
+    case _: BType => B
+    case _: ZType => Z
+    case _: Z8Type => Z8
+    case _: Z16Type => Z16
+    case _: Z32Type => Z32
+    case _: Z64Type => Z64
+    case _: NType => N
+    case _: N8Type => N8
+    case _: N16Type => N16
+    case _: N32Type => N32
+    case _: N64Type => N64
+    case _: S8Type => S8
+    case _: S16Type => S16
+    case _: S32Type => S32
+    case _: S64Type => S64
+    case _: U8Type => U8
+    case _: U16Type => U16
+    case _: U32Type => U32
+    case _: U64Type => U64
+    case _: RType => R
+    case _: F32Type => F32
+    case _: F64Type => F64
+    case _: BSType => BS
+    case _: ZSType => ZS
+    case _: Z8SType => Z8S
+    case _: Z16SType => Z16S
+    case _: Z32SType => Z32S
+    case _: Z64SType => Z64S
+    case _: NSType => NS
+    case _: N8SType => N8S
+    case _: N16SType => N16S
+    case _: N32SType => N32S
+    case _: N64SType => N64S
+    case _: S8SType => S8S
+    case _: S16SType => S16S
+    case _: S32SType => S32S
+    case _: S64SType => S64S
+    case _: U8SType => U8S
+    case _: U16SType => U16S
+    case _: U32SType => U32S
+    case _: U64SType => U64S
+    case _: RSType => RS
+    case _: F32SType => F32S
+    case _: F64SType => F64S
   }
 
   private[tipe] final def tipe(m: MethodDecl): FunTipe =
@@ -96,6 +138,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   private val someB = Some(B)
   private val someZ = Some(Z)
   private val someZS = Some(ZS)
+  private val someR = Some(R)
 
   def check(p: Program): TypeContext = {
     val r = check(p.block)(None)
@@ -273,11 +316,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     e match {
       case _: BooleanLit => someB
       case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
-      case e: Size => zs(e.exp); someZ
+      case e: Size => mseq(e.exp); someZ
       case e: Clone =>
-        if (!allowMethod) error(e.id, s"ZS clone is only allowed at statement level.")
-        zs(e.id)
-        someZS
+        if (!allowMethod) error(e.id, s"Clone is only allowed at statement level.")
+        mseq(e.id)
       case e: Result =>
         val r = tipe(Id("result")); r.foreach(e.tipe = _); r
       case e: Apply =>
@@ -312,7 +354,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             Some(t.result)
           case Some(t) =>
             if (e.args.size == 1)
-              error(e.id, s"Expecting a function/ZS type, but found $t.")
+              error(e.id, s"Expecting a function/sequence type, but found $t.")
             else
               error(e.id, s"Expecting a function type, but found $t.")
             None
@@ -326,15 +368,42 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         if (!allowMethod)
           error(e, s"Invoking readInt is only allowed at statement level.")
         someZ
-      case _: IntLit => someZ
-      case _: IntMin => someZ
-      case _: IntMax => someZ
+      case e: IntLit => someZ
+      case e: FloatLit => e.primitiveValue match {
+        case Left(_: Float) => Some(F32)
+        case Right(_: Double) => Some(F64)
+      }
+      case e: RealLit => someR
+      case e: IntMin => Some(TypeChecker.tipe(e.integralType))
+      case e: IntMax => Some(TypeChecker.tipe(e.integralType))
+      case e: ToIntegral => integral(e); Some(TypeChecker.tipe(e.tpe))
+      case e: Random => Some(TypeChecker.tipe(e.tpe))
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
-            z(e.left); z(e.right); e.tipe = Z; someZ
+            (for (t1 <- number(e.left); t2 <- number(e.right)) yield
+              if (t1 == t2) {
+                e.tipe = t1
+                Some(t1)
+              } else None
+              ).flatten
           case _: Lt | _: Le | _: Gt | _: Ge =>
-            z(e.left); z(e.right); e.tipe = Z; someB
+            (for (t1 <- number(e.left); t2 <- number(e.right)) yield
+              if (t1 == t2) {
+                e.tipe = t1
+                someB
+              } else None
+              ).flatten
+          case _: Shl | _: Shr =>
+            m(e.left) match {
+              case Some(t) => z(e.right); e.tipe = t; Some(t)
+              case _ => None
+            }
+          case _: UShr =>
+            ms(e.left) match {
+              case Some(t) => z(e.right); e.tipe = t; Some(t)
+              case _ => None
+            }
           case e: EqualityExp =>
             for (t1 <- check(e.left); t2 <- check(e.right))
               if (t1 != t2) {
@@ -344,21 +413,35 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                 e.tipe = t1
               }
             someB
-          case _: Append =>
-            zs(e.left)
-            z(e.right)
-            e.tipe = ZS
-            someZS
+          case e: Append =>
+            (mseq(e.left), check(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft.result != tRight)
+                  error(e, s"Ill-typed append operation $tLeft :+ $tRight.")
+                e.tipe = tLeft
+                Some(tLeft)
+              case _ => None
+            }
           case _: Prepend =>
-            z(e.left)
-            zs(e.right)
-            e.tipe = ZS
-            someZS
+            (check(e.left), mseq(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft != tRight.result)
+                  error(e, s"Ill-typed prepend operation $tLeft +: $tRight.")
+                e.tipe = tRight
+                Some(tRight)
+              case _ => None
+            }
           case _: And | _: Or | _: Implies =>
             b(e.left); b(e.right); e.tipe = B; someB
         }
       case e: Not => b(e.exp); e.tipe = B; someB
-      case e: Minus => z(e.exp); e.tipe = Z; someZ
+      case e: Minus =>
+        number(e.exp) match {
+          case Some(t) if TypeChecker.integerTipes.contains(t) =>
+            e.tipe = t
+            Some(t)
+          case _ => None
+        }
       case e: Quant[_] =>
         val t = e.domainOpt match {
           case Some(TypeDomain(tpe)) => TypeChecker.tipe(tpe)
@@ -372,7 +455,15 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         }
         copy(typeMap = tm).check(e.exp)
         someB
-      case e: SeqLit => for (arg <- e.args) z(arg); someZS
+      case e: SeqLit =>
+        val ts = TypeChecker.tipe(e.tpe).asInstanceOf[MSeq]
+        val et = ts.result
+        for (arg <- e.args; t <- check(arg)) {
+          if (t != et) {
+            error(arg, s"Expecting an expression of type $et, but found $t.")
+          }
+        }
+        Some(ts)
     }
 
   def collectAssignedVars(b: Block): ISet[Id] = {
@@ -410,6 +501,41 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case Some(Z) =>
       case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
       case _ =>
+    }
+
+  def number(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[NumberTipe] =
+    check(e) match {
+      case Some(t: NumberTipe) => Some(t)
+      case Some(t) => error(e, s"Expecting an expression of number type, but found $t."); None
+      case _ => None
+    }
+
+  def integral(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[IntegralTipe] =
+    check(e) match {
+      case Some(t: IntegralTipe) => Some(t)
+      case Some(t) => error(e, s"Expecting an expression of type integer, but found $t."); None
+      case _ => None
+    }
+
+  def m(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[ModuloIntegralTipe] =
+    check(e) match {
+      case Some(t: ModuloIntegralTipe) => Some(t)
+      case Some(t) => error(e, s"Expecting an expression of type modulo integer, but found $t."); None
+      case _ => None
+    }
+
+  def ms(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[ModuloIntegralTipe with SignedIntegralTipe] =
+    check(e) match {
+      case Some(t: ModuloIntegralTipe with SignedIntegralTipe) => Some(t)
+      case Some(t) => error(e, s"Expecting an expression of type signed modulo integer, but found $t."); None
+      case _ => None
+    }
+
+  def mseq(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[MSeq] =
+    check(e) match {
+      case Some(t: MSeq) => Some(t)
+      case Some(t) => error(e, s"Expecting an expression of type mutable sequence, but found $t."); None
+      case _ => None
     }
 
   def zs(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =

@@ -75,8 +75,6 @@ case object N32 extends UnsignedIntegralTipe
 
 case object N64 extends UnsignedIntegralTipe
 
-case object S extends SignedIntegralTipe with ModuloIntegralTipe
-
 case object S8 extends SignedIntegralTipe with ModuloIntegralTipe
 
 case object S16 extends SignedIntegralTipe with ModuloIntegralTipe
@@ -84,8 +82,6 @@ case object S16 extends SignedIntegralTipe with ModuloIntegralTipe
 case object S32 extends SignedIntegralTipe with ModuloIntegralTipe
 
 case object S64 extends SignedIntegralTipe with ModuloIntegralTipe
-
-case object U extends UnsignedIntegralTipe with ModuloIntegralTipe
 
 case object U8 extends UnsignedIntegralTipe with ModuloIntegralTipe
 
@@ -109,112 +105,114 @@ sealed trait Fn extends Tipe {
   def result: Tipe
 }
 
-case object BS extends Fn {
+sealed trait MSeq extends Fn
+
+case object BS extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = B
 }
 
-case object ZS extends Fn {
+case object ZS extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = Z
 }
 
-case object Z8S extends Fn {
+case object Z8S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = Z8
 }
 
-case object Z16S extends Fn {
+case object Z16S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = Z16
 }
 
-case object Z32S extends Fn {
+case object Z32S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = Z32
 }
 
-case object Z64S extends Fn {
+case object Z64S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = Z64
 }
 
-case object NS extends Fn {
+case object NS extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = N
 }
 
-case object N8S extends Fn {
+case object N8S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = N8
 }
 
-case object N16S extends Fn {
+case object N16S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = N16
 }
 
-case object N32S extends Fn {
+case object N32S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = N32
 }
 
-case object N64S extends Fn {
+case object N64S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = N64
 }
 
-case object S8S extends Fn {
+case object S8S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = S8
 }
 
-case object S16S extends Fn {
+case object S16S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = S8
 }
 
-case object S32S extends Fn {
+case object S32S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = S8
 }
 
-case object S64S extends Fn {
+case object S64S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = S8
 }
 
-case object U8S extends Fn {
+case object U8S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = U8
 }
 
-case object U16S extends Fn {
+case object U16S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = U16
 }
 
-case object U32S extends Fn {
+case object U32S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = U32
 }
 
-case object U64S extends Fn {
+case object U64S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = U8
 }
 
-case object RS extends Fn {
+case object RS extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = R
 }
 
-case object F32S extends Fn {
+case object F32S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = F32
 }
 
-case object F64S extends Fn {
+case object F64S extends MSeq {
   final val params = Tipe.seq(Z)
   final val result = F64
 }
