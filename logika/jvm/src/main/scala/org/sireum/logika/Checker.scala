@@ -517,9 +517,15 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         }
         if (hasError) None else addProvedStep(step)
       case Algebra(_, exp, steps) =>
-        if (deduce(num, exp, steps, isAuto = false))
-          addProvedStep(step)
-        else None
+        unitNode.mode match {
+          case LogicMode.Propositional | LogicMode.Predicate =>
+            error(step, s"Algebra cannot be used in ${unitNode.mode} Logic.")
+            None
+          case LogicMode.Programming =>
+            if (deduce(num, exp, steps, isAuto = false))
+              addProvedStep(step)
+            else None
+        }
       case ForAllIntro(_, q, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
@@ -606,8 +612,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case _ => None
         }
       case Auto(_, exp, steps) =>
-        if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
-        else None
+        unitNode.mode match {
+          case LogicMode.Propositional | LogicMode.Predicate =>
+            error(step, s"Auto cannot be used in ${unitNode.mode} Logic.")
+            None
+          case LogicMode.Programming =>
+            if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
+            else None
+        }
       case FactJust(_, exp, id) =>
         facts.get(id.value) match {
           case Some(expected) =>
