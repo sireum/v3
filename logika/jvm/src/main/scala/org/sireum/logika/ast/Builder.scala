@@ -236,7 +236,57 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       getOrElse(Node.emptySeq)) at ctx
   }
 
-  private def build(ctx: FormulaContext): Exp = {
+  private def token2type(token: Token): Type = {
+    val r = token.getText match {
+      case "B" => BType()
+      case "Z" => ZType()
+      case "Z8" => Z8Type()
+      case "Z16" => Z16Type()
+      case "Z32" => Z32Type()
+      case "Z64" => Z64Type()
+      case "N" => NType()
+      case "N8" => N8Type()
+      case "N16" => N16Type()
+      case "N32" => N32Type()
+      case "N64" => N64Type()
+      case "S8" => S8Type()
+      case "S16" => S16Type()
+      case "S32" => S32Type()
+      case "S64" => S64Type()
+      case "U8" => U8Type()
+      case "U16" => U16Type()
+      case "U32" => U32Type()
+      case "U64" => U64Type()
+      case "R" => RType()
+      case "F32" => F32Type()
+      case "F64" => F64Type()
+      case "BS" => BType()
+      case "ZS" => ZSType()
+      case "Z8S" => Z8SType()
+      case "Z16S" => Z16SType()
+      case "Z32S" => Z32SType()
+      case "Z64S" => Z64SType()
+      case "NS" => NSType()
+      case "N8S" => N8SType()
+      case "N16S" => N16SType()
+      case "N32S" => N32SType()
+      case "N64S" => N64SType()
+      case "S8S" => S8SType()
+      case "S16S" => S16SType()
+      case "S32S" => S32SType()
+      case "S64S" => S64SType()
+      case "U8S" => U8SType()
+      case "U16S" => U16SType()
+      case "U32S" => U32SType()
+      case "U64S" => U64SType()
+      case "RS" => RSType()
+      case "F32S" => F32SType()
+      case "F64S" => F64SType()
+    }
+    r at token
+  }
+
+  private def build(ctx: PrimFormulaContext): Exp = {
     val r = ctx match {
       case ctx: BooleanContext =>
         ctx.t.getText match {
@@ -244,11 +294,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "false" | "F" | "_|_" | "⊥" => BooleanLit(false)
         }
       case ctx: VarContext =>
-        val r = buildId(ctx.tb)
-        if (ctx.te != null) {
-          errorIf(ctx.te, "size")
-          Size(r)
-        } else r
+        buildId(ctx.tb)
       case ctx: ParenContext =>
         val r = build(ctx.formula)
         r.hasParen = true
@@ -260,18 +306,86 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val r = buildInt(ctx.NUM)
         constMap(r) = BigInt(r.value)
         r
-      case ctx: IntMnxContext =>
-        val r = ctx.ID.getText match {
-          case "Min" => checkBitWidth(ctx.ID); IntMin(bitWidth)
-          case "Max" => checkBitWidth(ctx.ID); IntMax(bitWidth)
-          case s =>
-            error(ctx.ID, s"Expecting Min or Max instead of $s.")
-            IntMin(8)
+      case ctx: LitContext =>
+        val r = ctx.t.getText match {
+          case "Z" => IntLit(ctx.STRING.getText)
+          case "R" => RealLit(ctx.STRING.getText)
         }
         r
-      case ctx: BigIntContext => IntLit(ctx.STRING.getText)
+      case ctx: FloatLitContext =>
+        val floatText = ctx.FLOAT.getText
+        if (floatText.last.toUpper == 'D')
+          try floatText.toDouble catch {
+            case _: Throwable =>
+              error(ctx.FLOAT, "Invalid F32 literal.")
+          }
+        else
+          try floatText.toFloat catch {
+            case _: Throwable =>
+              error(ctx.FLOAT, "Invalid F64 literal.")
+          }
+        FloatLit(ctx.FLOAT.getText)
+      case ctx: TypeAccessContext =>
+        val t = token2type(ctx.t)
+        val r = ctx.ID.getText match {
+          case "Min" =>
+            t match {
+              case t: IntegralType =>
+                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
+                IntMin(bitWidth, t)
+              case _ =>
+                error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
+                IntMin(8, ZType())
+            }
+          case "Max" =>
+            t match {
+              case t: IntegralType =>
+                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
+                IntMax(bitWidth, t)
+              case _ =>
+                error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
+                IntMin(8, ZType())
+            }
+          case "random" => Random(t)
+          case s =>
+            error(ctx.ID, s"Expecting Min, Max, random, toZ, toZ8, toZ16, ..., toZ64, toN, toN8, toN16, ..., toN, toS8, toS16, ..., toS54, toU8, toU16, ..., or toU64 instead of $s.")
+            IntMin(8, ZType())
+        }
+        r
       case ctx: SeqContext =>
-        SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        SeqLit(token2type(ctx.t), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+    }
+    r at ctx
+  }
+
+  private def build(ctx: FormulaContext): Exp = {
+    val r = ctx match {
+      case ctx: PFormulaContext =>
+        var e = build(ctx.primFormula)
+        for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
+          e = id.getText match {
+            case "size" => Size(e)
+            case "toZ" => ToIntegral(e, ZType() at id)
+            case "toZ8" => ToIntegral(e, Z8Type() at id)
+            case "toZ16" => ToIntegral(e, Z16Type() at id)
+            case "toZ32" => ToIntegral(e, Z32Type() at id)
+            case "toZ64" => ToIntegral(e, Z64Type() at id)
+            case "toN" => ToIntegral(e, NType() at id)
+            case "toN8" => ToIntegral(e, N8Type() at id)
+            case "toN16" => ToIntegral(e, N16Type() at id)
+            case "toN32" => ToIntegral(e, N32Type() at id)
+            case "toN64" => ToIntegral(e, N64Type() at id)
+            case "toS8" => ToIntegral(e, S8Type() at id)
+            case "toS16" => ToIntegral(e, S16Type() at id)
+            case "toS32" => ToIntegral(e, S32Type() at id)
+            case "toS64" => ToIntegral(e, S64Type() at id)
+            case "toU8" => ToIntegral(e, U8Type() at id)
+            case "toU16" => ToIntegral(e, U16Type() at id)
+            case "toU32" => ToIntegral(e, U32Type() at id)
+            case "toU64" => ToIntegral(e, U64Type() at id)
+          }
+        }
+        e
       case ctx: BinaryContext =>
         val lExp = build(ctx.l)
         val rExp = build(ctx.r)
@@ -317,6 +431,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)
           case ">=" | "≥" => Ge(lExp, rExp)
+          case ">>" => Shr(lExp, rExp)
+          case ">>>" => UShr(lExp, rExp)
+          case "<<" => Shl(lExp, rExp)
           case "=" => Eq(lExp, rExp)
           case "==" =>
             val r = Eq(lExp, rExp)
@@ -384,14 +501,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       build(ctx.formula)) at ctx
   }
 
-  private def build(ctx: TypeContext): Type = {
-    val r = ctx match {
-      case ctx: BooleanTypeContext => BooleanType()
-      case ctx: IntTypeContext => IntType()
-      case ctx: IntSeqTypeContext => IntSeqType()
-    }
-    r at ctx
-  }
+  private def build(ctx: TypeContext): Type =
+    token2type(ctx.t) at ctx
 
   private def build(ctx: ProgramContext): Program =
     if (ctx.impor != null) {
@@ -504,7 +615,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     rOpt.map(_ at ctx)
   }
 
-  private def build(ctx: ExpContext): Exp = {
+  private def build(ctx: PrimExpContext): Exp = {
     val r = ctx match {
       case ctx: BooleanExpContext =>
         ctx.t.getText match {
@@ -515,31 +626,90 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val r = buildInt(ctx.NUM)
         constMap(r) = BigInt(r.value)
         r
-      case ctx: IntMnxExpContext =>
+      case ctx: VarExpContext =>
+        buildId(ctx.ID)
+      case ctx: TypeAccessExpContext =>
+        val t = token2type(ctx.t)
         val r = ctx.ID.getText match {
-          case "Min" => checkBitWidth(ctx.ID); IntMin(bitWidth)
-          case "Max" => checkBitWidth(ctx.ID); IntMax(bitWidth)
+          case "Min" =>
+            t match {
+              case t: IntegralType =>
+                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
+                IntMin(bitWidth, t)
+              case _ =>
+                error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
+                IntMin(8, ZType())
+            }
+          case "Max" =>
+            t match {
+              case t: IntegralType =>
+                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
+                IntMax(bitWidth, t)
+              case _ =>
+                error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
+                IntMin(8, ZType())
+            }
+          case "random" => Random(t)
           case s =>
-            error(ctx.ID, s"Expecting Min or Max instead of $s.")
-            IntMin(8)
+            error(ctx.ID, s"Expecting Min, Max, random, toZ, toZ8, toZ16, ..., toZ64, toN, toN8, toN16, ..., toN, toS8, toS16, ..., toS54, toU8, toU16, ..., or toU64 instead of $s.")
+            IntMin(8, ZType())
         }
         r
-      case ctx: IdExpContext =>
-        val r = buildId(ctx.tb)
-        if (ctx.exp != null && ctx.t != null) {
-          Apply(r,
-            Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
-        } else ctx.te match {
-          case null => r
-          case te if te.getText == "size" => Size(r)
-          case te if te.getText == "clone" => Clone(r)
-          case te =>
-            error(ctx.te, s"Expecting size or clone instead of ${te.getText}.")
-            r
-        }
-      case ctx: BigIntExpContext => IntLit(ctx.STRING.getText)
+      case ctx: FloatLitExpContext =>
+        val floatText = ctx.FLOAT.getText
+        if (floatText.last.toUpper == 'D')
+          try floatText.toDouble catch {
+            case _: Throwable =>
+              error(ctx.FLOAT, "Invalid F32 literal.")
+          }
+        else
+          try floatText.toFloat catch {
+            case _: Throwable =>
+              error(ctx.FLOAT, "Invalid F64 literal.")
+          }
+        FloatLit(ctx.FLOAT.getText)
       case ctx: SeqExpContext =>
-        SeqLit(Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        SeqLit(token2type(ctx.t), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+    }
+    r at ctx
+  }
+
+  private def build(ctx: ExpContext): Exp = {
+    val r = ctx match {
+      case ctx: InvokeExpContext =>
+        Apply(buildId(ctx.tb), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+      case ctx: PExpContext =>
+        var e = build(ctx.primExp)
+        for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
+          e = id.getText match {
+            case "clone" => e match {
+              case e: Id => Clone(e)
+              case _ =>
+                error(id, s"Cloning is only allowed from a variable reference expression.")
+                Clone(Id("???"))
+            }
+            case "size" => Size(e)
+            case "toZ" => ToIntegral(e, ZType() at id)
+            case "toZ8" => ToIntegral(e, Z8Type() at id)
+            case "toZ16" => ToIntegral(e, Z16Type() at id)
+            case "toZ32" => ToIntegral(e, Z32Type() at id)
+            case "toZ64" => ToIntegral(e, Z64Type() at id)
+            case "toN" => ToIntegral(e, NType() at id)
+            case "toN8" => ToIntegral(e, N8Type() at id)
+            case "toN16" => ToIntegral(e, N16Type() at id)
+            case "toN32" => ToIntegral(e, N32Type() at id)
+            case "toN64" => ToIntegral(e, N64Type() at id)
+            case "toS8" => ToIntegral(e, S8Type() at id)
+            case "toS16" => ToIntegral(e, S16Type() at id)
+            case "toS32" => ToIntegral(e, S32Type() at id)
+            case "toS64" => ToIntegral(e, S64Type() at id)
+            case "toU8" => ToIntegral(e, U8Type() at id)
+            case "toU16" => ToIntegral(e, U16Type() at id)
+            case "toU32" => ToIntegral(e, U32Type() at id)
+            case "toU64" => ToIntegral(e, U64Type() at id)
+          }
+        }
+        e
       case ctx: RandomIntExpContext => RandomInt()
       case ctx: ReadIntExpContext =>
         ReadInt(Option(ctx.STRING).map { x =>
@@ -606,6 +776,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "<=" | "≤" => Le(lExp, rExp)
           case ">" => Gt(lExp, rExp)
           case ">=" | "≥" => Ge(lExp, rExp)
+          case ">>" => Shr(lExp, rExp)
+          case ">>>" => UShr(lExp, rExp)
+          case "<<" => Shl(lExp, rExp)
           case "=" => Eq(lExp, rExp)
           case "==" =>
             val r = Eq(lExp, rExp)
@@ -687,10 +860,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
     else constMap(e) = value
   }
-
-  private def errorIf(t: Token, tText: String): Unit =
-    if (t.getText != tText)
-      error(t, s"Expecting $tText instead of ${t.getText}")
 
   private def errorIf(num: Num, id: Token, op: Token,
                       idText: String, opTexts: String*): Unit = {

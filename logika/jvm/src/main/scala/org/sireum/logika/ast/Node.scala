@@ -40,7 +40,7 @@ object Node {
   final private[ast] def detectMode(unitNode: UnitNode): Unit = {
     var m = LogicMode.Propositional
     Visitor.build({
-      case _: IntType | _: BooleanType | _: IntSeqType |
+      case _: ZType | _: BType | _: ZSType |
            _: IntLit | _: IntMin | _: IntMax | _: SeqLit |
            _: Mul | _: Div | _: Rem | _: Add | _: Sub |
            _: Lt | _: Le | _: Gt | _: Ge | _: Eq | _: Ne |
@@ -491,10 +491,10 @@ final case class Id(value: String) extends PrimaryExp {
     sb.append(value)
 }
 
-final case class Size(id: Id) extends PrimaryExp {
+final case class Size(exp: Exp) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
-    id.buildString(sb, inProof)
+    exp.buildString(sb, inProof)
     sb.append(".size")
   }
 }
@@ -562,24 +562,87 @@ final case class IntLit(value: String) extends PrimaryExp {
   }
 }
 
-final case class IntMin(bitWidth: Int) extends PrimaryExp {
-  val value =
-    if (bitWidth == 0) BigInt(0)
-    else BigInt(-2).pow(bitWidth - 1)
+final case class FloatLit(value: String) extends PrimaryExp {
+  def primitiveValue: Either[Float, Double] =
+    if (value.charAt(value.length - 1).toUpper == 'D') Right(value.toDouble)
+    else Left(value.toFloat)
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
-    sb.append("Z.Min")
+    sb.append(value)
 }
 
-final case class IntMax(bitWidth: Int) extends PrimaryExp {
-  val value =
-    if (bitWidth == 0) BigInt(0)
-    else BigInt(2).pow(bitWidth - 1) - 1
-
+final case class RealLit(value: String) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
-    sb.append("Z.Max")
+    sb.append(value)
+}
+
+final case class IntMin(bitWidth: Int,
+                        integralType: IntegralType) extends PrimaryExp {
+  val value =
+    integralType match {
+      case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
+           _: S8Type | _: S16Type | _: S32Type | _: S64Type =>
+        if (bitWidth == 0) BigInt(0)
+        else BigInt(-2).pow(bitWidth - 1)
+      case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
+           _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
+        BigInt(0)
+    }
+
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    integralType.buildString(sb)
+    sb.append(".Min")
+  }
+}
+
+final case class IntMax(bitWidth: Int,
+                        integralType: IntegralType) extends PrimaryExp {
+  val value =
+    integralType match {
+      case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
+           _: S8Type | _: S16Type | _: S32Type | _: S64Type =>
+        if (bitWidth == 0) BigInt(0)
+        else BigInt(2).pow(bitWidth - 1) - 1
+      case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
+           _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
+        BigInt(2).pow(bitWidth) - 1
+    }
+
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    integralType.buildString(sb)
+    sb.append(".Max")
+  }
+}
+
+final case class Random(t: Type) extends PrimaryExp {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    t.buildString(sb)
+    sb.append(".random")
+  }
+}
+
+final case class Read(t: Type, msgOpt: Option[String]) extends PrimaryExp {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    t.buildString(sb)
+    sb.append(".read(")
+    msgOpt.foreach(sb.append)
+    sb.append(")")
+  }
+}
+
+final case class ToIntegral(e: Exp, t: IntegralType) extends PrimaryExp {
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    e.buildString(sb, inProof)
+    sb.append(".to")
+    t.buildString(sb)
+  }
 }
 
 sealed trait BinaryExp extends Exp {
@@ -659,6 +722,22 @@ final case class Gt(left: Exp, right: Exp) extends InequalityExp {
 
 final case class Ge(left: Exp, right: Exp) extends InequalityExp {
   def op(inProof: Boolean) = if (inProof) "≥" else ">="
+}
+
+sealed trait ShiftExp extends BinaryExp {
+  final override val precedence = 50
+}
+
+final case class Shr(left: Exp, right: Exp) extends ShiftExp {
+  def op(inProof: Boolean) = ">>"
+}
+
+final case class UShr(left: Exp, right: Exp) extends ShiftExp {
+  def op(inProof: Boolean) = ">>>"
+}
+
+final case class Shl(left: Exp, right: Exp) extends ShiftExp {
+  def op(inProof: Boolean) = "<<"
 }
 
 sealed trait EqualityExp extends BinaryExp {
@@ -816,7 +895,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
           for (id <- ids.tail) {
             antecedent = And(antecedent, range(id, lo, hi))
           }
-          apply(ids, Some(TypeDomain(IntType())),
+          apply(ids, Some(TypeDomain(ZType())),
             Implies(antecedent, exp)).asInstanceOf[T]
         case _ => this.asInstanceOf[T]
       }
@@ -849,10 +928,11 @@ final case class RangeDomain(lo: Exp,
                              loLt: Boolean,
                              hiLt: Boolean) extends QuantDomain
 
-final case class SeqLit(args: Node.Seq[Exp]) extends PrimaryExp {
+final case class SeqLit(tpe: Type, args: Node.Seq[Exp]) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
-    sb.append("ZS(")
+    tpe.buildString(sb)
+    sb.append('(')
     if (args.nonEmpty) {
       args.head.buildString(sb, inProof)
       for (arg <- args.tail) {
@@ -966,17 +1046,228 @@ sealed trait Type extends Node {
   def buildString(sb: StringBuilder): Unit
 }
 
-final case class BooleanType() extends Type {
+final case class BType() extends Type {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("B")
 }
 
-final case class IntType() extends Type {
+sealed trait IntegralType extends Type
+
+final case class ZType() extends IntegralType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z")
 }
 
-final case class IntSeqType() extends Type {
+final case class Z8Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z8")
+}
+
+final case class Z16Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z16")
+}
+
+final case class Z32Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z32")
+}
+
+final case class Z64Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z64")
+}
+
+final case class NType() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N")
+}
+
+final case class N8Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N8")
+}
+
+final case class N16Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N16")
+}
+
+final case class N32Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N32")
+}
+
+final case class N64Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N64")
+}
+
+final case class S8Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S8")
+}
+
+final case class S16Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S16")
+}
+
+final case class S32Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S32")
+}
+
+final case class S64Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S64")
+}
+
+final case class U8Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U8")
+}
+
+final case class U16Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U16")
+}
+
+final case class U32Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U32")
+}
+
+final case class U64Type() extends IntegralType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U64")
+}
+
+final case class RType() extends Type {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("R")
+}
+
+sealed trait FloatingPointType extends Type
+
+final case class F32Type() extends FloatingPointType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("F32")
+}
+
+final case class F64Type() extends FloatingPointType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("F64")
+}
+
+sealed trait SeqType extends Type
+
+final case class BSType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("BS")
+}
+
+final case class ZSType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("ZS")
+}
+
+final case class Z8SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z8S")
+}
+
+final case class Z16SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z16S")
+}
+
+final case class Z32SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z32S")
+}
+
+final case class Z64SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("Z64S")
+}
+
+final case class NSType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("NS")
+}
+
+final case class N8SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N8S")
+}
+
+final case class N16SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N16S")
+}
+
+final case class N32SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N32S")
+}
+
+final case class N64SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("N64S")
+}
+
+final case class S8SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S8S")
+}
+
+final case class S16SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S16S")
+}
+
+final case class S32SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S32S")
+}
+
+final case class S64SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("S64S")
+}
+
+final case class U8SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U8S")
+}
+
+final case class U16SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U16S")
+}
+
+final case class U32SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U32S")
+}
+
+final case class U64SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("U64S")
+}
+
+final case class RSType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("RS")
+}
+
+final case class F32SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("F32S")
+}
+
+final case class F64SType() extends SeqType {
+  override def buildString(sb: StringBuilder): Unit =
+    sb.append("F64S")
 }

@@ -74,9 +74,9 @@ object TypeChecker {
   }
 
   private[tipe] final def tipe(t: Type): Tipe = t match {
-    case t: BooleanType => B
-    case t: IntType => Z
-    case t: IntSeqType => ZS
+    case t: BType => B
+    case t: ZType => Z
+    case t: ZSType => ZS
   }
 
   private[tipe] final def tipe(m: MethodDecl): FunTipe =
@@ -273,7 +273,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     e match {
       case _: BooleanLit => someB
       case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
-      case e: Size => zs(e.id); someZ
+      case e: Size => zs(e.exp); someZ
       case e: Clone =>
         if (!allowMethod) error(e.id, s"ZS clone is only allowed at statement level.")
         zs(e.id)

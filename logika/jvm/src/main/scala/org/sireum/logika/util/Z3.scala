@@ -292,8 +292,8 @@ $s"""))
   }
 
   def translate(tpe: Type): String = tpe match {
-    case _: BooleanType => "B"
-    case _: IntType => "Z"
-    case _: IntSeqType => "ZS"
+    case _: BType => "B"
+    case _: ZType => "Z"
+    case _: ZSType => "ZS"
   }
 }

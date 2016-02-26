@@ -82,6 +82,14 @@ object Rewriter {
       val Seq(num: Num, exp: Exp, steps: IVector[_]) = es
       org.sireum.logika.ast.Auto(num, exp, cast(steps))
     }),
+    ("BSType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.BSType()
+    }),
+    ("BType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.BType()
+    }),
     ("Block", { es =>
       val Seq(stmts: IVector[_]) = es
       org.sireum.logika.ast.Block(cast(stmts))
@@ -89,10 +97,6 @@ object Rewriter {
     ("BooleanLit", { es =>
       val Seq(value: java.lang.Boolean) = es
       org.sireum.logika.ast.BooleanLit(value)
-    }),
-    ("BooleanType", { es =>
-      val Seq() = es
-      org.sireum.logika.ast.BooleanType()
     }),
     ("BottomElim", { es =>
       val Seq(num: Num, exp: Exp, falseStep: Num) = es
@@ -134,6 +138,22 @@ object Rewriter {
       val Seq(exp: Apply) = es
       org.sireum.logika.ast.ExpStmt(exp)
     }),
+    ("F32SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.F32SType()
+    }),
+    ("F32Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.F32Type()
+    }),
+    ("F64SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.F64SType()
+    }),
+    ("F64Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.F64Type()
+    }),
     ("Fact", { es =>
       val Seq(id: Id, exp: Exp) = es
       org.sireum.logika.ast.Fact(id, exp)
@@ -149,6 +169,10 @@ object Rewriter {
     ("Facts", { es =>
       val Seq(factOrFunDecls: IVector[_]) = es
       org.sireum.logika.ast.Facts(cast(factOrFunDecls))
+    }),
+    ("FloatLit", { es =>
+      val Seq(value: String) = es
+      org.sireum.logika.ast.FloatLit(value)
     }),
     ("ForAll", { es =>
       val Seq(ids: IVector[_], domainOpt: Option[_], exp: Exp) = es
@@ -203,20 +227,12 @@ object Rewriter {
       org.sireum.logika.ast.IntLit(value)
     }),
     ("IntMax", { es =>
-      val Seq(bitWidth: java.lang.Integer) = es
-      org.sireum.logika.ast.IntMax(bitWidth)
+      val Seq(bitWidth: java.lang.Integer, integralType: IntegralType) = es
+      org.sireum.logika.ast.IntMax(bitWidth, integralType)
     }),
     ("IntMin", { es =>
-      val Seq(bitWidth: java.lang.Integer) = es
-      org.sireum.logika.ast.IntMin(bitWidth)
-    }),
-    ("IntSeqType", { es =>
-      val Seq() = es
-      org.sireum.logika.ast.IntSeqType()
-    }),
-    ("IntType", { es =>
-      val Seq() = es
-      org.sireum.logika.ast.IntType()
+      val Seq(bitWidth: java.lang.Integer, integralType: IntegralType) = es
+      org.sireum.logika.ast.IntMin(bitWidth, integralType)
     }),
     ("Inv", { es =>
       val Seq(exps: IVector[_]) = es
@@ -261,6 +277,46 @@ object Rewriter {
     ("Mul", { es =>
       val Seq(left: Exp, right: Exp) = es
       org.sireum.logika.ast.Mul(left, right)
+    }),
+    ("N16SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N16SType()
+    }),
+    ("N16Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N16Type()
+    }),
+    ("N32SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N32SType()
+    }),
+    ("N32Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N32Type()
+    }),
+    ("N64SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N64SType()
+    }),
+    ("N64Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N64Type()
+    }),
+    ("N8SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N8SType()
+    }),
+    ("N8Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.N8Type()
+    }),
+    ("NSType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.NSType()
+    }),
+    ("NType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.NType()
     }),
     ("Ne", { es =>
       val Seq(left: Exp, right: Exp) = es
@@ -334,6 +390,18 @@ object Rewriter {
       val Seq(proof: Proof) = es
       org.sireum.logika.ast.ProofStmt(proof)
     }),
+    ("RSType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.RSType()
+    }),
+    ("RType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.RType()
+    }),
+    ("Random", { es =>
+      val Seq(t: Type) = es
+      org.sireum.logika.ast.Random(t)
+    }),
     ("RandomInt", { es =>
       val Seq() = es
       org.sireum.logika.ast.RandomInt()
@@ -342,9 +410,17 @@ object Rewriter {
       val Seq(lo: Exp, hi: Exp, loLt: java.lang.Boolean, hiLt: java.lang.Boolean) = es
       org.sireum.logika.ast.RangeDomain(lo, hi, loLt, hiLt)
     }),
+    ("Read", { es =>
+      val Seq(t: Type, msgOpt: Option[_]) = es
+      org.sireum.logika.ast.Read(t, cast(msgOpt))
+    }),
     ("ReadInt", { es =>
       val Seq(msgOpt: Option[_]) = es
       org.sireum.logika.ast.ReadInt(cast(msgOpt))
+    }),
+    ("RealLit", { es =>
+      val Seq(value: String) = es
+      org.sireum.logika.ast.RealLit(value)
     }),
     ("Rem", { es =>
       val Seq(left: Exp, right: Exp) = es
@@ -358,13 +434,45 @@ object Rewriter {
       val Seq() = es
       org.sireum.logika.ast.Result()
     }),
+    ("S16SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S16SType()
+    }),
+    ("S16Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S16Type()
+    }),
+    ("S32SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S32SType()
+    }),
+    ("S32Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S32Type()
+    }),
+    ("S64SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S64SType()
+    }),
+    ("S64Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S64Type()
+    }),
+    ("S8SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S8SType()
+    }),
+    ("S8Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.S8Type()
+    }),
     ("SeqAssign", { es =>
       val Seq(id: Id, index: Exp, exp: Exp) = es
       org.sireum.logika.ast.SeqAssign(id, index, exp)
     }),
     ("SeqLit", { es =>
-      val Seq(args: IVector[_]) = es
-      org.sireum.logika.ast.SeqLit(cast(args))
+      val Seq(tpe: Type, args: IVector[_]) = es
+      org.sireum.logika.ast.SeqLit(tpe, cast(args))
     }),
     ("Sequent", { es =>
       val Seq(premises: IVector[_], conclusions: IVector[_], proofOpt: Option[_]) = es
@@ -374,9 +482,17 @@ object Rewriter {
       val Seq(sequent: Sequent) = es
       org.sireum.logika.ast.SequentStmt(sequent)
     }),
+    ("Shl", { es =>
+      val Seq(left: Exp, right: Exp) = es
+      org.sireum.logika.ast.Shl(left, right)
+    }),
+    ("Shr", { es =>
+      val Seq(left: Exp, right: Exp) = es
+      org.sireum.logika.ast.Shr(left, right)
+    }),
     ("Size", { es =>
-      val Seq(id: Id) = es
-      org.sireum.logika.ast.Size(id)
+      val Seq(exp: Exp) = es
+      org.sireum.logika.ast.Size(exp)
     }),
     ("StringLit", { es =>
       val Seq(value: String) = es
@@ -398,9 +514,49 @@ object Rewriter {
       val Seq(num: Num, exp: Exp, eqStep: Num, step: Num) = es
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
     }),
+    ("ToIntegral", { es =>
+      val Seq(e: Exp, t: IntegralType) = es
+      org.sireum.logika.ast.ToIntegral(e, t)
+    }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es
       org.sireum.logika.ast.TypeDomain(tpe)
+    }),
+    ("U16SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U16SType()
+    }),
+    ("U16Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U16Type()
+    }),
+    ("U32SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U32SType()
+    }),
+    ("U32Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U32Type()
+    }),
+    ("U64SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U64SType()
+    }),
+    ("U64Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U64Type()
+    }),
+    ("U8SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U8SType()
+    }),
+    ("U8Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.U8Type()
+    }),
+    ("UShr", { es =>
+      val Seq(left: Exp, right: Exp) = es
+      org.sireum.logika.ast.UShr(left, right)
     }),
     ("VarDecl", { es =>
       val Seq(isVar: java.lang.Boolean, id: Id, tpe: Type, exp: Exp) = es
@@ -409,6 +565,46 @@ object Rewriter {
     ("While", { es =>
       val Seq(exp: Exp, block: Block, loopInv: LoopInv) = es
       org.sireum.logika.ast.While(exp, block, loopInv)
+    }),
+    ("Z16SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z16SType()
+    }),
+    ("Z16Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z16Type()
+    }),
+    ("Z32SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z32SType()
+    }),
+    ("Z32Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z32Type()
+    }),
+    ("Z64SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z64SType()
+    }),
+    ("Z64Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z64Type()
+    }),
+    ("Z8SType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z8SType()
+    }),
+    ("Z8Type", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.Z8Type()
+    }),
+    ("ZSType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.ZSType()
+    }),
+    ("ZType", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.ZType()
     })
   )
 

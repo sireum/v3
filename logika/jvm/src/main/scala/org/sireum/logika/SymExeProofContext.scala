@@ -54,8 +54,8 @@ SymExeProofContext(unitNode: Program,
 
   var validCache = imapEmpty[(ISeq[Exp], ISeq[Exp]), Boolean]
   val unboundedBitWidth = bitWidth == 0
-  lazy val zMin = IntMin(bitWidth)
-  lazy val zMax = IntMax(bitWidth)
+  lazy val zMin = IntMin(bitWidth, ZType())
+  lazy val zMax = IntMax(bitWidth, ZType())
 
   override def isValid(title: String, li: LocationInfo,
                        premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
@@ -73,9 +73,9 @@ SymExeProofContext(unitNode: Program,
     if (super.hasRuntimeError(stmt)) return true
     else if (unboundedBitWidth) return false
     val rw = ast.Rewriter.build[Exp]()({
-      case ForAll(ids, Some(TypeDomain(_: IntType)), e) =>
+      case ForAll(ids, Some(TypeDomain(_: ZType)), e) =>
         ForAll(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
-      case Exists(ids, Some(TypeDomain(_: IntType)), e) =>
+      case Exists(ids, Some(TypeDomain(_: ZType)), e) =>
         Exists(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
     })
     var ps = ivectorEmpty[Exp]

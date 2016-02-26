@@ -78,36 +78,58 @@ proofStep
     '}'                                                 #SubProof
   ;
 
-formula
+primFormula
   : t=( 'true' | 'T' | '⊤'
-      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean // propositional logic
-  | tb=ID ( '.' te=ID /* $te.text=="size" */ )?         #Var     // propositional logic
-  | '(' formula ')'                                     #Paren   // propositional logic
-  | 'result'                                            #Result  // programming logic
-  | ID '(' formula ( ',' formula )* ')'                 #Apply   // predicate logic
-  | NUM                                                 #Int     // algebra
-  | 'Z' '(' STRING ')'                                  #BigInt  // algebra
-  | 'Z' '.' ID /* ID == "Min" || ID == "Max" */         #IntMnx  // algebra
-  | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #Seq     // algebra
-  | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary  // algebra
-  | l=formula op=( '+' | '-' ) NL? r=formula            #Binary  // algebra
-  | <assoc=right> l=formula op='+:' NL? r=formula       #Binary  // algebra
-  | op='-' formula                                      #Unary   // algebra
-  | l=formula op=':+' NL? r=formula                     #Binary  // algebra
+      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean     // propositional logic
+  | tb=ID                                               #Var         // propositional logic
+  | '(' formula ')'                                     #Paren       // propositional logic
+  | 'result'                                            #Result      // programming logic
+  | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
+  | NUM                                                 #Int         // programming logic
+  | t=( 'Z' | 'R' ) '(' STRING ')'                      #Lit         // programming logic
+  | FLOAT                                               #FloatLit    // programming logic
+  | t=( 'B'
+      | 'Z' | 'Z8'  | 'Z16' | 'Z32' | 'Z64'
+      | 'N' | 'N8'  | 'N16' | 'N32' | 'N64'
+            | 'S8'  | 'S16' | 'S32' | 'S64'
+            | 'U8'  | 'U16' | 'U32' | 'U64'
+      | 'R' | 'F32' | 'F64' )'.' ID                     #TypeAccess  // programming logic
+      // ID in { "Min", "Max", "random" }
+  | t=( 'BS'
+      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
+      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
+             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
+             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
+      | 'RS' | 'F32S' | 'F64S' )
+    '(' ( exp ( ',' exp )* )? ')'                       #Seq         // programming logic
+  ;
+
+formula
+  : primFormula ( '.' ID )*                             #PFormula
+    /* ID in { "size",
+               "toZ", "toZ8", "toZ16", "toZ32", "toZ64",
+               "toN", "toN8", "toN16", "toN32", "toN64",
+                      "toS8", "toS16", "toS32", "toS64",
+                      "toU8", "toU16", "toU32", "toU64"  } */
+  | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
+  | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
+  | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
+  | op='-' formula                                      #Unary       // programming logic
+  | l=formula op=':+' NL? r=formula                     #Binary      // programming logic
   | l=formula
     op=( '=' |'==' | '!=' | '≠' ) NL?
-    r=formula                                           #Binary  // algebra
-  | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary   // propositional logic
+    r=formula                                           #Binary      // programming logic
+  | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
-    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥' ) NL?
-    r=formula                                           #Binary  // algebra
+    op=( '<' | '<=' | '≤' | '>' | '>=' | '≥'
+       | '>>' | '>>>' | '<<' ) NL? r=formula            #Binary      // programming logic
   | l=formula
-    op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary  // propositional logic
+    op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
   | l=formula
-    op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary  // propositional logic
+    op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary      // propositional logic
   | <assoc=right> l=formula
-    op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary  // propositional logic
-  | qformula                                            #Quant   // predicate logic
+    op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary      // propositional logic
+  | qformula                                            #Quant       // predicate logic
   ;
 
 qformula
@@ -121,9 +143,18 @@ qformula
   ;
 
 type
-  : t='B'                                               #BooleanType
-  | t='Z'                                               #IntType
-  | t='ZS'                                              #IntSeqType
+  : t=( 'B'
+      | 'Z'   | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
+      | 'N'   | 'N8'   | 'N16'  | 'N32'  | 'N64'
+              | 'S8'   | 'S16'  | 'S32'  | 'S64'
+              | 'U8'   | 'U16'  | 'U32'  | 'U64'
+      | 'R'   | 'F32'  | 'F64'
+      | 'BS'
+      | 'ZS'  | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
+      | 'NS'  | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
+              | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
+              | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
+      | 'RS'  | 'F32S' | 'F64S' )
   ;
 
 justification
@@ -262,17 +293,38 @@ stringOrExp
   | exp
   ;
 
-exp
+primExp
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
-  | 'Z' '.' ID /* ID == "Min" || ID == "Max" */         #IntMnxExp
-  | tb=ID
-    ( t='(' ( exp ( ',' exp )* )? ')'
-    | '.' te=ID // te=="size" or te =="clone"
-    )?                                                  #IdExp
-  | 'Z' '(' STRING ')'                                  #BigIntExp
-  | 'ZS' '(' ( exp ( ',' exp )* )? ')'                  #SeqExp
+  | ID                                                  #VarExp
+  | t=( 'B'
+      | 'Z' | 'Z8'  | 'Z16' | 'Z32' | 'Z64'
+      | 'N' | 'N8'  | 'N16' | 'N32' | 'N64'
+            | 'S8'  | 'S16' | 'S32' | 'S64'
+            | 'U8'  | 'U16' | 'U32' | 'U64'
+      | 'R' | 'F32' | 'F64' )'.' ID                     #TypeAccessExp
+      // ID in { "Min", "Max", "random" }
+  | t=( 'Z' | 'R' ) '(' STRING ')'                      #LitExp
+  | FLOAT                                               #FloatLitExp
+  | t=( 'BS'
+      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
+      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
+             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
+             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
+      | 'RS' | 'F32S' | 'F64S' )
+    '(' ( exp ( ',' exp )* )? ')'                       #SeqExp
+  ;
+
+exp
+  : tb=ID t='(' ( exp ( ',' exp )* )? ')'               #InvokeExp
+  | primExp ( '.' ID )*                                 #PExp
+    /* ID in { "clone", // primExp === ID
+               "size",
+               "toZ", "toZ8", "toZ16", "toZ32", "toZ64",
+               "toN", "toN8", "toN16", "toN32", "toN64",
+                      "toS8", "toS16", "toS32", "toS64",
+                      "toU8", "toU16", "toU32", "toU64"  } */
   | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
@@ -281,7 +333,9 @@ exp
   | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
   | <assoc=right> l=exp op='+:' NL? r=exp               #BinaryExp
   | l=exp op=':+' NL? r=exp                             #BinaryExp
-  | l=exp op=( '>' | '>=' | '<' | '<=' )  NL? r=exp     #BinaryExp
+  | l=exp
+    op=( '>' | '>=' | '<' | '<=' | '>>' | '>>>' | '<<' )
+    NL?  r=exp                                          #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
   | l=exp op='&' NL? r=exp                              #BinaryExp
   | l=exp op='|' NL? r=exp                              #BinaryExp
@@ -380,6 +434,10 @@ STRING
 	: '"' StringCharacters? '"'
 	;
 
+FLOAT
+    : FloatingPointLiteral
+    ;
+
 fragment
 StringCharacters
 	:	StringCharacter+
@@ -402,9 +460,122 @@ UnicodeEscape
     :   '\\' 'u' HexDigit HexDigit HexDigit HexDigit
     ;
 
+// §3.10.1 Integer Literals
+
 fragment
 HexDigit
 	:	[0-9a-fA-F]
+	;
+
+fragment
+Digits
+	:	Digit (DigitsAndUnderscores? Digit)?
+	;
+
+fragment
+Digit
+	:	'0'
+	|	NonZeroDigit
+	;
+
+fragment
+NonZeroDigit
+	:	[1-9]
+	;
+
+fragment
+DigitsAndUnderscores
+	:	DigitOrUnderscore+
+	;
+
+fragment
+DigitOrUnderscore
+	:	Digit
+	|	'_'
+	;
+
+fragment
+HexNumeral
+	:	'0' [xX] HexDigits
+	;
+
+fragment
+HexDigits
+	:	HexDigit (HexDigitsAndUnderscores? HexDigit)?
+	;
+
+fragment
+HexDigitsAndUnderscores
+	:	HexDigitOrUnderscore+
+	;
+
+fragment
+HexDigitOrUnderscore
+	:	HexDigit
+	|	'_'
+	;
+
+// §3.10.2 Floating-Point Literals
+
+fragment
+FloatingPointLiteral
+	:	DecimalFloatingPointLiteral
+	|	HexadecimalFloatingPointLiteral
+	;
+
+fragment
+DecimalFloatingPointLiteral
+	:	/* the second Digits is modified to be non-optional */
+	    Digits '.' Digits ExponentPart? FloatTypeSuffix?
+	|	'.' Digits ExponentPart? FloatTypeSuffix?
+	|	Digits ExponentPart FloatTypeSuffix?
+	|	Digits FloatTypeSuffix
+	;
+
+fragment
+ExponentPart
+	:	ExponentIndicator SignedInteger
+	;
+
+fragment
+ExponentIndicator
+	:	[eE]
+	;
+
+fragment
+SignedInteger
+	:	Sign? Digits
+	;
+
+fragment
+Sign
+	:	[+-]
+	;
+
+fragment
+FloatTypeSuffix
+	:	[fFdD]
+	;
+
+fragment
+HexadecimalFloatingPointLiteral
+	:	HexSignificand BinaryExponent FloatTypeSuffix?
+	;
+
+fragment
+HexSignificand
+	:	HexNumeral '.'?
+	|	'0' [xX] HexDigits? '.' HexDigits
+	;
+
+fragment
+BinaryExponent
+	:	BinaryExponentIndicator SignedInteger
+	;
+
+fragment
+BinaryExponentIndicator
+	:	[pP]
 	;
 
 ERROR_CHAR: . ;
