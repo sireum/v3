@@ -840,7 +840,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
     def index(id: Id, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
-      val req2 = Lt(e, Size(id))
+      val sz = Size(id)
+      sz.tipe = id.tipe
+      val req2 = Lt(e, sz)
       if (autoEnabled) {
         if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
           hasError = true

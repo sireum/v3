@@ -309,7 +309,12 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case ctx: LitContext =>
         val r = ctx.t.getText match {
           case "Z" => IntLit(ctx.STRING.getText)
-          case "R" => RealLit(ctx.STRING.getText)
+          case "R" =>
+            val text = ctx.STRING.getText
+            if (!(text.count(_ == '.') == 1 &&
+              text.forall(c => c == '.' || c.isDigit)))
+              error(ctx.STRING, s"Invalid real literal $text.")
+            RealLit(text)
         }
         r
       case ctx: FloatLitContext =>
@@ -317,12 +322,12 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         if (floatText.last.toUpper == 'D')
           try floatText.toDouble catch {
             case _: Throwable =>
-              error(ctx.FLOAT, "Invalid F32 literal.")
+              error(ctx.FLOAT, s"Invalid F32 literal $floatText.")
           }
         else
           try floatText.toFloat catch {
             case _: Throwable =>
-              error(ctx.FLOAT, "Invalid F64 literal.")
+              error(ctx.FLOAT, s"Invalid F64 literal $floatText.")
           }
         FloatLit(ctx.FLOAT.getText)
       case ctx: TypeAccessContext =>

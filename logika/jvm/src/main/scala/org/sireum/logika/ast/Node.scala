@@ -27,6 +27,7 @@ package org.sireum.logika.ast
 
 import org.sireum.logika.tipe._
 import org.sireum.util._
+import org.sireum.util.Rewriter.HasInternalData
 
 object Node {
   type Seq[T] = IVector[T]
@@ -483,15 +484,25 @@ final case class BooleanLit(value: Boolean) extends PrimaryExp {
     sb.append(if (value) "T" else "F")
 }
 
-final case class Id(value: String) extends PrimaryExp {
+final case class Id(value: String) extends PrimaryExp with HasInternalData[Id] {
   var tipe: Tipe = _
+
+  override def copy(other: Id): Unit = {
+    tipe = other.tipe
+  }
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
     sb.append(value)
 }
 
-final case class Size(exp: Exp) extends PrimaryExp {
+final case class Size(exp: Exp) extends PrimaryExp with HasInternalData[Size] {
+  var tipe: Tipe = _
+
+  override def copy(other: Size): Unit = {
+    tipe = other.tipe
+  }
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     exp.buildString(sb, inProof)
@@ -507,8 +518,12 @@ final case class Clone(id: Id) extends PrimaryExp {
   }
 }
 
-final case class Result() extends PrimaryExp {
+final case class Result() extends PrimaryExp with HasInternalData[Result] {
   var tipe: Tipe = _
+
+  override def copy(other: Result): Unit = {
+    tipe = other.tipe
+  }
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
@@ -635,7 +650,7 @@ final case class ToIntegral(e: Exp, tpe: IntegralType) extends PrimaryExp {
   }
 }
 
-sealed trait BinaryExp extends Exp {
+sealed trait BinaryExp extends Exp with HasInternalData[BinaryExp] {
   def left: Exp
 
   def op(inProof: Boolean): String
@@ -643,6 +658,10 @@ sealed trait BinaryExp extends Exp {
   def right: Exp
 
   var tipe: Tipe = _
+
+  final override def copy(other: BinaryExp): Unit = {
+    tipe = other.tipe
+  }
 
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {
@@ -796,12 +815,16 @@ final case class Implies(left: Exp, right: Exp) extends BinaryExp {
   override val precedence = 90
 }
 
-sealed trait UnaryExp extends Exp {
+sealed trait UnaryExp extends Exp with HasInternalData[UnaryExp] {
   def op(inProof: Boolean): String
 
   def exp: Exp
 
   var tipe: Tipe = _
+
+  final override def copy(other: UnaryExp): Unit = {
+    tipe = other.tipe
+  }
 
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {

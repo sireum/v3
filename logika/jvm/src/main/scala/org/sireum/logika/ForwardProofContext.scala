@@ -83,6 +83,11 @@ ForwardProofContext(unitNode: Program,
   }
 
   def check(stmt: Stmt): Option[ForwardProofContext] = {
+    def mkSize(id: Id): Size = {
+      val r = Size(id)
+      r.tipe = id.tipe
+      r
+    }
     var hasError = false
     if (!stmt.isInstanceOf[ProofElementStmt] &&
       !stmt.isInstanceOf[MethodDecl]) {
@@ -150,11 +155,11 @@ ForwardProofContext(unitNode: Program,
         Some(copy(premises =
           premises.map(e => subst(e, m)) ++
             ivector(
-              Eq(Size(id), Size(old)),
+              Eq(mkSize(id), mkSize(old)),
               Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
               ForAll(
                 Node.seq(qVar),
-                Some(RangeDomain(Checker.zero, Size(id),
+                Some(RangeDomain(Checker.zero, mkSize(id),
                   loLt = false, hiLt = true)),
                 Implies(
                   Ne(qVar, index),

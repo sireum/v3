@@ -77,7 +77,7 @@ private final class Z3(timeout: Int)(
   val stg = new STGroupFile(getClass.getResource("z3.stg"), "UTF-8", '$', '$')
   val typeMap: MMap[String, Tipe] = mmapEmpty[String, Tipe]
   val lineSep = scala.util.Properties.lineSeparator
-  var zsCounter = 0
+  var seqCounter = 0
   val stMain = stg.getInstanceOf("main")
 
   def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Boolean) = {
@@ -149,8 +149,9 @@ $s"""))
       case id: Id =>
         typeMap(id.value) = id.tipe
         stg.getInstanceOf("id").add("value", id.value)
-      case Size(id) =>
-        stg.getInstanceOf("size").add("id", translate(id))
+      case e@Size(id) =>
+        stg.getInstanceOf("size").add("id", translate(id)).
+          add("tipe", translate(e.tipe))
       case e: Result =>
         val id = Id("result")
         id.tipe = e.tipe
@@ -170,21 +171,23 @@ $s"""))
         stg.getInstanceOf("int").add("value", s"(- ${-e.value})")
       case e: IntMax =>
         stg.getInstanceOf("int").add("value", e.value)
-      case Prepend(left, right) =>
-        val c = zs()
+      case e@Prepend(left, right) =>
+        val c = freshSeq()
         val a = translate(right)
         val v = translate(left)
         stMain.add("a",
-          stg.getInstanceOf("prepend").add("c", c).add("a", a).add("v", v)).
-          add("a", lineSep)
+          stg.getInstanceOf("prepend").add("c", c).add("a", a).add("v", v).
+            add("tipe", translate(e.tipe))
+        ).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case Append(left, right) =>
-        val c = zs()
+      case e@Append(left, right) =>
+        val c = freshSeq()
         val a = translate(left)
         val v = translate(right)
         stMain.add("a",
-          stg.getInstanceOf("append").add("c", c).add("a", a).add("v", v)).
-          add("a", lineSep)
+          stg.getInstanceOf("append").add("c", c).add("a", a).add("v", v).
+            add("tipe", e.tipe)
+        ).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
       case e: BinaryExp =>
         val op =
@@ -203,10 +206,12 @@ $s"""))
             case e: Gt => ">"
             case e: Ge => ">="
             case e: Eq =>
-              if (e.tipe == ZS)
-                return stg.getInstanceOf("zsequal").add("a1", translate(e.left)).
-                  add("a2", translate(e.right))
-              else "="
+              e.tipe match {
+                case _: org.sireum.logika.tipe.MSeq =>
+                  return stg.getInstanceOf("equal").add("a1", translate(e.left)).
+                    add("a2", translate(e.right)).add("tipe", translate(e.tipe))
+                case _ => "="
+              }
             case e: And => "and"
             case e: Or => "or"
             case e: Implies => "=>"
@@ -236,42 +241,52 @@ $s"""))
               add("tipe", stType))
         st
       case e: SeqLit =>
-        val c = zs()
-        val stZs = stg.getInstanceOf("zs").add("c", c).
-          add("size", e.args.size)
+        val c = freshSeq()
+        val tipe = translate(e.tpe)
+        val stZs = stg.getInstanceOf("declseq").add("c", c).
+          add("size", e.args.size).add("tipe", tipe)
         if (e.args.isEmpty)
-          stZs.add("exp", "_empty")
+          stZs.add("exp", s"${tipe}_empty")
         else {
           val args = e.args
           var i = 0
-          var stZsExp = stg.getInstanceOf("zsexp").add("i", i).
-            add("v", translate(args.head))
+          var stZsExp = stg.getInstanceOf("seqexp").add("i", i).
+            add("v", translate(args.head)).add("tipe", tipe)
           i += 1
           for (arg <- args.tail) {
-            stZsExp = stg.getInstanceOf("zsexp").add("i", i).
-              add("v", translate(arg)).add("a", stZsExp)
+            stZsExp = stg.getInstanceOf("seqexp").add("i", i).
+              add("v", translate(arg)).add("a", stZsExp).add("tipe", tipe)
             i += 1
           }
           stZs.add("exp", stZsExp)
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case _: RandomInt | _: ReadInt | _: Clone =>
+      case _: RandomInt | _: ReadInt | _: Clone | _: Random =>
         assert(assertion = false, "Unexpected situation.")
         null
     }
 
-  def zs(): Int = {
-    val r = zsCounter
-    zsCounter += 1
+  def freshSeq(): Int = {
+    val r = seqCounter
+    seqCounter += 1
     r
   }
 
   def translate(name: String, tipe: Tipe): ST =
     tipe match {
-      case B => stg.getInstanceOf("bconst").add("name", name)
-      case Z => stg.getInstanceOf("zconst").add("name", name)
-      case ZS => stg.getInstanceOf("zsconst").add("name", name)
+      case B | Z | Z8 | Z16 | Z32 | Z64 |
+           N | N8 | N16 | N32 | N64 |
+           S8 | S16 | S32 | S64 |
+           U8 | U16 | U32 | U64 |
+           R | F32 | F64 |
+           BS | ZS | Z8S | Z16S | Z32S | Z64S |
+           NS | N8S | N16S | N32S | N64S |
+           S8S | S16S | S32S | S64S |
+           U8S | U16S | U32S | U64S |
+           RS | F32S | F64S =>
+        stg.getInstanceOf("const").add("name", name).
+          add("tipe", translate(tipe))
       case tipe: FunTipe =>
         val st = stg.getInstanceOf("fun").add("name", name).
           add("result", translate(tipe.result))
@@ -286,7 +301,48 @@ $s"""))
   def translate(tipe: Tipe): String = tipe match {
     case B => "B"
     case Z => "Z"
+    case Z8 => "Z8"
+    case Z16 => "Z16"
+    case Z32 => "Z32"
+    case Z64 => "Z64"
+    case N => "N"
+    case N8 => "N8"
+    case N16 => "N16"
+    case N32 => "N32"
+    case N64 => "N64"
+    case S8 => "S8"
+    case S16 => "S16"
+    case S32 => "S32"
+    case S64 => "S64"
+    case U8 => "U8"
+    case U16 => "U16"
+    case U32 => "U32"
+    case U64 => "U64"
+    case R => "R"
+    case F32 => "F32"
+    case F64 => "F64"
+    case BS => "BS"
     case ZS => "ZS"
+    case Z8S => "Z8S"
+    case Z16S => "Z16S"
+    case Z32S => "Z32S"
+    case Z64S => "Z64S"
+    case NS => "NS"
+    case N8S => "N8S"
+    case N16S => "N16S"
+    case N32S => "N32S"
+    case N64S => "N64S"
+    case S8S => "S8S"
+    case S16S => "S16S"
+    case S32S => "S32S"
+    case S64S => "S64S"
+    case U8S => "U8S"
+    case U16S => "U16S"
+    case U32S => "U32S"
+    case U64S => "U64S"
+    case RS => "RS"
+    case F32S => "F32S"
+    case F64S => "F64S"
     case _: FunTipe | UnitTipe =>
       assert(assertion = false, "Unexpected situation."); "???"
   }
@@ -294,6 +350,47 @@ $s"""))
   def translate(tpe: Type): String = tpe match {
     case _: BType => "B"
     case _: ZType => "Z"
+    case _: Z8Type => "Z8"
+    case _: Z16Type => "Z16"
+    case _: Z32Type => "Z32"
+    case _: Z64Type => "Z64"
+    case _: NType => "N"
+    case _: N8Type => "N8"
+    case _: N16Type => "N16"
+    case _: N32Type => "N32"
+    case _: N64Type => "N64"
+    case _: S8Type => "S8"
+    case _: S16Type => "S16"
+    case _: S32Type => "S32"
+    case _: S64Type => "S64"
+    case _: U8Type => "U8"
+    case _: U16Type => "U16"
+    case _: U32Type => "U32"
+    case _: U64Type => "U64"
+    case _: RType => "R"
+    case _: F32Type => "F32"
+    case _: F64Type => "F64"
+    case _: BSType => "BS"
     case _: ZSType => "ZS"
+    case _: Z8SType => "Z8S"
+    case _: Z16SType => "Z16S"
+    case _: Z32SType => "Z32S"
+    case _: Z64SType => "Z64S"
+    case _: NSType => "NS"
+    case _: N8SType => "N8S"
+    case _: N16SType => "N16S"
+    case _: N32SType => "N32S"
+    case _: N64SType => "N64S"
+    case _: S8SType => "S8S"
+    case _: S16SType => "S16S"
+    case _: S32SType => "S32S"
+    case _: S64SType => "S64S"
+    case _: U8SType => "U8S"
+    case _: U16SType => "U16S"
+    case _: U32SType => "U32S"
+    case _: U64SType => "U64S"
+    case _: RSType => "RS"
+    case _: F32SType => "F32S"
+    case _: F64SType => "F64S"
   }
 }

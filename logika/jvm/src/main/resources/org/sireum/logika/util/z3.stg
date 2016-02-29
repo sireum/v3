@@ -1,14 +1,54 @@
 main(d, a, e) ::= <<
 ; Preamble
-(define-sort B () Bool)                      ; Logika's B type
-(define-sort Z () Int)                       ; Logika's Z type
-(define-sort ZS () (Array Z Z))              ; Logika's ZS type
-(declare-fun _size (ZS) Z)                   ; ZS _size proof function
-(assert (forall ((a ZS)) (>= (_size a) 0)))  ; ZS _size axiom: _size of any ZS must be non-negative
-(declare-const _empty ZS)                    ; ZS _empty constant
-(assert (= _empty ((as const ZS) 0)))        ; ZS _empty axiom: no element in _empty
-(assert (= (_size _empty) 0))                ; ZS _size and _empty axiom: _size of _empty is 0
-
+(define-sort B    () Bool)                     ; Logika's B type
+(define-sort Z    () Int)                      ; Logika's Z type
+(define-sort ZS   () (Array Z Z))              ; Logika's ZS type
+(declare-fun ZS_size (ZS) Z)                   ; ZS_size proof function
+(assert (forall ((a ZS)) (>= (ZS_size a) 0)))  ; ZS_size axiom: ZS_size of any ZS must be non-negative
+(declare-const ZS_empty ZS)                    ; ZS_empty constant
+(assert (= ZS_empty ((as const ZS) 0)))        ; ZS_empty axiom: no element in ZS_empty
+(assert (= (ZS_size ZS_empty) 0))              ; ZS_size and ZS_empty axiom: ZS_size of ZS_empty is 0
+; Extended Preamble for SymExe
+(define-sort Z8   () Int)
+(define-sort Z16  () Int)
+(define-sort Z32  () Int)
+(define-sort Z64  () Int)
+(define-sort N    () Int)
+(define-sort N8   () Int)
+(define-sort N16  () Int)
+(define-sort N32  () Int)
+(define-sort N64  () Int)
+(define-sort S8   () (_ BitVec 8))
+(define-sort S16  () (_ BitVec 16))
+(define-sort S32  () (_ BitVec 32))
+(define-sort S64  () (_ BitVec 32))
+(define-sort U8   () (_ BitVec 8))
+(define-sort U16  () (_ BitVec 16))
+(define-sort U32  () (_ BitVec 32))
+(define-sort U64  () (_ BitVec 64))
+(define-sort R    () Real)
+(define-sort F32  () Float32)
+(define-sort F64  () Float64)
+(define-sort Z8S  () (Array Z Z8))
+(define-sort Z16S () (Array Z Z16))
+(define-sort Z32S () (Array Z Z32))
+(define-sort Z64S () (Array Z Z64))
+(define-sort NS   () (Array Z N))
+(define-sort N8S  () (Array Z N8))
+(define-sort N16S () (Array Z N16))
+(define-sort N32S () (Array Z N32))
+(define-sort N64S () (Array Z N64))
+(define-sort S8S  () (Array Z S8))
+(define-sort S16S () (Array Z S16))
+(define-sort S32S () (Array Z S32))
+(define-sort S64S () (Array Z S64))
+(define-sort U8S  () (Array Z U8))
+(define-sort U16S () (Array Z U16))
+(define-sort U32S () (Array Z U32))
+(define-sort U64S () (Array Z U64))
+(define-sort RS   () (Array Z R))
+(define-sort F32S () (Array Z F32))
+(define-sort F64S () (Array Z F64))
 ; Type Declarations
 $d$
 ; Auxiliaries
@@ -25,16 +65,8 @@ assertion(e) ::= <<
 (assert $e$)
 >>
 
-bconst(name) ::= <<
-(declare-const l_$name$ B)
->>
-
-zconst(name) ::= <<
-(declare-const l_$name$ Z)
->>
-
-zsconst(name) ::= <<
-(declare-const l_$name$ ZS)
+const(name, tipe) ::= <<
+(declare-const l_$name$ $tipe$)
 >>
 
 fun(name, param, result) ::= <<
@@ -53,8 +85,8 @@ id(value) ::= <<
 l_$value$
 >>
 
-size(id) ::= <<
-(_size $id$)
+size(id, tipe) ::= <<
+($tipe$_size $id$)
 >>
 
 index(a, i) ::= <<
@@ -89,51 +121,50 @@ a(c) ::= <<
 _a!$c$
 >>
 
-zs(c, exp, size) ::= <<
+declseq(c, exp, size, tipe) ::= <<
 (declare-const _a!$c$ ZS)
 (assert (= _a!$c$ $exp$))
-(assert (= (_size _a!$c$) $size$))
+(assert (= ($tipe$_size _a!$c$) $size$))
 >>
 
-zsexp(a, i, v) ::= <<
-(store $if(a)$$a$$else$_empty$endif$ $i$ $v$)
+seqexp(a, i, v, tipe) ::= <<
+(store $if(a)$$a$$else$$tipe$_empty$endif$ $i$ $v$)
 >>
 
-prepend(c, a, v) ::= <<
-(declare-const _a!$c$ ZS)
-(assert (= (_size _a!$c$) (+ (_size $a$) 1)))
+prepend(c, a, v, tipe) ::= <<
+(declare-const _a!$c$ $tipe$)
+(assert (= ($tipe$_size _a!$c$) (+ ($tipe$_size $a$) 1)))
 (assert (= (select _a!$c$ 0) $v$))
 (assert
   (forall ((_i Z))
     (=>
-      (and (< 0 _i) (< _i (_size _a!$c$)))
+      (and (< 0 _i) (< _i ($tipe$_size _a!$c$)))
       (= (select _a!$c$ _i) (select $a$ (- _i 1)))
     )
   )
 )
 >>
 
-append(c, a, v) ::= <<
-(declare-const _a!$c$ ZS)
-(assert (= (_size _a!$c$) (+ (_size $a$) 1)))
-(assert (= (select _a!$c$ (_size $a$)) $v$))
+append(c, a, v, tipe) ::= <<
+(declare-const _a!$c$ $tipe$)
+(assert (= ($tipe$_size _a!$c$) (+ ($tipe$_size $a$) 1)))
+(assert (= (select _a!$c$ ($tipe$_size $a$)) $v$))
 (assert
   (forall ((_i Z))
     (=>
-      (and (<= 0 _i) (< _i (_size $a$)))
+      (and (<= 0 _i) (< _i ($tipe$_size $a$)))
       (= (select _a!$c$ _i) (select $a$ _i))
     )
   )
 )
 >>
 
-
-zsequal(a1, a2) ::= <<
+equal(a1, a2, tipe) ::= <<
 (and
-  (= (_size $a1$) (_size $a2$))
+  (= ($tipe$_size $a1$) ($tipe$_size $a2$))
   (forall ((_i Z))
     (=>
-      (and (<= 0 _i) (< _i (_size $a1$)))
+      (and (<= 0 _i) (< _i ($tipe$_size $a1$)))
       (= (select $a1$ _i) (select $a2$ _i))
     )
   )

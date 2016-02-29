@@ -316,7 +316,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     e match {
       case _: BooleanLit => someB
       case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
-      case e: Size => mseq(e.exp); someZ
+      case e: Size => mseq(e.exp).foreach(e.tipe = _); someZ
       case e: Clone =>
         if (!allowMethod) error(e.id, s"Clone is only allowed at statement level.")
         mseq(e.id)
@@ -377,7 +377,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case e: IntMin => Some(TypeChecker.tipe(e.integralType))
       case e: IntMax => Some(TypeChecker.tipe(e.integralType))
       case e: ToIntegral => integral(e); Some(TypeChecker.tipe(e.tpe))
-      case e: Random => Some(TypeChecker.tipe(e.tpe))
+      case e: Random =>
+        if (!allowMethod)
+          error(e, s"Invoking .random is only allowed at statement level.")
+        Some(TypeChecker.tipe(e.tpe))
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
