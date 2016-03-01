@@ -641,10 +641,16 @@ final case class Random(tpe: Type) extends PrimaryExp {
   }
 }
 
-final case class ToIntegral(e: Exp, tpe: IntegralType) extends PrimaryExp {
+final case class ToIntegral(exp: Exp, tpe: IntegralType) extends PrimaryExp with HasInternalData[ToIntegral] {
+  var tipe: Tipe = _
+
+  override def copy(other: ToIntegral): Unit = {
+    tipe = other.tipe
+  }
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
-    e.buildString(sb, inProof)
+    exp.buildString(sb, inProof)
     sb.append(".to")
     tpe.buildString(sb)
   }

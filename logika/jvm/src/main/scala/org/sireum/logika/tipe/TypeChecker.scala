@@ -30,7 +30,7 @@ import org.sireum.util._
 
 object TypeChecker {
   val kind = "Type Checker"
-  val integerTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
+  val posNegTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
 
   final def check(programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
@@ -376,7 +376,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case e: RealLit => someR
       case e: IntMin => Some(TypeChecker.tipe(e.integralType))
       case e: IntMax => Some(TypeChecker.tipe(e.integralType))
-      case e: ToIntegral => integral(e); Some(TypeChecker.tipe(e.tpe))
+      case e: ToIntegral => integral(e).foreach(e.tipe = _); Some(TypeChecker.tipe(e.tpe))
       case e: Random =>
         if (!allowMethod)
           error(e, s"Invoking .random is only allowed at statement level.")
@@ -434,13 +434,24 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                 Some(tRight)
               case _ => None
             }
-          case _: And | _: Or | _: Implies =>
+          case _: And | _: Or =>
+            (check(e.left), check(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (!(tLeft == tRight &&
+                  (tLeft == B || tLeft.isInstanceOf[ModuloIntegralTipe])))
+                  error(e, s"Ill-typed operation $tLeft ${e.op(false)} $tRight.")
+                e.tipe = tLeft
+                Some(tLeft)
+              case _ =>
+                None
+            }
+          case _: Implies =>
             b(e.left); b(e.right); e.tipe = B; someB
         }
       case e: Not => b(e.exp); e.tipe = B; someB
       case e: Minus =>
         number(e.exp) match {
-          case Some(t) if TypeChecker.integerTipes.contains(t) =>
+          case Some(t) if TypeChecker.posNegTipes.contains(t) =>
             e.tipe = t
             Some(t)
           case _ => None

@@ -511,8 +511,8 @@ object Rewriter {
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
     }),
     ("ToIntegral", { es =>
-      val Seq(e: Exp, tpe: IntegralType) = es
-      org.sireum.logika.ast.ToIntegral(e, tpe)
+      val Seq(exp: Exp, tpe: IntegralType) = es
+      org.sireum.logika.ast.ToIntegral(exp, tpe)
     }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es

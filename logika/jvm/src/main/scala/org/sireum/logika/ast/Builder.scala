@@ -311,8 +311,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "Z" => IntLit(ctx.STRING.getText)
           case "R" =>
             val text = ctx.STRING.getText
-            if (!(text.count(_ == '.') == 1 &&
-              text.forall(c => c == '.' || c.isDigit)))
+            val t = if (text.head == '-') text.tail else text
+            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)))
               error(ctx.STRING, s"Invalid real literal $text.")
             RealLit(text)
         }

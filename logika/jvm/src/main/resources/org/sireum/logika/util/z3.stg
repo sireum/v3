@@ -49,6 +49,12 @@ main(d, a, e) ::= <<
 (define-sort RS   () (Array Z R))
 (define-sort F32S () (Array Z F32))
 (define-sort F64S () (Array Z F64))
+(define-const F32_PInf (F32) (_ +oo 8 24))
+(define-const F32_NInf (F32) (_ -oo 8 24))
+(define-const F32_NaN (F32) (_ NaN 8 24))
+(define-const F64_PInf (F64) (_ +oo 11 53))
+(define-const F64_NInf (F64) (_ -oo 11 53))
+(define-const F64_NaN (F64) (_ NaN 11 53))
 ; Type Declarations
 $d$
 ; Auxiliaries
@@ -97,8 +103,12 @@ apply(id, exp) ::= <<
 ($id$ $exp; separator=" "$)
 >>
 
-int(value) ::= <<
+lit(value) ::= <<
 $value$
+>>
+
+fplit(sign, eb, sb) ::= <<
+(fp #b$sign$ #x$e$ #x$s$)
 >>
 
 binary(op, left, right) ::= <<

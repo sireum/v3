@@ -48,6 +48,8 @@ object Z3 {
 
   case object Error extends CheckResult
 
+  private val max1U64 = BigInt(2).pow(64)
+
   val z3: String = {
     import java.io._
     val z3Filename = OsUtil.detect match {
@@ -79,6 +81,7 @@ private final class Z3(timeout: Int)(
   val lineSep = scala.util.Properties.lineSeparator
   var seqCounter = 0
   val stMain = stg.getInstanceOf("main")
+  val rounding = "RNE"
 
   def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Boolean) = {
     val r =
@@ -165,12 +168,107 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
+      case e: ToIntegral =>
+        val value = e.exp match {
+          case IntMin(b, tpe) => tpe match {
+            case _: Z8Type | _: S8Type => Byte.MinValue.toString
+            case _: Z16Type | _: S16Type => Short.MinValue.toString
+            case _: Z32Type | _: S32Type => Int.MinValue.toString
+            case _: Z64Type | _: S64Type => Long.MinValue.toString
+            case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
+                 _: U8Type | _: U16Type | _: U32Type | _: U64Type => "0"
+            case _: ZType => BigInt(-2).pow(b - 1).toString
+          }
+          case IntMax(b, tpe) => tpe match {
+            case _: Z8Type | _: S8Type => Byte.MaxValue.toString
+            case _: Z16Type | _: S16Type => Short.MaxValue.toString
+            case _: Z32Type | _: S32Type => Int.MaxValue.toString
+            case _: Z64Type | _: S64Type => Long.MaxValue.toString
+            case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
+                 _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
+              (BigInt(2).pow(b) - 1).toString
+            case _: ZType => (BigInt(2).pow(b - 1) - 1).toString
+          }
+          case IntLit(v) => v
+        }
+        val lit = e.tpe match {
+          case _: S8Type =>
+            val v: java.lang.Byte = BigInt(value).toByte
+            String.format("#x%02X", v)
+          case _: U8Type =>
+            val v: java.lang.Byte = (BigInt(value) % 256).toByte
+            String.format("#x%02X", v)
+          case _: S16Type =>
+            val v: java.lang.Short = BigInt(value).toShort
+            String.format("#x%04X", v)
+          case _: U16Type =>
+            val v: java.lang.Short = (BigInt(value) % 65536).toShort
+            String.format("#x%04X", v)
+          case _: S32Type =>
+            val v: java.lang.Integer = BigInt(value).toInt
+            String.format("#x%08X", v)
+          case _: U32Type =>
+            val v: java.lang.Integer = (BigInt(value) % 4294967296l).toInt
+            String.format("#x%08X", v)
+          case _: S64Type =>
+            val v: java.lang.Long = BigInt(value).toLong
+            String.format("#x%016X", v)
+          case _: U64Type =>
+            val v: java.lang.Long = (BigInt(value) % max1U64).toLong
+            String.format("#x%016X", v)
+          case _ => value
+        }
+        stg.getInstanceOf("lit").add("value", lit)
       case IntLit(value) =>
-        stg.getInstanceOf("int").add("value", value)
+        stg.getInstanceOf("lit").add("value", value)
+      case e@FloatLit(value) =>
+        import java.lang.{Float => JFloat, Double => JDouble, Integer => JInteger, Long => JLong}
+        e.primitiveValue match {
+          case Left(f) =>
+            if (JFloat.isNaN(f)) {
+              stg.getInstanceOf("lit").add("value", "F32_NaN")
+            } else if (JFloat.NEGATIVE_INFINITY == f) {
+              stg.getInstanceOf("lit").add("value", "F32_NInf")
+            } else if (JFloat.POSITIVE_INFINITY == f) {
+              stg.getInstanceOf("lit").add("value", "F32_PInf")
+            } else {
+              val bits = JFloat.floatToRawIntBits(f)
+              val sign = (bits & 0x80000000) >>> 31
+              var eb = JInteger.toHexString((bits & 0x7f800000) >>> 24)
+              eb = (0 until (2 - eb.length)).map(_ => '0').mkString + eb
+              var sb = JInteger.toHexString(bits & 0x007fffff)
+              sb = (0 until (6 - sb.length)).map(_ => '0').mkString + sb
+              stg.getInstanceOf("fplit").add("sign", sign).add("eb", eb).add("sb", sb)
+            }
+          case Right(d) =>
+            if (JDouble.isNaN(d)) {
+              stg.getInstanceOf("lit").add("value", "F64_NaN")
+            } else if (JDouble.NEGATIVE_INFINITY == d) {
+              stg.getInstanceOf("lit").add("value", "F64_NInf")
+            } else if (JDouble.POSITIVE_INFINITY == d) {
+              stg.getInstanceOf("lit").add("value", "F64_PInf")
+            } else {
+              val bits = JDouble.doubleToRawLongBits(d)
+              val sign = (bits & 0x8000000000000000L) >>> 63
+              var eb = JLong.toHexString((bits & 0x7ff0000000000000L) >>> 53)
+              eb = (0 until (3 - eb.length)).map(_ => '0').mkString + eb
+              var sb = JLong.toHexString(bits & 0x000fffffffffffffL)
+              sb = (0 until (14 - sb.length)).map(_ => '0').mkString + sb
+              stg.getInstanceOf("fplit").add("sign", sign).add("eb", eb).add("sb", sb)
+            }
+        }
+      case RealLit(value) =>
+        if (value.head == '-')
+          stg.getInstanceOf("lit").add("value", s"(- ${value.tail}")
+        else
+          stg.getInstanceOf("lit").add("value", value)
       case e: IntMin =>
-        stg.getInstanceOf("int").add("value", s"(- ${-e.value})")
+        if (e.value < 0)
+          stg.getInstanceOf("lit").add("value", s"(- ${-e.value})")
+        else
+          stg.getInstanceOf("lit").add("value", e.value)
       case e: IntMax =>
-        stg.getInstanceOf("int").add("value", e.value)
+        stg.getInstanceOf("lit").add("value", e.value)
       case e@Prepend(left, right) =>
         val c = freshSeq()
         val a = translate(right)
@@ -196,26 +294,93 @@ $s"""))
               val eq = Eq(left, right)
               eq.tipe = e.tipe
               return translate(Not(eq))
-            case e: Mul => "*"
-            case e: Div => "div"
-            case e: Rem => "rem"
-            case e: Add => "+"
-            case e: Sub => "-"
-            case e: Lt => "<"
-            case e: Le => "<="
-            case e: Gt => ">"
-            case e: Ge => ">="
+            case e: Mul =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvmul"
+                case F32 | F64 => s"fp.mul $rounding"
+                case _ => "*"
+              }
+            case e: Div =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvsdiv"
+                case U8 | U16 | U32 | U64 => "bvudiv"
+                case F32 | F64 => s"fp.div $rounding"
+                case _ => "div"
+              }
+            case e: Rem =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvsrem"
+                case U8 | U16 | U32 | U64 => "bvurem"
+                case F32 | F64 => "fp.rem"
+                case _ => "rem"
+              }
+            case e: Add =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvadd"
+                case F32 | F64 => s"fp.add $rounding"
+                case _ => "+"
+              }
+            case e: Sub =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvsub"
+                case F32 | F64 => s"fp.sub $rounding"
+                case _ => "-"
+              }
+            case e: Lt =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvslt"
+                case U8 | U16 | U32 | U64 => "bvult"
+                case F32 | F64 => "fp.lt"
+                case _ => "<"
+              }
+            case e: Le =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvsle"
+                case U8 | U16 | U32 | U64 => "bvule"
+                case F32 | F64 => "fp.leq"
+                case _ => "<="
+              }
+            case e: Gt =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvsgt"
+                case U8 | U16 | U32 | U64 => "bvugt"
+                case F32 | F64 => "fp.lt"
+                case _ => ">"
+              }
+            case e: Ge =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 => "bvsge"
+                case U8 | U16 | U32 | U64 => "bvuge"
+                case F32 | F64 => "fp.geq"
+                case _ => ">="
+              }
             case e: Eq =>
               e.tipe match {
                 case _: org.sireum.logika.tipe.MSeq =>
                   return stg.getInstanceOf("equal").add("a1", translate(e.left)).
                     add("a2", translate(e.right)).add("tipe", translate(e.tipe))
+                case F32 | F64 => "fp.eq"
                 case _ => "="
               }
-            case e: And => "and"
-            case e: Or => "or"
+            case e: And =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvand"
+                case _ => "and"
+              }
+            case e: Or =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvor"
+                case _ => "or"
+              }
             case e: Implies => "=>"
-            case _: Append | _: Prepend => assert(assertion = false, "Unexpected situation.")
+            case _: Append | _: Prepend =>
+              assert(assertion = false, "Unexpected situation.")
+              "???"
           }
         stg.getInstanceOf("binary").add("op", op).
           add("left", translate(e.left)).add("right", translate(e.right))
