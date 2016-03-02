@@ -137,7 +137,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
 
   private val someB = Some(B)
   private val someZ = Some(Z)
-  private val someZS = Some(ZS)
   private val someR = Some(R)
 
   def check(p: Program): TypeContext = {
@@ -384,27 +383,55 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
-            (for (t1 <- number(e.left); t2 <- number(e.right)) yield
-              if (t1 == t2) {
-                e.tipe = t1
-                Some(t1)
-              } else None
-              ).flatten
+            (number(e.left), number(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft != tRight) {
+                  val op = e.op(false)
+                  error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
+                  None
+                } else {
+                  e.tipe = tLeft
+                  Some(tLeft)
+                }
+              case _ => None
+            }
           case _: Lt | _: Le | _: Gt | _: Ge =>
-            (for (t1 <- number(e.left); t2 <- number(e.right)) yield
-              if (t1 == t2) {
-                e.tipe = t1
-                someB
-              } else None
-              ).flatten
+            (number(e.left), number(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft != tRight) {
+                  val op = e.op(false)
+                  error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
+                  None
+                } else {
+                  e.tipe = B
+                  someB
+                }
+              case _ => None
+            }
           case _: Shl | _: Shr =>
-            m(e.left) match {
-              case Some(t) => z(e.right); e.tipe = t; Some(t)
+            (m(e.left), m(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft != tRight) {
+                  val op = e.op(false)
+                  error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
+                  None
+                } else {
+                  e.tipe = tLeft
+                  Some(tLeft)
+                }
               case _ => None
             }
           case _: UShr =>
-            ms(e.left) match {
-              case Some(t) => z(e.right); e.tipe = t; Some(t)
+            (ms(e.left), ms(e.right)) match {
+              case (Some(tLeft), Some(tRight)) =>
+                if (tLeft != tRight) {
+                  val op = e.op(false)
+                  error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
+                  None
+                } else {
+                  e.tipe = tLeft
+                  Some(tLeft)
+                }
               case _ => None
             }
           case e: EqualityExp =>
@@ -412,6 +439,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               if (t1 != t2) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $t1 and $t2, respectively.")
+              } else if (t1 == F32 || t1 == F64) {
+                val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
+                error(e.right, s"The $op binary operator cannot be applied on values of type $t1.")
               } else {
                 e.tipe = t1
               }
@@ -419,36 +449,56 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           case e: Append =>
             (mseq(e.left), check(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft.result != tRight)
+                if (tLeft.result != tRight) {
                   error(e, s"Ill-typed append operation $tLeft :+ $tRight.")
-                e.tipe = tLeft
-                Some(tLeft)
+                  None
+                } else {
+                  e.tipe = tLeft
+                  Some(tLeft)
+                }
               case _ => None
             }
           case _: Prepend =>
             (check(e.left), mseq(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight.result)
+                if (tLeft != tRight.result) {
                   error(e, s"Ill-typed prepend operation $tLeft +: $tRight.")
-                e.tipe = tRight
-                Some(tRight)
+                  None
+                } else {
+                  e.tipe = tRight
+                  Some(tRight)
+                }
               case _ => None
             }
-          case _: And | _: Or =>
+          case _: And | _: Or | _: Xor =>
             (check(e.left), check(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
                 if (!(tLeft == tRight &&
-                  (tLeft == B || tLeft.isInstanceOf[ModuloIntegralTipe])))
+                  (tLeft == B || tLeft.isInstanceOf[ModuloIntegralTipe]))) {
                   error(e, s"Ill-typed operation $tLeft ${e.op(false)} $tRight.")
-                e.tipe = tLeft
-                Some(tLeft)
-              case _ =>
-                None
+                  None
+                } else {
+                  e.tipe = tLeft
+                  Some(tLeft)
+                }
+              case _ => None
             }
           case _: Implies =>
             b(e.left); b(e.right); e.tipe = B; someB
         }
       case e: Not => b(e.exp); e.tipe = B; someB
+      case e: Complement =>
+        check(e.exp) match {
+          case Some(t) =>
+            if (!(t == B || t.isInstanceOf[ModuloIntegralTipe])) {
+              error(e, s"Ill-typed operation ${e.op(false)}$t.")
+              None
+            } else {
+              e.tipe = t
+              Some(t)
+            }
+          case _ => None
+        }
       case e: Minus =>
         number(e.exp) match {
           case Some(t) if TypeChecker.posNegTipes.contains(t) =>

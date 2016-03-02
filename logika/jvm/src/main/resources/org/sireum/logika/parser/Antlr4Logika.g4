@@ -114,17 +114,18 @@ formula
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
   | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
-  | op='-' formula                                      #Unary       // programming logic
   | l=formula op=':+' NL? r=formula                     #Binary      // programming logic
   | l=formula
     op=( '=' |'==' | '!=' | '≠' ) NL?
     r=formula                                           #Binary      // programming logic
+  | op='-' formula                                      #Unary       // programming logic
   | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥'
        | '>>' | '>>>' | '<<' ) NL? r=formula            #Binary      // programming logic
   | l=formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
+  | l=formula op='^|' NL? r=formula                     #Binary      // propositional logic
   | l=formula
     op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary      // propositional logic
   | <assoc=right> l=formula
@@ -328,7 +329,7 @@ exp
   | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
-  | op=( '-' | '!' ) exp                                #UnaryExp
+  | op=( '-' | '!' | '~' ) exp                          #UnaryExp
   | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
   | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
   | <assoc=right> l=exp op='+:' NL? r=exp               #BinaryExp
@@ -338,6 +339,7 @@ exp
     NL?  r=exp                                          #BinaryExp
   | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
   | l=exp op='&' NL? r=exp                              #BinaryExp
+  | l=exp op='^|' NL? r=exp                             #BinaryExp
   | l=exp op='|' NL? r=exp                              #BinaryExp
   ;
 

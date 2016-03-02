@@ -507,6 +507,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             }
             r
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
+          case "^|" => Xor(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }
@@ -520,7 +521,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               case _ =>
             }
             r
-          case "not" | "!" | "~" | "¬" => Not(exp)
+          case "not" | "!" | "¬" => Not(exp)
+          case "~" => Complement(exp)
         }
       case ctx: QuantContext => build(ctx.qformula)
     }
@@ -778,7 +780,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               case _ =>
             }
             r
-          case "not" | "neg" | "!" | "~" | "¬" => Not(exp)
+          case "not" | "neg" | "!" | "¬" => Not(exp)
+          case "~" => Complement(exp)
         }
       case ctx: BinaryExpContext =>
         val lExp = build(ctx.l)
@@ -852,6 +855,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             }
             r
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
+          case "^|" => Xor(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }

@@ -106,6 +106,10 @@ object Rewriter {
       val Seq(id: Id) = es
       org.sireum.logika.ast.Clone(id)
     }),
+    ("Complement", { es =>
+      val Seq(exp: Exp) = es
+      org.sireum.logika.ast.Complement(exp)
+    }),
     ("Div", { es =>
       val Seq(left: Exp, right: Exp) = es
       org.sireum.logika.ast.Div(left, right)
@@ -561,6 +565,10 @@ object Rewriter {
     ("While", { es =>
       val Seq(exp: Exp, block: Block, loopInv: LoopInv) = es
       org.sireum.logika.ast.While(exp, block, loopInv)
+    }),
+    ("Xor", { es =>
+      val Seq(left: Exp, right: Exp) = es
+      org.sireum.logika.ast.Xor(left, right)
     }),
     ("Z16SType", { es =>
       val Seq() = es
