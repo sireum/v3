@@ -855,12 +855,6 @@ final case class Not(exp: Exp) extends UnaryExp {
   override def precedence: Int = 40
 }
 
-final case class Complement(exp: Exp) extends UnaryExp {
-  def op(inProof: Boolean) = "~"
-
-  override def precedence: Int = 0
-}
-
 final case class Minus(exp: Exp) extends UnaryExp {
   def op(inProof: Boolean) = "-"
 

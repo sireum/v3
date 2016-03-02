@@ -486,8 +486,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           case _: Implies =>
             b(e.left); b(e.right); e.tipe = B; someB
         }
-      case e: Not => b(e.exp); e.tipe = B; someB
-      case e: Complement =>
+      case e: Not =>
         check(e.exp) match {
           case Some(t) =>
             if (!(t == B || t.isInstanceOf[ModuloIntegralTipe])) {

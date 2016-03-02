@@ -336,6 +336,9 @@ $s"""))
                 case F32 | F64 => "fp.geq"
                 case _ => ">="
               }
+            case e: Shl => "bvshl"
+            case e: Shr => "bvashr"
+            case e: UShr => "bvlshr"
             case e: Eq =>
               e.tipe match {
                 case _: org.sireum.logika.tipe.MSeq =>
@@ -350,6 +353,12 @@ $s"""))
                      U8 | U16 | U32 | U64 => "bvand"
                 case _ => "and"
               }
+            case e: Xor =>
+              e.tipe match {
+                case S8 | S16 | S32 | S64 |
+                     U8 | U16 | U32 | U64 => "bvxor"
+                case _ => "xor"
+              }
             case e: Or =>
               e.tipe match {
                 case S8 | S16 | S32 | S64 |
@@ -363,12 +372,29 @@ $s"""))
           }
         stg.getInstanceOf("binary").add("op", op).
           add("left", translate(e.left)).add("right", translate(e.right))
-      case Not(exp) =>
-        stg.getInstanceOf("unary").add("op", "not").
-          add("exp", translate(exp))
-      case Minus(exp) =>
-        stg.getInstanceOf("unary").add("op", "-").
-          add("exp", translate(exp))
+      case e: UnaryExp =>
+        e match {
+          case Not(exp) =>
+            e.tipe match {
+              case S8 | S16 | S32 | S64 |
+                   U8 | U16 | U32 | U64 =>
+                stg.getInstanceOf("unary").add("op", "bvnot").
+                  add("exp", translate(exp))
+              case _ =>
+                stg.getInstanceOf("unary").add("op", "not").
+                  add("exp", translate(exp))
+            }
+          case Minus(exp) =>
+            e.tipe match {
+              case S8 | S16 | S32 | S64 |
+                   U8 | U16 | U32 | U64 =>
+                stg.getInstanceOf("unary").add("op", "bvneg").
+                  add("exp", translate(exp))
+              case _ =>
+                stg.getInstanceOf("unary").add("op", "-").
+                  add("exp", translate(exp))
+            }
+        }
       case e: Quant[_] =>
         val isForAll = e.isInstanceOf[ForAll]
         val stType = e.domainOpt match {

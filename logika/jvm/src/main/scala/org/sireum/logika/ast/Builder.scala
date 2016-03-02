@@ -521,8 +521,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               case _ =>
             }
             r
-          case "not" | "!" | "¬" => Not(exp)
-          case "~" => Complement(exp)
+          case "not" | "!" | "¬" | "~" => Not(exp)
         }
       case ctx: QuantContext => build(ctx.qformula)
     }
@@ -780,8 +779,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               case _ =>
             }
             r
-          case "not" | "neg" | "!" | "¬" => Not(exp)
-          case "~" => Complement(exp)
+          case "not" | "neg" | "!" | "¬" | "~" => Not(exp)
         }
       case ctx: BinaryExpContext =>
         val lExp = build(ctx.l)

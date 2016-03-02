@@ -106,10 +106,6 @@ object Rewriter {
       val Seq(id: Id) = es
       org.sireum.logika.ast.Clone(id)
     }),
-    ("Complement", { es =>
-      val Seq(exp: Exp) = es
-      org.sireum.logika.ast.Complement(exp)
-    }),
     ("Div", { es =>
       val Seq(left: Exp, right: Exp) = es
       org.sireum.logika.ast.Div(left, right)
