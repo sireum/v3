@@ -234,6 +234,10 @@ object Rewriter {
       val Seq(bitWidth: java.lang.Integer, integralType: IntegralType) = es
       org.sireum.logika.ast.IntMin(bitWidth, integralType)
     }),
+    ("IntegralConv", { es =>
+      val Seq(lit: IntLit, tpe: IntegralType) = es
+      org.sireum.logika.ast.IntegralConv(lit, tpe)
+    }),
     ("Inv", { es =>
       val Seq(exps: IVector[_]) = es
       org.sireum.logika.ast.Inv(cast(exps))
@@ -509,10 +513,6 @@ object Rewriter {
     ("Subst2", { es =>
       val Seq(num: Num, exp: Exp, eqStep: Num, step: Num) = es
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
-    }),
-    ("ToIntegral", { es =>
-      val Seq(exp: Exp, tpe: IntegralType) = es
-      org.sireum.logika.ast.ToIntegral(exp, tpe)
     }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es

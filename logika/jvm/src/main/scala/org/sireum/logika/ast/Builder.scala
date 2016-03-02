@@ -43,6 +43,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   val zero = BigInt(0)
   val maxInt = BigInt(Int.MaxValue)
   val minInt = BigInt(Int.MinValue)
+  val maxN64 = BigInt(2).pow(64) - 1
 
   private def build(ctx: FileContext): UnitNode = {
     val r =
@@ -363,6 +364,48 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     r at ctx
   }
 
+  private def build(e: Exp, t: IntegralType, tkn: Token): IntegralConv =
+    e match {
+      case e: IntLit =>
+        val n = BigInt(e.value)
+        t match {
+          case _: Z8Type =>
+            if (!(BigInt(Byte.MinValue) <= n && n <= BigInt(Byte.MaxValue)))
+              error(tkn, s"Literal ${e.value} is outside of Z8's value range.")
+          case _: Z16Type =>
+            if (!(BigInt(Short.MinValue) <= n && n <= BigInt(Short.MaxValue)))
+              error(tkn, s"Literal ${e.value} is outside of Z16's value range.")
+          case _: Z32Type =>
+            if (!(BigInt(Int.MinValue) <= n && n <= BigInt(Int.MaxValue)))
+              error(tkn, s"Literal ${e.value} is outside of Z32's value range.")
+          case _: Z64Type =>
+            if (!(BigInt(Long.MinValue) <= n && n <= BigInt(Long.MaxValue)))
+              error(tkn, s"Literal ${e.value} is outside of Z64's value range.")
+          case _: NType =>
+            if (n < 0)
+              error(tkn, s"Literal ${e.value} is outside of N's value range.")
+          case _: N8Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(256)))
+              error(tkn, s"Literal ${e.value} is outside of N8's value range.")
+          case _: N16Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(65536)))
+              error(tkn, s"Literal ${e.value} is outside of N16's value range.")
+          case _: N32Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(4294967296l)))
+              error(tkn, s"Literal ${e.value} is outside of N32's value range.")
+          case _: N64Type =>
+            if (!(BigInt(0) <= n && n <= maxN64))
+              error(tkn, s"Literal ${e.value} is outside of N64's value range.")
+          case _: ZType |
+               _: S8Type | _: S16Type | _: S32Type | _: S64Type |
+               _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
+        }
+        IntegralConv(e, t)
+      case _ =>
+        error(tkn, s"Integer conversion .${tkn.getText} can only be used on integer literal.")
+        IntegralConv(IntLit("0") at(e, e), t)
+    }
+
   private def build(ctx: FormulaContext): Exp = {
     val r = ctx match {
       case ctx: PFormulaContext =>
@@ -370,24 +413,24 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
           e = id.getText match {
             case "size" => Size(e)
-            case "toZ" => ToIntegral(e, ZType() at id)
-            case "toZ8" => ToIntegral(e, Z8Type() at id)
-            case "toZ16" => ToIntegral(e, Z16Type() at id)
-            case "toZ32" => ToIntegral(e, Z32Type() at id)
-            case "toZ64" => ToIntegral(e, Z64Type() at id)
-            case "toN" => ToIntegral(e, NType() at id)
-            case "toN8" => ToIntegral(e, N8Type() at id)
-            case "toN16" => ToIntegral(e, N16Type() at id)
-            case "toN32" => ToIntegral(e, N32Type() at id)
-            case "toN64" => ToIntegral(e, N64Type() at id)
-            case "toS8" => ToIntegral(e, S8Type() at id)
-            case "toS16" => ToIntegral(e, S16Type() at id)
-            case "toS32" => ToIntegral(e, S32Type() at id)
-            case "toS64" => ToIntegral(e, S64Type() at id)
-            case "toU8" => ToIntegral(e, U8Type() at id)
-            case "toU16" => ToIntegral(e, U16Type() at id)
-            case "toU32" => ToIntegral(e, U32Type() at id)
-            case "toU64" => ToIntegral(e, U64Type() at id)
+            case "toZ" => build(e, ZType() at id, id)
+            case "toZ8" => build(e, Z8Type() at id, id)
+            case "toZ16" => build(e, Z16Type() at id, id)
+            case "toZ32" => build(e, Z32Type() at id, id)
+            case "toZ64" => build(e, Z64Type() at id, id)
+            case "toN" => build(e, NType() at id, id)
+            case "toN8" => build(e, N8Type() at id, id)
+            case "toN16" => build(e, N16Type() at id, id)
+            case "toN32" => build(e, N32Type() at id, id)
+            case "toN64" => build(e, N64Type() at id, id)
+            case "toS8" => build(e, S8Type() at id, id)
+            case "toS16" => build(e, S16Type() at id, id)
+            case "toS32" => build(e, S32Type() at id, id)
+            case "toS64" => build(e, S64Type() at id, id)
+            case "toU8" => build(e, U8Type() at id, id)
+            case "toU16" => build(e, U16Type() at id, id)
+            case "toU32" => build(e, U32Type() at id, id)
+            case "toU64" => build(e, U64Type() at id, id)
           }
         }
         e
@@ -694,24 +737,24 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
                 Clone(Id("???"))
             }
             case "size" => Size(e)
-            case "toZ" => ToIntegral(e, ZType() at id)
-            case "toZ8" => ToIntegral(e, Z8Type() at id)
-            case "toZ16" => ToIntegral(e, Z16Type() at id)
-            case "toZ32" => ToIntegral(e, Z32Type() at id)
-            case "toZ64" => ToIntegral(e, Z64Type() at id)
-            case "toN" => ToIntegral(e, NType() at id)
-            case "toN8" => ToIntegral(e, N8Type() at id)
-            case "toN16" => ToIntegral(e, N16Type() at id)
-            case "toN32" => ToIntegral(e, N32Type() at id)
-            case "toN64" => ToIntegral(e, N64Type() at id)
-            case "toS8" => ToIntegral(e, S8Type() at id)
-            case "toS16" => ToIntegral(e, S16Type() at id)
-            case "toS32" => ToIntegral(e, S32Type() at id)
-            case "toS64" => ToIntegral(e, S64Type() at id)
-            case "toU8" => ToIntegral(e, U8Type() at id)
-            case "toU16" => ToIntegral(e, U16Type() at id)
-            case "toU32" => ToIntegral(e, U32Type() at id)
-            case "toU64" => ToIntegral(e, U64Type() at id)
+            case "toZ" => build(e, ZType() at id, id)
+            case "toZ8" => build(e, Z8Type() at id, id)
+            case "toZ16" => build(e, Z16Type() at id, id)
+            case "toZ32" => build(e, Z32Type() at id, id)
+            case "toZ64" => build(e, Z64Type() at id, id)
+            case "toN" => build(e, NType() at id, id)
+            case "toN8" => build(e, N8Type() at id, id)
+            case "toN16" => build(e, N16Type() at id, id)
+            case "toN32" => build(e, N32Type() at id, id)
+            case "toN64" => build(e, N64Type() at id, id)
+            case "toS8" => build(e, S8Type() at id, id)
+            case "toS16" => build(e, S16Type() at id, id)
+            case "toS32" => build(e, S32Type() at id, id)
+            case "toS64" => build(e, S64Type() at id, id)
+            case "toU8" => build(e, U8Type() at id, id)
+            case "toU16" => build(e, U16Type() at id, id)
+            case "toU32" => build(e, U32Type() at id, id)
+            case "toU64" => build(e, U64Type() at id, id)
           }
         }
         e

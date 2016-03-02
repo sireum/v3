@@ -376,7 +376,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case e: RealLit => someR
       case e: IntMin => Some(TypeChecker.tipe(e.integralType))
       case e: IntMax => Some(TypeChecker.tipe(e.integralType))
-      case e: ToIntegral => integral(e).foreach(e.tipe = _); Some(TypeChecker.tipe(e.tpe))
+      case e: IntegralConv => integral(e).foreach(e.tipe = _); Some(TypeChecker.tipe(e.tpe))
       case e: Random =>
         if (!allowMethod)
           error(e, s"Invoking .random is only allowed at statement level.")

@@ -168,29 +168,8 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
-      case e: ToIntegral =>
-        val value = e.exp match {
-          case IntMin(b, tpe) => tpe match {
-            case _: Z8Type | _: S8Type => Byte.MinValue.toString
-            case _: Z16Type | _: S16Type => Short.MinValue.toString
-            case _: Z32Type | _: S32Type => Int.MinValue.toString
-            case _: Z64Type | _: S64Type => Long.MinValue.toString
-            case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
-                 _: U8Type | _: U16Type | _: U32Type | _: U64Type => "0"
-            case _: ZType => BigInt(-2).pow(b - 1).toString
-          }
-          case IntMax(b, tpe) => tpe match {
-            case _: Z8Type | _: S8Type => Byte.MaxValue.toString
-            case _: Z16Type | _: S16Type => Short.MaxValue.toString
-            case _: Z32Type | _: S32Type => Int.MaxValue.toString
-            case _: Z64Type | _: S64Type => Long.MaxValue.toString
-            case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
-                 _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
-              (BigInt(2).pow(b) - 1).toString
-            case _: ZType => (BigInt(2).pow(b - 1) - 1).toString
-          }
-          case IntLit(v) => v
-        }
+      case e: IntegralConv =>
+        val value = e.lit.value
         val lit = e.tpe match {
           case _: S8Type =>
             val v: java.lang.Byte = BigInt(value).toByte
