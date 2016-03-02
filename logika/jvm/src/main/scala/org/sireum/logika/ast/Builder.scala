@@ -309,15 +309,36 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         r
       case ctx: LitContext =>
         val r = ctx.t.getText match {
-          case "Z" => IntLit(ctx.STRING.getText)
+          case "Z" =>
+            var text = ctx.STRING.getText
+            text = text.substring(1, text.length - 1).replaceAll(" ", "")
+            try BigInt(text) catch {
+              case _: Throwable =>
+                error(ctx.STRING, s"Invalid Z literal $text.")
+            }
+            IntLit(text)
           case "R" =>
-            val text = ctx.STRING.getText
+            var text = ctx.STRING.getText
+            text = text.substring(1, text.length - 1).replaceAll(" ", "")
             val t = if (text.head == '-') text.tail else text
-            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)))
-              error(ctx.STRING, s"Invalid real literal $text.")
+            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)) ||
+              t.startsWith(".") || t.endsWith("."))
+              error(ctx.STRING, s"Invalid R literal $text.")
             RealLit(text)
         }
         r
+      case ctx: ZLitContext =>
+        var text = ctx.INT.getText
+        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        try BigInt(text) catch {
+          case _: Throwable =>
+            error(ctx.INT, s"Invalid Z literal $text.")
+        }
+        IntLit(text)
+      case ctx: RLitContext =>
+        var text = ctx.REAL.getText
+        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        RealLit(text)
       case ctx: FloatLitContext =>
         val floatText = ctx.FLOAT.getText
         if (floatText.last.toUpper == 'D')
@@ -675,6 +696,38 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val r = buildInt(ctx.NUM)
         constMap(r) = BigInt(r.value)
         r
+      case ctx: LitExpContext =>
+        val r = ctx.t.getText match {
+          case "Z" =>
+            var text = ctx.STRING.getText
+            text = text.substring(1, text.length - 1).replaceAll(" ", "")
+            try BigInt(text) catch {
+              case _: Throwable =>
+                error(ctx.STRING, s"Invalid Z literal $text.")
+            }
+            IntLit(text)
+          case "R" =>
+            var text = ctx.STRING.getText
+            text = text.substring(1, text.length - 1).replaceAll(" ", "")
+            val t = if (text.head == '-') text.tail else text
+            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)) ||
+              t.startsWith(".") || t.endsWith("."))
+              error(ctx.STRING, s"Invalid R literal $text.")
+            RealLit(text)
+        }
+        r
+      case ctx: ZLitExpContext =>
+        var text = ctx.INT.getText
+        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        try BigInt(text) catch {
+          case _: Throwable =>
+            error(ctx.INT, s"Invalid Z literal $text.")
+        }
+        IntLit(text)
+      case ctx: RLitExpContext =>
+        var text = ctx.REAL.getText
+        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        RealLit(text)
       case ctx: VarExpContext =>
         buildId(ctx.ID)
       case ctx: TypeAccessExpContext =>

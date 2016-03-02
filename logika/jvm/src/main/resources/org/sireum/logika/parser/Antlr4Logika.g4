@@ -87,6 +87,8 @@ primFormula
   | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
   | NUM                                                 #Int         // programming logic
   | t=( 'Z' | 'R' ) '(' STRING ')'                      #Lit         // programming logic
+  | INT                                                 #ZLit        // programming logic
+  | REAL                                                #RLit        // programming logic
   | FLOAT                                               #FloatLit    // programming logic
   | t=( 'B'
       | 'Z' | 'Z8'  | 'Z16' | 'Z32' | 'Z64'
@@ -308,6 +310,8 @@ primExp
       // ID in { "Min", "Max", "random" }
   | t=( 'Z' | 'R' ) '(' STRING ')'                      #LitExp
   | FLOAT                                               #FloatLitExp
+  | INT                                                 #ZLitExp
+  | REAL                                                #RLitExp
   | t=( 'BS'
       | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
       | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
@@ -438,6 +442,14 @@ STRING
 
 FLOAT
     : FloatingPointLiteral
+    ;
+
+REAL
+    : 'r' '"' '-'? ( '0' | [1-9] [0-9 ]* ) '.' [0-9]+ '"'
+    ;
+
+INT
+    : 'z' '"' '-'? ( '0' | [1-9] [0-9 ]* ) '"'
     ;
 
 fragment
