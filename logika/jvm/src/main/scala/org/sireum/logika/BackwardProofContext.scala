@@ -44,6 +44,7 @@ BackwardProofContext(unitNode: Program,
                      methodOpt: Option[MethodDecl] = None,
                      satFacts: Boolean = true)
                     (implicit reporter: AccumulatingTagReporter) extends ProofContext[BackwardProofContext] {
+  val isSymExe = false
 
   def check: Boolean = {
     val program = unitNode

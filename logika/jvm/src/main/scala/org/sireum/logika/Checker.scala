@@ -200,6 +200,8 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def inscribeSummoningsEnabled: Boolean
 
+  def isSymExe: Boolean
+
   def make(vars: ISet[String] = vars,
            provedSteps: IMap[Natural, ProofStep] = provedSteps,
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
@@ -210,7 +212,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                timeoutMsg: => String): Boolean = {
     val es = exps.toVector
     if (checkSat) {
-      val (script, r) = Z3.checkSat(satTimeoutInMs, es: _*)
+      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, es: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator
         val sb = new StringBuilder
@@ -737,7 +739,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def isValid(title: String, li: LocationInfo,
               premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
-    val (script, r) = Z3.isValid(timeoutInMs, premises.toVector, conclusions.toVector)
+    val (script, r) = Z3.isValid(timeoutInMs, isSymExe, premises.toVector, conclusions.toVector)
     if (inscribeSummoningsEnabled) {
       val lineSep = scala.util.Properties.lineSeparator
       val sb = new StringBuilder

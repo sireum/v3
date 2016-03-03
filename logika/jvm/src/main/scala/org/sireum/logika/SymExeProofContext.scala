@@ -51,7 +51,7 @@ SymExeProofContext(unitNode: Program,
                    methodOpt: Option[MethodDecl] = None,
                    satFacts: Boolean = true)
                   (implicit reporter: AccumulatingTagReporter) extends ProofContext[SymExeProofContext] {
-
+  val isSymExe = true
   var validCache = imapEmpty[(ISeq[Exp], ISeq[Exp]), Boolean]
   val unboundedBitWidth = bitWidth == 0
   lazy val zMin = IntMin(bitWidth, ZType())

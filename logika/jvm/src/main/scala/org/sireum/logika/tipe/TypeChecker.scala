@@ -438,9 +438,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               if (t1 != t2) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $t1 and $t2, respectively.")
-              } else if (t1 == F32 || t1 == F64) {
-                val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
-                error(e.right, s"The $op binary operator cannot be applied on values of type $t1.")
               } else {
                 e.tipe = t1
               }

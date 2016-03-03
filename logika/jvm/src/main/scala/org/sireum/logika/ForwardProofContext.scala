@@ -44,6 +44,7 @@ ForwardProofContext(unitNode: Program,
                     methodOpt: Option[MethodDecl] = None,
                     satFacts: Boolean = true)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[ForwardProofContext] {
+  val isSymExe = false
 
   def check: Boolean = {
     val program = unitNode

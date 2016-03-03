@@ -44,6 +44,7 @@ SequentProofContext(unitNode: UnitNode,
                     methodOpt: Option[MethodDecl] = None,
                     satFacts: Boolean = true)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[SequentProofContext] {
+  val isSymExe = false
 
   def make(vars: ISet[String],
            provedSteps: IMap[Natural, ProofStep],

@@ -48,8 +48,6 @@ object Z3 {
 
   case object Error extends CheckResult
 
-  private val max1U64 = BigInt(2).pow(64)
-
   val z3: String = {
     import java.io._
     val z3Filename = OsUtil.detect match {
@@ -61,16 +59,16 @@ object Z3 {
     else z3Filename
   }
 
-  def isValid(timeoutInMs: Int, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
+  def isValid(timeoutInMs: Int, isSymExe: Boolean, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, Boolean) =
-    new Z3(timeoutInMs).isValid(premises, conclusions)
+    new Z3(timeoutInMs, isSymExe).isValid(premises, conclusions)
 
-  def checkSat(timeoutInMs: Int, es: Exp*)(
+  def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
-    new Z3(timeoutInMs).checkSat(es: _*)
+    new Z3(timeoutInMs, isSymExe).checkSat(es: _*)
 }
 
-private final class Z3(timeout: Int)(
+private final class Z3(timeout: Int, isSymExe: Boolean)(
   implicit reporter: TagReporter,
   nodeLocMap: MIdMap[Node, LocationInfo]) {
 
@@ -80,7 +78,11 @@ private final class Z3(timeout: Int)(
   val typeMap: MMap[String, Tipe] = mmapEmpty[String, Tipe]
   val lineSep = scala.util.Properties.lineSeparator
   var seqCounter = 0
-  val stMain = stg.getInstanceOf("main")
+  val stMain = {
+    val st = stg.getInstanceOf("main")
+    if (isSymExe) st.add("symexe", true)
+    st
+  }
   val rounding = "RNE"
 
   def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Boolean) = {
@@ -204,9 +206,9 @@ $s"""))
               val bits = JFloat.floatToRawIntBits(f)
               val sign = (bits & 0x80000000) >>> 31
               var eb = JInteger.toHexString((bits & 0x7f800000) >>> 24)
-              eb = (0 until (2 - eb.length)).map(_ => '0').mkString + eb
-              var sb = JInteger.toHexString(bits & 0x007fffff)
-              sb = (0 until (6 - sb.length)).map(_ => '0').mkString + sb
+              eb = "#x" + (0 until (2 - eb.length)).map(_ => '0').mkString + eb
+              var sb = JInteger.toBinaryString(bits & 0x007fffff)
+              sb = "#b" + (0 until (23 - sb.length)).map(_ => '0').mkString + sb
               stg.getInstanceOf("fplit").add("sign", sign).add("eb", eb).add("sb", sb)
             }
           case Right(d) =>
@@ -219,10 +221,10 @@ $s"""))
             } else {
               val bits = JDouble.doubleToRawLongBits(d)
               val sign = (bits & 0x8000000000000000L) >>> 63
-              var eb = JLong.toHexString((bits & 0x7ff0000000000000L) >>> 53)
-              eb = (0 until (3 - eb.length)).map(_ => '0').mkString + eb
+              var eb = JLong.toBinaryString((bits & 0x7ff0000000000000L) >>> 53)
+              eb = "#b" + (0 until (11 - eb.length)).map(_ => '0').mkString + eb
               var sb = JLong.toHexString(bits & 0x000fffffffffffffL)
-              sb = (0 until (14 - sb.length)).map(_ => '0').mkString + sb
+              sb = "#x" + (0 until (13 - sb.length)).map(_ => '0').mkString + sb
               stg.getInstanceOf("fplit").add("sign", sign).add("eb", eb).add("sb", sb)
             }
         }

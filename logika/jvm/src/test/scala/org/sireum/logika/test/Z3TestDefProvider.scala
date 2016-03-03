@@ -66,7 +66,7 @@ final class Z3TestDefProvider(tf: TestFramework)
           _,
           Ensures(Seq(e2))), _, _)))) =>
             implicit val nlm = p.nodeLocMap
-            Z3.isValid(2000, ivector(e1), ivector(e2))._2
+            Z3.isValid(2000, isSymExe = false, ivector(e1), ivector(e2))._2
           case _ => false
         }
       }

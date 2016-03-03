@@ -1,4 +1,4 @@
-main(d, a, e) ::= <<
+main(d, a, e, symexe) ::= <<
 ; Preamble
 (define-sort B    () Bool)                     ; Logika's B type
 (define-sort Z    () Int)                      ; Logika's Z type
@@ -8,7 +8,7 @@ main(d, a, e) ::= <<
 (declare-const ZS_empty ZS)                    ; ZS_empty constant
 (assert (= ZS_empty ((as const ZS) 0)))        ; ZS_empty axiom: no element in ZS_empty
 (assert (= (ZS_size ZS_empty) 0))              ; ZS_size and ZS_empty axiom: ZS_size of ZS_empty is 0
-; Extended Preamble for SymExe
+$if(symexe)$
 (define-sort Z8   () Int)
 (define-sort Z16  () Int)
 (define-sort Z32  () Int)
@@ -21,7 +21,7 @@ main(d, a, e) ::= <<
 (define-sort S8   () (_ BitVec 8))
 (define-sort S16  () (_ BitVec 16))
 (define-sort S32  () (_ BitVec 32))
-(define-sort S64  () (_ BitVec 32))
+(define-sort S64  () (_ BitVec 64))
 (define-sort U8   () (_ BitVec 8))
 (define-sort U16  () (_ BitVec 16))
 (define-sort U32  () (_ BitVec 32))
@@ -55,6 +55,127 @@ main(d, a, e) ::= <<
 (define-const F64_PInf (F64) (_ +oo 11 53))
 (define-const F64_NInf (F64) (_ -oo 11 53))
 (define-const F64_NaN (F64) (_ NaN 11 53))
+; Z8S
+(declare-fun Z8S_size (Z8S) Z)
+(assert (forall ((a Z8S)) (>= (Z8S_size a) 0)))
+(declare-const Z8S_empty Z8S)
+(assert (= Z8S_empty ((as const Z8S) 0)))
+(assert (= (Z8S_size Z8S_empty) 0))
+; Z16S
+(declare-fun Z16S_size (Z16S) Z)
+(assert (forall ((a Z16S)) (>= (Z16S_size a) 0)))
+(declare-const Z16S_empty Z16S)
+(assert (= Z16S_empty ((as const Z16S) 0)))
+(assert (= (Z16S_size Z16S_empty) 0))
+; Z32S
+(declare-fun Z32S_size (Z32S) Z)
+(assert (forall ((a Z32S)) (>= (Z32S_size a) 0)))
+(declare-const Z32S_empty Z32S)
+(assert (= Z32S_empty ((as const Z32S) 0)))
+(assert (= (Z32S_size Z32S_empty) 0))
+; Z64S
+(declare-fun Z64S_size (Z64S) Z)
+(assert (forall ((a Z64S)) (>= (Z64S_size a) 0)))
+(declare-const Z64S_empty Z64S)
+(assert (= Z64S_empty ((as const Z64S) 0)))
+(assert (= (Z64S_size Z64S_empty) 0))
+; NS
+(declare-fun NS_size (NS) Z)
+(assert (forall ((a NS)) (>= (NS_size a) 0)))
+(declare-const NS_empty NS)
+(assert (= NS_empty ((as const NS) 0)))
+(assert (= (NS_size NS_empty) 0))
+; N8S
+(declare-fun N8S_size (N8S) Z)
+(assert (forall ((a N8S)) (>= (N8S_size a) 0)))
+(declare-const N8S_empty N8S)
+(assert (= N8S_empty ((as const N8S) 0)))
+(assert (= (N8S_size N8S_empty) 0))
+; N16S
+(declare-fun N16S_size (N16S) Z)
+(assert (forall ((a N16S)) (>= (N16S_size a) 0)))
+(declare-const N16S_empty N16S)
+(assert (= N16S_empty ((as const N16S) 0)))
+(assert (= (N16S_size N16S_empty) 0))
+; N32S
+(declare-fun N32S_size (N32S) Z)
+(assert (forall ((a N32S)) (>= (N32S_size a) 0)))
+(declare-const N32S_empty N32S)
+(assert (= N32S_empty ((as const N32S) 0)))
+(assert (= (N32S_size N32S_empty) 0))
+; N64S
+(declare-fun N64S_size (N64S) Z)
+(assert (forall ((a N64S)) (>= (N64S_size a) 0)))
+(declare-const N64S_empty N64S)
+(assert (= N64S_empty ((as const N64S) 0)))
+(assert (= (N64S_size N64S_empty) 0))
+; S8S
+(declare-fun S8S_size (S8S) Z)
+(assert (forall ((a S8S)) (>= (S8S_size a) 0)))
+(declare-const S8S_empty S8S)
+(assert (= S8S_empty ((as const S8S) #x00)))
+(assert (= (S8S_size S8S_empty) 0))
+; S16S
+(declare-fun S16S_size (S16S) Z)
+(assert (forall ((a S16S)) (>= (S16S_size a) 0)))
+(declare-const S16S_empty S16S)
+(assert (= S16S_empty ((as const S16S) #x0000)))
+(assert (= (S16S_size S16S_empty) 0))
+; S32S
+(declare-fun S32S_size (S32S) Z)
+(assert (forall ((a S32S)) (>= (S32S_size a) 0)))
+(declare-const S32S_empty S32S)
+(assert (= S32S_empty ((as const S32S) #x00000000)))
+(assert (= (S32S_size S32S_empty) 0))
+; S64S
+(declare-fun S64S_size (S64S) Z)
+(assert (forall ((a S64S)) (>= (S64S_size a) 0)))
+(declare-const S64S_empty S64S)
+(assert (= S64S_empty ((as const S64S) #x0000000000000000)))
+(assert (= (S64S_size S64S_empty) 0))
+; U8S
+(declare-fun U8S_size (U8S) Z)
+(assert (forall ((a U8S)) (>= (U8S_size a) 0)))
+(declare-const U8S_empty U8S)
+(assert (= U8S_empty ((as const U8S) #x00)))
+(assert (= (U8S_size U8S_empty) 0))
+; U16S
+(declare-fun U16S_size (U16S) Z)
+(assert (forall ((a U16S)) (>= (U16S_size a) 0)))
+(declare-const U16S_empty U16S)
+(assert (= U16S_empty ((as const U16S) #x0000)))
+(assert (= (U16S_size U16S_empty) 0))
+; U32S
+(declare-fun U32S_size (U32S) Z)
+(assert (forall ((a U32S)) (>= (U32S_size a) 0)))
+(declare-const U32S_empty U32S)
+(assert (= U32S_empty ((as const U32S) #x00000000)))
+(assert (= (U32S_size U32S_empty) 0))
+; U64S
+(declare-fun U64S_size (U64S) Z)
+(assert (forall ((a U64S)) (>= (U64S_size a) 0)))
+(declare-const U64S_empty U64S)
+(assert (= U64S_empty ((as const U64S) #x0000000000000000)))
+(assert (= (U64S_size U64S_empty) 0))
+; RS
+(declare-fun RS_size (RS) Z)
+(assert (forall ((a RS)) (>= (RS_size a) 0)))
+(declare-const RS_empty RS)
+(assert (= RS_empty ((as const RS) 0.0)))
+(assert (= (RS_size RS_empty) 0))
+; F32S
+(declare-fun F32S_size (F32S) Z)
+(assert (forall ((a F32S)) (>= (F32S_size a) 0)))
+(declare-const F32S_empty F32S)
+(assert (= F32S_empty ((as const F32S) (fp #b0 #x00 #b00000000000000000000000))))
+(assert (= (F32S_size F32S_empty) 0))
+; F64S
+(declare-fun F64S_size (F64S) Z)
+(assert (forall ((a F64S)) (>= (F64S_size a) 0)))
+(declare-const F64S_empty F64S)
+(assert (= F64S_empty ((as const F64S) (fp #b0 #b00000000000 #x0000000000000))))
+(assert (= (F64S_size F64S_empty) 0))
+$endif$
 ; Type Declarations
 $d$
 ; Auxiliaries
@@ -108,7 +229,7 @@ $value$
 >>
 
 fplit(sign, eb, sb) ::= <<
-(fp #b$sign$ #x$e$ #x$s$)
+(fp #b$sign$ $eb$ $sb$)
 >>
 
 binary(op, left, right) ::= <<
