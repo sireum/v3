@@ -565,15 +565,105 @@ final case class ReadInt(msgOpt: Option[StringLit])
   }
 }
 
-final case class IntLit(value: String) extends PrimaryExp {
+final case class IntLit(value: String, tpeOpt: Option[IntegralType]) extends PrimaryExp {
+  var normalized: BigInt = _
+
+  def normalize(bitWidth: Int): BigInt =
+    if (normalized != null) normalized
+    else {
+      normalized = tpeOpt match {
+        case None => BigInt(value)
+        case Some(tpe) =>
+          var n = if (value.startsWith("0x")) BigInt(value.substring(2), 16) else BigInt(value)
+          tpe match {
+            case _: ZType =>
+              if (bitWidth != 0 && !(BigInt(-2).pow(bitWidth - 1) <= n && n <= BigInt(2).pow(bitWidth - 1) - 1))
+                throw new IllegalStateException(s"Literal $value is outside of $bitWidth-bit Z's value range.")
+              n
+            case _: Z8Type =>
+              if (!(BigInt(Byte.MinValue) <= n && n <= BigInt(Byte.MaxValue)))
+                throw new IllegalStateException(s"Literal $value is outside of Z8's value range.")
+              n
+            case _: Z16Type =>
+              if (!(BigInt(Short.MinValue) <= n && n <= BigInt(Short.MaxValue)))
+                throw new IllegalStateException(s"Literal $value is outside of Z16's value range.")
+              n
+            case _: Z32Type =>
+              if (!(BigInt(Int.MinValue) <= n && n <= BigInt(Int.MaxValue)))
+                throw new IllegalStateException(s"Literal $value is outside of Z32's value range.")
+              n
+            case _: Z64Type =>
+              if (!(BigInt(Long.MinValue) <= n && n <= BigInt(Long.MaxValue)))
+                throw new IllegalStateException(s"Literal $value is outside of Z64's value range.")
+              n
+            case _: NType =>
+              if (n < 0)
+                throw new IllegalStateException(s"Literal $value is outside of N's value range.")
+              n
+            case _: N8Type =>
+              if (!(BigInt(0) <= n && n <= BigInt(256)))
+                throw new IllegalStateException(s"Literal $value is outside of N8's value range.")
+              n
+            case _: N16Type =>
+              if (!(BigInt(0) <= n && n <= BigInt(65536)))
+                throw new IllegalStateException(s"Literal $value is outside of N16's value range.")
+              n
+            case _: N32Type =>
+              if (!(BigInt(0) <= n && n <= BigInt(4294967296l)))
+                throw new IllegalStateException(s"Literal $value is outside of N32's value range.")
+              n
+            case _: N64Type =>
+              if (!(BigInt(0) <= n && n <= BigInt("18446744073709551615")))
+                throw new IllegalStateException(s"Literal $value is outside of N64's value range.")
+              n
+            case _: S8Type => BigInt(n.toByte)
+            case _: S16Type => BigInt(n.toShort)
+            case _: S32Type => BigInt(n.toInt)
+            case _: S64Type => BigInt(n.toLong)
+            case _: U8Type =>
+              n = BigInt(n.toByte)
+              if (n < 0) BigInt(Byte.MaxValue) + 1 - (BigInt(Byte.MinValue) - n) else n
+            case _: U16Type =>
+              n = BigInt(n.toShort)
+              if (n < 0) BigInt(Short.MaxValue) + 1 - (BigInt(Short.MinValue) - n) else n
+            case _: U32Type =>
+              n = BigInt(n.toInt)
+              if (n < 0) BigInt(Int.MaxValue) + 1 - (BigInt(Int.MinValue) - n) else n
+            case _: U64Type =>
+              n = BigInt(n.toLong)
+              if (n < 0) BigInt(Long.MaxValue) + 1 - (BigInt(Long.MinValue) - n) else n
+          }
+      }
+      normalized
+    }
+
   override def buildString(sb: StringBuilder,
-                           inProof: Boolean): Unit = {
-    val n = BigInt(value)
-    if (n < Int.MinValue || n > Int.MaxValue) {
-      sb.append("Z(\"")
+                           inProof: Boolean): Unit = tpeOpt match {
+    case None => sb.append(value)
+    case Some(t) =>
+      t match {
+        case _: ZType => sb.append('z')
+        case _: Z8Type => sb.append("z8")
+        case _: Z16Type => sb.append("z16")
+        case _: Z32Type => sb.append("z32")
+        case _: Z64Type => sb.append("z64")
+        case _: NType => sb.append('n')
+        case _: N8Type => sb.append("n8")
+        case _: N16Type => sb.append("n16")
+        case _: N32Type => sb.append("n32")
+        case _: N64Type => sb.append("n64")
+        case _: S8Type => sb.append("s8")
+        case _: S16Type => sb.append("s16")
+        case _: S32Type => sb.append("s32")
+        case _: S64Type => sb.append("s64")
+        case _: U8Type => sb.append("u8")
+        case _: U16Type => sb.append("u16")
+        case _: U32Type => sb.append("u32")
+        case _: U64Type => sb.append("u64")
+      }
+      sb.append('"')
       sb.append(value)
-      sb.append("\")")
-    } else sb.append(value)
+      sb.append('"')
   }
 }
 
@@ -638,21 +728,6 @@ final case class Random(tpe: Type) extends PrimaryExp {
                            inProof: Boolean): Unit = {
     tpe.buildString(sb)
     sb.append(".random")
-  }
-}
-
-final case class IntegralConv(lit: IntLit, tpe: IntegralType) extends PrimaryExp with HasInternalData[IntegralConv] {
-  var tipe: Tipe = _
-
-  override def copy(other: IntegralConv): Unit = {
-    tipe = other.tipe
-  }
-
-  override def buildString(sb: StringBuilder,
-                           inProof: Boolean): Unit = {
-    lit.buildString(sb, inProof)
-    sb.append(".to")
-    tpe.buildString(sb)
   }
 }
 

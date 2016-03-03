@@ -367,7 +367,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         if (!allowMethod)
           error(e, s"Invoking readInt is only allowed at statement level.")
         someZ
-      case e: IntLit => someZ
+      case e: IntLit => Some(e.tpeOpt.map(TypeChecker.tipe).getOrElse(Z))
       case e: FloatLit => e.primitiveValue match {
         case Left(_: Float) => Some(F32)
         case Right(_: Double) => Some(F64)
@@ -375,7 +375,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case e: RealLit => someR
       case e: IntMin => Some(TypeChecker.tipe(e.integralType))
       case e: IntMax => Some(TypeChecker.tipe(e.integralType))
-      case e: IntegralConv => integral(e).foreach(e.tipe = _); Some(TypeChecker.tipe(e.tpe))
       case e: Random =>
         if (!allowMethod)
           error(e, s"Invoking .random is only allowed at statement level.")

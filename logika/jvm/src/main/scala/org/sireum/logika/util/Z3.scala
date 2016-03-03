@@ -168,38 +168,28 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
-      case e: IntegralConv =>
-        val value = e.lit.value
-        val lit = e.tpe match {
-          case _: S8Type =>
-            val v: java.lang.Byte = BigInt(value).toByte
-            String.format("#x%02X", v)
-          case _: U8Type =>
-            val v: java.lang.Byte = (BigInt(value) % 256).toByte
-            String.format("#x%02X", v)
-          case _: S16Type =>
-            val v: java.lang.Short = BigInt(value).toShort
-            String.format("#x%04X", v)
-          case _: U16Type =>
-            val v: java.lang.Short = (BigInt(value) % 65536).toShort
-            String.format("#x%04X", v)
-          case _: S32Type =>
-            val v: java.lang.Integer = BigInt(value).toInt
-            String.format("#x%08X", v)
-          case _: U32Type =>
-            val v: java.lang.Integer = (BigInt(value) % 4294967296l).toInt
-            String.format("#x%08X", v)
-          case _: S64Type =>
-            val v: java.lang.Long = BigInt(value).toLong
-            String.format("#x%016X", v)
-          case _: U64Type =>
-            val v: java.lang.Long = (BigInt(value) % max1U64).toLong
-            String.format("#x%016X", v)
+      case e@IntLit(value, tpeOpt) =>
+        val n = e.normalized
+        val lit = tpeOpt match {
+          case Some(tpe) =>
+            tpe match {
+              case _: S8Type | _: U8Type =>
+                val v: java.lang.Byte = n.toByte
+                String.format("#x%02X", v)
+              case _: S16Type | _: U16Type =>
+                val v: java.lang.Short = n.toShort
+                String.format("#x%04X", v)
+              case _: S32Type | _: U32Type =>
+                val v: java.lang.Integer = BigInt(value).toInt
+                String.format("#x%08X", v)
+              case _: S64Type | _: U64Type =>
+                val v: java.lang.Long = BigInt(value).toLong
+                String.format("#x%016X", v)
+              case _ => value
+            }
           case _ => value
         }
         stg.getInstanceOf("lit").add("value", lit)
-      case IntLit(value) =>
-        stg.getInstanceOf("lit").add("value", value)
       case e@FloatLit(value) =>
         import java.lang.{Float => JFloat, Double => JDouble, Integer => JInteger, Long => JLong}
         e.primitiveValue match {

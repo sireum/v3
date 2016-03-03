@@ -304,37 +304,47 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
       case ctx: IntContext =>
-        val r = buildInt(ctx.NUM)
-        constMap(r) = BigInt(r.value)
+        val r = IntLit(ctx.NUM.getText, None)
+        checkIntMaxMin(ctx.NUM, BigInt(r.value), r)
         r
-      case ctx: LitContext =>
-        val r = ctx.t.getText match {
-          case "Z" =>
-            var text = ctx.STRING.getText
-            text = text.substring(1, text.length - 1).replaceAll(" ", "")
-            try BigInt(text) catch {
-              case _: Throwable =>
-                error(ctx.STRING, s"Invalid Z literal $text.")
-            }
-            IntLit(text)
-          case "R" =>
-            var text = ctx.STRING.getText
-            text = text.substring(1, text.length - 1).replaceAll(" ", "")
-            val t = if (text.head == '-') text.tail else text
-            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)) ||
-              t.startsWith(".") || t.endsWith("."))
-              error(ctx.STRING, s"Invalid R literal $text.")
-            RealLit(text)
-        }
-        r
-      case ctx: ZLitContext =>
-        var text = ctx.INT.getText
+      case ctx: IntLitContext =>
+        val t = ctx.INT
+        var text = t.getText
+        val i = text.indexOf('"')
+        val ts = text.substring(0, i)
         text = text.substring(2, text.length - 1).replaceAll(" ", "")
-        try BigInt(text) catch {
+        try {
+          val tpe = (ts match {
+            case "z" => ZType()
+            case "z8" => Z8Type()
+            case "z16" => Z16Type()
+            case "z32" => Z32Type()
+            case "z64" => Z64Type()
+            case "n" => NType()
+            case "n8" => N8Type()
+            case "n16" => N16Type()
+            case "n32" => N32Type()
+            case "n64" => N64Type()
+            case "s8" => S8Type()
+            case "s16" => S16Type()
+            case "s32" => S32Type()
+            case "s64" => S64Type()
+            case "u8" => U8Type()
+            case "u16" => U16Type()
+            case "u32" => U32Type()
+            case "u64" => U64Type()
+          }) at t
+          val r = IntLit(text, Some(tpe))
+          r.normalize(bitWidth)
+          r
+        } catch {
+          case e: IllegalStateException =>
+            error(ctx.INT, e.getMessage)
+            IntLit("0", None)
           case _: Throwable =>
-            error(ctx.INT, s"Invalid Z literal $text.")
+            error(ctx.INT, s"Invalid ${ts.toUpperCase} literal ${t.getText}.")
+            IntLit("0", None)
         }
-        IntLit(text)
       case ctx: RLitContext =>
         var text = ctx.REAL.getText
         text = text.substring(2, text.length - 1).replaceAll(" ", "")
@@ -385,48 +395,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     r at ctx
   }
 
-  private def build(e: Exp, t: IntegralType, tkn: Token): IntegralConv =
-    e match {
-      case e: IntLit =>
-        val n = BigInt(e.value)
-        t match {
-          case _: Z8Type =>
-            if (!(BigInt(Byte.MinValue) <= n && n <= BigInt(Byte.MaxValue)))
-              error(tkn, s"Literal ${e.value} is outside of Z8's value range.")
-          case _: Z16Type =>
-            if (!(BigInt(Short.MinValue) <= n && n <= BigInt(Short.MaxValue)))
-              error(tkn, s"Literal ${e.value} is outside of Z16's value range.")
-          case _: Z32Type =>
-            if (!(BigInt(Int.MinValue) <= n && n <= BigInt(Int.MaxValue)))
-              error(tkn, s"Literal ${e.value} is outside of Z32's value range.")
-          case _: Z64Type =>
-            if (!(BigInt(Long.MinValue) <= n && n <= BigInt(Long.MaxValue)))
-              error(tkn, s"Literal ${e.value} is outside of Z64's value range.")
-          case _: NType =>
-            if (n < 0)
-              error(tkn, s"Literal ${e.value} is outside of N's value range.")
-          case _: N8Type =>
-            if (!(BigInt(0) <= n && n <= BigInt(256)))
-              error(tkn, s"Literal ${e.value} is outside of N8's value range.")
-          case _: N16Type =>
-            if (!(BigInt(0) <= n && n <= BigInt(65536)))
-              error(tkn, s"Literal ${e.value} is outside of N16's value range.")
-          case _: N32Type =>
-            if (!(BigInt(0) <= n && n <= BigInt(4294967296l)))
-              error(tkn, s"Literal ${e.value} is outside of N32's value range.")
-          case _: N64Type =>
-            if (!(BigInt(0) <= n && n <= maxN64))
-              error(tkn, s"Literal ${e.value} is outside of N64's value range.")
-          case _: ZType |
-               _: S8Type | _: S16Type | _: S32Type | _: S64Type |
-               _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
-        }
-        IntegralConv(e, t)
-      case _ =>
-        error(tkn, s"Integer conversion .${tkn.getText} can only be used on integer literal.")
-        IntegralConv(IntLit("0") at(e, e), t)
-    }
-
   private def build(ctx: FormulaContext): Exp = {
     val r = ctx match {
       case ctx: PFormulaContext =>
@@ -434,24 +402,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
           e = id.getText match {
             case "size" => Size(e)
-            case "toZ" => build(e, ZType() at id, id)
-            case "toZ8" => build(e, Z8Type() at id, id)
-            case "toZ16" => build(e, Z16Type() at id, id)
-            case "toZ32" => build(e, Z32Type() at id, id)
-            case "toZ64" => build(e, Z64Type() at id, id)
-            case "toN" => build(e, NType() at id, id)
-            case "toN8" => build(e, N8Type() at id, id)
-            case "toN16" => build(e, N16Type() at id, id)
-            case "toN32" => build(e, N32Type() at id, id)
-            case "toN64" => build(e, N64Type() at id, id)
-            case "toS8" => build(e, S8Type() at id, id)
-            case "toS16" => build(e, S16Type() at id, id)
-            case "toS32" => build(e, S32Type() at id, id)
-            case "toS64" => build(e, S64Type() at id, id)
-            case "toU8" => build(e, U8Type() at id, id)
-            case "toU16" => build(e, U16Type() at id, id)
-            case "toU32" => build(e, U32Type() at id, id)
-            case "toU64" => build(e, U64Type() at id, id)
+            case f =>
+              error(id, s"Unrecognized field access $f.")
+              e
           }
         }
         e
@@ -548,8 +501,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     }
     r at ctx
   }
-
-  private def buildInt(t: Token): IntLit = IntLit(t.getText)
 
   private def build(ctx: QformulaContext): Quant[_] = {
     val apply =
@@ -693,37 +644,47 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "false" | "F" | "_|_" | "⊥" => BooleanLit(false)
         }
       case ctx: IntExpContext =>
-        val r = buildInt(ctx.NUM)
-        constMap(r) = BigInt(r.value)
+        val r = IntLit(ctx.NUM.getText, None)
+        checkIntMaxMin(ctx.NUM, BigInt(r.value), r)
         r
-      case ctx: LitExpContext =>
-        val r = ctx.t.getText match {
-          case "Z" =>
-            var text = ctx.STRING.getText
-            text = text.substring(1, text.length - 1).replaceAll(" ", "")
-            try BigInt(text) catch {
-              case _: Throwable =>
-                error(ctx.STRING, s"Invalid Z literal $text.")
-            }
-            IntLit(text)
-          case "R" =>
-            var text = ctx.STRING.getText
-            text = text.substring(1, text.length - 1).replaceAll(" ", "")
-            val t = if (text.head == '-') text.tail else text
-            if (!(t.count(_ == '.') == 1 && t.forall(c => c == '.' || c.isDigit)) ||
-              t.startsWith(".") || t.endsWith("."))
-              error(ctx.STRING, s"Invalid R literal $text.")
-            RealLit(text)
-        }
-        r
-      case ctx: ZLitExpContext =>
-        var text = ctx.INT.getText
+      case ctx: IntLitExpContext =>
+        val t = ctx.INT
+        var text = t.getText
+        val i = text.indexOf('"')
+        val ts = text.substring(0, i)
         text = text.substring(2, text.length - 1).replaceAll(" ", "")
-        try BigInt(text) catch {
+        try {
+          val tpe = (ts match {
+            case "z" => ZType()
+            case "z8" => Z8Type()
+            case "z16" => Z16Type()
+            case "z32" => Z32Type()
+            case "z64" => Z64Type()
+            case "n" => NType()
+            case "n8" => N8Type()
+            case "n16" => N16Type()
+            case "n32" => N32Type()
+            case "n64" => N64Type()
+            case "s8" => S8Type()
+            case "s16" => S16Type()
+            case "s32" => S32Type()
+            case "s64" => S64Type()
+            case "u8" => U8Type()
+            case "u16" => U16Type()
+            case "u32" => U32Type()
+            case "u64" => U64Type()
+          }) at t
+          val r = IntLit(text, Some(tpe))
+          r.normalize(bitWidth)
+          r
+        } catch {
+          case e: IllegalStateException =>
+            error(ctx.INT, e.getMessage)
+            IntLit("0", None)
           case _: Throwable =>
-            error(ctx.INT, s"Invalid Z literal $text.")
+            error(ctx.INT, s"Invalid ${ts.toUpperCase} literal ${t.getText}.")
+            IntLit("0", None)
         }
-        IntLit(text)
       case ctx: RLitExpContext =>
         var text = ctx.REAL.getText
         text = text.substring(2, text.length - 1).replaceAll(" ", "")
@@ -791,24 +752,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
                 Clone(Id("???"))
             }
             case "size" => Size(e)
-            case "toZ" => build(e, ZType() at id, id)
-            case "toZ8" => build(e, Z8Type() at id, id)
-            case "toZ16" => build(e, Z16Type() at id, id)
-            case "toZ32" => build(e, Z32Type() at id, id)
-            case "toZ64" => build(e, Z64Type() at id, id)
-            case "toN" => build(e, NType() at id, id)
-            case "toN8" => build(e, N8Type() at id, id)
-            case "toN16" => build(e, N16Type() at id, id)
-            case "toN32" => build(e, N32Type() at id, id)
-            case "toN64" => build(e, N64Type() at id, id)
-            case "toS8" => build(e, S8Type() at id, id)
-            case "toS16" => build(e, S16Type() at id, id)
-            case "toS32" => build(e, S32Type() at id, id)
-            case "toS64" => build(e, S64Type() at id, id)
-            case "toU8" => build(e, U8Type() at id, id)
-            case "toU16" => build(e, U16Type() at id, id)
-            case "toU32" => build(e, U32Type() at id, id)
-            case "toU64" => build(e, U64Type() at id, id)
+            case f =>
+              error(id, s"Unrecognized field access $f.")
+              e
           }
         }
         e

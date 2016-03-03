@@ -86,8 +86,7 @@ primFormula
   | 'result'                                            #Result      // programming logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
   | NUM                                                 #Int         // programming logic
-  | t=( 'Z' | 'R' ) '(' STRING ')'                      #Lit         // programming logic
-  | INT                                                 #ZLit        // programming logic
+  | INT                                                 #IntLit      // programming logic
   | REAL                                                #RLit        // programming logic
   | FLOAT                                               #FloatLit    // programming logic
   | t=( 'B'
@@ -108,11 +107,7 @@ primFormula
 
 formula
   : primFormula ( '.' ID )*                             #PFormula
-    /* ID in { "size",
-               "toZ", "toZ8", "toZ16", "toZ32", "toZ64",
-               "toN", "toN8", "toN16", "toN32", "toN64",
-                      "toS8", "toS16", "toS32", "toS64",
-                      "toU8", "toU16", "toU32", "toU64"  } */
+    /* ID in { "size" } */
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
   | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
@@ -308,9 +303,8 @@ primExp
             | 'U8'  | 'U16' | 'U32' | 'U64'
       | 'R' | 'F32' | 'F64' )'.' ID                     #TypeAccessExp
       // ID in { "Min", "Max", "random" }
-  | t=( 'Z' | 'R' ) '(' STRING ')'                      #LitExp
   | FLOAT                                               #FloatLitExp
-  | INT                                                 #ZLitExp
+  | INT                                                 #IntLitExp
   | REAL                                                #RLitExp
   | t=( 'BS'
       | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
@@ -324,12 +318,9 @@ primExp
 exp
   : tb=ID t='(' ( exp ( ',' exp )* )? ')'               #InvokeExp
   | primExp ( '.' ID )*                                 #PExp
-    /* ID in { "clone", // primExp === ID
-               "size",
-               "toZ", "toZ8", "toZ16", "toZ32", "toZ64",
-               "toN", "toN8", "toN16", "toN32", "toN64",
-                      "toS8", "toS16", "toS32", "toS64",
-                      "toU8", "toU16", "toU32", "toU64"  } */
+    /* ID in { "size",
+               "clone" // primExp === ID
+             } */
   | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
@@ -381,6 +372,18 @@ HLINE: '-' '-' '-'+ ;
 NUM: '0' | [1-9] [0-9]* ;
 
 ID: [a-zA-Z] [a-zA-Z0-9_]* ;
+
+REAL // space is ignored
+    : 'r' '"' '-'? ( '0' | [1-9] [ 0-9]* ) '.' ' '* [0-9] [ 0-9]* '"'
+    ;
+
+INT // space is ignored
+    : ( 'z' | 'z8' | 'z16' | 'z32' | 'z64'
+      | 'n' | 'n8' | 'n16' | 'n32' | 'n64'
+      | 's8' | 's16' | 's32' | 's64'
+      | 'u8' | 'u16' | 'u32' | 'u64' )
+      '"' ( '0' | '-'? ' '* [0-9] [ 0-9]* | '0x' ' '*  [0-9a-fA-F] [ 0-9a-fA-F]* ) '"'
+    ;
 
 RESERVED
   : 'abstract' | 'case' | 'catch' | 'class'
@@ -442,14 +445,6 @@ STRING
 
 FLOAT
     : FloatingPointLiteral
-    ;
-
-REAL
-    : 'r' '"' '-'? ( '0' | [1-9] [0-9 ]* ) '.' [0-9]+ '"'
-    ;
-
-INT
-    : 'z' '"' '-'? ( '0' | [1-9] [0-9 ]* ) '"'
     ;
 
 fragment

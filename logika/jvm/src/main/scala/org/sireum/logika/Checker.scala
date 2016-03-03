@@ -34,7 +34,7 @@ import org.sireum.util._
 object Checker {
   private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
-  private[logika] final val zero = IntLit("0")
+  private[logika] final val zero = IntLit("0", None)
   private[logika] final val kind = "Proof Checker"
 
   final def check(m: message.Check)(
