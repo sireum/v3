@@ -147,6 +147,25 @@ $s"""))
     (z3Script, r)
   }
 
+  def translate(n: BigInt, tpe: IntegralType): ST = {
+    val lit = tpe match {
+      case _: S8Type | _: U8Type =>
+        val v: java.lang.Byte = n.toByte
+        String.format("#x%02X", v)
+      case _: S16Type | _: U16Type =>
+        val v: java.lang.Short = n.toShort
+        String.format("#x%04X", v)
+      case _: S32Type | _: U32Type =>
+        val v: java.lang.Integer = n.toInt
+        String.format("#x%08X", v)
+      case _: S64Type | _: U64Type =>
+        val v: java.lang.Long = n.toLong
+        String.format("#x%016X", v)
+      case _ => if (n < 0) s"(- ${-n})" else n.toString
+    }
+    stg.getInstanceOf("lit").add("value", lit)
+  }
+
   def translate(e: Exp): ST =
     e match {
       case BooleanLit(value) =>
@@ -173,22 +192,7 @@ $s"""))
       case e@IntLit(value, tpeOpt) =>
         val n = e.normalized
         val lit = tpeOpt match {
-          case Some(tpe) =>
-            tpe match {
-              case _: S8Type | _: U8Type =>
-                val v: java.lang.Byte = n.toByte
-                String.format("#x%02X", v)
-              case _: S16Type | _: U16Type =>
-                val v: java.lang.Short = n.toShort
-                String.format("#x%04X", v)
-              case _: S32Type | _: U32Type =>
-                val v: java.lang.Integer = BigInt(value).toInt
-                String.format("#x%08X", v)
-              case _: S64Type | _: U64Type =>
-                val v: java.lang.Long = BigInt(value).toLong
-                String.format("#x%016X", v)
-              case _ => value
-            }
+          case Some(tpe) => translate(n, tpe)
           case _ => value
         }
         stg.getInstanceOf("lit").add("value", lit)
@@ -234,12 +238,9 @@ $s"""))
         else
           stg.getInstanceOf("lit").add("value", value)
       case e: IntMin =>
-        if (e.value < 0)
-          stg.getInstanceOf("lit").add("value", s"(- ${-e.value})")
-        else
-          stg.getInstanceOf("lit").add("value", e.value)
+        translate(e.value, e.integralType)
       case e: IntMax =>
-        stg.getInstanceOf("lit").add("value", e.value)
+        translate(e.value, e.integralType)
       case e@Prepend(left, right) =>
         val c = freshSeq()
         val a = translate(right)
@@ -483,28 +484,28 @@ $s"""))
     case R => "R"
     case F32 => "F32"
     case F64 => "F64"
-    case BS => "BS"
+    case BS => stMain.add("BS", true); "BS"
     case ZS => "ZS"
-    case Z8S => "Z8S"
-    case Z16S => "Z16S"
-    case Z32S => "Z32S"
-    case Z64S => "Z64S"
-    case NS => "NS"
-    case N8S => "N8S"
-    case N16S => "N16S"
-    case N32S => "N32S"
-    case N64S => "N64S"
-    case S8S => "S8S"
-    case S16S => "S16S"
-    case S32S => "S32S"
-    case S64S => "S64S"
-    case U8S => "U8S"
-    case U16S => "U16S"
-    case U32S => "U32S"
-    case U64S => "U64S"
-    case RS => "RS"
-    case F32S => "F32S"
-    case F64S => "F64S"
+    case Z8S => stMain.add("Z8S", true); "Z8S"
+    case Z16S => stMain.add("Z16S", true); "Z16S"
+    case Z32S => stMain.add("Z32S", true); "Z32S"
+    case Z64S => stMain.add("Z64S", true); "Z64S"
+    case NS => stMain.add("NS", true); "NS"
+    case N8S => stMain.add("N8S", true); "N8S"
+    case N16S => stMain.add("N16S", true); "N16S"
+    case N32S => stMain.add("N32S", true); "N32S"
+    case N64S => stMain.add("N64S", true); "N64S"
+    case S8S => stMain.add("S8S", true); "S8S"
+    case S16S => stMain.add("S16S", true); "S16S"
+    case S32S => stMain.add("S32S", true); "S32S"
+    case S64S => stMain.add("S64S", true); "S64S"
+    case U8S => stMain.add("U8S", true); "U8S"
+    case U16S => stMain.add("U16S", true); "U16S"
+    case U32S => stMain.add("U32S", true); "U32S"
+    case U64S => stMain.add("U64S", true); "U64S"
+    case RS => stMain.add("RS", true); "RS"
+    case F32S => stMain.add("F32S", true); "F32S"
+    case F64S => stMain.add("F64S", true); "F64S"
     case _: FunTipe | UnitTipe =>
       assert(assertion = false, "Unexpected situation."); "???"
   }
@@ -532,27 +533,27 @@ $s"""))
     case _: RType => "R"
     case _: F32Type => "F32"
     case _: F64Type => "F64"
-    case _: BSType => "BS"
+    case _: BSType => stMain.add("BS", true); "BS"
     case _: ZSType => "ZS"
-    case _: Z8SType => "Z8S"
-    case _: Z16SType => "Z16S"
-    case _: Z32SType => "Z32S"
-    case _: Z64SType => "Z64S"
-    case _: NSType => "NS"
-    case _: N8SType => "N8S"
-    case _: N16SType => "N16S"
-    case _: N32SType => "N32S"
-    case _: N64SType => "N64S"
-    case _: S8SType => "S8S"
-    case _: S16SType => "S16S"
-    case _: S32SType => "S32S"
-    case _: S64SType => "S64S"
-    case _: U8SType => "U8S"
-    case _: U16SType => "U16S"
-    case _: U32SType => "U32S"
-    case _: U64SType => "U64S"
-    case _: RSType => "RS"
-    case _: F32SType => "F32S"
-    case _: F64SType => "F64S"
+    case _: Z8SType => stMain.add("Z8S", true); "Z8S"
+    case _: Z16SType => stMain.add("Z16S", true); "Z16S"
+    case _: Z32SType => stMain.add("Z32S", true); "Z32S"
+    case _: Z64SType => stMain.add("Z64S", true); "Z64S"
+    case _: NSType => stMain.add("NS", true); "NS"
+    case _: N8SType => stMain.add("N8S", true); "N8S"
+    case _: N16SType => stMain.add("N16S", true); "N16S"
+    case _: N32SType => stMain.add("N32S", true); "N32S"
+    case _: N64SType => stMain.add("N64S", true); "N64S"
+    case _: S8SType => stMain.add("S8S", true); "S8S"
+    case _: S16SType => stMain.add("S16S", true); "S16S"
+    case _: S32SType => stMain.add("S32S", true); "S32S"
+    case _: S64SType => stMain.add("S64S", true); "S64S"
+    case _: U8SType => stMain.add("U8S", true); "U8S"
+    case _: U16SType => stMain.add("U16S", true); "U16S"
+    case _: U32SType => stMain.add("U32S", true); "U32S"
+    case _: U64SType => stMain.add("U64S", true); "U64S"
+    case _: RSType => stMain.add("RS", true); "RS"
+    case _: F32SType => stMain.add("F32S", true); "F32S"
+    case _: F64SType => stMain.add("F64S", true); "F64S"
   }
 }

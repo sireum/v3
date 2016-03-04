@@ -1,4 +1,4 @@
-main(d, a, e, symexe) ::= <<
+main(d, a, e, symexe, BS, Z8S, Z16S, Z32S, Z64S, NS, N8S, N16S, N32S, N64S, S8S, S16S, S32S, S64S, U8S, U16S, U32S, U64S, RS, F32S, F64S) ::= <<
 ; Preamble
 (define-sort B    () Bool)                     ; Logika's B type
 (define-sort Z    () Int)                      ; Logika's Z type
@@ -9,6 +9,7 @@ main(d, a, e, symexe) ::= <<
 (assert (= ZS_empty ((as const ZS) 0)))        ; ZS_empty axiom: no element in ZS_empty
 (assert (= (ZS_size ZS_empty) 0))              ; ZS_size and ZS_empty axiom: ZS_size of ZS_empty is 0
 $if(symexe)$
+; Extended Preamble for SymExe
 (define-sort Z8   () Int)
 (define-sort Z16  () Int)
 (define-sort Z32  () Int)
@@ -28,153 +29,173 @@ $if(symexe)$
 (define-sort U64  () (_ BitVec 64))
 (define-sort R    () Real)
 (define-sort F32  () Float32)
-(define-sort F64  () Float64)
-(define-sort Z8S  () (Array Z Z8))
-(define-sort Z16S () (Array Z Z16))
-(define-sort Z32S () (Array Z Z32))
-(define-sort Z64S () (Array Z Z64))
-(define-sort NS   () (Array Z N))
-(define-sort N8S  () (Array Z N8))
-(define-sort N16S () (Array Z N16))
-(define-sort N32S () (Array Z N32))
-(define-sort N64S () (Array Z N64))
-(define-sort S8S  () (Array Z S8))
-(define-sort S16S () (Array Z S16))
-(define-sort S32S () (Array Z S32))
-(define-sort S64S () (Array Z S64))
-(define-sort U8S  () (Array Z U8))
-(define-sort U16S () (Array Z U16))
-(define-sort U32S () (Array Z U32))
-(define-sort U64S () (Array Z U64))
-(define-sort RS   () (Array Z R))
-(define-sort F32S () (Array Z F32))
-(define-sort F64S () (Array Z F64))
 (define-const F32_PInf (F32) (_ +oo 8 24))
 (define-const F32_NInf (F32) (_ -oo 8 24))
 (define-const F32_NaN (F32) (_ NaN 8 24))
+(define-sort F64  () Float64)
 (define-const F64_PInf (F64) (_ +oo 11 53))
 (define-const F64_NInf (F64) (_ -oo 11 53))
 (define-const F64_NaN (F64) (_ NaN 11 53))
-; Z8S
+$if(Z8S)$
+(define-sort Z8S  () (Array Z Z8))
 (declare-fun Z8S_size (Z8S) Z)
 (assert (forall ((a Z8S)) (>= (Z8S_size a) 0)))
 (declare-const Z8S_empty Z8S)
 (assert (= Z8S_empty ((as const Z8S) 0)))
 (assert (= (Z8S_size Z8S_empty) 0))
-; Z16S
+$endif$
+$if(Z16S)$
+(define-sort Z16S () (Array Z Z16))
 (declare-fun Z16S_size (Z16S) Z)
 (assert (forall ((a Z16S)) (>= (Z16S_size a) 0)))
 (declare-const Z16S_empty Z16S)
 (assert (= Z16S_empty ((as const Z16S) 0)))
 (assert (= (Z16S_size Z16S_empty) 0))
-; Z32S
+$endif$
+$if(Z32S)$
+(define-sort Z32S () (Array Z Z32))
 (declare-fun Z32S_size (Z32S) Z)
 (assert (forall ((a Z32S)) (>= (Z32S_size a) 0)))
 (declare-const Z32S_empty Z32S)
 (assert (= Z32S_empty ((as const Z32S) 0)))
 (assert (= (Z32S_size Z32S_empty) 0))
-; Z64S
+$endif$
+$if(Z64S)$
+(define-sort Z64S () (Array Z Z64))
 (declare-fun Z64S_size (Z64S) Z)
 (assert (forall ((a Z64S)) (>= (Z64S_size a) 0)))
 (declare-const Z64S_empty Z64S)
 (assert (= Z64S_empty ((as const Z64S) 0)))
 (assert (= (Z64S_size Z64S_empty) 0))
-; NS
+$endif$
+$if(NS)$
+(define-sort NS   () (Array Z N))
 (declare-fun NS_size (NS) Z)
 (assert (forall ((a NS)) (>= (NS_size a) 0)))
 (declare-const NS_empty NS)
 (assert (= NS_empty ((as const NS) 0)))
 (assert (= (NS_size NS_empty) 0))
-; N8S
+$endif$
+$if(N8S)$
+(define-sort N8S  () (Array Z N8))
 (declare-fun N8S_size (N8S) Z)
 (assert (forall ((a N8S)) (>= (N8S_size a) 0)))
 (declare-const N8S_empty N8S)
 (assert (= N8S_empty ((as const N8S) 0)))
 (assert (= (N8S_size N8S_empty) 0))
-; N16S
+$endif$
+$if(N16S)$
+(define-sort N16S () (Array Z N16))
 (declare-fun N16S_size (N16S) Z)
 (assert (forall ((a N16S)) (>= (N16S_size a) 0)))
 (declare-const N16S_empty N16S)
 (assert (= N16S_empty ((as const N16S) 0)))
 (assert (= (N16S_size N16S_empty) 0))
-; N32S
+$endif$
+$if(N32S)$
+(define-sort N32S () (Array Z N32))
 (declare-fun N32S_size (N32S) Z)
 (assert (forall ((a N32S)) (>= (N32S_size a) 0)))
 (declare-const N32S_empty N32S)
 (assert (= N32S_empty ((as const N32S) 0)))
 (assert (= (N32S_size N32S_empty) 0))
-; N64S
+$endif$
+$if(N64S)$
+(define-sort N64S () (Array Z N64))
 (declare-fun N64S_size (N64S) Z)
 (assert (forall ((a N64S)) (>= (N64S_size a) 0)))
 (declare-const N64S_empty N64S)
 (assert (= N64S_empty ((as const N64S) 0)))
 (assert (= (N64S_size N64S_empty) 0))
-; S8S
+$endif$
+$if(S8S)$
+(define-sort S8S  () (Array Z S8))
 (declare-fun S8S_size (S8S) Z)
 (assert (forall ((a S8S)) (>= (S8S_size a) 0)))
 (declare-const S8S_empty S8S)
 (assert (= S8S_empty ((as const S8S) #x00)))
 (assert (= (S8S_size S8S_empty) 0))
-; S16S
+$endif$
+$if(S16S)$
+(define-sort S16S () (Array Z S16))
 (declare-fun S16S_size (S16S) Z)
 (assert (forall ((a S16S)) (>= (S16S_size a) 0)))
 (declare-const S16S_empty S16S)
 (assert (= S16S_empty ((as const S16S) #x0000)))
 (assert (= (S16S_size S16S_empty) 0))
-; S32S
+$endif$
+$if(S32S)$
+(define-sort S32S () (Array Z S32))
 (declare-fun S32S_size (S32S) Z)
 (assert (forall ((a S32S)) (>= (S32S_size a) 0)))
 (declare-const S32S_empty S32S)
 (assert (= S32S_empty ((as const S32S) #x00000000)))
 (assert (= (S32S_size S32S_empty) 0))
-; S64S
+$endif$
+$if(S64S)$
+(define-sort S64S () (Array Z S64))
 (declare-fun S64S_size (S64S) Z)
 (assert (forall ((a S64S)) (>= (S64S_size a) 0)))
 (declare-const S64S_empty S64S)
 (assert (= S64S_empty ((as const S64S) #x0000000000000000)))
 (assert (= (S64S_size S64S_empty) 0))
-; U8S
+$endif$
+$if(U8S)$
+(define-sort U8S  () (Array Z U8))
 (declare-fun U8S_size (U8S) Z)
 (assert (forall ((a U8S)) (>= (U8S_size a) 0)))
 (declare-const U8S_empty U8S)
 (assert (= U8S_empty ((as const U8S) #x00)))
 (assert (= (U8S_size U8S_empty) 0))
-; U16S
+$endif$
+$if(U16S)$
+(define-sort U16S () (Array Z U16))
 (declare-fun U16S_size (U16S) Z)
 (assert (forall ((a U16S)) (>= (U16S_size a) 0)))
 (declare-const U16S_empty U16S)
 (assert (= U16S_empty ((as const U16S) #x0000)))
 (assert (= (U16S_size U16S_empty) 0))
-; U32S
+$endif$
+$if(U32S)$
+(define-sort U32S () (Array Z U32))
 (declare-fun U32S_size (U32S) Z)
 (assert (forall ((a U32S)) (>= (U32S_size a) 0)))
 (declare-const U32S_empty U32S)
 (assert (= U32S_empty ((as const U32S) #x00000000)))
 (assert (= (U32S_size U32S_empty) 0))
-; U64S
+$endif$
+$if(U64S)$
+(define-sort U64S () (Array Z U64))
 (declare-fun U64S_size (U64S) Z)
 (assert (forall ((a U64S)) (>= (U64S_size a) 0)))
 (declare-const U64S_empty U64S)
 (assert (= U64S_empty ((as const U64S) #x0000000000000000)))
 (assert (= (U64S_size U64S_empty) 0))
-; RS
+$endif$
+$if(RS)$
+(define-sort RS   () (Array Z R))
 (declare-fun RS_size (RS) Z)
 (assert (forall ((a RS)) (>= (RS_size a) 0)))
 (declare-const RS_empty RS)
 (assert (= RS_empty ((as const RS) 0.0)))
 (assert (= (RS_size RS_empty) 0))
-; F32S
+$endif$
+$if(F32S)$
+(define-sort F32S () (Array Z F32))
 (declare-fun F32S_size (F32S) Z)
 (assert (forall ((a F32S)) (>= (F32S_size a) 0)))
 (declare-const F32S_empty F32S)
 (assert (= F32S_empty ((as const F32S) (fp #b0 #x00 #b00000000000000000000000))))
 (assert (= (F32S_size F32S_empty) 0))
-; F64S
+$endif$
+$if(F64S)$
+(define-sort F64S () (Array Z F64))
 (declare-fun F64S_size (F64S) Z)
 (assert (forall ((a F64S)) (>= (F64S_size a) 0)))
 (declare-const F64S_empty F64S)
 (assert (= F64S_empty ((as const F64S) (fp #b0 #b00000000000 #x0000000000000))))
 (assert (= (F64S_size F64S_empty) 0))
+$endif$
 $endif$
 ; Type Declarations
 $d$

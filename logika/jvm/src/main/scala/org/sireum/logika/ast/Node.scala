@@ -713,7 +713,8 @@ final case class IntMax(bitWidth: Int,
         else BigInt(2).pow(bitWidth - 1) - 1
       case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
            _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
-        BigInt(2).pow(bitWidth) - 1
+        if (bitWidth == 0) BigInt(0)
+        else BigInt(2).pow(bitWidth) - 1
     }
 
   override def buildString(sb: StringBuilder,

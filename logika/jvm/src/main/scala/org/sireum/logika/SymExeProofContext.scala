@@ -56,6 +56,20 @@ SymExeProofContext(unitNode: Program,
   val unboundedBitWidth = bitWidth == 0
   lazy val zMin = IntMin(bitWidth, ZType())
   lazy val zMax = IntMax(bitWidth, ZType())
+  val z8Min = IntMin(8, Z8Type())
+  val z8Max = IntMax(8, Z8Type())
+  val z16Min = IntMin(16, Z16Type())
+  val z16Max = IntMax(16, Z16Type())
+  val z32Min = IntMin(32, Z32Type())
+  val z32Max = IntMax(32, Z32Type())
+  val z64Min = IntMin(64, Z64Type())
+  val z64Max = IntMax(64, Z64Type())
+  val nMin = Checker.zero
+  lazy val nMax = IntMax(bitWidth, NType())
+  val n8Max = IntMax(8, N8Type())
+  val n16Max = IntMax(16, N16Type())
+  val n32Max = IntMax(32, N32Type())
+  val n64Max = IntMax(64, N64Type())
 
   override def isValid(title: String, li: LocationInfo,
                        premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
@@ -70,20 +84,47 @@ SymExeProofContext(unitNode: Program,
   }
 
   override def hasRuntimeError(stmt: Stmt): Boolean = {
+    def rwQuant(q: Quant[_], apply: (Node.Seq[Id], Option[QuantDomain], Exp) => Quant[_],
+                ids: Node.Seq[Id], qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
+      case _: ZType if bitWidth != 0 => ForAll(ids, qdOpt, Implies(And(Le(zMin, e), Le(e, zMax)), e))
+      case _: Z8Type => ForAll(ids, qdOpt, Implies(And(Le(z8Min, e), Le(e, z8Max)), e))
+      case _: Z16Type => ForAll(ids, qdOpt, Implies(And(Le(z16Min, e), Le(e, z16Max)), e))
+      case _: Z32Type => ForAll(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
+      case _: Z64Type => ForAll(ids, qdOpt, Implies(And(Le(z64Min, e), Le(e, z64Max)), e))
+      case _: NType =>
+        if (bitWidth == 0) ForAll(ids, qdOpt, Implies(Le(nMin, e), e))
+        else ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, nMax)), e))
+      case _: N8Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n8Max)), e))
+      case _: N16Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n16Max)), e))
+      case _: N32Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n32Max)), e))
+      case _: N64Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n64Max)), e))
+      case _ => q
+    }
     if (super.hasRuntimeError(stmt)) return true
-    else if (unboundedBitWidth) return false
     val rw = ast.Rewriter.build[Exp]()({
-      case ForAll(ids, Some(TypeDomain(_: ZType)), e) =>
-        ForAll(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
-      case Exists(ids, Some(TypeDomain(_: ZType)), e) =>
-        Exists(ids, Some(RangeDomain(zMin, zMax, loLt = false, hiLt = false)), e)
+      case q@ForAll(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, ForAll, ids, qdOpt, e, t)
+      case q@Exists(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, Exists, ids, qdOpt, e, t)
     })
     var ps = ivectorEmpty[Exp]
-    var zIds = isetEmpty[String]
+    var integralIds = isetEmpty[String]
     val visitor = Visitor.build({
-      case id: Id if id.tipe == tipe.Z && !zIds.contains(id.value) =>
-        ps :+= And(Le(zMin, id), Le(id, zMax))
-        zIds += id.value
+      case id: Id if !integralIds.contains(id.value) && id.tipe.isInstanceOf[tipe.IntegralTipe] =>
+        id.tipe match {
+          case tipe.Z if bitWidth != 0 => ps :+= And(Le(zMin, id), Le(id, zMax))
+          case tipe.Z8 => ps :+= And(Le(z8Min, id), Le(id, z8Max))
+          case tipe.Z16 => ps :+= And(Le(z16Min, id), Le(id, z16Max))
+          case tipe.Z32 => ps :+= And(Le(z32Min, id), Le(id, z32Max))
+          case tipe.Z64 => ps :+= And(Le(z64Min, id), Le(id, z64Max))
+          case tipe.N =>
+            if (bitWidth == 0) ps :+= Le(nMin, id)
+            else ps :+= And(Le(nMin, id), Le(id, n8Max))
+          case tipe.N8 => ps :+= And(Le(nMin, id), Le(id, n8Max))
+          case tipe.N16 => ps :+= And(Le(nMin, id), Le(id, n16Max))
+          case tipe.N32 => ps :+= And(Le(nMin, id), Le(id, n32Max))
+          case tipe.N64 => ps :+= And(Le(nMin, id), Le(id, n64Max))
+          case _ =>
+        }
+        integralIds += id.value
         false
     })
     for (p <- facts.values.toVector ++ premises) {
@@ -91,37 +132,81 @@ SymExeProofContext(unitNode: Program,
       visitor(p)
     }
     var hasError = false
-    def boundCheck(n: Node, e: Exp, min: Exp, max: Exp): Boolean = {
+    def rangeCheck(ts: String, e: Exp, min: Exp, max: Exp): Unit = {
       val oldPs = ps
-      val oldIds = zIds
+      val oldIds = integralIds
       visitor(e)
+      val es = {
+        val sb = new StringBuilder
+        e.buildString(sb, inProof = false)
+        sb.toString
+      }
       val lReq = Le(min, e)
-      if (!isValid("Z.Min", nodeLocMap(e), ps, ivector(lReq))) {
-        error(n, s"Could not automatically deduce that the operation does not underflow (${Exp.toString(min, inProof = false)}).")
+      if (!isValid(s"$ts.Min ≤ $es", nodeLocMap(e), ps, ivector(lReq))) {
+        error(e, s"Could not automatically deduce that the operation does not underflow (${Exp.toString(min, inProof = false)}).")
         hasError = true
       }
       val hReq = Le(e, max)
-      if (!isValid("Z.Max", nodeLocMap(e), ps, ivector(hReq))) {
-        error(n, s"Could not automatically deduce that the operation does not overflow (${Exp.toString(max, inProof = false)}).")
+      if (!isValid(s"$es ≤ $ts.Max", nodeLocMap(e), ps, ivector(hReq))) {
+        error(e, s"Could not automatically deduce that the operation does not overflow (${Exp.toString(max, inProof = false)}).")
         hasError = true
       }
       ps = oldPs
-      zIds = oldIds
-      true
+      integralIds = oldIds
+    }
+
+    def rangeCheckTipe(e: Exp, t: tipe.Tipe): Unit = {
+      import org.sireum.logika.tipe._
+      t match {
+        case Z if bitWidth != 0 => rangeCheck("Z", e, zMin, zMax)
+        case Z8 => rangeCheck("Z8", e, z8Min, z8Max)
+        case Z16 => rangeCheck("Z16", e, z16Min, z16Max)
+        case Z32 => rangeCheck("Z32", e, z32Min, z32Max)
+        case Z64 => rangeCheck("Z64", e, z64Min, z64Max)
+        case N if bitWidth != 0 => rangeCheck("N", e, nMin, nMax)
+        case N8 => rangeCheck("N8", e, nMin, n8Max)
+        case N16 => rangeCheck("N16", e, nMin, n16Max)
+        case N32 => rangeCheck("N32", e, nMin, n32Max)
+        case N64 => rangeCheck("N64", e, nMin, n64Max)
+        case _ =>
+      }
+    }
+
+    def nonNegativeCheck(e: Exp, t: tipe.Tipe): Unit = {
+      val es = {
+        val sb = new StringBuilder
+        e.buildString(sb, inProof = false)
+        sb.toString
+      }
+      val zero = t.asInstanceOf[tipe.ModuloIntegralTipe] match {
+        case tipe.S8 => IntLit("0", Some(S8Type()))
+        case tipe.S16 => IntLit("0", Some(S16Type()))
+        case tipe.S32 => IntLit("0", Some(S32Type()))
+        case tipe.S64 => IntLit("0", Some(S64Type()))
+        case tipe.U8 => IntLit("0", Some(U8Type()))
+        case tipe.U16 => IntLit("0", Some(U16Type()))
+        case tipe.U32 => IntLit("0", Some(U32Type()))
+        case tipe.U64 => IntLit("0", Some(U64Type()))
+      }
+      val req = Le(zero, e)
+      if (!isValid(s"0 ≤ $es", nodeLocMap(e), ps, ivector(req))) {
+        error(e, s"Could not automatically deduce that the shift right-operand is non-negative.")
+        hasError = true
+      }
     }
 
     Visitor.build({
       case _: Block => false
       case _: LoopInv => false
-      case a: SeqAssign => boundCheck(a, a.exp, zMin, zMax)
-      case a: Assign if a.id.tipe == tipe.Z => boundCheck(a, a.exp, zMin, zMax)
-      case a: VarDecl if a.id.tipe == tipe.Z => boundCheck(a, a.exp, zMin, zMax)
-      case e: Add if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
-      case e: Sub if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
-      case e: Mul if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
-      case e: Div if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
-      case e: Rem if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
-      case e: Minus if e.tipe == tipe.Z => boundCheck(e, e, zMin, zMax)
+      case e: Add => rangeCheckTipe(e, e.tipe); false
+      case e: Sub => rangeCheckTipe(e, e.tipe); false
+      case e: Mul => rangeCheckTipe(e, e.tipe); false
+      case e: Div => rangeCheckTipe(e, e.tipe); false
+      case e: Rem => rangeCheckTipe(e, e.tipe); false
+      case e: Minus => rangeCheckTipe(e, e.tipe); false
+      case e: Shl => nonNegativeCheck(e, e.tipe); false
+      case e: Shr => nonNegativeCheck(e, e.tipe); false
+      case e: UShr => nonNegativeCheck(e, e.tipe); false
     })(stmt)
     hasError
   }
