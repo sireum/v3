@@ -179,16 +179,17 @@ SymExeProofContext(unitNode: Program,
         sb.toString
       }
       val zero = t.asInstanceOf[tipe.ModuloIntegralTipe] match {
-        case tipe.S8 => IntLit("0", Some(S8Type()))
-        case tipe.S16 => IntLit("0", Some(S16Type()))
-        case tipe.S32 => IntLit("0", Some(S32Type()))
-        case tipe.S64 => IntLit("0", Some(S64Type()))
-        case tipe.U8 => IntLit("0", Some(U8Type()))
-        case tipe.U16 => IntLit("0", Some(U16Type()))
-        case tipe.U32 => IntLit("0", Some(U32Type()))
-        case tipe.U64 => IntLit("0", Some(U64Type()))
+        case tipe.S8 => IntLit("0", 8, Some(S8Type()))
+        case tipe.S16 => IntLit("0", 16, Some(S16Type()))
+        case tipe.S32 => IntLit("0", 32, Some(S32Type()))
+        case tipe.S64 => IntLit("0", 64, Some(S64Type()))
+        case tipe.U8 => IntLit("0", 8, Some(U8Type()))
+        case tipe.U16 => IntLit("0", 16, Some(U16Type()))
+        case tipe.U32 => IntLit("0", 32, Some(U32Type()))
+        case tipe.U64 => IntLit("0", 64, Some(U64Type()))
       }
       val req = Le(zero, e)
+      req.tipe = t
       if (!isValid(s"0 ≤ $es", nodeLocMap(e), ps, ivector(req))) {
         error(e, s"Could not automatically deduce that the shift right-operand is non-negative.")
         hasError = true
@@ -204,9 +205,9 @@ SymExeProofContext(unitNode: Program,
       case e: Div => rangeCheckTipe(e, e.tipe); false
       case e: Rem => rangeCheckTipe(e, e.tipe); false
       case e: Minus => rangeCheckTipe(e, e.tipe); false
-      case e: Shl => nonNegativeCheck(e, e.tipe); false
-      case e: Shr => nonNegativeCheck(e, e.tipe); false
-      case e: UShr => nonNegativeCheck(e, e.tipe); false
+      case e: Shl => nonNegativeCheck(e.right, e.tipe); false
+      case e: Shr => nonNegativeCheck(e.right, e.tipe); false
+      case e: UShr => nonNegativeCheck(e.right, e.tipe); false
     })(stmt)
     hasError
   }

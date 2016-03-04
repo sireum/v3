@@ -565,77 +565,74 @@ final case class ReadInt(msgOpt: Option[StringLit])
   }
 }
 
-final case class IntLit(value: String, tpeOpt: Option[IntegralType]) extends PrimaryExp {
-  var normalized: BigInt = _
-
-  def normalize(bitWidth: Int): BigInt =
-    if (normalized != null) normalized
-    else {
-      normalized = tpeOpt match {
-        case None => BigInt(value)
-        case Some(tpe) =>
-          var n = if (value.startsWith("0x")) BigInt(value.substring(2), 16) else BigInt(value)
-          tpe match {
-            case _: ZType =>
-              if (bitWidth != 0 && !(BigInt(-2).pow(bitWidth - 1) <= n && n <= BigInt(2).pow(bitWidth - 1) - 1))
-                throw new IllegalStateException(s"Literal $value is outside of $bitWidth-bit Z's value range.")
-              n
-            case _: Z8Type =>
-              if (!(BigInt(Byte.MinValue) <= n && n <= BigInt(Byte.MaxValue)))
-                throw new IllegalStateException(s"Literal $value is outside of Z8's value range.")
-              n
-            case _: Z16Type =>
-              if (!(BigInt(Short.MinValue) <= n && n <= BigInt(Short.MaxValue)))
-                throw new IllegalStateException(s"Literal $value is outside of Z16's value range.")
-              n
-            case _: Z32Type =>
-              if (!(BigInt(Int.MinValue) <= n && n <= BigInt(Int.MaxValue)))
-                throw new IllegalStateException(s"Literal $value is outside of Z32's value range.")
-              n
-            case _: Z64Type =>
-              if (!(BigInt(Long.MinValue) <= n && n <= BigInt(Long.MaxValue)))
-                throw new IllegalStateException(s"Literal $value is outside of Z64's value range.")
-              n
-            case _: NType =>
-              if (n < 0)
-                throw new IllegalStateException(s"Literal $value is outside of N's value range.")
-              n
-            case _: N8Type =>
-              if (!(BigInt(0) <= n && n <= BigInt(256)))
-                throw new IllegalStateException(s"Literal $value is outside of N8's value range.")
-              n
-            case _: N16Type =>
-              if (!(BigInt(0) <= n && n <= BigInt(65536)))
-                throw new IllegalStateException(s"Literal $value is outside of N16's value range.")
-              n
-            case _: N32Type =>
-              if (!(BigInt(0) <= n && n <= BigInt(4294967296l)))
-                throw new IllegalStateException(s"Literal $value is outside of N32's value range.")
-              n
-            case _: N64Type =>
-              if (!(BigInt(0) <= n && n <= BigInt("18446744073709551615")))
-                throw new IllegalStateException(s"Literal $value is outside of N64's value range.")
-              n
-            case _: S8Type => BigInt(n.toByte)
-            case _: S16Type => BigInt(n.toShort)
-            case _: S32Type => BigInt(n.toInt)
-            case _: S64Type => BigInt(n.toLong)
-            case _: U8Type =>
-              n = BigInt(n.toByte)
-              if (n < 0) BigInt(Byte.MaxValue) + 1 - (BigInt(Byte.MinValue) - n) else n
-            case _: U16Type =>
-              n = BigInt(n.toShort)
-              if (n < 0) BigInt(Short.MaxValue) + 1 - (BigInt(Short.MinValue) - n) else n
-            case _: U32Type =>
-              n = BigInt(n.toInt)
-              if (n < 0) BigInt(Int.MaxValue) + 1 - (BigInt(Int.MinValue) - n) else n
-            case _: U64Type =>
-              n = BigInt(n.toLong)
-              if (n < 0) BigInt(Long.MaxValue) + 1 - (BigInt(Long.MinValue) - n) else n
-          }
-      }
-      normalized
+final case class IntLit(value: String,
+                        bitWidth: Int,
+                        tpeOpt: Option[IntegralType]) extends PrimaryExp {
+  lazy val normalize: BigInt = {
+    tpeOpt match {
+      case None => BigInt(value)
+      case Some(tpe) =>
+        var n = if (value.startsWith("0x")) BigInt(value.substring(2), 16) else BigInt(value)
+        tpe match {
+          case _: ZType =>
+            if (bitWidth != 0 && !(BigInt(-2).pow(bitWidth - 1) <= n && n <= BigInt(2).pow(bitWidth - 1) - 1))
+              throw new IllegalStateException(s"Literal $value is outside of $bitWidth-bit Z's value range.")
+            n
+          case _: Z8Type =>
+            if (!(BigInt(Byte.MinValue) <= n && n <= BigInt(Byte.MaxValue)))
+              throw new IllegalStateException(s"Literal $value is outside of Z8's value range.")
+            n
+          case _: Z16Type =>
+            if (!(BigInt(Short.MinValue) <= n && n <= BigInt(Short.MaxValue)))
+              throw new IllegalStateException(s"Literal $value is outside of Z16's value range.")
+            n
+          case _: Z32Type =>
+            if (!(BigInt(Int.MinValue) <= n && n <= BigInt(Int.MaxValue)))
+              throw new IllegalStateException(s"Literal $value is outside of Z32's value range.")
+            n
+          case _: Z64Type =>
+            if (!(BigInt(Long.MinValue) <= n && n <= BigInt(Long.MaxValue)))
+              throw new IllegalStateException(s"Literal $value is outside of Z64's value range.")
+            n
+          case _: NType =>
+            if (n < 0)
+              throw new IllegalStateException(s"Literal $value is outside of N's value range.")
+            n
+          case _: N8Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(255)))
+              throw new IllegalStateException(s"Literal $value is outside of N8's value range.")
+            n
+          case _: N16Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(65535)))
+              throw new IllegalStateException(s"Literal $value is outside of N16's value range.")
+            n
+          case _: N32Type =>
+            if (!(BigInt(0) <= n && n <= BigInt(4294967295l)))
+              throw new IllegalStateException(s"Literal $value is outside of N32's value range.")
+            n
+          case _: N64Type =>
+            if (!(BigInt(0) <= n && n <= BigInt("18446744073709551615")))
+              throw new IllegalStateException(s"Literal $value is outside of N64's value range.")
+            n
+          case _: S8Type => BigInt(n.toByte)
+          case _: S16Type => BigInt(n.toShort)
+          case _: S32Type => BigInt(n.toInt)
+          case _: S64Type => BigInt(n.toLong)
+          case _: U8Type =>
+            n = BigInt(n.toByte)
+            if (n < 0) BigInt(Byte.MaxValue) + 1 - (BigInt(Byte.MinValue) - n) else n
+          case _: U16Type =>
+            n = BigInt(n.toShort)
+            if (n < 0) BigInt(Short.MaxValue) + 1 - (BigInt(Short.MinValue) - n) else n
+          case _: U32Type =>
+            n = BigInt(n.toInt)
+            if (n < 0) BigInt(Int.MaxValue) + 1 - (BigInt(Int.MinValue) - n) else n
+          case _: U64Type =>
+            n = BigInt(n.toLong)
+            if (n < 0) BigInt(Long.MaxValue) + 1 - (BigInt(Long.MinValue) - n) else n
+        }
     }
+  }
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = tpeOpt match {
@@ -669,8 +666,8 @@ final case class IntLit(value: String, tpeOpt: Option[IntegralType]) extends Pri
 
 final case class FloatLit(value: String) extends PrimaryExp {
   def primitiveValue: Either[Float, Double] =
-    if (value.charAt(value.length - 1).toUpper == 'D') Right(value.toDouble)
-    else Left(value.toFloat)
+    if (value.charAt(value.length - 1).toUpper == 'F') Left(value.toFloat)
+    else Right(value.toDouble)
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
@@ -687,10 +684,10 @@ final case class IntMin(bitWidth: Int,
                         integralType: IntegralType) extends PrimaryExp {
   val value =
     integralType match {
+      case _: ZType if bitWidth == 0 => BigInt(0)
       case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
            _: S8Type | _: S16Type | _: S32Type | _: S64Type =>
-        if (bitWidth == 0) BigInt(0)
-        else BigInt(-2).pow(bitWidth - 1)
+        BigInt(-2).pow(bitWidth - 1)
       case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
            _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
         BigInt(0)
@@ -707,14 +704,13 @@ final case class IntMax(bitWidth: Int,
                         integralType: IntegralType) extends PrimaryExp {
   val value =
     integralType match {
+      case _: ZType if bitWidth == 0 => BigInt(0)
       case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
            _: S8Type | _: S16Type | _: S32Type | _: S64Type =>
-        if (bitWidth == 0) BigInt(0)
-        else BigInt(2).pow(bitWidth - 1) - 1
+        BigInt(2).pow(bitWidth - 1) - 1
       case _: NType | _: N8Type | _: N16Type | _: N32Type | _: N64Type |
            _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
-        if (bitWidth == 0) BigInt(0)
-        else BigInt(2).pow(bitWidth) - 1
+        BigInt(2).pow(bitWidth) - 1
     }
 
   override def buildString(sb: StringBuilder,
@@ -1152,94 +1148,132 @@ final case class BType() extends Type {
     sb.append("B")
 }
 
-sealed trait IntegralType extends Type
+sealed trait IntegralType extends Type {
+  def bitWidth: Int
+}
 
 final case class ZType() extends IntegralType {
+  val bitWidth = 0
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z")
 }
 
 final case class Z8Type() extends IntegralType {
+  val bitWidth = 8
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z8")
 }
 
 final case class Z16Type() extends IntegralType {
+  val bitWidth = 16
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z16")
 }
 
 final case class Z32Type() extends IntegralType {
+  val bitWidth = 32
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z32")
 }
 
 final case class Z64Type() extends IntegralType {
+  val bitWidth = 64
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z64")
 }
 
 final case class NType() extends IntegralType {
+  val bitWidth = 0
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N")
 }
 
 final case class N8Type() extends IntegralType {
+  val bitWidth = 8
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N8")
 }
 
 final case class N16Type() extends IntegralType {
+  val bitWidth = 16
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N16")
 }
 
 final case class N32Type() extends IntegralType {
+  val bitWidth = 32
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N32")
 }
 
 final case class N64Type() extends IntegralType {
+  val bitWidth = 64
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N64")
 }
 
 final case class S8Type() extends IntegralType {
+  val bitWidth = 8
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S8")
 }
 
 final case class S16Type() extends IntegralType {
+  val bitWidth = 16
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S16")
 }
 
 final case class S32Type() extends IntegralType {
+  val bitWidth = 32
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S32")
 }
 
 final case class S64Type() extends IntegralType {
+  val bitWidth = 64
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S64")
 }
 
 final case class U8Type() extends IntegralType {
+  val bitWidth = 8
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U8")
 }
 
 final case class U16Type() extends IntegralType {
+  val bitWidth = 16
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U16")
 }
 
 final case class U32Type() extends IntegralType {
+  val bitWidth = 32
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U32")
 }
 
 final case class U64Type() extends IntegralType {
+  val bitWidth = 64
+
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U64")
 }

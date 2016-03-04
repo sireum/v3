@@ -223,8 +223,8 @@ object Rewriter {
       org.sireum.logika.ast.ImpliesIntro(num, exp, subProof)
     }),
     ("IntLit", { es =>
-      val Seq(value: String, tpeOpt: Option[_]) = es
-      org.sireum.logika.ast.IntLit(value, cast(tpeOpt))
+      val Seq(value: String, bitWidth: java.lang.Integer, tpeOpt: Option[_]) = es
+      org.sireum.logika.ast.IntLit(value, bitWidth, cast(tpeOpt))
     }),
     ("IntMax", { es =>
       val Seq(bitWidth: java.lang.Integer, integralType: IntegralType) = es

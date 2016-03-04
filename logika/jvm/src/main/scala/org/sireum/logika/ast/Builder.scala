@@ -237,6 +237,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       getOrElse(Node.emptySeq)) at ctx
   }
 
+
   private def token2type(token: Token): Type = {
     val r = token.getText match {
       case "B" => BType()
@@ -304,7 +305,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
       case ctx: IntContext =>
-        val r = IntLit(ctx.NUM.getText, None)
+        val r = IntLit(ctx.NUM.getText, bitWidth, None)
         checkIntMaxMin(ctx.NUM, BigInt(r.value), r)
         r
       case ctx: IntLitContext =>
@@ -312,38 +313,38 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         var text = t.getText
         val i = text.indexOf('"')
         val ts = text.substring(0, i)
-        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        text = text.substring(i + 1, text.length - 1).replaceAll(" ", "")
         try {
-          val tpe = (ts match {
-            case "z" => ZType()
-            case "z8" => Z8Type()
-            case "z16" => Z16Type()
-            case "z32" => Z32Type()
-            case "z64" => Z64Type()
-            case "n" => NType()
-            case "n8" => N8Type()
-            case "n16" => N16Type()
-            case "n32" => N32Type()
-            case "n64" => N64Type()
-            case "s8" => S8Type()
-            case "s16" => S16Type()
-            case "s32" => S32Type()
-            case "s64" => S64Type()
-            case "u8" => U8Type()
-            case "u16" => U16Type()
-            case "u32" => U32Type()
-            case "u64" => U64Type()
+          val (bw, tpe) = (ts match {
+            case "z" => (bitWidth, ZType())
+            case "z8" => (8, Z8Type())
+            case "z16" => (16, Z16Type())
+            case "z32" => (32, Z32Type())
+            case "z64" => (64, Z64Type())
+            case "n" => (bitWidth, NType())
+            case "n8" => (8, N8Type())
+            case "n16" => (16, N16Type())
+            case "n32" => (32, N32Type())
+            case "n64" => (64, N64Type())
+            case "s8" => (8, S8Type())
+            case "s16" => (16, S16Type())
+            case "s32" => (32, S32Type())
+            case "s64" => (64, S64Type())
+            case "u8" => (8, U8Type())
+            case "u16" => (16, U16Type())
+            case "u32" => (32, U32Type())
+            case "u64" => (64, U64Type())
           }) at t
-          val r = IntLit(text, Some(tpe))
-          r.normalize(bitWidth)
+          val r = IntLit(text, bw, Some(tpe))
+          r.normalize
           r
         } catch {
           case e: IllegalStateException =>
             error(ctx.INT, e.getMessage)
-            IntLit("0", None)
+            IntLit("0", bitWidth, None)
           case _: Throwable =>
             error(ctx.INT, s"Invalid ${ts.toUpperCase} literal ${t.getText}.")
-            IntLit("0", None)
+            IntLit("0", bitWidth, None)
         }
       case ctx: RLitContext =>
         var text = ctx.REAL.getText
@@ -351,13 +352,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         RealLit(text)
       case ctx: FloatLitContext =>
         val floatText = ctx.FLOAT.getText
-        if (floatText.last.toUpper == 'D')
-          try floatText.toDouble catch {
+        if (floatText.last.toUpper == 'F')
+          try floatText.toFloat catch {
             case _: Throwable =>
               error(ctx.FLOAT, s"Invalid F32 literal $floatText.")
           }
         else
-          try floatText.toFloat catch {
+          try floatText.toDouble catch {
             case _: Throwable =>
               error(ctx.FLOAT, s"Invalid F64 literal $floatText.")
           }
@@ -368,20 +369,31 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "Min" =>
             t match {
               case t: IntegralType =>
-                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
-                IntMin(bitWidth, t)
+                t match {
+                  case _: ZType => checkBitWidth(ctx.ID, "Z")
+                  case _ =>
+                }
+                var bw = t.bitWidth
+                if (bw == 0) bw = bitWidth
+                IntMin(bw, t)
               case _ =>
                 error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
-                IntMin(8, ZType())
+                IntMin(bitWidth, ZType())
             }
           case "Max" =>
             t match {
               case t: IntegralType =>
-                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
-                IntMax(bitWidth, t)
+                t match {
+                  case _: ZType => checkBitWidth(ctx.ID, "Z")
+                  case _: NType => checkBitWidth(ctx.ID, "N")
+                  case _ =>
+                }
+                var bw = t.bitWidth
+                if (bw == 0) bw = bitWidth
+                IntMax(bw, t)
               case _ =>
                 error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
-                IntMin(8, ZType())
+                IntMin(bitWidth, ZType())
             }
           case "random" => Random(t)
           case s =>
@@ -644,7 +656,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "false" | "F" | "_|_" | "⊥" => BooleanLit(false)
         }
       case ctx: IntExpContext =>
-        val r = IntLit(ctx.NUM.getText, None)
+        val r = IntLit(ctx.NUM.getText, bitWidth, None)
         checkIntMaxMin(ctx.NUM, BigInt(r.value), r)
         r
       case ctx: IntLitExpContext =>
@@ -652,38 +664,38 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         var text = t.getText
         val i = text.indexOf('"')
         val ts = text.substring(0, i)
-        text = text.substring(2, text.length - 1).replaceAll(" ", "")
+        text = text.substring(i + 1, text.length - 1).replaceAll(" ", "")
         try {
-          val tpe = (ts match {
-            case "z" => ZType()
-            case "z8" => Z8Type()
-            case "z16" => Z16Type()
-            case "z32" => Z32Type()
-            case "z64" => Z64Type()
-            case "n" => NType()
-            case "n8" => N8Type()
-            case "n16" => N16Type()
-            case "n32" => N32Type()
-            case "n64" => N64Type()
-            case "s8" => S8Type()
-            case "s16" => S16Type()
-            case "s32" => S32Type()
-            case "s64" => S64Type()
-            case "u8" => U8Type()
-            case "u16" => U16Type()
-            case "u32" => U32Type()
-            case "u64" => U64Type()
+          val (bw, tpe) = (ts match {
+            case "z" => (bitWidth, ZType())
+            case "z8" => (8, Z8Type())
+            case "z16" => (16, Z16Type())
+            case "z32" => (32, Z32Type())
+            case "z64" => (64, Z64Type())
+            case "n" => (bitWidth, NType())
+            case "n8" => (8, N8Type())
+            case "n16" => (16, N16Type())
+            case "n32" => (32, N32Type())
+            case "n64" => (64, N64Type())
+            case "s8" => (8, S8Type())
+            case "s16" => (16, S16Type())
+            case "s32" => (32, S32Type())
+            case "s64" => (64, S64Type())
+            case "u8" => (8, U8Type())
+            case "u16" => (16, U16Type())
+            case "u32" => (32, U32Type())
+            case "u64" => (64, U64Type())
           }) at t
-          val r = IntLit(text, Some(tpe))
-          r.normalize(bitWidth)
+          val r = IntLit(text, bw, Some(tpe))
+          r.normalize
           r
         } catch {
           case e: IllegalStateException =>
             error(ctx.INT, e.getMessage)
-            IntLit("0", None)
+            IntLit("0", bitWidth, None)
           case _: Throwable =>
             error(ctx.INT, s"Invalid ${ts.toUpperCase} literal ${t.getText}.")
-            IntLit("0", None)
+            IntLit("0", bitWidth, None)
         }
       case ctx: RLitExpContext =>
         var text = ctx.REAL.getText
@@ -697,20 +709,31 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "Min" =>
             t match {
               case t: IntegralType =>
-                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
-                IntMin(bitWidth, t)
+                t match {
+                  case _: ZType => checkBitWidth(ctx.ID, "Z")
+                  case _ =>
+                }
+                var bw = t.bitWidth
+                if (bw == 0) bw = bitWidth
+                IntMin(bw, t)
               case _ =>
                 error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
-                IntMin(8, ZType())
+                IntMin(bitWidth, ZType())
             }
           case "Max" =>
             t match {
               case t: IntegralType =>
-                if (t.isInstanceOf[ZType]) checkBitWidth(ctx.ID)
-                IntMax(bitWidth, t)
+                t match {
+                  case _: ZType => checkBitWidth(ctx.ID, "Z")
+                  case _: NType => checkBitWidth(ctx.ID, "N")
+                  case _ =>
+                }
+                var bw = t.bitWidth
+                if (bw == 0) bw = bitWidth
+                IntMax(bw, t)
               case _ =>
                 error(ctx.ID, s"Cannot access ${ctx.ID.getText} from ${ctx.t.getText}.")
-                IntMin(8, ZType())
+                IntMin(bitWidth, ZType())
             }
           case "random" => Random(t)
           case s =>
@@ -720,13 +743,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         r
       case ctx: FloatLitExpContext =>
         val floatText = ctx.FLOAT.getText
-        if (floatText.last.toUpper == 'D')
-          try floatText.toDouble catch {
+        if (floatText.last.toUpper == 'F')
+          try floatText.toFloat catch {
             case _: Throwable =>
               error(ctx.FLOAT, "Invalid F32 literal.")
           }
         else
-          try floatText.toFloat catch {
+          try floatText.toDouble catch {
             case _: Throwable =>
               error(ctx.FLOAT, "Invalid F64 literal.")
           }
@@ -899,8 +922,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     num
   }
 
-  private def checkBitWidth(t: TerminalNode): Unit =
-    if (bitWidth == 0) error(t, s"Z.${t.getText} is used, but bit-width is unbounded.")
+  private def checkBitWidth(t: TerminalNode, ts: String): Unit =
+    if (bitWidth == 0) error(t, s"$ts.${t.getText} is used, but bit-width is unbounded.")
 
   private def checkIntMaxMin(t: Token, value: BigInt, e: Exp): Unit = {
     if (value < minInt)

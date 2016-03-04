@@ -189,8 +189,8 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
-      case e@IntLit(value, tpeOpt) =>
-        val n = e.normalized
+      case e@IntLit(value, _, tpeOpt) =>
+        val n = e.normalize
         val lit = tpeOpt match {
           case Some(tpe) => translate(n, tpe)
           case _ => value

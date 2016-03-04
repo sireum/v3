@@ -34,7 +34,7 @@ import org.sireum.util._
 object Checker {
   private[logika] final val top = BooleanLit(true)
   private[logika] final val bottom = BooleanLit(false)
-  private[logika] final val zero = IntLit("0", None)
+  private[logika] final val zero = IntLit("0", 0, None)
   private[logika] final val kind = "Proof Checker"
 
   final def check(m: message.Check)(
@@ -121,6 +121,7 @@ object Checker {
       Visitor.build({
         case _: SequentStmt => hasProof = true; false
         case _: ProofStmt => hasProof = true; false
+        case _: Assert => hasProof = true; false
         case InvStmt(inv) if inv.exps.nonEmpty =>
           hasProof = true; false
         case Requires(exps) if exps.nonEmpty =>
