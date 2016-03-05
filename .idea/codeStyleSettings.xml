@@ -4,9 +4,6 @@
     <option name="PER_PROJECT_SETTINGS">
       <value>
         <option name="FORMATTER_TAGS_ENABLED" value="true" />
-        <MultiMarkdownCodeStyleSettings>
-          <option name="RIGHT_MARGIN" value="72" />
-        </MultiMarkdownCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>

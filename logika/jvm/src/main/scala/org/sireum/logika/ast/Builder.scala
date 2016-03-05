@@ -315,26 +315,29 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val ts = text.substring(0, i)
         text = text.substring(i + 1, text.length - 1).replaceAll(" ", "")
         try {
-          val (bw, tpe) = (ts match {
-            case "z" => (bitWidth, ZType())
-            case "z8" => (8, Z8Type())
-            case "z16" => (16, Z16Type())
-            case "z32" => (32, Z32Type())
-            case "z64" => (64, Z64Type())
-            case "n" => (bitWidth, NType())
-            case "n8" => (8, N8Type())
-            case "n16" => (16, N16Type())
-            case "n32" => (32, N32Type())
-            case "n64" => (64, N64Type())
-            case "s8" => (8, S8Type())
-            case "s16" => (16, S16Type())
-            case "s32" => (32, S32Type())
-            case "s64" => (64, S64Type())
-            case "u8" => (8, U8Type())
-            case "u16" => (16, U16Type())
-            case "u32" => (32, U32Type())
-            case "u64" => (64, U64Type())
-          }) at t
+          val tpe = ts match {
+            case "z" => ZType()
+            case "z8" => Z8Type()
+            case "z16" => Z16Type()
+            case "z32" => Z32Type()
+            case "z64" => Z64Type()
+            case "n" => NType()
+            case "n8" => N8Type()
+            case "n16" => N16Type()
+            case "n32" => N32Type()
+            case "n64" => N64Type()
+            case "s8" => S8Type()
+            case "s16" => S16Type()
+            case "s32" => S32Type()
+            case "s64" => S64Type()
+            case "u8" => U8Type()
+            case "u16" => U16Type()
+            case "u32" => U32Type()
+            case "u64" => U64Type()
+          }
+          tpe at t
+          var bw = tpe.bitWidth
+          if (bw == 0) bw = bitWidth
           val r = IntLit(text, bw, Some(tpe))
           r.normalize
           r
@@ -493,7 +496,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             }
             r
           case "and" | "&" | "∧" | "^" => And(lExp, rExp)
-          case "^|" => Xor(lExp, rExp)
+          case "xor" | "^|" => Xor(lExp, rExp)
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }
@@ -666,26 +669,29 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val ts = text.substring(0, i)
         text = text.substring(i + 1, text.length - 1).replaceAll(" ", "")
         try {
-          val (bw, tpe) = (ts match {
-            case "z" => (bitWidth, ZType())
-            case "z8" => (8, Z8Type())
-            case "z16" => (16, Z16Type())
-            case "z32" => (32, Z32Type())
-            case "z64" => (64, Z64Type())
-            case "n" => (bitWidth, NType())
-            case "n8" => (8, N8Type())
-            case "n16" => (16, N16Type())
-            case "n32" => (32, N32Type())
-            case "n64" => (64, N64Type())
-            case "s8" => (8, S8Type())
-            case "s16" => (16, S16Type())
-            case "s32" => (32, S32Type())
-            case "s64" => (64, S64Type())
-            case "u8" => (8, U8Type())
-            case "u16" => (16, U16Type())
-            case "u32" => (32, U32Type())
-            case "u64" => (64, U64Type())
-          }) at t
+          val tpe = ts match {
+            case "z" => ZType()
+            case "z8" => Z8Type()
+            case "z16" => Z16Type()
+            case "z32" => Z32Type()
+            case "z64" => Z64Type()
+            case "n" => NType()
+            case "n8" => N8Type()
+            case "n16" => N16Type()
+            case "n32" => N32Type()
+            case "n64" => N64Type()
+            case "s8" => S8Type()
+            case "s16" => S16Type()
+            case "s32" => S32Type()
+            case "s64" => S64Type()
+            case "u8" => U8Type()
+            case "u16" => U16Type()
+            case "u32" => U32Type()
+            case "u64" => U64Type()
+          }
+          tpe at t
+          var bw = tpe.bitWidth
+          if (bw == 0) bw = bitWidth
           val r = IntLit(text, bw, Some(tpe))
           r.normalize
           r
@@ -850,7 +856,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case ">>" => Shr(lExp, rExp)
           case ">>>" => UShr(lExp, rExp)
           case "<<" => Shl(lExp, rExp)
-          case "=" => Eq(lExp, rExp)
           case "==" =>
             val r = Eq(lExp, rExp)
             if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
@@ -862,7 +867,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               error(r, s"Logika does not support $lExpS == $rExpS; please rewrite it to $rExpS == $lExpS.")
             }
             r
-          case "≠" => Ne(lExp, rExp)
           case "!=" =>
             val r = Ne(lExp, rExp)
             if (constMap.isDefinedAt(lExp) && !constMap.isDefinedAt(rExp)) {
@@ -874,10 +878,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               error(r, s"Logika does not support $lExpS != $rExpS; please rewrite it to $rExpS != $lExpS.")
             }
             r
-          case "and" | "&" | "∧" | "^" => And(lExp, rExp)
+          case "&" => And(lExp, rExp)
           case "^|" => Xor(lExp, rExp)
-          case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
-          case "implies" | "->" | "→" => Implies(lExp, rExp)
+          case "|" => Or(lExp, rExp)
         }
     }
     r at ctx
@@ -927,9 +930,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
 
   private def checkIntMaxMin(t: Token, value: BigInt, e: Exp): Unit = {
     if (value < minInt)
-      error(t, s"""32-bit integer underflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      error(t, s"""32-bit integer underflow is detected, please use z"..." to construct an arbitrary-precision integer.""")
     else if (value > maxInt)
-      error(t, s"""32-bit integer overflow is detected, please use Z("...") to construct an arbitrary-precision integer.""")
+      error(t, s"""32-bit integer overflow is detected, please use z"..." to construct an arbitrary-precision integer.""")
     else constMap(e) = value
   }
 

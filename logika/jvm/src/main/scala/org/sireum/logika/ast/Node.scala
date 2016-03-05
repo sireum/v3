@@ -852,7 +852,13 @@ final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
 }
 
 final case class And(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = if (inProof) "∧" else "&"
+  def op(inProof: Boolean) =
+    if (inProof)
+      tipe match {
+        case _: IntegralTipe => "&"
+        case _ => "∧"
+      }
+    else "&"
 
   override val precedence = 60
 }
@@ -870,13 +876,25 @@ object And {
 }
 
 final case class Xor(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = "^|"
+  def op(inProof: Boolean) =
+    if (inProof)
+      tipe match {
+        case _: IntegralTipe => "^|"
+        case _ => "xor"
+      }
+    else "^|"
 
   override val precedence = 70
 }
 
 final case class Or(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = if (inProof) "∨" else "|"
+  def op(inProof: Boolean) =
+    if (inProof)
+      tipe match {
+        case _: IntegralTipe => "|"
+        case _ => "∨"
+      }
+    else "|"
 
   override val precedence = 80
 }

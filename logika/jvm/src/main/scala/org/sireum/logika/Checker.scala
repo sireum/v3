@@ -26,6 +26,7 @@
 package org.sireum.logika
 
 import org.sireum.logika.ast._
+import org.sireum.logika.message.CheckerKind
 import org.sireum.logika.tipe.TypeChecker
 import org.sireum.logika.util._
 import org.sireum.util.Rewriter.TraversalMode
@@ -53,13 +54,38 @@ object Checker {
     if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
       if (TypeChecker.check(programs: _*)) {
-        if (m.lastOnly)
-          check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-            m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
-        else
-          for (program <- programs)
-            check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
+        var hasError = false
+        for (program <- programs)
+          try Visitor.build({
+            case t: IntegralType if !t.isInstanceOf[ZType] && m.kind != CheckerKind.SymExe =>
+              val ts = {
+                val sb = new StringBuilder
+                t.buildString(sb)
+                sb.toString
+              }
+              error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
+              throw new RuntimeException
+            case t: SeqType if !t.isInstanceOf[ZSType] && m.kind != CheckerKind.SymExe =>
+              val ts = {
+                val sb = new StringBuilder
+                t.buildString(sb)
+                sb.toString
+              }
+              error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution hgjk .")
+              throw new RuntimeException
+          })(program) catch {
+            case t: RuntimeException => hasError = true
+          }
+
+        if (!hasError) {
+          if (m.lastOnly)
+            check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
               m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
+          else
+            for (program <- programs)
+              check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
+                m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
+        }
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
           if (m.proofs.size > 1) "The programs are ill-formed."
@@ -828,8 +854,29 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def hasRuntimeError(stmt: Stmt): Boolean = {
     var hasError = false
     lazy val ps = premises ++ facts.values
-    def divisor(e: Exp): Boolean = {
-      val req = Ne(e, Checker.zero)
+    def divisor(e: Exp, t: tipe.IntegralTipe): Boolean = {
+      val tpe = t match {
+        case tipe.Z => ZType()
+        case tipe.Z8 => Z8Type()
+        case tipe.Z16 => Z16Type()
+        case tipe.Z32 => Z32Type()
+        case tipe.Z64 => Z64Type()
+        case tipe.N => NType()
+        case tipe.N8 => N8Type()
+        case tipe.N16 => N16Type()
+        case tipe.N32 => N32Type()
+        case tipe.N64 => N64Type()
+        case tipe.S8 => S8Type()
+        case tipe.S16 => S16Type()
+        case tipe.S32 => S32Type()
+        case tipe.S64 => S64Type()
+        case tipe.U8 => U8Type()
+        case tipe.U16 => U16Type()
+        case tipe.U32 => U32Type()
+        case tipe.U64 => U64Type()
+      }
+      val req = Ne(e, IntLit("0", tpe.bitWidth, Some(tpe)))
+      req.tipe = t
       if (autoEnabled) {
         if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
@@ -843,9 +890,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
     def index(id: Id, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
+      req1.tipe = tipe.Z
       val sz = Size(id)
       sz.tipe = id.tipe
       val req2 = Lt(e, sz)
+      req2.tipe = tipe.Z
       if (autoEnabled) {
         if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
           hasError = true
@@ -870,9 +919,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     Visitor.build({
       case _: Block => false
       case _: LoopInv => false
-      case Div(_, e2) => divisor(e2)
-      case Rem(_, e2) => divisor(e2)
-      case a@Apply(id, Seq(e)) if id.tipe == tipe.ZS => index(id, e)
+      case e@Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case e@Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case a@Apply(id, Seq(e)) if id.tipe.isInstanceOf[tipe.MSeq] => index(id, e)
       case SeqAssign(id, e, _) => index(id, e)
     })(stmt)
     hasError
