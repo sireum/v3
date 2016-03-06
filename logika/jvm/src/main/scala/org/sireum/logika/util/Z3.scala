@@ -178,7 +178,7 @@ $s"""))
         id.tipe = e.tipe
         translate(id)
       case e: Apply =>
-        if (e.id.tipe == ZS)
+        if (e.id.tipe.isInstanceOf[org.sireum.logika.tipe.MSeq])
           stg.getInstanceOf("index").add("a", translate(e.id)).
             add("i", translate(e.args.head))
         else {

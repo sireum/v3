@@ -1,0 +1,13 @@
+import org.sireum.logika._
+
+var bs: BS = BS(false, true)
+l"""⊢ ¬bs(0) ∧ bs(1)"""
+bs(0) = !bs(0)
+l"""⊢ ¬(∃i: (0 .. 1)  ¬bs(i))"""
+l"""⊢ ∀i: (0 .. 1)  bs(i)"""
+bs = bs :+ false
+l"""⊢ bs(0) ∧ bs(1) ∧ ¬bs(2)"""
+bs = false +: bs
+l"""⊢ ¬bs(0) ∧ bs(1) ∧ bs(2) ∧ ¬bs(3)"""
+bs(3) = ~bs(3)
+l"""⊢ ∃i: (0 .. 3)  ¬bs(i)"""

@@ -262,7 +262,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case "R" => RType()
       case "F32" => F32Type()
       case "F64" => F64Type()
-      case "BS" => BType()
+      case "BS" => BSType()
       case "ZS" => ZSType()
       case "Z8S" => Z8SType()
       case "Z16S" => Z16SType()

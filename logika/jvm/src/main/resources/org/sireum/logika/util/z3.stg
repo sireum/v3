@@ -36,8 +36,16 @@ $if(symexe)$
 (define-const F64_PInf (F64) (_ +oo 11 53))
 (define-const F64_NInf (F64) (_ -oo 11 53))
 (define-const F64_NaN (F64) (_ NaN 11 53))
+$if(BS)$
+(define-sort BS () (Array Z B))
+(declare-fun BS_size (BS) Z)
+(assert (forall ((a BS)) (>= (BS_size a) 0)))
+(declare-const BS_empty BS)
+(assert (= BS_empty ((as const BS) false)))
+(assert (= (BS_size BS_empty) 0))
+$endif$
 $if(Z8S)$
-(define-sort Z8S  () (Array Z Z8))
+(define-sort Z8S () (Array Z Z8))
 (declare-fun Z8S_size (Z8S) Z)
 (assert (forall ((a Z8S)) (>= (Z8S_size a) 0)))
 (declare-const Z8S_empty Z8S)
@@ -270,13 +278,13 @@ param(id, tipe) ::= <<
 >>
 
 a(c) ::= <<
-_a!$c$
+a_$c$
 >>
 
 declseq(c, exp, size, tipe) ::= <<
-(declare-const _a!$c$ ZS)
-(assert (= _a!$c$ $exp$))
-(assert (= ($tipe$_size _a!$c$) $size$))
+(declare-const a_$c$ $tipe$)
+(assert (= a_$c$ $exp$))
+(assert (= ($tipe$_size a_$c$) $size$))
 >>
 
 seqexp(a, i, v, tipe) ::= <<
@@ -284,28 +292,28 @@ seqexp(a, i, v, tipe) ::= <<
 >>
 
 prepend(c, a, v, tipe) ::= <<
-(declare-const _a!$c$ $tipe$)
-(assert (= ($tipe$_size _a!$c$) (+ ($tipe$_size $a$) 1)))
-(assert (= (select _a!$c$ 0) $v$))
+(declare-const a_$c$ $tipe$)
+(assert (= ($tipe$_size a_$c$) (+ ($tipe$_size $a$) 1)))
+(assert (= (select a_$c$ 0) $v$))
 (assert
   (forall ((_i Z))
     (=>
-      (and (< 0 _i) (< _i ($tipe$_size _a!$c$)))
-      (= (select _a!$c$ _i) (select $a$ (- _i 1)))
+      (and (< 0 _i) (< _i ($tipe$_size a_$c$)))
+      (= (select a_$c$ _i) (select $a$ (- _i 1)))
     )
   )
 )
 >>
 
 append(c, a, v, tipe) ::= <<
-(declare-const _a!$c$ $tipe$)
-(assert (= ($tipe$_size _a!$c$) (+ ($tipe$_size $a$) 1)))
-(assert (= (select _a!$c$ ($tipe$_size $a$)) $v$))
+(declare-const a_$c$ $tipe$)
+(assert (= ($tipe$_size a_$c$) (+ ($tipe$_size $a$) 1)))
+(assert (= (select a_$c$ ($tipe$_size $a$)) $v$))
 (assert
   (forall ((_i Z))
     (=>
       (and (<= 0 _i) (< _i ($tipe$_size $a$)))
-      (= (select _a!$c$ _i) (select $a$ _i))
+      (= (select a_$c$ _i) (select $a$ _i))
     )
   )
 )

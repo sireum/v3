@@ -1011,7 +1011,8 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
             antecedent = And(antecedent, range(id, lo, hi))
           }
           apply(ids, Some(TypeDomain(ZType())),
-            Implies(antecedent, exp)).asInstanceOf[T]
+            if (isForAll) Implies(antecedent, exp)
+            else And(antecedent, exp)).asInstanceOf[T]
         case _ => this.asInstanceOf[T]
       }
     simplified

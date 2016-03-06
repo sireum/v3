@@ -180,11 +180,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             id.tipe = tId
             if (tId != tExp)
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
-            else if (tId == ZS)
+            else if (tId.isInstanceOf[MSeq])
               exp match {
                 case _: SeqLit | _: Clone | _: Prepend | _: Append =>
                 case _ =>
-                  error(stmt, s"Assignment to a var of ZS type can only be done from a ZS literal, clone, prepend (+:), or append (:+).")
+                  error(stmt, s"Assignment to a var of $tId type can only be done from a $tId literal, clone, prepend (+:), or append (:+).")
               }
           case _ =>
             error(stmt, s"Can only assign to a var.")
@@ -212,10 +212,18 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       }
       this
     case SeqAssign(id, index, exp) =>
-      zs(id)(allowFun = false, mOpt)
-      id.tipe = ZS
-      z(index)(allowFun = false, mOpt)
-      z(exp)(allowFun = false, mOpt)
+      mseq(id)(allowFun = false, mOpt) match {
+        case Some(t) =>
+          id.tipe = t
+          z(index)(allowFun = false, mOpt)
+          check(exp)(allowFun = false, mOpt) match {
+            case Some(et) =>
+              if (t.result != et)
+                error(exp, s"Expecting type ${t.result}, but found $et.")
+            case _ =>
+          }
+        case _ =>
+      }
       this
     case md: MethodDecl =>
       var tm = typeMap
@@ -286,9 +294,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       modifiedVars += id
       typeMap.get(id.value) match {
         case Some((t, VarDecl(true, _, _, _), _)) => id.tipe = t
-        case Some((ZS, _, _)) => id.tipe = ZS
+        case Some((t: MSeq, _, _)) => id.tipe = t
         case Some(_) =>
-          error(id, s"Only variable or ZS value can be modified.")
+          error(id, s"Only variable or sequence value can be modified.")
         case _ => tipe(id).foreach(id.tipe = _)
       }
     }
@@ -535,7 +543,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         val modifiedIds = md.contract.modifies.ids.toSet
         r ++= (modifiedIds -- paramIds)
         for ((argId@Id(_), paramId) <- a.args.zip(paramIds) if
-        argId.tipe == ZS && modifiedIds.contains(paramId))
+        argId.tipe.isInstanceOf[MSeq] && modifiedIds.contains(paramId))
           r += argId
       case _ =>
     }
@@ -595,13 +603,6 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case Some(t: MSeq) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type mutable sequence, but found $t."); None
       case _ => None
-    }
-
-  def zs(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
-    check(e) match {
-      case Some(ZS) =>
-      case Some(t) => error(e, s"Expecting an expression of type ZS, but found $t.")
-      case _ =>
     }
 
   def tipe(id: Id): Option[Tipe] = typeMap.get(id.value) match {

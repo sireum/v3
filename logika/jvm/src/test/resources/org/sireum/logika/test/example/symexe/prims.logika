@@ -1,8 +1,14 @@
 import org.sireum.logika._
 
+val bvtrue: B = true
+val bvT: B = T
+val bvfalse: B = false
+val bvF: B = F
+assert((bvtrue == bvT) & bvT & (bvfalse == bvF) & !bvF & ~bvF)
+
 val zv1000: Z = 1000
 val zv1: Z = z"1"
-assert (zv1000 == z"1000" & zv1 == 1)
+l"""⊢ zv1000 == z"1000" ∧ zv1 == 1"""
 
 val z8vM128: Z8 = z8"-128"
 val z8v0: Z8 = z8"0"

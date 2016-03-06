@@ -251,6 +251,7 @@ SymExeProofContext(unitNode: Program,
 
   def oldId(id: Id): Id = {
     val c = varCounter.value.getOrElseUpdate(id.value, 0)
+    varCounter.value(id.value) = c + 1
     newId(s"${id.value}_$c", id.tipe)
   }
 

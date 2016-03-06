@@ -44,7 +44,8 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("square", check("square", 0)) :+
       ConditionTest("max", check("max", 0)) :+
       ConditionTest("abs", check("abs", 8)) :+
-      ConditionTest("prims", check("prims", 0))
+      ConditionTest("prims", check("prims", 0)) :+
+      ConditionTest("seqs", check("seqs", 0))
 
   def check(filename: String, bitWidth: Int): Boolean = {
     val uri = s"example/symexe/$filename.logika"
