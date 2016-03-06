@@ -772,7 +772,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       val sb = new StringBuilder
       if ("" == title) sb.append("; Validity: ")
       else sb.append(s"; Validity of $title: ")
-      sb.append(r)
+      sb.append(r match {
+        case Z3.Unsat => "Valid"
+        case Z3.Sat => "Invalid"
+        case Z3.Timeout => "Don't Know (Timeout)"
+        case Z3.Unknown => "Don't Know"
+        case Z3.Error => "Error"
+      })
       sb.append(lineSep)
       var i = 0
       for (p <- premises) {
@@ -796,7 +802,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       sb.append(script)
       reporter.report(li.toLocationInfo(fileUriOpt, "summoning", sb.toString))
     }
-    r
+    r == Z3.Unsat
   }
 
   def newId(x: String, t: tipe.Tipe) = {

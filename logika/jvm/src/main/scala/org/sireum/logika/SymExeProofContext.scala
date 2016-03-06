@@ -288,8 +288,7 @@ SymExeProofContext(unitNode: Program,
           hasError = true
           error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
         }
-        Some(copy(premises =
-          filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
+        Some(copy(premises = filter(premises ++ sequent.premises ++ sequent.conclusions)))
       case Assert(e) =>
         if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
           error(stmt, s"Could not automatically deduce the assertion validity.")

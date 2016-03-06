@@ -60,7 +60,7 @@ object Z3 {
   }
 
   def isValid(timeoutInMs: Int, isSymExe: Boolean, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, Boolean) =
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
     new Z3(timeoutInMs, isSymExe).isValid(premises, conclusions)
 
   def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
@@ -85,12 +85,9 @@ private final class Z3(timeout: Int, isSymExe: Boolean)(
   }
   val rounding = "RNE"
 
-  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Boolean) = {
-    val r =
-      if (premises.isEmpty) checkSat(Not(And(conclusions)))
-      else checkSat(Not(Implies(And(premises), And(conclusions))))
-    (r._1, r._2 == Unsat)
-  }
+  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Z3.CheckResult) =
+    if (premises.isEmpty) checkSat(Not(And(conclusions)))
+    else checkSat(Not(Implies(And(premises), And(conclusions))))
 
   def checkSat(es: Exp*): (String, CheckResult) = {
     for (e <- es)
@@ -208,8 +205,8 @@ $s"""))
               stg.getInstanceOf("lit").add("value", "F32_PInf")
             } else {
               val bits = JFloat.floatToRawIntBits(f)
-              val sign = (bits & 0x80000000) >>> 31
-              var eb = JInteger.toHexString((bits & 0x7f800000) >>> 24)
+              val sign = if ((bits & 0x80000000) != 0) 1 else 0
+              var eb = JInteger.toHexString((bits & 0x7f800000) >>> 23)
               eb = "#x" + (0 until (2 - eb.length)).map(_ => '0').mkString + eb
               var sb = JInteger.toBinaryString(bits & 0x007fffff)
               sb = "#b" + (0 until (23 - sb.length)).map(_ => '0').mkString + sb
@@ -224,8 +221,8 @@ $s"""))
               stg.getInstanceOf("lit").add("value", "F64_PInf")
             } else {
               val bits = JDouble.doubleToRawLongBits(d)
-              val sign = (bits & 0x8000000000000000L) >>> 63
-              var eb = JLong.toBinaryString((bits & 0x7ff0000000000000L) >>> 53)
+              val sign = if ((bits & 0x8000000000000000L) != 0) 1 else 0
+              var eb = JLong.toBinaryString((bits & 0x7ff0000000000000L) >>> 52)
               eb = "#b" + (0 until (11 - eb.length)).map(_ => '0').mkString + eb
               var sb = JLong.toHexString(bits & 0x000fffffffffffffL)
               sb = "#x" + (0 until (13 - sb.length)).map(_ => '0').mkString + sb
@@ -330,7 +327,11 @@ $s"""))
                 case _ => ">="
               }
             case e: Shl => "bvshl"
-            case e: Shr => "bvashr"
+            case e: Shr =>
+              e.tipe match {
+                case U8 | U16 | U32 | U64 => "bvlshr"
+                case _ => "bvashr"
+              }
             case e: UShr => "bvlshr"
             case e: Eq =>
               e.tipe match {

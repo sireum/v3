@@ -402,7 +402,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
                 } else {
-                  e.tipe = B
+                  e.tipe = tLeft
                   someB
                 }
               case _ => None
@@ -434,12 +434,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case _ => None
             }
           case e: EqualityExp =>
-            for (t1 <- check(e.left); t2 <- check(e.right))
-              if (t1 != t2) {
+            for (tLeft <- check(e.left); tRight <- check(e.right))
+              if (tLeft != tRight) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
-                error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $t1 and $t2, respectively.")
+                error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
               } else {
-                e.tipe = t1
+                e.tipe = tLeft
               }
             someB
           case e: Append =>

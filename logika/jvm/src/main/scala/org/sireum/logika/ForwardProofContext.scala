@@ -120,7 +120,8 @@ ForwardProofContext(unitNode: Program,
           error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
         }
         Some(copy(premises =
-          filter(ilinkedSetEmpty ++ sequent.premises ++ sequent.conclusions)))
+          filter(if (autoEnabled) premises else ilinkedSetEmpty) ++
+            sequent.premises ++ sequent.conclusions))
       case Assert(e) =>
         if (autoEnabled) {
           if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
