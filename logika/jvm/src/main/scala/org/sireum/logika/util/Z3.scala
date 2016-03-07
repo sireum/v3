@@ -90,15 +90,16 @@ private final class Z3(timeout: Int, isSymExe: Boolean)(
     else checkSat(Not(Implies(And(premises), And(conclusions))))
 
   def checkSat(es: Exp*): (String, CheckResult) = {
-    for (e <- es)
+    for (e <- es) {
       stMain.add("e",
         stg.getInstanceOf("assertion").
           add("e", translate(e))).add("e", lineSep)
-    Visitor.build({
-      case q: Quant[_] =>
-        for (id <- q.ids) typeMap -= id.value
-        true
-    })
+      Visitor.build({
+        case q: Quant[_] =>
+          for (id <- q.ids) typeMap -= id.value
+          true
+      })(e)
+    }
     for ((name, tipe) <- typeMap)
       stMain.add("d", translate(name, tipe)).
         add("d", lineSep)

@@ -9,6 +9,7 @@ main(d, a, e, symexe, BS, Z8S, Z16S, Z32S, Z64S, NS, N8S, N16S, N32S, N64S, S8S,
 (assert (= ZS_empty ((as const ZS) 0)))        ; ZS_empty axiom: no element in ZS_empty
 (assert (= (ZS_size ZS_empty) 0))              ; ZS_size and ZS_empty axiom: ZS_size of ZS_empty is 0
 $if(symexe)$
+
 ; Extended Preamble for SymExe
 (define-sort Z8   () Int)
 (define-sort Z16  () Int)
@@ -205,6 +206,8 @@ $if(F64S)$
 (assert (= (F64S_size F64S_empty) 0))
 $endif$
 $endif$
+
+
 ; Type Declarations
 $d$
 ; Auxiliaries
