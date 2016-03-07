@@ -34,7 +34,6 @@ zs(3) = zs(3) + 1
 l"""⊢ ∃i: (0 ..< zs.size)  zs(i) ≤ 0"""
 l"""⊢ ∀i: (0 <..< zs.size)  zs(i) > 0"""
 
-
 // filter out claims except the following two:
 // ∃i: (0 ..< zs.size)  zs(i) ≤ 0
 // ∀i: (0 <..< zs.size)  zs(i) > 0
