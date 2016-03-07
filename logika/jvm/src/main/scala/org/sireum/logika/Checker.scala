@@ -71,7 +71,7 @@ object Checker {
                 t.buildString(sb)
                 sb.toString
               }
-              error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution hgjk .")
+              error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
               throw new RuntimeException
           })(program) catch {
             case t: RuntimeException => hasError = true

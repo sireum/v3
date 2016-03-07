@@ -169,17 +169,17 @@ case object S8S extends MSeq {
 
 case object S16S extends MSeq {
   final val params = Tipe.seq(Z)
-  final val result = S8
+  final val result = S16
 }
 
 case object S32S extends MSeq {
   final val params = Tipe.seq(Z)
-  final val result = S8
+  final val result = S32
 }
 
 case object S64S extends MSeq {
   final val params = Tipe.seq(Z)
-  final val result = S8
+  final val result = S64
 }
 
 case object U8S extends MSeq {
@@ -199,7 +199,7 @@ case object U32S extends MSeq {
 
 case object U64S extends MSeq {
   final val params = Tipe.seq(Z)
-  final val result = U8
+  final val result = U64
 }
 
 case object RS extends MSeq {

@@ -317,7 +317,7 @@ $s"""))
               e.tipe match {
                 case S8 | S16 | S32 | S64 => "bvsgt"
                 case U8 | U16 | U32 | U64 => "bvugt"
-                case F32 | F64 => "fp.lt"
+                case F32 | F64 => "fp.gt"
                 case _ => ">"
               }
             case e: Ge =>
@@ -384,6 +384,9 @@ $s"""))
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
                 stg.getInstanceOf("unary").add("op", "bvneg").
+                  add("exp", translate(exp))
+              case F32 | F64 =>
+                stg.getInstanceOf("unary").add("op", "fp.neg").
                   add("exp", translate(exp))
               case _ =>
                 stg.getInstanceOf("unary").add("op", "-").

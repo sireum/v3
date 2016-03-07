@@ -70,6 +70,7 @@ SymExeProofContext(unitNode: Program,
   val n16Max = IntMax(16, N16Type())
   val n32Max = IntMax(32, N32Type())
   val n64Max = IntMax(64, N64Type())
+  val topConclusion = ivector(Checker.top)
 
   override def isValid(title: String, li: LocationInfo,
                        premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
@@ -276,20 +277,24 @@ SymExeProofContext(unitNode: Program,
           case _ => None
         }
       case SequentStmt(sequent) =>
-        if (sequent.premises.nonEmpty) {
-          if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
+        if (sequent.conclusions == topConclusion)
+          Some(copy(premises = ilinkedSetEmpty))
+        else {
+          if (sequent.premises.nonEmpty) {
+            if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
+              hasError = true
+              error(stmt, "Could not automatically deduce the specified sequent's premises.")
+            }
+            if (!isValid("sequent conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
+              hasError = true
+              error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
+            }
+          } else if (!isValid("sequent conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
             hasError = true
-            error(stmt, "Could not automatically deduce the specified sequent's premises.")
+            error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
           }
-          if (!isValid("sequent conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
-            hasError = true
-            error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
-          }
-        } else if (!isValid("sequent conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
-          hasError = true
-          error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
+          Some(copy(premises = filter(premises ++ sequent.premises ++ sequent.conclusions)))
         }
-        Some(copy(premises = filter(premises ++ sequent.premises ++ sequent.conclusions)))
       case Assert(e) =>
         if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
           error(stmt, s"Could not automatically deduce the assertion validity.")
