@@ -13,7 +13,13 @@ bs(3) = ~bs(3)
 l"""⊢ ∃i: (0 ..< bs.size)  ¬bs(i)"""
 l"""⊢ ∀i: (0 <..< bs.size)  bs(i)"""
 
-l"""⊢ ⊤""" // reset claims
+// filter out claims except the following two:
+// ∃i: (0 ..< bs.size)  ¬bs(i)
+// ∀i: (0 <..< bs.size)  bs(i)
+l"""∃i: (0 ..< bs.size)  ¬bs(i), ∀i: (0 <..< bs.size)  bs(i) ⊢ ⊤"""
+l"""⊢ ¬bs(0)"""
+
+l"""⊢ ⊤""" // reset (filter out all) claims
 
 var zs: ZS = ZS(0, 5)
 l"""⊢ zs(0) ≤ 0 ∧ zs(1) > 0"""
@@ -27,6 +33,17 @@ l"""⊢ zs(0) ≤ 0 ∧ zs(1) > 0 ∧ zs(2) > 0 ∧ zs(3) ≤ 0"""
 zs(3) = zs(3) + 1
 l"""⊢ ∃i: (0 ..< zs.size)  zs(i) ≤ 0"""
 l"""⊢ ∀i: (0 <..< zs.size)  zs(i) > 0"""
+
+
+// filter out claims except the following two:
+// ∃i: (0 ..< zs.size)  zs(i) ≤ 0
+// ∀i: (0 <..< zs.size)  zs(i) > 0
+l"""
+∃i: (0 ..< zs.size)  zs(i) ≤ 0     ∀i: (0 <..< zs.size)  zs(i) > 0
+------------------------------------------------------------------
+                                ⊤
+"""
+l"""⊢ zs(0) ≤ 0"""
 
 l"""⊢ ⊤""" // reset claims
 
