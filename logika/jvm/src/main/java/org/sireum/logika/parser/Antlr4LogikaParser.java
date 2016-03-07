@@ -850,11 +850,6 @@ public class Antlr4LogikaParser extends Parser {
 		public TerminalNode REAL() { return getToken(Antlr4LogikaParser.REAL, 0); }
 		public RLitContext(PrimFormulaContext ctx) { copyFrom(ctx); }
 	}
-	public static class VarContext extends PrimFormulaContext {
-		public Token tb;
-		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
-		public VarContext(PrimFormulaContext ctx) { copyFrom(ctx); }
-	}
 	public static class ApplyContext extends PrimFormulaContext {
 		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
 		public List<FormulaContext> formula() {
@@ -864,6 +859,11 @@ public class Antlr4LogikaParser extends Parser {
 			return getRuleContext(FormulaContext.class,i);
 		}
 		public ApplyContext(PrimFormulaContext ctx) { copyFrom(ctx); }
+	}
+	public static class VarContext extends PrimFormulaContext {
+		public Token tb;
+		public TerminalNode ID() { return getToken(Antlr4LogikaParser.ID, 0); }
+		public VarContext(PrimFormulaContext ctx) { copyFrom(ctx); }
 	}
 	public static class TypeAccessContext extends PrimFormulaContext {
 		public Token t;
@@ -924,61 +924,61 @@ public class Antlr4LogikaParser extends Parser {
 				}
 				break;
 			case 2:
-				_localctx = new VarContext(_localctx);
+				_localctx = new ParenContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(187);
-				((VarContext)_localctx).tb = match(ID);
-				}
-				break;
-			case 3:
-				_localctx = new ParenContext(_localctx);
-				enterOuterAlt(_localctx, 3);
-				{
-				setState(188);
 				match(T__15);
-				setState(189);
+				setState(188);
 				formula(0);
-				setState(190);
+				setState(189);
 				match(T__16);
 				}
 				break;
-			case 4:
+			case 3:
 				_localctx = new ResultContext(_localctx);
-				enterOuterAlt(_localctx, 4);
+				enterOuterAlt(_localctx, 3);
 				{
-				setState(192);
+				setState(191);
 				match(T__17);
 				}
 				break;
-			case 5:
+			case 4:
 				_localctx = new ApplyContext(_localctx);
-				enterOuterAlt(_localctx, 5);
+				enterOuterAlt(_localctx, 4);
 				{
-				setState(193);
+				setState(192);
 				match(ID);
-				setState(194);
+				setState(193);
 				match(T__15);
-				setState(195);
+				setState(194);
 				formula(0);
-				setState(200);
+				setState(199);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==T__0) {
 					{
 					{
-					setState(196);
+					setState(195);
 					match(T__0);
-					setState(197);
+					setState(196);
 					formula(0);
 					}
 					}
-					setState(202);
+					setState(201);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
-				setState(203);
+				setState(202);
 				match(T__16);
+				}
+				break;
+			case 5:
+				_localctx = new VarContext(_localctx);
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(204);
+				((VarContext)_localctx).tb = match(ID);
 				}
 				break;
 			case 6:
@@ -5487,8 +5487,8 @@ public class Antlr4LogikaParser extends Parser {
 		"\5\3\5\3\5\3\5\3\5\3\5\5\5\u009e\n\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5\u00a6"+
 		"\n\5\3\5\3\5\3\5\5\5\u00ab\n\5\3\5\6\5\u00ae\n\5\r\5\16\5\u00af\3\5\5"+
 		"\5\u00b3\n\5\7\5\u00b5\n\5\f\5\16\5\u00b8\13\5\3\5\5\5\u00bb\n\5\3\6\3"+
-		"\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6\u00c9\n\6\f\6\16\6\u00cc"+
-		"\13\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6\u00dc"+
+		"\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6\u00c8\n\6\f\6\16\6\u00cb\13"+
+		"\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6\u00dc"+
 		"\n\6\f\6\16\6\u00df\13\6\5\6\u00e1\n\6\3\6\5\6\u00e4\n\6\3\7\3\7\3\7\3"+
 		"\7\3\7\3\7\3\7\3\7\7\7\u00ee\n\7\f\7\16\7\u00f1\13\7\3\7\5\7\u00f4\n\7"+
 		"\3\7\3\7\3\7\5\7\u00f9\n\7\3\7\3\7\3\7\3\7\5\7\u00ff\n\7\3\7\3\7\3\7\3"+
@@ -5608,20 +5608,20 @@ public class Antlr4LogikaParser extends Parser {
 		"\2\2\u00b4\u00ad\3\2\2\2\u00b5\u00b8\3\2\2\2\u00b6\u00b4\3\2\2\2\u00b6"+
 		"\u00b7\3\2\2\2\u00b7\u00b9\3\2\2\2\u00b8\u00b6\3\2\2\2\u00b9\u00bb\7\7"+
 		"\2\2\u00ba\u0084\3\2\2\2\u00ba\u0089\3\2\2\2\u00bb\t\3\2\2\2\u00bc\u00e4"+
-		"\t\3\2\2\u00bd\u00e4\7\u00ae\2\2\u00be\u00bf\7\22\2\2\u00bf\u00c0\5\f"+
-		"\7\2\u00c0\u00c1\7\23\2\2\u00c1\u00e4\3\2\2\2\u00c2\u00e4\7\24\2\2\u00c3"+
-		"\u00c4\7\u00ae\2\2\u00c4\u00c5\7\22\2\2\u00c5\u00ca\5\f\7\2\u00c6\u00c7"+
-		"\7\3\2\2\u00c7\u00c9\5\f\7\2\u00c8\u00c6\3\2\2\2\u00c9\u00cc\3\2\2\2\u00ca"+
-		"\u00c8\3\2\2\2\u00ca\u00cb\3\2\2\2\u00cb\u00cd\3\2\2\2\u00cc\u00ca\3\2"+
-		"\2\2\u00cd\u00ce\7\23\2\2\u00ce\u00e4\3\2\2\2\u00cf\u00e4\7\u00ad\2\2"+
-		"\u00d0\u00e4\7\u00b0\2\2\u00d1\u00e4\7\u00af\2\2\u00d2\u00e4\7\u00b7\2"+
-		"\2\u00d3\u00d4\t\4\2\2\u00d4\u00d5\7\b\2\2\u00d5\u00e4\7\u00ae\2\2\u00d6"+
+		"\t\3\2\2\u00bd\u00be\7\22\2\2\u00be\u00bf\5\f\7\2\u00bf\u00c0\7\23\2\2"+
+		"\u00c0\u00e4\3\2\2\2\u00c1\u00e4\7\24\2\2\u00c2\u00c3\7\u00ae\2\2\u00c3"+
+		"\u00c4\7\22\2\2\u00c4\u00c9\5\f\7\2\u00c5\u00c6\7\3\2\2\u00c6\u00c8\5"+
+		"\f\7\2\u00c7\u00c5\3\2\2\2\u00c8\u00cb\3\2\2\2\u00c9\u00c7\3\2\2\2\u00c9"+
+		"\u00ca\3\2\2\2\u00ca\u00cc\3\2\2\2\u00cb\u00c9\3\2\2\2\u00cc\u00cd\7\23"+
+		"\2\2\u00cd\u00e4\3\2\2\2\u00ce\u00e4\7\u00ae\2\2\u00cf\u00e4\7\u00ad\2"+
+		"\2\u00d0\u00e4\7\u00b0\2\2\u00d1\u00e4\7\u00af\2\2\u00d2\u00e4\7\u00b7"+
+		"\2\2\u00d3\u00d4\t\4\2\2\u00d4\u00d5\7\b\2\2\u00d5\u00e4\7\u00ae\2\2\u00d6"+
 		"\u00d7\t\5\2\2\u00d7\u00e0\7\22\2\2\u00d8\u00dd\5*\26\2\u00d9\u00da\7"+
 		"\3\2\2\u00da\u00dc\5*\26\2\u00db\u00d9\3\2\2\2\u00dc\u00df\3\2\2\2\u00dd"+
 		"\u00db\3\2\2\2\u00dd\u00de\3\2\2\2\u00de\u00e1\3\2\2\2\u00df\u00dd\3\2"+
 		"\2\2\u00e0\u00d8\3\2\2\2\u00e0\u00e1\3\2\2\2\u00e1\u00e2\3\2\2\2\u00e2"+
-		"\u00e4\7\23\2\2\u00e3\u00bc\3\2\2\2\u00e3\u00bd\3\2\2\2\u00e3\u00be\3"+
-		"\2\2\2\u00e3\u00c2\3\2\2\2\u00e3\u00c3\3\2\2\2\u00e3\u00cf\3\2\2\2\u00e3"+
+		"\u00e4\7\23\2\2\u00e3\u00bc\3\2\2\2\u00e3\u00bd\3\2\2\2\u00e3\u00c1\3"+
+		"\2\2\2\u00e3\u00c2\3\2\2\2\u00e3\u00ce\3\2\2\2\u00e3\u00cf\3\2\2\2\u00e3"+
 		"\u00d0\3\2\2\2\u00e3\u00d1\3\2\2\2\u00e3\u00d2\3\2\2\2\u00e3\u00d3\3\2"+
 		"\2\2\u00e3\u00d6\3\2\2\2\u00e4\13\3\2\2\2\u00e5\u00e6\b\7\1\2\u00e6\u00e7"+
 		"\7E\2\2\u00e7\u00f4\5\f\7\t\u00e8\u00e9\t\6\2\2\u00e9\u00f4\5\f\7\b\u00ea"+
@@ -5924,7 +5924,7 @@ public class Antlr4LogikaParser extends Parser {
 		"\2\2\u0427\u0425\3\2\2\2\u0428\u042c\7\7\2\2\u0429\u042b\7\u00b2\2\2\u042a"+
 		"\u0429\3\2\2\2\u042b\u042e\3\2\2\2\u042c\u042a\3\2\2\2\u042c\u042d\3\2"+
 		"\2\2\u042d\63\3\2\2\2\u042e\u042c\3\2\2\2\u009b8<AIPS[ahjnsvz\u0081\u008e"+
-		"\u0095\u009d\u00a5\u00aa\u00af\u00b2\u00b6\u00ba\u00ca\u00dd\u00e0\u00e3"+
+		"\u0095\u009d\u00a5\u00aa\u00af\u00b2\u00b6\u00ba\u00c9\u00dd\u00e0\u00e3"+
 		"\u00ef\u00f3\u00f8\u00fe\u0104\u010a\u0110\u0116\u011c\u0122\u0128\u012e"+
 		"\u0131\u0133\u013c\u0145\u0149\u014e\u0151\u015b\u0162\u0168\u016e\u0192"+
 		"\u01a1\u01ab\u01b8\u01bf\u01cb\u01d9\u01dc\u01e1\u01e8\u01ec\u01fb\u0202"+

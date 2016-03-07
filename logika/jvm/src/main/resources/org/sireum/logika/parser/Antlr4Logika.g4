@@ -81,10 +81,10 @@ proofStep
 primFormula
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean     // propositional logic
-  | tb=ID                                               #Var         // propositional logic
   | '(' formula ')'                                     #Paren       // propositional logic
   | 'result'                                            #Result      // programming logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
+  | tb=ID                                               #Var         // propositional logic
   | NUM                                                 #Int         // programming logic
   | INT                                                 #IntLit      // programming logic
   | REAL                                                #RLit        // programming logic

@@ -1097,14 +1097,18 @@ object Builder {
 
     var i = 0
     var parens = 0
+    var inLogikaStmt = false
     val size = tokens.size
     while (tokens(i).getType != IntStream.EOF) {
       val token = tokens(i)
       token.getText match {
         case "(" => parens += 1
         case ")" if parens > 0 => parens -= 1
+        case "l\"\"\"" => inLogikaStmt = true
+        case "{" if inLogikaStmt => inLogikaStmt = false
+        case "\"\"\"" => inLogikaStmt = false
         case text if token.getType == NL =>
-          if (parens > 0) {
+          if (parens > 0 || inLogikaStmt) {
             token.asInstanceOf[CommonToken].
               setChannel(Token.HIDDEN_CHANNEL)
           } else {
