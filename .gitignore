@@ -5,7 +5,8 @@
 /sbt
 /lib_managed
 /project/project
-/distros
+/distros/sireum-v3
+/distros/*.zip
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionaries
