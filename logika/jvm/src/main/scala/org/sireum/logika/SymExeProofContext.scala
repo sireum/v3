@@ -278,7 +278,7 @@ SymExeProofContext(unitNode: Program,
         }
       case SequentStmt(sequent) =>
         if (sequent.conclusions == topConclusion)
-          Some(copy(premises = ilinkedSetEmpty))
+          Some(copy(premises = ilinkedSetEmpty ++ sequent.premises))
         else {
           if (sequent.premises.nonEmpty) {
             if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
