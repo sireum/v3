@@ -4,7 +4,6 @@ services:
 
 env:
     - SIREUM_PARALLEL_BUILD=false
-    - JAVA_OPTIONS=-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss1M -XX:+CMSClassUnloadingEnabled
 
 build:
     pre_ci:
@@ -14,6 +13,7 @@ build:
         pull: true
         options: "-e HOME=/root"
     ci:
+        - export JAVA_OPTIONS=-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss1M -XX:+CMSClassUnloadingEnabled
         - bin/sbt-launch.sh clean test:compile test
     post_ci:
     on_success:
