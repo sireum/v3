@@ -6,7 +6,6 @@ env:
     - SIREUM_PARALLEL_BUILD=false
 
 build:
-    cache: true
     pre_ci:
     pre_ci_boot:
         image_name: sireum/v3
@@ -19,21 +18,4 @@ build:
     on_success:
     on_failure:
     push:
-    cache:
-
-integrations:
-    notifications:
-        - integrationName: email
-          type: email
-          recipients:
-          branches:
-          on_start:
-          on_success: change
-          on_failure: always
-          on_changed:
-
-    hub:
-        - integrationName:
-          type:
-          agent_only:
-          branches:
+    cache: true
