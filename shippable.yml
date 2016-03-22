@@ -1,15 +1,39 @@
-cache: true
+language: scala
+
+services:
 
 env:
-  - SIREUM_PARALLEL_BUILD=false
+    - SIREUM_PARALLEL_BUILD=false
 
-before_script:
-  - bin/sbt-launch.sh clean test:compile
+build:
+    cache: true
+    pre_ci:
+    pre_ci_boot:
+        image_name: sireum/v3
+        image_tag: latest
+        pull: true
+        options: "-e HOME=/root"
+    ci:
+        - bin/sbt-launch.sh clean test:compile test
+    post_ci:
+    on_success:
+    on_failure:
+    push:
+    cache:
 
-script:
-  - bin/sbt-launch.sh clean test:compile test
+integrations:
+    notifications:
+        - integrationName: email
+          type: email
+          recipients:
+          branches:
+          on_start:
+          on_success: change
+          on_failure: always
+          on_changed:
 
-notifications:
-  email:
-    on_success: change
-    on_failure: always
+    hub:
+        - integrationName:
+          type:
+          agent_only:
+          branches:
