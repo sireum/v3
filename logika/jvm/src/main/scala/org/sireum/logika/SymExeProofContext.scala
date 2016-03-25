@@ -358,8 +358,9 @@ SymExeProofContext(unitNode: Program,
         val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
         (thenPcOpt, elsePcOpt) match {
           case (Some(thenPc), Some(elsePc)) =>
-            Some(copy(premises =
-              orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
+            Some(copy(premises = ilinkedSetEmpty +
+              Or(And(thenPc.cleanup.premises.toVector),
+                And(elsePc.cleanup.premises.toVector))))
           case _ => None
         }
       case stmt: MethodDecl =>

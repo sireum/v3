@@ -45,7 +45,9 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("max", check("max", 0)) :+
       ConditionTest("abs", check("abs", 8)) :+
       ConditionTest("prims", check("prims", 0)) :+
-      ConditionTest("seqs", check("seqs", 0))
+      ConditionTest("seqs", check("seqs", 0)) :+
+      ConditionTest("ffsS8", check("ffsS8", 0)) :+
+      ConditionTest("ffsU32", check("ffsU32", 0))
 
   def check(filename: String, bitWidth: Int): Boolean = {
     val uri = s"example/symexe/$filename.logika"
@@ -69,7 +71,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = true,
-        timeout = 2000,
+        timeout = 5000,
         checkSatEnabled = true,
         bitWidth = bitWidth))
     !reporter.hasError

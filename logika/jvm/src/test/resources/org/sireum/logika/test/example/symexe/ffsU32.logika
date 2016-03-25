@@ -1,0 +1,265 @@
+import org.sireum.logika._
+
+l"""⊢ ∀ x: S32  x >= s32"0" ∧ x < S32.Max -> x + s32"1" >= s32"0" """
+
+def ffsRefImp(word: U32): U32 = {
+  // ffsRef
+  var i: U32 = u32"0"
+  var r: U32 = u32"0"
+
+  if (word != u32"0") {
+    if (((u32"1" << i) & word) != u32"0") {
+      // 0
+      i = i + u32"1"
+      r = i
+    } else {
+      i = i + u32"1"
+      if (((u32"1" << i) & word) != u32"0") {
+        // 1
+        i = i + u32"1"
+        r = i
+      } else {
+        i = i + u32"1"
+        if (((u32"1" << i) & word) != u32"0") {
+          // 2
+          i = i + u32"1"
+          r = i
+        } else {
+          i = i + u32"1"
+          if (((u32"1" << i) & word) != u32"0") {
+            // 3
+            i = i + u32"1"
+            r = i
+          } else {
+            i = i + u32"1"
+            if (((u32"1" << i) & word) != u32"0") {
+              // 4
+              i = i + u32"1"
+              r = i
+            } else {
+              i = i + u32"1"
+              if (((u32"1" << i) & word) != u32"0") {
+                // 5
+                i = i + u32"1"
+                r = i
+              } else {
+                i = i + u32"1"
+                if (((u32"1" << i) & word) != u32"0") {
+                  // 6
+                  i = i + u32"1"
+                  r = i
+                } else {
+                  i = i + u32"1"
+                  if (((u32"1" << i) & word) != u32"0") {
+                    // 7
+                    i = i + u32"1"
+                    r = i
+                  } else {
+                    i = i + u32"1"
+                    if (((u32"1" << i) & word) != u32"0") {
+                      // 8
+                      i = i + u32"1"
+                      r = i
+                    } else {
+                      i = i + u32"1"
+                      if (((u32"1" << i) & word) != u32"0") {
+                        // 9
+                        i = i + u32"1"
+                        r = i
+                      } else {
+                        i = i + u32"1"
+                        if (((u32"1" << i) & word) != u32"0") {
+                          // 10
+                          i = i + u32"1"
+                          r = i
+                        } else {
+                          i = i + u32"1"
+                          if (((u32"1" << i) & word) != u32"0") {
+                            // 11
+                            i = i + u32"1"
+                            r = i
+                          } else {
+                            i = i + u32"1"
+                            if (((u32"1" << i) & word) != u32"0") {
+                              // 12
+                              i = i + u32"1"
+                              r = i
+                            } else {
+                              i = i + u32"1"
+                              if (((u32"1" << i) & word) != u32"0") {
+                                // 13
+                                i = i + u32"1"
+                                r = i
+                              } else {
+                                i = i + u32"1"
+                                if (((u32"1" << i) & word) != u32"0") {
+                                  // 14
+                                  i = i + u32"1"
+                                  r = i
+                                } else {
+                                  i = i + u32"1"
+                                  if (((u32"1" << i) & word) != u32"0") {
+                                    // 15
+                                    i = i + u32"1"
+                                    r = i
+                                  } else {
+                                    i = i + u32"1"
+                                    if (((u32"1" << i) & word) != u32"0") {
+                                      // 16
+                                      i = i + u32"1"
+                                      r = i
+                                    } else {
+                                      i = i + u32"1"
+                                      if (((u32"1" << i) & word) != u32"0") {
+                                        // 17
+                                        i = i + u32"1"
+                                        r = i
+                                      } else {
+                                        i = i + u32"1"
+                                        if (((u32"1" << i) & word) != u32"0") {
+                                          // 18
+                                          i = i + u32"1"
+                                          r = i
+                                        } else {
+                                          i = i + u32"1"
+                                          if (((u32"1" << i) & word) != u32"0") {
+                                            // 19
+                                            i = i + u32"1"
+                                            r = i
+                                          } else {
+                                            i = i + u32"1"
+                                            if (((u32"1" << i) & word) != u32"0") {
+                                              // 20
+                                              i = i + u32"1"
+                                              r = i
+                                            } else {
+                                              i = i + u32"1"
+                                              if (((u32"1" << i) & word) != u32"0") {
+                                                // 21
+                                                i = i + u32"1"
+                                                r = i
+                                              } else {
+                                                i = i + u32"1"
+                                                if (((u32"1" << i) & word) != u32"0") {
+                                                  // 22
+                                                  i = i + u32"1"
+                                                  r = i
+                                                } else {
+                                                  i = i + u32"1"
+                                                  if (((u32"1" << i) & word) != u32"0") {
+                                                    // 23
+                                                    i = i + u32"1"
+                                                    r = i
+                                                  } else {
+                                                    i = i + u32"1"
+                                                    if (((u32"1" << i) & word) != u32"0") {
+                                                      // 24
+                                                      i = i + u32"1"
+                                                      r = i
+                                                    } else {
+                                                      i = i + u32"1"
+                                                      if (((u32"1" << i) & word) != u32"0") {
+                                                        // 25
+                                                        i = i + u32"1"
+                                                        r = i
+                                                      } else {
+                                                        i = i + u32"1"
+                                                        if (((u32"1" << i) & word) != u32"0") {
+                                                          // 26
+                                                          i = i + u32"1"
+                                                          r = i
+                                                        } else {
+                                                          i = i + u32"1"
+                                                          if (((u32"1" << i) & word) != u32"0") {
+                                                            // 27
+                                                            i = i + u32"1"
+                                                            r = i
+                                                          } else {
+                                                            i = i + u32"1"
+                                                            if (((u32"1" << i) & word) != u32"0") {
+                                                              // 28
+                                                              i = i + u32"1"
+                                                              r = i
+                                                            } else {
+                                                              i = i + u32"1"
+                                                              if (((u32"1" << i) & word) != u32"0") {
+                                                                // 29
+                                                                i = i + u32"1"
+                                                                r = i
+                                                              } else {
+                                                                i = i + u32"1"
+                                                                if (((u32"1" << i) & word) != u32"0") {
+                                                                  // 30
+                                                                  i = i + u32"1"
+                                                                  r = i
+                                                                } else {
+                                                                  i = i + u32"1"
+                                                                  if (((u32"1" << i) & word) != u32"0") {
+                                                                    // 31
+                                                                    i = i + u32"1"
+                                                                    r = i
+                                                                  } else {
+                                                                    assert(false)
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+    // ffsImp
+    var j: U32 = word
+    var n: U32 = u32"1"
+    var r2: U32 = u32"0"
+    if ((j & u32"0xffff") == u32"0") {
+      n = n + u32"16"
+      j = j >> u32"16"
+    }
+    if ((j & u32"0xff") == u32"0") {
+      n = n + u32"8"
+      j = j >> u32"8"
+    }
+    if ((j & u32"0xf") == u32"0") {
+      n = n + u32"4"
+      j = j >> u32"4"
+    }
+    if ((j & u32"0x3") == u32"0") {
+      n = n + u32"2"
+      j = j >> u32"2"
+    }
+    if (j != u32"0") {
+      r2 = n + ((j + u32"1") & u32"0x1")
+    }
+
+    assert(r == r2)
+
+  }
+  return r
+}
