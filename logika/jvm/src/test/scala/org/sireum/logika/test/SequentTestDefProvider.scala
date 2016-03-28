@@ -464,9 +464,9 @@ final class SequentTestDefProvider(tf: TestFramework)
           |  3. {
           |       4. a  covered(a) ∧ (∃c vowel(c) ∧ holds(a, c))  assume
           |       5. covered(a)                                   ∧e1 4
-          |       6. ∃x covered(x)                                ∃i 5 a
+          |       6. ∃x covered(x)                                Ei 5 a
           |      }
-          |  7. ∃x covered(x)                                     ∃e 1 3
+          |  7. ∃x covered(x)                                     Ee 1 3
           |  8. ¬gameOver                                         →e 2 7
           |}
         """.stripMargin, LogicMode.Predicate))

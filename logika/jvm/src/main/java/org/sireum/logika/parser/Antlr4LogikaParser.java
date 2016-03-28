@@ -1828,9 +1828,8 @@ public class Antlr4LogikaParser extends Parser {
 	public static class ExistsElimContext extends JustificationContext {
 		public Token tb;
 		public Token step;
-		public Token subproof;
-		public Token t;
 		public Token subProof;
+		public Token t;
 		public List<TerminalNode> NUM() { return getTokens(Antlr4LogikaParser.NUM); }
 		public TerminalNode NUM(int i) {
 			return getToken(Antlr4LogikaParser.NUM, i);
@@ -2521,7 +2520,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(448);
 				((ExistsElimContext)_localctx).step = match(NUM);
 				setState(449);
-				((ExistsElimContext)_localctx).subproof = match(NUM);
+				((ExistsElimContext)_localctx).subProof = match(NUM);
 				}
 				break;
 			case 25:

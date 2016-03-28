@@ -215,7 +215,7 @@ justification
   | tb=( 'existsi' | 'somei' | 'Ei' )
     existsStep=NUM formula+                             #ExistsIntro
   | tb=( 'existse' | 'somee' | 'Ee' )
-    step=NUM subproof=NUM                               #ExistsElim
+    step=NUM subProof=NUM                               #ExistsElim
   | {"∃".equals(_input.LT(1).getText()) &&
      "i".equals(_input.LT(2).getText())}?
     tb='∃' ID existsStep=NUM formula+                   #ExistsIntro
