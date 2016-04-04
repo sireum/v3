@@ -26,6 +26,7 @@
 package org.sireum.logika
 
 import org.sireum.logika.ast._
+import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
 
 private object SymExeProofContext {
@@ -250,11 +251,7 @@ SymExeProofContext(unitNode: Program,
     pcOpt
   }
 
-  def oldId(id: Id): Id = {
-    val c = varCounter.value.getOrElseUpdate(id.value, -1)
-    varCounter.value(id.value) = c + 1
-    newId(s"${id.value}_$c", id.tipe)
-  }
+  def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
 
   def check(stmt: Stmt): Option[SymExeProofContext] = {
     def mkSize(id: Id): Size = {
@@ -358,9 +355,12 @@ SymExeProofContext(unitNode: Program,
         val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
         (thenPcOpt, elsePcOpt) match {
           case (Some(thenPc), Some(elsePc)) =>
-            Some(copy(premises = ilinkedSetEmpty +
-              Or(And(thenPc.cleanup.premises.toVector),
-                And(elsePc.cleanup.premises.toVector))))
+            val thenPremises = thenPc.cleanup.premises
+            val elsePremises = elsePc.cleanup.premises
+            Some(copy(premises =
+              thenPremises.intersect(elsePremises) +
+                Or(And(thenPremises.toVector),
+                  And(elsePremises.toVector))))
           case _ => None
         }
       case stmt: MethodDecl =>
@@ -561,8 +561,29 @@ SymExeProofContext(unitNode: Program,
   }
 
   def cleanup: SymExeProofContext =
-    copy(premises = filter(premises), provedSteps = imapEmpty,
-      declaredStepNumbers = imapEmpty)
+    copy(premises = rewriteOld(filter(premises)),
+      provedSteps = imapEmpty, declaredStepNumbers = imapEmpty)
+
+  def rewriteOld(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
+    val m = mmapEmpty[String, Int]
+    var r = ilinkedSetEmpty[Exp]
+    for (e <- premises) {
+      r += ast.Rewriter.build[Exp](TraversalMode.BOTTOM_UP)({
+        case idOld@Id(value) if value.endsWith("_old") =>
+          val name = value.substring(0, value.length - 4)
+          val n = m.get(name) match {
+            case Some(c) => c
+            case None =>
+              val c = varCounter.value.getOrElseUpdate(name, 0)
+              varCounter.value(name) = c + 1
+              m(name) = c
+              c
+          }
+          newId(s"${name}_$n", idOld.tipe)
+      })(e)
+    }
+    r
+  }
 
   def filter(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
     def keep(e: Exp) = {
@@ -575,6 +596,17 @@ SymExeProofContext(unitNode: Program,
       r
     }
     premises.filter(keep)
+  }
+
+  override def check(step: RegularStep): Option[SymExeProofContext] = {
+    val num = step.num.value
+    step match {
+      case Premise(_, exp) =>
+        if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
+        else if (deduce(num, exp, ivectorEmpty, isAuto = true)) addProvedStep(step)
+        else error(exp, s"Could not find the claimed premise in step #$num.")
+      case _ => super.check(step)
+    }
   }
 
   def make(vars: ISet[String],

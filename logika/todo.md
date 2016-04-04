@@ -6,8 +6,6 @@ Logika To-Dos
   
   - Need to generate errors for usages of forall/exists in propositional
   
-* Change SymeExe checker to be compatible with Forward checker
-
 * Add cone of influence in SymExe to optimize validity query
 
 * Add sat/validity query caching in server mode to optimize IVE

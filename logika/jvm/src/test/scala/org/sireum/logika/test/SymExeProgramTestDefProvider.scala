@@ -37,20 +37,46 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] =
-    (1 to 1).toVector.map { x =>
-      val name = f"assignment-$x%02d"
+    ((1 to 1).toVector.map { x =>
+      val name = f"symexe/assignment-$x%02d"
       ConditionTest(name, check(name, 0))
     } :+
-      ConditionTest("square", check("square", 0)) :+
-      ConditionTest("max", check("max", 0)) :+
-      ConditionTest("abs", check("abs", 8)) :+
-      ConditionTest("prims", check("prims", 0)) :+
-      ConditionTest("seqs", check("seqs", 0)) :+
-      ConditionTest("ffsS8", check("ffsS8", 0)) :+
-      ConditionTest("ffsU32", check("ffsU32", 0))
+      ConditionTest("symexe/square", check("symexe/square", 0)) :+
+      ConditionTest("symexe/max", check("symexe/max", 0)) :+
+      ConditionTest("symexe/abs", check("symexe/abs", 8)) :+
+      ConditionTest("symexe/prims", check("symexe/prims", 0)) :+
+      ConditionTest("symexe/seqs", check("symexe/seqs", 0)) :+
+      ConditionTest("symexe/ffsS8", check("symexe/ffsS8", 0)) :+
+      ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0))
+      ) ++
+      (1 to 14).toVector.map { x =>
+        val name = f"forward/assignment-$x%02d"
+        ConditionTest(name, check(name, 0))
+      } ++
+      (1 to 1).toVector.map { x =>
+        val name = f"forward/conditional-$x%d"
+        ConditionTest(name, check(name, 0))
+      } ++
+      (2 to 3).toVector.map { x =>
+        val name = f"forward/function-$x%d"
+        ConditionTest(name, check(name, 0))
+      } ++
+      (1 to 3).toVector.map { x =>
+        val name = f"forward/function-to-loop-$x%d"
+        ConditionTest(name, check(name, 0))
+      } ++
+      (0 to 4).toVector.map { x =>
+        val name = f"forward/seq-$x%d"
+        ConditionTest(name, check(name, 0))
+      } ++
+      (1 to 2).toVector.map { x =>
+        val name = f"forward/method-$x%d"
+        ConditionTest(name, check(name, 0))
+      } :+
+      ConditionTest("forward/bank", check("forward/bank", 0))
 
   def check(filename: String, bitWidth: Int): Boolean = {
-    val uri = s"example/symexe/$filename.logika"
+    val uri = s"example/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)
