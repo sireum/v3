@@ -13,7 +13,7 @@ build:
         pull: true
         options: "-e HOME=/root"
     ci:
-        - export JAVA_OPTIONS="-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss1M -XX:+CMSClassUnloadingEnabled"
+        - export JAVA_OPTIONS="-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss2m -XX:+CMSClassUnloadingEnabled"
         - bin/sbt-launch.sh clean test:compile test
     post_ci:
     on_success:
