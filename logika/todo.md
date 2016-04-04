@@ -1,7 +1,24 @@
 Logika To-Dos
 =============
 
-* Document programming logic input language 
+* Change propositional/predicate logic detection to only based on the
+  sequent (excluding proof)
+  
+  - Need to generate errors for usages of forall/exists in propositional
+  
+* Change SymeExe checker to be compatible with Forward checker
+
+* Add cone of influence in SymExe to optimize validity query
+
+* Add sat/validity query caching in server mode to optimize IVE
+  interaction (i.e., remember all queries and their result of previous
+  verification, if any)
+
+* Add concrete evaluation to optimize SymExe
+
+* Add unrolling SymExe
+
+* Document SymExe mode 
 
 
 Future Work
