@@ -839,11 +839,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
     var r = ilinkedSetEmpty[Exp]
-    for (e1 <- es1; e2 <- es2) {
+    for (e1 <- es1; e2 <- es2)
       if (e1 == e2)
         r += e1
-      r += Or(e1, e2)
-    }
+      else
+        r += Or(e1, e2)
     r
   }
 
