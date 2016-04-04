@@ -205,7 +205,8 @@ object Rewriter {
       val oldV = peek.value
       val v = peek.makeWithNewChildren
       val result =
-        if (hasPost && g.isDefinedAt(v)) (oldV, copy(oldV, g(v))) else (oldV, v)
+        if (hasPost && g.isDefinedAt(v)) (oldV, copy(oldV, g(v)))
+        else (oldV, copy(oldV, v))
       _stack = _stack.tail
       result
     }
