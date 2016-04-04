@@ -28,6 +28,6 @@ set JAVA_HOME=%SIREUM_HOME%platform\java
 set JAVA=%JAVA_HOME%\bin\java
 set SIREUM_JAR=%SIREUM_HOME%bin\sireum.jar
 if not defined JAVA_OPTIONS (
-  set JAVA_OPTIONS=-Xmx1G -XX:+UseG1GC
+  set JAVA_OPTIONS=-Xmx1G -XX:+UseG1GC -Xss2m
 )
 %JAVA% %JAVA_OPTIONS% %JAVA_PROPERTIES% -Dfile.encoding=UTF-8 -jar %SIREUM_JAR% %*

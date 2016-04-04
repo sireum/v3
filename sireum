@@ -32,6 +32,6 @@ DETECT_BUILD=${SIREUM_HOME}/bin/detect-build.sh
 if [ -f ${DETECT_BUILD} ]; then
   ${DETECT_BUILD}
 fi
-: ${JAVA_OPTIONS:=-Xmx1G -XX:+UseG1GC}
+: ${JAVA_OPTIONS:=-Xmx1G -XX:+UseG1GC -Xss2m}
 : ${JAVA_PROPERTIES:=}
 ${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -Dfile.encoding=UTF-8 -jar ${SIREUM_JAR} "$@"
