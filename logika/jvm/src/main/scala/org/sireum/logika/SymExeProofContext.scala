@@ -357,10 +357,10 @@ SymExeProofContext(unitNode: Program,
           case (Some(thenPc), Some(elsePc)) =>
             val thenPremises = thenPc.cleanup.premises
             val elsePremises = elsePc.cleanup.premises
-            Some(copy(premises =
-              thenPremises.intersect(elsePremises) +
-                Or(And(thenPremises.toVector),
-                  And(elsePremises.toVector))))
+            val commonPremises = thenPremises.intersect(elsePremises)
+            Some(copy(premises = commonPremises +
+              Or(And((thenPremises -- commonPremises).toVector),
+                And((elsePremises -- commonPremises).toVector))))
           case _ => None
         }
       case stmt: MethodDecl =>
