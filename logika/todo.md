@@ -8,10 +8,6 @@ Logika To-Dos
   
 * Add cone of influence in SymExe to optimize validity query
 
-* Add sat/validity query caching in server mode to optimize IVE
-  interaction (i.e., remember all queries and their result of previous
-  verification, if any)
-
 * Add concrete evaluation to optimize SymExe
 
 * Add unrolling SymExe

@@ -48,6 +48,10 @@ object Z3 {
 
   case object Error extends CheckResult
 
+  private[logika] val satCacheEnabled = new scala.util.DynamicVariable(false)
+  private[logika] val satCachePrev = new scala.util.DynamicVariable(mmapEmpty[Object, (String, CheckResult)])
+  private[logika] val satCacheCurrent = new scala.util.DynamicVariable(mmapEmpty[Object, (String, CheckResult)])
+
   val z3: String = {
     import java.io._
     val z3Filename = OsUtil.detect match {
@@ -65,8 +69,25 @@ object Z3 {
     else checkSat(timeoutInMs, isSymExe, Not(Implies(And(premises), And(conclusions))))
 
   def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
-    new Z3(timeoutInMs, isSymExe).checkSat(es: _*)
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) = {
+    def f() = new Z3(timeoutInMs, isSymExe).checkSat(es: _*)
+    if (satCacheEnabled.value) {
+      val key: Object = es match {
+        case Seq(e) => e
+        case _ => es
+      }
+      satCachePrev.value.get(key) match {
+        case Some(v) =>
+          val cr = v._2
+          if (cr == Timeout || cr == Unknown) f() else v
+        case _ =>
+          val r = f()
+          satCachePrev.value(key) = r
+          satCacheCurrent.value(key) = r
+          r
+      }
+    } else f()
+  }
 }
 
 private final class Z3(timeout: Int, isSymExe: Boolean)(
