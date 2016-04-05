@@ -61,7 +61,8 @@ object Z3 {
 
   def isValid(timeoutInMs: Int, isSymExe: Boolean, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
-    new Z3(timeoutInMs, isSymExe).isValid(premises, conclusions)
+    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, Not(And(conclusions)))
+    else checkSat(timeoutInMs, isSymExe, Not(Implies(And(premises), And(conclusions))))
 
   def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
@@ -84,10 +85,6 @@ private final class Z3(timeout: Int, isSymExe: Boolean)(
     st
   }
   val rounding = "RNE"
-
-  def isValid(premises: Node.Seq[Exp], conclusions: Node.Seq[Exp]): (String, Z3.CheckResult) =
-    if (premises.isEmpty) checkSat(Not(And(conclusions)))
-    else checkSat(Not(Implies(And(premises), And(conclusions))))
 
   def checkSat(es: Exp*): (String, CheckResult) = {
     for (e <- es) {
