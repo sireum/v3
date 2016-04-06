@@ -3,7 +3,7 @@ MAINTAINER Robby <robby@santoslab.org>
 RUN locale-gen en_US en_US.UTF-8 && \
     dpkg-reconfigure locales && \
     apt-get update && \
-    apt-get install -y wget git unzip libgomp1 coq&& \
+    apt-get install -y wget git unzip libgomp1 coq xz-utils&& \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
     git clone -b master https://github.com/sireum/v3.git sireum-v3 && \
