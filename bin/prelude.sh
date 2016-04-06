@@ -138,7 +138,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     rm -fR node
     mkdir -p node/bin
     cd node/bin
-    echo "Please wait while downloading ${NODE_DROP}..."
+    echo "Please wait while downloading Node.js ${NODE_VERSION}..."
     wget -q ${NODE_DROP_URL}
     echo
     cd ../..
@@ -150,9 +150,9 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     fi
   else
     NODE_DROP="${NODE_DROP_URL##*/}"
-    NODE_DIR="${NODE_DROP%.tar.gz}"
+    NODE_DIR="${NODE_DROP%.tar.*}"
     if [ ! -f ${NODE_DROP} ]; then
-      echo "Please wait while downloading ${NODE_DROP}"
+      echo "Please wait while downloading Node.js ${NODE_VERSION}"
       wget -q ${NODE_DROP_URL}
       echo
     fi
