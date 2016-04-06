@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.ow2.asm:asm-tree:5.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.ow2.asm/asm-tree/asm-tree-5.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.ow2.asm/asm-tree/asm-tree-5.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

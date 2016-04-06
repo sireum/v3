@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (c) 2015, Robby, Kansas State University
 # All rights reserved.
@@ -27,10 +27,9 @@ COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-set -e
-ZULU_VERSION=1.8.0_66-8.11.0.1
-SBT_VERSION=0.13.9
-NODE_VERSION=5.4.0
+ZULU_VERSION=8.13.0.5-jdk8.0.72
+SBT_VERSION=0.13.11
+NODE_VERSION=5.10.1
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
@@ -42,16 +41,16 @@ if [ -z "${PLATFORM}" ]; then
   fi
 fi
 if [ "${PLATFORM}" = "win"  ]; then
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-win64.zip
+  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-win_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-win.zip
 elif [ "${PLATFORM}" = "mac"  ]; then
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-macosx.zip
+  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
-  ZULU_DROP_URL=http://cdn.azulsystems.com/zulu/bin/zulu${ZULU_VERSION}-x86lx64.zip
-  NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz
+  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
+  NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz
   Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-ubuntu-14.04.zip
 else
   >&2 echo "Sireum does not support: $(uname)."
@@ -62,14 +61,21 @@ mkdir -p ${REPO}/platform
 cd ${REPO}/platform
 ZULU_DROP="${ZULU_DROP_URL##*/}"
 ZULU_DIR="${ZULU_DROP%.*}"
+if [[ ${ZULU_DIR} == *.tar ]]; then
+  ZULU_DIR="${ZULU_DIR%.*}"
+fi
 grep -q ${ZULU_VERSION} java/VER &> /dev/null && ZULU_UPDATE=false || ZULU_UPDATE=true
 if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   if [ ! -f ${ZULU_DROP} ]; then
     echo "Please wait while downloading Zulu JDK ${ZULU_VERSION}..."
-    wget -q --referer=http://www.azulsystems.com/products/zulu/downloads ${ZULU_DROP_URL}
+    wget -q ${ZULU_DROP_URL}
     echo
   fi
-  unzip -oq ${ZULU_DROP}
+  if [[ ${ZULU_DROP} == *.zip ]]; then
+    unzip -oq ${ZULU_DROP}
+  else
+    tar xf ${ZULU_DROP}
+  fi
   rm ${ZULU_DROP}
   rm -fR java
   mv ${ZULU_DIR} java
@@ -150,7 +156,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
       wget -q ${NODE_DROP_URL}
       echo
     fi
-    tar xfz ${NODE_DROP}
+    tar xf ${NODE_DROP}
     rm ${NODE_DROP}
     rm -fR node
     mv ${NODE_DIR} node

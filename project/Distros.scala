@@ -32,7 +32,10 @@ object Distros {
   }
 
   def build(): Unit = {
-    rm ! cwd / 'distros
+    rm ! cwd / 'distros / "sireum-v3-mac64.zip"
+    rm ! cwd / 'distros / "sireum-v3-win64.zip"
+    rm ! cwd / 'distros / "sireum-v3-linux64.zip"
+    rm ! cwd / 'distros / "sireum-v3-VER"
     write(cwd / 'distros / "sireum-v3-VER", VER)
     build("mac")
     build("win")

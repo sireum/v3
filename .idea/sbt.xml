@@ -46,7 +46,7 @@
           </set>
         </option>
         <option name="resolveSbtClassifiers" value="true" />
-        <option name="sbtVersion" value="0.13.9" />
+        <option name="sbtVersion" value="0.13.11" />
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />

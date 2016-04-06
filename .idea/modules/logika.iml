@@ -21,11 +21,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.11:0.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.7:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.7.0:jar" level="project" />
     <orderEntry type="module" module-name="test" exported="" />
     <orderEntry type="module" module-name="util" exported="" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.11:0.3.9:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.3.9:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.8.3:jar" level="project" />
   </component>
 </module>

@@ -10,6 +10,18 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
+    <profile name="SBT 1" modules="logika-js,pilar-js,test-js,util-js">
+      <option name="experimental" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-Ybackend:GenBCode" />
+        <parameter value="-Ydelambdafy:method" />
+      </parameters>
+      <plugins>
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.8/scalajs-compiler_2.11.8-0.6.8.jar" />
+      </plugins>
+    </profile>
     <profile name="SBT 3" modules="sireum-core-js-test,sireum-test-js">
       <option name="featureWarnings" value="true" />
       <plugins>
@@ -27,18 +39,6 @@
         <parameter value="-Ybackend:GenBCode" />
         <parameter value="-Ydelambdafy:method" />
       </parameters>
-    </profile>
-    <profile name="SBT 7" modules="logika-js,pilar-js,test-js,util-js">
-      <option name="experimental" value="true" />
-      <option name="featureWarnings" value="true" />
-      <parameters>
-        <parameter value="-target:jvm-1.8" />
-        <parameter value="-Ybackend:GenBCode" />
-        <parameter value="-Ydelambdafy:method" />
-      </parameters>
-      <plugins>
-        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.11.7/scalajs-compiler_2.11.7-0.6.5.jar" />
-      </plugins>
     </profile>
   </component>
 </project>

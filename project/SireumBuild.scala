@@ -37,7 +37,7 @@ import sbtassembly.AssemblyKeys._
 object SireumBuild extends Build {
   final val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-  final val scalaVer = "2.11.7"
+  final val scalaVer = "2.11.8"
 
   final val sireumVer = "3"
 
@@ -151,7 +151,7 @@ object SireumBuild extends Build {
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.3.6"
+      "com.lihaoyi" %%% "upickle" % "0.3.9"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     autoAPIMappings := true,
@@ -164,12 +164,12 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
-      "org.antlr" % "antlr4-runtime" % "4.5.1-1",
+      "org.antlr" % "antlr4-runtime" % "4.5.3",
       "org.antlr" % "ST4" % "4.0.8",
-      "org.yaml" % "snakeyaml" % "1.16",
-      "org.ow2.asm" % "asm" % "5.0.4",
-      "org.ow2.asm" % "asm-commons" % "5.0.4",
-      "org.ow2.asm" % "asm-util" % "5.0.4",
+      "org.yaml" % "snakeyaml" % "1.17",
+      "org.ow2.asm" % "asm" % "5.1",
+      "org.ow2.asm" % "asm-commons" % "5.1",
+      "org.ow2.asm" % "asm-util" % "5.1",
       "com.assembla.scala-incubator" %% "graph-core" % "1.10.1",
       "com.assembla.scala-incubator" %% "graph-dot" % "1.10.1",
       "com.novocode" % "junit-interface" % "0.11"
@@ -182,11 +182,12 @@ object SireumBuild extends Build {
     scalacOptions ++= Seq("-feature"),
     parallelExecution in Test := false,
     relativeSourceMaps := true,
+    scalaJSUseRhino in Global := false,
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
     postLinkJSEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
-      "com.lihaoyi" %%% "utest" % "0.3.1"
+      "com.lihaoyi" %%% "utest" % "0.4.3"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
