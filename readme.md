@@ -27,6 +27,10 @@ Supported platforms (64-bit only):
 
 * Required tools: `bash`, `git`, `unzip`, `wget`
 
+### Linux
+
+* Required tools: `xz`
+
 ### Windows
 
 * Required tools: [MSYS2](https://msys2.github.io)
@@ -34,10 +38,6 @@ Supported platforms (64-bit only):
   ```bash
   pacman -S git unzip wget
   ```
-
-### Linux
-
-* Required tools: `xz`
   
 ## Installing Sireum
 
