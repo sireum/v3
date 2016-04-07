@@ -79,7 +79,9 @@ object Z3 {
       satCachePrev.value.get(key) match {
         case Some(v) =>
           val cr = v._2
-          if (cr == Timeout || cr == Unknown) f() else v
+          val r = if (cr == Timeout || cr == Unknown) f() else v
+          satCacheCurrent.value(key) = r
+          r
         case _ =>
           val r = f()
           satCachePrev.value(key) = r
