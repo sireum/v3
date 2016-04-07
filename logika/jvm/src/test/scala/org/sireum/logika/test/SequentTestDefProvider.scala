@@ -485,6 +485,7 @@ final class SequentTestDefProvider(tf: TestFramework)
       kind = CheckerKind.Forward,
       hintEnabled = false,
       inscribeSummoningsEnabled = false,
+      coneInfluenceEnabled = false,
       proofs = ivector(ProofFile(None, text)),
       lastOnly = false,
       autoEnabled = false,

@@ -80,11 +80,11 @@ object Checker {
         if (!hasError) {
           if (m.lastOnly)
             check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-              m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
+              m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth)
           else
             for (program <- programs)
               check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-                m.hintEnabled, m.inscribeSummoningsEnabled, m.bitWidth)
+                m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth)
         }
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
@@ -108,6 +108,7 @@ object Checker {
                   timeoutInMs: Int = 2000, checkSat: Boolean = false,
                   hintEnabled: Boolean = false,
                   inscribeSummoningsEnabled: Boolean = false,
+                  coneInfluenceEnabled: Boolean = false,
                   bitWidth: Int = 0)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
@@ -163,13 +164,13 @@ object Checker {
       val r = checkerKind match {
         case message.CheckerKind.Forward =>
           ForwardProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
         case message.CheckerKind.Backward =>
           BackwardProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
         case message.CheckerKind.SymExe =>
           SymExeProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, bitWidth).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
       }
       if (r) {
         if (hasProof)
@@ -227,6 +228,8 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def inscribeSummoningsEnabled: Boolean
 
+  def coneInfluenceEnabled: Boolean
+
   def isSymExe: Boolean
 
   def make(vars: ISet[String] = vars,
@@ -271,6 +274,40 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           false
       }
     } else true
+  }
+
+  def coneOfInfluence(premises: Iterable[Exp],
+                      conclusions: Iterable[Exp]): IVector[Exp] = {
+    def collectIds(e: Exp): Set[String] = {
+      var ids = isetEmpty[String]
+      Visitor.build({
+        case Id(value) => ids += value
+          false
+      })(e)
+      ids
+    }
+    var relevantIds = conclusions.toVector.flatMap(collectIds)
+    if (relevantIds.isEmpty) return Node.emptySeq
+    val m = midmapEmpty[Exp, (Set[String], Int)]
+    var i = 0
+    for (e <- premises) {
+      m(e) = (collectIds(e), i)
+      i += 1
+    }
+    var changed = true
+    var relevantPremises = ivectorEmpty[Exp]
+    var temp = premises
+    while (changed) {
+      val (rps, t) = temp.partition(e => {
+        val eIds = m(e)._1
+        eIds.exists(relevantIds.contains)
+      })
+      temp = t
+      relevantPremises ++= rps
+      relevantIds ++= rps.flatMap(e => m(e)._1)
+      changed = rps.nonEmpty
+    }
+    relevantPremises.sortWith((e1, e2) => m(e1)._2 > m(e2)._2)
   }
 
   def check(proofGroup: ProofGroup): Option[T] = {
@@ -766,7 +803,16 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def isValid(title: String, li: LocationInfo,
               premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
-    val (script, r) = Z3.isValid(timeoutInMs, isSymExe, premises.toVector, conclusions.toVector)
+    val ps =
+      if (coneInfluenceEnabled)
+        util.Z3.checkSat(satTimeoutInMs,
+          isSymExe = true, And(conclusions.toVector))._2 match {
+          case util.Z3.Sat => coneOfInfluence(premises, conclusions)
+          case _ => premises
+        }
+      else premises
+
+    val (script, r) = Z3.isValid(timeoutInMs, isSymExe, ps.toVector, conclusions.toVector)
     if (inscribeSummoningsEnabled) {
       val lineSep = scala.util.Properties.lineSeparator
       val sb = new StringBuilder
@@ -781,10 +827,10 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       })
       sb.append(lineSep)
       var i = 0
-      for (p <- premises) {
+      for (p <- ps) {
         sb.append(";   ")
         sb.append(Exp.toString(p, inProof = true))
-        if (i + 1 != premises.size) sb.append(',')
+        if (i + 1 != ps.size) sb.append(',')
         sb.append(lineSep)
         i += 1
       }

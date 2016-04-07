@@ -82,6 +82,7 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
         kind = CheckerKind.Forward,
         hintEnabled = true,
         inscribeSummoningsEnabled = true,
+        coneInfluenceEnabled = true,
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = false,

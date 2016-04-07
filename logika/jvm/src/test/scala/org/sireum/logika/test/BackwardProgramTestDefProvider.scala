@@ -61,6 +61,7 @@ final class BackwardProgramTestDefProvider(tf: TestFramework)
         kind = CheckerKind.Backward,
         hintEnabled = true,
         inscribeSummoningsEnabled = true,
+        coneInfluenceEnabled = true,
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = false,

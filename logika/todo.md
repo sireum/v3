@@ -5,8 +5,6 @@ Logika To-Dos
   sequent (excluding proof)
   
   - Need to generate errors for usages of forall/exists in propositional
-  
-* Add cone of influence in SymExe to optimize validity query
 
 * Add concrete evaluation to optimize SymExe
 

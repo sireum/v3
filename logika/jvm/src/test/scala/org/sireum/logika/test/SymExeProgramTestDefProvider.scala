@@ -94,6 +94,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         kind = CheckerKind.SymExe,
         hintEnabled = true,
         inscribeSummoningsEnabled = true,
+        coneInfluenceEnabled = true,
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = true,
