@@ -1,11 +1,6 @@
 Logika To-Dos
 =============
 
-* Change propositional/predicate logic detection to only based on the
-  sequent (excluding proof)
-  
-  - Need to generate errors for usages of forall/exists in propositional
-
 * Add concrete evaluation to optimize SymExe
 
 * Add unrolling SymExe

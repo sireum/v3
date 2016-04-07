@@ -38,22 +38,19 @@ object Node {
 
   final def seq[T](es: Iterable[T]) = es.toVector
 
-  final private[ast] def detectMode(unitNode: UnitNode): Unit = {
-    var m = LogicMode.Propositional
-    Visitor.build({
-      case _: ZType | _: BType | _: ZSType |
-           _: IntLit | _: IntMin | _: IntMax | _: SeqLit |
-           _: Mul | _: Div | _: Rem | _: Add | _: Sub |
-           _: Lt | _: Le | _: Gt | _: Ge | _: Eq | _: Ne |
-           _: Minus =>
-        m = LogicMode.Programming
-        false
-      case _: QuantAssumeStep | _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
-        m = LogicMode.Predicate
-        false
-    })(unitNode)
-    unitNode.mode = m
-  }
+  final private[ast] def detectMode(unitNode: UnitNode): Unit =
+    unitNode match {
+      case unitNode: Sequent =>
+        var m = LogicMode.Propositional
+        val visitor = Visitor.build({
+          case _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
+            m = LogicMode.Predicate
+            true
+        })
+        unitNode.premises.foreach(visitor)
+        unitNode.mode = m
+      case unitNode: Program => unitNode.mode = LogicMode.Programming
+    }
 
   implicit class At[T <: Node](n: Node)(
     implicit val nodeLocMap: MMap[Node, LocationInfo]) {
@@ -176,11 +173,6 @@ object Node {
         true
     })
     v(unitNode)
-    if (unitNode.mode == LogicMode.Programming) unitNode match {
-      case _: Program =>
-      case _ =>
-        reporter.report(ErrorMessage("Semantics", "Standalone sequent cannot use algebra."))
-    }
   }
 
   final private[ast]
@@ -193,9 +185,6 @@ object Node {
         unitNode.fileUriOpt, "Semantics", msg))
     def collectFreeIds(node: Node, declIds: IMap[String, Id]): Unit = {
       Visitor.build({
-        case n: Auto =>
-          error(n, s"Auto is only available in programming logic.")
-          true
         case node: Quant[_] =>
           for (id <- node.ids)
             declIds.get(id.value) match {
@@ -215,6 +204,87 @@ object Node {
     }
     collectFreeIds(unitNode, imapEmpty)
     Visitor.build({
+      case n: Auto =>
+        error(n, s"Auto is only available in programming logic.")
+        true
+      case n: BType =>
+        error(n, s"Boolean type is only available in programming logic.")
+        true
+      case n: IntegralType =>
+        error(n, s"Integral type is only available in programming logic.")
+        true
+      case n: SeqType =>
+        error(n, s"Sequence type is only available in programming logic.")
+        true
+      case n: IntLit =>
+        error(n, s"Integral literal is only available in programming logic.")
+        true
+      case n: IntMin =>
+        error(n, s"Integer minimum is only available in programming logic.")
+        true
+      case n: IntMax =>
+        error(n, s"Integer maximum is only available in programming logic.")
+        true
+      case n: SeqLit =>
+        error(n, s"Sequence literal is only available in programming logic.")
+        true
+      case n: Mul =>
+        error(n, s"Multiplication is only available in programming logic.")
+        true
+      case n: Div =>
+        error(n, s"Division is only available in programming logic.")
+        true
+      case n: Rem =>
+        error(n, s"Remainder is only available in programming logic.")
+        true
+      case n: Add =>
+        error(n, s"Addition is only available in programming logic.")
+        true
+      case n: Sub =>
+        error(n, s"Substraction is only available in programming logic.")
+        true
+      case n: Lt =>
+        error(n, s"Less-than comparison is only available in programming logic.")
+        true
+      case n: Le =>
+        error(n, s"Less-than-or-equal comparison is only available in programming logic.")
+        true
+      case n: Gt =>
+        error(n, s"Greater-than comparison is only available in programming logic.")
+        true
+      case n: Ge =>
+        error(n, s"Greater-than-or-equal comparison is only available in programming logic.")
+        true
+      case n: Eq =>
+        error(n, s"Equal comparison is only available in programming logic.")
+        true
+      case n: Ne =>
+        error(n, s"Non-equal comparison is only available in programming logic.")
+        true
+      case n: Shl =>
+        error(n, s"Shift-left operator is only available in programming logic.")
+        true
+      case n: Shr =>
+        error(n, s"Shift-right operator is only available in programming logic.")
+        true
+      case n: UShr =>
+        error(n, s"Unsigned shift-right operator is only available in programming logic.")
+        true
+      case n: Append =>
+        error(n, s"Sequence append operator is only available in programming logic.")
+        true
+      case n: Prepend =>
+        error(n, s"Sequence prepend operator is only available in programming logic.")
+        true
+      case n: Xor =>
+        error(n, s"Xor operator is only available in programming logic.")
+        true
+      case n: Minus =>
+        error(n, s"Negative operator is only available in programming logic.")
+        true
+      case n: Apply if unitNode.mode == LogicMode.Propositional =>
+        error(n, s"Function application is not available in propositional logic.")
+        true
       case n: QuantAssumeStep =>
         freeIds.get(n.id.value) match {
           case Some(id) if n.id ne id =>
@@ -223,8 +293,10 @@ object Node {
           case _ =>
         }
         true
-      case node: Quant[_] =>
-        for (id <- node.ids)
+      case n: Quant[_] =>
+        if (unitNode.mode == LogicMode.Propositional)
+          error(n, s"Quantification is not available in propositional logic.")
+        for (id <- n.ids)
           freeIds.get(id.value) match {
             case Some(otherId) =>
               val li = nodeLocMap(otherId)
