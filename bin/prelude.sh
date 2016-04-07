@@ -68,7 +68,7 @@ fi
 grep -q ${ZULU_VERSION} java/VER &> /dev/null && ZULU_UPDATE=false || ZULU_UPDATE=true
 if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   if [ ! -f ${ZULU_DROP} ]; then
-    echo "Please wait while downloading Zulu JDK ${ZULU_VERSION}..."
+    echo "Please wait while downloading Zulu JDK ${ZULU_VERSION} ..."
     wget -q ${ZULU_DROP_URL}
     echo
   fi
@@ -94,7 +94,7 @@ Z3_DIR="${Z3_DROP%.*}"
 grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
 if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   if [ ! -f ${Z3_DROP} ]; then
-    echo "Please wait while downloading Z3 ${Z3_VERSION}..."
+    echo "Please wait while downloading Z3 ${Z3_VERSION} ..."
     wget -q ${Z3_DROP_URL}
     echo
   fi
@@ -118,7 +118,7 @@ SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   if [ ! -f ${SBT_DROP} ]; then
-    echo "Please wait while downloading sbt ${SBT_VERSION}..."
+    echo "Please wait while downloading sbt ${SBT_VERSION} ..."
     wget -q ${SBT_DROP_URL}
     echo
   fi
@@ -139,7 +139,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     rm -fR node
     mkdir -p node/bin
     cd node/bin
-    echo "Please wait while downloading Node.js ${NODE_VERSION}..."
+    echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
     wget -q ${NODE_DROP_URL}
     echo
     cd ../..
@@ -153,7 +153,7 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     NODE_DROP="${NODE_DROP_URL##*/}"
     NODE_DIR="${NODE_DROP%.tar.*}"
     if [ ! -f ${NODE_DROP} ]; then
-      echo "Please wait while downloading Node.js ${NODE_VERSION}"
+      echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
       wget -q ${NODE_DROP_URL}
       echo
     fi
