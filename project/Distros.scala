@@ -43,6 +43,8 @@ object Distros {
   }
 
   def build(platform: String): Unit = {
+    println(s"Building distro for ${platform}64...")
+    println()
     mkdir ! cwd / 'distros / "sireum-v3" / 'bin
     write(cwd / 'distros / "sireum-v3" / 'bin / 'VER, VER)
     val licenseLines = read.lines ! cwd / "license.txt"
