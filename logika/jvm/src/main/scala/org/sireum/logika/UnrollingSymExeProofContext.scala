@@ -383,7 +383,7 @@ UnrollingSymExeProofContext(unitNode: Program,
           hasError = true
         }
       if (hasError) r :+= pc2.updateStatus(Error(stmt))
-      else r :+= pc2
+      else r :+= pc2.updateStatus(Return(stmt))
     }
     r
   }
@@ -558,40 +558,18 @@ UnrollingSymExeProofContext(unitNode: Program,
                 ivector(updateStatus(BoundExhaustion(stmt)), copy(premises = ncond))
             }
           case (true, false) =>
-            copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
+            bound(stmt, isLoop = true) match {
+              case Some(pc2) =>
+                pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
+              case _ =>
+                warn(stmt, "Loop-bound exhausted.")
+                ivector(updateStatus(BoundExhaustion(stmt)), copy(premises = ncond))
+            }
           case (false, true) =>
             ivector(copy(premises = ncond))
           case (false, false) =>
             ivectorEmpty
         }
-      //        val es = loopInv.invariant.exps
-      //        val lps = premises ++ facts.values
-      //        var hasError = true
-      //        for (e <- es)
-      //          if (!isValid("loop invariant (beginning)", nodeLocMap(e), lps, ivector(e))) {
-      //            error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
-      //            hasError = true
-      //          }
-      //        var ps = ilinkedSetEmpty ++ es
-      //        val modifiedIds = loopInv.modifies.ids.toSet
-      //        for (premise <- premises) {
-      //          var propagate = true
-      //          Visitor.build({
-      //            case id: Id =>
-      //              if (modifiedIds.contains(id)) propagate = false
-      //              false
-      //          })(premise)
-      //          if (propagate) ps += premise
-      //        }
-      //        for (pc2 <- copy(premises = ps + exp).check(loopBlock).filter(isNormal)) {
-      //          val ps = pc2.premises ++ pc2.facts.values
-      //          for (e <- es)
-      //            if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
-      //              error(e, s"Could not deduce the loop invariant at the end of the loop.")
-      //            }
-      //        }
-      //        if (hasError) ivector(updateStatus(Error(stmt)))
-      //        else ivector(copy(premises = ps + Not(exp)))
       case _: Print => ivector(this)
     }
   }
