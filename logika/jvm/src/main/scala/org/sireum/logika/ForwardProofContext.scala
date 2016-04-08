@@ -42,7 +42,7 @@ ForwardProofContext(unitNode: Program,
                     facts: IMap[String, Exp] = imapEmpty,
                     provedSteps: IMap[Natural, ProofStep] = imapEmpty,
                     declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                    methodOpt: Option[MethodDecl] = None,
+                    inMethod: Boolean = false,
                     satFacts: Boolean = true)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[ForwardProofContext] {
   val isSymExe = false
@@ -145,7 +145,8 @@ ForwardProofContext(unitNode: Program,
         }
         Some(copy(premises = premises + e))
       case Assume(e) =>
-        hasError = !checkSat("", nodeLocMap(stmt), ivector(e),
+        hasError = !checkSat("", nodeLocMap(stmt),
+          premises ++ (if (satFacts) facts.values else ivectorEmpty) + e,
           unsatMsg = s"The assumption is unsatisfiable.",
           unknownMsg = s"The assumption might not be satisfiable.",
           timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -235,7 +236,7 @@ ForwardProofContext(unitNode: Program,
         val modifiedIds = stmt.contract.modifies.ids.toSet
         val mods = modifiedIds.map(id =>
           Eq(id, newId(id.value + "_in", id.tipe)))
-        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, methodOpt = Some(stmt)).
+        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, inMethod = true).
           check(stmt.block) match {
           case Some(pc2) =>
             var modifiedInvariants = ilinkedSetEmpty[Exp]
@@ -394,7 +395,7 @@ ForwardProofContext(unitNode: Program,
     }
     if (autoEnabled) {
       val ps = premises ++ facts.values
-      for (inv <- invs if methodOpt.isDefined)
+      for (inv <- invs if inMethod)
         if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
           val li = nodeLocMap(inv)
           error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
