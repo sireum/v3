@@ -169,7 +169,7 @@ object Checker {
           BackwardProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
         case message.CheckerKind.SymExe =>
-          SymExeProofContext(program, autoEnabled, timeoutInMs,
+          SummarizingSymExeProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
       }
       if (r) {

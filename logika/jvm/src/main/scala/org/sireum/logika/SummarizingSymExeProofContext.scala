@@ -29,30 +29,31 @@ import org.sireum.logika.ast._
 import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
 
-private object SymExeProofContext {
+private object SummarizingSymExeProofContext {
   private val varCounter = new scala.util.DynamicVariable(mmapEmpty[String, Natural])
 }
 
-import SymExeProofContext._
+import SummarizingSymExeProofContext._
 
 private final case class
-SymExeProofContext(unitNode: Program,
-                   autoEnabled: Boolean,
-                   timeoutInMs: Int,
-                   checkSat: Boolean,
-                   hintEnabled: Boolean,
-                   inscribeSummoningsEnabled: Boolean,
-                   coneInfluenceEnabled: Boolean,
-                   bitWidth: Int,
-                   invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
-                   premises: ILinkedSet[Exp] = ilinkedSetEmpty,
-                   vars: ISet[String] = isetEmpty,
-                   facts: IMap[String, Exp] = imapEmpty,
-                   provedSteps: IMap[Natural, ProofStep] = imapEmpty,
-                   declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                   methodOpt: Option[MethodDecl] = None,
-                   satFacts: Boolean = true)
-                  (implicit reporter: AccumulatingTagReporter) extends ProofContext[SymExeProofContext] {
+SummarizingSymExeProofContext(unitNode: Program,
+                              autoEnabled: Boolean,
+                              timeoutInMs: Int,
+                              checkSat: Boolean,
+                              hintEnabled: Boolean,
+                              inscribeSummoningsEnabled: Boolean,
+                              coneInfluenceEnabled: Boolean,
+                              bitWidth: Int,
+                              invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
+                              premises: ILinkedSet[Exp] = ilinkedSetEmpty,
+                              vars: ISet[String] = isetEmpty,
+                              facts: IMap[String, Exp] = imapEmpty,
+                              provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+                              declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
+                              methodOpt: Option[MethodDecl] = None,
+                              satFacts: Boolean = true)
+                             (implicit reporter: AccumulatingTagReporter)
+  extends ProofContext[SummarizingSymExeProofContext] {
   val isSymExe = true
   var validCache = imapEmpty[(ISeq[Exp], ISeq[Exp]), Boolean]
   val unboundedBitWidth = bitWidth == 0
@@ -241,8 +242,8 @@ SymExeProofContext(unitNode: Program,
     }
   }
 
-  def check(block: Block): Option[SymExeProofContext] = {
-    var pcOpt: Option[SymExeProofContext] = Some(this)
+  def check(block: Block): Option[SummarizingSymExeProofContext] = {
+    var pcOpt: Option[SummarizingSymExeProofContext] = Some(this)
     for (stmt <- block.stmts if pcOpt.isDefined) {
       val pc =
         if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
@@ -254,7 +255,7 @@ SymExeProofContext(unitNode: Program,
 
   def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
 
-  def check(stmt: Stmt): Option[SymExeProofContext] = {
+  def check(stmt: Stmt): Option[SummarizingSymExeProofContext] = {
     def mkSize(id: Id): Size = {
       val r = Size(id)
       r.tipe = id.tipe
@@ -489,17 +490,17 @@ SymExeProofContext(unitNode: Program,
     if (hasError) None else pcOpt
   }
 
-  def assign(id: Id, exp: Exp): Option[SymExeProofContext] = {
+  def assign(id: Id, exp: Exp): Option[SummarizingSymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
   }
 
-  def assign(id: Id): Option[SymExeProofContext] = {
+  def assign(id: Id): Option[SummarizingSymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst)))
   }
 
-  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, SymExeProofContext) = {
+  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, SummarizingSymExeProofContext) = {
     var hasError = false
     val md = a.declOpt.get
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
@@ -561,7 +562,7 @@ SymExeProofContext(unitNode: Program,
     ))
   }
 
-  def cleanup: SymExeProofContext =
+  def cleanup: SummarizingSymExeProofContext =
     copy(premises = rewriteOld(filter(premises)),
       provedSteps = imapEmpty, declaredStepNumbers = imapEmpty)
 
@@ -599,7 +600,7 @@ SymExeProofContext(unitNode: Program,
     premises.filter(keep)
   }
 
-  override def check(step: RegularStep): Option[SymExeProofContext] = {
+  override def check(step: RegularStep): Option[SummarizingSymExeProofContext] = {
     val num = step.num.value
     step match {
       case Premise(_, exp) =>
@@ -613,7 +614,7 @@ SymExeProofContext(unitNode: Program,
   def make(vars: ISet[String],
            provedSteps: IMap[Natural, ProofStep],
            declaredStepNumbers: IMap[Natural, LocationInfo],
-           premises: ILinkedSet[Exp]): SymExeProofContext =
+           premises: ILinkedSet[Exp]): SummarizingSymExeProofContext =
     copy(vars = vars, provedSteps = provedSteps,
       declaredStepNumbers = declaredStepNumbers, premises = premises)
 }
