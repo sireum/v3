@@ -85,6 +85,7 @@ ForwardProofContext(unitNode: Program,
   }
 
   def check(stmt: Stmt): Option[ForwardProofContext] = {
+    val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
     def mkSize(id: Id): Size = {
       val r = Size(id)
       r.tipe = id.tipe
@@ -97,15 +98,9 @@ ForwardProofContext(unitNode: Program,
     }
     val pcOpt = stmt match {
       case ProofStmt(proof) =>
-        check(proof) match {
-          case Some(pc2) =>
-            Some(pc2.copy(
-              premises = filter(
-                (if (autoEnabled) premises else ilinkedSetEmpty) ++
-                  extractClaims(proof, reverse = false)),
-              provedSteps = imapEmpty))
-          case _ => None
-        }
+        check(proof).map(_.copy(
+          premises = filter(premises ++ extractClaims(proof, reverse = false)),
+          provedSteps = imapEmpty))
       case SequentStmt(sequent) =>
         if (sequent.premises.nonEmpty) {
           if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
@@ -128,7 +123,7 @@ ForwardProofContext(unitNode: Program,
           if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
             error(stmt, s"Could not automatically deduce the assertion validity.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), ivector(e),
+            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -137,7 +132,7 @@ ForwardProofContext(unitNode: Program,
           if (!premises.contains(e)) {
             error(e, s"The assertion has not been proven.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), ivector(e),
+            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -146,7 +141,7 @@ ForwardProofContext(unitNode: Program,
         Some(copy(premises = premises + e))
       case Assume(e) =>
         hasError = !checkSat("", nodeLocMap(stmt),
-          premises ++ (if (satFacts) facts.values else ivectorEmpty) + e,
+          premises ++ effectiveSatFacts + e,
           unsatMsg = s"The assumption is unsatisfiable.",
           unknownMsg = s"The assumption might not be satisfiable.",
           timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -206,7 +201,7 @@ ForwardProofContext(unitNode: Program,
           else stmt.contract.requires.exps.head)
         hasError =
           !checkSat("effective precondition", preLi,
-            (if (satFacts) facts.values else ivectorEmpty) ++ effectivePre,
+            effectiveSatFacts ++ effectivePre,
             unsatMsg = s"The effective pre-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -222,7 +217,7 @@ ForwardProofContext(unitNode: Program,
           else stmt.contract.ensures.exps.head)
         hasError =
           !checkSat("effective postcondition", postLi,
-            (if (satFacts) facts.values else ivectorEmpty) ++ effectivePost,
+            effectiveSatFacts ++ effectivePost,
             unsatMsg = s"The effective post-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -304,7 +299,7 @@ ForwardProofContext(unitNode: Program,
         }
         if (hasError)
           checkSat("global invariant", nodeLocMap(stmt),
-            (if (satFacts) facts.values else ivectorEmpty) ++ inv.exps,
+            effectiveSatFacts ++ inv.exps,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
