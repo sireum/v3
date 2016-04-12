@@ -39,44 +39,46 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] =
     ((1 to 1).toVector.map { x =>
       val name = f"symexe/assignment-$x%02d"
-      ConditionTest(name, check(name, 0))
+      ConditionTest('s' + name, check(name, 0, isSummarizing = true))
     } :+
-      ConditionTest("symexe/square", check("symexe/square", 0)) :+
-      ConditionTest("symexe/max", check("symexe/max", 0)) :+
-      ConditionTest("symexe/abs", check("symexe/abs", 8)) :+
-      ConditionTest("symexe/prims", check("symexe/prims", 0)) :+
-      ConditionTest("symexe/seqs", check("symexe/seqs", 0)) :+
-      ConditionTest("symexe/ffsS8", check("symexe/ffsS8", 0)) :+
-      ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0)) :+
-      ConditionTest("symexe/factorial", check("symexe/factorial", 0))
+      ConditionTest("symexe/square", check("symexe/square", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/max", check("symexe/max", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/abs", check("symexe/abs", 8, isSummarizing = true)) :+
+      ConditionTest("symexe/abs-top", check("symexe/abs-top", 8, isSummarizing = true)) :+
+      ConditionTest("symexe/prims", check("symexe/prims", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/seqs", check("symexe/seqs", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/ffsS8", check("symexe/ffsS8", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/factorial", check("symexe/factorial", 0, isSummarizing = true)) :+
+      ConditionTest("usymexe/abs-top", check("symexe/abs-top", 8, isSummarizing = false))
       ) ++
       (1 to 14).toVector.map { x =>
         val name = f"forward/assignment-$x%02d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (1 to 1).toVector.map { x =>
         val name = f"forward/conditional-$x%d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (2 to 3).toVector.map { x =>
         val name = f"forward/function-$x%d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (1 to 3).toVector.map { x =>
         val name = f"forward/function-to-loop-$x%d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (0 to 4).toVector.map { x =>
         val name = f"forward/seq-$x%d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (1 to 2).toVector.map { x =>
         val name = f"forward/method-$x%d"
-        ConditionTest(name, check(name, 0))
+        ConditionTest(name, check(name, 0, isSummarizing = true))
       } :+
-      ConditionTest("forward/bank", check("forward/bank", 0))
+      ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true))
 
-  def check(filename: String, bitWidth: Int): Boolean = {
+  def check(filename: String, bitWidth: Int, isSummarizing: Boolean): Boolean = {
     val uri = s"example/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
@@ -92,7 +94,9 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
     Checker.check(
       Check(requestId = "",
         isBackground = false,
-        kind = CheckerKind.SymExe,
+        kind =
+          if (isSummarizing) CheckerKind.SummarizingSymExe
+          else CheckerKind.UnrollingSymExe,
         hintEnabled = true,
         inscribeSummoningsEnabled = true,
         coneInfluenceEnabled = true,
