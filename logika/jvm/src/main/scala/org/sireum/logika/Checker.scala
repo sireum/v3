@@ -40,7 +40,7 @@ object Checker {
 
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
-    val autoEnabled = m.autoEnabled || m.kind == message.CheckerKind.SymExe
+    val autoEnabled = m.autoEnabled || m.kind == message.CheckerKind.SummarizingSymExe
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
       Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
@@ -57,7 +57,7 @@ object Checker {
         var hasError = false
         for (program <- programs)
           try Visitor.build({
-            case t: IntegralType if !t.isInstanceOf[ZType] && m.kind != CheckerKind.SymExe =>
+            case t: IntegralType if !t.isInstanceOf[ZType] && m.kind != CheckerKind.SummarizingSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
@@ -65,7 +65,7 @@ object Checker {
               }
               error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
               throw new RuntimeException
-            case t: SeqType if !t.isInstanceOf[ZSType] && m.kind != CheckerKind.SymExe =>
+            case t: SeqType if !t.isInstanceOf[ZSType] && m.kind != CheckerKind.SummarizingSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
@@ -168,8 +168,11 @@ object Checker {
         case message.CheckerKind.Backward =>
           BackwardProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
-        case message.CheckerKind.SymExe =>
+        case message.CheckerKind.SummarizingSymExe =>
           SummarizingSymExeProofContext(program, autoEnabled, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
+        case message.CheckerKind.UnrollingSymExe =>
+          UnrollingSymExeProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
       }
       if (r) {

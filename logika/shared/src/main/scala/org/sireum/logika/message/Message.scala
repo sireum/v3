@@ -62,7 +62,8 @@ final case class Check(requestId: String,
 object CheckerKind extends Enum {
   final val Forward = Value("forward")
   final val Backward = Value("backward")
-  final val SymExe = Value("symexe")
+  final val SummarizingSymExe = Value("symexe")
+  final val UnrollingSymExe = Value("usymexe")
 }
 
 final case class ProofFile(fileUriOpt: Option[FileResourceUri],
