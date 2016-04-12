@@ -219,7 +219,7 @@ final class CliGen(licenseOpt: Option[String],
             }
             description = s"$description { ${elements.mkString(", ")} }"
             stMainDef.add("optionCase", stOptionCaseEnum)
-          } else if (pa.tipe =:= optType) {
+          } else if (pa.tipe =:= optType || pa.tipe =:= groupOptType) {
             val st =
               p.tipe match {
                 case `booleanType` =>
@@ -315,12 +315,12 @@ final class CliGen(licenseOpt: Option[String],
 
       for ((shortKeyOpt, longKey, description, defaultOpt) <- qs.
         sortWith((q1, q2) => (q1._1, q2._1) match {
-        case (Some(k1), Some(k2)) => k1.compareTo(k2) <= 0
-        case (Some(_), None) => true
-        case (None, Some(_)) => false
-        case _ => q1._2.compareTo(q2._2) <= 0
-      }) :+
-        (Some("h"), "help", "Display usage information", None)) {
+          case (Some(k1), Some(k2)) => k1.compareTo(k2) <= 0
+          case (Some(_), None) => true
+          case (None, Some(_)) => false
+          case _ => q1._2.compareTo(q2._2) <= 0
+        }) ++ (if (groupName != "") ivectorEmpty
+      else ivector((Some("h"), "help", "Display usage information", None)))) {
         sb.append("\n|")
         shortKeyOpt match {
           case Some(shortKey) =>

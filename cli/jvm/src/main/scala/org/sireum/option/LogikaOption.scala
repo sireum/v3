@@ -41,25 +41,25 @@ import scala.beans.BeanProperty
   handler = "org.sireum.logika.ProofChecker"
 )
 final case class LogikaOption(@BeanProperty
-                              @Opt(shortKey = Some("l"), description = "Check last program only")
+                              @GroupOpt(shortKey = Some("l"), description = "Check last program only", groupName = "Programming Logic")
                               var last: Boolean = false,
                               @BeanProperty
-                              @Opt(shortKey = Some("a"), description = "Enable auto mode (programming logic)")
+                              @GroupOpt(shortKey = Some("a"), description = "Enable auto mode", groupName = "Programming Logic")
                               var auto: Boolean = false,
                               @BeanProperty
-                              @Opt(shortKey = None, description = "Enable sat checking of facts and contracts")
+                              @GroupOpt(shortKey = None, description = "Enable sat checking of facts and contracts", groupName = "Programming Logic")
                               var sat: Boolean = false,
                               @BeanProperty
                               @Opt(shortKey = Some("s"), description = "Sequent matching the propositional/predicate logic input file's")
                               var sequent: OptionBean[String] = none(),
                               @BeanProperty
-                              @Opt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)")
+                              @GroupOpt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)", groupName = "Programming Logic")
                               var timeout: Int = 2000,
                               @Opt(shortKey = None, description = "Enable server mode")
                               var server: Boolean = false,
-                              @Opt(shortKey = Some("x"), description = "Enable symbolic execution (programming logic)")
+                              @GroupOpt(shortKey = Some("x"), description = "Enable symbolic execution", groupName = "Programming Logic")
                               var symexe: Boolean = false,
-                              @Opt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution")
+                              @GroupOpt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution", groupName = "Programming Logic")
                               var bitwidth: Int = 0,
                               @BeanProperty
                               @Arg(name = "filename")

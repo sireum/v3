@@ -671,17 +671,19 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |
            |Options:
-           |-a, --auto        Enable auto mode (programming logic)
+           |-s, --sequent    Sequent matching the propositional/predicate logic input file's
+           |    --server     Enable server mode
+           |-h, --help       Display usage information
+           |
+           |Programming Logic Options:
+           |-a, --auto        Enable auto mode
            |-b, --bitwidth    Default integer bit-width for symbolic execution
            |                    Default: ${option.bitwidth}
            |-l, --last        Check last program only
-           |-s, --sequent     Sequent matching the propositional/predicate logic input file's
            |-t, --timeout     Timeout for algebra and auto (in milliseconds)
            |                    Default: ${option.timeout}
-           |-x, --symexe      Enable symbolic execution (programming logic)
+           |-x, --symexe      Enable symbolic execution
            |    --sat         Enable sat checking of facts and contracts
-           |    --server      Enable server mode
-           |-h, --help        Display usage information
         """.stripMargin.trim
       )
     }
