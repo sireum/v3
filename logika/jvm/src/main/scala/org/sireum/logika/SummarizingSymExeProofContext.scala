@@ -343,6 +343,7 @@ SummarizingSymExeProofContext(unitNode: Program,
         exp match {
           case _: ReadInt => assign(id)
           case _: RandomInt => assign(id)
+          case _: Random => assign(id)
           case exp: Clone => assign(id, exp.id)
           case exp: Apply if exp.id.tipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))

@@ -1,204 +1,204 @@
 import org.sireum.logika._
 
-def ffsRefImp(word: U32): U32 = {
-  // ffsRef
-  var i: U32 = u32"0"
-  var r: U32 = u32"0"
+val word: U32 = U32.random
 
-  if (word != u32"0") {
+// ffsRef
+var i: U32 = u32"0"
+var r: U32 = u32"0"
+
+if (word != u32"0") {
+  if (((u32"1" << i) & word) != u32"0") {
+    // 0
+    i = i + u32"1"
+    r = i
+  } else {
+    i = i + u32"1"
     if (((u32"1" << i) & word) != u32"0") {
-      // 0
+      // 1
       i = i + u32"1"
       r = i
     } else {
       i = i + u32"1"
       if (((u32"1" << i) & word) != u32"0") {
-        // 1
+        // 2
         i = i + u32"1"
         r = i
       } else {
         i = i + u32"1"
         if (((u32"1" << i) & word) != u32"0") {
-          // 2
+          // 3
           i = i + u32"1"
           r = i
         } else {
           i = i + u32"1"
           if (((u32"1" << i) & word) != u32"0") {
-            // 3
+            // 4
             i = i + u32"1"
             r = i
           } else {
             i = i + u32"1"
             if (((u32"1" << i) & word) != u32"0") {
-              // 4
+              // 5
               i = i + u32"1"
               r = i
             } else {
               i = i + u32"1"
               if (((u32"1" << i) & word) != u32"0") {
-                // 5
+                // 6
                 i = i + u32"1"
                 r = i
               } else {
                 i = i + u32"1"
                 if (((u32"1" << i) & word) != u32"0") {
-                  // 6
+                  // 7
                   i = i + u32"1"
                   r = i
                 } else {
                   i = i + u32"1"
                   if (((u32"1" << i) & word) != u32"0") {
-                    // 7
+                    // 8
                     i = i + u32"1"
                     r = i
                   } else {
                     i = i + u32"1"
                     if (((u32"1" << i) & word) != u32"0") {
-                      // 8
+                      // 9
                       i = i + u32"1"
                       r = i
                     } else {
                       i = i + u32"1"
                       if (((u32"1" << i) & word) != u32"0") {
-                        // 9
+                        // 10
                         i = i + u32"1"
                         r = i
                       } else {
                         i = i + u32"1"
                         if (((u32"1" << i) & word) != u32"0") {
-                          // 10
+                          // 11
                           i = i + u32"1"
                           r = i
                         } else {
                           i = i + u32"1"
                           if (((u32"1" << i) & word) != u32"0") {
-                            // 11
+                            // 12
                             i = i + u32"1"
                             r = i
                           } else {
                             i = i + u32"1"
                             if (((u32"1" << i) & word) != u32"0") {
-                              // 12
+                              // 13
                               i = i + u32"1"
                               r = i
                             } else {
                               i = i + u32"1"
                               if (((u32"1" << i) & word) != u32"0") {
-                                // 13
+                                // 14
                                 i = i + u32"1"
                                 r = i
                               } else {
                                 i = i + u32"1"
                                 if (((u32"1" << i) & word) != u32"0") {
-                                  // 14
+                                  // 15
                                   i = i + u32"1"
                                   r = i
                                 } else {
                                   i = i + u32"1"
                                   if (((u32"1" << i) & word) != u32"0") {
-                                    // 15
+                                    // 16
                                     i = i + u32"1"
                                     r = i
                                   } else {
                                     i = i + u32"1"
                                     if (((u32"1" << i) & word) != u32"0") {
-                                      // 16
+                                      // 17
                                       i = i + u32"1"
                                       r = i
                                     } else {
                                       i = i + u32"1"
                                       if (((u32"1" << i) & word) != u32"0") {
-                                        // 17
+                                        // 18
                                         i = i + u32"1"
                                         r = i
                                       } else {
                                         i = i + u32"1"
                                         if (((u32"1" << i) & word) != u32"0") {
-                                          // 18
+                                          // 19
                                           i = i + u32"1"
                                           r = i
                                         } else {
                                           i = i + u32"1"
                                           if (((u32"1" << i) & word) != u32"0") {
-                                            // 19
+                                            // 20
                                             i = i + u32"1"
                                             r = i
                                           } else {
                                             i = i + u32"1"
                                             if (((u32"1" << i) & word) != u32"0") {
-                                              // 20
+                                              // 21
                                               i = i + u32"1"
                                               r = i
                                             } else {
                                               i = i + u32"1"
                                               if (((u32"1" << i) & word) != u32"0") {
-                                                // 21
+                                                // 22
                                                 i = i + u32"1"
                                                 r = i
                                               } else {
                                                 i = i + u32"1"
                                                 if (((u32"1" << i) & word) != u32"0") {
-                                                  // 22
+                                                  // 23
                                                   i = i + u32"1"
                                                   r = i
                                                 } else {
                                                   i = i + u32"1"
                                                   if (((u32"1" << i) & word) != u32"0") {
-                                                    // 23
+                                                    // 24
                                                     i = i + u32"1"
                                                     r = i
                                                   } else {
                                                     i = i + u32"1"
                                                     if (((u32"1" << i) & word) != u32"0") {
-                                                      // 24
+                                                      // 25
                                                       i = i + u32"1"
                                                       r = i
                                                     } else {
                                                       i = i + u32"1"
                                                       if (((u32"1" << i) & word) != u32"0") {
-                                                        // 25
+                                                        // 26
                                                         i = i + u32"1"
                                                         r = i
                                                       } else {
                                                         i = i + u32"1"
                                                         if (((u32"1" << i) & word) != u32"0") {
-                                                          // 26
+                                                          // 27
                                                           i = i + u32"1"
                                                           r = i
                                                         } else {
                                                           i = i + u32"1"
                                                           if (((u32"1" << i) & word) != u32"0") {
-                                                            // 27
+                                                            // 28
                                                             i = i + u32"1"
                                                             r = i
                                                           } else {
                                                             i = i + u32"1"
                                                             if (((u32"1" << i) & word) != u32"0") {
-                                                              // 28
+                                                              // 29
                                                               i = i + u32"1"
                                                               r = i
                                                             } else {
                                                               i = i + u32"1"
                                                               if (((u32"1" << i) & word) != u32"0") {
-                                                                // 29
+                                                                // 30
                                                                 i = i + u32"1"
                                                                 r = i
                                                               } else {
                                                                 i = i + u32"1"
                                                                 if (((u32"1" << i) & word) != u32"0") {
-                                                                  // 30
+                                                                  // 31
                                                                   i = i + u32"1"
                                                                   r = i
                                                                 } else {
-                                                                  i = i + u32"1"
-                                                                  if (((u32"1" << i) & word) != u32"0") {
-                                                                    // 31
-                                                                    i = i + u32"1"
-                                                                    r = i
-                                                                  } else {
-                                                                    assert(false)
-                                                                  }
+                                                                  assert(false)
                                                                 }
                                                               }
                                                             }
@@ -231,32 +231,31 @@ def ffsRefImp(word: U32): U32 = {
       }
     }
   }
-
-  // ffsImp
-  var j: U32 = word
-  var n: U32 = u32"1"
-  var r2: U32 = u32"0"
-  if ((j & u32"0xffff") == u32"0") {
-    n = n + u32"16"
-    j = j >> u32"16"
-  }
-  if ((j & u32"0xff") == u32"0") {
-    n = n + u32"8"
-    j = j >> u32"8"
-  }
-  if ((j & u32"0xf") == u32"0") {
-    n = n + u32"4"
-    j = j >> u32"4"
-  }
-  if ((j & u32"0x3") == u32"0") {
-    n = n + u32"2"
-    j = j >> u32"2"
-  }
-  if (j != u32"0") {
-    r2 = n + ((j + u32"1") & u32"0x1")
-  }
-
-  assert(r == r2)
-
-  return r
 }
+
+// ffsImp
+var j: U32 = word
+var n: U32 = u32"1"
+var r2: U32 = u32"0"
+if ((j & u32"0xffff") == u32"0") {
+  n = n + u32"16"
+  j = j >> u32"16"
+}
+if ((j & u32"0xff") == u32"0") {
+  n = n + u32"8"
+  j = j >> u32"8"
+}
+if ((j & u32"0xf") == u32"0") {
+  n = n + u32"4"
+  j = j >> u32"4"
+}
+if ((j & u32"0x3") == u32"0") {
+  n = n + u32"2"
+  j = j >> u32"2"
+}
+if (j != u32"0") {
+  r2 = n + ((j + u32"1") & u32"0x1")
+}
+
+assert(r == r2)
+

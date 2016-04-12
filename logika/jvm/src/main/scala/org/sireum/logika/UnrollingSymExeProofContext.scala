@@ -100,15 +100,20 @@ UnrollingSymExeProofContext(unitNode: Program,
       val initPcOpt = init
       if (initPcOpt.isEmpty) return false
       val r = initPcOpt.get.check(unitNode.block)
-      for (c <- r) {
-        println(c.status)
-        for (p <- c.premises) {
-          val sb = new StringBuilder
-          p.buildString(sb, inProof = true)
-          println(sb.toString)
-        }
-        println()
-      }
+      println(s"Normal: ${r.count(_.status == Normal)}")
+      println(s"Return: ${r.count(_.status.isInstanceOf[Return])}")
+      println(s"Error: ${r.count(_.status.isInstanceOf[Error])}")
+      println(s"Bound Exhaustion: ${r.count(_.status.isInstanceOf[BoundExhaustion])}")
+      println()
+      //      for (c <- r) {
+      //        println(c.status)
+      //        for (p <- c.premises) {
+      //          val sb = new StringBuilder
+      //          p.buildString(sb, inProof = true)
+      //          println(sb.toString)
+      //        }
+      //        println()
+      //      }
       r.forall(c => c.status == Normal || c.status.isInstanceOf[Return])
     }
   }
@@ -504,6 +509,7 @@ UnrollingSymExeProofContext(unitNode: Program,
         exp match {
           case _: ReadInt => assign(id)
           case _: RandomInt => assign(id)
+          case _: Random => assign(id)
           case exp: Clone => assign(id, exp.id)
           case exp: Apply if exp.id.tipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))
