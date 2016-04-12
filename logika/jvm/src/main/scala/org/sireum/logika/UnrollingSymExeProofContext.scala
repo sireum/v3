@@ -99,8 +99,17 @@ UnrollingSymExeProofContext(unitNode: Program,
     varCounter.withValue(mmapEmpty) {
       val initPcOpt = init
       if (initPcOpt.isEmpty) return false
-      initPcOpt.get.check(unitNode.block).
-        forall(_.status == Normal)
+      val r = initPcOpt.get.check(unitNode.block)
+      for (c <- r) {
+        println(c.status)
+        for (p <- c.premises) {
+          val sb = new StringBuilder
+          p.buildString(sb, inProof = true)
+          println(sb.toString)
+        }
+        println()
+      }
+      r.forall(c => c.status == Normal || c.status.isInstanceOf[Return])
     }
   }
 
