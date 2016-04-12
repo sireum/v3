@@ -676,6 +676,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-s, --sequent    Sequent matching the propositional/predicate logic input file's
            |-t, --timeout    Timeout for algebra and auto (in milliseconds)
            |                   Default: ${option.timeout}
+           |-x, --symexe     Enable symbolic execution (programming logic)
            |    --sat        Enable sat checking of facts and contracts
            |    --server     Enable server mode
            |-h, --help       Display usage information
@@ -722,6 +723,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           }
         case "--server" =>
           option.server = true
+        case "-x" | "--symexe" =>
+          option.symexe = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

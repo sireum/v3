@@ -57,8 +57,10 @@ final case class LogikaOption(@BeanProperty
                               var timeout: Int = 2000,
                               @Opt(shortKey = None, description = "Enable server mode")
                               var server: Boolean = false,
+                              @Opt(shortKey = Some("x"), description = "Enable symbolic execution (programming logic)")
+                              var symexe: Boolean = false,
                               @BeanProperty
                               @Arg(name = "filename")
                               var input: Array[String] = Array()) {
-  def this() = this(false, false, false, none(), 2000, false, Array())
+  def this() = this(false, false, false, none(), 2000, false, false, Array())
 }

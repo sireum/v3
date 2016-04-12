@@ -89,7 +89,9 @@ class ProofChecker(option: LogikaOption,
     Checker.check(message.Check(
       requestId = "",
       isBackground = false,
-      kind = message.CheckerKind.Forward,
+      kind =
+        if (option.symexe) message.CheckerKind.SummarizingSymExe
+        else message.CheckerKind.Forward,
       hintEnabled = false,
       inscribeSummoningsEnabled = false,
       coneInfluenceEnabled = false,
