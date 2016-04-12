@@ -70,6 +70,12 @@ class ProofChecker(option: LogikaOption,
           Some(message.ProofFile(if (option.input.length == 1) None else Some(filename), fText))
         }
       }
+    option.bitwidth match {
+      case 0 | 8 | 16 | 32 | 64 =>
+      case _ =>
+        errPrintln(s"Unsupported bit-width: ${option.bitwidth}; only 8, 16, 32, 64, and 0 are supported (0 means arbitrary-precision).")
+        hasError = true
+    }
     if (hasError) return false
 
     implicit val reporter = new ConsoleTagReporter
@@ -100,7 +106,7 @@ class ProofChecker(option: LogikaOption,
       autoEnabled = option.auto,
       timeout = option.timeout,
       checkSatEnabled = option.sat,
-      bitWidth = 0)
+      bitWidth = option.bitwidth)
     )
 
     if (hasError) return false

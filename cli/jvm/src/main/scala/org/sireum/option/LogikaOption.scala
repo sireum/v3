@@ -59,8 +59,10 @@ final case class LogikaOption(@BeanProperty
                               var server: Boolean = false,
                               @Opt(shortKey = Some("x"), description = "Enable symbolic execution (programming logic)")
                               var symexe: Boolean = false,
+                              @Opt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution")
+                              var bitwidth: Int = 0,
                               @BeanProperty
                               @Arg(name = "filename")
                               var input: Array[String] = Array()) {
-  def this() = this(false, false, false, none(), 2000, false, false, Array())
+  def this() = this(false, false, false, none(), 2000, false, false, 0, Array())
 }

@@ -671,15 +671,17 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |
            |Options:
-           |-a, --auto       Enable auto mode (programming logic)
-           |-l, --last       Check last program only
-           |-s, --sequent    Sequent matching the propositional/predicate logic input file's
-           |-t, --timeout    Timeout for algebra and auto (in milliseconds)
-           |                   Default: ${option.timeout}
-           |-x, --symexe     Enable symbolic execution (programming logic)
-           |    --sat        Enable sat checking of facts and contracts
-           |    --server     Enable server mode
-           |-h, --help       Display usage information
+           |-a, --auto        Enable auto mode (programming logic)
+           |-b, --bitwidth    Default integer bit-width for symbolic execution
+           |                    Default: ${option.bitwidth}
+           |-l, --last        Check last program only
+           |-s, --sequent     Sequent matching the propositional/predicate logic input file's
+           |-t, --timeout     Timeout for algebra and auto (in milliseconds)
+           |                    Default: ${option.timeout}
+           |-x, --symexe      Enable symbolic execution (programming logic)
+           |    --sat         Enable sat checking of facts and contracts
+           |    --server      Enable server mode
+           |-h, --help        Display usage information
         """.stripMargin.trim
       )
     }
@@ -725,6 +727,20 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           option.server = true
         case "-x" | "--symexe" =>
           option.symexe = true
+        case "-b" | "--bitwidth" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) =>
+              try {
+                option.bitwidth = arg.toInt
+              } catch {
+                case t: Throwable =>
+                  errPrintln(s"Invalid integer for bitwidth: '$arg'")
+                  return
+              }
+            case _ =>
+              errPrintln("Expected an integer value for bitwidth")
+          }
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")
