@@ -47,7 +47,8 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("symexe/prims", check("symexe/prims", 0)) :+
       ConditionTest("symexe/seqs", check("symexe/seqs", 0)) :+
       ConditionTest("symexe/ffsS8", check("symexe/ffsS8", 0)) :+
-      ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0))
+      ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0)) :+
+      ConditionTest("symexe/factorial", check("symexe/factorial", 0))
       ) ++
       (1 to 14).toVector.map { x =>
         val name = f"forward/assignment-$x%02d"
