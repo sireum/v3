@@ -53,7 +53,10 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("symexe/factorial", check("symexe/factorial", 0, isSummarizing = true)) :+
       ConditionTest("usymexe/abs-top", check("symexe/abs-top", 8, isSummarizing = false)) :+
       ConditionTest("usymexe/ffsS8-top", check("symexe/ffsS8-top", 8, isSummarizing = false)) :+
-      ConditionTest("usymexe/ffsU32-top", check("symexe/ffsU32-top", 8, isSummarizing = false))
+      ConditionTest("usymexe/ffsU32-top", check("symexe/ffsU32-top", 8, isSummarizing = false)) :+
+      ConditionTest("usymexe/ffsS8-loop", check("symexe/ffsS8-loop", 8, isSummarizing = false)) :+
+      ConditionTest("usymexe/ffsU32-loop", check("symexe/ffsU32-loop", 8, isSummarizing = false)) :+
+      ConditionTest("usymexe/ffsU32-loop-bug", check("symexe/ffsU32-loop-bug", 8, isSummarizing = false, hasError = true))
       ) ++
       (1 to 14).toVector.map { x =>
         val name = f"forward/assignment-$x%02d"
@@ -81,7 +84,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       } :+
       ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true))
 
-  def check(filename: String, bitWidth: Int, isSummarizing: Boolean): Boolean = {
+  def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false): Boolean = {
     val uri = s"example/$filename.logika"
     val r = new InputStreamReader(
       getClass.getResourceAsStream(uri))
@@ -90,8 +93,13 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
     implicit val reporter = new ConsoleTagReporter {
       override def info(msg: String): Unit = {
       }
-
       override def warn(msg: String): Unit = {
+      }
+
+      override def error(msg: String): Unit = {
+        if (!hasError) {
+          super.error(msg)
+        }
       }
     }
     Checker.check(
@@ -109,6 +117,6 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         timeout = 5000,
         checkSatEnabled = true,
         bitWidth = bitWidth))
-    !reporter.hasError
+    hasError == reporter.hasError
   }
 }

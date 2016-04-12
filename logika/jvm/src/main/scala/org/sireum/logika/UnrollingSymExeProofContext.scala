@@ -70,7 +70,7 @@ UnrollingSymExeProofContext(unitNode: Program,
                             inMethod: Boolean = false,
                             satFacts: Boolean = true,
                             stmtBound: CMap[Stmt, Int] = midmapEmpty,
-                            loopBound: Int = 10,
+                            loopBound: Int = 100,
                             recursionBound: Int = 10)
                            (implicit reporter: AccumulatingTagReporter)
   extends ProofContext[UnrollingSymExeProofContext] {
@@ -100,11 +100,14 @@ UnrollingSymExeProofContext(unitNode: Program,
       val initPcOpt = init
       if (initPcOpt.isEmpty) return false
       val r = initPcOpt.get.check(unitNode.block)
-      println(s"Normal: ${r.count(_.status == Normal)}")
-      println(s"Return: ${r.count(_.status.isInstanceOf[Return])}")
-      println(s"Error: ${r.count(_.status.isInstanceOf[Error])}")
-      println(s"Bound Exhaustion: ${r.count(_.status.isInstanceOf[BoundExhaustion])}")
-      println()
+      import java.io._
+      val sw = new StringWriter
+      val pw = new PrintWriter(sw)
+      pw.println(s"Normal: ${r.count(_.status == Normal)}")
+      pw.println(s"Return: ${r.count(_.status.isInstanceOf[Return])}")
+      pw.println(s"Error: ${r.count(_.status.isInstanceOf[Error])}")
+      pw.println(s"Bound Exhaustion: ${r.count(_.status.isInstanceOf[BoundExhaustion])}")
+      reporter.report(InfoMessage("usymexe", sw.toString))
       //      for (c <- r) {
       //        println(c.status)
       //        for (p <- c.premises) {
