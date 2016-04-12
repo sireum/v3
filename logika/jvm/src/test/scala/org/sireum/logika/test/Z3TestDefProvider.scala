@@ -58,7 +58,7 @@ final class Z3TestDefProvider(tf: TestFramework)
     Builder(Some(uri), text, 0, isAutoEnabled = false).
       map(_.asInstanceOf[Program]).
       exists { p =>
-        val hasError = !TypeChecker.check(p)
+        val hasError = !TypeChecker.check(weakModifies = false, p)
         if (hasError) return false
         p match {
           case Program(Block(Seq(MethodDecl(_, _, _, _, MethodContract(

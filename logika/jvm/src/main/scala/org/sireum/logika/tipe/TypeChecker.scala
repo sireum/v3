@@ -32,7 +32,7 @@ object TypeChecker {
   val kind = "Type Checker"
   val posNegTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
 
-  final def check(programs: Program*)(
+  final def check(weakModifies: Boolean, programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
     var typeMap = imapEmpty[String, (Tipe, Node, Program)]
     for (program <- programs) {
@@ -47,7 +47,7 @@ object TypeChecker {
     }
     if (reporter.hasError) return false
     if (programs.nonEmpty) {
-      var tc = TypeContext(typeMap, programs.head).check(programs.head)
+      var tc = TypeContext(typeMap, programs.head, weakModifies).check(programs.head)
       for (program <- programs.tail)
         tc = tc.copy(program = program).check(program)
     }
@@ -132,7 +132,8 @@ object TypeChecker {
 
 private final case class
 TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
-            program: Program)(
+            program: Program,
+            weakModifies: Boolean)(
              implicit reporter: AccumulatingTagReporter) {
 
   private val someB = Some(B)
@@ -303,7 +304,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     if (node.isInstanceOf[While])
       for (id <- collectAssignedVars(block) -- modifiedVars) {
         val li = program.nodeLocMap(id)
-        error(node, s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause.")
+        val msg = s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause."
+        if (weakModifies) warn(node, msg) else error(node, msg)
       }
     else {
       var localIds = isetEmpty[Id]
@@ -312,7 +314,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       })(block)
       for (id <- (collectAssignedVars(block) & typeMap.keySet.map(Id)) -- modifiedVars) {
         val li = program.nodeLocMap(id)
-        error(node, s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] but not declared in the method's modifies clause.")
+        val msg = s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] but not declared in the method's modifies clause."
+        if (weakModifies) warn(node, msg) else error(node, msg)
       }
     }
   }

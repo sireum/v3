@@ -53,11 +53,12 @@ object Checker {
     }
     if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
-      if (TypeChecker.check(programs: _*)) {
+      if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, programs: _*)) {
         var hasError = false
+        val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
         for (program <- programs)
           try Visitor.build({
-            case t: IntegralType if !t.isInstanceOf[ZType] && m.kind != CheckerKind.SummarizingSymExe =>
+            case t: IntegralType if !t.isInstanceOf[ZType] && !isSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
@@ -65,7 +66,7 @@ object Checker {
               }
               error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
               throw new RuntimeException
-            case t: SeqType if !t.isInstanceOf[ZSType] && m.kind != CheckerKind.SummarizingSymExe =>
+            case t: SeqType if !t.isInstanceOf[ZSType] && !isSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
