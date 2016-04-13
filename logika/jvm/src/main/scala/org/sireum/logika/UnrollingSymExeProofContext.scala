@@ -46,6 +46,26 @@ private object UnrollingSymExeProofContext {
 
   private def isNormal(pc: UnrollingSymExeProofContext): Boolean =
     pc.status == Normal
+
+  private def merge(c1: UnrollingSymExeProofContext,
+                    c2: UnrollingSymExeProofContext)(
+                     implicit reporter: AccumulatingTagReporter): UnrollingSymExeProofContext = {
+    var status: Status = Normal
+    ivector(c1.status, c2.status).foreach {
+      case s: Return if status == Normal => status = s
+      case s: Infeasible if status == Normal || status.isInstanceOf[Return] => status = s
+      case s: BoundExhaustion if status == Normal || status.isInstanceOf[Return] || status.isInstanceOf[Infeasible] => status = s
+      case s: Error => status = s
+      case _ =>
+    }
+    val stmtBound = c1.stmtBound.asInstanceOf[MIdMap[Stmt, Int]].clone()
+    for ((k, v) <- c2.stmtBound) stmtBound.get(k) match {
+      case Some(v2) =>
+        if (v2 > v) stmtBound(k) = v2
+      case _ => stmtBound(k) = v
+    }
+    c1.copy(status = status, stmtBound = stmtBound)
+  }
 }
 
 import UnrollingSymExeProofContext._
@@ -72,7 +92,9 @@ UnrollingSymExeProofContext(unitNode: Program,
                             stmtBound: CMap[Stmt, Int] = midmapEmpty,
                             loopBound: Int = 10,
                             recursionBound: Int = 10,
-                            useMethodContract: Boolean = true)
+                            useMethodContract: Boolean = true,
+                            branchSat: Boolean = true,
+                            mergePaths: Boolean = false)
                            (implicit reporter: AccumulatingTagReporter)
   extends ProofContext[UnrollingSymExeProofContext] {
   val isSymExe = true
@@ -409,7 +431,9 @@ UnrollingSymExeProofContext(unitNode: Program,
 
   def check(block: Block): ISeq[UnrollingSymExeProofContext] = {
     var r = ivectorEmpty[UnrollingSymExeProofContext]
-    var pcs = ivector(this).par
+    var pcs: GenSeq[UnrollingSymExeProofContext] = ivector(this)
+    if (!mergePaths)
+      pcs = pcs.par
     for (stmt <- block.stmts) {
       val vc = varCounter.value
       val (next, done) = (for (pc <- pcs) yield {
@@ -427,6 +451,16 @@ UnrollingSymExeProofContext(unitNode: Program,
   def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
 
   def updateStatus(s: Status): UnrollingSymExeProofContext = copy(status = s)
+
+  def mergeBranches(cs1: ISeq[UnrollingSymExeProofContext], cs2: ISeq[UnrollingSymExeProofContext]) =
+    if (mergePaths) {
+      val pc2 = (cs1 ++ cs2).reduce(merge)
+      for (c1 <- cs1; c2 <- cs2) yield {
+        val cp = c1.premises.intersect(c2.premises)
+        pc2.copy(premises = cp +
+          Or(And((c1.premises -- cp).toVector), And((c2.premises -- cp).toVector)))
+      }
+    } else cs1 ++ cs2
 
   def check(stmt: Stmt): ISeq[UnrollingSymExeProofContext] = {
     val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
@@ -529,12 +563,15 @@ UnrollingSymExeProofContext(unitNode: Program,
         val fs = facts.values
         val cond = premises + exp
         val ncond = premises + Not(exp)
-        (if (util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
-          copy(premises = cond).check(thenBlock)
-        else ivectorEmpty) ++
-          (if (util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+        val tcs =
+          if (!branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+            copy(premises = cond).check(thenBlock)
+          else ivectorEmpty
+        val fcs =
+          if (!branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
             copy(premises = ncond).check(elseBlock)
-          else ivectorEmpty)
+          else ivectorEmpty
+        mergeBranches(tcs, fcs)
       case stmt: MethodDecl => ivector(this)
       case InvStmt(inv) =>
         val ps = premises ++ facts.values
@@ -569,16 +606,19 @@ UnrollingSymExeProofContext(unitNode: Program,
         val fs = facts.values
         val cond = premises + exp
         val ncond = premises + Not(exp)
-        val loop = util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
-        val exit = util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
+        val loop = !branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
+        val exit = !branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
         (loop, exit) match {
           case (true, true) =>
             bound(stmt, isLoop = true) match {
               case Some(pc2) =>
-                pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt)) :+ copy(premises = ncond)
+                val tcs = pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
+                val fcs = ivector(copy(premises = ncond))
+                mergeBranches(tcs, fcs)
               case _ =>
                 warn(stmt, "Loop-bound exhausted.")
-                ivector(updateStatus(BoundExhaustion(stmt)), copy(premises = ncond))
+                mergeBranches(ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt))),
+                  ivector(copy(premises = ncond)))
             }
           case (true, false) =>
             bound(stmt, isLoop = true) match {
@@ -586,7 +626,7 @@ UnrollingSymExeProofContext(unitNode: Program,
                 pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
               case _ =>
                 warn(stmt, "Loop-bound exhausted.")
-                ivector(updateStatus(BoundExhaustion(stmt)), copy(premises = ncond))
+                ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt)))
             }
           case (false, true) =>
             ivector(copy(premises = ncond))
