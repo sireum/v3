@@ -491,7 +491,10 @@ final class SequentTestDefProvider(tf: TestFramework)
       autoEnabled = false,
       timeout = 2000,
       checkSatEnabled = false,
-      bitWidth = 0))
+      bitWidth = 0,
+      loopBound = 10,
+      recursionBound = 10,
+      useMethodContract = true))
     !reporter.hasError
   }
 }

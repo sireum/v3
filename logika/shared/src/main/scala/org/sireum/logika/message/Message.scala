@@ -56,7 +56,10 @@ final case class Check(requestId: String,
                        autoEnabled: Boolean,
                        timeout: Int,
                        checkSatEnabled: Boolean,
-                       bitWidth: Int)
+                       bitWidth: Int,
+                       loopBound: Int,
+                       recursionBound: Int,
+                       useMethodContract: Boolean)
   extends InputMessage
 
 object CheckerKind extends Enum {

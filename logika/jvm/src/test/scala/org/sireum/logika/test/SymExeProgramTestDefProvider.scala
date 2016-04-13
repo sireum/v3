@@ -116,7 +116,10 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         autoEnabled = true,
         timeout = 5000,
         checkSatEnabled = true,
-        bitWidth = bitWidth))
+        bitWidth = bitWidth,
+        loopBound = 32,
+        recursionBound = 10,
+        useMethodContract = true))
     hasError == reporter.hasError
   }
 }

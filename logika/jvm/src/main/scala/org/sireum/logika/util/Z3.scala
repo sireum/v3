@@ -26,6 +26,7 @@
 package org.sireum.logika.util
 
 import java.io.StringWriter
+import java.util.concurrent.ConcurrentHashMap
 
 import org.sireum.logika.ast._
 import org.sireum.logika.tipe._
@@ -48,9 +49,15 @@ object Z3 {
 
   case object Error extends CheckResult
 
-  private[logika] val satCacheEnabled = new scala.util.DynamicVariable(false)
-  private[logika] val satCachePrev = new scala.util.DynamicVariable(mmapEmpty[Object, (String, CheckResult)])
-  private[logika] val satCacheCurrent = new scala.util.DynamicVariable(mmapEmpty[Object, (String, CheckResult)])
+  private[logika] var satCacheEnabled = false
+  private[logika] var satCachePrev: MMap[Object, (String, CheckResult)] = {
+    import scala.collection.JavaConversions._
+    new ConcurrentHashMap[Object, (String, CheckResult)]
+  }
+  private[logika] var satCacheCurrent: MMap[Object, (String, CheckResult)] = {
+    import scala.collection.JavaConversions._
+    new ConcurrentHashMap[Object, (String, CheckResult)]
+  }
 
   val z3: String = {
     import java.io._
@@ -71,21 +78,21 @@ object Z3 {
   def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) = {
     def f() = new Z3(timeoutInMs, isSymExe).checkSat(es: _*)
-    if (satCacheEnabled.value) {
+    if (satCacheEnabled) {
       val key: Object = es match {
         case Seq(e) => e
         case _ => es
       }
-      satCachePrev.value.get(key) match {
+      satCachePrev.get(key) match {
         case Some(v) =>
           val cr = v._2
           val r = if (cr == Timeout || cr == Unknown) f() else v
-          satCacheCurrent.value(key) = r
+          satCacheCurrent(key) = r
           r
         case _ =>
           val r = f()
-          satCachePrev.value(key) = r
-          satCacheCurrent.value(key) = r
+          satCachePrev(key) = r
+          satCacheCurrent(key) = r
           r
       }
     } else f()

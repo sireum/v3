@@ -81,11 +81,13 @@ object Checker {
         if (!hasError) {
           if (m.lastOnly)
             check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-              m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth)
+              m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+              m.loopBound, m.recursionBound, m.useMethodContract)
           else
             for (program <- programs)
               check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-                m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth)
+                m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+                m.loopBound, m.recursionBound, m.useMethodContract)
         }
       } else {
         reporter.report(ErrorMessage(TypeChecker.kind,
@@ -110,7 +112,8 @@ object Checker {
                   hintEnabled: Boolean = false,
                   inscribeSummoningsEnabled: Boolean = false,
                   coneInfluenceEnabled: Boolean = false,
-                  bitWidth: Int = 0)(
+                  bitWidth: Int = 0, loopBound: Int = 10, recursionBound: Int = 10,
+                  useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
       assert(s.mode == LogicMode.Propositional ||
@@ -174,7 +177,9 @@ object Checker {
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
         case message.CheckerKind.UnrollingSymExe =>
           UnrollingSymExeProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth,
+            loopBound = loopBound, recursionBound = recursionBound,
+            useMethodContract = useMethodContract).check
       }
       if (r) {
         if (hasProof)

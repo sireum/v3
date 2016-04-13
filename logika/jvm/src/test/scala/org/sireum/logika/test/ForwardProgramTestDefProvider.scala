@@ -88,7 +88,10 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
         autoEnabled = false,
         timeout = 2000,
         checkSatEnabled = true,
-        bitWidth = 0))
+        bitWidth = 0,
+        loopBound = 10,
+        recursionBound = 10,
+        useMethodContract = true))
     !reporter.hasError
   }
 }

@@ -106,7 +106,10 @@ class ProofChecker(option: LogikaOption,
       autoEnabled = option.auto,
       timeout = option.timeout,
       checkSatEnabled = option.sat,
-      bitWidth = option.bitwidth)
+      bitWidth = option.bitwidth,
+      loopBound = 10,
+      recursionBound = 10,
+      useMethodContract = true)
     )
 
     if (hasError) return false
@@ -143,38 +146,33 @@ class ProofChecker(option: LogikaOption,
       Console.out.flush()
     }
     import org.sireum.logika.util.Z3
-    Z3.satCacheEnabled.withValue(true) {
-      Z3.satCachePrev.withValue(mmapEmpty) {
-        Z3.satCacheCurrent.withValue(mmapEmpty) {
-          var line = Console.in.readLine()
-          var exit = false
-          while (!exit && line != null) {
-            try {
-              if (line.trim != "")
-                message.Message.unpickleInput[message.InputMessage](line) match {
-                  case message.Terminate => exit = true
-                  case m: message.Check =>
-                    implicit val reporter = new AccumulatingTagReporter
-                    try {
-                      Console.out.println(message.Message.pickleOutput(Checker.check(m)))
-                      Console.out.flush()
-                    } catch {
-                      case t: Throwable => internalError(m.requestId, t)
-                    }
-                  case m: ProofFile => assert(false)
-                }
-            } catch {
-              case t: Throwable => internalError("", t)
-            }
-            if (!exit) {
-              val t = Z3.satCachePrev.value
-              t.clear()
-              Z3.satCachePrev.value = Z3.satCacheCurrent.value
-              Z3.satCacheCurrent.value = t
-              line = Console.in.readLine()
-            }
+    var line = Console.in.readLine()
+    var exit = false
+    Z3.satCacheEnabled = true
+    while (!exit && line != null) {
+      try {
+        if (line.trim != "")
+          message.Message.unpickleInput[message.InputMessage](line) match {
+            case message.Terminate => exit = true
+            case m: message.Check =>
+              implicit val reporter = new AccumulatingTagReporter
+              try {
+                Console.out.println(message.Message.pickleOutput(Checker.check(m)))
+                Console.out.flush()
+              } catch {
+                case t: Throwable => internalError(m.requestId, t)
+              }
+            case m: ProofFile => assert(false)
           }
-        }
+      } catch {
+        case t: Throwable => internalError("", t)
+      }
+      if (!exit) {
+        val t = Z3.satCachePrev
+        t.clear()
+        Z3.satCachePrev = Z3.satCacheCurrent
+        Z3.satCacheCurrent = t
+        line = Console.in.readLine()
       }
     }
     false

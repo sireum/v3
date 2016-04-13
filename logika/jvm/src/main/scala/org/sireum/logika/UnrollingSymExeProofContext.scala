@@ -70,8 +70,9 @@ UnrollingSymExeProofContext(unitNode: Program,
                             inMethod: Boolean = false,
                             satFacts: Boolean = true,
                             stmtBound: CMap[Stmt, Int] = midmapEmpty,
-                            loopBound: Int = 100,
-                            recursionBound: Int = 10)
+                            loopBound: Int = 10,
+                            recursionBound: Int = 10,
+                            useMethodContract: Boolean = true)
                            (implicit reporter: AccumulatingTagReporter)
   extends ProofContext[UnrollingSymExeProofContext] {
   val isSymExe = true
@@ -103,6 +104,7 @@ UnrollingSymExeProofContext(unitNode: Program,
       import java.io._
       val sw = new StringWriter
       val pw = new PrintWriter(sw)
+      pw.println(s"Unrolling SymExe Path Statistics")
       pw.println(s"Normal: ${r.count(_.status == Normal)}")
       pw.println(s"Return: ${r.count(_.status.isInstanceOf[Return])}")
       pw.println(s"Error: ${r.count(_.status.isInstanceOf[Error])}")
@@ -407,12 +409,15 @@ UnrollingSymExeProofContext(unitNode: Program,
 
   def check(block: Block): ISeq[UnrollingSymExeProofContext] = {
     var r = ivectorEmpty[UnrollingSymExeProofContext]
-    var pcs = ivector(this)
+    var pcs = ivector(this).par
     for (stmt <- block.stmts) {
-      val (next, done) = (for (pc <- pcs) yield
-        if (stmt.isInstanceOf[ProofStmt]) pc.check(stmt)
-        else pc.cleanup.check(stmt)
-        ).flatten.partition(isNormal)
+      val vc = varCounter.value
+      val (next, done) = (for (pc <- pcs) yield {
+        varCounter.withValue(vc) {
+          if (stmt.isInstanceOf[ProofStmt]) pc.check(stmt)
+          else pc.cleanup.check(stmt)
+        }
+      }).flatten.partition(isNormal)
       pcs = next
       r ++= done
     }
@@ -678,8 +683,11 @@ UnrollingSymExeProofContext(unitNode: Program,
           val n = m.get(name) match {
             case Some(c) => c
             case None =>
-              val c = varCounter.value.getOrElseUpdate(name, 0)
-              varCounter.value(name) = c + 1
+              var c = 0
+              varCounter.synchronized {
+                c = varCounter.value.getOrElseUpdate(name, 0)
+                varCounter.value(name) = c + 1
+              }
               m(name) = c
               c
           }
