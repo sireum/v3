@@ -217,7 +217,7 @@ private final class Eval(store: Store) {
         case (ms: RS.Value, i: Z) => ms(i)
         case (ms: F32S.Value, i: Z) => ms(i)
         case (ms: F64S.Value, i: Z) => ms(i)
-        case (ms, _) if !ms.isInstanceOf[MS[_]] => None
+        case (v, _) if !v.isInstanceOf[MS[_]] => None
       }
       catch {
         case _: IndexOutOfBoundsException => None
