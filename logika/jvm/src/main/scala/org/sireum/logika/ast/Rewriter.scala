@@ -467,7 +467,7 @@ object Rewriter {
       org.sireum.logika.ast.SeqAssign(id, index, exp)
     }),
     ("SeqLit", { es =>
-      val Seq(tpe: Type, args: IVector[_]) = es
+      val Seq(tpe: SeqType, args: IVector[_]) = es
       org.sireum.logika.ast.SeqLit(tpe, cast(args))
     }),
     ("Sequent", { es =>

@@ -405,7 +405,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         }
         r
       case ctx: SeqContext =>
-        SeqLit(token2type(ctx.t), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        SeqLit(token2type(ctx.t).asInstanceOf[SeqType],
+          Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
     }
     r at ctx
   }
@@ -761,7 +762,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           }
         FloatLit(ctx.FLOAT.getText)
       case ctx: SeqExpContext =>
-        SeqLit(token2type(ctx.t), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        SeqLit(token2type(ctx.t).asInstanceOf[SeqType],
+          Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
     }
     r at ctx
   }

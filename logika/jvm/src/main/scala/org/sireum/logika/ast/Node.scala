@@ -1116,7 +1116,7 @@ final case class RangeDomain(lo: Exp,
                              loLt: Boolean,
                              hiLt: Boolean) extends QuantDomain
 
-final case class SeqLit(tpe: Type, args: Node.Seq[Exp]) extends PrimaryExp {
+final case class SeqLit(tpe: SeqType, args: Node.Seq[Exp]) extends PrimaryExp {
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     tpe.buildString(sb)
