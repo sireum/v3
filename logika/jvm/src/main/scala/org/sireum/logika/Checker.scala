@@ -40,7 +40,9 @@ object Checker {
 
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
-    val autoEnabled = m.autoEnabled || m.kind == message.CheckerKind.SummarizingSymExe
+    val autoEnabled = m.autoEnabled ||
+      m.kind == message.CheckerKind.SummarizingSymExe ||
+      m.kind == message.CheckerKind.UnrollingSymExe
     var unitNodes = ivectorEmpty[UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
       Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
