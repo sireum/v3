@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.apfloat:apfloat:1.8.2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.apfloat/apfloat/apfloat-1.8.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.apfloat/apfloat/apfloat-1.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

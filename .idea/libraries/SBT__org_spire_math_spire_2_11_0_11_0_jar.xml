@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.spire-math:spire_2.11:0.11.0:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.spire-math/spire_2.11/spire_2.11-0.11.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.spire-math/spire_2.11/spire_2.11-0.11.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
