@@ -108,13 +108,17 @@ object Checker {
     message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
   }
 
-  final def check(unitNode: UnitNode, checkerKind: message.CheckerKind.Value,
+  final def check(unitNode: UnitNode,
+                  checkerKind: message.CheckerKind.Value,
                   autoEnabled: Boolean = false,
-                  timeoutInMs: Int = 2000, checkSat: Boolean = false,
+                  timeoutInMs: PosInteger = 2000,
+                  checkSat: Boolean = false,
                   hintEnabled: Boolean = false,
                   inscribeSummoningsEnabled: Boolean = false,
                   coneInfluenceEnabled: Boolean = false,
-                  bitWidth: Int = 0, loopBound: Int = 10, recursionBound: Int = 10,
+                  bitWidth: Natural = 0,
+                  loopBound: Natural = 10,
+                  recursionBound: Natural = 10,
                   useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: Sequent =>
@@ -225,7 +229,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def declaredStepNumbers: IMap[Natural, LocationInfo]
 
-  def timeoutInMs: Natural
+  def timeoutInMs: PosInteger
 
   def checkSat: Boolean
 
@@ -299,7 +303,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
     var relevantIds = conclusions.toVector.flatMap(collectIds)
     if (relevantIds.isEmpty) return Node.emptySeq
-    val m = midmapEmpty[Exp, (Set[String], Int)]
+    val m = midmapEmpty[Exp, (Set[String], Natural)]
     var i = 0
     for (e <- premises) {
       m(e) = (collectIds(e), i)
@@ -713,7 +717,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def deduce(num: Int, exp: Exp, steps: Node.Seq[Num],
+  def deduce(num: Natural, exp: Exp, steps: Node.Seq[Num],
              isAuto: Boolean): Boolean = {
     val antecedents =
       if (steps.nonEmpty) {
@@ -806,7 +810,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def addVar(id: Id, stepNum: Int): Option[T] = {
+  def addVar(id: Id, stepNum: Natural): Option[T] = {
     val varId = id.value
     assert(!vars.contains(varId))
     Some(make(vars = vars + varId))
@@ -868,7 +872,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     r
   }
 
-  def findSubProof(num: Num, stepNum: Int): Option[SubProof] = {
+  def findSubProof(num: Num, stepNum: Natural): Option[SubProof] = {
     provedSteps.get(num.value) match {
       case Some(r: SubProof) => Some(r)
       case Some(_) =>
@@ -883,7 +887,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def findRegularStepExp(num: Num, stepNum: Int): Option[Exp] =
+  def findRegularStepExp(num: Num, stepNum: Natural): Option[Exp] =
     provedSteps.get(num.value) match {
       case Some(r: RegularStep) => Some(r.exp)
       case _ =>

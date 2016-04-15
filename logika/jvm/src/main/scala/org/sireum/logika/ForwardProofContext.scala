@@ -31,7 +31,7 @@ import org.sireum.util._
 private final case class
 ForwardProofContext(unitNode: Program,
                     autoEnabled: Boolean,
-                    timeoutInMs: Int,
+                    timeoutInMs: PosInteger,
                     checkSat: Boolean,
                     hintEnabled: Boolean,
                     inscribeSummoningsEnabled: Boolean,

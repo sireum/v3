@@ -53,14 +53,14 @@ import UnrollingSymExeProofContext._
 private final case class
 UnrollingSymExeProofContext(unitNode: Program,
                             autoEnabled: Boolean,
-                            timeoutInMs: Int,
+                            timeoutInMs: PosInteger,
                             checkSat: Boolean,
                             hintEnabled: Boolean,
                             inscribeSummoningsEnabled: Boolean,
                             coneInfluenceEnabled: Boolean,
-                            bitWidth: Int,
+                            bitWidth: Natural,
                             status: UnrollingSymExeProofContext.Status = UnrollingSymExeProofContext.Normal,
-                            schedule: ISeq[(Int, Int)] = ivectorEmpty,
+                            schedule: ISeq[(PosInteger, Natural)] = ivectorEmpty,
                             invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
                             premises: ILinkedSet[Exp] = ilinkedSetEmpty,
                             vars: ISet[String] = isetEmpty,
@@ -70,8 +70,8 @@ UnrollingSymExeProofContext(unitNode: Program,
                             inMethod: Boolean = false,
                             satFacts: Boolean = true,
                             stmtBound: CMap[Stmt, Int] = midmapEmpty,
-                            loopBound: Int = 10,
-                            recursionBound: Int = 10,
+                            loopBound: Natural = 10,
+                            recursionBound: Natural = 10,
                             useMethodContract: Boolean = true,
                             store: eval.Eval.Store = imapEmpty)
                            (implicit reporter: AccumulatingTagReporter)
@@ -124,7 +124,7 @@ UnrollingSymExeProofContext(unitNode: Program,
     }
   }
 
-  def check(line: Int): Boolean = {
+  def check(line: Natural): Boolean = {
     val nodeLocMap = unitNode.nodeLocMap
     unitNode.block.stmts.find({
       case md: MethodDecl =>
@@ -165,25 +165,48 @@ UnrollingSymExeProofContext(unitNode: Program,
     var _ps: Option[ISeq[Exp]] = None
     def ps: ISeq[Exp] = {
       if (_ps.isDefined) return _ps.get
-      def rwQuant(q: Quant[_], apply: (Node.Seq[Id], Option[QuantDomain], Exp) => Quant[_],
-                  ids: Node.Seq[Id], qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
-        case _: ZType if bitWidth != 0 => ForAll(ids, qdOpt, Implies(And(Le(zMin, e), Le(e, zMax)), e))
-        case _: Z8Type => ForAll(ids, qdOpt, Implies(And(Le(z8Min, e), Le(e, z8Max)), e))
-        case _: Z16Type => ForAll(ids, qdOpt, Implies(And(Le(z16Min, e), Le(e, z16Max)), e))
-        case _: Z32Type => ForAll(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
-        case _: Z64Type => ForAll(ids, qdOpt, Implies(And(Le(z64Min, e), Le(e, z64Max)), e))
+      def rwQuant(q: Quant[_], isForAll: Boolean, ids: Node.Seq[Id],
+                  qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
+        case _: ZType if bitWidth != 0 =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(zMin, e), Le(e, zMax)), e))
+          else Exists(ids, qdOpt, And(And(Le(zMin, e), Le(e, zMax)), e))
+        case _: Z8Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(z8Min, e), Le(e, z8Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(z8Min, e), Le(e, z8Max)), e))
+        case _: Z16Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(z16Min, e), Le(e, z16Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(z16Min, e), Le(e, z16Max)), e))
+        case _: Z32Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
+          else Exists(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
+        case _: Z64Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(z64Min, e), Le(e, z64Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(z64Min, e), Le(e, z64Max)), e))
         case _: NType =>
-          if (bitWidth == 0) ForAll(ids, qdOpt, Implies(Le(nMin, e), e))
-          else ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, nMax)), e))
-        case _: N8Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n8Max)), e))
-        case _: N16Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n16Max)), e))
-        case _: N32Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n32Max)), e))
-        case _: N64Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n64Max)), e))
+          if (bitWidth == 0) {
+            if (isForAll) ForAll(ids, qdOpt, Implies(Le(nMin, e), e))
+            else Exists(ids, qdOpt, And(Le(nMin, e), e))
+          } else {
+            if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, nMax)), e))
+            else Exists(ids, qdOpt, And(And(Le(nMin, e), Le(e, nMax)), e))
+          }
+        case _: N8Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n8Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(nMin, e), Le(e, n8Max)), e))
+        case _: N16Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n16Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(nMin, e), Le(e, n16Max)), e))
+        case _: N32Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n32Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(nMin, e), Le(e, n32Max)), e))
+        case _: N64Type =>
+          if (isForAll) ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n64Max)), e))
+          else Exists(ids, qdOpt, And(And(Le(nMin, e), Le(e, n64Max)), e))
         case _ => q
       }
       val rw = ast.Rewriter.build[Exp]()({
-        case q@ForAll(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, ForAll, ids, qdOpt, e, t)
-        case q@Exists(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, Exists, ids, qdOpt, e, t)
+        case q@ForAll(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, isForAll = true, ids, qdOpt, e, t)
+        case q@Exists(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, isForAll = false, ids, qdOpt, e, t)
       })
       var integralIds = isetEmpty[String]
       var r = ivectorEmpty[Exp]
@@ -262,11 +285,7 @@ UnrollingSymExeProofContext(unitNode: Program,
       true
     }
     def rangeCheck(ts: String, e: Exp, min: Exp, max: Exp): Unit = {
-      val es = {
-        val sb = new StringBuilder
-        e.buildString(sb, inProof = false)
-        sb.toString
-      }
+      val es = Exp.toString(e, inProof = true)
       val lReq = Le(min, e)
       if (!isValid(s"$ts.Min ≤ $es", nodeLocMap(e), ps, ivector(lReq))) {
         error(e, s"Could not automatically deduce that the operation does not underflow (${Exp.toString(min, inProof = false)}).")
@@ -297,11 +316,7 @@ UnrollingSymExeProofContext(unitNode: Program,
     }
 
     def nonNegativeCheck(e: Exp, t: tipe.Tipe): Unit = {
-      val es = {
-        val sb = new StringBuilder
-        e.buildString(sb, inProof = false)
-        sb.toString
-      }
+      val es = Exp.toString(e, inProof = true)
       val zero = t.asInstanceOf[tipe.ModuloIntegralTipe] match {
         case tipe.S8 => IntLit("0", 8, Some(S8Type()))
         case tipe.S16 => IntLit("0", 16, Some(S16Type()))
@@ -339,7 +354,7 @@ UnrollingSymExeProofContext(unitNode: Program,
   }
 
   def bound(stmt: Stmt, isLoop: Boolean): Option[UnrollingSymExeProofContext] = {
-    val m = stmtBound.asInstanceOf[MIdMap[Stmt, Int]].clone()
+    val m = stmtBound.asInstanceOf[MIdMap[Stmt, Natural]].clone()
     stmtBound.get(stmt) match {
       case Some(n) =>
         if (isLoop) {
@@ -759,7 +774,7 @@ UnrollingSymExeProofContext(unitNode: Program,
       provedSteps = imapEmpty, declaredStepNumbers = imapEmpty)
 
   def rewriteOld(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
-    val m = mmapEmpty[String, Int]
+    val m = mmapEmpty[String, Natural]
     var r = ilinkedSetEmpty[Exp]
     for (e <- premises) {
       r += ast.Rewriter.build[Exp](TraversalMode.BOTTOM_UP)({

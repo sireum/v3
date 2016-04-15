@@ -541,7 +541,7 @@ final case class StringLit(value: String) extends StringOrExp
 sealed trait Exp extends StringOrExp {
   private[ast] var hasParen = false
 
-  def buildString(sb: StringBuilder, inProof: Boolean): Unit
+  private[ast] def buildString(sb: StringBuilder, inProof: Boolean): Unit
 
   def precedence: Int
 }
@@ -1003,7 +1003,11 @@ sealed trait UnaryExp extends Exp with HasInternalData[UnaryExp] {
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {
     sb.append(op(inProof))
-    if (exp.precedence > precedence) {
+    if (exp match {
+      case exp: PrimaryExp => false
+      case exp: UnaryExp => exp.precedence > precedence
+      case _ => true
+    }) {
       sb.append('(')
       exp.buildString(sb, inProof)
       sb.append(')')

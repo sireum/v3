@@ -31,7 +31,7 @@ import org.sireum.util._
 private final case class
 SequentProofContext(unitNode: UnitNode,
                     autoEnabled: Boolean,
-                    timeoutInMs: Int,
+                    timeoutInMs: PosInteger,
                     checkSat: Boolean = false,
                     hintEnabled: Boolean = false,
                     inscribeSummoningsEnabled: Boolean = false,

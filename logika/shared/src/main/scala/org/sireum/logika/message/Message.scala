@@ -54,11 +54,11 @@ final case class Check(requestId: String,
                        proofs: Vector[ProofFile],
                        lastOnly: Boolean,
                        autoEnabled: Boolean,
-                       timeout: Int,
+                       timeout: PosInteger,
                        checkSatEnabled: Boolean,
-                       bitWidth: Int,
-                       loopBound: Int,
-                       recursionBound: Int,
+                       bitWidth: Natural,
+                       loopBound: Natural,
+                       recursionBound: Natural,
                        useMethodContract: Boolean)
   extends InputMessage
 
