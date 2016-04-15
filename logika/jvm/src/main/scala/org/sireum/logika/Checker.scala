@@ -813,7 +813,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   }
 
   def isValid(title: String, li: LocationInfo,
-              premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+              premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
     val ps =
       if (coneInfluenceEnabled)
         util.Z3.checkSat(satTimeoutInMs,

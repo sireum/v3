@@ -76,7 +76,7 @@ SummarizingSymExeProofContext(unitNode: Program,
   val topConclusion = ivector(Checker.top)
 
   override def isValid(title: String, li: LocationInfo,
-                       premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+                       premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
     val key = (premises.toVector, conclusions.toVector)
     validCache.get(key) match {
       case Some(r) => r

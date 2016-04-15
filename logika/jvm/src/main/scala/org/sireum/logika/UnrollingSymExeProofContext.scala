@@ -46,26 +46,6 @@ private object UnrollingSymExeProofContext {
 
   private def isNormal(pc: UnrollingSymExeProofContext): Boolean =
     pc.status == Normal
-
-  private def merge(c1: UnrollingSymExeProofContext,
-                    c2: UnrollingSymExeProofContext)(
-                     implicit reporter: AccumulatingTagReporter): UnrollingSymExeProofContext = {
-    var status: Status = Normal
-    ivector(c1.status, c2.status).foreach {
-      case s: Return if status == Normal => status = s
-      case s: Infeasible if status == Normal || status.isInstanceOf[Return] => status = s
-      case s: BoundExhaustion if status == Normal || status.isInstanceOf[Return] || status.isInstanceOf[Infeasible] => status = s
-      case s: Error => status = s
-      case _ =>
-    }
-    val stmtBound = c1.stmtBound.asInstanceOf[MIdMap[Stmt, Int]].clone()
-    for ((k, v) <- c2.stmtBound) stmtBound.get(k) match {
-      case Some(v2) =>
-        if (v2 > v) stmtBound(k) = v2
-      case _ => stmtBound(k) = v
-    }
-    c1.copy(status = status, stmtBound = stmtBound)
-  }
 }
 
 import UnrollingSymExeProofContext._
@@ -93,8 +73,7 @@ UnrollingSymExeProofContext(unitNode: Program,
                             loopBound: Int = 10,
                             recursionBound: Int = 10,
                             useMethodContract: Boolean = true,
-                            branchSat: Boolean = true,
-                            mergePaths: Boolean = false)
+                            store: eval.Eval.Store = imapEmpty)
                            (implicit reporter: AccumulatingTagReporter)
   extends ProofContext[UnrollingSymExeProofContext] {
   val isSymExe = true
@@ -166,70 +145,124 @@ UnrollingSymExeProofContext(unitNode: Program,
   }
 
   override def isValid(title: String, li: LocationInfo,
-                       premises: Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
-    val key = (premises.toVector, conclusions.toVector)
+                       premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+    val cs = conclusions.toVector
+    if (cs.map(eval.Eval.evalExp(store)).forall({
+      case Some(true) => true
+      case _ => false
+    })) return true
+    val key = (premises.toVector, cs)
     validCache.get(key) match {
       case Some(r) => r
       case _ =>
-        val r = super.isValid(title, li, premises, conclusions)
+        val r = super.isValid(title, li, premises, cs)
         validCache += key -> r
         r
     }
   }
 
   override def hasRuntimeError(stmt: Stmt): Boolean = {
-    def rwQuant(q: Quant[_], apply: (Node.Seq[Id], Option[QuantDomain], Exp) => Quant[_],
-                ids: Node.Seq[Id], qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
-      case _: ZType if bitWidth != 0 => ForAll(ids, qdOpt, Implies(And(Le(zMin, e), Le(e, zMax)), e))
-      case _: Z8Type => ForAll(ids, qdOpt, Implies(And(Le(z8Min, e), Le(e, z8Max)), e))
-      case _: Z16Type => ForAll(ids, qdOpt, Implies(And(Le(z16Min, e), Le(e, z16Max)), e))
-      case _: Z32Type => ForAll(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
-      case _: Z64Type => ForAll(ids, qdOpt, Implies(And(Le(z64Min, e), Le(e, z64Max)), e))
-      case _: NType =>
-        if (bitWidth == 0) ForAll(ids, qdOpt, Implies(Le(nMin, e), e))
-        else ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, nMax)), e))
-      case _: N8Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n8Max)), e))
-      case _: N16Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n16Max)), e))
-      case _: N32Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n32Max)), e))
-      case _: N64Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n64Max)), e))
-      case _ => q
-    }
-    if (super.hasRuntimeError(stmt)) return true
-    val rw = ast.Rewriter.build[Exp]()({
-      case q@ForAll(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, ForAll, ids, qdOpt, e, t)
-      case q@Exists(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, Exists, ids, qdOpt, e, t)
-    })
-    var ps = ivectorEmpty[Exp]
-    var integralIds = isetEmpty[String]
-    val visitor = Visitor.build({
-      case id: Id if !integralIds.contains(id.value) && id.tipe.isInstanceOf[tipe.IntegralTipe] =>
-        id.tipe match {
-          case tipe.Z if bitWidth != 0 => ps :+= And(Le(zMin, id), Le(id, zMax))
-          case tipe.Z8 => ps :+= And(Le(z8Min, id), Le(id, z8Max))
-          case tipe.Z16 => ps :+= And(Le(z16Min, id), Le(id, z16Max))
-          case tipe.Z32 => ps :+= And(Le(z32Min, id), Le(id, z32Max))
-          case tipe.Z64 => ps :+= And(Le(z64Min, id), Le(id, z64Max))
-          case tipe.N =>
-            if (bitWidth == 0) ps :+= Le(nMin, id)
-            else ps :+= And(Le(nMin, id), Le(id, n8Max))
-          case tipe.N8 => ps :+= And(Le(nMin, id), Le(id, n8Max))
-          case tipe.N16 => ps :+= And(Le(nMin, id), Le(id, n16Max))
-          case tipe.N32 => ps :+= And(Le(nMin, id), Le(id, n32Max))
-          case tipe.N64 => ps :+= And(Le(nMin, id), Le(id, n64Max))
-          case _ =>
-        }
-        integralIds += id.value
-        false
-    })
-    for (p <- facts.values.toVector ++ premises) {
-      ps :+= rw(p)
-      visitor(p)
+    var _ps: Option[ISeq[Exp]] = None
+    def ps: ISeq[Exp] = {
+      println("Here")
+      if (_ps.isDefined) return _ps.get
+      def rwQuant(q: Quant[_], apply: (Node.Seq[Id], Option[QuantDomain], Exp) => Quant[_],
+                  ids: Node.Seq[Id], qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
+        case _: ZType if bitWidth != 0 => ForAll(ids, qdOpt, Implies(And(Le(zMin, e), Le(e, zMax)), e))
+        case _: Z8Type => ForAll(ids, qdOpt, Implies(And(Le(z8Min, e), Le(e, z8Max)), e))
+        case _: Z16Type => ForAll(ids, qdOpt, Implies(And(Le(z16Min, e), Le(e, z16Max)), e))
+        case _: Z32Type => ForAll(ids, qdOpt, Implies(And(Le(z32Min, e), Le(e, z32Max)), e))
+        case _: Z64Type => ForAll(ids, qdOpt, Implies(And(Le(z64Min, e), Le(e, z64Max)), e))
+        case _: NType =>
+          if (bitWidth == 0) ForAll(ids, qdOpt, Implies(Le(nMin, e), e))
+          else ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, nMax)), e))
+        case _: N8Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n8Max)), e))
+        case _: N16Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n16Max)), e))
+        case _: N32Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n32Max)), e))
+        case _: N64Type => ForAll(ids, qdOpt, Implies(And(Le(nMin, e), Le(e, n64Max)), e))
+        case _ => q
+      }
+      val rw = ast.Rewriter.build[Exp]()({
+        case q@ForAll(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, ForAll, ids, qdOpt, e, t)
+        case q@Exists(ids, qdOpt@Some(TypeDomain(t)), e) => rwQuant(q, Exists, ids, qdOpt, e, t)
+      })
+      var integralIds = isetEmpty[String]
+      var r = ivectorEmpty[Exp]
+      val visitor = Visitor.build({
+        case id: Id if !integralIds.contains(id.value) && id.tipe.isInstanceOf[tipe.IntegralTipe] =>
+          id.tipe match {
+            case tipe.Z if bitWidth != 0 => r :+= And(Le(zMin, id), Le(id, zMax))
+            case tipe.Z8 => r :+= And(Le(z8Min, id), Le(id, z8Max))
+            case tipe.Z16 => r :+= And(Le(z16Min, id), Le(id, z16Max))
+            case tipe.Z32 => r :+= And(Le(z32Min, id), Le(id, z32Max))
+            case tipe.Z64 => r :+= And(Le(z64Min, id), Le(id, z64Max))
+            case tipe.N =>
+              if (bitWidth == 0) r :+= Le(nMin, id)
+              else r :+= And(Le(nMin, id), Le(id, n8Max))
+            case tipe.N8 => r :+= And(Le(nMin, id), Le(id, n8Max))
+            case tipe.N16 => r :+= And(Le(nMin, id), Le(id, n16Max))
+            case tipe.N32 => r :+= And(Le(nMin, id), Le(id, n32Max))
+            case tipe.N64 => r :+= And(Le(nMin, id), Le(id, n64Max))
+            case _ =>
+          }
+          integralIds += id.value
+          false
+      })
+      for (p <- facts.values.toVector ++ premises) {
+        r :+= rw(p)
+        visitor(p)
+      }
+      _ps = Some(r)
+      r
     }
     var hasError = false
+    def divisor(e: Exp, t: tipe.IntegralTipe): Boolean = {
+      val tpe = t match {
+        case tipe.Z => ZType()
+        case tipe.Z8 => Z8Type()
+        case tipe.Z16 => Z16Type()
+        case tipe.Z32 => Z32Type()
+        case tipe.Z64 => Z64Type()
+        case tipe.N => NType()
+        case tipe.N8 => N8Type()
+        case tipe.N16 => N16Type()
+        case tipe.N32 => N32Type()
+        case tipe.N64 => N64Type()
+        case tipe.S8 => S8Type()
+        case tipe.S16 => S16Type()
+        case tipe.S32 => S32Type()
+        case tipe.S64 => S64Type()
+        case tipe.U8 => U8Type()
+        case tipe.U16 => U16Type()
+        case tipe.U32 => U32Type()
+        case tipe.U64 => U64Type()
+      }
+      val req = Ne(e, IntLit("0", tpe.bitWidth, Some(tpe)))
+      req.tipe = t
+      if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
+        error(e, s"Could not automatically deduce that the divisor is non-zero.")
+        hasError = true
+      }
+      true
+    }
+    def index(id: Id, e: Exp): Boolean = {
+      val req1 = Le(Checker.zero, e)
+      req1.tipe = tipe.Z
+      val sz = Size(id)
+      sz.tipe = id.tipe
+      val req2 = Lt(e, sz)
+      req2.tipe = tipe.Z
+      if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
+        hasError = true
+        error(e, "Could not automatically deduce that the sequence index is non-negative.")
+      }
+      if (!isValid("indexing high-bound", nodeLocMap(e), ps, ivector(req2))) {
+        hasError = true
+        error(e, s"Could not automatically deduce that the index is less than the sequence size.")
+      }
+      true
+    }
     def rangeCheck(ts: String, e: Exp, min: Exp, max: Exp): Unit = {
-      val oldPs = ps
-      val oldIds = integralIds
-      visitor(e)
       val es = {
         val sb = new StringBuilder
         e.buildString(sb, inProof = false)
@@ -245,19 +278,17 @@ UnrollingSymExeProofContext(unitNode: Program,
         error(e, s"Could not automatically deduce that the operation does not overflow (${Exp.toString(max, inProof = false)}).")
         hasError = true
       }
-      ps = oldPs
-      integralIds = oldIds
     }
 
     def rangeCheckTipe(e: Exp, t: tipe.Tipe): Unit = {
       import org.sireum.logika.tipe._
       t match {
-        case Z if bitWidth != 0 => rangeCheck("Z", e, zMin, zMax)
+        case tipe.Z if bitWidth != 0 => rangeCheck("Z", e, zMin, zMax)
         case Z8 => rangeCheck("Z8", e, z8Min, z8Max)
         case Z16 => rangeCheck("Z16", e, z16Min, z16Max)
         case Z32 => rangeCheck("Z32", e, z32Min, z32Max)
         case Z64 => rangeCheck("Z64", e, z64Min, z64Max)
-        case N if bitWidth != 0 => rangeCheck("N", e, nMin, nMax)
+        case tipe.N if bitWidth != 0 => rangeCheck("N", e, nMin, nMax)
         case N8 => rangeCheck("N8", e, nMin, n8Max)
         case N16 => rangeCheck("N16", e, nMin, n16Max)
         case N32 => rangeCheck("N32", e, nMin, n32Max)
@@ -296,12 +327,14 @@ UnrollingSymExeProofContext(unitNode: Program,
       case e: Add => rangeCheckTipe(e, e.tipe); false
       case e: Sub => rangeCheckTipe(e, e.tipe); false
       case e: Mul => rangeCheckTipe(e, e.tipe); false
-      case e: Div => rangeCheckTipe(e, e.tipe); false
-      case e: Rem => rangeCheckTipe(e, e.tipe); false
+      case e: Div => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); false
+      case e: Rem => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); false
       case e: Minus => rangeCheckTipe(e, e.tipe); false
       case e: Shl => nonNegativeCheck(e.right, e.tipe); false
       case e: Shr => nonNegativeCheck(e.right, e.tipe); false
       case e: UShr => nonNegativeCheck(e.right, e.tipe); false
+      case a@Apply(id, Seq(e)) if id.tipe.isInstanceOf[tipe.MSeq] => index(id, e)
+      case SeqAssign(id, e, _) => index(id, e)
     })(stmt)
     hasError
   }
@@ -431,9 +464,7 @@ UnrollingSymExeProofContext(unitNode: Program,
 
   def check(block: Block): ISeq[UnrollingSymExeProofContext] = {
     var r = ivectorEmpty[UnrollingSymExeProofContext]
-    var pcs: GenSeq[UnrollingSymExeProofContext] = ivector(this)
-    if (!mergePaths)
-      pcs = pcs.par
+    var pcs: GenSeq[UnrollingSymExeProofContext] = ivector(this).par
     for (stmt <- block.stmts) {
       val vc = varCounter.value
       val (next, done) = (for (pc <- pcs) yield {
@@ -451,16 +482,6 @@ UnrollingSymExeProofContext(unitNode: Program,
   def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
 
   def updateStatus(s: Status): UnrollingSymExeProofContext = copy(status = s)
-
-  def mergeBranches(cs1: ISeq[UnrollingSymExeProofContext], cs2: ISeq[UnrollingSymExeProofContext]) =
-    if (mergePaths) {
-      val pc2 = (cs1 ++ cs2).reduce(merge)
-      for (c1 <- cs1; c2 <- cs2) yield {
-        val cp = c1.premises.intersect(c2.premises)
-        pc2.copy(premises = cp +
-          Or(And((c1.premises -- cp).toVector), And((c2.premises -- cp).toVector)))
-      }
-    } else cs1 ++ cs2
 
   def check(stmt: Stmt): ISeq[UnrollingSymExeProofContext] = {
     val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
@@ -514,33 +535,44 @@ UnrollingSymExeProofContext(unitNode: Program,
         }
         ivector(copy(premises = premises + e))
       case Assume(e) =>
-        if (!checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
-          unsatMsg = s"The assumption is unsatisfiable.",
-          unknownMsg = s"The assumption might not be satisfiable.",
-          timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
-        )) {
-          return ivector(updateStatus(Infeasible(stmt)))
+        eval.Eval.evalExp(store)(e) match {
+          case Some(true) =>
+          case _ =>
+            if (!checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
+              unsatMsg = s"The assumption is unsatisfiable.",
+              unknownMsg = s"The assumption might not be satisfiable.",
+              timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
+            )) {
+              return ivector(updateStatus(Infeasible(stmt)))
+            }
         }
         ivector(copy(premises = premises + e))
       case SeqAssign(id, index, exp) =>
         val old = oldId(id)
         val m = imapEmpty[Node, Node] + (id -> old)
-        val qVar = newId("q_i", tipe.Z)
-        ivector(copy(premises =
-          premises.map(e => subst(e, m)) ++
-            ivector(
-              Eq(mkSize(id), mkSize(old)),
-              Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
-              ForAll(
-                Node.seq(qVar),
-                Some(RangeDomain(Checker.zero, mkSize(id),
-                  loLt = false, hiLt = true)),
-                Implies(
-                  Ne(qVar, index),
-                  Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
-                )
-              )
-            )))
+        eval.Eval.assignSeq(store)(id, index, exp) match {
+          case Some((store2, ms, v)) =>
+            ivector(copy(premises =
+              premises.map(e => subst(e, m)) + Eq(id, eval.Eval.toLit(bitWidth, id.tipe, ms)),
+              store = store2))
+          case _ =>
+            val qVar = newId("q_i", tipe.Z)
+            ivector(copy(premises =
+              premises.map(e => subst(e, m)) ++
+                ivector(
+                  Eq(mkSize(id), mkSize(old)),
+                  Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
+                  ForAll(
+                    Node.seq(qVar),
+                    Some(RangeDomain(Checker.zero, mkSize(id),
+                      loLt = false, hiLt = true)),
+                    Implies(
+                      Ne(qVar, index),
+                      Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                    )
+                  )
+                )))
+        }
       case ExpStmt(exp) =>
         val (he, pc2) = invoke(exp, None)
         if (he) ivector(pc2.updateStatus(Error(stmt)))
@@ -563,15 +595,19 @@ UnrollingSymExeProofContext(unitNode: Program,
         val fs = facts.values
         val cond = premises + exp
         val ncond = premises + Not(exp)
+        val (isTrue, isFalse) = eval.Eval.evalExp(store)(exp) match {
+          case Some(b: Boolean) => (b, !b)
+          case _ => (false, false)
+        }
         val tcs =
-          if (!branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+          if (isTrue || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
             copy(premises = cond).check(thenBlock)
           else ivectorEmpty
         val fcs =
-          if (!branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+          if (isFalse || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
             copy(premises = ncond).check(elseBlock)
           else ivectorEmpty
-        mergeBranches(tcs, fcs)
+        tcs ++ fcs
       case stmt: MethodDecl => ivector(this)
       case InvStmt(inv) =>
         val ps = premises ++ facts.values
@@ -606,19 +642,23 @@ UnrollingSymExeProofContext(unitNode: Program,
         val fs = facts.values
         val cond = premises + exp
         val ncond = premises + Not(exp)
-        val loop = !branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
-        val exit = !branchSat || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
+        val (isTrue, isFalse) = eval.Eval.evalExp(store)(exp) match {
+          case Some(b: Boolean) => (b, !b)
+          case _ => (false, false)
+        }
+        val loop = isTrue || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
+        val exit = isFalse || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
         (loop, exit) match {
           case (true, true) =>
             bound(stmt, isLoop = true) match {
               case Some(pc2) =>
                 val tcs = pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
-                val fcs = ivector(copy(premises = ncond))
-                mergeBranches(tcs, fcs)
+                val fc = copy(premises = ncond)
+                tcs :+ fc
               case _ =>
                 warn(stmt, "Loop-bound exhausted.")
-                mergeBranches(ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt))),
-                  ivector(copy(premises = ncond)))
+                ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt)),
+                  copy(premises = ncond))
             }
           case (true, false) =>
             bound(stmt, isLoop = true) match {
@@ -639,7 +679,13 @@ UnrollingSymExeProofContext(unitNode: Program,
 
   def assign(id: Id, exp: Exp): ISeq[UnrollingSymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
-    ivector(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+    eval.Eval.assignVar(store)(id.value, exp) match {
+      case Some((store2, v)) =>
+        ivector(copy(premises = premises.map(sst) +
+          Eq(id, eval.Eval.toLit(bitWidth, id.tipe, v)), store = store2))
+      case _ =>
+        ivector(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+    }
   }
 
   def assign(id: Id): ISeq[UnrollingSymExeProofContext] = {

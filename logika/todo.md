@@ -1,9 +1,7 @@
 Logika To-Dos
 =============
 
-* Add concrete evaluation to optimize SymExe
-
-* Add unrolling SymExe
+* Fix ZRange and NRange type boundaries
 
 * Document SymExe mode 
 
