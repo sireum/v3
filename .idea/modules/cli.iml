@@ -55,9 +55,9 @@
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.8.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.17:jar" level="project" />
     <orderEntry type="library" name="SBT: org.apfloat:apfloat:1.8.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.11:0.11.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire_2.11:0.11.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:machinist_2.11:0.4.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-5:jar" level="project" />
   </component>
 </module>

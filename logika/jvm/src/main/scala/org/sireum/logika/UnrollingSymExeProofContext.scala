@@ -146,9 +146,9 @@ UnrollingSymExeProofContext(unitNode: Program,
 
   override def isValid(title: String, li: LocationInfo,
                        premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
-    val cs = conclusions.toVector
-    if (cs.map(eval.Eval.evalExp(store)).forall({
-      case Some(true) => true
+    val cs = conclusions.toVector.map(eval.Eval.simplify(bitWidth, store))
+    if (cs.forall({
+      case BooleanLit(true) => true
       case _ => false
     })) return true
     val key = (premises.toVector, cs)
@@ -164,7 +164,6 @@ UnrollingSymExeProofContext(unitNode: Program,
   override def hasRuntimeError(stmt: Stmt): Boolean = {
     var _ps: Option[ISeq[Exp]] = None
     def ps: ISeq[Exp] = {
-      println("Here")
       if (_ps.isDefined) return _ps.get
       def rwQuant(q: Quant[_], apply: (Node.Seq[Id], Option[QuantDomain], Exp) => Quant[_],
                   ids: Node.Seq[Id], qdOpt: Option[QuantDomain], e: Exp, t: Type): Quant[_] = t match {
@@ -553,7 +552,7 @@ UnrollingSymExeProofContext(unitNode: Program,
         eval.Eval.assignSeq(store)(id, index, exp) match {
           case Some((store2, ms, v)) =>
             ivector(copy(premises =
-              premises.map(e => subst(e, m)) + Eq(id, eval.Eval.toLit(bitWidth, id.tipe, ms)),
+              premises.map(e => subst(e, m)) + Eq(id, eval.Eval.toLit(bitWidth, ms)),
               store = store2))
           case _ =>
             val qVar = newId("q_i", tipe.Z)
@@ -571,7 +570,7 @@ UnrollingSymExeProofContext(unitNode: Program,
                       Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
                     )
                   )
-                )))
+                ), store = store - id.value))
         }
       case ExpStmt(exp) =>
         val (he, pc2) = invoke(exp, None)
@@ -592,19 +591,19 @@ UnrollingSymExeProofContext(unitNode: Program,
           case _ => assign(id, exp)
         }
       case If(exp, thenBlock, elseBlock) =>
-        val fs = facts.values
-        val cond = premises + exp
-        val ncond = premises + Not(exp)
-        val (isTrue, isFalse) = eval.Eval.evalExp(store)(exp) match {
-          case Some(b: Boolean) => (b, !b)
-          case _ => (false, false)
-        }
+        val expSimplified = eval.Eval.simplify(bitWidth, store)(exp)
+        lazy val ps = premises ++ facts.values
+        lazy val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
+        lazy val cond = premises + expSimplified
+        lazy val ncond = premises + negExpSimplified
         val tcs =
-          if (isTrue || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+          if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat)
             copy(premises = cond).check(thenBlock)
           else ivectorEmpty
         val fcs =
-          if (isFalse || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat)
+          if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+            coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
             copy(premises = ncond).check(elseBlock)
           else ivectorEmpty
         tcs ++ fcs
@@ -628,26 +627,26 @@ UnrollingSymExeProofContext(unitNode: Program,
       case _: FactStmt => ivector(this)
       case While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
-        val lps = premises ++ facts.values
+        lazy val ps = premises ++ facts.values
         def checkLoopInv(): Boolean = {
           var hasError = true
           for (e <- es)
-            if (!isValid("loop invariant", nodeLocMap(e), lps, ivector(e))) {
+            if (!isValid("loop invariant", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the loop invariant.")
               hasError = true
             }
           !hasError
         }
         if (checkLoopInv()) return ivector(updateStatus(Error(stmt)))
-        val fs = facts.values
-        val cond = premises + exp
-        val ncond = premises + Not(exp)
-        val (isTrue, isFalse) = eval.Eval.evalExp(store)(exp) match {
-          case Some(b: Boolean) => (b, !b)
-          case _ => (false, false)
-        }
-        val loop = isTrue || util.Z3.checkSat(timeoutInMs, isSymExe = true, (cond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
-        val exit = isFalse || util.Z3.checkSat(timeoutInMs, isSymExe = true, (ncond ++ fs).toSeq: _*)._2 != util.Z3.Unsat
+        val expSimplified = eval.Eval.simplify(bitWidth, store)(exp)
+        lazy val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
+        lazy val cond = premises + expSimplified
+        lazy val ncond = premises + negExpSimplified
+        val (loop, exit) =
+          (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat,
+            util.Z3.checkSat(timeoutInMs, isSymExe = true,
+              coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
         (loop, exit) match {
           case (true, true) =>
             bound(stmt, isLoop = true) match {
@@ -682,15 +681,17 @@ UnrollingSymExeProofContext(unitNode: Program,
     eval.Eval.assignVar(store)(id.value, exp) match {
       case Some((store2, v)) =>
         ivector(copy(premises = premises.map(sst) +
-          Eq(id, eval.Eval.toLit(bitWidth, id.tipe, v)), store = store2))
+          Eq(id, eval.Eval.toLit(bitWidth, v)), store = store2))
       case _ =>
-        ivector(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+        ivector(copy(premises = premises.map(sst) +
+          Eq(id, sst(eval.Eval.simplify(bitWidth, store)(exp))),
+          store = store - id.value))
     }
   }
 
   def assign(id: Id): ISeq[UnrollingSymExeProofContext] = {
     val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
-    ivector(copy(premises = premises.map(sst)))
+    ivector(copy(premises = premises.map(sst), store = store - id.value))
   }
 
   def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, UnrollingSymExeProofContext) = {

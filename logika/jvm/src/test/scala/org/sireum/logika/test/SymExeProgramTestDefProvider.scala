@@ -114,7 +114,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = true,
-        timeout = 5000,
+        timeout = 8000,
         checkSatEnabled = true,
         bitWidth = bitWidth,
         loopBound = 32,

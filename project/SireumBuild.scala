@@ -164,7 +164,7 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
-      "org.sireum" %% "logika-runtime" % "3.0.0-4",
+      "org.sireum" %% "logika-runtime" % "3.0.0-5",
       "org.antlr" % "antlr4-runtime" % "4.5.3",
       "org.antlr" % "ST4" % "4.0.8",
       "org.yaml" % "snakeyaml" % "1.17",

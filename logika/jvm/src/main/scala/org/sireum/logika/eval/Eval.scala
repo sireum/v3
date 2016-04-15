@@ -28,110 +28,65 @@ package org.sireum.logika.eval
 import org.sireum.logika.ast._
 import org.sireum.logika.math._
 import org.sireum.logika.collection._
-import org.sireum.logika.tipe
 import org.sireum.util._
 
 object Eval {
   type Value = Any
   type Store = IMap[String, Value]
 
-  val z8Type = Z8Type()
-  val z16Type = Z16Type()
-  val z32Type = Z32Type()
-  val z64Type = Z64Type()
-  val nType = NType()
-  val n8Type = N8Type()
-  val n16Type = N16Type()
-  val n32Type = N32Type()
-  val n64Type = N64Type()
-  val s8Type = S8Type()
-  val s16Type = S16Type()
-  val s32Type = S32Type()
-  val s64Type = S32Type()
-  val u8Type = U8Type()
-  val u16Type = U16Type()
-  val u32Type = U32Type()
-  val u64Type = U64Type()
-  val bsType = BSType()
-  val zsType = ZSType()
-  val z8sType = Z8SType()
-  val z16sType = Z16SType()
-  val z32sType = Z32SType()
-  val z64sType = Z64SType()
-  val nsType = NSType()
-  val n8sType = N8SType()
-  val n16sType = N16SType()
-  val n32sType = N32SType()
-  val n64sType = N64SType()
-  val s8sType = S8SType()
-  val s16sType = S16SType()
-  val s32sType = S32SType()
-  val s64sType = S64SType()
-  val u8sType = U8SType()
-  val u16sType = U16SType()
-  val u32sType = U32SType()
-  val u64sType = U64SType()
-  val rsType = RSType()
-  val f32sType = F32SType()
-  val f64sType = F64SType()
+  final private val z8Type = Z8Type()
+  final private val z16Type = Z16Type()
+  final private val z32Type = Z32Type()
+  final private val z64Type = Z64Type()
+  final private val nType = NType()
+  final private val n8Type = N8Type()
+  final private val n16Type = N16Type()
+  final private val n32Type = N32Type()
+  final private val n64Type = N64Type()
+  final private val s8Type = S8Type()
+  final private val s16Type = S16Type()
+  final private val s32Type = S32Type()
+  final private val s64Type = S32Type()
+  final private val u8Type = U8Type()
+  final private val u16Type = U16Type()
+  final private val u32Type = U32Type()
+  final private val u64Type = U64Type()
+  final private val bsType = BSType()
+  final private val zsType = ZSType()
+  final private val z8sType = Z8SType()
+  final private val z16sType = Z16SType()
+  final private val z32sType = Z32SType()
+  final private val z64sType = Z64SType()
+  final private val nsType = NSType()
+  final private val n8sType = N8SType()
+  final private val n16sType = N16SType()
+  final private val n32sType = N32SType()
+  final private val n64sType = N64SType()
+  final private val s8sType = S8SType()
+  final private val s16sType = S16SType()
+  final private val s32sType = S32SType()
+  final private val s64sType = S64SType()
+  final private val u8sType = U8SType()
+  final private val u16sType = U16SType()
+  final private val u32sType = U32SType()
+  final private val u64sType = U64SType()
+  final private val rsType = RSType()
+  final private val f32sType = F32SType()
+  final private val f64sType = F64SType()
 
-  def toLit(bitWidth: Int, t: tipe.Tipe, v: Value): Exp = v match {
-    case v: Boolean => BooleanLit(v)
-    case v: Z => IntLit(v.toString, bitWidth, None)
-    case v: ZRange#Value =>
-      t match {
-        case tipe.Z8 => IntLit(v.toString, 8, Some(z8Type))
-        case tipe.Z16 => IntLit(v.toString, 16, Some(z16Type))
-        case tipe.Z32 => IntLit(v.toString, 32, Some(z32Type))
-        case tipe.Z64 => IntLit(v.toString, 64, Some(z64Type))
+  def simplify(bitWidth: Int, store: Store)(e: Exp): Exp = {
+    org.sireum.logika.ast.Rewriter.build[Exp](
+      mode = org.sireum.util.Rewriter.TraversalMode.BOTTOM_UP)({
+      case n: BooleanLit => n
+      case n: IntLit => n
+      case n: RealLit => n
+      case n: FloatLit => n
+      case n: SeqLit => n
+      case n: Exp => evalExp(store)(n) match {
+        case Some(v) => toLit(bitWidth, v)
+        case _ => n
       }
-    case v: N => IntLit(v.toString, bitWidth, Some(nType))
-    case v: NRange#Value =>
-      t match {
-        case tipe.N8 => IntLit(v.toString, 8, Some(n8Type))
-        case tipe.N16 => IntLit(v.toString, 16, Some(n16Type))
-        case tipe.N32 => IntLit(v.toString, 32, Some(n32Type))
-        case tipe.N64 => IntLit(v.toString, 64, Some(n64Type))
-      }
-    case v: S#Value =>
-      t match {
-        case tipe.S8 => IntLit(v.toString, 8, Some(s8Type))
-        case tipe.S16 => IntLit(v.toString, 16, Some(s16Type))
-        case tipe.S32 => IntLit(v.toString, 32, Some(s32Type))
-        case tipe.S64 => IntLit(v.toString, 64, Some(s64Type))
-      }
-    case v: U#Value =>
-      t match {
-        case tipe.U8 => IntLit(v.toString, 8, Some(u8Type))
-        case tipe.U16 => IntLit(v.toString, 16, Some(u16Type))
-        case tipe.U32 => IntLit(v.toString, 32, Some(u32Type))
-        case tipe.U64 => IntLit(v.toString, 64, Some(u64Type))
-      }
-    case v: R => RealLit(v.toString)
-    case v: F32.Value => FloatLit(v.floatValue.toString + "f")
-    case v: F64.Value => FloatLit(v.doubleValue.toString + "d")
-    case v: BS.Value => SeqLit(bsType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.B, v(Z(i)))))
-    case v: ZS.Value => SeqLit(zsType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.Z, v(Z(i)))))
-    case v: Z8S.Value => SeqLit(z8sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.Z8, v(Z(i)))))
-    case v: Z16S.Value => SeqLit(z16sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.Z16, v(Z(i)))))
-    case v: Z32S.Value => SeqLit(z32sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.Z32, v(Z(i)))))
-    case v: Z64S.Value => SeqLit(z64sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.Z64, v(Z(i)))))
-    case v: NS.Value => SeqLit(nsType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.N, v(Z(i)))))
-    case v: N8S.Value => SeqLit(n8sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.N8, v(Z(i)))))
-    case v: N16S.Value => SeqLit(n16sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.N16, v(Z(i)))))
-    case v: N32S.Value => SeqLit(n32sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.N32, v(Z(i)))))
-    case v: N64S.Value => SeqLit(n64sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.N64, v(Z(i)))))
-    case v: S8S.Value => SeqLit(s8sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.S8, v(Z(i)))))
-    case v: S16S.Value => SeqLit(s16sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.S16, v(Z(i)))))
-    case v: S32S.Value => SeqLit(s32sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.S32, v(Z(i)))))
-    case v: S64S.Value => SeqLit(s64sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.S64, v(Z(i)))))
-    case v: U8S.Value => SeqLit(u8sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.U8, v(Z(i)))))
-    case v: U16S.Value => SeqLit(u16sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.U16, v(Z(i)))))
-    case v: U32S.Value => SeqLit(u32sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.U32, v(Z(i)))))
-    case v: U64S.Value => SeqLit(u64sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.U64, v(Z(i)))))
-    case v: RS.Value => SeqLit(rsType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.R, v(Z(i)))))
-    case v: F32S.Value => SeqLit(f32sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.F32, v(Z(i)))))
-    case v: F64S.Value => SeqLit(f64sType, (0 until v.size.toInt).toVector.map(i => toLit(bitWidth, tipe.F64, v(Z(i)))))
+    })(e)
   }
 
   def assignVar(store: Store)(x: String, e: Exp): Option[(Store, Value)] =
@@ -233,6 +188,68 @@ object Eval {
 
   def evalExp(store: Store)(e: Exp): Option[Value] =
     new Eval(store).eval(e)
+
+  def toLit(bitWidth: Int, v: Value): Exp = v match {
+    case v: Boolean => BooleanLit(v)
+    case v: Z => IntLit(v.toString, bitWidth, None)
+    case v: ZRange#Value =>
+      v.bitWidth match {
+        case 8 => IntLit(v.toString, 8, Some(z8Type))
+        case 16 => IntLit(v.toString, 16, Some(z16Type))
+        case 32 => IntLit(v.toString, 32, Some(z32Type))
+        case 64 => IntLit(v.toString, 64, Some(z64Type))
+      }
+    case v: N => IntLit(v.toString, bitWidth, Some(nType))
+    case v: NRange#Value =>
+      v.bitWidth match {
+        case 8 => IntLit(v.toString, 8, Some(n8Type))
+        case 16 => IntLit(v.toString, 16, Some(n16Type))
+        case 32 => IntLit(v.toString, 32, Some(n32Type))
+        case 64 => IntLit(v.toString, 64, Some(n64Type))
+      }
+    case v: S#Value =>
+      v.bitWidth match {
+        case 8 => IntLit(v.toString, 8, Some(s8Type))
+        case 16 => IntLit(v.toString, 16, Some(s16Type))
+        case 32 => IntLit(v.toString, 32, Some(s32Type))
+        case 64 => IntLit(v.toString, 64, Some(s64Type))
+      }
+    case v: U#Value =>
+      v.bitWidth match {
+        case 8 => IntLit(v.toString, 8, Some(u8Type))
+        case 16 => IntLit(v.toString, 16, Some(u16Type))
+        case 32 => IntLit(v.toString, 32, Some(u32Type))
+        case 64 => IntLit(v.toString, 64, Some(u64Type))
+      }
+    case v: R => RealLit(v.toString)
+    case v: F#Value =>
+      v.bitWidth match {
+        case 32 => FloatLit(v.floatValue.toString + "f")
+        case 64 => FloatLit(v.doubleValue.toString + "d")
+      }
+    case v: BS.Value => SeqLit(bsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: ZS.Value => SeqLit(zsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: Z8S.Value => SeqLit(z8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: Z16S.Value => SeqLit(z16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: Z32S.Value => SeqLit(z32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: Z64S.Value => SeqLit(z64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: NS.Value => SeqLit(nsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: N8S.Value => SeqLit(n8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: N16S.Value => SeqLit(n16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: N32S.Value => SeqLit(n32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: N64S.Value => SeqLit(n64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: S8S.Value => SeqLit(s8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: S16S.Value => SeqLit(s16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: S32S.Value => SeqLit(s32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: S64S.Value => SeqLit(s64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: U8S.Value => SeqLit(u8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: U16S.Value => SeqLit(u16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: U32S.Value => SeqLit(u32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: U64S.Value => SeqLit(u64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: RS.Value => SeqLit(rsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: F32S.Value => SeqLit(f32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: F64S.Value => SeqLit(f64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+  }
 }
 
 import Eval._
@@ -766,7 +783,7 @@ private final class Eval(store: Store) {
         case (v1: Boolean, v2: Boolean) => !v1 | v2
       }
     case e: Not =>
-      for (v <- eval(e)) yield v match {
+      for (v <- eval(e.exp)) yield v match {
         case v: Boolean => !v
         case v: S8.Value => ~v
         case v: S16.Value => ~v
@@ -778,16 +795,15 @@ private final class Eval(store: Store) {
         case v: U64.Value => ~v
       }
     case e: Minus =>
-      // TODO: Simplify this one new runtime is published
       for (v <- eval(e.exp)) yield v match {
         case v: Z => -v
-        case v: S8.Value => Z(0).toS8 - v
-        case v: S16.Value => Z(0).toS16 - v
-        case v: S32.Value => Z(0).toS32 - v
-        case v: S64.Value => Z(0).toS64 - v
-        case v: R => R(0) - v
-        case v: F32.Value => F32(0) - v
-        case v: F64.Value => F64(0) - v
+        case v: S8.Value => -v
+        case v: S16.Value => -v
+        case v: S32.Value => -v
+        case v: S64.Value => -v
+        case v: R => -v
+        case v: F32.Value => -v
+        case v: F64.Value => -v
       }
     case e: ForAll => None
     case e: Exists => None
