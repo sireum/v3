@@ -592,19 +592,17 @@ UnrollingSymExeProofContext(unitNode: Program,
         }
       case If(exp, thenBlock, elseBlock) =>
         val expSimplified = eval.Eval.simplify(bitWidth, store)(exp)
-        lazy val ps = premises ++ facts.values
-        lazy val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
-        lazy val cond = premises + expSimplified
-        lazy val ncond = premises + negExpSimplified
+        val ps = premises ++ facts.values
+        val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
         val tcs =
           if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
             coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat)
-            copy(premises = cond).check(thenBlock)
+            copy(premises = premises + expSimplified).check(thenBlock)
           else ivectorEmpty
         val fcs =
           if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
             coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
-            copy(premises = ncond).check(elseBlock)
+            copy(premises = premises + negExpSimplified).check(elseBlock)
           else ivectorEmpty
         tcs ++ fcs
       case stmt: MethodDecl => ivector(this)
@@ -627,7 +625,7 @@ UnrollingSymExeProofContext(unitNode: Program,
       case _: FactStmt => ivector(this)
       case While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
-        lazy val ps = premises ++ facts.values
+        val ps = premises ++ facts.values
         def checkLoopInv(): Boolean = {
           var hasError = true
           for (e <- es)
@@ -639,7 +637,7 @@ UnrollingSymExeProofContext(unitNode: Program,
         }
         if (checkLoopInv()) return ivector(updateStatus(Error(stmt)))
         val expSimplified = eval.Eval.simplify(bitWidth, store)(exp)
-        lazy val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
+        val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
         lazy val cond = premises + expSimplified
         lazy val ncond = premises + negExpSimplified
         val (loop, exit) =
