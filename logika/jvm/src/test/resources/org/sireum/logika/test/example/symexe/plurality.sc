@@ -48,12 +48,18 @@ l"""{ fact
                   (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1))
 }"""
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
-  l"""{ requires numOfCandidates > 0
+  l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
         ensures  (0 ≤ result  ∧  result < numOfCandidates)  →
-                  ∀c: (0 ..< numOfCandidates)
+                   ∀c: (0 ..< numOfCandidates)
                      result ≠ c  →
                        count(election, result, election.size) > count(election, c, election.size)
+                 numOfCandidates == 0  →  result < 0
+                 result < 0 ∧ numOfCandidates ≠ 0 →  // TODO: spec need more inspection
+                  (∃c1: (0 ..< numOfCandidates)
+                     (∃c2: (0 ..< numOfCandidates)
+                        (c1 ≠ c2 →
+                           (count(election, c1, election.size) == count(election, c2, election.size)))))
   }"""
 
   // create a map of candidate # to the total votes for the candidate (initially zero)
@@ -109,10 +115,14 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
     i = 0
     var tied: B = false
     while (i < tally.size & !tied) {
-      l"""{ invariant !tied →
+      l"""{ invariant ¬tied →
                         ∀c: (0 ..< i)
                           winningCandidate ≠ c  →
                             count(election, winningCandidate, election.size) > count(election, c, election.size)
+                      tied →
+                        ∃c: (0 ..< i)
+                          winningCandidate ≠ c  →
+                            count(election, winningCandidate, election.size) == count(election, c, election.size)
                       ∀c: (0 ..< tally.size)
                         winningCandidate ≠ c  →
                           count(election, winningCandidate, election.size) >= count(election, c, election.size)
