@@ -54,15 +54,16 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
         ensures  (0 ≤ result  ∧  result < numOfCandidates)  →
-                   ∀c: (0 ..< numOfCandidates)
-                     result ≠ c  →
-                       count(election, result, election.size) > count(election, c, election.size)
-                 numOfCandidates == 0  →  result < 0
-                 (result < 0 ∧ numOfCandidates ≠ 0)  →
-                   ∃c1: (0 ..< numOfCandidates)
-                     ∃c2: (0 ..< numOfCandidates)
-                        c1 ≠ c2  ∧
-                           count(election, c1, election.size) == count(election, c2, election.size)
+                   (∀c: (0 ..< numOfCandidates)
+                      result ≠ c  →
+                        count(election, result, election.size) > count(election, c, election.size))
+                 result < 0  →
+                   (numOfCandidates == 0  ∨
+                    (numOfCandidates ≠ 0  ∧
+                       ∃c1: (0 ..< numOfCandidates)
+                         ∃c2: (0 ..< numOfCandidates)
+                           c1 ≠ c2  ∧
+                             count(election, c1, election.size) == count(election, c2, election.size)))
   }"""
 
   // create a map of candidate # to the total votes for the candidate (initially zero)
