@@ -105,7 +105,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
                           count(election, winningCandidate, election.size) >= count(election, c, election.size)
                       0 ≤ winningCandidate  ∧  winningCandidate < tally.size
                       0 ≤ i  ∧  i ≤ tally.size
-          modifies  max, winningCandidate, i }"""
+            modifies  max, winningCandidate, i }"""
       val t: Z = tally(i)
       if (max < t) {
         max = t
@@ -131,7 +131,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
                           count(election, winningCandidate, election.size) >= count(election, c, election.size)
                       0 ≤ i  ∧  i ≤ tally.size
                       0 ≤ winningCandidate  ∧  winningCandidate < tally.size
-          modifies  tied, i }"""
+            modifies  tied, i }"""
       if (i != winningCandidate & tally(i) == tally(winningCandidate)) {
         tied = true
       }
