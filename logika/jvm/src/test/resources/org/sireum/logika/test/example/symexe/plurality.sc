@@ -25,11 +25,13 @@
   }"""
 
   // create a map of candidate # to the total votes for the candidate (initially zero)
+  // no direct array creation for a given size yet :-(
   var tally: ZS = ZS()
   var i: Z = 0
   while (i < numOfCandidates) {
     l"""{ invariant ∀j: (0 ..< tally.size)  tally(j) == 0
                     tally.size == i
+                    0 ≤ i  ∧  i ≤ numOfCandidates
           modifies  tally, i }"""
     tally = tally :+ 0  // append 0
     i = i + 1
@@ -48,44 +50,53 @@
   }
 
   // compute the winning candidate based on max votes (can be more than one)
-  var max: Z = tally(0)
-  var winningCandidate: Z = 0
-  i = 1
-  while (i < tally.size) {
-    l"""{ invariant max == tally(winningCandidate)
-                    ∀c: (0 ..< i)
-                      winningCandidate ≠ c  →
-                        count(election, winningCandidate, election.size) >= count(election, c, election.size)
-                    0 ≤ winningCandidate  ∧  winningCandidate < tally.size
-                    0 ≤ i  ∧  i ≤ tally.size
-          modifies  max, winningCandidate, i }"""
-    val t: Z = tally(i)
-    if (max < t) {
-      max = t
-      winningCandidate = i
-    }
-    i = i + 1
-  }
-
-  // detect if there is a tie
-  i = 0
-  var tied: B = false
-  while (i < tally.size & !tied) {
-    l"""{ invariant !tied →
+  // no winner by default (by returning -1); no option type yet :-(
+  var winningCandidate: Z = -1
+  if (numOfCandidates > 0) {
+    winningCandidate = 0
+    var max: Z = tally(0)
+    i = 1
+    while (i < tally.size) {
+      l"""{ invariant max == tally(winningCandidate)
+                      ∀c: (0 ..< numOfCandidates)  tally(c) == count(election, c, election.size)
                       ∀c: (0 ..< i)
                         winningCandidate ≠ c  →
-                          count(election, winningCandidate, election.size) > count(election, c, election.size)
-                    0 ≤ i  ∧  i ≤ tally.size
-          modifies  tied, i }"""
-    if (i != winningCandidate & tally(i) == tally(winningCandidate)) {
-      tied = true
+                          count(election, winningCandidate, election.size) >= count(election, c, election.size)
+                      0 ≤ winningCandidate  ∧  winningCandidate < tally.size
+                      0 ≤ i  ∧  i ≤ tally.size
+          modifies  max, winningCandidate, i }"""
+      val t: Z = tally(i)
+      if (max < t) {
+        max = t
+        winningCandidate = i
+      }
+      i = i + 1
     }
-    i = i + 1
-  }
 
-  // no winner if there is a tie (by returning -1; no option type yet :()
-  if (tied) {
-    winningCandidate = -1
+    // detect if there is a tie
+    i = 0
+    var tied: B = false
+    while (i < tally.size & !tied) {
+      l"""{ invariant !tied →
+                        ∀c: (0 ..< i)
+                          winningCandidate ≠ c  →
+                            count(election, winningCandidate, election.size) > count(election, c, election.size)
+                      ∀c: (0 ..< tally.size)
+                        winningCandidate ≠ c  →
+                          count(election, winningCandidate, election.size) >= count(election, c, election.size)
+                      0 ≤ i  ∧  i ≤ tally.size
+                      0 ≤ winningCandidate  ∧  winningCandidate < tally.size
+          modifies  tied, i }"""
+      if (i != winningCandidate & tally(i) == tally(winningCandidate)) {
+        tied = true
+      }
+      i = i + 1
+    }
+
+    // no winner if there is a tie
+    if (tied) {
+      winningCandidate = -1
+    }
   }
 
   return winningCandidate

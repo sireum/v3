@@ -86,14 +86,19 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true))
 
   def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false): Boolean = {
-    val uri = s"example/$filename.logika"
-    val r = new InputStreamReader(
-      getClass.getResourceAsStream(uri))
+    var uri = s"example/$filename.logika"
+    val r = try new InputStreamReader(getClass.getResourceAsStream(uri))
+    catch {
+      case _: Throwable =>
+        uri = s"example/$filename.sc"
+        new InputStreamReader(getClass.getResourceAsStream(uri))
+    }
     val text = FileUtil.readFile(r)
     r.close()
     implicit val reporter = new ConsoleTagReporter {
       override def info(msg: String): Unit = {
       }
+
       override def warn(msg: String): Unit = {
       }
 

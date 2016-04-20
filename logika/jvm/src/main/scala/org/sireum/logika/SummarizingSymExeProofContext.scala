@@ -523,11 +523,13 @@ SummarizingSymExeProofContext(unitNode: Program,
             hasError = true
           }
         var ps = ilinkedSetEmpty ++ es
-        val modifiedIds = loopInv.modifies.ids.toSet
+        val modifiedIds = loopInv.modifies.ids.map(_.value).toSet
         for (premise <- premises) {
           var propagate = true
           Visitor.build({
-            case id: Id =>
+            case Id(value) =>
+              val i = value.indexOf('_')
+              val id = if (i >= 0) value.substring(0, i) else value
               if (modifiedIds.contains(id)) propagate = false
               false
           })(premise)
@@ -536,9 +538,9 @@ SummarizingSymExeProofContext(unitNode: Program,
         copy(premises = ps + exp).
           check(loopBlock) match {
           case Some(pc2) =>
-            val ps = pc2.premises ++ pc2.facts.values
+            val ps2 = pc2.premises ++ pc2.facts.values
             for (e <- es)
-              if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
+              if (!isValid("loop invariant (end)", nodeLocMap(e), ps2, ivector(e))) {
                 error(e, s"Could not deduce the loop invariant at the end of the loop.")
                 hasError = true
               }
