@@ -21,34 +21,7 @@
  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-// Adaptation of https://github.com/cjerdonek/formal-rcv/blob/master/src/Plurality.v
-
-import org.sireum.logika._
-
-l"""{ fact
-        // count is a proof function that given
-        // * cElection -- an election votes (as an integer array where
-        //   each integer represents a vote for a candidate #),
-        // * cCandidate -- a candidate (as an integer representing the
-        //   candidate #), and
-        // * cN -- a number in 0 .. cElection.size,
-        // it totals the number of votes for the candidate at indices 0 .. N - 1.
-        // The behavior of count is specified as axioms (recursive)
-        def count(cElection: ZS, cCandidate: Z, cN: Z): Z
-          base. ∀ce: ZS  ∀cc: Z  count(ce, cc, 0) == 0
-          rec.  ∀ce: ZS  ∀cc: Z  ∀ cj: (1 .. ce.size)
-                  (ce(cj - 1) == cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1) + 1) ∧
-                  (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1))
-}"""
-def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
-  l"""{ requires numOfCandidates > 0
-                 ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
-        ensures  (0 ≤ result  ∧  result < numOfCandidates)  →
-                   ∀c: (0 ..< numOfCandidates)
-                     result ≠ c  →
-                       count(election, result, election.size) > count(election, c, election.size)
+ */ult, election.size) > count(election, c, election.size)
   }"""
 
   // create a map of candidate # to the total votes for the candidate (initially zero)
