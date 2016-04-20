@@ -21,19 +21,14 @@
  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ult, election.size) > count(election, c, election.size)
-  }"""
-
-  // create a map of candidate # to the total votes for the candidate (initially zero)
-  // no direct array creation for a given size yet :-(
-  var tally: ZS = ZS()
+ */lly: ZS = ZS()
   var i: Z = 0
   while (i < numOfCandidates) {
     l"""{ invariant ∀j: (0 ..< tally.size)  tally(j) == 0
                     tally.size == i
                     0 ≤ i  ∧  i ≤ numOfCandidates
           modifies  tally, i }"""
-    tally = tally :+ 0  // append 0
+    tally = tally :+ 0 // append 0
     i = i + 1
   }
 
