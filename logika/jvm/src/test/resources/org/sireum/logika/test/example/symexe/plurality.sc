@@ -48,8 +48,8 @@ l"""{ fact
                   (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1))
 }"""
 // Given an election votes for a number of candidates, compute
-// a winning candidate that has the most vote.
-// Returns negative value if there is no winning candidate (i.e., tie).
+// a winning candidate that has the most votes.
+// Returns negative value when there is no winning candidate (i.e., tie).
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
