@@ -39,7 +39,7 @@ l"""{ fact
         // * cCandidate -- a candidate (as an integer representing the
         //   candidate #), and
         // * cN -- a number in 0 .. cElection.size,
-        // it totals the number of votes for the candidate at indices 0 .. N - 1.
+        // it totals the number of votes for the candidate at indices 0 .. cN - 1.
         // The behavior of count is specified as axioms (recursive)
         def count(cElection: ZS, cCandidate: Z, cN: Z): Z
           base. ∀ce: ZS  ∀cc: Z  count(ce, cc, 0) == 0
@@ -47,6 +47,9 @@ l"""{ fact
                   (ce(cj - 1) == cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1) + 1) ∧
                   (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1))
 }"""
+// Given an election votes for a number of candidates, compute
+// a winning candidate that has the most vote.
+// Returns negative value if there is no winning candidate (i.e., tie).
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
