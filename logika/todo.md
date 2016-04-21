@@ -1,7 +1,22 @@
 Logika To-Dos
 =============
 
-* Fix ZRange and NRange type boundaries
+* Add
+
+  * ``MS[E].create(size: Z, dflt: E)``
+  
+  * ``MS[E].random``
+  
+  * indexing on ``result``
+
+* Fix:
+
+  * generalize Apply's first arg to accept Exp instead of Id
+    
+  * Z literal Z3 translation with specific bit-width size
+   
+  * mangles identifiers differently for quantified, local, global,
+    param, etc. when translating to Z3   
 
 * Document SymExe mode 
 
