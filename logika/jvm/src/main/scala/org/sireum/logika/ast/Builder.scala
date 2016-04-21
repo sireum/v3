@@ -400,7 +400,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             }
           case "random" => Random(t)
           case s =>
-            error(ctx.ID, s"Expecting Min, Max, random, toZ, toZ8, toZ16, ..., toZ64, toN, toN8, toN16, ..., toN, toS8, toS16, ..., toS54, toU8, toU16, ..., or toU64 instead of $s.")
+            error(ctx.ID, s"Expecting Min, Max, or random instead of $s.")
             IntMin(8, ZType())
         }
         r
@@ -744,7 +744,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             }
           case "random" => Random(t)
           case s =>
-            error(ctx.ID, s"Expecting Min, Max, random, toZ, toZ8, toZ16, ..., toZ64, toN, toN8, toN16, ..., toN, toS8, toS16, ..., toS54, toU8, toU16, ..., or toU64 instead of $s.")
+            error(ctx.ID, s"Expecting Min, Max, or random instead of $s.")
             IntMin(8, ZType())
         }
         r
