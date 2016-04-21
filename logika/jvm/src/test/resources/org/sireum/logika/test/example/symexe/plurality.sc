@@ -54,7 +54,7 @@ l"""{ fact
 // TODO: Can be improved by not requiring numOfCandidates once Logika supports generic map, e.g., Map[Z, Z]
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
-                 ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
+                 ∀j: (0 ..< election.size)  0 ≤ election(j)  ∧  election(j) < numOfCandidates
         ensures  (0 ≤ result  ∧  result < numOfCandidates)  →
                    ∀c: (0 ..< numOfCandidates)
                       result ≠ c  →  count(election, result, election.size) > count(election, c, election.size)
@@ -102,7 +102,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
                       ∀c: (0 ..< numOfCandidates)  tally(c) == count(election, c, election.size)
                       ∀c: (0 ..< i)
                         winningCandidate ≠ c  →
-                          count(election, winningCandidate, election.size) >= count(election, c, election.size)
+                          count(election, winningCandidate, election.size) ≥ count(election, c, election.size)
                       0 ≤ winningCandidate  ∧  winningCandidate < tally.size
                       0 ≤ i  ∧  i ≤ tally.size
             modifies  max, winningCandidate, i }"""
@@ -128,7 +128,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
                             count(election, winningCandidate, election.size) == count(election, c, election.size)
                       ∀c: (0 ..< tally.size)
                         winningCandidate ≠ c  →
-                          count(election, winningCandidate, election.size) >= count(election, c, election.size)
+                          count(election, winningCandidate, election.size) ≥ count(election, c, election.size)
                       0 ≤ i  ∧  i ≤ tally.size
                       0 ≤ winningCandidate  ∧  winningCandidate < tally.size
             modifies  tied, i }"""
