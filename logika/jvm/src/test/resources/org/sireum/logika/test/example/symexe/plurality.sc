@@ -34,40 +34,39 @@ import org.sireum.logika._
 
 l"""{ fact
         // count is a proof function that given
-        // * cElection -- an election votes (as an integer array where
-        //   each integer represents a vote for a candidate #),
+        // * cElection -- an election votes (as a mutable sequence of integers,
+        //   where each integer represents a vote for a candidate #),
         // * cCandidate -- a candidate (as an integer representing the
         //   candidate #), and
         // * cN -- a number in 0 .. cElection.size,
         // it totals the number of votes for the candidate at indices 0 .. cN - 1.
-        // The behavior of count is specified as axioms (recursive)
+        // The behavior of count is specified as first-order, recursive axioms
         def count(cElection: ZS, cCandidate: Z, cN: Z): Z
           base. ∀ce: ZS  ∀cc: Z  count(ce, cc, 0) == 0
           rec.  ∀ce: ZS  ∀cc: Z  ∀ cj: (1 .. ce.size)
                   (ce(cj - 1) == cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1) + 1) ∧
-                  (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1))
-}"""
-// Given an election votes for a number of candidates, compute
-// a winning candidate that has the most votes.
+                  (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1)) }"""
+
+// Given an unmodifiable sequence of election votes for a number of candidates,
+// compute a winning candidate # that has the most votes, if any.
 // Returns negative value when there is no winning candidate (i.e., tie).
+// TODO: Can be improved by returning an option type, e.g., Option[Z] once Logika supports it.
+// TODO: Can be improved by not requiring numOfCandidates once Logika supports generic map, e.g., Map[Z, Z]
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  election(j) >= 0  ∧  election(j) < numOfCandidates
         ensures  (0 ≤ result  ∧  result < numOfCandidates)  →
-                   (∀c: (0 ..< numOfCandidates)
-                      result ≠ c  →
-                        count(election, result, election.size) > count(election, c, election.size))
+                   ∀c: (0 ..< numOfCandidates)
+                      result ≠ c  →  count(election, result, election.size) > count(election, c, election.size)
                  result < 0  →
                    (numOfCandidates == 0  ∨
                     (numOfCandidates ≠ 0  ∧
-                       ∃c1: (0 ..< numOfCandidates)
-                         ∃c2: (0 ..< numOfCandidates)
-                           c1 ≠ c2  ∧
-                             count(election, c1, election.size) == count(election, c2, election.size)))
-  }"""
+                       ∃c1, c2: (0 ..< numOfCandidates)
+                           c1 ≠ c2  ∧  count(election, c1, election.size) == count(election, c2, election.size))) }"""
 
-  // create a map of candidate # to the total votes for the candidate (initially zero)
-  // no direct array creation for a given size yet :-(
+  // create an initial map of candidate # to the total votes as a mutable sequence.
+  // no direct mutable sequence creation with a default value for a given size yet.
+  // TODO: change to:  val tally = ZS.create(numOfCandidates, 0)
   var tally: ZS = ZS()
   var i: Z = 0
   while (i < numOfCandidates) {
@@ -92,7 +91,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   }
 
   // compute the winning candidate based on max votes (can be more than one)
-  // no winner by default (by returning -1); no option type yet :-(
+  // no winner by default (-1)
   var winningCandidate: Z = -1
   if (numOfCandidates > 0) {
     winningCandidate = 0
