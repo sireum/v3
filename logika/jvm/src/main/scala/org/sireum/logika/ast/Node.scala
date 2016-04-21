@@ -1131,8 +1131,8 @@ final case class SeqLit(tpe: SeqType, args: Node.Seq[Exp]) extends PrimaryExp {
         sb.append(", ")
         arg.buildString(sb, inProof)
       }
-      sb.append(')')
     }
+    sb.append(')')
   }
 }
 
