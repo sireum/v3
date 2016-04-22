@@ -16,7 +16,9 @@ Logika To-Dos
   * Z literal Z3 translation with specific bit-width size
    
   * mangles identifiers differently for quantified, local, global,
-    param, etc. when translating to Z3   
+    param, etc. when translating to Z3
+     
+  * catch concrete eval errors (prims.logika under unrolling SymExe)
 
 * Document SymExe mode 
 
