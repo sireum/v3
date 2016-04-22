@@ -52,6 +52,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("symexe/ffsU32", check("symexe/ffsU32", 0, isSummarizing = true)) :+
       ConditionTest("symexe/factorial", check("symexe/factorial", 0, isSummarizing = true)) :+
       ConditionTest("symexe/plurality", check("symexe/plurality", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/plurality", check("symexe/plurality-opt", 0, isSummarizing = true)) :+
       ConditionTest("usymexe/abs-top", check("symexe/abs-top", 8, isSummarizing = false)) :+
       ConditionTest("usymexe/ffsS8-top", check("symexe/ffsS8-top", 8, isSummarizing = false)) :+
       ConditionTest("usymexe/ffsU32-top", check("symexe/ffsU32-top", 8, isSummarizing = false)) :+
