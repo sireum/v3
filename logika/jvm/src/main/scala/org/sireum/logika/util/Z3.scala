@@ -206,11 +206,11 @@ $s"""))
         id.tipe = e.tipe
         translate(id)
       case e: Apply =>
-        if (e.id.tipe.isInstanceOf[org.sireum.logika.tipe.MSeq])
-          stg.getInstanceOf("index").add("a", translate(e.id)).
+        if (e.expTipe.isInstanceOf[org.sireum.logika.tipe.MSeq])
+          stg.getInstanceOf("index").add("a", translate(e.exp)).
             add("i", translate(e.args.head))
         else {
-          val r = stg.getInstanceOf("apply").add("id", translate(e.id))
+          val r = stg.getInstanceOf("apply").add("id", translate(e.exp))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }

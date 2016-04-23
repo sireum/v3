@@ -603,13 +603,19 @@ final case class Result() extends PrimaryExp with HasInternalData[Result] {
   }
 }
 
-final case class Apply(id: Id,
-                       args: Node.Seq[Exp]) extends PrimaryExp {
+final case class Apply(exp: Exp,
+                       args: Node.Seq[Exp]) extends PrimaryExp with HasInternalData[Apply] {
+  var expTipe: Tipe = _
+
+  override def copy(other: Apply): Unit = {
+    expTipe = other.expTipe
+  }
+
   var declOpt: Option[MethodDecl] = None
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
-    id.buildString(sb, inProof)
+    exp.buildString(sb, inProof)
     sb.append('(')
     if (args.nonEmpty) {
       args.head.buildString(sb, inProof)

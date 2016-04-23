@@ -10,8 +10,6 @@ Logika To-Dos
   * indexing on ``result``
 
 * Fix:
-
-  * generalize Apply's first arg to accept Exp instead of Id
     
   * Z literal Z3 translation with specific bit-width size
    

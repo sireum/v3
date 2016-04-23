@@ -178,7 +178,7 @@ BackwardProofContext(unitNode: Program,
           case _: ReadInt => assign(id)
           case _: RandomInt => assign(id)
           case exp: Clone => assign(id, exp.id)
-          case exp: Apply if exp.id.tipe != tipe.ZS =>
+          case exp: Apply if exp.expTipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))
             hasError ||= he
             Some(pc2)

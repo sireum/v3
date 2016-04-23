@@ -267,11 +267,11 @@ UnrollingSymExeProofContext(unitNode: Program,
       }
       true
     }
-    def index(id: Id, e: Exp): Boolean = {
+    def index(a: Exp, aTipe: tipe.Tipe, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
       req1.tipe = tipe.Z
-      val sz = Size(id)
-      sz.tipe = id.tipe
+      val sz = Size(a)
+      sz.tipe = aTipe
       val req2 = Lt(e, sz)
       req2.tipe = tipe.Z
       if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
@@ -347,8 +347,8 @@ UnrollingSymExeProofContext(unitNode: Program,
       case e: Shl => nonNegativeCheck(e.right, e.tipe); false
       case e: Shr => nonNegativeCheck(e.right, e.tipe); false
       case e: UShr => nonNegativeCheck(e.right, e.tipe); false
-      case a@Apply(id, Seq(e)) if id.tipe.isInstanceOf[tipe.MSeq] => index(id, e)
-      case SeqAssign(id, e, _) => index(id, e)
+      case a@Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
+      case SeqAssign(id, e, _) => index(id, id.tipe, e)
     })(stmt)
     hasError
   }
@@ -575,14 +575,14 @@ UnrollingSymExeProofContext(unitNode: Program,
               premises.map(e => subst(e, m)) ++
                 ivector(
                   Eq(mkSize(id), mkSize(old)),
-                  Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
+                  Eq(applySeq(id, id.tipe, Node.seq(subst(index, m))), subst(exp, m)),
                   ForAll(
                     Node.seq(qVar),
                     Some(RangeDomain(Checker.zero, mkSize(id),
                       loLt = false, hiLt = true)),
                     Implies(
                       Ne(qVar, index),
-                      Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                      Eq(applySeq(id, id.tipe, Node.seq(qVar)), applySeq(old, old.tipe, Node.seq(qVar)))
                     )
                   )
                 ), store = store - id.value))
@@ -599,7 +599,7 @@ UnrollingSymExeProofContext(unitNode: Program,
           case _: RandomInt => assign(id)
           case _: Random => assign(id)
           case exp: Clone => assign(id, exp.id)
-          case exp: Apply if exp.id.tipe != tipe.ZS =>
+          case exp: Apply if exp.expTipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))
             if (he) ivector(pc2.updateStatus(Error(stmt)))
             else ivector(pc2)

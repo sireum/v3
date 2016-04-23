@@ -955,11 +955,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       }
       true
     }
-    def index(id: Id, e: Exp): Boolean = {
+    def index(a: Exp, aTipe: tipe.Tipe, e: Exp): Boolean = {
       val req1 = Le(Checker.zero, e)
       req1.tipe = tipe.Z
-      val sz = Size(id)
-      sz.tipe = id.tipe
+      val sz = Size(a)
+      sz.tipe = aTipe
       val req2 = Lt(e, sz)
       req2.tipe = tipe.Z
       if (autoEnabled) {
@@ -988,10 +988,16 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       case _: LoopInv => false
       case e@Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
       case e@Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
-      case a@Apply(id, Seq(e)) if id.tipe.isInstanceOf[tipe.MSeq] => index(id, e)
-      case SeqAssign(id, e, _) => index(id, e)
+      case a@Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
+      case SeqAssign(id, e, _) => index(id, id.tipe, e)
     })(stmt)
     hasError
+  }
+
+  def applySeq(e: Exp, seqTipe: tipe.Tipe, args: Node.Seq[Exp]): Apply = {
+    val r = Apply(e, args)
+    r.expTipe = seqTipe
+    r
   }
 
   def generateHint(beforePremises: ILinkedSet[Exp],

@@ -147,7 +147,7 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   return winningCandidate
 }
 
-//runPluralityElection(4, ZS())              // Output: -1
-//runPluralityElection(4, ZS(0, 2, 3, 3))    // Output: 3
-//runPluralityElection(4, ZS(0, 2, 3, 2, 3)) // Output: -1
-//runPluralityElection(4, ZS(0, 2, 3, 2))    // Output: 2
+runPluralityElection(4, ZS()) // Output: -1
+runPluralityElection(4, ZS(0, 2, 3, 3)) // Output: 3
+runPluralityElection(4, ZS(0, 2, 3, 2, 3)) // Output: -1
+runPluralityElection(4, ZS(0, 2, 3, 2)) // Output: 2

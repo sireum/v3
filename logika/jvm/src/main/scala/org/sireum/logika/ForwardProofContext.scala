@@ -155,14 +155,14 @@ ForwardProofContext(unitNode: Program,
           premises.map(e => subst(e, m)) ++
             ivector(
               Eq(mkSize(id), mkSize(old)),
-              Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
+              Eq(applySeq(id, id.tipe, Node.seq(subst(index, m))), subst(exp, m)),
               ForAll(
                 Node.seq(qVar),
                 Some(RangeDomain(Checker.zero, mkSize(id),
                   loLt = false, hiLt = true)),
                 Implies(
                   Ne(qVar, index),
-                  Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                  Eq(applySeq(id, id.tipe, Node.seq(qVar)), applySeq(old, old.tipe, Node.seq(qVar)))
                 )
               )
             )))
@@ -177,7 +177,7 @@ ForwardProofContext(unitNode: Program,
           case _: ReadInt => assign(id)
           case _: RandomInt => assign(id)
           case exp: Clone => assign(id, exp.id)
-          case exp: Apply if exp.id.tipe != tipe.ZS =>
+          case exp: Apply if exp.expTipe != tipe.ZS =>
             val (he, pc2) = invoke(exp, Some(id))
             hasError ||= he
             Some(pc2)

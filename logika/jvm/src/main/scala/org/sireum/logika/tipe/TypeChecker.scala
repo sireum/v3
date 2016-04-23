@@ -334,24 +334,28 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         val r = tipe(Id("result")); r.foreach(e.tipe = _); r
       case e: Apply =>
         val isMethod =
-          typeMap.get(e.id.value) match {
-            case Some((_, md: MethodDecl, _)) =>
-              if (!allowMethod)
-                error(e.id, s"Method invocation is only allowed at statement level.")
-              e.declOpt = Some(md)
-              true
-            case Some((_, fun: Fun, _)) =>
-              if (!allowFun)
-                error(e.id, s"Use of proof function is only allowed in proof context.")
-              false
-            case _ =>
-              false
+          e.exp match {
+            case id: Id =>
+              typeMap.get(id.value) match {
+                case Some((_, md: MethodDecl, _)) =>
+                  if (!allowMethod)
+                    error(e, s"Method invocation is only allowed at statement level.")
+                  e.declOpt = Some(md)
+                  true
+                case Some((_, fun: Fun, _)) =>
+                  if (!allowFun)
+                    error(e, s"Use of proof function is only allowed in proof context.")
+                  false
+                case _ =>
+                  false
+              }
+            case _ => false
           }
-        check(e.id) match {
+        check(e.exp) match {
           case Some(t: Fn) =>
             if (e.args.size != t.params.size) {
               val text = if (isMethod) "Method" else "Proof function"
-              error(e, s"$text ${e.id.value} requires ${t.params.size} arguments, but found ${e.args.size}.")
+              error(e, s"$text ${Exp.toString(e.exp, inProof = allowFun)} requires ${t.params.size} arguments, but found ${e.args.size}.")
             }
             for ((arg, pType) <- e.args.zip(t.params)) {
               check(arg) match {
@@ -361,12 +365,13 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                 case _ =>
               }
             }
+            e.expTipe = t
             Some(t.result)
           case Some(t) =>
             if (e.args.size == 1)
-              error(e.id, s"Expecting a function/sequence type, but found $t.")
+              error(e.exp, s"Expecting a function/sequence type, but found $t.")
             else
-              error(e.id, s"Expecting a function type, but found $t.")
+              error(e.exp, s"Expecting a function type, but found $t.")
             None
           case _ => None
         }
