@@ -610,12 +610,12 @@ UnrollingSymExeProofContext(unitNode: Program,
         val ps = premises ++ facts.values
         val negExpSimplified = eval.Eval.simplify(bitWidth, store)(Not(expSimplified))
         val tcs =
-          if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+          if (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
             coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat)
             copy(premises = premises + expSimplified).check(thenBlock)
           else ivectorEmpty
         val fcs =
-          if (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+          if (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
             coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
             copy(premises = premises + negExpSimplified).check(elseBlock)
           else ivectorEmpty
@@ -656,9 +656,9 @@ UnrollingSymExeProofContext(unitNode: Program,
         lazy val cond = premises + expSimplified
         lazy val ncond = premises + negExpSimplified
         val (loop, exit) =
-          (util.Z3.checkSat(timeoutInMs, isSymExe = true,
+          (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
             coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat,
-            util.Z3.checkSat(timeoutInMs, isSymExe = true,
+            util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
               coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
         (loop, exit) match {
           case (true, true) =>

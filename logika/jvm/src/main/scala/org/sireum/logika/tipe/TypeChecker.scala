@@ -32,7 +32,7 @@ object TypeChecker {
   val kind = "Type Checker"
   val posNegTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
 
-  final def check(weakModifies: Boolean, programs: Program*)(
+  final def check(weakModifies: Boolean, bitWidth: Natural, programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
     var typeMap = imapEmpty[String, (Tipe, Node, Program)]
     for (program <- programs) {
@@ -41,13 +41,13 @@ object TypeChecker {
         case _ => None
       }).flatten
       for (f@Fun(id, _, _) <- factOrFunDecls)
-        typeMap = addId(typeMap, program, id, tipe(f), f)
+        typeMap = addId(typeMap, program, id, tipe(bitWidth, f), f)
       for (m@MethodDecl(_, id, _, _, _, _, _) <- program.block.stmts)
-        typeMap = addId(typeMap, program, id, tipe(m), m)
+        typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
     }
     if (reporter.hasError) return false
     if (programs.nonEmpty) {
-      var tc = TypeContext(typeMap, programs.head, weakModifies).check(programs.head)
+      var tc = TypeContext(typeMap, programs.head, weakModifies, bitWidth).check(programs.head)
       for (program <- programs.tail)
         tc = tc.copy(program = program).check(program)
     }
@@ -74,14 +74,14 @@ object TypeChecker {
     }
   }
 
-  private[tipe] final def tipe(t: Type): Tipe = t match {
+  private[tipe] final def tipe(bitWidth: Natural, t: Type): Tipe = t match {
     case _: BType => B
-    case _: ZType => Z
+    case _: ZType => Tipe.normalize(bitWidth, Z)
     case _: Z8Type => Z8
     case _: Z16Type => Z16
     case _: Z32Type => Z32
     case _: Z64Type => Z64
-    case _: NType => N
+    case _: NType => Tipe.normalize(bitWidth, N)
     case _: N8Type => N8
     case _: N16Type => N16
     case _: N32Type => N32
@@ -121,23 +121,24 @@ object TypeChecker {
     case _: F64SType => F64S
   }
 
-  private[tipe] final def tipe(m: MethodDecl): FunTipe =
-    FunTipe(m.params.map(p => tipe(p.tpe)),
-      m.returnTypeOpt.map(tipe).getOrElse(UnitTipe))
+  private[tipe] final def tipe(bitWidth: Natural, m: MethodDecl): FunTipe =
+    FunTipe(m.params.map(p => tipe(bitWidth, p.tpe)),
+      m.returnTypeOpt.map(tipe(bitWidth, _)).getOrElse(UnitTipe))
 
-  private[tipe] final def tipe(f: Fun): FunTipe =
-    FunTipe(f.params.map(p => tipe(p.tpe)),
-      tipe(f.returnType))
+  private[tipe] final def tipe(bitWidth: Natural, f: Fun): FunTipe =
+    FunTipe(f.params.map(p => tipe(bitWidth, p.tpe)),
+      tipe(bitWidth, f.returnType))
 }
 
 private final case class
 TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             program: Program,
-            weakModifies: Boolean)(
+            weakModifies: Boolean,
+            bitWidth: Natural)(
              implicit reporter: AccumulatingTagReporter) {
 
   private val someB = Some(B)
-  private val someZ = Some(Z)
+  private val someZ = Some(Tipe.normalize(bitWidth, Z))
   private val someR = Some(R)
 
   def check(p: Program): TypeContext = {
@@ -169,7 +170,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   def check(stmt: Stmt)(
     implicit mOpt: Option[MethodDecl]): TypeContext = stmt match {
     case VarDecl(isVar, id, t, exp) =>
-      id.tipe = TypeChecker.tipe(t)
+      id.tipe = TypeChecker.tipe(bitWidth, t)
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
         if (id.tipe != tExp)
           error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively."))
@@ -229,14 +230,14 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     case md: MethodDecl =>
       var tm = typeMap
       for (p <- md.params)
-        tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(p.tpe), p)
+        tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
       tc = tc.check(md.block)(Some(md))
       tc.checkModifies(md.contract.modifies, md.block, md)
       md.returnTypeOpt match {
         case Some(rt) =>
-          val t = TypeChecker.tipe(rt)
+          val t = TypeChecker.tipe(bitWidth, rt)
           val tcPost = copy(
             typeMap = TypeChecker.addId(tm, program, Id("result"), t, md))
           for (e <- md.contract.ensures.exps)
@@ -280,7 +281,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       case step: QuantAssumeStep =>
         tc = copy(typeMap =
           TypeChecker.addId(typeMap, program, step.id,
-            TypeChecker.tipe(step.typeOpt.get), step))
+            TypeChecker.tipe(bitWidth, step.typeOpt.get), step))
       case step: ProofGroup => tc.check(step)
       case _ =>
     }
@@ -312,7 +313,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       Visitor.build({
         case VarDecl(true, id, _, _) => localIds += id; false
       })(block)
-      for (id <- (collectAssignedVars(block) & typeMap.keySet.map(Id)) -- modifiedVars) {
+      for (id <- (collectAssignedVars(block) & typeMap.keySet.map(x => {
+        val id = Id(x)
+        id.tipe = typeMap(x)._1
+        id
+      })) -- modifiedVars) {
         val li = program.nodeLocMap(id)
         val msg = s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] but not declared in the method's modifies clause."
         if (weakModifies) warn(node, msg) else error(node, msg)
@@ -383,18 +388,19 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         if (!allowMethod)
           error(e, s"Invoking readInt is only allowed at statement level.")
         someZ
-      case e: IntLit => Some(e.tpeOpt.map(TypeChecker.tipe).getOrElse(Z))
+      case e: IntLit => Some(Tipe.normalize(bitWidth,
+        e.tpeOpt.map(TypeChecker.tipe(bitWidth, _)).getOrElse(Z)))
       case e: FloatLit => e.primitiveValue match {
         case Left(_: Float) => Some(F32)
         case Right(_: Double) => Some(F64)
       }
       case e: RealLit => someR
-      case e: IntMin => Some(TypeChecker.tipe(e.integralType))
-      case e: IntMax => Some(TypeChecker.tipe(e.integralType))
+      case e: IntMin => Some(TypeChecker.tipe(bitWidth, e.integralType))
+      case e: IntMax => Some(TypeChecker.tipe(bitWidth, e.integralType))
       case e: Random =>
         if (!allowMethod)
           error(e, s"Invoking .random is only allowed at statement level.")
-        Some(TypeChecker.tipe(e.tpe))
+        Some(TypeChecker.tipe(bitWidth, e.tpe))
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
@@ -519,7 +525,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         }
       case e: Quant[_] =>
         val t = e.domainOpt match {
-          case Some(TypeDomain(tpe)) => TypeChecker.tipe(tpe)
+          case Some(TypeDomain(tpe)) => TypeChecker.tipe(bitWidth, tpe)
           case Some(RangeDomain(lo, hi, _, _)) => z(lo); z(hi); Z
           case None => assert(assertion = false, "Unexpected situation."); Z
         }
@@ -531,7 +537,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         copy(typeMap = tm).check(e.exp)
         someB
       case e: SeqLit =>
-        val ts = TypeChecker.tipe(e.tpe).asInstanceOf[MSeq]
+        val ts = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
         val et = ts.result
         for (arg <- e.args; t <- check(arg)) {
           if (t != et) {

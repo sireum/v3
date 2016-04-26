@@ -55,7 +55,7 @@ object Checker {
     }
     if (unitNodes.forall(_.isInstanceOf[Program])) {
       val programs = unitNodes.map(_.asInstanceOf[Program])
-      if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, programs: _*)) {
+      if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, m.bitWidth, programs: _*)) {
         var hasError = false
         val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
         for (program <- programs)
@@ -247,6 +247,8 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def isSymExe: Boolean
 
+  def bitWidth: Natural
+
   def make(vars: ISet[String] = vars,
            provedSteps: IMap[Natural, ProofStep] = provedSteps,
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
@@ -257,7 +259,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                timeoutMsg: => String): Boolean = {
     val es = exps.toVector
     if (checkSat) {
-      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, es: _*)
+      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator
         val sb = new StringBuilder
@@ -820,14 +822,15 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
               premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
     val ps =
       if (coneInfluenceEnabled)
-        util.Z3.checkSat(satTimeoutInMs,
-          isSymExe = true, And(conclusions.toVector))._2 match {
+        util.Z3.checkSat(satTimeoutInMs, isSymExe = true, bitWidth,
+          And(conclusions.toVector))._2 match {
           case util.Z3.Sat => coneOfInfluence(premises, conclusions)
           case _ => premises
         }
       else premises
 
-    val (script, r) = Z3.isValid(timeoutInMs, isSymExe, ps.toVector, conclusions.toVector)
+    val (script, r) = Z3.isValid(timeoutInMs, isSymExe, bitWidth,
+      ps.toVector, conclusions.toVector)
     if (inscribeSummoningsEnabled) {
       val lineSep = scala.util.Properties.lineSeparator
       val sb = new StringBuilder

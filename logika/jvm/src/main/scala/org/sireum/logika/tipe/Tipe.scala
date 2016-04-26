@@ -35,6 +35,27 @@ object Tipe {
   final def seq[T](es: T*) = ivector(es: _*)
 
   final def seq[T](es: Iterable[T]) = es.toVector
+
+  final def normalize(bitWidth: Natural, t: Tipe): Tipe =
+    t match {
+      case Z =>
+        bitWidth match {
+          case 0 => Z
+          case 8 => Z8
+          case 16 => Z16
+          case 32 => Z32
+          case 64 => Z64
+        }
+      case N =>
+        bitWidth match {
+          case 0 => N
+          case 8 => N8
+          case 16 => N16
+          case 32 => N32
+          case 64 => N64
+        }
+      case _ => t
+    }
 }
 
 sealed trait Tipe

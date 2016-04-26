@@ -70,14 +70,15 @@ object Z3 {
     else z3Filename
   }
 
-  def isValid(timeoutInMs: Int, isSymExe: Boolean, premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
+  def isValid(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural,
+              premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
-    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, Not(And(conclusions)))
-    else checkSat(timeoutInMs, isSymExe, Not(Implies(And(premises), And(conclusions))))
+    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, bitWidth, Not(And(conclusions)))
+    else checkSat(timeoutInMs, isSymExe, bitWidth, Not(Implies(And(premises), And(conclusions))))
 
-  def checkSat(timeoutInMs: Int, isSymExe: Boolean, es: Exp*)(
+  def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural, es: Exp*)(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) = {
-    def f() = new Z3(timeoutInMs, isSymExe).checkSat(es: _*)
+    def f() = new Z3(timeoutInMs, isSymExe, bitWidth).checkSat(es: _*)
     if (satCacheEnabled) {
       val key: Object = es match {
         case Seq(e) => e
@@ -99,7 +100,7 @@ object Z3 {
   }
 }
 
-private final class Z3(timeout: Int, isSymExe: Boolean)(
+private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural)(
   implicit reporter: TagReporter,
   nodeLocMap: MIdMap[Node, LocationInfo]) {
 
@@ -173,7 +174,7 @@ $s"""))
   }
 
   def translate(n: BigInt, tpe: IntegralType): ST = {
-    val lit = tpe match {
+    val lit = Type.normalize(bitWidth, tpe) match {
       case _: S8Type | _: U8Type =>
         val v: java.lang.Byte = n.toByte
         String.format("#x%02X", v)
@@ -190,6 +191,9 @@ $s"""))
     }
     stg.getInstanceOf("lit").add("value", lit)
   }
+
+  def normalizeTipe(t: org.sireum.logika.tipe.Tipe): org.sireum.logika.tipe.Tipe =
+    org.sireum.logika.tipe.Tipe.normalize(bitWidth, t)
 
   def translate(e: Exp): ST =
     e match {
@@ -218,7 +222,7 @@ $s"""))
         val n = e.normalize
         val lit = tpeOpt match {
           case Some(tpe) => translate(n, tpe)
-          case _ => value
+          case _ => translate(n, ZType())
         }
         stg.getInstanceOf("lit").add("value", lit)
       case e@FloatLit(value) =>
@@ -292,63 +296,63 @@ $s"""))
               eq.tipe = e.tipe
               return translate(Not(eq))
             case e: Mul =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvmul"
                 case F32 | F64 => s"fp.mul $rounding"
                 case _ => "*"
               }
             case e: Div =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsdiv"
                 case U8 | U16 | U32 | U64 => "bvudiv"
                 case F32 | F64 => s"fp.div $rounding"
                 case _ => "div"
               }
             case e: Rem =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsrem"
                 case U8 | U16 | U32 | U64 => "bvurem"
                 case F32 | F64 => "fp.rem"
                 case _ => "rem"
               }
             case e: Add =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvadd"
                 case F32 | F64 => s"fp.add $rounding"
                 case _ => "+"
               }
             case e: Sub =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvsub"
                 case F32 | F64 => s"fp.sub $rounding"
                 case _ => "-"
               }
             case e: Lt =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvslt"
                 case U8 | U16 | U32 | U64 => "bvult"
                 case F32 | F64 => "fp.lt"
                 case _ => "<"
               }
             case e: Le =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsle"
                 case U8 | U16 | U32 | U64 => "bvule"
                 case F32 | F64 => "fp.leq"
                 case _ => "<="
               }
             case e: Gt =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsgt"
                 case U8 | U16 | U32 | U64 => "bvugt"
                 case F32 | F64 => "fp.gt"
                 case _ => ">"
               }
             case e: Ge =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsge"
                 case U8 | U16 | U32 | U64 => "bvuge"
                 case F32 | F64 => "fp.geq"
@@ -356,13 +360,13 @@ $s"""))
               }
             case e: Shl => "bvshl"
             case e: Shr =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case U8 | U16 | U32 | U64 => "bvlshr"
                 case _ => "bvashr"
               }
             case e: UShr => "bvlshr"
             case e: Eq =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case _: org.sireum.logika.tipe.MSeq =>
                   return stg.getInstanceOf("equal").add("a1", translate(e.left)).
                     add("a2", translate(e.right)).add("tipe", translate(e.tipe))
@@ -370,19 +374,19 @@ $s"""))
                 case _ => "="
               }
             case e: And =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvand"
                 case _ => "and"
               }
             case e: Xor =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvxor"
                 case _ => "xor"
               }
             case e: Or =>
-              e.tipe match {
+              normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvor"
                 case _ => "or"
@@ -397,7 +401,7 @@ $s"""))
       case e: UnaryExp =>
         e match {
           case Not(exp) =>
-            e.tipe match {
+            normalizeTipe(e.tipe) match {
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
                 stg.getInstanceOf("unary").add("op", "bvnot").
@@ -407,7 +411,7 @@ $s"""))
                   add("exp", translate(exp))
             }
           case Minus(exp) =>
-            e.tipe match {
+            normalizeTipe(e.tipe) match {
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
                 stg.getInstanceOf("unary").add("op", "bvneg").
@@ -469,7 +473,7 @@ $s"""))
   }
 
   def translate(name: String, tipe: Tipe): ST =
-    tipe match {
+    normalizeTipe(tipe) match {
       case B | Z | Z8 | Z16 | Z32 | Z64 |
            N | N8 | N16 | N32 | N64 |
            S8 | S16 | S32 | S64 |
@@ -493,7 +497,7 @@ $s"""))
         assert(assertion = false, "Unexpected situation."); null
     }
 
-  def translate(tipe: Tipe): String = tipe match {
+  def translate(tipe: Tipe): String = normalizeTipe(tipe) match {
     case B => "B"
     case Z => "Z"
     case Z8 => "Z8"
@@ -544,7 +548,14 @@ $s"""))
 
   def translate(tpe: Type): String = tpe match {
     case _: BType => "B"
-    case _: ZType => "Z"
+    case _: ZType =>
+      bitWidth match {
+        case 0 => "Z"
+        case 8 => "S8"
+        case 16 => "S16"
+        case 32 => "S32"
+        case 64 => "S64"
+      }
     case _: Z8Type => "Z8"
     case _: Z16Type => "Z16"
     case _: Z32Type => "Z32"

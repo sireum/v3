@@ -31,7 +31,7 @@ import org.sireum.util._
 private final case class
 BackwardProofContext(unitNode: Program,
                      autoEnabled: Boolean,
-                     timeoutInMs: Int,
+                     timeoutInMs: PosInteger,
                      checkSat: Boolean,
                      hintEnabled: Boolean,
                      inscribeSummoningsEnabled: Boolean,
@@ -46,6 +46,7 @@ BackwardProofContext(unitNode: Program,
                      satFacts: Boolean = true)
                     (implicit reporter: AccumulatingTagReporter) extends ProofContext[BackwardProofContext] {
   val isSymExe = false
+  val bitWidth = 0
 
   def check: Boolean = {
     val program = unitNode

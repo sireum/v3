@@ -58,7 +58,7 @@ final class Z3TestDefProvider(tf: TestFramework)
     Builder(Some(uri), text, 0, isAutoEnabled = false).
       map(_.asInstanceOf[Program]).
       exists { p =>
-        val hasError = !TypeChecker.check(weakModifies = false, p)
+        val hasError = !TypeChecker.check(weakModifies = false, 0, p)
         if (hasError) return false
         p match {
           case Program(Block(Seq(MethodDecl(_, _, _, _, MethodContract(
@@ -66,7 +66,7 @@ final class Z3TestDefProvider(tf: TestFramework)
           _,
           Ensures(Seq(e2))), _, _)))) =>
             implicit val nlm = p.nodeLocMap
-            Z3.isValid(2000, isSymExe = false, ivector(e1), ivector(e2))._2 == Z3.Unsat
+            Z3.isValid(2000, isSymExe = false, 0, ivector(e1), ivector(e2))._2 == Z3.Unsat
           case _ => false
         }
       }

@@ -1233,6 +1233,18 @@ final case class Fun(id: Id,
                      returnType: Type) extends FactOrFun
 
 object Type {
+  final def normalize(bitWidth: Natural, t: Type): Type =
+    t match {
+      case _: ZType => bitWidth match {
+        case 0 => t
+        case 8 => Z8Type()
+        case 16 => Z16SType()
+        case 32 => Z32Type()
+        case 64 => Z64Type()
+      }
+      case _ => t
+    }
+
   final def toString(t: Type): String = {
     val sb = new StringBuilder
     t.buildString(sb)
