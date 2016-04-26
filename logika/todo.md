@@ -15,8 +15,6 @@ Logika To-Dos
    
   * mangles identifiers differently for quantified, local, global,
     param, etc. when translating to Z3
-     
-  * catch concrete eval errors (prims.logika under unrolling SymExe)
 
 * Document SymExe mode 
 
