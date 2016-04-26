@@ -187,7 +187,11 @@ object Eval {
     }
 
   def evalExp(store: Store)(e: Exp): Option[Value] =
-    new Eval(store).eval(e)
+    try {
+      new Eval(store).eval(e)
+    } catch {
+      case _: Throwable => None
+    }
 
   def toLit(bitWidth: Int, v: Value): Exp = v match {
     case v: Boolean => BooleanLit(v)
