@@ -22,6 +22,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
@@ -56,6 +57,5 @@
     <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.11:0.11.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire_2.11:0.11.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:machinist_2.11:0.4.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-5:jar" level="project" />
   </component>
 </module>
