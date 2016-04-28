@@ -25,22 +25,21 @@
 
 package org.sireum.logika
 
-import org.sireum.logika.ast._
 import org.sireum.util._
 
 private final case class
-BackwardProofContext(unitNode: Program,
+BackwardProofContext(unitNode: ast.Program,
                      autoEnabled: Boolean,
                      timeoutInMs: PosInteger,
                      checkSat: Boolean,
                      hintEnabled: Boolean,
                      inscribeSummoningsEnabled: Boolean,
                      coneInfluenceEnabled: Boolean,
-                     invariants: ILinkedSet[Exp] = ilinkedSetEmpty,
-                     premises: ILinkedSet[Exp] = ilinkedSetEmpty,
+                     invariants: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
+                     premises: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                      vars: ISet[String] = isetEmpty,
-                     facts: IMap[String, Exp] = imapEmpty,
-                     provedSteps: IMap[Natural, ProofStep] = imapEmpty,
+                     facts: IMap[String, ast.Exp] = imapEmpty,
+                     provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                      declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
                      inMethod: Boolean = false,
                      satFacts: Boolean = true)
@@ -51,8 +50,8 @@ BackwardProofContext(unitNode: Program,
   def check: Boolean = {
     val program = unitNode
     val facts = this.facts ++ program.block.stmts.flatMap(_ match {
-      case FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
-        case f: Fact => Some(f.id.value -> f.exp)
+      case ast.FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
+        case f: ast.Fact => Some(f.id.value -> f.exp)
         case _ => None
       })
       case _ => ivectorEmpty
@@ -72,38 +71,32 @@ BackwardProofContext(unitNode: Program,
     copy(facts = facts, satFacts = isSat).check(program.block).isDefined
   }
 
-  def oldId(id: Id): Id = newId(s"${id.value}_old", id.tipe)
+  def oldId(id: ast.Id): ast.Id = ast.Exp.Id(id.tipe, s"${id.value}_old")
 
-  def check(block: Block): Option[BackwardProofContext] = {
+  def check(block: ast.Block): Option[BackwardProofContext] = {
     var pcOpt: Option[BackwardProofContext] = Some(this)
     for (stmt <- block.stmts if pcOpt.isDefined) {
       val pc =
-        if (stmt.isInstanceOf[ProofStmt]) pcOpt.get
+        if (stmt.isInstanceOf[ast.ProofStmt]) pcOpt.get
         else pcOpt.get.cleanup
       pcOpt = pc.check(stmt)
     }
     pcOpt
   }
 
-  // TODO: Rework this
-  def check(stmt: Stmt): Option[BackwardProofContext] = {
+  def check(stmt: ast.Stmt): Option[BackwardProofContext] = {
     val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
-    def mkSize(id: Id): Size = {
-      val r = Size(id)
-      r.tipe = id.tipe
-      r
-    }
     var hasError = false
-    if (!stmt.isInstanceOf[ProofElementStmt] &&
-      !stmt.isInstanceOf[MethodDecl]) {
+    if (!stmt.isInstanceOf[ast.ProofElementStmt] &&
+      !stmt.isInstanceOf[ast.MethodDecl]) {
       hasError = hasRuntimeError(stmt) || hasError
     }
     val pcOpt = stmt match {
-      case ProofStmt(proof) =>
+      case ast.ProofStmt(proof) =>
         check(proof).map(_.copy(
           premises = filter(premises ++ extractClaims(proof, reverse = false)),
           provedSteps = imapEmpty))
-      case SequentStmt(sequent) =>
+      case ast.SequentStmt(sequent) =>
         if (sequent.premises.nonEmpty) {
           if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
             hasError = true
@@ -118,9 +111,9 @@ BackwardProofContext(unitNode: Program,
           error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
         }
         Some(copy(premises =
-          filter(if (autoEnabled) premises else ilinkedSetEmpty)
-            ++ sequent.premises ++ sequent.conclusions))
-      case Assert(e) =>
+          filter(if (autoEnabled) premises else ilinkedSetEmpty) ++
+            sequent.premises ++ sequent.conclusions))
+      case ast.Assert(e) =>
         if (autoEnabled) {
           if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
             error(stmt, s"Could not automatically deduce the assertion validity.")
@@ -141,7 +134,7 @@ BackwardProofContext(unitNode: Program,
           }
         }
         Some(copy(premises = premises + e))
-      case Assume(e) =>
+      case ast.Assume(e) =>
         hasError = !checkSat("", nodeLocMap(stmt),
           premises ++ effectiveSatFacts + e,
           unsatMsg = s"The assumption is unsatisfiable.",
@@ -149,52 +142,55 @@ BackwardProofContext(unitNode: Program,
           timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
         ) || hasError
         Some(copy(premises = premises + e))
-      case SeqAssign(id, index, exp) =>
+      case ast.SeqAssign(id, index, exp) =>
         val old = oldId(id)
-        val m = imapEmpty[Node, Node] + (id -> old)
-        val qVar = newId("q_i", tipe.Z)
+        val m = imapEmpty[ast.Node, ast.Node] + (id -> old)
+        import ast.Exp
+        val qVar = Exp.Id(tipe.Z, "q_i")
+        val t = id.tipe.asInstanceOf[tipe.Fn].result
         Some(copy(premises =
           premises.map(e => subst(e, m)) ++
             ivector(
-              Eq(mkSize(id), mkSize(old)),
-              Eq(Apply(id, Node.seq(subst(index, m))), subst(exp, m)),
-              ForAll(
-                Node.seq(qVar),
-                Some(RangeDomain(Checker.zero, mkSize(id),
+              Exp.Eq(tipe.Z, Exp.Size(id.tipe, id), Exp.Size(old.tipe, old)),
+              Exp.Eq(t, Exp.Apply(id.tipe, id, ast.Node.seq(subst(index, m))), subst(exp, m)),
+              ast.ForAll(
+                ast.Node.seq(qVar),
+                Some(ast.RangeDomain(Checker.zero, Exp.Size(id.tipe, id),
                   loLt = false, hiLt = true)),
-                Implies(
-                  Ne(qVar, index),
-                  Eq(Apply(id, Node.seq(qVar)), Apply(old, Node.seq(qVar)))
+                Exp.Implies(tipe.B,
+                  Exp.Ne(tipe.Z, qVar, index),
+                  Exp.Eq(t, Exp.Apply(id.tipe, id, ast.Node.seq(qVar)),
+                    Exp.Apply(old.tipe, old, ast.Node.seq(qVar)))
                 )
               )
             )))
-      case ExpStmt(exp) =>
+      case ast.ExpStmt(exp) =>
         val (he, pc2) = invoke(exp, None)
         hasError ||= he
         Some(pc2)
-      case a: VarAssign =>
+      case a: ast.VarAssign =>
         val id = a.id
         val exp = a.exp
         exp match {
-          case _: ReadInt => assign(id)
-          case _: RandomInt => assign(id)
-          case exp: Clone => assign(id, exp.id)
-          case exp: Apply if exp.expTipe != tipe.ZS =>
+          case _: ast.ReadInt => assign(id)
+          case _: ast.RandomInt => assign(id)
+          case exp: ast.Clone => assign(id, exp.id)
+          case exp: ast.Apply if !exp.expTipe.isInstanceOf[tipe.MSeq] =>
             val (he, pc2) = invoke(exp, Some(id))
             hasError ||= he
             Some(pc2)
           case _ => assign(id, exp)
         }
-      case If(exp, thenBlock, elseBlock) =>
+      case ast.If(exp, thenBlock, elseBlock) =>
         val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
-        val elsePcOpt = copy(premises = premises + Not(exp)).check(elseBlock)
+        val elsePcOpt = copy(premises = premises + ast.Exp.Not(tipe.B, exp)).check(elseBlock)
         (thenPcOpt, elsePcOpt) match {
           case (Some(thenPc), Some(elsePc)) =>
             Some(copy(premises =
               orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
           case _ => None
         }
-      case stmt: MethodDecl =>
+      case stmt: ast.MethodDecl =>
         val invs = if (stmt.isHelper) ilinkedSetEmpty else invariants
         val effectivePre = invs ++ stmt.contract.requires.exps
         val effectivePost = invs ++ stmt.contract.ensures.exps
@@ -232,15 +228,15 @@ BackwardProofContext(unitNode: Program,
           ) || hasError
         val modifiedIds = stmt.contract.modifies.ids.toSet
         val mods = modifiedIds.map(id =>
-          Eq(id, newId(id.value + "_in", id.tipe)))
+          ast.Exp.Eq(id.tipe, id, ast.Exp.Id(id.tipe, id.value + "_in")))
         copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, inMethod = true).
           check(stmt.block) match {
           case Some(pc2) =>
-            var modifiedInvariants = ilinkedSetEmpty[Exp]
+            var modifiedInvariants = ilinkedSetEmpty[ast.Exp]
             for (e <- invs) {
               var modified = false
               Visitor.build({
-                case id: Id =>
+                case id: ast.Id =>
                   if (modifiedIds.contains(id)) {
                     modified = true
                   }
@@ -264,8 +260,8 @@ BackwardProofContext(unitNode: Program,
             }
             val post = stmt.contract.ensures.exps
             val postSubstMap = stmt.returnExpOpt match {
-              case Some(e) => imapEmpty[Node, Node] + (Result() -> e)
-              case _ => imapEmpty[Node, Node]
+              case Some(e) => imapEmpty[ast.Node, ast.Node] + (ast.Result() -> e)
+              case _ => imapEmpty[ast.Node, ast.Node]
             }
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
@@ -284,7 +280,7 @@ BackwardProofContext(unitNode: Program,
           case _ => hasError = true
         }
         Some(this.cleanup)
-      case InvStmt(inv) =>
+      case ast.InvStmt(inv) =>
         if (autoEnabled) {
           val ps = premises ++ facts.values
           for (e <- inv.exps)
@@ -306,8 +302,8 @@ BackwardProofContext(unitNode: Program,
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         Some(copy(invariants = invariants ++ inv.exps))
-      case _: FactStmt => Some(this)
-      case While(exp, loopBlock, loopInv) =>
+      case _: ast.FactStmt => Some(this)
+      case ast.While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
         if (autoEnabled) {
           val ps = premises ++ facts.values
@@ -329,7 +325,7 @@ BackwardProofContext(unitNode: Program,
           for (premise <- premises) {
             var propagate = true
             Visitor.build({
-              case id: Id =>
+              case id: ast.Id =>
                 if (modifiedIds.contains(id)) propagate = false
                 false
             })(premise)
@@ -353,37 +349,37 @@ BackwardProofContext(unitNode: Program,
                   hasError = true
                 }
             }
-            Some(copy(premises = ps + Not(exp)))
+            Some(copy(premises = ps + ast.Exp.Not(tipe.B, exp)))
           case _ => None
         }
-      case _: Print => Some(this)
+      case _: ast.Print => Some(this)
     }
     generateHint(premises, stmt,
       pcOpt.map(_.premises).getOrElse(ilinkedSetEmpty))
     if (hasError) None else pcOpt
   }
 
-  def assign(id: Id, exp: Exp): Option[BackwardProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
-    Some(copy(premises = premises.map(sst) + Eq(id, sst(exp))))
+  def assign(id: ast.Id, exp: ast.Exp): Option[BackwardProofContext] = {
+    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oldId(id)))
+    Some(copy(premises = premises.map(sst) + ast.Exp.Eq(id.tipe, id, sst(exp))))
   }
 
-  def assign(id: Id): Option[BackwardProofContext] = {
-    val sst = expRewriter(Map[Node, Node](id -> oldId(id)))
+  def assign(id: ast.Id): Option[BackwardProofContext] = {
+    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oldId(id)))
     Some(copy(premises = premises.map(sst)))
   }
 
-  def invoke(a: Apply, lhsOpt: Option[Id]): (Boolean, BackwardProofContext) = {
+  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): (Boolean, BackwardProofContext) = {
     var hasError = false
     val md = a.declOpt.get
-    var postSubstMap = md.params.map(_.id).zip(a.args).toMap[Node, Node]
+    var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
     val isHelper = md.isHelper
-    var invs = ivectorEmpty[Exp]
+    var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
     for (inv <- invariants if !isHelper) {
       var mod = false
       Visitor.build({
-        case id: Id =>
+        case id: ast.Id =>
           if (modIds.contains(id.value))
             mod = true
           false
@@ -420,19 +416,19 @@ BackwardProofContext(unitNode: Program,
     }
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
-        (x, imapEmpty[Node, Node] + (x -> oldId(x)))
+        (x, imapEmpty[ast.Node, ast.Node] + (x -> oldId(x)))
       case _ =>
-        (newId(md.id.value + "_result",
-          md.id.tipe.asInstanceOf[tipe.Fn].result),
-          imapEmpty[Node, Node])
+        (ast.Exp.Id(md.id.tipe.asInstanceOf[tipe.Fn].result,
+          md.id.value + "_result"),
+          imapEmpty[ast.Node, ast.Node])
     }
     var premiseSubstMap = psm
-    postSubstMap += Result() -> lhs
+    postSubstMap += ast.Result() -> lhs
     var modParams = isetEmpty[String]
-    for ((p, arg@Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
+    for ((p, arg@ast.Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
       modParams += p.value
       val arg_old = oldId(arg)
-      val p_in = newId(p.value + "_in", p.tipe)
+      val p_in = ast.Exp.Id(p.tipe, p.value + "_in")
       premiseSubstMap += arg -> arg_old
       postSubstMap += arg -> arg_old
       postSubstMap += p -> arg
@@ -440,7 +436,7 @@ BackwardProofContext(unitNode: Program,
     }
     for (g <- md.contract.modifies.ids if !modParams.contains(g.value)) {
       val g_old = oldId(g)
-      val g_in = newId(g.value + "_in", g.tipe)
+      val g_in = ast.Exp.Id(g.tipe, g.value + "_in")
       premiseSubstMap += g -> g_old
       postSubstMap += g_in -> g_old
     }
@@ -454,11 +450,11 @@ BackwardProofContext(unitNode: Program,
     copy(premises = filter(premises), provedSteps = imapEmpty,
       declaredStepNumbers = imapEmpty)
 
-  def filter(premises: ILinkedSet[Exp]): ILinkedSet[Exp] = {
-    def keep(e: Exp) = {
+  def filter(premises: ILinkedSet[ast.Exp]): ILinkedSet[ast.Exp] = {
+    def keep(e: ast.Exp) = {
       var r = true
       Visitor.build({
-        case Id(value) if value.endsWith("_old") || value.endsWith("_result") =>
+        case ast.Id(value) if value.endsWith("_old") || value.endsWith("_result") =>
           r = false
           false
       })(e)
@@ -468,9 +464,9 @@ BackwardProofContext(unitNode: Program,
   }
 
   def make(vars: ISet[String],
-           provedSteps: IMap[Natural, ProofStep],
+           provedSteps: IMap[Natural, ast.ProofStep],
            declaredStepNumbers: IMap[Natural, LocationInfo],
-           premises: ILinkedSet[Exp]): BackwardProofContext =
+           premises: ILinkedSet[ast.Exp]): BackwardProofContext =
     copy(vars = vars, provedSteps = provedSteps,
       declaredStepNumbers = declaredStepNumbers, premises = premises)
 }

@@ -28,7 +28,7 @@ package org.sireum.logika.util
 import java.io.StringWriter
 import java.util.concurrent.ConcurrentHashMap
 
-import org.sireum.logika.ast._
+import org.sireum.logika.ast
 import org.sireum.logika.tipe._
 import org.sireum.util.jvm._
 import org.sireum.util._
@@ -71,13 +71,16 @@ object Z3 {
   }
 
   def isValid(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural,
-              premises: Node.Seq[Exp], conclusions: Node.Seq[Exp])(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) =
-    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, bitWidth, Not(And(conclusions)))
-    else checkSat(timeoutInMs, isSymExe, bitWidth, Not(Implies(And(premises), And(conclusions))))
+              premises: ast.Node.Seq[ast.Exp], conclusions: ast.Node.Seq[ast.Exp])(
+               implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) = {
+    import ast.Exp
+    import org.sireum.logika.tipe._
+    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, bitWidth, Exp.Not(B, Exp.And(conclusions)))
+    else checkSat(timeoutInMs, isSymExe, bitWidth, Exp.Not(B, Exp.Implies(B, Exp.And(premises), Exp.And(conclusions))))
+  }
 
-  def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural, es: Exp*)(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[Node, LocationInfo]): (String, CheckResult) = {
+  def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural, es: ast.Exp*)(
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) = {
     def f() = new Z3(timeoutInMs, isSymExe, bitWidth).checkSat(es: _*)
     if (satCacheEnabled) {
       val key: Object = es match {
@@ -102,7 +105,7 @@ object Z3 {
 
 private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural)(
   implicit reporter: TagReporter,
-  nodeLocMap: MIdMap[Node, LocationInfo]) {
+  nodeLocMap: MIdMap[ast.Node, LocationInfo]) {
 
   import Z3._
 
@@ -117,13 +120,14 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
   }
   val rounding = "RNE"
 
-  def checkSat(es: Exp*): (String, CheckResult) = {
+  def checkSat(es: ast.Exp*): (String, CheckResult) = {
     for (e <- es) {
+      assert(e.isResolved)
       stMain.add("e",
         stg.getInstanceOf("assertion").
           add("e", translate(e))).add("e", lineSep)
       Visitor.build({
-        case q: Quant[_] =>
+        case q: ast.Quant[_] =>
           for (id <- q.ids) typeMap -= id.value
           true
       })(e)
@@ -153,6 +157,9 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
             case "sat" => Sat
             case "timeout" => Timeout
             case _ =>
+              for (e <- es) {
+                println(ast.Exp.toString(e, inProof = true))
+              }
               reporter.report(InternalErrorMessage("Z3",
                 s"""Error occurred when calling Z3 for the following script:
 $z3Script
@@ -173,18 +180,18 @@ $s"""))
     (z3Script, r)
   }
 
-  def translate(n: BigInt, tpe: IntegralType): ST = {
-    val lit = Type.normalize(bitWidth, tpe) match {
-      case _: S8Type | _: U8Type =>
+  def translate(n: BigInt, tpe: ast.IntegralType): ST = {
+    val lit = ast.Type.normalize(bitWidth, tpe) match {
+      case _: ast.S8Type | _: ast.U8Type =>
         val v: java.lang.Byte = n.toByte
         String.format("#x%02X", v)
-      case _: S16Type | _: U16Type =>
+      case _: ast.S16Type | _: ast.U16Type =>
         val v: java.lang.Short = n.toShort
         String.format("#x%04X", v)
-      case _: S32Type | _: U32Type =>
+      case _: ast.S32Type | _: ast.U32Type =>
         val v: java.lang.Integer = n.toInt
         String.format("#x%08X", v)
-      case _: S64Type | _: U64Type =>
+      case _: ast.S64Type | _: ast.U64Type =>
         val v: java.lang.Long = n.toLong
         String.format("#x%016X", v)
       case _ => if (n < 0) s"(- ${-n})" else n.toString
@@ -195,21 +202,19 @@ $s"""))
   def normalizeTipe(t: org.sireum.logika.tipe.Tipe): org.sireum.logika.tipe.Tipe =
     org.sireum.logika.tipe.Tipe.normalize(bitWidth, t)
 
-  def translate(e: Exp): ST =
+  def translate(e: ast.Exp): ST =
     e match {
-      case BooleanLit(value) =>
+      case ast.BooleanLit(value) =>
         stg.getInstanceOf(if (value) "truelit" else "falselit")
-      case id: Id =>
+      case id: ast.Id =>
         typeMap(id.value) = id.tipe
         stg.getInstanceOf("id").add("value", id.value)
-      case e@Size(id) =>
+      case e@ast.Size(id) =>
         stg.getInstanceOf("size").add("id", translate(id)).
           add("tipe", translate(e.tipe))
-      case e: Result =>
-        val id = Id("result")
-        id.tipe = e.tipe
-        translate(id)
-      case e: Apply =>
+      case e: ast.Result =>
+        translate(ast.Exp.Id(e.tipe, "result"))
+      case e: ast.Apply =>
         if (e.expTipe.isInstanceOf[org.sireum.logika.tipe.MSeq])
           stg.getInstanceOf("index").add("a", translate(e.exp)).
             add("i", translate(e.args.head))
@@ -218,14 +223,14 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
-      case e@IntLit(value, _, tpeOpt) =>
+      case e@ast.IntLit(value, _, tpeOpt) =>
         val n = e.normalize
         val lit = tpeOpt match {
           case Some(tpe) => translate(n, tpe)
-          case _ => translate(n, ZType())
+          case _ => translate(n, ast.ZType())
         }
         stg.getInstanceOf("lit").add("value", lit)
-      case e@FloatLit(value) =>
+      case e@ast.FloatLit(value) =>
         import java.lang.{Float => JFloat, Double => JDouble, Integer => JInteger, Long => JLong}
         e.primitiveValue match {
           case Left(f) =>
@@ -261,16 +266,16 @@ $s"""))
               stg.getInstanceOf("fplit").add("sign", sign).add("eb", eb).add("sb", sb)
             }
         }
-      case RealLit(value) =>
+      case ast.RealLit(value) =>
         if (value.head == '-')
           stg.getInstanceOf("lit").add("value", s"(- ${value.tail}")
         else
           stg.getInstanceOf("lit").add("value", value)
-      case e: IntMin =>
+      case e: ast.IntMin =>
         translate(e.value, e.integralType)
-      case e: IntMax =>
+      case e: ast.IntMax =>
         translate(e.value, e.integralType)
-      case e@Prepend(left, right) =>
+      case e@ast.Prepend(left, right) =>
         val c = freshSeq()
         val a = translate(right)
         val v = translate(left)
@@ -279,7 +284,7 @@ $s"""))
             add("tipe", translate(e.tipe))
         ).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case e@Append(left, right) =>
+      case e@ast.Append(left, right) =>
         val c = freshSeq()
         val a = translate(left)
         val v = translate(right)
@@ -288,84 +293,84 @@ $s"""))
             add("tipe", e.tipe)
         ).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case e: BinaryExp =>
+      case e: ast.BinaryExp =>
         val op =
           e match {
-            case e@Ne(left, right) =>
-              val eq = Eq(left, right)
+            case e@ast.Ne(left, right) =>
+              val eq = ast.Exp.Eq(e.tipe, left, right)
               eq.tipe = e.tipe
-              return translate(Not(eq))
-            case e: Mul =>
+              return translate(ast.Exp.Not(B, eq))
+            case e: ast.Mul =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvmul"
                 case F32 | F64 => s"fp.mul $rounding"
                 case _ => "*"
               }
-            case e: Div =>
+            case e: ast.Div =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsdiv"
                 case U8 | U16 | U32 | U64 => "bvudiv"
                 case F32 | F64 => s"fp.div $rounding"
                 case _ => "div"
               }
-            case e: Rem =>
+            case e: ast.Rem =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsrem"
                 case U8 | U16 | U32 | U64 => "bvurem"
                 case F32 | F64 => "fp.rem"
                 case _ => "rem"
               }
-            case e: Add =>
+            case e: ast.Add =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvadd"
                 case F32 | F64 => s"fp.add $rounding"
                 case _ => "+"
               }
-            case e: Sub =>
+            case e: ast.Sub =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvsub"
                 case F32 | F64 => s"fp.sub $rounding"
                 case _ => "-"
               }
-            case e: Lt =>
+            case e: ast.Lt =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvslt"
                 case U8 | U16 | U32 | U64 => "bvult"
                 case F32 | F64 => "fp.lt"
                 case _ => "<"
               }
-            case e: Le =>
+            case e: ast.Le =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsle"
                 case U8 | U16 | U32 | U64 => "bvule"
                 case F32 | F64 => "fp.leq"
                 case _ => "<="
               }
-            case e: Gt =>
+            case e: ast.Gt =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsgt"
                 case U8 | U16 | U32 | U64 => "bvugt"
                 case F32 | F64 => "fp.gt"
                 case _ => ">"
               }
-            case e: Ge =>
+            case e: ast.Ge =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 => "bvsge"
                 case U8 | U16 | U32 | U64 => "bvuge"
                 case F32 | F64 => "fp.geq"
                 case _ => ">="
               }
-            case e: Shl => "bvshl"
-            case e: Shr =>
+            case e: ast.Shl => "bvshl"
+            case e: ast.Shr =>
               normalizeTipe(e.tipe) match {
                 case U8 | U16 | U32 | U64 => "bvlshr"
                 case _ => "bvashr"
               }
-            case e: UShr => "bvlshr"
-            case e: Eq =>
+            case e: ast.UShr => "bvlshr"
+            case e: ast.Eq =>
               normalizeTipe(e.tipe) match {
                 case _: org.sireum.logika.tipe.MSeq =>
                   return stg.getInstanceOf("equal").add("a1", translate(e.left)).
@@ -373,34 +378,34 @@ $s"""))
                 case F32 | F64 => "fp.eq"
                 case _ => "="
               }
-            case e: And =>
+            case e: ast.And =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvand"
                 case _ => "and"
               }
-            case e: Xor =>
+            case e: ast.Xor =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvxor"
                 case _ => "xor"
               }
-            case e: Or =>
+            case e: ast.Or =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvor"
                 case _ => "or"
               }
-            case e: Implies => "=>"
-            case _: Append | _: Prepend =>
+            case e: ast.Implies => "=>"
+            case _: ast.Append | _: ast.Prepend =>
               assert(assertion = false, "Unexpected situation.")
               "???"
           }
         stg.getInstanceOf("binary").add("op", op).
           add("left", translate(e.left)).add("right", translate(e.right))
-      case e: UnaryExp =>
+      case e: ast.UnaryExp =>
         e match {
-          case Not(exp) =>
+          case ast.Not(exp) =>
             normalizeTipe(e.tipe) match {
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
@@ -410,7 +415,7 @@ $s"""))
                 stg.getInstanceOf("unary").add("op", "not").
                   add("exp", translate(exp))
             }
-          case Minus(exp) =>
+          case ast.Minus(exp) =>
             normalizeTipe(e.tipe) match {
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
@@ -424,11 +429,11 @@ $s"""))
                   add("exp", translate(exp))
             }
         }
-      case e: Quant[_] =>
-        val isForAll = e.isInstanceOf[ForAll]
+      case e: ast.Quant[_] =>
+        val isForAll = e.isInstanceOf[ast.ForAll]
         val stType = e.domainOpt match {
-          case Some(_: RangeDomain) => return translate(e.simplify)
-          case Some(TypeDomain(tpe)) => translate(tpe)
+          case Some(_: ast.RangeDomain) => return translate(e.simplify)
+          case Some(ast.TypeDomain(tpe)) => translate(tpe)
           case None => assert(assertion = false, "Unexpected situation.")
         }
         val st = stg.getInstanceOf("quant").
@@ -439,7 +444,7 @@ $s"""))
             stg.getInstanceOf("param").add("id", translate(id)).
               add("tipe", stType))
         st
-      case e: SeqLit =>
+      case e: ast.SeqLit =>
         val c = freshSeq()
         val tipe = translate(e.tpe)
         val stZs = stg.getInstanceOf("declseq").add("c", c).
@@ -461,7 +466,7 @@ $s"""))
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case _: RandomInt | _: ReadInt | _: Clone | _: Random =>
+      case _: ast.RandomInt | _: ast.ReadInt | _: ast.Clone | _: ast.Random =>
         assert(assertion = false, "Unexpected situation.")
         null
     }
@@ -546,57 +551,57 @@ $s"""))
       assert(assertion = false, "Unexpected situation."); "???"
   }
 
-  def translate(tpe: Type): String = tpe match {
-    case _: BType => "B"
-    case _: ZType =>
+  def translate(tpe: ast.Type): String = tpe match {
+    case _: ast.BType => "B"
+    case _: ast.ZType =>
       bitWidth match {
         case 0 => "Z"
-        case 8 => "S8"
-        case 16 => "S16"
-        case 32 => "S32"
-        case 64 => "S64"
+        case 8 => "Z8"
+        case 16 => "Z16"
+        case 32 => "Z32"
+        case 64 => "Z64"
       }
-    case _: Z8Type => "Z8"
-    case _: Z16Type => "Z16"
-    case _: Z32Type => "Z32"
-    case _: Z64Type => "Z64"
-    case _: NType => "N"
-    case _: N8Type => "N8"
-    case _: N16Type => "N16"
-    case _: N32Type => "N32"
-    case _: N64Type => "N64"
-    case _: S8Type => "S8"
-    case _: S16Type => "S16"
-    case _: S32Type => "S32"
-    case _: S64Type => "S64"
-    case _: U8Type => "U8"
-    case _: U16Type => "U16"
-    case _: U32Type => "U32"
-    case _: U64Type => "U64"
-    case _: RType => "R"
-    case _: F32Type => "F32"
-    case _: F64Type => "F64"
-    case _: BSType => stMain.add("BS", true); "BS"
-    case _: ZSType => "ZS"
-    case _: Z8SType => stMain.add("Z8S", true); "Z8S"
-    case _: Z16SType => stMain.add("Z16S", true); "Z16S"
-    case _: Z32SType => stMain.add("Z32S", true); "Z32S"
-    case _: Z64SType => stMain.add("Z64S", true); "Z64S"
-    case _: NSType => stMain.add("NS", true); "NS"
-    case _: N8SType => stMain.add("N8S", true); "N8S"
-    case _: N16SType => stMain.add("N16S", true); "N16S"
-    case _: N32SType => stMain.add("N32S", true); "N32S"
-    case _: N64SType => stMain.add("N64S", true); "N64S"
-    case _: S8SType => stMain.add("S8S", true); "S8S"
-    case _: S16SType => stMain.add("S16S", true); "S16S"
-    case _: S32SType => stMain.add("S32S", true); "S32S"
-    case _: S64SType => stMain.add("S64S", true); "S64S"
-    case _: U8SType => stMain.add("U8S", true); "U8S"
-    case _: U16SType => stMain.add("U16S", true); "U16S"
-    case _: U32SType => stMain.add("U32S", true); "U32S"
-    case _: U64SType => stMain.add("U64S", true); "U64S"
-    case _: RSType => stMain.add("RS", true); "RS"
-    case _: F32SType => stMain.add("F32S", true); "F32S"
-    case _: F64SType => stMain.add("F64S", true); "F64S"
+    case _: ast.Z8Type => "Z8"
+    case _: ast.Z16Type => "Z16"
+    case _: ast.Z32Type => "Z32"
+    case _: ast.Z64Type => "Z64"
+    case _: ast.NType => "N"
+    case _: ast.N8Type => "N8"
+    case _: ast.N16Type => "N16"
+    case _: ast.N32Type => "N32"
+    case _: ast.N64Type => "N64"
+    case _: ast.S8Type => "S8"
+    case _: ast.S16Type => "S16"
+    case _: ast.S32Type => "S32"
+    case _: ast.S64Type => "S64"
+    case _: ast.U8Type => "U8"
+    case _: ast.U16Type => "U16"
+    case _: ast.U32Type => "U32"
+    case _: ast.U64Type => "U64"
+    case _: ast.RType => "R"
+    case _: ast.F32Type => "F32"
+    case _: ast.F64Type => "F64"
+    case _: ast.BSType => stMain.add("BS", true); "BS"
+    case _: ast.ZSType => "ZS"
+    case _: ast.Z8SType => stMain.add("Z8S", true); "Z8S"
+    case _: ast.Z16SType => stMain.add("Z16S", true); "Z16S"
+    case _: ast.Z32SType => stMain.add("Z32S", true); "Z32S"
+    case _: ast.Z64SType => stMain.add("Z64S", true); "Z64S"
+    case _: ast.NSType => stMain.add("NS", true); "NS"
+    case _: ast.N8SType => stMain.add("N8S", true); "N8S"
+    case _: ast.N16SType => stMain.add("N16S", true); "N16S"
+    case _: ast.N32SType => stMain.add("N32S", true); "N32S"
+    case _: ast.N64SType => stMain.add("N64S", true); "N64S"
+    case _: ast.S8SType => stMain.add("S8S", true); "S8S"
+    case _: ast.S16SType => stMain.add("S16S", true); "S16S"
+    case _: ast.S32SType => stMain.add("S32S", true); "S32S"
+    case _: ast.S64SType => stMain.add("S64S", true); "S64S"
+    case _: ast.U8SType => stMain.add("U8S", true); "U8S"
+    case _: ast.U16SType => stMain.add("U16S", true); "U16S"
+    case _: ast.U32SType => stMain.add("U32S", true); "U32S"
+    case _: ast.U64SType => stMain.add("U64S", true); "U64S"
+    case _: ast.RSType => stMain.add("RS", true); "RS"
+    case _: ast.F32SType => stMain.add("F32S", true); "F32S"
+    case _: ast.F64SType => stMain.add("F64S", true); "F64S"
   }
 }

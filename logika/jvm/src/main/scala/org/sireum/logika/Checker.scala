@@ -25,7 +25,6 @@
 
 package org.sireum.logika
 
-import org.sireum.logika.ast._
 import org.sireum.logika.message.CheckerKind
 import org.sireum.logika.tipe.TypeChecker
 import org.sireum.logika.util._
@@ -33,9 +32,9 @@ import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
 
 object Checker {
-  private[logika] final val top = BooleanLit(true)
-  private[logika] final val bottom = BooleanLit(false)
-  private[logika] final val zero = IntLit("0", 0, None)
+  private[logika] final val top = ast.BooleanLit(true)
+  private[logika] final val bottom = ast.BooleanLit(false)
+  private[logika] final val zero = ast.IntLit("0", 0, None)
   private[logika] final val kind = "Proof Checker"
 
   final def check(m: message.Check)(
@@ -43,9 +42,9 @@ object Checker {
     val autoEnabled = m.autoEnabled ||
       m.kind == message.CheckerKind.SummarizingSymExe ||
       m.kind == message.CheckerKind.UnrollingSymExe
-    var unitNodes = ivectorEmpty[UnitNode]
+    var unitNodes = ivectorEmpty[ast.UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
+      ast.Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
@@ -53,14 +52,14 @@ object Checker {
         else "The input is ill-formed."))
       return message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
     }
-    if (unitNodes.forall(_.isInstanceOf[Program])) {
-      val programs = unitNodes.map(_.asInstanceOf[Program])
+    if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
+      val programs = unitNodes.map(_.asInstanceOf[ast.Program])
       if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, m.bitWidth, programs: _*)) {
         var hasError = false
         val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
         for (program <- programs)
           try Visitor.build({
-            case t: IntegralType if !t.isInstanceOf[ZType] && !isSymExe =>
+            case t: ast.IntegralType if !t.isInstanceOf[ast.ZType] && !isSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
@@ -68,7 +67,7 @@ object Checker {
               }
               error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
               throw new RuntimeException
-            case t: SeqType if !t.isInstanceOf[ZSType] && !isSymExe =>
+            case t: ast.SeqType if !t.isInstanceOf[ast.ZSType] && !isSymExe =>
               val ts = {
                 val sb = new StringBuilder
                 t.buildString(sb)
@@ -96,8 +95,8 @@ object Checker {
           if (m.proofs.size > 1) "The programs are ill-formed."
           else "The program is ill-formed."))
       }
-    } else if (unitNodes.forall(_.isInstanceOf[Sequent])) {
-      val sequents = unitNodes.map(_.asInstanceOf[Sequent])
+    } else if (unitNodes.forall(_.isInstanceOf[ast.Sequent])) {
+      val sequents = unitNodes.map(_.asInstanceOf[ast.Sequent])
       if (m.lastOnly)
         reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
       for (sequent <- sequents)
@@ -108,7 +107,7 @@ object Checker {
     message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
   }
 
-  final def check(unitNode: UnitNode,
+  final def check(unitNode: ast.UnitNode,
                   checkerKind: message.CheckerKind.Value,
                   autoEnabled: Boolean = false,
                   timeoutInMs: PosInteger = 2000,
@@ -121,9 +120,9 @@ object Checker {
                   recursionBound: Natural = 10,
                   useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
-    case s: Sequent =>
-      assert(s.mode == LogicMode.Propositional ||
-        s.mode == LogicMode.Predicate)
+    case s: ast.Sequent =>
+      assert(s.mode == ast.LogicMode.Propositional ||
+        s.mode == ast.LogicMode.Predicate)
       implicit val fileUriOpt = s.fileUriOpt
       var vars = isetEmpty[String]
       for (e <- s.premises ++ s.conclusions)
@@ -136,7 +135,7 @@ object Checker {
             premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
           val exps = proof.steps.flatMap(_ match {
-            case s: RegularStep => Some(s.exp)
+            case s: ast.RegularStep => Some(s.exp)
             case _ => None
           }).toSet
           for (c <- s.conclusions)
@@ -151,21 +150,21 @@ object Checker {
           reporter.report(ErrorMessage(kind, s"${unitNode.mode.value} logic proof is yet to be done."))
           false
       }
-    case program: Program =>
+    case program: ast.Program =>
       implicit val fileUriOpt = program.fileUriOpt
       implicit val nodeLocMap = program.nodeLocMap
       var hasProof = false
       Visitor.build({
-        case _: SequentStmt => hasProof = true; false
-        case _: ProofStmt => hasProof = true; false
-        case _: Assert => hasProof = true; false
-        case InvStmt(inv) if inv.exps.nonEmpty =>
+        case _: ast.SequentStmt => hasProof = true; false
+        case _: ast.ProofStmt => hasProof = true; false
+        case _: ast.Assert => hasProof = true; false
+        case ast.InvStmt(inv) if inv.exps.nonEmpty =>
           hasProof = true; false
-        case Requires(exps) if exps.nonEmpty =>
+        case ast.Requires(exps) if exps.nonEmpty =>
           hasProof = true; false
-        case Ensures(exps) if exps.nonEmpty =>
+        case ast.Ensures(exps) if exps.nonEmpty =>
           hasProof = true; false
-        case LoopInv(inv, _) if inv.exps.nonEmpty =>
+        case ast.LoopInv(inv, _) if inv.exps.nonEmpty =>
           hasProof = true; false
       })(program)
       if (!hasProof) {
@@ -194,10 +193,10 @@ object Checker {
       r
   }
 
-  private[logika] final def collectVars(e: Exp): ISet[String] = {
+  private[logika] final def collectVars(e: ast.Exp): ISet[String] = {
     var result = isetEmpty[String]
     Visitor.build({
-      case Id(value) =>
+      case ast.Id(value) =>
         result += value
         false
     })(e)
@@ -219,13 +218,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   implicit val nodeLocMap = unitNode.nodeLocMap
   val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
 
-  def unitNode: UnitNode
+  def unitNode: ast.UnitNode
 
-  def premises: ILinkedSet[Exp]
+  def premises: ILinkedSet[ast.Exp]
 
   def vars: ISet[String]
 
-  def provedSteps: IMap[Natural, ProofStep]
+  def provedSteps: IMap[Natural, ast.ProofStep]
 
   def declaredStepNumbers: IMap[Natural, LocationInfo]
 
@@ -235,9 +234,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def hintEnabled: Boolean
 
-  def invariants: ILinkedSet[Exp]
+  def invariants: ILinkedSet[ast.Exp]
 
-  def facts: IMap[String, Exp]
+  def facts: IMap[String, ast.Exp]
 
   def autoEnabled: Boolean
 
@@ -250,11 +249,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def bitWidth: Natural
 
   def make(vars: ISet[String] = vars,
-           provedSteps: IMap[Natural, ProofStep] = provedSteps,
+           provedSteps: IMap[Natural, ast.ProofStep] = provedSteps,
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
-           premises: ILinkedSet[Exp] = premises): T
+           premises: ILinkedSet[ast.Exp] = premises): T
 
-  def checkSat(title: String, li: LocationInfo, exps: Iterable[Exp],
+  def checkSat(title: String, li: LocationInfo, exps: Iterable[ast.Exp],
                unsatMsg: => String, unknownMsg: => String,
                timeoutMsg: => String): Boolean = {
     val es = exps.toVector
@@ -269,7 +268,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         sb.append(lineSep)
         for (e <- es) {
           sb.append(";   ")
-          sb.append(Exp.toString(e, inProof = true))
+          sb.append(ast.Exp.toString(e, inProof = true))
           sb.append(lineSep)
         }
         sb.append(lineSep)
@@ -293,26 +292,26 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     } else true
   }
 
-  def coneOfInfluence(premises: Iterable[Exp],
-                      conclusions: Iterable[Exp]): IVector[Exp] = {
-    def collectIds(e: Exp): Set[String] = {
+  def coneOfInfluence(premises: Iterable[ast.Exp],
+                      conclusions: Iterable[ast.Exp]): IVector[ast.Exp] = {
+    def collectIds(e: ast.Exp): Set[String] = {
       var ids = isetEmpty[String]
       Visitor.build({
-        case Id(value) => ids += value
+        case ast.Id(value) => ids += value
           false
       })(e)
       ids
     }
     var relevantIds = conclusions.toVector.flatMap(collectIds)
-    if (relevantIds.isEmpty) return Node.emptySeq
-    val m = midmapEmpty[Exp, (Set[String], Natural)]
+    if (relevantIds.isEmpty) return ast.Node.emptySeq
+    val m = midmapEmpty[ast.Exp, (Set[String], Natural)]
     var i = 0
     for (e <- premises) {
       m(e) = (collectIds(e), i)
       i += 1
     }
     var changed = true
-    var relevantPremises = ivectorEmpty[Exp]
+    var relevantPremises = ivectorEmpty[ast.Exp]
     var temp = premises
     while (changed) {
       val (rps, t) = temp.partition(e => {
@@ -327,19 +326,19 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     relevantPremises.sortWith((e1, e2) => m(e1)._2 > m(e2)._2)
   }
 
-  def check(proofGroup: ProofGroup): Option[T] = {
+  def check(proofGroup: ast.ProofGroup): Option[T] = {
     var addedVars = isetEmpty[String]
     var addedSteps = isetEmpty[Natural]
     var pcOpt: Option[T] =
       proofGroup match {
-        case p: SubProof =>
+        case p: ast.SubProof =>
           val popt = p.assumeStep match {
-            case PlainAssumeStep(_, exp) =>
+            case ast.PlainAssumeStep(_, exp) =>
               addProvedStep(p.assumeStep)
-            case ForAllAssumeStep(num, id, _) =>
+            case ast.ForAllAssumeStep(num, id, _) =>
               addedVars += id.value
               addVar(id, num.value)
-            case ExistsAssumeStep(num, id, exp, _) =>
+            case ast.ExistsAssumeStep(num, id, exp, _) =>
               addedVars += id.value
               addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
           }
@@ -349,9 +348,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     for (step <- proofGroup.steps if pcOpt.isDefined) {
       addedSteps += step.num.value
       step match {
-        case p: RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
-        case p: SubProof => pcOpt = pcOpt.get.check(p)
-        case _: ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
+        case p: ast.RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
+        case p: ast.SubProof => pcOpt = pcOpt.get.check(p)
+        case _: ast.ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
       }
     }
     pcOpt.map(pc => pc.make(
@@ -359,63 +358,63 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       provedSteps = pc.provedSteps -- addedSteps))
   }
 
-  def check(step: RegularStep): Option[T] = {
+  def check(step: ast.RegularStep): Option[T] = {
     val num = step.num.value
     step match {
-      case Premise(_, exp) =>
+      case ast.Premise(_, exp) =>
         if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
         else error(exp, s"Could not find the claimed premise in step #$num.")
-      case AndIntro(_, and, lStep, rStep) =>
+      case ast.AndIntro(_, and, lStep, rStep) =>
         (for (lExp <- findRegularStepExp(lStep, num);
               rExp <- findRegularStepExp(rStep, num)) yield {
-          val expected = And(lExp, rExp)
+          val expected = ast.Exp.And(tipe.B, lExp, rExp)
           if (expected == step.exp) addProvedStep(step)
           else error(and, s"And-intro in step #$num with #${lStep.value} on the left and #${rStep.value} on the right does not produce the expressed form.")
         }).flatten
-      case AndElim1(_, exp, andStep) =>
+      case ast.AndElim1(_, exp, andStep) =>
         findRegularStepExp(andStep, num) match {
-          case Some(And(expected, _)) =>
+          case Some(ast.And(expected, _)) =>
             if (expected == exp) addProvedStep(step)
             else error(exp, s"The conjunction's left sub-expression in step #${andStep.value} does not match #$num for And-elim1.")
           case Some(_) => error(andStep, s"And-elim1 in step #$num requires a conjunction.")
           case _ => None
         }
-      case AndElim2(_, exp, andStep) =>
+      case ast.AndElim2(_, exp, andStep) =>
         findRegularStepExp(andStep, num) match {
-          case Some(And(_, expected)) =>
+          case Some(ast.And(_, expected)) =>
             if (expected == exp) addProvedStep(step)
             else error(exp, s"The conjunction's right sub-expression in step #${andStep.value} does not match #$num for And-elim2.")
           case Some(_) => error(andStep, s"And-elim2 in step #$num requires a conjunction.")
           case _ => None
         }
-      case OrIntro1(_, or@Or(lExp, _), step2) =>
+      case ast.OrIntro1(_, or@ast.Or(lExp, _), step2) =>
         findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == lExp) addProvedStep(step)
             else error(lExp, s"The disjunction's left sub-expression in step #$num does not match #${step2.value} for Or-intro1.")
           case _ => None
         }
-      case OrIntro2(_, or@Or(_, rExp), step2) =>
+      case ast.OrIntro2(_, or@ast.Or(_, rExp), step2) =>
         findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == rExp) addProvedStep(step)
             else error(rExp, s"The disjunction's right sub-expression in step #$num does not match #${step2.value} for Or-intro2.")
           case _ => None
         }
-      case OrElim(_, exp, orStep, lSubProof, rSubProof) =>
+      case ast.OrElim(_, exp, orStep, lSubProof, rSubProof) =>
         findRegularStepExp(orStep, num) match {
-          case someE@Some(_: Or | _: Le | _: Ge) =>
+          case someE@Some(_: ast.Or | _: ast.Le | _: ast.Ge) =>
             val r =
               for (lsp <- findSubProof(lSubProof, num);
                    rsp <- findSubProof(rSubProof, num)) yield {
                 var hasError = false
                 (lsp.first, rsp.first) match {
-                  case (lfs: PlainAssumeStep, rfs: PlainAssumeStep) =>
+                  case (lfs: ast.PlainAssumeStep, rfs: ast.PlainAssumeStep) =>
                     val (lExp, rExp) =
                       (someE.x: @unchecked) match {
-                        case Or(le, re) => (le, re)
-                        case Le(le, re) => (Lt(le, re), Eq(le, re))
-                        case Ge(le, re) => (Gt(le, re), Eq(le, re))
+                        case ast.Or(le, re) => (le, re)
+                        case e@ast.Le(le, re) => (ast.Exp.Lt(e.tipe, le, re), ast.Exp.Eq(e.tipe, le, re))
+                        case e@ast.Ge(le, re) => (ast.Exp.Gt(e.tipe, le, re), ast.Exp.Eq(e.tipe, le, re))
                       }
                     if (lfs.exp != lExp) {
                       error(lSubProof, s"Assumed expression does not match the left sub-expression of #${orStep.value} for Or-elim in step #$num.")
@@ -432,9 +431,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                       hasError = true
                     }
                   case (lfs, rfs) =>
-                    if (!lfs.isInstanceOf[PlainAssumeStep])
+                    if (!lfs.isInstanceOf[ast.PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim left assumption in step #$num.")
-                    if (!rfs.isInstanceOf[PlainAssumeStep])
+                    if (!rfs.isInstanceOf[ast.PlainAssumeStep])
                       error(lSubProof, s"Wrong form for Or-elim right assumption in step #$num.")
                     hasError = true
                 }
@@ -443,12 +442,12 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             r.flatten
           case _ => error(orStep, s"Or-elim in step #$num requires a disjunction in step # ${orStep.value}.")
         }
-      case ImpliesIntro(_, Implies(antecedent, conclusion), subProof) =>
+      case ast.ImpliesIntro(_, ast.Implies(antecedent, conclusion), subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = false
             sp.first match {
-              case fs: PlainAssumeStep =>
+              case fs: ast.PlainAssumeStep =>
                 if (fs.exp != antecedent) {
                   error(antecedent, s"The antecedent of step #$num does not match the assumption of #${subProof.value} for Implies-intro.")
                   hasError = true
@@ -465,10 +464,10 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case ImpliesElim(_, exp, impliesStep, antecedentStep) =>
+      case ast.ImpliesElim(_, exp, impliesStep, antecedentStep) =>
         (findRegularStepExp(impliesStep, num),
           findRegularStepExp(antecedentStep, num)) match {
-          case (Some(Implies(a, c)), Some(antecedent)) =>
+          case (Some(ast.Implies(a, c)), Some(antecedent)) =>
             var hasError = false
             if (a != antecedent) {
               error(step, s"The expression in #${antecedentStep.value} does not match the antecedent in #${impliesStep.value} for Implies-elim of step #$num.")
@@ -484,12 +483,12 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             None
           case _ => None
         }
-      case NegIntro(_, exp, subProof) =>
+      case ast.NegIntro(_, exp, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = false
             (sp.first, sp.last) match {
-              case (fs: PlainAssumeStep, ls: RegularStep) =>
+              case (fs: ast.PlainAssumeStep, ls: ast.RegularStep) =>
                 if (fs.exp != exp.exp) {
                   error(exp.exp, s"The assumption in step #${subProof.value} does not match the non-negated expression of #$num for Negation-intro.")
                   hasError = true
@@ -500,18 +499,18 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep])
+                if (!fs.isInstanceOf[ast.PlainAssumeStep])
                   error(sp, s"Wrong form for Negation-intro assumption in step #$num.")
-                if (!ls.isInstanceOf[RegularStep])
+                if (!ls.isInstanceOf[ast.RegularStep])
                   error(sp, s"Wrong form for Negation-intro conclusion in step #$num.")
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case NegElim(_, exp, step2, negStep) =>
+      case ast.NegElim(_, exp, step2, negStep) =>
         (findRegularStepExp(step2, num), findRegularStepExp(negStep, num)) match {
-          case (Some(e1), Some(e2: Not)) =>
+          case (Some(e1), Some(e2: ast.Not)) =>
             var hasError = false
             if (e1 != e2.exp) {
               error(step, s"The negated expression of step #${step2.value} does not match #${negStep.value} for Negation-elim in #$num.")
@@ -527,7 +526,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             None
           case _ => None
         }
-      case BottomElim(_, exp, falseStep) =>
+      case ast.BottomElim(_, exp, falseStep) =>
         findRegularStepExp(falseStep, num) match {
           case Some(e) =>
             if (e != Checker.bottom) {
@@ -536,13 +535,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             } else addProvedStep(step)
           case _ => None
         }
-      case Pbc(_, exp, subProof) =>
+      case ast.Pbc(_, exp, subProof) =>
         findSubProof(subProof, num) match {
-          case Some(sp: SubProof) =>
+          case Some(sp: ast.SubProof) =>
             var hasError = false
             (sp.first, sp.last) match {
-              case (fs: PlainAssumeStep, ls: RegularStep) =>
-                if (fs.exp != Not(exp)) {
+              case (fs: ast.PlainAssumeStep, ls: ast.RegularStep) =>
+                if (fs.exp != ast.Not(exp)) {
                   error(exp, s"The negated expression in step #$num does not match the assumption in #${subProof.value} for Pbc.")
                   hasError = true
                 }
@@ -552,22 +551,22 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                   hasError = true
                 }
               case (fs, ls) =>
-                if (!fs.isInstanceOf[PlainAssumeStep])
+                if (!fs.isInstanceOf[ast.PlainAssumeStep])
                   error(sp, s"Wrong form for Pbc assumption in step #$num.")
-                if (ls.isInstanceOf[RegularStep])
+                if (ls.isInstanceOf[ast.RegularStep])
                   error(sp, s"Wrong form for Pbc conclusion in step #$num.")
                 hasError = true
             }
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case Subst1(_, exp, eqStep, step2) =>
+      case ast.Subst1(_, exp, eqStep, step2) =>
         var hasError = false
         (findRegularStepExp(eqStep, num),
           findRegularStepExp(step2, num)) match {
-          case (Some(Eq(exp1, exp2)), Some(e)) =>
+          case (Some(ast.Eq(exp1, exp2)), Some(e)) =>
             val expected =
-              org.sireum.logika.ast.Rewriter.build[Exp]()({
+              org.sireum.logika.ast.Rewriter.build[ast.Exp]()({
                 case `exp1` => exp2
               })(e)
             if (expected != exp) {
@@ -580,13 +579,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case _ => hasError = true
         }
         if (hasError) None else addProvedStep(step)
-      case Subst2(_, exp, eqStep, step2) =>
+      case ast.Subst2(_, exp, eqStep, step2) =>
         var hasError = false
         (findRegularStepExp(eqStep, num),
           findRegularStepExp(step2, num)) match {
-          case (Some(Eq(exp1, exp2)), Some(e)) =>
+          case (Some(ast.Eq(exp1, exp2)), Some(e)) =>
             val expected =
-              org.sireum.logika.ast.Rewriter.build[Exp]()({
+              org.sireum.logika.ast.Rewriter.build[ast.Exp]()({
                 case `exp2` => exp1
               })(e)
             if (expected != exp) {
@@ -599,26 +598,26 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case _ => hasError = true
         }
         if (hasError) None else addProvedStep(step)
-      case Algebra(_, exp, steps) =>
+      case ast.Algebra(_, exp, steps) =>
         unitNode.mode match {
-          case LogicMode.Propositional | LogicMode.Predicate =>
+          case ast.LogicMode.Propositional | ast.LogicMode.Predicate =>
             error(step, s"Algebra cannot be used in ${unitNode.mode} Logic.")
             None
-          case LogicMode.Programming =>
+          case ast.LogicMode.Programming =>
             if (deduce(num, exp, steps, isAuto = false))
               addProvedStep(step)
             else None
         }
-      case ForAllIntro(_, q, subProof) =>
+      case ast.ForAllIntro(_, q, subProof) =>
         findSubProof(subProof, num) match {
           case Some(sp) =>
             var hasError = true
             sp.first match {
-              case fs: ForAllAssumeStep =>
+              case fs: ast.ForAllAssumeStep =>
                 val freshVarId = fs.id
                 val freshVar = freshVarId.value
                 for (step <- sp.steps.reverse if hasError) step match {
-                  case step: RegularStep if Checker.collectVars(step.exp).contains(freshVar) =>
+                  case step: ast.RegularStep if Checker.collectVars(step.exp).contains(freshVar) =>
                     val expected = subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
                     if (expected == step.exp) hasError = false
                   case _ =>
@@ -632,9 +631,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             if (hasError) None else addProvedStep(step)
           case _ => None
         }
-      case ForAllElim(_, exp, step2, args) =>
+      case ast.ForAllElim(_, exp, step2, args) =>
         findRegularStepExp(step2, num) match {
-          case Some(q: ForAll) =>
+          case Some(q: ast.ForAll) =>
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = subst(e, m)
@@ -647,7 +646,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case Some(_) => error(step2, s"Forall-elim in step #$num requires a universal quantification in #${step2.value}.")
           case _ => None
         }
-      case ExistsIntro(_, q, step2, args) =>
+      case ast.ExistsIntro(_, q, step2, args) =>
         findRegularStepExp(step2, num) match {
           case Some(result) =>
             buildSubstMap(q.simplify, args) match {
@@ -661,16 +660,16 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             }
           case _ => None
         }
-      case ExistsElim(_, exp, step2, subProof) =>
+      case ast.ExistsElim(_, exp, step2, subProof) =>
         findRegularStepExp(step2, num) match {
-          case Some(q: Exists) =>
+          case Some(q: ast.Exists) =>
             findSubProof(subProof, num) match {
               case Some(sp) =>
                 var hasError = false
                 sp.first match {
-                  case fs: ExistsAssumeStep =>
+                  case fs: ast.ExistsAssumeStep =>
                     val freshVar = fs.id.value
-                    val expected = subst(q.simplify.exp, Map(q.ids.head -> Id(freshVar)))
+                    val expected = subst(q.simplify.exp, Map(q.ids.head -> ast.Id(freshVar)))
                     if (expected != fs.exp) {
                       error(exp, s"Supplying $freshVar for ${q.ids.head} in step #${step2.value} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
@@ -694,36 +693,36 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case Some(_) => error(step2, s"Exists-elim in step #$num requires an existensial quantification in #${step2.value}.")
           case _ => None
         }
-      case Auto(_, exp, steps) =>
+      case ast.Auto(_, exp, steps) =>
         unitNode.mode match {
-          case LogicMode.Propositional | LogicMode.Predicate =>
+          case ast.LogicMode.Propositional | ast.LogicMode.Predicate =>
             error(step, s"Auto cannot be used in ${unitNode.mode} Logic.")
             None
-          case LogicMode.Programming =>
+          case ast.LogicMode.Programming =>
             if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
             else None
         }
-      case FactJust(_, exp, id) =>
+      case ast.FactJust(_, exp, id) =>
         facts.get(id.value) match {
           case Some(expected) =>
             if (expected == exp) addProvedStep(step)
             else error(exp, s"The expression in step #$num does not match the one in fact ${id.value}.")
           case _ => error(id, s"Could not find a fact ${id.value}.")
         }
-      case Invariant(_, exp) =>
+      case ast.Invariant(_, exp) =>
         if (invariants.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
-      case _: ExistsAssumeStep | _: PlainAssumeStep =>
+      case _: ast.ExistsAssumeStep | _: ast.PlainAssumeStep =>
         assert(assertion = false, "Unexpected situation.")
         None
     }
   }
 
-  def deduce(num: Natural, exp: Exp, steps: Node.Seq[Num],
+  def deduce(num: Natural, exp: ast.Exp, steps: ast.Node.Seq[ast.Num],
              isAuto: Boolean): Boolean = {
     val antecedents =
       if (steps.nonEmpty) {
-        var as = Node.emptySeq[Exp]
+        var as = ast.Node.emptySeq[ast.Exp]
         var hasError = false
         for (numOrId <- steps)
           findRegularStepExp(numOrId, num) match {
@@ -739,7 +738,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           }
         if (hasError) return false else as
       } else if (isAuto) premises ++ facts.values
-      else Node.emptySeq[Exp]
+      else ast.Node.emptySeq[ast.Exp]
     val method = if (isAuto) "automatically" else "apply algebra to"
     if (isValid("", nodeLocMap(exp), antecedents, ivector(exp))) true
     else {
@@ -748,22 +747,22 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def checkAlgebraExp(e: Exp): Boolean = {
+  def checkAlgebraExp(e: ast.Exp): Boolean = {
     var hasError = false
     Visitor.build({
-      case e: And =>
+      case e: ast.And =>
         hasError = true
         error(e, "Algebra justification cannot be used for conjunction.")
         true
-      case e: Or =>
+      case e: ast.Or =>
         hasError = true
         error(e, "Algebra justification cannot be used for disjunction.")
         true
-      case e: Implies =>
+      case e: ast.Implies =>
         hasError = true
         error(e, "Algebra justification cannot be used for implication.")
         true
-      case q: Quant[_] =>
+      case q: ast.Quant[_] =>
         hasError = true
         error(e, "Algebra justification cannot be used for quantification.")
         true
@@ -771,26 +770,26 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     !hasError
   }
 
-  def expRewriter(m: IMap[Node, Node]): Exp => Exp =
-    org.sireum.logika.ast.Rewriter.build[Exp](TraversalMode.BOTTOM_UP) {
-      case n: Node => m.getOrElse(n, n)
+  def expRewriter(m: IMap[ast.Node, ast.Node]): ast.Exp => ast.Exp =
+    org.sireum.logika.ast.Rewriter.build[ast.Exp](TraversalMode.BOTTOM_UP) {
+      case n: ast.Node => m.getOrElse(n, n)
     }
 
-  def subst(e: Exp, m: IMap[Node, Node]): Exp = expRewriter(m)(e)
+  def subst(e: ast.Exp, m: IMap[ast.Node, ast.Node]): ast.Exp = expRewriter(m)(e)
 
-  def buildSubstMap(q: Quant[_], args: Node.Seq[Exp]): Option[(IMap[Node, Node], Exp)] = {
-    val r = imapEmpty[Node, Node] ++ q.ids.zip(args)
+  def buildSubstMap(q: ast.Quant[_], args: ast.Node.Seq[ast.Exp]): Option[(IMap[ast.Node, ast.Node], ast.Exp)] = {
+    val r = imapEmpty[ast.Node, ast.Node] ++ q.ids.zip(args)
     if (r.isEmpty) None
     else if (r.size < q.ids.size) {
       q match {
-        case q: ForAll =>
-          Some((r, ForAll(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
-        case q: Exists =>
-          Some((r, Exists(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
+        case q: ast.ForAll =>
+          Some((r, ast.ForAll(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
+        case q: ast.Exists =>
+          Some((r, ast.Exists(q.ids.slice(r.size, q.ids.size), q.domainOpt, q.exp)))
       }
     } else if (r.size < args.size) {
       q.exp match {
-        case q2: Quant[_] =>
+        case q2: ast.Quant[_] =>
           buildSubstMap(q2, args.slice(r.size, args.size)) match {
             case Some((m, e)) => Some((r ++ m, e))
             case _ => None
@@ -800,7 +799,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     } else Some((r, q.exp))
   }
 
-  def addProvedStep(step: ProofStep): Option[T] = {
+  def addProvedStep(step: ast.ProofStep): Option[T] = {
     val num = step.num.value
     declaredStepNumbers.get(num) match {
       case Some(li) =>
@@ -812,18 +811,18 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def addVar(id: Id, stepNum: Natural): Option[T] = {
+  def addVar(id: ast.Id, stepNum: Natural): Option[T] = {
     val varId = id.value
     assert(!vars.contains(varId))
     Some(make(vars = vars + varId))
   }
 
   def isValid(title: String, li: LocationInfo,
-              premises: => Iterable[Exp], conclusions: Iterable[Exp]): Boolean = {
+              premises: => Iterable[ast.Exp], conclusions: Iterable[ast.Exp]): Boolean = {
     val ps =
       if (coneInfluenceEnabled)
         util.Z3.checkSat(satTimeoutInMs, isSymExe = true, bitWidth,
-          And(conclusions.toVector))._2 match {
+          ast.Exp.And(conclusions.toVector))._2 match {
           case util.Z3.Sat => coneOfInfluence(premises, conclusions)
           case _ => premises
         }
@@ -847,7 +846,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       var i = 0
       for (p <- ps) {
         sb.append(";   ")
-        sb.append(Exp.toString(p, inProof = true))
+        sb.append(ast.Exp.toString(p, inProof = true))
         if (i + 1 != ps.size) sb.append(',')
         sb.append(lineSep)
         i += 1
@@ -857,7 +856,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       i = 0
       for (c <- conclusions) {
         sb.append(";   ")
-        sb.append(Exp.toString(c, inProof = true))
+        sb.append(ast.Exp.toString(c, inProof = true))
         if (i + 1 != conclusions.size) sb.append(',')
         sb.append(lineSep)
         i += 1
@@ -869,15 +868,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     r == Z3.Unsat
   }
 
-  def newId(x: String, t: tipe.Tipe) = {
-    val r = Id(x)
-    r.tipe = t
-    r
-  }
-
-  def findSubProof(num: Num, stepNum: Natural): Option[SubProof] = {
+  def findSubProof(num: ast.Num, stepNum: Natural): Option[ast.SubProof] = {
     provedSteps.get(num.value) match {
-      case Some(r: SubProof) => Some(r)
+      case Some(r: ast.SubProof) => Some(r)
       case Some(_) =>
         error(num, s"#${num.value} should be a sub-proof.")
         None
@@ -890,9 +883,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def findRegularStepExp(num: Num, stepNum: Natural): Option[Exp] =
+  def findRegularStepExp(num: ast.Num, stepNum: Natural): Option[ast.Exp] =
     provedSteps.get(num.value) match {
-      case Some(r: RegularStep) => Some(r.exp)
+      case Some(r: ast.RegularStep) => Some(r.exp)
       case _ =>
         if (declaredStepNumbers.contains(num.value))
           error(num, s"Step #${num.value} is out of scope from #$stepNum.")
@@ -901,52 +894,51 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         None
     }
 
-  def orClaims(es1: Iterable[Exp], es2: Iterable[Exp]): ILinkedSet[Exp] = {
-    var r = ilinkedSetEmpty[Exp]
+  def orClaims(es1: Iterable[ast.Exp], es2: Iterable[ast.Exp]): ILinkedSet[ast.Exp] = {
+    var r = ilinkedSetEmpty[ast.Exp]
     for (e1 <- es1; e2 <- es2)
       if (e1 == e2)
         r += e1
       else
-        r += Or(e1, e2)
+        r += ast.Exp.Or(tipe.B, e1, e2)
     r
   }
 
-  def extractClaims(pg: ProofGroup,
-                    reverse: Boolean = true): ILinkedSet[Exp] = {
+  def extractClaims(pg: ast.ProofGroup,
+                    reverse: Boolean = true): ILinkedSet[ast.Exp] = {
     var steps = pg.allSteps
     if (reverse) steps = steps.reverse
     ilinkedSetEmpty ++ steps.flatMap(_ match {
-      case step: RegularStep => Some(step.exp)
+      case step: ast.RegularStep => Some(step.exp)
       case _ => None
     })
   }
 
-  def hasRuntimeError(stmt: Stmt): Boolean = {
+  def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     var hasError = false
     lazy val ps = premises ++ facts.values
-    def divisor(e: Exp, t: tipe.IntegralTipe): Boolean = {
+    def divisor(e: ast.Exp, t: tipe.IntegralTipe): Boolean = {
       val tpe = t match {
-        case tipe.Z => ZType()
-        case tipe.Z8 => Z8Type()
-        case tipe.Z16 => Z16Type()
-        case tipe.Z32 => Z32Type()
-        case tipe.Z64 => Z64Type()
-        case tipe.N => NType()
-        case tipe.N8 => N8Type()
-        case tipe.N16 => N16Type()
-        case tipe.N32 => N32Type()
-        case tipe.N64 => N64Type()
-        case tipe.S8 => S8Type()
-        case tipe.S16 => S16Type()
-        case tipe.S32 => S32Type()
-        case tipe.S64 => S64Type()
-        case tipe.U8 => U8Type()
-        case tipe.U16 => U16Type()
-        case tipe.U32 => U32Type()
-        case tipe.U64 => U64Type()
+        case tipe.Z => ast.ZType()
+        case tipe.Z8 => ast.Z8Type()
+        case tipe.Z16 => ast.Z16Type()
+        case tipe.Z32 => ast.Z32Type()
+        case tipe.Z64 => ast.Z64Type()
+        case tipe.N => ast.NType()
+        case tipe.N8 => ast.N8Type()
+        case tipe.N16 => ast.N16Type()
+        case tipe.N32 => ast.N32Type()
+        case tipe.N64 => ast.N64Type()
+        case tipe.S8 => ast.S8Type()
+        case tipe.S16 => ast.S16Type()
+        case tipe.S32 => ast.S32Type()
+        case tipe.S64 => ast.S64Type()
+        case tipe.U8 => ast.U8Type()
+        case tipe.U16 => ast.U16Type()
+        case tipe.U32 => ast.U32Type()
+        case tipe.U64 => ast.U64Type()
       }
-      val req = Ne(e, IntLit("0", tpe.bitWidth, Some(tpe)))
-      req.tipe = t
+      val req = ast.Exp.Ne(t, e, ast.IntLit("0", tpe.bitWidth, Some(tpe)))
       if (autoEnabled) {
         if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")
@@ -958,12 +950,12 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       }
       true
     }
-    def index(a: Exp, aTipe: tipe.Tipe, e: Exp): Boolean = {
-      val req1 = Le(Checker.zero, e)
+    def index(a: ast.Exp, aTipe: tipe.Tipe, e: ast.Exp): Boolean = {
+      val req1 = ast.Exp.Le(tipe.Z, Checker.zero, e)
       req1.tipe = tipe.Z
-      val sz = Size(a)
+      val sz = ast.Exp.Size(tipe.Z, a)
       sz.tipe = aTipe
-      val req2 = Lt(e, sz)
+      val req2 = ast.Exp.Lt(tipe.Z, e, sz)
       req2.tipe = tipe.Z
       if (autoEnabled) {
         if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
@@ -987,27 +979,21 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       true
     }
     Visitor.build({
-      case _: Block => false
-      case _: LoopInv => false
-      case e@Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
-      case e@Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
-      case a@Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
-      case SeqAssign(id, e, _) => index(id, id.tipe, e)
+      case _: ast.Block => false
+      case _: ast.LoopInv => false
+      case e@ast.Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case e@ast.Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case a@ast.Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
+      case ast.SeqAssign(id, e, _) => index(id, id.tipe, e)
     })(stmt)
     hasError
   }
 
-  def applySeq(e: Exp, seqTipe: tipe.Tipe, args: Node.Seq[Exp]): Apply = {
-    val r = Apply(e, args)
-    r.expTipe = seqTipe
-    r
-  }
-
-  def generateHint(beforePremises: ILinkedSet[Exp],
-                   stmt: Stmt,
-                   afterPremises: ILinkedSet[Exp]): Unit = {
+  def generateHint(beforePremises: ILinkedSet[ast.Exp],
+                   stmt: ast.Stmt,
+                   afterPremises: ILinkedSet[ast.Exp]): Unit = {
     if (hintEnabled && (beforePremises.nonEmpty || afterPremises.nonEmpty) &&
-      !stmt.isInstanceOf[MethodDecl]) {
+      !stmt.isInstanceOf[ast.MethodDecl]) {
       val input = unitNode.input
       val li = nodeLocMap(stmt)
       var startOffset = input.lastIndexOf('\n', li.offset) + 1
@@ -1025,7 +1011,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       for (e <- beforePremises) {
         indent()
         sb.append("  ")
-        sb.append(Exp.toString(e, inProof = true))
+        sb.append(ast.Exp.toString(e, inProof = true))
         sb.append('\n')
       }
       indent()
@@ -1038,7 +1024,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       for (e <- afterPremises) {
         indent()
         sb.append("  ")
-        sb.append(Exp.toString(e, inProof = true))
+        sb.append(ast.Exp.toString(e, inProof = true))
         sb.append('\n')
       }
       indent()
@@ -1047,14 +1033,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     }
   }
 
-  def error(n: Node, msg: String): Option[T] = error(nodeLocMap(n), msg)
+  def error(n: ast.Node, msg: String): Option[T] = error(nodeLocMap(n), msg)
 
   def error(li: LocationInfo, msg: String): Option[T] = {
     reporter.report(li.toLocationError(fileUriOpt, Checker.kind, msg))
     None
   }
 
-  def warn(n: Node, msg: String): Unit = warn(nodeLocMap(n), msg)
+  def warn(n: ast.Node, msg: String): Unit = warn(nodeLocMap(n), msg)
 
   def warn(li: LocationInfo, msg: String): Unit =
     reporter.report(li.toLocationWarning(fileUriOpt, Checker.kind, msg))

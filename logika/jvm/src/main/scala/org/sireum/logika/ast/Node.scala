@@ -527,6 +527,104 @@ final case class ExistsAssumeStep(num: Num,
   extends QuantAssumeStep with RegularStep
 
 object Exp {
+  def Id(tipe: Tipe, name: String): Id = {
+    val r = org.sireum.logika.ast.Id(name)
+    r.tipe = tipe
+    r
+  }
+
+  def Size(tipe: Tipe, exp: Exp): Size = {
+    val r = org.sireum.logika.ast.Size(exp)
+    r.tipe = tipe
+    r
+  }
+
+  def Apply(expTipe: Tipe, exp: Exp, args: Node.Seq[Exp]): Apply = {
+    val r = org.sireum.logika.ast.Apply(exp, args)
+    r.expTipe = expTipe
+    r
+  }
+
+  def And(tipe: Tipe, left: Exp, right: Exp): And = {
+    val r = org.sireum.logika.ast.And(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def And(args: Node.Seq[Exp]): Exp =
+    if (args.isEmpty) BooleanLit(value = true)
+    else {
+      var r = args.head
+      for (arg <- args.tail) {
+        r = And(B, arg, r)
+      }
+      r
+    }
+
+  def Or(tipe: Tipe, left: Exp, right: Exp): Or = {
+    val r = org.sireum.logika.ast.Or(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Or(args: Node.Seq[Exp]): Exp =
+    if (args.isEmpty) BooleanLit(value = false)
+    else {
+      var r = args.head
+      for (arg <- args.tail) {
+        r = Or(B, arg, r)
+      }
+      r
+    }
+
+  def Implies(tipe: Tipe, left: Exp, right: Exp): Implies = {
+    val r = org.sireum.logika.ast.Implies(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Eq(tipe: Tipe, left: Exp, right: Exp): Eq = {
+    val r = org.sireum.logika.ast.Eq(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Ne(tipe: Tipe, left: Exp, right: Exp): Ne = {
+    val r = org.sireum.logika.ast.Ne(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Lt(tipe: Tipe, left: Exp, right: Exp): Lt = {
+    val r = org.sireum.logika.ast.Lt(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Le(tipe: Tipe, left: Exp, right: Exp): Le = {
+    val r = org.sireum.logika.ast.Le(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Gt(tipe: Tipe, left: Exp, right: Exp): Gt = {
+    val r = org.sireum.logika.ast.Gt(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Ge(tipe: Tipe, left: Exp, right: Exp): Ge = {
+    val r = org.sireum.logika.ast.Ge(left, right)
+    r.tipe = tipe
+    r
+  }
+
+  def Not(tipe: Tipe, exp: Exp): Not = {
+    val r = org.sireum.logika.ast.Not(exp)
+    r.tipe = tipe
+    r
+  }
+
   final def toString(e: Exp, inProof: Boolean): String = {
     val sb = new StringBuilder
     e.buildString(sb, inProof)
@@ -544,6 +642,8 @@ sealed trait Exp extends StringOrExp {
   private[ast] def buildString(sb: StringBuilder, inProof: Boolean): Unit
 
   def precedence: Int
+
+  def isResolved: Boolean
 }
 
 sealed trait PrimaryExp extends Exp {
@@ -551,6 +651,8 @@ sealed trait PrimaryExp extends Exp {
 }
 
 final case class BooleanLit(value: Boolean) extends PrimaryExp {
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
     sb.append(if (value) "T" else "F")
@@ -558,6 +660,8 @@ final case class BooleanLit(value: Boolean) extends PrimaryExp {
 
 final case class Id(value: String) extends PrimaryExp with HasInternalData[Id] {
   var tipe: Tipe = _
+
+  override def isResolved: Boolean = tipe != null
 
   override def copy(other: Id): Unit = {
     tipe = other.tipe
@@ -571,6 +675,8 @@ final case class Id(value: String) extends PrimaryExp with HasInternalData[Id] {
 final case class Size(exp: Exp) extends PrimaryExp with HasInternalData[Size] {
   var tipe: Tipe = _
 
+  override def isResolved: Boolean = tipe != null && exp.isResolved
+
   override def copy(other: Size): Unit = {
     tipe = other.tipe
   }
@@ -583,6 +689,8 @@ final case class Size(exp: Exp) extends PrimaryExp with HasInternalData[Size] {
 }
 
 final case class Clone(id: Id) extends PrimaryExp {
+  override val isResolved: Boolean = id.isResolved
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     id.buildString(sb, inProof)
@@ -592,6 +700,8 @@ final case class Clone(id: Id) extends PrimaryExp {
 
 final case class Result() extends PrimaryExp with HasInternalData[Result] {
   var tipe: Tipe = _
+
+  override def isResolved: Boolean = tipe != null
 
   override def copy(other: Result): Unit = {
     tipe = other.tipe
@@ -606,6 +716,9 @@ final case class Result() extends PrimaryExp with HasInternalData[Result] {
 final case class Apply(exp: Exp,
                        args: Node.Seq[Exp]) extends PrimaryExp with HasInternalData[Apply] {
   var expTipe: Tipe = _
+
+  override def isResolved: Boolean = expTipe != null && exp.isResolved &&
+    args.forall(_.isResolved)
 
   override def copy(other: Apply): Unit = {
     expTipe = other.expTipe
@@ -629,6 +742,8 @@ final case class Apply(exp: Exp,
 }
 
 final case class RandomInt() extends PrimaryExp {
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     sb.append("randomInt()")
@@ -637,6 +752,8 @@ final case class RandomInt() extends PrimaryExp {
 
 final case class ReadInt(msgOpt: Option[StringLit])
   extends PrimaryExp {
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     sb.append("readInt()")
@@ -712,6 +829,8 @@ final case class IntLit(value: String,
     }
   }
 
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = tpeOpt match {
     case None => sb.append(value)
@@ -743,9 +862,11 @@ final case class IntLit(value: String,
 }
 
 final case class FloatLit(value: String) extends PrimaryExp {
-  def primitiveValue: Either[Float, Double] =
+  val primitiveValue: Either[Float, Double] =
     if (value.charAt(value.length - 1).toUpper == 'F') Left(value.toFloat)
     else Right(value.toDouble)
+
+  override def isResolved: Boolean = true
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
@@ -753,6 +874,8 @@ final case class FloatLit(value: String) extends PrimaryExp {
 }
 
 final case class RealLit(value: String) extends PrimaryExp {
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit =
     sb.append(value)
@@ -770,6 +893,8 @@ final case class IntMin(bitWidth: Int,
            _: U8Type | _: U16Type | _: U32Type | _: U64Type =>
         BigInt(0)
     }
+
+  override def isResolved: Boolean = true
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
@@ -791,6 +916,8 @@ final case class IntMax(bitWidth: Int,
         BigInt(2).pow(bitWidth) - 1
     }
 
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     integralType.buildString(sb)
@@ -799,6 +926,8 @@ final case class IntMax(bitWidth: Int,
 }
 
 final case class Random(tpe: Type) extends PrimaryExp {
+  override def isResolved: Boolean = true
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     tpe.buildString(sb)
@@ -814,6 +943,8 @@ sealed trait BinaryExp extends Exp with HasInternalData[BinaryExp] {
   def right: Exp
 
   var tipe: Tipe = _
+
+  override def isResolved: Boolean = tipe != null && left.isResolved && right.isResolved
 
   final override def copy(other: BinaryExp): Unit = {
     tipe = other.tipe
@@ -941,18 +1072,6 @@ final case class And(left: Exp, right: Exp) extends BinaryExp {
   override val precedence = 60
 }
 
-object And {
-  def apply(args: ISeq[Exp]): Exp =
-    if (args.isEmpty) BooleanLit(value = true)
-    else {
-      var r = args.head
-      for (arg <- args.tail) {
-        r = And(arg, r)
-      }
-      r
-    }
-}
-
 final case class Xor(left: Exp, right: Exp) extends BinaryExp {
   def op(inProof: Boolean) =
     if (inProof)
@@ -977,18 +1096,6 @@ final case class Or(left: Exp, right: Exp) extends BinaryExp {
   override val precedence = 80
 }
 
-object Or {
-  def apply(args: ISeq[Exp]): Exp =
-    if (args.isEmpty) BooleanLit(value = false)
-    else {
-      var r = args.head
-      for (arg <- args.tail) {
-        r = Or(arg, r)
-      }
-      r
-    }
-}
-
 final case class Implies(left: Exp, right: Exp) extends BinaryExp {
   def op(inProof: Boolean) = if (inProof) "→" else "->"
 
@@ -1001,6 +1108,8 @@ sealed trait UnaryExp extends Exp with HasInternalData[UnaryExp] {
   def exp: Exp
 
   var tipe: Tipe = _
+
+  override def isResolved: Boolean = tipe != null && exp.isResolved
 
   final override def copy(other: UnaryExp): Unit = {
     tipe = other.tipe
@@ -1042,7 +1151,10 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
 
   def exp: Exp
 
-  override val precedence = 100
+  override def precedence = 100
+
+  override def isResolved: Boolean = ids.forall(_.isResolved) &&
+    domainOpt.forall(_.isResolved) && exp.isResolved
 
   override final def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {
@@ -1117,16 +1229,24 @@ final case class Exists(ids: Node.Seq[Id],
   val op = "∃"
 }
 
-sealed trait QuantDomain extends Node
+sealed trait QuantDomain extends Node {
+  def isResolved: Boolean
+}
 
-final case class TypeDomain(tpe: Type) extends QuantDomain
+final case class TypeDomain(tpe: Type) extends QuantDomain {
+  override def isResolved: Boolean = true
+}
 
 final case class RangeDomain(lo: Exp,
                              hi: Exp,
                              loLt: Boolean,
-                             hiLt: Boolean) extends QuantDomain
+                             hiLt: Boolean) extends QuantDomain {
+  override def isResolved: Boolean = lo.isResolved && hi.isResolved
+}
 
 final case class SeqLit(tpe: SeqType, args: Node.Seq[Exp]) extends PrimaryExp {
+  override def isResolved: Boolean = args.forall(_.isResolved)
+
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
     tpe.buildString(sb)
@@ -1238,7 +1358,7 @@ object Type {
       case _: ZType => bitWidth match {
         case 0 => t
         case 8 => Z8Type()
-        case 16 => Z16SType()
+        case 16 => Z16Type()
         case 32 => Z32Type()
         case 64 => Z64Type()
       }
