@@ -190,7 +190,8 @@ object Eval {
     try {
       new Eval(store).eval(e)
     } catch {
-      case _: Throwable => None
+      case _: IndexOutOfBoundsException => None
+      case _: ArithmeticException => None
     }
 
   def toLit(bitWidth: Int, v: Value): Exp = v match {
