@@ -253,7 +253,8 @@ index(a, i) ::= <<
 >>
 
 apply(id, exp) ::= <<
-($id$ $exp; separator=" "$)
+($id$
+  $exp; separator="\n"$)
 >>
 
 lit(value) ::= <<
@@ -265,15 +266,19 @@ fplit(sign, eb, sb) ::= <<
 >>
 
 binary(op, left, right) ::= <<
-($op$ $left$ $right$)
+($op$
+   $left$
+   $right$)
 >>
 
 unary(op, exp) ::= <<
-($op$ $exp$)
+($op$
+  $exp$)
 >>
 
 quant(op, param, exp) ::= <<
-($op$ ($param; separator=" "$) $exp$)
+($op$ ($param; separator=" "$)
+  $exp$)
 >>
 
 param(id, tipe) ::= <<
@@ -302,10 +307,7 @@ prepend(c, a, v, tipe) ::= <<
   (forall ((_i Z))
     (=>
       (and (< 0 _i) (< _i ($tipe$_size a_$c$)))
-      (= (select a_$c$ _i) (select $a$ (- _i 1)))
-    )
-  )
-)
+      (= (select a_$c$ _i) (select $a$ (- _i 1))))))
 >>
 
 append(c, a, v, tipe) ::= <<
@@ -316,10 +318,7 @@ append(c, a, v, tipe) ::= <<
   (forall ((_i Z))
     (=>
       (and (<= 0 _i) (< _i ($tipe$_size $a$)))
-      (= (select a_$c$ _i) (select $a$ _i))
-    )
-  )
-)
+      (= (select a_$c$ _i) (select $a$ _i)))))
 >>
 
 equal(a1, a2, tipe) ::= <<
@@ -328,8 +327,5 @@ equal(a1, a2, tipe) ::= <<
   (forall ((_i Z))
     (=>
       (and (<= 0 _i) (< _i ($tipe$_size $a1$)))
-      (= (select $a1$ _i) (select $a2$ _i))
-    )
-  )
-)
+      (= (select $a1$ _i) (select $a2$ _i)))))
 >>
