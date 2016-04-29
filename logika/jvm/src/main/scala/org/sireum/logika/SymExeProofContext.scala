@@ -65,69 +65,73 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
 
   final override def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     import ast.Exp
+    def zRange(id: ast.Id, lo: Exp, hi: Exp): ast.And =
+      Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, hi, id))
+    def nRange(id: ast.Id, lo: Exp, ignored: Exp): ast.Le =
+      Exp.Le(tipe.Z, lo, id)
+    def zForAll(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, hi: ast.Exp, e: Exp): ast.ForAll =
+      ast.ForAll(ids, Some(ast.TypeDomain(t)), Exp.Implies(tipe.B, Exp.And(ids.map(zRange(_, lo, hi))), e))
+    def zExists(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, hi: ast.Exp, e: Exp): ast.Exists =
+      ast.Exists(ids, Some(ast.TypeDomain(t)), Exp.And(tipe.B, Exp.And(ids.map(zRange(_, lo, hi))), e))
+    def nForAll(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, ignored: Exp, e: Exp): ast.ForAll =
+      ast.ForAll(ids, Some(ast.TypeDomain(t)), Exp.Implies(tipe.B, Exp.And(ids.map(nRange(_, lo, lo))), e))
+    def nExists(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, ignored: Exp, e: Exp): ast.Exists =
+      ast.Exists(ids, Some(ast.TypeDomain(t)), Exp.And(tipe.B, Exp.And(ids.map(nRange(_, lo, lo))), e))
     var _ps: Option[ISeq[ast.Exp]] = None
     def ps: ISeq[ast.Exp] = {
       if (_ps.isDefined) return _ps.get
-      def rwQuant(q: ast.Quant[_], isForAll: Boolean, ids: ast.Node.Seq[ast.Id],
-                  qdOpt: Option[ast.QuantDomain], e: ast.Exp, t: ast.Type): ast.Quant[_] = t match {
-        case _: ast.ZType if bitWidth != 0 =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z, zMin, e), Exp.Le(tipe.Z, e, zMax)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z, zMin, e), Exp.Le(tipe.Z, e, zMax)), e))
-        case _: ast.Z8Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z8, z8Min, e), Exp.Le(tipe.Z8, e, z8Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z8, z8Min, e), Exp.Le(tipe.Z8, e, z8Max)), e))
-        case _: ast.Z16Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z16, z16Min, e), Exp.Le(tipe.Z16, e, z16Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z16, z16Min, e), Exp.Le(tipe.Z16, e, z16Max)), e))
-        case _: ast.Z32Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z32, z32Min, e), Exp.Le(tipe.Z32, e, z32Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z32, z32Min, e), Exp.Le(tipe.Z32, e, z32Max)), e))
-        case _: ast.Z64Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z64, z64Min, e), Exp.Le(tipe.Z64, e, z64Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.Z64, z64Min, e), Exp.Le(tipe.Z64, e, z64Max)), e))
-        case _: ast.NType =>
-          if (bitWidth == 0) {
-            if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.Le(tipe.N, nMin, e), e))
-            else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.Le(tipe.N, nMin, e), e))
-          } else {
-            if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N, nMin, e), Exp.Le(tipe.N, e, nMax)), e))
-            else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N, nMin, e), Exp.Le(tipe.N, e, nMax)), e))
-          }
-        case _: ast.N8Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N8, nMin, e), Exp.Le(tipe.N8, e, n8Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N8, nMin, e), Exp.Le(tipe.N8, e, n8Max)), e))
-        case _: ast.N16Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N16, nMin, e), Exp.Le(tipe.N16, e, n16Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N16, nMin, e), Exp.Le(tipe.N16, e, n16Max)), e))
-        case _: ast.N32Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N32, nMin, e), Exp.Le(tipe.N32, e, n32Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N32, nMin, e), Exp.Le(tipe.N32, e, n32Max)), e))
-        case _: ast.N64Type =>
-          if (isForAll) ast.ForAll(ids, qdOpt, Exp.Implies(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N64, nMin, e), Exp.Le(tipe.N64, e, n64Max)), e))
-          else ast.Exists(ids, qdOpt, Exp.And(tipe.B, Exp.And(tipe.B, Exp.Le(tipe.N64, nMin, e), Exp.Le(tipe.N64, e, n64Max)), e))
+      def rwQuant(q: ast.Quant[_],
+                  apply: (ast.Node.Seq[ast.Id], ast.Type, ast.Exp, ast.Exp, ast.Exp) => ast.Quant[_],
+                  ids: ast.Node.Seq[ast.Id],
+                  qdOpt: Option[ast.QuantDomain],
+                  e: ast.Exp,
+                  t: ast.Type): ast.Quant[_] = t match {
+        case t: ast.ZType if bitWidth != 0 => apply(ids, t, zMin, zMax, e)
+        case t: ast.Z8Type => apply(ids, t, z8Min, z8Max, e)
+        case t: ast.Z16Type => apply(ids, t, z16Min, z16Max, e)
+        case t: ast.Z32Type => apply(ids, t, z32Min, z32Max, e)
+        case t: ast.Z64Type => apply(ids, t, z64Min, z64Max, e)
+        case t: ast.NType => apply(ids, t, nMin, if (bitWidth == 0) nMin else nMax, e)
+        case t: ast.N8Type => apply(ids, t, nMin, n8Max, e)
+        case t: ast.N16Type => apply(ids, t, nMin, n16Max, e)
+        case t: ast.N32Type => apply(ids, t, nMin, n32Max, e)
+        case t: ast.N64Type => apply(ids, t, nMin, n64Max, e)
         case _ => q
       }
       val rw = ast.Rewriter.build[Exp]()({
-        case q@ast.ForAll(ids, qdOpt@Some(ast.TypeDomain(t)), e) => rwQuant(q, isForAll = true, ids, qdOpt, e, t)
-        case q@ast.Exists(ids, qdOpt@Some(ast.TypeDomain(t)), e) => rwQuant(q, isForAll = false, ids, qdOpt, e, t)
+        case q@ast.ForAll(ids, qdOpt@Some(ast.TypeDomain(t: ast.NType)), e) if bitWidth == 0 =>
+          rwQuant(q, nForAll, ids, qdOpt, e, t)
+        case q@ast.Exists(ids, qdOpt@Some(ast.TypeDomain(t: ast.NType)), e) if bitWidth == 0 =>
+          rwQuant(q, nExists, ids, qdOpt, e, t)
+        case q@ast.ForAll(ids, qdOpt@Some(ast.TypeDomain(t)), e) =>
+          rwQuant(q, zForAll, ids, qdOpt, e, t)
+        case q@ast.Exists(ids, qdOpt@Some(ast.TypeDomain(t)), e) =>
+          rwQuant(q, zExists, ids, qdOpt, e, t)
       })
       var integralIds = isetEmpty[String]
       var r = ivectorEmpty[Exp]
-      val visitor = Visitor.build({
+      lazy val visitor: Any => Boolean = Visitor.build({
+        case q: ast.Quant[_] =>
+          val ids = q.ids.map(_.value)
+          integralIds ++= ids
+          visitor(q.domainOpt)
+          visitor(q.exp)
+          integralIds --= ids
+          false
         case id: ast.Id if !integralIds.contains(id.value) && id.tipe.isInstanceOf[tipe.IntegralTipe] =>
           id.tipe match {
-            case tipe.Z if bitWidth != 0 => r :+= Exp.And(tipe.B, Exp.Le(tipe.Z, zMin, id), Exp.Le(tipe.Z, id, zMax))
-            case tipe.Z8 => r :+= Exp.And(tipe.B, Exp.Le(tipe.Z8, z8Min, id), Exp.Le(tipe.Z8, id, z8Max))
-            case tipe.Z16 => r :+= Exp.And(tipe.B, Exp.Le(tipe.Z16, z16Min, id), Exp.Le(tipe.Z16, id, z16Max))
-            case tipe.Z32 => r :+= Exp.And(tipe.B, Exp.Le(tipe.Z32, z32Min, id), Exp.Le(tipe.Z32, id, z32Max))
-            case tipe.Z64 => r :+= Exp.And(tipe.B, Exp.Le(tipe.Z64, z64Min, id), Exp.Le(tipe.Z64, id, z64Max))
+            case tipe.Z if bitWidth != 0 => r :+= zRange(id, zMin, zMax)
+            case tipe.Z8 => r :+= zRange(id, z8Min, z8Max)
+            case tipe.Z16 => r :+= zRange(id, z16Min, z16Max)
+            case tipe.Z32 => r :+= zRange(id, z32Min, z32Max)
+            case tipe.Z64 => r :+= zRange(id, z64Min, z64Max)
             case tipe.N =>
-              if (bitWidth == 0) r :+= Exp.Le(tipe.N, nMin, id)
-              else r :+= Exp.And(tipe.B, Exp.Le(tipe.N, nMin, id), Exp.Le(tipe.N, id, nMax))
-            case tipe.N8 => r :+= Exp.And(tipe.B, Exp.Le(tipe.N8, nMin, id), Exp.Le(tipe.N8, id, n8Max))
-            case tipe.N16 => r :+= Exp.And(tipe.B, Exp.Le(tipe.N16, nMin, id), Exp.Le(tipe.N16, id, n16Max))
-            case tipe.N32 => r :+= Exp.And(tipe.B, Exp.Le(tipe.N32, nMin, id), Exp.Le(tipe.N32, id, n32Max))
-            case tipe.N64 => r :+= Exp.And(tipe.B, Exp.Le(tipe.N64, nMin, id), Exp.Le(tipe.N64, id, n64Max))
+              if (bitWidth == 0) r :+= nRange(id, nMin, nMin)
+              else r :+= nRange(id, nMin, nMax)
+            case tipe.N8 => r :+= nRange(id, nMin, n8Max)
+            case tipe.N16 => r :+= nRange(id, nMin, n16Max)
+            case tipe.N32 => r :+= nRange(id, nMin, n32Max)
+            case tipe.N64 => r :+= nRange(id, nMin, n64Max)
             case _ =>
           }
           integralIds += id.value

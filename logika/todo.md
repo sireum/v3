@@ -11,8 +11,6 @@ Logika To-Dos
 
 * Fix:
     
-  * Z literal Z3 translation with specific bit-width size
-   
   * mangles identifiers differently for quantified, local, global,
     param, etc. when translating to Z3
 
