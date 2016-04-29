@@ -110,7 +110,7 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
   import Z3._
 
   val stg = new STGroupFile(getClass.getResource("z3.stg"), "UTF-8", '$', '$')
-  val typeMap: MMap[String, Tipe] = mmapEmpty[String, Tipe]
+  var typeMap: IMap[String, Tipe] = imapEmpty[String, Tipe]
   val lineSep = scala.util.Properties.lineSeparator
   var seqCounter = 0
   val stMain = {
@@ -126,17 +126,13 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
       stMain.add("e",
         stg.getInstanceOf("assertion").
           add("e", translate(e))).add("e", lineSep)
-      Visitor.build({
-        case q: ast.Quant[_] =>
-          for (id <- q.ids) typeMap -= id.value
-          true
-      })(e)
     }
     for ((name, tipe) <- typeMap)
       stMain.add("d", translate(name, tipe)).
         add("d", lineSep)
 
     val z3Script = stMain.render()
+    //println(z3Script)
     val result = {
       val input =
         OsUtil.detect match {
@@ -157,9 +153,9 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
             case "sat" => Sat
             case "timeout" => Timeout
             case _ =>
-              for (e <- es) {
-                println(ast.Exp.toString(e, inProof = true))
-              }
+              //              for (e <- es) {
+              //                println(ast.Exp.toString(e, inProof = true))
+              //              }
               reporter.report(InternalErrorMessage("Z3",
                 s"""Error occurred when calling Z3 for the following script:
 $z3Script
@@ -207,7 +203,7 @@ $s"""))
       case ast.BooleanLit(value) =>
         stg.getInstanceOf(if (value) "truelit" else "falselit")
       case id: ast.Id =>
-        typeMap(id.value) = id.tipe
+        typeMap += id.value -> id.tipe
         stg.getInstanceOf("id").add("value", id.value)
       case e@ast.Size(id) =>
         stg.getInstanceOf("size").add("id", translate(id)).
@@ -436,13 +432,28 @@ $s"""))
           case Some(ast.TypeDomain(tpe)) => translate(tpe)
           case None => assert(assertion = false, "Unexpected situation.")
         }
-        val st = stg.getInstanceOf("quant").
-          add("op", if (isForAll) "forall" else "exists").
-          add("exp", translate(e.exp))
-        for (id <- e.ids)
+        val m = mmapEmpty[String, Tipe]
+        val st = stg.getInstanceOf("quant")
+        for (id <- e.ids) {
+          val name = id.value
+          typeMap.get(name) match {
+            case Some(t) => m(name) = t
+            case _ =>
+          }
+          typeMap += name -> id.tipe
           st.add("param",
             stg.getInstanceOf("param").add("id", translate(id)).
               add("tipe", stType))
+        }
+        st.add("op", if (isForAll) "forall" else "exists").
+          add("exp", translate(e.exp))
+        for (id <- e.ids) {
+          val name = id.value
+          m.get(name) match {
+            case Some(t) => typeMap += name -> t
+            case _ => typeMap -= name
+          }
+        }
         st
       case e: ast.SeqLit =>
         val c = freshSeq()

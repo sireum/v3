@@ -1,57 +1,27 @@
 /*
- Copyright (c) 2016, Robby, Galois Inc. and Kansas State University
+ Copyright (c) 2016, Robby, Kansas State University
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
 
- * Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
- * Neither the names of the copyright holders nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-// Adaptation of https://github.com/cjerdonek/formal-rcv/blob/master/src/Plurality.v
-
-import org.sireum.logika._
-
-l"""{ fact
-        // count is a proof function that given
-        // * cElection -- an election votes (as a mutable sequence of integers,
-        //   where each integer represents a vote for a candidate #),
-        // * cCandidate -- a candidate (as an integer representing the
-        //   candidate #), and
-        // * cN -- a number in 0 .. cElection.size,
-        // it totals the number of votes for the candidate at indices 0 .. cN - 1.
-        // The behavior of count is specified as first-order, recursive axioms
-        def count(cElection: ZS, cCandidate: Z, cN: Z): Z
-          base. ∀ce: ZS  ∀cc: Z  count(ce, cc, 0) == 0
-          rec.  ∀ce: ZS  ∀cc: Z  ∀ cj: (1 .. ce.size)
-                  (ce(cj - 1) == cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1) + 1) ∧
-                  (ce(cj - 1) ≠ cc  →  count(ce, cc, cj) == count(ce, cc, cj - 1)) }"""
-
-// Given an unmodifiable sequence of election votes for a number of candidates,
-// compute a winning candidate # that has the most votes, if any.
-// Returns negative value when there is no winning candidate (i.e., tie).
-// TODO: Can be improved by returning an option type, e.g., Option[Z] once Logika supports it.
-// TODO: Can be improved by not requiring numOfCandidates once Logika supports generic map, e.g., Map[Z, Z]
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */g., Map[Z, Z]
 def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
   l"""{ requires numOfCandidates ≥ 0
                  ∀j: (0 ..< election.size)  0 ≤ election(j)  ∧  election(j) < numOfCandidates

@@ -9,11 +9,6 @@ Logika To-Dos
   
   * indexing on ``result``
 
-* Fix:
-    
-  * mangles identifiers differently for quantified, local, global,
-    param, etc. when translating to Z3
-
 * Document SymExe mode 
 
 
