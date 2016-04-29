@@ -301,6 +301,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         val r = build(ctx.formula)
         r.hasParen = true
         r
+      case ctx: ApplyResultContext =>
+        val r = Result() at ctx.tb
+        Apply(r, ctx.formula.map(build))
       case ctx: ResultContext => Result()
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))

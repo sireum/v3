@@ -5,10 +5,6 @@ Logika To-Dos
 
   * ``MS[E].create(size: Z, dflt: E)``
   
-  * ``MS[E].random``
-  
-  * indexing on ``result``
-
 * Document SymExe mode 
 
 

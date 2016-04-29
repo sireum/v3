@@ -82,6 +82,7 @@ primFormula
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean     // propositional logic
   | '(' formula ')'                                     #Paren       // propositional logic
+  | tb='result' '(' formula ( ',' formula )* ')'        #ApplyResult // programming logic
   | 'result'                                            #Result      // programming logic
   | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
   | tb=ID                                               #Var         // propositional logic
@@ -90,11 +91,12 @@ primFormula
   | REAL                                                #RLit        // programming logic
   | FLOAT                                               #FloatLit    // programming logic
   | t=( 'B'
-      | 'Z' | 'Z8'  | 'Z16' | 'Z32' | 'Z64'
-      | 'N' | 'N8'  | 'N16' | 'N32' | 'N64'
-            | 'S8'  | 'S16' | 'S32' | 'S64'
-            | 'U8'  | 'U16' | 'U32' | 'U64'
-      | 'R' | 'F32' | 'F64' )'.' ID                     #TypeAccess  // programming logic
+      | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
+      | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
+               | 'S8'   | 'S16'  | 'S32'  | 'S64'
+               | 'U8'   | 'U16'  | 'U32'  | 'U64'
+      | 'R'    | 'F32'  | 'F64' )
+      '.' ID                                            #TypeAccess  // programming logic
       // ID in { "Min", "Max", "random" }
   | t=( 'BS'
       | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
@@ -297,11 +299,18 @@ primExp
   | NUM                                                 #IntExp
   | ID                                                  #VarExp
   | t=( 'B'
-      | 'Z' | 'Z8'  | 'Z16' | 'Z32' | 'Z64'
-      | 'N' | 'N8'  | 'N16' | 'N32' | 'N64'
-            | 'S8'  | 'S16' | 'S32' | 'S64'
-            | 'U8'  | 'U16' | 'U32' | 'U64'
-      | 'R' | 'F32' | 'F64' )'.' ID                     #TypeAccessExp
+      | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
+      | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
+               | 'S8'   | 'S16'  | 'S32'  | 'S64'
+               | 'U8'   | 'U16'  | 'U32'  | 'U64'
+      | 'R'    | 'F32'  | 'F64'
+      | 'BS'
+      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
+      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
+               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
+               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
+      | 'RS'   | 'F32S' | 'F64S'
+      )'.' ID                                           #TypeAccessExp
       // ID in { "Min", "Max", "random" }
   | FLOAT                                               #FloatLitExp
   | INT                                                 #IntLitExp
