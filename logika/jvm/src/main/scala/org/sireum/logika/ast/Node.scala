@@ -1169,7 +1169,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
       case Some(t: TypeDomain) =>
         sb.append(": ")
         t.tpe.buildString(sb)
-        sb.append(' ')
+        sb.append("  ")
       case Some(r: RangeDomain) =>
         sb.append(": (")
         r.lo.buildString(sb, inProof)
@@ -1179,9 +1179,9 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
         if (r.hiLt) sb.append('<')
         sb.append(' ')
         r.hi.buildString(sb, inProof)
-        sb.append(") ")
+        sb.append(")  ")
       case None =>
-        sb.append(' ')
+        sb.append("  ")
     }
     exp.buildString(sb, inProof)
   }
