@@ -935,6 +935,26 @@ final case class Random(tpe: Type) extends PrimaryExp {
   }
 }
 
+final case class TypeMethodCallExp(tpe: Type, id: Id, args: Node.Seq[Exp]) extends PrimaryExp {
+  override def isResolved: Boolean = id.isResolved && args.forall(_.isResolved)
+
+  override def buildString(sb: StringBuilder,
+                           inProof: Boolean): Unit = {
+    tpe.buildString(sb)
+    sb.append('.')
+    sb.append(id.value)
+    sb.append('(')
+    if (args.nonEmpty) {
+      args.head.buildString(sb, inProof)
+      for (arg <- args.tail) {
+        sb.append(", ")
+        arg.buildString(sb, inProof)
+      }
+    }
+    sb.append(')')
+  }
+}
+
 sealed trait BinaryExp extends Exp with HasInternalData[BinaryExp] {
   def left: Exp
 

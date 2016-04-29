@@ -477,7 +477,8 @@ $s"""))
         }
         stMain.add("a", stZs).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
-      case _: ast.RandomInt | _: ast.ReadInt | _: ast.Clone | _: ast.Random =>
+      case _: ast.RandomInt | _: ast.ReadInt |
+           _: ast.Clone | _: ast.Random | _: ast.TypeMethodCallExp =>
         assert(assertion = false, "Unexpected situation.")
         null
     }

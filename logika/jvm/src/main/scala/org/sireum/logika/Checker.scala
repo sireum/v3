@@ -57,8 +57,13 @@ object Checker {
       if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, m.bitWidth, programs: _*)) {
         var hasError = false
         val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
-        for (program <- programs)
+        for (program <- programs) {
+          def symExeOnly(n: ast.Exp): Unit =
+            error(program.fileUriOpt, program.nodeLocMap(n), s"${ast.Exp.toString(n, inProof = false)} can only be used in symbolic execution.")
+
           try Visitor.build({
+            case n: ast.TypeMethodCallExp if !isSymExe => symExeOnly(n); throw new RuntimeException
+            case n: ast.Random if !isSymExe => symExeOnly(n); throw new RuntimeException
             case t: ast.IntegralType if !t.isInstanceOf[ast.ZType] && !isSymExe =>
               val ts = {
                 val sb = new StringBuilder
@@ -78,6 +83,7 @@ object Checker {
           })(program) catch {
             case t: RuntimeException => hasError = true
           }
+        }
 
         if (!hasError) {
           if (m.lastOnly)

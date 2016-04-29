@@ -68,20 +68,10 @@ def runPluralityElection(numOfCandidates: Z, election: ZS): Z = {
 
   // create an initial map of candidate # to the total votes as a mutable sequence.
   // no direct mutable sequence creation with a default value for a given size yet.
-  // TODO: change to:  val tally = ZS.create(numOfCandidates, 0)
-  var tally: ZS = ZS()
-  var i: Z = 0
-  while (i < numOfCandidates) {
-    l"""{ invariant ∀j: (0 ..< tally.size)  tally(j) == 0
-                    tally.size == i
-                    0 ≤ i  ∧  i ≤ numOfCandidates
-          modifies  tally, i }"""
-    tally = tally :+ 0 // append 0
-    i = i + 1
-  }
+  val tally: ZS = ZS.create(numOfCandidates, 0)
 
   // compute the total votes for each candidate
-  i = 0
+  var i: Z = 0
   while (i < election.size) {
     l"""{ invariant ∀c: (0 ..< numOfCandidates)  tally(c) == count(election, c, i)
                     tally.size == numOfCandidates

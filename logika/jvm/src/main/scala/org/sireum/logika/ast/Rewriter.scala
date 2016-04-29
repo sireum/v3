@@ -514,6 +514,10 @@ object Rewriter {
       val Seq(tpe: Type) = es
       org.sireum.logika.ast.TypeDomain(tpe)
     }),
+    ("TypeMethodCallExp", { es =>
+      val Seq(tpe: Type, id: Id, args: IVector[_]) = es
+      org.sireum.logika.ast.TypeMethodCallExp(tpe, id, cast(args))
+    }),
     ("U16SType", { es =>
       val Seq() = es
       org.sireum.logika.ast.U16SType()

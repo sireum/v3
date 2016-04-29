@@ -182,6 +182,18 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
             val (he, pc2) = invoke(exp, Some(id))
             hasError ||= he
             Some(pc2)
+          case exp: ast.TypeMethodCallExp =>
+            exp.id.value match {
+              case "create" =>
+                val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
+                val qVar = ast.Exp.Id(tipe.Z, "q_i")
+                val sz = ast.Exp.Size(resultT, id)
+                assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
+                  ast.Exp.Eq(tipe.Z, sz, exp.args.head),
+                  ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
+                    ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
+                )))
+            }
           case _ => assign(id, exp)
         }
       case ast.If(exp, thenBlock, elseBlock) =>

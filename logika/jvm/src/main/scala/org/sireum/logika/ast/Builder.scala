@@ -371,7 +371,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         FloatLit(ctx.FLOAT.getText)
       case ctx: TypeAccessContext =>
         val t = token2type(ctx.t)
-        val r = ctx.ID.getText match {
+        ctx.ID.getText match {
           case "Min" =>
             t match {
               case t: IntegralType =>
@@ -406,7 +406,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             error(ctx.ID, s"Expecting Min, Max, or random instead of $s.")
             IntMin(8, ZType())
         }
-        r
       case ctx: SeqContext =>
         SeqLit(token2type(ctx.t).asInstanceOf[SeqType],
           Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
@@ -713,9 +712,19 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         RealLit(text)
       case ctx: VarExpContext =>
         buildId(ctx.ID)
+      case ctx: TypeMethodCallExpContext =>
+        val t = token2type(ctx.t)
+        ctx.ID.getText match {
+          case "create" =>
+            TypeMethodCallExp(t, buildId(ctx.ID),
+              Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+          case s =>
+            error(ctx.ID, s"Expecting create instead of $s.")
+            TypeMethodCallExp(t, buildId(ctx.ID), Node.emptySeq)
+        }
       case ctx: TypeAccessExpContext =>
         val t = token2type(ctx.t)
-        val r = ctx.ID.getText match {
+        ctx.ID.getText match {
           case "Min" =>
             t match {
               case t: IntegralType =>
@@ -750,7 +759,6 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             error(ctx.ID, s"Expecting Min, Max, or random instead of $s.")
             IntMin(8, ZType())
         }
-        r
       case ctx: FloatLitExpContext =>
         val floatText = ctx.FLOAT.getText
         if (floatText.last.toUpper == 'F')

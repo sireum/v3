@@ -401,6 +401,26 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         if (!allowMethod)
           error(e, s"Invoking .random is only allowed at statement level.")
         Some(TypeChecker.tipe(bitWidth, e.tpe))
+      case e: TypeMethodCallExp =>
+        if (!allowMethod)
+          error(e, s"Invoking ${e.id.value} is only allowed at statement level.")
+        val mst = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
+        e.id.tipe = FunTipe(ivector(Z, mst.result), mst)
+        e.id.value match {
+          case "create" =>
+            if (e.args.size != 2)
+              error(e, s"Invoking create requires 2 arguments instead of ${e.args.size}.")
+            else {
+              z(e.args(0))
+              check(e.args(1)) match {
+                case Some(t) =>
+                  if (mst.result != t)
+                    error(e, s"Invalid default value for elements of ${e.tpe}.")
+                case _ =>
+              }
+            }
+        }
+        Some(mst)
       case e: BinaryExp =>
         e match {
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>

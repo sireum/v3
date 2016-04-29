@@ -1,9 +1,5 @@
 Logika To-Dos
 =============
-
-* Add
-
-  * ``MS[E].create(size: Z, dflt: E)``
   
 * Document SymExe mode 
 

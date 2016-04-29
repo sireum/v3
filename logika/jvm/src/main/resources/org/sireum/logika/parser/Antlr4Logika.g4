@@ -298,6 +298,14 @@ primExp
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
   | ID                                                  #VarExp
+  | t=( 'BS'
+      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
+      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
+               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
+               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
+      | 'RS'   | 'F32S' | 'F64S' )
+      '.' ID '(' ( exp ( ',' exp )* )? ')'              #TypeMethodCallExp
+      // ID in { "create" }
   | t=( 'B'
       | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
       | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
@@ -309,8 +317,8 @@ primExp
       | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
                | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
                | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'   | 'F32S' | 'F64S'
-      )'.' ID                                           #TypeAccessExp
+      | 'RS'   | 'F32S' | 'F64S' )
+      '.' ID                                            #TypeAccessExp
       // ID in { "Min", "Max", "random" }
   | FLOAT                                               #FloatLitExp
   | INT                                                 #IntLitExp
