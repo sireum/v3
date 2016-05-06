@@ -50,6 +50,10 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
         ConditionTest(name, check(name))
       } ++
       (1 to 3).toVector.map { x =>
+        val name = f"function-to-loop-axiom-$x%d"
+        ConditionTest(name, check(name))
+      } ++
+      (1 to 3).toVector.map { x =>
         val name = f"function-to-loop-$x%d"
         ConditionTest(name, check(name))
       } ++
@@ -61,6 +65,7 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
         val name = f"method-$x%d"
         ConditionTest(name, check(name))
       } :+
+      ConditionTest("seq-axiom-3", check("seq-axiom-3")) :+
       ConditionTest("bank", check("bank")) :+
       ConditionTest("square", check("square"))
 

@@ -73,6 +73,10 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
       (1 to 3).toVector.map { x =>
+        val name = f"forward/function-to-loop-axiom-$x%d"
+        ConditionTest(name, check(name, 0, isSummarizing = true))
+      } ++
+      (1 to 3).toVector.map { x =>
         val name = f"forward/function-to-loop-$x%d"
         ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
@@ -84,7 +88,9 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         val name = f"forward/method-$x%d"
         ConditionTest(name, check(name, 0, isSummarizing = true))
       } :+
-      ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true))
+      ConditionTest("forward/seq-axiom-3", check("forward/seq-axiom-3", 0, isSummarizing = true)) :+
+      ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true)) :+
+      ConditionTest("forward/square", check("forward/square", 0, isSummarizing = true))
 
   def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false): Boolean = {
     var uri = s"example/$filename.logika"
