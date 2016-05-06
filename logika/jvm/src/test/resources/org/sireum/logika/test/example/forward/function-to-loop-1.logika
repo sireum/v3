@@ -1,10 +1,9 @@
 import org.sireum.logika._
 
 l"""{ fact
-        def f(n: Z): Z
-        base. f(0) == 1
-        rec.  all x: Z
-                x > 0 -> f(x) == f(x-1) * x        }"""
+        def f(x: Z): Z
+          = 1,            if x == 0   (base)
+          = f(x - 1) * x, if x > 0    (rec)         }"""
 def factorial(n: Z): Z = {
   l"""{ requires  n >= 0
         ensures   result == f(n)                   }"""
@@ -13,10 +12,13 @@ def factorial(n: Z): Z = {
         2. ans == 1                 premise        }"""
   if (n == 0) {
     l"""{ 1. ans == 1               premise
-          2. f(0) == 1              fact base
-          3. ans == f(0)            subst2 2 1
+          2. all x: Z
+               x == 0  ->
+                 f(x) == 1          fact base
+          3. n == 0  ->  f(n) == 1  alle 2 n
           4. n == 0                 premise
-          5. ans == f(n)            subst2 4 3     }"""
+          5. f(n) == 1              ->e 3 4
+          8. ans == f(n)            subst2 5 1     }"""
   } else {
     l"""{ 1. not(n == 0)            premise
           2. n >= 0                 premise

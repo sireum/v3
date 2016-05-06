@@ -259,6 +259,34 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
            premises: ILinkedSet[ast.Exp] = premises): T
 
+  def extractFacts: IMap[String, ast.Exp] = {
+    var m = imapEmpty[String, ast.Exp]
+    unitNode match {
+      case unitNode: ast.Program =>
+        for (stmt <- unitNode.block.stmts) stmt match {
+          case stmt: ast.FactStmt =>
+            for (fact <- stmt.fact.factOrFunDecls) fact match {
+              case fact: ast.Fun =>
+                assert(fact.isResolved)
+                val ft = fact.id.tipe.asInstanceOf[tipe.Fn]
+                val f = ast.Exp.Apply(ft, fact.id, fact.params.map(_.id))
+                for (fd <- fact.funDefs) {
+                  var r: ast.Exp = ast.Exp.Implies(tipe.B, fd.cond, ast.Exp.Eq(ft.result, f, fd.exp))
+                  for (p <- fact.params.reverse) {
+                    r = ast.ForAll(ivector(p.id), Some(ast.TypeDomain(p.tpe)), r)
+                  }
+                  m += fd.id.value -> r
+                }
+              case fact: ast.Fact =>
+                m += fact.id.value -> fact.exp
+            }
+          case _ =>
+        }
+      case _ =>
+    }
+    m
+  }
+
   def checkSat(title: String, li: LocationInfo, exps: Iterable[ast.Exp],
                unsatMsg: => String, unknownMsg: => String,
                timeoutMsg: => String): Boolean = {

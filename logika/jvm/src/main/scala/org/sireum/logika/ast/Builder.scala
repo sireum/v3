@@ -566,7 +566,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   private def build(ctx: FunContext): Fun = {
     if (ctx.ID.getText.indexOf('_') >= 0)
       error(ctx.ID, s"Underscore is a reserved character for fun identifier.")
-    Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`)) at ctx
+    Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`), ctx.funDef.map(build)) at ctx
+  }
+
+  private def build(ctx: FunDefContext): FunDef = {
+    if (ctx.ID.getText.indexOf('_') >= 0)
+      error(ctx.ID, s"Underscore is a reserved character for fun case identifier.")
+    FunDef(buildId(ctx.ID), build(ctx.c), build(ctx.e)) at ctx
   }
 
   private def build(ctx: ParamContext): Param = {

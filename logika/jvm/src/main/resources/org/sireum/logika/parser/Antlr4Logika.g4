@@ -250,6 +250,11 @@ fact: ID '.' formula ;
 fun
   : tb='def' ID  NL?
     '(' param ( ',' param )* ')' ':' type
+    ( NL* funDef )*
+  ;
+
+funDef
+  : '=' e=formula ',' NL* 'if' c=formula '(' ID ')'
   ;
 
 param: ID ':' type ;

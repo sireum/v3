@@ -1,10 +1,9 @@
 import org.sireum.logika._
 
 l"""{ fact
-        def f(n: Z): Z
-        base. f(0) == 1
-        rec.  all x: Z
-                x > 0 -> f(x) == f(x-1) * x         }"""
+        def f(x: Z): Z
+          = 1,            if x == 0   (base)
+          = f(x - 1) * x, if x > 0    (rec)         }"""
 def factorial(n: Z): Z = {
 
   l"""{ requires  n >= 0

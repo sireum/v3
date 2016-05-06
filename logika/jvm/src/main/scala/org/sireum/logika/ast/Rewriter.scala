@@ -191,8 +191,12 @@ object Rewriter {
       org.sireum.logika.ast.ForAllIntro(num, exp, subProof)
     }),
     ("Fun", { es =>
-      val Seq(id: Id, params: IVector[_], returnType: Type) = es
-      org.sireum.logika.ast.Fun(id, cast(params), returnType)
+      val Seq(id: Id, params: IVector[_], returnType: Type, funDefs: IVector[_]) = es
+      org.sireum.logika.ast.Fun(id, cast(params), returnType, cast(funDefs))
+    }),
+    ("FunDef", { es =>
+      val Seq(id: Id, cond: Exp, exp: Exp) = es
+      org.sireum.logika.ast.FunDef(id, cond, exp)
     }),
     ("Ge", { es =>
       val Seq(left: Exp, right: Exp) = es

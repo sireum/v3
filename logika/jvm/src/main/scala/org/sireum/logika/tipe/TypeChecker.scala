@@ -40,8 +40,11 @@ object TypeChecker {
         case stmt: FactStmt => Some(stmt.fact.factOrFunDecls)
         case _ => None
       }).flatten
-      for (f@Fun(id, _, _) <- factOrFunDecls)
-        typeMap = addId(typeMap, program, id, tipe(bitWidth, f), f)
+      for (f@Fun(id, _, _, _) <- factOrFunDecls) {
+        val ft = tipe(bitWidth, f)
+        id.tipe = ft
+        typeMap = addId(typeMap, program, id, ft, f)
+      }
       for (m@MethodDecl(_, id, _, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
     }
@@ -268,8 +271,26 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       this
     case InvStmt(inv) => for (e <- inv.exps) b(e)(allowFun = true, mOpt); this
     case FactStmt(facts) =>
-      for (Fact(_, e) <- facts.factOrFunDecls)
-        check(e, allowMethod = false)(allowFun = true, None)
+      for (f <- facts.factOrFunDecls) f match {
+        case f: Fact => b(f.exp)(allowFun = true, None)
+        case f: Fun =>
+          val rt = f.id.tipe.asInstanceOf[Fn].result
+          var tm = typeMap
+          for (p <- f.params) {
+            p.id.tipe = TypeChecker.tipe(bitWidth, p.tpe)
+            tm = TypeChecker.addId(tm, program, p.id, p.id.tipe, p)
+          }
+          val tc = copy(typeMap = tm)
+          for (fd <- f.funDefs) {
+            tc.b(fd.cond)(allowFun = true, None)
+            tc.check(fd.exp, allowMethod = false)(allowFun = true, None) match {
+              case Some(t) =>
+                if (rt != t)
+                  error(fd.exp, s"The expression's type does not match function return type.")
+              case _ =>
+            }
+          }
+      }
       this
   }
 

@@ -1370,7 +1370,17 @@ final case class Fact(id: Id,
 
 final case class Fun(id: Id,
                      params: Node.Seq[Param],
-                     returnType: Type) extends FactOrFun
+                     returnType: Type,
+                     funDefs: Node.Seq[FunDef]) extends FactOrFun {
+  def isResolved: Boolean =
+    id.isResolved && params.forall(_.id.isResolved) && funDefs.forall(_.isResolved)
+}
+
+final case class FunDef(id: Id,
+                        cond: Exp,
+                        exp: Exp) extends Node {
+  def isResolved: Boolean = cond.isResolved && exp.isResolved
+}
 
 object Type {
   final def normalize(bitWidth: Natural, t: Type): Type =

@@ -40,14 +40,13 @@ l"""{ fact
         //   candidate #), and
         // * n -- a number in 0 .. election.size,
         // it totals the number of votes for the candidate at indices 0 .. n - 1.
-        // The behavior of count is specified as first-order, recursive axioms
+        // The behavior of count is algebraically specified.
         def count(election: ZS, candidate: Z, n: Z): Z
-          base. ∀election: ZS  ∀candidate: Z  count(election, candidate, 0) == 0
-          rec.  ∀election: ZS  ∀candidate: Z  ∀n: (1 .. election.size)
-                  (election(n - 1) == candidate  →
-                     count(election, candidate, n) == count(election, candidate, n - 1) + 1) ∧
-                  (election(n - 1) ≠ candidate  →
-                     count(election, candidate, n) == count(election, candidate, n - 1)) }"""
+          = 0, if n == 0                                                        (base)
+          = count(election, candidate, n - 1) + 1,
+               if 1 ≤ n  ∧  n ≤ election.size  ∧  election(n - 1) == candidate  (recEq)
+          = count(election, candidate, n - 1),
+               if 1 ≤ n  ∧  n ≤ election.size  ∧  election(n - 1) ≠ candidate   (recNe) }"""
 
 // Given an unmodifiable sequence of election votes for a number of candidates,
 // compute a winning candidate # that has the most votes, if any.

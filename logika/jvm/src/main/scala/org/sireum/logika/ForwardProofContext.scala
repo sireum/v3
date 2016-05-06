@@ -49,13 +49,7 @@ ForwardProofContext(unitNode: ast.Program,
 
   def check: Boolean = {
     val program = unitNode
-    val facts = this.facts ++ program.block.stmts.flatMap(_ match {
-      case ast.FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
-        case f: ast.Fact => Some(f.id.value -> f.exp)
-        case _ => None
-      })
-      case _ => ivectorEmpty
-    })
+    val facts = extractFacts
     var isSat = true
     if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
       unsatMsg = "The specified set of facts are unsatisfiable.",
