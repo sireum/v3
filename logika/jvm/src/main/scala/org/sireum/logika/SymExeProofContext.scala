@@ -66,9 +66,10 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
   final override def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     import ast.Exp
     def zRange(id: ast.Id, lo: Exp, hi: Exp): ast.And =
-      Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, hi, id))
-    def nRange(id: ast.Id, lo: Exp, ignored: Exp): ast.Le =
-      Exp.Le(tipe.Z, lo, id)
+      Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, id, hi))
+    def nRange(id: ast.Id, lo: Exp, hi: Exp): ast.Exp =
+      if (lo == hi) Exp.Le(tipe.Z, lo, id)
+      else Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, id, hi))
     def zForAll(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, hi: ast.Exp, e: Exp): ast.ForAll =
       ast.ForAll(ids, Some(ast.TypeDomain(t)), Exp.Implies(tipe.B, Exp.And(ids.map(zRange(_, lo, hi))), e))
     def zExists(ids: ast.Node.Seq[ast.Id], t: ast.Type, lo: ast.Exp, hi: ast.Exp, e: Exp): ast.Exists =
