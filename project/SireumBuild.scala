@@ -151,7 +151,7 @@ object SireumBuild extends Build {
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.3.9"
+      "com.lihaoyi" %%% "upickle" % "0.4.1"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     autoAPIMappings := true,
@@ -164,7 +164,7 @@ object SireumBuild extends Build {
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
       "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
-      "org.sireum" %% "logika-runtime" % "3.0.0-6",
+      "org.sireum" %% "logika-runtime" % "3.0.0-7",
       "org.antlr" % "antlr4-runtime" % "4.5.3",
       "org.antlr" % "ST4" % "4.0.8",
       "org.yaml" % "snakeyaml" % "1.17",

@@ -22,34 +22,35 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: com.novocode:junit-interface:0.11:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-6:jar" level="project" />
-    <orderEntry type="library" name="SBT: junit:junit:4.11:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.hamcrest:hamcrest-core:1.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.11:0.7.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
-    <orderEntry type="module" module-name="util" exported="" />
-    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-core_2.11:1.10.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalacheck:scalacheck_2.11:1.12.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-dot_2.11:1.10.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.11:0.3.9:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.3.9:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.ow2.asm:asm:5.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.ow2.asm:asm-commons:5.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.ow2.asm:asm-tree:5.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.ow2.asm:asm-util:5.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.8.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.17:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.apfloat:apfloat:1.8.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.11:0.11.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.spire-math:spire_2.11:0.11.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.11:0.4.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:sourcecode_2.11:0.1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.11:0.4.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:machinist_2.11:0.4.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.spire-math:spire_2.11:0.11.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.11:0.11.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apfloat:apfloat:1.8.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.17:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.11:0.8.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-util:5.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-tree:5.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-commons:5.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm:5.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:antlr4-runtime:4.5.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-dot_2.11:1.10.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalacheck:scalacheck_2.11:1.12.5:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.assembla.scala-incubator:graph-core_2.11:1.10.1:jar" level="project" />
+    <orderEntry type="module" module-name="util" exported="" />
+    <orderEntry type="library" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.11:0.7.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.hamcrest:hamcrest-core:1.3:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:antlr-runtime:3.5.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.antlr:ST4:4.0.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: junit:junit:4.11:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.11:3.0.0-7:jar" level="project" />
   </component>
 </module>
