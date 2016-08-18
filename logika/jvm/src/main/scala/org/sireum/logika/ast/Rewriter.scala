@@ -74,6 +74,10 @@ object Rewriter {
       val Seq(id: Id, exp: Exp) = es
       org.sireum.logika.ast.Assign(id, exp)
     }),
+    ("Assignments", { es =>
+      val Seq(value: IVector[_]) = es
+      org.sireum.logika.ast.Assignments(cast(value))
+    }),
     ("Assume", { es =>
       val Seq(exp: Exp) = es
       org.sireum.logika.ast.Assume(exp)
@@ -105,6 +109,14 @@ object Rewriter {
     ("Clone", { es =>
       val Seq(id: Id) = es
       org.sireum.logika.ast.Clone(id)
+    }),
+    ("ContingentStatus", { es =>
+      val Seq(trueAssignments: IVector[_], falseAssignments: IVector[_]) = es
+      org.sireum.logika.ast.ContingentStatus(cast(trueAssignments), cast(falseAssignments))
+    }),
+    ("ContradictoryStatus", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.ContradictoryStatus()
     }),
     ("Div", { es =>
       val Seq(left: Exp, right: Exp) = es
@@ -513,6 +525,22 @@ object Rewriter {
     ("Subst2", { es =>
       val Seq(num: Num, exp: Exp, eqStep: Num, step: Num) = es
       org.sireum.logika.ast.Subst2(num, exp, eqStep, step)
+    }),
+    ("TautologyStatus", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.TautologyStatus()
+    }),
+    ("TruthTable", { es =>
+      val Seq(star: TruthTableMarker, ids: IVector[_], bar: TruthTableMarker, formula: Exp, rows: IVector[_], statusOpt: Option[_]) = es
+      org.sireum.logika.ast.TruthTable(star, cast(ids), bar, formula, cast(rows), cast(statusOpt))
+    }),
+    ("TruthTableMarker", { es =>
+      val Seq() = es
+      org.sireum.logika.ast.TruthTableMarker()
+    }),
+    ("TruthTableRow", { es =>
+      val Seq(assignments: Assignments, bar: TruthTableMarker, values: IVector[_]) = es
+      org.sireum.logika.ast.TruthTableRow(assignments, bar, cast(values))
     }),
     ("TypeDomain", { es =>
       val Seq(tpe: Type) = es
