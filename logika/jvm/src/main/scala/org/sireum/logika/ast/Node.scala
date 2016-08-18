@@ -38,19 +38,24 @@ object Node {
 
   final def seq[T](es: Iterable[T]) = es.toVector
 
-  final private[ast] def detectMode(unitNode: UnitNode): Unit =
+  final private[ast] def detectMode(unitNode: UnitNode): Unit = {
+    var m = LogicMode.Propositional
+    lazy val visitor = Visitor.build({
+      case _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
+        m = LogicMode.Predicate
+        true
+    })
     unitNode match {
+      case unitNode: TruthTable =>
+        visitor(unitNode.formula)
+        unitNode.mode = m
       case unitNode: Sequent =>
-        var m = LogicMode.Propositional
-        val visitor = Visitor.build({
-          case _: Apply | _: Quant[_] if m == LogicMode.Propositional =>
-            m = LogicMode.Predicate
-            true
-        })
         unitNode.premises.foreach(visitor)
         unitNode.mode = m
-      case unitNode: Program => unitNode.mode = LogicMode.Programming
+      case unitNode: Program =>
+        unitNode.mode = LogicMode.Programming
     }
+  }
 
   implicit class At[T <: Node](n: Node)(
     implicit val nodeLocMap: MMap[Node, LocationInfo]) {
@@ -80,6 +85,64 @@ object Node {
         unitNode.fileUriOpt, "Semantics", msg))
 
     unitNode match {
+      case unitNode: TruthTable =>
+        var vars = imapEmpty[String, Id]
+        for (id <- unitNode.ids) {
+          vars.get(id.value) match {
+            case Some(prevId) =>
+              val li = nodeLocMap(prevId)
+              error(id, s"Identifier ${id.value} has been declared at [${li.lineBegin}, ${li.columnBegin}].")
+            case _ => vars += (id.value -> id)
+          }
+        }
+        Visitor.build({
+          case id: Id =>
+            vars.get(id.value) match {
+              case None =>
+                val li = nodeLocMap(id)
+                error(id, s"Undeclared identifier ${id.value}.")
+              case _ =>
+            }
+            true
+          case _: And | _: Or | _: Implies | _: Not => true
+          case n: Node =>
+            error(n, s"Truth Table mode only allows identifier, and, or, implication, and negation expressions.")
+            true
+        })(unitNode.formula)
+        val star = nodeLocMap(unitNode.star).columnBegin
+        val formula = nodeLocMap(unitNode.formula).columnBegin
+        var seenAssignments = imapEmpty[IVector[Boolean], TruthTableRow]
+        for (row <- unitNode.rows) {
+          val assignments = row.assignments.value.map(_.value)
+          seenAssignments.get(assignments) match {
+            case Some(otherRow) =>
+              val li = nodeLocMap(otherRow)
+              error(row, s"Duplicate assignments to the ones in [${li.lineBegin}, ${li.columnBegin}]")
+            case _ =>
+          }
+          if (row.assignments.value.size != unitNode.ids.size) {
+            error(row, s"Invalid number of variable assignments (expecting ${unitNode.ids.size} instead of ${row.assignments.value.size}). ")
+          }
+          seenAssignments += assignments -> row
+        }
+        if (star != formula) {
+          error(unitNode.star, "Invalid location for * (it should be in the same column as the top-level formula expression).")
+        }
+        unitNode.statusOpt match {
+          case Some(status: ContingentStatus) =>
+            var seen = imapEmpty[IVector[Boolean], Assignments]
+            for (a <- status.trueAssignments ++ status.falseAssignments) {
+              val assignments = a.value.map(_.value)
+              seen.get(assignments) match {
+                case Some(other) =>
+                  val li = nodeLocMap(other)
+                  error(a, s"Duplicate assignments to the ones in [${li.lineBegin}, ${li.columnBegin}]")
+                case _ => seen += assignments -> a
+              }
+            }
+          case _ =>
+        }
+        return
       case unitNode: Sequent => checkWellFormedSequent(unitNode)
       case _ =>
     }
@@ -341,6 +404,33 @@ sealed trait UnitNode extends Node {
   var mode = LogicMode.Programming
   var input: String = ""
 }
+
+final case class TruthTable(star: TruthTableMarker,
+                            ids: Node.Seq[Id],
+                            bar: TruthTableMarker,
+                            formula: Exp,
+                            rows: Node.Seq[TruthTableRow],
+                            statusOpt: Option[TruthTableStatus])
+  extends UnitNode
+
+final case class TruthTableMarker() extends Node
+
+final case class TruthTableRow(assignments: Assignments,
+                               bar: TruthTableMarker,
+                               values: Node.Seq[BooleanLit])
+  extends Node
+
+final case class Assignments(value: Node.Seq[BooleanLit]) extends Node
+
+sealed trait TruthTableStatus extends Node
+
+final case class TautologyStatus() extends TruthTableStatus
+
+final case class ContradictoryStatus() extends TruthTableStatus
+
+final case class ContingentStatus(trueAssignments: Node.Seq[Assignments],
+                                  falseAssignments: Node.Seq[Assignments])
+  extends TruthTableStatus
 
 final case class Sequent(premises: Node.Seq[Exp],
                          conclusions: Node.Seq[Exp],

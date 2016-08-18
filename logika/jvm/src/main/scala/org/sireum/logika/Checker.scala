@@ -107,6 +107,12 @@ object Checker {
         reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
       for (sequent <- sequents)
         check(sequent, m.kind, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
+    } else if (unitNodes.forall(_.isInstanceOf[ast.TruthTable])) {
+      val truthTables = unitNodes.map(_.asInstanceOf[ast.TruthTable])
+      if (m.lastOnly)
+        reporter.report(WarningMessage("AST", "Last mode is only applicable for checking programs."))
+      for (tt <- truthTables)
+        check(tt, m.kind, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
     } else {
       reporter.report(ErrorMessage("AST", "Cannot check mixed programs and sequents."))
     }
@@ -126,6 +132,8 @@ object Checker {
                   recursionBound: Natural = 10,
                   useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
+    case tt: ast.TruthTable =>
+      check(tt)
     case s: ast.Sequent =>
       assert(s.mode == ast.LogicMode.Propositional ||
         s.mode == ast.LogicMode.Predicate)
@@ -136,7 +144,7 @@ object Checker {
       s.proofOpt match {
         case Some(proof) =>
           implicit val nodeLocMap = s.nodeLocMap
-          var r = new SequentProofContext(s, autoEnabled, timeoutInMs,
+          var r = SequentProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled,
             premises = ilinkedSetEmpty ++ s.premises).
             check(proof).isDefined
@@ -197,6 +205,111 @@ object Checker {
           reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
       } else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
       r
+  }
+
+  def check(tt: ast.TruthTable)(
+    implicit reporter: AccumulatingTagReporter): Boolean = {
+    val nodeLocMap = tt.nodeLocMap
+    def errorH(n: ast.Node, msg: String): Unit =
+      error(tt.fileUriOpt, nodeLocMap(n), msg)(reporter)
+    var allAssignments = ivectorEmpty[IVector[Boolean]]
+    def idValComb(i: Natural, acc: IVector[Boolean]): Unit =
+      if (i == tt.ids.length) allAssignments :+= acc
+      else {
+        idValComb(i + 1, acc :+ true)
+        idValComb(i + 1, acc :+ false)
+      }
+    idValComb(0, ivectorEmpty)
+    var (expectedMap, trueAssignments, falseAssignments) = {
+      var tAssignments = isetEmpty[IVector[Boolean]]
+      var fAssignments = isetEmpty[IVector[Boolean]]
+      var result = imapEmpty[IVector[Boolean], IMap[PosInteger, (ast.Exp, Boolean)]]
+      for (a <- allAssignments) {
+        val assignments = imapEmpty[String, Boolean] ++ tt.ids.map(_.value).zip(a)
+        var m = imapEmpty[PosInteger, (ast.Exp, Boolean)]
+        def eval(e: ast.Exp): Boolean = {
+          val c = nodeLocMap(e).columnBegin
+          val r = (e: @unchecked) match {
+            case ast.Id(value) => assignments(value)
+            case ast.Not(exp) => !eval(exp)
+            case ast.And(e1, e2) => eval(e1) & eval(e2)
+            case ast.Or(e1, e2) => eval(e1) | eval(e2)
+            case ast.Implies(e1, e2) => !eval(e1) | eval(e2)
+          }
+          m += c -> (e, r)
+          r
+        }
+        if (eval(tt.formula)) {
+          tAssignments += a
+        } else {
+          fAssignments += a
+        }
+        result += a -> m
+      }
+      (result, tAssignments, fAssignments)
+    }
+    val barColumn = nodeLocMap(tt.bar).columnBegin
+    for (row <- tt.rows) {
+      val rowBarColumn = nodeLocMap(row.bar).columnBegin
+      if (rowBarColumn != barColumn) {
+        errorH(row.bar, s"Invalid location for | (expecting it to be at column $barColumn instead of $rowBarColumn).")
+      }
+      val assignments = row.assignments.value.map(_.value)
+      var m = expectedMap(assignments)
+      expectedMap -= assignments
+      var rowHasError = false
+      for (value <- row.values if !rowHasError) {
+        val c = nodeLocMap(value).columnBegin
+        m.get(c) match {
+          case Some((e, expectedValue)) =>
+            if (expectedValue != value.value) {
+              rowHasError = true
+              errorH(row, "Some expression values are invalid.")
+            }
+            m -= c
+          case _ =>
+            rowHasError = true
+            errorH(value, s"Could not find the value's corresponding expression.")
+        }
+      }
+      for ((e, b) <- m.values if !rowHasError) e match {
+        case e: ast.Id =>
+        case _ =>
+          rowHasError = true
+          errorH(row, "Missing some expression values.")
+      }
+    }
+    if (expectedMap.nonEmpty) {
+      errorH(tt.star, "Some assignments are missing.")
+    }
+
+    if (!reporter.hasError)
+      tt.statusOpt match {
+        case Some(status: ast.TautologyStatus) =>
+          if (falseAssignments.nonEmpty) errorH(status, "It is not a Tautology.")
+        case Some(status: ast.ContradictoryStatus) =>
+          if (trueAssignments.nonEmpty) errorH(status, "It is not Contradictory.")
+        case Some(status: ast.ContingentStatus) =>
+          if (trueAssignments.isEmpty || falseAssignments.isEmpty)
+            errorH(status, "It is not Contingent.")
+          else {
+            val tContingentAssignments = status.trueAssignments.map(_.value.map(_.value)).toSet
+            if (tContingentAssignments != trueAssignments) {
+              errorH(status, "Invalid assignments for true.")
+            }
+            val fContingentAssignments = status.falseAssignments.map(_.value.map(_.value)).toSet
+            if (fContingentAssignments != falseAssignments) {
+              errorH(status, "Invalid assignments for false.")
+            }
+          }
+        case None =>
+          errorH(tt.star, "Expecting Tautology, Contradictory, or Contingent.")
+      }
+
+    if (reporter.hasError) reporter.report(ErrorMessage("Truth Table Checker", s"Truth table is rejected."))
+    else reporter.report(InfoMessage("Truth Table Checker", s"Truth table is accepted."))
+
+    reporter.hasError
   }
 
   private[logika] final def collectVars(e: ast.Exp): ISet[String] = {

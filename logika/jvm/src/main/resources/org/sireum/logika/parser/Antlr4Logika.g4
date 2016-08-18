@@ -44,7 +44,7 @@ grammar Antlr4Logika;
 ==============================================
 
 Note: ---+ means at least three minus (-) characters
-and it is used for a different form of sequent
+and it is used for truth table and a different form of sequent
 */
 
 @header {
@@ -52,8 +52,45 @@ and it is used for a different form of sequent
 }
 
 file
-  : sequent NL* proof? NL* EOF                          #SequentFile
+  : truthTable EOF                                      #TruthTableFile
+  | sequent NL* proof? NL* EOF                          #SequentFile
   | program EOF                                         #ProgramFile
+  ;
+
+truthTable
+  : NL*
+    star='*' NL+
+    HLINE NL+
+    vars+=ID+ bar='|' formula NL+
+    HLINE
+    ( NL+ row )*
+    NL+ HLINE
+    ( NL+ status )?
+    NL*
+  ;
+
+row
+  : model+=bool* bar='|' eval+=bool*
+  ;
+
+bool
+  : t=( 'T' | '⊤' | 'F' | '⊥' )
+  ;
+
+status
+  : ID // ID in { "Tautology", "Contradictory", "Contingent" }
+    ( // when "Contingent"
+      NL+
+      t='-' ( 'T' | '⊤' ) ':'
+      tContingentAssignments+=assignments*
+      NL+
+      '-' ( 'F' | '⊥' ) ':'
+      fContingentAssignments+=assignments*
+    )?
+  ;
+
+assignments
+  : '[' bool+ ']'
   ;
 
 sequent // note: all newlines inside a sequent are whitespaces

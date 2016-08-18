@@ -1,34 +1,14 @@
 Logika To-Dos
 =============
-  
+
+* Document Truth Table mode
+
 * Document SymExe mode 
 
 
 Future Work
 ===========
 
-* Add automatic check of propositional and predicate logic sequents
-
-* Add option to specify default range for integers
-
-* Add truth table input language and checker, e.g.,
-
-  ```
-            *
-  -------------- 
-   p  q | p ∧ q 
-  --------------
-   T  T |   T  
-   T  F |   F
-   F  T |   F
-   F  F |   F
-  --------------
-  Contingent
-    T on (T, T)
-    F on (T, F), (F, T), (F, F)
-  Valid
-  ```
-  
 * Add logic gates circuit output for propositional logic 
 
 * Add jago tactic
