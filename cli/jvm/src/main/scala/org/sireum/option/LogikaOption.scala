@@ -50,8 +50,8 @@ final case class LogikaOption(@BeanProperty
                               @GroupOpt(shortKey = None, description = "Enable sat checking of facts and contracts", groupName = "Programming Logic")
                               var sat: Boolean = false,
                               @BeanProperty
-                              @Opt(shortKey = Some("s"), description = "Sequent matching the propositional/predicate logic input file's")
-                              var sequent: OptionBean[String] = none(),
+                              @Opt(shortKey = Some("f"), description = "Formula/sequent matching the truth table/logic input file's")
+                              var formula: OptionBean[String] = none(),
                               @BeanProperty
                               @GroupOpt(shortKey = Some("t"), description = "Timeout for algebra and auto (in milliseconds)", groupName = "Programming Logic")
                               var timeout: Int = 2000,
