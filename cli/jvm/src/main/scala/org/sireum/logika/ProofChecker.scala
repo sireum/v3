@@ -49,8 +49,8 @@ class ProofChecker(option: LogikaOption,
     if (option.input.isEmpty)
       return true
 
-    if (option.input.length > 1 && option.sequent.nonEmpty) {
-      errPrintln("Sequent cannot provided when checking multiple files.")
+    if (option.input.length > 1 && option.formula.nonEmpty) {
+      errPrintln("Formula cannot be provided when checking multiple files.")
       return false
     }
 
@@ -79,20 +79,8 @@ class ProofChecker(option: LogikaOption,
     if (hasError) return false
 
     implicit val reporter = new ConsoleTagReporter
-    val sequentOpt: Option[Sequent] = option.sequent.flatMap {
-      text =>
-        val r: Option[Sequent] =
-          Builder(None, text, 0, isAutoEnabled = false) match {
-            case Some(s: Sequent) => Some(s)
-            case _ =>
-              hasError = true
-              None
-          }
-        r
-    }
-    if (hasError) return false
 
-    Checker.check(message.Check(
+    hasError = Checker.check(message.Check(
       requestId = "",
       isBackground = false,
       kind =
@@ -110,23 +98,54 @@ class ProofChecker(option: LogikaOption,
       loopBound = 10,
       recursionBound = 10,
       useMethodContract = true)
-    )
+    ).tags.exists(_.isInstanceOf[ErrorTag])
 
     if (hasError) return false
 
-    if (sequentOpt.nonEmpty) {
+    if (option.formula.nonEmpty) {
       Builder(None, proofs.head.content, 0, isAutoEnabled = false) match {
-        case Some(s: Sequent) if !hasError =>
-          val sequent = sequentOpt.get
-          if (!(s.premises == sequent.premises &&
-            s.conclusions == sequent.conclusions)) {
-            val li = s.nodeLocMap(s.conclusions.last)
-            outPrintln(
-              s"""The specified sequent is different than the one in the file.
-                  |Specified:
-                  |${option.sequent.get}
-                  |File:
-                  |${proofs.head.content.substring(0, li.offset + li.length)}""".stripMargin)
+        case Some(s: Sequent) =>
+          option.formula.foreach {
+            text =>
+              Builder(None, text, 0, isAutoEnabled = false) match {
+                case Some(sequent: Sequent) =>
+                  if (!(s.premises == sequent.premises &&
+                    s.conclusions == sequent.conclusions)) {
+                    val li = s.nodeLocMap(s.conclusions.last)
+                    var end = li.offset
+                    val text = proofs.head.content
+                    while (text.charAt(end) != '{') end += 1
+                    outPrintln(
+                      s"""The specified sequent is different than the one in the file.
+                          |Specified:
+                          |${option.formula.get}
+                          |File:
+                          |${proofs.head.content.substring(0, end).trim}""".stripMargin)
+                  }
+                case _ =>
+              }
+          }
+        case Some(tt: TruthTable) =>
+          option.formula.foreach {
+            text =>
+              Builder(None, '⊢' + text, 0, isAutoEnabled = false) match {
+                case Some(sequent: Sequent) =>
+                  if (sequent.conclusions.head != tt.formula) {
+                    val li = tt.nodeLocMap(tt.formula)
+                    var start = li.offset
+                    var end = li.offset
+                    val text = proofs.head.content
+                    while (text.charAt(start) != '|') start -= 1
+                    while (text.charAt(end) != '\n') end += 1
+                    outPrintln(
+                      s"""The specified formula is different than the one in the file.
+                          |Specified:
+                          |${option.formula.get}
+                          |File:
+                          |${text.substring(start + 1, end).trim}""".stripMargin)
+                  }
+                case _ =>
+              }
           }
         case _ =>
       }

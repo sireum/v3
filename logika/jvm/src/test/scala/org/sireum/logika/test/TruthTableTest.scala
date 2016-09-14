@@ -25,19 +25,30 @@
 
 package org.sireum.logika.test
 
+import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.Suite
-import org.sireum.logika.test._
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+import org.sireum.test.{JUnitTestFramework, TestDef}
 
-@RunWith(classOf[Suite])
-@Suite.SuiteClasses(
-  Array(
-    classOf[TruthTableTest],
-    classOf[SequentTest],
-    classOf[Z3Test],
-    classOf[ForwardProgramTest],
-    classOf[BackwardProgramTest],
-    classOf[SymExeProgramTest]
-  )
-)
-final class LogikaRegressionTestSuite
+@RunWith(value = classOf[Parameterized])
+final class TruthTableTest(name: String, td: TestDef) {
+  @Test
+  def test(): Unit = {
+    td.test(JUnitTestFramework)
+  }
+}
+
+object TruthTableTest {
+  val provider = new TruthTableTestDefProvider(JUnitTestFramework)
+
+  @Parameters(name = "{0}")
+  def parameters = {
+    val ps = provider.enabledTestDefs.map(td => Array(td.name, td))
+    val r = new java.util.ArrayList[Array[Object]](ps.size)
+    for (p <- ps) {
+      r.add(p)
+    }
+    r
+  }
+}

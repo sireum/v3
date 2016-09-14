@@ -671,7 +671,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |
            |Options:
-           |-s, --sequent    Sequent matching the propositional/predicate logic input file's
+           |-f, --formula    Formula/sequent matching the truth table/logic input file's
            |    --server     Enable server mode
            |-h, --help       Display usage information
            |
@@ -702,13 +702,13 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           option.auto = true
         case "--sat" =>
           option.sat = true
-        case "-s" | "--sequent" =>
+        case "-f" | "--formula" =>
           i += 1
           args.at(i) match {
             case Some(arg) =>
-              option.sequent = org.sireum.util.some(arg)
+              option.formula = org.sireum.util.some(arg)
             case _ =>
-              errPrintln("Expecting a value for sequent")
+              errPrintln("Expecting a value for formula")
               return
           }
         case "-t" | "--timeout" =>

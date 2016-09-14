@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.lihaoyi:sourcecode_2.11:0.1.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/sourcecode_2.11/sourcecode_2.11-0.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/sourcecode_2.11/sourcecode_2.11-0.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

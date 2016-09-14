@@ -48,6 +48,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   private def build(ctx: FileContext): UnitNode = {
     val r =
       ctx match {
+        case ctx: TruthTableFileContext => build(ctx)
         case ctx: SequentFileContext => build(ctx)
         case ctx: ProgramFileContext => build(ctx)
       }
@@ -55,6 +56,66 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     r.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
     r
   }
+
+  private def build(ctx: TruthTableFileContext): TruthTable =
+    build(ctx.truthTable)
+
+  private def build(ctx: TruthTableContext): TruthTable =
+    TruthTable(
+      TruthTableMarker() at ctx.star,
+      ctx.vars.map(buildId),
+      TruthTableMarker() at ctx.bar,
+      build(ctx.formula),
+      Option(ctx.row).map(_.map(build)).getOrElse(Node.emptySeq),
+      Option(ctx.status).map(build)) at ctx
+
+  private def build(ctx: RowContext): TruthTableRow = {
+    val model = ctx.model.toVector.map(build)
+    TruthTableRow(
+      Assignments(model at(model.head, model.last)),
+      TruthTableMarker() at ctx.bar,
+      ctx.eval.map(build)) at ctx
+  }
+
+  private def build(ctx: BoolContext): BooleanLit =
+    ctx.t.getText match {
+      case "T" | "⊤" => BooleanLit(value = true) at ctx
+      case "F" | "⊥" => BooleanLit(value = false) at ctx
+    }
+
+  private def build(ctx: StatusContext): TruthTableStatus =
+    Option(ctx.t) match {
+      case Some(_) =>
+        ctx.ID.getText match {
+          case "Tautology" =>
+            error(ctx.t, s"Unexpected assignments.")
+            ContradictoryStatus() at ctx.t
+          case "Contradictory" =>
+            error(ctx.t, s"Unexpected assignments.")
+            ContradictoryStatus() at ctx.t
+          case "Contingent" =>
+            ContingentStatus(
+              ctx.tContingentAssignments.map(build),
+              ctx.fContingentAssignments.map(build)) at ctx
+          case t =>
+            error(ctx.ID, s"Expecting either Tautology, Contradictory, or Contingent, but found $t instead.")
+            ContradictoryStatus() at ctx
+        }
+      case _ =>
+        ctx.ID.getText match {
+          case "Tautology" => TautologyStatus() at ctx
+          case "Contradictory" => ContradictoryStatus() at ctx
+          case "Contingent" =>
+            error(ctx.ID, s"Expecting truth assignments for Contingent.")
+            ContradictoryStatus() at ctx
+          case t =>
+            error(ctx.ID, s"Expecting either Tautology, Contradictory, or Contingent, but found $t instead.")
+            ContradictoryStatus() at ctx
+        }
+    }
+
+  private def build(ctx: AssignmentsContext): Assignments =
+    Assignments(ctx.bool.map(build)) at ctx
 
   private def build(ctx: SequentFileContext): Sequent =
     if (ctx.proof != null) build(ctx.sequent).
@@ -410,16 +471,17 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         SeqLit(token2type(ctx.t).asInstanceOf[SeqType],
           Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
     }
-    r at ctx
+    if (!(nodeLocMap isDefinedAt r)) r at ctx
+    else r
   }
 
   private def build(ctx: FormulaContext): Exp = {
-    val r = ctx match {
+    ctx match {
       case ctx: PFormulaContext =>
         var e = build(ctx.primFormula)
         for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
           e = id.getText match {
-            case "size" => Size(e)
+            case "size" => Size(e) at id
             case f =>
               error(id, s"Unrecognized field access $f.")
               e
@@ -429,7 +491,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case ctx: BinaryContext =>
         val lExp = build(ctx.l)
         val rExp = build(ctx.r)
-        ctx.op.getText match {
+        val r = ctx.op.getText match {
           case "*" =>
             val r = Mul(lExp, rExp)
             for (lN <- constMap.get(lExp);
@@ -503,9 +565,10 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "or" | "|" | "∨" | "V" => Or(lExp, rExp)
           case "implies" | "->" | "→" => Implies(lExp, rExp)
         }
+        r at ctx.op
       case ctx: UnaryContext =>
         val exp = build(ctx.formula)
-        ctx.op.getText match {
+        val r = ctx.op.getText match {
           case "-" =>
             val r = Minus(exp)
             constMap.get(exp) match {
@@ -515,9 +578,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             r
           case "not" | "!" | "¬" | "~" => Not(exp)
         }
+        r at ctx.op
       case ctx: QuantContext => build(ctx.qformula)
     }
-    r at ctx
   }
 
   private def build(ctx: QformulaContext): Quant[_] = {
@@ -786,20 +849,20 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   }
 
   private def build(ctx: ExpContext): Exp = {
-    val r = ctx match {
+    ctx match {
       case ctx: InvokeExpContext =>
-        Apply(buildId(ctx.tb), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
+        Apply(buildId(ctx.tb), Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq)) at ctx
       case ctx: PExpContext =>
         var e = build(ctx.primExp)
         for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
           e = id.getText match {
             case "clone" => e match {
-              case e: Id => Clone(e)
+              case e: Id => Clone(e) at id
               case _ =>
                 error(id, s"Cloning is only allowed from a variable reference expression.")
                 Clone(Id("???"))
             }
-            case "size" => Size(e)
+            case "size" => Size(e) at id
             case f =>
               error(id, s"Unrecognized field access $f.")
               e
@@ -811,14 +874,14 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         ReadInt(Option(ctx.STRING).map { x =>
           val text = x.getText
           StringLit(text.substring(1, text.length - 1))
-        })
+        }) at ctx
       case ctx: ParenExpContext =>
         val r = build(ctx.exp)
         r.hasParen = true
         r
       case ctx: UnaryExpContext =>
         val exp = build(ctx.exp)
-        ctx.op.getText match {
+        val r = ctx.op.getText match {
           case "-" =>
             val r = Minus(exp)
             constMap.get(exp) match {
@@ -828,10 +891,11 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             r
           case "not" | "neg" | "!" | "¬" | "~" => Not(exp)
         }
+        r at ctx.op
       case ctx: BinaryExpContext =>
         val lExp = build(ctx.l)
         val rExp = build(ctx.r)
-        ctx.op.getText match {
+        val r = ctx.op.getText match {
           case "*" =>
             val r = Mul(lExp, rExp)
             for (lN <- constMap.get(lExp);
@@ -901,8 +965,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           case "^|" => Xor(lExp, rExp)
           case "|" => Or(lExp, rExp)
         }
+        r at ctx.op
     }
-    r at ctx
   }
 
   private def build(ctx: LoopInvariantContext): LoopInv = {
@@ -999,7 +1063,7 @@ object Builder {
              implicit reporter: AccumulatingTagReporter): Option[UnitNode] = {
     class ParsingEscape extends RuntimeException
     object Mode extends Enumeration {
-      val Sequent, Program = Value
+      val TruthTable, Sequent, Program = Value
     }
 
     val sr = new StringReader(input)
@@ -1017,8 +1081,11 @@ object Builder {
       }
       firstTokenOpt match {
         case Some(t) =>
-          if (t.getText == "import") Mode.Program
-          else Mode.Sequent
+          t.getText match {
+            case "*" => Mode.TruthTable
+            case "import" => Mode.Program
+            case _ => Mode.Sequent
+          }
         case _ => Mode.Program
       }
     }
@@ -1064,25 +1131,23 @@ object Builder {
 
 
     try {
-      val r =
-        mode match {
+      val r = {
+        val parseTree = mode match {
+          case Mode.TruthTable =>
+            parser.file()
           case Mode.Sequent =>
             orientNewlines(tokenStream, isProgram = false)
-            val parseTree = parser.file()
-            if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
-              if (!reporter.hasError) Some(ast)
-              else None
-            } else None
+            parser.file()
           case Mode.Program =>
             orientNewlines(tokenStream, isProgram = true)
-            val parseTree = parser.file()
-            if (!reporter.hasError) {
-              val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
-              if (!reporter.hasError) Some(ast)
-              else None
-            } else None
+            parser.file()
         }
+        if (!reporter.hasError) {
+          val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
+          if (!reporter.hasError) Some(ast)
+          else None
+        } else None
+      }
       r match {
         case Some(un) =>
           un.input = input
