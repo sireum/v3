@@ -37,6 +37,11 @@ object Checker {
   private[logika] final val zero = ast.IntLit("0", 0, None)
   private[logika] final val kind = "Proof Checker"
 
+  /* Top Level check command
+
+     Does something (I can't tell what) and then hands off to lower level check command.
+   */
+
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
     val autoEnabled = m.autoEnabled ||
@@ -114,32 +119,39 @@ object Checker {
   }
 
   final def check(unitNode: ast.UnitNode,
-                  checkerKind: message.CheckerKind.Value,
-                  autoEnabled: Boolean = false,
-                  timeoutInMs: PosInteger = 2000,
+                  checkerKind: message.CheckerKind.Value, // kind of checker, using logika CheckerKind enumeration
+                  autoEnabled: Boolean = false,    // auto mode
+                  timeoutInMs: PosInteger = 2000,  // time out
                   checkSat: Boolean = false,
-                  hintEnabled: Boolean = false,
-                  inscribeSummoningsEnabled: Boolean = false,
+                  hintEnabled: Boolean = false,    // hints
+                  inscribeSummoningsEnabled: Boolean = false, // inscribe summonings
                   coneInfluenceEnabled: Boolean = false,
                   bitWidth: Natural = 0,
-                  loopBound: Natural = 10,
-                  recursionBound: Natural = 10,
+                  loopBound: Natural = 10,         // loop bound
+                  recursionBound: Natural = 10,    // recursion bound
                   useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case s: ast.Sequent =>
       assert(s.mode == ast.LogicMode.Propositional ||
         s.mode == ast.LogicMode.Predicate)
       implicit val fileUriOpt = s.fileUriOpt
+      // create an empty set of strings to accumlate vars
       var vars = isetEmpty[String]
+      // loop over premises and conclusions and find all variables
+      // (why?)
       for (e <- s.premises ++ s.conclusions)
         vars ++= collectVars(e)
       s.proofOpt match {
         case Some(proof) =>
+          // This AST is a proof, so extract the location map, and identify it as an implicit parameter
           implicit val nodeLocMap = s.nodeLocMap
+          // Create a new sequent proof context
+          // Why do we make a SequentProofContext here?  Is seems like this decision should be made elsewhere.
+          // r is True if there is a proof
           var r = new SequentProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled,
             premises = ilinkedSetEmpty ++ s.premises).
-            check(proof).isDefined
+            check(proof).isDefined  // I don't understand what these last two clauses do
           val exps = proof.steps.flatMap(_ match {
             case s: ast.RegularStep => Some(s.exp)
             case _ => None
@@ -365,7 +377,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     var addedSteps = isetEmpty[Natural]
     var pcOpt: Option[T] =
       proofGroup match {
+          // if proofGroup is a SubProof
         case p: ast.SubProof =>
+          // consider the type of the first step in the subproof (the assume step)
           val popt = p.assumeStep match {
             case ast.PlainAssumeStep(_, exp) =>
               addProvedStep(p.assumeStep)

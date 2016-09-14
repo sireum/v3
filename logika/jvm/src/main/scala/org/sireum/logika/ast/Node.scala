@@ -490,14 +490,14 @@ final case class Auto(num: Num,
                       steps: Node.Seq[Num])
   extends RegularStep
 
-final case class SubProof(num: Num,
-                          assumeStep: AssumeStep,
-                          steps: Node.Seq[ProofStep])
+final case class SubProof(num: Num,                    // number of the subproof
+                          assumeStep: AssumeStep,      // the assume step at the beginning of the subproof
+                          steps: Node.Seq[ProofStep])  // the rest of the steps of the subproof
   extends ProofStep with ProofGroup {
 
-  override def allSteps = assumeStep +: steps
+  override def allSteps = assumeStep +: steps      // all steps consist of assume step and rest of steps
 
-  override def first = assumeStep
+  override def first = assumeStep                  // the first step is the assume step
 
   override def last =
     if (steps.isEmpty) assumeStep else steps.last
