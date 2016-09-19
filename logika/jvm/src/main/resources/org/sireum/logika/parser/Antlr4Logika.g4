@@ -53,7 +53,7 @@ and it is used for truth table and a different form of sequent
 
 file
   : truthTable EOF                                      #TruthTableFile
-  | sequent NL* proof? NL* EOF                          #SequentFile
+  | NL* sequent NL* proof? NL* EOF                      #SequentFile
   | program EOF                                         #ProgramFile
   ;
 
@@ -82,10 +82,10 @@ status
     ( // when "Contingent"
       NL+
       t='-' ( 'T' | '⊤' ) ':'
-      tContingentAssignments+=assignments*
+      ( NL* tContingentAssignments+=assignments )*
       NL+
       '-' ( 'F' | '⊥' ) ':'
-      fContingentAssignments+=assignments*
+      ( NL* fContingentAssignments+=assignments )*
     )?
   ;
 
