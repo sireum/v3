@@ -495,12 +495,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           // consider the type of the first step in the subproof (the assume step)
           val popt = p.assumeStep match {
             case ast.PlainAssumeStep(_, exp) =>
+              addedSteps += p.assumeStep.num.value
               addProvedStep(p.assumeStep)
             case ast.ForAllAssumeStep(num, id, _) =>
               addedVars += id.value
               addVar(id, num.value)
             case ast.ExistsAssumeStep(num, id, exp, _) =>
               addedVars += id.value
+              addedSteps += p.assumeStep.num.value
               addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
           }
           popt.flatMap(_.addProvedStep(p))
