@@ -51,6 +51,7 @@ object Node {
         unitNode.mode = m
       case unitNode: Sequent =>
         unitNode.premises.foreach(visitor)
+        unitNode.conclusions.foreach(visitor)
         unitNode.mode = m
       case unitNode: Program =>
         unitNode.mode = LogicMode.Programming
