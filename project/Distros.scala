@@ -26,17 +26,17 @@
 import ammonite.ops._
 
 object Distros {
-  implicit val wd = cwd
+  implicit val wd = pwd
   lazy val VER = {
     %%('git, 'log, "-n", "1", "--pretty=format:%H").out.lines.head.trim
   }
 
   def build(): Unit = {
-    rm ! cwd / 'distros / "sireum-v3-mac64.zip"
-    rm ! cwd / 'distros / "sireum-v3-win64.zip"
-    rm ! cwd / 'distros / "sireum-v3-linux64.zip"
-    rm ! cwd / 'distros / "sireum-v3-VER"
-    write(cwd / 'distros / "sireum-v3-VER", VER)
+    rm ! pwd / 'distros / "sireum-v3-mac64.zip"
+    rm ! pwd / 'distros / "sireum-v3-win64.zip"
+    rm ! pwd / 'distros / "sireum-v3-linux64.zip"
+    rm ! pwd / 'distros / "sireum-v3-VER"
+    write(pwd / 'distros / "sireum-v3-VER", VER)
     build("mac")
     build("win")
     build("linux")
@@ -45,22 +45,22 @@ object Distros {
   def build(platform: String): Unit = {
     println(s"Building distro for ${platform}64...")
     println()
-    mkdir ! cwd / 'distros / "sireum-v3" / 'bin
-    write(cwd / 'distros / "sireum-v3" / 'bin / 'VER, VER)
-    val licenseLines = read.lines ! cwd / "license.txt"
+    mkdir ! pwd / 'distros / "sireum-v3" / 'bin
+    write(pwd / 'distros / "sireum-v3" / 'bin / 'VER, VER)
+    val licenseLines = read.lines ! pwd / "license.txt"
     platform match {
       case "win" =>
-        write(cwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\r\n"))
-        cp(cwd / 'resources / 'distro / "sireum.bat", cwd / 'distros / "sireum-v3" / "sireum.bat")
+        write(pwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\r\n"))
+        cp(pwd / 'resources / 'distro / "sireum.bat", pwd / 'distros / "sireum-v3" / "sireum.bat")
       case _ =>
-        write(cwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\n"))
-        cp(cwd / "sireum", cwd / 'distros / "sireum-v3" / "sireum")
+        write(pwd / 'distros / "sireum-v3" / "license.txt", licenseLines.mkString("\n"))
+        cp(pwd / "sireum", pwd / 'distros / "sireum-v3" / "sireum")
     }
-    cp(cwd / 'bin / "sireum.jar", cwd / 'distros / "sireum-v3" / 'bin / "sireum.jar")
-    cp(cwd / 'bin / "prelude.sh", cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh")
-    %('bash, cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh", PLATFORM = platform, DISTROS = "true")
-    rm ! cwd / 'distros / "sireum-v3" / 'bin / "prelude.sh"
-    %('zip, "-qr", s"sireum-v3-${platform}64.zip", "sireum-v3")(cwd / 'distros)
-    rm ! cwd / 'distros / "sireum-v3"
+    cp(pwd / 'bin / "sireum.jar", pwd / 'distros / "sireum-v3" / 'bin / "sireum.jar")
+    cp(pwd / 'bin / "prelude.sh", pwd / 'distros / "sireum-v3" / 'bin / "prelude.sh")
+    %('bash, pwd / 'distros / "sireum-v3" / 'bin / "prelude.sh", PLATFORM = platform, DISTROS = "true")
+    rm ! pwd / 'distros / "sireum-v3" / 'bin / "prelude.sh"
+    %('zip, "-qr", s"sireum-v3-${platform}64.zip", "sireum-v3")(pwd / 'distros)
+    rm ! pwd / 'distros / "sireum-v3"
   }
 }

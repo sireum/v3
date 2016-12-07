@@ -1,1 +1,1 @@
-libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "0.5.7"
+libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "0.8.0"

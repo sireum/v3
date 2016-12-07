@@ -23,7 +23,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.typesafe.sbteclipse.core.EclipsePlugin._
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.scalajs.sbtplugin.cross.CrossProject
@@ -37,7 +36,7 @@ import sbtassembly.AssemblyKeys._
 object SireumBuild extends Build {
   final val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-  final val scalaVer = "2.11.8"
+  final val scalaVer = "2.12.1"
 
   final val sireumVer = "3"
 
@@ -140,18 +139,12 @@ object SireumBuild extends Build {
     incOptions := incOptions.value.withNameHashing(true),
     scalaVersion := scalaVer,
     retrieveManaged := true,
-    EclipseKeys.withSource := true,
-    EclipseKeys.relativizeLibs := true,
-    EclipseKeys.useProjectId := true,
-    EclipseKeys.withBundledScalaContainers := false,
-    EclipseKeys.eclipseOutput := Some("bin"),
-    scalacOptions ++= (Seq("-target:jvm-1.8", "-Ybackend:GenBCode",
-      "-Ydelambdafy:method", "-feature", "-Xexperimental") ++
-      (if (isRelease) Seq("-optimize", "-Yopt:l:classpath") else Seq())),
+    scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
+      "-Ydelambdafy:method", "-feature"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.4.1"
+      "com.lihaoyi" %%% "upickle" % "0.4.4"
     ),
     scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
     autoAPIMappings := true,
@@ -163,16 +156,16 @@ object SireumBuild extends Build {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.scala-lang" % "scala-compiler" % scalaVer,
-      "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0",
-      "org.sireum" %% "logika-runtime" % "3.0.0-7",
+      "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
+      "org.sireum" %% "logika-runtime" % "3.0.0-8",
       "org.antlr" % "antlr4-runtime" % "4.5.3",
       "org.antlr" % "ST4" % "4.0.8",
       "org.yaml" % "snakeyaml" % "1.17",
       "org.ow2.asm" % "asm" % "5.1",
       "org.ow2.asm" % "asm-commons" % "5.1",
       "org.ow2.asm" % "asm-util" % "5.1",
-      "com.assembla.scala-incubator" %% "graph-core" % "1.10.1",
-      "com.assembla.scala-incubator" %% "graph-dot" % "1.10.1",
+      "org.scala-graph" %% "graph-core" % "1.11.4",
+      "org.scala-graph" %% "graph-dot" % "1.11.0",
       "com.novocode" % "junit-interface" % "0.11"
     ),
     parallelExecution in Test := true,
@@ -183,12 +176,11 @@ object SireumBuild extends Build {
     scalacOptions ++= Seq("-feature"),
     parallelExecution in Test := false,
     relativeSourceMaps := true,
-    scalaJSUseRhino in Global := false,
     scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
     jsEnv := NodeJSEnv().value,
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVer,
-      "com.lihaoyi" %%% "utest" % "0.4.3"
+      "com.lihaoyi" %%% "utest" % "0.4.4"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )

@@ -27,10 +27,11 @@ COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=8.15.0.1-jdk8.0.92
-SBT_VERSION=0.13.12
-NODE_VERSION=6.3.1
-Z3_VERSION=4.4.1
+ZULU_VERSION=8.19.0.1-jdk8.0.112
+SCALA_VERSION=2.12.1
+SBT_VERSION=0.13.13
+NODE_VERSION=7.2.1
+Z3_VERSION=4.5.0
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
     PLATFORM=win
@@ -47,7 +48,7 @@ if [ "${PLATFORM}" = "win"  ]; then
 elif [ "${PLATFORM}" = "mac"  ]; then
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
-  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.6.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
   type -P xz &>/dev/null || { >&2 echo "xz command not found."; exit 1; }
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
@@ -87,6 +88,30 @@ if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
     exit 1
   fi
 fi
+cd ${REPO}/platform
+SCALA_DROP_URL=http://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.zip
+SCALA_DROP="${SCALA_DROP_URL##*/}"
+grep -q ${SCALA_VERSION} scala/VER &> /dev/null && SCALA_UPDATE=false || SCALA_UPDATE=true
+if [ ! -d "scala" ] || [ "${SCALA_UPDATE}" = "true" ]; then
+  if [ ! -f ${SCALA_DROP} ]; then
+    echo "Please wait while downloading Scala ${SCALA_VERSION} ..."
+    wget -q ${SCALA_DROP_URL}
+    echo
+  fi
+  rm -fR scala
+  unzip -oq ${SCALA_DROP}
+  rm ${SCALA_DROP}
+  mv scala-${SCALA_VERSION} scala
+  if [ -d "scala/bin" ]; then
+    echo "${SCALA_VERSION}" > scala/VER
+  else
+    >&2 echo "Could not install Scala ${SCALA_VERSION}."
+    exit 1
+  fi
+fi
+if [ "${DISTROS}" = "true" ]; then
+  exit
+fi
 mkdir -p ${REPO}/apps
 cd ${REPO}/apps
 Z3_DROP="${Z3_DROP_URL##*/}"
@@ -109,26 +134,24 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
     exit 1
   fi
 fi
-if [ "${DISTROS}" = "true" ]; then
-  exit
-fi
 cd ${REPO}/platform
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   if [ ! -f ${SBT_DROP} ]; then
-    echo "Please wait while downloading sbt ${SBT_VERSION} ..."
+    echo "Please wait while downloading Sbt ${SBT_VERSION} ..."
     wget -q ${SBT_DROP_URL}
     echo
   fi
   rm -fR sbt
   unzip -oq ${SBT_DROP}
   rm ${SBT_DROP}
+  mv sbt-launcher-packaging-${SBT_VERSION} sbt
   if [ -d "sbt/bin" ]; then
     echo "${SBT_VERSION}" > sbt/VER
   else
-    >&2 echo "Could not install sbt ${SBT_VERSION}."
+    >&2 echo "Could not install Sbt ${SBT_VERSION}."
     exit 1
   fi
 fi
