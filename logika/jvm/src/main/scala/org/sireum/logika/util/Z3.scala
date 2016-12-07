@@ -147,7 +147,9 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
     val r =
       result match {
         case Exec.StringResult(s, _) =>
-          s.substring(0, s.indexOf('\n')).trim match {
+          val i = s.indexOf('\n')
+          val result = if (i >= 0) s.substring(0, i).trim else s.trim
+          result match {
             case "unsat" => Unsat
             case "unknown" => Unknown
             case "sat" => Sat
