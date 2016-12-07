@@ -600,7 +600,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
             ctx.lh != null) at(lo, hi))
       } else None
     apply(ctx.vars.map(buildId), domain,
-      build(ctx.formula)) at ctx
+      build(ctx.qf)) at ctx
   }
 
   private def build(ctx: TypeContext): Type =

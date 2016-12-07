@@ -174,9 +174,9 @@ qformula
       | 'exists' | 'some' | 'E' | '∃' )
     vars+=ID ( ',' vars+=ID )*
     ( ':' type
-    | ':' '(' lo=exp ll='<'? '..' lh='<'? hi=exp ')'
+    | ':' '(' lo=formula ll='<'? '..' lh='<'? hi=formula ')'
     )? NL?
-    formula
+    qf=formula
   ;
 
 type

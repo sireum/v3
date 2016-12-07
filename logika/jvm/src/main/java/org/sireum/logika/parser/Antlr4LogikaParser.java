@@ -2111,27 +2111,25 @@ public class Antlr4LogikaParser extends Parser {
 		public Token q;
 		public Token ID;
 		public List<Token> vars = new ArrayList<Token>();
-		public ExpContext lo;
+		public FormulaContext lo;
 		public Token ll;
 		public Token lh;
-		public ExpContext hi;
-		public FormulaContext formula() {
-			return getRuleContext(FormulaContext.class,0);
-		}
+		public FormulaContext hi;
+		public FormulaContext qf;
 		public List<TerminalNode> ID() { return getTokens(Antlr4LogikaParser.ID); }
 		public TerminalNode ID(int i) {
 			return getToken(Antlr4LogikaParser.ID, i);
+		}
+		public List<FormulaContext> formula() {
+			return getRuleContexts(FormulaContext.class);
+		}
+		public FormulaContext formula(int i) {
+			return getRuleContext(FormulaContext.class,i);
 		}
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
 		public TerminalNode NL() { return getToken(Antlr4LogikaParser.NL, 0); }
-		public List<ExpContext> exp() {
-			return getRuleContexts(ExpContext.class);
-		}
-		public ExpContext exp(int i) {
-			return getRuleContext(ExpContext.class,i);
-		}
 		public QformulaContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2191,7 +2189,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(481);
 				match(T__20);
 				setState(482);
-				((QformulaContext)_localctx).lo = exp(0);
+				((QformulaContext)_localctx).lo = formula(0);
 				setState(484);
 				_la = _input.LA(1);
 				if (_la==T__72) {
@@ -2213,7 +2211,7 @@ public class Antlr4LogikaParser extends Parser {
 				}
 
 				setState(490);
-				((QformulaContext)_localctx).hi = exp(0);
+				((QformulaContext)_localctx).hi = formula(0);
 				setState(491);
 				match(T__21);
 				}
@@ -2229,7 +2227,7 @@ public class Antlr4LogikaParser extends Parser {
 			}
 
 			setState(498);
-			formula(0);
+			((QformulaContext)_localctx).qf = formula(0);
 			}
 		}
 		catch (RecognitionException re) {
@@ -6379,20 +6377,20 @@ public class Antlr4LogikaParser extends Parser {
 		"\2\2\u01db\u01d9\3\2\2\2\u01dc\u01df\3\2\2\2\u01dd\u01db\3\2\2\2\u01dd"+
 		"\u01de\3\2\2\2\u01de\u01ef\3\2\2\2\u01df\u01dd\3\2\2\2\u01e0\u01e1\7\n"+
 		"\2\2\u01e1\u01f0\5\32\16\2\u01e2\u01e3\7\n\2\2\u01e3\u01e4\7\27\2\2\u01e4"+
-		"\u01e6\5\66\34\2\u01e5\u01e7\7K\2\2\u01e6\u01e5\3\2\2\2\u01e6\u01e7\3"+
-		"\2\2\2\u01e7\u01e8\3\2\2\2\u01e8\u01ea\7q\2\2\u01e9\u01eb\7K\2\2\u01ea"+
-		"\u01e9\3\2\2\2\u01ea\u01eb\3\2\2\2\u01eb\u01ec\3\2\2\2\u01ec\u01ed\5\66"+
-		"\34\2\u01ed\u01ee\7\30\2\2\u01ee\u01f0\3\2\2\2\u01ef\u01e0\3\2\2\2\u01ef"+
-		"\u01e2\3\2\2\2\u01ef\u01f0\3\2\2\2\u01f0\u01f2\3\2\2\2\u01f1\u01f3\7\u00b4"+
-		"\2\2\u01f2\u01f1\3\2\2\2\u01f2\u01f3\3\2\2\2\u01f3\u01f4\3\2\2\2\u01f4"+
-		"\u01f5\5\26\f\2\u01f5\31\3\2\2\2\u01f6\u01f7\t\23\2\2\u01f7\33\3\2\2\2"+
-		"\u01f8\u027e\7r\2\2\u01f9\u01fd\7s\2\2\u01fa\u01fb\t\24\2\2\u01fb\u01fd"+
-		"\7\u00b0\2\2\u01fc\u01f9\3\2\2\2\u01fc\u01fa\3\2\2\2\u01fd\u01fe\3\2\2"+
-		"\2\u01fe\u01ff\7\u00af\2\2\u01ff\u027e\7\u00af\2\2\u0200\u0204\t\25\2"+
-		"\2\u0201\u0202\t\24\2\2\u0202\u0204\7\u00b0\2\2\u0203\u0200\3\2\2\2\u0203"+
-		"\u0201\3\2\2\2\u0204\u0205\3\2\2\2\u0205\u027e\7\u00af\2\2\u0206\u020a"+
-		"\t\26\2\2\u0207\u0208\t\27\2\2\u0208\u020a\7\u00b0\2\2\u0209\u0206\3\2"+
-		"\2\2\u0209\u0207\3\2\2\2\u020a\u020b\3\2\2\2\u020b\u027e\7\u00af\2\2\u020c"+
+		"\u01e6\5\26\f\2\u01e5\u01e7\7K\2\2\u01e6\u01e5\3\2\2\2\u01e6\u01e7\3\2"+
+		"\2\2\u01e7\u01e8\3\2\2\2\u01e8\u01ea\7q\2\2\u01e9\u01eb\7K\2\2\u01ea\u01e9"+
+		"\3\2\2\2\u01ea\u01eb\3\2\2\2\u01eb\u01ec\3\2\2\2\u01ec\u01ed\5\26\f\2"+
+		"\u01ed\u01ee\7\30\2\2\u01ee\u01f0\3\2\2\2\u01ef\u01e0\3\2\2\2\u01ef\u01e2"+
+		"\3\2\2\2\u01ef\u01f0\3\2\2\2\u01f0\u01f2\3\2\2\2\u01f1\u01f3\7\u00b4\2"+
+		"\2\u01f2\u01f1\3\2\2\2\u01f2\u01f3\3\2\2\2\u01f3\u01f4\3\2\2\2\u01f4\u01f5"+
+		"\5\26\f\2\u01f5\31\3\2\2\2\u01f6\u01f7\t\23\2\2\u01f7\33\3\2\2\2\u01f8"+
+		"\u027e\7r\2\2\u01f9\u01fd\7s\2\2\u01fa\u01fb\t\24\2\2\u01fb\u01fd\7\u00b0"+
+		"\2\2\u01fc\u01f9\3\2\2\2\u01fc\u01fa\3\2\2\2\u01fd\u01fe\3\2\2\2\u01fe"+
+		"\u01ff\7\u00af\2\2\u01ff\u027e\7\u00af\2\2\u0200\u0204\t\25\2\2\u0201"+
+		"\u0202\t\24\2\2\u0202\u0204\7\u00b0\2\2\u0203\u0200\3\2\2\2\u0203\u0201"+
+		"\3\2\2\2\u0204\u0205\3\2\2\2\u0205\u027e\7\u00af\2\2\u0206\u020a\t\26"+
+		"\2\2\u0207\u0208\t\27\2\2\u0208\u020a\7\u00b0\2\2\u0209\u0206\3\2\2\2"+
+		"\u0209\u0207\3\2\2\2\u020a\u020b\3\2\2\2\u020b\u027e\7\u00af\2\2\u020c"+
 		"\u0210\t\30\2\2\u020d\u020e\t\27\2\2\u020e\u0210\7\u00b0\2\2\u020f\u020c"+
 		"\3\2\2\2\u020f\u020d\3\2\2\2\u0210\u0211\3\2\2\2\u0211\u0212\7\u00af\2"+
 		"\2\u0212\u0213\7\u00af\2\2\u0213\u027e\7\u00af\2\2\u0214\u0215\7|\2\2"+

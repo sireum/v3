@@ -180,8 +180,18 @@ ForwardProofContext(unitNode: ast.Program,
         val elsePcOpt = copy(premises = premises + ast.Exp.Not(tipe.B, exp)).check(elseBlock)
         (thenPcOpt, elsePcOpt) match {
           case (Some(thenPc), Some(elsePc)) =>
-            Some(copy(premises =
-              orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
+            if (autoEnabled) {
+              val thenPremises = thenPc.cleanup.premises
+              val elsePremises = elsePc.cleanup.premises
+              val commonPremises = thenPremises.intersect(elsePremises)
+              import ast.Exp
+              Some(copy(premises = commonPremises +
+                Exp.Or(tipe.B, Exp.And((thenPremises -- commonPremises).toVector),
+                  Exp.And((elsePremises -- commonPremises).toVector))))
+            } else {
+              Some(copy(premises =
+                orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
+            }
           case _ => None
         }
       case stmt: ast.MethodDecl =>
@@ -314,17 +324,15 @@ ForwardProofContext(unitNode: ast.Program,
             }
         }
         var ps = ilinkedSetEmpty ++ es
-        if (autoEnabled) {
-          val modifiedIds = loopInv.modifies.ids.toSet
-          for (premise <- premises) {
-            var propagate = true
-            Visitor.build({
-              case id: ast.Id =>
-                if (modifiedIds.contains(id)) propagate = false
-                false
-            })(premise)
-            if (propagate) ps += premise
-          }
+        val modifiedIds = loopInv.modifies.ids.toSet
+        for (premise <- premises) {
+          var propagate = true
+          Visitor.build({
+            case id: ast.Id =>
+              if (modifiedIds.contains(id)) propagate = false
+              false
+          })(premise)
+          if (propagate) ps += premise
         }
         copy(premises = ps + exp).
           check(loopBlock) match {

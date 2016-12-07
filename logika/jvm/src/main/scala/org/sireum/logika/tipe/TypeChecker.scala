@@ -176,7 +176,15 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       id.tipe = TypeChecker.tipe(bitWidth, t)
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
         if (id.tipe != tExp)
-          error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively."))
+          error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively.")
+        else if (tExp.isInstanceOf[MSeq]) {
+          exp match {
+            case _: SeqLit | _: Clone | _: Prepend | _: Append | _: Random | _: Apply =>
+            case TypeMethodCallExp(_: ZSType, Id("create"), _) =>
+            case _ =>
+              error(stmt, s"Assignment to a var of $tExp type can only be done from a $tExp literal, clone, prepend (+:), append (:+), create, random, and invocation.")
+          }
+        })
       copy(typeMap = TypeChecker.addId(typeMap, program, id, id.tipe, stmt))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
@@ -187,9 +195,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
             else if (tId.isInstanceOf[MSeq])
               exp match {
-                case _: SeqLit | _: Clone | _: Prepend | _: Append =>
+                case _: SeqLit | _: Clone | _: Prepend | _: Append | _: Random | _: Apply =>
+                case TypeMethodCallExp(_: ZSType, Id("create"), _) =>
                 case _ =>
-                  error(stmt, s"Assignment to a var of $tId type can only be done from a $tId literal, clone, prepend (+:), or append (:+).")
+                  error(stmt, s"Assignment to a var of $tId type can only be done from a $tId literal, clone, prepend (+:), or append (:+), create, random, and invocation.")
               }
           case _ =>
             error(stmt, s"Can only assign to a var.")
@@ -297,12 +306,17 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   def check(p: ProofGroup): Unit = {
     var tc = this
     for (step <- p.allSteps) step match {
-      case step: RegularStep =>
-        tc.b(step.exp)(allowFun = true, None)
       case step: QuantAssumeStep =>
         tc = copy(typeMap =
           TypeChecker.addId(typeMap, program, step.id,
             TypeChecker.tipe(bitWidth, step.typeOpt.get), step))
+        step match {
+          case step: RegularStep =>
+            tc.b(step.exp)(allowFun = true, None)
+          case _ =>
+        }
+      case step: RegularStep =>
+        tc.b(step.exp)(allowFun = true, None)
       case step: ProofGroup => tc.check(step)
       case _ =>
     }
@@ -357,7 +371,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         if (!allowMethod) error(e.id, s"Clone is only allowed at statement level.")
         mseq(e.id)
       case e: Result =>
-        val r = tipe(Id("result")); r.foreach(e.tipe = _); r
+        val id = Id("result")
+        program.nodeLocMap(id) = program.nodeLocMap(e)
+        val r = tipe(id)
+        r.foreach(e.tipe = _)
+        program.nodeLocMap -= id
+        r
       case e: Apply =>
         val isMethod =
           e.exp match {
