@@ -31,7 +31,7 @@ ZULU_VERSION=8.19.0.1-jdk8.0.112
 SCALA_VERSION=2.12.1
 SBT_VERSION=0.13.13
 NODE_VERSION=7.2.1
-Z3_VERSION=4.5.0
+Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
     PLATFORM=win
@@ -48,7 +48,7 @@ if [ "${PLATFORM}" = "win"  ]; then
 elif [ "${PLATFORM}" = "mac"  ]; then
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
-  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.6.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/bin/raw/master/releases/z3-${Z3_VERSION}-x64-osx-10.11.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
   type -P xz &>/dev/null || { >&2 echo "xz command not found."; exit 1; }
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
