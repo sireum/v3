@@ -344,10 +344,10 @@ object Checker {
 private abstract class
 ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
-  val mode = unitNode.mode
-  val fileUriOpt = unitNode.fileUriOpt
-  implicit val nodeLocMap = unitNode.nodeLocMap
-  val satTimeoutInMs = scala.math.min(timeoutInMs / 2, 500)
+  val mode: ast.LogicMode = unitNode.mode
+  val fileUriOpt: Option[FileResourceUri] = unitNode.fileUriOpt
+  implicit val nodeLocMap: MIdMap[ast.Node, LocationInfo] = unitNode.nodeLocMap
+  val satTimeoutInMs: PosInteger = scala.math.min(timeoutInMs / 2, 500)
 
   def unitNode: ast.UnitNode
 
@@ -574,7 +574,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 (lsp.first, rsp.first) match {
                   case (lfs: ast.PlainAssumeStep, rfs: ast.PlainAssumeStep) =>
                     val (lExp, rExp) =
-                      (someE.x: @unchecked) match {
+                      (someE.value: @unchecked) match {
                         case ast.Or(le, re) => (le, re)
                         case e@ast.Le(le, re) => (ast.Exp.Lt(e.tipe, le, re), ast.Exp.Eq(e.tipe, le, re))
                         case e@ast.Ge(le, re) => (ast.Exp.Gt(e.tipe, le, re), ast.Exp.Eq(e.tipe, le, re))
@@ -1101,7 +1101,9 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         case tipe.U32 => ast.U32Type()
         case tipe.U64 => ast.U64Type()
       }
-      val req = ast.Exp.Ne(t, e, ast.IntLit("0", tpe.bitWidth, Some(tpe)))
+      val req =
+        if (t == tipe.Z) ast.Exp.Ne(t, e, Checker.zero)
+        else ast.Exp.Ne(t, e, ast.IntLit("0", tpe.bitWidth, Some(tpe)))
       if (autoEnabled) {
         if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
           error(e, s"Could not automatically deduce that the divisor is non-zero.")

@@ -1,0 +1,7 @@
+import org.sireum.logika._
+
+def foo(n: Z): Z = {
+  assume(n != 0)
+  val r: Z = 5 / n
+  return r
+}
