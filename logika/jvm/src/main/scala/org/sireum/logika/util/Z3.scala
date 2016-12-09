@@ -51,12 +51,12 @@ object Z3 {
 
   private[logika] var satCacheEnabled = false
   private[logika] var satCachePrev: MMap[Object, (String, CheckResult)] = {
-    import scala.collection.JavaConversions._
-    new ConcurrentHashMap[Object, (String, CheckResult)]
+    import scala.collection.JavaConverters._
+    new ConcurrentHashMap[Object, (String, CheckResult)].asScala
   }
   private[logika] var satCacheCurrent: MMap[Object, (String, CheckResult)] = {
-    import scala.collection.JavaConversions._
-    new ConcurrentHashMap[Object, (String, CheckResult)]
+    import scala.collection.JavaConverters._
+    new ConcurrentHashMap[Object, (String, CheckResult)].asScala
   }
 
   val z3: String = {
@@ -109,16 +109,17 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
 
   import Z3._
 
-  val stg = new STGroupFile(getClass.getResource("z3.stg"), "UTF-8", '$', '$')
+  val stg: STGroup = new STGroupFile(getClass.getResource("z3.stg"), "UTF-8", '$', '$')
   var typeMap: IMap[String, Tipe] = imapEmpty[String, Tipe]
-  val lineSep = scala.util.Properties.lineSeparator
-  var seqCounter = 0
-  val stMain = {
+  val lineSep: String = scala.util.Properties.lineSeparator
+  var seqCounter: Natural = 0
+  val stMain: ST = {
     val st = stg.getInstanceOf("main")
     if (isSymExe) st.add("symexe", true)
     st
   }
   val rounding = "RNE"
+  val hardTimeout: PosInteger = timeout + (timeout * 10) / 100
 
   def checkSat(es: ast.Exp*): (String, CheckResult) = {
     for (e <- es) {
@@ -141,7 +142,7 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
           case _ =>
             ivector(z3, "-smt2", s"-t:$timeout", "-in")
         }
-      new Exec().run(0, input, Some(z3Script), None)
+      new Exec().run(hardTimeout, input, Some(z3Script), None)
     }
 
     val r =
