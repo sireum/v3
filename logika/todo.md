@@ -1,6 +1,22 @@
 Logika To-Dos
 =============
 
+* Z.create require non neg size
+
+* Runtime check loop cond at end iteration
+
+* Make sure to check non-aliasing for call arguments
+
+* Quan rules check vars
+
+* Multiple/partial intro/elim on quans
+
+* Add termination
+
+* Auto: orClaims, premise, and cone of influence
+
+* Auto loop inv at end should not have old
+
 * Document Truth Table mode
 
 * Document SymExe mode 
@@ -8,6 +24,16 @@ Logika To-Dos
 
 Future Work
 ===========
+
+* Def as method
+
+* Def without cond and with where
+
+* Use line # for _old numbering
+
+* Add functions to convert numbers
+
+* Add @record
 
 * Add logic gates circuit output for propositional logic 
 
