@@ -100,7 +100,7 @@ object Node {
           case id: Id =>
             vars.get(id.value) match {
               case None =>
-                error(id, s"Undeclared identifier ${id.value}.")
+                error(id, s"Undefined identifier ${id.value}.")
               case _ =>
             }
             true
@@ -241,11 +241,14 @@ object Node {
   final private[ast]
   def checkWellFormedSequent(unitNode: Sequent)
                             (implicit reporter: AccumulatingTagReporter): Unit = {
-    var freeIds = imapEmpty[String, Id]
     val nodeLocMap = unitNode.nodeLocMap
-    def error(n: Node, msg: String): Unit =
-      reporter.report(nodeLocMap(n).toLocationError(
-        unitNode.fileUriOpt, "Semantics", msg))
+    var freeIds = imapEmpty[String, Id]
+    var hasErrors = false
+
+    def error(n: Node, msg: String): Unit = {
+      hasErrors = true
+      reporter.report(nodeLocMap(n).toLocationError(unitNode.fileUriOpt, "Semantics", msg))
+    }
     def collectFreeIds(node: Node, declIds: IMap[String, Id]): Unit = {
       Visitor.build({
         case node: Quant[_] =>
@@ -265,8 +268,14 @@ object Node {
           false
       })(node)
     }
+
+    unitNode.premises.foreach(collectFreeIds(_, imapEmpty))
+    unitNode.conclusions.foreach(collectFreeIds(_, imapEmpty))
+    if (hasErrors) return
+    var currentIds = freeIds.keySet
+    freeIds = imapEmpty[String, Id]
     collectFreeIds(unitNode, imapEmpty)
-    Visitor.build({
+    lazy val v: Any => Boolean = Visitor.build({
       case n: Auto =>
         error(n, s"Auto is only available in programming logic.")
         true
@@ -356,6 +365,26 @@ object Node {
           case _ =>
         }
         true
+      case n: SubProof =>
+        val oldIds = currentIds
+        n.assumeStep match {
+          case step: ForAllAssumeStep =>
+            currentIds += step.id.value
+          case step: ExistsAssumeStep =>
+            currentIds += step.id.value
+          case _ =>
+        }
+        n.allSteps.foreach(v)
+        currentIds = oldIds
+        false
+      case n: ForAllElim =>
+        val v2 = Visitor.build({
+          case id@Id(value) if !currentIds.contains(value) =>
+            error(id, s"Undeclared identifier $value.")
+            false
+        })
+        n.args.foreach(v2)
+        true
       case n: Quant[_] =>
         if (unitNode.mode == LogicMode.Propositional)
           error(n, s"Quantification is not available in propositional logic.")
@@ -367,7 +396,8 @@ object Node {
             case _ =>
           }
         true
-    })(unitNode)
+    })
+    v(unitNode)
   }
 }
 

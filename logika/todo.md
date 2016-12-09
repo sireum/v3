@@ -3,8 +3,6 @@ Logika To-Dos
 
 * Make sure to check non-aliasing for call arguments
 
-* Quan rules check vars
-
 * Add termination
 
 * Auto loop inv at end should not have old
