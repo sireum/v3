@@ -1,8 +1,6 @@
 Logika To-Dos
 =============
 
-* Z.create require non neg size
-
 * Runtime check loop cond at end iteration
 
 * Make sure to check non-aliasing for call arguments

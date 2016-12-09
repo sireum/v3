@@ -766,7 +766,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case ast.LogicMode.Propositional | ast.LogicMode.Predicate =>
             error(step, s"Algebra cannot be used in ${unitNode.mode} Logic.")
             None
-          case ast.LogicMode.Programming =>
+          case _ =>
             if (deduce(num, exp, steps, isAuto = false))
               addProvedStep(step)
             else None
@@ -861,7 +861,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case ast.LogicMode.Propositional | ast.LogicMode.Predicate =>
             error(step, s"Auto cannot be used in ${unitNode.mode} Logic.")
             None
-          case ast.LogicMode.Programming =>
+          case _ =>
             if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
             else None
         }

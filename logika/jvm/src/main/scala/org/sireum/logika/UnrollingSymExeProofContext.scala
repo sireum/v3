@@ -328,7 +328,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         val old = oldId(id)
         val m = imapEmpty[ast.Node, ast.Node] + (id -> old)
         eval.Eval.assignSeq(store)(id, index, exp) match {
-          case Some((store2, ms, v)) =>
+          case Some((store2, ms, _)) =>
             ivector(copy(premises =
               premises.map(e => subst(e, m)) + ast.Exp.Eq(id.tipe, id, eval.Eval.toLit(bitWidth, ms)),
               store = store2))
@@ -371,14 +371,20 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           case exp: ast.TypeMethodCallExp =>
             exp.id.value match {
               case "create" =>
-                val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
-                val qVar = ast.Exp.Id(tipe.Z, "q_i")
-                val sz = ast.Exp.Size(resultT, id)
-                assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
-                  ast.Exp.Eq(tipe.Z, sz, exp.args.head),
-                  ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
-                    ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
-                )))
+                val req = ast.Exp.Ge(tipe.Z, exp.args.head, Checker.zero)
+                if (isValid("precondition", nodeLocMap(exp), premises, ivector(req))) {
+                  val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
+                  val qVar = ast.Exp.Id(tipe.Z, "q_i")
+                  val sz = ast.Exp.Size(resultT, id)
+                  assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
+                    ast.Exp.Eq(tipe.Z, sz, exp.args.head),
+                    ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
+                      ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
+                  )))
+                } else {
+                  error(exp.args.head, s"Could not automatically deduce the size is non-negative.")
+                  ivectorEmpty
+                }
             }
           case _ => assign(id, exp)
         }
@@ -397,7 +403,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
             copy(premises = premises + negExpSimplified).check(elseBlock)
           else ivectorEmpty
         tcs ++ fcs
-      case stmt: ast.MethodDecl => ivector(this)
+      case _: ast.MethodDecl => ivector(this)
       case ast.InvStmt(inv) =>
         val ps = premises ++ facts.values
         var hasError = false

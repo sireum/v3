@@ -179,14 +179,20 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           case exp: ast.TypeMethodCallExp =>
             exp.id.value match {
               case "create" =>
-                val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
-                val qVar = ast.Exp.Id(tipe.Z, "q_i")
-                val sz = ast.Exp.Size(resultT, id)
-                assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
-                  ast.Exp.Eq(tipe.Z, sz, exp.args.head),
-                  ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
-                    ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
-                )))
+                val req = ast.Exp.Ge(tipe.Z, exp.args.head, Checker.zero)
+                if (isValid("precondition", nodeLocMap(exp), premises, ivector(req))) {
+                  val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
+                  val qVar = ast.Exp.Id(tipe.Z, "q_i")
+                  val sz = ast.Exp.Size(resultT, id)
+                  assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
+                    ast.Exp.Eq(tipe.Z, sz, exp.args.head),
+                    ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
+                      ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
+                  )))
+                } else {
+                  error(exp.args.head, s"Could not automatically deduce the size is non-negative.")
+                  None
+                }
             }
           case _ => assign(id, exp)
         }
