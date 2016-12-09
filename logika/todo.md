@@ -1,8 +1,6 @@
 Logika To-Dos
 =============
 
-* Runtime check loop cond at end iteration
-
 * Make sure to check non-aliasing for call arguments
 
 * Quan rules check vars

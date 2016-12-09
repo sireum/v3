@@ -307,7 +307,7 @@ ForwardProofContext(unitNode: ast.Program,
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         Some(copy(invariants = invariants ++ inv.exps))
       case _: ast.FactStmt => Some(this)
-      case ast.While(exp, loopBlock, loopInv) =>
+      case stmt@ast.While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
         if (autoEnabled) {
           val ps = premises ++ facts.values
@@ -337,6 +337,7 @@ ForwardProofContext(unitNode: ast.Program,
         copy(premises = ps + exp).
           check(loopBlock) match {
           case Some(pc2) =>
+            hasError = hasError || pc2.hasRuntimeError(stmt)
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
               for (e <- es)

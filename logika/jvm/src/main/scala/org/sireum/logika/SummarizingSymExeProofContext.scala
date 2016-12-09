@@ -297,7 +297,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
         Some(copy(invariants = invariants ++ inv.exps))
       case _: ast.FactStmt => Some(this)
-      case ast.While(exp, loopBlock, loopInv) =>
+      case stmt@ast.While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
         val lps = premises ++ facts.values
         for (e <- es)
@@ -321,6 +321,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         copy(premises = ps + exp).
           check(loopBlock) match {
           case Some(pc2) =>
+            hasError = hasError || pc2.hasRuntimeError(stmt)
             val ps2 = pc2.premises ++ pc2.facts.values
             for (e <- es)
               if (!isValid("loop invariant (end)", nodeLocMap(e), ps2, ivector(e))) {
