@@ -7,8 +7,6 @@ Logika To-Dos
 
 * Add termination
 
-* Auto: orClaims, premise, and cone of influence
-
 * Auto loop inv at end should not have old
 
 * Document Truth Table mode

@@ -449,6 +449,17 @@ ForwardProofContext(unitNode: ast.Program,
     ))
   }
 
+  override def check(step: ast.RegularStep): Option[ForwardProofContext] = {
+    val num = step.num.value
+    step match {
+      case ast.Premise(_, exp) =>
+        if (premises.contains(exp) || exp == Checker.top) addProvedStep(step)
+        else if (autoEnabled && deduce(num, exp, ivectorEmpty, isAuto = true)) addProvedStep(step)
+        else error(exp, s"Could not find the claimed premise in step #$num.")
+      case _ => super.check(step)
+    }
+  }
+
   def cleanup: ForwardProofContext =
     copy(premises = filter(premises), provedSteps = imapEmpty,
       declaredStepNumbers = imapEmpty)
