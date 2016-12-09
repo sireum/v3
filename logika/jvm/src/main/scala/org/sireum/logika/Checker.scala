@@ -37,11 +37,6 @@ object Checker {
   private[logika] final val zero = ast.IntLit("0", 0, None)
   private[logika] final val kind = "Proof Checker"
 
-  /* Top Level check command
-
-     Does something (I can't tell what) and then hands off to lower level check command.
-   */
-
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
     val autoEnabled = m.autoEnabled ||
@@ -86,7 +81,7 @@ object Checker {
               error(program.fileUriOpt, program.nodeLocMap(t), s"Type $ts can only be used in symbolic execution.")
               throw new RuntimeException
           })(program) catch {
-            case t: RuntimeException => hasError = true
+            case _: RuntimeException => hasError = true
           }
         }
 
@@ -273,7 +268,7 @@ object Checker {
       for (value <- row.values if !rowHasError) {
         val c = nodeLocMap(value).columnBegin
         m.get(c) match {
-          case Some((e, expectedValue)) =>
+          case Some((_, expectedValue)) =>
             if (expectedValue != value.value) {
               rowHasError = true
               errorH(row, "Some expression values are invalid.")
@@ -284,8 +279,8 @@ object Checker {
             errorH(value, s"Could not find the value's corresponding expression.")
         }
       }
-      for ((e, b) <- m.values if !rowHasError) e match {
-        case e: ast.Id =>
+      for ((e, _) <- m.values if !rowHasError) e match {
+        case _: ast.Id =>
         case _ =>
           rowHasError = true
           errorH(row, "Missing some expression values.")
@@ -494,13 +489,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         case p: ast.SubProof =>
           // consider the type of the first step in the subproof (the assume step)
           val popt = p.assumeStep match {
-            case ast.PlainAssumeStep(_, exp) =>
+            case _: ast.PlainAssumeStep =>
               addedSteps += p.assumeStep.num.value
               addProvedStep(p.assumeStep)
             case ast.ForAllAssumeStep(num, id, _) =>
               addedVars += id.value
               addVar(id, num.value)
-            case ast.ExistsAssumeStep(num, id, exp, _) =>
+            case ast.ExistsAssumeStep(num, id, _, _) =>
               addedVars += id.value
               addedSteps += p.assumeStep.num.value
               addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
@@ -550,14 +545,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
           case Some(_) => error(andStep, s"And-elim2 in step #$num requires a conjunction.")
           case _ => None
         }
-      case ast.OrIntro1(_, or@ast.Or(lExp, _), step2) =>
+      case ast.OrIntro1(_, ast.Or(lExp, _), step2) =>
         findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == lExp) addProvedStep(step)
             else error(lExp, s"The disjunction's left sub-expression in step #$num does not match #${step2.value} for Or-intro1.")
           case _ => None
         }
-      case ast.OrIntro2(_, or@ast.Or(_, rExp), step2) =>
+      case ast.OrIntro2(_, ast.Or(_, rExp), step2) =>
         findRegularStepExp(step2, num) match {
           case Some(expected) =>
             if (expected == rExp) addProvedStep(step)
@@ -620,7 +615,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                   error(antecedent, s"Could not find the consequent of step #$num in #${subProof.value} for Implies-intro.")
                   hasError = true
                 }
-              case fs =>
+              case _ =>
                 error(sp, s"Wrong form for Implies-intro assumption in step #$num.")
                 hasError = true
             }
@@ -684,12 +679,12 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
               hasError = true
             }
             if (hasError) None else addProvedStep(step)
-          case (_, Some(e2)) =>
+          case (_, Some(_)) =>
             error(negStep, s"The second expression argument of step #${negStep.value} for Negation-elim in step #$num has to be negation.")
             None
           case _ => None
         }
-      case ast.BottomElim(_, exp, falseStep) =>
+      case ast.BottomElim(_, _, falseStep) =>
         findRegularStepExp(falseStep, num) match {
           case Some(e) =>
             if (e != Checker.bottom) {
@@ -781,14 +776,19 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 val freshVar = freshVarId.value
                 for (step <- sp.steps.reverse if hasError) step match {
                   case step: ast.RegularStep if Checker.collectVars(step.exp).contains(freshVar) =>
-                    val expected = subst(q.simplify.exp, Map(q.ids.head -> freshVarId))
-                    if (expected == step.exp) hasError = false
+                    val (m, e) = buildSubstMap(q.simplify, ivector(freshVarId)).get
+                    val expected = subst(e, m)
+                    val stepExpSimplified = step.exp match {
+                      case stepExp: ast.Quant[_] => stepExp.simplify
+                      case _ => step.exp
+                    }
+                    if (expected == stepExpSimplified) hasError = false
                   case _ =>
                 }
                 if (hasError) {
                   error(step, s"Could not find a suitable expression in #${subProof.value} for Forall-intro.")
                 }
-              case fs =>
+              case _ =>
                 error(sp, s"Wrong form for the start of Forall-intro in step #$num that is expected to have only a fresh variable.")
             }
             if (hasError) None else addProvedStep(step)
@@ -800,7 +800,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = subst(e, m)
-                if (exp != expected) {
+                val expSimplified = exp match {
+                  case exp: ast.Quant[_] => exp.simplify
+                  case _ => exp
+                }
+                if (expSimplified != expected) {
                   error(exp, s"Supplying the specified arguments to the quantification in step #${step2.value} does not produce matching expression in #$num for Forall-elim.")
                   None
                 } else addProvedStep(step)
@@ -815,7 +819,11 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             buildSubstMap(q.simplify, args) match {
               case Some((m, e)) =>
                 val expected = subst(e, m)
-                if (result != expected) {
+                val resultSimplified = result match {
+                  case result: ast.Quant[_] => result.simplify
+                  case _ => result
+                }
+                if (resultSimplified != expected) {
                   error(q, s"Supplying the specified arguments to the quantification in step #$num does not produce matching expression in #${step2.value} for Exists-intro.")
                   None
                 } else addProvedStep(step)
@@ -832,8 +840,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                 sp.first match {
                   case fs: ast.ExistsAssumeStep =>
                     val freshVar = fs.id.value
-                    val expected = subst(q.simplify.exp, Map(q.ids.head -> ast.Id(freshVar)))
-                    if (expected != fs.exp) {
+                    val (m, e) = buildSubstMap(q.simplify, ivector(ast.Id(freshVar))).get
+                    val expected = subst(e, m)
+                    val fsExpSimplified = fs.exp match {
+                      case fsExp: ast.Quant[_] => fsExp.simplify
+                      case _ => fs.exp
+                    }
+                    if (expected != fsExpSimplified) {
                       error(exp, s"Supplying $freshVar for ${q.ids.head} in step #${step2.value} does not produce matching expression in the assumption of #${subProof.value} for Exists-elim.")
                       hasError = true
                     }
@@ -846,7 +859,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                       error(exp, s"The expression in step #$num should not contain $freshVar for Exists-elim.")
                       hasError = true
                     }
-                  case fs =>
+                  case _ =>
                     error(sp, s"Wrong form for Exists-elim assumption in step #$num that is expected to have a fresh variable and a formula.")
                     hasError = true
                 }
@@ -925,7 +938,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         hasError = true
         error(e, "Algebra justification cannot be used for implication.")
         true
-      case q: ast.Quant[_] =>
+      case _: ast.Quant[_] =>
         hasError = true
         error(e, "Algebra justification cannot be used for quantification.")
         true
@@ -1167,7 +1180,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       if (endOffset < 0) endOffset = input.length
       val sb = new StringBuilder
       def indent(): Unit = {
-        for (i <- 0 until li.columnBegin) {
+        for (_ <- 0 until li.columnBegin) {
           sb.append(' ')
         }
       }

@@ -32,11 +32,11 @@ import org.sireum.util.Rewriter.HasInternalData
 object Node {
   type Seq[T] = IVector[T]
 
-  final def emptySeq[T] = ivectorEmpty[T]
+  final def emptySeq[T]: Node.Seq[T] = ivectorEmpty[T]
 
-  final def seq[T](es: T*) = ivector(es: _*)
+  final def seq[T](es: T*): Node.Seq[T] = ivector(es: _*)
 
-  final def seq[T](es: Iterable[T]) = es.toVector
+  final def seq[T](es: Iterable[T]): Node.Seq[T] = es.toVector
 
   final private[ast] def detectMode(unitNode: UnitNode): Unit = {
     var m = LogicMode.Propositional
@@ -100,7 +100,6 @@ object Node {
           case id: Id =>
             vars.get(id.value) match {
               case None =>
-                val li = nodeLocMap(id)
                 error(id, s"Undeclared identifier ${id.value}.")
               case _ =>
             }
@@ -217,13 +216,13 @@ object Node {
             case _ =>
           }
           Visitor.build({
-            case n: FactStmt =>
+            case _: FactStmt =>
               error(s, s"Facts cannot be defined inside a method.")
               false
-            case n: InvStmt =>
+            case _: InvStmt =>
               error(s, s"Invariants cannot be defined inside a method.")
               false
-            case n: Invariant =>
+            case _: Invariant =>
               error(s, s"Invariant justification cannot be used inside a method.")
               false
           })(s)
@@ -388,13 +387,13 @@ object LogicMode {
 }
 
 final case class LogicMode private(value: String) {
-  val ordinal = {
+  val ordinal: Natural = {
     val o = LogicMode.counter
     LogicMode.counter += 1
     o
   }
 
-  override def toString = value
+  override def toString: String = value
 }
 
 sealed trait Node extends Product
@@ -461,11 +460,11 @@ sealed trait ProofGroup extends Node {
 
 final case class Proof(steps: Node.Seq[ProofStep])
   extends ProofGroup {
-  override def allSteps = steps
+  override def allSteps: Node.Seq[ProofStep] = steps
 
-  override def first = steps.head
+  override def first: ProofStep = steps.head
 
-  override def last = steps.last
+  override def last: ProofStep = steps.last
 }
 
 sealed trait RegularStep extends ProofStep {
@@ -586,11 +585,11 @@ final case class SubProof(num: Num,                    // number of the subproof
                           steps: Node.Seq[ProofStep])  // the rest of the steps of the subproof
   extends ProofStep with ProofGroup {
 
-  override def allSteps = assumeStep +: steps      // all steps consist of assume step and rest of steps
+  override def allSteps: Node.Seq[ProofStep] = assumeStep +: steps // all steps consist of assume step and rest of steps
 
-  override def first = assumeStep                  // the first step is the assume step
+  override def first: AssumeStep = assumeStep // the first step is the assume step
 
-  override def last =
+  override def last: ProofStep =
     if (steps.isEmpty) assumeStep else steps.last
 }
 
@@ -712,6 +711,12 @@ object Exp {
 
   def Not(tipe: Tipe, exp: Exp): Not = {
     val r = org.sireum.logika.ast.Not(exp)
+    r.tipe = tipe
+    r
+  }
+
+  def RangeDomain(tipe: Tipe, lo: Exp, hi: Exp, loLt: Boolean, hiLt: Boolean): RangeDomain = {
+    val r = org.sireum.logika.ast.RangeDomain(lo, hi, loLt, hiLt)
     r.tipe = tipe
     r
   }
@@ -974,7 +979,7 @@ final case class RealLit(value: String) extends PrimaryExp {
 
 final case class IntMin(bitWidth: Int,
                         integralType: IntegralType) extends PrimaryExp {
-  val value =
+  val value: BigInt =
     integralType match {
       case _: ZType if bitWidth == 0 => BigInt(0)
       case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
@@ -996,7 +1001,7 @@ final case class IntMin(bitWidth: Int,
 
 final case class IntMax(bitWidth: Int,
                         integralType: IntegralType) extends PrimaryExp {
-  val value =
+  val value: BigInt =
     integralType match {
       case _: ZType if bitWidth == 0 => BigInt(0)
       case _: ZType | _: Z8Type | _: Z16Type | _: Z32Type | _: Z64Type |
@@ -1088,15 +1093,15 @@ sealed trait MultiplicativeExp extends BinaryExp {
 }
 
 final case class Mul(left: Exp, right: Exp) extends MultiplicativeExp {
-  def op(inProof: Boolean) = "*"
+  override def op(inProof: Boolean): String = "*"
 }
 
 final case class Div(left: Exp, right: Exp) extends MultiplicativeExp {
-  def op(inProof: Boolean) = "/"
+  override def op(inProof: Boolean): String = "/"
 }
 
 final case class Rem(left: Exp, right: Exp) extends MultiplicativeExp {
-  def op(inProof: Boolean) = "%"
+  override def op(inProof: Boolean): String = "%"
 }
 
 sealed trait AdditiveExp extends BinaryExp {
@@ -1104,11 +1109,11 @@ sealed trait AdditiveExp extends BinaryExp {
 }
 
 final case class Add(left: Exp, right: Exp) extends AdditiveExp {
-  def op(inProof: Boolean) = "+"
+  override def op(inProof: Boolean): String = "+"
 }
 
 final case class Sub(left: Exp, right: Exp) extends AdditiveExp {
-  def op(inProof: Boolean) = "-"
+  override def op(inProof: Boolean): String = "-"
 }
 
 sealed trait InequalityExp extends BinaryExp {
@@ -1116,19 +1121,19 @@ sealed trait InequalityExp extends BinaryExp {
 }
 
 final case class Lt(left: Exp, right: Exp) extends InequalityExp {
-  def op(inProof: Boolean) = "<"
+  override def op(inProof: Boolean): String = "<"
 }
 
 final case class Le(left: Exp, right: Exp) extends InequalityExp {
-  def op(inProof: Boolean) = if (inProof) "≤" else "<="
+  override def op(inProof: Boolean): String = if (inProof) "≤" else "<="
 }
 
 final case class Gt(left: Exp, right: Exp) extends InequalityExp {
-  def op(inProof: Boolean) = ">"
+  override def op(inProof: Boolean): String = ">"
 }
 
 final case class Ge(left: Exp, right: Exp) extends InequalityExp {
-  def op(inProof: Boolean) = if (inProof) "≥" else ">="
+  override def op(inProof: Boolean): String = if (inProof) "≥" else ">="
 }
 
 sealed trait ShiftExp extends BinaryExp {
@@ -1136,15 +1141,15 @@ sealed trait ShiftExp extends BinaryExp {
 }
 
 final case class Shr(left: Exp, right: Exp) extends ShiftExp {
-  def op(inProof: Boolean) = ">>"
+  override def op(inProof: Boolean): String = ">>"
 }
 
 final case class UShr(left: Exp, right: Exp) extends ShiftExp {
-  def op(inProof: Boolean) = ">>>"
+  override def op(inProof: Boolean): String = ">>>"
 }
 
 final case class Shl(left: Exp, right: Exp) extends ShiftExp {
-  def op(inProof: Boolean) = "<<"
+  override def op(inProof: Boolean): String = "<<"
 }
 
 sealed trait EqualityExp extends BinaryExp {
@@ -1152,27 +1157,27 @@ sealed trait EqualityExp extends BinaryExp {
 }
 
 final case class Eq(left: Exp, right: Exp) extends EqualityExp {
-  def op(inProof: Boolean) = "=="
+  override def op(inProof: Boolean): String = "=="
 }
 
 final case class Ne(left: Exp, right: Exp) extends EqualityExp {
-  def op(inProof: Boolean) = if (inProof) "≠" else "!="
+  override def op(inProof: Boolean): String = if (inProof) "≠" else "!="
 }
 
 final case class Append(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = ":+"
+  override def op(inProof: Boolean): String = ":+"
 
   override val precedence = 40
 }
 
 final case class Prepend(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = "+:"
+  override def op(inProof: Boolean): String = "+:"
 
   override val precedence = 30
 }
 
 final case class And(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) =
+  override def op(inProof: Boolean): String =
     if (inProof)
       tipe match {
         case _: IntegralTipe => "&"
@@ -1184,7 +1189,7 @@ final case class And(left: Exp, right: Exp) extends BinaryExp {
 }
 
 final case class Xor(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) =
+  override def op(inProof: Boolean): String =
     if (inProof)
       tipe match {
         case _: IntegralTipe => "^|"
@@ -1196,7 +1201,7 @@ final case class Xor(left: Exp, right: Exp) extends BinaryExp {
 }
 
 final case class Or(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) =
+  override def op(inProof: Boolean): String =
     if (inProof)
       tipe match {
         case _: IntegralTipe => "|"
@@ -1208,7 +1213,7 @@ final case class Or(left: Exp, right: Exp) extends BinaryExp {
 }
 
 final case class Implies(left: Exp, right: Exp) extends BinaryExp {
-  def op(inProof: Boolean) = if (inProof) "→" else "->"
+  override def op(inProof: Boolean): String = if (inProof) "→" else "->"
 
   override val precedence = 90
 }
@@ -1230,7 +1235,7 @@ sealed trait UnaryExp extends Exp with HasInternalData[UnaryExp] {
                                  inProof: Boolean): Unit = {
     sb.append(op(inProof))
     if (exp match {
-      case exp: PrimaryExp => false
+      case _: PrimaryExp => false
       case exp: UnaryExp => exp.precedence > precedence
       case _ => true
     }) {
@@ -1242,13 +1247,13 @@ sealed trait UnaryExp extends Exp with HasInternalData[UnaryExp] {
 }
 
 final case class Not(exp: Exp) extends UnaryExp {
-  def op(inProof: Boolean) = if (inProof) "¬" else "!"
+  override def op(inProof: Boolean): String = if (inProof) "¬" else "!"
 
   override def precedence: Int = 40
 }
 
 final case class Minus(exp: Exp) extends UnaryExp {
-  def op(inProof: Boolean) = "-"
+  override def op(inProof: Boolean): String = "-"
 
   override def precedence: Int = 20
 }
@@ -1303,7 +1308,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
     if (simplified != null) return simplified
     simplified =
       domainOpt match {
-        case Some(rd@RangeDomain(lo, hi, loLt, hiLt)) =>
+        case Some(RangeDomain(lo, hi, loLt, hiLt)) =>
           val isForAll = isInstanceOf[ForAll]
           def range(id: Id, l: Exp, h: Exp): And = {
             val lApply = if (loLt) Lt else Le
@@ -1315,7 +1320,7 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
           for (id <- ids.tail) {
             antecedent = And(antecedent, range(id, lo, hi))
           }
-          apply(ids, Some(TypeDomain(ZType())),
+          apply(ids, None,
             if (isForAll) Implies(antecedent, exp)
             else And(antecedent, exp)).asInstanceOf[T]
         case _ => this.asInstanceOf[T]
@@ -1328,9 +1333,7 @@ final case class ForAll(ids: Node.Seq[Id],
                         domainOpt: Option[QuantDomain],
                         exp: Exp)
   extends Quant[ForAll] {
-  val op = "∀"
-  val ids2 = ids :+ Id("x")
-  val ids3 = Id("x") +: ids
+  override val op: String = "∀"
 }
 
 final case class Exists(ids: Node.Seq[Id],
@@ -1351,8 +1354,14 @@ final case class TypeDomain(tpe: Type) extends QuantDomain {
 final case class RangeDomain(lo: Exp,
                              hi: Exp,
                              loLt: Boolean,
-                             hiLt: Boolean) extends QuantDomain {
-  override def isResolved: Boolean = lo.isResolved && hi.isResolved
+                             hiLt: Boolean) extends QuantDomain with HasInternalData[RangeDomain] {
+  var tipe: Tipe = _
+
+  override def isResolved: Boolean = tipe != null && lo.isResolved && hi.isResolved
+
+  override def copy(other: RangeDomain): Unit = {
+    tipe = other.tipe
+  }
 }
 
 final case class SeqLit(tpe: SeqType, args: Node.Seq[Exp]) extends PrimaryExp {

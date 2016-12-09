@@ -29,8 +29,8 @@ import org.sireum.logika.ast._
 import org.sireum.util._
 
 object TypeChecker {
-  val kind = "Type Checker"
-  val posNegTipes = Set[NumberTipe](Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
+  final val kind: String = "Type Checker"
+  final val posNegTipes: Set[NumberTipe] = Set(Z, Z8, Z16, Z32, Z64, S8, S16, S32, S64, R, F32, F64)
 
   final def check(weakModifies: Boolean, bitWidth: Natural, programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
@@ -73,7 +73,7 @@ object TypeChecker {
           program.nodeLocMap(id).toLocationError(otherProgram.fileUriOpt,
             kind, message))
         typeMap
-      case _ => typeMap + (id.value ->(id.tipe, decl, program))
+      case _ => typeMap + (id.value -> (id.tipe, decl, program))
     }
   }
 
@@ -273,7 +273,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       }
       this
     case ProofStmt(proof) => check(proof); this
-    case stmt@SequentStmt(sequent) =>
+    case SequentStmt(sequent) =>
       for (e <- sequent.premises) b(e)(allowFun = true, mOpt)
       for (e <- sequent.conclusions) b(e)(allowFun = true, mOpt)
       sequent.proofOpt.foreach(check)
@@ -387,7 +387,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                     error(e, s"Method invocation is only allowed at statement level.")
                   e.declOpt = Some(md)
                   true
-                case Some((_, fun: Fun, _)) =>
+                case Some((_, _: Fun, _)) =>
                   if (!allowFun)
                     error(e, s"Use of proof function is only allowed in proof context.")
                   false
@@ -405,7 +405,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             for ((arg, pType) <- e.args.zip(t.params)) {
               check(arg) match {
                 case Some(`pType`) =>
-                case Some(argType) =>
+                case Some(_) =>
                   error(arg, s"Expecting type $pType, but found $t.")
                 case _ =>
               }
@@ -434,7 +434,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         case Left(_: Float) => Some(F32)
         case Right(_: Double) => Some(F64)
       }
-      case e: RealLit => someR
+      case _: RealLit => someR
       case e: IntMin => Some(TypeChecker.tipe(bitWidth, e.integralType))
       case e: IntMax => Some(TypeChecker.tipe(bitWidth, e.integralType))
       case e: Random =>
@@ -584,17 +584,35 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           case _ => None
         }
       case e: Quant[_] =>
-        val t = e.domainOpt match {
-          case Some(TypeDomain(tpe)) => TypeChecker.tipe(bitWidth, tpe)
-          case Some(RangeDomain(lo, hi, _, _)) => z(lo); z(hi); Z
-          case None => assert(assertion = false, "Unexpected situation."); Z
+        val tOpt: Option[Tipe] = e.domainOpt match {
+          case Some(TypeDomain(tpe)) => Some(TypeChecker.tipe(bitWidth, tpe))
+          case Some(rd@RangeDomain(lo, hi, _, _)) =>
+            val loT = check(lo, allowMethod)
+            val hiT = check(hi, allowMethod)
+            if (loT.isDefined && hiT.isDefined) {
+              if (loT != hiT) {
+                error(rd, s"Mismatch range type: ${loT.get} .. ${hiT.get}.")
+                None
+              } else if (!loT.get.isInstanceOf[NumberTipe]) {
+                error(rd, s"Expecting numbers for range, but found: ${loT.get}.")
+                None
+              } else {
+                rd.tipe = loT.get
+                loT
+              }
+            } else None
+          case None =>
+            assert(assertion = false, "Unexpected situation.")
+            None
         }
-        var tm = typeMap
-        for (id <- e.ids) {
-          tm = TypeChecker.addId(tm, program, id, t, e)
-          id.tipe = t
+        tOpt.foreach { t =>
+          var tm = typeMap
+          for (id <- e.ids) {
+            tm = TypeChecker.addId(tm, program, id, t, e)
+            id.tipe = t
+          }
+          copy(typeMap = tm).check(e.exp)
         }
-        copy(typeMap = tm).check(e.exp)
         someB
       case e: SeqLit =>
         val ts = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
@@ -610,8 +628,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   def collectAssignedVars(b: Block): ISet[Id] = {
     var r = isetEmpty[Id]
     var lids = isetEmpty[Id]
+
     def collect(e: Exp): Unit = e match {
-      case a@Apply(id, args) if a.declOpt.isDefined =>
+      case a: Apply if a.declOpt.isDefined =>
         val md = a.declOpt.get
         val paramIds = md.params.map(_.id)
         val modifiedIds = md.contract.modifies.ids.toSet
@@ -621,6 +640,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           r += argId
       case _ =>
     }
+
     Visitor.build({
       case VarDecl(_, id, _, e) => lids += id; collect(e); false
       case Assign(id, e) if !lids.contains(id) => r += id; collect(e); false

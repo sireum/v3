@@ -222,14 +222,14 @@ $s"""))
           for (arg <- e.args) r.add("exp", translate(arg))
           r
         }
-      case e@ast.IntLit(value, _, tpeOpt) =>
+      case e@ast.IntLit(_, _, tpeOpt) =>
         val n = e.normalize
         val lit = tpeOpt match {
           case Some(tpe) => translate(n, tpe)
           case _ => translate(n, ast.ZType())
         }
         stg.getInstanceOf("lit").add("value", lit)
-      case e@ast.FloatLit(value) =>
+      case e: ast.FloatLit =>
         import java.lang.{Float => JFloat, Double => JDouble, Integer => JInteger, Long => JLong}
         e.primitiveValue match {
           case Left(f) =>
@@ -362,13 +362,13 @@ $s"""))
                 case F32 | F64 => "fp.geq"
                 case _ => ">="
               }
-            case e: ast.Shl => "bvshl"
+            case _: ast.Shl => "bvshl"
             case e: ast.Shr =>
               normalizeTipe(e.tipe) match {
                 case U8 | U16 | U32 | U64 => "bvlshr"
                 case _ => "bvashr"
               }
-            case e: ast.UShr => "bvlshr"
+            case _: ast.UShr => "bvlshr"
             case e: ast.Eq =>
               normalizeTipe(e.tipe) match {
                 case _: org.sireum.logika.tipe.MSeq =>
@@ -395,7 +395,7 @@ $s"""))
                      U8 | U16 | U32 | U64 => "bvor"
                 case _ => "or"
               }
-            case e: ast.Implies => "=>"
+            case _: ast.Implies => "=>"
             case _: ast.Append | _: ast.Prepend =>
               assert(assertion = false, "Unexpected situation.")
               "???"
@@ -431,7 +431,35 @@ $s"""))
       case e: ast.Quant[_] =>
         val isForAll = e.isInstanceOf[ast.ForAll]
         val stType = e.domainOpt match {
-          case Some(_: ast.RangeDomain) => return translate(e.simplify)
+          case Some(rd: ast.RangeDomain) =>
+            val tpe = (rd.tipe: @unchecked) match {
+              case Z => ast.ZType()
+              case Z8 => ast.Z8Type()
+              case Z16 => ast.Z16Type()
+              case Z32 => ast.Z32Type()
+              case Z64 => ast.Z64Type()
+              case N => ast.NType()
+              case N8 => ast.N8Type()
+              case N16 => ast.N16Type()
+              case N32 => ast.N32Type()
+              case N64 => ast.N64Type()
+              case S8 => ast.S8Type()
+              case S16 => ast.S16Type()
+              case S32 => ast.S32Type()
+              case S64 => ast.S64Type()
+              case U8 => ast.U8Type()
+              case U16 => ast.U16Type()
+              case U32 => ast.U32Type()
+              case U64 => ast.U64Type()
+              case R => ast.RType()
+              case F32 => ast.F32SType()
+              case F64 => ast.F32SType()
+            }
+            val q = e.simplify match {
+              case e: ast.ForAll => e.copy(domainOpt = Some(ast.TypeDomain(tpe)))
+              case e: ast.Exists => e.copy(domainOpt = Some(ast.TypeDomain(tpe)))
+            }
+            return translate(q)
           case Some(ast.TypeDomain(tpe)) => translate(tpe)
           case None => assert(assertion = false, "Unexpected situation.")
         }

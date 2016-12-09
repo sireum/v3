@@ -152,7 +152,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
               Exp.Eq(t, Exp.Apply(id.tipe, id, ast.Node.seq(subst(index, m))), subst(exp, m)),
               ast.ForAll(
                 ast.Node.seq(qVar),
-                Some(ast.RangeDomain(Checker.zero, Exp.Size(id.tipe, id),
+                Some(ast.Exp.RangeDomain(tipe.Z, Checker.zero, Exp.Size(id.tipe, id),
                   loLt = false, hiLt = true)),
                 Exp.Implies(tipe.B,
                   Exp.Ne(tipe.Z, qVar, index),
@@ -186,7 +186,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
                   val sz = ast.Exp.Size(resultT, id)
                   assign(id).map(pc => pc.copy(premises = pc.premises ++ ivector(
                     ast.Exp.Eq(tipe.Z, sz, exp.args.head),
-                    ast.ForAll(ivector(qVar), Some(ast.RangeDomain(Checker.zero, sz, loLt = false, hiLt = true)),
+                    ast.ForAll(ivector(qVar), Some(ast.Exp.RangeDomain(tipe.Z, Checker.zero, sz, loLt = false, hiLt = true)),
                       ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
                   )))
                 } else {

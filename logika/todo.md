@@ -5,8 +5,6 @@ Logika To-Dos
 
 * Quan rules check vars
 
-* Multiple/partial intro/elim on quans
-
 * Add termination
 
 * Auto: orClaims, premise, and cone of influence
