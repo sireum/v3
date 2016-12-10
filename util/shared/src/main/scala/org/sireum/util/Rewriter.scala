@@ -45,7 +45,7 @@ object Rewriter {
     new PartialFunction[Any, Any] {
       def isDefinedAt(o: Any) = true
 
-      def apply(o: Any) = {
+      def apply(o: Any): Any = {
         val o1 = if (f.isDefinedAt(o)) f(o) else o
         if (g.isDefinedAt(o1)) g(o1) else o1
       }
@@ -55,7 +55,7 @@ object Rewriter {
     new PartialFunction[Any, Any] {
       def isDefinedAt(o: Any) = true
 
-      def apply(o: Any) = {
+      def apply(o: Any): Any = {
         var r = o
         for (f <- fs) {
           if (f.isDefinedAt(r))
@@ -67,7 +67,7 @@ object Rewriter {
 
   def build[T](m: ConstructorMap)(
     mode: TraversalMode.Type,
-    f: RewriteFunction) = { x: T =>
+    f: RewriteFunction): T => T = { x: T =>
     mode match {
       case TraversalMode.TOP_DOWN =>
         rewrite(m, Some({ _ => f }), None)(x)
@@ -79,7 +79,7 @@ object Rewriter {
   def buildEnd[T](m: ConstructorMap)(
     mode: TraversalMode.Type,
     f: RewriteFunction,
-    g: RewriteFunction) = { x: T =>
+    g: RewriteFunction): T => T = { x: T =>
     mode match {
       case TraversalMode.TOP_DOWN =>
         rewrite(m, Some({ _ => f }), Some({ _ => g }))(x)
@@ -118,20 +118,20 @@ object Rewriter {
     extends TraversableStackElement(value)
     with ProductStackElement[scala.collection.Traversable[_]] {
     val newChildren = new Array[Object](value.size)
-    var isDirty = alwaysCopy
+    var isDirty: Boolean = alwaysCopy
 
     import scala.collection.generic.CanBuildFrom
     import scala.language.higherKinds
 
-    def makeWithNewChildren =
+    def makeWithNewChildren: AnyRef =
       if (isDirty)
         value match {
-          case m: ILinkedMap[_, _] =>
+          case _: ILinkedMap[_, _] =>
             makeHelperM(value.asInstanceOf[ILinkedMap[Any, Any]])
-          case m: scala.collection.Map[_, _] =>
+          case _: scala.collection.Map[_, _] =>
             makeHelperM(value.
               asInstanceOf[scala.collection.Map[Any, Any]])
-          case t: IVector[_] =>
+          case _: IVector[_] =>
             makeHelperT(value.asInstanceOf[IVector[Any]])
           case _ =>
             makeHelperT(value.
@@ -163,9 +163,9 @@ object Rewriter {
     extends Visitor.ProductStackElement(value)
     with ProductStackElement[Product] {
     val newChildren = new Array[Object](value.productArity)
-    var isDirty = alwaysCopy
+    var isDirty: Boolean = alwaysCopy
 
-    def makeWithNewChildren =
+    def makeWithNewChildren: AnyRef =
       if (isDirty)
         value match {
           case Some(_) => Some(newChildren(0))
@@ -185,7 +185,7 @@ object Rewriter {
     var _stack = ilistEmpty[VisitorStackElementRoot with ProductStackElement[_]]
 
     val vsp = new VisitorStackProvider {
-      def stack = _stack
+      def stack: IList[VisitorStackElementRoot with ProductStackElement[_]] = _stack
     }
 
     val (hasPre, f) =
@@ -240,8 +240,10 @@ object Rewriter {
       def add(n: Any) {
         val (shouldPush, r) =
           if (hasPre && f.isDefinedAt(n)) (false, copy(n, f(n))) else (true, n)
-        if (_stack.isEmpty) push(r)
-        else {
+        if (_stack.isEmpty) {
+          if (shouldPush)
+            push(r)
+        } else {
           peek.newChild(peek.currIndex, n, r)
           if (shouldPush)
             push(r)
