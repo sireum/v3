@@ -401,6 +401,25 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             if (e.args.size != t.params.size) {
               val text = if (isMethod) "Method" else "Proof function"
               error(e, s"$text ${Exp.toString(e.exp, inProof = allowFun)} requires ${t.params.size} arguments, but found ${e.args.size}.")
+            } else if (isMethod) {
+              val md = e.declOpt.get
+              val modifiedIds = md.contract.modifies.ids.toSet
+              val modifiedArgParams: MMap[Exp, Id] = mmapEmpty
+              for ((param, arg) <- md.params.zip(e.args)
+                   if param.id.tipe.isInstanceOf[MSeq] &&
+                     modifiedIds.contains(param.id) &&
+                     !arg.isInstanceOf[SeqLit] &&
+                     !modifiedArgParams.contains(arg)) {
+                modifiedArgParams(arg) = param.id
+              }
+              for ((param, arg) <- md.params.zip(e.args)
+                   if param.id.tipe.isInstanceOf[MSeq]) {
+                modifiedArgParams.get(arg) match {
+                  case Some(pid) if pid.value != param.id.value =>
+                    error(arg, s"Cannot pass ${Exp.toString(arg, inProof = false)} for parameter ${param.id.value} because it will be passed for modified parameter ${pid.value}.")
+                  case _ =>
+                }
+              }
             }
             for ((arg, pType) <- e.args.zip(t.params)) {
               check(arg) match {

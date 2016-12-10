@@ -1,8 +1,6 @@
 Logika To-Dos
 =============
 
-* Make sure to check non-aliasing for call arguments
-
 * Add termination
 
 * Auto loop inv at end should not have old
