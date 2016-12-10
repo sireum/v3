@@ -947,9 +947,10 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   }
 
   def expRewriter(m: IMap[ast.Node, ast.Node]): ast.Exp => ast.Exp =
-    org.sireum.logika.ast.Rewriter.build[ast.Exp](TraversalMode.BOTTOM_UP) {
-      case n: ast.Quant[_] if n.ids.exists(m.contains(_)) => subst(n, m -- n.ids.toSet)
-      case n: ast.Node => m.getOrElse(n, n)
+    if (m.isEmpty) identity
+    else org.sireum.logika.ast.Rewriter.build[ast.Exp](TraversalMode.TOP_DOWN) {
+      case n: ast.Quant[_] if n.ids.exists(m.contains(_)) => expRewriter(m -- n.ids)(n)
+      case n: ast.Node if m.isDefinedAt(n) => m(n)
     }
 
   def subst(e: ast.Exp, m: IMap[ast.Node, ast.Node]): ast.Exp = expRewriter(m)(e)

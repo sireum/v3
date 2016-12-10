@@ -306,16 +306,23 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
             hasError = true
           }
         var ps = ilinkedSetEmpty ++ es
-        val modifiedIds = loopInv.modifies.ids.map(_.value).toSet
+        var modifiedIds = loopInv.modifies.ids.toSet
         for (premise <- premises) {
           var propagate = true
-          Visitor.build({
+          lazy val v: Any => Boolean = Visitor.build({
+            case n: ast.Quant[_] if n.ids.exists(modifiedIds.contains(_)) =>
+              val oldModifiedIds = modifiedIds
+              modifiedIds --= n.ids
+              v(n)
+              modifiedIds = oldModifiedIds
+              false
             case ast.Id(value) =>
               val i = value.indexOf('_')
               val id = if (i >= 0) value.substring(0, i) else value
-              if (modifiedIds.contains(id)) propagate = false
+              if (modifiedIds.contains(ast.Id(id))) propagate = false
               false
-          })(premise)
+          })
+          v(premise)
           if (propagate) ps += premise
         }
         copy(premises = ps + exp).

@@ -324,14 +324,21 @@ ForwardProofContext(unitNode: ast.Program,
             }
         }
         var ps = ilinkedSetEmpty ++ es
-        val modifiedIds = loopInv.modifies.ids.toSet
+        var modifiedIds = loopInv.modifies.ids.toSet
         for (premise <- premises) {
           var propagate = true
-          Visitor.build({
+          lazy val v: Any => Boolean = Visitor.build({
+            case n: ast.Quant[_] if n.ids.exists(modifiedIds.contains(_)) =>
+              val oldModifiedIds = modifiedIds
+              modifiedIds --= n.ids
+              v(n)
+              modifiedIds = oldModifiedIds
+              false
             case id: ast.Id =>
               if (modifiedIds.contains(id)) propagate = false
               false
-          })(premise)
+          })
+          v(premise)
           if (propagate) ps += premise
         }
         copy(premises = ps + exp).
