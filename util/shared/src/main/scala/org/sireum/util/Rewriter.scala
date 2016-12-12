@@ -29,7 +29,7 @@ import scala.annotation.tailrec
 
 object Rewriter {
 
-  type ConstructorMap = IMap[String, Traversable[AnyRef] => Product]
+  type ConstructorMap = IMap[String, Traversable[AnyRef] => Product with AnyRef]
 
   trait HasInternalData[T] {
     def copy(other: T): Unit
@@ -90,7 +90,7 @@ object Rewriter {
 
   import Visitor._
 
-  private[util] trait ProductStackElement[T] {
+  private[util] trait ProductStackElement[T <: AnyRef] {
     def newChildren: Array[Object]
 
     var isDirty: Boolean
@@ -123,7 +123,7 @@ object Rewriter {
     import scala.collection.generic.CanBuildFrom
     import scala.language.higherKinds
 
-    def makeWithNewChildren: AnyRef =
+    def makeWithNewChildren: scala.collection.Traversable[_] =
       if (isDirty)
         value match {
           case _: ILinkedMap[_, _] =>
@@ -158,14 +158,14 @@ object Rewriter {
 
   private[util] class
   RProductStackElement(m: ConstructorMap,
-                       override val value: Product,
+                       override val value: Product with AnyRef,
                        alwaysCopy: Boolean)
     extends Visitor.ProductStackElement(value)
-    with ProductStackElement[Product] {
+      with ProductStackElement[Product with AnyRef] {
     val newChildren = new Array[Object](value.productArity)
     var isDirty: Boolean = alwaysCopy
 
-    def makeWithNewChildren: AnyRef =
+    def makeWithNewChildren: Product with AnyRef =
       if (isDirty)
         value match {
           case Some(_) => Some(newChildren(0))
@@ -231,7 +231,7 @@ object Rewriter {
         o match {
           case t: scala.collection.Traversable[_] =>
             _stack = new RTraversableStackElement(t, alwaysCopy, rewriter) :: _stack
-          case v: Product =>
+          case v: Product with AnyRef =>
             _stack = new RProductStackElement(m, v, alwaysCopy) :: _stack
           case _ =>
         }
