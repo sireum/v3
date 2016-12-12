@@ -164,6 +164,7 @@ object SireumBuild extends Build {
       "org.ow2.asm" % "asm" % "5.1",
       "org.ow2.asm" % "asm-commons" % "5.1",
       "org.ow2.asm" % "asm-util" % "5.1",
+      "org.jgrapht" % "jgrapht" % "1.0.0",
       "org.scala-graph" %% "graph-core" % "1.11.4",
       "org.scala-graph" %% "graph-dot" % "1.11.0",
       "com.novocode" % "junit-interface" % "0.11"
