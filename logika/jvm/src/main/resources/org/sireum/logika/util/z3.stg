@@ -253,8 +253,7 @@ index(a, i) ::= <<
 >>
 
 apply(id, exp) ::= <<
-($id$
-  $exp; separator="\n"$)
+($id$ $exp; separator=" "$)
 >>
 
 lit(value) ::= <<
