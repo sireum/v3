@@ -81,6 +81,7 @@ object Node {
   final private[ast] def checkWellFormed(unitNode: UnitNode, isAutoEnabled: Boolean)
                                         (implicit reporter: AccumulatingTagReporter): Unit = {
     val nodeLocMap = unitNode.nodeLocMap.clone
+
     def error(n: Node, msg: String): Unit =
       reporter.report(nodeLocMap(n).toLocationError(
         unitNode.fileUriOpt, "Semantics", msg))
@@ -249,6 +250,7 @@ object Node {
       hasErrors = true
       reporter.report(nodeLocMap(n).toLocationError(unitNode.fileUriOpt, "Semantics", msg))
     }
+
     def collectFreeIds(node: Node, declIds: IMap[String, Id]): Unit = {
       Visitor.build({
         case node: Quant[_] =>
@@ -610,9 +612,9 @@ final case class Auto(num: Num,
                       steps: Node.Seq[Num])
   extends RegularStep
 
-final case class SubProof(num: Num,                    // number of the subproof
-                          assumeStep: AssumeStep,      // the assume step at the beginning of the subproof
-                          steps: Node.Seq[ProofStep])  // the rest of the steps of the subproof
+final case class SubProof(num: Num, // number of the subproof
+                          assumeStep: AssumeStep, // the assume step at the beginning of the subproof
+                          steps: Node.Seq[ProofStep]) // the rest of the steps of the subproof
   extends ProofStep with ProofGroup {
 
   override def allSteps: Node.Seq[ProofStep] = assumeStep +: steps // all steps consist of assume step and rest of steps
@@ -1111,7 +1113,8 @@ sealed trait BinaryExp extends Exp with HasInternalData[BinaryExp] {
 
   final override def buildString(sb: StringBuilder,
                                  inProof: Boolean): Unit = {
-    if (left.precedence > precedence) {
+    if (left.precedence > precedence ||
+      (isInstanceOf[Implies] && left.precedence == precedence)) {
       sb.append('(')
       left.buildString(sb, inProof)
       sb.append(')')
@@ -1121,7 +1124,8 @@ sealed trait BinaryExp extends Exp with HasInternalData[BinaryExp] {
     sb.append(' ')
     sb.append(op(inProof))
     sb.append(' ')
-    if (right.precedence > precedence) {
+    if (right.precedence > precedence ||
+      (!isInstanceOf[Implies] && right.precedence == precedence)) {
       sb.append('(')
       right.buildString(sb, inProof)
       sb.append(')')
@@ -1353,11 +1357,13 @@ sealed trait Quant[T <: Quant[T]] extends Exp {
       domainOpt match {
         case Some(RangeDomain(lo, hi, loLt, hiLt)) =>
           val isForAll = isInstanceOf[ForAll]
+
           def range(id: Id, l: Exp, h: Exp): And = {
             val lApply = if (loLt) Lt else Le
             val rApply = if (hiLt) Lt else Le
             And(lApply(l, id), rApply(id, h))
           }
+
           val apply = if (isForAll) ForAll else Exists
           var antecedent = range(ids.head, lo, hi)
           for (id <- ids.tail) {
