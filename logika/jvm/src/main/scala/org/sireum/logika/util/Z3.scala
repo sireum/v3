@@ -293,6 +293,7 @@ $s"""))
         ).add("a", lineSep)
         stg.getInstanceOf("a").add("c", c)
       case e: ast.BinaryExp =>
+        var multiLine = false
         val op =
           e match {
             case e@ast.Ne(left, right) =>
@@ -378,10 +379,27 @@ $s"""))
                 case _ => "="
               }
             case e: ast.And =>
+              multiLine = true
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvand"
-                case _ => "and"
+                case _ =>
+                  var l = ilistEmpty[ast.Exp]
+                  var e2: ast.Exp = e
+                  while (e2.isInstanceOf[ast.And]) {
+                    val and = e2.asInstanceOf[ast.And]
+                    l = and.right :: l
+                    e2 = and.left
+                  }
+                  l = e2 :: l
+                  if (l.size > 2) {
+                    val st = stg.getInstanceOf("multi")
+                    st.add("op", "and")
+                    for (e <- l) {
+                      st.add("exp", translate(e))
+                    }
+                    return st
+                  } else "and"
               }
             case e: ast.Xor =>
               normalizeTipe(e.tipe) match {
@@ -390,17 +408,51 @@ $s"""))
                 case _ => "xor"
               }
             case e: ast.Or =>
+              multiLine = true
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
                      U8 | U16 | U32 | U64 => "bvor"
-                case _ => "or"
+                case _ =>
+                  var l = ilistEmpty[ast.Exp]
+                  var e2: ast.Exp = e
+                  while (e2.isInstanceOf[ast.Or]) {
+                    val or = e2.asInstanceOf[ast.Or]
+                    l = or.right :: l
+                    e2 = or.left
+                  }
+                  l = e2 :: l
+                  if (l.size > 2) {
+                    val st = stg.getInstanceOf("multi")
+                    st.add("op", "or")
+                    for (e <- l) {
+                      st.add("exp", translate(e))
+                    }
+                    return st
+                  } else "or"
               }
-            case _: ast.Implies => "=>"
+            case _: ast.Implies =>
+              multiLine = true
+              var l = ivectorEmpty[ast.Exp]
+              var e2: ast.Exp = e
+              while (e2.isInstanceOf[ast.Implies]) {
+                val implies = e2.asInstanceOf[ast.Implies]
+                l = l :+ implies.left
+                e2 = implies.right
+              }
+              l = l :+ e2
+              if (l.size > 2) {
+                val st = stg.getInstanceOf("multi")
+                st.add("op", "=>")
+                for (e <- l) {
+                  st.add("exp", translate(e))
+                }
+                return st
+              } else "=>"
             case _: ast.Append | _: ast.Prepend =>
               assert(assertion = false, "Unexpected situation.")
               "???"
           }
-        stg.getInstanceOf("binary").add("op", op).
+        stg.getInstanceOf(if (multiLine) "binaryLine" else "binary").add("op", op).
           add("left", translate(e.left)).add("right", translate(e.right))
       case e: ast.UnaryExp =>
         e match {

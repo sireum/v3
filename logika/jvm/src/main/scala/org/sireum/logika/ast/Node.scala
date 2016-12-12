@@ -676,7 +676,7 @@ object Exp {
     else {
       var r = args.head
       for (arg <- args.tail) {
-        r = And(B, arg, r)
+        r = And(B, r, arg)
       }
       r
     }
@@ -692,7 +692,7 @@ object Exp {
     else {
       var r = args.head
       for (arg <- args.tail) {
-        r = Or(B, arg, r)
+        r = Or(B, r, arg)
       }
       r
     }
@@ -702,6 +702,19 @@ object Exp {
     r.tipe = tipe
     r
   }
+
+  def Implies(args: Node.Seq[Exp]): Exp =
+    if (args.isEmpty) BooleanLit(value = false)
+    else {
+      var i = args.size - 1
+      var r = args(i)
+      i -= 1
+      while (i >= 0) {
+        r = Implies(B, args(i), r)
+        i -= 1
+      }
+      r
+    }
 
   def Eq(tipe: Tipe, left: Exp, right: Exp): Eq = {
     val r = org.sireum.logika.ast.Eq(left, right)

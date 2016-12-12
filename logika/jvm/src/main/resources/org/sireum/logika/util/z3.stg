@@ -266,14 +266,22 @@ fplit(sign, eb, sb) ::= <<
 >>
 
 binary(op, left, right) ::= <<
+($op$ $left$ $right$)
+>>
+
+binaryLine(op, left, right) ::= <<
 ($op$
    $left$
    $right$)
 >>
 
-unary(op, exp) ::= <<
+multi(op, exp) ::= <<
 ($op$
-  $exp$)
+   $exp; separator="\n"$)
+>>
+
+unary(op, exp) ::= <<
+($op$ $exp$)
 >>
 
 quant(op, param, exp) ::= <<
