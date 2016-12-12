@@ -267,7 +267,7 @@ $s"""))
         }
       case ast.RealLit(value) =>
         if (value.head == '-')
-          stg.getInstanceOf("lit").add("value", s"(- ${value.tail}")
+          stg.getInstanceOf("lit").add("value", s"(- ${value.tail})")
         else
           stg.getInstanceOf("lit").add("value", value)
       case e: ast.IntMin =>
