@@ -3,8 +3,6 @@ Logika To-Dos
 
 * Add termination
 
-* Auto loop inv at end should not have old
-
 * Document Truth Table mode
 
 * Document SymExe mode 
@@ -16,8 +14,6 @@ Future Work
 * Def as method
 
 * Def without cond and with where
-
-* Use line # for _old numbering
 
 * Add functions to convert numbers
 

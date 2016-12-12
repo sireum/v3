@@ -28,12 +28,6 @@ package org.sireum.logika
 import org.sireum.util.Rewriter.TraversalMode
 import org.sireum.util._
 
-private object SummarizingSymExeProofContext {
-  private val varCounter = new scala.util.DynamicVariable(mmapEmpty[String, Natural])
-}
-
-import SummarizingSymExeProofContext._
-
 private final case class
 SummarizingSymExeProofContext(unitNode: ast.Program,
                               autoEnabled: Boolean,
@@ -50,7 +44,8 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
                               provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                               declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
                               inMethod: Boolean = false,
-                              satFacts: Boolean = true)
+                              satFacts: Boolean = true,
+                              oldIdLineMap: IMap[ast.Id, (Natural, PosInteger)] = imapEmpty)
                              (implicit reporter: AccumulatingTagReporter)
   extends SymExeProofContext[SummarizingSymExeProofContext] {
 
@@ -69,9 +64,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         "Could not check satisfiability of the set of facts due to timeout."
       }
     )) return false
-    varCounter.withValue(mmapEmpty) {
-      copy(facts = facts, satFacts = isSat).check(program.block).isDefined
-    }
+    copy(facts = facts, satFacts = isSat).check(program.block).isDefined
   }
 
   def check(block: ast.Block): Option[SummarizingSymExeProofContext] = {
@@ -140,12 +133,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         ) || hasError
         Some(copy(premises = premises + e))
       case ast.SeqAssign(id, index, exp) =>
-        val old = oldId(id)
+        val (pc2, old) = defOldId(id, nodeLocMap(id).lineBegin)
         val m = imapEmpty[ast.Node, ast.Node] + (id -> old)
         val qVar = ast.Exp.Id(tipe.Z, "q_i")
         val t = id.tipe.asInstanceOf[tipe.Fn].result
         import ast.Exp
-        Some(copy(premises =
+        Some(pc2.copy(premises =
           premises.map(e => subst(e, m)) ++
             ivector(
               Exp.Eq(tipe.Z, Exp.Size(id.tipe, id), Exp.Size(old.tipe, old)),
@@ -196,18 +189,48 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
             }
           case _ => assign(id, exp)
         }
-      case ast.If(exp, thenBlock, elseBlock) =>
+      case stmt@ast.If(exp, thenBlock, elseBlock) =>
         val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
         val elsePcOpt = copy(premises = premises + ast.Exp.Not(tipe.B, exp)).check(elseBlock)
         (thenPcOpt, elsePcOpt) match {
           case (Some(thenPc), Some(elsePc)) =>
-            val thenPremises = thenPc.cleanup.premises
-            val elsePremises = elsePc.cleanup.premises
+            var thenPremises = thenPc.cleanup.premises
+            var elsePremises = elsePc.cleanup.premises
             val commonPremises = thenPremises.intersect(elsePremises)
+
+            var modifiedIds = scala.collection.immutable.TreeSet.empty[ast.Id](
+              Ordering.fromLessThan(_.value > _.value))
+            for ((k, v) <- thenPc.oldIdLineMap if (oldIdLineMap.get(k) match {
+              case Some(v2) => v != v2
+              case _ => false
+            })) {
+              modifiedIds += k
+            }
+            for ((k, v) <- elsePc.oldIdLineMap if (oldIdLineMap.get(k) match {
+              case Some(v2) => v != v2
+              case _ => false
+            })) {
+              modifiedIds += k
+            }
+            var nextOldIdLineMap = oldIdLineMap
+            val line = nodeLocMap(stmt).lineEnd
+            for (id <- modifiedIds) {
+              val newThenId = symId(id.tipe, id.value, thenPc.oldIdLineMap(id)._2)
+              val newElseId = symId(id.tipe, id.value, elsePc.oldIdLineMap(id)._2)
+              val thenSubstMap = Map[ast.Node, ast.Node](id -> newThenId)
+              val elseSubstMap = Map[ast.Node, ast.Node](id -> newElseId)
+              thenPremises = thenPremises.map(p => subst(p, thenSubstMap))
+              elsePremises = elsePremises.map(p => subst(p, elseSubstMap))
+              thenPremises += ast.Exp.Eq(id.tipe, id, newThenId)
+              elsePremises += ast.Exp.Eq(id.tipe, id, newElseId)
+              nextOldIdLineMap = nextOldIdLineMap + (id -> (line, line))
+            }
+
             import ast.Exp
             Some(copy(premises = commonPremises +
               Exp.Or(tipe.B, Exp.And((thenPremises -- commonPremises).toVector),
-                Exp.And((elsePremises -- commonPremises).toVector))))
+                Exp.And((elsePremises -- commonPremises).toVector)),
+              oldIdLineMap = nextOldIdLineMap))
           case _ => None
         }
       case stmt: ast.MethodDecl =>
@@ -325,17 +348,22 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           v(premise)
           if (propagate) ps += premise
         }
-        copy(premises = ps + exp).
+        var pc2 = this
+        for (id <- loopInv.modifies.ids) {
+          pc2 = defOldId(id, nodeLocMap(id).lineBegin)._1
+        }
+        pc2.copy(premises = ps + exp).
           check(loopBlock) match {
-          case Some(pc2) =>
-            hasError = hasError || pc2.hasRuntimeError(stmt)
-            val ps2 = pc2.premises ++ pc2.facts.values
+          case Some(pc3) =>
+            hasError = hasError || pc3.hasRuntimeError(stmt)
+            val ps2 = pc3.premises ++ pc3.facts.values
             for (e <- es)
               if (!isValid("loop invariant (end)", nodeLocMap(e), ps2, ivector(e))) {
                 error(e, s"Could not deduce the loop invariant at the end of the loop.")
                 hasError = true
               }
-            Some(copy(premises = ps + ast.Exp.Not(tipe.B, exp)))
+            Some(copy(premises = ps + ast.Exp.Not(tipe.B, exp),
+              oldIdLineMap = pc2.oldIdLineMap))
           case _ => None
         }
       case _: ast.Print => Some(this)
@@ -346,13 +374,15 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
   }
 
   def assign(id: ast.Id, exp: ast.Exp): Option[SummarizingSymExeProofContext] = {
-    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oldId(id)))
-    Some(copy(premises = premises.map(sst) + ast.Exp.Eq(id.tipe, id, sst(exp))))
+    val (pc2, oid) = defOldId(id, nodeLocMap(id).lineBegin)
+    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oid))
+    Some(pc2.copy(premises = premises.map(sst) + ast.Exp.Eq(id.tipe, id, sst(exp))))
   }
 
   def assign(id: ast.Id): Option[SummarizingSymExeProofContext] = {
-    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oldId(id)))
-    Some(copy(premises = premises.map(sst)))
+    val (pc2, oid) = defOldId(id, nodeLocMap(id).lineBegin)
+    val sst = expRewriter(Map[ast.Node, ast.Node](id -> oid))
+    Some(pc2.copy(premises = premises.map(sst)))
   }
 
   def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): (Boolean, SummarizingSymExeProofContext) = {
@@ -385,9 +415,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
         hasError = true
       }
+    var pc2 = this
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
-        (x, imapEmpty[ast.Node, ast.Node] + (x -> oldId(x)))
+        val (pc3, x_old) = defOldId(x, nodeLocMap(x).lineBegin)
+        pc2 = pc3
+        (x, imapEmpty[ast.Node, ast.Node] + (x -> x_old))
       case _ =>
         (ast.Exp.Id(md.id.tipe.asInstanceOf[tipe.Fn].result,
           md.id.value + "_result"),
@@ -398,15 +431,17 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
     var modParams = isetEmpty[String]
     for ((p, arg@ast.Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
       modParams += p.value
-      val arg_old = oldId(arg)
+      val (pc3, arg_old) = defOldId(arg, nodeLocMap(a).lineBegin)
+      pc2 = pc3
       val p_in = ast.Exp.Id(p.tipe, p.value + "_in")
       premiseSubstMap += arg -> arg_old
       postSubstMap += arg -> arg_old
       postSubstMap += p -> arg
-      postSubstMap += p_in -> oldId(arg)
+      postSubstMap += p_in -> arg_old
     }
     for (g <- md.contract.modifies.ids if !modParams.contains(g.value)) {
-      val g_old = oldId(g)
+      val (pc3, g_old) = defOldId(g, nodeLocMap(a).lineBegin)
+      pc2 = pc3
       val g_in = ast.Exp.Id(g.tipe, g.value + "_in")
       premiseSubstMap += g -> g_old
       postSubstMap += g_in -> g_old
@@ -414,7 +449,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
     (hasError, make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
         md.contract.ensures.exps.map(e => subst(e, postSubstMap))
-    ))
+    ).copy(oldIdLineMap = pc2.oldIdLineMap))
   }
 
   def cleanup: SummarizingSymExeProofContext =
@@ -422,21 +457,13 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       provedSteps = imapEmpty, declaredStepNumbers = imapEmpty)
 
   def rewriteOld(premises: ILinkedSet[ast.Exp]): ILinkedSet[ast.Exp] = {
-    val m = mmapEmpty[String, Natural]
     var r = ilinkedSetEmpty[ast.Exp]
     for (e <- premises) {
       r += ast.Rewriter.build[ast.Exp](TraversalMode.BOTTOM_UP)({
         case idOld@ast.Id(value) if value.endsWith("_old") =>
           val name = value.substring(0, value.length - 4)
-          val n = m.get(name) match {
-            case Some(c) => c
-            case None =>
-              val c = varCounter.value.getOrElseUpdate(name, 0)
-              varCounter.value(name) = c + 1
-              m(name) = c
-              c
-          }
-          ast.Exp.Id(idOld.tipe, s"${name}_$n")
+          val n = oldIdLineMap(ast.Id(name))._1
+          symId(idOld.tipe, name, n)
       })(e)
     }
     r
@@ -452,6 +479,18 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       case _ => super.check(step)
     }
   }
+
+  def defOldId(id: ast.Id, line: PosInteger): (SummarizingSymExeProofContext, ast.Id) = {
+    val prevLine = oldIdLineMap.get(id) match {
+      case Some((_, next)) => next
+      case _ => 0
+    }
+    val pc = copy(oldIdLineMap = oldIdLineMap + (id -> (prevLine, line)))
+    (pc, ast.Exp.Id(id.tipe, s"${id.value}_old"))
+  }
+
+  def symId(t: tipe.Tipe, name: String, line: PosInteger) =
+    ast.Exp.Id(t, s"${name}_$line")
 
   def make(vars: ISet[String],
            provedSteps: IMap[Natural, ast.ProofStep],

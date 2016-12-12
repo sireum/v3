@@ -29,26 +29,26 @@ import org.sireum.util.{LocationInfo, Visitor, _}
 
 private abstract class
 SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTagReporter) extends ProofContext[T] {
-  final val isSymExe = true
-  final var validCache = imapEmpty[(ISeq[ast.Exp], ISeq[ast.Exp]), Boolean]
-  final val unboundedBitWidth = bitWidth == 0
-  final lazy val zMin = ast.IntMin(bitWidth, ast.ZType())
-  final lazy val zMax = ast.IntMax(bitWidth, ast.ZType())
-  final val z8Min = ast.IntMin(8, ast.Z8Type())
-  final val z8Max = ast.IntMax(8, ast.Z8Type())
-  final val z16Min = ast.IntMin(16, ast.Z16Type())
-  final val z16Max = ast.IntMax(16, ast.Z16Type())
-  final val z32Min = ast.IntMin(32, ast.Z32Type())
-  final val z32Max = ast.IntMax(32, ast.Z32Type())
-  final val z64Min = ast.IntMin(64, ast.Z64Type())
-  final val z64Max = ast.IntMax(64, ast.Z64Type())
-  final val nMin = Checker.zero
-  final lazy val nMax = ast.IntMax(bitWidth, ast.NType())
-  final val n8Max = ast.IntMax(8, ast.N8Type())
-  final val n16Max = ast.IntMax(16, ast.N16Type())
-  final val n32Max = ast.IntMax(32, ast.N32Type())
-  final val n64Max = ast.IntMax(64, ast.N64Type())
-  final val topConclusion = ivector(Checker.top)
+  final val isSymExe: Boolean = true
+  final var validCache: IMap[(ISeq[ast.Exp], ISeq[ast.Exp]), Boolean] = imapEmpty
+  final val unboundedBitWidth: Boolean = bitWidth == 0
+  final lazy val zMin: ast.IntMin = ast.IntMin(bitWidth, ast.ZType())
+  final lazy val zMax: ast.IntMax = ast.IntMax(bitWidth, ast.ZType())
+  final val z8Min: ast.IntMin = ast.IntMin(8, ast.Z8Type())
+  final val z8Max: ast.IntMax = ast.IntMax(8, ast.Z8Type())
+  final val z16Min: ast.IntMin = ast.IntMin(16, ast.Z16Type())
+  final val z16Max: ast.IntMax = ast.IntMax(16, ast.Z16Type())
+  final val z32Min: ast.IntMin = ast.IntMin(32, ast.Z32Type())
+  final val z32Max: ast.IntMax = ast.IntMax(32, ast.Z32Type())
+  final val z64Min: ast.IntMin = ast.IntMin(64, ast.Z64Type())
+  final val z64Max: ast.IntMax = ast.IntMax(64, ast.Z64Type())
+  final val nMin: ast.IntLit = Checker.zero
+  final lazy val nMax: ast.IntMax = ast.IntMax(bitWidth, ast.NType())
+  final val n8Max: ast.IntMax = ast.IntMax(8, ast.N8Type())
+  final val n16Max: ast.IntMax = ast.IntMax(16, ast.N16Type())
+  final val n32Max: ast.IntMax = ast.IntMax(32, ast.N32Type())
+  final val n64Max: ast.IntMax = ast.IntMax(64, ast.N64Type())
+  final val topConclusion: ast.Node.Seq[ast.Exp] = ivector(Checker.top)
 
   final override def isValid(title: String, li: LocationInfo,
                              premises: => Iterable[ast.Exp],
@@ -255,8 +255,6 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
     })(stmt)
     hasError
   }
-
-  final def oldId(id: ast.Id): ast.Id = ast.Exp.Id(id.tipe, s"${id.value}_old")
 
   final def filter(premises: ILinkedSet[ast.Exp]): ILinkedSet[ast.Exp] = {
     def keep(e: ast.Exp) = {

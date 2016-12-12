@@ -591,6 +591,8 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     }
   }
 
+  def oldId(id: ast.Id): ast.Id = ast.Exp.Id(id.tipe, s"${id.value}_old")
+
   def make(vars: ISet[String],
            provedSteps: IMap[Natural, ast.ProofStep],
            declaredStepNumbers: IMap[Natural, LocationInfo],
