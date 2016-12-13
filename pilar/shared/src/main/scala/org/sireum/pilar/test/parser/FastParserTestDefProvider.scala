@@ -31,20 +31,20 @@ import org.sireum.pilar.parser._
 import org.sireum.util._
 
 object FastParserTestDefProvider {
-  final val model1 =
+  final val model1: String =
     """global var z;
       |def foo(x) {
       |#L0 return x;
       |}
     """.stripMargin
-  final val model2 =
+  final val model2: String =
     """def abs(x) {
       |#L0 if x < z'0 then L1 else L2;
       |#L1 return -(x);
       |#L2 return x;
       |}
     """.stripMargin
-  final val model3 =
+  final val model3: String =
     """def min(x, y) {
       |#L0 if x <= y then L1 else L2;
       |#L1 return x;
@@ -58,7 +58,7 @@ import FastParserTestDefProvider._
 final class FastParserTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
-  private val noRecover = { () => }
+  private val noRecover = {}
 
   override val testDefs: ISeq[TestDef] = ivector(
 

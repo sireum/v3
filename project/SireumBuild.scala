@@ -140,7 +140,7 @@ object SireumBuild extends Build {
     scalaVersion := scalaVer,
     retrieveManaged := true,
     scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
-      "-Ydelambdafy:method", "-feature"),
+      "-Ydelambdafy:method", "-feature", "-unchecked"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
     libraryDependencies ++= Seq(

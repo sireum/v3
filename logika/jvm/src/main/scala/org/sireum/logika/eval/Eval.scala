@@ -95,7 +95,7 @@ object Eval {
   def assignSeq(store: Store)(id: Id, index: Exp, e: Exp): Option[(Store, Value, Value)] =
     for (ms <- evalExp(store)(id);
          i <- evalExp(store)(index);
-         v <- evalExp(store)(e)) yield (ms, i, v) match {
+         v <- evalExp(store)(e)) yield ((ms, i, v): @unchecked) match {
       case (ms: BS.Value, i: Z, v: Boolean) =>
         val ms2 = ms.clone
         ms2(i) = v
@@ -313,7 +313,7 @@ private final class Eval(store: Store) {
       case v: F32S.Value => v.clone
       case v: F64S.Value => v.clone
     }
-    case e: Result => store.get("result")
+    case _: Result => store.get("result")
     case Apply(id, Seq(arg)) =>
       try for (ms <- eval(id);
                i <- eval(arg)) yield (ms, i) match {
@@ -424,10 +424,10 @@ private final class Eval(store: Store) {
           case _: U64Type => v.toU64
         })
       }
-    case e: Random => None
+    case _: Random => None
     case e: Mul =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 * v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 * v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 * v2
@@ -452,7 +452,7 @@ private final class Eval(store: Store) {
       }
     case e: Div =>
       try for (v1 <- eval(e.left);
-               v2 <- eval(e.right)) yield (v1, v2) match {
+               v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 / v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 / v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 / v2
@@ -479,7 +479,7 @@ private final class Eval(store: Store) {
       }
     case e: Rem =>
       try for (v1 <- eval(e.left);
-               v2 <- eval(e.right)) yield (v1, v2) match {
+               v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 % v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 % v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 % v2
@@ -506,7 +506,7 @@ private final class Eval(store: Store) {
       }
     case e: Add =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 + v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 + v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 + v2
@@ -531,7 +531,7 @@ private final class Eval(store: Store) {
       }
     case e: Sub =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 - v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 - v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 - v2
@@ -556,7 +556,7 @@ private final class Eval(store: Store) {
       }
     case e: Lt =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 < v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 < v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 < v2
@@ -581,7 +581,7 @@ private final class Eval(store: Store) {
       }
     case e: Le =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 <= v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 <= v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 <= v2
@@ -606,7 +606,7 @@ private final class Eval(store: Store) {
       }
     case e: Gt =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 > v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 > v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 > v2
@@ -631,7 +631,7 @@ private final class Eval(store: Store) {
       }
     case e: Ge =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Z, v2: Z) => v1 >= v2
         case (v1: Z8.Value, v2: Z8.Value) => v1 >= v2
         case (v1: Z16.Value, v2: Z16.Value) => v1 >= v2
@@ -656,7 +656,7 @@ private final class Eval(store: Store) {
       }
     case e: Shr =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: S8.Value, v2: S8.Value) => v1 >> v2
         case (v1: S16.Value, v2: S16.Value) => v1 >> v2
         case (v1: S32.Value, v2: S32.Value) => v1 >> v2
@@ -664,7 +664,7 @@ private final class Eval(store: Store) {
       }
     case e: UShr =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: S8.Value, v2: S8.Value) => v1 >>> v2
         case (v1: S16.Value, v2: S16.Value) => v1 >>> v2
         case (v1: S32.Value, v2: S32.Value) => v1 >>> v2
@@ -676,7 +676,7 @@ private final class Eval(store: Store) {
       }
     case e: Shl =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: S8.Value, v2: S8.Value) => v1 << v2
         case (v1: S16.Value, v2: S16.Value) => v1 << v2
         case (v1: S32.Value, v2: S32.Value) => v1 << v2
@@ -694,7 +694,7 @@ private final class Eval(store: Store) {
            v2 <- eval(e.right)) yield v1 != v2
     case e: Append =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: BS.Value, v2: Boolean) => v1 :+ v2
         case (v1: ZS.Value, v2: Z) => v1 :+ v2
         case (v1: Z8S.Value, v2: Z8.Value) => v1 :+ v2
@@ -720,7 +720,7 @@ private final class Eval(store: Store) {
       }
     case e: Prepend =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v2, v1) match {
+           v2 <- eval(e.right)) yield ((v2, v1): @unchecked) match {
         case (v2: BS.Value, v1: Boolean) => v1 +: v2
         case (v2: ZS.Value, v1: Z) => v1 +: v2
         case (v2: Z8S.Value, v1: Z8.Value) => v1 +: v2
@@ -746,7 +746,7 @@ private final class Eval(store: Store) {
       }
     case e: And =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Boolean, v2: Boolean) => v1 & v2
         case (v1: S8.Value, v2: S8.Value) => v1 & v2
         case (v1: S16.Value, v2: S16.Value) => v1 & v2
@@ -759,7 +759,7 @@ private final class Eval(store: Store) {
       }
     case e: Xor =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Boolean, v2: Boolean) => v1 ^ v2
         case (v1: S8.Value, v2: S8.Value) => v1 ^| v2
         case (v1: S16.Value, v2: S16.Value) => v1 ^| v2
@@ -772,7 +772,7 @@ private final class Eval(store: Store) {
       }
     case e: Or =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Boolean, v2: Boolean) => v1 | v2
         case (v1: S8.Value, v2: S8.Value) => v1 | v2
         case (v1: S16.Value, v2: S16.Value) => v1 | v2
@@ -785,11 +785,11 @@ private final class Eval(store: Store) {
       }
     case e: Implies =>
       for (v1 <- eval(e.left);
-           v2 <- eval(e.right)) yield (v1, v2) match {
+           v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
         case (v1: Boolean, v2: Boolean) => !v1 | v2
       }
     case e: Not =>
-      for (v <- eval(e.exp)) yield v match {
+      for (v <- eval(e.exp)) yield (v: @unchecked) match {
         case v: Boolean => !v
         case v: S8.Value => ~v
         case v: S16.Value => ~v
@@ -801,7 +801,7 @@ private final class Eval(store: Store) {
         case v: U64.Value => ~v
       }
     case e: Minus =>
-      for (v <- eval(e.exp)) yield v match {
+      for (v <- eval(e.exp)) yield (v: @unchecked) match {
         case v: Z => -v
         case v: S8.Value => -v
         case v: S16.Value => -v
@@ -811,8 +811,8 @@ private final class Eval(store: Store) {
         case v: F32.Value => -v
         case v: F64.Value => -v
       }
-    case e: ForAll => None
-    case e: Exists => None
+    case _: ForAll => None
+    case _: Exists => None
     case e: SeqLit =>
       var args = ivectorEmpty[Value]
       for (arg <- e.args) eval(arg) match {

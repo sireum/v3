@@ -81,9 +81,9 @@ class JavaBytecodeTranslator(option: JavaBytecodeTranslatorOption,
           translate(in)
           verbose(s"// Translated: $in")
         } catch {
-          case e: ClassNotFoundException =>
+          case _: ClassNotFoundException =>
             errPrintln(s"Could not find class: $in")
-          case t: Throwable =>
+          case _: Throwable =>
             errPrintln(s"Error translating class: $in")
         }
       }
@@ -97,13 +97,13 @@ class JavaBytecodeTranslator(option: JavaBytecodeTranslatorOption,
   }
 
   private def translateZip(f: File): Option[File] = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     val zf = new ZipFile(f)
     val o = new File(f.getParentFile, removeExt(f.getName) + PILAR_ZIP_EXT)
     val zof = new ZipOutputStream(new FileOutputStream(o))
     var hasError = false
     try {
-      for (ze: ZipEntry <- zf.entries) {
+      for (ze: ZipEntry <- zf.entries.asScala) {
         val name = ze.getName
         val size = ze.getSize.toInt
         val buff = new Array[Byte](size)

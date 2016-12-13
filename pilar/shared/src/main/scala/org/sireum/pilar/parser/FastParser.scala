@@ -49,7 +49,7 @@ final class FastParser(input: String,
     val rOpt = parse
     if (rOpt.isEmpty) return None
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     if (peek() == EOF) rOpt
     else {
@@ -62,7 +62,8 @@ final class FastParser(input: String,
   def parseModel(): Option[Model] = {
     var ok = true
     var recovered = false
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findKeywords(modelElementKeywords)
       if (i >= 0) {
@@ -71,7 +72,7 @@ final class FastParser(input: String,
       }
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -81,12 +82,12 @@ final class FastParser(input: String,
 
     var elements = Node.emptySeq[ModelElement]
 
-    parseWhiteSpace()
+    parseWhiteSpace
     while (charEq(peek(), 'g') || charEq(peek(), 'd')) {
       val eOpt = parseModelElement(rcv)
       if (eOpt.isDefined) elements = elements :+ eOpt.get
       else ok = false
-      parseWhiteSpace()
+      parseWhiteSpace
     }
     val r = Model(elements, annotations) at(line, column, offset)
     r.nodeLocMap = nodeLocMap
@@ -94,8 +95,8 @@ final class FastParser(input: String,
     Some(r)
   }
 
-  def parseModelElement(recover: () => Unit): Option[ModelElement] = {
-    parseWhiteSpace()
+  def parseModelElement(recover: => Unit): Option[ModelElement] = {
+    parseWhiteSpace
     peek() match {
       case 'g' =>
         if (matchKeyword("global")) {
@@ -103,7 +104,7 @@ final class FastParser(input: String,
             return parseGlobalVarDecl(recover)
           }
         }
-        recover()
+        recover
         None
       case 'd' =>
         parseProcedureDecl(recover)
@@ -114,15 +115,16 @@ final class FastParser(input: String,
     }
   }
 
-  private def parseGlobalVarDecl(recover: () => Unit): Option[GlobalVarDecl] = {
+  private def parseGlobalVarDecl(recover: => Unit): Option[GlobalVarDecl] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
@@ -140,21 +142,22 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(GlobalVarDecl(id, annotations) at(line, column, offset))
   }
 
-  private def parseProcedureDecl(recover: () => Unit): Option[ProcedureDecl] = {
-    def rcvID(): Unit = {
+  private def parseProcedureDecl(recover: => Unit): Option[ProcedureDecl] = {
+    def rcvID: Unit = {
       val i = findChar('(', ')', ';', '{', '#', '}')
       if (i >= 0) {
         consume(i)
       }
     }
-    def rcvParam(): Unit = {
+
+    def rcvParam: Unit = {
       var i = findChar(',', ')', ';', '{', '#', '}')
       if (i >= 0) {
         consume(i)
@@ -167,15 +170,16 @@ final class FastParser(input: String,
     }
 
     var ok = true
-    def rcv(): Unit = {
-      recover()
+
+    def rcv: Unit = {
+      recover
       ok = false
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("def")) {
-      recover()
+      recover
       return None
     }
 
@@ -189,21 +193,21 @@ final class FastParser(input: String,
 
     var params = Node.emptySeq[ParamDecl]
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     if (charNe(peek(), ')')) {
 
       val paramOpt = parseParamDecl(rcvParam)
       if (paramOpt.isDefined) params = params :+ paramOpt.get
 
-      parseWhiteSpace()
+      parseWhiteSpace
 
       while (charEq(peek(), ',')) {
         consume()
         val paramOpt = parseParamDecl(rcvParam)
         if (paramOpt.isDefined) params = params :+ paramOpt.get
 
-        parseWhiteSpace()
+        parseWhiteSpace
       }
     }
 
@@ -218,7 +222,7 @@ final class FastParser(input: String,
 
     var bodyOpt: Option[ProcedureBody] = None
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     if (charEq(peek(), ';')) consume()
     else if (charEq(peek(), '{'))
@@ -229,14 +233,15 @@ final class FastParser(input: String,
       at(line, column, offset))
   }
 
-  def parseParamDecl(recover: () => Unit): Option[ParamDecl] = {
+  def parseParamDecl(recover: => Unit): Option[ParamDecl] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
-      recover()
+      recover
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -251,8 +256,8 @@ final class FastParser(input: String,
     Some(ParamDecl(id, annotations) at(line, column, offset))
   }
 
-  private[parser] def parseProcedureBody(recover: () => Unit): Option[ProcedureBody] = {
-    def rcv(): Unit = {
+  private[parser] def parseProcedureBody(recover: => Unit): Option[ProcedureBody] = {
+    def rcv: Unit = {
       var i = findChar('#', '}')
       if (i >= 0) {
         consume(i)
@@ -261,7 +266,7 @@ final class FastParser(input: String,
         if (i >= 0) {
           consume(i)
         } else {
-          recover()
+          recover
         }
       }
     }
@@ -278,7 +283,7 @@ final class FastParser(input: String,
 
     var locals = Node.emptySeq[LocalVarDecl]
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     if (charEq(peek(), 'v')) {
       matchKeyword("var")
@@ -290,14 +295,14 @@ final class FastParser(input: String,
         locals = locals :+ localOpt.get
       else ok = false
 
-      parseWhiteSpace()
+      parseWhiteSpace
 
       while (ok && charNe(peek(), '#')) {
         val localOpt = parseLocalVarDecl(rcv)
         if (localOpt.nonEmpty)
           locals = locals :+ localOpt.get
         else ok = false
-        parseWhiteSpace()
+        parseWhiteSpace
       }
     }
 
@@ -308,7 +313,7 @@ final class FastParser(input: String,
       if (locationOpt.nonEmpty)
         locations = locations :+ locationOpt.get
 
-      parseWhiteSpace()
+      parseWhiteSpace
     }
 
     matchChar('}') { s =>
@@ -320,19 +325,20 @@ final class FastParser(input: String,
     val r = Some(ProcedureBody(locals, locations).
       at(line, column, offset))
     if (shouldRecover) {
-      recover()
+      recover
     }
     r
   }
 
-  def parseLocalVarDecl(recover: () => Unit): Option[LocalVarDecl] = {
+  def parseLocalVarDecl(recover: => Unit): Option[LocalVarDecl] = {
     var ok = true
-    def rcv(): Unit = {
-      recover()
+
+    def rcv: Unit = {
+      recover
       ok = false
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -348,26 +354,27 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(LocalVarDecl(id, annotations) at(line, column, offset))
   }
 
-  def parseLocation(recover: () => Unit): Option[Location] = {
+  def parseLocation(recover: => Unit): Option[Location] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar('#', '}')
       if (i >= 0) {
         consume(i)
       } else {
-        recover()
+        recover
       }
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -379,7 +386,7 @@ final class FastParser(input: String,
     }
 
     if (!ok) {
-      rcv()
+      rcv
       return None
     }
 
@@ -391,7 +398,7 @@ final class FastParser(input: String,
 
     if (!ok) return None
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     (peekKeyword(0, locationKeywords) match {
       case 0 => parseCallTransformation(id, annotations, recover)
@@ -401,12 +408,12 @@ final class FastParser(input: String,
 
   private def parseCallTransformation(label: Id,
                                       annotations: Node.Seq[Annotation],
-                                      recover: () => Unit)(
+                                      recover: => Unit)(
                                        implicit begin: (Int, Int, Int)): Option[Location] = {
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("call")) {
-      recover()
+      recover
       return None
     }
 
@@ -417,7 +424,7 @@ final class FastParser(input: String,
       if (lhsOpt.isEmpty) return None
 
       if (!matchCharSeq(":=", "assignment operator")) {
-        recover()
+        recover
         return None
       }
     }
@@ -431,7 +438,7 @@ final class FastParser(input: String,
     val args = argsOpt.get
 
     if (!matchKeyword("goto")) {
-      recover()
+      recover
       return None
     }
 
@@ -442,7 +449,7 @@ final class FastParser(input: String,
     matchChar(';') { s =>
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
-      recover()
+      recover
       return None
     }
 
@@ -451,12 +458,13 @@ final class FastParser(input: String,
 
   private def parseBlockTransformation(label: Id,
                                        annotations: Node.Seq[Annotation],
-                                       recover: () => Unit)(
+                                       recover: => Unit)(
                                         implicit begin: (Int, Int, Int)): Option[Location] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
-      recover()
+      recover
     }
 
     var actions = Node.emptySeq[Action]
@@ -468,7 +476,7 @@ final class FastParser(input: String,
       else {
         if (!ok) return None
       }
-      parseWhiteSpace()
+      parseWhiteSpace
     }
 
     var jumpOpt = parseJump(rcv)
@@ -480,8 +488,8 @@ final class FastParser(input: String,
     Some(BlockLocation(label, actions, jumpOpt.get, annotations))
   }
 
-  def parseAction(recover: () => Unit): Option[Action] = {
-    parseWhiteSpace()
+  def parseAction(recover: => Unit): Option[Action] = {
+    parseWhiteSpace
     peekKeyword(0, actionKeywords) match {
       case 0 => parseAssertAction(recover)
       case 1 => parseAssumeAction(recover)
@@ -490,15 +498,16 @@ final class FastParser(input: String,
     }
   }
 
-  private def parseAssignAction(recover: () => Unit): Option[AssignAction] = {
+  private def parseAssignAction(recover: => Unit): Option[AssignAction] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
@@ -509,7 +518,7 @@ final class FastParser(input: String,
     val lhs = lhsOpt.get
 
     if (!matchCharSeq(":=", "assignment operator")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -525,7 +534,7 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
@@ -533,22 +542,23 @@ final class FastParser(input: String,
   }
 
 
-  private def parseAssertAction(recover: () => Unit): Option[AssertAction] = {
+  private def parseAssertAction(recover: => Unit): Option[AssertAction] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("assert")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -564,29 +574,30 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(AssertAction(exp, annotations) at(line, column, offset))
   }
 
-  private def parseAssumeAction(recover: () => Unit): Option[AssumeAction] = {
+  private def parseAssumeAction(recover: => Unit): Option[AssumeAction] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("assume")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -602,29 +613,30 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(AssumeAction(exp, annotations) at(line, column, offset))
   }
 
-  private def parseExtAction(recover: () => Unit): Option[ExtAction] = {
+  private def parseExtAction(recover: => Unit): Option[ExtAction] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("ext")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -644,15 +656,15 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(ExtAction(id, args, annotations) at(line, column, offset))
   }
 
-  def parseJump(recover: () => Unit): Option[Jump] = {
-    parseWhiteSpace()
+  def parseJump(recover: => Unit): Option[Jump] = {
+    parseWhiteSpace
     peek() match {
       case 'g' => parseGotoJump(recover)
       case 'i' => parseIfJump(recover)
@@ -662,27 +674,28 @@ final class FastParser(input: String,
       case _ =>
         reporter.error(line, column, offset,
           s"Expected a goto, if, return, switch, or extension jump")
-        recover()
+        recover
         None
     }
   }
 
-  private def parseGotoJump(recover: () => Unit): Option[GotoJump] = {
+  private def parseGotoJump(recover: => Unit): Option[GotoJump] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("goto")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -698,29 +711,30 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(GotoJump(id, annotations) at(line, column, offset))
   }
 
-  private def parseIfJump(recover: () => Unit): Option[IfJump] = {
+  private def parseIfJump(recover: => Unit): Option[IfJump] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("if")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -729,7 +743,7 @@ final class FastParser(input: String,
     val exp = expOpt.get
 
     if (!matchKeyword("then")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -738,7 +752,7 @@ final class FastParser(input: String,
     val t = tOpt.get
 
     if (!matchKeyword("else")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -754,33 +768,34 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(IfJump(exp, t, f, annotations) at(line, column, offset))
   }
 
-  private def parseReturnJump(recover: () => Unit): Option[ReturnJump] = {
+  private def parseReturnJump(recover: => Unit): Option[ReturnJump] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("return")) {
-      rcv()
+      rcv
       return None
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     val c = peek()
     var eOpt: Option[Exp] = None
@@ -797,29 +812,30 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(ReturnJump(eOpt, annotations) at(line, column, offset))
   }
 
-  private def parseSwitchJump(recover: () => Unit): Option[SwitchJump] = {
+  private def parseSwitchJump(recover: => Unit): Option[SwitchJump] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("switch")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -829,12 +845,12 @@ final class FastParser(input: String,
 
     var cases = Node.emptySeq[SwitchCase]
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     while (charEq(peek(), 'c')) {
       val begin2 = (line, column, offset)
       if (!matchKeyword("case")) {
-        rcv()
+        rcv
         return None
       }
 
@@ -846,7 +862,7 @@ final class FastParser(input: String,
       matchChar(':') { s =>
         reporter.error(line, column, offset,
           s"Expected: ':', but found $s")
-        rcv()
+        rcv
         return None
       }
 
@@ -857,20 +873,20 @@ final class FastParser(input: String,
       cases = cases :+ SwitchCase(Some(lit), id).
         at(line, column, offset)(begin2, createLocInfo, nodeLocMap)
 
-      parseWhiteSpace()
+      parseWhiteSpace
     }
 
     if (charEq(peek(), 'd')) {
       val begin2 = (line, column, offset)
       if (!matchKeyword("default")) {
-        rcv()
+        rcv
         return None
       }
 
       matchChar(':') { s =>
         reporter.error(line, column, offset,
           s"Expected: ':', but found $s")
-        rcv()
+        rcv
         return None
       }
 
@@ -890,29 +906,30 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(SwitchJump(exp, cases, annotations) at(line, column, offset))
   }
 
-  private def parseExtJump(recover: () => Unit): Option[ExtJump] = {
+  private def parseExtJump(recover: => Unit): Option[ExtJump] = {
     var ok = true
-    def rcv(): Unit = {
+
+    def rcv: Unit = {
       ok = false
       val i = findChar(';', '#', '}')
       if (i >= 0) {
         consume(i + 1)
       } else {
-        recover()
+        recover
       }
     }
 
     implicit val begin = (line, column, offset)
 
     if (!matchKeyword("jext")) {
-      rcv()
+      rcv
       return None
     }
 
@@ -932,15 +949,15 @@ final class FastParser(input: String,
       reporter.error(line, column, offset,
         s"Expected: ';', but found $s")
     }) {
-      recover()
+      recover
       return None
     }
 
     Some(ExtJump(id, args, annotations) at(line, column, offset))
   }
 
-  def parseExp(recover: () => Unit): Option[Exp] = {
-    parseWhiteSpace()
+  def parseExp(recover: => Unit): Option[Exp] = {
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -961,7 +978,7 @@ final class FastParser(input: String,
       }
 
       if (ok) {
-        parseWhiteSpace()
+        parseWhiteSpace
 
         val p = peekID()
         kind = p._1
@@ -976,8 +993,8 @@ final class FastParser(input: String,
     } else Some(r)
   }
 
-  private def parsePrimaryExpArgs(recover: () => Unit): Option[Exp] = {
-    parseWhiteSpace()
+  private def parsePrimaryExpArgs(recover: => Unit): Option[Exp] = {
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -989,25 +1006,25 @@ final class FastParser(input: String,
 
 
     var ok = true
-    parseWhiteSpace()
+    parseWhiteSpace
     while (charEq(peek(), '(') && ok) {
       parseArg(recover) match {
         case Some(es) =>
           r = ExtExp(r, es) at(line, column, offset)
         case _ => ok = false
       }
-      parseWhiteSpace()
+      parseWhiteSpace
     }
     Some(r)
   }
 
-  private[pilar] def parsePrimaryExp(recover: () => Unit): Option[Exp] = {
+  private[pilar] def parsePrimaryExp(recover: => Unit): Option[Exp] = {
     if (charEq(peek(), '(')) parseTupleExp(recover)
     else parseIdOrLitExp(recover)
   }
 
-  private def parseIdOrLitExp(recover: () => Unit): Option[Exp] = {
-    parseWhiteSpace()
+  private def parseIdOrLitExp(recover: => Unit): Option[Exp] = {
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -1015,7 +1032,7 @@ final class FastParser(input: String,
     if (idOpt.isEmpty) return None
     val id = idOpt.get
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     peek() match {
       case '\'' | '\"' =>
@@ -1029,8 +1046,8 @@ final class FastParser(input: String,
     }
   }
 
-  private def parseTupleExp(recover: () => Unit): Option[Exp] = {
-    def rcv(): Unit = {
+  private def parseTupleExp(recover: => Unit): Option[Exp] = {
+    def rcv: Unit = {
       var i = findChar(',', ')', ';', '#', '}')
       if (i >= 0) {
         consume(i)
@@ -1040,7 +1057,7 @@ final class FastParser(input: String,
       if (i >= 0) {
         consume(i)
       } else {
-        recover()
+        recover
       }
     }
 
@@ -1055,20 +1072,20 @@ final class FastParser(input: String,
     var ok = true
     var es = Node.seq(e)
 
-    parseWhiteSpace()
+    parseWhiteSpace
     while (charEq(peek(), ',') && ok) {
       consume()
       parseExp(rcv) match {
         case Some(e2) => es = es :+ e2
         case _ => ok = false
       }
-      parseWhiteSpace()
+      parseWhiteSpace
     }
     ok = ok && matchChar(')') {
       s =>
         reporter.error(line, column, offset,
           s"Expected: ')', but found $s")
-        recover()
+        recover
     }
     if (ok) {
       Some(TupleExp(es, parseAnnotations(recover)).
@@ -1076,36 +1093,36 @@ final class FastParser(input: String,
     } else None
   }
 
-  def parseAnnotations(recover: () => Unit): Node.Seq[Annotation] = {
-    def rcv(): Unit = {
+  def parseAnnotations(recover: => Unit): Node.Seq[Annotation] = {
+    def rcv: Unit = {
       val i = findChar('@', ';')
       if (i >= 0) consume(i)
-      else recover()
+      else recover
     }
 
     var r = Node.emptySeq[Annotation]
-    parseWhiteSpace()
+    parseWhiteSpace
     while (charEq(peek(), '@')) {
       parseAnnotation(rcv).foreach(a => r = r :+ a)
-      parseWhiteSpace()
+      parseWhiteSpace
     }
     r
   }
 
-  private[pilar] def parseAnnotation(recover: () => Unit): Option[Annotation] = {
+  private[pilar] def parseAnnotation(recover: => Unit): Option[Annotation] = {
     implicit val begin = (line, column, offset)
 
     if (!matchChar('@') {
       s =>
         reporter.error(begin._1, begin._2, begin._3,
           s"Expected: '@', but found $s")
-        recover()
+        recover
     }) return None
 
     for (
       id <- parseID(recover);
       raw <- {
-        parseWhiteSpace()
+        parseWhiteSpace
         if (charEq(peek(), '\'') || charEq(peek(), '"') || charEq(peek(), '«'))
           parseLIT(id, recover)
         else Some(RawLit(""))
@@ -1115,8 +1132,8 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseArg(recover: () => Unit): Option[Node.Seq[Exp]] = {
-    def rcv(): Unit = {
+  private def parseArg(recover: => Unit): Option[Node.Seq[Exp]] = {
+    def rcv: Unit = {
       var i = findChar(',', ')', ';', '#', '}')
       if (i >= 0) {
         consume(i)
@@ -1129,7 +1146,7 @@ final class FastParser(input: String,
       }
     }
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     implicit val begin = (line, column, offset)
 
@@ -1137,13 +1154,13 @@ final class FastParser(input: String,
       s =>
         reporter.error(begin._1, begin._2, begin._3,
           s"Expected: '(', but found $s")
-        recover()
+        recover
     }
     if (!ok) return None
 
     var es = Node.emptySeq[Exp]
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     if (charEq(peek(), ')')) {
       consume()
@@ -1154,7 +1171,7 @@ final class FastParser(input: String,
     if (eOpt.isEmpty) return None
     es = es :+ eOpt.get
 
-    parseWhiteSpace()
+    parseWhiteSpace
 
     while (charEq(peek(), ',') && ok) {
       consume()
@@ -1162,19 +1179,19 @@ final class FastParser(input: String,
         case Some(e2) => es = es :+ e2
         case _ => ok = false
       }
-      parseWhiteSpace()
+      parseWhiteSpace
     }
     ok = ok && matchChar(')') {
       s =>
         reporter.error(line, column, offset,
           s"Expected: ')', but found $s")
-        recover()
+        recover
     }
     if (ok) Some(es) else None
   }
 
-  private[pilar] def parseID(recover: () => Unit): Option[Id] = {
-    parseWhiteSpace()
+  private[pilar] def parseID(recover: => Unit): Option[Id] = {
+    parseWhiteSpace
     peek() match {
       case '`' =>
         val (ok, i) = peekComplexID()
@@ -1189,8 +1206,8 @@ final class FastParser(input: String,
     }
   }
 
-  private[pilar] def parseLIT(id: Id, recover: () => Unit): Option[Lit] = {
-    parseWhiteSpace()
+  private[pilar] def parseLIT(id: Id, recover: => Unit): Option[Lit] = {
+    parseWhiteSpace
     val litOpt =
       peek() match {
         case '\'' =>
@@ -1204,7 +1221,7 @@ final class FastParser(input: String,
             s"Invalid character for a literal string: '${
               c.asInstanceOf[Char]
             }'")
-          recover()
+          recover
           None
       }
     litOpt.map { raw =>
@@ -1224,7 +1241,7 @@ final class FastParser(input: String,
 
   private def parseID(kind: FastParser.IdKind.Value,
                       i: Natural,
-                      recover: () => Unit) =
+                      recover: => Unit) =
     kind match {
       case FastParser.IdKind.Simple => parseSimpleID(ok = true, i, recover)
       case FastParser.IdKind.Op => parseOpID(ok = true, i, recover)
@@ -1232,7 +1249,7 @@ final class FastParser(input: String,
     }
 
   @inline
-  private def parseComplexID(ok: Boolean, i: Natural, recover: () => Unit) = {
+  private def parseComplexID(ok: Boolean, i: Natural, recover: => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
@@ -1243,13 +1260,13 @@ final class FastParser(input: String,
         s"Expected a complex identifier form but found: '${
           input.substring(begin._3, offset + i)
         }'")
-      recover()
+      recover
       None
     }
   }
 
   @inline
-  private def parseOpID(ok: Boolean, i: Natural, recover: () => Unit) = {
+  private def parseOpID(ok: Boolean, i: Natural, recover: => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
@@ -1260,13 +1277,13 @@ final class FastParser(input: String,
         s"Expected a Op identifier form but found: '${
           input.substring(begin._3, offset + i)
         }'")
-      recover()
+      recover
       None
     }
   }
 
   @inline
-  private def parseSimpleID(ok: Boolean, i: Natural, recover: () => Unit) = {
+  private def parseSimpleID(ok: Boolean, i: Natural, recover: => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
@@ -1285,7 +1302,7 @@ final class FastParser(input: String,
           s"Expected an identifier but found: '${
             input.substring(begin._3, offset + i)
           }'")
-      recover()
+      recover
       None
     }
   }
@@ -1338,7 +1355,7 @@ final class FastParser(input: String,
     peekOnePlusOne(offset, '`', isComplexIDChar, '`')
 
   @inline
-  private def parseSimpleLIT(ok: Boolean, i: Natural, recover: () => Unit) = {
+  private def parseSimpleLIT(ok: Boolean, i: Natural, recover: => Unit) = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
@@ -1349,13 +1366,13 @@ final class FastParser(input: String,
         s"Expected a single-quoted string literal but found: '${
           input.substring(begin._3, offset + i)
         }'")
-      recover()
+      recover
       None
     }
   }
 
   @inline
-  private def parseComplexLIT(ok: Boolean, i: Natural, recover: () => Unit): Option[RawLit] = {
+  private def parseComplexLIT(ok: Boolean, i: Natural, recover: => Unit): Option[RawLit] = {
     implicit val begin = (line, column, offset)
     if (ok) {
       consume(i)
@@ -1368,7 +1385,7 @@ final class FastParser(input: String,
         s"Expected a multi-line string literal but found: '${
           input.substring(begin._3, offset + i)
         }'")
-      recover()
+      recover
       None
     }
   }
@@ -1490,7 +1507,7 @@ final class FastParser(input: String,
   }
 
   private def matchKeyword(s: String): Boolean = {
-    parseWhiteSpace()
+    parseWhiteSpace
     val begin = (line, column, offset)
     if (!matchCharSeq(s, "keyword")) return false
     var isID = false
@@ -1511,7 +1528,7 @@ final class FastParser(input: String,
   }
 
   private def matchCharSeq(s: String, something: String): Boolean = {
-    parseWhiteSpace()
+    parseWhiteSpace
     val begin = (line, column, offset)
     var i = 0
     var ok = true
@@ -1533,7 +1550,7 @@ final class FastParser(input: String,
   }
 
   private def matchChar(char: Char)(f: String => Unit): Boolean = {
-    parseWhiteSpace()
+    parseWhiteSpace
     val c = peek()
     if (charNe(c, char)) {
       if (c == EOF) f(" nothing")
@@ -1548,7 +1565,7 @@ final class FastParser(input: String,
   }
 
   @inline
-  private def parseWhiteSpace(): Unit = {
+  private def parseWhiteSpace: Unit = {
     while (isWhitespace(peek())) consume()
   }
 
@@ -1670,8 +1687,8 @@ final class FastParser(input: String,
 }
 
 object FastParser {
-  final val EOF = naturalSentinel
-  final val keywords = Set(
+  final val EOF: NaturalSentinel = naturalSentinel
+  final val keywords: ISet[String] = Set(
     "assert",
     "assume",
     "call",

@@ -33,25 +33,27 @@ object Reflection {
 
   import scala.reflect.runtime.universe._
 
-  final val classLoader = {
+  final val classLoader: ClassLoader = {
     val cl = getClass.getClassLoader
     if (cl == null) ClassLoader.getSystemClassLoader else cl
   }
 
-  final val mirror = runtimeMirror(classLoader)
+  import scala.reflect.runtime.universe.{Mirror, Type, MethodSymbol}
 
-  final val booleanType = typeOf[Boolean]
-  final val charType = typeOf[Character]
-  final val shortType = typeOf[Short]
-  final val intType = typeOf[Int]
-  final val longType = typeOf[Long]
-  final val floatType = typeOf[Float]
-  final val doubleType = typeOf[Double]
-  final val bigIntType = typeOf[BigInt]
-  final val stringType = typeOf[String]
-  final val productType = typeOf[Product].erasure
-  final val seqType = typeOf[CSeq[_]].erasure
-  final val noneType = typeOf[None.type]
+  final val mirror: Mirror = runtimeMirror(classLoader)
+
+  final val booleanType: Type = typeOf[Boolean]
+  final val charType: Type = typeOf[Character]
+  final val shortType: Type = typeOf[Short]
+  final val intType: Type = typeOf[Int]
+  final val longType: Type = typeOf[Long]
+  final val floatType: Type = typeOf[Float]
+  final val doubleType: Type = typeOf[Double]
+  final val bigIntType: Type = typeOf[BigInt]
+  final val stringType: Type = typeOf[String]
+  final val productType: Type = typeOf[Product].erasure
+  final val seqType: Type = typeOf[CSeq[_]].erasure
+  final val noneType: Type = typeOf[None.type]
 
 
   def typeCheck(t: Tree, m: Mirror = mirror): Tree = {
@@ -61,14 +63,14 @@ object Reflection {
     tb.typecheck(t)
   }
 
-  def eval[T](expr: String, m: Mirror = mirror) = {
+  def eval[T](expr: String, m: Mirror = mirror): T = {
     import scala.tools.reflect.ToolBox
 
     val tb = m.mkToolBox()
     tb.eval(tb.parse(expr)).asInstanceOf[T]
   }
 
-  def evalExpr[T](expr: Expr[T], m: Mirror = mirror) = {
+  def evalExpr[T](expr: Expr[T], m: Mirror = mirror): T = {
     import scala.tools.reflect.ToolBox
 
     val tb = m.mkToolBox()
@@ -114,16 +116,16 @@ object Reflection {
             moduleSymbol.annotations.toVector.map(annotation(_, m))
           else ivectorEmpty))
       catch {
-        case e: ClassNotFoundException => None
+        case _: ClassNotFoundException => None
       }
     } else None
   }
 
   @inline
-  def fullName(t: Type) = t.typeSymbol.fullName
+  def fullName(t: Type): String = t.typeSymbol.fullName
 
   @inline
-  def constructor(t: Type) =
+  def constructor(t: Type): MethodSymbol =
     t.decl(termNames.CONSTRUCTOR).asTerm.alternatives.head.asMethod
 
   @inline
@@ -168,7 +170,7 @@ object Reflection {
         if (m.getName == "$init$")
           init = Some(m)
     } catch {
-      case e: Exception =>
+      case _: Exception =>
     }
 
     if (init.isEmpty) return imapEmpty
@@ -186,18 +188,20 @@ object Reflection {
 
     var result = imapEmpty[String, Object]
 
-    init.get.invoke(null, Proxy.newProxyInstance(cl, Array[Class[_]](clazz),
-      new InvocationHandler {
-        def invoke(proxy: Object,
-                   method: java.lang.reflect.Method,
-                   args: Array[Object]) = {
-          encodedToDecodedSetterNameMap.get(method.getName) match {
-            case Some(decodedName) => result += (decodedName -> args(0))
-            case _ =>
+    init.get.invoke(null,
+      Proxy.newProxyInstance(cl,
+        Array[Class[_]](clazz), new InvocationHandler {
+          def invoke(proxy: Object,
+                     method: java.lang.reflect.Method,
+                     args: Array[Object]): Object = {
+            encodedToDecodedSetterNameMap.get(method.getName) match {
+              case Some(decodedName) => result += (decodedName -> args(0))
+              case _ =>
+            }
+            null
           }
-          null
         }
-      }))
+      ))
 
     result
   }
@@ -209,12 +213,13 @@ object Reflection {
         case _: AssignOrNamedArg => true
         case _ => false
       }
+
     def tree(tr: Tree): Any = {
       val tipe = tr.tpe
       if (tipe != null && tipe =:= noneType) return None
       tr match {
         case Literal(Constant(v)) => v
-        case Apply(fun, args) =>
+        case Apply(_, args) =>
           tr.tpe match {
             case t if t <:< productType =>
               getClassOfType(t).getConstructors()(0).
@@ -228,6 +233,7 @@ object Reflection {
           sys.error("Unhandled reflection tree: " + showRaw(tr))
       }
     }
+
     val aType = a.tree.tpe
     if (isJavaAnnotation(a.tree)) {
       Annotation(aType, a.tree.children.tail.map({
@@ -238,7 +244,7 @@ object Reflection {
       val cc =
         try CaseClass.caseClassType(aType, processAnnotations = false)
         catch {
-          case t: Throwable =>
+          case _: Throwable =>
             sys.error("Only support case classes (or Java annotation) as annotation type")
         }
       Annotation(aType, cc.params.zip(a.tree.children.tail).map { p =>
@@ -250,24 +256,24 @@ object Reflection {
     }
   }
 
-  case class Annotation(tipe: Type,
-                        params: ISeq[AnnotationArg]) {
+  final case class Annotation(tipe: Type,
+                              params: ISeq[AnnotationArg]) {
     override def equals(obj: scala.Any): Boolean = obj match {
       case obj: Annotation => tipe =:= obj.tipe && params == obj.params
       case _ => false
     }
   }
 
-  case class AnnotationArg(name: String,
-                           value: Any)
+  final case class AnnotationArg(name: String,
+                                 value: Any)
 
-  case class CaseClass(tipe: Type,
-                       annotations: ISeq[Reflection.Annotation],
-                       private[Reflection] var _params: ISeq[CaseClass.Param],
-                       private[Reflection] var _properties: IMap[Any, Any]) {
-    def params = _params
+  final case class CaseClass(tipe: Type,
+                             annotations: ISeq[Reflection.Annotation],
+                             private[Reflection] var _params: ISeq[CaseClass.Param],
+                             private[Reflection] var _properties: IMap[Any, Any]) {
+    def params: ISeq[CaseClass.Param] = _params
 
-    def properties = _properties
+    def properties: IMap[Any, Any] = _properties
 
     override def equals(obj: scala.Any): Boolean = obj match {
       case obj: CaseClass =>
@@ -289,8 +295,8 @@ object Reflection {
     }
 
     val caseClassCache: MMap[Class[_], CaseClass] = {
-      import scala.collection.JavaConversions._
-      new java.util.WeakHashMap[Class[_], CaseClass]()
+      import scala.collection.JavaConverters._
+      new java.util.WeakHashMap[Class[_], CaseClass]().asScala
     }
 
     @inline

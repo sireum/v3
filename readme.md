@@ -20,7 +20,7 @@ Supported platforms (64-bit only):
 
 * Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
 
-* [Docker](https://hub.docker.com/r/sireum/v3/) (based on [Ubuntu](http://www.ubuntu.com) 14.04)
+* [Docker](https://hub.docker.com/r/sireum/v3/) (based on [Ubuntu](http://www.ubuntu.com) 16.04)
 
 
 ### All Supported Platforms

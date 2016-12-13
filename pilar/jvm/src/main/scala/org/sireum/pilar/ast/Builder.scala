@@ -297,7 +297,7 @@ final class Builder private() {
 
   @inline
   private implicit def toNodeSeq[T](ns: java.lang.Iterable[T]): Node.Seq[T] =
-    Node.seq[T](scala.collection.JavaConversions.iterableAsScalaIterable(ns))
+    Node.seq[T](scala.collection.JavaConverters.iterableAsScalaIterable(ns))
 
   @inline
   private implicit def toToken(n: TerminalNode): Token = n.getSymbol

@@ -57,7 +57,7 @@ package object util {
   type MLinkedSet[T] = scala.collection.mutable.LinkedHashSet[T]
   type MLinkedMap[K, V] = scala.collection.mutable.LinkedHashMap[K, V]
   type MIdSet[T] = MMap[T, T]
-  type MStack[T] = scala.collection.mutable.Stack[T]
+  type MStack[T] = scala.collection.mutable.ListBuffer[T]
 
   val naturalSentinel: NaturalSentinel = -1
 
@@ -89,7 +89,21 @@ package object util {
   final def msetEmpty[T]: MSet[T] = scala.collection.mutable.Set.empty[T]
 
   @inline
-  final def mstackEmpty[T]: MStack[T] = new scala.collection.mutable.Stack[T]
+  final def mstackEmpty[T]: MStack[T] = new scala.collection.mutable.ListBuffer[T]
+
+  implicit final class MStackPushPop[T](val stack: MStack[T]) extends AnyVal {
+    def push(e: T): Unit = {
+      stack.insert(0, e)
+    }
+
+    def pop(): T = {
+      stack.remove(0)
+    }
+
+    def top: T = {
+      stack.head
+    }
+  }
 
   type IBitSet = scala.collection.immutable.BitSet
   type ISeq[T] = scala.collection.immutable.Seq[T]
@@ -155,10 +169,10 @@ package object util {
   final def istackEmpty[T]: IStack[T] = scala.collection.immutable.List.empty[T]
 
   @inline
-  final def cintersect[T](s1: CSet[T], s2: CSet[T]) = s1.intersect(s2)
+  final def cintersect[T](s1: CSet[T], s2: CSet[T]): CSet[T] = s1.intersect(s2)
 
   @inline
-  final def cunion[T](s1: CSet[T], s2: CSet[T]) = s1.union(s2)
+  final def cunion[T](s1: CSet[T], s2: CSet[T]): CSet[T] = s1.union(s2)
 
   @inline
   final def bigCIntersect[T](it: Iterable[CSet[T]]): CSet[T] =
@@ -177,10 +191,10 @@ package object util {
     }
 
   @inline
-  final def iintersect[T](s1: ISet[T], s2: ISet[T]) = s1.intersect(s2)
+  final def iintersect[T](s1: ISet[T], s2: ISet[T]): ISet[T] = s1.intersect(s2)
 
   @inline
-  final def iunion[T](s1: ISet[T], s2: ISet[T]) = s1.union(s2)
+  final def iunion[T](s1: ISet[T], s2: ISet[T]): ISet[T] = s1.union(s2)
 
   @inline
   final def bigIIntersect[T](it: Iterable[ISet[T]]): ISet[T] =
@@ -201,14 +215,14 @@ package object util {
   trait IsBoolean {
     def asBoolean: Boolean
 
-    override def equals(other: Any) =
+    override def equals(other: Any): Boolean =
       other match {
         case other: Boolean => this.asBoolean == other
         case other: IsBoolean => this.asBoolean == other.asBoolean
         case _ => false
       }
 
-    override def hashCode = asBoolean.hashCode
+    override def hashCode: Int = asBoolean.hashCode
   }
 
   final implicit class IStackPushPop[E](val l: IStack[E]) extends AnyVal {
@@ -216,7 +230,7 @@ package object util {
 
     def push(e: E): IStack[E] = e :: l
 
-    def top = l.head
+    def top: E = l.head
   }
 
   object CompareResult extends Enum("Compare") {
@@ -251,7 +265,7 @@ package object util {
   final def cast[T1, T2, T3](t: (_, _, _)): (T1, T2, T3) =
     (t._1.asInstanceOf[T1], t._2.asInstanceOf[T2], t._3.asInstanceOf[T3])
 
-  final val sireumV3License =
+  final val sireumV3License: String =
     """Copyright (c) 2011-2015, Robby, Kansas State University
       |All rights reserved.
       |

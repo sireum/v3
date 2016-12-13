@@ -39,11 +39,11 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   implicit reporter: AccumulatingTagReporter) {
 
   private implicit val nodeLocMap = midmapEmpty[AnyRef, LocationInfo]
-  val constMap = MIdMap[Node, BigInt]()
-  val zero = BigInt(0)
-  val maxInt = BigInt(Int.MaxValue)
-  val minInt = BigInt(Int.MinValue)
-  val maxN64 = BigInt(2).pow(64) - 1
+  val constMap: MIdMap[Node, BigInt] = midmapEmpty
+  val zero: BigInt = BigInt(0)
+  val maxInt: BigInt = BigInt(Int.MaxValue)
+  val minInt: BigInt = BigInt(Int.MinValue)
+  val maxN64: BigInt = BigInt(2).pow(64) - 1
 
   private def build(ctx: FileContext): UnitNode = {
     val r =
@@ -145,7 +145,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     val exp = build(ctx.formula)
     val r =
       ctx.justification match {
-        case ctx: PremiseContext => Premise(num, exp)
+        case _: PremiseContext => Premise(num, exp)
         case ctx: AndIntroContext =>
           errorIf(num, ctx.ID, ctx.tb, "i", "andi")
           exp match {
@@ -365,7 +365,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
       case ctx: ApplyResultContext =>
         val r = Result() at ctx.tb
         Apply(r, ctx.formula.map(build))
-      case ctx: ResultContext => Result()
+      case _: ResultContext => Result()
       case ctx: ApplyContext =>
         Apply(buildId(ctx.ID), ctx.formula.map(build))
       case ctx: IntContext =>
@@ -705,7 +705,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
                 Ensures(Node.emptySeq))),
             build(ctx.stmts), Option(ctx.exp).map(build)))
         case ctx: LogikaStmtContext =>
-          Some((ctx.proof, ctx.sequent, ctx.invariants, ctx.facts) match {
+          Some(((ctx.proof, ctx.sequent, ctx.invariants, ctx.facts): @unchecked) match {
             case (proof, null, null, null) => ProofStmt(build(proof))
             case (null, sequent, null, null) => SequentStmt(build(sequent))
             case (null, null, invariants, null) => InvStmt(build(invariants))
@@ -869,7 +869,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           }
         }
         e
-      case ctx: RandomIntExpContext => RandomInt()
+      case _: RandomIntExpContext => RandomInt()
       case ctx: ReadIntExpContext =>
         ReadInt(Option(ctx.STRING).map { x =>
           val text = x.getText
@@ -1039,7 +1039,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
 
   @inline
   private implicit def toNodeSeq[T](ns: java.lang.Iterable[T]): Node.Seq[T] =
-    Node.seq[T](scala.collection.JavaConversions.iterableAsScalaIterable(ns))
+    Node.seq[T](scala.collection.JavaConverters.iterableAsScalaIterable(ns))
 
   @inline
   private implicit def toToken(n: TerminalNode): Token =
@@ -1072,9 +1072,9 @@ object Builder {
     val tokenStream = new CommonTokenStream(lexer)
     tokenStream.fill()
     val mode = {
-      import scala.collection.JavaConversions._
+      import scala.collection.JavaConverters._
       var firstTokenOpt: Option[Token] = None
-      for (t <- tokenStream.getTokens() if firstTokenOpt.isEmpty) {
+      for (t <- tokenStream.getTokens().asScala if firstTokenOpt.isEmpty) {
         if (t.getType != Antlr4LogikaLexer.NL &&
           t.getChannel == Lexer.DEFAULT_TOKEN_CHANNEL)
           firstTokenOpt = Some(t)
@@ -1090,11 +1090,11 @@ object Builder {
       }
     }
     {
-      import scala.collection.JavaConversions._
+      import scala.collection.JavaConverters._
       var inLogikaStmt = false
       lexer.reset()
       val tokens = lexer.getAllTokens
-      for (t <- tokens) {
+      for (t <- tokens.asScala) {
         val tText = t.getText
         if (tText == "l\"\"\"")
           inLogikaStmt = true
@@ -1164,8 +1164,8 @@ object Builder {
                              isProgram: Boolean): Unit = {
     import Antlr4LogikaLexer.{ID, NL, NUM}
     val tokens: CSeq[Token] = {
-      import scala.collection.JavaConversions._
-      cts.getTokens
+      import scala.collection.JavaConverters._
+      cts.getTokens.asScala
     }
     if (tokens.isEmpty) {
       return
@@ -1191,7 +1191,7 @@ object Builder {
         case "l\"\"\"" => inLogikaStmt = true
         case "{" if inLogikaStmt => inLogikaStmt = false
         case "\"\"\"" => inLogikaStmt = false
-        case text if token.getType == NL =>
+        case _ if token.getType == NL =>
           if (parens > 0 || inLogikaStmt) {
             token.asInstanceOf[CommonToken].
               setChannel(Token.HIDDEN_CHANNEL)

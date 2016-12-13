@@ -336,9 +336,9 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
   private object AnnotationTranslator extends AnnotationVisitor(asmApi) {
 
-    final case class E(noName: Boolean,
-                       args: MArray[AnyRef],
-                       endFun: MArray[AnyRef] => Unit)
+    case class E(noName: Boolean,
+                 args: MArray[AnyRef],
+                 endFun: MArray[AnyRef] => Unit)
 
     final var stack: IStack[E] = istackEmpty
 
@@ -482,7 +482,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       if (!isStatic) {
         r :+= ((Some(thisLocalVarName), ivectorEmpty))
       }
-      for (i <- methodType.parameterTypes.indices) {
+      for (_ <- methodType.parameterTypes.indices) {
         r :+= ((None, ivectorEmpty))
       }
       (if (isStatic) 0 else 1, r)
@@ -536,7 +536,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       bs = bs.drop(1)
       val rw = org.sireum.pilar.ast.Rewriter.
         build[Command]()({ case Id(`ln`) => Id(name) })
-      for ((l, block) <- bs) {
+      for ((_, block) <- bs) {
         for (i <- block.indices) {
           block(i) = rw(block(i))
         }
@@ -672,7 +672,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
 
     override def visitMultiANewArrayInsn(desc: String, dims: Int): Unit = {
       var args = ilistEmpty[String]
-      for (i <- 0 until dims) {
+      for (_ <- 0 until dims) {
         val (t, tipe) = varStack.pop()
         assert(isIntType(tipe))
         args = t :: args
@@ -738,7 +738,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
       var args = ilistEmpty[String]
       val size = methodType.parameterTypes.size + (if (isStatic) 0 else 1)
 
-      for (i <- 0 until size) {
+      for (_ <- 0 until size) {
         val (t, _) = varStack.pop()
         args = t :: args
       }
@@ -1317,7 +1317,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         bArgs = arg :: bArgs
       }
 
-      for (i <- methodType.parameterTypes.indices) {
+      for (_ <- methodType.parameterTypes.indices) {
         val (t, _) = varStack.pop()
         args = t :: args
       }
