@@ -87,7 +87,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |Available mode(s):
           |
-          |logika    Logika Proof Checker
+          |logika    Logika Program Verifier and Proof Checker
           |util      Utility Tools
         """.stripMargin.trim
       )
@@ -455,8 +455,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     def printUsage(): Unit = {
       outPrintln(
         s"""
-           |Sireum Logika -- A Natural Deduction Proof Checker
-           |... for Propositional, Predicate, and Programming Logic
+           |Sireum Logika -- A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logic
            |
            |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |

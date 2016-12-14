@@ -34,10 +34,9 @@ import scala.beans.BeanProperty
   name = "logika",
   header =
     """
-      |Sireum Logika -- A Natural Deduction Proof Checker
-      |... for Propositional, Predicate, and Programming Logic
+      |Sireum Logika -- A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logic
     """,
-  description = "Logika Proof Checker",
+  description = "Logika Program Verifier and Proof Checker",
   handler = "org.sireum.logika.ProofChecker"
 )
 final case class LogikaOption(@BeanProperty
