@@ -60,8 +60,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
 
   val modeSireumOptionMap: M = Vector(
     ("util", parseUtilOption _),
-    ("java", parseJavaOption _),
-    ("pilar", parsePilarOption _),
     ("logika", parseLogikaOption _)
   )
   val modeUtilOptionMap: M = Vector(
@@ -72,12 +70,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     ("cli", parseCliGenOption _),
     ("json", parseJsonGenOption _),
     ("rewriter", parseRewriterGenOption _)
-  )
-  val modeJavaOptionMap: M = Vector(
-    ("translator", parseJavaBytecodeTranslatorOption _)
-  )
-  val modePilarOptionMap: M = Vector(
-    ("parser", parsePilarParserOption _)
   )
 
   def parseSireumOption(args: CSeq[String],
@@ -95,9 +87,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           |
           |Available mode(s):
           |
-          |java      Java tooling
           |logika    Logika Proof Checker
-          |pilar     Pilar tooling
           |util      Utility Tools
         """.stripMargin.trim
       )
@@ -149,48 +139,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       return
     }
     select(args, index, modeUtilReflectOptionMap, o)
-  }
-
-  def parseJavaOption(args: CSeq[String],
-                       index: Int,
-                       o: Product = org.sireum.option.JavaOption()): Unit = {
-
-    if (index < 0 || index >= args.length) {
-      outPrintln(
-        """
-          |Sireum Java Tooling
-          |
-          |Usage: sireum java <mode>
-          |
-          |Available mode(s):
-          |
-          |translator    Java bytecode translator
-        """.stripMargin.trim
-      )
-      return
-    }
-    select(args, index, modeJavaOptionMap, o)
-  }
-
-  def parsePilarOption(args: CSeq[String],
-                       index: Int,
-                       o: Product = org.sireum.option.PilarOption()): Unit = {
-
-    if (index < 0 || index >= args.length) {
-      outPrintln(
-        """
-          |Pilar: Sireum's Intermediate Representation (IR)
-          |
-          |Usage: sireum pilar <mode>
-          |
-          |Available mode(s):
-          |
-          |parser    Pilar parser
-        """.stripMargin.trim
-      )
-      return
-    }
-    select(args, index, modePilarOptionMap, o)
   }
 
   def parseUtilOptionOption(args: CSeq[String],
@@ -496,164 +444,6 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
 
     if (foundHelp || org.sireum.util.reflect.ReflectGen.run(option, outPrintln, errPrintln)) {
-      printUsage()
-    }
-  }
-
-  def parseJavaBytecodeTranslatorOption(args: CSeq[String],
-                             index: Int,
-                             o: Product = org.sireum.option.JavaBytecodeTranslatorOption()): Unit = {
-    val option = o.asInstanceOf[org.sireum.option.JavaBytecodeTranslatorOption]
-    def printUsage(): Unit = {
-      outPrintln(
-        s"""
-           |Sireum Java Bytecode Translator
-           |
-           |Usage: sireum java translator [option] <{class-name,file.{class,zip,jar},dir-path}-1> ... <{class-name,file.{class,zip,jar},dir-path}-N>
-           |
-           |Options:
-           |-v, --verbose    Verbose mode
-           |-h, --help       Display usage information
-        """.stripMargin.trim
-      )
-    }
-    val len = args.length
-    var foundHelp = false
-
-    var i = index
-    var processingOptions = true
-    while (i < len && processingOptions) {
-      args(i) match {
-        case "-h" | "--help" =>
-          foundHelp = true
-        case "-v" | "--verbose" =>
-          option.verbose = true
-        case arg =>
-          if (arg.startsWith("--") || arg.startsWith("-")) {
-            errPrintln(s"Unrecognized option: '$arg'")
-          }
-          processingOptions = false
-      }
-
-      if (processingOptions) i += 1
-    }
-
-    while (i < len) {
-      option.inputs = option.inputs :+ args(i)
-      i += 1
-    }
-
-    if (foundHelp || org.sireum.java.translator.JavaBytecodeTranslator.run(option, outPrintln, errPrintln)) {
-      printUsage()
-    }
-  }
-
-  def parsePilarParserOption(args: CSeq[String],
-                             index: Int,
-                             o: Product = org.sireum.option.PilarParserOption()): Unit = {
-    val option = o.asInstanceOf[org.sireum.option.PilarParserOption]
-    def printUsage(): Unit = {
-      outPrintln(
-        s"""
-           |Pilar Parser
-           |... and pretty printer and JSON de/serializer
-           |
-           |Usage: sireum pilar parser [option] <file-1> ... <file-N>
-           |
-           |Options:
-           | -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
-           | -e, --max-errors        Maximum number of errors found before parsing stop
-           |                           Default: ${option.maxErrors}
-           | -f, --output-file       Output file
-           |                         (if unspecified, use standard output stream)
-           | -i, --input-mode        Input mode { auto, pilar, json, scala }
-           |                           Default: ${option.inputMode}
-           |-in, --standard-input    Use standard input stream
-           | -o, --output-mode       Output mode { pilar, json, scala }
-           |                           Default: ${option.outputMode}
-           | -h, --help              Display usage information
-        """.stripMargin.trim
-      )
-    }
-    val len = args.length
-    var foundHelp = false
-
-    var i = index
-    var processingOptions = true
-    while (i < len && processingOptions) {
-      args(i) match {
-        case "-h" | "--help" =>
-          foundHelp = true
-        case "-in" | "--standard-input" =>
-          option.standardInput = true
-        case "-f" | "--output-file" =>
-          i += 1
-          args.at(i) match {
-            case Some(arg) =>
-              option.outputFile = org.sireum.util.some(arg)
-            case _ =>
-              errPrintln("Expecting a value for output file")
-              return
-          }
-        case "-i" | "--input-mode" =>
-          i += 1
-          args.at(i) match {
-            case Some("auto") => option.inputMode = "auto"
-            case Some("pilar") => option.inputMode = "pilar"
-            case Some("json") => option.inputMode = "json"
-            case Some("scala") => option.inputMode = "scala"
-            case Some(arg) =>
-              errPrintln(s"Only either { auto, pilar, json, scala } is allowed for input mode instead of '$arg'")
-              return
-            case None =>
-              errPrintln("Expected either { auto, pilar, json, scala } for input mode")
-              return
-          }
-        case "-o" | "--output-mode" =>
-          i += 1
-          args.at(i) match {
-            case Some("pilar") => option.outputMode = "pilar"
-            case Some("json") => option.outputMode = "json"
-            case Some("scala") => option.outputMode = "scala"
-            case Some(arg) =>
-              errPrintln(s"Only either { pilar, json, scala } is allowed for output mode instead of '$arg'")
-              return
-            case None =>
-              errPrintln("Expected either { pilar, json, scala } for output mode")
-              return
-          }
-        case "-a" | "--antlr4" =>
-          option.antlr4 = true
-        case "-e" | "--max-errors" =>
-          i += 1
-          args.at(i) match {
-            case Some(arg) =>
-              try {
-                option.maxErrors = arg.toInt
-              } catch {
-                case t: Throwable =>
-                  errPrintln(s"Invalid integer for max errors: '$arg'")
-                  return
-              }
-            case _ =>
-              errPrintln("Expected an integer value for max errors")
-          }
-        case arg =>
-          if (arg.startsWith("--") || arg.startsWith("-")) {
-            errPrintln(s"Unrecognized option: '$arg'")
-          }
-          processingOptions = false
-      }
-
-      if (processingOptions) i += 1
-    }
-
-    while (i < len) {
-      option.inputs = option.inputs :+ args(i)
-      i += 1
-    }
-
-    if (foundHelp || org.sireum.pilar.parser.Parser.run(option, outPrintln, errPrintln)) {
       printUsage()
     }
   }
