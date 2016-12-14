@@ -241,15 +241,15 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
     Visitor.build({
       case _: ast.Block => false
       case _: ast.LoopInv => false
-      case e: ast.Add => rangeCheckTipe(e, e.tipe); false
-      case e: ast.Sub => rangeCheckTipe(e, e.tipe); false
-      case e: ast.Mul => rangeCheckTipe(e, e.tipe); false
-      case e: ast.Div => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); false
-      case e: ast.Rem => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); false
-      case e: ast.Minus => rangeCheckTipe(e, e.tipe); false
-      case e: ast.Shl => nonNegativeCheck(e.right, e.tipe); false
-      case e: ast.Shr => nonNegativeCheck(e.right, e.tipe); false
-      case e: ast.UShr => nonNegativeCheck(e.right, e.tipe); false
+      case e: ast.Add => rangeCheckTipe(e, e.tipe); true
+      case e: ast.Sub => rangeCheckTipe(e, e.tipe); true
+      case e: ast.Mul => rangeCheckTipe(e, e.tipe); true
+      case e: ast.Div => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); true
+      case e: ast.Rem => rangeCheckTipe(e, e.tipe); divisor(e.right, e.tipe.asInstanceOf[tipe.IntegralTipe]); true
+      case e: ast.Minus => rangeCheckTipe(e, e.tipe); true
+      case e: ast.Shl => nonNegativeCheck(e.right, e.tipe); true
+      case e: ast.Shr => nonNegativeCheck(e.right, e.tipe); true
+      case e: ast.UShr => nonNegativeCheck(e.right, e.tipe); true
       case a@ast.Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
       case ast.SeqAssign(id, e, _) => index(id, id.tipe, e)
     })(stmt)
