@@ -268,7 +268,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           val subProof = buildNum(ctx.subProof)
           errorIf(num, ctx.ID, ctx.tb, "e", "existse", "somee", "Ee")
           ExistsElim(num, exp, step, subProof)
-        case ctx: InvariantContext =>
+        case _: InvariantContext =>
           Invariant(num, exp)
         case ctx: FctContext =>
           FactJust(num, exp, buildId(ctx.ID))
@@ -1091,23 +1091,24 @@ object Builder {
     }
     {
       import scala.collection.JavaConverters._
-      var inLogikaStmt = false
+      var inProofContext = false
       lexer.reset()
       val tokens = lexer.getAllTokens
       for (t <- tokens.asScala) {
-        val tText = t.getText
-        if (tText == "l\"\"\"")
-          inLogikaStmt = true
-        else if (tText == "\"\"\"")
-          inLogikaStmt = false
-        else if (inLogikaStmt) {
-          if (t.getType == Antlr4LogikaLexer.COMMENT)
-            error("Parser", fileUriOpt, t, "Block comment cannot appear inside l\"\"\" ... \"\"\"")
-          else if (tText.exists(_ == '$'))
-            error("Parser", fileUriOpt, t, "$ cannot appear inside l\"\"\" ... \"\"\"")
+        t.getText match {
+          case "l\"\"\"" => inProofContext = true
+          case "\"\"\"" => inProofContext = false
+          case _ if t.getType == Antlr4LogikaLexer.TAB && mode == Mode.TruthTable =>
+            error("Parser", fileUriOpt, t, "Tab character cannot be used in truth table (replace with space).")
+          case _ if inProofContext && t.getType == Antlr4LogikaLexer.COMMENT =>
+            error("Parser", fileUriOpt, t, "Block comment cannot appear inside l\"\"\" ... \"\"\".")
+          case tText if inProofContext && tText.exists(_ == '$') =>
+            error("Parser", fileUriOpt, t, "$ cannot appear inside l\"\"\" ... \"\"\".")
+          case _ =>
         }
       }
     }
+
     val parser = new Antlr4LogikaParser(tokenStream)
     parser.removeErrorListeners()
     parser.addErrorListener(new BaseErrorListener {

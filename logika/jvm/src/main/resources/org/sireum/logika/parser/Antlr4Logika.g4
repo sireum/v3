@@ -464,7 +464,9 @@ LINE_COMMENT: '//' ~[\r\n]* -> channel(1) ;
 
 COMMENT: '/*' .*? '*/' -> channel(1) ;
 
-WS: [ \t\u000C]+ -> channel(2) ;
+TAB: '\t'+ -> channel(2) ;
+
+WS: [ \u000C]+ -> channel(2) ;
 
 
 // From https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4

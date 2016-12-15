@@ -47,7 +47,7 @@ public class Antlr4LogikaParser extends Parser {
 		T__161=162, T__162=163, T__163=164, T__164=165, T__165=166, T__166=167, 
 		T__167=168, T__168=169, T__169=170, T__170=171, HLINE=172, NUM=173, ID=174, 
 		REAL=175, INT=176, RESERVED=177, NL=178, LINE_COMMENT=179, COMMENT=180, 
-		WS=181, STRING=182, FLOAT=183, ERROR_CHAR=184;
+		TAB=181, WS=182, STRING=183, FLOAT=184, ERROR_CHAR=185;
 	public static final int
 		RULE_file = 0, RULE_truthTable = 1, RULE_row = 2, RULE_bool = 3, RULE_status = 4, 
 		RULE_assignments = 5, RULE_sequent = 6, RULE_proof = 7, RULE_proofStep = 8, 
@@ -104,7 +104,7 @@ public class Antlr4LogikaParser extends Parser {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, "HLINE", "NUM", "ID", "REAL", "INT", "RESERVED", 
-		"NL", "LINE_COMMENT", "COMMENT", "WS", "STRING", "FLOAT", "ERROR_CHAR"
+		"NL", "LINE_COMMENT", "COMMENT", "TAB", "WS", "STRING", "FLOAT", "ERROR_CHAR"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -6117,7 +6117,7 @@ public class Antlr4LogikaParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\u00ba\u04fa\4\2\t"+
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\u00bb\u04fa\4\2\t"+
 		"\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -6333,7 +6333,7 @@ public class Antlr4LogikaParser extends Parser {
 		"\u0168\3\2\2\2\u016a\u016b\3\2\2\2\u016b\u016d\3\2\2\2\u016c\u016a\3\2"+
 		"\2\2\u016d\u016e\7\30\2\2\u016e\u0185\3\2\2\2\u016f\u0185\7\u00b0\2\2"+
 		"\u0170\u0185\7\u00af\2\2\u0171\u0185\7\u00b2\2\2\u0172\u0185\7\u00b1\2"+
-		"\2\u0173\u0185\7\u00b9\2\2\u0174\u0175\t\7\2\2\u0175\u0176\7\22\2\2\u0176"+
+		"\2\u0173\u0185\7\u00ba\2\2\u0174\u0175\t\7\2\2\u0175\u0176\7\22\2\2\u0176"+
 		"\u0185\7\u00b0\2\2\u0177\u0178\t\b\2\2\u0178\u0181\7\27\2\2\u0179\u017e"+
 		"\5\66\34\2\u017a\u017b\7\r\2\2\u017b\u017d\5\66\34\2\u017c\u017a\3\2\2"+
 		"\2\u017d\u0180\3\2\2\2\u017e\u017c\3\2\2\2\u017e\u017f\3\2\2\2\u017f\u0182"+
@@ -6543,7 +6543,7 @@ public class Antlr4LogikaParser extends Parser {
 		"\5\66\34\2\u03b6\u0303\3\2\2\2\u03b6\u030d\3\2\2\2\u03b6\u0313\3\2\2\2"+
 		"\u03b6\u0318\3\2\2\2\u03b6\u031d\3\2\2\2\u03b6\u0337\3\2\2\2\u03b6\u0351"+
 		"\3\2\2\2\u03b6\u035e\3\2\2\2\u03b6\u036a\3\2\2\2\u03b6\u03ab\3\2\2\2\u03b6"+
-		"\u03b4\3\2\2\2\u03b6\u03b5\3\2\2\2\u03b7\61\3\2\2\2\u03b8\u03bb\7\u00b8"+
+		"\u03b4\3\2\2\2\u03b6\u03b5\3\2\2\2\u03b7\61\3\2\2\2\u03b8\u03bb\7\u00b9"+
 		"\2\2\u03b9\u03bb\5\66\34\2\u03ba\u03b8\3\2\2\2\u03ba\u03b9\3\2\2\2\u03bb"+
 		"\63\3\2\2\2\u03bc\u03e2\t\6\2\2\u03bd\u03e2\7\u00af\2\2\u03be\u03e2\7"+
 		"\u00b0\2\2\u03bf\u03c0\t\b\2\2\u03c0\u03c1\7\22\2\2\u03c1\u03c2\7\u00b0"+
@@ -6552,7 +6552,7 @@ public class Antlr4LogikaParser extends Parser {
 		"\2\2\2\u03c8\u03c9\3\2\2\2\u03c9\u03cc\3\2\2\2\u03ca\u03c8\3\2\2\2\u03cb"+
 		"\u03c3\3\2\2\2\u03cb\u03cc\3\2\2\2\u03cc\u03cd\3\2\2\2\u03cd\u03e2\7\30"+
 		"\2\2\u03ce\u03cf\t\23\2\2\u03cf\u03d0\7\22\2\2\u03d0\u03e2\7\u00b0\2\2"+
-		"\u03d1\u03e2\7\u00b9\2\2\u03d2\u03e2\7\u00b2\2\2\u03d3\u03e2\7\u00b1\2"+
+		"\u03d1\u03e2\7\u00ba\2\2\u03d2\u03e2\7\u00b2\2\2\u03d3\u03e2\7\u00b1\2"+
 		"\2\u03d4\u03d5\t\b\2\2\u03d5\u03de\7\27\2\2\u03d6\u03db\5\66\34\2\u03d7"+
 		"\u03d8\7\r\2\2\u03d8\u03da\5\66\34\2\u03d9\u03d7\3\2\2\2\u03da\u03dd\3"+
 		"\2\2\2\u03db\u03d9\3\2\2\2\u03db\u03dc\3\2\2\2\u03dc\u03df\3\2\2\2\u03dd"+
@@ -6569,7 +6569,7 @@ public class Antlr4LogikaParser extends Parser {
 		"\2\2\u03f5\u03f8\3\2\2\2\u03f6\u03f4\3\2\2\2\u03f6\u03f7\3\2\2\2\u03f7"+
 		"\u0409\3\2\2\2\u03f8\u03f6\3\2\2\2\u03f9\u03fa\7\u00a7\2\2\u03fa\u03fb"+
 		"\7\27\2\2\u03fb\u0409\7\30\2\2\u03fc\u03fd\7\u00a8\2\2\u03fd\u03ff\7\27"+
-		"\2\2\u03fe\u0400\7\u00b8\2\2\u03ff\u03fe\3\2\2\2\u03ff\u0400\3\2\2\2\u0400"+
+		"\2\2\u03fe\u0400\7\u00b9\2\2\u03ff\u03fe\3\2\2\2\u03ff\u0400\3\2\2\2\u0400"+
 		"\u0401\3\2\2\2\u0401\u0409\7\30\2\2\u0402\u0403\7\27\2\2\u0403\u0404\5"+
 		"\66\34\2\u0404\u0405\7\30\2\2\u0405\u0409\3\2\2\2\u0406\u0407\t%\2\2\u0407"+
 		"\u0409\5\66\34\f\u0408\u03e3\3\2\2\2\u0408\u03f1\3\2\2\2\u0408\u03f9\3"+
