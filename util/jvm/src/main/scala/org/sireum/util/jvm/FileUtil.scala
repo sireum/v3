@@ -148,7 +148,11 @@ object FileUtil {
   }
 
   def writeFile(fileUri: FileResourceUri, content: String): Unit = {
-    val fw = new FileWriter(toFile(fileUri))
+    writeFile(toFile(fileUri), content)
+  }
+
+  def writeFile(file: File, content: String): Unit = {
+    val fw = new FileWriter(file)
     try fw.write(content) finally fw.close()
   }
 }
