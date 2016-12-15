@@ -64,6 +64,7 @@ object SymbolConverter {
       if (!isJust) sb.append(' ')
     }
 
+    var inProof = false
     while (i < len) {
       val t = tks(i)
       t.getText.charAt(0) match {
@@ -79,7 +80,13 @@ object SymbolConverter {
         case '≤' => sb.append("<=")
         case '≥' => sb.append(">=")
         case '≠' => sb.append("!=")
-        case _ => sb.append(t.getText)
+        case _ =>
+          t.getText match {
+            case s@"l\"\"\"" => inProof = true; sb.append(s)
+            case s@"\"\"\"" => inProof = false; sb.append(s)
+            case "==" if inProof => sb.append('=')
+            case s => sb.append(s)
+          }
       }
       i += 1
     }
