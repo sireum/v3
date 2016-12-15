@@ -1204,7 +1204,7 @@ sealed trait EqualityExp extends BinaryExp {
 }
 
 final case class Eq(left: Exp, right: Exp) extends EqualityExp {
-  override def op(inProof: Boolean): String = "=="
+  override def op(inProof: Boolean): String = if (inProof) "=" else "=="
 }
 
 final case class Ne(left: Exp, right: Exp) extends EqualityExp {
