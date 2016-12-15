@@ -88,7 +88,10 @@ object SymbolConverter {
 
   def toUnicode(input: String): String = {
     val sb = new StringBuilder
+    var inProof = false
     for (t <- tokens(input)) t.getText match {
+      case s@"l\"\"\"" => inProof = true; sb.append(s)
+      case s@"\"\"\"" => inProof = false; sb.append(s)
       case "|-" => sb.append('⊢')
       case "^" | "and" => sb.append('∧')
       case "V" | "or" => sb.append('∨')
@@ -112,7 +115,21 @@ object SymbolConverter {
       case "Ei" | "somei" | "existsi" => sb.append("∃i")
       case "Ee" | "somee" | "existse" => sb.append("∃e")
       case "_|_" => sb.append('⊥')
-      case s => sb.append(s)
+      case s =>
+        if (inProof) {
+          s match {
+            case "==" => sb.append('=')
+            case "<=" => sb.append('≤')
+            case ">=" => sb.append('≥')
+            case "!=" => sb.append('≠')
+            case "!" => sb.append('¬')
+            case "&" => sb.append('∧')
+            case "|" => sb.append('∨')
+            case "T" | "true" => sb.append('⊤')
+            case "F" | "false" => sb.append('⊥')
+            case _ => sb.append(s)
+          }
+        } else sb.append(s)
     }
     sb.toString
   }
