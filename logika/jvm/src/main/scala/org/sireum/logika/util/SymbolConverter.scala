@@ -62,7 +62,7 @@ object SymbolConverter {
     def appendJs(c: Char): Unit = {
       if (!isPrevWhitespace) sb.append(' ')
       sb.append(c)
-      if (!isJust) sb.append(' ')
+      if (!isJust && !isNextWhitespace) sb.append(' ')
     }
 
     var inProof = false
