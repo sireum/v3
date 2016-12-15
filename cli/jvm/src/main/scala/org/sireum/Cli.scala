@@ -473,6 +473,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |                    Default: ${option.timeout}
            |-x, --symexe      Enable symbolic execution
            |    --sat         Enable sat checking of facts and contracts
+           |
+           |Symbol Conversion Options:
+           |    --ascii      Convert to ASCII
+           |    --unicode    Convert to Unicode
         """.stripMargin.trim
       )
     }
@@ -532,6 +536,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
             case _ =>
               errPrintln("Expected an integer value for bitwidth")
           }
+        case "--ascii" =>
+          option.ascii = true
+        case "--unicode" =>
+          option.unicode = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")
@@ -547,7 +555,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
       i += 1
     }
 
-    if (foundHelp || org.sireum.logika.ProofChecker.run(option, outPrintln, errPrintln)) {
+    if (foundHelp || org.sireum.logika.Main.run(option, outPrintln, errPrintln)) {
       printUsage()
     }
   }

@@ -37,7 +37,7 @@ import scala.beans.BeanProperty
       |Sireum Logika -- A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logic
     """,
   description = "Logika Program Verifier and Proof Checker",
-  handler = "org.sireum.logika.ProofChecker"
+  handler = "org.sireum.logika.Main"
 )
 final case class LogikaOption(@BeanProperty
                               @GroupOpt(shortKey = Some("l"), description = "Check last program only", groupName = "Programming Logic")
@@ -60,8 +60,12 @@ final case class LogikaOption(@BeanProperty
                               var symexe: Boolean = false,
                               @GroupOpt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution", groupName = "Programming Logic")
                               var bitwidth: Int = 0,
+                              @GroupOpt(shortKey = None, description = "Convert to ASCII", groupName = "Symbol Conversion")
+                              var ascii: Boolean = false,
+                              @GroupOpt(shortKey = None, description = "Convert to Unicode", groupName = "Symbol Conversion")
+                              var unicode: Boolean = false,
                               @BeanProperty
                               @Arg(name = "filename")
                               var input: Array[String] = Array()) {
-  def this() = this(false, false, false, none(), 2000, false, false, 0, Array())
+  def this() = this(false, false, false, none(), 2000, false, false, 0, false, false, Array())
 }

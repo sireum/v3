@@ -30,19 +30,20 @@ import java.io.StringWriter
 import org.sireum.logika.message.ProofFile
 import org.sireum.option.LogikaOption
 import org.sireum.logika.ast._
+import org.sireum.logika.util.SymbolConverter
 import org.sireum.util._
 import org.sireum.util.jvm._
 
-object ProofChecker {
+object Main {
   def run(option: LogikaOption,
           outPrintln: String => Unit,
           errPrintln: String => Unit): Boolean =
-    new ProofChecker(option, outPrintln, errPrintln).run()
+    new Main(option, outPrintln, errPrintln).run()
 }
 
-class ProofChecker(option: LogikaOption,
-                   outPrintln: String => Unit,
-                   errPrintln: String => Unit) {
+class Main(option: LogikaOption,
+           outPrintln: String => Unit,
+           errPrintln: String => Unit) {
   def run(): Boolean = {
     if (option.server) return runServer()
 
@@ -51,6 +52,37 @@ class ProofChecker(option: LogikaOption,
 
     if (option.input.length > 1 && option.formula.nonEmpty) {
       errPrintln("Formula cannot be provided when checking multiple files.")
+      return false
+    }
+
+    if (option.ascii && option.unicode) {
+      errPrintln("Cannot convert to ASCII and Unicode at the same time.")
+      return false
+    }
+
+    if (option.ascii || option.unicode) {
+      var hasError = false
+      val contents = option.input.toVector.flatMap { filename =>
+        import java.io._
+        val f = new File(filename)
+        if (!f.exists) {
+          errPrintln(s"File ${f.getAbsolutePath} does not exist.")
+          hasError = true
+          None
+        } else {
+          val fr = new FileReader(f)
+          val fText = FileUtil.readFile(fr)
+          fr.close()
+          Some(fText)
+        }
+      }
+      if (hasError) return false
+      outPrintln((
+        if (option.ascii) {
+          contents.map(SymbolConverter.toASCII)
+        } else {
+          contents.map(SymbolConverter.toUnicode)
+        }).mkString(scala.util.Properties.lineSeparator + "// ---"))
       return false
     }
 
@@ -117,10 +149,10 @@ class ProofChecker(option: LogikaOption,
                     while (text.charAt(end) != '{') end += 1
                     outPrintln(
                       s"""The specified sequent is different than the one in the file.
-                          |Specified:
-                          |${option.formula.get}
-                          |File:
-                          |${proofs.head.content.substring(0, end).trim}""".stripMargin)
+                         |Specified:
+                         |${option.formula.get}
+                         |File:
+                         |${proofs.head.content.substring(0, end).trim}""".stripMargin)
                   }
                 case _ =>
               }
@@ -139,10 +171,10 @@ class ProofChecker(option: LogikaOption,
                     while (text.charAt(end) != '\n') end += 1
                     outPrintln(
                       s"""The specified formula is different than the one in the file.
-                          |Specified:
-                          |${option.formula.get}
-                          |File:
-                          |${text.substring(start + 1, end).trim}""".stripMargin)
+                         |Specified:
+                         |${option.formula.get}
+                         |File:
+                         |${text.substring(start + 1, end).trim}""".stripMargin)
                   }
                 case _ =>
               }
@@ -181,7 +213,7 @@ class ProofChecker(option: LogikaOption,
               } catch {
                 case t: Throwable => internalError(m.requestId, t)
               }
-            case m: ProofFile => assert(false)
+            case _: ProofFile => assert(false)
           }
       } catch {
         case t: Throwable => internalError("", t)

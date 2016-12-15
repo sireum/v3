@@ -814,7 +814,7 @@ public class Antlr4LogikaLexer extends Lexer {
 		"\u049e\u04a5\u04a8\u04da\u04df\u04e4\u04eb\u04f4\u04fb\u04fe\u05ab\u05ae"+
 		"\u05b8\u05c3\u05ce\u05d4\u05dd\u05e1\u05e6\u05f3\u05f6\u05fa\u0601\u0605"+
 		"\u060d\u0610\u0615\u0619\u061d\u0623\u0626\u062b\u062e\u0633\u0638\u0640"+
-		"\u064b\u064f\u0654\u0658\4\2\3\2\b\2\2";
+		"\u064b\u064f\u0654\u0658\4\2\3\2\2\4\2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
