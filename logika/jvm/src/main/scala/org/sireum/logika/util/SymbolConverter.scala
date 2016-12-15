@@ -47,9 +47,10 @@ object SymbolConverter {
     def isJust: Boolean = {
       var j = i + 1
       while (j < len && tks(j).getChannel == 2) j += 1
+      val isId = j < len && tks(j).getType == Antlr4LogikaLexer.ID
       j += 1
       while (j < len && tks(j).getChannel == 2) j += 1
-      j < len && tks(j).getType == Antlr4LogikaLexer.NUM
+      j < len && isId && tks(j).getType == Antlr4LogikaLexer.NUM
     }
 
     def appendWs(c: Char): Unit = {
@@ -90,7 +91,7 @@ object SymbolConverter {
       }
       i += 1
     }
-    sb.toString
+    adJust(sb.toString)
   }
 
   def toUnicode(input: String): String = {
@@ -132,13 +133,85 @@ object SymbolConverter {
             case "!" => sb.append('¬')
             case "&" => sb.append('∧')
             case "|" => sb.append('∨')
-            case "T" | "true" => sb.append('⊤')
-            case "F" | "false" => sb.append('⊥')
             case _ => sb.append(s)
           }
         } else sb.append(s)
     }
+    adJust(sb.toString)
+  }
+
+  private def space(n: Natural): String = {
+    val sb = new StringBuilder
+    for (_ <- 0 until n) {
+      sb.append(' ')
+    }
     sb.toString
+  }
+
+  private def insert(s: String, i: Int, sub: String) =
+    new StringBuilder(s).insert(i, sub).toString
+
+  private def adJust(input: String): String = {
+    val tks = tokens(input.toString)
+    var i = 0
+    val len = tks.size
+    var maxJustColumn = 0
+    while (i < len) {
+      val column = tks(i).getCharPositionInLine
+      if (isJust(i, tks) && maxJustColumn < column) {
+        maxJustColumn = column
+      }
+      i += 1
+    }
+    val lines = input.split('\n')
+    i = 0
+    while (i < len) {
+      if (isJust(i, tks)) {
+        val line = tks(i).getLine
+        val column = tks(i).getCharPositionInLine
+        if (maxJustColumn != column) {
+          val l = lines(line - 1)
+          lines(line - 1) = insert(l, column, space(maxJustColumn - column))
+        }
+      }
+      i += 1
+    }
+    lines.mkString("\n")
+  }
+
+  private def isJust(i: Natural, tks: CSeq[Token]): Boolean = {
+    val len = tks.size
+    tks(i).getText match {
+      case "premise" | "assume" | "andi" | "ande1" | "ande2" |
+           "ori1" | "Vi1" | "ori2" | "Vi2" | "ore" | "Ve" |
+           "impliese" | "impliese" | "noti" | "negi" | "note" | "nege" |
+           "bottome" | "falsee" | "pbc" | "subst1" | "subst2" | "algebra" |
+           "foralli" | "alli" | "Ai" | "foralle" | "alle" | "Ae" |
+           "existsi" | "somei" | "Ei" | "existse" | "somee" | "Ee" |
+           "auto" =>
+        true
+      case "invariant" =>
+        var j = i + 1
+        while (j < len && tks(j).getChannel == 2) j += 1
+        val isNum = j < len && tks(j).getType == Antlr4LogikaLexer.NUM
+        while (j < len && tks(j).getChannel == 2) j += 1
+        j < len && isNum && tks(j).getType == Antlr4LogikaLexer.NL
+      case "fact" =>
+        var j = i + 1
+        while (j < len && tks(j).getChannel == 2) j += 1
+        val isId = j < len && tks(j).getType == Antlr4LogikaLexer.ID
+        while (j < len && tks(j).getChannel == 2) j += 1
+        j < len && isId && tks(j).getType == Antlr4LogikaLexer.NL
+      case "&" | "∧" | "^" | "|" | "∨" | "->" | "→" | "!" | "~" | "¬" |
+           "_|_" | "⊥" | "∀" | "∃" =>
+        var j = i + 1
+        while (j < len && tks(j).getChannel == 2) j += 1
+        val isId = j < len && tks(j).getType == Antlr4LogikaLexer.ID
+        j += 1
+        while (j < len && tks(j).getChannel == 2) j += 1
+        j < len && isId && tks(j).getType == Antlr4LogikaLexer.NUM
+      case _ => false
+    }
   }
 
   private def tokens(input: String): CSeq[Token] = {
