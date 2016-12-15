@@ -73,16 +73,22 @@ class Main(option: LogikaOption,
           val fr = new FileReader(f)
           val fText = FileUtil.readFile(fr)
           fr.close()
-          Some(fText)
+          Some(f, fText)
         }
       }
       if (hasError) return false
-      outPrintln((
+      val (prefix, newFileContents) =
         if (option.ascii) {
-          contents.map(SymbolConverter.toASCII)
+          ("ascii", contents.map(p => (p._1, SymbolConverter.toASCII(p._2))))
         } else {
-          contents.map(SymbolConverter.toUnicode)
-        }).mkString(scala.util.Properties.lineSeparator + "// ---"))
+          ("unicode", contents.map(p => (p._1, SymbolConverter.toUnicode(p._2))))
+        }
+      for ((f, newContent) <- newFileContents) {
+        import java.io._
+        val f2 = new File(f.getParentFile, s"$prefix-${f.getName}")
+        FileUtil.writeFile(f2, newContent)
+        outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+      }
       return false
     }
 
