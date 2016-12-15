@@ -55,11 +55,6 @@ class Main(option: LogikaOption,
       return false
     }
 
-    if (option.ascii && option.unicode) {
-      errPrintln("Cannot convert to ASCII and Unicode at the same time.")
-      return false
-    }
-
     if (option.ascii || option.unicode) {
       var hasError = false
       val contents = option.input.toVector.flatMap { filename =>
@@ -77,17 +72,21 @@ class Main(option: LogikaOption,
         }
       }
       if (hasError) return false
-      val (prefix, newFileContents) =
-        if (option.ascii) {
-          ("ascii", contents.map(p => (p._1, SymbolConverter.toASCII(p._2))))
-        } else {
-          ("unicode", contents.map(p => (p._1, SymbolConverter.toUnicode(p._2))))
-        }
-      for ((f, newContent) <- newFileContents) {
+      for ((f, asciiOpt, uniOpt) <- contents.map(p =>
+        (p._1,
+          if (option.ascii) Some(SymbolConverter.toASCII(p._2)) else None,
+          if (option.unicode) Some(SymbolConverter.toUnicode(p._2)) else None))) {
         import java.io._
-        val f2 = new File(f.getParentFile, s"$prefix-${f.getName}")
-        FileUtil.writeFile(f2, newContent)
-        outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+        asciiOpt.foreach { content =>
+          val f2 = new File(f.getParentFile, s"ascii-${f.getName}")
+          FileUtil.writeFile(f2, content)
+          outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+        }
+        uniOpt.foreach { content =>
+          val f2 = new File(f.getParentFile, s"unicode-${f.getName}")
+          FileUtil.writeFile(f2, content)
+          outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+        }
       }
       return false
     }
