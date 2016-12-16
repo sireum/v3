@@ -869,7 +869,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           }
         }
         e
-      case _: RandomIntExpContext => RandomInt()
+      case ctx: RandomIntExpContext => RandomInt() at ctx
       case ctx: ReadIntExpContext =>
         ReadInt(Option(ctx.STRING).map { x =>
           val text = x.getText
