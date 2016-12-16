@@ -109,9 +109,6 @@ if [ ! -d "scala" ] || [ "${SCALA_UPDATE}" = "true" ]; then
     exit 1
   fi
 fi
-if [ "${DISTROS}" = "true" ]; then
-  exit
-fi
 mkdir -p ${REPO}/apps
 cd ${REPO}/apps
 Z3_DROP="${Z3_DROP_URL##*/}"
@@ -133,6 +130,9 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
     >&2 echo "Could not install Z3 ${Z3_VERSION}."
     exit 1
   fi
+fi
+if [ "${DISTROS}" = "true" ]; then
+  exit
 fi
 cd ${REPO}/platform
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
