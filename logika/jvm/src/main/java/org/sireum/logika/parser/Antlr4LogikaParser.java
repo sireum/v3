@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.5.3
+// Generated from /Users/robby/Repositories/Sireum/sireum-v3/logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.6
 package org.sireum.logika.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4LogikaParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.5.3", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -251,6 +251,7 @@ public class Antlr4LogikaParser extends Parser {
 					_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
 				}
 				setState(79);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__13) {
 					{
@@ -610,7 +611,10 @@ public class Antlr4LogikaParser extends Parser {
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5))) != 0)) ) {
 				((BoolContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}
@@ -683,7 +687,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__2 || _la==T__3) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(179);
@@ -739,7 +746,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__4 || _la==T__5) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(199);
@@ -871,6 +881,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(230);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__22) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__85 - 64)) | (1L << (T__86 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)) | (1L << (T__89 - 64)) | (1L << (T__102 - 64)) | (1L << (T__103 - 64)) | (1L << (T__104 - 64)) | (1L << (T__105 - 64)) | (1L << (T__106 - 64)) | (1L << (T__107 - 64)) | (1L << (T__108 - 64)) | (1L << (T__109 - 64)))) != 0) || ((((_la - 173)) & ~0x3f) == 0 && ((1L << (_la - 173)) & ((1L << (NUM - 173)) | (1L << (ID - 173)) | (1L << (REAL - 173)) | (1L << (INT - 173)) | (1L << (FLOAT - 173)))) != 0)) {
 					{
@@ -901,7 +912,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__11 || _la==T__12) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(233);
@@ -1006,6 +1020,7 @@ public class Antlr4LogikaParser extends Parser {
 			setState(255);
 			((ProofContext)_localctx).tb = match(T__13);
 			setState(257);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==NUM) {
 				{
@@ -1041,6 +1056,7 @@ public class Antlr4LogikaParser extends Parser {
 					_alt = getInterpreter().adaptivePredict(_input,33,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				setState(265);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==NUM) {
 					{
@@ -1208,6 +1224,7 @@ public class Antlr4LogikaParser extends Parser {
 					setState(301);
 					match(ID);
 					setState(304);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if (_la==T__7) {
 						{
@@ -1233,6 +1250,7 @@ public class Antlr4LogikaParser extends Parser {
 					setState(309);
 					match(ID);
 					setState(312);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if (_la==T__7) {
 						{
@@ -1277,6 +1295,7 @@ public class Antlr4LogikaParser extends Parser {
 						_alt = getInterpreter().adaptivePredict(_input,42,_ctx);
 					} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 					setState(325);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if (_la==NUM) {
 						{
@@ -1406,7 +1425,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__17) | (1L << T__18) | (1L << T__19))) != 0)) ) {
 					((BooleanContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				}
@@ -1540,7 +1562,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44))) != 0)) ) {
 					((TypeAccessContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(371);
@@ -1558,12 +1583,16 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 46)) & ~0x3f) == 0 && ((1L << (_la - 46)) & ((1L << (T__45 - 46)) | (1L << (T__46 - 46)) | (1L << (T__47 - 46)) | (1L << (T__48 - 46)) | (1L << (T__49 - 46)) | (1L << (T__50 - 46)) | (1L << (T__51 - 46)) | (1L << (T__52 - 46)) | (1L << (T__53 - 46)) | (1L << (T__54 - 46)) | (1L << (T__55 - 46)) | (1L << (T__56 - 46)) | (1L << (T__57 - 46)) | (1L << (T__58 - 46)) | (1L << (T__59 - 46)) | (1L << (T__60 - 46)) | (1L << (T__61 - 46)) | (1L << (T__62 - 46)) | (1L << (T__63 - 46)) | (1L << (T__64 - 46)) | (1L << (T__65 - 46)) | (1L << (T__66 - 46)))) != 0)) ) {
 					((SeqContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(374);
 				match(T__20);
 				setState(383);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 					{
@@ -1670,6 +1699,7 @@ public class Antlr4LogikaParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(402);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__2:
 			case T__3:
@@ -1781,7 +1811,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 86)) & ~0x3f) == 0 && ((1L << (_la - 86)) & ((1L << (T__85 - 86)) | (1L << (T__86 - 86)) | (1L << (T__87 - 86)) | (1L << (T__88 - 86)) | (1L << (T__89 - 86)))) != 0)) ) {
 					((UnaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(400);
@@ -1831,10 +1864,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__0 || _la==T__67 || _la==T__68) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(407);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1859,10 +1896,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__6 || _la==T__69) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(413);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1885,6 +1926,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(417);
 						((BinaryContext)_localctx).op = match(T__70);
 						setState(419);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1907,6 +1949,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(423);
 						((BinaryContext)_localctx).op = match(T__71);
 						setState(425);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1931,10 +1974,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(((((_la - 73)) & ~0x3f) == 0 && ((1L << (_la - 73)) & ((1L << (T__72 - 73)) | (1L << (T__73 - 73)) | (1L << (T__74 - 73)) | (1L << (T__75 - 73)) | (1L << (T__76 - 73)) | (1L << (T__77 - 73)) | (1L << (T__78 - 73)) | (1L << (T__79 - 73)) | (1L << (T__80 - 73)))) != 0)) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(431);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1959,10 +2006,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(((((_la - 82)) & ~0x3f) == 0 && ((1L << (_la - 82)) & ((1L << (T__81 - 82)) | (1L << (T__82 - 82)) | (1L << (T__83 - 82)) | (1L << (T__84 - 82)))) != 0)) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(437);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -1987,10 +2038,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(((((_la - 91)) & ~0x3f) == 0 && ((1L << (_la - 91)) & ((1L << (T__90 - 91)) | (1L << (T__91 - 91)) | (1L << (T__92 - 91)) | (1L << (T__93 - 91)))) != 0)) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(443);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -2015,10 +2070,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__94 || _la==T__95) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(449);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -2043,10 +2102,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__1 || ((((_la - 97)) & ~0x3f) == 0 && ((1L << (_la - 97)) & ((1L << (T__96 - 97)) | (1L << (T__97 - 97)) | (1L << (T__98 - 97)))) != 0)) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(455);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -2071,10 +2134,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(((((_la - 100)) & ~0x3f) == 0 && ((1L << (_la - 100)) & ((1L << (T__99 - 100)) | (1L << (T__100 - 100)) | (1L << (T__101 - 100)))) != 0)) ) {
 							((BinaryContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(461);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -2148,7 +2215,10 @@ public class Antlr4LogikaParser extends Parser {
 			_la = _input.LA(1);
 			if ( !(((((_la - 103)) & ~0x3f) == 0 && ((1L << (_la - 103)) & ((1L << (T__102 - 103)) | (1L << (T__103 - 103)) | (1L << (T__104 - 103)) | (1L << (T__105 - 103)) | (1L << (T__106 - 103)) | (1L << (T__107 - 103)) | (1L << (T__108 - 103)) | (1L << (T__109 - 103)))) != 0)) ) {
 				((QformulaContext)_localctx).q = (Token)_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			setState(470);
@@ -2191,6 +2261,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(482);
 				((QformulaContext)_localctx).lo = formula(0);
 				setState(484);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__72) {
 					{
@@ -2202,6 +2273,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(486);
 				match(T__110);
 				setState(488);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__72) {
 					{
@@ -2218,6 +2290,7 @@ public class Antlr4LogikaParser extends Parser {
 				break;
 			}
 			setState(496);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==NL) {
 				{
@@ -2261,7 +2334,10 @@ public class Antlr4LogikaParser extends Parser {
 			_la = _input.LA(1);
 			if ( !(((((_la - 24)) & ~0x3f) == 0 && ((1L << (_la - 24)) & ((1L << (T__23 - 24)) | (1L << (T__24 - 24)) | (1L << (T__25 - 24)) | (1L << (T__26 - 24)) | (1L << (T__27 - 24)) | (1L << (T__28 - 24)) | (1L << (T__29 - 24)) | (1L << (T__30 - 24)) | (1L << (T__31 - 24)) | (1L << (T__32 - 24)) | (1L << (T__33 - 24)) | (1L << (T__34 - 24)) | (1L << (T__35 - 24)) | (1L << (T__36 - 24)) | (1L << (T__37 - 24)) | (1L << (T__38 - 24)) | (1L << (T__39 - 24)) | (1L << (T__40 - 24)) | (1L << (T__41 - 24)) | (1L << (T__42 - 24)) | (1L << (T__43 - 24)) | (1L << (T__44 - 24)) | (1L << (T__45 - 24)) | (1L << (T__46 - 24)) | (1L << (T__47 - 24)) | (1L << (T__48 - 24)) | (1L << (T__49 - 24)) | (1L << (T__50 - 24)) | (1L << (T__51 - 24)) | (1L << (T__52 - 24)) | (1L << (T__53 - 24)) | (1L << (T__54 - 24)) | (1L << (T__55 - 24)) | (1L << (T__56 - 24)) | (1L << (T__57 - 24)) | (1L << (T__58 - 24)) | (1L << (T__59 - 24)) | (1L << (T__60 - 24)) | (1L << (T__61 - 24)) | (1L << (T__62 - 24)) | (1L << (T__63 - 24)) | (1L << (T__64 - 24)) | (1L << (T__65 - 24)) | (1L << (T__66 - 24)))) != 0)) ) {
 				((TypeContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}
@@ -2494,6 +2570,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(506);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__112:
 					{
@@ -2510,7 +2587,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(((((_la - 92)) & ~0x3f) == 0 && ((1L << (_la - 92)) & ((1L << (T__91 - 92)) | (1L << (T__92 - 92)) | (1L << (T__93 - 92)))) != 0)) ) {
 						((AndIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					setState(505);
@@ -2531,6 +2611,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(513);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__113:
 				case T__114:
@@ -2540,7 +2621,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__113 || _la==T__114) ) {
 						((AndElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -2554,7 +2638,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(((((_la - 92)) & ~0x3f) == 0 && ((1L << (_la - 92)) & ((1L << (T__91 - 92)) | (1L << (T__92 - 92)) | (1L << (T__93 - 92)))) != 0)) ) {
 						((AndElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					setState(512);
@@ -2573,6 +2660,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(519);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__115:
 				case T__116:
@@ -2584,7 +2672,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(((((_la - 116)) & ~0x3f) == 0 && ((1L << (_la - 116)) & ((1L << (T__115 - 116)) | (1L << (T__116 - 116)) | (1L << (T__117 - 116)) | (1L << (T__118 - 116)))) != 0)) ) {
 						((OrIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -2597,7 +2688,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__1 || _la==T__98) ) {
 						((OrIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					setState(518);
@@ -2616,6 +2710,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(525);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__119:
 				case T__120:
@@ -2625,7 +2720,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__119 || _la==T__120) ) {
 						((OrElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -2638,7 +2736,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__1 || _la==T__98) ) {
 						((OrElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					setState(524);
@@ -2691,7 +2792,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__100 || _la==T__101) ) {
 					((ImpliesIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(537);
@@ -2713,7 +2817,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__100 || _la==T__101) ) {
 					((ImpliesElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(541);
@@ -2733,7 +2840,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__123 || _la==T__124) ) {
 					((NegIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(545);
@@ -2749,7 +2859,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__125 || _la==T__126) ) {
 					((NegElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(547);
@@ -2772,7 +2885,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 88)) & ~0x3f) == 0 && ((1L << (_la - 88)) & ((1L << (T__87 - 88)) | (1L << (T__88 - 88)) | (1L << (T__89 - 88)))) != 0)) ) {
 					((NegIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(551);
@@ -2795,7 +2911,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 88)) & ~0x3f) == 0 && ((1L << (_la - 88)) & ((1L << (T__87 - 88)) | (1L << (T__88 - 88)) | (1L << (T__89 - 88)))) != 0)) ) {
 					((NegElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(555);
@@ -2811,6 +2930,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 14);
 				{
 				setState(561);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__127:
 				case T__128:
@@ -2820,7 +2940,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__127 || _la==T__128) ) {
 						((BottomElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -2833,7 +2956,10 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==T__5 || _la==T__19) ) {
 						((BottomElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					setState(560);
@@ -2913,7 +3039,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 134)) & ~0x3f) == 0 && ((1L << (_la - 134)) & ((1L << (T__133 - 134)) | (1L << (T__134 - 134)) | (1L << (T__135 - 134)))) != 0)) ) {
 					((ForallIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(580);
@@ -2929,7 +3058,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 137)) & ~0x3f) == 0 && ((1L << (_la - 137)) & ((1L << (T__136 - 137)) | (1L << (T__137 - 137)) | (1L << (T__138 - 137)))) != 0)) ) {
 					((ForallElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(582);
@@ -3003,7 +3135,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 140)) & ~0x3f) == 0 && ((1L << (_la - 140)) & ((1L << (T__139 - 140)) | (1L << (T__140 - 140)) | (1L << (T__141 - 140)))) != 0)) ) {
 					((ExistsIntroContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(602);
@@ -3033,7 +3168,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 143)) & ~0x3f) == 0 && ((1L << (_la - 143)) & ((1L << (T__142 - 143)) | (1L << (T__143 - 143)) | (1L << (T__144 - 143)))) != 0)) ) {
 					((ExistsElimContext)_localctx).tb = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(609);
@@ -3182,6 +3320,7 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 			}
 			setState(651);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__148) {
 				{
@@ -3364,6 +3503,7 @@ public class Antlr4LogikaParser extends Parser {
 					_alt = getInterpreter().adaptivePredict(_input,87,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				setState(683);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__150 || _la==ID) {
 					{
@@ -3425,6 +3565,7 @@ public class Antlr4LogikaParser extends Parser {
 		enterRule(_localctx, 34, RULE_factOrFun);
 		try {
 			setState(699);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ID:
 				enterOuterAlt(_localctx, 1);
@@ -3532,6 +3673,7 @@ public class Antlr4LogikaParser extends Parser {
 			setState(706);
 			match(ID);
 			setState(708);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==NL) {
 				{
@@ -3741,6 +3883,7 @@ public class Antlr4LogikaParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(754);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__16) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 149)) & ~0x3f) == 0 && ((1L << (_la - 149)) & ((1L << (T__148 - 149)) | (1L << (T__150 - 149)) | (1L << (T__151 - 149)) | (1L << (T__152 - 149)) | (1L << (T__153 - 149)) | (1L << (T__154 - 149)) | (1L << (T__156 - 149)) | (1L << (T__157 - 149)) | (1L << (T__159 - 149)) | (1L << (T__160 - 149)) | (1L << (T__161 - 149)) | (1L << (T__164 - 149)) | (1L << (T__165 - 149)) | (1L << (NUM - 149)) | (1L << (ID - 149)) | (1L << (REAL - 149)) | (1L << (INT - 149)) | (1L << (FLOAT - 149)))) != 0)) {
 				{
@@ -3776,6 +3919,7 @@ public class Antlr4LogikaParser extends Parser {
 					_alt = getInterpreter().adaptivePredict(_input,98,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				setState(762);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__16) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 149)) & ~0x3f) == 0 && ((1L << (_la - 149)) & ((1L << (T__148 - 149)) | (1L << (T__150 - 149)) | (1L << (T__151 - 149)) | (1L << (T__152 - 149)) | (1L << (T__153 - 149)) | (1L << (T__154 - 149)) | (1L << (T__156 - 149)) | (1L << (T__157 - 149)) | (1L << (T__159 - 149)) | (1L << (T__160 - 149)) | (1L << (T__161 - 149)) | (1L << (T__164 - 149)) | (1L << (T__165 - 149)) | (1L << (NUM - 149)) | (1L << (ID - 149)) | (1L << (REAL - 149)) | (1L << (INT - 149)) | (1L << (FLOAT - 149)))) != 0)) {
 					{
@@ -3981,7 +4125,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__152 || _la==T__153) ) {
 					((VarDeclStmtContext)_localctx).modifier = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(770);
@@ -3993,6 +4140,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(773);
 				match(T__81);
 				setState(775);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==NL) {
 					{
@@ -4014,6 +4162,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(780);
 				match(T__81);
 				setState(782);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==NL) {
 					{
@@ -4087,6 +4236,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(807);
 				match(T__14);
 				setState(819);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__155) {
 					{
@@ -4188,12 +4338,16 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__159 || _la==T__160) ) {
 					((PrintStmtContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(848);
 				match(T__20);
 				setState(857);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (STRING - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 					{
@@ -4237,6 +4391,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(864);
 				match(T__81);
 				setState(866);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==NL) {
 					{
@@ -4254,6 +4409,7 @@ public class Antlr4LogikaParser extends Parser {
 				enterOuterAlt(_localctx, 9);
 				{
 				setState(872);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__161) {
 					{
@@ -4269,6 +4425,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(875);
 				((MethodDeclStmtContext)_localctx).id = match(ID);
 				setState(877);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==NL) {
 					{
@@ -4280,6 +4437,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(879);
 				match(T__20);
 				setState(888);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ID) {
 					{
@@ -4309,6 +4467,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(891);
 				match(T__7);
 				setState(894);
+				_errHandler.sync(this);
 				switch (_input.LA(1)) {
 				case T__23:
 				case T__24:
@@ -4431,12 +4590,14 @@ public class Antlr4LogikaParser extends Parser {
 				setState(922);
 				stmts();
 				setState(933);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__163) {
 					{
 					setState(923);
 					((MethodDeclStmtContext)_localctx).rtb = match(T__163);
 					setState(925);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 						{
@@ -4549,6 +4710,7 @@ public class Antlr4LogikaParser extends Parser {
 		enterRule(_localctx, 48, RULE_stringOrExp);
 		try {
 			setState(952);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING:
 				enterOuterAlt(_localctx, 1);
@@ -4719,7 +4881,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__17) | (1L << T__18) | (1L << T__19))) != 0)) ) {
 					((BooleanExpContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				}
@@ -4749,7 +4914,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 46)) & ~0x3f) == 0 && ((1L << (_la - 46)) & ((1L << (T__45 - 46)) | (1L << (T__46 - 46)) | (1L << (T__47 - 46)) | (1L << (T__48 - 46)) | (1L << (T__49 - 46)) | (1L << (T__50 - 46)) | (1L << (T__51 - 46)) | (1L << (T__52 - 46)) | (1L << (T__53 - 46)) | (1L << (T__54 - 46)) | (1L << (T__55 - 46)) | (1L << (T__56 - 46)) | (1L << (T__57 - 46)) | (1L << (T__58 - 46)) | (1L << (T__59 - 46)) | (1L << (T__60 - 46)) | (1L << (T__61 - 46)) | (1L << (T__62 - 46)) | (1L << (T__63 - 46)) | (1L << (T__64 - 46)) | (1L << (T__65 - 46)) | (1L << (T__66 - 46)))) != 0)) ) {
 					((TypeMethodCallExpContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(958);
@@ -4759,6 +4927,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(960);
 				match(T__20);
 				setState(969);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 					{
@@ -4796,7 +4965,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 24)) & ~0x3f) == 0 && ((1L << (_la - 24)) & ((1L << (T__23 - 24)) | (1L << (T__24 - 24)) | (1L << (T__25 - 24)) | (1L << (T__26 - 24)) | (1L << (T__27 - 24)) | (1L << (T__28 - 24)) | (1L << (T__29 - 24)) | (1L << (T__30 - 24)) | (1L << (T__31 - 24)) | (1L << (T__32 - 24)) | (1L << (T__33 - 24)) | (1L << (T__34 - 24)) | (1L << (T__35 - 24)) | (1L << (T__36 - 24)) | (1L << (T__37 - 24)) | (1L << (T__38 - 24)) | (1L << (T__39 - 24)) | (1L << (T__40 - 24)) | (1L << (T__41 - 24)) | (1L << (T__42 - 24)) | (1L << (T__43 - 24)) | (1L << (T__44 - 24)) | (1L << (T__45 - 24)) | (1L << (T__46 - 24)) | (1L << (T__47 - 24)) | (1L << (T__48 - 24)) | (1L << (T__49 - 24)) | (1L << (T__50 - 24)) | (1L << (T__51 - 24)) | (1L << (T__52 - 24)) | (1L << (T__53 - 24)) | (1L << (T__54 - 24)) | (1L << (T__55 - 24)) | (1L << (T__56 - 24)) | (1L << (T__57 - 24)) | (1L << (T__58 - 24)) | (1L << (T__59 - 24)) | (1L << (T__60 - 24)) | (1L << (T__61 - 24)) | (1L << (T__62 - 24)) | (1L << (T__63 - 24)) | (1L << (T__64 - 24)) | (1L << (T__65 - 24)) | (1L << (T__66 - 24)))) != 0)) ) {
 					((TypeAccessExpContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(973);
@@ -4838,12 +5010,16 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(((((_la - 46)) & ~0x3f) == 0 && ((1L << (_la - 46)) & ((1L << (T__45 - 46)) | (1L << (T__46 - 46)) | (1L << (T__47 - 46)) | (1L << (T__48 - 46)) | (1L << (T__49 - 46)) | (1L << (T__50 - 46)) | (1L << (T__51 - 46)) | (1L << (T__52 - 46)) | (1L << (T__53 - 46)) | (1L << (T__54 - 46)) | (1L << (T__55 - 46)) | (1L << (T__56 - 46)) | (1L << (T__57 - 46)) | (1L << (T__58 - 46)) | (1L << (T__59 - 46)) | (1L << (T__60 - 46)) | (1L << (T__61 - 46)) | (1L << (T__62 - 46)) | (1L << (T__63 - 46)) | (1L << (T__64 - 46)) | (1L << (T__65 - 46)) | (1L << (T__66 - 46)))) != 0)) ) {
 					((SeqExpContext)_localctx).t = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(979);
 				match(T__20);
 				setState(988);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 					{
@@ -4982,6 +5158,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(995);
 				((InvokeExpContext)_localctx).t = match(T__20);
 				setState(1004);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)))) != 0) || ((((_la - 165)) & ~0x3f) == 0 && ((1L << (_la - 165)) & ((1L << (T__164 - 165)) | (1L << (T__165 - 165)) | (1L << (NUM - 165)) | (1L << (ID - 165)) | (1L << (REAL - 165)) | (1L << (INT - 165)) | (1L << (FLOAT - 165)))) != 0)) {
 					{
@@ -5060,6 +5237,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(1019);
 				match(T__20);
 				setState(1021);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==STRING) {
 					{
@@ -5095,7 +5273,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__6 || _la==T__87 || _la==T__88) ) {
 					((UnaryExpContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(1029);
@@ -5127,10 +5308,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__0 || _la==T__67 || _la==T__68) ) {
 							((BinaryExpContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(1035);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5155,10 +5340,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__6 || _la==T__69) ) {
 							((BinaryExpContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(1041);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5181,6 +5370,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(1045);
 						((BinaryExpContext)_localctx).op = match(T__70);
 						setState(1047);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5203,6 +5393,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(1051);
 						((BinaryExpContext)_localctx).op = match(T__71);
 						setState(1053);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5227,10 +5418,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(((((_la - 73)) & ~0x3f) == 0 && ((1L << (_la - 73)) & ((1L << (T__72 - 73)) | (1L << (T__73 - 73)) | (1L << (T__75 - 73)) | (1L << (T__76 - 73)) | (1L << (T__78 - 73)) | (1L << (T__79 - 73)) | (1L << (T__80 - 73)))) != 0)) ) {
 							((BinaryExpContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(1059);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5255,10 +5450,14 @@ public class Antlr4LogikaParser extends Parser {
 						_la = _input.LA(1);
 						if ( !(_la==T__82 || _la==T__83) ) {
 							((BinaryExpContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						} else {
+						}
+						else {
+							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+							_errHandler.reportMatch(this);
 							consume();
 						}
 						setState(1065);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5281,6 +5480,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(1069);
 						((BinaryExpContext)_localctx).op = match(T__91);
 						setState(1071);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5303,6 +5503,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(1075);
 						((BinaryExpContext)_localctx).op = match(T__95);
 						setState(1077);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5325,6 +5526,7 @@ public class Antlr4LogikaParser extends Parser {
 						setState(1081);
 						((BinaryExpContext)_localctx).op = match(T__1);
 						setState(1083);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if (_la==NL) {
 							{
@@ -5492,6 +5694,7 @@ public class Antlr4LogikaParser extends Parser {
 						_alt = getInterpreter().adaptivePredict(_input,152,_ctx);
 					} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 					setState(1127);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__22) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__85 - 64)) | (1L << (T__86 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)) | (1L << (T__89 - 64)) | (1L << (T__102 - 64)) | (1L << (T__103 - 64)) | (1L << (T__104 - 64)) | (1L << (T__105 - 64)) | (1L << (T__106 - 64)) | (1L << (T__107 - 64)) | (1L << (T__108 - 64)) | (1L << (T__109 - 64)))) != 0) || ((((_la - 173)) & ~0x3f) == 0 && ((1L << (_la - 173)) & ((1L << (NUM - 173)) | (1L << (ID - 173)) | (1L << (REAL - 173)) | (1L << (INT - 173)) | (1L << (FLOAT - 173)))) != 0)) {
 						{
@@ -5507,6 +5710,7 @@ public class Antlr4LogikaParser extends Parser {
 					_la = _input.LA(1);
 				}
 				setState(1135);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__166) {
 					{
@@ -5671,6 +5875,7 @@ public class Antlr4LogikaParser extends Parser {
 				_alt = getInterpreter().adaptivePredict(_input,160,_ctx);
 			}
 			setState(1189);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__167 || _la==T__168) {
 				{
@@ -5678,7 +5883,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__167 || _la==T__168) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(1172);
@@ -5726,6 +5934,7 @@ public class Antlr4LogikaParser extends Parser {
 							_alt = getInterpreter().adaptivePredict(_input,162,_ctx);
 						} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 						setState(1182);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__22) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__85 - 64)) | (1L << (T__86 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)) | (1L << (T__89 - 64)) | (1L << (T__102 - 64)) | (1L << (T__103 - 64)) | (1L << (T__104 - 64)) | (1L << (T__105 - 64)) | (1L << (T__106 - 64)) | (1L << (T__107 - 64)) | (1L << (T__108 - 64)) | (1L << (T__109 - 64)))) != 0) || ((((_la - 173)) & ~0x3f) == 0 && ((1L << (_la - 173)) & ((1L << (NUM - 173)) | (1L << (ID - 173)) | (1L << (REAL - 173)) | (1L << (INT - 173)) | (1L << (FLOAT - 173)))) != 0)) {
 							{
@@ -5762,6 +5971,7 @@ public class Antlr4LogikaParser extends Parser {
 				_alt = getInterpreter().adaptivePredict(_input,166,_ctx);
 			}
 			setState(1198);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__166) {
 				{
@@ -5771,6 +5981,7 @@ public class Antlr4LogikaParser extends Parser {
 			}
 
 			setState(1221);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__169 || _la==T__170) {
 				{
@@ -5778,7 +5989,10 @@ public class Antlr4LogikaParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==T__169 || _la==T__170) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(1204);
@@ -5826,6 +6040,7 @@ public class Antlr4LogikaParser extends Parser {
 							_alt = getInterpreter().adaptivePredict(_input,169,_ctx);
 						} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 						setState(1214);
+						_errHandler.sync(this);
 						_la = _input.LA(1);
 						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__22) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__85 - 64)) | (1L << (T__86 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)) | (1L << (T__89 - 64)) | (1L << (T__102 - 64)) | (1L << (T__103 - 64)) | (1L << (T__104 - 64)) | (1L << (T__105 - 64)) | (1L << (T__106 - 64)) | (1L << (T__107 - 64)) | (1L << (T__108 - 64)) | (1L << (T__109 - 64)))) != 0) || ((((_la - 173)) & ~0x3f) == 0 && ((1L << (_la - 173)) & ((1L << (NUM - 173)) | (1L << (ID - 173)) | (1L << (REAL - 173)) | (1L << (INT - 173)) | (1L << (FLOAT - 173)))) != 0)) {
 							{
@@ -5978,6 +6193,7 @@ public class Antlr4LogikaParser extends Parser {
 					_alt = getInterpreter().adaptivePredict(_input,177,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
 				setState(1257);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__6) | (1L << T__17) | (1L << T__18) | (1L << T__19) | (1L << T__20) | (1L << T__22) | (1L << T__23) | (1L << T__24) | (1L << T__25) | (1L << T__26) | (1L << T__27) | (1L << T__28) | (1L << T__29) | (1L << T__30) | (1L << T__31) | (1L << T__32) | (1L << T__33) | (1L << T__34) | (1L << T__35) | (1L << T__36) | (1L << T__37) | (1L << T__38) | (1L << T__39) | (1L << T__40) | (1L << T__41) | (1L << T__42) | (1L << T__43) | (1L << T__44) | (1L << T__45) | (1L << T__46) | (1L << T__47) | (1L << T__48) | (1L << T__49) | (1L << T__50) | (1L << T__51) | (1L << T__52) | (1L << T__53) | (1L << T__54) | (1L << T__55) | (1L << T__56) | (1L << T__57) | (1L << T__58) | (1L << T__59) | (1L << T__60) | (1L << T__61) | (1L << T__62))) != 0) || ((((_la - 64)) & ~0x3f) == 0 && ((1L << (_la - 64)) & ((1L << (T__63 - 64)) | (1L << (T__64 - 64)) | (1L << (T__65 - 64)) | (1L << (T__66 - 64)) | (1L << (T__85 - 64)) | (1L << (T__86 - 64)) | (1L << (T__87 - 64)) | (1L << (T__88 - 64)) | (1L << (T__89 - 64)) | (1L << (T__102 - 64)) | (1L << (T__103 - 64)) | (1L << (T__104 - 64)) | (1L << (T__105 - 64)) | (1L << (T__106 - 64)) | (1L << (T__107 - 64)) | (1L << (T__108 - 64)) | (1L << (T__109 - 64)))) != 0) || ((((_la - 173)) & ~0x3f) == 0 && ((1L << (_la - 173)) & ((1L << (NUM - 173)) | (1L << (ID - 173)) | (1L << (REAL - 173)) | (1L << (INT - 173)) | (1L << (FLOAT - 173)))) != 0)) {
 					{

@@ -1,29 +1,4 @@
-/*
- Copyright (c) 2016, Robby, Kansas State University
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.5.1
+// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.6
 package org.sireum.pilar.parser;
 
 // @formatter:off
@@ -39,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.5.1", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -251,6 +226,7 @@ public class Antlr4PilarParser extends Parser {
 		enterRule(_localctx, 4, RULE_modelElement);
 		try {
 			setState(59);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__0:
 				_localctx = new GlobalVarContext(_localctx);
@@ -376,6 +352,7 @@ public class Antlr4PilarParser extends Parser {
 			setState(72);
 			match(T__4);
 			setState(81);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ID) {
 				{
@@ -417,6 +394,7 @@ public class Antlr4PilarParser extends Parser {
 				_la = _input.LA(1);
 			}
 			setState(92);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__7:
 				{
@@ -525,6 +503,7 @@ public class Antlr4PilarParser extends Parser {
 			setState(101);
 			match(T__7);
 			setState(108);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__1) {
 				{
@@ -730,6 +709,7 @@ public class Antlr4PilarParser extends Parser {
 		int _la;
 		try {
 			setState(155);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__10:
 				_localctx = new CallContext(_localctx);
@@ -738,6 +718,7 @@ public class Antlr4PilarParser extends Parser {
 				setState(136);
 				match(T__10);
 				setState(140);
+				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
 				case 1:
 					{
@@ -878,6 +859,7 @@ public class Antlr4PilarParser extends Parser {
 		int _la;
 		try {
 			setState(199);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__4:
 			case ID:
@@ -1094,6 +1076,7 @@ public class Antlr4PilarParser extends Parser {
 		int _la;
 		try {
 			setState(265);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__12:
 				_localctx = new GotoJumpContext(_localctx);
@@ -1162,6 +1145,7 @@ public class Antlr4PilarParser extends Parser {
 				setState(224);
 				match(T__19);
 				setState(226);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==T__4 || _la==ID) {
 					{
@@ -1497,6 +1481,7 @@ public class Antlr4PilarParser extends Parser {
 		try {
 			int _alt;
 			setState(307);
+			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,34,_ctx) ) {
 			case 1:
 				_localctx = new LitExpContext(_localctx);
@@ -1594,6 +1579,7 @@ public class Antlr4PilarParser extends Parser {
 			setState(309);
 			match(T__4);
 			setState(318);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__4 || _la==ID) {
 				{
@@ -1686,6 +1672,7 @@ public class Antlr4PilarParser extends Parser {
 			setState(326);
 			match(ID);
 			setState(328);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==LIT) {
 				{
