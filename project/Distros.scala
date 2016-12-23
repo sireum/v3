@@ -66,7 +66,7 @@ object Distros {
   )
 
   def buildIdea(): Unit = {
-    if (!(baseDir / 'distros / "sireum-v3-VER").toIO.exists) {
+    if (!(baseDir / 'distros / "sireum-v3" / 'distros / "sireum-v3-VER").toIO.exists) {
       sys.error("Need to run distros task first.")
       return
     }
@@ -180,9 +180,9 @@ object Distros {
     print("Extracting Sireum v3 distro ... ")
     platform match {
       case "mac" =>
-        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform / "Sireum.app" / "Contents" / "Resources")
+        %%('unzip, "-oq", baseDir / 'distros / "sireum-v3" / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform / "Sireum.app" / "Contents" / "Resources")
       case _ =>
-        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform)
+        %%('unzip, "-oq", baseDir / 'distros / "sireum-v3" / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform)
         mv(ideaDir / platform / "sireum-v3", ideaDir / platform / "Sireum")
     }
     println("done!")
