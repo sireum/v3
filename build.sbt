@@ -41,7 +41,10 @@ val BUILD_FILENAME = "BUILD"
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
 
 val distros = TaskKey[Unit]("distros", "Build Sireum distributions.")
+val ideaDistros = TaskKey[Unit]("idea-distros", "Build Sireum IntelliJ distributions.")
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
+
+traceLevel in ideaDistros := -1
 
 lazy val sireum = Project(
   id = "sireum",
@@ -49,6 +52,9 @@ lazy val sireum = Project(
     name := "Sireum",
     distros := {
       Distros.build()
+    },
+    ideaDistros := {
+      Distros.buildIdea()
     },
     depDot := {
       val args = spaceDelimited("<arg>").parsed
