@@ -131,9 +131,6 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
     exit 1
   fi
 fi
-if [ "${DISTROS}" = "true" ]; then
-  exit
-fi
 cd ${REPO}/platform
 SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
@@ -155,6 +152,10 @@ if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
     exit 1
   fi
 fi
+if [ "${DISTROS}" = "true" ]; then
+  exit
+fi
+cd ${REPO}/platform
 grep -q ${NODE_VERSION} node/VER &> /dev/null && NODE_UPDATE=false || NODE_UPDATE=true
 if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
   if [ "${PLATFORM}" = "win" ]; then
