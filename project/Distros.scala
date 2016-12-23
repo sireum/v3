@@ -174,8 +174,8 @@ object Distros {
         patchIdeaProperties(platform, tempDir / 'idea / 'bin / "idea.properties")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
-        %%('cp, "-p", pwd / 'resources / 'distro / "idea.sh", buildDir / platform / "sireum-v3")
-        %%('chmod, "+x", buildDir / platform / "sireum-v3" / "idea.sh")
+        %%('cp, "-p", pwd / 'resources / 'distro / "idea", buildDir / platform / "sireum-v3")
+        %%('chmod, "+x", buildDir / platform / "sireum-v3" / "idea")
     }
     print("Extracting Sireum v3 distro ... ")
     platform match {
