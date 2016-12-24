@@ -79,7 +79,7 @@ val mode%modeClass%Map: M = Vector(
 >>
 
 modeMapEntry(command, className) ::= <<
-("%command%", parse%className% _)
+("%command%", parse%className%)
 >>
 
 modeUsage(header, command, mode) ::= <<
@@ -170,7 +170,7 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
       try {
         option.%fieldName% = arg.toInt
       } catch {
-        case t: Throwable =>
+        case _: Throwable =>
           errPrintln(s"Invalid integer for %name%: '$arg'")
           return
       }

@@ -59,17 +59,17 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
   import Cli._
 
   val modeSireumOptionMap: M = Vector(
-    ("util", parseUtilOption _),
-    ("logika", parseLogikaOption _)
+    ("util", parseUtilOption),
+    ("logika", parseLogikaOption)
   )
   val modeUtilOptionMap: M = Vector(
-    ("option", parseUtilOptionOption _),
-    ("reflect", parseUtilReflectOption _)
+    ("option", parseUtilOptionOption),
+    ("reflect", parseUtilReflectOption)
   )
   val modeUtilReflectOptionMap: M = Vector(
-    ("cli", parseCliGenOption _),
-    ("json", parseJsonGenOption _),
-    ("rewriter", parseRewriterGenOption _)
+    ("cli", parseCliGenOption),
+    ("json", parseJsonGenOption),
+    ("rewriter", parseRewriterGenOption)
   )
 
   def parseSireumOption(args: CSeq[String],
@@ -511,7 +511,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               try {
                 option.timeout = arg.toInt
               } catch {
-                case t: Throwable =>
+                case _: Throwable =>
                   errPrintln(s"Invalid integer for timeout: '$arg'")
                   return
               }
@@ -529,7 +529,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
               try {
                 option.bitwidth = arg.toInt
               } catch {
-                case t: Throwable =>
+                case _: Throwable =>
                   errPrintln(s"Invalid integer for bitwidth: '$arg'")
                   return
               }
