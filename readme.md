@@ -14,7 +14,7 @@
 
 Supported platforms (64-bit only):
 
-* OS X (test platform: [El Capitan](http://www.apple.com/osx/) -- 10.11)
+* macOS (test platform: [Sierra](http://www.apple.com/macos/sierra/) -- 10.12)
 
 * Linux (test platform: [Manjaro](https://manjaro.github.io))
 
