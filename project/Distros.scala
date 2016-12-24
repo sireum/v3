@@ -76,6 +76,8 @@ object Distros {
       buildIdea("mac")
     buildIdea("win")
     buildIdea("linux")
+
+    rm ! baseDir / 'distros / 'idea
   }
 
   def downloadPlugins(): Unit = {
@@ -190,18 +192,20 @@ object Distros {
     print(s"Packaging ${platform}64 idea distro ... ")
     platform match {
       case "mac" =>
-        val bundle = baseDir / 'distros / "sireum-v3-idea-mac64.dmg"
+        val bundle = baseDir / 'distros / "sireum-v3-idea-mac64.tar.gz"
+        val bundleDmg = baseDir / 'distros / "sireum-v3-idea-mac64.dmg"
         rm ! bundle
         %%('tar, "cfz", bundle, "Sireum.app")(ideaDir / platform)
+        val ver = (read ! baseDir / 'distros / "sireum-v3-VER").substring(0, 7)
         %%(pwd / 'resources / 'distro / "create-dmg" / "create-dmg",
-          "--volname", "Sireum v3",
+          "--volname", s"Sireum v3 $ver",
           "--hide-extension", "Sireum.app",
           "--icon-size", "64",
           "--icon", "Sireum.app", "0", "90",
           "--app-drop-link", "256", "90",
           "--window-size", "500", "150",
           "--background", pwd / 'resources / 'distro / "dmg-background.png",
-          ideaDir / "sireum-v3-idea-mac64.dmg", "Sireum.app")(ideaDir / platform)
+          bundleDmg, "Sireum.app")(ideaDir / platform)
         rm ! ideaDir / platform
       case "linux" =>
         val bundle = baseDir / 'distros / "sireum-v3-idea-linux64.zip"
