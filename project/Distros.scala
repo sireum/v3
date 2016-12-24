@@ -66,13 +66,14 @@ object Distros {
   )
 
   def buildIdea(): Unit = {
-    if (!(baseDir / 'distros / "sireum-v3" / 'distros / "sireum-v3-VER").toIO.exists) {
+    if (!(baseDir / 'distros / "sireum-v3-VER").toIO.exists) {
       sys.error("Need to run distros task first.")
       return
     }
 
     downloadPlugins()
-    buildIdea("mac")
+    if (System.getProperty("os.name").toLowerCase.contains("mac"))
+      buildIdea("mac")
     buildIdea("win")
     buildIdea("linux")
   }
@@ -180,26 +181,35 @@ object Distros {
     print("Extracting Sireum v3 distro ... ")
     platform match {
       case "mac" =>
-        %%('unzip, "-oq", baseDir / 'distros / "sireum-v3" / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform / "Sireum.app" / "Contents" / "Resources")
+        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform / "Sireum.app" / "Contents" / "Resources")
       case _ =>
-        %%('unzip, "-oq", baseDir / 'distros / "sireum-v3" / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform)
+        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform)
         mv(ideaDir / platform / "sireum-v3", ideaDir / platform / "Sireum")
     }
     println("done!")
     print(s"Packaging ${platform}64 idea distro ... ")
     platform match {
       case "mac" =>
-        val bundle = ideaDir / "sireum-v3-idea-mac64.tar.gz"
+        val bundle = baseDir / 'distros / "sireum-v3-idea-mac64.dmg"
         rm ! bundle
         %%('tar, "cfz", bundle, "Sireum.app")(ideaDir / platform)
+        %%(pwd / 'resources / 'distro / "create-dmg" / "create-dmg",
+          "--volname", "Sireum v3",
+          "--hide-extension", "Sireum.app",
+          "--icon-size", "64",
+          "--icon", "Sireum.app", "0", "90",
+          "--app-drop-link", "256", "90",
+          "--window-size", "500", "150",
+          "--background", pwd / 'resources / 'distro / "dmg-background.png",
+          ideaDir / "sireum-v3-idea-mac64.dmg", "Sireum.app")(ideaDir / platform)
         rm ! ideaDir / platform
       case "linux" =>
-        val bundle = ideaDir / "sireum-v3-idea-linux64.tar.gz"
+        val bundle = baseDir / 'distros / "sireum-v3-idea-linux64.zip"
         rm ! bundle
-        %%('tar, "cfz", bundle, "Sireum")(ideaDir / platform)
+        %%('zip, "-r", bundle, "Sireum")(ideaDir / platform)
         rm ! ideaDir / platform
       case "win" =>
-        val bundle = ideaDir / "sireum-v3-idea-win64.zip"
+        val bundle = baseDir / 'distros / "sireum-v3-idea-win64.zip"
         rm ! bundle
         %%('zip, "-r", bundle, "Sireum")(ideaDir / platform)
         rm ! ideaDir / platform
