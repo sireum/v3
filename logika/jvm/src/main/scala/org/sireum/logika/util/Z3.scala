@@ -181,16 +181,36 @@ $s"""))
 
   def translate(n: BigInt, tpe: ast.IntegralType): ST = {
     val lit = ast.Type.normalize(bitWidth, tpe) match {
-      case _: ast.S8Type | _: ast.U8Type =>
+      case _: ast.S8Type =>
+        stMain.add("S8", true)
         val v: java.lang.Byte = n.toByte
         String.format("#x%02X", v)
-      case _: ast.S16Type | _: ast.U16Type =>
+      case _: ast.S16Type =>
+        stMain.add("S16", true)
         val v: java.lang.Short = n.toShort
         String.format("#x%04X", v)
-      case _: ast.S32Type | _: ast.U32Type =>
+      case _: ast.S32Type =>
+        stMain.add("S32", true)
         val v: java.lang.Integer = n.toInt
         String.format("#x%08X", v)
-      case _: ast.S64Type | _: ast.U64Type =>
+      case _: ast.S64Type =>
+        stMain.add("S64", true)
+        val v: java.lang.Long = n.toLong
+        String.format("#x%016X", v)
+      case _: ast.U8Type =>
+        stMain.add("U8", true)
+        val v: java.lang.Byte = n.toByte
+        String.format("#x%02X", v)
+      case _: ast.U16Type =>
+        stMain.add("U16", true)
+        val v: java.lang.Short = n.toShort
+        String.format("#x%04X", v)
+      case _: ast.U32Type =>
+        stMain.add("U32", true)
+        val v: java.lang.Integer = n.toInt
+        String.format("#x%08X", v)
+      case _: ast.U64Type =>
+        stMain.add("U64", true)
         val v: java.lang.Long = n.toLong
         String.format("#x%016X", v)
       case _ => if (n < 0) s"(- ${-n})" else n.toString
@@ -600,26 +620,26 @@ $s"""))
   def translate(tipe: Tipe): String = normalizeTipe(tipe) match {
     case B => "B"
     case Z => "Z"
-    case Z8 => "Z8"
-    case Z16 => "Z16"
-    case Z32 => "Z32"
-    case Z64 => "Z64"
-    case N => "N"
-    case N8 => "N8"
-    case N16 => "N16"
-    case N32 => "N32"
-    case N64 => "N64"
-    case S8 => "S8"
-    case S16 => "S16"
-    case S32 => "S32"
-    case S64 => "S64"
-    case U8 => "U8"
-    case U16 => "U16"
-    case U32 => "U32"
-    case U64 => "U64"
-    case R => "R"
-    case F32 => "F32"
-    case F64 => "F64"
+    case Z8 => stMain.add("Z8", true); "Z8"
+    case Z16 => stMain.add("Z16", true); "Z16"
+    case Z32 => stMain.add("Z32", true); "Z32"
+    case Z64 => stMain.add("Z64", true); "Z64"
+    case N => stMain.add("N", true); "N"
+    case N8 => stMain.add("N8", true); "N8"
+    case N16 => stMain.add("N16", true); "N16"
+    case N32 => stMain.add("N32", true); "N32"
+    case N64 => stMain.add("N64", true); "N64"
+    case S8 => stMain.add("S8", true); "S8"
+    case S16 => stMain.add("S16", true); "S16"
+    case S32 => stMain.add("S32", true); "S32"
+    case S64 => stMain.add("S64", true); "S64"
+    case U8 => stMain.add("U8", true); "U8"
+    case U16 => stMain.add("U16", true); "U16"
+    case U32 => stMain.add("U32", true); "U32"
+    case U64 => stMain.add("U64", true); "U64"
+    case R => stMain.add("R", true); "R"
+    case F32 => stMain.add("F32", true); "F32"
+    case F64 => stMain.add("F64", true); "F64"
     case BS => stMain.add("BS", true); "BS"
     case ZS => "ZS"
     case Z8S => stMain.add("Z8S", true); "Z8S"

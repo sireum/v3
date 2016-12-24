@@ -1,4 +1,10 @@
-main(d, a, e, symexe, BS, Z8S, Z16S, Z32S, Z64S, NS, N8S, N16S, N32S, N64S, S8S, S16S, S32S, S64S, U8S, U16S, U32S, U64S, RS, F32S, F64S) ::= <<
+main(d, a, e, symexe,
+     Z8, Z16, Z32, Z64, N, N8, N16, N32, N64,
+     S8, S16, S32, S64, U8, U16, U32, U64,
+     R, F32, F64,
+     BS, Z8S, Z16S, Z32S, Z64S, NS, N8S, N16S, N32S, N64S,
+     S8S, S16S, S32S, S64S, U8S, U16S, U32S, U64S,
+     RS, F32S, F64S) ::= <<
 ; Preamble
 (define-sort B    () Bool)                     ; Logika's B type
 (define-sort Z    () Int)                      ; Logika's Z type
@@ -8,34 +14,72 @@ main(d, a, e, symexe, BS, Z8S, Z16S, Z32S, Z64S, NS, N8S, N16S, N32S, N64S, S8S,
 (declare-const ZS_empty ZS)                    ; ZS_empty constant
 (assert (= (ZS_size ZS_empty) 0))              ; ZS_size and ZS_empty axiom: ZS_size of ZS_empty is 0
 $if(symexe)$
-
-; Extended Preamble for SymExe
+$if(Z8||Z8S)$
 (define-sort Z8   () Int)
+$endif$
+$if(Z16||Z16S)$
 (define-sort Z16  () Int)
+$endif$
+$if(Z32||Z32S)$
 (define-sort Z32  () Int)
+$endif$
+$if(Z64||Z64S)$
 (define-sort Z64  () Int)
+$endif$
+$if(N||NS)$
 (define-sort N    () Int)
+$endif$
+$if(N8||N8S)$
 (define-sort N8   () Int)
+$endif$
+$if(N16||N16S)$
 (define-sort N16  () Int)
+$endif$
+$if(N32||N32S)$
 (define-sort N32  () Int)
+$endif$
+$if(N64||N64S)$
 (define-sort N64  () Int)
+$endif$
+$if(S8||S8S)$
 (define-sort S8   () (_ BitVec 8))
+$endif$
+$if(S16||S16S)$
 (define-sort S16  () (_ BitVec 16))
+$endif$
+$if(S32||S32S)$
 (define-sort S32  () (_ BitVec 32))
+$endif$
+$if(S64||S64S)$
 (define-sort S64  () (_ BitVec 64))
+$endif$
+$if(U8||U8S)$
 (define-sort U8   () (_ BitVec 8))
+$endif$
+$if(U16||U16S)$
 (define-sort U16  () (_ BitVec 16))
+$endif$
+$if(U32||U32S)$
 (define-sort U32  () (_ BitVec 32))
+$endif$
+$if(U64||U64S)$
 (define-sort U64  () (_ BitVec 64))
+$endif$
+$if(R||RS)$
 (define-sort R    () Real)
+$endif$
+$if(F32||F32S)$
 (define-sort F32  () Float32)
 (define-const F32_PInf (F32) (_ +oo 8 24))
 (define-const F32_NInf (F32) (_ -oo 8 24))
 (define-const F32_NaN (F32) (_ NaN 8 24))
+$endif$
+$if(F64||F64S)$
 (define-sort F64  () Float64)
 (define-const F64_PInf (F64) (_ +oo 11 53))
 (define-const F64_NInf (F64) (_ -oo 11 53))
 (define-const F64_NaN (F64) (_ NaN 11 53))
+$endif$
 $if(BS)$
 (define-sort BS () (Array Z B))
 (declare-fun BS_size (BS) Z)
