@@ -8,6 +8,7 @@
 /distros/sireum-v3
 /distros/*.zip
 /distros/*.dmg
+/distros/*.tar.gz
 /distros/sireum-v3-VER
 /distros/idea
 /.idea/workspace.xml
