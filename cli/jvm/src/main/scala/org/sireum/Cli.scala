@@ -472,6 +472,8 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |-t, --timeout     Timeout for algebra and auto (in milliseconds)
            |                    Default: ${option.timeout}
            |-x, --symexe      Enable symbolic execution
+           |    --compare     Compare well-formed input program files (sans contracts and prints)
+           |    --run         Run input program file(s)
            |    --sat         Enable sat checking of facts and contracts
            |
            |Symbol Conversion Options:
@@ -540,6 +542,10 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           option.ascii = true
         case "--unicode" =>
           option.unicode = true
+        case "--run" =>
+          option.run = true
+        case "--compare" =>
+          option.compare = true
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")

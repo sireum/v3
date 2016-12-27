@@ -37,8 +37,8 @@ object Checker {
   private[logika] final val zero = ast.IntLit("0", 0, None)
   private[logika] final val kind = "Proof Checker"
 
-  final def check(m: message.Check)(
-    implicit reporter: AccumulatingTagReporter): message.Result = {
+  final def typeCheck(m: message.Check)(
+    implicit reporter: AccumulatingTagReporter): (Boolean, Boolean, ISeq[ast.UnitNode]) = {
     val autoEnabled = m.autoEnabled ||
       m.kind == message.CheckerKind.SummarizingSymExe ||
       m.kind == message.CheckerKind.UnrollingSymExe
@@ -50,7 +50,7 @@ object Checker {
       reporter.report(ErrorMessage("AST",
         if (m.proofs.size > 1) "The inputs are ill-formed."
         else "The input is ill-formed."))
-      return message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
+      return (true, autoEnabled, unitNodes)
     }
     if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
       val programs = unitNodes.map(_.asInstanceOf[ast.Program])
@@ -84,23 +84,33 @@ object Checker {
             case _: RuntimeException => hasError = true
           }
         }
-
-        if (!hasError) {
-          if (m.lastOnly)
-            check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-              m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
-              m.loopBound, m.recursionBound, m.useMethodContract)
-          else
-            for (program <- programs)
-              check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-                m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
-                m.loopBound, m.recursionBound, m.useMethodContract)
-        }
-      } else {
-        reporter.report(ErrorMessage(TypeChecker.kind,
-          if (m.proofs.size > 1) "The programs are ill-formed."
-          else "The program is ill-formed."))
       }
+    }
+    if (reporter.hasError) {
+      reporter.report(ErrorMessage("AST",
+        if (m.proofs.size > 1) "The inputs are ill-formed."
+        else "The input is ill-formed."))
+      return (true, autoEnabled, unitNodes)
+    }
+    (reporter.hasError, autoEnabled, unitNodes)
+  }
+
+  final def check(m: message.Check)(
+    implicit reporter: AccumulatingTagReporter): message.Result = {
+    val (hasError, autoEnabled, unitNodes) = typeCheck(m)
+    if (hasError) return message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
+
+    if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
+      val programs = unitNodes.map(_.asInstanceOf[ast.Program])
+      if (m.lastOnly)
+        check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
+          m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+          m.loopBound, m.recursionBound, m.useMethodContract)
+      else
+        for (program <- programs)
+          check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
+            m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+            m.loopBound, m.recursionBound, m.useMethodContract)
     } else if (unitNodes.forall(_.isInstanceOf[ast.Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[ast.Sequent])
       if (m.lastOnly)
@@ -114,22 +124,22 @@ object Checker {
       for (tt <- truthTables)
         check(tt, m.kind, autoEnabled = false, m.timeout, m.checkSatEnabled, m.hintEnabled)
     } else {
-      reporter.report(ErrorMessage("AST", "Cannot check mixed programs and sequents."))
+      reporter.report(ErrorMessage("AST", "Cannot check mixed programs/sequents/truth tables."))
     }
     message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
   }
 
   final def check(unitNode: ast.UnitNode,
                   checkerKind: message.CheckerKind.Value, // kind of checker, using logika CheckerKind enumeration
-                  autoEnabled: Boolean = false,    // auto mode
-                  timeoutInMs: PosInteger = 2000,  // time out
+                  autoEnabled: Boolean = false, // auto mode
+                  timeoutInMs: PosInteger = 2000, // time out
                   checkSat: Boolean = false,
-                  hintEnabled: Boolean = false,    // hints
+                  hintEnabled: Boolean = false, // hints
                   inscribeSummoningsEnabled: Boolean = false, // inscribe summonings
                   coneInfluenceEnabled: Boolean = false,
                   bitWidth: Natural = 0,
-                  loopBound: Natural = 10,         // loop bound
-                  recursionBound: Natural = 10,    // recursion bound
+                  loopBound: Natural = 10, // loop bound
+                  recursionBound: Natural = 10, // recursion bound
                   useMethodContract: Boolean = true)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case tt: ast.TruthTable =>
@@ -154,7 +164,8 @@ object Checker {
           var r = SequentProofContext(s, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled,
             premises = ilinkedSetEmpty ++ s.premises).
-            check(proof).isDefined  // I don't understand what these last two clauses do
+            check(proof).isDefined
+          // I don't understand what these last two clauses do
           val exps = proof.steps.flatMap(_ match {
             case s: ast.RegularStep => Some(s.exp)
             case _ => None
@@ -217,15 +228,19 @@ object Checker {
   def check(tt: ast.TruthTable)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
     val nodeLocMap = tt.nodeLocMap
+
     def errorH(n: ast.Node, msg: String): Unit =
       error(tt.fileUriOpt, nodeLocMap(n), msg)(reporter)
+
     var allAssignments = ivectorEmpty[IVector[Boolean]]
+
     def idValComb(i: Natural, acc: IVector[Boolean]): Unit =
       if (i == tt.ids.length) allAssignments :+= acc
       else {
         idValComb(i + 1, acc :+ true)
         idValComb(i + 1, acc :+ false)
       }
+
     idValComb(0, ivectorEmpty)
     var (expectedMap, trueAssignments, falseAssignments) = {
       var tAssignments = isetEmpty[IVector[Boolean]]
@@ -234,6 +249,7 @@ object Checker {
       for (a <- allAssignments) {
         val assignments = imapEmpty[String, Boolean] ++ tt.ids.map(_.value).zip(a)
         var m = imapEmpty[PosInteger, (ast.Exp, Boolean)]
+
         def eval(e: ast.Exp): Boolean = {
           val c = nodeLocMap(e).columnBegin
           val r = (e: @unchecked) match {
@@ -246,6 +262,7 @@ object Checker {
           m += c -> (e, r)
           r
         }
+
         if (eval(tt.formula)) {
           tAssignments += a
         } else {
@@ -456,6 +473,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       })(e)
       ids
     }
+
     var relevantIds = conclusions.toVector.flatMap(collectIds)
     if (relevantIds.isEmpty) return ast.Node.emptySeq
     val m = midmapEmpty[ast.Exp, (Set[String], Natural)]
@@ -485,7 +503,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     var addedSteps = isetEmpty[Natural]
     var pcOpt: Option[T] =
       proofGroup match {
-          // if proofGroup is a SubProof
+        // if proofGroup is a SubProof
         case p: ast.SubProof =>
           // consider the type of the first step in the subproof (the assume step)
           val popt = p.assumeStep match {
@@ -1095,6 +1113,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     var hasError = false
     lazy val ps = premises ++ facts.values
+
     def divisor(e: ast.Exp, t: tipe.IntegralTipe): Boolean = {
       val tpe = t match {
         case tipe.Z => ast.ZType()
@@ -1130,6 +1149,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       }
       true
     }
+
     def index(a: ast.Exp, aTipe: tipe.Tipe, e: ast.Exp): Boolean = {
       val req1 = ast.Exp.Le(tipe.Z, Checker.zero, e)
       req1.tipe = tipe.Z
@@ -1158,6 +1178,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       }
       true
     }
+
     Visitor.build({
       case _: ast.Block => false
       case _: ast.LoopInv => false
@@ -1181,11 +1202,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       var endOffset = input.indexOf('\n', li.offset + li.length)
       if (endOffset < 0) endOffset = input.length
       val sb = new StringBuilder
+
       def indent(): Unit = {
         for (_ <- 0 until li.columnBegin) {
           sb.append(' ')
         }
       }
+
       indent()
       sb.append("{\n")
       for (e <- beforePremises) {

@@ -64,8 +64,12 @@ final case class LogikaOption(@BeanProperty
                               var ascii: Boolean = false,
                               @GroupOpt(shortKey = None, description = "Convert to Unicode", groupName = "Symbol Conversion")
                               var unicode: Boolean = false,
+                              @GroupOpt(shortKey = None, description = "Run input program file(s)", groupName = "Programming Logic")
+                              var run: Boolean = false,
+                              @GroupOpt(shortKey = None, description = "Compare well-formed input program files (sans contracts and prints)", groupName = "Programming Logic")
+                              var compare: Boolean = false,
                               @BeanProperty
                               @Arg(name = "filename")
                               var input: Array[String] = Array()) {
-  def this() = this(false, false, false, none(), 2000, false, false, 0, false, false, Array())
+  def this() = this(false, false, false, none(), 2000, false, false, 0, false, false, false, false, Array())
 }
