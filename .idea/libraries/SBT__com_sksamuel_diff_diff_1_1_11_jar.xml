@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.sksamuel.diff:diff:1.1.11:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.sksamuel.diff/diff/diff-1.1.11.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.sksamuel.diff/diff/diff-1.1.11-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -167,6 +167,8 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.jgrapht" % "jgrapht" % "1.0.0",
     "org.scala-graph" %% "graph-core" % "1.11.4",
     "org.scala-graph" %% "graph-dot" % "1.11.0",
+    "com.lihaoyi" %% "ammonite-ops" % "0.8.1",
+    "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),
   parallelExecution in Test := true,
