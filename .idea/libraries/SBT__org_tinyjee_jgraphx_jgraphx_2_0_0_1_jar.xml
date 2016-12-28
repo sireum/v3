@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.tinyjee.jgraphx:jgraphx:2.0.0.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.tinyjee.jgraphx/jgraphx/jgraphx-2.0.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.tinyjee.jgraphx/jgraphx/jgraphx-2.0.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

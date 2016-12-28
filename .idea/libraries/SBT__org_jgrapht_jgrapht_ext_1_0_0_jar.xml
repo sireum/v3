@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.jgrapht:jgrapht-ext:1.0.0:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.jgrapht/jgrapht-ext/jgrapht-ext-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.jgrapht/jgrapht-ext/jgrapht-ext-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
