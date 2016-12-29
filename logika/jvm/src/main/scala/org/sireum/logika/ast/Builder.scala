@@ -27,9 +27,9 @@ package org.sireum.logika.ast
 
 import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.tree._
-
 import java.io.StringReader
 
+import org.sireum.logika.alir.Cfg
 import org.sireum.logika.parser.Antlr4LogikaParser._
 import org.sireum.logika.parser._
 import org.sireum.util._
@@ -44,6 +44,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   val maxInt: BigInt = BigInt(Int.MaxValue)
   val minInt: BigInt = BigInt(Int.MinValue)
   val maxN64: BigInt = BigInt(2).pow(64) - 1
+
+  var inMethod = false
 
   private def build(ctx: FileContext): UnitNode = {
     val r =
@@ -609,8 +611,12 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   private def build(ctx: ProgramContext): Program =
     if (ctx.impor != null) {
       checkImport(ctx.impor)
-      Program(build(ctx.stmts)) at ctx
-    } else Program(Block(Node.emptySeq))
+      Program(
+        Block(
+          (for (stmts <- Option(ctx.stmts); ss <- Option(stmts.stmt)) yield
+            (for (s <- ss) yield build(s)).flatten).getOrElse(Node.emptySeq),
+          None)) at ctx
+    } else Program(Block(Node.emptySeq, None))
 
   private def checkImport(ctx: ImporContext): Unit =
     if (!("org" == ctx.org.getText && "sireum" == ctx.sireum.getText &&
@@ -644,11 +650,19 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
     Param(buildId(ctx.ID), build(ctx.`type`)) at ctx
   }
 
-  private def build(ctx: StmtsContext): Block =
-    Block(Option(ctx.stmt) match {
+  private def build(t: Token, ctx: BlockEndContext): Block = {
+    val r = Block(Option(ctx.stmts.stmt) match {
       case Some(stmts) => for (stmt <- stmts; s <- build(stmt)) yield s
       case None => Node.emptySeq
-    })
+    }, Option(ctx.returnStmt).map(build)) at(t, ctx.t)
+    if (r.returnOpt.isDefined && !inMethod) {
+      error(r.returnOpt.get, s"Returning a value is only possible inside a method.")
+    }
+    r
+  }
+
+  private def build(ctx: ReturnStmtContext): Return =
+    Return(Option(ctx.exp).map(build)) at ctx
 
   private def build(ctx: StmtContext): Option[Stmt] = {
     val rOpt: Option[Stmt] =
@@ -667,10 +681,11 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         case ctx: AssumeStmtContext => Some(Assume(build(ctx.exp)))
         case ctx: AssertStmtContext => Some(Assert(build(ctx.exp)))
         case ctx: IfStmtContext =>
-          Some(If(build(ctx.exp), build(ctx.ts),
-            Option(ctx.fs).map(build).getOrElse(Block(Node.emptySeq))))
+          Some(If(build(ctx.exp), build(ctx.tt, ctx.ts),
+            Option(ctx.fs).map(build(ctx.tf, _)).
+              getOrElse(Block(Node.emptySeq, None))))
         case ctx: WhileStmtContext =>
-          Some(While(build(ctx.exp), build(ctx.stmts),
+          Some(While(build(ctx.exp), build(ctx.t, ctx.blockEnd),
             Option(ctx.loopInvariant).map(build).getOrElse(
               LoopInv(Inv(Node.emptySeq), Modifies(Node.emptySeq)))))
         case ctx: PrintStmtContext =>
@@ -696,14 +711,35 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
                 error(ctx.helper, s"Only helper annotation is allowed instead of ${ctx.helper.getText}.")
               true
             } else false
-          Some(MethodDecl(isHelper, buildId(ctx.id),
+          inMethod = true
+          val block = build(ctx.t, ctx.blockEnd)
+          inMethod = false
+          val r = MethodDecl(isHelper, buildId(ctx.id),
             Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
             Option(ctx.`type`).map(build),
             Option(ctx.methodContract).map(build).getOrElse(
               MethodContract(Requires(Node.emptySeq),
                 Modifies(Node.emptySeq),
                 Ensures(Node.emptySeq))),
-            build(ctx.stmts), Option(ctx.exp).map(build)))
+            block)
+          val cfg = Cfg(r)
+          //          val unitNode = Program(Block(Node.emptySeq, None))
+          //          unitNode.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
+          //          println(cfg.toDotString(unitNode))
+          val unreachableNodes = cfg.unreachableNodes
+          if (unreachableNodes.nonEmpty) {
+            for (n <- unreachableNodes) n match {
+              case n: Cfg.StmtNode => error(n.stmt, "Unreachable statement.")
+              case n: Cfg.ReturnNode => error(n.ret, "Unreachable statement.")
+              case _ =>
+            }
+          }
+          if (r.returnTypeOpt.isDefined)
+            for (ret <- cfg.pred(cfg.endNode) if !unreachableNodes.contains(ret)) ret match {
+              case n: Cfg.StmtNode => error(n.stmt, "Explicit return should be added after the statement.")
+              case _ =>
+            }
+          Some(r)
         case ctx: LogikaStmtContext =>
           Some(((ctx.proof, ctx.sequent, ctx.invariants, ctx.facts): @unchecked) match {
             case (proof, null, null, null) => ProofStmt(build(proof))
@@ -1054,6 +1090,8 @@ object Builder {
     "catch", "else", "extends", "finally", "forSome", "match", "with", "yield",
     ",", ".", ":", "=", "=>", "⇒", "[", ")", "]", "}", "<-", "<:", "<%", ">:", "#"
   )
+
+  private class EscapeException extends RuntimeException
 
   import org.antlr.v4.runtime._
 

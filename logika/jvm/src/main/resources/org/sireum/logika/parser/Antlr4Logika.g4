@@ -303,23 +303,20 @@ stmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
-  | 'if' '(' exp ')' NL* '{' ts=stmts '}'
-     ( 'else' NL* '{' fs=stmts '}' )?                   #IfStmt
-  | 'while' '(' exp ')' NL* '{'
+  | 'if' '(' exp ')' NL* tt='{' ts=blockEnd
+     ( 'else' NL* tf='{' fs=blockEnd )?                 #IfStmt
+  | 'while' '(' exp ')' NL* t='{'
     ( NL* 'l"""' loopInvariant '"""' )?
-    stmts
-    '}'                                                 #WhileStmt
+    blockEnd                                            #WhileStmt
   | op=( 'print' | 'println' )
     '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
   | ( '@' helper=ID )? 'def' id=ID  NL?
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
-    '{'
+    t='{'
     ( NL* 'l"""' methodContract NL* '"""' )?
-    stmts
-    ( rtb='return' exp? NL* )?
-    '}'                                                 #MethodDeclStmt
+    blockEnd                                            #MethodDeclStmt
   | 'l"""'
     ( proof
     | sequent
@@ -328,6 +325,16 @@ stmt
     ) '"""'                                             #LogikaStmt
   | impor                                               #ImportStmt
   | exp                                                 #ExpStmt
+  ;
+
+blockEnd
+  : stmts
+    ( returnStmt NL* )?
+    t='}'
+  ;
+
+returnStmt
+  : 'return' exp?
   ;
 
 stringOrExp

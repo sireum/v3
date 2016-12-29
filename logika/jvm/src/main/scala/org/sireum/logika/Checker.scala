@@ -207,8 +207,8 @@ object Checker {
           ForwardProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
         case message.CheckerKind.Backward =>
-          BackwardProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
+          reporter.report(InternalErrorMessage(kind, "Backward mode is unsupported yet."))
+          return false
         case message.CheckerKind.SummarizingSymExe =>
           SummarizingSymExeProofContext(program, autoEnabled, timeoutInMs,
             checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
@@ -425,17 +425,23 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   }
 
   def checkSat(title: String, li: LocationInfo, exps: Iterable[ast.Exp],
-               unsatMsg: => String, unknownMsg: => String,
+               genMessage: Boolean, unsatMsg: => String, unknownMsg: => String,
                timeoutMsg: => String): Boolean = {
     val es = exps.toVector
-    if (checkSat) {
+    if (checkSat || !genMessage) {
       val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator
         val sb = new StringBuilder
         if ("" == title) sb.append("; Satisfiability: ")
         else sb.append(s"; Satisfiability of $title: ")
-        sb.append(r)
+        sb.append(r match {
+          case Z3.Unsat => "Unsat"
+          case Z3.Sat => "Sat"
+          case Z3.Timeout => "Don't Know (Timeout)"
+          case Z3.Unknown => "Don't Know"
+          case Z3.Error => "Error"
+        })
         sb.append(lineSep)
         for (e <- es) {
           sb.append(";   ")
@@ -450,53 +456,55 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
         case Z3.Sat =>
           true
         case Z3.Unsat =>
-          error(li, unsatMsg); false
+          if (genMessage) error(li, unsatMsg)
+          false
         case Z3.Unknown =>
-          reporter.report(li.toLocationWarning(fileUriOpt, "checksat", unknownMsg))
+          if (genMessage) reporter.report(li.toLocationWarning(fileUriOpt, "checksat", unknownMsg))
           true
         case Z3.Timeout =>
-          reporter.report(li.toLocationWarning(fileUriOpt, "checksat", timeoutMsg))
+          if (genMessage) reporter.report(li.toLocationWarning(fileUriOpt, "checksat", timeoutMsg))
           true
         case Z3.Error =>
-          false
+          true
       }
     } else true
   }
 
   def coneOfInfluence(premises: Iterable[ast.Exp],
-                      conclusions: Iterable[ast.Exp]): IVector[ast.Exp] = {
-    def collectIds(e: ast.Exp): Set[String] = {
-      var ids = isetEmpty[String]
-      Visitor.build({
-        case ast.Id(value) => ids += value
-          false
-      })(e)
-      ids
-    }
+                      conclusions: Iterable[ast.Exp]): IVector[ast.Exp] =
+    if (coneInfluenceEnabled) {
+      def collectIds(e: ast.Exp): Set[String] = {
+        var ids = isetEmpty[String]
+        Visitor.build({
+          case ast.Id(value) => ids += value
+            false
+        })(e)
+        ids
+      }
 
-    var relevantIds = conclusions.toVector.flatMap(collectIds)
-    if (relevantIds.isEmpty) return ast.Node.emptySeq
-    val m = midmapEmpty[ast.Exp, (Set[String], Natural)]
-    var i = 0
-    for (e <- premises) {
-      m(e) = (collectIds(e), i)
-      i += 1
-    }
-    var changed = true
-    var relevantPremises = ivectorEmpty[ast.Exp]
-    var temp = premises
-    while (changed) {
-      val (rps, t) = temp.partition(e => {
-        val eIds = m(e)._1
-        eIds.exists(relevantIds.contains)
-      })
-      temp = t
-      relevantPremises ++= rps
-      relevantIds ++= rps.flatMap(e => m(e)._1)
-      changed = rps.nonEmpty
-    }
-    relevantPremises.sortWith((e1, e2) => m(e1)._2 > m(e2)._2)
-  }
+      var relevantIds = conclusions.toVector.flatMap(collectIds)
+      if (relevantIds.isEmpty) return ast.Node.emptySeq
+      val m = midmapEmpty[ast.Exp, (Set[String], Natural)]
+      var i = 0
+      for (e <- premises) {
+        m(e) = (collectIds(e), i)
+        i += 1
+      }
+      var changed = true
+      var relevantPremises = ivectorEmpty[ast.Exp]
+      var temp = premises
+      while (changed) {
+        val (rps, t) = temp.partition(e => {
+          val eIds = m(e)._1
+          eIds.exists(relevantIds.contains)
+        })
+        temp = t
+        relevantPremises ++= rps
+        relevantIds ++= rps.flatMap(e => m(e)._1)
+        changed = rps.nonEmpty
+      }
+      relevantPremises.sortWith((e1, e2) => m(e1)._2 > m(e2)._2)
+    } else premises.toVector
 
   def check(proofGroup: ast.ProofGroup): Option[T] = {
     var addedVars = isetEmpty[String]

@@ -66,7 +66,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
                             facts: IMap[String, ast.Exp] = imapEmpty,
                             provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                             declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                            inMethod: Boolean = false,
+                            mdOpt: Option[ast.MethodDecl] = None,
                             satFacts: Boolean = true,
                             stmtBound: CMap[ast.Stmt, Int] = midmapEmpty,
                             loopBound: Natural = 10,
@@ -155,6 +155,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     })
     var isSat = true
     if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
+      genMessage = true,
       unsatMsg = "The specified set of facts are unsatisfiable.",
       unknownMsg = {
         isSat = false
@@ -178,7 +179,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
     var hasError =
       !checkSat("effective precondition", preLi,
-        effectiveSatFacts ++ effectivePre,
+        effectiveSatFacts ++ effectivePre, genMessage = true,
         unsatMsg = s"The effective pre-condition of method ${
           stmt.id.value
         } is unsatisfiable.",
@@ -194,7 +195,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       else stmt.contract.ensures.exps.head)
     hasError =
       !checkSat("effective postcondition", postLi,
-        effectiveSatFacts ++ effectivePost,
+        effectiveSatFacts ++ effectivePost, genMessage = true,
         unsatMsg = s"The effective post-condition of method ${
           stmt.id.value
         } is unsatisfiable.",
@@ -208,45 +209,11 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     if (hasError) return ivector(updateStatus(Error(stmt)))
     val modifiedIds = stmt.contract.modifies.ids.toSet
     val mods = modifiedIds.map(id => ast.Exp.Eq(id.tipe, id, ast.Exp.Id(id.tipe, id.value + "_in")))
-    var (pc2s, r) = copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods,
-      inMethod = true).check(stmt.block).partition(isNormal)
-    for (pc2 <- pc2s) {
-      hasError = false
-      var modifiedInvariants = ilinkedSetEmpty[ast.Exp]
-      for (e <- invs) {
-        var modified = false
-        Visitor.build({
-          case id: ast.Id =>
-            if (modifiedIds.contains(id)) {
-              modified = true
-            }
-            false
-        })(e)
-        if (modified) modifiedInvariants += e
-      }
-      val ps = pc2.premises ++ pc2.facts.values
-      for (e <- modifiedInvariants)
-        if (!isValid(s"global invariant", nodeLocMap(stmt), ps, ivector(e))) {
-          error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
-          hasError = true
-        }
-      val post = stmt.contract.ensures.exps
-      val postSubstMap = stmt.returnExpOpt match {
-        case Some(e) => imapEmpty[ast.Node, ast.Node] + (ast.Result() -> e)
-        case _ => imapEmpty[ast.Node, ast.Node]
-      }
-      for (e <- post)
-        if (!isValid("postcondition", nodeLocMap(e), ps, ivector(subst(e, postSubstMap)))) {
-          error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
-          hasError = true
-        }
-      if (hasError) r :+= pc2.updateStatus(Error(stmt))
-      else r :+= pc2.updateStatus(Return(stmt))
-    }
-    r
+    copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods,
+      mdOpt = Some(stmt)).check(stmt.block, checkReturn = true)
   }
 
-  def check(block: ast.Block): ISeq[UnrollingSymExeProofContext] = {
+  def check(block: ast.Block, checkReturn: Boolean = false): ISeq[UnrollingSymExeProofContext] = {
     var r = ivectorEmpty[UnrollingSymExeProofContext]
     var pcs: GenSeq[UnrollingSymExeProofContext] = ivector(this).par
     for (stmt <- block.stmts) {
@@ -260,7 +227,61 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       pcs = next
       r ++= done
     }
-    r ++ pcs
+    block.returnOpt match {
+      case Some(ret) =>
+        r = r ++ (for (pc <- pcs) yield pc.checkPostCondition(nodeLocMap(ret), ret.expOpt))
+      case _ =>
+        if (checkReturn) {
+          val li = nodeLocMap(block)
+          val newLi = li.copy(
+            lineBegin = li.lineEnd,
+            columnBegin = li.columnEnd - 1,
+            offset = li.offset + li.length - 1,
+            length = 1)
+          r = r ++ (for (pc <- pcs) yield pc.checkPostCondition(newLi, None))
+        } else r = r ++ pcs
+    }
+    r
+  }
+
+  def checkPostCondition(li: LocationInfo, retExpOpt: Option[ast.Exp]): UnrollingSymExeProofContext = {
+    assert(mdOpt.isDefined)
+    val md = mdOpt.get
+    val invs = if (md.isHelper) ilinkedSetEmpty else invariants
+    val modifiedIds = md.contract.modifies.ids.toSet
+    var modifiedInvariants = ilinkedSetEmpty[ast.Exp]
+    for (e <- invs) {
+      var modified = false
+      Visitor.build({
+        case id: ast.Id =>
+          if (modifiedIds.contains(id)) {
+            modified = true
+          }
+          false
+      })(e)
+      if (modified) modifiedInvariants += e
+    }
+    var hasError = false
+    val ps = premises ++ facts.values
+    for (e <- modifiedInvariants)
+      if (!isValid(s"global invariant", li, ps, ivector(e))) {
+        val eLi = nodeLocMap(e)
+        error(li, s"Could not automatically deduce the global invariant specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
+        hasError = true
+      }
+    val post = md.contract.ensures.exps
+    val postSubstMap = retExpOpt match {
+      case Some(e) => imapEmpty[ast.Node, ast.Node] + (ast.Result() -> e)
+      case _ => imapEmpty[ast.Node, ast.Node]
+    }
+    for (e <- post)
+      if (!isValid("postcondition", li, ps, ivector(subst(e, postSubstMap)))) {
+        val eLi = nodeLocMap(e)
+        error(li, s"Could not automatically deduce the post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
+        hasError = true
+      }
+    if (hasError) updateStatus(Error(md))
+    else updateStatus(Return(md))
   }
 
   def updateStatus(s: Status): UnrollingSymExeProofContext = copy(status = s)
@@ -304,7 +325,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       case ast.Assert(e) =>
         if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
           error(stmt, s"Could not automatically deduce the assertion validity.")
-          checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
+          checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
             unsatMsg = s"The assertion is unsatisfiable.",
             unknownMsg = s"The assertion might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -315,7 +336,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         eval.Eval.evalExp(store)(e) match {
           case Some(true) =>
           case _ =>
-            if (!checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
+            if (!checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assumption is unsatisfiable.",
               unknownMsg = s"The assumption might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -393,13 +414,13 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         val ps = premises ++ facts.values
         val negExpSimplified = eval.Eval.simplify(bitWidth, store)(ast.Exp.Not(tipe.B, expSimplified))
         val tcs =
-          if (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
-            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat)
+          if (checkSat("True Branch", nodeLocMap(exp),
+            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified, genMessage = false, "", "", ""))
             copy(premises = premises + expSimplified).check(thenBlock)
           else ivectorEmpty
         val fcs =
-          if (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
-            coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
+          if (checkSat("False Branch", nodeLocMap(exp),
+            coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified, genMessage = false, "", "", ""))
             copy(premises = premises + negExpSimplified).check(elseBlock)
           else ivectorEmpty
         tcs ++ fcs
@@ -414,7 +435,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           }
         if (hasError)
           checkSat("global invariant", nodeLocMap(stmt),
-            effectiveSatFacts ++ inv.exps,
+            effectiveSatFacts ++ inv.exps, genMessage = true,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
@@ -424,6 +445,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       case ast.While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
         val ps = premises ++ facts.values
+
         def checkLoopInv(): Boolean = {
           var hasError = true
           for (e <- es)
@@ -433,23 +455,25 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
             }
           !hasError
         }
+
         if (checkLoopInv()) return ivector(updateStatus(Error(stmt)))
         val expSimplified = eval.Eval.simplify(bitWidth, store)(exp)
         val negExpSimplified = eval.Eval.simplify(bitWidth, store)(ast.Exp.Not(tipe.B, expSimplified))
         lazy val cond = premises + expSimplified
         lazy val ncond = premises + negExpSimplified
         val (loop, exit) =
-          (util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
-            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified: _*)._2 != util.Z3.Unsat,
-            util.Z3.checkSat(timeoutInMs, isSymExe = true, bitWidth,
-              coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified: _*)._2 != util.Z3.Unsat)
+          (checkSat("True Branch", nodeLocMap(exp),
+            coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified, genMessage = false, "", "", ""),
+            checkSat("False Branch", nodeLocMap(exp),
+              coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified, genMessage = false, "", "", ""))
         (loop, exit) match {
           case (true, true) =>
             bound(stmt, isLoop = true) match {
               case Some(pc2) =>
-                val tcs = pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
+                val (next, done) = pc2.copy(premises = cond).check(loopBlock).partition(isNormal)
+                val tcs = next.flatMap(_.check(stmt))
                 val fc = copy(premises = ncond)
-                tcs :+ fc
+                (done ++ tcs) :+ fc
               case _ =>
                 warn(stmt, "Loop-bound exhausted.")
                 ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt)),
@@ -458,7 +482,8 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           case (true, false) =>
             bound(stmt, isLoop = true) match {
               case Some(pc2) =>
-                pc2.copy(premises = cond).check(loopBlock).flatMap(_.check(stmt))
+                val (next, done) = pc2.copy(premises = cond).check(loopBlock).partition(isNormal)
+                done ++ next.flatMap(_.check(stmt))
               case _ =>
                 warn(stmt, "Loop-bound exhausted.")
                 ivector(copy(premises = cond).updateStatus(BoundExhaustion(stmt)))
@@ -508,7 +533,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       if (mod) invs :+= inv
     }
     val ps = premises ++ facts.values
-    for (inv <- invs if inMethod)
+    for (inv <- invs if mdOpt.isDefined)
       if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
         val li = nodeLocMap(inv)
         error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")

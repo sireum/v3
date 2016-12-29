@@ -41,7 +41,7 @@ ForwardProofContext(unitNode: ast.Program,
                     facts: IMap[String, ast.Exp] = imapEmpty,
                     provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                     declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
-                    inMethod: Boolean = false,
+                    mdOpt: Option[ast.MethodDecl] = None,
                     satFacts: Boolean = true)
                    (implicit reporter: AccumulatingTagReporter) extends ProofContext[ForwardProofContext] {
   val isSymExe = false
@@ -51,23 +51,25 @@ ForwardProofContext(unitNode: ast.Program,
     val program = unitNode
     val facts = extractFacts
     var isSat = true
-    if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
-      unsatMsg = "The specified set of facts are unsatisfiable.",
-      unknownMsg = {
-        isSat = false
-        "The set of facts might not be satisfiable."
-      },
-      timeoutMsg = {
-        isSat = false
-        "Could not check satisfiability of the set of facts due to timeout."
-      }
-    )) return false
-    copy(facts = facts, satFacts = isSat).check(program.block).isDefined
+    if (facts.nonEmpty &&
+      !checkSat("facts", nodeLocMap(program), facts.values, genMessage = true,
+        unsatMsg = "The specified set of facts are unsatisfiable.",
+        unknownMsg = {
+          isSat = false
+          "The set of facts might not be satisfiable."
+        },
+        timeoutMsg = {
+          isSat = false
+          "Could not check satisfiability of the set of facts due to timeout."
+        }
+      )) return false
+    copy(facts = facts, satFacts = isSat).check(program.block)
+    !reporter.hasError
   }
 
   def oldId(id: ast.Id): ast.Id = ast.Exp.Id(id.tipe, s"${id.value}_old")
 
-  def check(block: ast.Block): Option[ForwardProofContext] = {
+  def check(block: ast.Block, checkReturn: Boolean = false): Option[ForwardProofContext] = {
     var pcOpt: Option[ForwardProofContext] = Some(this)
     for (stmt <- block.stmts if pcOpt.isDefined) {
       val pc =
@@ -75,7 +77,73 @@ ForwardProofContext(unitNode: ast.Program,
         else pcOpt.get.cleanup
       pcOpt = pc.check(stmt)
     }
+    (pcOpt, block.returnOpt) match {
+      case (Some(pc), Some(ret)) =>
+        pc.checkPostCondition(nodeLocMap(ret), ret.expOpt)
+        pcOpt = None
+      case (Some(pc), _) if checkReturn =>
+        val li = nodeLocMap(block)
+        pc.checkPostCondition(li.copy(
+          lineBegin = li.lineEnd,
+          columnBegin = li.columnEnd - 1,
+          offset = li.offset + li.length - 1,
+          length = 1), None)
+        pcOpt = None
+      case _ =>
+    }
     pcOpt
+  }
+
+  def checkPostCondition(li: LocationInfo, retExpOpt: Option[ast.Exp]): Unit = {
+    assert(mdOpt.nonEmpty)
+    val md = mdOpt.get
+    val invs = if (md.isHelper) ilinkedSetEmpty else invariants
+    val modifiedIds = md.contract.modifies.ids.toSet
+    var modifiedInvariants = ilinkedSetEmpty[ast.Exp]
+    for (e <- invs) {
+      var modified = false
+      Visitor.build({
+        case id: ast.Id =>
+          if (modifiedIds.contains(id)) {
+            modified = true
+          }
+          false
+      })(e)
+      if (modified) modifiedInvariants += e
+    }
+    if (autoEnabled) {
+      val ps = premises ++ facts.values
+      for (e <- modifiedInvariants)
+        if (!isValid(s"global invariant", li, ps, ivector(e))) {
+          val eLi = nodeLocMap(e)
+          error(li, s"Could not automatically deduce the global invariant specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
+        }
+    } else {
+      for (e <- modifiedInvariants)
+        if (!premises.contains(e)) {
+          val eLi = nodeLocMap(e)
+          error(li, s"The global invariant specified at [${eLi.lineBegin}, ${eLi.columnBegin}] has not been proven.")
+        }
+    }
+    val post = md.contract.ensures.exps
+    val postSubstMap = retExpOpt match {
+      case Some(e) => imapEmpty[ast.Node, ast.Node] + (ast.Result() -> e)
+      case _ => imapEmpty[ast.Node, ast.Node]
+    }
+    if (autoEnabled) {
+      val ps = premises ++ facts.values
+      for (e <- post)
+        if (!isValid("postcondition", li, ps, ivector(subst(e, postSubstMap)))) {
+          val eLi = nodeLocMap(e)
+          error(li, s"Could not automatically deduce the post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
+        }
+    } else {
+      for (e <- post)
+        if (!premises.contains(subst(e, postSubstMap))) {
+          val eLi = nodeLocMap(e)
+          error(e, s"The post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}] has not been proven.")
+        }
+    }
   }
 
   def check(stmt: ast.Stmt): Option[ForwardProofContext] = {
@@ -112,7 +180,7 @@ ForwardProofContext(unitNode: ast.Program,
           if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
             error(stmt, s"Could not automatically deduce the assertion validity.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
+            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -121,7 +189,7 @@ ForwardProofContext(unitNode: ast.Program,
           if (!premises.contains(e)) {
             error(e, s"The assertion has not been proven.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e,
+            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -130,7 +198,7 @@ ForwardProofContext(unitNode: ast.Program,
         Some(copy(premises = premises + e))
       case ast.Assume(e) =>
         hasError = !checkSat("", nodeLocMap(stmt),
-          premises ++ effectiveSatFacts + e,
+          premises ++ effectiveSatFacts + e, genMessage = true,
           unsatMsg = s"The assumption is unsatisfiable.",
           unknownMsg = s"The assumption might not be satisfiable.",
           timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -178,21 +246,32 @@ ForwardProofContext(unitNode: ast.Program,
       case ast.If(exp, thenBlock, elseBlock) =>
         val thenPcOpt = copy(premises = premises + exp).check(thenBlock)
         val elsePcOpt = copy(premises = premises + ast.Exp.Not(tipe.B, exp)).check(elseBlock)
-        (thenPcOpt, elsePcOpt) match {
-          case (Some(thenPc), Some(elsePc)) =>
-            if (autoEnabled) {
-              val thenPremises = thenPc.cleanup.premises
-              val elsePremises = elsePc.cleanup.premises
-              val commonPremises = thenPremises.intersect(elsePremises)
-              import ast.Exp
-              Some(copy(premises = commonPremises +
-                Exp.Or(tipe.B, Exp.And((thenPremises -- commonPremises).toVector),
-                  Exp.And((elsePremises -- commonPremises).toVector))))
-            } else {
-              Some(copy(premises =
-                orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
-            }
-          case _ => None
+        (thenBlock.returnOpt.isEmpty, elseBlock.returnOpt.isEmpty) match {
+          case (true, true) => (thenPcOpt, elsePcOpt) match {
+            case (Some(thenPc), Some(elsePc)) =>
+              if (autoEnabled) {
+                val thenPremises = thenPc.cleanup.premises
+                val elsePremises = elsePc.cleanup.premises
+                val commonPremises = thenPremises.intersect(elsePremises)
+                import ast.Exp
+                Some(copy(premises = commonPremises +
+                  Exp.Or(tipe.B, Exp.And((thenPremises -- commonPremises).toVector),
+                    Exp.And((elsePremises -- commonPremises).toVector))))
+              } else {
+                Some(copy(premises =
+                  orClaims(thenPc.cleanup.premises, elsePc.cleanup.premises)))
+              }
+            case _ => None
+          }
+          case (true, false) => thenPcOpt match {
+            case Some(thenPc) => Some(copy(premises = thenPc.cleanup.premises))
+            case _ => None
+          }
+          case (false, true) => elsePcOpt match {
+            case Some(elsePc) => Some(copy(premises = elsePc.cleanup.premises))
+            case _ => None
+          }
+          case (false, false) => None
         }
       case stmt: ast.MethodDecl =>
         val invs = if (stmt.isHelper) ilinkedSetEmpty else invariants
@@ -203,7 +282,7 @@ ForwardProofContext(unitNode: ast.Program,
           else stmt.contract.requires.exps.head)
         hasError =
           !checkSat("effective precondition", preLi,
-            effectiveSatFacts ++ effectivePre,
+            effectiveSatFacts ++ effectivePre, genMessage = true,
             unsatMsg = s"The effective pre-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -219,7 +298,7 @@ ForwardProofContext(unitNode: ast.Program,
           else stmt.contract.ensures.exps.head)
         hasError =
           !checkSat("effective postcondition", postLi,
-            effectiveSatFacts ++ effectivePost,
+            effectiveSatFacts ++ effectivePost, genMessage = true,
             unsatMsg = s"The effective post-condition of method ${
               stmt.id.value
             } is unsatisfiable.",
@@ -233,56 +312,8 @@ ForwardProofContext(unitNode: ast.Program,
         val modifiedIds = stmt.contract.modifies.ids.toSet
         val mods = modifiedIds.map(id =>
           ast.Exp.Eq(id.tipe, id, ast.Exp.Id(id.tipe, id.value + "_in")))
-        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, inMethod = true).
-          check(stmt.block) match {
-          case Some(pc2) =>
-            var modifiedInvariants = ilinkedSetEmpty[ast.Exp]
-            for (e <- invs) {
-              var modified = false
-              Visitor.build({
-                case id: ast.Id =>
-                  if (modifiedIds.contains(id)) {
-                    modified = true
-                  }
-                  false
-              })(e)
-              if (modified) modifiedInvariants += e
-            }
-            if (autoEnabled) {
-              val ps = pc2.premises ++ pc2.facts.values
-              for (e <- modifiedInvariants)
-                if (!isValid(s"global invariant", nodeLocMap(stmt), ps, ivector(e))) {
-                  error(e, s"Could not automatically deduce the global invariant at the end of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            } else {
-              for (e <- modifiedInvariants)
-                if (!pc2.premises.contains(e)) {
-                  error(e, s"The global invariant has not been proven at the end of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            }
-            val post = stmt.contract.ensures.exps
-            val postSubstMap = stmt.returnExpOpt match {
-              case Some(e) => imapEmpty[ast.Node, ast.Node] + (ast.Result() -> e)
-              case _ => imapEmpty[ast.Node, ast.Node]
-            }
-            if (autoEnabled) {
-              val ps = pc2.premises ++ pc2.facts.values
-              for (e <- post)
-                if (!isValid("postcondition", nodeLocMap(e), ps, ivector(subst(e, postSubstMap)))) {
-                  error(e, s"Could not automatically deduce the post-condition of method ${stmt.id.value}.")
-                  hasError = true
-                }
-            } else {
-              for (e <- post)
-                if (!pc2.premises.contains(subst(e, postSubstMap))) {
-                  error(e, s"The post-condition of method ${stmt.id.value} has not been proven.")
-                  hasError = true
-                }
-            }
-          case _ => hasError = true
-        }
+        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, mdOpt = Some(stmt)).
+          check(stmt.block, checkReturn = true)
         Some(this.cleanup)
       case ast.InvStmt(inv) =>
         if (autoEnabled) {
@@ -301,7 +332,7 @@ ForwardProofContext(unitNode: ast.Program,
         }
         if (hasError)
           checkSat("global invariant", nodeLocMap(stmt),
-            effectiveSatFacts ++ inv.exps,
+            effectiveSatFacts ++ inv.exps, genMessage = true,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the global invariant(s) due to timeout.")
@@ -341,8 +372,7 @@ ForwardProofContext(unitNode: ast.Program,
           v(premise)
           if (propagate) ps += premise
         }
-        copy(premises = ps + exp).
-          check(loopBlock) match {
+        copy(premises = ps + exp).check(loopBlock) match {
           case Some(pc2) =>
             hasError = hasError || pc2.hasRuntimeError(stmt)
             if (autoEnabled) {
@@ -359,9 +389,9 @@ ForwardProofContext(unitNode: ast.Program,
                   hasError = true
                 }
             }
-            Some(copy(premises = ps + ast.Exp.Not(tipe.B, exp)))
-          case _ => None
+          case _ =>
         }
+        Some(copy(premises = ps + ast.Exp.Not(tipe.B, exp)))
       case _: ast.Print => Some(this)
     }
     generateHint(premises, stmt,
@@ -398,7 +428,7 @@ ForwardProofContext(unitNode: ast.Program,
     }
     if (autoEnabled) {
       val ps = premises ++ facts.values
-      for (inv <- invs if inMethod)
+      for (inv <- invs if mdOpt.isDefined)
         if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
           val li = nodeLocMap(inv)
           error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
@@ -481,6 +511,7 @@ ForwardProofContext(unitNode: ast.Program,
       })(e)
       r
     }
+
     premises.filter(keep)
   }
 

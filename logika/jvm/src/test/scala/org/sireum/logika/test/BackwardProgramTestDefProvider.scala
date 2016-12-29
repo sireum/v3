@@ -48,11 +48,16 @@ final class BackwardProgramTestDefProvider(tf: TestFramework)
       getClass.getResourceAsStream(uri))
     val text = FileUtil.readFile(r)
     r.close()
+    var hasInternalError = false
     implicit val reporter = new ConsoleTagReporter {
       override def info(msg: String): Unit = {
       }
 
       override def warn(msg: String): Unit = {
+      }
+
+      override def internalError(msg: String): Unit = {
+        hasInternalError = true
       }
     }
     Checker.check(
@@ -71,6 +76,6 @@ final class BackwardProgramTestDefProvider(tf: TestFramework)
         loopBound = 10,
         recursionBound = 10,
         useMethodContract = true))
-    !reporter.hasError
+    !reporter.hasError && hasInternalError // unimplemented
   }
 }

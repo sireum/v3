@@ -64,7 +64,7 @@ final class Z3TestDefProvider(tf: TestFramework)
           case Program(Block(Seq(MethodDecl(_, _, _, _, MethodContract(
           Requires(Seq(e1)),
           _,
-          Ensures(Seq(e2))), _, _)))) =>
+          Ensures(Seq(e2))), _)), _)) =>
             implicit val nlm = p.nodeLocMap
             Z3.isValid(2000, isSymExe = false, 0, ivector(e1), ivector(e2))._2 == Z3.Unsat
           case _ => false

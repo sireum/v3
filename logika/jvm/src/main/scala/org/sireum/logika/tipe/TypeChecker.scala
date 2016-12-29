@@ -45,7 +45,7 @@ object TypeChecker {
         id.tipe = ft
         typeMap = addId(typeMap, program, id, ft, f)
       }
-      for (m@MethodDecl(_, id, _, _, _, _, _) <- program.block.stmts)
+      for (m@MethodDecl(_, id, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
     }
     if (reporter.hasError) return false
@@ -164,14 +164,35 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   }
 
   def check(b: Block)(
-    implicit mOpt: Option[MethodDecl]): TypeContext = {
+    implicit mOpt: Option[Tipe]): TypeContext = {
     var tc = this
     for (stmt <- b.stmts) tc = tc.check(stmt)
+    mOpt match {
+      case Some(t) =>
+        b.returnOpt.map(_.expOpt) match {
+          case Some(Some(e)) =>
+            tc.check(e, allowMethod = false)(
+              allowFun = false, mOpt) match {
+              case Some(t2) =>
+                if (t != t2)
+                  error(e, s"Expecting return type $t, but found $t2.")
+              case _ =>
+            }
+          case Some(None) =>
+            error(b.returnOpt.get, s"Expecting return type $t, but found none.")
+          case _ =>
+        }
+      case _ =>
+        b.returnOpt.map(_.expOpt) match {
+          case Some(Some(e)) => error(e, s"Unexpected return expression.")
+          case _ =>
+        }
+    }
     tc
   }
 
   def check(stmt: Stmt)(
-    implicit mOpt: Option[MethodDecl]): TypeContext = stmt match {
+    implicit mOpt: Option[Tipe]): TypeContext = stmt match {
     case VarDecl(isVar, id, t, exp) =>
       id.tipe = TypeChecker.tipe(bitWidth, t)
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
@@ -245,32 +266,19 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
-      tc = tc.check(md.block)(Some(md))
-      tc.checkModifies(md.contract.modifies, md.block, md)
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(bitWidth, rt)
+          tc = tc.check(md.block)(Some(t))
           val tcPost = copy(
             typeMap = TypeChecker.addId(tm, program, Id("result"), t, md))
           for (e <- md.contract.ensures.exps)
             tcPost.b(e)(allowFun = true, mOpt)
-          md.returnExpOpt match {
-            case Some(e) =>
-              tc.check(e, allowMethod = false)(
-                allowFun = false, mOpt) match {
-                case Some(t2) =>
-                  if (t != t2)
-                    error(e, s"Expecting return type $t, but found $t2.")
-                case _ =>
-              }
-            case _ =>
-              error(rt, s"Expecting a return value.")
-          }
-        case _ =>
-          if (md.returnExpOpt.isDefined)
-            error(md.returnExpOpt.get, s"Unexpected return expression.")
+        case None =>
+          tc = tc.check(md.block)(None)
           for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true, mOpt)
       }
+      tc.checkModifies(md.contract.modifies, md.block, md)
       this
     case ProofStmt(proof) => check(proof); this
     case SequentStmt(sequent) =>
@@ -362,7 +370,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
 
   def check(e: Exp, allowMethod: Boolean = false)(
     implicit allowFun: Boolean,
-    mOpt: Option[MethodDecl]): Option[Tipe] =
+    mOpt: Option[Tipe]): Option[Tipe] =
     e match {
       case _: BooleanLit => someB
       case e: Id => val r = tipe(e); r.foreach(e.tipe = _); r
@@ -669,49 +677,49 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     r
   }
 
-  def b(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
+  def b(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Unit =
     check(e) match {
       case Some(B) =>
       case Some(t) => error(e, s"Expecting an expression of type B, but found $t.")
       case _ =>
     }
 
-  def z(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
+  def z(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Unit =
     check(e) match {
       case Some(Z) =>
       case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
       case _ =>
     }
 
-  def number(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[NumberTipe] =
+  def number(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[NumberTipe] =
     check(e) match {
       case Some(t: NumberTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of number type, but found $t."); None
       case _ => None
     }
 
-  def integral(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[IntegralTipe] =
+  def integral(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[IntegralTipe] =
     check(e) match {
       case Some(t: IntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type integer, but found $t."); None
       case _ => None
     }
 
-  def m(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[ModuloIntegralTipe] =
+  def m(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[ModuloIntegralTipe] =
     check(e) match {
       case Some(t: ModuloIntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type modulo integer, but found $t."); None
       case _ => None
     }
 
-  def ms(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[ModuloIntegralTipe with SignedIntegralTipe] =
+  def ms(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[ModuloIntegralTipe with SignedIntegralTipe] =
     check(e) match {
       case Some(t: ModuloIntegralTipe with SignedIntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type signed modulo integer, but found $t."); None
       case _ => None
     }
 
-  def mseq(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[MSeq] =
+  def mseq(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[MSeq] =
     check(e) match {
       case Some(t: MSeq) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type mutable sequence, but found $t."); None

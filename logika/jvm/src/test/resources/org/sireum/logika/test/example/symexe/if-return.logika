@@ -1,0 +1,9 @@
+import org.sireum.logika._
+
+def foo(x: Z): Z = {
+  l"""{ ensures result ≥ 0}"""
+  if (x < 0) {
+    return 0
+  }
+  return x
+}

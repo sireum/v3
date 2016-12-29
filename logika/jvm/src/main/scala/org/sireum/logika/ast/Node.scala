@@ -1433,7 +1433,10 @@ final case class SeqLit(tpe: SeqType, args: Node.Seq[Exp]) extends PrimaryExp {
 
 final case class Program(block: Block) extends UnitNode
 
-final case class Block(stmts: Node.Seq[Stmt]) extends Node
+final case class Block(stmts: Node.Seq[Stmt],
+                       returnOpt: Option[Return]) extends Node
+
+final case class Return(expOpt: Option[Exp]) extends Node
 
 sealed trait Stmt extends Node
 
@@ -1480,8 +1483,7 @@ final case class MethodDecl(isHelper: Boolean,
                             params: Node.Seq[Param],
                             returnTypeOpt: Option[Type],
                             contract: MethodContract,
-                            block: Block,
-                            returnExpOpt: Option[Exp])
+                            block: Block)
   extends Stmt
 
 final case class MethodContract(requires: Requires,

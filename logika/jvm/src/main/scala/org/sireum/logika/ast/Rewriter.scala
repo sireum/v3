@@ -95,8 +95,8 @@ object Rewriter {
       org.sireum.logika.ast.BType()
     }),
     ("Block", { es =>
-      val Seq(stmts: IVector[_]) = es
-      org.sireum.logika.ast.Block(cast(stmts))
+      val Seq(stmts: IVector[_], returnOpt: Option[_]) = es
+      org.sireum.logika.ast.Block(cast(stmts), cast(returnOpt))
     }),
     ("BooleanLit", { es =>
       val Seq(value: java.lang.Boolean) = es
@@ -279,8 +279,8 @@ object Rewriter {
       org.sireum.logika.ast.MethodContract(requires, modifies, ensures)
     }),
     ("MethodDecl", { es =>
-      val Seq(isHelper: java.lang.Boolean, id: Id, params: IVector[_], returnTypeOpt: Option[_], contract: MethodContract, block: Block, returnExpOpt: Option[_]) = es
-      org.sireum.logika.ast.MethodDecl(isHelper, id, cast(params), cast(returnTypeOpt), contract, block, cast(returnExpOpt))
+      val Seq(isHelper: java.lang.Boolean, id: Id, params: IVector[_], returnTypeOpt: Option[_], contract: MethodContract, block: Block) = es
+      org.sireum.logika.ast.MethodDecl(isHelper, id, cast(params), cast(returnTypeOpt), contract, block)
     }),
     ("Minus", { es =>
       val Seq(exp: Exp) = es
@@ -445,6 +445,10 @@ object Rewriter {
     ("Result", { es =>
       val Seq() = es
       org.sireum.logika.ast.Result()
+    }),
+    ("Return", { es =>
+      val Seq(expOpt: Option[_]) = es
+      org.sireum.logika.ast.Return(cast(expOpt))
     }),
     ("S16SType", { es =>
       val Seq() = es
