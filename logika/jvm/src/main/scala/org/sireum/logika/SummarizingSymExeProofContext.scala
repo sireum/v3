@@ -242,12 +242,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         }
       case stmt@ast.If(exp, thenBlock, elseBlock) =>
         val ncond = ast.Exp.Not(tipe.B, exp)
-        val thenPcOpt = if (checkSat("True Branch", nodeLocMap(exp),
+        val thenPcOpt = if (checkSat("True-Branch", nodeLocMap(exp),
           coneOfInfluence(premises, ivector(exp)) :+ exp,
           genMessage = false, "", "", ""))
           copy(premises = premises + exp).check(thenBlock)
         else None
-        val elsePcOpt = if (checkSat("False Branch", nodeLocMap(exp),
+        val elsePcOpt = if (checkSat("False-Branch", nodeLocMap(exp),
           coneOfInfluence(premises, ivector(exp)) :+ ncond,
           genMessage = false, "", "", ""))
           copy(premises = premises + ncond).check(elseBlock)
@@ -391,12 +391,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           v(premise)
           if (propagate) ps += premise
         }
-        if (!checkSat("True Branch", nodeLocMap(exp),
+        if (!checkSat("True-Branch", nodeLocMap(exp),
           coneOfInfluence(lps, ivector(exp)) :+ exp, genMessage = false, "", "", "")) {
           warn(exp, s"The loop condition is always false, thus, the loop body will never be executed.")
         }
         if (!ast.AstUtil.hasReturn(loopBlock) &&
-          !checkSat("False Branch", nodeLocMap(exp),
+          !checkSat("False-Branch", nodeLocMap(exp),
             coneOfInfluence(ps, ivector(exp)) :+ ncond, genMessage = false, "", "", "")) {
           error(exp, s"The loop condition is always true, thus, the loop will never exit.")
         }

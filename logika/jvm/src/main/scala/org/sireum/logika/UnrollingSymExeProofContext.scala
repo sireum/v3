@@ -414,12 +414,12 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         val ps = premises ++ facts.values
         val negExpSimplified = eval.Eval.simplify(bitWidth, store)(ast.Exp.Not(tipe.B, expSimplified))
         val tcs =
-          if (checkSat("True Branch", nodeLocMap(exp),
+          if (checkSat("True-Branch", nodeLocMap(exp),
             coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified, genMessage = false, "", "", ""))
             copy(premises = premises + expSimplified).check(thenBlock)
           else ivectorEmpty
         val fcs =
-          if (checkSat("False Branch", nodeLocMap(exp),
+          if (checkSat("False-Branch", nodeLocMap(exp),
             coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified, genMessage = false, "", "", ""))
             copy(premises = premises + negExpSimplified).check(elseBlock)
           else ivectorEmpty
@@ -462,9 +462,9 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         lazy val cond = premises + expSimplified
         lazy val ncond = premises + negExpSimplified
         val (loop, exit) =
-          (checkSat("True Branch", nodeLocMap(exp),
+          (checkSat("True-Branch", nodeLocMap(exp),
             coneOfInfluence(ps, ivector(expSimplified)) :+ expSimplified, genMessage = false, "", "", ""),
-            checkSat("False Branch", nodeLocMap(exp),
+            checkSat("False-Branch", nodeLocMap(exp),
               coneOfInfluence(ps, ivector(negExpSimplified)) :+ negExpSimplified, genMessage = false, "", "", ""))
         (loop, exit) match {
           case (true, true) =>
