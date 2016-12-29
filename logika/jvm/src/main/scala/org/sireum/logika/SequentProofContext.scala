@@ -32,7 +32,7 @@ private final case class
 SequentProofContext(unitNode: UnitNode,
                     autoEnabled: Boolean,
                     timeoutInMs: PosInteger,
-                    checkSat: Boolean = false,
+                    checkSatEnabled: Boolean = false,
                     hintEnabled: Boolean = false,
                     inscribeSummoningsEnabled: Boolean = false,
                     coneInfluenceEnabled: Boolean = false,

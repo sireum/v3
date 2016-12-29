@@ -32,7 +32,7 @@ private final case class
 SummarizingSymExeProofContext(unitNode: ast.Program,
                               autoEnabled: Boolean,
                               timeoutInMs: PosInteger,
-                              checkSat: Boolean,
+                              checkSatEnabled: Boolean,
                               hintEnabled: Boolean,
                               inscribeSummoningsEnabled: Boolean,
                               coneInfluenceEnabled: Boolean,
@@ -242,16 +242,18 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         }
       case stmt@ast.If(exp, thenBlock, elseBlock) =>
         val ncond = ast.Exp.Not(tipe.B, exp)
-        val thenPcOpt = if (checkSat("True-Branch", nodeLocMap(exp),
-          coneOfInfluence(premises, ivector(exp)) :+ exp,
-          genMessage = false, "", "", ""))
-          copy(premises = premises + exp).check(thenBlock)
-        else None
-        val elsePcOpt = if (checkSat("False-Branch", nodeLocMap(exp),
-          coneOfInfluence(premises, ivector(exp)) :+ ncond,
-          genMessage = false, "", "", ""))
-          copy(premises = premises + ncond).check(elseBlock)
-        else None
+        val thenPcOpt =
+          if (checkSat("True-Branch", nodeLocMap(exp),
+            coneOfInfluence(premises, ivector(exp)) :+ exp,
+            genMessage = false, "", "", ""))
+            copy(premises = premises + exp).check(thenBlock)
+          else None
+        val elsePcOpt =
+          if (checkSat("False-Branch", nodeLocMap(exp),
+            coneOfInfluence(premises, ivector(exp)) :+ ncond,
+            genMessage = false, "", "", ""))
+            copy(premises = premises + ncond).check(elseBlock)
+          else None
         (thenBlock.returnOpt.isEmpty, elseBlock.returnOpt.isEmpty) match {
           case (true, true) => (thenPcOpt, elsePcOpt) match {
             case (Some(thenPc), Some(elsePc)) =>

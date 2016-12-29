@@ -373,7 +373,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def timeoutInMs: PosInteger
 
-  def checkSat: Boolean
+  def checkSatEnabled: Boolean
 
   def hintEnabled: Boolean
 
@@ -428,7 +428,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                genMessage: Boolean, unsatMsg: => String, unknownMsg: => String,
                timeoutMsg: => String): Boolean = {
     val es = exps.toVector
-    if (checkSat || !genMessage) {
+    if (checkSatEnabled || !genMessage) {
       val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator

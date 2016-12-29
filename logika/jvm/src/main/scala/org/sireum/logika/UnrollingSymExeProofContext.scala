@@ -53,7 +53,7 @@ private final case class
 UnrollingSymExeProofContext(unitNode: ast.Program,
                             autoEnabled: Boolean,
                             timeoutInMs: PosInteger,
-                            checkSat: Boolean,
+                            checkSatEnabled: Boolean,
                             hintEnabled: Boolean,
                             inscribeSummoningsEnabled: Boolean,
                             coneInfluenceEnabled: Boolean,
