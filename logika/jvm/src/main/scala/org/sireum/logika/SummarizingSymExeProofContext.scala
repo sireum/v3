@@ -365,6 +365,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       case stmt@ast.While(exp, loopBlock, loopInv) =>
         val es = loopInv.invariant.exps
         val lps = premises ++ facts.values
+        val ncond = ast.Exp.Not(tipe.B, exp)
         for (e <- es)
           if (!isValid("Loop Invariant (beginning)", nodeLocMap(e), lps, ivector(e))) {
             error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
@@ -390,6 +391,15 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           v(premise)
           if (propagate) ps += premise
         }
+        if (!checkSat("True Branch", nodeLocMap(exp),
+          coneOfInfluence(lps, ivector(exp)) :+ exp, genMessage = false, "", "", "")) {
+          warn(exp, s"The loop condition is always false, thus, the loop body will never be executed.")
+        }
+        if (!ast.AstUtil.hasReturn(loopBlock) &&
+          !checkSat("False Branch", nodeLocMap(exp),
+            coneOfInfluence(ps, ivector(exp)) :+ ncond, genMessage = false, "", "", "")) {
+          error(exp, s"The loop condition is always true, thus, the loop will never exit.")
+        }
         var pc2 = this
         for (id <- loopInv.modifies.ids) {
           pc2 = defOldId(id, nodeLocMap(id).lineBegin)._1
@@ -405,7 +415,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
               }
           case _ =>
         }
-        Some(pc2.copy(premises = ps + ast.Exp.Not(tipe.B, exp)))
+        Some(pc2.copy(premises = ps + ncond))
       case _: ast.Print => Some(this)
     }
     generateHint(premises, stmt,

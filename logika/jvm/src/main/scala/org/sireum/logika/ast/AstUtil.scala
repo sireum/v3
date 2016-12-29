@@ -130,6 +130,15 @@ object AstUtil {
     }
   }
 
+  def hasReturn(b: Block): Boolean = {
+    var r = false
+    Visitor.build({
+      case b: Block => r ||= b.returnOpt.isDefined; r
+      case _: Stmt => false
+    })(b)
+    r
+  }
+
   private final case class CompareException(node1: Node,
                                             node2: Node,
                                             diffElementIndex: NaturalSentinel = -1) extends RuntimeException
