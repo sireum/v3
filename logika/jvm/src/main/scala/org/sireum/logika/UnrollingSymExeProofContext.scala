@@ -154,7 +154,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       case _ => ivectorEmpty
     })
     var isSat = true
-    if (facts.nonEmpty && !checkSat("facts", nodeLocMap(program), facts.values,
+    if (facts.nonEmpty && !checkSat("Facts", nodeLocMap(program), facts.values,
       genMessage = true,
       unsatMsg = "The specified set of facts are unsatisfiable.",
       unknownMsg = {
@@ -178,7 +178,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       else stmt.contract.requires.exps.head)
     val effectiveSatFacts = if (satFacts) facts.values else ivectorEmpty
     var hasError =
-      !checkSat("effective precondition", preLi,
+      !checkSat("Effective Pre-condition", preLi,
         effectiveSatFacts ++ effectivePre, genMessage = true,
         unsatMsg = s"The effective pre-condition of method ${
           stmt.id.value
@@ -194,7 +194,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       if (stmt.contract.ensures.exps.isEmpty) stmt
       else stmt.contract.ensures.exps.head)
     hasError =
-      !checkSat("effective postcondition", postLi,
+      !checkSat("Effective Post-condition", postLi,
         effectiveSatFacts ++ effectivePost, genMessage = true,
         unsatMsg = s"The effective post-condition of method ${
           stmt.id.value
@@ -264,7 +264,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     var hasError = false
     val ps = premises ++ facts.values
     for (e <- modifiedInvariants)
-      if (!isValid(s"global invariant", li, ps, ivector(e))) {
+      if (!isValid(s"Global Invariant", li, ps, ivector(e))) {
         val eLi = nodeLocMap(e)
         error(li, s"Could not automatically deduce the global invariant specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
         hasError = true
@@ -275,7 +275,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       case _ => imapEmpty[ast.Node, ast.Node]
     }
     for (e <- post)
-      if (!isValid("postcondition", li, ps, ivector(subst(e, postSubstMap)))) {
+      if (!isValid("Post-condition", li, ps, ivector(subst(e, postSubstMap)))) {
         val eLi = nodeLocMap(e)
         error(li, s"Could not automatically deduce the post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
         hasError = true
@@ -300,14 +300,14 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           provedSteps = imapEmpty)).toVector
       case ast.SequentStmt(sequent) =>
         if (sequent.premises.nonEmpty) {
-          if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
+          if (!isValid("Sequent Premises", nodeLocMap(stmt), premises, sequent.premises)) {
             error(stmt, "Could not automatically deduce the specified sequent's premises.")
             return ivector(updateStatus(Error(stmt)))
           }
           if (sequent.conclusions == topConclusion)
             ivector(copy(premises = ilinkedSetEmpty ++ sequent.premises))
           else {
-            if (!isValid("sequent conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
+            if (!isValid("Sequent Conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
               error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
               return ivector(updateStatus(Error(stmt)))
             }
@@ -316,16 +316,16 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         } else if (sequent.conclusions == topConclusion) {
           ivector(copy(premises = ilinkedSetEmpty))
         } else {
-          if (!isValid("sequent conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
+          if (!isValid("Sequent Conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
             error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
             return ivector(updateStatus(Error(stmt)))
           }
           ivector(copy(premises = filter(premises ++ sequent.conclusions)))
         }
       case ast.Assert(e) =>
-        if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
+        if (!isValid("Assertion", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
           error(stmt, s"Could not automatically deduce the assertion validity.")
-          checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
+          checkSat("Assertion", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
             unsatMsg = s"The assertion is unsatisfiable.",
             unknownMsg = s"The assertion might not be satisfiable.",
             timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -336,7 +336,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         eval.Eval.evalExp(store)(e) match {
           case Some(true) =>
           case _ =>
-            if (!checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
+            if (!checkSat("Assumption", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assumption is unsatisfiable.",
               unknownMsg = s"The assumption might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assumption due to timeout."
@@ -393,7 +393,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
             exp.id.value match {
               case "create" =>
                 val req = ast.Exp.Ge(tipe.Z, exp.args.head, Checker.zero)
-                if (isValid("precondition", nodeLocMap(exp), premises, ivector(req))) {
+                if (isValid("Pre-condition", nodeLocMap(exp), premises, ivector(req))) {
                   val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
                   val qVar = ast.Exp.Id(tipe.Z, "q_i")
                   val sz = ast.Exp.Size(resultT, id)
@@ -429,12 +429,12 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         val ps = premises ++ facts.values
         var hasError = false
         for (e <- inv.exps)
-          if (!isValid("", nodeLocMap(e), ps, ivector(e))) {
+          if (!isValid("Global Invariant", nodeLocMap(e), ps, ivector(e))) {
             error(e, s"Could not automatically deduce the global invariant.")
             hasError = true
           }
         if (hasError)
-          checkSat("global invariant", nodeLocMap(stmt),
+          checkSat("Global Invariant", nodeLocMap(stmt),
             effectiveSatFacts ++ inv.exps, genMessage = true,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
@@ -449,7 +449,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         def checkLoopInv(): Boolean = {
           var hasError = true
           for (e <- es)
-            if (!isValid("loop invariant", nodeLocMap(e), ps, ivector(e))) {
+            if (!isValid("Loop Invariant", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the loop invariant.")
               hasError = true
             }
@@ -534,13 +534,13 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     }
     val ps = premises ++ facts.values
     for (inv <- invs if mdOpt.isDefined)
-      if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
+      if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
         val li = nodeLocMap(inv)
         error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
         hasError = true
       }
     for (pre <- md.contract.requires.exps)
-      if (!isValid("precondition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
+      if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
         val li = nodeLocMap(pre)
         error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
         hasError = true

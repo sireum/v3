@@ -52,7 +52,7 @@ ForwardProofContext(unitNode: ast.Program,
     val facts = extractFacts
     var isSat = true
     if (facts.nonEmpty &&
-      !checkSat("facts", nodeLocMap(program), facts.values, genMessage = true,
+      !checkSat("Facts", nodeLocMap(program), facts.values, genMessage = true,
         unsatMsg = "The specified set of facts are unsatisfiable.",
         unknownMsg = {
           isSat = false
@@ -114,7 +114,7 @@ ForwardProofContext(unitNode: ast.Program,
     if (autoEnabled) {
       val ps = premises ++ facts.values
       for (e <- modifiedInvariants)
-        if (!isValid(s"global invariant", li, ps, ivector(e))) {
+        if (!isValid(s"Global Invariant", li, ps, ivector(e))) {
           val eLi = nodeLocMap(e)
           error(li, s"Could not automatically deduce the global invariant specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
         }
@@ -133,7 +133,7 @@ ForwardProofContext(unitNode: ast.Program,
     if (autoEnabled) {
       val ps = premises ++ facts.values
       for (e <- post)
-        if (!isValid("postcondition", li, ps, ivector(subst(e, postSubstMap)))) {
+        if (!isValid("Post-condition", li, ps, ivector(subst(e, postSubstMap)))) {
           val eLi = nodeLocMap(e)
           error(li, s"Could not automatically deduce the post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
         }
@@ -160,15 +160,15 @@ ForwardProofContext(unitNode: ast.Program,
           provedSteps = imapEmpty))
       case ast.SequentStmt(sequent) =>
         if (sequent.premises.nonEmpty) {
-          if (!isValid("sequent premises", nodeLocMap(stmt), premises, sequent.premises)) {
+          if (!isValid("Sequent Premises", nodeLocMap(stmt), premises, sequent.premises)) {
             hasError = true
             error(stmt, "Could not automatically deduce the specified sequent's premises.")
           }
-          if (!isValid("sequent conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
+          if (!isValid("Sequent Conclusions", nodeLocMap(stmt), sequent.premises, sequent.conclusions)) {
             hasError = true
             error(stmt, "Could not automatically deduce the specified sequent's conclusions from its premises.")
           }
-        } else if (!isValid("sequent conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
+        } else if (!isValid("Sequent Conclusions", nodeLocMap(stmt), premises ++ facts.values, sequent.conclusions)) {
           hasError = true
           error(stmt, "Could not automatically deduce the specified sequent's conclusions.")
         }
@@ -177,10 +177,10 @@ ForwardProofContext(unitNode: ast.Program,
             sequent.premises ++ sequent.conclusions))
       case ast.Assert(e) =>
         if (autoEnabled) {
-          if (!isValid("", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
+          if (!isValid("Assertion", nodeLocMap(stmt), premises ++ facts.values, ivector(e))) {
             error(stmt, s"Could not automatically deduce the assertion validity.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
+            checkSat("Assertion", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -189,7 +189,7 @@ ForwardProofContext(unitNode: ast.Program,
           if (!premises.contains(e)) {
             error(e, s"The assertion has not been proven.")
             hasError = true
-            checkSat("", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
+            checkSat("Assertion", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assertion is unsatisfiable.",
               unknownMsg = s"The assertion might not be satisfiable.",
               timeoutMsg = s"Could not check satisfiability of the assertion due to timeout.")
@@ -197,7 +197,7 @@ ForwardProofContext(unitNode: ast.Program,
         }
         Some(copy(premises = premises + e))
       case ast.Assume(e) =>
-        hasError = !checkSat("", nodeLocMap(stmt),
+        hasError = !checkSat("Assumption", nodeLocMap(stmt),
           premises ++ effectiveSatFacts + e, genMessage = true,
           unsatMsg = s"The assumption is unsatisfiable.",
           unknownMsg = s"The assumption might not be satisfiable.",
@@ -281,7 +281,7 @@ ForwardProofContext(unitNode: ast.Program,
           if (stmt.contract.requires.exps.isEmpty) stmt
           else stmt.contract.requires.exps.head)
         hasError =
-          !checkSat("effective precondition", preLi,
+          !checkSat("Effective Pre-condition", preLi,
             effectiveSatFacts ++ effectivePre, genMessage = true,
             unsatMsg = s"The effective pre-condition of method ${
               stmt.id.value
@@ -297,7 +297,7 @@ ForwardProofContext(unitNode: ast.Program,
           if (stmt.contract.ensures.exps.isEmpty) stmt
           else stmt.contract.ensures.exps.head)
         hasError =
-          !checkSat("effective postcondition", postLi,
+          !checkSat("Effective Post-condition", postLi,
             effectiveSatFacts ++ effectivePost, genMessage = true,
             unsatMsg = s"The effective post-condition of method ${
               stmt.id.value
@@ -319,7 +319,7 @@ ForwardProofContext(unitNode: ast.Program,
         if (autoEnabled) {
           val ps = premises ++ facts.values
           for (e <- inv.exps)
-            if (!isValid("", nodeLocMap(e), ps, ivector(e))) {
+            if (!isValid("Global Invariant", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the global invariant.")
               hasError = true
             }
@@ -331,7 +331,7 @@ ForwardProofContext(unitNode: ast.Program,
             }
         }
         if (hasError)
-          checkSat("global invariant", nodeLocMap(stmt),
+          checkSat("Global Invariant", nodeLocMap(stmt),
             effectiveSatFacts ++ inv.exps, genMessage = true,
             unsatMsg = s"The global invariant(s) are unsatisfiable.",
             unknownMsg = s"The global invariant(s) might not be satisfiable.",
@@ -343,7 +343,7 @@ ForwardProofContext(unitNode: ast.Program,
         if (autoEnabled) {
           val ps = premises ++ facts.values
           for (e <- es)
-            if (!isValid("loop invariant (beginning)", nodeLocMap(e), ps, ivector(e))) {
+            if (!isValid("Loop Invariant (beginning)", nodeLocMap(e), ps, ivector(e))) {
               error(e, s"Could not automatically deduce the loop invariant at the beginning of the loop.")
               hasError = true
             }
@@ -378,7 +378,7 @@ ForwardProofContext(unitNode: ast.Program,
             if (autoEnabled) {
               val ps = pc2.premises ++ pc2.facts.values
               for (e <- es)
-                if (!isValid("loop invariant (end)", nodeLocMap(e), ps, ivector(e))) {
+                if (!isValid("Loop Invariant (end)", nodeLocMap(e), ps, ivector(e))) {
                   error(e, s"Could not deduce the loop invariant at the end of the loop.")
                   hasError = true
                 }
@@ -429,13 +429,13 @@ ForwardProofContext(unitNode: ast.Program,
     if (autoEnabled) {
       val ps = premises ++ facts.values
       for (inv <- invs if mdOpt.isDefined)
-        if (!isValid("invariant", nodeLocMap(a), ps, ivector(inv))) {
+        if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
           val li = nodeLocMap(inv)
           error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
         }
       for (pre <- md.contract.requires.exps)
-        if (!isValid("precondition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
+        if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
           val li = nodeLocMap(pre)
           error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
           hasError = true
