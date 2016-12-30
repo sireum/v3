@@ -39,7 +39,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2016.3.1"
+  val ideaVer = "2016.3.2"
 
   val ideaUrlMap = Map(
     "mac" -> s"https://download.jetbrains.com/idea/ideaIC-$ideaVer.dmg",
@@ -56,7 +56,7 @@ object Distros {
     "snakeyaml" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=24503",
     "antlr" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31133",
     "asm" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=18619",
-    "bash" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=28046",
+    "bash" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31391",
     "cmd" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=18875",
     "batch" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=22567",
     "compare" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=24991",
@@ -107,11 +107,11 @@ object Distros {
         val i = content.indexOf("idea.paths.selector")
         val j = content.indexOf("<string>", i)
         val k = content.indexOf("</string>", j)
-        content.substring(0, j) + "<string>Sireum" + content.substring(k)
+        content.substring(0, j) + s"<string>Sireum$ideaVer" + content.substring(k)
       case "win" =>
-        "idea.config.path=${user.home}/.Sireum/config\r\nidea.system.path=${user.home}/.Sireum/system\r\n" + content
+        s"idea.config.path=$${user.home}/.Sireum/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\r\n" + content
       case "linux" =>
-        "idea.config.path=${user.home}/.Sireum/config\nidea.system.path=${user.home}/.Sireum/system\n" + content
+        s"idea.config.path=$${user.home}/.Sireum/config\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\n" + content
     }
     rm ! p
     write(p, newContent)
@@ -127,6 +127,17 @@ object Distros {
     }
     rm ! p
     write(p, newContent)
+    println("done!")
+  }
+
+  def patchImages(path: Path): Unit = {
+    val filePath = path / 'lib / "resources.jar"
+    print(s"Patching $filePath ... ")
+    %%('zip, filePath,
+      "idea_community_about.png",
+      "idea_community_about@2x.png",
+      "idea_community_logo.png",
+      "idea_community_logo@2x.png")(pwd / 'resources / 'distro)
     println("done!")
   }
 
@@ -155,6 +166,7 @@ object Distros {
         extractPlugins(tempDir / "Sireum.app" / 'Contents / 'plugins)
         patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
         patchVMOptions(platform, tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
+        patchImages(tempDir / "Sireum.app" / 'Contents)
       case "win" =>
         val tempDir = buildDir / platform / "sireum-v3" / 'apps / 'idea
         mkdir ! tempDir
@@ -165,6 +177,7 @@ object Distros {
         patchIdeaProperties(platform, tempDir / 'bin / "idea.properties")
         patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
+        patchImages(tempDir)
         %%('cp, "-p", pwd / 'resources / 'distro / "idea.bat", buildDir / platform / "sireum-v3")
         %%('cp, "-p", pwd / 'resources / 'distro / "idea64.bat", buildDir / platform / "sireum-v3")
       case "linux" =>
@@ -177,6 +190,7 @@ object Distros {
         patchIdeaProperties(platform, tempDir / 'idea / 'bin / "idea.properties")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
+        patchImages(tempDir / 'idea)
         %%('cp, "-p", pwd / 'resources / 'distro / "idea", buildDir / platform / "sireum-v3")
         %%('chmod, "+x", buildDir / platform / "sireum-v3" / "idea")
     }
