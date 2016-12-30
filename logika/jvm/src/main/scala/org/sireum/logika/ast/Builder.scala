@@ -635,14 +635,23 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   private def build(ctx: FunContext): Fun = {
     if (ctx.ID.getText.indexOf('_') >= 0)
       error(ctx.ID, s"Underscore is a reserved character for fun identifier.")
-    Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`), ctx.funDef.map(build)) at ctx
+    Fun(buildId(ctx.ID), ctx.param.map(build), build(ctx.`type`),
+      Option(ctx.funDef).map(build(ctx.ID)).getOrElse(Node.emptySeq)) at ctx
   }
 
-  private def build(ctx: FunDefContext): FunDef = {
+  private def build(id: Token)(ctx: FunDefContext): Node.Seq[FunDef] = ctx match {
+    case ctx: FunDefCondsContext => ctx.funDefCond.map(build)
+    case ctx: FunDefEqContext => ivector(build(id, ctx.funDefSimple))
+  }
+
+  private def build(ctx: FunDefCondContext): FunDef = {
     if (ctx.ID.getText.indexOf('_') >= 0)
       error(ctx.ID, s"Underscore is a reserved character for fun case identifier.")
     FunDef(buildId(ctx.ID), build(ctx.c), build(ctx.e)) at ctx
   }
+
+  private def build(id: Token, ctx: FunDefSimpleContext): FunDef =
+    FunDef(buildId(id), BooleanLit(true) at id, build(ctx.e)) at ctx
 
   private def build(ctx: ParamContext): Param = {
     if (ctx.ID.getText.indexOf('_') >= 0)
@@ -1090,8 +1099,6 @@ object Builder {
     "catch", "else", "extends", "finally", "forSome", "match", "with", "yield",
     ",", ".", ":", "=", "=>", "⇒", "[", ")", "]", "}", "<-", "<:", "<%", ">:", "#"
   )
-
-  private class EscapeException extends RuntimeException
 
   import org.antlr.v4.runtime._
 
