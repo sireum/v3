@@ -69,7 +69,8 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
       ConditionTest("bank", check("bank")) :+
       ConditionTest("square", check("square")) :+
       ConditionTest("div", check("div")) :+
-      ConditionTest("pure-invoke", check("pure-invoke"))
+      ConditionTest("pure-invoke", check("pure-invoke")) :+
+      ConditionTest("pure-invoke2", check("pure-invoke2"))
 
   def check(filename: String): Boolean = {
     val uri = s"example/forward/$filename.logika"

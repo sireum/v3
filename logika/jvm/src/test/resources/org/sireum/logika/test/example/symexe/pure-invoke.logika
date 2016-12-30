@@ -5,7 +5,7 @@ def inc(x : Z): Z = {
   return x + 1
 }
 
-def foo(x: Z): Z = {
-  l"""{ ensures result == inc(inc(x)) }"""
-  return x + 2
+def foo(y: Z): Z = {
+  l"""{ ensures result == inc(inc(y)) }"""
+  return y + 2
 }
