@@ -52,7 +52,7 @@ object TypeChecker {
           factMap = addId(factMap, program, fd.id, Right((f, fd)))
         }
       }
-      for (m@MethodDecl(_, id, _, _, _, _) <- program.block.stmts)
+      for (m@MethodDecl(_, _, id, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
     }
     if (reporter.hasError) return false
@@ -361,7 +361,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             typeMap.get(step.id.value) match {
               case Some((_, md: MethodDecl, _)) =>
                 if (!md.isPure)
-                  error(step.id, s"Could not use a method with side-effects as a fact.")
+                  error(step.id, s"Could not use a method without @pure as a fact.")
                 step.decl = Right3(md)
               case _ =>
                 error(step.id, s"Could not resolve fact or method ${step.id.value}.")
@@ -437,7 +437,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               typeMap.get(id.value) match {
                 case Some((_, md: MethodDecl, _)) =>
                   if (!allowMethod && !md.isPure)
-                    error(id, s"Invocation of method with side-effects is only allowed at statement level.")
+                    error(id, s"Invocation of method without @pure is only allowed at statement level.")
                   e.declOpt = Some(Left(md))
                   true
                 case Some((_, f: Fun, _)) =>

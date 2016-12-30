@@ -141,25 +141,27 @@ object AstUtil {
     r
   }
 
-  def isPure(md: MethodDecl): Boolean = {
-    md.contract.modifies.ids.isEmpty && {
-      try {
-        Visitor.build({
-          case e: TypeMethodCallExp if sideEffectingTypeMethod.contains(e.id.value) =>
-            throw new EscapeException
-          case _: RandomInt => throw new EscapeException
-          case _: Random => throw new EscapeException
-          case _: ReadInt => throw new EscapeException
-        })(md)
-        true
-      } catch {
-        case _: EscapeException => false
-      }
+  def isPure(md: MethodDecl): Option[(Node, String)] = {
+    if (md.contract.modifies.ids.nonEmpty)
+      return Some(md.contract.modifies.ids.head, "A pure method cannot modify variables.")
+    try {
+      Visitor.build({
+        case e: TypeMethodCallExp if sideEffectingTypeMethod.contains(e.id.value) =>
+          throw new EscapePayloadException(e, s"A pure method cannot use ${e.id.value}.")
+        case e: RandomInt =>
+          throw new EscapePayloadException(e, "A pure method cannot use randomInt.")
+        case e: Random =>
+          throw new EscapePayloadException(e, "A pure method cannot use random.")
+        case e: ReadInt =>
+          throw new EscapePayloadException(e, "A pure method cannot use readInt.")
+      })(md)
+      None
+    } catch {
+      case e: EscapePayloadException[_] => Some(e.value.asInstanceOf[(Node, String)])
     }
   }
 
   private final case class CompareException(node1: Node,
                                             node2: Node,
                                             diffElementIndex: NaturalSentinel = -1) extends RuntimeException
-
 }

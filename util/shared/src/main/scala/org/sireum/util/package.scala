@@ -242,6 +242,8 @@ package object util {
 
   final class EscapeException extends RuntimeException
 
+  final class EscapePayloadException[T](val value: T) extends RuntimeException
+
   sealed trait Either3[+A, +B, +C] {
     def data[T](implicit evA: A <:< T, evB: B <:< T, evC: C <:< T): T
   }

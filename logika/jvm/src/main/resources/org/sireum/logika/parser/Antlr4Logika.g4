@@ -320,12 +320,7 @@ stmt
   | op=( 'print' | 'println' )
     '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
-  | ( '@' helper=ID )? 'def' id=ID  NL?
-    '(' ( param ( ',' param )* )? ')'
-    ':' ( type | 'Unit' ) '=' NL*
-    t='{'
-    ( NL* 'l"""' methodContract NL* '"""' )?
-    blockEnd                                            #MethodDeclStmt
+  | methodDecl                                          #MethodDeclStmt
   | 'l"""'
     ( proof
     | sequent
@@ -334,6 +329,15 @@ stmt
     ) '"""'                                             #LogikaStmt
   | impor                                               #ImportStmt
   | exp                                                 #ExpStmt
+  ;
+
+methodDecl
+  : ( '@' NL* anns+=ID NL* )* 'def' id=ID  NL?
+    '(' ( param ( ',' param )* )? ')'
+    ':' ( type | 'Unit' ) '=' NL*
+    t='{'
+    ( NL* 'l"""' methodContract NL* '"""' )?
+    blockEnd
   ;
 
 blockEnd

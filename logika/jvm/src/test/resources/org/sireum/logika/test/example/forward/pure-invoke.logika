@@ -1,6 +1,8 @@
 import org.sireum.logika._
 
-def inc(x : Z): Z = {
+var g: Z = 0
+
+@pure def inc(x : Z): Z = {
   l"""{ ensures result == x + 1 }"""
 
   l"""{ 1. x + 1 == x + 1 algebra }"""

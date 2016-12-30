@@ -712,43 +712,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         case ctx: SeqAssignStmtContext =>
           Some(SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r)))
         case ctx: MethodDeclStmtContext =>
-          if (ctx.id.getText.indexOf('_') >= 0)
-            error(ctx.id, s"Underscore is a reserved character for method identifier.")
-          val isHelper =
-            if (ctx.helper != null) {
-              if (ctx.helper.getText != "helper")
-                error(ctx.helper, s"Only helper annotation is allowed instead of ${ctx.helper.getText}.")
-              true
-            } else false
-          inMethod = true
-          val block = build(ctx.t, ctx.blockEnd)
-          inMethod = false
-          val r = MethodDecl(isHelper, buildId(ctx.id),
-            Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
-            Option(ctx.`type`).map(build),
-            Option(ctx.methodContract).map(build).getOrElse(
-              MethodContract(Requires(Node.emptySeq),
-                Modifies(Node.emptySeq),
-                Ensures(Node.emptySeq))),
-            block)
-          val cfg = Cfg(r)
-          //          val unitNode = Program(Block(Node.emptySeq, None))
-          //          unitNode.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
-          //          println(cfg.toDotString(unitNode))
-          val unreachableNodes = cfg.unreachableNodes
-          if (unreachableNodes.nonEmpty) {
-            for (n <- unreachableNodes) n match {
-              case n: Cfg.StmtNode => error(n.stmt, "Unreachable statement.")
-              case n: Cfg.ReturnNode => error(n.ret, "Unreachable statement.")
-              case _ =>
-            }
-          }
-          if (r.returnTypeOpt.isDefined)
-            for (ret <- cfg.pred(cfg.endNode) if !unreachableNodes.contains(ret)) ret match {
-              case n: Cfg.StmtNode => error(n.stmt, "Explicit return should be added after the statement.")
-              case _ =>
-            }
-          Some(r)
+          Some(build(ctx.methodDecl))
         case ctx: LogikaStmtContext =>
           Some(((ctx.proof, ctx.sequent, ctx.invariants, ctx.facts): @unchecked) match {
             case (proof, null, null, null) => ProofStmt(build(proof))
@@ -766,6 +730,65 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           })
       }
     rOpt.map(_ at ctx)
+  }
+
+  private def build(ctx: MethodDeclContext): MethodDecl = {
+    import scala.collection.JavaConverters._
+    if (ctx.id.getText.indexOf('_') >= 0)
+      error(ctx.id, s"Underscore is a reserved character for method identifier.")
+    var anns = imapEmpty[String, Token]
+    var isHelper = false
+    var isPure = false
+    for (ann <- ctx.anns.asScala) {
+      val name = ann.getText
+      anns.get(name) match {
+        case Some(other) =>
+          error(other, s"Annotation ${other.getText} has been declared at [${other.getLine}, ${other.getCharPositionInLine}].")
+        case _ =>
+          anns += ann.getText -> ann
+          name match {
+            case "helper" => isHelper = true
+            case "pure" => isPure = true
+            case _ =>
+              error(ann, s"Only @helper or @pure are allowed instead of @$name.")
+          }
+
+      }
+    }
+    inMethod = true
+    val block = build(ctx.t, ctx.blockEnd)
+    inMethod = false
+    val r = MethodDecl(isHelper, isPure, buildId(ctx.id),
+      Option(ctx.param).map(_.map(build)).getOrElse(Node.emptySeq),
+      Option(ctx.`type`).map(build),
+      Option(ctx.methodContract).map(build).getOrElse(
+        MethodContract(Requires(Node.emptySeq),
+          Modifies(Node.emptySeq),
+          Ensures(Node.emptySeq))),
+      block)
+    if (isPure) AstUtil.isPure(r) match {
+      case Some((n, msg)) =>
+        error(n, msg)
+      case _ =>
+    }
+    val cfg = Cfg(r)
+    //          val unitNode = Program(Block(Node.emptySeq, None))
+    //          unitNode.nodeLocMap = nodeLocMap.asInstanceOf[MIdMap[Node, LocationInfo]]
+    //          println(cfg.toDotString(unitNode))
+    val unreachableNodes = cfg.unreachableNodes
+    if (unreachableNodes.nonEmpty) {
+      for (n <- unreachableNodes) n match {
+        case n: Cfg.StmtNode => error(n.stmt, "Unreachable statement.")
+        case n: Cfg.ReturnNode => error(n.ret, "Unreachable statement.")
+        case _ =>
+      }
+    }
+    if (r.returnTypeOpt.isDefined)
+      for (ret <- cfg.pred(cfg.endNode) if !unreachableNodes.contains(ret)) ret match {
+        case n: Cfg.StmtNode => error(n.stmt, "Explicit return should be added after the statement.")
+        case _ =>
+      }
+    r
   }
 
   private def build(ctx: PrimExpContext): Exp = {
@@ -812,7 +835,8 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
           val r = IntLit(text, bw, Some(tpe))
           r.normalize
           r
-        } catch {
+        }
+        catch {
           case e: IllegalStateException =>
             error(ctx.INT, e.getMessage)
             IntLit("0", bitWidth, None)
@@ -890,6 +914,7 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         SeqLit(token2type(ctx.t).asInstanceOf[SeqType],
           Option(ctx.exp).map(_.map(build)).getOrElse(Node.emptySeq))
     }
+
     r at ctx
   }
 
@@ -916,9 +941,10 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         e
       case ctx: RandomIntExpContext => RandomInt() at ctx
       case ctx: ReadIntExpContext =>
-        ReadInt(Option(ctx.STRING).map { x =>
-          val text = x.getText
-          StringLit(text.substring(1, text.length - 1))
+        ReadInt(Option(ctx.STRING).map {
+          x =>
+            val text = x.getText
+            StringLit(text.substring(1, text.length - 1))
         }) at ctx
       case ctx: ParenExpContext =>
         val r = build(ctx.exp)
@@ -1054,7 +1080,9 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
   }
 
   private def checkBitWidth(t: TerminalNode, ts: String): Unit =
-    if (bitWidth == 0) error(t, s"$ts.${t.getText} is used, but bit-width is unbounded.")
+    if (bitWidth == 0) error(t, s"$ts.${
+      t.getText
+    } is used, but bit-width is unbounded.")
 
   private def checkIntMaxMin(t: Token, value: BigInt, e: Exp): Unit = {
     if (value < minInt)
@@ -1068,7 +1096,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
                       idText: String, opTexts: String*): Unit = {
     if (!(opTexts.contains(op.getText) || id.getText == idText))
       error(op, id,
-        s"Unrecognized justification ${op.getText}${id.getText} in step #${num.value}.")
+        s"Unrecognized justification ${
+          op.getText
+        }${
+          id.getText
+        } in step #${
+          num.value
+        }.")
   }
 
   private def error(t: Token, msg: String): Unit =
@@ -1192,7 +1226,8 @@ object Builder {
           val ast = new Builder(fileUriOpt, input, bitWidth).build(parseTree)
           if (!reporter.hasError) Some(ast)
           else None
-        } else None
+        }
+        else None
       }
       r match {
         case Some(un) =>
@@ -1241,7 +1276,8 @@ object Builder {
           if (parens > 0 || inLogikaStmt) {
             token.asInstanceOf[CommonToken].
               setChannel(Token.HIDDEN_CHANNEL)
-          } else {
+          }
+          else {
             var skip = true
             if (i > 0) {
               val prevToken = tokens(i - 1)

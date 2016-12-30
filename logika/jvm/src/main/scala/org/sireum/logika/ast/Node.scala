@@ -1483,14 +1483,13 @@ final case class SeqAssign(id: Id,
                            exp: Exp) extends Stmt
 
 final case class MethodDecl(isHelper: Boolean,
+                            isPure: Boolean,
                             id: Id,
                             params: Node.Seq[Param],
                             returnTypeOpt: Option[Type],
                             contract: MethodContract,
                             block: Block)
-  extends Stmt {
-  lazy val isPure: Boolean = AstUtil.isPure(this)
-}
+  extends Stmt
 
 final case class MethodContract(requires: Requires,
                                 modifies: Modifies,
