@@ -49,9 +49,10 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
   final val n32Max: ast.IntMax = ast.IntMax(32, ast.N32Type())
   final val n64Max: ast.IntMax = ast.IntMax(64, ast.N64Type())
   final val topConclusion: ast.Node.Seq[ast.Exp] = ivector(Checker.top)
+  final val autoEnabled: Boolean = true
 
   final override def isValid(title: String, li: LocationInfo,
-                             premises: => Iterable[ast.Exp],
+                             premises: Iterable[ast.Exp],
                              conclusions: Iterable[ast.Exp]): Boolean = {
     val key = (premises.toVector, conclusions.toVector)
     validCache.get(key) match {
@@ -63,7 +64,7 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
     }
   }
 
-  final override def hasRuntimeError(stmt: ast.Stmt): Boolean = {
+  final def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     import ast.Exp
     def zRange(id: ast.Id, lo: Exp, hi: Exp): ast.And =
       Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, id, hi))
@@ -251,6 +252,7 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
       case e: ast.Shr => nonNegativeCheck(e.right, e.tipe); true
       case e: ast.UShr => nonNegativeCheck(e.right, e.tipe); true
       case a@ast.Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
+      case a: ast.Apply => checkInvoke(a)
       case ast.SeqAssign(id, e, _) => index(id, id.tipe, e)
     })(stmt)
     hasError

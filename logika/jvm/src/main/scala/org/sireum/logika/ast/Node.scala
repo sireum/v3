@@ -605,7 +605,10 @@ final case class Invariant(num: Num,
 final case class FactJust(num: Num,
                           exp: Exp,
                           id: Id)
-  extends RegularStep
+  extends RegularStep {
+
+  var decl: Either3[Fact, (Fun, FunDef), MethodDecl] = _
+}
 
 final case class Auto(num: Num,
                       exp: Exp,
@@ -858,14 +861,15 @@ final case class Apply(exp: Exp,
                        args: Node.Seq[Exp]) extends PrimaryExp with HasInternalData[Apply] {
   var expTipe: Tipe = _
 
+  var declOpt: Option[Either[MethodDecl, Fun]] = None
+
   override def isResolved: Boolean = expTipe != null && exp.isResolved &&
     args.forall(_.isResolved)
 
   override def copy(other: Apply): Unit = {
     expTipe = other.expTipe
+    declOpt = other.declOpt
   }
-
-  var declOpt: Option[MethodDecl] = None
 
   override def buildString(sb: StringBuilder,
                            inProof: Boolean): Unit = {
@@ -1484,7 +1488,9 @@ final case class MethodDecl(isHelper: Boolean,
                             returnTypeOpt: Option[Type],
                             contract: MethodContract,
                             block: Block)
-  extends Stmt
+  extends Stmt {
+  lazy val isPure: Boolean = AstUtil.isPure(this)
+}
 
 final case class MethodContract(requires: Requires,
                                 modifies: Modifies,

@@ -1,0 +1,11 @@
+import org.sireum.logika._
+
+def inc(x : Z): Z = {
+  l"""{ ensures result == x + 1 }"""
+  return x + 1
+}
+
+def foo(x: Z): Z = {
+  l"""{ ensures result == inc(inc(x)) }"""
+  return x + 2
+}

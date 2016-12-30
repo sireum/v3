@@ -240,6 +240,24 @@ package object util {
     val GT = Value("GT")
   }
 
+  final class EscapeException extends RuntimeException
+
+  sealed trait Either3[+A, +B, +C] {
+    def data[T](implicit evA: A <:< T, evB: B <:< T, evC: C <:< T): T
+  }
+
+  final case class Left3[+A, +B, +C](value: A) extends Either3[A, B, C] {
+    def data[T](implicit evA: A <:< T, evB: B <:< T, evC: C <:< T): T = value
+  }
+
+  final case class Middle3[+A, +B, +C](value: B) extends Either3[A, B, C] {
+    def data[T](implicit evA: A <:< T, evB: B <:< T, evC: C <:< T): T = value
+  }
+
+  final case class Right3[+A, +B, +C](value: C) extends Either3[A, B, C] {
+    def data[T](implicit evA: A <:< T, evB: B <:< T, evC: C <:< T): T = value
+  }
+
   @inline
   final def compareResult(n: Int): CompareResult.Type = n match {
     case -1 => CompareResult.LT

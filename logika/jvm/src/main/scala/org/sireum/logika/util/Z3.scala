@@ -123,7 +123,13 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
 
   def checkSat(es: ast.Exp*): (String, CheckResult) = {
     for (e <- es) {
-      assert(e.isResolved)
+      if (!e.isResolved) {
+        Visitor.build({
+          case e: ast.Exp if !e.isResolved =>
+            assert(false, s"${ast.Exp.toString(e, inProof = true)}")
+            false
+        }, Visitor.TraversalMode.BOTTOM_UP)(e)
+      }
       stMain.add("e",
         stg.getInstanceOf("assertion").
           add("e", translate(e))).add("e", lineSep)

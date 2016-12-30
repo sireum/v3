@@ -35,26 +35,55 @@ object TypeChecker {
   final def check(weakModifies: Boolean, bitWidth: Natural, programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
     var typeMap = imapEmpty[String, (Tipe, Node, Program)]
+    var factMap = imapEmpty[String, (Either[Fact, (Fun, FunDef)], Program)]
     for (program <- programs) {
       val factOrFunDecls = program.block.stmts.flatMap(_ match {
         case stmt: FactStmt => Some(stmt.fact.factOrFunDecls)
         case _ => None
       }).flatten
+      for (fact@Fact(id, _) <- factOrFunDecls) {
+        factMap = addId(factMap, program, id, Left(fact))
+      }
       for (f@Fun(id, _, _, _) <- factOrFunDecls) {
         val ft = tipe(bitWidth, f)
         id.tipe = ft
         typeMap = addId(typeMap, program, id, ft, f)
+        for (fd <- f.funDefs) {
+          factMap = addId(factMap, program, fd.id, Right((f, fd)))
+        }
       }
       for (m@MethodDecl(_, id, _, _, _, _) <- program.block.stmts)
         typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
     }
     if (reporter.hasError) return false
     if (programs.nonEmpty) {
-      var tc = TypeContext(typeMap, programs.head, weakModifies, bitWidth).check(programs.head)
+      var tc = TypeContext(typeMap, factMap, programs.head,
+        weakModifies, bitWidth).check(programs.head)
       for (program <- programs.tail)
         tc = tc.copy(program = program).check(program)
     }
     !reporter.hasError
+  }
+
+  private[tipe] def addId(factMap: IMap[String, (Either[Fact, (Fun, FunDef)], Program)],
+                          program: Program, id: Id, factOrFunDef: Either[Fact, (Fun, FunDef)])(
+                           implicit reporter: AccumulatingTagReporter): IMap[String, (Either[Fact, (Fun, FunDef)], Program)] = {
+    factMap.get(id.value) match {
+      case Some((e, otherProgram)) =>
+        val otherLi = e match {
+          case Left(other) => otherProgram.nodeLocMap(other)
+          case Right((_, other)) => otherProgram.nodeLocMap(other)
+        }
+        val message =
+          if ((program eq otherProgram) || otherProgram.fileUriOpt.isEmpty)
+            s"Identifier ${id.value} has been declared at [${otherLi.lineBegin}, ${otherLi.columnBegin}]."
+          else
+            s"Identifier ${id.value} has been declared at [${otherLi.lineBegin}, ${otherLi.columnBegin}] of ${otherProgram.fileUriOpt.get}."
+        reporter.report(
+          program.nodeLocMap(id).toLocationError(program.fileUriOpt, kind, message))
+        factMap
+      case _ => factMap + (id.value -> (factOrFunDef, program))
+    }
   }
 
   private[tipe] def addId(typeMap: IMap[String, (Tipe, Node, Program)],
@@ -70,8 +99,7 @@ object TypeChecker {
           else
             s"Identifier ${id.value} has been declared at [${otherLi.lineBegin}, ${otherLi.columnBegin}] of ${otherProgram.fileUriOpt.get}."
         reporter.report(
-          program.nodeLocMap(id).toLocationError(otherProgram.fileUriOpt,
-            kind, message))
+          program.nodeLocMap(id).toLocationError(program.fileUriOpt, kind, message))
         typeMap
       case _ => typeMap + (id.value -> (id.tipe, decl, program))
     }
@@ -135,6 +163,7 @@ object TypeChecker {
 
 private final case class
 TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
+            factMap: IMap[String, (Either[Fact, (Fun, FunDef)], Program)],
             program: Program,
             weakModifies: Boolean,
             bitWidth: Natural)(
@@ -154,10 +183,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
           case ExpStmt(a) => Some(a)
           case _ => None
         }
-      applyOpt.foreach(_.declOpt.foreach { d =>
-        if (d.isHelper) {
+      applyOpt.foreach(_.declOpt.foreach {
+        case Left(d) if d.isHelper =>
           error(applyOpt.get, s"Cannot directly call a helper method in the program main level.")
-        }
+        case _ =>
       })
     }
     r
@@ -251,7 +280,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
         case Some(t) =>
           id.tipe = t
           z(index)(allowFun = false, mOpt)
-          check(exp)(allowFun = false, mOpt) match {
+          check(exp, allowMethod = false)(allowFun = false, mOpt) match {
             case Some(et) =>
               if (t.result != et)
                 error(exp, s"Expecting type ${t.result}, but found $et.")
@@ -323,6 +352,22 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             tc.b(step.exp)(allowFun = true, None)
           case _ =>
         }
+      case step: FactJust =>
+        val id = step.id.value
+        factMap.get(id) match {
+          case Some((Left(fact), _)) => step.decl = Left3(fact)
+          case Some((Right(funDef), _)) => step.decl = Middle3(funDef)
+          case _ =>
+            typeMap.get(step.id.value) match {
+              case Some((_, md: MethodDecl, _)) =>
+                if (!md.isPure)
+                  error(step.id, s"Could not use a method with side-effects as a fact.")
+                step.decl = Right3(md)
+              case _ =>
+                error(step.id, s"Could not resolve fact or method ${step.id.value}.")
+            }
+        }
+        tc.b(step.exp)(allowFun = true, None)
       case step: RegularStep =>
         tc.b(step.exp)(allowFun = true, None)
       case step: ProofGroup => tc.check(step)
@@ -368,7 +413,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     }
   }
 
-  def check(e: Exp, allowMethod: Boolean = false)(
+  def check(e: Exp, allowMethod: Boolean)(
     implicit allowFun: Boolean,
     mOpt: Option[Tipe]): Option[Tipe] =
     e match {
@@ -391,26 +436,27 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             case id: Id =>
               typeMap.get(id.value) match {
                 case Some((_, md: MethodDecl, _)) =>
-                  if (!allowMethod)
-                    error(e, s"Method invocation is only allowed at statement level.")
-                  e.declOpt = Some(md)
+                  if (!allowMethod && !md.isPure)
+                    error(id, s"Invocation of method with side-effects is only allowed at statement level.")
+                  e.declOpt = Some(Left(md))
                   true
-                case Some((_, _: Fun, _)) =>
+                case Some((_, f: Fun, _)) =>
                   if (!allowFun)
-                    error(e, s"Use of proof function is only allowed in proof context.")
+                    error(id, s"Use of proof function is only allowed in proof context.")
+                  e.declOpt = Some(Right(f))
                   false
                 case _ =>
                   false
               }
             case _ => false
           }
-        check(e.exp) match {
+        check(e.exp, allowMethod = false) match {
           case Some(t: Fn) =>
             if (e.args.size != t.params.size) {
               val text = if (isMethod) "Method" else "Proof function"
               error(e, s"$text ${Exp.toString(e.exp, inProof = allowFun)} requires ${t.params.size} arguments, but found ${e.args.size}.")
             } else if (isMethod) {
-              val md = e.declOpt.get
+              val Some(Left(md)) = e.declOpt
               val modifiedIds = md.contract.modifies.ids.toSet
               val modifiedArgParams: MMap[Exp, Id] = mmapEmpty
               for ((param, arg) <- md.params.zip(e.args)
@@ -430,7 +476,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               }
             }
             for ((arg, pType) <- e.args.zip(t.params)) {
-              check(arg) match {
+              check(arg, allowMethod = false) match {
                 case Some(`pType`) =>
                 case Some(_) =>
                   error(arg, s"Expecting type $pType, but found $t.")
@@ -479,7 +525,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               error(e, s"Invoking create requires 2 arguments instead of ${e.args.size}.")
             else {
               z(e.args(0))
-              check(e.args(1)) match {
+              check(e.args(1), allowMethod = false) match {
                 case Some(t) =>
                   if (mst.result != t)
                     error(e, s"Invalid default value for elements of ${e.tpe}.")
@@ -543,7 +589,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case _ => None
             }
           case e: EqualityExp =>
-            for (tLeft <- check(e.left); tRight <- check(e.right))
+            for (tLeft <- check(e.left, allowMethod = false); tRight <- check(e.right, allowMethod = false))
               if (tLeft != tRight) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
@@ -552,7 +598,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               }
             someB
           case e: Append =>
-            (mseq(e.left), check(e.right)) match {
+            (mseq(e.left), check(e.right, allowMethod = false)) match {
               case (Some(tLeft), Some(tRight)) =>
                 if (tLeft.result != tRight) {
                   error(e, s"Ill-typed append operation $tLeft :+ $tRight.")
@@ -564,7 +610,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case _ => None
             }
           case _: Prepend =>
-            (check(e.left), mseq(e.right)) match {
+            (check(e.left, allowMethod = false), mseq(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
                 if (tLeft != tRight.result) {
                   error(e, s"Ill-typed prepend operation $tLeft +: $tRight.")
@@ -576,7 +622,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case _ => None
             }
           case _: And | _: Or | _: Xor =>
-            (check(e.left), check(e.right)) match {
+            (check(e.left, allowMethod = false), check(e.right, allowMethod = false)) match {
               case (Some(tLeft), Some(tRight)) =>
                 if (!(tLeft == tRight &&
                   (tLeft == B || tLeft.isInstanceOf[ModuloIntegralTipe]))) {
@@ -592,7 +638,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             b(e.left); b(e.right); e.tipe = B; someB
         }
       case e: Not =>
-        check(e.exp) match {
+        check(e.exp, allowMethod = false) match {
           case Some(t) =>
             if (!(t == B || t.isInstanceOf[ModuloIntegralTipe])) {
               error(e, s"Ill-typed operation ${e.op(false)}$t.")
@@ -638,13 +684,13 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             tm = TypeChecker.addId(tm, program, id, t, e)
             id.tipe = t
           }
-          copy(typeMap = tm).check(e.exp)
+          copy(typeMap = tm).check(e.exp, allowMethod = false)
         }
         someB
       case e: SeqLit =>
         val ts = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
         val et = ts.result
-        for (arg <- e.args; t <- check(arg)) {
+        for (arg <- e.args; t <- check(arg, allowMethod = false)) {
           if (t != et) {
             error(arg, s"Expecting an expression of type $et, but found $t.")
           }
@@ -657,14 +703,16 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
     var lids = isetEmpty[Id]
 
     def collect(e: Exp): Unit = e match {
-      case a: Apply if a.declOpt.isDefined =>
-        val md = a.declOpt.get
-        val paramIds = md.params.map(_.id)
-        val modifiedIds = md.contract.modifies.ids.toSet
-        r ++= (modifiedIds -- paramIds)
-        for ((argId@Id(_), paramId) <- a.args.zip(paramIds) if
-        argId.tipe.isInstanceOf[MSeq] && modifiedIds.contains(paramId))
-          r += argId
+      case a: Apply => a.declOpt match {
+        case Some(Left(md)) =>
+          val paramIds = md.params.map(_.id)
+          val modifiedIds = md.contract.modifies.ids.toSet
+          r ++= (modifiedIds -- paramIds)
+          for ((argId@Id(_), paramId) <- a.args.zip(paramIds) if
+          argId.tipe.isInstanceOf[MSeq] && modifiedIds.contains(paramId))
+            r += argId
+        case _ =>
+      }
       case _ =>
     }
 
@@ -678,49 +726,49 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
   }
 
   def b(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Unit =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(B) =>
       case Some(t) => error(e, s"Expecting an expression of type B, but found $t.")
       case _ =>
     }
 
   def z(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Unit =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(Z) =>
       case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
       case _ =>
     }
 
   def number(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[NumberTipe] =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(t: NumberTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of number type, but found $t."); None
       case _ => None
     }
 
   def integral(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[IntegralTipe] =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(t: IntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type integer, but found $t."); None
       case _ => None
     }
 
   def m(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[ModuloIntegralTipe] =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(t: ModuloIntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type modulo integer, but found $t."); None
       case _ => None
     }
 
   def ms(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[ModuloIntegralTipe with SignedIntegralTipe] =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(t: ModuloIntegralTipe with SignedIntegralTipe) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type signed modulo integer, but found $t."); None
       case _ => None
     }
 
   def mseq(e: Exp)(implicit allowFun: Boolean, mOpt: Option[Tipe]): Option[MSeq] =
-    check(e) match {
+    check(e, allowMethod = false) match {
       case Some(t: MSeq) => Some(t)
       case Some(t) => error(e, s"Expecting an expression of type mutable sequence, but found $t."); None
       case _ => None

@@ -51,19 +51,18 @@ import UnrollingSymExeProofContext._
 
 private final case class
 UnrollingSymExeProofContext(unitNode: ast.Program,
-                            autoEnabled: Boolean,
                             timeoutInMs: PosInteger,
                             checkSatEnabled: Boolean,
                             hintEnabled: Boolean,
                             inscribeSummoningsEnabled: Boolean,
                             coneInfluenceEnabled: Boolean,
                             bitWidth: Natural,
+                            facts: IMap[String, ast.Exp],
                             status: UnrollingSymExeProofContext.Status = UnrollingSymExeProofContext.Normal,
                             schedule: ISeq[(PosInteger, Natural)] = ivectorEmpty,
                             invariants: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                             premises: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                             vars: ISet[String] = isetEmpty,
-                            facts: IMap[String, ast.Exp] = imapEmpty,
                             provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                             declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
                             mdOpt: Option[ast.MethodDecl] = None,
@@ -145,28 +144,9 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
   }
 
   def init: Option[UnrollingSymExeProofContext] = {
-    val program = unitNode
-    val facts = this.facts ++ program.block.stmts.flatMap(_ match {
-      case ast.FactStmt(fs) => fs.factOrFunDecls.flatMap(_ match {
-        case f: ast.Fact => Some(f.id.value -> f.exp)
-        case _ => None
-      })
-      case _ => ivectorEmpty
-    })
-    var isSat = true
-    if (facts.nonEmpty && !checkSat("Facts", nodeLocMap(program), facts.values,
-      genMessage = true,
-      unsatMsg = "The specified set of facts are unsatisfiable.",
-      unknownMsg = {
-        isSat = false
-        "The set of facts might not be satisfiable."
-      },
-      timeoutMsg = {
-        isSat = false
-        "Could not check satisfiability of the set of facts due to timeout."
-      }
-    )) return None
-    Some(copy(facts = facts, satFacts = isSat))
+    val (isSat, ok) = checkSatFacts
+    if (!ok) return None
+    Some(copy(satFacts = isSat))
   }
 
   def check(stmt: ast.MethodDecl): ISeq[UnrollingSymExeProofContext] = {
@@ -364,7 +344,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
                   Exp.Eq(t, Exp.Apply(id.tipe, id, ast.Node.seq(subst(index, m))), subst(exp, m)),
                   ast.ForAll(
                     ast.Node.seq(qVar),
-                    Some(ast.RangeDomain(Checker.zero, Exp.Size(id.tipe, id),
+                    Some(ast.Exp.RangeDomain(tipe.Z, Checker.zero, Exp.Size(id.tipe, id),
                       loLt = false, hiLt = true)),
                     Exp.Implies(tipe.B,
                       Exp.Ne(tipe.Z, qVar, index),
@@ -373,10 +353,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
                   )
                 ), store = store - id.value))
         }
-      case ast.ExpStmt(exp) =>
-        val (he, pc2) = invoke(exp, None)
-        if (he) ivector(pc2.updateStatus(Error(stmt)))
-        else ivector(pc2)
+      case ast.ExpStmt(exp) => ivector(invoke(exp, None))
       case a: ast.VarAssign =>
         val id = a.id
         val exp = a.exp
@@ -386,9 +363,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           case _: ast.Random => assign(id)
           case exp: ast.Clone => assign(id, exp.id)
           case exp: ast.Apply if !exp.expTipe.isInstanceOf[tipe.MSeq] =>
-            val (he, pc2) = invoke(exp, Some(id))
-            if (he) ivector(pc2.updateStatus(Error(stmt)))
-            else ivector(pc2)
+            ivector(invoke(exp, Some(id)))
           case exp: ast.TypeMethodCallExp =>
             exp.id.value match {
               case "create" =>
@@ -515,14 +490,12 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
     ivector(copy(premises = premises.map(sst), store = store - id.value))
   }
 
-  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): (Boolean, UnrollingSymExeProofContext) = {
-    var hasError = false
-    val md = a.declOpt.get
+  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): UnrollingSymExeProofContext = {
+    val Some(Left(md)) = a.declOpt
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
-    val isHelper = md.isHelper
     var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
-    for (inv <- invariants if !isHelper) {
+    for (inv <- invariants if !md.isHelper) {
       var mod = false
       Visitor.build({
         case id: ast.Id =>
@@ -532,19 +505,6 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       })(inv)
       if (mod) invs :+= inv
     }
-    val ps = premises ++ facts.values
-    for (inv <- invs if mdOpt.isDefined)
-      if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
-        val li = nodeLocMap(inv)
-        error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-        hasError = true
-      }
-    for (pre <- md.contract.requires.exps)
-      if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
-        val li = nodeLocMap(pre)
-        error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-        hasError = true
-      }
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
         (x, imapEmpty[ast.Node, ast.Node] + (x -> oldId(x)))
@@ -571,10 +531,9 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
       premiseSubstMap += g -> g_old
       postSubstMap += g_in -> g_old
     }
-    (hasError, make(premises =
+    make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
-        md.contract.ensures.exps.map(e => subst(e, postSubstMap))
-    ))
+        md.contract.ensures.exps.map(e => subst(e, postSubstMap)))
   }
 
   def cleanup: UnrollingSymExeProofContext =

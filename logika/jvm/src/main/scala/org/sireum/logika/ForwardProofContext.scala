@@ -35,10 +35,10 @@ ForwardProofContext(unitNode: ast.Program,
                     hintEnabled: Boolean,
                     inscribeSummoningsEnabled: Boolean,
                     coneInfluenceEnabled: Boolean,
+                    facts: IMap[String, ast.Exp],
                     invariants: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                     premises: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                     vars: ISet[String] = isetEmpty,
-                    facts: IMap[String, ast.Exp] = imapEmpty,
                     provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                     declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
                     mdOpt: Option[ast.MethodDecl] = None,
@@ -49,21 +49,9 @@ ForwardProofContext(unitNode: ast.Program,
 
   def check: Boolean = {
     val program = unitNode
-    val facts = extractFacts
-    var isSat = true
-    if (facts.nonEmpty &&
-      !checkSat("Facts", nodeLocMap(program), facts.values, genMessage = true,
-        unsatMsg = "The specified set of facts are unsatisfiable.",
-        unknownMsg = {
-          isSat = false
-          "The set of facts might not be satisfiable."
-        },
-        timeoutMsg = {
-          isSat = false
-          "Could not check satisfiability of the set of facts due to timeout."
-        }
-      )) return false
-    copy(facts = facts, satFacts = isSat).check(program.block)
+    val (isSat, ok) = checkSatFacts
+    if (!ok) return false
+    copy(satFacts = isSat).check(program.block)
     !reporter.hasError
   }
 
@@ -138,12 +126,94 @@ ForwardProofContext(unitNode: ast.Program,
           error(li, s"Could not automatically deduce the post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}].")
         }
     } else {
-      for (e <- post)
+      for (e <- post) {
         if (!premises.contains(subst(e, postSubstMap))) {
           val eLi = nodeLocMap(e)
           error(e, s"The post-condition specified at [${eLi.lineBegin}, ${eLi.columnBegin}] has not been proven.")
         }
+      }
     }
+  }
+
+  def hasRuntimeError(stmt: ast.Stmt): Boolean = {
+    var hasError = false
+    lazy val ps = premises ++ facts.values
+
+    def divisor(e: ast.Exp, t: tipe.IntegralTipe): Boolean = {
+      val tpe = t match {
+        case tipe.Z => ast.ZType()
+        case tipe.Z8 => ast.Z8Type()
+        case tipe.Z16 => ast.Z16Type()
+        case tipe.Z32 => ast.Z32Type()
+        case tipe.Z64 => ast.Z64Type()
+        case tipe.N => ast.NType()
+        case tipe.N8 => ast.N8Type()
+        case tipe.N16 => ast.N16Type()
+        case tipe.N32 => ast.N32Type()
+        case tipe.N64 => ast.N64Type()
+        case tipe.S8 => ast.S8Type()
+        case tipe.S16 => ast.S16Type()
+        case tipe.S32 => ast.S32Type()
+        case tipe.S64 => ast.S64Type()
+        case tipe.U8 => ast.U8Type()
+        case tipe.U16 => ast.U16Type()
+        case tipe.U32 => ast.U32Type()
+        case tipe.U64 => ast.U64Type()
+      }
+      val req =
+        if (t == tipe.Z) ast.Exp.Ne(t, e, Checker.zero)
+        else ast.Exp.Ne(t, e, ast.IntLit("0", tpe.bitWidth, Some(tpe)))
+      if (autoEnabled) {
+        if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
+          error(e, s"Could not automatically deduce that the divisor is non-zero.")
+          hasError = true
+        }
+      } else if (!premises.contains(req)) {
+        error(e, s"Divisor has to be proven to be non-zero.")
+        hasError = true
+      }
+      true
+    }
+
+    def index(a: ast.Exp, aTipe: tipe.Tipe, e: ast.Exp): Boolean = {
+      val req1 = ast.Exp.Le(tipe.Z, Checker.zero, e)
+      req1.tipe = tipe.Z
+      val sz = ast.Exp.Size(tipe.Z, a)
+      sz.tipe = aTipe
+      val req2 = ast.Exp.Lt(tipe.Z, e, sz)
+      req2.tipe = tipe.Z
+      if (autoEnabled) {
+        if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
+          hasError = true
+          error(e, "Could not automatically deduce that the sequence index is non-negative.")
+        }
+        if (!isValid("indexing high-bound", nodeLocMap(e), ps, ivector(req2))) {
+          hasError = true
+          error(e, s"Could not automatically deduce that the index is less than the sequence size.")
+        }
+      } else {
+        if (!premises.contains(req1)) {
+          hasError = true
+          error(e, "The sequence index has to be proven non-negative.")
+        }
+        if (!premises.contains(req2)) {
+          hasError = true
+          error(e, s"The sequence index has to be proven less than the sequence size.")
+        }
+      }
+      true
+    }
+
+    Visitor.build({
+      case _: ast.Block => false
+      case _: ast.LoopInv => false
+      case e@ast.Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case e@ast.Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
+      case a@ast.Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
+      case a: ast.Apply => checkInvoke(a)
+      case ast.SeqAssign(id, e, _) => index(id, id.tipe, e)
+    })(stmt)
+    hasError
   }
 
   def check(stmt: ast.Stmt): Option[ForwardProofContext] = {
@@ -217,7 +287,7 @@ ForwardProofContext(unitNode: ast.Program,
               Exp.Eq(t, Exp.Apply(id.tipe, id, ast.Node.seq(subst(index, m))), subst(exp, m)),
               ast.ForAll(
                 ast.Node.seq(qVar),
-                Some(ast.RangeDomain(Checker.zero, Exp.Size(id.tipe, id),
+                Some(ast.Exp.RangeDomain(tipe.Z, Checker.zero, Exp.Size(id.tipe, id),
                   loLt = false, hiLt = true)),
                 Exp.Implies(tipe.B,
                   Exp.Ne(tipe.Z, qVar, index),
@@ -226,10 +296,7 @@ ForwardProofContext(unitNode: ast.Program,
                 )
               )
             )))
-      case ast.ExpStmt(exp) =>
-        val (he, pc2) = invoke(exp, None)
-        hasError ||= he
-        Some(pc2)
+      case ast.ExpStmt(exp) => Some(invoke(exp, None))
       case a: ast.VarAssign =>
         val id = a.id
         val exp = a.exp
@@ -238,9 +305,7 @@ ForwardProofContext(unitNode: ast.Program,
           case _: ast.RandomInt => assign(id)
           case exp: ast.Clone => assign(id, exp.id)
           case exp: ast.Apply if !exp.expTipe.isInstanceOf[tipe.MSeq] =>
-            val (he, pc2) = invoke(exp, Some(id))
-            hasError ||= he
-            Some(pc2)
+            Some(invoke(exp, Some(id)))
           case _ => assign(id, exp)
         }
       case ast.If(exp, thenBlock, elseBlock) =>
@@ -431,14 +496,12 @@ ForwardProofContext(unitNode: ast.Program,
     Some(copy(premises = premises.map(sst)))
   }
 
-  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): (Boolean, ForwardProofContext) = {
-    var hasError = false
-    val md = a.declOpt.get
+  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): ForwardProofContext = {
+    val Some(Left(md)) = a.declOpt
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
-    val isHelper = md.isHelper
     var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
-    for (inv <- invariants if !isHelper) {
+    for (inv <- invariants if !md.isHelper) {
       var mod = false
       Visitor.build({
         case id: ast.Id =>
@@ -447,34 +510,6 @@ ForwardProofContext(unitNode: ast.Program,
           false
       })(inv)
       if (mod) invs :+= inv
-    }
-    if (autoEnabled) {
-      val ps = premises ++ facts.values
-      for (inv <- invs if mdOpt.isDefined)
-        if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
-          val li = nodeLocMap(inv)
-          error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-          hasError = true
-        }
-      for (pre <- md.contract.requires.exps)
-        if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
-          val li = nodeLocMap(pre)
-          error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-          hasError = true
-        }
-    } else {
-      for (inv <- invs)
-        if (!premises.contains(inv)) {
-          val li = nodeLocMap(inv)
-          error(a, s"The invariant defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
-          hasError = true
-        }
-      for (pre <- md.contract.requires.exps)
-        if (!premises.contains(subst(pre, postSubstMap))) {
-          val li = nodeLocMap(pre)
-          error(a, s"The pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
-          hasError = true
-        }
     }
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
@@ -502,10 +537,9 @@ ForwardProofContext(unitNode: ast.Program,
       premiseSubstMap += g -> g_old
       postSubstMap += g_in -> g_old
     }
-    (hasError, make(premises =
+    make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
-        md.contract.ensures.exps.map(e => subst(e, postSubstMap))
-    ))
+        md.contract.ensures.exps.map(e => subst(e, postSubstMap)))
   }
 
   override def check(step: ast.RegularStep): Option[ForwardProofContext] = {

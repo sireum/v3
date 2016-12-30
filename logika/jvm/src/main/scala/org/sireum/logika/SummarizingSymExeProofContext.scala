@@ -30,17 +30,16 @@ import org.sireum.util._
 
 private final case class
 SummarizingSymExeProofContext(unitNode: ast.Program,
-                              autoEnabled: Boolean,
                               timeoutInMs: PosInteger,
                               checkSatEnabled: Boolean,
                               hintEnabled: Boolean,
                               inscribeSummoningsEnabled: Boolean,
                               coneInfluenceEnabled: Boolean,
                               bitWidth: Natural,
+                              facts: IMap[String, ast.Exp],
                               invariants: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                               premises: ILinkedSet[ast.Exp] = ilinkedSetEmpty,
                               vars: ISet[String] = isetEmpty,
-                              facts: IMap[String, ast.Exp] = imapEmpty,
                               provedSteps: IMap[Natural, ast.ProofStep] = imapEmpty,
                               declaredStepNumbers: IMap[Natural, LocationInfo] = imapEmpty,
                               mdOpt: Option[ast.MethodDecl] = None,
@@ -51,21 +50,9 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
 
   def check: Boolean = {
     val program = unitNode
-    val facts = extractFacts
-    var isSat = true
-    if (facts.nonEmpty && !checkSat("Facts", nodeLocMap(program), facts.values,
-      genMessage = true,
-      unsatMsg = "The specified set of facts are unsatisfiable.",
-      unknownMsg = {
-        isSat = false
-        "The set of facts might not be satisfiable."
-      },
-      timeoutMsg = {
-        isSat = false
-        "Could not check satisfiability of the set of facts due to timeout."
-      }
-    )) return false
-    copy(facts = facts, satFacts = isSat).check(program.block)
+    val (isSat, ok) = checkSatFacts
+    if (!ok) return false
+    copy(satFacts = isSat).check(program.block)
     !reporter.hasError
   }
 
@@ -204,10 +191,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
                 )
               )
             )))
-      case ast.ExpStmt(exp) =>
-        val (he, pc2) = invoke(exp, None)
-        hasError ||= he
-        Some(pc2)
+      case ast.ExpStmt(exp) => Some(invoke(exp, None))
       case a: ast.VarAssign =>
         val id = a.id
         val exp = a.exp
@@ -217,9 +201,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           case _: ast.Random => assign(id)
           case exp: ast.Clone => assign(id, exp.id)
           case exp: ast.Apply if !exp.expTipe.isInstanceOf[tipe.MSeq] =>
-            val (he, pc2) = invoke(exp, Some(id))
-            hasError ||= he
-            Some(pc2)
+            Some(invoke(exp, Some(id)))
           case exp: ast.TypeMethodCallExp =>
             exp.id.value match {
               case "create" =>
@@ -437,14 +419,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
     Some(pc2.copy(premises = premises.map(sst)))
   }
 
-  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): (Boolean, SummarizingSymExeProofContext) = {
-    var hasError = false
-    val md = a.declOpt.get
+  def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): SummarizingSymExeProofContext = {
+    val Some(Left(md)) = a.declOpt
     var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
-    val isHelper = md.isHelper
     var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
-    for (inv <- invariants if !isHelper) {
+    for (inv <- invariants if !md.isHelper) {
       var mod = false
       Visitor.build({
         case id: ast.Id =>
@@ -454,19 +434,6 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       })(inv)
       if (mod) invs :+= inv
     }
-    val ps = premises ++ facts.values
-    for (inv <- invs if mdOpt.isDefined)
-      if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
-        val li = nodeLocMap(inv)
-        error(a, s"Could not automatically deduce the invariant of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-        hasError = true
-      }
-    for (pre <- md.contract.requires.exps)
-      if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
-        val li = nodeLocMap(pre)
-        error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} defined at [${li.lineBegin}, ${li.columnBegin}].")
-        hasError = true
-      }
     var pc2 = this
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
@@ -498,10 +465,10 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       premiseSubstMap += g -> g_old
       postSubstMap += g_in -> g_old
     }
-    (hasError, make(premises =
+    make(premises =
       premises.map(e => subst(e, premiseSubstMap)) ++ invs ++
-        md.contract.ensures.exps.map(e => subst(e, postSubstMap))
-    ).copy(oldIdLineMap = pc2.oldIdLineMap))
+        md.contract.ensures.exps.map(e => subst(e, postSubstMap))).
+      copy(oldIdLineMap = pc2.oldIdLineMap)
   }
 
   def cleanup: SummarizingSymExeProofContext =

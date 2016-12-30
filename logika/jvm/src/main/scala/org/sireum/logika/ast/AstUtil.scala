@@ -31,6 +31,8 @@ import org.sireum.util._
 import org.sireum.util.{AccumulatingTagReporter, FileResourceUri, LocationInfo, Natural, Visitor}
 
 object AstUtil {
+  private val sideEffectingTypeMethod = Set("random", "read")
+
   def wipe(fileUriOpt: Option[FileResourceUri],
            programText: String,
            bitWidth: Natural,
@@ -137,6 +139,23 @@ object AstUtil {
       case _: Stmt => false
     })(b)
     r
+  }
+
+  def isPure(md: MethodDecl): Boolean = {
+    md.contract.modifies.ids.isEmpty && {
+      try {
+        Visitor.build({
+          case e: TypeMethodCallExp if sideEffectingTypeMethod.contains(e.id.value) =>
+            throw new EscapeException
+          case _: RandomInt => throw new EscapeException
+          case _: Random => throw new EscapeException
+          case _: ReadInt => throw new EscapeException
+        })(md)
+        true
+      } catch {
+        case _: EscapeException => false
+      }
+    }
   }
 
   private final case class CompareException(node1: Node,

@@ -102,15 +102,18 @@ object Checker {
 
     if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
       val programs = unitNodes.map(_.asInstanceOf[ast.Program])
+      var factMap = imapEmpty[String, ast.Exp]
+      for (program <- programs) factMap ++= extractFacts(program)
+
       if (m.lastOnly)
         check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
           m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
-          m.loopBound, m.recursionBound, m.useMethodContract)
+          m.loopBound, m.recursionBound, m.useMethodContract, factMap)
       else
         for (program <- programs)
           check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
             m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
-            m.loopBound, m.recursionBound, m.useMethodContract)
+            m.loopBound, m.recursionBound, m.useMethodContract, factMap)
     } else if (unitNodes.forall(_.isInstanceOf[ast.Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[ast.Sequent])
       if (m.lastOnly)
@@ -140,7 +143,8 @@ object Checker {
                   bitWidth: Natural = 0,
                   loopBound: Natural = 10, // loop bound
                   recursionBound: Natural = 10, // recursion bound
-                  useMethodContract: Boolean = true)(
+                  useMethodContract: Boolean = true,
+                  factMap: IMap[String, ast.Exp] = imapEmpty)(
                    implicit reporter: AccumulatingTagReporter): Boolean = unitNode match {
     case tt: ast.TruthTable =>
       check(tt)
@@ -205,16 +209,16 @@ object Checker {
       val r = checkerKind match {
         case message.CheckerKind.Forward =>
           ForwardProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled).check
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, factMap).check
         case message.CheckerKind.Backward =>
           reporter.report(InternalErrorMessage(kind, "Backward mode is unsupported yet."))
           return false
         case message.CheckerKind.SummarizingSymExe =>
-          SummarizingSymExeProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth).check
+          SummarizingSymExeProofContext(program, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth, factMap).check
         case message.CheckerKind.UnrollingSymExe =>
-          UnrollingSymExeProofContext(program, autoEnabled, timeoutInMs,
-            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth,
+          UnrollingSymExeProofContext(program, timeoutInMs,
+            checkSat, hintEnabled, inscribeSummoningsEnabled, coneInfluenceEnabled, bitWidth, factMap,
             loopBound = loopBound, recursionBound = recursionBound,
             useMethodContract = useMethodContract).check
       }
@@ -223,6 +227,20 @@ object Checker {
           reporter.report(InfoMessage(kind, s"Programming logic proof is accepted."))
       } else reporter.report(ErrorMessage(kind, s"Programming logic proof is rejected."))
       r
+  }
+
+  def extractFacts(unitNode: ast.Program): IMap[String, ast.Exp] = {
+    var m = imapEmpty[String, ast.Exp]
+    for (stmt <- unitNode.block.stmts) stmt match {
+      case stmt: ast.FactStmt =>
+        for (fact <- stmt.fact.factOrFunDecls) fact match {
+          case fact: ast.Fact =>
+            m += fact.id.value -> fact.exp
+          case _ =>
+        }
+      case _ =>
+    }
+    m
   }
 
   def check(tt: ast.TruthTable)(
@@ -396,40 +414,149 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
            declaredStepNumbers: IMap[Natural, LocationInfo] = declaredStepNumbers,
            premises: ILinkedSet[ast.Exp] = premises): T
 
-  def extractFacts: IMap[String, ast.Exp] = {
-    var m = imapEmpty[String, ast.Exp]
-    unitNode match {
-      case unitNode: ast.Program =>
-        for (stmt <- unitNode.block.stmts) stmt match {
-          case stmt: ast.FactStmt =>
-            for (fact <- stmt.fact.factOrFunDecls) fact match {
-              case fact: ast.Fun =>
-                assert(fact.isResolved)
-                val ft = fact.id.tipe.asInstanceOf[tipe.Fn]
-                val f = ast.Exp.Apply(ft, fact.id, fact.params.map(_.id))
-                for (fd <- fact.funDefs) {
-                  var r: ast.Exp = ast.Exp.Implies(tipe.B, fd.cond, ast.Exp.Eq(ft.result, f, fd.exp))
-                  for (p <- fact.params.reverse) {
-                    r = ast.ForAll(ivector(p.id), Some(ast.TypeDomain(p.tpe)), r)
-                  }
-                  m += fd.id.value -> r
-                }
-              case fact: ast.Fact =>
-                m += fact.id.value -> fact.exp
+  def extractFact(fun: ast.Fun, fd: ast.FunDef): ast.Exp = {
+    val ft = fun.id.tipe.asInstanceOf[tipe.Fn]
+    val f = ast.Exp.Apply(ft, fun.id, fun.params.map(_.id))
+    var r: ast.Exp = fd.cond match {
+      case ast.BooleanLit(true) => ast.Exp.Eq(ft.result, f, fd.exp)
+      case ast.BooleanLit(false) => return ast.BooleanLit(true)
+      case _ => ast.Exp.Implies(tipe.B, fd.cond, ast.Exp.Eq(ft.result, f, fd.exp))
+    }
+    for (p <- fun.params.reverse) {
+      r = ast.ForAll(ivector(p.id), Some(ast.TypeDomain(p.tpe)), r)
+    }
+    r
+  }
+
+  def extractFact(md: ast.MethodDecl): Option[ast.Exp] = {
+    require(md.contract.modifies.ids.isEmpty)
+    lazy val post = subst(ast.Exp.And(md.contract.ensures.exps),
+      Map[ast.Node, ast.Node](ast.Result() ->
+        ast.Exp.Apply(md.id.tipe.asInstanceOf[tipe.Fn], md.id, md.params.map(_.id))))
+    val eOpt = (md.contract.requires.exps.nonEmpty, md.contract.ensures.exps.nonEmpty) match {
+      case (true, true) =>
+        val pre = ast.Exp.And(md.contract.requires.exps)
+        Some(ast.Exp.Implies(tipe.B, pre, post))
+      case (false, true) =>
+        Some(post)
+      case (_, false) => None
+    }
+    for (e <- eOpt) yield {
+      var r = e
+      for (p <- md.params.reverse) {
+        r = ast.ForAll(ivector(p.id), Some(ast.TypeDomain(p.tpe)), r)
+      }
+      r
+    }
+  }
+
+  def additionalFacts(es: Iterable[ast.Exp]): ILinkedSet[ast.Exp] = {
+    var r = ilinkedSetEmpty[ast.Exp]
+    val seen = midmapEmpty[Object, Boolean]
+    lazy val v: Any => Boolean = Visitor.build({
+      case a: ast.Apply =>
+        a.declOpt match {
+          case Some(Left(md)) if !seen.contains(md) =>
+            seen(md) = true
+            for (e <- extractFact(md)) {
+              r += e
+              v(e)
+            }
+          case Some(Right(fun)) if !seen.contains(fun) =>
+            seen(fun) = true
+            for (fd <- fun.funDefs) {
+              val e = extractFact(fun, fd)
+              r += e
+              v(e)
             }
           case _ =>
         }
+        true
+    })
+    es.foreach(v)
+    r
+  }
+
+  def checkSatFacts: (Boolean, Boolean) = {
+    if (!checkSatEnabled) return (true, true)
+    var fs = facts.values.toVector
+    Visitor.build({
+      case a: ast.Apply =>
+        a.declOpt match {
+          case Some(Right(fun)) =>
+            for (funDef <- fun.funDefs) {
+              fs :+= extractFact(fun, funDef)
+            }
+          case _ =>
+        }
+        true
+    })(unitNode)
+    var isSat = true
+    if (fs.nonEmpty &&
+      !checkSat("Facts", nodeLocMap(unitNode), fs, genMessage = true,
+        unsatMsg = "The specified set of facts are unsatisfiable.",
+        unknownMsg = {
+          isSat = false
+          "The set of facts might not be satisfiable."
+        },
+        timeoutMsg = {
+          isSat = false
+          "Could not check satisfiability of the set of facts due to timeout."
+        })) return (isSat, false)
+    (isSat, true)
+  }
+
+  def checkInvoke(a: ast.Apply): Boolean = {
+    a.declOpt match {
+      case Some(Left(md)) =>
+        var invs = ivectorEmpty[ast.Exp]
+        val modIds = md.contract.modifies.ids.map(_.value).toSet
+        for (inv <- invariants if !md.isHelper) {
+          var mod = false
+          Visitor.build({
+            case id: ast.Id =>
+              if (modIds.contains(id.value))
+                mod = true
+              false
+          })(inv)
+          if (mod) invs :+= inv
+        }
+        val postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
+        if (autoEnabled) {
+          val ps = premises ++ facts.values
+          for (inv <- invs)
+            if (!isValid("Global Invariant", nodeLocMap(a), ps, ivector(inv))) {
+              val li = nodeLocMap(inv)
+              error(a, s"Could not automatically deduce the global invariant specified at [${li.lineBegin}, ${li.columnBegin}].")
+            }
+          for (pre <- md.contract.requires.exps)
+            if (!isValid("Pre-condition", nodeLocMap(a), ps, ivector(subst(pre, postSubstMap)))) {
+              val li = nodeLocMap(pre)
+              error(a, s"Could not automatically deduce the pre-condition of method ${md.id.value} specified at [${li.lineBegin}, ${li.columnBegin}].")
+            }
+        } else {
+          for (inv <- invs)
+            if (!premises.contains(inv)) {
+              val li = nodeLocMap(inv)
+              error(a, s"The global invariant specified at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
+            }
+          for (pre <- md.contract.requires.exps)
+            if (!premises.contains(subst(pre, postSubstMap))) {
+              val li = nodeLocMap(pre)
+              error(a, s"The pre-condition of method ${md.id.value} specified at [${li.lineBegin}, ${li.columnBegin}] has not been proven.")
+            }
+        }
       case _ =>
     }
-    m
+    true
   }
 
   def checkSat(title: String, li: LocationInfo, exps: Iterable[ast.Exp],
                genMessage: Boolean, unsatMsg: => String, unknownMsg: => String,
                timeoutMsg: => String): Boolean = {
-    val es = exps.toVector
     if (checkSatEnabled || !genMessage) {
-      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es: _*)
+      val es = additionalFacts(exps) ++ exps.toVector
+      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es.toVector: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator
         val sb = new StringBuilder
@@ -904,13 +1031,15 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
             if (deduce(num, exp, steps, isAuto = true)) addProvedStep(step)
             else None
         }
-      case ast.FactJust(_, exp, id) =>
-        facts.get(id.value) match {
-          case Some(expected) =>
-            if (expected == exp) addProvedStep(step)
-            else error(exp, s"The expression in step #$num does not match the one in fact ${id.value}.")
-          case _ => error(id, s"Could not find a fact ${id.value}.")
+      case factJust@ast.FactJust(_, exp, id) =>
+        val expected: Option[ast.Exp] = factJust.decl match {
+          case Left3(fact) => Some(fact.exp)
+          case Middle3((fun, funDef)) => Some(extractFact(fun, funDef))
+          case Right3(md) => extractFact(md)
         }
+        val result: Option[ast.Exp] = Some(exp)
+        if (expected == result) addProvedStep(step)
+        else error(exp, s"The expression in step #$num does not match the one in fact ${id.value}.")
       case ast.Invariant(_, exp) =>
         if (invariants.contains(exp)) addProvedStep(step)
         else error(exp, s"Could not find the invariant in step #$num.")
@@ -1022,16 +1151,16 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   }
 
   def isValid(title: String, li: LocationInfo,
-              premises: => Iterable[ast.Exp], conclusions: Iterable[ast.Exp]): Boolean = {
-    val ps =
-      if (coneInfluenceEnabled)
+              premises: Iterable[ast.Exp], conclusions: Iterable[ast.Exp]): Boolean = {
+    var ps = ilinkedSetEmpty[ast.Exp]
+    ps ++= (if (coneInfluenceEnabled)
         util.Z3.checkSat(satTimeoutInMs, isSymExe = true, bitWidth,
           ast.Exp.And(conclusions.toVector))._2 match {
           case util.Z3.Sat => coneOfInfluence(premises, conclusions)
           case _ => premises
         }
-      else premises
-
+    else premises)
+    ps ++= additionalFacts(premises ++ conclusions)
     val (script, r) = Z3.isValid(timeoutInMs, isSymExe, bitWidth,
       ps.toVector, conclusions.toVector)
     if (inscribeSummoningsEnabled) {
@@ -1116,86 +1245,6 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       case step: ast.RegularStep => Some(step.exp)
       case _ => None
     })
-  }
-
-  def hasRuntimeError(stmt: ast.Stmt): Boolean = {
-    var hasError = false
-    lazy val ps = premises ++ facts.values
-
-    def divisor(e: ast.Exp, t: tipe.IntegralTipe): Boolean = {
-      val tpe = t match {
-        case tipe.Z => ast.ZType()
-        case tipe.Z8 => ast.Z8Type()
-        case tipe.Z16 => ast.Z16Type()
-        case tipe.Z32 => ast.Z32Type()
-        case tipe.Z64 => ast.Z64Type()
-        case tipe.N => ast.NType()
-        case tipe.N8 => ast.N8Type()
-        case tipe.N16 => ast.N16Type()
-        case tipe.N32 => ast.N32Type()
-        case tipe.N64 => ast.N64Type()
-        case tipe.S8 => ast.S8Type()
-        case tipe.S16 => ast.S16Type()
-        case tipe.S32 => ast.S32Type()
-        case tipe.S64 => ast.S64Type()
-        case tipe.U8 => ast.U8Type()
-        case tipe.U16 => ast.U16Type()
-        case tipe.U32 => ast.U32Type()
-        case tipe.U64 => ast.U64Type()
-      }
-      val req =
-        if (t == tipe.Z) ast.Exp.Ne(t, e, Checker.zero)
-        else ast.Exp.Ne(t, e, ast.IntLit("0", tpe.bitWidth, Some(tpe)))
-      if (autoEnabled) {
-        if (!isValid("division", nodeLocMap(e), ps, ivector(req))) {
-          error(e, s"Could not automatically deduce that the divisor is non-zero.")
-          hasError = true
-        }
-      } else if (!premises.contains(req)) {
-        error(e, s"Divisor has to be proven to be non-zero.")
-        hasError = true
-      }
-      true
-    }
-
-    def index(a: ast.Exp, aTipe: tipe.Tipe, e: ast.Exp): Boolean = {
-      val req1 = ast.Exp.Le(tipe.Z, Checker.zero, e)
-      req1.tipe = tipe.Z
-      val sz = ast.Exp.Size(tipe.Z, a)
-      sz.tipe = aTipe
-      val req2 = ast.Exp.Lt(tipe.Z, e, sz)
-      req2.tipe = tipe.Z
-      if (autoEnabled) {
-        if (!isValid("indexing low-bound", nodeLocMap(e), ps, ivector(req1))) {
-          hasError = true
-          error(e, "Could not automatically deduce that the sequence index is non-negative.")
-        }
-        if (!isValid("indexing high-bound", nodeLocMap(e), ps, ivector(req2))) {
-          hasError = true
-          error(e, s"Could not automatically deduce that the index is less than the sequence size.")
-        }
-      } else {
-        if (!premises.contains(req1)) {
-          hasError = true
-          error(e, "The sequence index has to be proven non-negative.")
-        }
-        if (!premises.contains(req2)) {
-          hasError = true
-          error(e, s"The sequence index has to be proven less than the sequence size.")
-        }
-      }
-      true
-    }
-
-    Visitor.build({
-      case _: ast.Block => false
-      case _: ast.LoopInv => false
-      case e@ast.Div(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
-      case e@ast.Rem(_, e2) => divisor(e2, e.tipe.asInstanceOf[tipe.IntegralTipe])
-      case a@ast.Apply(exp, Seq(arg)) if a.expTipe.isInstanceOf[tipe.MSeq] => index(exp, a.expTipe, arg)
-      case ast.SeqAssign(id, e, _) => index(id, id.tipe, e)
-    })(stmt)
-    hasError
   }
 
   def generateHint(beforePremises: ILinkedSet[ast.Exp],
