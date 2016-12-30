@@ -157,7 +157,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.sireum" %% "logika-runtime" % "3.0.0-9",
+    "org.sireum" %% "logika-runtime" % "3.0.0-10",
     "org.antlr" % "antlr4-runtime" % "4.6",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.17",
