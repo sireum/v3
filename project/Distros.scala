@@ -41,28 +41,28 @@ object Distros {
 
   val ideaVer = "2016.3.2"
 
-  val ideaUrlMap = Map(
-    "mac" -> s"https://download.jetbrains.com/idea/ideaIC-$ideaVer.dmg",
-    "win" -> s"https://download.jetbrains.com/idea/ideaIC-$ideaVer.exe",
-    "linux" -> s"https://download.jetbrains.com/idea/ideaIC-$ideaVer.tar.gz"
+  val ideaExtMap = Map(
+    "mac" -> ".dmg",
+    "win" -> ".exe",
+    "linux" -> ".tar.gz"
   )
 
-  val pluginUrlMap = Map(
-    "sireum" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31248",
-    "jdt" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31124",
-    "scala" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=30974",
-    "sbt" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=22670",
-    "markdown" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=30117",
-    "snakeyaml" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=24503",
-    "antlr" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31133",
-    "asm" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=18619",
-    "bash" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=31391",
-    "cmd" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=18875",
-    "batch" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=22567",
-    "compare" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=24991",
-    "latex" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=18476",
-    "python" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=30456",
-    "rst" -> "https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=14700"
+  val pluginUpdateIdMap = Map(
+    "sireum" -> 31441,
+    "jdt" -> 31124,
+    "scala" -> 30974,
+    "sbt" -> 22670,
+    "markdown" -> 30117,
+    "snakeyaml" -> 24503,
+    "antlr" -> 31133,
+    "asm" -> 18619,
+    "bash" -> 31391,
+    "cmd" -> 18875,
+    "batch" -> 22567,
+    "compare" -> 24991,
+    "latex" -> 18476,
+    "python" -> 30456,
+    "rst" -> 14700
   )
 
   def buildIdea(): Unit = {
@@ -83,18 +83,19 @@ object Distros {
   def downloadPlugins(): Unit = {
     val pluginsDir = ideaDir / 'plugins
     mkdir ! pluginsDir
-    for ((name, url) <- pluginUrlMap if !(pluginsDir / s"$name.zip").toIO.exists) {
+    for ((name, updateId) <- pluginUpdateIdMap if !(pluginsDir / s"$name-$updateId.zip").toIO.exists) {
+      val url = s"https://plugins.jetbrains.com/plugin/download?pr=idea&updateId=$updateId"
       print(s"Downloading $name plugin from $url ... ")
-      %%('wget, "-q", "-O", s"$name.zip", url)(pluginsDir)
+      %%('wget, "-q", "-O", s"$name-$updateId.zip", url)(pluginsDir)
       println("done!")
     }
   }
 
   def extractPlugins(p: Path): Unit = {
     println("Downloading idea plugins ...")
-    for ((name, _) <- pluginUrlMap) {
+    for ((name, updateId) <- pluginUpdateIdMap) {
       print(s"Extracting $name plugin ... ")
-      %%('unzip, "-oq", ideaDir / 'plugins / s"$name.zip")(p)
+      %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$updateId.zip")(p)
       println("done!")
     }
   }
@@ -143,7 +144,7 @@ object Distros {
 
   def buildIdea(platform: String): Unit = {
     println(s"Building Sireum v3 idea ${platform}64 distro ...")
-    val url = ideaUrlMap(platform)
+    val url = s"https://download.jetbrains.com/idea/ideaIC-$ideaVer${ideaExtMap(platform)}"
     val filename = url.substring(url.lastIndexOf('/') + 1)
     val buildDir = ideaDir
     %%('mkdir, "-p", buildDir)
