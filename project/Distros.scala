@@ -77,7 +77,7 @@ object Distros {
     buildIdea("win")
     buildIdea("linux")
 
-    rm ! baseDir / 'distros / 'idea
+    //rm ! baseDir / 'distros / 'idea
   }
 
   def downloadPlugins(): Unit = {
@@ -109,9 +109,9 @@ object Distros {
         val k = content.indexOf("</string>", j)
         content.substring(0, j) + s"<string>Sireum$ideaVer" + content.substring(k)
       case "win" =>
-        s"idea.config.path=$${user.home}/.Sireum/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\r\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\r\n" + content
       case "linux" =>
-        s"idea.config.path=$${user.home}/.Sireum/config\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer/config\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\n" + content
     }
     rm ! p
     write(p, newContent)
@@ -122,8 +122,8 @@ object Distros {
     print(s"Patching $p ... ")
     val content = read ! p
     val newContent = platform match {
-      case "win" => content + "\r\n-Dfile.encoding=UTF-8"
-      case _ => content + "\n-Dfile.encoding=UTF-8"
+      case "win" => s"${content.trim}\r\n-Dorg.sireum.ive=Sireum$ideaVer\r\n-Dfile.encoding=UTF-8\r\n"
+      case _ => s"${content.trim}\n-Dorg.sireum.ive=Sireum$ideaVer\n-Dfile.encoding=UTF-8\n"
     }
     rm ! p
     write(p, newContent)
