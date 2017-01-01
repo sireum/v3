@@ -23,6 +23,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.FileInputStream
+import java.util.jar.JarInputStream
+
 import ammonite.ops._
 
 object Distros {
@@ -62,7 +65,8 @@ object Distros {
     "compare" -> 24991,
     "latex" -> 18476,
     "python" -> 30456,
-    "rst" -> 14700
+    "rst" -> 14700,
+    "ignore" -> 30395
   )
 
   def buildIdea(): Unit = {
@@ -71,13 +75,39 @@ object Distros {
       return
     }
 
+    val isMac = System.getProperty("os.name").toLowerCase.contains("mac")
+    val hasWine = try {
+      %%('wineconsole, "-h"); true
+    } catch {
+      case _: ShelloutException => false
+    }
+
+    downloadResourceHacker()
     downloadPlugins()
-    if (System.getProperty("os.name").toLowerCase.contains("mac"))
-      buildIdea("mac")
-    buildIdea("win")
+    if (isMac) buildIdea("mac")
+    if (hasWine) buildIdea("win")
     buildIdea("linux")
 
     //rm ! baseDir / 'distros / 'idea
+  }
+
+  def downloadResourceHacker(): Unit = {
+    val distroPath = pwd / 'resources / 'distro
+    val rhDir = distroPath / 'resource_hacker
+    if (!(rhDir / "ResourceHacker.exe").toIO.exists) {
+      val rhFilename = "resource_hacker.zip"
+      rm ! rhDir
+      rm ! distroPath / rhFilename
+      val url = s"http://www.angusj.com/resourcehacker/$rhFilename"
+      print(s"Downloading $url ... ")
+      %%('wget, "-q", url)(distroPath)
+      println("done!")
+      print(s"Extracting $rhFilename ... ")
+      mkdir ! rhDir
+      %%('unzip, "-qo", s"../$rhFilename")(rhDir)
+      rm ! distroPath / rhFilename
+      println("done!")
+    }
   }
 
   def downloadPlugins(): Unit = {
@@ -138,7 +168,54 @@ object Distros {
       "idea_community_about.png",
       "idea_community_about@2x.png",
       "idea_community_logo.png",
-      "idea_community_logo@2x.png")(pwd / 'resources / 'distro)
+      "idea_community_logo@2x.png")(pwd / 'resources / 'distro / 'images)
+    println("done!")
+  }
+
+  def patchIconExe(filePath: Path): Unit = {
+    def toWinePath(p: Path) = "Z:" + p.toString.replaceAllLiterally("/", "\\")
+
+    val wineFilePath = toWinePath(filePath)
+    val icoFilePath = toWinePath(pwd / 'resources / 'distro / 'icons / "idea.ico")
+    print(s"Patching $filePath ... ")
+    %%('wineconsole, pwd / 'resources / 'distro / 'resource_hacker / "ResourceHacker.exe",
+      "-open", wineFilePath, "-save", wineFilePath, "-action", 'addoverwrite,
+      "-res", icoFilePath, "-mask", "ICONGROUP,107,")
+    println("done!")
+  }
+
+  def patchIcon(platform: String, path: Path): Unit = {
+    val iconsPath = pwd / 'resources / 'distro / 'icons
+    val (dirPath, filename) = platform match {
+      case "mac" => (path / 'Resources, "idea.icns")
+      case "win" =>
+        patchIconExe(path / 'bin / "idea.exe")
+        patchIconExe(path / 'bin / "idea64.exe")
+        (path / 'bin, "idea.ico")
+      case "linux" => (path / 'bin, "idea.png")
+    }
+    print(s"Replacing icon $dirPath/$filename ... ")
+    %%('cp, filename, dirPath)(iconsPath)
+    println("done!")
+    val iconsJar = path / 'lib / "icons.jar"
+    print(s"Patching $iconsJar ... ")
+    val jis = new JarInputStream(new FileInputStream(iconsJar.toIO))
+    var entries = Set[String]()
+    var done = false
+    do {
+      Option(jis.getNextEntry) match {
+        case Some(e) if !e.isDirectory => entries += e.getName
+        case None => done = true
+        case _ =>
+      }
+    } while (!done)
+    val entriesToUpdate =
+      (for (f <- iconsPath.toIO.listFiles if f.getName != "idea.icns" && f.getName != "idea.png") yield {
+        require(entries.contains(f.getName), s"File ${f.getName} is not in $iconsJar.")
+        f.getName
+      }).toVector
+    val cmd = "zip" +: iconsJar.toString +: entriesToUpdate
+    Shellout.executeStream(iconsPath, Command(cmd, Map(), Shellout.executeStream))
     println("done!")
   }
 
@@ -168,6 +245,7 @@ object Distros {
         patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
         patchVMOptions(platform, tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
         patchImages(tempDir / "Sireum.app" / 'Contents)
+        patchIcon(platform, tempDir / "Sireum.app" / 'Contents)
       case "win" =>
         val tempDir = buildDir / platform / "sireum-v3" / 'apps / 'idea
         mkdir ! tempDir
@@ -179,6 +257,7 @@ object Distros {
         patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
         patchImages(tempDir)
+        patchIcon(platform, tempDir)
         %%('cp, "-p", pwd / 'resources / 'distro / "idea.bat", buildDir / platform / "sireum-v3")
         %%('cp, "-p", pwd / 'resources / 'distro / "idea64.bat", buildDir / platform / "sireum-v3")
       case "linux" =>
@@ -192,8 +271,9 @@ object Distros {
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
         patchImages(tempDir / 'idea)
-        %%('cp, "-p", pwd / 'resources / 'distro / "idea", buildDir / platform / "sireum-v3")
-        %%('chmod, "+x", buildDir / platform / "sireum-v3" / "idea")
+        patchIcon(platform, tempDir / 'idea)
+        %%('cp, "-p", pwd / 'resources / 'distro / 'idea, buildDir / platform / "sireum-v3")
+        %%('chmod, "+x", buildDir / platform / "sireum-v3" / 'idea)
     }
     print("Extracting Sireum v3 distro ... ")
     platform match {
@@ -210,7 +290,8 @@ object Distros {
         val bundle = baseDir / 'distros / "sireum-v3-idea-mac64.tar.gz"
         val bundleDmg = baseDir / 'distros / "sireum-v3-idea-mac64.dmg"
         rm ! bundle
-        %%('tar, "cfz", bundle, "Sireum.app")(ideaDir / platform)
+        rm ! bundleDmg
+        %%('tar, 'cfz, bundle, "Sireum.app")(ideaDir / platform)
         val ver = (read ! baseDir / 'distros / "sireum-v3-VER").substring(0, 7)
         %%(pwd / 'resources / 'distro / "create-dmg" / "create-dmg",
           "--volname", s"Sireum v3 $ver",
@@ -219,7 +300,7 @@ object Distros {
           "--icon", "Sireum.app", "0", "90",
           "--app-drop-link", "256", "90",
           "--window-size", "500", "150",
-          "--background", pwd / 'resources / 'distro / "dmg-background.png",
+          "--background", pwd / 'resources / 'distro / 'images / "dmg-background.png",
           bundleDmg, "Sireum.app")(ideaDir / platform)
         rm ! ideaDir / platform
       case "linux" =>

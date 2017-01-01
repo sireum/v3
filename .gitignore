@@ -30,3 +30,5 @@ project-dependency.dot
 .classpath
 .settings
 /awas
+/resources/distro/resource_hacker
+/resources/distro/resource_hacker.zip
