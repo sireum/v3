@@ -1,2 +1,4 @@
 #!/bin/bash -e
-docker build --rm -t sireum/v3:latest .
+export SCRIPT_DIR=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+docker build --rm -f ./Dockerfile -t sireum/v3:latest .
