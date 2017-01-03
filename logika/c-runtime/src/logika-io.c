@@ -164,5 +164,6 @@ void L_println(const int strNum, ...) {
     fflush(stdout);
   }
   va_end(valist);
+  printf("\n");
   fflush(stdout);
 }
