@@ -4,67 +4,165 @@
 
 [Simplified BSD License](license.md)
 
-
 ## Available Products
 
 * [Sireum Logika: A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](http://logika.sireum.org)
 
-
-## Requirements
+## Requirements for Running Sireum
 
 Supported platforms (64-bit only):
 
 * macOS (test platform: [Sierra](http://www.apple.com/macos/sierra/) -- 10.12)
 
-* Linux (test platform: [Manjaro](https://manjaro.github.io))
+* Linux (test platform: [Manjaro](https://manjaro.github.io) and [Ubuntu](http://www.ubuntu.com) 16.04)
 
 * Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
 
 * [Docker](https://hub.docker.com/r/sireum/v3/) (based on [Ubuntu](http://www.ubuntu.com) 16.04)
 
+## Installing and Running Sireum
+
+### Sireum Integrated Verification Environment (IVE)
+
+Sireum IVE includes a custom [IntelliJ IDEA](http://www.jetbrains.com/idea) Community Edition with various plugins 
+installed, along with the Sireum CLI (see below).
+
+* **macOS**
+
+  Execute the following in a bash terminal:
+  
+  ```bash
+  curl -o sireum-v3-idea-mac64.dmg https://goo.gl/y71F7n; open sireum-v3-idea-mac64.dmg 
+  ```
+  
+  Once it is done, it should open a new window:
+  
+  ![sireum-v3-idea-mac64.dmg](resources/images/sireum-v3-idea-mac64.dmg.png)
+  
+  Drag and drop the Sireum icon to the Applications folder.
+  
+  (Note: the above avoids [GateKeeper](https://support.apple.com/en-us/HT202491); 
+  if it is instead downloaded using a browser,
+  you need to remove Apple's quarantine extended attribute on the .dmg file before opening it as follows: 
+  `xattr -d com.apple.quarantine sireum-v3-idea-mac64.dmg`).
+ 
+  For subsequent instructions, replace `SIREUM_HOME` with `/Applications/Sireum.app/Contents/Resources/sireum-v3`.
+  
+  To run Sireum IVE, double-click `Sireum` inside `/Applications` (or, in a terminal: `open /Applications/Sireum.app`).
+  
+  To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
+
+* **Linux**
+
+  Download from: https://goo.gl/bpntQs
+  
+  Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
+  (or `~/Applications`, if your home directory path does not contain a whitespace).
+  
+  For subsequent instructions, replace `SIREUM_HOME` with `/opt/Sireum` (or `~/Applications/Sireum`).
+  
+  To run Sireum IVE in a terminal: `SIREUM_HOME/idea`.
+   
+  To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
+
+* **Windows**
+
+  Download from: https://goo.gl/DoOOHl
+   
+  Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\Sireum\sireum.bat` is present.
+  
+  For subsequent instructions, replace `SIREUM_HOME` with `C:\Sireum`.
+  
+  To run Sireum IVE:
+  
+  * double-click, either:
+  
+    * 32-bit: `SIREUM_HOME\apps\idea\bin\idea.exe`, or
+    
+    * 64-bit: `SIREUM_HOME\apps\idea\bin\idea64.exe`
+     
+      This requires Java 8 64-bit, which is available in `SIREUM_HOME\platform\java`;
+      to use that, add `SIREUM_HOME\platform\java\bin` to your `PATH` environment variable.   
+  
+  * in a terminal: `SIREUM_HOME\idea.bat` or `SIREUM_HOME\idea64.bat`.
+  
+  To run Sireum CLI in a terminal: `SIREUM_HOME\sireum.bat`
+
+### Sireum Command-Line Interface (CLI)
+
+* **macOS**
+
+  Download from: https://goo.gl/RoRDuA
+  
+  Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
+  (or `~/Applications`, if your home directory path does not contain a whitespace).
+  
+  For subsequent instructions, replace `SIREUM_HOME` with `/opt/sireum-v3` (or `~/Applications/sireum-v3`).
+  
+  To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
+
+* **Linux**
+
+  Download from: https://goo.gl/rRKgDh
+
+  Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
+  (or `~/Applications`, if your home directory path does not contain a whitespace).
+  
+  For subsequent instructions, replace `SIREUM_HOME` with `/opt/sireum-v3` (or `~/Applications/sireum-v3`).
+  
+  To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
+
+* **Windows**
+
+  Download from: https://goo.gl/Aql6xa
+
+  Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\sireum-v3\sireum.bat` is present.
+  
+  For subsequent instructions, replace `SIREUM_HOME` with `C:\sireum-v3`.
+  
+  To run Sireum CLI in a terminal: `SIREUM_HOME\sireum.bat`.
+
+## Requirements for Buiding Sireum from Source
 
 ### All Supported Platforms
 
-* Required tools: `bash`, `git`, `unzip`, `wget`
+* Required tools for building Sireum: `bash`, `git`, `unzip`, `wget`
 
 ### Linux
 
-* Required tools: `xz`
+* Required tools for building Sireum: `xz`
 
 ### Windows
 
-* Required tools: [MSYS2](https://msys2.github.io)
+* Required tools for building Sireum: [MSYS2](https://msys2.github.io)
 
   ```bash
   pacman -S git unzip wget
   ```
   
-## Installing Sireum
+## Installing and Running Sireum from Source
+
+In a bash terminal:
 
 * Using HTTPS:
 
   ```bash
   git clone https://github.com/sireum/v3.git sireum-v3
+  sireum-v3/sireum
   ```
 
 * Using SSH:
  
   ```bash
   git clone git@github.com:sireum/v3.git sireum-v3
+  sireum-v3/sireum
   ```
-
-## Running Sireum
-
-Run:
-
-```bash
-sireum-v3/sireum
-```
-
+  
 (If this is your first time running the script, it first:
 
 * downloads
-  [Zulu JDK](https://www.azul.com/products/zulu/), 
+  [Zulu JDK](https://www.azul.com/products/zulu/),
+  [Scala](https://scala-lang.org/),
   [Node.js](https://nodejs.org/)
   and 
   [Sbt](http://www.scala-sbt.org),
@@ -81,77 +179,36 @@ sireum-v3/sireum
 
 ```
 Sireum: A Software Analysis Platform (v3)
-(c) 2011-2016, SAnToS Laboratory, Kansas State University
+(c) 2011-2017, SAnToS Laboratory, Kansas State University
 http://sireum.org
 
 Usage: sireum <mode>
 
 Available mode(s):
 
-java      Java tooling
 logika    Logika Proof Checker
-pilar     Pilar tooling
 util      Utility Tools
-```
-
-The rest of this document assumes `sireum` refers to `sireum-v3/sireum`.
-
-Another example: `sireum pilar` (or simply `sireum p`)
-
-```
-Pilar: Sireum's Intermediate Representation (IR)
-
-Usage: sireum pilar <mode>
-
-Available mode(s):
-
-parser    Pilar parser
-```
-
-More example: `sireum p p`
-
-```
-Pilar Parser
-... and pretty printer and JSON de/serializer
-
-Usage: sireum pilar parser <file-1> ... <file-N>
-
-Options:
- -a, --antlr4            Use ANTLR4 Pilar parser instead of hand-written one
- -e, --max-errors        Maximum number of errors found before parsing stop
-                           Default: 10
- -f, --output-file       Output file
-                         (if unspecified, use standard output stream)
- -i, --input-mode        Input mode { auto, pilar, json, scala }
-                           Default: auto
--in, --standard-input    Use standard input stream
- -o, --output-mode       Output mode { pilar, json, scala }
-                           Default: json
- -h, --help              Display usage information
-```
-
-Try:
-```
-prompt> sireum p p -i pilar -in↩
-def foo(x) {↩
-#L1 return x;↩
-}↩
-⌃D
-```
-Output (line-wrapped per 80 characters):
-```
-{".class":"Model","elements":[{".class":"ProcedureDecl","id":{".class":"Id","val
-ue":"foo"},"params":[{".class":"ParamDecl","id":{".class":"Id","value":"x"},"ann
-otations":[]}],"bodyOpt":[{".class":"ProcedureBody","locals":[],"locations":[{".
-class":"BlockLocation","label":{".class":"Id","value":"L1"},"actions":[],"jump":
-{".class":"ReturnJump","expOpt":[{".class":"IdExp","id":{".class":"Id","value":"
-x"}}],"annotations":[]},"annotations":[]}]}],"annotations":[]}],"annotations":[]
-}
 ```
 
 ## Building and Testing Sireum using Sbt
 
 Run: `sireum-v3/bin/sbt-launch.sh test`
+
+## Building Sireum IVE and CLI Distributions
+
+Run: `sireum-v3/distros/build-idea.sh`
+
+## Building Sireum Docker Containers
+
+Run: 
+
+* Without CompCert: `sireum-v3/docker/build.sh`
+
+  The resulting image name is `sireum/v3:latest`.
+
+* With CompCert (Non-Commercial Only): `sireum-v3/docker/build-compcert.sh`
+
+  The resulting image name is `sireum/v3-compcert:latest`.
 
 ### Troubleshooting
 
@@ -207,65 +264,14 @@ Run: `sireum-v3/bin/sbt-launch.sh assembly`
  
 The jar will be located at `sireum-v3/bin/sireum.jar`
 
+## Development Environments
 
-## Development Environment
-
-[IntelliJ IDEA](https://www.jetbrains.com/idea/) 
-is the recommended IDE for Sireum v3 development.
-JetBrains has graciously provided free licenses for IntelliJ Ultimate for Sireum project members
-(claim a license [here](https://docs.google.com/document/d/1YC1KY4qALJ10VoHfF9KAdqP9vGq5v5MlOvGAKKL697U/edit#));
-however, you can also use IntelliJ Community Edition.
-
-### Download
-
-JetBrains provides IntelliJ that includes a custom OpenJDK 8 build
-(this also makes it unnecessary to install system-wide JDK such as Apple Java 6 in OS X):
-
-* Ultimate Edition: http://download.jetbrains.com/idea/ideaIU-15.0.2-custom-jdk-bundled.dmg
-
-* Community Edition: http://download.jetbrains.com/idea/ideaIC-15.0.2-custom-jdk-bundled.dmg
-
-(The download URLs for other platforms are simply the download URLs for regular builds with `-custom-jdk-bundled`
-inserted before the file extension.)
-
-Once installed, simply open Sireum v3 in IntelliJ by pointing it to your local Sireum v3 git repository
-(see [IntelliJ's doc](https://www.jetbrains.com/idea/help/getting-started-with-sbt.html#import_project)).
-Anytime that you are asked for a JDK, point it to `sireum-v3/platform/java`
-(note: you need to run Sireum at least once).
-
-**Note:** You can opt to use the Zulu JDK that Sireum uses to run IntelliJ instead of IntelliJ's custom JDK.
-To do so, exit IntelliJ (if it is running), then, for OS X:
-
-```bash
-cd "/Applications/IntelliJ IDEA 15.app/Contents/jre/jdk/Contents"
-sudo rm -fR Home
-sudo ln -s /absolute/path/of/sireum-v3/platform/java Home
-```
-
-### Plugins
-
-You need to install some plugins for Sireum v3 development
-(by opening `IntelliJ`->`Preference`->`Plugin` and click "Browse repositories..."):
-
-* .ignore
-* ANTLR v4 grammar plugin
-* ASM Bytecode Outline
-* BashSupport
-* Batch Scripts Support
-* CMD
-* gfm
-* MultiMarkdown
-* Python
-* ReStructuredText Support
-* SBT ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) (**see notes below**)
-* Scala
-
-Other plugins that you might be interested are:
-
-* ColourChooser
-* Compare Directories
-* Docker integration
-* LaTeX
+[IntelliJ IDEA](https://www.jetbrains.com/idea/)-based Sireum IVE (or IDEA Ultimate/Community Edition)
+are the recommended IDEs for Sireum v3 development.
+ 
+[CLion](https://www.jetbrains.com/clion/) is recommended for C/C++ related development.
+JetBrains has graciously provided free licenses JetBrains' toolbox (including CLion) 
+for Sireum project members.
 
 ### Setting Preferences
 
@@ -292,13 +298,3 @@ Other plugins that you might be interested are:
       check `Run in current module...`
       
     * Add `SIREUM_HOME` environment variable and set it to the absolute path of the directory containing this file.
-
-
-### Alternative IDE
-
-You can also use Eclipse that is shipped in [Sireum v2 Shortcake](http://sireum.org/software.html#shortcake).
-Run:
-```bash
-sireum-v3/bin/sbt-eclipse.sh
-```
-Then, import the existing projects into your Eclipse workspace (after setting up some preferences).
