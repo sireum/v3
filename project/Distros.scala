@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2016, Robby, Kansas State University
+ Copyright (c) 2017, Robby, Kansas State University
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,12 @@ object Distros {
     "linux" -> ".tar.gz"
   )
 
+  val jarPlugins = Map(
+    "rst" -> "rest.jar",
+    "batch" -> "idea-batch.jar",
+    "latex" -> "idea-latex.jar"
+  )
+
   val pluginUpdateIdMap = Map(
     "sireum" -> 31441,
     "jdt" -> 31124,
@@ -75,17 +81,25 @@ object Distros {
       return
     }
 
+    try {
+      %%("7z", "-h")
+    } catch {
+      case _: Throwable => sys.error("Need 7z.")
+    }
+
     val isMac = System.getProperty("os.name").toLowerCase.contains("mac")
     val hasWine = try {
       %%('wineconsole, "-h"); true
     } catch {
-      case _: ShelloutException => false
+      case _: Exception => false
     }
 
     downloadResourceHacker()
     downloadPlugins()
     if (isMac) buildIdea("mac")
+    else println("Idea mac64 distro will not be built because it can only be built on a macOS host.")
     if (hasWine) buildIdea("win")
+    else println("Idea win64 distro will not be built because of missing wineconsole.")
     buildIdea("linux")
 
     //rm ! baseDir / 'distros / 'idea
@@ -124,8 +138,14 @@ object Distros {
   def extractPlugins(p: Path): Unit = {
     println("Downloading idea plugins ...")
     for ((name, updateId) <- pluginUpdateIdMap) {
-      print(s"Extracting $name plugin ... ")
-      %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$updateId.zip")(p)
+      jarPlugins.get(name) match {
+        case Some(jarName) =>
+          print(s"Copying $name plugin ... ")
+          %%('cp, ideaDir / 'plugins / s"$name-$updateId.zip", p / jarPlugins(name))(p)
+        case _ =>
+          print(s"Extracting $name plugin ... ")
+          %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$updateId.zip")(p)
+      }
       println("done!")
     }
   }
