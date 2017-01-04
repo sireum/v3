@@ -18,7 +18,7 @@ Supported platforms (64-bit only):
 
 * Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
 
-* [Docker](https://hub.docker.com/r/sireum/v3/) (based on [Ubuntu](http://www.ubuntu.com) 16.04)
+* [Docker](https://www.docker.com/products/overview) (based on [Ubuntu](http://www.ubuntu.com) 16.04)
 
 ## Installing and Running Sireum
 
@@ -190,21 +190,63 @@ logika    Logika Proof Checker
 util      Utility Tools
 ```
 
-## Building and Testing Sireum using Sbt
+## Testing Sireum using Sbt
 
 Run: `sireum-v3/bin/sbt-launch.sh test`
 
-## Building Sireum IVE and CLI Distributions
+## Building Sireum Distributions
+
+### Building Sireum CLI Distributions
+
+Run: `sireum-v3/distros/build.sh`
+
+The resulting bundles are located at: `sireum-v3/distros`.
+
+### Building Sireum CLI and IVE Distributions
+
+Requirements:
+
+* macOS host
+
+* [P7ZIP](http://p7zip.sourceforge.net)
+
+* [Wine](https://www.winehq.org)
 
 Run: `sireum-v3/distros/build-idea.sh`
 
-## Building Sireum Docker Containers
+The resulting bundles are located at: `sireum-v3/distros`.
+
+## Docker Containers
+
+### Pre-Built Images
+
+Pre-built container images are available at [Docker Hub](https://hub.docker.com):
+  
+* Sireum CLI: https://hub.docker.com/r/sireum/v3
+  
+  ```bash
+  docker run -it sireum/v3:latest /bin/bash
+  ```
+  
+  Sireum CLI is located at `/opt/sireum-v3/sireum`.
+  
+* Sireum CLI with [CompCert](http://compcert.inria.fr) (Non-Commercial Only): https://hub.docker.com/r/sireum/v3-compcert/
+
+  ```bash
+  docker run -it sireum/v3-compcert:latest /bin/bash
+  ```
+
+  Sireum CLI is located at `/opt/sireum-v3/sireum`.
+
+### Building Images
 
 Run: 
 
-* Without CompCert: `sireum-v3/docker/build.sh`
+* `sireum-v3/docker/build.sh`
 
   The resulting image name is `sireum/v3:latest`.
+  
+  Pre-built container
 
 * With CompCert (Non-Commercial Only): `sireum-v3/docker/build-compcert.sh`
 
