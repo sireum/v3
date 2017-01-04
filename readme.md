@@ -186,7 +186,7 @@ Usage: sireum <mode>
 
 Available mode(s):
 
-logika    Logika Proof Checker
+logika    Logika Program Verifier and Proof Checker
 util      Utility Tools
 ```
 
