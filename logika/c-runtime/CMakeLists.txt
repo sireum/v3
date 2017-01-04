@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 
 project(logika-c-runtime)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 90)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -13,11 +13,11 @@ include_directories(${GMP_INCLUDE_DIRS})
 include_directories(include)
 
 set(LIB_SOURCE_FILES src/logika.c src/logika-io.c)
-set(UB -DBIT_WIDTH=0)
-set(B8 -DBIT_WIDTH=8)
-set(B16 -DBIT_WIDTH=16)
-set(B32 -DBIT_WIDTH=32)
-set(B64 -DBIT_WIDTH=64)
+set(UB -DBIT_WIDTH=0 -DLOGIKA_SECURE_WIPE)
+set(B8 -DBIT_WIDTH=8 -DLOGIKA_SECURE_WIPE)
+set(B16 -DBIT_WIDTH=16 -DLOGIKA_SECURE_WIPE)
+set(B32 -DBIT_WIDTH=32 -DLOGIKA_SECURE_WIPE)
+set(B64 -DBIT_WIDTH=64 -DLOGIKA_SECURE_WIPE)
 
 add_definitions(-DLOGIKA_DEBUG)
 

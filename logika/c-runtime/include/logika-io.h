@@ -26,6 +26,8 @@
 #ifndef LOGIKA_IO_H
 #define LOGIKA_IO_H
 
+#include <stdlib.h>
+#include <string.h>
 #include <logika.h>
 
 Z L_readInt(const L_string msg);

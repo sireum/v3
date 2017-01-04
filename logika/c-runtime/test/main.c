@@ -24,7 +24,7 @@
  */
 
 #include <logika-io.h>
-#include <stdlib.h>
+
 
 int main(int argc, L_string argv[]) {
   Z a = L_readInt("Enter a: ");
@@ -41,15 +41,13 @@ int main(int argc, L_string argv[]) {
     L_string arg1 = L_Z_toString(b);
     L_string arg2 = L_Z_toString(c);
     L_println(5, arg0, " * ", arg1, " => ", arg2);
-    free(arg0);
-    free(arg1);
-    free(arg2);
+    L_string_wipe(arg0);
+    L_string_wipe(arg1);
+    L_string_wipe(arg2);
   }
 
-#if BIT_WIDTH == 0
-  mpz_clear(a.data);
-  mpz_clear(b.data);
-  mpz_clear(c.data);
-#endif
+  L_Z_wipe(&a);
+  L_Z_wipe(&b);
+  L_Z_wipe(&c);
   return 0;
 }

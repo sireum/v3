@@ -27,25 +27,40 @@
 #define LOGIKA_H
 
 #ifdef LOGIKA_DEBUG
+
 #include <assert.h>
+
 #define L_assert(e) assert(e)
 #else
 #define L_assert(e)
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+
+#ifdef LOGIKA_SECURE_WIPE
+
+#define L_av(p) asm volatile("": : "g" (p) :"memory")
+#define L_wipe(p, n) { memset(p, 0, n); L_av(p); }
+#define L_string_wipe(s) { memset(s, 0, strlen(s)); L_av(s); free(s); }
+#else
+#define L_av(p)
+#define L_wipe(p, n)
+#define L_string_wipe(s) free(s)
+#endif
 
 #define L_string char *
 
 #if BIT_WIDTH == 0
+
 #include <gmp.h>
+
 typedef struct Z {
   mpz_t data;
 } Z;
-typedef struct N {
-  mpz_t data;
-} N;
+
+#define N Z
 #elif BIT_WIDTH == 8
 #define Z         int8_t
 #define N         uint8_t
@@ -145,162 +160,296 @@ typedef struct N {
 #define F64         double
 
 typedef struct {
-  Z size;
+  size_t size;
   B *data;
 } BS;
 
 typedef struct {
-  Z size;
+  size_t size;
   Z *data;
 } ZS;
 
 typedef struct {
-  Z size;
+  size_t size;
   Z8 *data;
 } Z8S;
 
 typedef struct {
-  Z size;
+  size_t size;
   Z16 *data;
 } Z16S;
 
 typedef struct {
-  Z size;
+  size_t size;
   Z32 *data;
 } Z32S;
 
 typedef struct {
-  Z size;
+  size_t size;
   Z64 *data;
 } Z64S;
 
 typedef struct {
-  Z size;
+  size_t size;
   N *data;
 } NS;
 
 typedef struct {
-  Z size;
+  size_t size;
   N8 *data;
 } N8S;
 
 typedef struct {
-  Z size;
+  size_t size;
   N16 *data;
 } N16S;
 
 typedef struct {
-  Z size;
+  size_t size;
   N32 *data;
 } N32S;
 
 typedef struct {
-  Z size;
+  size_t size;
   N64 *data;
 } N64S;
 
-typedef struct {
-  Z size;
-  S8 *data;
-} S8S;
+#define S8S Z8S
+#define S16S Z16S
+#define S32S Z32S
+#define S64S Z64S
+
+#define U8S N8S
+#define U16S N16S
+#define U32S N32S
+#define U64S N64S
 
 typedef struct {
-  Z size;
-  S16 *data;
-} S16S;
-
-typedef struct {
-  Z size;
-  S32 *data;
-} S32S;
-
-typedef struct {
-  Z size;
-  S64 *data;
-} S64S;
-
-typedef struct {
-  Z size;
-  S8 *data;
-} U8S;
-
-typedef struct {
-  Z size;
-  S16 *data;
-} U16S;
-
-typedef struct {
-  Z size;
-  S32 *data;
-} U32S;
-
-typedef struct {
-  Z size;
-  S64 *data;
-} U64S;
-
-typedef struct {
-  Z size;
-  S32 *data;
+  size_t size;
+  F32 *data;
 } F32S;
 
 typedef struct {
-  Z size;
+  size_t size;
   F64 *data;
 } F64S;
+
+void L_Z_wipe(Z *n);
+
+void L_ZS_wipe(ZS *ns);
 
 #if BIT_WIDTH == 0
 
 Z L_Z_add(Z n, Z m);
+
 Z L_Z_addl(Z n, Z m);
+
 Z L_Z_addr(Z n, Z m);
+
 Z L_Z_addlr(Z n, Z m);
 
 Z L_Z_sub(Z n, Z m);
+
 Z L_Z_subl(Z n, Z m);
+
 Z L_Z_subr(Z n, Z m);
+
 Z L_Z_sublr(Z n, Z m);
 
 Z L_Z_mul(Z n, Z m);
+
 Z L_Z_mull(Z n, Z m);
+
 Z L_Z_mulr(Z n, Z m);
+
 Z L_Z_mullr(Z n, Z m);
 
 Z L_Z_div(Z n, Z m);
+
 Z L_Z_divl(Z n, Z m);
+
 Z L_Z_divr(Z n, Z m);
+
 Z L_Z_divlr(Z n, Z m);
 
 Z L_Z_rem(Z n, Z m);
+
 Z L_Z_reml(Z n, Z m);
+
 Z L_Z_remr(Z n, Z m);
+
 Z L_Z_remlr(Z n, Z m);
 
 N L_N_add(N n, N m);
+
 N L_N_addl(N n, N m);
+
 N L_N_addr(N n, N m);
+
 N L_N_addlr(N n, N m);
 
 N L_N_sub(N n, N m);
+
 N L_N_subl(N n, N m);
+
 N L_N_subr(N n, N m);
+
 N L_N_sublr(N n, N m);
 
 N L_N_mul(N n, N m);
+
 N L_N_mull(N n, N m);
+
 N L_N_mulr(N n, N m);
+
 N L_N_mullr(N n, N m);
 
 N L_N_div(N n, N m);
+
 N L_N_divl(N n, N m);
+
 N L_N_divr(N n, N m);
+
 N L_N_divlr(N n, N m);
 
 N L_N_rem(N n, N m);
+
 N L_N_reml(N n, N m);
+
 N L_N_remr(N n, N m);
+
 N L_N_remlr(N n, N m);
 
+B L_Z_eq(Z n, Z m);
+
+B L_Z_eql(Z n, Z m);
+
+B L_Z_eqr(Z n, Z m);
+
+B L_Z_eqlr(Z n, Z m);
+
+B L_Z_lt(Z n, Z m);
+
+B L_Z_ltl(Z n, Z m);
+
+B L_Z_ltr(Z n, Z m);
+
+B L_Z_ltlr(Z n, Z m);
+
+B L_Z_gt(Z n, Z m);
+
+B L_Z_gtl(Z n, Z m);
+
+B L_Z_gtr(Z n, Z m);
+
+B L_Z_gtlr(Z n, Z m);
+
+#define L_Z_ne(n, m) !L_Z_eq(n, m)
+
+#define L_Z_nel(n, m) !L_Z_eql(n, m)
+
+#define L_Z_ner(n, m) !L_Z_eqr(n, m)
+
+#define L_Z_nelr(n, m) !L_Z_eqlr(n, m)
+
+#define L_Z_le(n, m) !L_Z_gt(n, m)
+
+#define L_Z_lel(n, m) !L_Z_gtl(n, m)
+
+#define L_Z_ler(n, m) !L_Z_gtr(n, m)
+
+#define L_Z_lelr(n, m) !L_Z_gtlr(n, m)
+
+#define L_Z_ge(n, m) !L_Z_lt(n, m)
+
+#define L_Z_gel(n, m) !L_Z_ltl(n, m)
+
+#define L_Z_ger(n, m) !L_Z_ltr(n, m)
+
+#define L_Z_gelr(n, m) !L_Z_ltlr(n, m)
+
+#define L_N_wipe(n) L_Z_wipe(n)
+
+#define L_NS_wipe(n) L_ZS_wipe(n)
+
+#else
+
+void L_N_wipe(N *n);
+
+void L_NS_wipe(NS *ns);
+
 #endif
+
+void L_Z8_wipe(Z8 *n);
+
+void L_Z16_wipe(Z16 *n);
+
+void L_Z32_wipe(Z32 *n);
+
+void L_Z64_wipe(Z64 *n);
+
+#define L_N8_wipe(n) L_Z8_wipe((Z8 *) n)
+
+#define L_N16_wipe(n) L_Z16_wipe((Z16 *) n)
+
+#define L_N32_wipe(n) L_Z32_wipe((Z32 *) n)
+
+#define L_N64_wipe(n) L_Z64_wipe((Z64 *) n)
+
+#define L_S8_wipe(n) L_Z8_wipe((Z8 *) n)
+
+#define L_S16_wipe(n) L_Z16_wipe((Z16 *) n)
+
+#define L_S32_wipe(n) L_Z32_wipe((Z32 *) n)
+
+#define L_S64_wipe(n) L_Z64_wipe((Z64 *) n)
+
+#define L_U8_wipe(n) L_Z8_wipe((Z8 *) n)
+
+#define L_U16_wipe(n) L_Z16_wipe((Z16 *) n)
+
+#define L_U32_wipe(n) L_Z32_wipe((Z32 *) n)
+
+#define L_U64_wipe(n) L_Z64_wipe((Z64 *) n)
+
+#define L_F32_wipe(n) L_Z32_wipe((Z32 *) n)
+
+#define L_F64_wipe(n) L_Z64_wipe((Z64 *) n)
+
+void L_Z8S_wipe(Z8S *ns);
+
+void L_Z16S_wipe(Z16S *ns);
+
+void L_Z32S_wipe(Z32S *ns);
+
+void L_Z64S_wipe(Z64S *ns);
+
+void L_N8S_wipe(N8S *ns);
+
+void L_N16S_wipe(N16S *ns);
+
+void L_N32S_wipe(N32S *ns);
+
+void L_N64S_wipe(N64S *ns);
+
+#define L_S8S_wipe(ns) L_Z8S_wipe(ns)
+
+#define L_S16S_wipe(ns) L_Z16S_wipe(ns)
+
+#define L_S32S_wipe(ns) L_Z32S_wipe(ns)
+
+#define L_S64S_wipe(ns) L_Z64S_wipe(ns)
+
+#define L_U8S_wipe(ns) L_Z8S_wipe(ns)
+
+#define L_U16S_wipe(ns) L_Z16S_wipe(ns)
+
+#define L_U32S_wipe(ns) L_Z32S_wipe(ns)
+
+#define L_U64S_wipe(ns) L_Z64S_wipe(ns)
+
+void L_F32S_wipe(F32S *ns);
+
+void L_F64S_wipe(F64S *ns);
 
 #endif
