@@ -246,8 +246,6 @@ Run:
 
   The resulting image name is `sireum/v3:latest`.
   
-  Pre-built container
-
 * With CompCert (Non-Commercial Only): `sireum-v3/docker/build-compcert.sh`
 
   The resulting image name is `sireum/v3-compcert:latest`.
