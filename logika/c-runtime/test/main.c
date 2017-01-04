@@ -23,8 +23,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "logika.h"
-#include "logika-io.h"
+#include <logika-io.h>
+#include <stdlib.h>
 
 int main(int argc, L_string argv[]) {
   Z a = L_readInt("Enter a: ");

@@ -10,6 +10,8 @@ find_package(GMP REQUIRED)
 
 include_directories(${GMP_INCLUDE_DIRS})
 
+include_directories(include)
+
 set(LIB_SOURCE_FILES src/logika.c src/logika-io.c)
 set(UB -DBIT_WIDTH=0)
 set(B8 -DBIT_WIDTH=8)
@@ -18,8 +20,6 @@ set(B32 -DBIT_WIDTH=32)
 set(B64 -DBIT_WIDTH=64)
 
 add_definitions(-DLOGIKA_DEBUG)
-link_libraries(${GMP_LIBRARIES})
-
 
 add_library(logika ${LIB_SOURCE_FILES})
 target_compile_definitions(logika PUBLIC ${UB})
@@ -38,26 +38,21 @@ target_compile_definitions(logika64 PUBLIC ${B64})
 
 
 add_executable(logika-main test/main.c)
-target_link_libraries(logika-main logika)
-target_include_directories(logika-main PUBLIC src)
+target_link_libraries(logika-main logika ${GMP_LIBRARIES})
 target_compile_definitions(logika-main PUBLIC ${UB})
 
 add_executable(logika-main8 test/main.c)
 target_link_libraries(logika-main8 logika8)
-target_include_directories(logika-main8 PUBLIC src)
 target_compile_definitions(logika-main8 PUBLIC ${B8})
 
 add_executable(logika-main16 test/main.c)
 target_link_libraries(logika-main16 logika16)
-target_include_directories(logika-main16 PUBLIC src)
 target_compile_definitions(logika-main16 PUBLIC ${B16})
 
 add_executable(logika-main32 test/main.c)
 target_link_libraries(logika-main32 logika32)
-target_include_directories(logika-main32 PUBLIC src)
 target_compile_definitions(logika-main32 PUBLIC ${B32})
 
 add_executable(logika-main64 test/main.c)
 target_link_libraries(logika-main64 logika64)
-target_include_directories(logika-main64 PUBLIC src)
 target_compile_definitions(logika-main64 PUBLIC ${B64})

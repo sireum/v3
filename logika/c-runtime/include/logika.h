@@ -33,7 +33,6 @@
 #define L_assert(e)
 #endif
 
-#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 

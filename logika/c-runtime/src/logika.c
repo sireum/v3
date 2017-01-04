@@ -23,7 +23,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "logika.h"
+#include <limits.h>
+#include <logika.h>
 
 #if BIT_WIDTH == 0
 
@@ -101,7 +102,6 @@ Z L_Z_mullr(Z n, Z m) {
   mpz_clears(n.data, m.data);
   return result;
 }
-
 
 Z L_Z_div(Z n, Z m) {
   L_assert(mpz_cmp_ui(m.data, 0) != 0);
