@@ -693,8 +693,11 @@ N8S L_N8S(int size, ...) {
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    if (sizeof(N8) < sizeof(int)) result.data[i] = (N8) va_arg(valist, int);
-    else result.data[i] = va_arg(valist, N8);
+#if Z8_Max < INT_MAX
+    result.data[i] = (N8) va_arg(valist, int);
+#else
+    result.data[i] = va_arg(valist, N8);
+#endif
   }
   va_end(valist);
 
@@ -720,8 +723,11 @@ N16S L_N16S(int size, ...) {
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    if (sizeof(N16) < sizeof(int)) result.data[i] = (N16) va_arg(valist, int);
-    else result.data[i] = va_arg(valist, N16);
+#if Z16_Max < INT_MAX
+    result.data[i] = (N16) va_arg(valist, int);
+#else
+    result.data[i] = va_arg(valist, N16);
+#endif
   }
   va_end(valist);
 
