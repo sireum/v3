@@ -87,7 +87,7 @@ static bool L_str2int(long long int *out,
     return false;
   L_string end;
   errno = 0;
-  long l = strtol((L_string) str, &end, 10);
+  long long int l = strtoll((L_string) str, &end, 10);
   if (l > max || (errno == ERANGE && l == LLONG_MAX))
     return false;
   if (l < min || (errno == ERANGE && l == LLONG_MIN))
@@ -305,7 +305,7 @@ F64S L_F64S_random() {
   result.size = size;
   result.data = L_malloc(size * sizeof(F64));
   for (size_t i = 0; i < size; i++) {
-    result.data[i] = L_F64_random();
+    result.data[i] = L_N64_random();
   }
   return result;
 }
