@@ -63,27 +63,37 @@ typedef struct {
   mpz_t data;
 } Z;
 
-#define N Z
+#define N         Z
+
+#define Z_LT_INT  false
 
 #elif BIT_WIDTH == 8
 
 #define Z         int8_t
 #define N         uint8_t
 
+#define Z_LT_INT  INT8_MAX < INT_MAX
+
 #elif BIT_WIDTH == 16
 
 #define Z         int16_t
 #define N         uint16_t
+
+#define Z_LT_INT  INT16_MAX < INT_MAX
 
 #elif BIT_WIDTH == 32
 
 #define Z         int32_t
 #define N         uint32_t
 
+#define Z_LT_INT  INT32_MAX < INT_MAX
+
 #elif BIT_WIDTH == 64
 
 #define Z         int64_t
 #define N         uint64_t
+
+#define Z_LT_INT  INT64_MAX < INT_MAX
 
 #endif
 

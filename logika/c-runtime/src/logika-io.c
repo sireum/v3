@@ -25,10 +25,12 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <limits.h>
 #include <sodium.h>
 #include <stdarg.h>
 #include <logika-io.h>
+
+#define LL_MAX ((0x7fffffffLL << 32) | 0xffffffffLL)
+#define LL_MIN ((0xffffffffLL << 32) | 0xffffffffLL)
 
 #if BIT_WIDTH == 0
 
@@ -88,9 +90,9 @@ static bool L_str2int(long long int *out,
   L_string end;
   errno = 0;
   long long int l = strtoll((L_string) str, &end, 10);
-  if (l > max || (errno == ERANGE && l == LLONG_MAX))
+  if (l > max || (errno == ERANGE && l == LL_MAX))
     return false;
-  if (l < min || (errno == ERANGE && l == LLONG_MIN))
+  if (l < min || (errno == ERANGE && l == LL_MIN))
     return false;
   if (*end != '\0')
     return false;
@@ -168,7 +170,8 @@ Z L_Z_random() {
   Z result = {0};
   int n = (int) randombytes_uniform(16);
   mpz_init_set_ui(result.data, randombytes_random());
-  for (int i = 0; i < n; i++) {
+  int i;
+  for (i = 0; i < n; i++) {
     mpz_mul_ui(result.data, result.data, (unsigned long int) i + 1);
     mpz_add_ui(result.data, result.data, randombytes_random());
   }
@@ -181,7 +184,8 @@ ZS L_ZS_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(Z));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_Z_random();
   }
   return result;
@@ -205,7 +209,8 @@ Z8S L_Z8S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(Z8));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_Z8_random();
   }
   return result;
@@ -216,7 +221,8 @@ Z16S L_Z16S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(Z16));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_Z16_random();
   }
   return result;
@@ -227,7 +233,8 @@ Z32S L_Z32S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(Z32));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_Z32_random();
   }
   return result;
@@ -238,7 +245,8 @@ Z64S L_Z64S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(Z64));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_Z64_random();
   }
   return result;
@@ -249,7 +257,8 @@ N8S L_N8S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(N8));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_N8_random();
   }
   return result;
@@ -260,7 +269,8 @@ N16S L_N16S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(N16));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_N16_random();
   }
   return result;
@@ -271,7 +281,8 @@ N32S L_N32S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(N32));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_N32_random();
   }
   return result;
@@ -282,7 +293,8 @@ N64S L_N64S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(N64));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_N64_random();
   }
   return result;
@@ -293,7 +305,8 @@ F32S L_F32S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(F32));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_F32_random();
   }
   return result;
@@ -304,7 +317,8 @@ F64S L_F64S_random() {
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
   result.data = L_malloc(size * sizeof(F64));
-  for (size_t i = 0; i < size; i++) {
+  size_t i;
+  for (i = 0; i < size; i++) {
     result.data[i] = L_N64_random();
   }
   return result;
@@ -313,7 +327,8 @@ F64S L_F64S_random() {
 void L_print(const int strNum, ...) {
   va_list valist;
   va_start(valist, strNum);
-  for (int i = 0; i < strNum; i++) {
+  int i;
+  for (i = 0; i < strNum; i++) {
     printf("%s", *va_arg(valist, L_string *));
     fflush(stdout);
   }
@@ -323,7 +338,8 @@ void L_print(const int strNum, ...) {
 void L_println(const int strNum, ...) {
   va_list valist;
   va_start(valist, strNum);
-  for (int i = 0; i < strNum; i++) {
+  int i;
+  for (i = 0; i < strNum; i++) {
     L_string str = va_arg(valist, L_string);
     printf("%s", str);
     fflush(stdout);
