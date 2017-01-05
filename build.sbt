@@ -211,7 +211,9 @@ lazy val pilarJs = pilarT._3
 lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
-lazy val logikaJvm = logikaT._2
+lazy val logikaJvm = logikaT._2.settings(
+  parallelExecution in Test := false
+)
 lazy val logikaJs = logikaT._3
 
 // Jvm Projects
