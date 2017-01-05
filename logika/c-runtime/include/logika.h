@@ -26,18 +26,21 @@
 #ifndef LOGIKA_H
 #define LOGIKA_H
 
-#ifdef LOGIKA_DEBUG
-
 #include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef LOGIKA_DEBUG
 
 #define L_assert(e) assert(e)
 #else
 #define L_assert(e)
 #endif
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+void * L_malloc(size_t size);
+
+void * L_realloc(void * ptr, size_t size);
 
 #ifdef LOGIKA_SECURE_WIPE
 

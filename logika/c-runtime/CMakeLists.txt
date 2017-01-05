@@ -7,10 +7,9 @@ set(CMAKE_C_STANDARD 90)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(GMP REQUIRED)
+find_package(Sodium REQUIRED)
 
-include_directories(${GMP_INCLUDE_DIRS})
-
-include_directories(include)
+include_directories(${GMP_H} ${SODIUM_H} include)
 
 set(LIB_SOURCE_FILES src/logika.c src/logika-io.c)
 set(UB -DBIT_WIDTH=0 -DLOGIKA_SECURE_WIPE)
@@ -38,21 +37,21 @@ target_compile_definitions(logika64 PUBLIC ${B64})
 
 
 add_executable(logika-main test/main.c)
-target_link_libraries(logika-main logika ${GMP_LIBRARIES})
+target_link_libraries(logika-main logika ${GMP_L} ${SODIUM_L})
 target_compile_definitions(logika-main PUBLIC ${UB})
 
 add_executable(logika-main8 test/main.c)
-target_link_libraries(logika-main8 logika8)
+target_link_libraries(logika-main8 logika8 ${SODIUM_L})
 target_compile_definitions(logika-main8 PUBLIC ${B8})
 
 add_executable(logika-main16 test/main.c)
-target_link_libraries(logika-main16 logika16)
+target_link_libraries(logika-main16 logika16 ${SODIUM_L})
 target_compile_definitions(logika-main16 PUBLIC ${B16})
 
 add_executable(logika-main32 test/main.c)
-target_link_libraries(logika-main32 logika32)
+target_link_libraries(logika-main32 logika32 ${SODIUM_L})
 target_compile_definitions(logika-main32 PUBLIC ${B32})
 
 add_executable(logika-main64 test/main.c)
-target_link_libraries(logika-main64 logika64)
+target_link_libraries(logika-main64 logika64 ${SODIUM_L})
 target_compile_definitions(logika-main64 PUBLIC ${B64})

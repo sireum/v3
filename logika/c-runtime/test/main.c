@@ -27,8 +27,8 @@
 
 
 int main(int argc, L_string argv[]) {
-  Z a = L_readInt("Enter a: ");
-  Z b = L_readInt("Enter b: ");
+  Z a = L_Z_read("Enter a: ");
+  Z b = L_Z_read("Enter b: ");
 
 #if BIT_WIDTH == 0
   Z c = L_Z_mul(a, b);
