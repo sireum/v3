@@ -56,36 +56,32 @@
 
 #include <gmp.h>
 
-typedef struct Z {
+typedef struct {
   mpz_t data;
 } Z;
 
 #define N Z
+
 #elif BIT_WIDTH == 8
+
 #define Z         int8_t
 #define N         uint8_t
-#define Z_C(c)    c
-#define Z_L(c)    c
+
 #elif BIT_WIDTH == 16
+
 #define Z         int16_t
 #define N         uint16_t
-#define Z_C(c)    c
-#define Z_L(c)    c
+
 #elif BIT_WIDTH == 32
+
 #define Z         int32_t
 #define N         uint32_t
-#define Z_C(c)    c
-#define Z_L(c)    c
+
 #elif BIT_WIDTH == 64
+
 #define Z         int64_t
 #define N         uint64_t
-#if __WORDSIZE == 64
-#define Z_C(c)  c ## L
-#define Z_L(c)  c
-#else
-#define Z_C(c)  c ## LL
-#define Z_L(c)  c ## L
-#endif
+
 #endif
 
 #define B           bool
@@ -158,6 +154,8 @@ typedef struct Z {
 
 #define F32         float
 #define F64         double
+
+size_t L_Z_to_size_t(Z n);
 
 typedef struct {
   size_t size;
@@ -234,11 +232,29 @@ typedef struct {
   F64 *data;
 } F64S;
 
+ZS L_ZS_create(size_t size, Z initialValue);
+
+ZS L_ZS(int size, ...);
+
 void L_Z_wipe(Z *n);
 
 void L_ZS_wipe(ZS *ns);
 
 #if BIT_WIDTH == 0
+
+Z L_Z_si(long int n);
+
+Z L_Z_ui(unsigned long int n);
+
+Z L_Z_str(L_string n);
+
+#define L_N_ui(n) L_Z_ui(n)
+
+#define L_N_str(n) L_Z_str(n)
+
+Z L_Z_neg(Z n);
+
+Z L_Z_negf(Z n);
 
 Z L_Z_add(Z n, Z m);
 
@@ -368,11 +384,19 @@ B L_Z_gtlr(Z n, Z m);
 
 #define L_Z_gelr(n, m) !L_Z_ltlr(n, m)
 
+#define L_NS_create(size, initialValue) L_ZS_create(size, initialValue)
+
+#define L_NS(size, args ...) L_ZS(size, args)
+
 #define L_N_wipe(n) L_Z_wipe(n)
 
 #define L_NS_wipe(n) L_ZS_wipe(n)
 
 #else
+
+NS L_NS_create(size_t size, N initialValue);
+
+NS L_NS(int size, ...);
 
 void L_N_wipe(N *n);
 
@@ -415,6 +439,58 @@ void L_Z64_wipe(Z64 *n);
 #define L_F32_wipe(n) L_Z32_wipe((Z32 *) n)
 
 #define L_F64_wipe(n) L_Z64_wipe((Z64 *) n)
+
+Z8S L_Z8S_create(size_t size, Z8 initialValue);
+
+Z8S L_Z8S(int size, ...);
+
+Z16S L_Z16S_create(size_t size, Z16 initialValue);
+
+Z16S L_Z16S(int size, ...);
+
+Z32S L_Z32S_create(size_t size, Z32 initialValue);
+
+Z32S L_Z32S(int size, ...);
+
+Z64S L_Z64S_create(size_t size, Z64 initialValue);
+
+Z64S L_Z64S(int size, ...);
+
+N8S L_N8S_create(size_t size, N8 initialValue);
+
+N8S L_N8S(int size, ...);
+
+N16S L_N16S_create(size_t size, N16 initialValue);
+
+N16S L_N16S(int size, ...);
+
+N32S L_N32S_create(size_t size, N32 initialValue);
+
+N32S L_N32S(int size, ...);
+
+N64S L_N64S_create(size_t size, N64 initialValue);
+
+N64S L_N64S(int size, ...);
+
+#define L_S8S_create(size, initialValue) L_Z8S_create(size, initialValue)
+
+#define L_S16S_create(size, initialValue) L_Z16S_create(size, initialValue)
+
+#define L_S32S_create(size, initialValue) L_Z32S_create(size, initialValue)
+
+#define L_S64S_create(size, initialValue) L_Z64S_create(size, initialValue)
+
+#define L_U8S_create(size, initialValue) L_U8S_create(size, initialValue)
+
+#define L_U16S_create(size, initialValue) L_U16S_create(size, initialValue)
+
+#define L_U32S_create(size, initialValue) L_U32S_create(size, initialValue)
+
+#define L_U64S_create(size, initialValue) L_U64S_create(size, initialValue)
+
+F32S L_F32S_create(size_t size, F32 initialValue);
+
+F64S L_F64S_create(size_t size, F64 initialValue);
 
 void L_Z8S_wipe(Z8S *ns);
 
