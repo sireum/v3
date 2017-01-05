@@ -5,18 +5,17 @@ RUN locale-gen en_US en_US.UTF-8 && \
     dpkg --add-architecture i386 && \
     apt-get update && \
     apt-get install -y wget git unzip libgomp1 xz-utils build-essential automake cmake aspcud \
-                       libc6-dev libgmp-dev libsodium-dev libc6-dev:i386 libgmp-dev:i386 libsodium-dev:i386 && \
+                       libc6-dev libgmp-dev libsodium-dev libc6-dev-i386 libgmp-dev:i386 libsodium-dev:i386 && \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
     git clone -b master https://github.com/sireum/v3.git sireum-v3 && \
+    sireum-v3/bin/sbt-launch.sh clean test:compile test && \
+    sireum-v3/sireum && \
     git clone https://github.com/ksu-cis-706/compiler.git compiler && \
-    sireum-v3/bin/prelude.sh && \
     cd /opt/compiler && \
     PATH=$PATH:/opt/sireum-v3/platform/java/bin /opt/sireum-v3/platform/sbt/bin/sbt clean test:compile test && \
     cd /opt && \
     rm -R compiler && \
-    sireum-v3/bin/sbt-launch.sh clean test:compile test && \
-    sireum-v3/sireum && \
     mkdir -p /opt/local/bin && \
     wget -q -O /opt/local/bin/opam https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux && \
     chmod +x /opt/local/bin/opam && \

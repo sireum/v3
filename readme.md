@@ -14,11 +14,11 @@ Supported platforms (64-bit only):
 
 * macOS (test platform: [Sierra](http://www.apple.com/macos/sierra/) -- 10.12)
 
-* Linux (test platform: [Manjaro](https://manjaro.github.io) and [Ubuntu](http://www.ubuntu.com) 16.04)
+* Linux (test platform: [Manjaro](https://manjaro.github.io) and [Ubuntu](http://www.ubuntu.com) 16.10)
 
 * Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
 
-* [Docker](https://www.docker.com/products/overview) (based on [Ubuntu](http://www.ubuntu.com) 16.04)
+* [Docker](https://www.docker.com/products/overview) (based on [Ubuntu](http://www.ubuntu.com) 16.10)
 
 ## Installing and Running Sireum
 
