@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <sodium.h>
 #include <logika-io.h>
+#include <logika.h>
 
 #define LL_MAX ((0x7fffffffLL << 32) | 0xffffffffLL)
 #define LL_MIN ((0xffffffffLL << 32) | 0xffffffffLL)
@@ -162,7 +163,133 @@ void L_print_Z(const Z n) {
   free(str);
 }
 
+void L_print_ZS(ZS ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_Z(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_Z(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
 #endif
+
+void L_print_S8S(S8S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_S8(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_S8(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_S16S(S16S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_S16(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_S16(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_S32S(S32S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_S32(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_S32(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_S64S(S64S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_S64(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_S64(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_U8S(U8S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_U8(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_U8(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_U16S(U16S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_U16(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_U16(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_U32S(U32S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_U32(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_U32(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
+
+void L_print_U64S(U64S ns) {
+  L_print("[");
+  size_t size = ns.size;
+  if (size > 0) {
+    L_print_U64(ns.data[0]);
+    size_t i;
+    for (i = 1; i < size; i++) {
+      L_print(", ");
+      L_print_U64(ns.data[i]);
+    }
+  }
+  L_print("]");
+}
 
 void L_print(char *str) {
   printf("%s", str);

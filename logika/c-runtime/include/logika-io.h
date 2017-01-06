@@ -73,11 +73,47 @@ void L_print_U64(const U64 n);
 
 #define L_print_N64(n) L_print_U64(n)
 
+void L_print_S8S(const S8S ns);
+
+void L_print_S16S(const S16S ns);
+
+void L_print_S32S(const S32S ns);
+
+void L_print_S64S(const S64S ns);
+
+void L_print_U8S(const U8S ns);
+
+void L_print_U16S(const U16S ns);
+
+void L_print_U32S(const U32S ns);
+
+void L_print_U64S(const U64S ns);
+
+#define L_print_Z8S(ns) L_print_S8S(ns)
+
+#define L_print_Z16S(ns) L_print_S16S(ns)
+
+#define L_print_Z32S(ns) L_print_S32S(ns)
+
+#define L_print_Z64S(ns) L_print_S64S(ns)
+
+#define L_print_N8S(ns) L_print_U8S(ns)
+
+#define L_print_N16S(ns) L_print_U16S(ns)
+
+#define L_print_N32S(ns) L_print_U32S(ns)
+
+#define L_print_N64S(ns) L_print_U64S(ns)
+
 #if BIT_WIDTH == 0
 
 void L_print_Z(const Z n);
 
 #define L_print_N(n) L_print_Z(n)
+
+void L_print_ZS(ZS ns);
+
+#define L_print_NS(n) L_print_ZS(n)
 
 #elif BIT_WIDTH == 8
 
@@ -85,11 +121,19 @@ void L_print_Z(const Z n);
 
 #define L_print_N(n) L_print_U8(n)
 
+#define L_print_ZS(ns) L_print_S8S(ns)
+
+#define L_print_NS(ns) L_print_U8S(ns)
+
 #elif BIT_WIDTH == 16
 
 #define L_print_Z(n) L_print_S16(n)
 
 #define L_print_N(n) L_print_U16(n)
+
+#define L_print_ZS(ns) L_print_S16S(ns)
+
+#define L_print_NS(ns) L_print_U16S(ns)
 
 #elif BIT_WIDTH == 32
 
@@ -97,11 +141,19 @@ void L_print_Z(const Z n);
 
 #define L_print_N(n) L_print_U32(n)
 
+#define L_print_ZS(ns) L_print_S32S(ns)
+
+#define L_print_NS(ns) L_print_U32S(ns)
+
 #elif BIT_WIDTH == 64
 
 #define L_print_Z(n) L_print_S64(n)
 
 #define L_print_N(n) L_print_U64(n)
+
+#define L_print_ZS(ns) L_print_S64S(ns)
+
+#define L_print_NS(ns) L_print_U64S(ns)
 
 #endif
 
