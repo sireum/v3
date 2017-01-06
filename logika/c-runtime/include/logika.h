@@ -41,7 +41,7 @@
 
 
 #ifdef LOGIKA_SECURE_WIPE
-#define L_av(p) asm volatile("": : "g" (p) :"memory")
+#define L_av(p) __asm__ __volatile__("": : "m" (p) :"memory")
 #define L_wipe(p, n) { memset(p, 0, n); L_av(p); }
 #define L_string_wipe(s) { memset(s, 0, strlen(s)); L_av(s); free(s); }
 #else
