@@ -26,24 +26,21 @@
 #ifndef LOGIKA_H
 #define LOGIKA_H
 
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef LOGIKA_DEBUG
 
+#ifdef LOGIKA_DEBUG
 #define L_assert(e) assert(e)
 #else
 #define L_assert(e)
 #endif
 
-void *L_malloc(size_t size);
-
-void *L_realloc(void *ptr, size_t size);
 
 #ifdef LOGIKA_SECURE_WIPE
-
 #define L_av(p) asm volatile("": : "g" (p) :"memory")
 #define L_wipe(p, n) { memset(p, 0, n); L_av(p); }
 #define L_string_wipe(s) { memset(s, 0, strlen(s)); L_av(s); free(s); }
@@ -52,6 +49,12 @@ void *L_realloc(void *ptr, size_t size);
 #define L_wipe(p, n)
 #define L_string_wipe(s) free(s)
 #endif
+
+
+void *L_malloc(size_t size);
+
+void *L_realloc(void *ptr, size_t size);
+
 
 #if BIT_WIDTH == 0
 
@@ -181,12 +184,16 @@ typedef struct {
 } ZS;
 
 #if BIT_WIDTH == 0
+
 typedef ZS NS;
+
 #else
+
 typedef struct {
   size_t size;
   N *data;
 } NS;
+
 #endif
 
 typedef struct {
@@ -255,13 +262,6 @@ typedef struct {
   F64 *data;
 } F64S;
 
-ZS L_ZS_create(size_t size, Z initialValue);
-
-ZS L_ZS(int size, ...);
-
-void L_Z_wipe(Z *n);
-
-void L_ZS_wipe(ZS *ns);
 
 #if BIT_WIDTH == 0
 
@@ -407,25 +407,8 @@ B L_Z_gtlr(Z n, Z m);
 
 #define L_Z_gelr(n, m) !L_Z_ltlr(n, m)
 
-#define L_NS_create(size, initialValue) L_ZS_create(size, initialValue)
-
-#define L_NS(size, args ...) L_ZS(size, args)
-
-#define L_N_wipe(n) L_Z_wipe(n)
-
-#define L_NS_wipe(n) L_ZS_wipe(n)
-
-#else
-
-NS L_NS_create(size_t size, N initialValue);
-
-NS L_NS(int size, ...);
-
-void L_N_wipe(N *n);
-
-void L_NS_wipe(NS *ns);
-
 #endif
+
 
 void L_U8_wipe(U8 *n);
 
@@ -462,6 +445,19 @@ void L_U64_wipe(U64 *n);
 #define L_F32_wipe(n) L_U32_wipe((U32 *) n)
 
 #define L_F64_wipe(n) L_U64_wipe((U64 *) n)
+
+void L_Z_wipe(Z *n);
+
+#if BIT_WIDTH == 0
+
+#define L_N_wipe(n) L_Z_wipe(n)
+
+#else
+
+void L_N_wipe(N *n);
+
+#endif
+
 
 S8S L_S8S_create(size_t size, S8 initialValue);
 
@@ -515,6 +511,325 @@ F32S L_F32S_create(size_t size, F32 initialValue);
 
 F64S L_F64S_create(size_t size, F64 initialValue);
 
+ZS L_ZS_create(size_t size, Z initialValue);
+
+ZS L_ZS(int size, ...);
+
+#if BIT_WIDTH == 0
+
+#define L_NS_create(size, initialValue) L_ZS_create(size, initialValue)
+
+#define L_NS(size, args ...) L_ZS(size, args)
+
+#else
+
+NS L_NS_create(size_t size, N initialValue);
+
+NS L_NS(int size, ...);
+
+#endif
+
+
+S8S L_S8S_prepend(S8 n, S8S ns);
+
+S8S L_S8S_prependf(S8 n, S8S ns);
+
+S8S L_S8S_append(S8S ns, S8 n);
+
+S8S L_S8S_appendf(S8S ns, S8 n);
+
+S8S L_S8S_appends(S8S ns1, S8S ns2);
+
+S8S L_S8S_appendsl(S8S ns1, S8S ns2);
+
+S8S L_S8S_appendsr(S8S ns1, S8S ns2);
+
+S8S L_S8S_appendslr(S8S ns1, S8S ns2);
+
+S16S L_S16S_prepend(S16 n, S16S ns);
+
+S16S L_S16S_prependf(S16 n, S16S ns);
+
+S16S L_S16S_append(S16S ns, S16 n);
+
+S16S L_S16S_appendf(S16S ns, S16 n);
+
+S16S L_S16S_appends(S16S ns1, S16S ns2);
+
+S16S L_S16S_appendsl(S16S ns1, S16S ns2);
+
+S16S L_S16S_appendsr(S16S ns1, S16S ns2);
+
+S16S L_S16S_appendslr(S16S ns1, S16S ns2);
+
+S32S L_S32S_prepend(S32 n, S32S ns);
+
+S32S L_S32S_prependf(S32 n, S32S ns);
+
+S32S L_S32S_append(S32S ns, S32 n);
+
+S32S L_S32S_appendf(S32S ns, S32 n);
+
+S32S L_S32S_appends(S32S ns1, S32S ns2);
+
+S32S L_S32S_appendsl(S32S ns1, S32S ns2);
+
+S32S L_S32S_appendsr(S32S ns1, S32S ns2);
+
+S32S L_S32S_appendslr(S32S ns1, S32S ns2);
+
+S64S L_S64S_prepend(S64 n, S64S ns);
+
+S64S L_S64S_prependf(S64 n, S64S ns);
+
+S64S L_S64S_append(S64S ns, S64 n);
+
+S64S L_S64S_appendf(S64S ns, S64 n);
+
+S64S L_S64S_appends(S64S ns1, S64S ns2);
+
+S64S L_S64S_appendsl(S64S ns1, S64S ns2);
+
+S64S L_S64S_appendsr(S64S ns1, S64S ns2);
+
+S64S L_S64S_appendslr(S64S ns1, S64S ns2);
+
+U8S L_U8S_prepend(U8 n, U8S ns);
+
+U8S L_U8S_prependf(U8 n, U8S ns);
+
+U8S L_U8S_append(U8S ns, U8 n);
+
+U8S L_U8S_appendf(U8S ns, U8 n);
+
+U8S L_U8S_appends(U8S ns1, U8S ns2);
+
+U8S L_U8S_appendsl(U8S ns1, U8S ns2);
+
+U8S L_U8S_appendsr(U8S ns1, U8S ns2);
+
+U8S L_U8S_appendslr(U8S ns1, U8S ns2);
+
+U16S L_U16S_prepend(U16 n, U16S ns);
+
+U16S L_U16S_prependf(U16 n, U16S ns);
+
+U16S L_U16S_append(U16S ns, U16 n);
+
+U16S L_U16S_appendf(U16S ns, U16 n);
+
+U16S L_U16S_appends(U16S ns1, U16S ns2);
+
+U16S L_U16S_appendsl(U16S ns1, U16S ns2);
+
+U16S L_U16S_appendsr(U16S ns1, U16S ns2);
+
+U16S L_U16S_appendslr(U16S ns1, U16S ns2);
+
+U32S L_U32S_prepend(U32 n, U32S ns);
+
+U32S L_U32S_prependf(U32 n, U32S ns);
+
+U32S L_U32S_append(U32S ns, U32 n);
+
+U32S L_U32S_appendf(U32S ns, U32 n);
+
+U32S L_U32S_appends(U32S ns1, U32S ns2);
+
+U32S L_U32S_appendsl(U32S ns1, U32S ns2);
+
+U32S L_U32S_appendsr(U32S ns1, U32S ns2);
+
+U32S L_U32S_appendslr(U32S ns1, U32S ns2);
+
+U64S L_U64S_prepend(U64 n, U64S ns);
+
+U64S L_U64S_prependf(U64 n, U64S ns);
+
+U64S L_U64S_append(U64S ns, U64 n);
+
+U64S L_U64S_appendf(U64S ns, U64 n);
+
+U64S L_U64S_appends(U64S ns1, U64S ns2);
+
+U64S L_U64S_appendsl(U64S ns1, U64S ns2);
+
+U64S L_U64S_appendsr(U64S ns1, U64S ns2);
+
+U64S L_U64S_appendslr(U64S ns1, U64S ns2);
+
+#if BIT_WIDTH == 0
+
+ZS L_ZS_prepend(Z n, ZS ns);
+
+ZS L_ZS_prependf(Z n, ZS ns);
+
+ZS L_ZS_append(ZS ns, Z n);
+
+ZS L_ZS_appendf(ZS ns, Z n);
+
+ZS L_ZS_appends(ZS ns1, ZS ns2);
+
+ZS L_ZS_appendsl(ZS ns1, ZS ns2);
+
+ZS L_ZS_appendsr(ZS ns1, ZS ns2);
+
+ZS L_ZS_appendslr(ZS ns1, ZS ns2);
+
+#define L_NS_prepend(n, ns) L_ZS_prepend(n, ns)
+
+#define L_NS_prependf(n, ns) L_ZS_prependf(n, ns)
+
+#define L_NS_append(ns, n) L_ZS_append(ns, n)
+
+#define L_NS_appendf(ns, n) L_ZS_appendf(ns, n)
+
+#define L_NS_appends(ns1, ns2) L_ZS_appends(ns1, ns2)
+
+#define L_NS_appendsl(ns1, ns2) L_ZS_appendsl(ns1, ns2)
+
+#define L_NS_appendsr(ns1, ns2) L_ZS_appendsr(ns1, ns2)
+
+#define L_NS_appendslr(ns1, ns2) L_ZS_appendslr(ns1, ns2)
+
+#elif BIT_WIDTH == 8
+
+#define L_ZS_prepend(n, ns) L_S8S_prepend(n, ns)
+
+#define L_ZS_prependf(n, ns) L_S8S_prependf(n, ns)
+
+#define L_ZS_append(ns, n) L_S8S_append(ns, n)
+
+#define L_ZS_appendf(ns, n) L_S8S_appendf(ns, n)
+
+#define L_ZS_appends(ns1, ns2) L_S8S_appends(ns1, ns2)
+
+#define L_ZS_appendsl(ns1, ns2) L_S8S_appendsl(ns1, ns2)
+
+#define L_ZS_appendsr(ns1, ns2) L_S8S_appendsr(ns1, ns2)
+
+#define L_ZS_appendslr(ns1, ns2) L_S8S_appendslr(ns1, ns2)
+
+#define L_NS_prepend(n, ns) L_U8S_prepend(n, ns)
+
+#define L_NS_prependf(n, ns) L_U8S_prependf(n, ns)
+
+#define L_NS_append(ns, n) L_U8S_append(ns, n)
+
+#define L_NS_appendf(ns, n) L_U8S_appendf(ns, n)
+
+#define L_NS_appends(ns1, ns2) L_U8S_appends(ns1, ns2)
+
+#define L_NS_appendsl(ns1, ns2) L_U8S_appendsl(ns1, ns2)
+
+#define L_NS_appendsr(ns1, ns2) L_U8S_appendsr(ns1, ns2)
+
+#define L_NS_appendslr(ns1, ns2) L_U8S_appendslr(ns1, ns2)
+
+#elif BIT_WIDTH == 16
+
+#define L_ZS_prepend(n, ns) L_S16S_prepend(n, ns)
+
+#define L_ZS_prependf(n, ns) L_S16S_prependf(n, ns)
+
+#define L_ZS_append(ns, n) L_S16S_append(ns, n)
+
+#define L_ZS_appendf(ns, n) L_S16S_appendf(ns, n)
+
+#define L_ZS_appends(ns1, ns2) L_S16S_appends(ns1, ns2)
+
+#define L_ZS_appendsl(ns1, ns2) L_S16S_appendsl(ns1, ns2)
+
+#define L_ZS_appendsr(ns1, ns2) L_S16S_appendsr(ns1, ns2)
+
+#define L_ZS_appendslr(ns1, ns2) L_S16S_appendslr(ns1, ns2)
+
+#define L_NS_prepend(n, ns) L_U16S_prepend(n, ns)
+
+#define L_NS_prependf(n, ns) L_U16S_prependf(n, ns)
+
+#define L_NS_append(ns, n) L_U16S_append(ns, n)
+
+#define L_NS_appendf(ns, n) L_U16S_appendf(ns, n)
+
+#define L_NS_appends(ns1, ns2) L_U16S_appends(ns1, ns2)
+
+#define L_NS_appendsl(ns1, ns2) L_U16S_appendsl(ns1, ns2)
+
+#define L_NS_appendsr(ns1, ns2) L_U16S_appendsr(ns1, ns2)
+
+#define L_NS_appendslr(ns1, ns2) L_U16S_appendslr(ns1, ns2)
+
+#elif BIT_WIDTH == 32
+
+#define L_ZS_prepend(n, ns) L_S32S_prepend(n, ns)
+
+#define L_ZS_prependf(n, ns) L_S32S_prependf(n, ns)
+
+#define L_ZS_append(ns, n) L_S32S_append(ns, n)
+
+#define L_ZS_appendf(ns, n) L_S32S_appendf(ns, n)
+
+#define L_ZS_appends(ns1, ns2) L_S32S_appends(ns1, ns2)
+
+#define L_ZS_appendsl(ns1, ns2) L_S32S_appendsl(ns1, ns2)
+
+#define L_ZS_appendsr(ns1, ns2) L_S32S_appendsr(ns1, ns2)
+
+#define L_ZS_appendslr(ns1, ns2) L_S32S_appendslr(ns1, ns2)
+
+#define L_NS_prepend(n, ns) L_U32S_prepend(n, ns)
+
+#define L_NS_prependf(n, ns) L_U32S_prependf(n, ns)
+
+#define L_NS_append(ns, n) L_U32S_append(ns, n)
+
+#define L_NS_appendf(ns, n) L_U32S_appendf(ns, n)
+
+#define L_NS_appends(ns1, ns2) L_U32S_appends(ns1, ns2)
+
+#define L_NS_appendsl(ns1, ns2) L_U32S_appendsl(ns1, ns2)
+
+#define L_NS_appendsr(ns1, ns2) L_U32S_appendsr(ns1, ns2)
+
+#define L_NS_appendslr(ns1, ns2) L_U32S_appendslr(ns1, ns2)
+
+#elif BIT_WIDTH == 64
+
+#define L_ZS_prepend(n, ns) L_S64S_prepend(n, ns)
+
+#define L_ZS_prependf(n, ns) L_S64S_prependf(n, ns)
+
+#define L_ZS_append(ns, n) L_S64S_append(ns, n)
+
+#define L_ZS_appendf(ns, n) L_S64S_appendf(ns, n)
+
+#define L_ZS_appends(ns1, ns2) L_S64S_appends(ns1, ns2)
+
+#define L_ZS_appendsl(ns1, ns2) L_S64S_appendsl(ns1, ns2)
+
+#define L_ZS_appendsr(ns1, ns2) L_S64S_appendsr(ns1, ns2)
+
+#define L_ZS_appendslr(ns1, ns2) L_S64S_appendslr(ns1, ns2)
+
+#define L_NS_prepend(n, ns) L_U64S_prepend(n, ns)
+
+#define L_NS_prependf(n, ns) L_U64S_prependf(n, ns)
+
+#define L_NS_append(ns, n) L_U64S_append(ns, n)
+
+#define L_NS_appendf(ns, n) L_U64S_appendf(ns, n)
+
+#define L_NS_appends(ns1, ns2) L_U64S_appends(ns1, ns2)
+
+#define L_NS_appendsl(ns1, ns2) L_U64S_appendsl(ns1, ns2)
+
+#define L_NS_appendsr(ns1, ns2) L_U64S_appendsr(ns1, ns2)
+
+#define L_NS_appendslr(ns1, ns2) L_U64S_appendslr(ns1, ns2)
+
+#endif
+
 void L_S8S_wipe(S8S *ns);
 
 void L_S16S_wipe(S16S *ns);
@@ -550,5 +865,17 @@ void L_U64S_wipe(U64S *ns);
 void L_F32S_wipe(F32S *ns);
 
 void L_F64S_wipe(F64S *ns);
+
+void L_ZS_wipe(ZS *ns);
+
+#if BIT_WIDTH == 0
+
+#define L_NS_wipe(n) L_ZS_wipe(n)
+
+#else
+
+void L_NS_wipe(NS *ns);
+
+#endif
 
 #endif

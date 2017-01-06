@@ -54,7 +54,7 @@ static bool L_Z_fits_size_t(Z n) {
 
 size_t L_Z_to_size_t(Z n) {
   L_assert(L_Z_fits_size_t(n));
-#if SIZE_MAX > ULONG_MAX
+#if SIZE_T_MAX > ULONG_MAX
   mpz_t temp;
   mpz_init(temp);
   mpz_fdiv_q_2exp(temp, n.data, BITS_PER_ULONG);
@@ -483,7 +483,7 @@ void L_ZS_wipe(ZS *ns) {
 #else
 
 NS L_NS_create(size_t size, N initialValue) {
-  L_assert(size <= SIZE_MAX);
+  L_assert(size <= SIZE_T_MAX);
   NS result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(N));
@@ -807,6 +807,586 @@ F64S L_F64S_create(size_t size, F64 initialValue) {
   return result;
 }
 
+S8S L_S8S_prepend(S8 n, S8S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S8S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S8) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+S8S L_S8S_prependf(S8 n, S8S ns) {
+  S8S result = L_S8S_prepend(n, ns);
+  L_S8S_wipe(&ns);
+  return result;
+}
+
+S8S L_S8S_append(S8S ns, S8 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S8S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S8) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+S8S L_S8S_appendf(S8S ns, S8 n) {
+  S8S result = L_S8S_append(ns, n);
+  L_S8S_wipe(&ns);
+  return result;
+}
+
+S8S L_S8S_appends(S8S ns1, S8S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  S8S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(S8) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+S8S L_S8S_appendsl(S8S ns1, S8S ns2) {
+  S8S result = L_S8S_appends(ns1, ns2);
+  L_S8S_wipe(&ns1);
+  return result;
+}
+
+S8S L_S8S_appendsr(S8S ns1, S8S ns2) {
+  S8S result = L_S8S_appends(ns1, ns2);
+  L_S8S_wipe(&ns2);
+  return result;
+}
+
+S8S L_S8S_appendslr(S8S ns1, S8S ns2) {
+  S8S result = L_S8S_appends(ns1, ns2);
+  L_S8S_wipe(&ns1);
+  L_S8S_wipe(&ns2);
+  return result;
+}
+
+S16S L_S16S_prepend(S16 n, S16S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S16S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S16) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+S16S L_S16S_prependf(S16 n, S16S ns) {
+  S16S result = L_S16S_prepend(n, ns);
+  L_S16S_wipe(&ns);
+  return result;
+}
+
+S16S L_S16S_append(S16S ns, S16 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S16S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S16) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+S16S L_S16S_appendf(S16S ns, S16 n) {
+  S16S result = L_S16S_append(ns, n);
+  L_S16S_wipe(&ns);
+  return result;
+}
+
+S16S L_S16S_appends(S16S ns1, S16S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  S16S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(S16) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+S16S L_S16S_appendsl(S16S ns1, S16S ns2) {
+  S16S result = L_S16S_appends(ns1, ns2);
+  L_S16S_wipe(&ns1);
+  return result;
+}
+
+S16S L_S16S_appendsr(S16S ns1, S16S ns2) {
+  S16S result = L_S16S_appends(ns1, ns2);
+  L_S16S_wipe(&ns2);
+  return result;
+}
+
+S16S L_S16S_appendslr(S16S ns1, S16S ns2) {
+  S16S result = L_S16S_appends(ns1, ns2);
+  L_S16S_wipe(&ns1);
+  L_S16S_wipe(&ns2);
+  return result;
+}
+
+S32S L_S32S_prepend(S32 n, S32S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S32S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S32) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+S32S L_S32S_prependf(S32 n, S32S ns) {
+  S32S result = L_S32S_prepend(n, ns);
+  L_S32S_wipe(&ns);
+  return result;
+}
+
+S32S L_S32S_append(S32S ns, S32 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S32S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S32) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+S32S L_S32S_appendf(S32S ns, S32 n) {
+  S32S result = L_S32S_append(ns, n);
+  L_S32S_wipe(&ns);
+  return result;
+}
+
+S32S L_S32S_appends(S32S ns1, S32S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  S32S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(S32) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+S32S L_S32S_appendsl(S32S ns1, S32S ns2) {
+  S32S result = L_S32S_appends(ns1, ns2);
+  L_S32S_wipe(&ns1);
+  return result;
+}
+
+S32S L_S32S_appendsr(S32S ns1, S32S ns2) {
+  S32S result = L_S32S_appends(ns1, ns2);
+  L_S32S_wipe(&ns2);
+  return result;
+}
+
+S32S L_S32S_appendslr(S32S ns1, S32S ns2) {
+  S32S result = L_S32S_appends(ns1, ns2);
+  L_S32S_wipe(&ns1);
+  L_S32S_wipe(&ns2);
+  return result;
+}
+
+S64S L_S64S_prepend(S64 n, S64S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S64S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S64) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+S64S L_S64S_prependf(S64 n, S64S ns) {
+  S64S result = L_S64S_prepend(n, ns);
+  L_S64S_wipe(&ns);
+  return result;
+}
+
+S64S L_S64S_append(S64S ns, S64 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  S64S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(S64) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+S64S L_S64S_appendf(S64S ns, S64 n) {
+  S64S result = L_S64S_append(ns, n);
+  L_S64S_wipe(&ns);
+  return result;
+}
+
+S64S L_S64S_appends(S64S ns1, S64S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  S64S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(S64) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+S64S L_S64S_appendsl(S64S ns1, S64S ns2) {
+  S64S result = L_S64S_appends(ns1, ns2);
+  L_S64S_wipe(&ns1);
+  return result;
+}
+
+S64S L_S64S_appendsr(S64S ns1, S64S ns2) {
+  S64S result = L_S64S_appends(ns1, ns2);
+  L_S64S_wipe(&ns2);
+  return result;
+}
+
+S64S L_S64S_appendslr(S64S ns1, S64S ns2) {
+  S64S result = L_S64S_appends(ns1, ns2);
+  L_S64S_wipe(&ns1);
+  L_S64S_wipe(&ns2);
+  return result;
+}
+
+U8S L_U8S_prepend(U8 n, U8S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U8S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U8) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+U8S L_U8S_prependf(U8 n, U8S ns) {
+  U8S result = L_U8S_prepend(n, ns);
+  L_U8S_wipe(&ns);
+  return result;
+}
+
+U8S L_U8S_append(U8S ns, U8 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U8S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U8) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+U8S L_U8S_appendf(U8S ns, U8 n) {
+  U8S result = L_U8S_append(ns, n);
+  L_U8S_wipe(&ns);
+  return result;
+}
+
+U8S L_U8S_appends(U8S ns1, U8S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  U8S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(U8) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+U8S L_U8S_appendsl(U8S ns1, U8S ns2) {
+  U8S result = L_U8S_appends(ns1, ns2);
+  L_U8S_wipe(&ns1);
+  return result;
+}
+
+U8S L_U8S_appendsr(U8S ns1, U8S ns2) {
+  U8S result = L_U8S_appends(ns1, ns2);
+  L_U8S_wipe(&ns2);
+  return result;
+}
+
+U8S L_U8S_appendslr(U8S ns1, U8S ns2) {
+  U8S result = L_U8S_appends(ns1, ns2);
+  L_U8S_wipe(&ns1);
+  L_U8S_wipe(&ns2);
+  return result;
+}
+
+U16S L_U16S_prepend(U16 n, U16S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U16S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U16) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+U16S L_U16S_prependf(U16 n, U16S ns) {
+  U16S result = L_U16S_prepend(n, ns);
+  L_U16S_wipe(&ns);
+  return result;
+}
+
+U16S L_U16S_append(U16S ns, U16 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U16S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U16) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+U16S L_U16S_appendf(U16S ns, U16 n) {
+  U16S result = L_U16S_append(ns, n);
+  L_U16S_wipe(&ns);
+  return result;
+}
+
+U16S L_U16S_appends(U16S ns1, U16S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  U16S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(U16) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+U16S L_U16S_appendsl(U16S ns1, U16S ns2) {
+  U16S result = L_U16S_appends(ns1, ns2);
+  L_U16S_wipe(&ns1);
+  return result;
+}
+
+U16S L_U16S_appendsr(U16S ns1, U16S ns2) {
+  U16S result = L_U16S_appends(ns1, ns2);
+  L_U16S_wipe(&ns2);
+  return result;
+}
+
+U16S L_U16S_appendslr(U16S ns1, U16S ns2) {
+  U16S result = L_U16S_appends(ns1, ns2);
+  L_U16S_wipe(&ns1);
+  L_U16S_wipe(&ns2);
+  return result;
+}
+
+U32S L_U32S_prepend(U32 n, U32S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U32S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U32) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+U32S L_U32S_prependf(U32 n, U32S ns) {
+  U32S result = L_U32S_prepend(n, ns);
+  L_U32S_wipe(&ns);
+  return result;
+}
+
+U32S L_U32S_append(U32S ns, U32 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U32S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U32) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+U32S L_U32S_appendf(U32S ns, U32 n) {
+  U32S result = L_U32S_append(ns, n);
+  L_U32S_wipe(&ns);
+  return result;
+}
+
+U32S L_U32S_appends(U32S ns1, U32S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  U32S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(U32) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+U32S L_U32S_appendsl(U32S ns1, U32S ns2) {
+  U32S result = L_U32S_appends(ns1, ns2);
+  L_U32S_wipe(&ns1);
+  return result;
+}
+
+U32S L_U32S_appendsr(U32S ns1, U32S ns2) {
+  U32S result = L_U32S_appends(ns1, ns2);
+  L_U32S_wipe(&ns2);
+  return result;
+}
+
+U32S L_U32S_appendslr(U32S ns1, U32S ns2) {
+  U32S result = L_U32S_appends(ns1, ns2);
+  L_U32S_wipe(&ns1);
+  L_U32S_wipe(&ns2);
+  return result;
+}
+
+U64S L_U64S_prepend(U64 n, U64S ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U64S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U64) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+U64S L_U64S_prependf(U64 n, U64S ns) {
+  U64S result = L_U64S_prepend(n, ns);
+  L_U64S_wipe(&ns);
+  return result;
+}
+
+U64S L_U64S_append(U64S ns, U64 n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  U64S result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(U64) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+U64S L_U64S_appendf(U64S ns, U64 n) {
+  U64S result = L_U64S_append(ns, n);
+  L_U64S_wipe(&ns);
+  return result;
+}
+
+U64S L_U64S_appends(U64S ns1, U64S ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  U64S result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(U64) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+U64S L_U64S_appendsl(U64S ns1, U64S ns2) {
+  U64S result = L_U64S_appends(ns1, ns2);
+  L_U64S_wipe(&ns1);
+  return result;
+}
+
+U64S L_U64S_appendsr(U64S ns1, U64S ns2) {
+  U64S result = L_U64S_appends(ns1, ns2);
+  L_U64S_wipe(&ns2);
+  return result;
+}
+
+U64S L_U64S_appendslr(U64S ns1, U64S ns2) {
+  U64S result = L_U64S_appends(ns1, ns2);
+  L_U64S_wipe(&ns1);
+  L_U64S_wipe(&ns2);
+  return result;
+}
+
+#if BIT_WIDTH == 0
+
+ZS L_ZS_prepend(Z n, ZS ns) {
+  L_assert(ns.size < SIZE_T_MAX);
+  ZS result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(Z) * size);
+  result.data[0] = n;
+  memcpy(&(result.data[1]), ns.data, ns.size);
+  return result;
+}
+
+ZS L_ZS_prependf(Z n, ZS ns) {
+  ZS result = L_ZS_prepend(n, ns);
+  L_ZS_wipe(&ns);
+  return result;
+}
+
+ZS L_ZS_append(ZS ns, Z n) {
+  L_assert(ns.size < SIZE_T_MAX);
+  ZS result = {0};
+  size_t size = ns.size + 1;
+  result.size = size;
+  result.data = L_malloc(sizeof(Z) * size);
+  result.data[size - 1] = n;
+  memcpy(result.data, ns.data, ns.size);
+  return result;
+}
+
+ZS L_ZS_appendf(ZS ns, Z n) {
+  ZS result = L_ZS_append(ns, n);
+  L_ZS_wipe(&ns);
+  return result;
+}
+
+ZS L_ZS_appends(ZS ns1, ZS ns2) {
+  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  ZS result = {0};
+  size_t size = ns1.size + ns2.size;
+  result.size = size;
+  result.data = L_malloc(sizeof(Z) * size);
+  memcpy(result.data, ns1.data, ns1.size);
+  memcpy(&(result.data[ns1.size]), ns2.data, ns2.size);
+  return result;
+}
+
+ZS L_ZS_appendsl(ZS ns1, ZS ns2) {
+  ZS result = L_ZS_appends(ns1, ns2);
+  L_ZS_wipe(&ns1);
+  return result;
+}
+
+ZS L_ZS_appendsr(ZS ns1, ZS ns2) {
+  ZS result = L_ZS_appends(ns1, ns2);
+  L_ZS_wipe(&ns2);
+  return result;
+}
+
+ZS L_ZS_appendslr(ZS ns1, ZS ns2) {
+  ZS result = L_ZS_appends(ns1, ns2);
+  L_ZS_wipe(&ns1);
+  L_ZS_wipe(&ns2);
+  return result;
+}
+
+#endif
+
 void L_S8S_wipe(S8S *ns) {
   L_wipe(ns->data, sizeof(S8) * ns->size);
   free(ns->data);
@@ -870,7 +1450,7 @@ void L_F64S_wipe(F64S *ns) {
 static void __EV() {
   U8 __EV_F32_IS_32[1 - (2 * ((sizeof(F32) * CHAR_BIT) != 32))];
   U8 __EV_F64_IS_64[1 - (2 * ((sizeof(F64) * CHAR_BIT) != 64))];
-#if SIZE_MAX > ULONG_MAX
+#if SIZE_T_MAX > ULONG_MAX
   U8 __EV_SIZE_T_ULONG2X[1 - (2 * (sizeof(size_t) != 2 * sizeof(unsigned long int)))];
 #endif
   L_assert(F);
