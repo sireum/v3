@@ -483,7 +483,13 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
         var e = build(ctx.primFormula)
         for (id <- Option(ctx.ID).map(_.toVector).getOrElse(ivectorEmpty)) {
           e = id.getText match {
-            case "size" => Size(e) at id
+            case "size" =>
+              e match {
+                case _: Result | _: Id =>
+                case _ =>
+                  error(e, "Can only retrieve .size from a variable.")
+              }
+              Size(e) at id
             case f =>
               error(id, s"Unrecognized field access $f.")
               e
