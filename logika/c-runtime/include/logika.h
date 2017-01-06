@@ -262,6 +262,7 @@ typedef struct {
   F64 *data;
 } F64S;
 
+Z L_Z_size_t(size_t n);
 
 #if BIT_WIDTH == 0
 
@@ -526,6 +527,71 @@ ZS L_ZS(int size, ...);
 NS L_NS_create(size_t size, N initialValue);
 
 NS L_NS(int size, ...);
+
+#endif
+
+
+S8S L_S8S_clone(S8S ns);
+
+S16S L_S16S_clone(S16S ns);
+
+S32S L_S32S_clone(S32S ns);
+
+S64S L_S64S_clone(S64S ns);
+
+U8S L_U8S_clone(U8S ns);
+
+U16S L_U16S_clone(U16S ns);
+
+U32S L_U32S_clone(U32S ns);
+
+U64S L_U64S_clone(U64S ns);
+
+#define L_Z8S_clone(ns) L_S8S_clone(ns)
+
+#define L_Z16S_clone(ns) L_S16S_clone(ns)
+
+#define L_Z32S_clone(ns) L_S32S_clone(ns)
+
+#define L_Z64S_clone(ns) L_S64S_clone(ns)
+
+#define L_N8S_clone(ns) L_U8S_clone(ns)
+
+#define L_N16S_clone(ns) L_U16S_clone(ns)
+
+#define L_N32S_clone(ns) L_U32S_clone(ns)
+
+#define L_N64S_clone(ns) L_U64S_clone(ns)
+
+#if BIT_WIDTH == 0
+
+ZS L_ZS_clone(ZS ns);
+
+#define L_NS_clone(ns) L_ZS_clone(ns)
+
+#elif BIT_WIDTH == 8
+
+#define L_ZS_clone(ns) L_S8S_clone(ns)
+
+#define L_NS_clone(ns) L_U8S_clone(ns)
+
+#elif BIT_WIDTH == 16
+
+#define L_ZS_clone(ns) L_S16S_clone(ns)
+
+#define L_NS_clone(ns) L_U16S_clone(ns)
+
+#elif BIT_WIDTH == 32
+
+#define L_ZS_clone(ns) L_S32S_clone(ns)
+
+#define L_NS_clone(ns) L_U32S_clone(ns)
+
+#elif BIT_WIDTH == 64
+
+#define L_ZS_clone(ns) L_S64S_clone(ns)
+
+#define L_NS_clone(ns) L_U64S_clone(ns)
 
 #endif
 

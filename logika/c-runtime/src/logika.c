@@ -47,6 +47,20 @@ void *L_realloc(void *ptr, size_t size) {
 
 #if BIT_WIDTH == 0
 
+Z L_Z_size_t(size_t n) {
+  Z result = {0};
+  if (n < ULONG_MAX) {
+    mpz_init_set_ui(result.data, n);
+  } else {
+    size_t length = snprintf(NULL, 0, "%zu", n);
+    char *str = L_malloc(length + 1);
+    snprintf(str, length + 1, "%zu", n);
+    mpz_init_set_str(result.data, str, 10);
+    free(str);
+  }
+  return result;
+}
+
 static bool L_Z_fits_size_t(Z n) {
   L_assert(mpz_cmp_ui(n.data, 0) >= 0);
   return mpz_sizeinbase(n.data, 2) <= BITS_PER_SIZE_T;
@@ -482,6 +496,12 @@ void L_ZS_wipe(ZS *ns) {
 
 #else
 
+Z L_Z_size_t(size_t n) {
+  Z result = (Z) n;
+  L_assert(result == n);
+  return result;
+}
+
 NS L_NS_create(size_t size, N initialValue) {
   L_assert(size <= SIZE_T_MAX);
   NS result = {0};
@@ -806,6 +826,94 @@ F64S L_F64S_create(size_t size, F64 initialValue) {
   }
   return result;
 }
+
+S8S L_S8S_clone(S8S ns) {
+  S8S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(S8));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+S16S L_S16S_clone(S16S ns) {
+  S16S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(S16));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+S32S L_S32S_clone(S32S ns) {
+  S32S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(S32));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+S64S L_S64S_clone(S64S ns) {
+  S64S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(S64));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+U8S L_U8S_clone(U8S ns) {
+  U8S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(U8));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+U16S L_U16S_clone(U16S ns) {
+  U16S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(U16));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+U32S L_U32S_clone(U32S ns) {
+  U32S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(U32));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+U64S L_U64S_clone(U64S ns) {
+  U64S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(U64));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+#if BIT_WIDTH == 0
+
+ZS L_ZS_clone(ZS ns) {
+  ZS result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(Z));
+  size_t i;
+  for (i = 0; i < size; i++) {
+    mpz_set(result.data[i].data, ns.data[i].data);
+  }
+  return result;
+}
+
+#endif
 
 S8S L_S8S_prepend(S8 n, S8S ns) {
   L_assert(ns.size < SIZE_T_MAX);
