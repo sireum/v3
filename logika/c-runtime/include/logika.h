@@ -38,9 +38,9 @@
 #define L_assert(e)
 #endif
 
-void * L_malloc(size_t size);
+void *L_malloc(size_t size);
 
-void * L_realloc(void * ptr, size_t size);
+void *L_realloc(void *ptr, size_t size);
 
 #ifdef LOGIKA_SECURE_WIPE
 
@@ -53,8 +53,6 @@ void * L_realloc(void * ptr, size_t size);
 #define L_string_wipe(s) free(s)
 #endif
 
-#define L_string char *
-
 #if BIT_WIDTH == 0
 
 #include <gmp.h>
@@ -63,110 +61,112 @@ typedef struct {
   mpz_t data;
 } Z;
 
-#define N         Z
+#define N Z
 
 #define Z_LT_INT  false
 
 #elif BIT_WIDTH == 8
 
-#define Z         int8_t
-#define N         uint8_t
+typedef int8_t    Z;
+typedef uint8_t   N;
 
 #define Z_LT_INT  INT8_MAX < INT_MAX
 
 #elif BIT_WIDTH == 16
 
-#define Z         int16_t
-#define N         uint16_t
+typedef int16_t    Z;
+typedef uint16_t   N;
 
 #define Z_LT_INT  INT16_MAX < INT_MAX
 
 #elif BIT_WIDTH == 32
 
-#define Z         int32_t
-#define N         uint32_t
+typedef int32_t    Z;
+typedef uint32_t   N;
 
 #define Z_LT_INT  INT32_MAX < INT_MAX
 
 #elif BIT_WIDTH == 64
 
-#define Z         int64_t
-#define N         uint64_t
+typedef int64_t    Z;
+typedef uint64_t   N;
 
 #define Z_LT_INT  INT64_MAX < INT_MAX
 
 #endif
 
-#define B           bool
+typedef bool B;
+
 #define T           true
 #define F           false
 
-#define Z8          int8_t
+typedef int8_t Z8;
 #define Z8_Min      INT8_MIN
 #define Z8_Max      INT8_MAX
 
-#define Z16         int16_t
+typedef int16_t Z16;
 #define Z16_Min     INT16_MIN
 #define Z16_Max     INT16_MAX
 
-#define Z32         int32_t
+typedef int32_t Z32;
 #define Z32_Min     INT32_MIN
 #define Z32_Max     INT32_MAX
 
-#define Z64         int64_t
+typedef int64_t Z64;
 #define Z64_Min     INT64_MIN
 #define Z64_Max     INT64_MAX
 
-#define N8          uint8_t
+typedef uint8_t N8;
 #define N8_Min      0
 #define N8_Max      UINT8_MAX
 
-#define N16         uint16_t
+typedef uint16_t N16;
 #define N16_Min     0
 #define N16_Max     UINT16_MAX
 
-#define N32         uint32_t
+typedef uint32_t N32;
 #define N32_Min     0
 #define N32_Max     UINT32_MAX
 
-#define N64         uint64_t
+typedef uint64_t N64;
 #define N64_Min     0
 #define N64_Max     UINT64_MAX
 
-#define S8          int8_t
+typedef int8_t S8;
 #define S8_Min      INT8_MIN
 #define S8_Max      INT8_MAX
 
-#define S16         int16_t
+typedef int16_t S16;
 #define S16_Min     INT16_MIN
 #define S16_Max     INT16_MAX
 
-#define S32         int32_t
+typedef int32_t S32;
 #define S32_Min     INT32_MIN
 #define S32_Max     INT32_MAX
 
-#define S64         int64_t
+typedef int64_t S64;
 #define S64_Min     INT64_MIN
 #define S64_Max     INT64_MAX
 
-#define U8          uint8_t
+typedef uint8_t U8;
 #define U8_Min      UINT8_MIN
 #define U8_Max      UINT8_MAX
 
-#define U16         uint16_t
+typedef uint16_t U16;
 #define U16_Min     UINT16_MIN
 #define U16_Max     UINT16_MAX
 
-#define U32         uint32_t
+typedef uint32_t U32;
 #define U32_Min     UINT32_MIN
 #define U32_Max     UINT32_MAX
 
-#define U64         uint64_t
+typedef uint64_t U64;
 #define U64_Min     UINT64_MIN
 #define U64_Max     UINT64_MAX
 
-#define F32         float
-#define F64         double
+typedef float F32;
+
+typedef double F64;
 
 size_t L_Z_to_size_t(Z n);
 
@@ -180,60 +180,70 @@ typedef struct {
   Z *data;
 } ZS;
 
-typedef struct {
-  size_t size;
-  Z8 *data;
-} Z8S;
-
-typedef struct {
-  size_t size;
-  Z16 *data;
-} Z16S;
-
-typedef struct {
-  size_t size;
-  Z32 *data;
-} Z32S;
-
-typedef struct {
-  size_t size;
-  Z64 *data;
-} Z64S;
-
+#if BIT_WIDTH == 0
+typedef ZS NS;
+#else
 typedef struct {
   size_t size;
   N *data;
 } NS;
+#endif
 
 typedef struct {
   size_t size;
-  N8 *data;
-} N8S;
+  S8 *data;
+} S8S;
 
 typedef struct {
   size_t size;
-  N16 *data;
-} N16S;
+  S16 *data;
+} S16S;
 
 typedef struct {
   size_t size;
-  N32 *data;
-} N32S;
+  Z32 *data;
+} S32S;
 
 typedef struct {
   size_t size;
-  N64 *data;
-} N64S;
+  Z64 *data;
+} S64S;
 
-#define S8S Z8S
-#define S16S Z16S
-#define S32S Z32S
-#define S64S Z64S
+typedef struct {
+  size_t size;
+  U8 *data;
+} U8S;
 
-#define U8S N8S
-#define U16S N16S
-#define U32S N32S
-#define U64S N64S
+typedef struct {
+  size_t size;
+  U16 *data;
+} U16S;
+
+typedef struct {
+  size_t size;
+  U32 *data;
+} U32S;
+
+typedef struct {
+  size_t size;
+  U64 *data;
+} U64S;
+
+typedef S8S Z8S;
+
+typedef S16S Z16S;
+
+typedef S32S Z32S;
+
+typedef S64S Z64S;
+
+typedef U8S N8S;
+
+typedef U16S N16S;
+
+typedef U32S N32S;
+
+typedef U64S N64S;
 
 typedef struct {
   size_t size;
@@ -259,7 +269,7 @@ Z L_Z_si(long int n);
 
 Z L_Z_ui(unsigned long int n);
 
-Z L_Z_str(L_string n);
+Z L_Z_str(char *n);
 
 #define L_N_ui(n) L_Z_ui(n)
 
@@ -417,125 +427,125 @@ void L_NS_wipe(NS *ns);
 
 #endif
 
-void L_Z8_wipe(Z8 *n);
+void L_U8_wipe(U8 *n);
 
-void L_Z16_wipe(Z16 *n);
+void L_U16_wipe(U16 *n);
 
-void L_Z32_wipe(Z32 *n);
+void L_U32_wipe(U32 *n);
 
-void L_Z64_wipe(Z64 *n);
+void L_U64_wipe(U64 *n);
 
-#define L_N8_wipe(n) L_Z8_wipe((Z8 *) n)
+#define L_Z8_wipe(n) L_U8_wipe((U8 *) n)
 
-#define L_N16_wipe(n) L_Z16_wipe((Z16 *) n)
+#define L_Z16_wipe(n) L_U16_wipe((U16 *) n)
 
-#define L_N32_wipe(n) L_Z32_wipe((Z32 *) n)
+#define L_Z32_wipe(n) L_U32_wipe((U32 *) n)
 
-#define L_N64_wipe(n) L_Z64_wipe((Z64 *) n)
+#define L_Z64_wipe(n) L_U64_wipe((U64 *) n)
 
-#define L_S8_wipe(n) L_Z8_wipe((Z8 *) n)
+#define L_N8_wipe(n) L_U8_wipe((U8 *) n)
 
-#define L_S16_wipe(n) L_Z16_wipe((Z16 *) n)
+#define L_N16_wipe(n) L_U16_wipe((U16 *) n)
 
-#define L_S32_wipe(n) L_Z32_wipe((Z32 *) n)
+#define L_N32_wipe(n) L_U32_wipe((U32 *) n)
 
-#define L_S64_wipe(n) L_Z64_wipe((Z64 *) n)
+#define L_N64_wipe(n) L_U64_wipe((U64 *) n)
 
-#define L_U8_wipe(n) L_Z8_wipe((Z8 *) n)
+#define L_S8_wipe(n) L_U8_wipe((U8 *) n)
 
-#define L_U16_wipe(n) L_Z16_wipe((Z16 *) n)
+#define L_S16_wipe(n) L_U16_wipe((U16 *) n)
 
-#define L_U32_wipe(n) L_Z32_wipe((Z32 *) n)
+#define L_S32_wipe(n) L_U32_wipe((U32 *) n)
 
-#define L_U64_wipe(n) L_Z64_wipe((Z64 *) n)
+#define L_S64_wipe(n) L_U64_wipe((U64 *) n)
 
-#define L_F32_wipe(n) L_Z32_wipe((Z32 *) n)
+#define L_F32_wipe(n) L_U32_wipe((U32 *) n)
 
-#define L_F64_wipe(n) L_Z64_wipe((Z64 *) n)
+#define L_F64_wipe(n) L_U64_wipe((U64 *) n)
 
-Z8S L_Z8S_create(size_t size, Z8 initialValue);
+S8S L_S8S_create(size_t size, S8 initialValue);
 
-Z8S L_Z8S(int size, ...);
+S8S L_S8S(int size, ...);
 
-Z16S L_Z16S_create(size_t size, Z16 initialValue);
+S16S L_S16S_create(size_t size, S16 initialValue);
 
-Z16S L_Z16S(int size, ...);
+S16S L_S16S(int size, ...);
 
-Z32S L_Z32S_create(size_t size, Z32 initialValue);
+S32S L_S32S_create(size_t size, S32 initialValue);
 
-Z32S L_Z32S(int size, ...);
+S32S L_S32S(int size, ...);
 
-Z64S L_Z64S_create(size_t size, Z64 initialValue);
+S64S L_S64S_create(size_t size, S64 initialValue);
 
-Z64S L_Z64S(int size, ...);
+S64S L_S64S(int size, ...);
 
-N8S L_N8S_create(size_t size, N8 initialValue);
+U8S L_U8S_create(size_t size, U8 initialValue);
 
-N8S L_N8S(int size, ...);
+U8S L_U8S(int size, ...);
 
-N16S L_N16S_create(size_t size, N16 initialValue);
+U16S L_U16S_create(size_t size, U16 initialValue);
 
-N16S L_N16S(int size, ...);
+U16S L_U16S(int size, ...);
 
-N32S L_N32S_create(size_t size, N32 initialValue);
+U32S L_U32S_create(size_t size, U32 initialValue);
 
-N32S L_N32S(int size, ...);
+U32S L_U32S(int size, ...);
 
-N64S L_N64S_create(size_t size, N64 initialValue);
+U64S L_U64S_create(size_t size, U64 initialValue);
 
-N64S L_N64S(int size, ...);
+U64S L_U64S(int size, ...);
 
-#define L_S8S_create(size, initialValue) L_Z8S_create(size, initialValue)
+#define L_Z8S_create(size, initialValue) L_S8S_create(size, initialValue)
 
-#define L_S16S_create(size, initialValue) L_Z16S_create(size, initialValue)
+#define L_Z16S_create(size, initialValue) L_S16S_create(size, initialValue)
 
-#define L_S32S_create(size, initialValue) L_Z32S_create(size, initialValue)
+#define L_Z32S_create(size, initialValue) L_S32S_create(size, initialValue)
 
-#define L_S64S_create(size, initialValue) L_Z64S_create(size, initialValue)
+#define L_Z64S_create(size, initialValue) L_S64S_create(size, initialValue)
 
-#define L_U8S_create(size, initialValue) L_U8S_create(size, initialValue)
+#define L_N8S_create(size, initialValue) L_U8S_create(size, initialValue)
 
-#define L_U16S_create(size, initialValue) L_U16S_create(size, initialValue)
+#define L_N16S_create(size, initialValue) L_U16S_create(size, initialValue)
 
-#define L_U32S_create(size, initialValue) L_U32S_create(size, initialValue)
+#define L_N32S_create(size, initialValue) L_U32S_create(size, initialValue)
 
-#define L_U64S_create(size, initialValue) L_U64S_create(size, initialValue)
+#define L_N64S_create(size, initialValue) L_U64S_create(size, initialValue)
 
 F32S L_F32S_create(size_t size, F32 initialValue);
 
 F64S L_F64S_create(size_t size, F64 initialValue);
 
-void L_Z8S_wipe(Z8S *ns);
+void L_S8S_wipe(S8S *ns);
 
-void L_Z16S_wipe(Z16S *ns);
+void L_S16S_wipe(S16S *ns);
 
-void L_Z32S_wipe(Z32S *ns);
+void L_S32S_wipe(S32S *ns);
 
-void L_Z64S_wipe(Z64S *ns);
+void L_S64S_wipe(S64S *ns);
 
-void L_N8S_wipe(N8S *ns);
+void L_U8S_wipe(U8S *ns);
 
-void L_N16S_wipe(N16S *ns);
+void L_U16S_wipe(U16S *ns);
 
-void L_N32S_wipe(N32S *ns);
+void L_U32S_wipe(U32S *ns);
 
-void L_N64S_wipe(N64S *ns);
+void L_U64S_wipe(U64S *ns);
 
-#define L_S8S_wipe(ns) L_Z8S_wipe(ns)
+#define L_Z8S_wipe(ns) L_S8S_wipe(ns)
 
-#define L_S16S_wipe(ns) L_Z16S_wipe(ns)
+#define L_Z16S_wipe(ns) L_S16S_wipe(ns)
 
-#define L_S32S_wipe(ns) L_Z32S_wipe(ns)
+#define L_Z32S_wipe(ns) L_S32S_wipe(ns)
 
-#define L_S64S_wipe(ns) L_Z64S_wipe(ns)
+#define L_Z64S_wipe(ns) L_S64S_wipe(ns)
 
-#define L_U8S_wipe(ns) L_Z8S_wipe(ns)
+#define L_N8S_wipe(ns) L_U8S_wipe(ns)
 
-#define L_U16S_wipe(ns) L_Z16S_wipe(ns)
+#define L_N16S_wipe(ns) L_U16S_wipe(ns)
 
-#define L_U32S_wipe(ns) L_Z32S_wipe(ns)
+#define L_N32S_wipe(ns) L_U32S_wipe(ns)
 
-#define L_U64S_wipe(ns) L_Z64S_wipe(ns)
+#define L_N64S_wipe(ns) L_U64S_wipe(ns)
 
 void L_F32S_wipe(F32S *ns);
 

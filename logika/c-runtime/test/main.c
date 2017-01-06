@@ -25,8 +25,7 @@
 
 #include <logika-io.h>
 
-
-int main(int argc, L_string argv[]) {
+int main(int argc, char *argv[]) {
   Z a = L_Z_read("Enter a: ");
   Z b = L_Z_read("Enter b: ");
 
@@ -37,13 +36,13 @@ int main(int argc, L_string argv[]) {
 #endif
 
   {
-    L_string arg0 = L_Z_toString(a);
-    L_string arg1 = L_Z_toString(b);
-    L_string arg2 = L_Z_toString(c);
-    L_println(5, arg0, " * ", arg1, " => ", arg2);
-    L_string_wipe(arg0);
-    L_string_wipe(arg1);
-    L_string_wipe(arg2);
+    L_print_Z(a);
+    L_print(" * ");
+    L_print_Z(b);
+    L_print(" => ");
+    L_print_Z(c);
+    L_println();
+    L_flush();
   }
 
   L_Z_wipe(&a);

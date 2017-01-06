@@ -26,41 +26,14 @@
 #include <ctype.h>
 #include <errno.h>
 #include <sodium.h>
-#include <stdarg.h>
 #include <logika-io.h>
 
 #define LL_MAX ((0x7fffffffLL << 32) | 0xffffffffLL)
 #define LL_MIN ((0xffffffffLL << 32) | 0xffffffffLL)
 
-#if BIT_WIDTH == 0
-
-L_string L_Z_toString(const Z n) {
-  return mpz_get_str(NULL, 10, n.data);
-}
-
-#elif BIT_WIDTH == 64
-
-L_string L_Z_toString(const Z n) {
-  size_t length = snprintf(NULL, 0, "%lld", n);
-  L_string str = L_malloc(length + 1);
-  snprintf(str, length + 1, "%lld", n);
-  return str;
-}
-
-#else
-
-L_string L_Z_toString(const Z n) {
-  size_t length = snprintf(NULL, 0, "%d", n);
-  L_string str = L_malloc(length + 1);
-  snprintf(str, length + 1, "%d", n);
-  return str;
-}
-
-#endif
-
-static L_string L_readLine(const L_string msg) {
-  size_t capacity = 1024;
-  L_string line = L_malloc(capacity);
+static char *L_readLine(const char *msg) {
+  size_t capacity = L_READLINE_INIT_SIZE;
+  char *line = L_malloc(capacity);
   printf("%s", msg);
   fflush(stdout);
   size_t size = 0;
@@ -82,14 +55,14 @@ static L_string L_readLine(const L_string msg) {
 }
 
 static bool L_str2int(long long int *out,
-                      const L_string str,
+                      const char *str,
                       const long long int min,
                       const long long int max) {
   if (str[0] == '\0' || isspace(str[0]))
     return false;
-  L_string end;
+  char *end;
   errno = 0;
-  long long int l = strtoll((L_string) str, &end, 10);
+  long long int l = strtoll((char *) str, &end, 10);
   if (l > max || (errno == ERANGE && l == LL_MAX))
     return false;
   if (l < min || (errno == ERANGE && l == LL_MIN))
@@ -100,8 +73,8 @@ static bool L_str2int(long long int *out,
   return true;
 }
 
-Z L_Z_read(const L_string msg) {
-  L_string s = L_readLine(msg);
+Z L_Z_read(const char *msg) {
+  char *s = L_readLine(msg);
 #if BIT_WIDTH == 0
   Z result = {0};
   if (s[0] == '\0' || isspace(s[0]) || mpz_init_set_str(result.data, s, 10) == -1) {
@@ -149,24 +122,79 @@ Z L_Z_read(const L_string msg) {
   return result;
 }
 
-Z8 L_Z8_random() {
-  return (Z8) randombytes_uniform(256);
+void L_print_S8(const S8 n) {
+  printf("%d", (int) n);
 }
 
-Z16 L_Z16_random() {
-  return (Z16) randombytes_uniform(65536);
+void L_print_S16(const S16 n) {
+  printf("%d", (int) n);
 }
 
-Z32 L_Z32_random() {
-  return randombytes_random();
+void L_print_S32(const S32 n) {
+  printf("%ld", (long int) n);
 }
 
-Z64 L_Z64_random() {
-  return ((Z64) randombytes_random()) << 32 | randombytes_random();
+void L_print_S64(const S64 n) {
+  printf("%lld", (long long int) n);
+}
+
+void L_print_U8(const U8 n) {
+  printf("%u", (unsigned int) n);
+}
+
+void L_print_U16(const U16 n) {
+  printf("%u", (unsigned int) n);
+}
+
+void L_print_U32(const U32 n) {
+  printf("%lu", (unsigned long int) n);
+}
+
+void L_print_U64(const U64 n) {
+  printf("%llu", (unsigned long long int) n);
 }
 
 #if BIT_WIDTH == 0
-Z L_Z_random() {
+
+void L_print_Z(const Z n) {
+  char *str = mpz_get_str(NULL, 10, n.data);
+  printf("%s", str);
+  free(str);
+}
+
+#endif
+
+void L_print(char *str) {
+  printf("%s", str);
+}
+
+void L_println(void) {
+  printf("\n");
+}
+
+void L_flush(void) {
+  fflush(stdout);
+}
+
+U8 L_U8_random(void) {
+  return (U8) randombytes_uniform(256);
+}
+
+U16 L_U16_random(void) {
+  return (U16) randombytes_uniform(65536);
+}
+
+U32 L_U32_random(void) {
+  return randombytes_random();
+}
+
+U64 L_U64_random(void) {
+  return ((U64) randombytes_random()) << 32 | randombytes_random();
+}
+
+#if BIT_WIDTH == 0
+
+Z L_Z_random(void) {
   Z result = {0};
   int n = (int) randombytes_uniform(16);
   mpz_init_set_ui(result.data, randombytes_random());
@@ -177,9 +205,10 @@ Z L_Z_random() {
   }
   return result;
 }
+
 #endif
 
-ZS L_ZS_random() {
+ZS L_ZS_random(void) {
   ZS result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
@@ -192,7 +221,7 @@ ZS L_ZS_random() {
 }
 
 #if BIT_WIDTH != 0
-NS L_NS_random() {
+NS L_NS_random(void) {
   NS result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
@@ -204,103 +233,103 @@ NS L_NS_random() {
 }
 #endif
 
-Z8S L_Z8S_random() {
-  Z8S result = {0};
+S8S L_S8S_random(void) {
+  S8S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z8));
+  result.data = L_malloc(size * sizeof(S8));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_Z8_random();
+    result.data[i] = L_S8_random();
   }
   return result;
 }
 
-Z16S L_Z16S_random() {
-  Z16S result = {0};
+S16S L_S16S_random(void) {
+  S16S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z16));
+  result.data = L_malloc(size * sizeof(S16));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_Z16_random();
+    result.data[i] = L_S16_random();
   }
   return result;
 }
 
-Z32S L_Z32S_random() {
-  Z32S result = {0};
+S32S L_S32S_random(void) {
+  S32S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z32));
+  result.data = L_malloc(size * sizeof(S32));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_Z32_random();
+    result.data[i] = L_S32_random();
   }
   return result;
 }
 
-Z64S L_Z64S_random() {
-  Z64S result = {0};
+S64S L_S64S_random(void) {
+  S64S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z64));
+  result.data = L_malloc(size * sizeof(S64));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_Z64_random();
+    result.data[i] = L_S64_random();
   }
   return result;
 }
 
-N8S L_N8S_random() {
-  N8S result = {0};
+U8S L_U8S_random(void) {
+  U8S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(N8));
+  result.data = L_malloc(size * sizeof(U8));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_N8_random();
+    result.data[i] = L_U8_random();
   }
   return result;
 }
 
-N16S L_N16S_random() {
-  N16S result = {0};
+U16S L_U16S_random(void) {
+  U16S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(N16));
+  result.data = L_malloc(size * sizeof(U16));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_N16_random();
+    result.data[i] = L_U16_random();
   }
   return result;
 }
 
-N32S L_N32S_random() {
-  N32S result = {0};
+U32S L_U32S_random(void) {
+  U32S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(N32));
+  result.data = L_malloc(size * sizeof(U32));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_N32_random();
+    result.data[i] = L_U32_random();
   }
   return result;
 }
 
-N64S L_N64S_random() {
-  N64S result = {0};
+U64S L_U64S_random(void) {
+  U64S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
-  result.data = L_malloc(size * sizeof(N64));
+  result.data = L_malloc(size * sizeof(U64));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = L_N64_random();
+    result.data[i] = L_U64_random();
   }
   return result;
 }
 
-F32S L_F32S_random() {
+F32S L_F32S_random(void) {
   F32S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
@@ -312,7 +341,7 @@ F32S L_F32S_random() {
   return result;
 }
 
-F64S L_F64S_random() {
+F64S L_F64S_random(void) {
   F64S result = {0};
   size_t size = (size_t) randombytes_uniform(L_RANDOM_SEQ_MAX);
   result.size = size;
@@ -322,29 +351,4 @@ F64S L_F64S_random() {
     result.data[i] = L_N64_random();
   }
   return result;
-}
-
-void L_print(const int strNum, ...) {
-  va_list valist;
-  va_start(valist, strNum);
-  int i;
-  for (i = 0; i < strNum; i++) {
-    printf("%s", *va_arg(valist, L_string *));
-    fflush(stdout);
-  }
-  va_end(valist);
-}
-
-void L_println(const int strNum, ...) {
-  va_list valist;
-  va_start(valist, strNum);
-  int i;
-  for (i = 0; i < strNum; i++) {
-    L_string str = va_arg(valist, L_string);
-    printf("%s", str);
-    fflush(stdout);
-  }
-  va_end(valist);
-  printf("\n");
-  fflush(stdout);
 }

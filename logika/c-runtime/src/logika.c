@@ -33,14 +33,14 @@
 #define BITS_PER_SIZE_T CHAR_BIT * sizeof(size_t)
 #define BITS_PER_ULONG  CHAR_BIT * sizeof(unsigned int long)
 
-void * L_malloc(size_t size) {
-  void * result = malloc(size);
+void *L_malloc(size_t size) {
+  void *result = malloc(size);
   L_assert(result != NULL);
   return result;
 }
 
-void * L_realloc(void * ptr, size_t size) {
-  void * result = realloc(ptr, size);
+void *L_realloc(void *ptr, size_t size) {
+  void *result = realloc(ptr, size);
   L_assert(result != NULL);
   return result;
 }
@@ -55,15 +55,15 @@ static bool L_Z_fits_size_t(Z n) {
 size_t L_Z_to_size_t(Z n) {
   L_assert(L_Z_fits_size_t(n));
 #if SIZE_MAX > ULONG_MAX
-    mpz_t temp;
-    mpz_init(temp);
-    mpz_fdiv_q_2exp(temp, n.data, BITS_PER_ULONG);
-    size_t result = (((size_t) mpz_get_ui(temp)) << BITS_PER_ULONG) | mpz_get_ui(n.data);
-    mpz_clear(temp);
-    L_wipe(&temp, sizeof(mpz_t));
-    return result;
+  mpz_t temp;
+  mpz_init(temp);
+  mpz_fdiv_q_2exp(temp, n.data, BITS_PER_ULONG);
+  size_t result = (((size_t) mpz_get_ui(temp)) << BITS_PER_ULONG) | mpz_get_ui(n.data);
+  mpz_clear(temp);
+  L_wipe(&temp, sizeof(mpz_t));
+  return result;
 #else
-    return mpz_get_ui(n.data);
+  return mpz_get_ui(n.data);
 #endif
 }
 
@@ -79,7 +79,7 @@ Z L_Z_ui(unsigned long int n) {
   return result;
 }
 
-Z L_Z_str(L_string n) {
+Z L_Z_str(char *n) {
   Z result = {0};
   mpz_init_set_str(result.data, n, 10);
   return result;
@@ -513,7 +513,6 @@ NS L_NS(int size, ...) {
   return result;
 }
 
-
 void L_Z_wipe(Z *n) {
   *n = 0;
 }
@@ -542,30 +541,30 @@ void L_NS_wipe(NS *ns) {
 
 #endif
 
-void L_Z8_wipe(Z8 *n) {
+void L_U8_wipe(U8 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_Z16_wipe(Z16 *n) {
+void L_U16_wipe(U16 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_Z32_wipe(Z32 *n) {
+void L_U32_wipe(U32 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_Z64_wipe(Z64 *n) {
+void L_U64_wipe(U64 *n) {
   *n = 0;
   L_av(n);
 }
 
-Z8S L_Z8S_create(size_t size, Z8 initialValue) {
-  Z8S result = {0};
+S8S L_S8S_create(size_t size, S8 initialValue) {
+  S8S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z8));
+  result.data = L_malloc(size * sizeof(S8));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -573,18 +572,18 @@ Z8S L_Z8S_create(size_t size, Z8 initialValue) {
   return result;
 }
 
-Z8S L_Z8S(int size, ...) {
-  Z8S result = {0};
+S8S L_S8S(int size, ...) {
+  S8S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(Z8));
+  result.data = L_malloc(size * sizeof(S8));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
 #if Z8_Max < INT_MAX
-    result.data[i] = (Z8) va_arg(valist, int);
+    result.data[i] = (S8) va_arg(valist, int);
 #else
-    result.data[i] = va_arg(valist, Z8);
+    result.data[i] = va_arg(valist, S8);
 #endif
   }
   va_end(valist);
@@ -592,10 +591,10 @@ Z8S L_Z8S(int size, ...) {
   return result;
 }
 
-Z16S L_Z16S_create(size_t size, Z16 initialValue) {
-  Z16S result = {0};
+S16S L_S16S_create(size_t size, S16 initialValue) {
+  S16S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z16));
+  result.data = L_malloc(size * sizeof(S16));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -603,18 +602,18 @@ Z16S L_Z16S_create(size_t size, Z16 initialValue) {
   return result;
 }
 
-Z16S L_Z16S(int size, ...) {
-  Z16S result = {0};
+S16S L_S16S(int size, ...) {
+  S16S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(Z16));
+  result.data = L_malloc(size * sizeof(S16));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
 #if Z16_Max < INT_MAX
-    result.data[i] = (Z16) va_arg(valist, int);
+    result.data[i] = (S16) va_arg(valist, int);
 #else
-    result.data[i] = va_arg(valist, Z16);
+    result.data[i] = va_arg(valist, S16);
 #endif
   }
   va_end(valist);
@@ -622,10 +621,10 @@ Z16S L_Z16S(int size, ...) {
   return result;
 }
 
-Z32S L_Z32S_create(size_t size, Z32 initialValue) {
-  Z32S result = {0};
+S32S L_S32S_create(size_t size, S32 initialValue) {
+  S32S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z32));
+  result.data = L_malloc(size * sizeof(S32));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -633,25 +632,25 @@ Z32S L_Z32S_create(size_t size, Z32 initialValue) {
   return result;
 }
 
-Z32S L_Z32S(int size, ...) {
-  Z32S result = {0};
+S32S L_S32S(int size, ...) {
+  S32S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(Z32));
+  result.data = L_malloc(size * sizeof(S32));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    result.data[i] = va_arg(valist, Z32);
+    result.data[i] = va_arg(valist, S32);
   }
   va_end(valist);
 
   return result;
 }
 
-Z64S L_Z64S_create(size_t size, Z64 initialValue) {
-  Z64S result = {0};
+S64S L_S64S_create(size_t size, S64 initialValue) {
+  S64S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(Z64));
+  result.data = L_malloc(size * sizeof(S64));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -659,25 +658,25 @@ Z64S L_Z64S_create(size_t size, Z64 initialValue) {
   return result;
 }
 
-Z64S L_Z64S(int size, ...) {
-  Z64S result = {0};
+S64S L_S64S(int size, ...) {
+  S64S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(Z64));
+  result.data = L_malloc(size * sizeof(S64));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    result.data[i] = va_arg(valist, Z64);
+    result.data[i] = va_arg(valist, S64);
   }
   va_end(valist);
 
   return result;
 }
 
-N8S L_N8S_create(size_t size, N8 initialValue) {
-  N8S result = {0};
+U8S L_U8S_create(size_t size, U8 initialValue) {
+  U8S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(N8));
+  result.data = L_malloc(size * sizeof(U8));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -685,18 +684,18 @@ N8S L_N8S_create(size_t size, N8 initialValue) {
   return result;
 }
 
-N8S L_N8S(int size, ...) {
-  N8S result = {0};
+U8S L_U8S(int size, ...) {
+  U8S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(N8));
+  result.data = L_malloc(size * sizeof(U8));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
 #if Z8_Max < INT_MAX
-    result.data[i] = (N8) va_arg(valist, int);
+    result.data[i] = (U8) va_arg(valist, int);
 #else
-    result.data[i] = va_arg(valist, N8);
+    result.data[i] = va_arg(valist, U8);
 #endif
   }
   va_end(valist);
@@ -704,10 +703,10 @@ N8S L_N8S(int size, ...) {
   return result;
 }
 
-N16S L_N16S_create(size_t size, N16 initialValue) {
-  N16S result = {0};
+U16S L_U16S_create(size_t size, U16 initialValue) {
+  U16S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(N16));
+  result.data = L_malloc(size * sizeof(U16));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -715,18 +714,18 @@ N16S L_N16S_create(size_t size, N16 initialValue) {
   return result;
 }
 
-N16S L_N16S(int size, ...) {
-  N16S result = {0};
+U16S L_U16S(int size, ...) {
+  U16S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(N16));
+  result.data = L_malloc(size * sizeof(U16));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
 #if Z16_Max < INT_MAX
-    result.data[i] = (N16) va_arg(valist, int);
+    result.data[i] = (U16) va_arg(valist, int);
 #else
-    result.data[i] = va_arg(valist, N16);
+    result.data[i] = va_arg(valist, U16);
 #endif
   }
   va_end(valist);
@@ -734,10 +733,10 @@ N16S L_N16S(int size, ...) {
   return result;
 }
 
-N32S L_N32S_create(size_t size, N32 initialValue) {
-  N32S result = {0};
+U32S L_U32S_create(size_t size, U32 initialValue) {
+  U32S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(N32));
+  result.data = L_malloc(size * sizeof(U32));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -745,25 +744,25 @@ N32S L_N32S_create(size_t size, N32 initialValue) {
   return result;
 }
 
-N32S L_N32S(int size, ...) {
-  N32S result = {0};
+U32S L_U32S(int size, ...) {
+  U32S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(N32));
+  result.data = L_malloc(size * sizeof(U32));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    result.data[i] = va_arg(valist, N32);
+    result.data[i] = va_arg(valist, U32);
   }
   va_end(valist);
 
   return result;
 }
 
-N64S L_N64S_create(size_t size, N64 initialValue) {
-  N64S result = {0};
+U64S L_U64S_create(size_t size, U64 initialValue) {
+  U64S result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(N64));
+  result.data = L_malloc(size * sizeof(U64));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -771,15 +770,15 @@ N64S L_N64S_create(size_t size, N64 initialValue) {
   return result;
 }
 
-N64S L_N64S(int size, ...) {
-  N64S result = {0};
+U64S L_U64S(int size, ...) {
+  U64S result = {0};
   result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(N64));
+  result.data = L_malloc(size * sizeof(U64));
   va_list valist;
   va_start(valist, size);
   int i;
   for (i = 0; i < size; i++) {
-    result.data[i] = va_arg(valist, N64);
+    result.data[i] = va_arg(valist, U64);
   }
   va_end(valist);
 
@@ -808,52 +807,52 @@ F64S L_F64S_create(size_t size, F64 initialValue) {
   return result;
 }
 
-void L_Z8S_wipe(Z8S *ns) {
-  L_wipe(ns->data, sizeof(Z8) * ns->size);
+void L_S8S_wipe(S8S *ns) {
+  L_wipe(ns->data, sizeof(S8) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(Z8S));
+  L_wipe(ns, sizeof(S8S));
 }
 
-void L_Z16S_wipe(Z16S *ns) {
-  L_wipe(ns->data, sizeof(Z16) * ns->size);
+void L_S16S_wipe(S16S *ns) {
+  L_wipe(ns->data, sizeof(S16) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(Z16S));
+  L_wipe(ns, sizeof(S16S));
 }
 
-void L_Z32S_wipe(Z32S *ns) {
-  L_wipe(ns->data, sizeof(Z32) * ns->size);
+void L_S32S_wipe(S32S *ns) {
+  L_wipe(ns->data, sizeof(S32) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(Z32S));
+  L_wipe(ns, sizeof(S32S));
 }
 
-void L_Z64S_wipe(Z64S *ns) {
-  L_wipe(ns->data, sizeof(Z64) * ns->size);
+void L_S64S_wipe(S64S *ns) {
+  L_wipe(ns->data, sizeof(S64) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(Z64S));
+  L_wipe(ns, sizeof(S64S));
 }
 
-void L_N8S_wipe(N8S *ns) {
-  L_wipe(ns->data, sizeof(N8) * ns->size);
+void L_U8S_wipe(U8S *ns) {
+  L_wipe(ns->data, sizeof(U8) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(N8S));
+  L_wipe(ns, sizeof(U8S));
 }
 
-void L_N16S_wipe(N16S *ns) {
-  L_wipe(ns->data, sizeof(N16) * ns->size);
+void L_U16S_wipe(U16S *ns) {
+  L_wipe(ns->data, sizeof(U16) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(N16S));
+  L_wipe(ns, sizeof(U16S));
 }
 
-void L_N32S_wipe(N32S *ns) {
-  L_wipe(ns->data, sizeof(N32) * ns->size);
+void L_U32S_wipe(U32S *ns) {
+  L_wipe(ns->data, sizeof(U32) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(N32S));
+  L_wipe(ns, sizeof(U32S));
 }
 
-void L_N64S_wipe(N64S *ns) {
-  L_wipe(ns->data, sizeof(N64) * ns->size);
+void L_U64S_wipe(U64S *ns) {
+  L_wipe(ns->data, sizeof(U64) * ns->size);
   free(ns->data);
-  L_wipe(ns, sizeof(Z64S));
+  L_wipe(ns, sizeof(U64S));
 }
 
 void L_F32S_wipe(F32S *ns) {
@@ -871,5 +870,8 @@ void L_F64S_wipe(F64S *ns) {
 static void __EV() {
   U8 __EV_F32_IS_32[1 - (2 * ((sizeof(F32) * CHAR_BIT) != 32))];
   U8 __EV_F64_IS_64[1 - (2 * ((sizeof(F64) * CHAR_BIT) != 64))];
+#if SIZE_MAX > ULONG_MAX
+  U8 __EV_SIZE_T_ULONG2X[1 - (2 * (sizeof(size_t) != 2 * sizeof(unsigned long int)))];
+#endif
   L_assert(F);
 }
