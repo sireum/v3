@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <sodium.h>
 #include <logika-io.h>
-#include <logika.h>
 
 #define LL_MAX ((0x7fffffffLL << 32) | 0xffffffffLL)
 #define LL_MIN ((0xffffffffLL << 32) | 0xffffffffLL)
