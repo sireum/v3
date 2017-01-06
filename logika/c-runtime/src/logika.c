@@ -899,6 +899,24 @@ U64S L_U64S_clone(U64S ns) {
   return result;
 }
 
+F32S L_F32S_clone(F32S ns) {
+  F32S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(F32));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
+F64S L_F64S_clone(F64S ns) {
+  F64S result = {0};
+  size_t size = ns.size;
+  result.size = size;
+  result.data = L_malloc(size * sizeof(F64));
+  memcpy(result.data, ns.data, size);
+  return result;
+}
+
 #if BIT_WIDTH == 0
 
 ZS L_ZS_clone(ZS ns) {

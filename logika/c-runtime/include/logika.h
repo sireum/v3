@@ -547,6 +547,10 @@ U32S L_U32S_clone(U32S ns);
 
 U64S L_U64S_clone(U64S ns);
 
+F32S L_F32S_clone(F32S ns);
+
+F64S L_F64S_clone(F64S ns);
+
 #define L_Z8S_clone(ns) L_S8S_clone(ns)
 
 #define L_Z16S_clone(ns) L_S16S_clone(ns)
