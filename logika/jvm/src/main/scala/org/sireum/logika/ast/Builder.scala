@@ -714,7 +714,11 @@ final private class Builder(fileUriOpt: Option[FileResourceUri], input: String, 
               }
             case None => Node.emptySeq
           }
-          Some(Print(ctx.op.getText == "println", args))
+          val isNewline = ctx.op.getText == "println"
+          if (!isNewline && args.isEmpty) {
+            error(ctx.op, "At least one argument is required for print.")
+          }
+          Some(Print(isNewline, args))
         case ctx: SeqAssignStmtContext =>
           Some(SeqAssign(buildId(ctx.tb), build(ctx.index), build(ctx.r)))
         case ctx: MethodDeclStmtContext =>
