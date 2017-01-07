@@ -44,6 +44,7 @@ object Main {
   final val RUN_ERROR_EXIT_CODE: Int = -7
   final val VERIFICATION_FAILED_EXIT_CODE: Int = -8
   final val FORMULA_DIFF_EXIT_CODE: Int = -9
+  final val TRANSLATION_FAILED_EXIT_CODE: Int = -10
 
   def run(option: LogikaOption,
           outPrintln: String => Unit,
@@ -93,6 +94,8 @@ class Main(option: LogikaOption,
     implicit val reporter: AccumulatingTagReporter = new ConsoleTagReporter
 
     run(option, checkMessage, proofs)
+
+    translateC(option, checkMessage, proofs)
 
     Checker.check(checkMessage)
     if (reporter.hasError) sys.exit(VERIFICATION_FAILED_EXIT_CODE)
@@ -153,21 +156,29 @@ class Main(option: LogikaOption,
     for ((fileUri, program, content) <- fileProofContent.tail if program != anchorProgram) try {
       errPrintln(s"The program AST (sans contracts and prints) of $fileUri is structurally different than $anchorFileUri.")
       if (!hasError) {
-        FileUtil.writeFile(wipedAnchorFile, anchorContent)
-        outPrintln(s"Wrote to ${wipedAnchorFile.getCanonicalPath}.")
+        if (FileUtil.writeFile(wipedAnchorFile, anchorContent))
+          outPrintln(s"Wrote to ${wipedAnchorFile.getCanonicalPath}.")
+        else {
+          errPrintln(s"Could not write to ${wipedAnchorFile.getCanonicalPath}.")
+          sys.exit(COMPARE_FAILED_EXIT_CODE)
+        }
       }
       hasError = true
       val file = new File(fileUri)
       val wipedFile = new File(file.getParentFile, s"wiped-${file.getName}")
-      FileUtil.writeFile(wipedFile, content)
-      outPrintln(s"Wrote to ${wipedFile.getCanonicalPath}.")
+      if (FileUtil.writeFile(wipedFile, content))
+        outPrintln(s"Wrote to ${wipedFile.getCanonicalPath}.")
+      else {
+        errPrintln(s"Could not write to ${wipedFile.getCanonicalPath}.")
+        sys.exit(COMPARE_FAILED_EXIT_CODE)
+      }
       val dmp = new DiffMatchPatch()
       val htmlFile = new File(file.getParentFile, s"diff-${file.getName}.html")
       val diffs = dmp.diff_main(anchorContent, content)
       val html = dmp.diff_prettyHtml(diffs)
       assert(!(diffs.size == 1 && diffs.get(0).operation == DiffMatchPatch.Operation.EQUAL))
       val lines = html.split("&para;").indices.map(_.toString).mkString(" \\a ")
-      FileUtil.writeFile(htmlFile,
+      if (FileUtil.writeFile(htmlFile,
         s"""<html>
            |  <head>
            |    <title>Diff Between ${wipedAnchorFile.getName} and ${wipedFile.getName}</title>
@@ -207,8 +218,12 @@ class Main(option: LogikaOption,
            |    <h1>Diff Between <a href="${wipedAnchorFile.toURI.toURL}">${wipedAnchorFile.getName}</a> and <a href="${wipedFile.toURI.toURL}">${wipedFile.getName}</a></h1>
            |    <div class="code">$html</div>
            |  </body>
-           |</html>""".stripMargin)
-      outPrintln(s"Wrote diff report to ${htmlFile.getCanonicalPath}.")
+           |</html>""".stripMargin))
+        outPrintln(s"Wrote diff report to ${htmlFile.getCanonicalPath}.")
+      else {
+        errPrintln(s"Could not write diff report to ${htmlFile.getCanonicalPath}.")
+        sys.exit(COMPARE_FAILED_EXIT_CODE)
+      }
     } catch {
       case t: Throwable =>
         hasError = true
@@ -309,6 +324,62 @@ class Main(option: LogikaOption,
     proofs
   }
 
+  def translateC(option: LogikaOption, checkMessage: message.Check,
+                 proofs: ISeq[message.ProofFile])(
+                  implicit reporter: AccumulatingTagReporter): Unit = {
+    if (option.c.isEmpty) return
+    val file = {
+      val f = new java.io.File(option.c.get)
+      if (f.isDirectory)
+        new java.io.File(f, option.input.map(removeExt).mkString("+") + ".c")
+      else f
+    }
+    val filename = file.getName
+    if (!filename.endsWith(".c")) {
+      errPrintln(s"Invalid C file extension ${file.getName}.")
+      sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+
+    val (hasError, _, unitNodes) = Checker.typeCheck(checkMessage)
+    if (hasError) sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    var allPrograms = true
+    for ((input, unitNode) <- option.input.zip(unitNodes)) {
+      unitNode.fileUriOpt = Some(new java.io.File(input).toURI.toString)
+      if (!unitNode.isInstanceOf[Program]) {
+        errPrintln(s"Cannot translate $input because it is not a Logika program.")
+        allPrograms = false
+      }
+    }
+    if (!allPrograms) sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+
+    val r = transpiler.C(unitNodes.map(_.asInstanceOf[Program]), option.bitwidth)
+    if (reporter.hasError) {
+      sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+    if (FileUtil.writeFile(file, r.stMain.render))
+      outPrintln(s"Wrote to ${file.getCanonicalPath}.")
+    else {
+      errPrintln(s"Could not write to ${file.getCanonicalPath}.")
+      sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+
+    val filenameH = filename.substring(0, filename.length - 1) + 'h'
+    val fileH = new java.io.File(file.getParentFile, filenameH)
+    if (FileUtil.writeFile(fileH, r.stMainHeader.render))
+      outPrintln(s"Wrote to ${fileH.getCanonicalPath}.")
+    else {
+      errPrintln(s"Could not write to ${fileH.getCanonicalPath}.")
+      sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+  }
+
+  def removeExt(filepath: String): String = {
+    val filename = new java.io.File(filepath).getName
+    val i = filename.lastIndexOf('.')
+    if (i >= 0) filename.substring(0, i)
+    else filename
+  }
+
   def run(option: LogikaOption, checkMessage: message.Check,
           proofs: ISeq[message.ProofFile])(
            implicit reporter: AccumulatingTagReporter): Unit = {
@@ -316,10 +387,9 @@ class Main(option: LogikaOption,
     val (hasError, _, unitNodes) = Checker.typeCheck(checkMessage)
     if (hasError) sys.exit(RUN_FAILED_EXIT_CODE)
     var allPrograms = true
-    val optionMode = if (option.run) "run" else "compare"
     for ((input, unitNode) <- option.input.zip(unitNodes)) {
       if (!unitNode.isInstanceOf[Program]) {
-        errPrintln(s"Cannot $optionMode $input because it is not a Logika program.")
+        errPrintln(s"Cannot run $input because it is not a Logika program.")
         allPrograms = false
       }
     }
@@ -372,13 +442,21 @@ class Main(option: LogikaOption,
         import java.io._
         asciiOpt.foreach { content =>
           val f2 = new File(f.getParentFile, s"ascii-${f.getName}")
-          FileUtil.writeFile(f2, content)
-          outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+          if (FileUtil.writeFile(f2, content))
+            outPrintln(s"Wrote to ${f2.getCanonicalPath}.")
+          else {
+            errPrintln(s"Could not write to ${f2.getCanonicalPath}.")
+            sys.exit(SYMBOL_CONVERSION_FAILED_EXIT_CODE)
+          }
         }
         uniOpt.foreach { content =>
-          val f2 = new File(f.getParentFile, s"unicode-${f.getName}")
-          FileUtil.writeFile(f2, content)
-          outPrintln(s"Wrote to ${f2.getCanonicalPath}")
+          val f2 = new File(f.getParentFile, s"unicode-${f.getName}.")
+          if (FileUtil.writeFile(f2, content))
+            outPrintln(s"Wrote to ${f2.getCanonicalPath}.")
+          else {
+            errPrintln(s"Could not write to ${f2.getCanonicalPath}.")
+            sys.exit(SYMBOL_CONVERSION_FAILED_EXIT_CODE)
+          }
         }
       } catch {
         case t: Throwable =>

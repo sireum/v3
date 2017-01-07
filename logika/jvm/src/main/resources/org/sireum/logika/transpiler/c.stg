@@ -1,0 +1,202 @@
+copyright() ::= <<
+ Copyright (c) 2017, Robby, Kansas State University
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+>>
+
+main(comment, io, assertion, assumption, globals, stmts, methods) ::= <<
+$if(comment)$
+$comment; separator="\n"$
+$endif$
+$if(io)$
+#include <logika-io.h>
+$else$
+#include <logika.h>
+$endif$
+$if(assertion||assumption)$
+#include <assert.h>
+
+$if(assumption)$
+#define assume(e) assert(e)
+$endif$
+$endif$
+
+$globals; separator="\n\n"$
+
+void run() {
+
+  $stmts; separator="\n\n"$
+
+}
+
+$methods; separator="\n\n"$
+int main() {
+  run();
+  return 0;
+}
+
+>>
+
+globals(comment, global) ::= <<
+$if(comment && global)$
+$comment; separator="\n"$
+$endif$
+$global; separator="\n"$
+>>
+
+global(t, x, no) ::= <<
+$t$ $x$;$if(no)$ // L$no$$endif$
+>>
+
+stmts(comment, stmt) ::= <<
+$if(comment && stmt)$
+$comment; separator="\n"$
+$endif$
+$stmt; separator="\n"$
+>>
+
+methods(comment, method) ::= <<
+$if(comment && method)$
+$comment; separator="\n"$
+
+$endif$
+$method; separator="\n\n"$
+>>
+
+mainH(protos) ::= <<
+#include <logika.h>
+
+$protos; separator="\n\n"$
+>>
+
+lcomment(text) ::= <<
+// $text$
+>>
+
+protos(proto, comment) ::= <<
+s$if(comment && proto)$
+$comment; separator="\n"$
+
+$endif$
+$proto; separator=";\n\n"$$if(proto)$;$endif$
+>>
+
+method(proto, stmts) ::= <<
+$proto$ {
+  $stmts$
+}
+>>
+
+proto(no, t, name, param) ::= <<
+$if(no)$/* L$no$ */ $endif$$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)
+>>
+
+param(mod, t, x) ::= <<
+$if(!mod)$const $endif$$t$ $x$
+>>
+
+line(no) ::= <<
+$if(no)$L$no$: $endif$
+>>
+
+assignStmt(no, t, x, e) ::= <<
+$line(no)$$if(t)$$t$ $endif$$x$ = $e$;
+>>
+
+seqAssignStmt(no, x, i, e) ::= <<
+$line(no)$$x$.data[$i$] = $e$;
+>>
+
+assertStmt(no, e) ::= <<
+$line(no)$assert($e$);
+>>
+
+assumeStmt(no, e) ::= <<
+$line(no)$assume($e$);
+>>
+
+ifStmt(no, e, tStmts, fStmts) ::= <<
+$line(no)$if ($e$) {
+  $tStmts$
+}$if(fStmts)$ else {
+  $fStmts$
+}
+$else$
+
+$endif$
+>>
+
+whileStmt(no, e,  stmt) ::= <<
+$line(no)$while ($e$) {
+  $stmt; separator="\n"$
+}
+>>
+
+printStmt(no, stmt) ::= <<
+$line(no)${
+  $stmt; separator="\n"$
+}
+>>
+
+lit(e) ::= <<
+$e$
+>>
+
+litCastExp(t, e, text) ::= <<
+(($t$) $t$$if(text)$ /* $text$ */$endif$)
+>>
+
+lit64Exp(signed, t, e1, e2, text) ::= <<
+$if(signed)$
+(($t$) ($e1$LL << 32 | $e2$LL) /* $text$ */)
+$else$
+(($t$) ($e1$ULL << 32 | $e2$ULL) /* $text$ */)
+$endif$
+>>
+
+sizeExp(e) ::= <<
+L_Z_size_t($e$.size)
+>>
+
+cloneExp(t, e) ::= <<
+L_$t$_clone($e$)
+>>
+
+unExp(op, e, paren) ::= <<
+$if(paren)$($endif$$op$ $e$$if(paren)$)$endif$
+>>
+
+binExp(e1, op, e2, paren) ::= <<
+$if(paren)$($endif$$e1$ $op$ $e2$$if(paren)$)$endif$
+>>
+
+callExp(no, id, e, end) ::= <<
+$line(no)$$id$($e; separator=", "$)$end$
+>>
+
+indexExp(e, i) ::= <<
+$e$.data[$i$]
+>>
+
+createExp(t, size, initValue) ::= <<
+L_$t$_create($size$, $initValue$)
+>>

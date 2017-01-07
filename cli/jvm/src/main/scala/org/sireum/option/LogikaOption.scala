@@ -34,7 +34,9 @@ import scala.beans.BeanProperty
   name = "logika",
   header =
     """
-      |Sireum Logika -- A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logic
+      |Sireum Logika:
+      |A Program Verifier and A Natural Deduction Proof Checker
+      |... for Propositional, Predicate, and Programming Logics
     """,
   description = "Logika Program Verifier and Proof Checker",
   handler = "org.sireum.logika.Main"
@@ -58,7 +60,7 @@ final case class LogikaOption(@BeanProperty
                               var server: Boolean = false,
                               @GroupOpt(shortKey = Some("x"), description = "Enable symbolic execution", groupName = "Programming Logic")
                               var symexe: Boolean = false,
-                              @GroupOpt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution", groupName = "Programming Logic")
+                              @GroupOpt(shortKey = Some("b"), description = "Default integer bit-width for symbolic execution & translation", groupName = "Programming Logic")
                               var bitwidth: Int = 0,
                               @GroupOpt(shortKey = None, description = "Convert to ASCII", groupName = "Symbol Conversion")
                               var ascii: Boolean = false,
@@ -66,10 +68,12 @@ final case class LogikaOption(@BeanProperty
                               var unicode: Boolean = false,
                               @GroupOpt(shortKey = None, description = "Run input program file(s)", groupName = "Programming Logic")
                               var run: Boolean = false,
-                              @GroupOpt(shortKey = None, description = "Compare well-formed input program files (sans contracts and prints)", groupName = "Programming Logic")
+                              @GroupOpt(shortKey = None, description = "Compare well-formed input program files (sans contracts/prints)", groupName = "Programming Logic")
                               var compare: Boolean = false,
+                              @GroupOpt(shortKey = None, description = "File/directory path for C translation", groupName = "Programming Logic")
+                              var c: OptionBean[String] = none(),
                               @BeanProperty
                               @Arg(name = "filename")
                               var input: Array[String] = Array()) {
-  def this() = this(false, false, false, none(), 2000, false, false, 0, false, false, false, false, Array())
+  def this() = this(false, false, false, none(), 2000, false, false, 0, false, false, false, false, none(), Array())
 }

@@ -455,7 +455,9 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     def printUsage(): Unit = {
       outPrintln(
         s"""
-           |Sireum Logika -- A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logic
+           |Sireum Logika:
+           |A Program Verifier and A Natural Deduction Proof Checker
+           |... for Propositional, Predicate, and Programming Logics
            |
            |Usage: sireum logika [option] <filename-1> ... <filename-N>
            |
@@ -466,13 +468,14 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
            |
            |Programming Logic Options:
            |-a, --auto        Enable auto mode
-           |-b, --bitwidth    Default integer bit-width for symbolic execution
+           |-b, --bitwidth    Default integer bit-width for symbolic execution & translation
            |                    Default: ${option.bitwidth}
            |-l, --last        Check last program only
            |-t, --timeout     Timeout for algebra and auto (in milliseconds)
            |                    Default: ${option.timeout}
            |-x, --symexe      Enable symbolic execution
-           |    --compare     Compare well-formed input program files (sans contracts and prints)
+           |    --c           File/directory path for C translation
+           |    --compare     Compare well-formed input program files (sans contracts/prints)
            |    --run         Run input program file(s)
            |    --sat         Enable sat checking of facts and contracts
            |
@@ -546,6 +549,15 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
           option.run = true
         case "--compare" =>
           option.compare = true
+        case "--c" =>
+          i += 1
+          args.at(i) match {
+            case Some(arg) =>
+              option.c = org.sireum.util.some(arg)
+            case _ =>
+              errPrintln("Expecting a value for c")
+              return
+          }
         case arg =>
           if (arg.startsWith("--") || arg.startsWith("-")) {
             errPrintln(s"Unrecognized option: '$arg'")
