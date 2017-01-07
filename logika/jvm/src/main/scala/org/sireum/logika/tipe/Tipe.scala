@@ -126,7 +126,9 @@ sealed trait Fn extends Tipe {
   def result: Tipe
 }
 
-sealed trait MSeq extends Fn
+sealed trait RefTipe extends Tipe
+
+sealed trait MSeq extends Fn with RefTipe
 
 case object BS extends MSeq {
   final val params = Tipe.seq(Z)

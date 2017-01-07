@@ -87,7 +87,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         val name = f"forward/seq-$x%d"
         ConditionTest(name, check(name, 0, isSummarizing = true))
       } ++
-      (1 to 2).toVector.map { x =>
+      (1 to 1).toVector.map { x =>
         val name = f"forward/method-$x%d"
         ConditionTest(name, check(name, 0, isSummarizing = true))
       } :+
