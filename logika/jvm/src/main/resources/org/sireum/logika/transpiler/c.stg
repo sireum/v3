@@ -41,18 +41,25 @@ $if(assumption)$
 $endif$
 $endif$
 
+$if(protos)$
 $protos; separator="\n\n"$
 
+$endif$
+$if(globals)$
 $globals; separator="\n\n"$
 
-void run() {
-
-  $stmts; separator="\n\n"$
-
+$endif$
+void run()
+{
+  $stmts; separator="\n"$
 }
 
+$if(methods)$
 $methods; separator="\n\n"$
-int main() {
+
+$endif$
+int main()
+{
   run();
   return 0;
 }
@@ -91,8 +98,10 @@ $comment; separator="\n"$
 
 $endif$
 #include <logika.h>
+$if(protos)$
 
 $protos; separator="\n\n"$
+$endif$
 >>
 
 lcomment(text) ::= <<
@@ -108,13 +117,14 @@ $proto; separator=";\n\n"$$if(proto)$;$endif$
 >>
 
 method(proto, stmts) ::= <<
-$proto$ {
+$proto$
+{
   $stmts$
 }
 >>
 
 proto(no, t, name, param) ::= <<
-$if(no)$/* L$no$ */ $endif$$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)
+$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)$if(no)$ /* L$no$ */$endif$
 >>
 
 param(mod, t, x) ::= <<
@@ -122,50 +132,48 @@ $if(!mod)$const $endif$$t$ $x$
 >>
 
 line(no) ::= <<
-$if(no)$L$no$: $endif$
+$if(no)$ // L$no$$endif$
 >>
 
 assignStmt(no, t, x, e) ::= <<
-$line(no)$$if(t)$$t$ $endif$$x$ = $e$;
+$if(t)$$t$ $endif$$x$ = $e$;$line(no)$
 >>
 
 seqAssignStmt(no, x, i, e) ::= <<
-$line(no)$$x$.data[$i$] = $e$;
+$x$.data[$i$] = $e$;$line(no)$
 >>
 
 assertStmt(no, e) ::= <<
-$line(no)$assert($e$);
+assert($e$);$line(no)$
 >>
 
 assumeStmt(no, e) ::= <<
-$line(no)$assume($e$);
+assume($e$);$line(no)$
 >>
 
 ifStmt(no, e, tStmts, fStmts) ::= <<
-$line(no)$if ($e$) {
+if ($e$) {$line(no)$
   $tStmts$
 }$if(fStmts)$ else {
   $fStmts$
 }
-$else$
-
 $endif$
 >>
 
 whileStmt(no, e,  stmt) ::= <<
-$line(no)$while ($e$) {
+while ($e$) {$line(no)$
   $stmt; separator="\n"$
 }
 >>
 
 printStmt(no, stmt) ::= <<
-$line(no)${
+{$line(no)$
   $stmt; separator="\n"$
 }
 >>
 
 returnStmt(no, e) ::= <<
-$line(no)$return $e$;
+return $e$;$line(no)$
 >>
 
 lit(e) ::= <<
@@ -201,7 +209,7 @@ $if(paren)$($endif$$e1$ $op$ $e2$$if(paren)$)$endif$
 >>
 
 callExp(no, id, e, end) ::= <<
-$line(no)$$id$($e; separator=", "$)$end$
+$id$($e; separator=", "$)$end$$line(no)$
 >>
 
 indexExp(e, i) ::= <<

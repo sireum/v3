@@ -58,6 +58,19 @@ object C {
     ">" -> "L_Z_gt",
     ">=" -> "L_Z_ge")
 
+  private val nOpMap = Map(
+    "+" -> "L_N_add",
+    "-" -> "L_N_sub",
+    "*" -> "L_N_mul",
+    "/" -> "L_N_div",
+    "%" -> "L_N_rem",
+    "==" -> "L_N_eq",
+    "!=" -> "L_N_ne",
+    "<" -> "L_N_lt",
+    "<=" -> "L_N_le",
+    ">" -> "L_N_gt",
+    ">=" -> "L_N_ge")
+
   private val opMap = Map(
     "&" -> "&&",
     "|" -> "||",
@@ -85,14 +98,14 @@ private class C(program: ast.Program,
   val Result(stMainHeader, stMain) = result
   val stProtos: ST = stg.getInstanceOf("protos")
   val stGlobals: ST = stg.getInstanceOf("globals")
-  val stStmts: ST = stg.getInstanceOf("stmts")
+  val stRunStmts: ST = stg.getInstanceOf("stmts")
   val stMethods: ST = stg.getInstanceOf("methods")
 
   {
     stMainHeader.add("protos", stProtos)
     stMain.add("globals", stGlobals)
     stMain.add("protos", stProtos)
-    stMain.add("stmts", stStmts)
+    stMain.add("stmts", stRunStmts)
     stMain.add("methods", stMethods)
 
     for (fileUri <- program.fileUriOpt) {
@@ -100,25 +113,76 @@ private class C(program: ast.Program,
         add("text", s"Generated from $fileUri")
       stProtos.add("comment", st)
       stGlobals.add("comment", st)
-      stStmts.add("comment", st)
+      stRunStmts.add("comment", st)
       stMethods.add("comment", st)
     }
 
     translate(program.block, isGlobal = true,
-      stStmts, ivectorEmpty, None)
+      stRunStmts, ivectorEmpty, None, shouldReturn = true)
   }
 
   def translate(block: ast.Block,
                 isGlobal: Boolean,
                 stStmts: ST,
                 declaredVars: ISeq[(String, String)],
-                retTypeNameOpt: Option[String]): Unit = {
-    var varDecls = declaredVars
+                retTypeNameOpt: Option[String],
+                shouldReturn: Boolean): Unit = {
+    var varDecls = ivectorEmpty[(String, String)]
     for (stmt <- block.stmts)
       for (tx <- translate(stmt, isGlobal, stStmts, varDecls, retTypeNameOpt))
         varDecls :+= tx
-    block.returnOpt.foreach(
-      translate(_, stStmts, varDecls, retTypeNameOpt))
+    if (shouldReturn || block.returnOpt.isDefined)
+      translate(block.returnOpt, stStmts,
+        varWipe(varDecls ++ declaredVars), retTypeNameOpt)
+    else varWipe(varDecls)(None, stStmts)
+  }
+
+  def varWipe(declaredVars: ISeq[(String, String)])
+             (idOpt: Option[ast.Id], stStmts: ST): Unit = {
+    val tAlias = idOpt.exists(_.tipe match {
+      case _: MSeq[_] => true
+      case tipe.Z | tipe.N => bitWidth == 0
+      case _ => false
+    })
+    val idName = idOpt.map(_.value).getOrElse("")
+    for ((t, x) <- declaredVars) {
+      if (!tAlias || idName != x)
+        stStmts.add("stmt",
+          stg.getInstanceOf("callExp").
+            add("id", s"L_${t}_wipe").
+            add("e", s"&${name(x)}").add("end", ";"))
+    }
+  }
+
+  def translate(rOpt: Option[ast.Return],
+                stStmts: ST,
+                varWipeFun: (Option[ast.Id], ST) => Unit,
+                retTypeNameOpt: Option[String]): Unit = {
+    val idOpt =
+      retTypeNameOpt match {
+        case Some(t) =>
+          val retExp = rOpt.get.expOpt.get
+          stStmts.add("stmt",
+            stg.getInstanceOf("assignStmt").
+              add("no", program.nodeLocMap(retExp).lineBegin).
+              add("t", t).
+              add("x", "result").
+              add("e", translate(retExp)))
+          retExp match {
+            case retExp: ast.Id => Some(retExp)
+            case _ => None
+          }
+        case _ => None
+      }
+    varWipeFun(idOpt, stStmts)
+    rOpt match {
+      case Some(r) =>
+        val retST = stg.getInstanceOf("returnStmt").
+          add("no", program.nodeLocMap(r).lineBegin)
+        r.expOpt.foreach(_ => retST.add("e", "result"))
+        stStmts.add("stmt", retST)
+      case _ =>
+    }
   }
 
   def translate(stmt: ast.Stmt,
@@ -184,13 +248,13 @@ private class C(program: ast.Program,
       val stTStmts = stg.getInstanceOf("stmts")
       ifST.add("tStmts", stTStmts)
       translate(stmt.trueBlock, isGlobal, stTStmts,
-        declaredVars, retTypeNameOpt)
+        declaredVars, retTypeNameOpt, shouldReturn = false)
       if (stmt.falseBlock.stmts.nonEmpty ||
         stmt.falseBlock.returnOpt.nonEmpty) {
         val stFStmts = stg.getInstanceOf("stmts")
         ifST.add("fStmts", stFStmts)
         translate(stmt.falseBlock, isGlobal, stFStmts,
-          declaredVars, retTypeNameOpt)
+          declaredVars, retTypeNameOpt, shouldReturn = false)
       }
       None
     case stmt: ast.While =>
@@ -201,7 +265,7 @@ private class C(program: ast.Program,
       val stWStmts = stg.getInstanceOf("stmts")
       whileST.add("tStmts", stWStmts)
       translate(stmt.block, isGlobal, stWStmts,
-        declaredVars, retTypeNameOpt)
+        declaredVars, retTypeNameOpt, shouldReturn = false)
       None
     case stmt: ast.Print =>
       result.stMain.add("io", true)
@@ -277,36 +341,10 @@ private class C(program: ast.Program,
       val stMStmts = stg.getInstanceOf("stmts")
       methodST.add("stmts", stMStmts)
       translate(stmt.block, isGlobal = false, stMStmts,
-        ivectorEmpty, mretTypeNameOpt)
+        ivectorEmpty, mretTypeNameOpt, shouldReturn = true)
       None
     case _: ast.ProofElementStmt | _: ast.ProofStmt |
          _: ast.SequentStmt | _: ast.InvStmt => None
-  }
-
-  def translate(r: ast.Return,
-                stStmts: ST,
-                declaredVars: ISeq[(String, String)],
-                retTypeNameOpt: Option[String]): Unit = {
-    retTypeNameOpt match {
-      case Some(t) =>
-        val retExp = r.expOpt.get
-        stStmts.add("stmt",
-          stg.getInstanceOf("assignStmt").
-            add("no", program.nodeLocMap(retExp).lineBegin).
-            add("t", t).
-            add("x", "result").
-            add("e", translate(retExp)))
-      case _ =>
-    }
-    for ((t, x) <- declaredVars if !r.expOpt.contains(ast.Id(x)))
-      stStmts.add("stmt",
-        stg.getInstanceOf("callExp").
-          add("id", s"L_${t}_wipe").
-          add("e", s"&${name(x)}").add("end", ";"))
-    val retST = stg.getInstanceOf("returnStmt").
-      add("no", program.nodeLocMap(r).lineBegin)
-    r.expOpt.foreach(_ => retST.add("e", "result"))
-    stStmts.add("stmt", retST)
   }
 
   def translate(e: ast.Exp): ST = e match {
@@ -516,6 +554,13 @@ private class C(program: ast.Program,
             (if (shouldFree(e.left)) "l" else "") +
             (if (shouldFree(e.right)) "r" else "")
           stg.getInstanceOf("callExp").add("id", zOp).
+            add("e", translate(e.left)).
+            add("e", translate(e.right))
+        case tipe.N if bitWidth == 0 =>
+          val nOp = nOpMap(op) +
+            (if (shouldFree(e.left)) "l" else "") +
+            (if (shouldFree(e.right)) "r" else "")
+          stg.getInstanceOf("callExp").add("id", nOp).
             add("e", translate(e.left)).
             add("e", translate(e.right))
         case _ =>
