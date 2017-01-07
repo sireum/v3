@@ -410,7 +410,7 @@ private class C(program: ast.Program,
           result.add("id", translate(e.exp))
       }
     case _: ast.RandomInt =>
-      result.stMain.add("io", true)
+      result.stMain.add("hasRandom", true)
       stg.getInstanceOf("callExp").add("id", "L_random_Z")
     case _: ast.ReadInt =>
       result.stMain.add("io", true)
@@ -556,7 +556,7 @@ private class C(program: ast.Program,
       }
       stg.getInstanceOf("lit").add("e", lit)
     case e: ast.Random =>
-      result.stMain.add("io", true)
+      result.stMain.add("hasRandom", true)
       stg.getInstanceOf("callExp").
         add("id", s"L_random_${typeName(e.tpe)}")
     case e: ast.TypeMethodCallExp =>

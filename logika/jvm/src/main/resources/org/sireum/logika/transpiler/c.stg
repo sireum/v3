@@ -23,17 +23,22 @@ copyright() ::= <<
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 >>
 
-main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods, hasTopLevel, hasPrototypes, hasGlobals) ::= <<
+main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods, hasTopLevel, hasPrototypes, hasGlobals, hasRandom) ::= <<
 $if(comment)$
 $comment; separator="\n"$
 
 $endif$
-$if(io)$
+$if(io || hasRandom)$
 #include <logika-io.h>
 $else$
 #include <logika.h>
 $endif$
-$if(assertion||assumption)$
+$if(hasTopLevel && hasRandom)$
+#include <sodium.h>
+$elseif(hasRandom)$
+// Need to call sodium_init in the main program
+$endif$
+$if(assertion || assumption || (hasTopLevel && hasRandom))$
 #include <assert.h>
 
 $if(assumption)$
@@ -58,6 +63,10 @@ $if(hasTopLevel)$
 // Top-Level Statements
 void run()
 {
+  $if(hasRandom)$
+  L_assert(sodium_init() != -1);
+  $endif$
+
   $stmts; separator="\n\n"$
 }
 
