@@ -244,9 +244,10 @@ class Main(option: LogikaOption,
     option.bitwidth match {
       case 0 =>
       case 8 | 16 | 32 | 64 =>
-        if (!option.symexe)
+        if (!option.symexe) {
           errPrintln(s"Bit-width ${option.bitwidth} is only supported on symbolic execution mode.")
-        sys.exit(BIT_WIDTH_UNSUPPORTED_EXIT_CODE)
+          sys.exit(BIT_WIDTH_UNSUPPORTED_EXIT_CODE)
+        }
       case _ =>
         errPrintln(s"Unsupported bit-width: ${option.bitwidth}; only 8, 16, 32, 64, and 0 are supported (0 means arbitrary-precision).")
         sys.exit(BIT_WIDTH_UNSUPPORTED_EXIT_CODE)
