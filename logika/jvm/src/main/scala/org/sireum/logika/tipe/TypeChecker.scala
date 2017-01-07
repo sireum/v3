@@ -271,11 +271,13 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       checkModifies(loopInv.modifies, block, stmt)
       this
     case p: Print =>
-      var argTipes = ivectorEmpty[Tipe]
+      var argTipes = ivectorEmpty[Option[Tipe]]
       for (arg <- p.args) arg match {
         case exp: Exp =>
-          check(exp, allowMethod = false)(allowFun = false, mOpt).foreach(argTipes :+= _)
+          check(exp, allowMethod = false)(allowFun = false, mOpt).
+            foreach(argTipes :+= Some(_))
         case _ =>
+          argTipes :+= None
       }
       p.argTipes = argTipes
       this

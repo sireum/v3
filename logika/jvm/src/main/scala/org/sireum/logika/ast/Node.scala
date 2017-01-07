@@ -1477,7 +1477,7 @@ final case class LoopInv(invariant: Inv,
 
 final case class Print(isNewline: Boolean,
                        args: Node.Seq[StringOrExp]) extends Stmt {
-  var argTipes: ISeq[Tipe] = ivectorEmpty
+  var argTipes: ISeq[Option[Tipe]] = ivectorEmpty
 }
 
 final case class SeqAssign(id: Id,
