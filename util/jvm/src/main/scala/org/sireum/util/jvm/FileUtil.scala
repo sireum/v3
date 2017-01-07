@@ -147,12 +147,15 @@ object FileUtil {
     ok
   }
 
-  def writeFile(fileUri: FileResourceUri, content: String): Unit = {
+  def writeFile(fileUri: FileResourceUri, content: String): Boolean =
     writeFile(toFile(fileUri), content)
-  }
 
-  def writeFile(file: File, content: String): Unit = {
+  def writeFile(file: File, content: String): Boolean = {
     val fw = new FileWriter(file)
-    try fw.write(content) finally fw.close()
+    var ok = true
+    try fw.write(content) catch {
+      case _: Throwable => ok = false
+    } finally fw.close()
+    ok
   }
 }
