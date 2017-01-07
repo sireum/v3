@@ -212,7 +212,12 @@ lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
 lazy val logikaJvm = logikaT._2.settings(
-  parallelExecution in Test := false
+  parallelExecution in Test := false,
+  unmanagedResourceDirectories in Compile ++= Seq(
+    logikaT._2.base / "c-runtime" / "include",
+    logikaT._2.base / "c-runtime" / "src",
+    logikaT._2.base / "c-runtime" / "cmake"
+  )
 )
 lazy val logikaJs = logikaT._3
 

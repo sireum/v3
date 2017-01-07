@@ -13,6 +13,9 @@
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/src/test/scala" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/src/test/scala-2.12" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/target/scala-2.12/src_managed/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/c-runtime/cmake" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/c-runtime/include" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/c-runtime/src" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/target/scala-2.12/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../logika/jvm/src/test/resources" type="java-test-resource" />
