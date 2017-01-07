@@ -39,7 +39,7 @@
 #define L_READLINE_INIT_SIZE 1024
 #endif
 
-Z L_Z_read(const char *msg);
+Z L_read_Z(const char *msg);
 
 void L_print_S8(const S8 n);
 
@@ -163,120 +163,120 @@ void L_println(void);
 
 void L_flush(void);
 
-U8 L_U8_random(void);
+U8 L_random_U8(void);
 
-U16 L_U16_random(void);
+U16 L_random_U16(void);
 
-U32 L_U32_random(void);
+U32 L_random_U32(void);
 
-U64 L_U64_random(void);
+U64 L_random_U64(void);
 
-#define L_S8_random() ((S8) L_U8_random())
+#define L_random_S8()  ((S8)  L_random_U8())
 
-#define L_S16_random() ((S16) L_U16_random())
+#define L_random_S16() ((S16) L_random_U16())
 
-#define L_S32_random() ((S32) L_U32_random())
+#define L_random_S32() ((S32) L_random_U32())
 
-#define L_S64_random() ((S64) L_U64_random())
+#define L_random_S64() ((S64) L_random_U64())
 
-#define L_Z8_random() ((Z8) L_U8_random())
+#define L_random_Z8()  ((Z8)  L_random_U8 ())
 
-#define L_Z16_random() ((Z16) L_U16_random())
+#define L_random_Z16() ((Z16) L_random_U16())
 
-#define L_Z32_random() ((Z32) L_U32_random())
+#define L_random_Z32() ((Z32) L_random_U32())
 
-#define L_Z64_random() ((Z64) L_U64_random())
+#define L_random_Z64() ((Z64) L_random_U64())
 
-#define L_N8_random() ((N8) L_U8_random())
+#define L_random_N8()  ((N8)  L_random_U8())
 
-#define L_N16_random() ((N16) L_U16_random())
+#define L_random_N16() ((N16) L_random_U16())
 
-#define L_N32_random() ((N32) L_U32_random())
+#define L_random_N32() ((N32) L_random_U32())
 
-#define L_N64_random() ((N64) L_U64_random())
+#define L_random_N64() ((N64) L_random_U64())
 
-#define L_F32_random() ((F32) L_U32_random())
+#define L_random_F32() ((F32) L_random_U32())
 
-#define L_F64_random() ((F64) L_U64_random())
+#define L_random_F64() ((F64) L_random_U64())
 
 #if BIT_WIDTH == 0
 
-Z L_Z_random(void);
+Z L_random_Z(void);
 
-#define L_N_random() L_Z_random()
+#define L_random_N() L_random_Z()
 
 #elif BIT_WIDTH == 8
 
-#define L_Z_random() L_Z8_random()
+#define L_random_Z() L_random_Z8()
 
-#define L_N_random() L_N8_random()
+#define L_random_N() L_random_N8()
 
 #elif BIT_WIDTH == 16
 
-#define L_Z_random() L_Z16_random()
+#define L_random_Z() L_random_Z16()
 
-#define L_N_random() L_N16_random()
+#define L_random_N() L_random_N16()
 
 #elif BIT_WIDTH == 32
 
-#define L_Z_random() L_Z32_random()
+#define L_random_Z() L_random_Z32()
 
-#define L_N_random() L_N64_random()
+#define L_random_N() L_random_N32()
 
 #elif BIT_WIDTH == 64
 
-#define L_Z_random() L_Z64_random()
+#define L_random_Z() L_random_Z64()
 
-#define L_N_random() L_N64_random()
+#define L_random_N() L_random_N64()
 
 #endif
 
-ZS L_ZS_random(void);
+ZS L_random_ZS(void);
 
 #if BIT_WIDTH == 0
 
-#define L_NS_random() L_ZS_random()
+#define L_random_NS() L_random_ZS()
 
 #else
 
-NS L_NS_random(void);
+NS L_random_NS(void);
 
 #endif
 
-S8S L_S8S_random(void);
+S8S L_random_S8S(void);
 
-S16S L_S16S_random(void);
+S16S L_random_S16S(void);
 
-S32S L_S32S_random(void);
+S32S L_random_S32S(void);
 
-S64S L_S64S_random(void);
+S64S L_random_S64S(void);
 
-U8S L_U8S_random(void);
+U8S L_random_U8S(void);
 
-U16S L_U16S_random(void);
+U16S L_random_U16S(void);
 
-U32S L_U32S_random(void);
+U32S L_random_U32S(void);
 
-U64S L_U64S_random(void);
+U64S L_random_U64S(void);
 
-#define L_Z8S_random() L_S8S_random()
+#define L_random_Z8S()  L_random_S8S()
 
-#define L_Z16S_random() L_S16S_random()
+#define L_random_Z16S() L_random_S16S()
 
-#define L_Z32S_random() L_S32S_random()
+#define L_random_Z32S() L_random_S32S()
 
-#define L_Z64S_random() L_S64S_random()
+#define L_random_Z64S() L_random_S64S()
 
-#define L_N8S_random() L_U8S_random()
+#define L_random_N8S()  L_random_U8S()
 
-#define L_N16S_random() L_U16S_random()
+#define L_random_N16S() L_random_U16S()
 
-#define L_N32S_random() L_U32S_random()
+#define L_random_N32S() L_random_U32S()
 
-#define L_N64S_random() L_U64S_random()
+#define L_random_N64S() L_random_U64S()
 
-F32S L_F32S_random(void);
+F32S L_random_F32S(void);
 
-F64S L_F64S_random(void);
+F64S L_random_F64S(void);
 
 #endif

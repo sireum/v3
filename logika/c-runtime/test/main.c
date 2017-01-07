@@ -26,11 +26,11 @@
 #include <logika-io.h>
 
 int main(int argc, char *argv[]) {
-  Z a = L_Z_read("Enter a: ");
-  Z b = L_Z_read("Enter b: ");
+  Z a = L_read_Z("Enter a: ");
+  Z b = L_read_Z("Enter b: ");
 
 #if BIT_WIDTH == 0
-  Z c = L_Z_mul(a, b);
+  Z c = L_mul_Z(a, b);
 #else
   Z c = a * b;
 #endif
@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     L_flush();
   }
 
-  L_Z_wipe(&a);
-  L_Z_wipe(&b);
-  L_Z_wipe(&c);
+  L_wipe_Z(&a);
+  L_wipe_Z(&b);
+  L_wipe_Z(&c);
   return 0;
 }

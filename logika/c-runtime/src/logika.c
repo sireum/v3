@@ -47,7 +47,7 @@ void *L_realloc(void *ptr, size_t size) {
 
 #if BIT_WIDTH == 0
 
-Z L_Z_size_t(size_t n) {
+Z L_Zsize_t(size_t n) {
   Z result = {0};
   if (n < ULONG_MAX) {
     mpz_init_set_ui(result.data, n);
@@ -81,116 +81,116 @@ size_t L_Z_to_size_t(Z n) {
 #endif
 }
 
-Z L_Z_si(long int n) {
+Z L_Zsi(long int n) {
   Z result = {0};
   mpz_init_set_si(result.data, n);
   return result;
 }
 
-Z L_Z_ui(unsigned long int n) {
+Z L_Zui(unsigned long int n) {
   Z result = {0};
   mpz_init_set_ui(result.data, n);
   return result;
 }
 
-Z L_Z_str(char *n) {
+Z L_Zstr(char *n) {
   Z result = {0};
   mpz_init_set_str(result.data, n, 10);
   return result;
 }
 
-Z L_Z_neg(Z n) {
+Z L_neg_Z(Z n) {
   Z result = {0};
   mpz_init(result.data);
   mpz_neg(result.data, n.data);
   return result;
 }
 
-Z L_Z_negf(Z n) {
-  Z result = L_Z_neg(n);
-  L_Z_wipe(&n);
+Z L_neg_Zf(Z n) {
+  Z result = L_neg_Z(n);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_add(Z n, Z m) {
+Z L_add_Z(Z n, Z m) {
   Z result = {0};
   mpz_init(result.data);
   mpz_add(result.data, n.data, m.data);
   return result;
 }
 
-Z L_Z_addl(Z n, Z m) {
-  Z result = L_Z_add(n, m);
-  L_Z_wipe(&n);
+Z L_add_Zl(Z n, Z m) {
+  Z result = L_add_Z(n, m);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_addr(Z n, Z m) {
-  Z result = L_Z_add(n, m);
-  L_Z_wipe(&m);
+Z L_add_Zr(Z n, Z m) {
+  Z result = L_add_Z(n, m);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_addlr(Z n, Z m) {
-  Z result = L_Z_add(n, m);
-  L_Z_wipe(&n);
-  L_Z_wipe(&m);
+Z L_add_Zlr(Z n, Z m) {
+  Z result = L_add_Z(n, m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_sub(Z n, Z m) {
+Z L_sub_Z(Z n, Z m) {
   Z result = {0};
   mpz_init(result.data);
   mpz_sub(result.data, n.data, m.data);
   return result;
 }
 
-Z L_Z_subl(Z n, Z m) {
-  Z result = L_Z_sub(n, m);
-  L_Z_wipe(&n);
+Z L_sub_Zl(Z n, Z m) {
+  Z result = L_sub_Z(n, m);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_subr(Z n, Z m) {
-  Z result = L_Z_sub(n, m);
-  L_Z_wipe(&m);
+Z L_sub_Zr(Z n, Z m) {
+  Z result = L_sub_Z(n, m);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_sublr(Z n, Z m) {
-  Z result = L_Z_sub(n, m);
-  L_Z_wipe(&n);
-  L_Z_wipe(&m);
+Z L_sub_Zlr(Z n, Z m) {
+  Z result = L_sub_Z(n, m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_mul(Z n, Z m) {
+Z L_mul_Z(Z n, Z m) {
   Z result = {0};
   mpz_init(result.data);
   mpz_mul(result.data, n.data, m.data);
   return result;
 }
 
-Z L_Z_mull(Z n, Z m) {
-  Z result = L_Z_mul(n, m);
-  L_Z_wipe(&n);
+Z L_mul_Zl(Z n, Z m) {
+  Z result = L_mul_Z(n, m);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_mulr(Z n, Z m) {
-  Z result = L_Z_mul(n, m);
-  L_Z_wipe(&m);
+Z L_mul_Zr(Z n, Z m) {
+  Z result = L_mul_Z(n, m);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_mullr(Z n, Z m) {
-  Z result = L_Z_mul(n, m);
-  L_Z_wipe(&n);
-  L_Z_wipe(&m);
+Z L_mul_Zlr(Z n, Z m) {
+  Z result = L_mul_Z(n, m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_div(Z n, Z m) {
+Z L_div_Z(Z n, Z m) {
   L_assert(mpz_cmp_ui(m.data, 0) != 0);
   Z result = {0};
   mpz_init(result.data);
@@ -198,26 +198,26 @@ Z L_Z_div(Z n, Z m) {
   return result;
 }
 
-Z L_Z_divl(Z n, Z m) {
-  Z result = L_Z_div(n, m);
-  L_Z_wipe(&n);
+Z L_div_Zl(Z n, Z m) {
+  Z result = L_div_Z(n, m);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_divr(Z n, Z m) {
-  Z result = L_Z_div(n, m);
-  L_Z_wipe(&m);
+Z L_div_Zr(Z n, Z m) {
+  Z result = L_div_Z(n, m);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_divlr(Z n, Z m) {
-  Z result = L_Z_div(n, m);
-  L_Z_wipe(&n);
-  L_Z_wipe(&m);
+Z L_div_Zlr(Z n, Z m) {
+  Z result = L_div_Z(n, m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_rem(Z n, Z m) {
+Z L_rem_Z(Z n, Z m) {
   L_assert(mpz_cmp_ui(m.data, 0) != 0);
   Z result = {0};
   mpz_init(result.data);
@@ -225,95 +225,95 @@ Z L_Z_rem(Z n, Z m) {
   return result;
 }
 
-Z L_Z_reml(Z n, Z m) {
-  Z result = L_Z_rem(n, m);
-  L_Z_wipe(&n);
+Z L_rem_Zl(Z n, Z m) {
+  Z result = L_rem_Z(n, m);
+  L_wipe_Z(&n);
   return result;
 }
 
-Z L_Z_remr(Z n, Z m) {
-  Z result = L_Z_rem(n, m);
-  L_Z_wipe(&m);
+Z L_rem_Zr(Z n, Z m) {
+  Z result = L_rem_Z(n, m);
+  L_wipe_Z(&m);
   return result;
 }
 
-Z L_Z_remlr(Z n, Z m) {
-  Z result = L_Z_rem(n, m);
-  L_Z_wipe(&n);
-  L_Z_wipe(&m);
+Z L_rem_Zlr(Z n, Z m) {
+  Z result = L_rem_Z(n, m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
-B L_Z_eq(Z n, Z m) {
+B L_eq_Z(Z n, Z m) {
   return mpz_cmp(n.data, m.data) == 0;
 }
 
-B L_Z_eql(Z n, Z m) {
-  B result = L_Z_eq(n, m);
-  L_N_wipe(&n);
+B L_eq_Zl(Z n, Z m) {
+  B result = L_eq_Z(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-B L_Z_eqr(Z n, Z m) {
-  B result = L_Z_eq(n, m);
-  L_N_wipe(&m);
+B L_eq_Zr(Z n, Z m) {
+  B result = L_eq_Z(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-B L_Z_eqlr(Z n, Z m) {
-  B result = L_Z_eq(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+B L_eq_Zlr(Z n, Z m) {
+  B result = L_eq_Z(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-B L_Z_lt(Z n, Z m) {
+B L_lt_Z(Z n, Z m) {
   return mpz_cmp(n.data, m.data) < 0;
 }
 
-B L_Z_ltl(Z n, Z m) {
-  B result = L_Z_lt(n, m);
-  L_N_wipe(&n);
+B L_lt_Zl(Z n, Z m) {
+  B result = L_lt_Z(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-B L_Z_ltr(Z n, Z m) {
-  B result = L_Z_lt(n, m);
-  L_N_wipe(&m);
+B L_lt_Zr(Z n, Z m) {
+  B result = L_lt_Z(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-B L_Z_ltlr(Z n, Z m) {
-  B result = L_Z_lt(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+B L_lt_Zlr(Z n, Z m) {
+  B result = L_lt_Z(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-B L_Z_gt(Z n, Z m) {
+B L_gt_Z(Z n, Z m) {
   return mpz_cmp(n.data, m.data) > 0;
 }
 
-B L_Z_gtl(Z n, Z m) {
-  B result = L_Z_gt(n, m);
-  L_N_wipe(&n);
+B L_gt_Zl(Z n, Z m) {
+  B result = L_gt_Z(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-B L_Z_gtr(Z n, Z m) {
-  B result = L_Z_gt(n, m);
-  L_N_wipe(&m);
+B L_gt_Zr(Z n, Z m) {
+  B result = L_gt_Z(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-B L_Z_gtlr(Z n, Z m) {
-  B result = L_Z_gt(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+B L_gt_Zlr(Z n, Z m) {
+  B result = L_gt_Z(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_add(N n, N m) {
+N L_add_N(N n, N m) {
   N result = {0};
   mpz_init(result.data);
   mpz_add(result.data, n.data, m.data);
@@ -321,26 +321,26 @@ N L_N_add(N n, N m) {
   return result;
 }
 
-N L_N_addl(N n, N m) {
-  N result = L_N_add(n, m);
-  L_N_wipe(&n);
+N L_add_Nl(N n, N m) {
+  N result = L_add_N(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-N L_N_addr(N n, N m) {
-  N result = L_N_add(n, m);
-  L_N_wipe(&m);
+N L_add_Nr(N n, N m) {
+  N result = L_add_N(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_addlr(N n, N m) {
-  N result = L_N_add(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+N L_add_Nlr(N n, N m) {
+  N result = L_add_N(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_sub(N n, N m) {
+N L_sub_N(N n, N m) {
   N result = {0};
   mpz_init(result.data);
   mpz_sub(result.data, n.data, m.data);
@@ -348,26 +348,26 @@ N L_N_sub(N n, N m) {
   return result;
 }
 
-N L_N_subl(N n, N m) {
-  N result = L_N_sub(n, m);
-  L_N_wipe(&n);
+N L_sub_Nl(N n, N m) {
+  N result = L_sub_N(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-N L_N_subr(N n, N m) {
-  N result = L_N_sub(n, m);
-  L_N_wipe(&m);
+N L_sub_Nr(N n, N m) {
+  N result = L_sub_N(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_sublr(N n, N m) {
-  N result = L_N_sub(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+N L_subl_Nr(N n, N m) {
+  N result = L_sub_N(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_mul(N n, N m) {
+N L_mul_N(N n, N m) {
   N result = {0};
   mpz_init(result.data);
   mpz_mul(result.data, n.data, m.data);
@@ -375,26 +375,26 @@ N L_N_mul(N n, N m) {
   return result;
 }
 
-N L_N_mull(N n, N m) {
-  N result = L_N_mul(n, m);
-  L_N_wipe(&n);
+N L_mul_Nl(N n, N m) {
+  N result = L_mul_N(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-N L_N_mulr(N n, N m) {
-  N result = L_N_mul(n, m);
-  L_N_wipe(&m);
+N L_mul_Nr(N n, N m) {
+  N result = L_mul_N(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_mullr(N n, N m) {
-  N result = L_N_mul(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+N L_mul_Nlr(N n, N m) {
+  N result = L_mul_N(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_div(N n, N m) {
+N L_div_N(N n, N m) {
   L_assert(mpz_cmp_ui(m.data, 0) != 0);
   N result = {0};
   mpz_init(result.data);
@@ -403,26 +403,26 @@ N L_N_div(N n, N m) {
   return result;
 }
 
-N L_N_divl(N n, N m) {
-  N result = L_N_div(n, m);
-  L_N_wipe(&n);
+N L_div_Nl(N n, N m) {
+  N result = L_div_N(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-N L_N_divr(N n, N m) {
-  N result = L_N_div(n, m);
-  L_N_wipe(&m);
+N L_div_Nr(N n, N m) {
+  N result = L_div_N(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_divlr(N n, N m) {
-  N result = L_N_div(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+N L_div_Nlr(N n, N m) {
+  N result = L_div_N(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_rem(N n, N m) {
+N L_rem_N(N n, N m) {
   L_assert(mpz_cmp_ui(m.data, 0) != 0);
   N result = {0};
   mpz_init(result.data);
@@ -431,26 +431,26 @@ N L_N_rem(N n, N m) {
   return result;
 }
 
-N L_N_reml(N n, N m) {
-  N result = L_N_rem(n, m);
-  L_N_wipe(&n);
+N L_rem_Nl(N n, N m) {
+  N result = L_rem_N(n, m);
+  L_wipe_N(&n);
   return result;
 }
 
-N L_N_remr(N n, N m) {
-  N result = L_N_rem(n, m);
-  L_N_wipe(&m);
+N L_rem_Nr(N n, N m) {
+  N result = L_rem_N(n, m);
+  L_wipe_N(&m);
   return result;
 }
 
-N L_N_remlr(N n, N m) {
-  N result = L_N_rem(n, m);
-  L_N_wipe(&n);
-  L_N_wipe(&m);
+N L_rem_Nlr(N n, N m) {
+  N result = L_rem_N(n, m);
+  L_wipe_N(&n);
+  L_wipe_N(&m);
   return result;
 }
 
-ZS L_ZS_create(size_t size, Z initialValue) {
+ZS L_create_ZS(size_t size, Z initialValue) {
   ZS result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(Z));
@@ -480,29 +480,29 @@ ZS L_ZS(int size, ...) {
   return result;
 }
 
-void L_Z_wipe(Z *n) {
+void L_wipe_Z(Z *n) {
   mpz_clear(n->data);
   L_wipe(n, sizeof(Z));
 }
 
-void L_ZS_wipe(ZS *ns) {
+void L_wipe_ZS(ZS *ns) {
   size_t size = ns->size;
   size_t i;
   for (i = 0; i < size; i++) {
-    L_Z_wipe(&(ns->data[i]));
+    L_wipe_Z(&(ns->data[i]));
   }
   L_wipe(ns, sizeof(ZS));
 }
 
 #else
 
-Z L_Z_size_t(size_t n) {
+Z L_Zsize_t(size_t n) {
   Z result = (Z) n;
   L_assert(result == n);
   return result;
 }
 
-NS L_NS_create(size_t size, N initialValue) {
+NS L_create_NS(size_t size, N initialValue) {
   L_assert(size <= SIZE_T_MAX);
   NS result = {0};
   result.size = size;
@@ -533,55 +533,55 @@ NS L_NS(int size, ...) {
   return result;
 }
 
-void L_Z_wipe(Z *n) {
+void L_wipe_Z(Z *n) {
   *n = 0;
 }
 
-void L_N_wipe(N *n) {
+void L_wipe_N(N *n) {
   *n = 0;
 }
 
-void L_ZS_wipe(ZS *ns) {
+void L_wipe_ZS(ZS *ns) {
   size_t size = ns->size;
   size_t i;
   for (i = 0; i < size; i++) {
-    L_Z_wipe(&(ns->data[i]));
+    L_wipe_Z(&(ns->data[i]));
   }
   L_wipe(ns, sizeof(ZS));
 }
 
-void L_NS_wipe(NS *ns) {
+void L_wipe_NS(NS *ns) {
   size_t size = ns->size;
   size_t i;
   for (i = 0; i < size; i++) {
-    L_N_wipe(&(ns->data[i]));
+    L_wipe_N(&(ns->data[i]));
   }
   L_wipe(ns, sizeof(NS));
 }
 
 #endif
 
-void L_U8_wipe(U8 *n) {
+void L_wipe_U8(U8 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_U16_wipe(U16 *n) {
+void L_wipe_U16(U16 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_U32_wipe(U32 *n) {
+void L_wipe_U32(U32 *n) {
   *n = 0;
   L_av(n);
 }
 
-void L_U64_wipe(U64 *n) {
+void L_wipe_U64(U64 *n) {
   *n = 0;
   L_av(n);
 }
 
-S8S L_S8S_create(size_t size, S8 initialValue) {
+S8S L_create_S8S(size_t size, S8 initialValue) {
   S8S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(S8));
@@ -611,7 +611,7 @@ S8S L_S8S(int size, ...) {
   return result;
 }
 
-S16S L_S16S_create(size_t size, S16 initialValue) {
+S16S L_create_S16S(size_t size, S16 initialValue) {
   S16S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(S16));
@@ -641,7 +641,7 @@ S16S L_S16S(int size, ...) {
   return result;
 }
 
-S32S L_S32S_create(size_t size, S32 initialValue) {
+S32S L_create_S32S(size_t size, S32 initialValue) {
   S32S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(S32));
@@ -667,7 +667,7 @@ S32S L_S32S(int size, ...) {
   return result;
 }
 
-S64S L_S64S_create(size_t size, S64 initialValue) {
+S64S L_create_S64S(size_t size, S64 initialValue) {
   S64S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(S64));
@@ -693,7 +693,7 @@ S64S L_S64S(int size, ...) {
   return result;
 }
 
-U8S L_U8S_create(size_t size, U8 initialValue) {
+U8S L_create_U8S(size_t size, U8 initialValue) {
   U8S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(U8));
@@ -723,7 +723,7 @@ U8S L_U8S(int size, ...) {
   return result;
 }
 
-U16S L_U16S_create(size_t size, U16 initialValue) {
+U16S L_create_U16S(size_t size, U16 initialValue) {
   U16S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(U16));
@@ -753,7 +753,7 @@ U16S L_U16S(int size, ...) {
   return result;
 }
 
-U32S L_U32S_create(size_t size, U32 initialValue) {
+U32S L_create_U32S(size_t size, U32 initialValue) {
   U32S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(U32));
@@ -779,7 +779,7 @@ U32S L_U32S(int size, ...) {
   return result;
 }
 
-U64S L_U64S_create(size_t size, U64 initialValue) {
+U64S L_create_U64S(size_t size, U64 initialValue) {
   U64S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(U64));
@@ -805,7 +805,7 @@ U64S L_U64S(int size, ...) {
   return result;
 }
 
-F32S L_F32S_create(size_t size, F32 initialValue) {
+F32S L_create_F32S(size_t size, F32 initialValue) {
   F32S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(F32));
@@ -816,7 +816,7 @@ F32S L_F32S_create(size_t size, F32 initialValue) {
   return result;
 }
 
-F64S L_F64S_create(size_t size, F64 initialValue) {
+F64S L_create_F64S(size_t size, F64 initialValue) {
   F64S result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(F64));
@@ -836,7 +836,7 @@ S8S L_S8S_clone(S8S ns) {
   return result;
 }
 
-S16S L_S16S_clone(S16S ns) {
+S16S L_clone_S16S(S16S ns) {
   S16S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -845,7 +845,7 @@ S16S L_S16S_clone(S16S ns) {
   return result;
 }
 
-S32S L_S32S_clone(S32S ns) {
+S32S L_clone_S32S(S32S ns) {
   S32S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -854,7 +854,7 @@ S32S L_S32S_clone(S32S ns) {
   return result;
 }
 
-S64S L_S64S_clone(S64S ns) {
+S64S L_clone_S64S(S64S ns) {
   S64S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -863,7 +863,7 @@ S64S L_S64S_clone(S64S ns) {
   return result;
 }
 
-U8S L_U8S_clone(U8S ns) {
+U8S L_clone_U8S(U8S ns) {
   U8S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -872,7 +872,7 @@ U8S L_U8S_clone(U8S ns) {
   return result;
 }
 
-U16S L_U16S_clone(U16S ns) {
+U16S L_clone_U16S(U16S ns) {
   U16S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -881,7 +881,7 @@ U16S L_U16S_clone(U16S ns) {
   return result;
 }
 
-U32S L_U32S_clone(U32S ns) {
+U32S L_clone_U32S(U32S ns) {
   U32S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -890,7 +890,7 @@ U32S L_U32S_clone(U32S ns) {
   return result;
 }
 
-U64S L_U64S_clone(U64S ns) {
+U64S L_clone_U64S(U64S ns) {
   U64S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -899,7 +899,7 @@ U64S L_U64S_clone(U64S ns) {
   return result;
 }
 
-F32S L_F32S_clone(F32S ns) {
+F32S L_clone_F32S(F32S ns) {
   F32S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -908,7 +908,7 @@ F32S L_F32S_clone(F32S ns) {
   return result;
 }
 
-F64S L_F64S_clone(F64S ns) {
+F64S L_clone_F64S(F64S ns) {
   F64S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -919,7 +919,7 @@ F64S L_F64S_clone(F64S ns) {
 
 #if BIT_WIDTH == 0
 
-ZS L_ZS_clone(ZS ns) {
+ZS L_clone_ZS(ZS ns) {
   ZS result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -933,7 +933,7 @@ ZS L_ZS_clone(ZS ns) {
 
 #endif
 
-S8S L_S8S_prepend(S8 n, S8S ns) {
+S8S L_prepend_S8S(S8 n, S8S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   S8S result = {0};
   size_t size = ns.size + 1;
@@ -944,13 +944,13 @@ S8S L_S8S_prepend(S8 n, S8S ns) {
   return result;
 }
 
-S8S L_S8S_prependf(S8 n, S8S ns) {
-  S8S result = L_S8S_prepend(n, ns);
-  L_S8S_wipe(&ns);
+S8S L_prepend_S8Sf(S8 n, S8S ns) {
+  S8S result = L_prepend_S8S(n, ns);
+  L_wipe_S8S(&ns);
   return result;
 }
 
-S8S L_S8S_append(S8S ns, S8 n) {
+S8S L_append_S8S(S8S ns, S8 n) {
   L_assert(ns.size < SIZE_T_MAX);
   S8S result = {0};
   size_t size = ns.size + 1;
@@ -961,13 +961,13 @@ S8S L_S8S_append(S8S ns, S8 n) {
   return result;
 }
 
-S8S L_S8S_appendf(S8S ns, S8 n) {
-  S8S result = L_S8S_append(ns, n);
-  L_S8S_wipe(&ns);
+S8S L_append_S8Sf(S8S ns, S8 n) {
+  S8S result = L_append_S8S(ns, n);
+  L_wipe_S8S(&ns);
   return result;
 }
 
-S8S L_S8S_appends(S8S ns1, S8S ns2) {
+S8S L_appends_S8S(S8S ns1, S8S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   S8S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -978,26 +978,26 @@ S8S L_S8S_appends(S8S ns1, S8S ns2) {
   return result;
 }
 
-S8S L_S8S_appendsl(S8S ns1, S8S ns2) {
-  S8S result = L_S8S_appends(ns1, ns2);
-  L_S8S_wipe(&ns1);
+S8S L_appends_S8Sl(S8S ns1, S8S ns2) {
+  S8S result = L_appends_S8S(ns1, ns2);
+  L_wipe_S8S(&ns1);
   return result;
 }
 
-S8S L_S8S_appendsr(S8S ns1, S8S ns2) {
-  S8S result = L_S8S_appends(ns1, ns2);
-  L_S8S_wipe(&ns2);
+S8S L_appends_S8Sr(S8S ns1, S8S ns2) {
+  S8S result = L_appends_S8S(ns1, ns2);
+  L_wipe_S8S(&ns2);
   return result;
 }
 
-S8S L_S8S_appendslr(S8S ns1, S8S ns2) {
-  S8S result = L_S8S_appends(ns1, ns2);
-  L_S8S_wipe(&ns1);
-  L_S8S_wipe(&ns2);
+S8S L_appends_S8Slr(S8S ns1, S8S ns2) {
+  S8S result = L_appends_S8S(ns1, ns2);
+  L_wipe_S8S(&ns1);
+  L_wipe_S8S(&ns2);
   return result;
 }
 
-S16S L_S16S_prepend(S16 n, S16S ns) {
+S16S L_prepend_S16S(S16 n, S16S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   S16S result = {0};
   size_t size = ns.size + 1;
@@ -1008,13 +1008,13 @@ S16S L_S16S_prepend(S16 n, S16S ns) {
   return result;
 }
 
-S16S L_S16S_prependf(S16 n, S16S ns) {
-  S16S result = L_S16S_prepend(n, ns);
-  L_S16S_wipe(&ns);
+S16S L_prepend_S16Sf(S16 n, S16S ns) {
+  S16S result = L_prepend_S16S(n, ns);
+  L_wipe_S16S(&ns);
   return result;
 }
 
-S16S L_S16S_append(S16S ns, S16 n) {
+S16S L_append_S16S(S16S ns, S16 n) {
   L_assert(ns.size < SIZE_T_MAX);
   S16S result = {0};
   size_t size = ns.size + 1;
@@ -1025,13 +1025,13 @@ S16S L_S16S_append(S16S ns, S16 n) {
   return result;
 }
 
-S16S L_S16S_appendf(S16S ns, S16 n) {
-  S16S result = L_S16S_append(ns, n);
-  L_S16S_wipe(&ns);
+S16S L_append_S16Sf(S16S ns, S16 n) {
+  S16S result = L_append_S16S(ns, n);
+  L_wipe_S16S(&ns);
   return result;
 }
 
-S16S L_S16S_appends(S16S ns1, S16S ns2) {
+S16S L_appends_S16S(S16S ns1, S16S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   S16S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1042,26 +1042,26 @@ S16S L_S16S_appends(S16S ns1, S16S ns2) {
   return result;
 }
 
-S16S L_S16S_appendsl(S16S ns1, S16S ns2) {
-  S16S result = L_S16S_appends(ns1, ns2);
-  L_S16S_wipe(&ns1);
+S16S L_appends_S16Sl(S16S ns1, S16S ns2) {
+  S16S result = L_appends_S16S(ns1, ns2);
+  L_wipe_S16S(&ns1);
   return result;
 }
 
-S16S L_S16S_appendsr(S16S ns1, S16S ns2) {
-  S16S result = L_S16S_appends(ns1, ns2);
-  L_S16S_wipe(&ns2);
+S16S L_appends_S16Sr(S16S ns1, S16S ns2) {
+  S16S result = L_appends_S16S(ns1, ns2);
+  L_wipe_S16S(&ns2);
   return result;
 }
 
-S16S L_S16S_appendslr(S16S ns1, S16S ns2) {
-  S16S result = L_S16S_appends(ns1, ns2);
-  L_S16S_wipe(&ns1);
-  L_S16S_wipe(&ns2);
+S16S L_appends_S16Slr(S16S ns1, S16S ns2) {
+  S16S result = L_appends_S16S(ns1, ns2);
+  L_wipe_S16S(&ns1);
+  L_wipe_S16S(&ns2);
   return result;
 }
 
-S32S L_S32S_prepend(S32 n, S32S ns) {
+S32S L_prepend_S32S(S32 n, S32S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   S32S result = {0};
   size_t size = ns.size + 1;
@@ -1072,13 +1072,13 @@ S32S L_S32S_prepend(S32 n, S32S ns) {
   return result;
 }
 
-S32S L_S32S_prependf(S32 n, S32S ns) {
-  S32S result = L_S32S_prepend(n, ns);
-  L_S32S_wipe(&ns);
+S32S L_prepend_S32Sf(S32 n, S32S ns) {
+  S32S result = L_prepend_S32S(n, ns);
+  L_wipe_S32S(&ns);
   return result;
 }
 
-S32S L_S32S_append(S32S ns, S32 n) {
+S32S L_append_S32S(S32S ns, S32 n) {
   L_assert(ns.size < SIZE_T_MAX);
   S32S result = {0};
   size_t size = ns.size + 1;
@@ -1089,13 +1089,13 @@ S32S L_S32S_append(S32S ns, S32 n) {
   return result;
 }
 
-S32S L_S32S_appendf(S32S ns, S32 n) {
-  S32S result = L_S32S_append(ns, n);
-  L_S32S_wipe(&ns);
+S32S L_append_S32Sf(S32S ns, S32 n) {
+  S32S result = L_append_S32S(ns, n);
+  L_wipe_S32S(&ns);
   return result;
 }
 
-S32S L_S32S_appends(S32S ns1, S32S ns2) {
+S32S L_appends_S32S(S32S ns1, S32S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   S32S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1106,26 +1106,26 @@ S32S L_S32S_appends(S32S ns1, S32S ns2) {
   return result;
 }
 
-S32S L_S32S_appendsl(S32S ns1, S32S ns2) {
-  S32S result = L_S32S_appends(ns1, ns2);
-  L_S32S_wipe(&ns1);
+S32S L_appends_S32Sl(S32S ns1, S32S ns2) {
+  S32S result = L_appends_S32S(ns1, ns2);
+  L_wipe_S32S(&ns1);
   return result;
 }
 
-S32S L_S32S_appendsr(S32S ns1, S32S ns2) {
-  S32S result = L_S32S_appends(ns1, ns2);
-  L_S32S_wipe(&ns2);
+S32S L_appends_S32Sr(S32S ns1, S32S ns2) {
+  S32S result = L_appends_S32S(ns1, ns2);
+  L_wipe_S32S(&ns2);
   return result;
 }
 
-S32S L_S32S_appendslr(S32S ns1, S32S ns2) {
-  S32S result = L_S32S_appends(ns1, ns2);
-  L_S32S_wipe(&ns1);
-  L_S32S_wipe(&ns2);
+S32S L_appends_S32Slr(S32S ns1, S32S ns2) {
+  S32S result = L_appends_S32S(ns1, ns2);
+  L_wipe_S32S(&ns1);
+  L_wipe_S32S(&ns2);
   return result;
 }
 
-S64S L_S64S_prepend(S64 n, S64S ns) {
+S64S L_prepend_S64S(S64 n, S64S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   S64S result = {0};
   size_t size = ns.size + 1;
@@ -1136,13 +1136,13 @@ S64S L_S64S_prepend(S64 n, S64S ns) {
   return result;
 }
 
-S64S L_S64S_prependf(S64 n, S64S ns) {
-  S64S result = L_S64S_prepend(n, ns);
-  L_S64S_wipe(&ns);
+S64S L_prepend_S64Sf(S64 n, S64S ns) {
+  S64S result = L_prepend_S64S(n, ns);
+  L_wipe_S64S(&ns);
   return result;
 }
 
-S64S L_S64S_append(S64S ns, S64 n) {
+S64S L_append_S64S(S64S ns, S64 n) {
   L_assert(ns.size < SIZE_T_MAX);
   S64S result = {0};
   size_t size = ns.size + 1;
@@ -1153,13 +1153,13 @@ S64S L_S64S_append(S64S ns, S64 n) {
   return result;
 }
 
-S64S L_S64S_appendf(S64S ns, S64 n) {
-  S64S result = L_S64S_append(ns, n);
-  L_S64S_wipe(&ns);
+S64S L_append_S64Sf(S64S ns, S64 n) {
+  S64S result = L_append_S64S(ns, n);
+  L_wipe_S64S(&ns);
   return result;
 }
 
-S64S L_S64S_appends(S64S ns1, S64S ns2) {
+S64S L_appends_S64S(S64S ns1, S64S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   S64S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1170,26 +1170,26 @@ S64S L_S64S_appends(S64S ns1, S64S ns2) {
   return result;
 }
 
-S64S L_S64S_appendsl(S64S ns1, S64S ns2) {
-  S64S result = L_S64S_appends(ns1, ns2);
-  L_S64S_wipe(&ns1);
+S64S L_appends_S64Sl(S64S ns1, S64S ns2) {
+  S64S result = L_appends_S64S(ns1, ns2);
+  L_wipe_S64S(&ns1);
   return result;
 }
 
-S64S L_S64S_appendsr(S64S ns1, S64S ns2) {
-  S64S result = L_S64S_appends(ns1, ns2);
-  L_S64S_wipe(&ns2);
+S64S L_appends_S64Sr(S64S ns1, S64S ns2) {
+  S64S result = L_appends_S64S(ns1, ns2);
+  L_wipe_S64S(&ns2);
   return result;
 }
 
-S64S L_S64S_appendslr(S64S ns1, S64S ns2) {
-  S64S result = L_S64S_appends(ns1, ns2);
-  L_S64S_wipe(&ns1);
-  L_S64S_wipe(&ns2);
+S64S L_appends_S64Slr(S64S ns1, S64S ns2) {
+  S64S result = L_appends_S64S(ns1, ns2);
+  L_wipe_S64S(&ns1);
+  L_wipe_S64S(&ns2);
   return result;
 }
 
-U8S L_U8S_prepend(U8 n, U8S ns) {
+U8S L_prepend_U8S(U8 n, U8S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   U8S result = {0};
   size_t size = ns.size + 1;
@@ -1200,13 +1200,13 @@ U8S L_U8S_prepend(U8 n, U8S ns) {
   return result;
 }
 
-U8S L_U8S_prependf(U8 n, U8S ns) {
-  U8S result = L_U8S_prepend(n, ns);
-  L_U8S_wipe(&ns);
+U8S L_prepend_U8Sf(U8 n, U8S ns) {
+  U8S result = L_prepend_U8S(n, ns);
+  L_wipe_U8S(&ns);
   return result;
 }
 
-U8S L_U8S_append(U8S ns, U8 n) {
+U8S L_append_U8S(U8S ns, U8 n) {
   L_assert(ns.size < SIZE_T_MAX);
   U8S result = {0};
   size_t size = ns.size + 1;
@@ -1217,13 +1217,13 @@ U8S L_U8S_append(U8S ns, U8 n) {
   return result;
 }
 
-U8S L_U8S_appendf(U8S ns, U8 n) {
-  U8S result = L_U8S_append(ns, n);
-  L_U8S_wipe(&ns);
+U8S L_append_U8Sf(U8S ns, U8 n) {
+  U8S result = L_append_U8S(ns, n);
+  L_wipe_U8S(&ns);
   return result;
 }
 
-U8S L_U8S_appends(U8S ns1, U8S ns2) {
+U8S L_appends_U8S(U8S ns1, U8S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   U8S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1234,26 +1234,26 @@ U8S L_U8S_appends(U8S ns1, U8S ns2) {
   return result;
 }
 
-U8S L_U8S_appendsl(U8S ns1, U8S ns2) {
-  U8S result = L_U8S_appends(ns1, ns2);
-  L_U8S_wipe(&ns1);
+U8S L_appends_U8Sl(U8S ns1, U8S ns2) {
+  U8S result = L_appends_U8S(ns1, ns2);
+  L_wipe_U8S(&ns1);
   return result;
 }
 
-U8S L_U8S_appendsr(U8S ns1, U8S ns2) {
-  U8S result = L_U8S_appends(ns1, ns2);
-  L_U8S_wipe(&ns2);
+U8S L_appends_U8Sr(U8S ns1, U8S ns2) {
+  U8S result = L_appends_U8S(ns1, ns2);
+  L_wipe_U8S(&ns2);
   return result;
 }
 
-U8S L_U8S_appendslr(U8S ns1, U8S ns2) {
-  U8S result = L_U8S_appends(ns1, ns2);
-  L_U8S_wipe(&ns1);
-  L_U8S_wipe(&ns2);
+U8S L_appends_U8Slr(U8S ns1, U8S ns2) {
+  U8S result = L_appends_U8S(ns1, ns2);
+  L_wipe_U8S(&ns1);
+  L_wipe_U8S(&ns2);
   return result;
 }
 
-U16S L_U16S_prepend(U16 n, U16S ns) {
+U16S L_prepend_U16S(U16 n, U16S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   U16S result = {0};
   size_t size = ns.size + 1;
@@ -1264,13 +1264,13 @@ U16S L_U16S_prepend(U16 n, U16S ns) {
   return result;
 }
 
-U16S L_U16S_prependf(U16 n, U16S ns) {
-  U16S result = L_U16S_prepend(n, ns);
-  L_U16S_wipe(&ns);
+U16S L_prepend_U16Sf(U16 n, U16S ns) {
+  U16S result = L_prepend_U16S(n, ns);
+  L_wipe_U16S(&ns);
   return result;
 }
 
-U16S L_U16S_append(U16S ns, U16 n) {
+U16S L_append_U16S(U16S ns, U16 n) {
   L_assert(ns.size < SIZE_T_MAX);
   U16S result = {0};
   size_t size = ns.size + 1;
@@ -1281,13 +1281,13 @@ U16S L_U16S_append(U16S ns, U16 n) {
   return result;
 }
 
-U16S L_U16S_appendf(U16S ns, U16 n) {
-  U16S result = L_U16S_append(ns, n);
-  L_U16S_wipe(&ns);
+U16S L_append_U16Sf(U16S ns, U16 n) {
+  U16S result = L_append_U16S(ns, n);
+  L_wipe_U16S(&ns);
   return result;
 }
 
-U16S L_U16S_appends(U16S ns1, U16S ns2) {
+U16S L_appends_U16S(U16S ns1, U16S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   U16S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1298,26 +1298,26 @@ U16S L_U16S_appends(U16S ns1, U16S ns2) {
   return result;
 }
 
-U16S L_U16S_appendsl(U16S ns1, U16S ns2) {
-  U16S result = L_U16S_appends(ns1, ns2);
-  L_U16S_wipe(&ns1);
+U16S L_appends_U16Sl(U16S ns1, U16S ns2) {
+  U16S result = L_appends_U16S(ns1, ns2);
+  L_wipe_U16S(&ns1);
   return result;
 }
 
-U16S L_U16S_appendsr(U16S ns1, U16S ns2) {
-  U16S result = L_U16S_appends(ns1, ns2);
-  L_U16S_wipe(&ns2);
+U16S L_appends_U16Sr(U16S ns1, U16S ns2) {
+  U16S result = L_appends_U16S(ns1, ns2);
+  L_wipe_U16S(&ns2);
   return result;
 }
 
-U16S L_U16S_appendslr(U16S ns1, U16S ns2) {
-  U16S result = L_U16S_appends(ns1, ns2);
-  L_U16S_wipe(&ns1);
-  L_U16S_wipe(&ns2);
+U16S L_appends_U16Slr(U16S ns1, U16S ns2) {
+  U16S result = L_appends_U16S(ns1, ns2);
+  L_wipe_U16S(&ns1);
+  L_wipe_U16S(&ns2);
   return result;
 }
 
-U32S L_U32S_prepend(U32 n, U32S ns) {
+U32S L_prepend_U32S(U32 n, U32S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   U32S result = {0};
   size_t size = ns.size + 1;
@@ -1328,13 +1328,13 @@ U32S L_U32S_prepend(U32 n, U32S ns) {
   return result;
 }
 
-U32S L_U32S_prependf(U32 n, U32S ns) {
-  U32S result = L_U32S_prepend(n, ns);
-  L_U32S_wipe(&ns);
+U32S L_prepend_U32Sf(U32 n, U32S ns) {
+  U32S result = L_prepend_U32S(n, ns);
+  L_wipe_U32S(&ns);
   return result;
 }
 
-U32S L_U32S_append(U32S ns, U32 n) {
+U32S L_append_U32S(U32S ns, U32 n) {
   L_assert(ns.size < SIZE_T_MAX);
   U32S result = {0};
   size_t size = ns.size + 1;
@@ -1345,13 +1345,13 @@ U32S L_U32S_append(U32S ns, U32 n) {
   return result;
 }
 
-U32S L_U32S_appendf(U32S ns, U32 n) {
-  U32S result = L_U32S_append(ns, n);
-  L_U32S_wipe(&ns);
+U32S L_append_U32Sf(U32S ns, U32 n) {
+  U32S result = L_append_U32S(ns, n);
+  L_wipe_U32S(&ns);
   return result;
 }
 
-U32S L_U32S_appends(U32S ns1, U32S ns2) {
+U32S L_appends_U32S(U32S ns1, U32S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   U32S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1362,26 +1362,26 @@ U32S L_U32S_appends(U32S ns1, U32S ns2) {
   return result;
 }
 
-U32S L_U32S_appendsl(U32S ns1, U32S ns2) {
-  U32S result = L_U32S_appends(ns1, ns2);
-  L_U32S_wipe(&ns1);
+U32S L_appends_U32Sl(U32S ns1, U32S ns2) {
+  U32S result = L_appends_U32S(ns1, ns2);
+  L_wipe_U32S(&ns1);
   return result;
 }
 
-U32S L_U32S_appendsr(U32S ns1, U32S ns2) {
-  U32S result = L_U32S_appends(ns1, ns2);
-  L_U32S_wipe(&ns2);
+U32S L_appends_U32Sr(U32S ns1, U32S ns2) {
+  U32S result = L_appends_U32S(ns1, ns2);
+  L_wipe_U32S(&ns2);
   return result;
 }
 
-U32S L_U32S_appendslr(U32S ns1, U32S ns2) {
-  U32S result = L_U32S_appends(ns1, ns2);
-  L_U32S_wipe(&ns1);
-  L_U32S_wipe(&ns2);
+U32S L_appends_U32Slr(U32S ns1, U32S ns2) {
+  U32S result = L_appends_U32S(ns1, ns2);
+  L_wipe_U32S(&ns1);
+  L_wipe_U32S(&ns2);
   return result;
 }
 
-U64S L_U64S_prepend(U64 n, U64S ns) {
+U64S L_prepend_U64S(U64 n, U64S ns) {
   L_assert(ns.size < SIZE_T_MAX);
   U64S result = {0};
   size_t size = ns.size + 1;
@@ -1392,13 +1392,13 @@ U64S L_U64S_prepend(U64 n, U64S ns) {
   return result;
 }
 
-U64S L_U64S_prependf(U64 n, U64S ns) {
-  U64S result = L_U64S_prepend(n, ns);
-  L_U64S_wipe(&ns);
+U64S L_prepend_U64Sf(U64 n, U64S ns) {
+  U64S result = L_prepend_U64S(n, ns);
+  L_wipe_U64S(&ns);
   return result;
 }
 
-U64S L_U64S_append(U64S ns, U64 n) {
+U64S L_append_U64S(U64S ns, U64 n) {
   L_assert(ns.size < SIZE_T_MAX);
   U64S result = {0};
   size_t size = ns.size + 1;
@@ -1409,13 +1409,13 @@ U64S L_U64S_append(U64S ns, U64 n) {
   return result;
 }
 
-U64S L_U64S_appendf(U64S ns, U64 n) {
-  U64S result = L_U64S_append(ns, n);
-  L_U64S_wipe(&ns);
+U64S L_append_U64Sf(U64S ns, U64 n) {
+  U64S result = L_append_U64S(ns, n);
+  L_wipe_U64S(&ns);
   return result;
 }
 
-U64S L_U64S_appends(U64S ns1, U64S ns2) {
+U64S L_appends_U64S(U64S ns1, U64S ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   U64S result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1426,28 +1426,28 @@ U64S L_U64S_appends(U64S ns1, U64S ns2) {
   return result;
 }
 
-U64S L_U64S_appendsl(U64S ns1, U64S ns2) {
-  U64S result = L_U64S_appends(ns1, ns2);
-  L_U64S_wipe(&ns1);
+U64S L_appends_U64Sl(U64S ns1, U64S ns2) {
+  U64S result = L_appends_U64S(ns1, ns2);
+  L_wipe_U64S(&ns1);
   return result;
 }
 
-U64S L_U64S_appendsr(U64S ns1, U64S ns2) {
-  U64S result = L_U64S_appends(ns1, ns2);
-  L_U64S_wipe(&ns2);
+U64S L_appends_U64Sr(U64S ns1, U64S ns2) {
+  U64S result = L_appends_U64S(ns1, ns2);
+  L_wipe_U64S(&ns2);
   return result;
 }
 
-U64S L_U64S_appendslr(U64S ns1, U64S ns2) {
-  U64S result = L_U64S_appends(ns1, ns2);
-  L_U64S_wipe(&ns1);
-  L_U64S_wipe(&ns2);
+U64S L_appends_U64Slr(U64S ns1, U64S ns2) {
+  U64S result = L_appends_U64S(ns1, ns2);
+  L_wipe_U64S(&ns1);
+  L_wipe_U64S(&ns2);
   return result;
 }
 
 #if BIT_WIDTH == 0
 
-ZS L_ZS_prepend(Z n, ZS ns) {
+ZS L_prepend_ZS(Z n, ZS ns) {
   L_assert(ns.size < SIZE_T_MAX);
   ZS result = {0};
   size_t size = ns.size + 1;
@@ -1458,13 +1458,13 @@ ZS L_ZS_prepend(Z n, ZS ns) {
   return result;
 }
 
-ZS L_ZS_prependf(Z n, ZS ns) {
-  ZS result = L_ZS_prepend(n, ns);
-  L_ZS_wipe(&ns);
+ZS L_prepend_ZSf(Z n, ZS ns) {
+  ZS result = L_prepend_ZS(n, ns);
+  L_wipe_ZS(&ns);
   return result;
 }
 
-ZS L_ZS_append(ZS ns, Z n) {
+ZS L_append_ZS(ZS ns, Z n) {
   L_assert(ns.size < SIZE_T_MAX);
   ZS result = {0};
   size_t size = ns.size + 1;
@@ -1475,13 +1475,13 @@ ZS L_ZS_append(ZS ns, Z n) {
   return result;
 }
 
-ZS L_ZS_appendf(ZS ns, Z n) {
-  ZS result = L_ZS_append(ns, n);
-  L_ZS_wipe(&ns);
+ZS L_append_ZSf(ZS ns, Z n) {
+  ZS result = L_append_ZS(ns, n);
+  L_wipe_ZS(&ns);
   return result;
 }
 
-ZS L_ZS_appends(ZS ns1, ZS ns2) {
+ZS L_appends_ZS(ZS ns1, ZS ns2) {
   L_assert(ns1.size + ns2.size < SIZE_T_MAX);
   ZS result = {0};
   size_t size = ns1.size + ns2.size;
@@ -1492,82 +1492,82 @@ ZS L_ZS_appends(ZS ns1, ZS ns2) {
   return result;
 }
 
-ZS L_ZS_appendsl(ZS ns1, ZS ns2) {
-  ZS result = L_ZS_appends(ns1, ns2);
-  L_ZS_wipe(&ns1);
+ZS L_appends_ZSl(ZS ns1, ZS ns2) {
+  ZS result = L_appends_ZS(ns1, ns2);
+  L_wipe_ZS(&ns1);
   return result;
 }
 
-ZS L_ZS_appendsr(ZS ns1, ZS ns2) {
-  ZS result = L_ZS_appends(ns1, ns2);
-  L_ZS_wipe(&ns2);
+ZS L_appends_ZSr(ZS ns1, ZS ns2) {
+  ZS result = L_appends_ZS(ns1, ns2);
+  L_wipe_ZS(&ns2);
   return result;
 }
 
-ZS L_ZS_appendslr(ZS ns1, ZS ns2) {
-  ZS result = L_ZS_appends(ns1, ns2);
-  L_ZS_wipe(&ns1);
-  L_ZS_wipe(&ns2);
+ZS L_appends_ZSlr(ZS ns1, ZS ns2) {
+  ZS result = L_appends_ZS(ns1, ns2);
+  L_wipe_ZS(&ns1);
+  L_wipe_ZS(&ns2);
   return result;
 }
 
 #endif
 
-void L_S8S_wipe(S8S *ns) {
+void L_wipe_S8S(S8S *ns) {
   L_wipe(ns->data, sizeof(S8) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(S8S));
 }
 
-void L_S16S_wipe(S16S *ns) {
+void L_wipe_S16S(S16S *ns) {
   L_wipe(ns->data, sizeof(S16) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(S16S));
 }
 
-void L_S32S_wipe(S32S *ns) {
+void L_wipe_S32S(S32S *ns) {
   L_wipe(ns->data, sizeof(S32) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(S32S));
 }
 
-void L_S64S_wipe(S64S *ns) {
+void L_wipe_S64S(S64S *ns) {
   L_wipe(ns->data, sizeof(S64) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(S64S));
 }
 
-void L_U8S_wipe(U8S *ns) {
+void L_wipe_U8S(U8S *ns) {
   L_wipe(ns->data, sizeof(U8) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(U8S));
 }
 
-void L_U16S_wipe(U16S *ns) {
+void L_wipe_U16S(U16S *ns) {
   L_wipe(ns->data, sizeof(U16) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(U16S));
 }
 
-void L_U32S_wipe(U32S *ns) {
+void L_wipe_U32S(U32S *ns) {
   L_wipe(ns->data, sizeof(U32) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(U32S));
 }
 
-void L_U64S_wipe(U64S *ns) {
+void L_wipe_U64S(U64S *ns) {
   L_wipe(ns->data, sizeof(U64) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(U64S));
 }
 
-void L_F32S_wipe(F32S *ns) {
+void L_wipe_F32S(F32S *ns) {
   L_wipe(ns->data, sizeof(F32) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(F32S));
 }
 
-void L_F64S_wipe(F64S *ns) {
+void L_wipe_F64S(F64S *ns) {
   L_wipe(ns->data, sizeof(F64) * ns->size);
   free(ns->data);
   L_wipe(ns, sizeof(F64S));
