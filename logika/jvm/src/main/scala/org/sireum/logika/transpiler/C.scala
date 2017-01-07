@@ -118,42 +118,48 @@ private class C(program: ast.Program,
     }
 
     translate(program.block, isGlobal = true,
-      stRunStmts, ivectorEmpty, None, shouldReturn = true)
+      stRunStmts, imapEmpty, None, shouldReturn = true)
   }
 
   def translate(block: ast.Block,
                 isGlobal: Boolean,
                 stStmts: ST,
-                declaredVars: ISeq[(String, String)],
+                declaredVars: IMap[ast.Id, ast.Type],
                 retTypeNameOpt: Option[String],
                 shouldReturn: Boolean): Unit = {
-    var varDecls = ivectorEmpty[(String, String)]
+    var varDecls = imapEmpty[ast.Id, ast.Type]
     for (stmt <- block.stmts)
       for (tx <- translate(stmt, isGlobal, stStmts, varDecls, retTypeNameOpt))
-        varDecls :+= tx
+        varDecls += tx
     if (shouldReturn || block.returnOpt.isDefined)
       translate(block.returnOpt, stStmts,
         varWipe(varDecls ++ declaredVars), retTypeNameOpt)
     else varWipe(varDecls)(None, stStmts)
   }
 
-  def isRefType(id: ast.Id): Boolean = isRefType(id.tipe)
+  def isInternalRefType(id: ast.Id): Boolean = isInternalRefType(id.tipe)
 
-  def isRefType(t: tipe.Tipe): Boolean = t match {
-    case _: MSeq[_] => true
+  def isInternalRefType(t: tipe.Tipe): Boolean = t match {
+    case _: tipe.MSeq => true
     case tipe.Z | tipe.N => bitWidth == 0
     case _ => false
   }
 
-  def varWipe(declaredVars: ISeq[(String, String)])
+  def isRefType(id: ast.Id): Boolean = isRefType(id.tipe)
+
+  def isRefType(t: tipe.Tipe): Boolean = t match {
+    case _: tipe.MSeq => true
+    case _ => false
+  }
+
+  def varWipe(declaredVars: IMap[ast.Id, ast.Type])
              (idOpt: Option[ast.Id], stStmts: ST): Unit = {
-    val tAlias = idOpt.exists(isRefType)
-    val idName = idOpt.map(_.value).getOrElse("")
-    for ((t, x) <- declaredVars) {
-      if (!tAlias || idName != x)
+    val tAlias = idOpt.exists(isInternalRefType)
+    for ((x, t) <- declaredVars) {
+      if (!tAlias || !idOpt.contains(x))
         stStmts.add("stmt",
           stg.getInstanceOf("callExp").
-            add("id", s"L_wipe_$t").
+            add("id", s"L_wipe_${typeName(t)}").
             add("e", s"&${name(x)}").add("end", ";"))
     }
   }
@@ -168,7 +174,7 @@ private class C(program: ast.Program,
           val retExp = rOpt.get.expOpt.get
           stStmts.add("stmt",
             stg.getInstanceOf("assignStmt").
-              add("no", program.nodeLocMap(retExp).lineBegin).
+              add("no", lineNo(retExp)).
               add("t", t).
               add("x", "result").
               add("e", translate(retExp)))
@@ -182,7 +188,7 @@ private class C(program: ast.Program,
     rOpt match {
       case Some(r) =>
         val retST = stg.getInstanceOf("returnStmt").
-          add("no", program.nodeLocMap(r).lineBegin)
+          add("no", lineNo(r))
         r.expOpt.foreach(_ => retST.add("e", "result"))
         stStmts.add("stmt", retST)
       case _ =>
@@ -192,12 +198,12 @@ private class C(program: ast.Program,
   def translate(stmt: ast.Stmt,
                 isGlobal: Boolean,
                 stStmts: ST,
-                declaredVars: ISeq[(String, String)],
-                retTypeNameOpt: Option[String]): Option[(String, String)] = {
+                declaredVars: IMap[ast.Id, ast.Type],
+                retTypeNameOpt: Option[String]): Option[(ast.Id, ast.Type)] = {
     if (isGlobal && !stmt.isInstanceOf[ast.MethodDecl]) stMain.add("hasTopLevel", true)
     stmt match {
       case stmt: ast.VarDecl =>
-        val line = program.nodeLocMap(stmt).lineBegin
+        val line = lineNo(stmt)
         val t = typeName(stmt.tpe)
         val x = name(stmt.id)
         if (isGlobal) {
@@ -220,36 +226,44 @@ private class C(program: ast.Program,
               add("x", x).
               add("e", translate(stmt.exp)))
         }
-        Some((t, x))
+        Some((stmt.id, stmt.tpe))
       case stmt: ast.Assign =>
-        stStmts.add("stmt",
-          stg.getInstanceOf("assignStmt").
-            add("no", program.nodeLocMap(stmt).lineBegin).
-            add("x", name(stmt.id)).
-            add("e", translate(stmt.exp)))
+        if (isRefType(stmt.id))
+          stStmts.add("stmt",
+            stg.getInstanceOf("assignRefStmt").
+              add("no", lineNo(stmt)).
+              add("t", typeName(declaredVars(stmt.id))).
+              add("x", name(stmt.id)).
+              add("e", translate(stmt.exp)))
+        else
+          stStmts.add("stmt",
+            stg.getInstanceOf("assignStmt").
+              add("no", lineNo(stmt)).
+              add("x", name(stmt.id)).
+              add("e", translate(stmt.exp)))
         None
       case stmt: ast.Assume =>
         stMain.add("assumption", true)
         stStmts.add("stmt",
           stg.getInstanceOf("assumeStmt").
-            add("no", program.nodeLocMap(stmt).lineBegin).
+            add("no", lineNo(stmt)).
             add("e", translate(stmt.exp)))
         None
       case stmt: ast.Assert =>
         stMain.add("assertion", true)
         stStmts.add("stmt",
           stg.getInstanceOf("assertStmt").
-            add("no", program.nodeLocMap(stmt).lineBegin).
+            add("no", lineNo(stmt)).
             add("e", translate(stmt.exp)))
         None
       case stmt: ast.ExpStmt =>
         stStmts.add("stmt",
           translate(stmt.exp).add("end", ";").
-            add("no", program.nodeLocMap(stmt).lineBegin))
+            add("no", lineNo(stmt)))
         None
       case stmt: ast.If =>
         val ifST = stg.getInstanceOf("ifStmt").
-          add("no", program.nodeLocMap(stmt).lineBegin).
+          add("no", lineNo(stmt)).
           add("e", translate(stmt.exp))
         stStmts.add("stmt", ifST)
         val stTStmts = stg.getInstanceOf("stmts")
@@ -266,7 +280,7 @@ private class C(program: ast.Program,
         None
       case stmt: ast.While =>
         val whileST = stg.getInstanceOf("whileStmt").
-          add("no", program.nodeLocMap(stmt).lineBegin).
+          add("no", lineNo(stmt)).
           add("e", translate(stmt.exp))
         stStmts.add("stmt", whileST)
         val stWStmts = stg.getInstanceOf("stmts")
@@ -279,11 +293,11 @@ private class C(program: ast.Program,
         if (stmt.isNewline && stmt.args.isEmpty) {
           stStmts.add("stmt",
             stg.getInstanceOf("callExp").
-              add("no", program.nodeLocMap(stmt).lineBegin).
+              add("no", lineNo(stmt)).
               add("id", "L_println").add("end", ";"))
         } else {
           val printST = stg.getInstanceOf("printStmt").
-            add("no", program.nodeLocMap(stmt).lineBegin).
+            add("no", lineNo(stmt)).
             add("end", ";")
           stStmts.add("stmt", printST)
           for ((tOpt, arg) <- stmt.argTipes.zip(stmt.args)) {
@@ -303,7 +317,7 @@ private class C(program: ast.Program,
           if (stmt.isNewline) {
             stStmts.add("stmt",
               stg.getInstanceOf("callExp").
-                add("no", program.nodeLocMap(stmt).lineBegin).
+                add("no", lineNo(stmt)).
                 add("id", "L_println").add("end", ";"))
           }
         }
@@ -313,7 +327,7 @@ private class C(program: ast.Program,
           case tipe.BS =>
             stStmts.add("stmt",
               stg.getInstanceOf("callExp").
-                add("no", program.nodeLocMap(stmt).lineBegin).
+                add("no", lineNo(stmt)).
                 add("id", "L_set_BS").
                 add("e", translate(stmt.id)).
                 add("e", translate(stmt.index)).
@@ -322,7 +336,7 @@ private class C(program: ast.Program,
           case _ =>
             stStmts.add("stmt",
               stg.getInstanceOf("seqAssignStmt").
-                add("no", program.nodeLocMap(stmt).lineBegin).
+                add("no", lineNo(stmt)).
                 add("x", translate(stmt.id)).
                 add("i", translate(stmt.index)).
                 add("e", translate(stmt.exp)))
@@ -333,25 +347,23 @@ private class C(program: ast.Program,
         stMain.add("hasPrototypes", true)
         val mretTypeNameOpt = stmt.returnTypeOpt.map(typeName)
         val protoST = stg.getInstanceOf("proto").
-          add("no", program.nodeLocMap(stmt).lineBegin).
+          add("no", lineNo(stmt)).
           add("t", mretTypeNameOpt.getOrElse("void")).
           add("name", name(stmt.id))
         val methodST = stg.getInstanceOf("method")
         methodST.add("proto", protoST)
         stMethods.add("method", methodST)
         val modNames = stmt.contract.modifies.ids.map(name).toSet
-        var varDecls = ivectorEmpty[(String, String)]
+        var varDecls = imapEmpty[ast.Id, ast.Type]
         for (p <- stmt.params) {
           val id = p.id
-          val t = id.tipe
-          val notRefType = !isRefType(t)
-          val tName = typeName(p.tpe)
+          val notRefType = !isInternalRefType(id)
           val idName = name(id)
-          if (notRefType) varDecls :+= (tName, idName)
+          if (notRefType) varDecls += id -> p.tpe
           protoST.add("param",
             stg.getInstanceOf("param").
               add("mod", notRefType || modNames.contains(idName)).
-              add("t", tName).
+              add("t", typeName(p.tpe)).
               add("x", idName))
         }
         val stMStmts = stg.getInstanceOf("stmts")
@@ -365,6 +377,10 @@ private class C(program: ast.Program,
       case _: ast.ProofElementStmt | _: ast.ProofStmt |
            _: ast.SequentStmt | _: ast.InvStmt => None
     }
+  }
+
+  private def lineNo(n: ast.Node): PosInteger = {
+    program.nodeLocMap(n).lineBegin
   }
 
   def translate(e: ast.Exp): ST = e match {

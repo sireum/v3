@@ -160,6 +160,14 @@ assignStmt(no, t, x, e) ::= <<
 $if(t)$$t$ $endif$$x$ = $e$;$line(no)$
 >>
 
+assignRefStmt(no, t, x, e) ::= <<
+{$line(no)$
+  $t$ L_temp = $e$;
+  L_wipe_$t$(&$x$);
+  $x$ = L_temp;
+}
+>>
+
 seqAssignStmt(no, x, i, e) ::= <<
 $x$.data[$i$] = $e$;$line(no)$
 >>
