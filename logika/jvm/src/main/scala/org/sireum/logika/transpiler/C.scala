@@ -137,13 +137,17 @@ private class C(program: ast.Program,
     else varWipe(varDecls)(None, stStmts)
   }
 
+  def isRefType(id: ast.Id): Boolean = isRefType(id.tipe)
+
+  def isRefType(t: tipe.Tipe): Boolean = t match {
+    case _: MSeq[_] => true
+    case tipe.Z | tipe.N => bitWidth == 0
+    case _ => false
+  }
+
   def varWipe(declaredVars: ISeq[(String, String)])
              (idOpt: Option[ast.Id], stStmts: ST): Unit = {
-    val tAlias = idOpt.exists(_.tipe match {
-      case _: MSeq[_] => true
-      case tipe.Z | tipe.N => bitWidth == 0
-      case _ => false
-    })
+    val tAlias = idOpt.exists(isRefType)
     val idName = idOpt.map(_.value).getOrElse("")
     for ((t, x) <- declaredVars) {
       if (!tAlias || idName != x)
@@ -335,17 +339,25 @@ private class C(program: ast.Program,
         val methodST = stg.getInstanceOf("method")
         methodST.add("proto", protoST)
         stMethods.add("method", methodST)
-        val modIds = stmt.contract.modifies.ids.toSet
-        for (p <- stmt.params)
+        val modNames = stmt.contract.modifies.ids.map(name).toSet
+        var varDecls = ivectorEmpty[(String, String)]
+        for (p <- stmt.params) {
+          val id = p.id
+          val t = id.tipe
+          val notRefType = !isRefType(t)
+          val tName = typeName(p.tpe)
+          val idName = name(id)
+          if (notRefType) varDecls :+= (tName, idName)
           protoST.add("param",
             stg.getInstanceOf("param").
-              add("mod", modIds.contains(p.id)).
-              add("t", typeName(p.tpe)).
-              add("x", name(p.id)))
+              add("mod", notRefType || modNames.contains(idName)).
+              add("t", tName).
+              add("x", idName))
+        }
         val stMStmts = stg.getInstanceOf("stmts")
         methodST.add("stmts", stMStmts)
         translate(stmt.block, isGlobal = false, stMStmts,
-          ivectorEmpty, mretTypeNameOpt, shouldReturn = true)
+          varDecls, mretTypeNameOpt, shouldReturn = true)
         val protoST2 = new ST(protoST)
         protoST2.add("end", ";")
         stProtos.add("proto", protoST2)
