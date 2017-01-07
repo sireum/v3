@@ -114,7 +114,7 @@ class Main(option: LogikaOption,
     var hasError = false
     var fileProofContent: ISeq[(FileResourceUri, Program, String)] = ivectorEmpty
     for (proof <- proofs) {
-      val (failed, _, unitNodes) = {
+      val (failed, _, _, unitNodes) = {
         Checker.typeCheck(message.Check(
           requestId = "",
           isBackground = false,
@@ -342,7 +342,7 @@ class Main(option: LogikaOption,
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     }
 
-    val (hasError, _, unitNodes) = Checker.typeCheck(checkMessage)
+    val (hasError, _, bitWidth, unitNodes) = Checker.typeCheck(checkMessage)
     if (hasError) sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     var allPrograms = true
     for ((input, unitNode) <- option.input.zip(unitNodes)) {
@@ -353,7 +353,7 @@ class Main(option: LogikaOption,
     }
     if (!allPrograms) sys.exit(TRANSLATION_FAILED_EXIT_CODE)
 
-    val r = transpiler.C(unitNodes.map(_.asInstanceOf[Program]), option.bitwidth)
+    val r = transpiler.C(unitNodes.map(_.asInstanceOf[Program]), bitWidth)
     if (reporter.hasError) {
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     }
@@ -390,7 +390,7 @@ class Main(option: LogikaOption,
           proofs: ISeq[message.ProofFile])(
            implicit reporter: AccumulatingTagReporter): Unit = {
     if (!option.run) return
-    val (hasError, _, unitNodes) = Checker.typeCheck(checkMessage)
+    val (hasError, _, _, unitNodes) = Checker.typeCheck(checkMessage)
     if (hasError) sys.exit(RUN_FAILED_EXIT_CODE)
     var allPrograms = true
     for ((input, unitNode) <- option.input.zip(unitNodes)) {

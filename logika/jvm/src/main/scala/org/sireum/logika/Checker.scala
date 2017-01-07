@@ -38,23 +38,25 @@ object Checker {
   private[logika] final val kind = "Proof Checker"
 
   final def typeCheck(m: message.Check)(
-    implicit reporter: AccumulatingTagReporter): (Boolean, Boolean, ISeq[ast.UnitNode]) = {
-    val autoEnabled = m.autoEnabled ||
-      m.kind == message.CheckerKind.SummarizingSymExe ||
+    implicit reporter: AccumulatingTagReporter): (Boolean, Boolean, Natural, ISeq[ast.UnitNode]) = {
+    val isSymExe = m.kind == message.CheckerKind.SummarizingSymExe ||
       m.kind == message.CheckerKind.UnrollingSymExe
+    val autoEnabled = m.autoEnabled || isSymExe
+    val bitWidth = if (isSymExe) m.bitWidth else 0
+
     var unitNodes = ivectorEmpty[ast.UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
-      ast.Builder(fileUriOpt, text, m.bitWidth, autoEnabled).foreach(unitNodes :+= _)
+      ast.Builder(fileUriOpt, text, bitWidth, autoEnabled).foreach(unitNodes :+= _)
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
         if (m.proofs.size > 1) "The inputs are ill-formed."
         else "The input is ill-formed."))
-      return (true, autoEnabled, unitNodes)
+      return (true, autoEnabled, bitWidth, unitNodes)
     }
     if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
       val programs = unitNodes.map(_.asInstanceOf[ast.Program])
-      if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, m.bitWidth, programs: _*)) {
+      if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, bitWidth, programs: _*)) {
         var hasError = false
         val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
         for (program <- programs) {
@@ -90,14 +92,14 @@ object Checker {
       reporter.report(ErrorMessage("AST",
         if (m.proofs.size > 1) "The inputs are ill-formed."
         else "The input is ill-formed."))
-      return (true, autoEnabled, unitNodes)
+      return (true, autoEnabled, bitWidth, unitNodes)
     }
-    (reporter.hasError, autoEnabled, unitNodes)
+    (reporter.hasError, autoEnabled, bitWidth, unitNodes)
   }
 
   final def check(m: message.Check)(
     implicit reporter: AccumulatingTagReporter): message.Result = {
-    val (hasError, autoEnabled, unitNodes) = typeCheck(m)
+    val (hasError, autoEnabled, bitWidth, unitNodes) = typeCheck(m)
     if (hasError) return message.Result(m.requestId, m.isBackground, reporter.tags.toVector)
 
     if (unitNodes.forall(_.isInstanceOf[ast.Program])) {
@@ -107,12 +109,12 @@ object Checker {
 
       if (m.lastOnly)
         check(programs.last, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-          m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+          m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, bitWidth,
           m.loopBound, m.recursionBound, m.useMethodContract, factMap)
       else
         for (program <- programs)
           check(program, m.kind, autoEnabled, m.timeout, m.checkSatEnabled,
-            m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, m.bitWidth,
+            m.hintEnabled, m.inscribeSummoningsEnabled, m.coneInfluenceEnabled, bitWidth,
             m.loopBound, m.recursionBound, m.useMethodContract, factMap)
     } else if (unitNodes.forall(_.isInstanceOf[ast.Sequent])) {
       val sequents = unitNodes.map(_.asInstanceOf[ast.Sequent])
