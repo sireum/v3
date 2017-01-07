@@ -242,7 +242,11 @@ class Main(option: LogikaOption,
 
   def checkBitWidth(option: LogikaOption): Unit = {
     option.bitwidth match {
-      case 0 | 8 | 16 | 32 | 64 =>
+      case 0 =>
+      case 8 | 16 | 32 | 64 =>
+        if (!option.symexe)
+          errPrintln(s"Bit-width ${option.bitwidth} is only supported on symbolic execution mode.")
+        sys.exit(BIT_WIDTH_UNSUPPORTED_EXIT_CODE)
       case _ =>
         errPrintln(s"Unsupported bit-width: ${option.bitwidth}; only 8, 16, 32, 64, and 0 are supported (0 means arbitrary-precision).")
         sys.exit(BIT_WIDTH_UNSUPPORTED_EXIT_CODE)
@@ -362,7 +366,7 @@ class Main(option: LogikaOption,
       r.stMain.add("comment", comment)
       r.stMainHeader.add("comment", comment)
     }
-    if (FileUtil.writeFile(file, r.stMain.render))
+    if (FileUtil.writeFile(file, alignRightLineComment(r.stMain.render())))
       outPrintln(s"Wrote to ${file.getCanonicalPath}.")
     else {
       errPrintln(s"Could not write to ${file.getCanonicalPath}.")
@@ -371,12 +375,37 @@ class Main(option: LogikaOption,
 
     val filenameH = filename.substring(0, filename.length - 1) + 'h'
     val fileH = new java.io.File(file.getParentFile, filenameH)
-    if (FileUtil.writeFile(fileH, r.stMainHeader.render))
+    if (FileUtil.writeFile(fileH, alignRightLineComment(r.stMainHeader.render())))
       outPrintln(s"Wrote to ${fileH.getCanonicalPath}.")
     else {
       errPrintln(s"Could not write to ${fileH.getCanonicalPath}.")
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     }
+  }
+
+  def alignRightLineComment(text: String, prefix: String = "// L"): String = {
+    val lines = text.lines.toVector
+    var maxCommentColumn = -1
+    for (line <- lines) {
+      var i = line.lastIndexOf(prefix)
+      if (i > maxCommentColumn) maxCommentColumn = i
+    }
+    if (maxCommentColumn < 0) return text
+    maxCommentColumn += 3
+    val sb = new StringBuilder
+    val lineSep = scala.util.Properties.lineSeparator
+    for (line <- lines) {
+      val i = line.lastIndexOf(prefix)
+      if (i >= 0) {
+        sb.append(line.substring(0, i))
+        for (i <- 0 until maxCommentColumn - i) {
+          sb.append(' ')
+        }
+        sb.append(line.substring(i))
+      } else sb.append(line)
+      sb.append(lineSep)
+    }
+    sb.toString.trim + lineSep
   }
 
   def removeExt(filepath: String): String = {
