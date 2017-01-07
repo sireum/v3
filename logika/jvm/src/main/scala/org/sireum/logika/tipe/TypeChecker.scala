@@ -464,11 +464,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               error(e, s"$text ${Exp.toString(e.exp, inProof = allowFun)} requires ${t.params.size} arguments, but found ${e.args.size}.")
             } else if (isMethod) {
               val Some(Left(md)) = e.declOpt
-              for (arg@Id(value) <- e.args) typeMap(value) match {
-                case (_: RefTipe, _, true, _) => error(arg, s"Cannot pass global variable $value as an argument.")
+              mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
+              if (!md.isPure) for (arg@Id(value) <- e.args) typeMap(value) match {
+                case (_: RefTipe, _, true, _) => error(arg, s"Cannot pass non-scalar global variable $value as an argument to a non @pure method.")
                 case _ =>
               }
-              mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
               val modifiedIds = md.contract.modifies.ids.toSet
               val modifiedArgParams: MMap[Exp, Id] = mmapEmpty
               for ((param, arg) <- md.params.zip(e.args)
