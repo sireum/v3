@@ -46,30 +46,30 @@ object C {
   private val uiMax: BigInt = BigInt(2).pow(32) - 1
 
   private val zOpMap = Map(
-    "+" -> "L_Z_add",
-    "-" -> "L_Z_sub",
-    "*" -> "L_Z_mul",
-    "/" -> "L_Z_div",
-    "%" -> "L_Z_rem",
-    "==" -> "L_Z_eq",
-    "!=" -> "L_Z_ne",
-    "<" -> "L_Z_lt",
-    "<=" -> "L_Z_le",
-    ">" -> "L_Z_gt",
-    ">=" -> "L_Z_ge")
+    "+" -> "L_add_Z",
+    "-" -> "L_sub_Z",
+    "*" -> "L_mul_Z",
+    "/" -> "L_div_Z",
+    "%" -> "L_rem_Z",
+    "==" -> "L_eq_Z",
+    "!=" -> "L_ne_Z",
+    "<" -> "L_lt_Z",
+    "<=" -> "L_le_Z",
+    ">" -> "L_gt_Z",
+    ">=" -> "L_ge_Z")
 
   private val nOpMap = Map(
-    "+" -> "L_N_add",
-    "-" -> "L_N_sub",
-    "*" -> "L_N_mul",
-    "/" -> "L_N_div",
-    "%" -> "L_N_rem",
-    "==" -> "L_N_eq",
-    "!=" -> "L_N_ne",
-    "<" -> "L_N_lt",
-    "<=" -> "L_N_le",
-    ">" -> "L_N_gt",
-    ">=" -> "L_N_ge")
+    "+" -> "L_add_N",
+    "-" -> "L_sub_N",
+    "*" -> "L_mul_N",
+    "/" -> "L_div_N",
+    "%" -> "L_rem_N",
+    "==" -> "L_eq_N",
+    "!=" -> "L_ne_N",
+    "<" -> "L_lt_N",
+    "<=" -> "L_le_N",
+    ">" -> "L_gt_N",
+    ">=" -> "L_ge_N")
 
   private val opMap = Map(
     "&" -> "&&",
@@ -149,7 +149,7 @@ private class C(program: ast.Program,
       if (!tAlias || idName != x)
         stStmts.add("stmt",
           stg.getInstanceOf("callExp").
-            add("id", s"L_${t}_wipe").
+            add("id", s"L_wipe_$t").
             add("e", s"&${name(x)}").add("end", ";"))
     }
   }
@@ -307,7 +307,7 @@ private class C(program: ast.Program,
           stStmts.add("stmt",
             stg.getInstanceOf("callExp").
               add("no", program.nodeLocMap(stmt).lineBegin).
-              add("id", "L_BS_set").
+              add("id", "L_set_BS").
               add("e", translate(stmt.id)).
               add("e", translate(stmt.index)).
               add("e", translate(stmt.exp)).
@@ -377,7 +377,7 @@ private class C(program: ast.Program,
           for (arg <- e.args) {
             result.add("e", translate(arg))
           }
-          result.add("id", "L_BS_get")
+          result.add("id", "L_get_BS")
         case _: MSeq[_] =>
           stg.getInstanceOf("indexExp").
             add("e", translate(e.exp)).
@@ -391,10 +391,10 @@ private class C(program: ast.Program,
       }
     case _: ast.RandomInt =>
       result.stMain.add("io", true)
-      stg.getInstanceOf("callExp").add("id", "L_Z_random")
+      stg.getInstanceOf("callExp").add("id", "L_random_Z")
     case _: ast.ReadInt =>
       result.stMain.add("io", true)
-      stg.getInstanceOf("callExp").add("id", "L_Z_read")
+      stg.getInstanceOf("callExp").add("id", "L_read_Z")
     case e: ast.IntLit =>
       val n = e.normalize
       e.bitWidth match {
@@ -402,16 +402,16 @@ private class C(program: ast.Program,
           e.tpeOpt match {
             case Some(_: ast.NType) =>
               if (0 <= n && n <= uiMax)
-                stg.getInstanceOf("lit").add("e", s"L_N_ui(${n}UL)")
+                stg.getInstanceOf("lit").add("e", s"L_Nui(${n}UL)")
               else
-                stg.getInstanceOf("lit").add("e", "L_N_str(\"" + n + "\")")
+                stg.getInstanceOf("lit").add("e", "L_Nstr(\"" + n + "\")")
             case _ =>
               if (n.isValidInt)
-                stg.getInstanceOf("lit").add("e", s"L_Z_si(${n}L)")
+                stg.getInstanceOf("lit").add("e", s"L_Zsi(${n}L)")
               else if (0 <= n && n <= uiMax)
-                stg.getInstanceOf("lit").add("e", s"L_Z_ui(${n}UL)")
+                stg.getInstanceOf("lit").add("e", s"L_Zui(${n}UL)")
               else
-                stg.getInstanceOf("lit").add("e", "L_Z_str(\"" + n + "\")")
+                stg.getInstanceOf("lit").add("e", "L_Zstr(\"" + n + "\")")
           }
         case 32 =>
           e.tpeOpt match {
@@ -537,12 +537,12 @@ private class C(program: ast.Program,
       stg.getInstanceOf("lit").add("e", lit)
     case e: ast.Random =>
       result.stMain.add("io", true)
-      val lit = typeName(e.tpe)
-      stg.getInstanceOf("lit").add("e", lit)
+      stg.getInstanceOf("callExp").
+        add("id", s"L_random_${typeName(e.tpe)}")
     case e: ast.TypeMethodCallExp =>
       e.id.value match {
         case "create" =>
-          stg.getInstanceOf("callExp").add("t", typeName(e.tpe)).
+          stg.getInstanceOf("createExp").add("t", typeName(e.tpe)).
             add("size", translate(e.args.head)).
             add("initValue", translate(e.args(1)))
       }
@@ -565,9 +565,21 @@ private class C(program: ast.Program,
             add("e", translate(e.right))
         case _ =>
           op match {
-            case ":+" | "+:" | "++" =>
+            case ":+" =>
               stg.getInstanceOf("callExp").
-                add("id", s"L_${typeName(e, e.tipe)}_${opMap(op)}" +
+                add("id", s"L_${opMap(op)}_${typeName(e, e.tipe)}" +
+                  (if (shouldFree(e.left)) "f" else "")).
+                add("e", translate(e.left)).
+                add("e", translate(e.right))
+            case "+:" =>
+              stg.getInstanceOf("callExp").
+                add("id", s"L_${opMap(op)}_${typeName(e, e.tipe)}" +
+                  (if (shouldFree(e.right)) "f" else "")).
+                add("e", translate(e.left)).
+                add("e", translate(e.right))
+            case "++" =>
+              stg.getInstanceOf("callExp").
+                add("id", s"L_${opMap(op)}_${typeName(e, e.tipe)}" +
                   (if (shouldFree(e.left)) "l" else "") +
                   (if (shouldFree(e.right)) "r" else "")).
                 add("e", translate(e.left)).
@@ -586,7 +598,7 @@ private class C(program: ast.Program,
       e.tipe match {
         case tipe.Z if bitWidth == 0 =>
           stg.getInstanceOf("callExp").
-            add("id", "L_Z_neg" + (if (shouldFree(e)) "f" else "")).
+            add("id", "L_neg_Z" + (if (shouldFree(e)) "f" else "")).
             add("e", translate(e))
         case _ =>
           stg.getInstanceOf("unExp").add("op", "-").

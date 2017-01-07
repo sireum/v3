@@ -193,11 +193,15 @@ $endif$
 >>
 
 sizeExp(e) ::= <<
-L_Z_size_t($e$.size)
+L_Zsize_t($e$.size)
 >>
 
 cloneExp(t, e) ::= <<
-L_$t$_clone($e$)
+L_clone_$t$($e$)
+>>
+
+randomExp(t) ::= <<
+L_random_$t$()
 >>
 
 unExp(op, e, paren) ::= <<
@@ -217,5 +221,5 @@ $e$.data[$i$]
 >>
 
 createExp(t, size, initValue) ::= <<
-L_$t$_create($size$, $initValue$)
+L_create_$t$($size$, $initValue$)
 >>
