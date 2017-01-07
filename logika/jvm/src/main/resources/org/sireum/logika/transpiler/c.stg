@@ -23,7 +23,7 @@ copyright() ::= <<
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 >>
 
-main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods) ::= <<
+main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods, hasTopLevel, hasPrototypes, hasGlobals) ::= <<
 $if(comment)$
 $comment; separator="\n"$
 
@@ -41,29 +41,41 @@ $if(assumption)$
 $endif$
 $endif$
 
-$if(protos)$
+
+$if(hasPrototypes)$
+// Prototypes
 $protos; separator="\n\n"$
 
 $endif$
-$if(globals)$
+
+$if(hasGlobals)$
+// Global Variables
 $globals; separator="\n\n"$
 
 $endif$
+
+$if(hasTopLevel)$
+// Top-Level Statements
 void run()
 {
-  $stmts; separator="\n"$
+  $stmts; separator="\n\n"$
 }
 
-$if(methods)$
+$endif$
+
+$if(hasPrototypes)$
+// Implementations
 $methods; separator="\n\n"$
 
 $endif$
+
+$if(hasTopLevel)$
 int main()
 {
   run();
   return 0;
 }
-
+$endif$
 >>
 
 globals(comment, global) ::= <<
@@ -92,14 +104,14 @@ $endif$
 $method; separator="\n\n"$
 >>
 
-mainH(comment, protos) ::= <<
+mainH(comment, protos, hasPrototypes) ::= <<
 $if(comment)$
 $comment; separator="\n"$
 
 $endif$
 #include <logika.h>
-$if(protos)$
 
+$if(hasPrototypes)$
 $protos; separator="\n\n"$
 $endif$
 >>
@@ -113,7 +125,7 @@ $if(comment && proto)$
 $comment; separator="\n"$
 
 $endif$
-$proto; separator=";\n\n"$$if(proto)$;$endif$
+$proto; separator="\n\n"$
 >>
 
 method(proto, stmts) ::= <<
@@ -123,8 +135,8 @@ $proto$
 }
 >>
 
-proto(no, t, name, param) ::= <<
-$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)$if(no)$ /* L$no$ */$endif$
+proto(no, t, name, param, end) ::= <<
+$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)$end$$if(no)$ // L$no$$endif$
 >>
 
 param(mod, t, x) ::= <<
@@ -160,9 +172,9 @@ if ($e$) {$line(no)$
 $endif$
 >>
 
-whileStmt(no, e,  stmt) ::= <<
+whileStmt(no, e, stmts) ::= <<
 while ($e$) {$line(no)$
-  $stmt; separator="\n"$
+  $stmts$
 }
 >>
 
