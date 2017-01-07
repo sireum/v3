@@ -316,7 +316,9 @@ class Main(option: LogikaOption,
         val fText = FileUtil.readFile(fr)
         fr.close()
         Some(message.ProofFile(
-          fileUriOpt = if (option.input.length == 1) None else Some(filePath),
+          fileUriOpt =
+            if (option.input.length == 1) None
+            else Some(f.getCanonicalPath),
           content = fText))
       }
     }
@@ -344,7 +346,6 @@ class Main(option: LogikaOption,
     if (hasError) sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     var allPrograms = true
     for ((input, unitNode) <- option.input.zip(unitNodes)) {
-      unitNode.fileUriOpt = Some(new java.io.File(input).toURI.toString)
       if (!unitNode.isInstanceOf[Program]) {
         errPrintln(s"Cannot translate $input because it is not a Logika program.")
         allPrograms = false
@@ -355,6 +356,11 @@ class Main(option: LogikaOption,
     val r = transpiler.C(unitNodes.map(_.asInstanceOf[Program]), option.bitwidth)
     if (reporter.hasError) {
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+    if (option.input.length == 1) {
+      val comment = s"// Generated from ${new java.io.File(option.input.head).getCanonicalPath}"
+      r.stMain.add("comment", comment)
+      r.stMainHeader.add("comment", comment)
     }
     if (FileUtil.writeFile(file, r.stMain.render))
       outPrintln(s"Wrote to ${file.getCanonicalPath}.")

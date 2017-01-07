@@ -23,9 +23,10 @@ copyright() ::= <<
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 >>
 
-main(comment, io, assertion, assumption, globals, stmts, methods) ::= <<
+main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods) ::= <<
 $if(comment)$
 $comment; separator="\n"$
+
 $endif$
 $if(io)$
 #include <logika-io.h>
@@ -39,6 +40,8 @@ $if(assumption)$
 #define assume(e) assert(e)
 $endif$
 $endif$
+
+$protos; separator="\n\n"$
 
 $globals; separator="\n\n"$
 
@@ -82,7 +85,11 @@ $endif$
 $method; separator="\n\n"$
 >>
 
-mainH(protos) ::= <<
+mainH(comment, protos) ::= <<
+$if(comment)$
+$comment; separator="\n"$
+
+$endif$
 #include <logika.h>
 
 $protos; separator="\n\n"$
@@ -93,7 +100,7 @@ lcomment(text) ::= <<
 >>
 
 protos(proto, comment) ::= <<
-s$if(comment && proto)$
+$if(comment && proto)$
 $comment; separator="\n"$
 
 $endif$
@@ -157,12 +164,16 @@ $line(no)${
 }
 >>
 
+returnStmt(no, e) ::= <<
+$line(no)$return $e$;
+>>
+
 lit(e) ::= <<
 $e$
 >>
 
 litCastExp(t, e, text) ::= <<
-(($t$) $t$$if(text)$ /* $text$ */$endif$)
+(($t$) $e$$if(text)$ /* $text$ */$endif$)
 >>
 
 lit64Exp(signed, t, e1, e2, text) ::= <<

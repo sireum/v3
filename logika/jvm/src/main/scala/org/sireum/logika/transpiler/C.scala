@@ -45,7 +45,7 @@ object C {
 
   private val uiMax: BigInt = BigInt(2).pow(32) - 1
 
-  private val opMap = Map(
+  private val zOpMap = Map(
     "+" -> "L_Z_add",
     "-" -> "L_Z_sub",
     "*" -> "L_Z_mul",
@@ -56,7 +56,9 @@ object C {
     "<" -> "L_Z_lt",
     "<=" -> "L_Z_le",
     ">" -> "L_Z_gt",
-    ">=" -> "L_Z_ge",
+    ">=" -> "L_Z_ge")
+
+  private val opMap = Map(
     "&" -> "&&",
     "|" -> "||",
     "|^" -> "^",
@@ -81,20 +83,21 @@ private class C(program: ast.Program,
                 result: Result)(
                  implicit reporter: TagReporter) {
   val Result(stMainHeader, stMain) = result
+  val stProtos: ST = stg.getInstanceOf("protos")
   val stGlobals: ST = stg.getInstanceOf("globals")
   val stStmts: ST = stg.getInstanceOf("stmts")
   val stMethods: ST = stg.getInstanceOf("methods")
-  val stProtos: ST = stg.getInstanceOf("protos")
 
   {
     stMainHeader.add("protos", stProtos)
     stMain.add("globals", stGlobals)
+    stMain.add("protos", stProtos)
     stMain.add("stmts", stStmts)
     stMain.add("methods", stMethods)
 
     for (fileUri <- program.fileUriOpt) {
       val st = stg.getInstanceOf("lcomment").
-        add("text", fileUri)
+        add("text", s"Generated from $fileUri")
       stProtos.add("comment", st)
       stGlobals.add("comment", st)
       stStmts.add("comment", st)
@@ -111,7 +114,7 @@ private class C(program: ast.Program,
                 declaredVars: ISeq[(String, String)],
                 retTypeNameOpt: Option[String]): Unit = {
     var varDecls = declaredVars
-    for (stmt <- program.block.stmts)
+    for (stmt <- block.stmts)
       for (tx <- translate(stmt, isGlobal, stStmts, varDecls, retTypeNameOpt))
         varDecls :+= tx
     block.returnOpt.foreach(
@@ -201,6 +204,7 @@ private class C(program: ast.Program,
         declaredVars, retTypeNameOpt)
       None
     case stmt: ast.Print =>
+      result.stMain.add("io", true)
       if (stmt.isNewline && stmt.args.isEmpty) {
         stStmts.add("stmt",
           stg.getInstanceOf("callExp").
@@ -299,7 +303,8 @@ private class C(program: ast.Program,
         stg.getInstanceOf("callExp").
           add("id", s"L_${t}_wipe").
           add("e", s"&${name(x)}").add("end", ";"))
-    val retST = stg.getInstanceOf("returnStmt")
+    val retST = stg.getInstanceOf("returnStmt").
+      add("no", program.nodeLocMap(r).lineBegin)
     r.expOpt.foreach(_ => retST.add("e", "result"))
     stStmts.add("stmt", retST)
   }
@@ -347,8 +352,10 @@ private class C(program: ast.Program,
           result.add("id", translate(e.exp))
       }
     case _: ast.RandomInt =>
+      result.stMain.add("io", true)
       stg.getInstanceOf("callExp").add("id", "L_Z_random")
     case _: ast.ReadInt =>
+      result.stMain.add("io", true)
       stg.getInstanceOf("callExp").add("id", "L_Z_read")
     case e: ast.IntLit =>
       val n = e.normalize
@@ -491,6 +498,7 @@ private class C(program: ast.Program,
       }
       stg.getInstanceOf("lit").add("e", lit)
     case e: ast.Random =>
+      result.stMain.add("io", true)
       val lit = typeName(e.tpe)
       stg.getInstanceOf("lit").add("e", lit)
     case e: ast.TypeMethodCallExp =>
@@ -504,7 +512,7 @@ private class C(program: ast.Program,
       val op = e.op(false)
       e.tipe match {
         case tipe.Z if bitWidth == 0 =>
-          val zOp = opMap(op) +
+          val zOp = zOpMap(op) +
             (if (shouldFree(e.left)) "l" else "") +
             (if (shouldFree(e.right)) "r" else "")
           stg.getInstanceOf("callExp").add("id", zOp).
@@ -522,7 +530,7 @@ private class C(program: ast.Program,
             case _ =>
               stg.getInstanceOf("binExp").
                 add("e1", translate(e.left)).
-                add("op", opMap(op)).
+                add("op", opMap.getOrElse(op, op)).
                 add("e2", translate(e.right))
           }
       }
