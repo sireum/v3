@@ -47,7 +47,7 @@ void *L_realloc(void *ptr, size_t size) {
 
 #if BIT_WIDTH == 0
 
-Z L_Zsize_t(size_t n) {
+Z L_st2Z(size_t n) {
   Z result = {0};
   if (n < ULONG_MAX) {
     mpz_init_set_ui(result.data, n);
@@ -66,7 +66,7 @@ static bool L_Z_fits_size_t(Z n) {
   return mpz_sizeinbase(n.data, 2) <= BITS_PER_SIZE_T;
 }
 
-size_t L_Z_to_size_t(Z n) {
+size_t L_Z2st(Z n) {
   L_assert(L_Z_fits_size_t(n));
 #if SIZE_T_MAX > ULONG_MAX
   mpz_t temp;
@@ -461,25 +461,6 @@ ZS L_create_ZS(size_t size, Z initialValue) {
   return result;
 }
 
-ZS L_ZS(int size, ...) {
-  ZS result = {0};
-  result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(Z));
-  va_list valist;
-  va_start(valist, size);
-  int i;
-  for (i = 0; i < size; i++) {
-#if Z_LT_INT
-    result.data[i] = (Z) va_arg(valist, int);
-#else
-    result.data[i] = va_arg(valist, Z);
-#endif
-  }
-  va_end(valist);
-
-  return result;
-}
-
 void L_wipe_Z(Z *n) {
   mpz_clear(n->data);
   L_wipe(n, sizeof(Z));
@@ -496,7 +477,12 @@ void L_wipe_ZS(ZS *ns) {
 
 #else
 
-Z L_Zsize_t(size_t n) {
+size_t L_Z2st(Z n) {
+  L_assert(0 <= n && n <= SIZE_T_MAX);
+  return (size_t) n;
+}
+
+Z L_st2Z(size_t n) {
   Z result = (Z) n;
   L_assert(result == n);
   return result;
@@ -579,6 +565,25 @@ void L_wipe_U32(U32 *n) {
 void L_wipe_U64(U64 *n) {
   *n = 0;
   L_av(n);
+}
+
+ZS L_ZS(int size, ...) {
+  ZS result = {0};
+  result.size = (size_t) size;
+  result.data = L_malloc(size * sizeof(Z));
+  va_list valist;
+  va_start(valist, size);
+  int i;
+  for (i = 0; i < size; i++) {
+#if Z_LT_INT
+    result.data[i] = (Z) va_arg(valist, int);
+#else
+    result.data[i] = va_arg(valist, Z);
+#endif
+  }
+  va_end(valist);
+
+  return result;
 }
 
 S8S L_create_S8S(size_t size, S8 initialValue) {

@@ -297,8 +297,7 @@ private class C(program: ast.Program,
               add("id", "L_println").add("end", ";"))
         } else {
           val printST = stg.getInstanceOf("printStmt").
-            add("no", lineNo(stmt)).
-            add("end", ";")
+            add("no", lineNo(stmt))
           stStmts.add("stmt", printST)
           for ((tOpt, arg) <- stmt.argTipes.zip(stmt.args)) {
             printST.add("stmt",
@@ -315,9 +314,8 @@ private class C(program: ast.Program,
               })
           }
           if (stmt.isNewline) {
-            stStmts.add("stmt",
+            printST.add("stmt",
               stg.getInstanceOf("callExp").
-                add("no", lineNo(stmt)).
                 add("id", "L_println").add("end", ";"))
           }
         }
@@ -395,7 +393,7 @@ private class C(program: ast.Program,
         case tipe.RS =>
           error(e.id, "C translation of RS is not currently supported.")
           noResult
-        case t: MSeq[_] =>
+        case t: tipe.MSeq =>
           stg.getInstanceOf("cloneExp").
             add("t", typeName(e.id, t)).
             add("e", translate(e.id))
@@ -414,7 +412,7 @@ private class C(program: ast.Program,
             result.add("e", translate(arg))
           }
           result.add("id", "L_get_BS")
-        case _: MSeq[_] =>
+        case _: tipe.MSeq =>
           stg.getInstanceOf("indexExp").
             add("e", translate(e.exp)).
             add("i", translate(e.args.head))
@@ -645,13 +643,18 @@ private class C(program: ast.Program,
       noResult
     case e: ast.SeqLit =>
       val result = stg.getInstanceOf("callExp")
+      result.add("e", e.args.size)
       for (arg <- e.args) {
         result.add("e", translate(arg))
       }
       result.add("id", s"L_${typeName(e.tpe)}")
   }
 
-  def shouldFree(e: ast.Exp): Boolean = !e.isInstanceOf[ast.Id]
+  def shouldFree(e: ast.Exp): Boolean = e match {
+    case _: ast.Id => false
+    case e: ast.Apply if e.expTipe.isInstanceOf[tipe.MSeq] => false
+    case _ => true
+  }
 
   def typeName(t: ast.Type): String = t match {
     case _: ast.BType => "B"

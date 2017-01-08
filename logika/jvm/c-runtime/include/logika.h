@@ -171,30 +171,13 @@ typedef float F32;
 
 typedef double F64;
 
-size_t L_Z_to_size_t(Z n);
+size_t L_Z2st(Z n);
+Z L_st2Z(size_t n);
 
 typedef struct {
   size_t size;
   size_t *data;
 } BS;
-
-typedef struct {
-  size_t size;
-  Z *data;
-} ZS;
-
-#if BIT_WIDTH == 0
-
-typedef ZS NS;
-
-#else
-
-typedef struct {
-  size_t size;
-  N *data;
-} NS;
-
-#endif
 
 typedef struct {
   size_t size;
@@ -252,6 +235,37 @@ typedef U32S N32S;
 
 typedef U64S N64S;
 
+#if BIT_WIDTH == 0
+
+typedef struct {
+  size_t size;
+  Z *data;
+} ZS;
+
+typedef ZS NS;
+
+#elif BIT_WIDTH == 8
+
+typedef Z8S ZS;
+typedef N8S NS;
+
+#elif BIT_WIDTH == 16
+
+typedef Z16S ZS;
+typedef N16S NS;
+
+#elif BIT_WIDTH == 32
+
+typedef Z32S ZS;
+typedef N32S NS;
+
+#elif BIT_WIDTH == 64
+
+typedef Z64S ZS;
+typedef N64S NS;
+
+#endif
+
 typedef struct {
   size_t size;
   F32 *data;
@@ -261,8 +275,6 @@ typedef struct {
   size_t size;
   F64 *data;
 } F64S;
-
-Z L_Zsize_t(size_t n);
 
 #if BIT_WIDTH == 0
 

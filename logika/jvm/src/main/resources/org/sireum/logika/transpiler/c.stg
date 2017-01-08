@@ -169,7 +169,7 @@ assignRefStmt(no, t, x, e) ::= <<
 >>
 
 seqAssignStmt(no, x, i, e) ::= <<
-$x$.data[$i$] = $e$;$line(no)$
+$x$.data[L_Z2st($i$)] = $e$;$line(no)$
 >>
 
 assertStmt(no, e) ::= <<
@@ -222,7 +222,7 @@ $endif$
 >>
 
 sizeExp(e) ::= <<
-L_Zsize_t($e$.size)
+L_st2Z($e$.size)
 >>
 
 cloneExp(t, e) ::= <<
@@ -246,7 +246,7 @@ $id$($e; separator=", "$)$end$$line(no)$
 >>
 
 indexExp(e, i) ::= <<
-$e$.data[$i$]
+$e$.data[L_Z2st($i$)]
 >>
 
 createExp(t, size, initValue) ::= <<
