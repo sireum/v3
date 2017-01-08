@@ -32,7 +32,9 @@ import org.sireum.util._
 object C {
 
   final case class Result(stMainHeader: ST,
-                          stMain: ST)
+                          stMain: ST,
+                          stCMake: ST,
+                          files: MMap[String, String])
 
   private val stg: STGroup = new STGroupFile(getClass.getResource("c.stg"), "UTF-8", '$', '$')
 
@@ -81,10 +83,34 @@ object C {
 
   private val noResult: ST = stg.getInstanceOf("lit").add("e", "???")
 
+  def read(filename: String, result: Result): Unit =
+    if (!result.files.contains(filename)) {
+      val r = new java.io.BufferedReader(
+        new java.io.InputStreamReader(
+          getClass.getResourceAsStream("/" + filename)))
+      val lines = r.lines().toArray
+      r.close()
+      val sb = new StringBuilder
+      for (line <- lines) {
+        sb.append(line)
+        sb.append(scala.util.Properties.lineSeparator)
+      }
+      result.files(filename) = sb.toString
+    }
+
   def apply(programs: ISeq[ast.Program], bitWidth: Natural)(
     implicit reporter: TagReporter): Result = {
-    val result = Result(stg.getInstanceOf("mainH"), stg.getInstanceOf("main"))
+    var result = Result(stg.getInstanceOf("mainH"),
+      stg.getInstanceOf("main"), stg.getInstanceOf("cmake"), mmapEmpty[String, String])
+    read("logika.c", result)
+    read("logika.h", result)
+    if (bitWidth == 0) {
+      result.stCMake.add("gmp", true)
+      read("FindGMP.cmake", result)
+    }
     for (p <- programs) new C(p, bitWidth, result)
+    result.stCMake.add("bitWidth", bitWidth)
+    for (f <- result.files.keys) result.stCMake.add("file", f)
     result
   }
 }
@@ -95,14 +121,19 @@ private class C(program: ast.Program,
                 bitWidth: Natural,
                 result: Result)(
                  implicit reporter: TagReporter) {
-  val Result(stMainHeader, stMain) = result
+  val Result(stMainHeader, stMain, stCMake, _) = result
   val stProtos: ST = stg.getInstanceOf("protos")
   val stGlobals: ST = stg.getInstanceOf("globals")
+  val stHeaderGlobals: ST = stg.getInstanceOf("globals")
   val stRunStmts: ST = stg.getInstanceOf("stmts")
   val stMethods: ST = stg.getInstanceOf("methods")
+  var hasIO = false
+  var hasRandom = false
+  var hasTopLevel = false
 
   {
     stMainHeader.add("protos", stProtos)
+    stMainHeader.add("protos", stHeaderGlobals)
     stMain.add("protos", stProtos)
     stMain.add("globals", stGlobals)
     stMain.add("stmts", stRunStmts)
@@ -113,12 +144,28 @@ private class C(program: ast.Program,
         add("text", s"Generated from $fileUri")
       stProtos.add("comment", st)
       stGlobals.add("comment", st)
+      stHeaderGlobals.add("comment", st)
       stRunStmts.add("comment", st)
       stMethods.add("comment", st)
     }
 
     translate(program.block, isGlobal = true,
       stRunStmts, imapEmpty, None, shouldReturn = true)
+
+    if (hasIO) {
+      read("logika-io.h", result)
+      read("logika-io.c", result)
+      result.stMain.add("io", true)
+    }
+    if (hasRandom) {
+      read("logika-random.h", result)
+      read("logika-random.c", result)
+      read("FindSodium.cmake", result)
+      result.stMain.add("hasRandom", true)
+      result.stCMake.add("sodium", true)
+    }
+    if (hasTopLevel) stMain.add("hasTopLevel", true)
+    else stCMake.add("library", true)
   }
 
   def translate(block: ast.Block,
@@ -200,7 +247,7 @@ private class C(program: ast.Program,
                 stStmts: ST,
                 declaredVars: IMap[ast.Id, ast.Type],
                 retTypeNameOpt: Option[String]): Option[(ast.Id, ast.Type)] = {
-    if (isGlobal && !stmt.isInstanceOf[ast.MethodDecl]) stMain.add("hasTopLevel", true)
+    if (isGlobal && !stmt.isInstanceOf[ast.MethodDecl]) hasTopLevel = true
     stmt match {
       case stmt: ast.VarDecl =>
         val line = lineNo(stmt)
@@ -208,11 +255,13 @@ private class C(program: ast.Program,
         val x = name(stmt.id)
         if (isGlobal) {
           stMain.add("hasGlobals", true)
-          stGlobals.add("global",
-            stg.getInstanceOf("global").
-              add("t", t).
-              add("x", x).
-              add("no", line))
+          stMainHeader.add("hasGlobals", true)
+          val globalST = stg.getInstanceOf("global").
+            add("t", t).
+            add("x", x).
+            add("no", line)
+          stGlobals.add("global", globalST)
+          stHeaderGlobals.add("global", new ST(globalST).add("extern", true))
           stStmts.add("stmt",
             stg.getInstanceOf("assignStmt").
               add("no", line).
@@ -289,7 +338,7 @@ private class C(program: ast.Program,
           declaredVars, retTypeNameOpt, shouldReturn = false)
         None
       case stmt: ast.Print =>
-        result.stMain.add("io", true)
+        hasIO = true
         if (stmt.isNewline && stmt.args.isEmpty) {
           stStmts.add("stmt",
             stg.getInstanceOf("callExp").
@@ -424,10 +473,10 @@ private class C(program: ast.Program,
           result.add("id", translate(e.exp))
       }
     case _: ast.RandomInt =>
-      result.stMain.add("hasRandom", true)
+      hasRandom = true
       stg.getInstanceOf("callExp").add("id", "L_random_Z")
     case _: ast.ReadInt =>
-      result.stMain.add("io", true)
+      hasIO = true
       stg.getInstanceOf("callExp").add("id", "L_read_Z")
     case e: ast.IntLit =>
       val n = e.normalize
@@ -570,7 +619,7 @@ private class C(program: ast.Program,
       }
       stg.getInstanceOf("lit").add("e", lit)
     case e: ast.Random =>
-      result.stMain.add("hasRandom", true)
+      hasRandom = true
       stg.getInstanceOf("callExp").
         add("id", s"L_random_${typeName(e.tpe)}")
     case e: ast.TypeMethodCallExp =>

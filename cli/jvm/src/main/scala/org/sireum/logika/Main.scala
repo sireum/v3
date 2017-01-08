@@ -374,13 +374,32 @@ class Main(option: LogikaOption,
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
     }
 
-    val filenameH = filename.substring(0, filename.length - 1) + 'h'
+    val name = filename.substring(0, filename.length - 2)
+    val filenameH = name + ".h"
     val fileH = new java.io.File(file.getParentFile, filenameH)
     if (FileUtil.writeFile(fileH, alignRightLineComment(r.stMainHeader.render())))
       outPrintln(s"Wrote to ${fileH.getCanonicalPath}.")
     else {
       errPrintln(s"Could not write to ${fileH.getCanonicalPath}.")
       sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+
+    val fileCMake = new java.io.File(file.getParentFile, "CMakeLists.txt")
+    if (FileUtil.writeFile(fileCMake, r.stCMake.add("name", name).render()))
+      outPrintln(s"Wrote to ${fileCMake.getCanonicalPath}.")
+    else {
+      errPrintln(s"Could not write to ${fileCMake.getCanonicalPath}.")
+      sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+    }
+
+    for ((fName, fText) <- r.files) {
+      val fFile = new java.io.File(file.getParentFile, fName)
+      if (FileUtil.writeFile(fFile, fText))
+        outPrintln(s"Wrote to ${fFile.getCanonicalPath}.")
+      else {
+        errPrintln(s"Could not write to ${fFile.getCanonicalPath}.")
+        sys.exit(TRANSLATION_FAILED_EXIT_CODE)
+      }
     }
   }
 

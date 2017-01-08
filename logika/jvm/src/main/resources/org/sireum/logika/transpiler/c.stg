@@ -23,15 +23,37 @@ copyright() ::= <<
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 >>
 
-main(comment, filename, io, assertion, assumption, globals, protos, stmts, methods, hasTopLevel, hasPrototypes, hasGlobals, hasRandom) ::= <<
+mainH(comment, globals, protos, hasPrototypes, hasGlobals) ::= <<
 $if(comment)$
 $comment; separator="\n"$
 
 $endif$
-$if(io || hasRandom)$
-#include <logika-io.h>
-$else$
 #include <logika.h>
+
+$if(hasPrototypes)$
+// Prototypes
+$protos; separator="\n\n"$
+
+$endif$
+
+$if(hasGlobals)$
+// Global Variables
+$globals; separator="\n\n"$
+$endif$
+>>
+
+main(comment, io, assertion, assumption, globals, protos, stmts, methods, hasTopLevel, hasPrototypes, hasGlobals, hasRandom) ::= <<
+$if(comment)$
+$comment; separator="\n"$
+
+$endif$
+
+#include <logika.h>
+$if(io)$
+#include <logika-io.h>
+$endif$
+$if(hasRandom)$
+#include <logika-random.h>
 $endif$
 $if(hasTopLevel && hasRandom)$
 #include <sodium.h>
@@ -87,11 +109,52 @@ int main()
 $endif$
 >>
 
-globals(comment, global) ::= <<
+cmake(name, bitWidth, gmp, sodium, file, library) ::= <<
+cmake_minimum_required(VERSION 3.5.2)
+
+project($name$)
+
+set(CMAKE_C_STANDARD 90)
+
+list(APPEND CMAKE_MODULE_PATH "./")
+
+add_definitions(-DBIT_WIDTH=$bitWidth$)
+
+# Optionals
+add_definitions(-DLOGIKA_DEBUG -DLOGIKA_SECURE_WIPE)
+
+$if(gmp && sodium)$
+find_package(GMP REQUIRED)
+find_package(Sodium REQUIRED)
+
+include_directories(\${GMP_H} \${SODIUM_H} "./")
+link_libraries(\${GMP_L} \${SODIUM_L})
+$elseif(gmp)$
+find_package(GMP REQUIRED)
+
+include_directories(\${GMP_H} "./")
+link_libraries(\${GMP_L})
+$elseif(sodium)$
+find_package(Sodium REQUIRED)
+
+include_directories(\${SODIUM_H} "./")
+link_libraries(\${SODIUM_L})
+$else$
+include_directories("./")
+$endif$
+
+$if(library)$
+add_library($name$ $name$.c)
+$else$
+add_executable($name$ $name$.c $file; separator=" "$)
+$endif$
+>>
+
+globals(comment, global, extern) ::= <<
 $if(comment && global)$
 $comment; separator="\n"$
 $endif$
-$global; separator="\n"$
+$if(extern)$extern $endif$$global; separator="\n"$
 >>
 
 global(t, x, no) ::= <<
@@ -111,18 +174,6 @@ $comment; separator="\n"$
 
 $endif$
 $method; separator="\n\n"$
->>
-
-mainH(comment, protos, hasPrototypes) ::= <<
-$if(comment)$
-$comment; separator="\n"$
-
-$endif$
-#include <logika.h>
-
-$if(hasPrototypes)$
-$protos; separator="\n\n"$
-$endif$
 >>
 
 lcomment(text) ::= <<
