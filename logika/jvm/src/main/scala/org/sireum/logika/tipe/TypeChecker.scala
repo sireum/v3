@@ -204,7 +204,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
             tc.check(e, allowMethod = false)(
               allowFun = false, mOpt) match {
               case Some(t2) =>
-                if (t != t2)
+                if (!tipeEq(t, t2))
                   error(e, s"Expecting return type $t, but found $t2.")
               case _ =>
             }
@@ -226,7 +226,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
     case VarDecl(isVar, id, t, exp) =>
       id.tipe = TypeChecker.tipe(bitWidth, t)
       check(exp, allowMethod = true)(allowFun = false, mOpt).foreach(tExp =>
-        if (id.tipe != tExp)
+        if (!tipeEq(id.tipe, tExp))
           error(stmt, s"${if (isVar) "Var" else "Val"} declaration requires the same type on both left and right expressions, but found ${id.tipe} and $tExp, respectively.")
         else if (tExp.isInstanceOf[MSeq]) {
           exp match {
@@ -288,7 +288,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           z(index)(allowFun = false, mOpt)
           check(exp, allowMethod = false)(allowFun = false, mOpt) match {
             case Some(et) =>
-              if (t.result != et)
+              if (!tipeEq(et, t.result))
                 error(exp, s"Expecting type ${t.result}, but found $et.")
             case _ =>
           }
@@ -301,16 +301,15 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
         tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p, isGlobalVar = false)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
+      tc = tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(bitWidth, rt)
-          tc = tc.check(md.block)(Some(md))
           val tcPost = copy(
             typeMap = TypeChecker.addId(tm, program, Id("result"), t, md, isGlobalVar = false))
           for (e <- md.contract.ensures.exps)
             tcPost.b(e)(allowFun = true, mOpt)
         case None =>
-          tc = tc.check(md.block)(None)
           for (e <- md.contract.ensures.exps) tc.b(e)(allowFun = true, mOpt)
       }
       tc.checkModifies(md.contract.modifies, md.block, md)
@@ -337,7 +336,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
             tc.b(fd.cond)(allowFun = true, None)
             tc.check(fd.exp, allowMethod = false)(allowFun = true, None) match {
               case Some(t) =>
-                if (rt != t)
+                if (!tipeEq(rt, t))
                   error(fd.exp, s"The expression's type does not match function return type.")
               case _ =>
             }
@@ -466,7 +465,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               val Some(Left(md)) = e.declOpt
               mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
               if (!md.isPure) for (arg@Id(value) <- e.args) typeMap(value) match {
-                case (_: RefTipe, _, true, _) => error(arg, s"Cannot pass non-scalar global variable $value as an argument to a non @pure method.")
+                case (_: RefTipe, _, true, _) =>
+                  error(arg, s"Cannot pass non-scalar global variable $value as an argument to a non @pure method.")
+                  throw new RuntimeException(typeMap.map(p => (p._1, p._2._3)).toString)
                 case _ =>
               }
               val modifiedIds = md.contract.modifies.ids.toSet
@@ -488,10 +489,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               }
             }
             for ((arg, pType) <- e.args.zip(t.params)) {
-              check(arg, allowMethod = false) match {
+              if (pType == Z) z(arg)
+              else check(arg, allowMethod = false) match {
                 case Some(`pType`) =>
-                case Some(_) =>
-                  error(arg, s"Expecting type $pType, but found $t.")
+                case Some(x) =>
+                  error(arg, s"Expecting type $pType, but found $x.")
                 case _ =>
               }
             }
@@ -539,7 +541,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               z(e.args(0))
               check(e.args(1), allowMethod = false) match {
                 case Some(t) =>
-                  if (mst.result != t)
+                  if (!tipeEq(mst.result, t))
                     error(e, s"Invalid default value for elements of ${e.tpe}.")
                 case _ =>
               }
@@ -551,7 +553,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case _: Mul | _: Div | _: Rem | _: Add | _: Sub =>
             (number(e.left), number(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight) {
+                if (!tipeEq(tLeft, tRight)) {
                   val op = e.op(false)
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
@@ -564,7 +566,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case _: Lt | _: Le | _: Gt | _: Ge =>
             (number(e.left), number(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight) {
+                if (!tipeEq(tLeft, tRight)) {
                   val op = e.op(false)
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
@@ -577,7 +579,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case _: Shl | _: Shr =>
             (m(e.left), m(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight) {
+                if (!tipeEq(tLeft, tRight)) {
                   val op = e.op(false)
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
@@ -590,7 +592,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case _: UShr =>
             (ms(e.left), ms(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight) {
+                if (!tipeEq(tLeft, tRight)) {
                   val op = e.op(false)
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
@@ -602,7 +604,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
             }
           case e: EqualityExp =>
             for (tLeft <- check(e.left, allowMethod = false); tRight <- check(e.right, allowMethod = false))
-              if (tLeft != tRight) {
+              if (!tipeEq(tLeft, tRight)) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
               } else {
@@ -612,7 +614,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case e: Append =>
             (mseq(e.left), check(e.right, allowMethod = false)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft.result != tRight) {
+                if (!tipeEq(tLeft.result, tRight)) {
                   error(e, s"Ill-typed append operation $tLeft :+ $tRight.")
                   None
                 } else {
@@ -624,7 +626,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case _: Prepend =>
             (check(e.left, allowMethod = false), mseq(e.right)) match {
               case (Some(tLeft), Some(tRight)) =>
-                if (tLeft != tRight.result) {
+                if (!tipeEq(tLeft, tRight.result)) {
                   error(e, s"Ill-typed prepend operation $tLeft +: $tRight.")
                   None
                 } else {
@@ -675,7 +677,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
             val loT = check(lo, allowMethod)
             val hiT = check(hi, allowMethod)
             if (loT.isDefined && hiT.isDefined) {
-              if (loT != hiT) {
+              if (!tipeEq(loT.get, hiT.get)) {
                 error(rd, s"Mismatch range type: ${loT.get} .. ${hiT.get}.")
                 None
               } else if (!loT.get.isInstanceOf[NumberTipe]) {
@@ -703,12 +705,47 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
         val ts = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
         val et = ts.result
         for (arg <- e.args; t <- check(arg, allowMethod = false)) {
-          if (t != et) {
+          if (!tipeEq(et, t)) {
             error(arg, s"Expecting an expression of type $et, but found $t.")
           }
         }
         Some(ts)
     }
+
+  def tipeEq(t1: Tipe, t2: Tipe): Boolean = (t1, t2) match {
+    case (Z, Z) => true
+    case (N, N) => true
+    case (Z, _) =>
+      bitWidth match {
+      case 0 => Z == t2
+      case 8 => Z8 == t2
+      case 16 => Z16 == t2
+      case 32 => Z32 == t2
+      case 64 => Z64 == t2
+    }
+    case (_, Z) => bitWidth match {
+      case 0 => Z == t1
+      case 8 => Z8 == t1
+      case 16 => Z16 == t1
+      case 32 => Z32 == t1
+      case 64 => Z64 == t1
+    }
+    case (N, _) => bitWidth match {
+      case 0 => N == t2
+      case 8 => Z8 == t2
+      case 16 => Z16 == t2
+      case 32 => Z32 == t2
+      case 64 => Z64 == t2
+    }
+    case (_, N) => bitWidth match {
+      case 0 => N == t1
+      case 8 => Z8 == t1
+      case 16 => Z16 == t1
+      case 32 => Z32 == t1
+      case 64 => Z64 == t1
+    }
+    case _ => t1 == t2
+  }
 
   def collectAssignedVars(b: Block): ISet[Id] = {
     var r = isetEmpty[Id]
@@ -745,10 +782,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
     }
 
   def z(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Unit =
-    check(e, allowMethod = false) match {
-      case Some(Z) =>
-      case Some(t) => error(e, s"Expecting an expression of type Z, but found $t.")
-      case _ =>
+    for (t <- check(e, allowMethod = false)) {
+      if (!tipeEq(Z, t)) {
+        error(e, s"Expecting an expression of type Z, but found $t.")
+      }
     }
 
   def number(e: Exp)(implicit allowFun: Boolean, mOpt: Option[MethodDecl]): Option[NumberTipe] =
