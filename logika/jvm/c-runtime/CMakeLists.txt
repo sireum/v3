@@ -11,7 +11,7 @@ find_package(Sodium REQUIRED)
 
 include_directories(${GMP_H} ${SODIUM_H} include)
 
-set(LIB_SOURCE_FILES src/logika.c src/logika-io.c)
+set(LIB_SOURCE_FILES src/logika.c src/logika-io.c src/logika-random.c)
 set(UB -DBIT_WIDTH=0 -DLOGIKA_SECURE_WIPE)
 set(B8 -DBIT_WIDTH=8 -DLOGIKA_SECURE_WIPE)
 set(B16 -DBIT_WIDTH=16 -DLOGIKA_SECURE_WIPE)
