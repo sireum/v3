@@ -41,8 +41,8 @@ object Checker {
     implicit reporter: AccumulatingTagReporter): (Boolean, Boolean, Natural, ISeq[ast.UnitNode]) = {
     val isSymExe = m.kind == message.CheckerKind.SummarizingSymExe ||
       m.kind == message.CheckerKind.UnrollingSymExe
-    val autoEnabled = m.autoEnabled || isSymExe
     val bitWidth = if (isSymExe) m.bitWidth else 0
+    val autoEnabled = m.autoEnabled || isSymExe
 
     var unitNodes = ivectorEmpty[ast.UnitNode]
     for (message.ProofFile(fileUriOpt, text) <- m.proofs) {
@@ -58,7 +58,6 @@ object Checker {
       val programs = unitNodes.map(_.asInstanceOf[ast.Program])
       if (TypeChecker.check(m.kind == CheckerKind.UnrollingSymExe, bitWidth, programs: _*)) {
         var hasError = false
-        val isSymExe = m.kind == CheckerKind.SummarizingSymExe || m.kind == CheckerKind.UnrollingSymExe
         for (program <- programs) {
           def symExeOnly(n: ast.Exp): Unit =
             error(program.fileUriOpt, program.nodeLocMap(n), s"${ast.Exp.toString(n, inProof = false)} can only be used in symbolic execution.")
