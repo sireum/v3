@@ -32,6 +32,7 @@
 
 #define BITS_PER_SIZE_T CHAR_BIT * sizeof(size_t)
 #define BITS_PER_ULONG  CHAR_BIT * sizeof(unsigned int long)
+#define ST_MAX ((size_t) - 1)
 
 void *L_malloc(size_t size) {
   void *result = malloc(size);
@@ -68,14 +69,16 @@ static bool L_Z_fits_size_t(Z n) {
 
 size_t L_Z2st(Z n) {
   L_assert(L_Z_fits_size_t(n));
-#if SIZE_T_MAX > ULONG_MAX
-  mpz_t temp;
-  mpz_init(temp);
-  mpz_fdiv_q_2exp(temp, n.data, BITS_PER_ULONG);
-  size_t result = (((size_t) mpz_get_ui(temp)) << BITS_PER_ULONG) | mpz_get_ui(n.data);
-  mpz_clear(temp);
-  L_wipe(&temp, sizeof(mpz_t));
-  return result;
+#if ST_MAX > ULONG_MAX
+  if (ST_MAX != ULONG_MAX) { // workaround ccomp issue
+    mpz_t temp;
+    mpz_init(temp);
+    mpz_fdiv_q_2exp(temp, n.data, BITS_PER_ULONG);
+    size_t result = (((size_t) mpz_get_ui(temp)) << BITS_PER_ULONG) | mpz_get_ui(n.data);
+    mpz_clear(temp);
+    L_wipe(&temp, sizeof(mpz_t));
+    return result;
+  } else return mpz_get_ui(n.data);
 #else
   return mpz_get_ui(n.data);
 #endif
@@ -484,7 +487,7 @@ void L_wipe_ZS(ZS *ns) {
 #else
 
 size_t L_Z2st(Z n) {
-  L_assert(0 <= n && n <= SIZE_T_MAX);
+  L_assert(0 <= n && n <= ST_MAX);
   return (size_t) n;
 }
 
@@ -495,7 +498,7 @@ Z L_st2Z(size_t n) {
 }
 
 NS L_create_NS(size_t size, N initialValue) {
-  L_assert(size <= SIZE_T_MAX);
+  L_assert(size <= ST_MAX);
   NS result = {0};
   result.size = size;
   result.data = L_malloc(size * sizeof(N));
@@ -1294,7 +1297,7 @@ B L_eq_ZSlr(ZS ns1, ZS ns2) {
 #endif
 
 S8S L_prepend_S8S(S8 n, S8S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S8S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1311,7 +1314,7 @@ S8S L_prepend_S8Sf(S8 n, S8S ns) {
 }
 
 S8S L_append_S8S(S8S ns, S8 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S8S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1328,7 +1331,7 @@ S8S L_append_S8Sf(S8S ns, S8 n) {
 }
 
 S8S L_appends_S8S(S8S ns1, S8S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   S8S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1358,7 +1361,7 @@ S8S L_appends_S8Slr(S8S ns1, S8S ns2) {
 }
 
 S16S L_prepend_S16S(S16 n, S16S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S16S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1375,7 +1378,7 @@ S16S L_prepend_S16Sf(S16 n, S16S ns) {
 }
 
 S16S L_append_S16S(S16S ns, S16 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S16S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1392,7 +1395,7 @@ S16S L_append_S16Sf(S16S ns, S16 n) {
 }
 
 S16S L_appends_S16S(S16S ns1, S16S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   S16S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1422,7 +1425,7 @@ S16S L_appends_S16Slr(S16S ns1, S16S ns2) {
 }
 
 S32S L_prepend_S32S(S32 n, S32S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S32S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1439,7 +1442,7 @@ S32S L_prepend_S32Sf(S32 n, S32S ns) {
 }
 
 S32S L_append_S32S(S32S ns, S32 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S32S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1456,7 +1459,7 @@ S32S L_append_S32Sf(S32S ns, S32 n) {
 }
 
 S32S L_appends_S32S(S32S ns1, S32S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   S32S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1486,7 +1489,7 @@ S32S L_appends_S32Slr(S32S ns1, S32S ns2) {
 }
 
 S64S L_prepend_S64S(S64 n, S64S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S64S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1503,7 +1506,7 @@ S64S L_prepend_S64Sf(S64 n, S64S ns) {
 }
 
 S64S L_append_S64S(S64S ns, S64 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   S64S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1520,7 +1523,7 @@ S64S L_append_S64Sf(S64S ns, S64 n) {
 }
 
 S64S L_appends_S64S(S64S ns1, S64S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   S64S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1550,7 +1553,7 @@ S64S L_appends_S64Slr(S64S ns1, S64S ns2) {
 }
 
 U8S L_prepend_U8S(U8 n, U8S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U8S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1567,7 +1570,7 @@ U8S L_prepend_U8Sf(U8 n, U8S ns) {
 }
 
 U8S L_append_U8S(U8S ns, U8 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U8S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1584,7 +1587,7 @@ U8S L_append_U8Sf(U8S ns, U8 n) {
 }
 
 U8S L_appends_U8S(U8S ns1, U8S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   U8S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1614,7 +1617,7 @@ U8S L_appends_U8Slr(U8S ns1, U8S ns2) {
 }
 
 U16S L_prepend_U16S(U16 n, U16S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U16S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1631,7 +1634,7 @@ U16S L_prepend_U16Sf(U16 n, U16S ns) {
 }
 
 U16S L_append_U16S(U16S ns, U16 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U16S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1648,7 +1651,7 @@ U16S L_append_U16Sf(U16S ns, U16 n) {
 }
 
 U16S L_appends_U16S(U16S ns1, U16S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   U16S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1678,7 +1681,7 @@ U16S L_appends_U16Slr(U16S ns1, U16S ns2) {
 }
 
 U32S L_prepend_U32S(U32 n, U32S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U32S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1695,7 +1698,7 @@ U32S L_prepend_U32Sf(U32 n, U32S ns) {
 }
 
 U32S L_append_U32S(U32S ns, U32 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U32S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1712,7 +1715,7 @@ U32S L_append_U32Sf(U32S ns, U32 n) {
 }
 
 U32S L_appends_U32S(U32S ns1, U32S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   U32S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1742,7 +1745,7 @@ U32S L_appends_U32Slr(U32S ns1, U32S ns2) {
 }
 
 U64S L_prepend_U64S(U64 n, U64S ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U64S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1759,7 +1762,7 @@ U64S L_prepend_U64Sf(U64 n, U64S ns) {
 }
 
 U64S L_append_U64S(U64S ns, U64 n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   U64S result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1776,7 +1779,7 @@ U64S L_append_U64Sf(U64S ns, U64 n) {
 }
 
 U64S L_appends_U64S(U64S ns1, U64S ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   U64S result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1808,7 +1811,7 @@ U64S L_appends_U64Slr(U64S ns1, U64S ns2) {
 #if BIT_WIDTH == 0
 
 ZS L_prepend_ZS(Z n, ZS ns) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   ZS result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1825,7 +1828,7 @@ ZS L_prepend_ZSf(Z n, ZS ns) {
 }
 
 ZS L_append_ZS(ZS ns, Z n) {
-  L_assert(ns.size < SIZE_T_MAX);
+  L_assert(ns.size < ST_MAX);
   ZS result = {0};
   size_t size = ns.size + 1;
   result.size = size;
@@ -1842,7 +1845,7 @@ ZS L_append_ZSf(ZS ns, Z n) {
 }
 
 ZS L_appends_ZS(ZS ns1, ZS ns2) {
-  L_assert(ns1.size + ns2.size < SIZE_T_MAX);
+  L_assert(ns1.size + ns2.size < ST_MAX);
   ZS result = {0};
   size_t size = ns1.size + ns2.size;
   result.size = size;
@@ -1939,11 +1942,14 @@ void L_wipe_F64S(F64S *ns) {
   L_wipe(ns, sizeof(F64S));
 }
 
+#define c_assert(name, b) U8 __EV_##name[1 - (2 * !(b))]
+
 static void __EV() {
-  U8 __EV_F32_IS_32[1 - (2 * ((sizeof(F32) * CHAR_BIT) != 32))];
-  U8 __EV_F64_IS_64[1 - (2 * ((sizeof(F64) * CHAR_BIT) != 64))];
-#if SIZE_T_MAX > ULONG_MAX
-  U8 __EV_SIZE_T_ULONG2X[1 - (2 * (sizeof(size_t) != 2 * sizeof(unsigned long int)))];
+  c_assert(F32_IS_32, (sizeof(F32) * CHAR_BIT) == 32);
+  c_assert(F64_IS_64, (sizeof(F64) * CHAR_BIT) == 64);
+#if ST_MAX == ULONG_MAX // workaround ccomp issue
+#elif ST_MAX > ULONG_MAX
+  c_assert(SIZE_T_ULONG, ST_MAX == 2 * ULONG_MAX);
 #endif
-  L_assert(false);
+  L_assert(ST_MAX);
 }
