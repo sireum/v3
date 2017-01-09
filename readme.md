@@ -32,7 +32,7 @@ installed, along with the Sireum CLI (see below).
   Execute the following in a bash terminal:
   
   ```bash
-  curl -o sireum-v3-idea-mac64.dmg https://goo.gl/y71F7n; open sireum-v3-idea-mac64.dmg 
+  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/2i6jvbX; open sireum-v3-idea-mac64.dmg 
   ```
   
   Once it is done, it should open a new window:
@@ -54,7 +54,7 @@ installed, along with the Sireum CLI (see below).
 
 * **Linux**
 
-  Download from: https://goo.gl/bpntQs
+  Download from: http://bit.ly/2ja1oic
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -67,7 +67,7 @@ installed, along with the Sireum CLI (see below).
 
 * **Windows**
 
-  Download from: https://goo.gl/DoOOHl
+  Download from: http://bit.ly/2iw7hFN
    
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\Sireum\sireum.bat` is present.
   
@@ -92,7 +92,7 @@ installed, along with the Sireum CLI (see below).
 
 * **macOS**
 
-  Download from: https://goo.gl/RoRDuA
+  Download from: http://bit.ly/2jluudT
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -103,7 +103,7 @@ installed, along with the Sireum CLI (see below).
 
 * **Linux**
 
-  Download from: https://goo.gl/rRKgDh
+  Download from: http://bit.ly/2j051Ks
 
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -114,7 +114,7 @@ installed, along with the Sireum CLI (see below).
 
 * **Windows**
 
-  Download from: https://goo.gl/Aql6xa
+  Download from: http://bit.ly/2i6llK8
 
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\sireum-v3\sireum.bat` is present.
   
