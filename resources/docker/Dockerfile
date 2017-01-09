@@ -10,7 +10,7 @@ RUN locale-gen en_US en_US.UTF-8 && \
     dpkg --add-architecture i386 && \
     apt-get update && \
     apt-get install -y wget git unzip libgomp1 xz-utils build-essential automake cmake aspcud \
-                       libc6-dev libgmp-dev libsodium-dev libc6-dev-i386 libgmp-dev:i386 libsodium-dev:i386 && \
+                       libc6-dev libgmp-dev libsodium-dev libc6-dev-i386 libgmp-dev:i386 libsodium-dev:i386 nano && \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
     git clone -b master https://github.com/sireum/v3.git sireum-v3 && \
@@ -19,6 +19,7 @@ RUN locale-gen en_US en_US.UTF-8 && \
     SIREUM_PARALLEL_BUILD=false && \
     $SIREUM_HOME/bin/sbt-launch.sh test && \
     sireum && \
+    $SIREUM_HOME/bin/sbt-launch.sh clean && \
     git clone https://github.com/ksu-cis-706/compiler.git compiler && \
     cd /opt/compiler && \
     sbt clean test:compile test && \
