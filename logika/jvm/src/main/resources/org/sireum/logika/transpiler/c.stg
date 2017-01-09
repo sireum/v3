@@ -150,15 +150,15 @@ add_executable($name$ $name$.c $file; separator=" "$)
 $endif$
 >>
 
-globals(comment, global, extern) ::= <<
+globals(comment, global) ::= <<
 $if(comment && global)$
 $comment; separator="\n"$
 $endif$
-$if(extern)$extern $endif$$global; separator="\n"$
+$global; separator="\n"$
 >>
 
-global(t, x, no) ::= <<
-$t$ $x$;$if(no)$ // L$no$$endif$
+global(t, x, no, extern) ::= <<
+$if(extern)$extern $endif$$t$ $x$;$if(no)$ // L$no$$endif$
 >>
 
 stmts(comment, stmt) ::= <<
@@ -296,10 +296,10 @@ callExp(no, id, e, end) ::= <<
 $id$($e; separator=", "$)$end$$line(no)$
 >>
 
-indexExp(e, i) ::= <<
-$e$.data[L_Z2st($i$)]
+indexExp(e, i, free) ::= <<
+$e$.data[L_Z2st$if(free)$f$endif$($i$)]
 >>
 
-createExp(t, size, initValue) ::= <<
-L_create_$t$($size$, $initValue$)
+createExp(t, size, initValue, free) ::= <<
+L_create_$t$(L_Z2st$if(free)$f$endif$($size$), $initValue$)
 >>

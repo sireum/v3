@@ -354,7 +354,7 @@ private class C(program: ast.Program,
                 case ast.StringLit(value) =>
                   stg.getInstanceOf("callExp").
                     add("id", "L_print").
-                    add("e", '"' + escape(value) + '"').
+                    add("e", escape(value)).
                     add("end", ";")
                 case arg: ast.Exp =>
                   stg.getInstanceOf("callExp").
@@ -432,7 +432,7 @@ private class C(program: ast.Program,
 
   def translate(e: ast.Exp): ST = e match {
     case ast.BooleanLit(value) =>
-      stg.getInstanceOf("lit").add("e", if (value) "T" else "F")
+      stg.getInstanceOf("lit").add("e", if (value) "true" else "false")
     case e: ast.Id =>
       stg.getInstanceOf("lit").add("e", name(e))
     case e: ast.Size =>
@@ -456,15 +456,15 @@ private class C(program: ast.Program,
     case e: ast.Apply =>
       e.expTipe match {
         case tipe.BS =>
-          val result = stg.getInstanceOf("callExp")
-          for (arg <- e.args) {
-            result.add("e", translate(arg))
-          }
-          result.add("id", "L_get_BS")
+          stg.getInstanceOf("callExp").
+            add("id", "L_get_BS").
+            add("e", translate(e.args.head))
         case _: tipe.MSeq =>
+          val index = e.args.head
           stg.getInstanceOf("indexExp").
             add("e", translate(e.exp)).
-            add("i", translate(e.args.head))
+            add("i", translate(index)).
+            add("free", shouldFree(index))
         case _ =>
           val result = stg.getInstanceOf("callExp")
           for (arg <- e.args) {
@@ -475,9 +475,10 @@ private class C(program: ast.Program,
     case _: ast.RandomInt =>
       hasRandom = true
       stg.getInstanceOf("callExp").add("id", "L_random_Z")
-    case _: ast.ReadInt =>
+    case e: ast.ReadInt =>
       hasIO = true
-      stg.getInstanceOf("callExp").add("id", "L_read_Z")
+      stg.getInstanceOf("callExp").add("id", "L_read_Z").
+        add("e", e.msgOpt.map(sl => escape(sl.value)).getOrElse("\"\""))
     case e: ast.IntLit =>
       val n = e.normalize
       e.bitWidth match {
@@ -625,9 +626,11 @@ private class C(program: ast.Program,
     case e: ast.TypeMethodCallExp =>
       e.id.value match {
         case "create" =>
+          val size = e.args.head
           stg.getInstanceOf("createExp").add("t", typeName(e.tpe)).
-            add("size", translate(e.args.head)).
-            add("initValue", translate(e.args(1)))
+            add("size", translate(size)).
+            add("initValue", translate(e.args(1))).
+            add("free", shouldFree(size))
       }
     case e: ast.BinaryExp =>
       val op = e.op(false)
@@ -667,6 +670,14 @@ private class C(program: ast.Program,
                   (if (shouldFree(e.right)) "r" else "")).
                 add("e", translate(e.left)).
                 add("e", translate(e.right))
+            case "==" | "!=" if e.tipe.isInstanceOf[tipe.MSeq] =>
+              val opEq = if (e.isInstanceOf[ast.Eq]) "eq" else "ne"
+              stg.getInstanceOf("callExp").
+                add("id", s"L_${opEq}_${typeName(e, e.tipe)}" +
+                  (if (shouldFree(e.left)) "l" else "") +
+                  (if (shouldFree(e.right)) "r" else "")).
+                add("e", translate(e.left)).
+                add("e", translate(e.right))
             case _ =>
               stg.getInstanceOf("binExp").
                 add("e1", translate(e.left)).
@@ -682,10 +693,10 @@ private class C(program: ast.Program,
         case tipe.Z if bitWidth == 0 =>
           stg.getInstanceOf("callExp").
             add("id", "L_neg_Z" + (if (shouldFree(e)) "f" else "")).
-            add("e", translate(e))
+            add("e", translate(e.exp))
         case _ =>
           stg.getInstanceOf("unExp").add("op", "-").
-            add("e", translate(e))
+            add("e", translate(e.exp))
       }
     case _: ast.Quant[_] =>
       internalError("Unexpected contract C translation: result.")

@@ -81,6 +81,12 @@ size_t L_Z2st(Z n) {
 #endif
 }
 
+size_t L_Z2stf(Z n) {
+  size_t result = L_Z2st(n);
+  L_wipe_Z(&n);
+  return result;
+}
+
 Z L_Zsi(long int n) {
   Z result = {0};
   mpz_init_set_si(result.data, n);
@@ -547,6 +553,11 @@ void L_wipe_NS(NS *ns) {
 
 #endif
 
+void L_wipe_B(B *b) {
+  *b = false;
+  L_av(b);
+}
+
 void L_wipe_U8(U8 *n) {
   *n = 0;
   L_av(n);
@@ -580,6 +591,35 @@ ZS L_ZS(int size, ...) {
 #else
     result.data[i] = va_arg(valist, Z);
 #endif
+  }
+  va_end(valist);
+
+  return result;
+}
+
+BS L_create_BS(size_t size, B initialValue) {
+  BS result = {0};
+  size_t dataSize = size / BITS_PER_SIZE_T + (size % BITS_PER_SIZE_T == 0? 0 : 1);
+  result.size = size;
+  result.dataSize = dataSize;
+  result.data = L_malloc(dataSize * sizeof(size_t));
+  size_t i;
+  size_t init = initialValue ? SIZE_MAX : 0;
+  for (i = 0; i < dataSize; i++) {
+    result.data[i] = init;
+  }
+  return result;
+}
+
+BS L_BS(int size, ...) {
+  BS result = L_create_BS((size_t) size, false);
+  va_list valist;
+  va_start(valist, size);
+  int i;
+  for (i = 0; i < size; i++) {
+    if (va_arg(valist, int)) {
+      L_set_BS(result, L_st2Z((size_t) i), true);
+    }
   }
   va_end(valist);
 
@@ -832,7 +872,36 @@ F64S L_create_F64S(size_t size, F64 initialValue) {
   return result;
 }
 
-S8S L_S8S_clone(S8S ns) {
+B L_get_BS(BS bs, Z index) {
+  size_t i = L_Z2st(index);
+  size_t j = i / BITS_PER_SIZE_T;
+  size_t mask = (size_t) 1 << (i % BITS_PER_SIZE_T);
+  return (bs.data[j] & mask) == 0? false : true;
+}
+
+void L_set_BS(BS bs, Z index, B value) {
+  size_t i = L_Z2st(index);
+  size_t j = i / BITS_PER_SIZE_T;
+  if (value) {
+    size_t mask = (size_t) 1 << (i % BITS_PER_SIZE_T);
+    bs.data[j] = bs.data[j] | mask;
+  } else {
+    size_t mask = (size_t) ~(1 << (i % BITS_PER_SIZE_T));
+    bs.data[j] = bs.data[j] & mask;
+  }
+}
+
+BS L_clone_BS(BS ns) {
+  BS result = {0};
+  size_t dataSize = ns.dataSize;
+  result.size = ns.size;
+  result.dataSize = dataSize;
+  result.data = L_malloc(dataSize * sizeof(size_t));
+  memcpy(result.data, ns.data, dataSize);
+  return result;
+}
+
+S8S L_clone_S8S(S8S ns) {
   S8S result = {0};
   size_t size = ns.size;
   result.size = size;
@@ -933,6 +1002,292 @@ ZS L_clone_ZS(ZS ns) {
   for (i = 0; i < size; i++) {
     mpz_set(result.data[i].data, ns.data[i].data);
   }
+  return result;
+}
+
+#endif
+
+B L_eq_BS(BS bs1, BS bs2) {
+  return bs1.size == bs2.size && memcmp(bs1.data, bs2.data, bs1.dataSize) == 0;
+}
+
+B L_eq_BSl(BS bs1, BS bs2) {
+  B result = L_eq_BS(bs1, bs2);
+  L_wipe_BS(&bs1);
+  return result;
+}
+
+B L_eq_BSr(BS bs1, BS bs2) {
+  B result = L_eq_BS(bs1, bs2);
+  L_wipe_BS(&bs2);
+  return result;
+}
+
+B L_eq_BSlr(BS bs1, BS bs2) {
+  B result = L_eq_BS(bs1, bs2);
+  L_wipe_BS(&bs1);
+  L_wipe_BS(&bs2);
+  return result;
+}
+
+B L_eq_S8S(S8S ns1, S8S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_S8Sl(S8S ns1, S8S ns2) {
+  B result = L_eq_S8S(ns1, ns2);
+  L_wipe_S8S(&ns1);
+  return result;
+}
+
+B L_eq_S8Sr(S8S ns1, S8S ns2) {
+  B result = L_eq_S8S(ns1, ns2);
+  L_wipe_S8S(&ns2);
+  return result;
+}
+
+B L_eq_S8Slr(S8S ns1, S8S ns2) {
+  B result = L_eq_S8S(ns1, ns2);
+  L_wipe_S8S(&ns1);
+  L_wipe_S8S(&ns2);
+  return result;
+}
+
+B L_eq_S16S(S16S ns1, S16S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_S16Sl(S16S ns1, S16S ns2) {
+  B result = L_eq_S16S(ns1, ns2);
+  L_wipe_S16S(&ns1);
+  return result;
+}
+
+B L_eq_S16Sr(S16S ns1, S16S ns2) {
+  B result = L_eq_S16S(ns1, ns2);
+  L_wipe_S16S(&ns2);
+  return result;
+}
+
+B L_eq_S16Slr(S16S ns1, S16S ns2) {
+  B result = L_eq_S16S(ns1, ns2);
+  L_wipe_S16S(&ns1);
+  L_wipe_S16S(&ns2);
+  return result;
+}
+
+B L_eq_S32S(S32S ns1, S32S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_S32Sl(S32S ns1, S32S ns2) {
+  B result = L_eq_S32S(ns1, ns2);
+  L_wipe_S32S(&ns1);
+  return result;
+}
+
+B L_eq_S32Sr(S32S ns1, S32S ns2) {
+  B result = L_eq_S32S(ns1, ns2);
+  L_wipe_S32S(&ns2);
+  return result;
+}
+
+B L_eq_S32Slr(S32S ns1, S32S ns2) {
+  B result = L_eq_S32S(ns1, ns2);
+  L_wipe_S32S(&ns1);
+  L_wipe_S32S(&ns2);
+  return result;
+}
+
+B L_eq_S64S(S64S ns1, S64S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_S64Sl(S64S ns1, S64S ns2) {
+  B result = L_eq_S64S(ns1, ns2);
+  L_wipe_S64S(&ns1);
+  return result;
+}
+
+B L_eq_S64Sr(S64S ns1, S64S ns2) {
+  B result = L_eq_S64S(ns1, ns2);
+  L_wipe_S64S(&ns2);
+  return result;
+}
+
+B L_eq_S64Slr(S64S ns1, S64S ns2) {
+  B result = L_eq_S64S(ns1, ns2);
+  L_wipe_S64S(&ns1);
+  L_wipe_S64S(&ns2);
+  return result;
+}
+
+B L_eq_U8S(U8S ns1, U8S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_U8Sl(U8S ns1, U8S ns2) {
+  B result = L_eq_U8S(ns1, ns2);
+  L_wipe_U8S(&ns1);
+  return result;
+}
+
+B L_eq_U8Sr(U8S ns1, U8S ns2) {
+  B result = L_eq_U8S(ns1, ns2);
+  L_wipe_U8S(&ns2);
+  return result;
+}
+
+B L_eq_U8Slr(U8S ns1, U8S ns2) {
+  B result = L_eq_U8S(ns1, ns2);
+  L_wipe_U8S(&ns1);
+  L_wipe_U8S(&ns2);
+  return result;
+}
+
+B L_eq_U16S(U16S ns1, U16S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_U16Sl(U16S ns1, U16S ns2) {
+  B result = L_eq_U16S(ns1, ns2);
+  L_wipe_U16S(&ns1);
+  return result;
+}
+
+B L_eq_U16Sr(U16S ns1, U16S ns2) {
+  B result = L_eq_U16S(ns1, ns2);
+  L_wipe_U16S(&ns2);
+  return result;
+}
+
+B L_eq_U16Slr(U16S ns1, U16S ns2) {
+  B result = L_eq_U16S(ns1, ns2);
+  L_wipe_U16S(&ns1);
+  L_wipe_U16S(&ns2);
+  return result;
+}
+
+B L_eq_U32S(U32S ns1, U32S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_U32Sl(U32S ns1, U32S ns2) {
+  B result = L_eq_U32S(ns1, ns2);
+  L_wipe_U32S(&ns1);
+  return result;
+}
+
+B L_eq_U32Sr(U32S ns1, U32S ns2) {
+  B result = L_eq_U32S(ns1, ns2);
+  L_wipe_U32S(&ns2);
+  return result;
+}
+
+B L_eq_U32Slr(U32S ns1, U32S ns2) {
+  B result = L_eq_U32S(ns1, ns2);
+  L_wipe_U32S(&ns1);
+  L_wipe_U32S(&ns2);
+  return result;
+}
+
+B L_eq_U64S(U64S ns1, U64S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_U64Sl(U64S ns1, U64S ns2) {
+  B result = L_eq_U64S(ns1, ns2);
+  L_wipe_U64S(&ns1);
+  return result;
+}
+
+B L_eq_U64Sr(U64S ns1, U64S ns2) {
+  B result = L_eq_U64S(ns1, ns2);
+  L_wipe_U64S(&ns2);
+  return result;
+}
+
+B L_eq_U64Slr(U64S ns1, U64S ns2) {
+  B result = L_eq_U64S(ns1, ns2);
+  L_wipe_U64S(&ns1);
+  L_wipe_U64S(&ns2);
+  return result;
+}
+
+B L_eq_F32S(F32S ns1, F32S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_F32Sl(F32S ns1, F32S ns2) {
+  B result = L_eq_F32S(ns1, ns2);
+  L_wipe_F32S(&ns1);
+  return result;
+}
+
+B L_eq_F32Sr(F32S ns1, F32S ns2) {
+  B result = L_eq_F32S(ns1, ns2);
+  L_wipe_F32S(&ns2);
+  return result;
+}
+
+B L_eq_F32Slr(F32S ns1, F32S ns2) {
+  B result = L_eq_F32S(ns1, ns2);
+  L_wipe_F32S(&ns1);
+  L_wipe_F32S(&ns2);
+  return result;
+}
+
+B L_eq_F64S(F64S ns1, F64S ns2) {
+  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+}
+
+B L_eq_F64Sl(F64S ns1, F64S ns2) {
+  B result = L_eq_F64S(ns1, ns2);
+  L_wipe_F64S(&ns1);
+  return result;
+}
+
+B L_eq_F64Sr(F64S ns1, F64S ns2) {
+  B result = L_eq_F64S(ns1, ns2);
+  L_wipe_F64S(&ns2);
+  return result;
+}
+
+B L_eq_F64Slr(F64S ns1, F64S ns2) {
+  B result = L_eq_F64S(ns1, ns2);
+  L_wipe_F64S(&ns1);
+  L_wipe_F64S(&ns2);
+  return result;
+}
+
+#if BIT_WIDTH == 0
+
+B L_eq_ZS(ZS ns1, ZS ns2) {
+  size_t size = ns1.size;
+  if (size != ns2.size) return false;
+  size_t i;
+  for (i = 0; i < size; i++) {
+    if (!L_eq_Z(ns1.data[i], ns1.data[i])) return false;
+  }
+  return true;
+}
+
+B L_eq_ZSl(ZS ns1, ZS ns2) {
+  B result = L_eq_ZS(ns1, ns2);
+  L_wipe_ZS(&ns1);
+  return result;
+}
+
+B L_eq_ZSr(ZS ns1, ZS ns2) {
+  B result = L_eq_ZS(ns1, ns2);
+  L_wipe_ZS(&ns2);
+  return result;
+}
+
+B L_eq_ZSlr(ZS ns1, ZS ns2) {
+  B result = L_eq_ZS(ns1, ns2);
+  L_wipe_ZS(&ns1);
+  L_wipe_ZS(&ns2);
   return result;
 }
 
@@ -1518,6 +1873,12 @@ ZS L_appends_ZSlr(ZS ns1, ZS ns2) {
 
 #endif
 
+void L_wipe_BS(BS *bs) {
+  L_wipe(bs->data, bs->dataSize);
+  free(bs->data);
+  L_wipe(bs, sizeof(BS));
+}
+
 void L_wipe_S8S(S8S *ns) {
   L_wipe(ns->data, sizeof(S8) * ns->size);
   free(ns->data);
@@ -1584,5 +1945,5 @@ static void __EV() {
 #if SIZE_T_MAX > ULONG_MAX
   U8 __EV_SIZE_T_ULONG2X[1 - (2 * (sizeof(size_t) != 2 * sizeof(unsigned long int)))];
 #endif
-  L_assert(F);
+  L_assert(false);
 }

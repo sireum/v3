@@ -100,9 +100,6 @@ typedef uint64_t   N;
 
 typedef bool B;
 
-#define T           true
-#define F           false
-
 typedef int8_t Z8;
 #define Z8_Min      INT8_MIN
 #define Z8_Max      INT8_MAX
@@ -172,10 +169,14 @@ typedef float F32;
 typedef double F64;
 
 size_t L_Z2st(Z n);
+
+size_t L_Z2stf(Z n);
+
 Z L_st2Z(size_t n);
 
 typedef struct {
   size_t size;
+  size_t dataSize;
   size_t *data;
 } BS;
 
@@ -422,6 +423,7 @@ B L_gt_Zlr(Z n, Z m);
 
 #endif
 
+void L_wipe_B(B *b);
 
 void L_wipe_U8(U8 *n);
 
@@ -471,6 +473,8 @@ void L_wipe_N(N *n);
 
 #endif
 
+
+void L_wipe_BS(BS *bs);
 
 S8S L_create_S8S(size_t size, S8 initialValue);
 
@@ -542,6 +546,11 @@ NS L_NS(int size, ...);
 
 #endif
 
+B L_get_BS(BS bs, Z index);
+
+void L_set_BS(BS bs, Z index, B value);
+
+BS L_clone_BS(BS ns);
 
 S8S L_clone_S8S(S8S ns);
 
@@ -610,6 +619,387 @@ ZS L_clone_ZS(ZS ns);
 #define L_clone_NS(ns) L_clone_U64S(ns)
 
 #endif
+
+
+B L_eq_BS(BS bs1, BS bs2);
+
+B L_eq_BSl(BS bs1, BS bs2);
+
+B L_eq_BSr(BS bs1, BS bs2);
+
+B L_eq_BSlr(BS bs1, BS bs2);
+
+B L_eq_S8S(S8S ns1, S8S ns2);
+
+B L_eq_S8Sl(S8S ns1, S8S ns2);
+
+B L_eq_S8Sr(S8S ns1, S8S ns2);
+
+B L_eq_S8Slr(S8S ns1, S8S ns2);
+
+B L_eq_S16S(S16S ns1, S16S ns2);
+
+B L_eq_S16Sl(S16S ns1, S16S ns2);
+
+B L_eq_S16Sr(S16S ns1, S16S ns2);
+
+B L_eq_S16Slr(S16S ns1, S16S ns2);
+
+B L_eq_S32S(S32S ns1, S32S ns2);
+
+B L_eq_S32Sl(S32S ns1, S32S ns2);
+
+B L_eq_S32Sr(S32S ns1, S32S ns2);
+
+B L_eq_S32Slr(S32S ns1, S32S ns2);
+
+B L_eq_S64S(S64S ns1, S64S ns2);
+
+B L_eq_S64Sl(S64S ns1, S64S ns2);
+
+B L_eq_S64Sr(S64S ns1, S64S ns2);
+
+B L_eq_S64Slr(S64S ns1, S64S ns2);
+
+B L_eq_U8S(U8S ns1, U8S ns2);
+
+B L_eq_U8Sl(U8S ns1, U8S ns2);
+
+B L_eq_U8Sr(U8S ns1, U8S ns2);
+
+B L_eq_U8Slr(U8S ns1, U8S ns2);
+
+B L_eq_U16S(U16S ns1, U16S ns2);
+
+B L_eq_U16Sl(U16S ns1, U16S ns2);
+
+B L_eq_U16Sr(U16S ns1, U16S ns2);
+
+B L_eq_U16Slr(U16S ns1, U16S ns2);
+
+B L_eq_U32S(U32S ns1, U32S ns2);
+
+B L_eq_U32Sl(U32S ns1, U32S ns2);
+
+B L_eq_U32Sr(U32S ns1, U32S ns2);
+
+B L_eq_U32Slr(U32S ns1, U32S ns2);
+
+B L_eq_U64S(U64S ns1, U64S ns2);
+
+B L_eq_U64Sl(U64S ns1, U64S ns2);
+
+B L_eq_U64Sr(U64S ns1, U64S ns2);
+
+B L_eq_U64Slr(U64S ns1, U64S ns2);
+
+B L_eq_F32S(F32S ns1, F32S ns2);
+
+B L_eq_F32Sl(F32S ns1, F32S ns2);
+
+B L_eq_F32Sr(F32S ns1, F32S ns2);
+
+B L_eq_F32Slr(F32S ns1, F32S ns2);
+
+B L_eq_F64S(F64S ns1, F64S ns2);
+
+B L_eq_F64Sl(F64S ns1, F64S ns2);
+
+B L_eq_F64Sr(F64S ns1, F64S ns2);
+
+B L_eq_F64Slr(F64S ns1, F64S ns2);
+
+#define L_eq_Z8S(ns1, ns2)  L_eq_S8S(ns1, ns2)
+
+#define L_eq_Z16S(ns1, ns2) L_eq_S16S(ns1, ns2)
+
+#define L_eq_Z32S(ns1, ns2) L_eq_S32S(ns1, ns2)
+
+#define L_eq_Z64S(ns1, ns2) L_eq_S64S(ns1, ns2)
+
+#define L_eq_N8S(ns1, ns2)  L_eq_U8S(ns1, ns2)
+
+#define L_eq_N16S(ns1, ns2) L_eq_U16S(ns1, ns2)
+
+#define L_eq_N32S(ns1, ns2) L_eq_U32S(ns1, ns2)
+
+#define L_eq_N64S(ns1, ns2) L_eq_U64S(ns1, ns2)
+
+#define L_eq_Z8Sl(ns1, ns2)  L_eq_S8Sl(ns1, ns2)
+
+#define L_eq_Z16Sl(ns1, ns2) L_eq_S16Sl(ns1, ns2)
+
+#define L_eq_Z32Sl(ns1, ns2) L_eq_S32Sl(ns1, ns2)
+
+#define L_eq_Z64Sl(ns1, ns2) L_eq_S64Sl(ns1, ns2)
+
+#define L_eq_N8Sl(ns1, ns2)  L_eq_U8Sl(ns1, ns2)
+
+#define L_eq_N16Sl(ns1, ns2) L_eq_U16Sl(ns1, ns2)
+
+#define L_eq_N32Sl(ns1, ns2) L_eq_U32Sl(ns1, ns2)
+
+#define L_eq_N64Sl(ns1, ns2) L_eq_U64Sl(ns1, ns2)
+
+#define L_eq_Z8Sr(ns1, ns2)  L_eq_S8Sr(ns1, ns2)
+
+#define L_eq_Z16Sr(ns1, ns2) L_eq_S16Sr(ns1, ns2)
+
+#define L_eq_Z32Sr(ns1, ns2) L_eq_S32Sr(ns1, ns2)
+
+#define L_eq_Z64Sr(ns1, ns2) L_eq_S64Sr(ns1, ns2)
+
+#define L_eq_N8Sr(ns1, ns2)  L_eq_U8Sr(ns1, ns2)
+
+#define L_eq_N16Sr(ns1, ns2) L_eq_U16Sr(ns1, ns2)
+
+#define L_eq_N32Sr(ns1, ns2) L_eq_U32Sr(ns1, ns2)
+
+#define L_eq_N64Sr(ns1, ns2) L_eq_U64Sr(ns1, ns2)
+
+#define L_eq_Z8Slr(ns1, ns2)  L_eq_S8Slr(ns1, ns2)
+
+#define L_eq_Z16Slr(ns1, ns2) L_eq_S16Slr(ns1, ns2)
+
+#define L_eq_Z32Slr(ns1, ns2) L_eq_S32Slr(ns1, ns2)
+
+#define L_eq_Z64Slr(ns1, ns2) L_eq_S64Slr(ns1, ns2)
+
+#define L_eq_N8Slr(ns1, ns2)  L_eq_U8Slr(ns1, ns2)
+
+#define L_eq_N16Slr(ns1, ns2) L_eq_U16Slr(ns1, ns2)
+
+#define L_eq_N32Slr(ns1, ns2) L_eq_U32Slr(ns1, ns2)
+
+#define L_eq_N64Slr(ns1, ns2) L_eq_U64Slr(ns1, ns2)
+
+#if BIT_WIDTH == 0
+
+B L_eq_ZS(ZS ns1, ZS ns2);
+
+B L_eq_ZSl(ZS ns1, ZS ns2);
+
+B L_eq_ZSr(ZS ns1, ZS ns2);
+
+B L_eq_ZSlr(ZS ns1, ZS ns2);
+
+#define L_eq_NS(ns1, ns2) L_eq_ZS(ns1, ns2)
+
+#elif BIT_WIDTH == 8
+
+#define L_eq_ZS(ns1, ns2) L_eq_S8S(ns1, ns2)
+
+#define L_eq_ZSl(ns1, ns2) L_eq_S8Sl(ns1, ns2)
+
+#define L_eq_ZSr(ns1, ns2) L_eq_S8Sr(ns1, ns2)
+
+#define L_eq_ZSlr(ns1, ns2) L_eq_S8Slr(ns1, ns2)
+
+#define L_eq_NS(ns1, ns2) L_eq_U8S(ns1, ns2)
+
+#elif BIT_WIDTH == 16
+
+#define L_eq_ZS(ns1, ns2) L_eq_S16S(ns1, ns2)
+
+#define L_eq_ZSl(ns1, ns2) L_eq_S16Sl(ns1, ns2)
+
+#define L_eq_ZSr(ns1, ns2) L_eq_S16Sr(ns1, ns2)
+
+#define L_eq_ZSlr(ns1, ns2) L_eq_S16Slr(ns1, ns2)
+
+#define L_eq_NS(ns1, ns2) L_eq_U16S(ns1, ns2)
+
+#elif BIT_WIDTH == 32
+
+#define L_eq_ZS(ns1, ns2) L_eq_S32S(ns1, ns2)
+
+#define L_eq_ZSl(ns1, ns2) L_eq_S32Sl(ns1, ns2)
+
+#define L_eq_ZSr(ns1, ns2) L_eq_S32Sr(ns1, ns2)
+
+#define L_eq_ZSlr(ns1, ns2) L_eq_S32Slr(ns1, ns2)
+
+#define L_eq_NS(ns1, ns2) L_eq_U32S(ns1, ns2)
+
+#elif BIT_WIDTH == 64
+
+#define L_eq_ZS(ns1, ns2) L_eq_S64S(ns1, ns2)
+
+#define L_eq_ZSl(ns1, ns2) L_eq_S64Sl(ns1, ns2)
+
+#define L_eq_ZSr(ns1, ns2) L_eq_S64Sr(ns1, ns2)
+
+#define L_eq_ZSlr(ns1, ns2) L_eq_S64Slr(ns1, ns2)
+
+#define L_eq_NS(ns1, ns2) L_eq_U64S(ns1, ns2)
+
+#endif
+
+#define L_eq_NSl(ns1, ns2) L_eq_ZSl(ns1, ns2)
+
+#define L_eq_NSr(ns1, ns2) L_eq_ZSr(ns1, ns2)
+
+#define L_eq_NSlr(ns1, ns2) L_eq_ZSlr(ns1, ns2)
+
+#define L_ne_S8S(ns1, ns2) !L_eq_S8S(ns1, ns2)
+
+#define L_ne_S8Sl(ns1, ns2) !L_eq_S8Sl(ns1, ns2)
+
+#define L_ne_S8Sr(ns1, ns2) !L_eq_S8Sr(ns1, ns2)
+
+#define L_ne_S8Slr(ns1, ns2) !L_eq_S8Slr(ns1, ns2)
+
+#define L_ne_S16S(ns1, ns2) !L_eq_S16S(ns1, ns2)
+
+#define L_ne_S16Sl(ns1, ns2) !L_eq_S16Sl(ns1, ns2)
+
+#define L_ne_S16Sr(ns1, ns2) !L_eq_S16Sr(ns1, ns2)
+
+#define L_ne_S16Slr(ns1, ns2) !L_eq_S16Slr(ns1, ns2)
+
+#define L_ne_S32S(ns1, ns2) !L_eq_S32S(ns1, ns2)
+
+#define L_ne_S32Sl(ns1, ns2) !L_eq_S32Sl(ns1, ns2)
+
+#define L_ne_S32Sr(ns1, ns2) !L_eq_S32Sr(ns1, ns2)
+
+#define L_ne_S32Slr(ns1, ns2) !L_eq_S32Slr(ns1, ns2)
+
+#define L_ne_S64S(ns1, ns2) !L_eq_S64S(ns1, ns2)
+
+#define L_ne_S64Sl(ns1, ns2) !L_eq_S64Sl(ns1, ns2)
+
+#define L_ne_S64Sr(ns1, ns2) !L_eq_S64Sr(ns1, ns2)
+
+#define L_ne_S64Slr(ns1, ns2) !L_eq_S64Slr(ns1, ns2)
+
+#define L_ne_U8S(ns1, ns2) !L_eq_U8S(ns1, ns2)
+
+#define L_ne_U8Sl(ns1, ns2) !L_eq_U8Sl(ns1, ns2)
+
+#define L_ne_U8Sr(ns1, ns2) !L_eq_U8Sr(ns1, ns2)
+
+#define L_ne_U8Slr(ns1, ns2) !L_eq_U8Slr(ns1, ns2)
+
+#define L_ne_U16S(ns1, ns2) !L_eq_U16S(ns1, ns2)
+
+#define L_ne_U16Sl(ns1, ns2) !L_eq_U16Sl(ns1, ns2)
+
+#define L_ne_U16Sr(ns1, ns2) !L_eq_U16Sr(ns1, ns2)
+
+#define L_ne_U16Slr(ns1, ns2) !L_eq_U16Slr(ns1, ns2)
+
+#define L_ne_U32S(ns1, ns2) !L_eq_U32S(ns1, ns2)
+
+#define L_ne_U32Sl(ns1, ns2) !L_eq_U32Sl(ns1, ns2)
+
+#define L_ne_U32Sr(ns1, ns2) !L_eq_U32Sr(ns1, ns2)
+
+#define L_ne_U32Slr(ns1, ns2) !L_eq_U32Slr(ns1, ns2)
+
+#define L_ne_U64S(ns1, ns2) !L_eq_U64S(ns1, ns2)
+
+#define L_ne_U64Sl(ns1, ns2) !L_eq_U64Sl(ns1, ns2)
+
+#define L_ne_U64Sr(ns1, ns2) !L_eq_U64Sr(ns1, ns2)
+
+#define L_ne_U64Slr(ns1, ns2) !L_eq_U64Slr(ns1, ns2)
+
+#define L_ne_Z8S(ns1, ns2) !L_eq_Z8S(ns1, ns2)
+
+#define L_ne_Z8Sl(ns1, ns2) !L_eq_Z8Sl(ns1, ns2)
+
+#define L_ne_Z8Sr(ns1, ns2) !L_eq_Z8Sr(ns1, ns2)
+
+#define L_ne_Z8Slr(ns1, ns2) !L_eq_Z8Slr(ns1, ns2)
+
+#define L_ne_Z16S(ns1, ns2) !L_eq_Z16S(ns1, ns2)
+
+#define L_ne_Z16Sl(ns1, ns2) !L_eq_Z16Sl(ns1, ns2)
+
+#define L_ne_Z16Sr(ns1, ns2) !L_eq_Z16Sr(ns1, ns2)
+
+#define L_ne_Z16Slr(ns1, ns2) !L_eq_Z16Slr(ns1, ns2)
+
+#define L_ne_Z32S(ns1, ns2) !L_eq_Z32S(ns1, ns2)
+
+#define L_ne_Z32Sl(ns1, ns2) !L_eq_Z32Sl(ns1, ns2)
+
+#define L_ne_Z32Sr(ns1, ns2) !L_eq_Z32Sr(ns1, ns2)
+
+#define L_ne_Z32Slr(ns1, ns2) !L_eq_Z32Slr(ns1, ns2)
+
+#define L_ne_Z64S(ns1, ns2) !L_eq_Z64S(ns1, ns2)
+
+#define L_ne_Z64Sl(ns1, ns2) !L_eq_Z64Sl(ns1, ns2)
+
+#define L_ne_Z64Sr(ns1, ns2) !L_eq_Z64Sr(ns1, ns2)
+
+#define L_ne_Z64Slr(ns1, ns2) !L_eq_Z64Slr(ns1, ns2)
+
+#define L_ne_N8S(ns1, ns2) !L_eq_N8S(ns1, ns2)
+
+#define L_ne_N8Sl(ns1, ns2) !L_eq_N8Sl(ns1, ns2)
+
+#define L_ne_N8Sr(ns1, ns2) !L_eq_N8Sr(ns1, ns2)
+
+#define L_ne_N8Slr(ns1, ns2) !L_eq_N8Slr(ns1, ns2)
+
+#define L_ne_N16S(ns1, ns2) !L_eq_N16S(ns1, ns2)
+
+#define L_ne_N16Sl(ns1, ns2) !L_eq_N16Sl(ns1, ns2)
+
+#define L_ne_N16Sr(ns1, ns2) !L_eq_N16Sr(ns1, ns2)
+
+#define L_ne_N16Slr(ns1, ns2) !L_eq_N16Slr(ns1, ns2)
+
+#define L_ne_N32S(ns1, ns2) !L_eq_N32S(ns1, ns2)
+
+#define L_ne_N32Sl(ns1, ns2) !L_eq_N32Sl(ns1, ns2)
+
+#define L_ne_N32Sr(ns1, ns2) !L_eq_N32Sr(ns1, ns2)
+
+#define L_ne_N32Slr(ns1, ns2) !L_eq_N32Slr(ns1, ns2)
+
+#define L_ne_N64S(ns1, ns2) !L_eq_N64S(ns1, ns2)
+
+#define L_ne_N64Sl(ns1, ns2) !L_eq_N64Sl(ns1, ns2)
+
+#define L_ne_N64Sr(ns1, ns2) !L_eq_N64Sr(ns1, ns2)
+
+#define L_ne_N64Slr(ns1, ns2) !L_eq_N64Slr(ns1, ns2)
+
+#define L_ne_F32S(ns1, ns2) !L_eq_F32S(ns1, ns2)
+
+#define L_ne_F32Sl(ns1, ns2) !L_eq_F32Sl(ns1, ns2)
+
+#define L_ne_F32Sr(ns1, ns2) !L_eq_F32Sr(ns1, ns2)
+
+#define L_ne_F32Slr(ns1, ns2) !L_eq_F32Slr(ns1, ns2)
+
+#define L_ne_F64S(ns1, ns2) !L_eq_F64S(ns1, ns2)
+
+#define L_ne_F64Sl(ns1, ns2) !L_eq_F64Sl(ns1, ns2)
+
+#define L_ne_F64Sr(ns1, ns2) !L_eq_F64Sr(ns1, ns2)
+
+#define L_ne_F64Slr(ns1, ns2) !L_eq_F64Slr(ns1, ns2)
+
+#define L_ne_ZS(ns1, ns2) !L_eq_ZS(ns1, ns2)
+
+#define L_ne_ZSl(ns1, ns2) !L_eq_ZSl(ns1, ns2)
+
+#define L_ne_ZSr(ns1, ns2) !L_eq_ZSr(ns1, ns2)
+
+#define L_ne_ZSlr(ns1, ns2) !L_eq_ZSlr(ns1, ns2)
+
+#define L_ne_NS(ns1, ns2) !L_eq_NS(ns1, ns2)
+
+#define L_ne_NSl(ns1, ns2) !L_eq_NSl(ns1, ns2)
+
+#define L_ne_NSr(ns1, ns2) !L_eq_NSr(ns1, ns2)
+
+#define L_ne_NSlr(ns1, ns2) !L_eq_NSlr(ns1, ns2)
 
 
 S8S L_prepend_S8S(S8 n, S8S ns);
@@ -913,7 +1303,7 @@ ZS L_appends_ZSlr(ZS ns1, ZS ns2);
 
 #endif
 
-void L_wipe_S8S (S8S *ns);
+void L_wipe_S8S(S8S *ns);
 
 void L_wipe_S16S(S16S *ns);
 
@@ -921,7 +1311,7 @@ void L_wipe_S32S(S32S *ns);
 
 void L_wipe_S64S(S64S *ns);
 
-void L_wipe_U8S (U8S *ns);
+void L_wipe_U8S(U8S *ns);
 
 void L_wipe_U16S(U16S *ns);
 
