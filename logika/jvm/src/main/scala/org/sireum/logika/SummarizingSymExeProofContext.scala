@@ -328,7 +328,17 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           ) || hasError
         val modifiedIds = stmt.contract.modifies.ids.toSet
         val mods = modifiedIds.map(id => ast.Exp.Eq(id.tipe, id, ast.Exp.Id(id.tipe, id.value + "_in")))
-        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods, mdOpt = Some(stmt)).
+        val stmtLine = nodeLocMap(stmt).lineBegin
+        var newOldIdLineMaps = oldIdLineMap.map(p => (p._1, (stmtLine, stmtLine)))
+        for (id <- stmt.contract.modifies.ids) {
+          newOldIdLineMaps += id -> (stmtLine, stmtLine)
+        }
+        for (p <- stmt.params) {
+          val line = nodeLocMap(p.id).lineBegin
+          newOldIdLineMaps += p.id -> (line, line)
+        }
+        copy(premises = ilinkedSetEmpty ++ effectivePre ++ mods,
+          mdOpt = Some(stmt), oldIdLineMap = newOldIdLineMaps).
           check(stmt.block, checkReturn = true)
         Some(this.cleanup)
       case ast.InvStmt(inv) =>
