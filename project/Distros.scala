@@ -75,7 +75,7 @@ object Distros {
     "ignore" -> 30395
   )
 
-  val hasExes = (baseDir / 'distros / "idea.exe").toIO.isFile &&
+  val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
     (baseDir / 'distros / "idea64.exe").toIO.isFile
 
   def buildIdea(): Unit = {
@@ -90,20 +90,11 @@ object Distros {
       case _: Throwable => sys.error("Need 7z.")
     }
 
-    val isMac = System.getProperty("os.name").toLowerCase.contains("mac")
-    val hasWine = try {
-      %%('wineconsole, "-h"); true
-    } catch {
-      case _: Exception => false
-    }
-
     downloadResourceHacker()
     downloadPlugins()
-    if (isMac) buildIdea("mac")
-    else println("Idea mac64 distro will not be built because it can only be built on a macOS host.")
-    //if (hasWine || hasExes) buildIdea("win")
-    //else println("Idea win64 distro will not be built because of missing wineconsole.")
-    //buildIdea("linux")
+    buildIdea("mac")
+    buildIdea("win")
+    buildIdea("linux")
 
     //rm ! baseDir / 'distros / 'idea
   }
@@ -142,7 +133,7 @@ object Distros {
     println("Downloading idea plugins ...")
     for ((name, updateId) <- pluginUpdateIdMap) {
       jarPlugins.get(name) match {
-        case Some(jarName) =>
+        case Some(_) =>
           print(s"Copying $name plugin ... ")
           %%('cp, ideaDir / 'plugins / s"$name-$updateId.zip", p / jarPlugins(name))(p)
         case _ =>
