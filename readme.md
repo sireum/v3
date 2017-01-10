@@ -32,7 +32,7 @@ installed, along with the Sireum CLI (see below).
   Execute the following in a bash terminal:
   
   ```bash
-  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/2i6jvbX; open sireum-v3-idea-mac64.dmg 
+  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/2i6jvbX && open sireum-v3-idea-mac64.dmg 
   ```
   
   Once it is done, it should open a new window:
