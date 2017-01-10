@@ -4,8 +4,10 @@ cd $SCRIPT_DIR
 rm -fR sireum-v3-mac64.zip sireum-v3-linux64.zip sireum-v3-win64.zip sireum-v3-VER sireum-v3
 export SIREUM_SKIP_BUILD=false
 git clone -b master https://github.com/sireum/v3.git sireum-v3
-if [ -d idea ] && [ -d resource_hacker ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
+if [ -d idea ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
   mv idea sireum-v3/distros
+fi
+if [ -d resource_hacker ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
   mv resource_hacker sireum-v3/resources/distro
 fi
 cd sireum-v3

@@ -1,6 +1,7 @@
 #!/bin/bash -e
 export SCRIPT_DIR=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 export SIREUM_IDEA_DISTROS=true
+rm -f sireum-v3-idea*
 $SCRIPT_DIR/build.sh
 $SCRIPT_DIR/sireum-v3/bin/sbt-launch.sh idea-distros
 mv $SCRIPT_DIR/sireum-v3/distros/*.zip $SCRIPT_DIR/
