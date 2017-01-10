@@ -75,6 +75,9 @@ object Distros {
     "ignore" -> 30395
   )
 
+  val hasExes = (baseDir / 'distros / "idea.exe").toIO.isFile &&
+    (baseDir / 'distros / "idea64.exe").toIO.isFile
+
   def buildIdea(): Unit = {
     if (!(baseDir / 'distros / "sireum-v3-VER").toIO.exists) {
       sys.error("Need to run distros task first.")
@@ -98,7 +101,7 @@ object Distros {
     downloadPlugins()
     if (isMac) buildIdea("mac")
     else println("Idea mac64 distro will not be built because it can only be built on a macOS host.")
-    if (hasWine) buildIdea("win")
+    if (hasWine || hasExes) buildIdea("win")
     else println("Idea win64 distro will not be built because of missing wineconsole.")
     buildIdea("linux")
 
@@ -193,15 +196,21 @@ object Distros {
   }
 
   def patchIconExe(filePath: Path): Unit = {
-    def toWinePath(p: Path) = "Z:" + p.toString.replaceAllLiterally("/", "\\")
+    if (hasExes) {
+      print(s"Replacing $filePath ... ")
+      %%('cp, pwd / 'distros / filePath.last, filePath)
+      println("done!")
+    } else {
+      def toWinePath(p: Path) = "Z:" + p.toString.replaceAllLiterally("/", "\\")
 
-    val wineFilePath = toWinePath(filePath)
-    val icoFilePath = toWinePath(pwd / 'resources / 'distro / 'icons / "idea.ico")
-    print(s"Patching $filePath ... ")
-    %%('wineconsole, pwd / 'resources / 'distro / 'resource_hacker / "ResourceHacker.exe",
-      "-open", wineFilePath, "-save", wineFilePath, "-action", 'addoverwrite,
-      "-res", icoFilePath, "-mask", "ICONGROUP,107,")
-    println("done!")
+      val wineFilePath = toWinePath(filePath)
+      val icoFilePath = toWinePath(pwd / 'resources / 'distro / 'icons / "idea.ico")
+      print(s"Patching $filePath ... ")
+      %%('wineconsole, pwd / 'resources / 'distro / 'resource_hacker / "ResourceHacker.exe",
+        "-open", wineFilePath, "-save", wineFilePath, "-action", 'addoverwrite,
+        "-res", icoFilePath, "-mask", "ICONGROUP,107,")
+      println("done!")
+    }
   }
 
   def patchIcon(platform: String, path: Path): Unit = {
@@ -313,15 +322,10 @@ object Distros {
         rm ! bundleDmg
         %%('tar, 'cfz, bundle, "Sireum.app")(ideaDir / platform)
         val ver = (read ! baseDir / 'distros / "sireum-v3-VER").substring(0, 7)
-        %%(pwd / 'resources / 'distro / "create-dmg" / "create-dmg",
-          "--volname", s"Sireum v3 $ver",
-          "--hide-extension", "Sireum.app",
-          "--icon-size", "64",
-          "--icon", "Sireum.app", "0", "90",
-          "--app-drop-link", "256", "90",
-          "--window-size", "500", "150",
-          "--background", pwd / 'resources / 'distro / 'images / "dmg-background.png",
-          bundleDmg, "Sireum.app")(ideaDir / platform)
+        val app = ideaDir / platform / "Sireum.app"
+        val background = pwd / 'resources / 'distro / 'images / "dmg-background.png"
+        %%('dmgbuild, "-s", "settings.py", "-D", s"app=$app",
+          "-D", s"background=$background", s"Sireum v3 $ver", bundleDmg)(baseDir / 'distros)
         rm ! ideaDir / platform
       case "linux" =>
         val bundle = baseDir / 'distros / "sireum-v3-idea-linux64.zip"

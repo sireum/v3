@@ -208,6 +208,8 @@ Requirements:
 
 * macOS host
 
+* [dmgbuild](http://dmgbuild.readthedocs.io)
+
 * [P7ZIP](http://p7zip.sourceforge.net)
 
 * [Wine](https://www.winehq.org)
