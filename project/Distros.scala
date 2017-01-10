@@ -101,9 +101,9 @@ object Distros {
     downloadPlugins()
     if (isMac) buildIdea("mac")
     else println("Idea mac64 distro will not be built because it can only be built on a macOS host.")
-    if (hasWine || hasExes) buildIdea("win")
-    else println("Idea win64 distro will not be built because of missing wineconsole.")
-    buildIdea("linux")
+    //if (hasWine || hasExes) buildIdea("win")
+    //else println("Idea win64 distro will not be built because of missing wineconsole.")
+    //buildIdea("linux")
 
     //rm ! baseDir / 'distros / 'idea
   }
@@ -209,6 +209,7 @@ object Distros {
       %%('wineconsole, pwd / 'resources / 'distro / 'resource_hacker / "ResourceHacker.exe",
         "-open", wineFilePath, "-save", wineFilePath, "-action", 'addoverwrite,
         "-res", icoFilePath, "-mask", "ICONGROUP,107,")
+      %%('cp, filePath, pwd / 'distros / filePath.last)
       println("done!")
     }
   }
@@ -324,7 +325,8 @@ object Distros {
         val ver = (read ! baseDir / 'distros / "sireum-v3-VER").substring(0, 7)
         val app = ideaDir / platform / "Sireum.app"
         val background = pwd / 'resources / 'distro / 'images / "dmg-background.png"
-        %%('dmgbuild, "-s", "settings.py", "-D", s"app=$app",
+        val settings = pwd / 'resources / 'distro / "dmgbuild-settings.py"
+        %%('dmgbuild, "-s", settings, "-D", s"app=$app",
           "-D", s"background=$background", s"Sireum v3 $ver", bundleDmg)(baseDir / 'distros)
         rm ! ideaDir / platform
       case "linux" =>
