@@ -550,6 +550,14 @@ B L_get_BS(BS bs, Z index);
 
 void L_set_BS(BS bs, Z index, B value);
 
+#if BIT_WIDTH == 0
+
+Z L_clone_Z(Z n);
+
+#define L_clone_N(n) L_clone_Z(n)
+
+#endif
+
 BS L_clone_BS(BS ns);
 
 S8S L_clone_S8S(S8S ns);

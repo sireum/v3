@@ -32,7 +32,11 @@
 
 #define BITS_PER_SIZE_T CHAR_BIT * sizeof(size_t)
 #define BITS_PER_ULONG  CHAR_BIT * sizeof(unsigned int long)
+#ifdef SIZE_MAX
+#define ST_MAX SIZE_MAX
+#else
 #define ST_MAX ((size_t) - 1)
+#endif
 
 void *L_malloc(size_t size) {
   void *result = malloc(size);
@@ -259,20 +263,20 @@ B L_eq_Z(Z n, Z m) {
 
 B L_eq_Zl(Z n, Z m) {
   B result = L_eq_Z(n, m);
-  L_wipe_N(&n);
+  L_wipe_Z(&n);
   return result;
 }
 
 B L_eq_Zr(Z n, Z m) {
   B result = L_eq_Z(n, m);
-  L_wipe_N(&m);
+  L_wipe_Z(&m);
   return result;
 }
 
 B L_eq_Zlr(Z n, Z m) {
   B result = L_eq_Z(n, m);
-  L_wipe_N(&n);
-  L_wipe_N(&m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
@@ -282,20 +286,20 @@ B L_lt_Z(Z n, Z m) {
 
 B L_lt_Zl(Z n, Z m) {
   B result = L_lt_Z(n, m);
-  L_wipe_N(&n);
+  L_wipe_Z(&n);
   return result;
 }
 
 B L_lt_Zr(Z n, Z m) {
   B result = L_lt_Z(n, m);
-  L_wipe_N(&m);
+  L_wipe_Z(&m);
   return result;
 }
 
 B L_lt_Zlr(Z n, Z m) {
   B result = L_lt_Z(n, m);
-  L_wipe_N(&n);
-  L_wipe_N(&m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
@@ -305,20 +309,20 @@ B L_gt_Z(Z n, Z m) {
 
 B L_gt_Zl(Z n, Z m) {
   B result = L_gt_Z(n, m);
-  L_wipe_N(&n);
+  L_wipe_Z(&n);
   return result;
 }
 
 B L_gt_Zr(Z n, Z m) {
   B result = L_gt_Z(n, m);
-  L_wipe_N(&m);
+  L_wipe_Z(&m);
   return result;
 }
 
 B L_gt_Zlr(Z n, Z m) {
   B result = L_gt_Z(n, m);
-  L_wipe_N(&n);
-  L_wipe_N(&m);
+  L_wipe_Z(&n);
+  L_wipe_Z(&m);
   return result;
 }
 
@@ -465,7 +469,7 @@ ZS L_create_ZS(size_t size, Z initialValue) {
   result.data = L_malloc(size * sizeof(Z));
   size_t i;
   for (i = 0; i < size; i++) {
-    result.data[i] = initialValue;
+    mpz_set(result.data[i].data, initialValue.data);
   }
   return result;
 }
@@ -893,6 +897,16 @@ void L_set_BS(BS bs, Z index, B value) {
     bs.data[j] = bs.data[j] & mask;
   }
 }
+
+#if BIT_WIDTH == 0
+
+Z L_clone_Z(Z n) {
+  Z result = {0};
+  mpz_init_set(result.data, n.data);
+  return result;
+}
+
+#endif
 
 BS L_clone_BS(BS ns) {
   BS result = {0};

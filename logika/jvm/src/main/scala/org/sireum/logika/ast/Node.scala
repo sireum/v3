@@ -1716,114 +1716,160 @@ final case class F64Type() extends FloatingPointType {
     sb.append("F64")
 }
 
-sealed trait SeqType extends Type
+sealed trait SeqType extends Type {
+  def elementType: Type
+}
 
 final case class BSType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("BS")
+
+  override def elementType: Type = BType()
 }
 
 final case class ZSType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("ZS")
+
+  override def elementType: Type = ZType()
 }
 
 final case class Z8SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z8S")
+
+  override def elementType: Type = Z8Type()
 }
 
 final case class Z16SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z16S")
+
+  override def elementType: Type = Z16Type()
 }
 
 final case class Z32SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z32S")
+
+  override def elementType: Type = Z32Type()
 }
 
 final case class Z64SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("Z64S")
+
+  override def elementType: Type = Z64Type()
 }
 
 final case class NSType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("NS")
+
+  override def elementType: Type = NType()
 }
 
 final case class N8SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N8S")
+
+  override def elementType: Type = N8Type()
 }
 
 final case class N16SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N16S")
+
+  override def elementType: Type = N16Type()
 }
 
 final case class N32SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N32S")
+
+  override def elementType: Type = N32Type()
 }
 
 final case class N64SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("N64S")
+
+  override def elementType: Type = N64Type()
 }
 
 final case class S8SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S8S")
+
+  override def elementType: Type = S8Type()
 }
 
 final case class S16SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S16S")
+
+  override def elementType: Type = S16Type()
 }
 
 final case class S32SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S32S")
+
+  override def elementType: Type = S32Type()
 }
 
 final case class S64SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("S64S")
+
+  override def elementType: Type = S64Type()
 }
 
 final case class U8SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U8S")
+
+  override def elementType: Type = U8Type()
 }
 
 final case class U16SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U16S")
+
+  override def elementType: Type = U16Type()
 }
 
 final case class U32SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U32S")
+
+  override def elementType: Type = U32Type()
 }
 
 final case class U64SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("U64S")
+
+  override def elementType: Type = U64Type()
 }
 
 final case class RSType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("RS")
+
+  override def elementType: Type = RType()
 }
 
 final case class F32SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("F32S")
+
+  override def elementType: Type = F32Type()
 }
 
 final case class F64SType() extends SeqType {
   override def buildString(sb: StringBuilder): Unit =
     sb.append("F64S")
+
+  override def elementType: Type = F64Type()
 }

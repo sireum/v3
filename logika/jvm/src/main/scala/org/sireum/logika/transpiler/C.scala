@@ -100,7 +100,7 @@ object C {
 
   def apply(programs: ISeq[ast.Program], bitWidth: Natural)(
     implicit reporter: TagReporter): Result = {
-    var result = Result(stg.getInstanceOf("mainH"),
+    val result = Result(stg.getInstanceOf("mainH"),
       stg.getInstanceOf("main"), stg.getInstanceOf("cmake"), mmapEmpty[String, String])
     read("logika.c", result)
     read("logika.h", result)
@@ -149,7 +149,7 @@ private class C(program: ast.Program,
       stMethods.add("comment", st)
     }
 
-    translate(program.block, isGlobal = true,
+    translate(program.block, None,
       stRunStmts, imapEmpty, None, shouldReturn = true)
 
     if (hasIO) {
@@ -169,19 +169,19 @@ private class C(program: ast.Program,
   }
 
   def translate(block: ast.Block,
-                isGlobal: Boolean,
+                mdOpt: Option[ast.MethodDecl],
                 stStmts: ST,
                 declaredVars: IMap[ast.Id, ast.Type],
                 retTypeNameOpt: Option[String],
                 shouldReturn: Boolean): Unit = {
-    var varDecls = imapEmpty[ast.Id, ast.Type]
+    var varDecls = declaredVars
     for (stmt <- block.stmts)
-      for (tx <- translate(stmt, isGlobal, stStmts, varDecls, retTypeNameOpt))
+      for (tx <- translate(stmt, mdOpt, stStmts, varDecls, retTypeNameOpt))
         varDecls += tx
     if (shouldReturn || block.returnOpt.isDefined)
       translate(block.returnOpt, stStmts,
-        varWipe(varDecls ++ declaredVars), retTypeNameOpt)
-    else varWipe(varDecls)(None, stStmts)
+        varWipe(varDecls), retTypeNameOpt)
+    else varWipe(varDecls -- declaredVars.keys)(None, stStmts)
   }
 
   def isInternalRefType(id: ast.Id): Boolean = isInternalRefType(id.tipe)
@@ -243,11 +243,23 @@ private class C(program: ast.Program,
   }
 
   def translate(stmt: ast.Stmt,
-                isGlobal: Boolean,
+                mdOpt: Option[ast.MethodDecl],
                 stStmts: ST,
                 declaredVars: IMap[ast.Id, ast.Type],
                 retTypeNameOpt: Option[String]): Option[(ast.Id, ast.Type)] = {
-    if (isGlobal && !stmt.isInstanceOf[ast.MethodDecl]) hasTopLevel = true
+    def idType(id: ast.Id): ast.Type = {
+      declaredVars.get(id) match {
+        case Some(t) => t
+        case _ =>
+          for (md <- mdOpt; p <- md.params) {
+            return p.tpe
+          }
+          throw new AssertionError("Unexpected case.")
+      }
+    }
+
+    val isGlobal = mdOpt.isEmpty
+    if (isGlobal) hasTopLevel = true
     stmt match {
       case stmt: ast.VarDecl =>
         val line = lineNo(stmt)
@@ -266,14 +278,14 @@ private class C(program: ast.Program,
             stg.getInstanceOf("assignStmt").
               add("no", line).
               add("x", x).
-              add("e", translate(stmt.exp)))
+              add("e", translateRhs(stmt.tpe, stmt.exp)))
         } else {
           stStmts.add("stmt",
             stg.getInstanceOf("assignStmt").
               add("no", line).
               add("t", t).
               add("x", x).
-              add("e", translate(stmt.exp)))
+              add("e", translateRhs(stmt.tpe, stmt.exp)))
         }
         Some((stmt.id, stmt.tpe))
       case stmt: ast.Assign =>
@@ -281,7 +293,7 @@ private class C(program: ast.Program,
           stStmts.add("stmt",
             stg.getInstanceOf("assignRefStmt").
               add("no", lineNo(stmt)).
-              add("t", typeName(declaredVars(stmt.id))).
+              add("t", typeName(idType(stmt.id))).
               add("x", name(stmt.id)).
               add("e", translate(stmt.exp)))
         else
@@ -289,7 +301,7 @@ private class C(program: ast.Program,
             stg.getInstanceOf("assignStmt").
               add("no", lineNo(stmt)).
               add("x", name(stmt.id)).
-              add("e", translate(stmt.exp)))
+              add("e", translateRhs(idType(stmt.id), stmt.exp)))
         None
       case stmt: ast.Assume =>
         stMain.add("assumption", true)
@@ -317,13 +329,13 @@ private class C(program: ast.Program,
         stStmts.add("stmt", ifST)
         val stTStmts = stg.getInstanceOf("stmts")
         ifST.add("tStmts", stTStmts)
-        translate(stmt.trueBlock, isGlobal, stTStmts,
+        translate(stmt.trueBlock, mdOpt, stTStmts,
           declaredVars, retTypeNameOpt, shouldReturn = false)
         if (stmt.falseBlock.stmts.nonEmpty ||
           stmt.falseBlock.returnOpt.nonEmpty) {
           val stFStmts = stg.getInstanceOf("stmts")
           ifST.add("fStmts", stFStmts)
-          translate(stmt.falseBlock, isGlobal, stFStmts,
+          translate(stmt.falseBlock, mdOpt, stFStmts,
             declaredVars, retTypeNameOpt, shouldReturn = false)
         }
         None
@@ -334,7 +346,7 @@ private class C(program: ast.Program,
         stStmts.add("stmt", whileST)
         val stWStmts = stg.getInstanceOf("stmts")
         whileST.add("stmts", stWStmts)
-        translate(stmt.block, isGlobal, stWStmts,
+        translate(stmt.block, mdOpt, stWStmts,
           declaredVars, retTypeNameOpt, shouldReturn = false)
         None
       case stmt: ast.Print =>
@@ -386,7 +398,10 @@ private class C(program: ast.Program,
                 add("no", lineNo(stmt)).
                 add("x", translate(stmt.id)).
                 add("i", translate(stmt.index)).
-                add("e", translate(stmt.exp)))
+                add("e", translateRhs(
+                  idType(stmt.id).
+                    asInstanceOf[ast.SeqType].
+                    elementType, stmt.exp)))
         }
         None
       case stmt: ast.MethodDecl =>
@@ -415,7 +430,7 @@ private class C(program: ast.Program,
         }
         val stMStmts = stg.getInstanceOf("stmts")
         methodST.add("stmts", stMStmts)
-        translate(stmt.block, isGlobal = false, stMStmts,
+        translate(stmt.block, Some(stmt), stMStmts,
           varDecls, mretTypeNameOpt, shouldReturn = true)
         val protoST2 = new ST(protoST)
         protoST2.add("end", ";")
@@ -424,6 +439,14 @@ private class C(program: ast.Program,
       case _: ast.ProofElementStmt | _: ast.ProofStmt |
            _: ast.SequentStmt | _: ast.InvStmt => None
     }
+  }
+
+  def translateRhs(t: ast.Type, e: ast.Exp): ST = t match {
+    case _: ast.ZType | _: ast.NType if bitWidth == 0 && !shouldFree(e) =>
+      stg.getInstanceOf("cloneExp").
+        add("t", typeName(t)).
+        add("e", translate(e))
+    case _ => translate(e)
   }
 
   private def lineNo(n: ast.Node): PosInteger = {
