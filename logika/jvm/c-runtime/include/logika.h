@@ -170,7 +170,11 @@ typedef double F64;
 
 size_t L_Z2st(Z n);
 
+#if BIT_WIDTH == 0
 size_t L_Z2stf(Z n);
+#else
+#define L_Z2stf(n) L_Z2st(n)
+#endif
 
 Z L_st2Z(size_t n);
 

@@ -150,7 +150,8 @@ private class C(program: ast.Program,
     }
 
     translate(program.block, None,
-      stRunStmts, imapEmpty, None, shouldReturn = true)
+      stRunStmts, isetEmpty, imapEmpty, None,
+      shouldReturn = true)
 
     if (hasIO) {
       read("logika-io.h", result)
@@ -171,6 +172,7 @@ private class C(program: ast.Program,
   def translate(block: ast.Block,
                 mdOpt: Option[ast.MethodDecl],
                 stStmts: ST,
+                globalVars: ISet[ast.Id],
                 declaredVars: IMap[ast.Id, ast.Type],
                 retTypeNameOpt: Option[String],
                 shouldReturn: Boolean): Unit = {
@@ -180,8 +182,8 @@ private class C(program: ast.Program,
         varDecls += tx
     if (shouldReturn || block.returnOpt.isDefined)
       translate(block.returnOpt, stStmts,
-        varWipe(varDecls), retTypeNameOpt)
-    else varWipe(varDecls -- declaredVars.keys)(None, stStmts)
+        varWipe(varDecls -- globalVars), retTypeNameOpt)
+    else varWipe(varDecls -- (declaredVars.keySet -- globalVars))(None, stStmts)
   }
 
   def isInternalRefType(id: ast.Id): Boolean = isInternalRefType(id.tipe)
@@ -202,7 +204,9 @@ private class C(program: ast.Program,
   def varWipe(declaredVars: IMap[ast.Id, ast.Type])
              (idOpt: Option[ast.Id], stStmts: ST): Unit = {
     val tAlias = idOpt.exists(isInternalRefType)
-    for ((x, t) <- declaredVars) {
+    for ((x, t) <- declaredVars.toVector.sortWith {
+      (p1, p2) => p1._1.value.compare(p2._1.value) <= 0
+    }) {
       if (!tAlias || !idOpt.contains(x))
         stStmts.add("stmt",
           stg.getInstanceOf("callExp").
@@ -254,7 +258,7 @@ private class C(program: ast.Program,
           for (md <- mdOpt; p <- md.params) {
             return p.tpe
           }
-          throw new AssertionError("Unexpected case.")
+          throw new AssertionError(s"Unexpected case: could not find ${id.value} in $declaredVars and ${mdOpt.map(_.params.map(_.id.value))}.")
       }
     }
 
@@ -323,30 +327,34 @@ private class C(program: ast.Program,
             add("no", lineNo(stmt)))
         None
       case stmt: ast.If =>
+        val eST = translate(stmt.exp)
+        if (eST.isInstanceOf[ast.BinaryExp]) eST.add("paren", false)
         val ifST = stg.getInstanceOf("ifStmt").
           add("no", lineNo(stmt)).
-          add("e", translate(stmt.exp))
+          add("e", eST)
         stStmts.add("stmt", ifST)
         val stTStmts = stg.getInstanceOf("stmts")
         ifST.add("tStmts", stTStmts)
-        translate(stmt.trueBlock, mdOpt, stTStmts,
+        translate(stmt.trueBlock, mdOpt, stTStmts, isetEmpty,
           declaredVars, retTypeNameOpt, shouldReturn = false)
         if (stmt.falseBlock.stmts.nonEmpty ||
           stmt.falseBlock.returnOpt.nonEmpty) {
           val stFStmts = stg.getInstanceOf("stmts")
           ifST.add("fStmts", stFStmts)
-          translate(stmt.falseBlock, mdOpt, stFStmts,
+          translate(stmt.falseBlock, mdOpt, stFStmts, isetEmpty,
             declaredVars, retTypeNameOpt, shouldReturn = false)
         }
         None
       case stmt: ast.While =>
+        val eST = translate(stmt.exp)
+        if (eST.isInstanceOf[ast.BinaryExp]) eST.add("paren", false)
         val whileST = stg.getInstanceOf("whileStmt").
           add("no", lineNo(stmt)).
-          add("e", translate(stmt.exp))
+          add("e", eST)
         stStmts.add("stmt", whileST)
         val stWStmts = stg.getInstanceOf("stmts")
         whileST.add("stmts", stWStmts)
-        translate(stmt.block, mdOpt, stWStmts,
+        translate(stmt.block, mdOpt, stWStmts, isetEmpty,
           declaredVars, retTypeNameOpt, shouldReturn = false)
         None
       case stmt: ast.Print =>
@@ -416,7 +424,7 @@ private class C(program: ast.Program,
         methodST.add("proto", protoST)
         stMethods.add("method", methodST)
         val modNames = stmt.contract.modifies.ids.map(name).toSet
-        var varDecls = imapEmpty[ast.Id, ast.Type]
+        var varDecls = declaredVars
         for (p <- stmt.params) {
           val id = p.id
           val notRefType = !isInternalRefType(id)
@@ -430,7 +438,7 @@ private class C(program: ast.Program,
         }
         val stMStmts = stg.getInstanceOf("stmts")
         methodST.add("stmts", stMStmts)
-        translate(stmt.block, Some(stmt), stMStmts,
+        translate(stmt.block, Some(stmt), stMStmts, declaredVars.keySet,
           varDecls, mretTypeNameOpt, shouldReturn = true)
         val protoST2 = new ST(protoST)
         protoST2.add("end", ";")
@@ -541,11 +549,15 @@ private class C(program: ast.Program,
             case Some(_: ast.U64Type) => "U64"
             case _ => "Z"
           }
-          val l = n.toLong
-          val e1 = (l >>> 32) & 0xFFFFFFFF
-          val e2 = l & 0xFFFFFFFF
-          stg.getInstanceOf("lit64Exp").add("t", t).
-            add("e1", e1).add("e2", e2).add("text", n)
+          if (Int.MinValue <= n && n <= Int.MaxValue) {
+            stg.getInstanceOf("litCastExp").add("t", t).add("e", s"${n}UL")
+          } else {
+            val l = n.toLong
+            val e1 = (l >>> 32) & 0xFFFFFFFF
+            val e2 = l & 0xFFFFFFFF
+            stg.getInstanceOf("lit64Exp").add("t", t).
+              add("e1", e1).add("e2", e2).add("text", n)
+          }
         case _ =>
           val t = e.tpeOpt match {
             case Some(_: ast.Z8Type) => "Z8"
@@ -705,12 +717,14 @@ private class C(program: ast.Program,
               stg.getInstanceOf("binExp").
                 add("e1", translate(e.left)).
                 add("op", opMap.getOrElse(op, op)).
-                add("e2", translate(e.right))
+                add("e2", translate(e.right)).
+                add("paren", true)
           }
       }
     case e: ast.Not =>
       stg.getInstanceOf("unExp").add("op", "!").
-        add("e", translate(e.exp))
+        add("e", translate(e.exp)).
+        add("paren", true)
     case e: ast.Minus =>
       e.tipe match {
         case tipe.Z if bitWidth == 0 =>
@@ -719,7 +733,8 @@ private class C(program: ast.Program,
             add("e", translate(e.exp))
         case _ =>
           stg.getInstanceOf("unExp").add("op", "-").
-            add("e", translate(e.exp))
+            add("e", translate(e.exp)).
+            add("paren", true)
       }
     case _: ast.Quant[_] =>
       internalError("Unexpected contract C translation: result.")

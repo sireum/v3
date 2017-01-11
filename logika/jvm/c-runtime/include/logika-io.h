@@ -37,6 +37,8 @@
 
 Z L_read_Z(const char *msg);
 
+void L_print_B(const B b);
+
 void L_print_S8(const S8 n);
 
 void L_print_S16(const S16 n);

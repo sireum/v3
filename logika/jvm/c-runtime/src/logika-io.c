@@ -121,6 +121,11 @@ Z L_read_Z(const char *msg) {
   return result;
 }
 
+void L_print_B(const B b) {
+  if (b) printf("T");
+  else printf("F");
+}
+
 void L_print_S8(const S8 n) {
   printf("%d", (int) n);
 }

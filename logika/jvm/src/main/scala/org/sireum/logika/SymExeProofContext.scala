@@ -66,6 +66,8 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
 
   final def hasRuntimeError(stmt: ast.Stmt): Boolean = {
     import ast.Exp
+    def zERange(e: Exp, t: tipe.Tipe, lo: Exp, hi: Exp) =
+      Exp.And(tipe.B, Exp.Le(t, lo, e), Exp.Le(t, e, hi))
     def zRange(id: ast.Id, lo: Exp, hi: Exp): ast.And =
       Exp.And(tipe.B, Exp.Le(tipe.Z, lo, id), Exp.Le(tipe.Z, id, hi))
     def nRange(id: ast.Id, lo: Exp, hi: Exp): ast.Exp =
@@ -120,6 +122,9 @@ SymExeProofContext[T <: SymExeProofContext[T]](implicit reporter: AccumulatingTa
           visitor(q.exp)
           integralIds --= ids
           false
+        case n: ast.Size if bitWidth != 0 =>
+          r :+= zERange(n, tipe.Z, zMin, zMax)
+          true
         case id: ast.Id if !integralIds.contains(id.value) && id.tipe.isInstanceOf[tipe.IntegralTipe] =>
           id.tipe match {
             case tipe.Z if bitWidth != 0 => r :+= zRange(id, zMin, zMax)

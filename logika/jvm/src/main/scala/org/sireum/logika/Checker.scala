@@ -89,8 +89,8 @@ object Checker {
     }
     if (reporter.hasError) {
       reporter.report(ErrorMessage("AST",
-        if (m.proofs.size > 1) "The inputs are ill-formed."
-        else "The input is ill-formed."))
+        if (m.proofs.size > 1) "The inputs are ill-typed."
+        else "The input is ill-typed."))
       return (true, autoEnabled, bitWidth, unitNodes)
     }
     (reporter.hasError, autoEnabled, bitWidth, unitNodes)

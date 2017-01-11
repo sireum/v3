@@ -34,8 +34,10 @@ object TypeChecker {
 
   final def check(weakModifies: Boolean, bitWidth: Natural, programs: Program*)(
     implicit reporter: AccumulatingTagReporter): Boolean = {
-    var typeMap = imapEmpty[String, (Tipe, Node, Boolean, Program)]
+    var typeMap = imapEmpty[String, (Tipe, Node, Program)]
     var factMap = imapEmpty[String, (Either[Fact, (Fun, FunDef)], Program)]
+    var mdGlobalsMap = imapEmpty[String, ISet[String]]
+    var currentGlobals = isetEmpty[String]
     for (program <- programs) {
       val factOrFunDecls = program.block.stmts.flatMap(_ match {
         case stmt: FactStmt => Some(stmt.fact.factOrFunDecls)
@@ -47,17 +49,22 @@ object TypeChecker {
       for (f@Fun(id, _, _, _) <- factOrFunDecls) {
         val ft = tipe(bitWidth, f)
         id.tipe = ft
-        typeMap = addId(typeMap, program, id, ft, f, isGlobalVar = false)
+        typeMap = addId(typeMap, program, id, ft, f)
         for (fd <- f.funDefs) {
           factMap = addId(factMap, program, fd.id, Right((f, fd)))
         }
       }
-      for (m@MethodDecl(_, _, id, _, _, _, _) <- program.block.stmts)
-        typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m, isGlobalVar = false)
+      for (stmt <- program.block.stmts) stmt match {
+        case VarDecl(_, Id(value), _, _) => currentGlobals += value
+        case m@MethodDecl(_, _, id, _, _, _, _) =>
+          mdGlobalsMap += id.value -> currentGlobals
+          typeMap = addId(typeMap, program, id, tipe(bitWidth, m), m)
+        case _ =>
+      }
     }
     if (reporter.hasError) return false
     if (programs.nonEmpty) {
-      var tc = TypeContext(typeMap, factMap, programs.head,
+      var tc = TypeContext(typeMap, factMap, mdGlobalsMap, programs.head,
         weakModifies, bitWidth).check(programs.head)
       for (program <- programs.tail)
         tc = tc.copy(program = program).check(program)
@@ -86,12 +93,12 @@ object TypeChecker {
     }
   }
 
-  private[tipe] def addId(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
-                          program: Program, id: Id, tipe: Tipe, decl: Node, isGlobalVar: Boolean)(
-                           implicit reporter: AccumulatingTagReporter): IMap[String, (Tipe, Node, Boolean, Program)] = {
+  private[tipe] def addId(typeMap: IMap[String, (Tipe, Node, Program)],
+                          program: Program, id: Id, tipe: Tipe, decl: Node)(
+                           implicit reporter: AccumulatingTagReporter): IMap[String, (Tipe, Node, Program)] = {
     id.tipe = tipe
     typeMap.get(id.value) match {
-      case Some((_, other, _, otherProgram)) =>
+      case Some((_, other, otherProgram)) =>
         val otherLi = otherProgram.nodeLocMap(other)
         val message =
           if ((program eq otherProgram) || otherProgram.fileUriOpt.isEmpty)
@@ -101,7 +108,7 @@ object TypeChecker {
         reporter.report(
           program.nodeLocMap(id).toLocationError(program.fileUriOpt, kind, message))
         typeMap
-      case _ => typeMap + (id.value -> (id.tipe, decl, isGlobalVar, program))
+      case _ => typeMap + (id.value -> (id.tipe, decl, program))
     }
   }
 
@@ -162,8 +169,9 @@ object TypeChecker {
 }
 
 private final case class
-TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
+TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             factMap: IMap[String, (Either[Fact, (Fun, FunDef)], Program)],
+            mdGlobalsMap: IMap[String, ISet[String]],
             program: Program,
             weakModifies: Boolean,
             bitWidth: Natural)(
@@ -172,6 +180,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
   private val someB = Some(B)
   private val someZ = Some(Tipe.normalize(bitWidth, Z))
   private val someR = Some(R)
+  private lazy val zMax: BigInt = BigInt(2).pow(bitWidth - 1) - 1
 
   def check(p: Program): TypeContext = {
     val r = check(p.block)(None)
@@ -236,13 +245,13 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               error(stmt, s"Assignment to a var of $tExp type can only be done from a $tExp literal, clone, prepend (+:), append (:+), create, random, and invocation.")
           }
         })
-      copy(typeMap = TypeChecker.addId(typeMap, program, id, id.tipe, stmt, mOpt.isEmpty))
+      copy(typeMap = TypeChecker.addId(typeMap, program, id, id.tipe, stmt))
     case Assign(id, exp) =>
       for (tExp <- check(exp, allowMethod = true)(allowFun = false, mOpt))
         typeMap.get(id.value) match {
-          case Some((tId, vd: VarDecl, _, _)) if vd.isVar =>
+          case Some((tId, vd: VarDecl, _)) if vd.isVar =>
             id.tipe = tId
-            if (tId != tExp)
+            if (!tipeEq(tId, tExp))
               error(stmt, s"Assignment requires the same type on both left and right expressions, but found $tId and $tExp, respectively.")
             else if (tId.isInstanceOf[MSeq])
               exp match {
@@ -298,15 +307,15 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
     case md: MethodDecl =>
       var tm = typeMap
       for (p <- md.params)
-        tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p, isGlobalVar = false)
+        tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p)
       var tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
-      tc = tc.check(md.block)(Some(md))
+      tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
         case Some(rt) =>
           val t = TypeChecker.tipe(bitWidth, rt)
           val tcPost = copy(
-            typeMap = TypeChecker.addId(tm, program, Id("result"), t, md, isGlobalVar = false))
+            typeMap = TypeChecker.addId(tm, program, Id("result"), t, md))
           for (e <- md.contract.ensures.exps)
             tcPost.b(e)(allowFun = true, mOpt)
         case None =>
@@ -329,7 +338,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           var tm = typeMap
           for (p <- f.params) {
             p.id.tipe = TypeChecker.tipe(bitWidth, p.tpe)
-            tm = TypeChecker.addId(tm, program, p.id, p.id.tipe, p, isGlobalVar = false)
+            tm = TypeChecker.addId(tm, program, p.id, p.id.tipe, p)
           }
           val tc = copy(typeMap = tm)
           for (fd <- f.funDefs) {
@@ -351,7 +360,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
       case step: QuantAssumeStep =>
         tc = copy(typeMap =
           TypeChecker.addId(typeMap, program, step.id,
-            TypeChecker.tipe(bitWidth, step.typeOpt.get), step, isGlobalVar = false))
+            TypeChecker.tipe(bitWidth, step.typeOpt.get), step))
         step match {
           case step: RegularStep =>
             tc.b(step.exp)(allowFun = true, None)
@@ -364,7 +373,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           case Some((Right(funDef), _)) => step.decl = Middle3(funDef)
           case _ =>
             typeMap.get(step.id.value) match {
-              case Some((_, md: MethodDecl, _, _)) =>
+              case Some((_, md: MethodDecl, _)) =>
                 if (!md.isPure)
                   error(step.id, s"Could not use a method without @pure as a fact.")
                 step.decl = Right3(md)
@@ -388,8 +397,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
       }
       modifiedVars += id
       typeMap.get(id.value) match {
-        case Some((t, VarDecl(true, _, _, _), _, _)) => id.tipe = t
-        case Some((t: MSeq, _, _, _)) => id.tipe = t
+        case Some((t, VarDecl(true, _, _, _), _)) => id.tipe = t
+        case Some((t: MSeq, _, _)) => id.tipe = t
         case Some(_) =>
           error(id, s"Only variable or sequence value can be modified.")
         case _ => tipe(id).foreach(id.tipe = _)
@@ -441,12 +450,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
           e.exp match {
             case id: Id =>
               typeMap.get(id.value) match {
-                case Some((_, md: MethodDecl, _, _)) =>
+                case Some((_, md: MethodDecl, _)) =>
                   if (!allowMethod && !md.isPure)
                     error(id, s"Invocation of method without @pure is only allowed at statement level.")
                   e.declOpt = Some(Left(md))
                   true
-                case Some((_, f: Fun, _, _)) =>
+                case Some((_, f: Fun, _)) =>
                   if (!allowFun)
                     error(id, s"Use of proof function is only allowed in proof context.")
                   e.declOpt = Some(Right(f))
@@ -465,9 +474,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
               val Some(Left(md)) = e.declOpt
               mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
               if (!md.isPure) for (arg@Id(value) <- e.args) typeMap(value) match {
-                case (_: RefTipe, _, true, _) =>
-                  error(arg, s"Cannot pass non-scalar global variable $value as an argument to a non @pure method.")
-                  throw new RuntimeException(typeMap.map(p => (p._1, p._2._3)).toString)
+                case (_: RefTipe, _, _) if mdGlobalsMap(md.id.value).contains(value) =>
+                  error(arg, s"Cannot pass non-scalar global variable $value as an argument that can access $value directly.")
                 case _ =>
               }
               val modifiedIds = md.contract.modifies.ids.toSet
@@ -695,7 +703,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
         tOpt.foreach { t =>
           var tm = typeMap
           for (id <- e.ids) {
-            tm = TypeChecker.addId(tm, program, id, t, e, isGlobalVar = false)
+            tm = TypeChecker.addId(tm, program, id, t, e)
             id.tipe = t
           }
           copy(typeMap = tm).check(e.exp, allowMethod = false)
@@ -704,6 +712,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
       case e: SeqLit =>
         val ts = TypeChecker.tipe(bitWidth, e.tpe).asInstanceOf[MSeq]
         val et = ts.result
+        if (bitWidth != 0 && e.args.size > zMax) {
+          error(e, s"Cannot have a sequence larger than $zMax for bit-width $bitWidth.")
+        }
         for (arg <- e.args; t <- check(arg, allowMethod = false)) {
           if (!tipeEq(et, t)) {
             error(arg, s"Expecting an expression of type $et, but found $t.")
@@ -717,12 +728,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
     case (N, N) => true
     case (Z, _) =>
       bitWidth match {
-      case 0 => Z == t2
-      case 8 => Z8 == t2
-      case 16 => Z16 == t2
-      case 32 => Z32 == t2
-      case 64 => Z64 == t2
-    }
+        case 0 => Z == t2
+        case 8 => Z8 == t2
+        case 16 => Z16 == t2
+        case 32 => Z32 == t2
+        case 64 => Z64 == t2
+      }
     case (_, Z) => bitWidth match {
       case 0 => Z == t1
       case 8 => Z8 == t1
@@ -824,11 +835,11 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
     }
 
   def tipe(id: Id): Option[Tipe] = typeMap.get(id.value) match {
-    case Some((t, _, _, _)) => Some(t)
+    case Some((t, _, _)) => Some(t)
     case _ =>
       nameOfSymExeOld(id.value) match {
         case Some(x) => typeMap.get(x) match {
-          case Some((t, _, _, _)) => Some(t)
+          case Some((t, _, _)) => Some(t)
           case _ =>
             error(id, s"Undeclared identifier ${id.value}.")
             None
@@ -836,12 +847,12 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Boolean, Program)],
         case _ =>
           if (id.value.endsWith("_old")) {
             typeMap.get(id.value.substring(0, id.value.length - 4)) match {
-              case Some((t, _, _, _)) => return Some(t)
+              case Some((t, _, _)) => return Some(t)
               case _ =>
             }
           } else if (id.value.endsWith("_in")) {
             typeMap.get(id.value.substring(0, id.value.length - 3)) match {
-              case Some((t, _, _, _)) => return Some(t)
+              case Some((t, _, _)) => return Some(t)
               case _ =>
             }
           }

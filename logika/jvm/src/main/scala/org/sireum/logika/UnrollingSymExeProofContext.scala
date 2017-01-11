@@ -367,7 +367,10 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
           case exp: ast.TypeMethodCallExp =>
             exp.id.value match {
               case "create" =>
-                val req = ast.Exp.Ge(tipe.Z, exp.args.head, Checker.zero)
+                var req: ast.Exp = ast.Exp.Ge(tipe.Z, exp.args.head, Checker.zero)
+                if (bitWidth != 0) {
+                  req = ast.Exp.And(tipe.B, req, ast.Exp.Le(tipe.Z, exp.args.head, zMax))
+                }
                 if (isValid("Pre-condition", nodeLocMap(exp), premises, ivector(req))) {
                   val resultT = exp.id.tipe.asInstanceOf[tipe.Fn].result.asInstanceOf[tipe.MSeq]
                   val qVar = ast.Exp.Id(tipe.Z, "q_i")
@@ -378,7 +381,10 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
                       ast.Exp.Eq(resultT.result, ast.Exp.Apply(resultT, id, ivector(qVar)), exp.args(1)))
                   )))
                 } else {
-                  error(exp.args.head, s"Could not automatically deduce the size is non-negative.")
+                  if (bitWidth != 0)
+                    error(exp.args.head, s"Could not automatically deduce the size is non-negative and is at most ${zMax.value}.")
+                  else
+                    error(exp.args.head, s"Could not automatically deduce the size is non-negative.")
                   ivectorEmpty
                 }
             }

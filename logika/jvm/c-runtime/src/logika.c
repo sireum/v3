@@ -469,7 +469,7 @@ ZS L_create_ZS(size_t size, Z initialValue) {
   result.data = L_malloc(size * sizeof(Z));
   size_t i;
   for (i = 0; i < size; i++) {
-    mpz_set(result.data[i].data, initialValue.data);
+    mpz_init_set(result.data[i].data, initialValue.data);
   }
   return result;
 }
@@ -501,11 +501,11 @@ Z L_st2Z(size_t n) {
   return result;
 }
 
-NS L_create_NS(size_t size, N initialValue) {
+ZS L_create_ZS(size_t size, Z initialValue) {
   L_assert(size <= ST_MAX);
-  NS result = {0};
+  ZS result = {0};
   result.size = size;
-  result.data = L_malloc(size * sizeof(N));
+  result.data = L_malloc(size * sizeof(Z));
   size_t i;
   for (i = 0; i < size; i++) {
     result.data[i] = initialValue;
@@ -513,24 +513,7 @@ NS L_create_NS(size_t size, N initialValue) {
   return result;
 }
 
-NS L_NS(int size, ...) {
-  NS result = {0};
-  result.size = (size_t) size;
-  result.data = L_malloc(size * sizeof(N));
-  va_list valist;
-  va_start(valist, size);
-  int i;
-  for (i = 0; i < size; i++) {
-#if Z_LT_INT
-    result.data[i] = (N) va_arg(valist, int);
-#else
-    result.data[i] = va_arg(valist, N);
-#endif
-  }
-  va_end(valist);
-
-  return result;
-}
+#define L_create_NS(size, initialValue) L_create_ZS(size, initialValue)
 
 void L_wipe_Z(Z *n) {
   *n = 0;
@@ -595,6 +578,9 @@ ZS L_ZS(int size, ...) {
   for (i = 0; i < size; i++) {
 #if Z_LT_INT
     result.data[i] = (Z) va_arg(valist, int);
+#elif BIT_WIDTH == 0
+    Z e = va_arg(valist, Z);
+    mpz_init_set(result.data[i].data, e.data);
 #else
     result.data[i] = va_arg(valist, Z);
 #endif
@@ -1017,7 +1003,7 @@ ZS L_clone_ZS(ZS ns) {
   result.data = L_malloc(size * sizeof(Z));
   size_t i;
   for (i = 0; i < size; i++) {
-    mpz_set(result.data[i].data, ns.data[i].data);
+    mpz_init_set(result.data[i].data, ns.data[i].data);
   }
   return result;
 }

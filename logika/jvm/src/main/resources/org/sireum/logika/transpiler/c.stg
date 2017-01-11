@@ -264,12 +264,11 @@ litCastExp(t, e, text) ::= <<
 (($t$) $e$$if(text)$ /* $text$ */$endif$)
 >>
 
-lit64Exp(signed, t, e1, e2, text) ::= <<
-$if(signed)$
+lit64ExpSigned(t, e1, e2, text) ::= <<
 (($t$) ($e1$LL << 32 | $e2$LL) /* $text$ */)
-$else$
+>>
+lit64Exp(signed, t, e1, e2, text) ::= <<
 (($t$) ($e1$ULL << 32 | $e2$ULL) /* $text$ */)
-$endif$
 >>
 
 sizeExp(e) ::= <<
