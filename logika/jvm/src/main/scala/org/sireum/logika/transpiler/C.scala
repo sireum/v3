@@ -110,7 +110,7 @@ object C {
     }
     for (p <- programs) new C(p, bitWidth, result)
     result.stCMake.add("bitWidth", bitWidth)
-    for (f <- result.files.keys) result.stCMake.add("file", f)
+    for (f <- result.files.keys if f.endsWith(".c")) result.stCMake.add("file", f)
     result
   }
 }
@@ -328,7 +328,8 @@ private class C(program: ast.Program,
         None
       case stmt: ast.If =>
         val eST = translate(stmt.exp)
-        if (eST.isInstanceOf[ast.BinaryExp]) eST.add("paren", false)
+        if (stmt.exp.isInstanceOf[ast.BinaryExp] && bitWidth != 0)
+          eST.remove("paren")
         val ifST = stg.getInstanceOf("ifStmt").
           add("no", lineNo(stmt)).
           add("e", eST)
@@ -347,7 +348,8 @@ private class C(program: ast.Program,
         None
       case stmt: ast.While =>
         val eST = translate(stmt.exp)
-        if (eST.isInstanceOf[ast.BinaryExp]) eST.add("paren", false)
+        if (stmt.exp.isInstanceOf[ast.BinaryExp] && bitWidth != 0)
+          eST.remove("paren")
         val whileST = stg.getInstanceOf("whileStmt").
           add("no", lineNo(stmt)).
           add("e", eST)
