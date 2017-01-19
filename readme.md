@@ -24,6 +24,8 @@ Supported platforms (64-bit only):
 
 ### Sireum Integrated Verification Environment (IVE)
 
+Video Tutorial: [Installing Sireum IVE in Windows](http://files.sireum.org/media/sireum-ive-win64.mp4)
+
 Sireum IVE includes a custom [IntelliJ IDEA](http://www.jetbrains.com/idea) Community Edition with various plugins 
 installed, along with the Sireum CLI (see below).
 
