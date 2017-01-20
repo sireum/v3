@@ -22,6 +22,15 @@ Supported platforms (64-bit only):
 
 ## Installing and Running Sireum
 
+Sireum v3 binary distributions can be verified with the following
+[minisign](https://jedisct1.github.io/minisign/)
+command:
+
+```bash
+minisign -P RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu -Vm <file>
+```
+
+
 ### Sireum Integrated Verification Environment (IVE)
 
 Video Tutorial: [Installing Sireum IVE in Windows](http://files.sireum.org/media/sireum-ive-win64.mp4)
@@ -37,6 +46,8 @@ installed, along with the Sireum CLI (see below).
   curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/2i6jvbX && open sireum-v3-idea-mac64.dmg 
   ```
   
+  Minisign: http://bit.ly/2jRUAGz
+
   Once it is done, it should open a new window:
   
   ![sireum-v3-idea-mac64.dmg](resources/images/sireum-v3-idea-mac64.dmg.png)
@@ -57,6 +68,8 @@ installed, along with the Sireum CLI (see below).
 * **Linux**
 
   Download from: http://bit.ly/2ja1oic
+
+  Minisign: http://bit.ly/2k62F9W
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -70,7 +83,9 @@ installed, along with the Sireum CLI (see below).
 * **Windows**
 
   Download from: http://bit.ly/2iw7hFN
-   
+  
+  Minisign: http://bit.ly/2iHq8So
+  
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\Sireum\sireum.bat` is present.
   
   For subsequent instructions, replace `SIREUM_HOME` with `C:\Sireum`.
@@ -96,6 +111,8 @@ installed, along with the Sireum CLI (see below).
 
   Download from: http://bit.ly/2jluudT
   
+  Minisign: http://bit.ly/2jEelUz
+  
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
   
@@ -107,6 +124,8 @@ installed, along with the Sireum CLI (see below).
 
   Download from: http://bit.ly/2j051Ks
 
+  Minisign: http://bit.ly/2iPSUeU
+  
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
   
@@ -118,6 +137,8 @@ installed, along with the Sireum CLI (see below).
 
   Download from: http://bit.ly/2i6llK8
 
+  Minisign: http://bit.ly/2iYOPIN
+   
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\sireum-v3\sireum.bat` is present.
   
   For subsequent instructions, replace `SIREUM_HOME` with `C:\sireum-v3`.
