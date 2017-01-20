@@ -83,6 +83,11 @@ object C {
 
   private val noResult: ST = stg.getInstanceOf("lit").add("e", "???")
 
+
+  private val maskLimit: Natural = 32
+
+  private val maskId: String = "$"
+
   def read(filename: String, result: Result): Unit =
     if (!result.files.contains(filename)) {
       val r = new java.io.BufferedReader(
@@ -112,6 +117,21 @@ object C {
     result.stCMake.add("bitWidth", bitWidth)
     for (f <- result.files.keys if f.endsWith(".c")) result.stCMake.add("file", f)
     result
+  }
+
+  def isInternalRefType(id: ast.Id, bitWidth: Natural): Boolean = isInternalRefType(id.tipe, bitWidth)
+
+  def isInternalRefType(t: tipe.Tipe, bitWidth: Natural): Boolean = t match {
+    case _: tipe.MSeq => true
+    case tipe.Z | tipe.N => bitWidth == 0
+    case _ => false
+  }
+
+  def isRefType(id: ast.Id): Boolean = isRefType(id.tipe)
+
+  def isRefType(t: tipe.Tipe): Boolean = t match {
+    case _: tipe.MSeq => true
+    case _ => false
   }
 }
 
@@ -151,7 +171,7 @@ private class C(program: ast.Program,
 
     translate(program.block, None,
       stRunStmts, isetEmpty, imapEmpty, None,
-      shouldReturn = true)
+      shouldReturn = false)
 
     if (hasIO) {
       read("logika-io.h", result)
@@ -181,24 +201,9 @@ private class C(program: ast.Program,
       for (tx <- translate(stmt, mdOpt, stStmts, varDecls, retTypeNameOpt))
         varDecls += tx
     if (shouldReturn || block.returnOpt.isDefined)
-      translate(block.returnOpt, stStmts,
-        varWipe(varDecls -- globalVars), retTypeNameOpt)
+      translate(block.returnOpt, mdOpt.get, stStmts,
+        varWipe(varDecls -- globalVars) _, retTypeNameOpt)
     else varWipe(varDecls -- (declaredVars.keySet -- globalVars))(None, stStmts)
-  }
-
-  def isInternalRefType(id: ast.Id): Boolean = isInternalRefType(id.tipe)
-
-  def isInternalRefType(t: tipe.Tipe): Boolean = t match {
-    case _: tipe.MSeq => true
-    case tipe.Z | tipe.N => bitWidth == 0
-    case _ => false
-  }
-
-  def isRefType(id: ast.Id): Boolean = isRefType(id.tipe)
-
-  def isRefType(t: tipe.Tipe): Boolean = t match {
-    case _: tipe.MSeq => true
-    case _ => false
   }
 
   def varWipe(declaredVars: IMap[ast.Id, ast.Type])
@@ -215,27 +220,43 @@ private class C(program: ast.Program,
     }
   }
 
+  def isInternalRefType(id: ast.Id): Boolean = C.isInternalRefType(id.tipe, bitWidth)
+
+  def isInternalRefType(t: tipe.Tipe): Boolean = C.isInternalRefType(t, bitWidth)
+
   def translate(rOpt: Option[ast.Return],
+                md: ast.MethodDecl,
                 stStmts: ST,
                 varWipeFun: (Option[ast.Id], ST) => Unit,
                 retTypeNameOpt: Option[String]): Unit = {
-    val idOpt =
-      retTypeNameOpt match {
-        case Some(t) =>
-          val retExp = rOpt.get.expOpt.get
-          stStmts.add("stmt",
-            stg.getInstanceOf("assignStmt").
-              add("no", lineNo(retExp)).
-              add("t", t).
-              add("x", "result").
-              add("e", translate(retExp)))
-          retExp match {
-            case retExp: ast.Id => Some(retExp)
-            case _ => None
-          }
-        case _ => None
-      }
+    val idOpt = retTypeNameOpt match {
+      case Some(t) =>
+        val retExp = rOpt.get.expOpt.get
+        stStmts.add("stmt",
+          stg.getInstanceOf("assignStmt").
+            add("no", lineNo(retExp)).
+            add("t", t).
+            add("x", "result").
+            add("e", translate(retExp)))
+        retExp match {
+          case retExp: ast.Id => Some(retExp)
+          case _ => None
+        }
+      case _ => None
+    }
     varWipeFun(idOpt, stStmts)
+    val b = md.params.size > maskLimit
+    for (i <- md.params.indices) {
+      val p = md.params(i)
+      val t = typeName(p.tpe)
+      val x = p.id.value
+      stStmts.add("stmt",
+        (if (b) stg.getInstanceOf("maskWipe")
+        else stg.getInstanceOf(s"maskWipeF")).
+          add("i", i).
+          add("t", t).
+          add("x", x))
+    }
     rOpt match {
       case Some(r) =>
         val retST = stg.getInstanceOf("returnStmt").
@@ -425,8 +446,18 @@ private class C(program: ast.Program,
         val methodST = stg.getInstanceOf("method")
         methodST.add("proto", protoST)
         stMethods.add("method", methodST)
-        val modNames = stmt.contract.modifies.ids.map(name).toSet
         var varDecls = declaredVars
+        if (stmt.params.nonEmpty) {
+          if (stmt.params.size > maskLimit) {
+            protoST.add("param", stg.getInstanceOf("param").
+              add("t", "BS").
+              add("x", maskId))
+          } else {
+            protoST.add("param", stg.getInstanceOf("param").
+              add("t", s"U$maskLimit").
+              add("x", maskId))
+          }
+        }
         for (p <- stmt.params) {
           val id = p.id
           val notRefType = !isInternalRefType(id)
@@ -434,7 +465,6 @@ private class C(program: ast.Program,
           if (notRefType) varDecls += id -> p.tpe
           protoST.add("param",
             stg.getInstanceOf("param").
-              add("mod", notRefType || modNames.contains(idName)).
               add("t", typeName(p.tpe)).
               add("x", idName))
         }
@@ -465,7 +495,7 @@ private class C(program: ast.Program,
 
   def translate(e: ast.Exp): ST = e match {
     case ast.BooleanLit(value) =>
-      stg.getInstanceOf("lit").add("e", if (value) "true" else "false")
+      stg.getInstanceOf("lit").add("e", if (value) "T" else "F")
     case e: ast.Id =>
       stg.getInstanceOf("lit").add("e", name(e))
     case e: ast.Size =>
@@ -500,6 +530,19 @@ private class C(program: ast.Program,
             add("free", shouldFree(index))
         case _ =>
           val result = stg.getInstanceOf("callExp")
+          e.declOpt match {
+            case Some(Left(md)) if md.params.nonEmpty =>
+              if (md.params.size > maskLimit) {
+                result.add("e", bsMask(e.args))
+              } else {
+                var mask = 0
+                for ((i, arg) <- md.params.indices.zip(e.args) if shouldFree(arg)) {
+                  mask = mask | (1 << i)
+                }
+                result.add("e", s"0x${mask.toHexString.toUpperCase}UL")
+              }
+            case _ =>
+          }
           for (arg <- e.args) {
             result.add("e", translate(arg))
           }
@@ -541,16 +584,10 @@ private class C(program: ast.Program,
             case Some(_: ast.U32Type) =>
               stg.getInstanceOf("litCastExp").add("t", "U32").add("e", s"${n}UL")
             case _ =>
-              stg.getInstanceOf("litCastExp").add("t", "Z").add("e", s"${n}L")
+              stg.getInstanceOf("litCastExp").add("t", typeName(e, tipe.Z)).add("e", s"${n}L")
           }
         case 64 =>
-          val t = e.tpeOpt match {
-            case Some(_: ast.Z64Type) => "Z64"
-            case Some(_: ast.N64Type) => "N64"
-            case Some(_: ast.S64Type) => "S64"
-            case Some(_: ast.U64Type) => "U64"
-            case _ => "Z"
-          }
+          val t = e.tpeOpt.map(typeName).getOrElse(typeName(e, tipe.Z))
           if (Int.MinValue <= n && n <= Int.MaxValue) {
             stg.getInstanceOf("litCastExp").add("t", t).add("e", s"${n}UL")
           } else {
@@ -561,17 +598,7 @@ private class C(program: ast.Program,
               add("e1", e1).add("e2", e2).add("text", n)
           }
         case _ =>
-          val t = e.tpeOpt match {
-            case Some(_: ast.Z8Type) => "Z8"
-            case Some(_: ast.N8Type) => "N8"
-            case Some(_: ast.S8Type) => "S8"
-            case Some(_: ast.U8Type) => "U8"
-            case Some(_: ast.Z16Type) => "Z16"
-            case Some(_: ast.N16Type) => "N16"
-            case Some(_: ast.S16Type) => "S16"
-            case Some(_: ast.U16Type) => "U16"
-            case _ => "Z"
-          }
+          val t = e.tpeOpt.map(typeName).getOrElse(typeName(e, tipe.Z))
           stg.getInstanceOf("litCastExp").add("t", t).add("e", n)
       }
     case e: ast.FloatLit =>
@@ -664,10 +691,12 @@ private class C(program: ast.Program,
       e.id.value match {
         case "create" =>
           val size = e.args.head
-          stg.getInstanceOf("createExp").add("t", typeName(e.tpe)).
+          val st = stg.getInstanceOf("createExp").add("t", typeName(e.tpe)).
             add("size", translate(size)).
             add("initValue", translate(e.args(1))).
             add("free", shouldFree(size))
+          if (bitWidth == 0 && shouldFree(e.args(1))) st.add("t", "f")
+          st
       }
     case e: ast.BinaryExp =>
       val op = e.op(false)
@@ -743,11 +772,33 @@ private class C(program: ast.Program,
       noResult
     case e: ast.SeqLit =>
       val result = stg.getInstanceOf("callExp")
+      result.add("id", s"L_${typeName(e.tpe)}")
+      e.tpe.elementType match {
+        case _: ast.ZType | _: ast.NType if bitWidth == 0 =>
+          result.add("id", "f")
+          result.add("e", bsMask(e.args))
+        case _ =>
+      }
       result.add("e", e.args.size)
       for (arg <- e.args) {
         result.add("e", translate(arg))
       }
-      result.add("id", s"L_${typeName(e.tpe)}")
+      result
+  }
+
+  def bsMask(args: ast.Node.Seq[ast.Exp]): ST = {
+    val sz = if (args.size > uiMax) s"${args.size}ULL" else s"${args.size}UL"
+    if (args.forall(shouldFree)) {
+      stg.getInstanceOf("callExp").
+        add("id", "L_create_BS").add("e", sz).add("e", "T")
+    } else if (!args.exists(shouldFree)) {
+      stg.getInstanceOf("callExp").
+        add("id", "L_create_BS").add("e", sz).add("e", "F")
+    } else {
+      val st = stg.getInstanceOf("callExp").add("id", "L_BS")
+      for (e <- args) st.add("e", if (shouldFree(e)) "T" else "F")
+      st
+    }
   }
 
   def shouldFree(e: ast.Exp): Boolean = e match {
@@ -758,12 +809,26 @@ private class C(program: ast.Program,
 
   def typeName(t: ast.Type): String = t match {
     case _: ast.BType => "B"
-    case _: ast.ZType => "Z"
+    case _: ast.ZType =>
+      bitWidth match {
+        case 0 => "Z"
+        case 8 => "Z8"
+        case 16 => "Z16"
+        case 32 => "Z32"
+        case 64 => "Z64"
+      }
     case _: ast.Z8Type => "Z8"
     case _: ast.Z16Type => "Z16"
     case _: ast.Z32Type => "Z32"
     case _: ast.Z64Type => "Z64"
-    case _: ast.NType => "N"
+    case _: ast.NType =>
+      bitWidth match {
+        case 0 => "N"
+        case 8 => "N8"
+        case 16 => "N16"
+        case 32 => "N32"
+        case 64 => "N64"
+      }
     case _: ast.N8Type => "N8"
     case _: ast.N16Type => "N16"
     case _: ast.N32Type => "N32"
@@ -782,12 +847,26 @@ private class C(program: ast.Program,
     case _: ast.F32Type => "F32"
     case _: ast.F64Type => "F64"
     case _: ast.BSType => "BS"
-    case _: ast.ZSType => "ZS"
+    case _: ast.ZSType =>
+      bitWidth match {
+        case 0 => "ZS"
+        case 8 => "Z8S"
+        case 16 => "Z16S"
+        case 32 => "Z32S"
+        case 64 => "Z64S"
+      }
     case _: ast.Z8SType => "Z8S"
     case _: ast.Z16SType => "Z16S"
     case _: ast.Z32SType => "Z32S"
     case _: ast.Z64SType => "Z64S"
-    case _: ast.NSType => "NS"
+    case _: ast.NSType =>
+      bitWidth match {
+        case 0 => "NS"
+        case 8 => "N8S"
+        case 16 => "N16S"
+        case 32 => "N32S"
+        case 64 => "N64S"
+      }
     case _: ast.N8SType => "N8S"
     case _: ast.N16SType => "N16S"
     case _: ast.N32SType => "N32S"
@@ -809,12 +888,26 @@ private class C(program: ast.Program,
 
   def typeName(n: ast.Node, t: tipe.Tipe): String = t match {
     case tipe.B => "B"
-    case tipe.Z => "Z"
+    case tipe.Z =>
+      bitWidth match {
+        case 0 => "Z"
+        case 8 => "Z8"
+        case 16 => "Z16"
+        case 32 => "Z32"
+        case 64 => "Z64"
+      }
     case tipe.Z8 => "Z8"
     case tipe.Z16 => "Z16"
     case tipe.Z32 => "Z32"
     case tipe.Z64 => "Z64"
-    case tipe.N => "N"
+    case tipe.N =>
+      bitWidth match {
+        case 0 => "N"
+        case 8 => "N8"
+        case 16 => "N16"
+        case 32 => "N32"
+        case 64 => "N64"
+      }
     case tipe.N8 => "N8"
     case tipe.N16 => "N16"
     case tipe.N32 => "N32"
@@ -833,12 +926,26 @@ private class C(program: ast.Program,
     case tipe.F32 => "F32"
     case tipe.F64 => "F64"
     case tipe.BS => "BS"
-    case tipe.ZS => "ZS"
+    case tipe.ZS =>
+      bitWidth match {
+        case 0 => "ZS"
+        case 8 => "Z8S"
+        case 16 => "Z16S"
+        case 32 => "Z32S"
+        case 64 => "Z64S"
+      }
     case tipe.Z8S => "Z8S"
     case tipe.Z16S => "Z16S"
     case tipe.Z32S => "Z32S"
     case tipe.Z64S => "Z64S"
-    case tipe.NS => "NS"
+    case tipe.NS =>
+      bitWidth match {
+        case 0 => "NS"
+        case 8 => "N8S"
+        case 16 => "N16S"
+        case 32 => "N32S"
+        case 64 => "N64S"
+      }
     case tipe.N8S => "N8S"
     case tipe.N16S => "N16S"
     case tipe.N32S => "N32S"

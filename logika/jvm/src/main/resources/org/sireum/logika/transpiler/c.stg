@@ -199,8 +199,8 @@ proto(no, t, name, param, end) ::= <<
 $t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)$end$$if(no)$ // L$no$$endif$
 >>
 
-param(mod, t, x) ::= <<
-$if(!mod)$const $endif$$t$ $x$
+param(t, x) ::= <<
+$t$ $x$
 >>
 
 line(no) ::= <<
@@ -301,4 +301,12 @@ $e$.data[L_Z2st$if(free)$f$endif$($i$)]
 
 createExp(t, size, initValue, free) ::= <<
 L_create_$t$(L_Z2st$if(free)$f$endif$($size$), $initValue$)
+>>
+
+maskWipeF(i, t, x) ::= <<
+if (\$ & (1UL << $i$)) L_wipe_$t$(&$x$);
+>>
+
+maskWipe(i, t, x) ::= <<
+if (L_get_BS(\$, L_Zui($i$UL))) L_wipe_$t$(&$x$);
 >>

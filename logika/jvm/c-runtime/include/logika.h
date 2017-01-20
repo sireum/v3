@@ -99,6 +99,8 @@ typedef uint64_t   N;
 #endif
 
 typedef bool B;
+#define T true
+#define F false
 
 typedef int8_t Z8;
 #define Z8_Min      INT8_MIN
@@ -477,76 +479,107 @@ void L_wipe_N(N *n);
 
 #endif
 
+BS L_create_BS(size_t size, B initialValue);
+
+BS L_BS(size_t size, ...);
 
 void L_wipe_BS(BS *bs);
 
 S8S L_create_S8S(size_t size, S8 initialValue);
 
-S8S L_S8S(int size, ...);
+S8S L_S8S(size_t size, ...);
 
 S16S L_create_S16S(size_t size, S16 initialValue);
 
-S16S L_S16S(int size, ...);
+S16S L_S16S(size_t size, ...);
 
 S32S L_create_S32S(size_t size, S32 initialValue);
 
-S32S L_S32S(int size, ...);
+S32S L_S32S(size_t size, ...);
 
 S64S L_create_S64S(size_t size, S64 initialValue);
 
-S64S L_S64S(int size, ...);
+S64S L_S64S(size_t size, ...);
 
 U8S L_create_U8S(size_t size, U8 initialValue);
 
-U8S L_U8S(int size, ...);
+U8S L_U8S(size_t size, ...);
 
 U16S L_create_U16S(size_t size, U16 initialValue);
 
-U16S L_U16S(int size, ...);
+U16S L_U16S(size_t size, ...);
 
 U32S L_create_U32S(size_t size, U32 initialValue);
 
-U32S L_U32S(int size, ...);
+U32S L_U32S(size_t size, ...);
 
 U64S L_create_U64S(size_t size, U64 initialValue);
 
-U64S L_U64S(int size, ...);
+U64S L_U64S(size_t size, ...);
 
 #define L_create_Z8S(size, initialValue)  L_create_S8S(size, initialValue)
 
+#define L_Z8S(size, args ...) L_S8S(size, args)
+
 #define L_create_Z16S(size, initialValue) L_create_S16S(size, initialValue)
+
+#define L_Z16S(size, args ...) L_S16S(size, args)
 
 #define L_create_Z32S(size, initialValue) L_create_S32S(size, initialValue)
 
+#define L_Z32S(size, args ...) L_S32S(size, args)
+
 #define L_create_Z64S(size, initialValue) L_create_S64S(size, initialValue)
+
+#define L_Z64S(size, args ...) L_S64S(size, args)
 
 #define L_create_N8S(size, initialValue)  L_create_U8S(size, initialValue)
 
+#define L_N8S(size, args ...) L_U8S(size, args)
+
 #define L_create_N16S(size, initialValue) L_create_U16S(size, initialValue)
+
+#define L_N16S(size, args ...) L_U16S(size, args)
 
 #define L_create_N32S(size, initialValue) L_create_U32S(size, initialValue)
 
+#define L_N32S(size, args ...) L_U32S(size, args)
+
 #define L_create_N64S(size, initialValue) L_create_U64S(size, initialValue)
+
+#define L_N64S(size, args ...) L_U64S(size, args)
 
 F32S L_create_F32S(size_t size, F32 initialValue);
 
+F32S L_F32S(size_t size, ...);
+
 F64S L_create_F64S(size_t size, F64 initialValue);
+
+F64S L_F64S(size_t size, ...);
 
 ZS L_create_ZS(size_t size, Z initialValue);
 
-ZS L_ZS(int size, ...);
+ZS L_ZS(size_t size, ...);
 
 #if BIT_WIDTH == 0
 
+ZS L_create_ZSf(size_t size, Z initialValue);
+
+ZS L_ZSf(BS fmask, size_t size, ...);
+
 #define L_create_NS(size, initialValue) L_create_ZS(size, initialValue)
 
+#define L_create_NSf(size, initialValue) L_create_ZSf(size, initialValue)
+
 #define L_NS(size, args ...) L_ZS(size, args)
+
+#define L_NSf(fmask, size, args ...) L_ZSf(fmask, size, args)
 
 #else
 
 NS L_create_NS(size_t size, N initialValue);
 
-NS L_NS(int size, ...);
+NS L_NS(size_t size, ...);
 
 #endif
 
