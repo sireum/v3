@@ -22,8 +22,11 @@ Supported platforms (64-bit only):
 
 ## Installing and Running Sireum
 
-Sireum v3 binary distributions are cryptographically signed; the digital signature
-can be verified using the following
+Sireum v3 binary distributions are cryptographically-signed if you want ensure that
+your copy is untampered
+[read more](https://www.openbsd.org/papers/bsdcan-signify.html>).
+
+The digital signature can be verified using the following
 [minisign](https://jedisct1.github.io/minisign/)
 command:
 
@@ -32,14 +35,14 @@ minisign -P RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu -Vm <file>
 ```
 
 Alternatively, you can use the following
-[signify](https://www.openbsd.org/papers/bsdcan-signify.html)
+[signify](https://github.com/search?q=signify+OpenBSD)
 command:
 
 ```bash
-signify -p key.pub -x <file>.minisig -Vm <file>
+signify -p sireum-v3-key.pub -x <file>.minisig -Vm <file>
 ```
 
-where the file ``key.pub`` stores the text ``RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu``.
+where ``sireum-v3-key.pub`` can be downloaded from: http://bit.ly/sv3key
 
 ### Sireum Integrated Verification Environment (IVE)
 
@@ -56,7 +59,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
   Execute the following in a bash terminal:
   
   ```bash
-  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/sv3ivem && open sireum-v3-idea-mac64.dmg 
+  curl -JLo sireum-v3-ive-mac64.dmg http://bit.ly/sv3ivem && open sireum-v3-ive-mac64.dmg 
   ```
   
   Minisign: http://bit.ly/sv3ivems
@@ -81,7 +84,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
   Development Build:
 
   ```bash
-  curl -J -L -o sireum-v3-dev-idea-mac64.dmg http://bit.ly/sv3divem && open sireum-v3-dev-idea-mac64.dmg 
+  curl -JLo sireum-v3-dev-ive-mac64.dmg http://bit.ly/sv3divem && open sireum-v3-dev-ive-mac64.dmg 
   ```
   
   Minisign: http://bit.ly/sv3divems
