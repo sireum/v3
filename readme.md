@@ -23,7 +23,7 @@ Supported platforms (64-bit only):
 ## Installing and Running Sireum
 
 Sireum v3 binary distributions that we provide are cryptographically-signed 
-just in case  you want ensure that your copy is untampered
+just in case you want to ensure that your copy is untampered
 [read more](https://www.openbsd.org/papers/bsdcan-signify.html>).
 
 The accompanying [Minisign](https://jedisct1.github.io/minisign/) 
