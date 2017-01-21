@@ -42,7 +42,7 @@ val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
 
 val distros = TaskKey[Unit]("distros", "Build Sireum distributions.")
 val iveDistros = TaskKey[Unit]("ive-distros", "Build Sireum IVE distributions.")
-val devDistros = TaskKey[Unit]("distros", "Build Sireum-dev distributions.")
+val devDistros = TaskKey[Unit]("dev-distros", "Build Sireum-dev distributions.")
 val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distributions.")
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
