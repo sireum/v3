@@ -22,7 +22,8 @@ Supported platforms (64-bit only):
 
 ## Installing and Running Sireum
 
-Sireum v3 binary distributions can be verified with the following
+Sireum v3 binary distributions are cryptographically signed; the digital signature
+can be verified using the following
 [minisign](https://jedisct1.github.io/minisign/)
 command:
 
@@ -30,6 +31,15 @@ command:
 minisign -P RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu -Vm <file>
 ```
 
+Alternatively, you can use the following
+[signify](https://www.openbsd.org/papers/bsdcan-signify.html)
+command:
+
+```bash
+signify -p key.pub -x <file>.minisig -Vm <file>
+```
+
+where the file ``key.pub`` stores the text ``RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu``.
 
 ### Sireum Integrated Verification Environment (IVE)
 
@@ -38,15 +48,18 @@ Video Tutorial: [Installing Sireum IVE in Windows](http://files.sireum.org/media
 Sireum IVE includes a custom [IntelliJ IDEA](http://www.jetbrains.com/idea) Community Edition with various plugins 
 installed, along with the Sireum CLI (see below).
 
+In addition to the regular **Release** builds, 
+we also provide **Development** builds for trying out Sireum v3 experimental features.
+
 * **macOS**
 
   Execute the following in a bash terminal:
   
   ```bash
-  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/2i6jvbX && open sireum-v3-idea-mac64.dmg 
+  curl -J -L -o sireum-v3-idea-mac64.dmg http://bit.ly/sv3ivem && open sireum-v3-idea-mac64.dmg 
   ```
   
-  Minisign: http://bit.ly/2jRUAGz
+  Minisign: http://bit.ly/sv3ivems
 
   Once it is done, it should open a new window:
   
@@ -65,11 +78,19 @@ installed, along with the Sireum CLI (see below).
   
   To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
 
+  Development Build:
+
+  ```bash
+  curl -J -L -o sireum-v3-dev-idea-mac64.dmg http://bit.ly/sv3divem && open sireum-v3-dev-idea-mac64.dmg 
+  ```
+  
+  Minisign: http://bit.ly/sv3divems
+
 * **Linux**
 
-  Download from: http://bit.ly/2ja1oic
+  Download from: http://bit.ly/sv3ivel
 
-  Minisign: http://bit.ly/2k62F9W
+  Minisign: http://bit.ly/sv3ivels
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -80,11 +101,13 @@ installed, along with the Sireum CLI (see below).
    
   To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
 
+  Development Build: http://bit.ly/sv3divel, Minisign: http://bit.ly/sv3divels
+
 * **Windows**
 
-  Download from: http://bit.ly/2iw7hFN
+  Download from: http://bit.ly/sv3ivew
   
-  Minisign: http://bit.ly/2iHq8So
+  Minisign: http://bit.ly/sv3ivews
   
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\Sireum\sireum.bat` is present.
   
@@ -105,13 +128,15 @@ installed, along with the Sireum CLI (see below).
   
   To run Sireum CLI in a terminal: `SIREUM_HOME\sireum.bat`
 
+  Development Build: http://bit.ly/sv3divew, Minisign: http://bit.ly/sv3divews
+
 ### Sireum Command-Line Interface (CLI)
 
 * **macOS**
 
-  Download from: http://bit.ly/2jluudT
+  Download from: http://bit.ly/sv3clim
   
-  Minisign: http://bit.ly/2jEelUz
+  Minisign: http://bit.ly/sv3clims
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -119,12 +144,14 @@ installed, along with the Sireum CLI (see below).
   For subsequent instructions, replace `SIREUM_HOME` with `/opt/sireum-v3` (or `~/Applications/sireum-v3`).
   
   To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
+
+  Development Build: http://bit.ly/sv3dclim, Minisign: http://bit.ly/sv3dclims
 
 * **Linux**
 
-  Download from: http://bit.ly/2j051Ks
+  Download from: http://bit.ly/sv3clil
 
-  Minisign: http://bit.ly/2iPSUeU
+  Minisign: http://bit.ly/sv3clils
   
   Uncompress it in a folder whose path does not contain a whitespace such as `/opt` 
   (or `~/Applications`, if your home directory path does not contain a whitespace).
@@ -133,17 +160,21 @@ installed, along with the Sireum CLI (see below).
   
   To run Sireum CLI in a terminal: `SIREUM_HOME/sireum`.
 
+  Development Build: http://bit.ly/sv3dclil, Minisign: http://bit.ly/sv3dclils
+
 * **Windows**
 
-  Download from: http://bit.ly/2i6llK8
+  Download from: http://bit.ly/sv3cliw
 
-  Minisign: http://bit.ly/2iYOPIN
+  Minisign: http://bit.ly/sv3cliws
    
   Uncompress it to the `C:` drive root directory (i.e., `C:\`) so the file `C:\sireum-v3\sireum.bat` is present.
   
   For subsequent instructions, replace `SIREUM_HOME` with `C:\sireum-v3`.
   
   To run Sireum CLI in a terminal: `SIREUM_HOME\sireum.bat`.
+
+  Development Build: http://bit.ly/sv3dcliw, Minisign: http://bit.ly/sv3dcliws
 
 ## Requirements for Buiding Sireum from Source
 
