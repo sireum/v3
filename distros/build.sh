@@ -26,7 +26,7 @@ if [ -e $SCRIPT_DIR/../build.sbt ]; then
 fi
 cd sireum-v3
 export SIREUM_PARALLEL_BUILD=false
-#bin/sbt-launch.sh clean test:compile test
+bin/sbt-launch.sh clean test:compile test
 ./sireum
 if [ "${SIREUM_DEV_DISTROS}" == "true" ]; then
   bin/sbt-launch.sh dev-distros
