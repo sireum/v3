@@ -26,9 +26,8 @@ Sireum v3 binary distributions that we provide are cryptographically-signed
 just in case  you want ensure that your copy is untampered
 [read more](https://www.openbsd.org/papers/bsdcan-signify.html>).
 
-The digital signature can be verified using the following
-[minisign](https://jedisct1.github.io/minisign/)
-command:
+The accompanying [Minisign](https://jedisct1.github.io/minisign/) 
+digital signature can be verified using the following command:
 
 ```bash
 minisign -P RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu -Vm <file>
