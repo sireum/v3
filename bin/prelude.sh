@@ -69,9 +69,20 @@ fi
 grep -q ${ZULU_VERSION} java/VER &> /dev/null && ZULU_UPDATE=false || ZULU_UPDATE=true
 if [ ! -d "java" ] || [ "${ZULU_UPDATE}" = "true" ]; then
   if [ ! -f ${ZULU_DROP} ]; then
-    echo "Please wait while downloading Zulu JDK ${ZULU_VERSION} ..."
-    wget -q ${ZULU_DROP_URL}
-    echo
+    if [ -f ${SIREUM_CACHE}/${ZULU_DROP} ]; then
+      echo "Using ${SIREUM_CACHE}/${ZULU_DROP} ... "
+      ln -s ${SIREUM_CACHE}/${ZULU_DROP}
+      echo
+    else
+      echo "Please wait while downloading Zulu JDK ${ZULU_VERSION} ..."
+      wget -q ${ZULU_DROP_URL}
+      echo
+      if [ ! -z ${SIREUM_CACHE} ]; then
+        echo "Copying to ${SIREUM_CACHE}/${ZULU_DROP} ..."
+        cp ${ZULU_DROP} ${SIREUM_CACHE}/${ZULU_DROP}
+        echo
+      fi
+    fi
   fi
   if [[ ${ZULU_DROP} == *.zip ]]; then
     unzip -oq ${ZULU_DROP}
@@ -94,9 +105,20 @@ SCALA_DROP="${SCALA_DROP_URL##*/}"
 grep -q ${SCALA_VERSION} scala/VER &> /dev/null && SCALA_UPDATE=false || SCALA_UPDATE=true
 if [ ! -d "scala" ] || [ "${SCALA_UPDATE}" = "true" ]; then
   if [ ! -f ${SCALA_DROP} ]; then
-    echo "Please wait while downloading Scala ${SCALA_VERSION} ..."
-    wget -q ${SCALA_DROP_URL}
-    echo
+    if [ -f ${SIREUM_CACHE}/${SCALA_DROP} ]; then
+      echo "Using ${SIREUM_CACHE}/${SCALA_DROP} ... "
+      ln -s ${SIREUM_CACHE}/${SCALA_DROP}
+      echo
+    else
+      echo "Please wait while downloading Scala ${SCALA_VERSION} ..."
+      wget -q ${SCALA_DROP_URL}
+      echo
+      if [ ! -z ${SIREUM_CACHE} ]; then
+        echo "Copying to ${SIREUM_CACHE}/${SCALA_DROP} ..."
+        cp ${SCALA_DROP} ${SIREUM_CACHE}/${SCALA_DROP}
+        echo
+      fi
+    fi
   fi
   rm -fR scala
   unzip -oq ${SCALA_DROP}
@@ -116,9 +138,20 @@ Z3_DIR="${Z3_DROP%.*}"
 grep -q ${Z3_VERSION} z3/VER &> /dev/null && Z3_UPDATE=false || Z3_UPDATE=true
 if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   if [ ! -f ${Z3_DROP} ]; then
-    echo "Please wait while downloading Z3 ${Z3_VERSION} ..."
-    wget -q ${Z3_DROP_URL}
-    echo
+    if [ -f ${SIREUM_CACHE}/${Z3_DROP} ]; then
+      echo "Using ${SIREUM_CACHE}/${Z3_DROP} ... "
+      ln -s ${SIREUM_CACHE}/${Z3_DROP}
+      echo
+    else
+      echo "Please wait while downloading Z3 ${Z3_VERSION} ..."
+      wget -q ${Z3_DROP_URL}
+      echo
+      if [ ! -z ${SIREUM_CACHE} ]; then
+        echo "Copying to ${SIREUM_CACHE}/${Z3_DROP} ..."
+        cp ${Z3_DROP} ${SIREUM_CACHE}/${Z3_DROP}
+        echo
+      fi
+    fi
   fi
   unzip -oq ${Z3_DROP}
   rm ${Z3_DROP}
@@ -137,9 +170,20 @@ SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   if [ ! -f ${SBT_DROP} ]; then
-    echo "Please wait while downloading Sbt ${SBT_VERSION} ..."
-    wget -q ${SBT_DROP_URL}
-    echo
+    if [ -f ${SIREUM_CACHE}/${SBT_DROP} ]; then
+      echo "Using ${SIREUM_CACHE}/${SBT_DROP} ... "
+      ln -s ${SIREUM_CACHE}/${SBT_DROP}
+      echo
+    else
+      echo "Please wait while downloading Sbt ${SBT_VERSION} ..."
+      wget -q ${SBT_DROP_URL}
+      echo
+      if [ ! -z ${SIREUM_CACHE} ]; then
+        echo "Copying to ${SIREUM_CACHE}/${SBT_DROP} ..."
+        cp ${SBT_DROP} ${SIREUM_CACHE}/${SBT_DROP}
+        echo
+      fi
+    fi
   fi
   rm -fR sbt
   unzip -oq ${SBT_DROP}
@@ -163,9 +207,20 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     rm -fR node
     mkdir -p node/bin
     cd node/bin
-    echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
-    wget -q ${NODE_DROP_URL}
-    echo
+    if [ -f ${SIREUM_CACHE}/${NODE_DROP} ]; then
+      echo "Using ${SIREUM_CACHE}/${NODE_DROP} ... "
+      ln -s ${SIREUM_CACHE}/${NODE_DROP}
+      echo
+    else
+      echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
+      wget -q ${NODE_DROP_URL}
+      echo
+      if [ ! -z ${SIREUM_CACHE} ]; then
+        echo "Copying to ${SIREUM_CACHE}/${NODE_DROP} ..."
+        cp ${NODE_DROP} ${SIREUM_CACHE}/${NODE_DROP}
+        echo
+      fi
+    fi
     cd ../..
     if [ -d "node/bin" ]; then
       echo "${NODE_VERSION}" > node/VER
@@ -177,9 +232,20 @@ if [ ! -d "node" ] || [ "${NODE_UPDATE}" = "true" ]; then
     NODE_DROP="${NODE_DROP_URL##*/}"
     NODE_DIR="${NODE_DROP%.tar.*}"
     if [ ! -f ${NODE_DROP} ]; then
-      echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
-      wget -q ${NODE_DROP_URL}
-      echo
+      if [ -f ${SIREUM_CACHE}/${NODE_DROP} ]; then
+        echo "Using ${SIREUM_CACHE}/${NODE_DROP} ... "
+        ln -s ${SIREUM_CACHE}/${NODE_DROP}
+        echo
+      else
+        echo "Please wait while downloading Node.js ${NODE_VERSION} ..."
+        wget -q ${NODE_DROP_URL}
+        echo
+        if [ ! -z ${SIREUM_CACHE} ]; then
+          echo "Copying to ${SIREUM_CACHE}/${NODE_DROP} ..."
+          cp ${NODE_DROP} ${SIREUM_CACHE}/${NODE_DROP}
+          echo
+        fi
+      fi
     fi
     tar xf ${NODE_DROP}
     rm ${NODE_DROP}
