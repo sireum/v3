@@ -304,9 +304,9 @@ L_create_$t$(L_Z2st$if(free)$f$endif$($size$), $initValue$)
 >>
 
 maskWipeF(i, t, x) ::= <<
-if (\$ & (1UL << $i$)) L_wipe_$t$(&$x$);
+if (\$ & (1UL << $i$)) L_wipe_$t$(&$x$); else L_wipex($x$, sizeof($t$));
 >>
 
 maskWipe(i, t, x) ::= <<
-if (L_get_BS(\$, L_Zui($i$UL))) L_wipe_$t$(&$x$) else L_wipe(&$x$, sizeof($t$));
+if (L_get_BS(\$, L_Zui($i$UL))) L_wipe_$t$(&$x$); else L_wipex($x$, sizeof($t$));
 >>

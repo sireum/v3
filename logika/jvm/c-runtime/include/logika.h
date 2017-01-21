@@ -45,9 +45,11 @@
 #ifdef LOGIKA_SECURE_WIPE
 #define L_av(p) __asm__ __volatile__("": : "m" (p) :"memory")
 #define L_wipe(p, n) { memset(p, 0, n); L_av(p); }
+#define L_wipex(x, n) { memset(&x, 0, n); L_av(x); }
 #else
 #define L_av(p)
 #define L_wipe(p, n)
+#define L_wipex(x, n)
 #endif
 
 
