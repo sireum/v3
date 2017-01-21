@@ -64,7 +64,7 @@ $if(assertion || assumption || (hasTopLevel && hasRandom))$
 #include <assert.h>
 
 $if(assumption)$
-#define assume(e) assert(e)
+#define L_assume(e) L_assert(e)
 $endif$
 $endif$
 
@@ -224,11 +224,11 @@ $x$.data[L_Z2st($i$)] = $e$;$line(no)$
 >>
 
 assertStmt(no, e) ::= <<
-assert($e$);$line(no)$
+L_assert($e$);$line(no)$
 >>
 
 assumeStmt(no, e) ::= <<
-assume($e$);$line(no)$
+L_assume($e$);$line(no)$
 >>
 
 ifStmt(no, e, tStmts, fStmts) ::= <<
@@ -308,5 +308,5 @@ if (\$ & (1UL << $i$)) L_wipe_$t$(&$x$);
 >>
 
 maskWipe(i, t, x) ::= <<
-if (L_get_BS(\$, L_Zui($i$UL))) L_wipe_$t$(&$x$);
+if (L_get_BS(\$, L_Zui($i$UL))) L_wipe_$t$(&$x$) else L_wipe(&$x$, sizeof($t$));
 >>
