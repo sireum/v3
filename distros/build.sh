@@ -6,10 +6,14 @@ rm -fR sireum-v3-dev-mac64.zip sireum-v3-dev-linux64.zip sireum-v3-dev-win64.zip
 export SIREUM_SKIP_BUILD=false
 git clone -b master https://github.com/sireum/v3.git sireum-v3
 if [ -d idea ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
-  mv idea sireum-v3/distros
+  cd sireum-v3/distros
+  ln -s ../../idea
+  cd ../..
 fi
 if [ -d resource_hacker ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
-  mv resource_hacker sireum-v3/resources/distro
+  cd sireum-v3/resources/distro
+  ln -s ../../resource_hacker
+  cd ../../..
 fi
 if [ -e $SCRIPT_DIR/../project/Distros.scala ]; then
   cp $SCRIPT_DIR/../project/Distros.scala sireum-v3/project/Distros.scala
