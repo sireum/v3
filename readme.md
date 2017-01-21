@@ -22,8 +22,8 @@ Supported platforms (64-bit only):
 
 ## Installing and Running Sireum
 
-Sireum v3 binary distributions are cryptographically-signed if you want ensure that
-your copy is untampered
+Sireum v3 binary distributions are cryptographically-signed just in case 
+you want ensure that your copy is untampered
 [read more](https://www.openbsd.org/papers/bsdcan-signify.html>).
 
 The digital signature can be verified using the following
