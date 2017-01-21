@@ -41,10 +41,12 @@ val BUILD_FILENAME = "BUILD"
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
 
 val distros = TaskKey[Unit]("distros", "Build Sireum distributions.")
-val ideaDistros = TaskKey[Unit]("idea-distros", "Build Sireum IntelliJ distributions.")
+val iveDistros = TaskKey[Unit]("ive-distros", "Build Sireum IVE distributions.")
+val devDistros = TaskKey[Unit]("distros", "Build Sireum-dev distributions.")
+val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distributions.")
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
-traceLevel in ideaDistros := -1
+traceLevel in iveDistros := -1
 
 lazy val sireum = Project(
   id = "sireum",
@@ -53,8 +55,14 @@ lazy val sireum = Project(
     distros := {
       Distros.build()
     },
-    ideaDistros := {
-      Distros.buildIdea()
+    iveDistros := {
+      Distros.buildIVE()
+    },
+    devDistros := {
+      Distros.buildDev()
+    },
+    devIveDistros := {
+      Distros.buildIVEDev()
     },
     depDot := {
       val args = spaceDelimited("<arg>").parsed
@@ -161,13 +169,11 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.antlr" % "antlr4-runtime" % "4.6",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.17",
-    "org.ow2.asm" % "asm" % "5.1",
-    "org.ow2.asm" % "asm-commons" % "5.1",
-    "org.ow2.asm" % "asm-util" % "5.1",
+    "org.ow2.asm" % "asm" % "5.2",
+    "org.ow2.asm" % "asm-commons" % "5.2",
+    "org.ow2.asm" % "asm-util" % "5.2",
     "org.jgrapht" % "jgrapht-core" % "1.0.0",
     "org.jgrapht" % "jgrapht-ext" % "1.0.0",
-    "org.scala-graph" %% "graph-core" % "1.11.4",
-    "org.scala-graph" %% "graph-dot" % "1.11.0",
     "com.lihaoyi" %% "ammonite-ops" % "0.8.1",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"

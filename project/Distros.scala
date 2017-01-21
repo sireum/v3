@@ -29,6 +29,8 @@ import java.util.jar.JarInputStream
 import ammonite.ops._
 
 object Distros {
+  var isDev: Boolean = false
+  lazy val dev: String = if (isDev) "-dev" else ""
   val baseDir: Path = {
     Option(System.getenv("SIREUM_DISTRO_BUILD_DIR")) match {
       case Some(v) => Path(new java.io.File(v))
@@ -57,7 +59,7 @@ object Distros {
   )
 
   val pluginUpdateIdMap = Map(
-    "sireum" -> 31441,
+    "sireum" -> (if (isDev) 31441 else 31441),
     "jdt" -> 31124,
     "scala" -> 31659,
     "sbt" -> 22670,
@@ -78,8 +80,20 @@ object Distros {
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
     (baseDir / 'distros / "idea64.exe").toIO.isFile
 
-  def buildIdea(): Unit = {
-    if (!(baseDir / 'distros / "sireum-v3-VER").toIO.exists) {
+  def buildIVEDev(): Unit = {
+    isDev = true
+    buildIVE()
+  }
+
+  def buildDev(): Unit = {
+    isDev = true
+    build()
+  }
+
+  def buildIVE(): Unit = {
+    val ver = baseDir / 'distros / s"sireum-v3$dev-VER"
+    if (!ver.toIO.exists) {
+      sys.error(s"Could not find $ver!")
       sys.error("Need to run distros task first.")
       return
     }
@@ -92,9 +106,9 @@ object Distros {
 
     downloadResourceHacker()
     downloadPlugins()
-    buildIdea("mac")
-    buildIdea("win")
-    buildIdea("linux")
+    buildIVE("mac")
+    buildIVE("win")
+    buildIVE("linux")
 
     //rm ! baseDir / 'distros / 'idea
   }
@@ -152,11 +166,11 @@ object Distros {
         val i = content.indexOf("idea.paths.selector")
         val j = content.indexOf("<string>", i)
         val k = content.indexOf("</string>", j)
-        content.substring(0, j) + s"<string>Sireum$ideaVer" + content.substring(k)
+        content.substring(0, j) + s"<string>Sireum$ideaVer$dev" + content.substring(k)
       case "win" =>
-        s"idea.config.path=$${user.home}/.Sireum$ideaVer/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\r\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\r\n" + content
       case "linux" =>
-        s"idea.config.path=$${user.home}/.Sireum$ideaVer/config\nidea.system.path=$${user.home}/.Sireum$ideaVer/system\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\n" + content
     }
     rm ! p
     write(p, newContent)
@@ -167,8 +181,8 @@ object Distros {
     print(s"Patching $p ... ")
     val content = read ! p
     val newContent = platform match {
-      case "win" => s"${content.trim}\r\n-Dorg.sireum.ive=Sireum$ideaVer\r\n-Dfile.encoding=UTF-8\r\n"
-      case _ => s"${content.trim}\n-Dorg.sireum.ive=Sireum$ideaVer\n-Dfile.encoding=UTF-8\n"
+      case "win" => s"${content.trim}\r\n-Dorg.sireum.ive=Sireum$ideaVer\r\n-Dorg.sireum.ive.dev=$isDev\r\n-Dfile.encoding=UTF-8\r\n"
+      case _ => s"${content.trim}\n-Dorg.sireum.ive=Sireum$ideaVer\n-Dorg.sireum.ive.dev=$isDev\n-Dfile.encoding=UTF-8\n"
     }
     rm ! p
     write(p, newContent)
@@ -178,11 +192,18 @@ object Distros {
   def patchImages(path: Path): Unit = {
     val filePath = path / 'lib / "resources.jar"
     print(s"Patching $filePath ... ")
-    %%('zip, filePath,
-      "idea_community_about.png",
-      "idea_community_about@2x.png",
-      "idea_community_logo.png",
-      "idea_community_logo@2x.png")(pwd / 'resources / 'distro / 'images)
+    if (isDev)
+      %%('zip, filePath,
+        "idea_community_about.png",
+        "idea_community_about@2x.png",
+        "idea_community_logo.png",
+        "idea_community_logo@2x.png")(pwd / 'resources / 'distro / 'images / 'dev)
+    else
+      %%('zip, filePath,
+        "idea_community_about.png",
+        "idea_community_about@2x.png",
+        "idea_community_logo.png",
+        "idea_community_logo@2x.png")(pwd / 'resources / 'distro / 'images)
     println("done!")
   }
 
@@ -240,8 +261,8 @@ object Distros {
     println("done!")
   }
 
-  def buildIdea(platform: String): Unit = {
-    println(s"Building Sireum v3 idea ${platform}64 distro ...")
+  def buildIVE(platform: String): Unit = {
+    println(s"Building Sireum$dev IVE ${platform}64 distro ...")
     val url = s"https://download.jetbrains.com/idea/ideaIC-$ideaVer${ideaExtMap(platform)}"
     val filename = url.substring(url.lastIndexOf('/') + 1)
     val buildDir = ideaDir
@@ -281,6 +302,7 @@ object Distros {
         patchIcon(platform, tempDir)
         %%('cp, "-p", pwd / 'resources / 'distro / "idea.bat", buildDir / platform / "sireum-v3")
         %%('cp, "-p", pwd / 'resources / 'distro / "idea64.bat", buildDir / platform / "sireum-v3")
+        if (isDev) mv(buildDir / platform / "sireum-v3", buildDir / platform / s"sireum-v3$dev")
       case "linux" =>
         val tempDir = buildDir / platform / "sireum-v3" / 'apps
         mkdir ! tempDir
@@ -295,58 +317,63 @@ object Distros {
         patchIcon(platform, tempDir / 'idea)
         %%('cp, "-p", pwd / 'resources / 'distro / 'idea, buildDir / platform / "sireum-v3")
         %%('chmod, "+x", buildDir / platform / "sireum-v3" / 'idea)
+        if (isDev) mv(buildDir / platform / "sireum-v3", buildDir / platform / s"sireum-v3$dev")
     }
     print("Extracting Sireum v3 distro ... ")
     platform match {
       case "mac" =>
-        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform / "Sireum.app" / "Contents" / "Resources")
+        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3$dev-${platform}64.zip")(ideaDir / platform / "Sireum.app" / "Contents" / "Resources")
+        if (isDev) {
+          mv(ideaDir / platform / "Sireum.app" / "Contents" / "Resources" / s"sireum-v3$dev", ideaDir / platform / "Sireum.app" / "Contents" / "Resources" / "sireum-v3")
+          mv(ideaDir / platform / "Sireum.app", ideaDir / platform / s"Sireum$dev.app")
+        }
       case _ =>
-        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3-${platform}64.zip")(baseDir / 'distros / 'idea / platform)
-        mv(ideaDir / platform / "sireum-v3", ideaDir / platform / "Sireum")
+        %%('unzip, "-oq", baseDir / 'distros / s"sireum-v3$dev-${platform}64.zip")(ideaDir / platform)
+        mv(ideaDir / platform / s"sireum-v3$dev", ideaDir / platform / s"Sireum$dev")
     }
     println("done!")
     print(s"Packaging ${platform}64 idea distro ... ")
     platform match {
       case "mac" =>
-        val bundle = baseDir / 'distros / "sireum-v3-idea-mac64.tar.gz"
-        val bundleDmg = baseDir / 'distros / "sireum-v3-idea-mac64.dmg"
+        val bundle = baseDir / 'distros / s"sireum-v3$dev-ive-mac64.tar.gz"
+        val bundleDmg = baseDir / 'distros / s"sireum-v3$dev-ive-mac64.dmg"
         rm ! bundle
         rm ! bundleDmg
-        %%('tar, 'cfz, bundle, "Sireum.app")(ideaDir / platform)
-        val ver = (read ! baseDir / 'distros / "sireum-v3-VER").substring(0, 7)
-        val app = ideaDir / platform / "Sireum.app"
+        %%('tar, 'cfz, bundle, s"Sireum$dev.app")(ideaDir / platform)
+        val ver = (read ! baseDir / 'distros / s"sireum-v3$dev-VER").substring(0, 7)
+        val app = ideaDir / platform / s"Sireum$dev.app"
         val background = pwd / 'resources / 'distro / 'images / "dmg-background.png"
         val settings = pwd / 'resources / 'distro / "dmgbuild-settings.py"
         %%('dmgbuild, "-s", settings, "-D", s"app=$app",
           "-D", s"background=$background", s"Sireum v3 $ver", bundleDmg)(baseDir / 'distros)
         rm ! ideaDir / platform
       case "linux" =>
-        val bundle = baseDir / 'distros / "sireum-v3-idea-linux64.zip"
+        val bundle = baseDir / 'distros / s"sireum-v3$dev-ive-linux64.zip"
         rm ! bundle
-        %%('zip, "-r", bundle, "Sireum")(ideaDir / platform)
+        %%('zip, "-r", bundle, s"Sireum$dev")(ideaDir / platform)
         rm ! ideaDir / platform
       case "win" =>
-        val bundle = baseDir / 'distros / "sireum-v3-idea-win64.zip"
+        val bundle = baseDir / 'distros / s"sireum-v3$dev-ive-win64.zip"
         rm ! bundle
-        %%('zip, "-r", bundle, "Sireum")(ideaDir / platform)
+        %%('zip, "-r", bundle, s"Sireum$dev")(ideaDir / platform)
         rm ! ideaDir / platform
     }
     println("done!")
   }
 
   def build(): Unit = {
-    rm ! baseDir / 'distros / "sireum-v3-mac64.zip"
-    rm ! baseDir / 'distros / "sireum-v3-win64.zip"
-    rm ! baseDir / 'distros / "sireum-v3-linux64.zip"
-    rm ! baseDir / 'distros / "sireum-v3-VER"
-    write(baseDir / 'distros / "sireum-v3-VER", VER)
+    rm ! baseDir / 'distros / s"sireum-v3$dev-mac64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3$dev-win64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3$dev-linux64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3$dev-VER"
+    write(baseDir / 'distros / s"sireum-v3$dev-VER", VER)
     build("mac")
     build("win")
     build("linux")
   }
 
   def build(platform: String): Unit = {
-    println(s"Building distro for ${platform}64...")
+    println(s"Building Sireum$dev for ${platform}64...")
     println()
     rm ! baseDir / 'distros / "sireum-v3"
     mkdir ! baseDir / 'distros / "sireum-v3" / 'bin
@@ -364,7 +391,8 @@ object Distros {
     cp(pwd / 'bin / "prelude.sh", baseDir / 'distros / "sireum-v3" / 'bin / "prelude.sh")
     %('bash, baseDir / 'distros / "sireum-v3" / 'bin / "prelude.sh", PLATFORM = platform, DISTROS = "true")
     rm ! baseDir / 'distros / "sireum-v3" / 'bin / "prelude.sh"
-    %('zip, "-qr", s"sireum-v3-${platform}64.zip", "sireum-v3")(baseDir / 'distros)
-    rm ! baseDir / 'distros / "sireum-v3"
+    if (isDev) mv(baseDir / 'distros / "sireum-v3", baseDir / 'distros / s"sireum-v3$dev")
+    %('zip, "-qr", s"sireum-v3$dev-${platform}64.zip", s"sireum-v3$dev")(baseDir / 'distros)
+    rm ! baseDir / 'distros / s"sireum-v3$dev"
   }
 }
