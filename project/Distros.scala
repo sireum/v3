@@ -376,6 +376,7 @@ object Distros {
     println(s"Building Sireum$dev for ${platform}64...")
     println()
     rm ! baseDir / 'distros / "sireum-v3"
+    if (isDev) rm ! baseDir / 'distros / "sireum-v3-dev"
     mkdir ! baseDir / 'distros / "sireum-v3" / 'bin
     write(baseDir / 'distros / "sireum-v3" / 'bin / 'VER, VER)
     val licenseLines = read.lines ! pwd / "license.txt"
