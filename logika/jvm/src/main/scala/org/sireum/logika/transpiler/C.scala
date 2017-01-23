@@ -153,7 +153,7 @@ private class C(program: ast.Program,
 
   {
     stMainHeader.add("protos", stProtos)
-    stMainHeader.add("protos", stHeaderGlobals)
+    stMainHeader.add("globals", stHeaderGlobals)
     stMain.add("protos", stProtos)
     stMain.add("globals", stGlobals)
     stMain.add("stmts", stRunStmts)
@@ -214,9 +214,9 @@ private class C(program: ast.Program,
     }) {
       if (!tAlias || !idOpt.contains(x))
         stStmts.add("stmt",
-          stg.getInstanceOf("callExp").
-            add("id", s"L_wipe_${typeName(t)}").
-            add("e", s"&${name(x)}").add("end", ";"))
+          stg.getInstanceOf("wipeStmt").
+            add("t", typeName(t)).
+            add("x", name(x)))
     }
   }
 
@@ -249,13 +249,20 @@ private class C(program: ast.Program,
     for (i <- md.params.indices) {
       val p = md.params(i)
       val t = typeName(p.tpe)
-      val x = p.id.value
-      stStmts.add("stmt",
-        (if (b) stg.getInstanceOf("maskWipe")
-        else stg.getInstanceOf(s"maskWipeF")).
-          add("i", i).
-          add("t", t).
-          add("x", x))
+      val x = name(p.id)
+      if (isInternalRefType(p.id)) {
+        stStmts.add("stmt",
+          (if (b) stg.getInstanceOf("maskWipe")
+          else stg.getInstanceOf(s"maskWipeF")).
+            add("i", i).
+            add("t", t).
+            add("x", x))
+      } else {
+        stStmts.add("stmt",
+          stg.getInstanceOf("wipeStmt").
+            add("t", t).
+            add("x", name(x)))
+      }
     }
     rOpt match {
       case Some(r) =>
@@ -439,10 +446,13 @@ private class C(program: ast.Program,
         stMainHeader.add("hasPrototypes", true)
         stMain.add("hasPrototypes", true)
         val mretTypeNameOpt = stmt.returnTypeOpt.map(typeName)
+        val mName = name(stmt.id)
         val protoST = stg.getInstanceOf("proto").
           add("no", lineNo(stmt)).
           add("t", mretTypeNameOpt.getOrElse("void")).
-          add("name", name(stmt.id))
+          add("name", mName)
+        val protoDefST = stg.getInstanceOf("protoDef").
+          add("name", mName)
         val methodST = stg.getInstanceOf("method")
         methodST.add("proto", protoST)
         stMethods.add("method", methodST)
@@ -452,21 +462,23 @@ private class C(program: ast.Program,
             protoST.add("param", stg.getInstanceOf("param").
               add("t", "BS").
               add("x", maskId))
+            protoDefST.add("mask", stg.getInstanceOf("callExp").
+              add("e", stmt.params.size).
+              add("e", "F"))
           } else {
             protoST.add("param", stg.getInstanceOf("param").
               add("t", s"U$maskLimit").
               add("x", maskId))
+            protoDefST.add("mask", "0")
           }
         }
         for (p <- stmt.params) {
-          val id = p.id
-          val notRefType = !isInternalRefType(id)
-          val idName = name(id)
-          if (notRefType) varDecls += id -> p.tpe
+          val idName = name(p.id)
           protoST.add("param",
             stg.getInstanceOf("param").
               add("t", typeName(p.tpe)).
               add("x", idName))
+          protoDefST.add("paramId", idName)
         }
         val stMStmts = stg.getInstanceOf("stmts")
         methodST.add("stmts", stMStmts)
@@ -475,6 +487,7 @@ private class C(program: ast.Program,
         val protoST2 = new ST(protoST)
         protoST2.add("end", ";")
         stProtos.add("proto", protoST2)
+        stProtos.add("proto", protoDefST)
         None
       case _: ast.ProofElementStmt | _: ast.ProofStmt |
            _: ast.SequentStmt | _: ast.InvStmt => None
@@ -541,12 +554,14 @@ private class C(program: ast.Program,
                 }
                 result.add("e", s"0x${mask.toHexString.toUpperCase}UL")
               }
+              result.add("id", s"_${name(md.id)}")
             case _ =>
+              result.add("id", translate(e.exp))
           }
           for (arg <- e.args) {
             result.add("e", translate(arg))
           }
-          result.add("id", translate(e.exp))
+          result
       }
     case _: ast.RandomInt =>
       hasRandom = true

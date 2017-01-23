@@ -196,7 +196,11 @@ $proto$
 >>
 
 proto(no, t, name, param, end) ::= <<
-$t$ $name$($if(param)$$param; separator=", "$$else$void$endif$)$end$$if(no)$ // L$no$$endif$
+$t$ _$name$($if(param)$$param; separator=", "$$else$void$endif$)$end$$if(no)$ // L$no$$endif$
+>>
+
+protoDef(name, paramId, mask) ::= <<
+#define $name$($paramId; separator=", "$) _$name$($mask$$if(paramId)$, $paramId; separator=", "$$endif$)
 >>
 
 param(t, x) ::= <<
@@ -301,6 +305,10 @@ $e$.data[L_Z2st$if(free)$f$endif$($i$)]
 
 createExp(t, size, initValue, free) ::= <<
 L_create_$t$(L_Z2st$if(free)$f$endif$($size$), $initValue$)
+>>
+
+wipeStmt(t, x) ::= <<
+L_wipe_$t$(&$x$);
 >>
 
 maskWipeF(i, t, x) ::= <<
