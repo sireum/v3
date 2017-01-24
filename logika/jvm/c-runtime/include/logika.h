@@ -42,10 +42,14 @@
 #endif
 
 
-#ifdef LOGIKA_SECURE_WIPE
+#ifdef LOGIKA_WIPE
 #define L_av(p) __asm__ __volatile__("": : "m" (p) :"memory")
 #define L_wipe(p, n) { memset(p, 0, n); L_av(p); }
 #define L_wipex(x, n) { memset(&x, 0, n); L_av(x); }
+#elif LOGIKA_DIRTY_WIPE
+#define L_av(p) __asm__ __volatile__("": : "m" (p) :"memory")
+void L_wipe(void *p, size_t n);
+#define L_wipex(x, n) L_wipe(&x, n)
 #else
 #define L_av(p)
 #define L_wipe(p, n)

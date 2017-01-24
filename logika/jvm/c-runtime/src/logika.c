@@ -38,6 +38,24 @@
 #define ST_MAX ((size_t) - 1)
 #endif
 
+#if LOGIKA_DIRTY_WIPE
+#include <logika-random.h>
+
+void L_wipe(void *p, size_t n) {
+  size_t m = n / 4;
+  size_t r = n % 4;
+  size_t i;
+  U32 *p32 = (U32 *) p;
+  for (i = 0; i < m; i++) {
+    p32[i] = L_random_U32();
+  }
+  U8 *p8 = (U8 *) p;
+  for (i = 0; i < r; i++) {
+    p8[i] = L_random_U8();
+  }
+}
+#endif
+
 void *L_malloc(size_t size) {
   void *result = malloc(size);
   L_assert(result != NULL);
@@ -49,6 +67,7 @@ void *L_realloc(void *ptr, size_t size) {
   L_assert(result != NULL);
   return result;
 }
+
 
 #if BIT_WIDTH == 0
 

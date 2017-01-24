@@ -178,13 +178,10 @@ private class C(program: ast.Program,
       read("logika-io.c", result)
       result.stMain.add("io", true)
     }
-    if (hasRandom) {
-      read("logika-random.h", result)
-      read("logika-random.c", result)
-      read("FindSodium.cmake", result)
-      result.stMain.add("hasRandom", true)
-      result.stCMake.add("sodium", true)
-    }
+    read("logika-random.h", result)
+    read("logika-random.c", result)
+    read("FindSodium.cmake", result)
+    if (hasRandom) result.stMain.add("hasRandom", true)
     if (hasTopLevel) stMain.add("hasTopLevel", true)
     else stCMake.add("library", true)
   }

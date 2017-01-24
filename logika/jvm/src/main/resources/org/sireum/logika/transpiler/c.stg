@@ -59,6 +59,8 @@ $if(hasTopLevel && hasRandom)$
 #include <sodium.h>
 $elseif(hasRandom)$
 // Need to call sodium_init in the main program
+$elseif(!hasTopLevel)$
+// Need to call sodium_init in the main program when LOGIKA_DIRTY_WIPE is set
 $endif$
 $if(assertion || assumption || (hasTopLevel && hasRandom))$
 #include <assert.h>
@@ -87,6 +89,10 @@ void run()
 {
   $if(hasRandom)$
   L_assert(sodium_init() != -1);
+  $else$
+#ifdef LOGIKA_DIRTY_WIPE
+  L_assert(sodium_init() != -1);
+#endif
   $endif$
 
   $stmts; separator="\n\n"$
@@ -121,26 +127,19 @@ list(APPEND CMAKE_MODULE_PATH "./")
 add_definitions(-DBIT_WIDTH=$bitWidth$)
 
 # Optionals
-add_definitions(-DLOGIKA_DEBUG -DLOGIKA_SECURE_WIPE)
+add_definitions(-DLOGIKA_DEBUG -DLOGIKA_DIRTY_WIPE)
 
-$if(gmp && sodium)$
+$if(gmp)$
 find_package(GMP REQUIRED)
 find_package(Sodium REQUIRED)
 
 include_directories(\${GMP_H} \${SODIUM_H} "./")
 link_libraries(\${GMP_L} \${SODIUM_L})
-$elseif(gmp)$
-find_package(GMP REQUIRED)
-
-include_directories(\${GMP_H} "./")
-link_libraries(\${GMP_L})
-$elseif(sodium)$
+$else$
 find_package(Sodium REQUIRED)
 
 include_directories(\${SODIUM_H} "./")
 link_libraries(\${SODIUM_L})
-$else$
-include_directories("./")
 $endif$
 
 $if(library)$
