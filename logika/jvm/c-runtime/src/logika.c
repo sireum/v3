@@ -1089,7 +1089,7 @@ ZS L_clone_ZS(ZS ns) {
 #endif
 
 B L_eq_BS(BS bs1, BS bs2) {
-  return bs1.size == bs2.size && memcmp(bs1.data, bs2.data, bs1.dataSize) == 0;
+  return bs1.size == bs2.size && (bs1.data == bs2.data || memcmp(bs1.data, bs2.data, bs1.dataSize) == 0);
 }
 
 B L_eq_BSl(BS bs1, BS bs2) {
@@ -1112,7 +1112,7 @@ B L_eq_BSlr(BS bs1, BS bs2) {
 }
 
 B L_eq_S8S(S8S ns1, S8S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_S8Sl(S8S ns1, S8S ns2) {
@@ -1135,7 +1135,7 @@ B L_eq_S8Slr(S8S ns1, S8S ns2) {
 }
 
 B L_eq_S16S(S16S ns1, S16S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_S16Sl(S16S ns1, S16S ns2) {
@@ -1158,7 +1158,7 @@ B L_eq_S16Slr(S16S ns1, S16S ns2) {
 }
 
 B L_eq_S32S(S32S ns1, S32S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_S32Sl(S32S ns1, S32S ns2) {
@@ -1181,7 +1181,7 @@ B L_eq_S32Slr(S32S ns1, S32S ns2) {
 }
 
 B L_eq_S64S(S64S ns1, S64S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_S64Sl(S64S ns1, S64S ns2) {
@@ -1204,7 +1204,7 @@ B L_eq_S64Slr(S64S ns1, S64S ns2) {
 }
 
 B L_eq_U8S(U8S ns1, U8S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_U8Sl(U8S ns1, U8S ns2) {
@@ -1227,7 +1227,7 @@ B L_eq_U8Slr(U8S ns1, U8S ns2) {
 }
 
 B L_eq_U16S(U16S ns1, U16S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_U16Sl(U16S ns1, U16S ns2) {
@@ -1250,7 +1250,7 @@ B L_eq_U16Slr(U16S ns1, U16S ns2) {
 }
 
 B L_eq_U32S(U32S ns1, U32S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_U32Sl(U32S ns1, U32S ns2) {
@@ -1273,7 +1273,7 @@ B L_eq_U32Slr(U32S ns1, U32S ns2) {
 }
 
 B L_eq_U64S(U64S ns1, U64S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_U64Sl(U64S ns1, U64S ns2) {
@@ -1296,7 +1296,7 @@ B L_eq_U64Slr(U64S ns1, U64S ns2) {
 }
 
 B L_eq_F32S(F32S ns1, F32S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_F32Sl(F32S ns1, F32S ns2) {
@@ -1319,7 +1319,7 @@ B L_eq_F32Slr(F32S ns1, F32S ns2) {
 }
 
 B L_eq_F64S(F64S ns1, F64S ns2) {
-  return ns1.size == ns2.size && memcmp(ns1.data, ns2.data, ns1.size) == 0;
+  return ns1.size == ns2.size && (ns1.data == ns2.data || memcmp(ns1.data, ns2.data, ns1.size) == 0);
 }
 
 B L_eq_F64Sl(F64S ns1, F64S ns2) {
@@ -1346,6 +1346,7 @@ B L_eq_F64Slr(F64S ns1, F64S ns2) {
 B L_eq_ZS(ZS ns1, ZS ns2) {
   size_t size = ns1.size;
   if (size != ns2.size) return false;
+  if (ns1.data == ns2.data) return true;
   size_t i;
   for (i = 0; i < size; i++) {
     if (!L_eq_Z(ns1.data[i], ns1.data[i])) return false;
