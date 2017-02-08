@@ -37,6 +37,7 @@ grammar Antlr4Logika;
    ¬         00AC      not   neg  !        ~
    ∧         2227      and        &        ^
    ∨         2228      or         |        V
+   ⊕         2295      xor        ^|
    →         21D2      implies    ->
    ∀         2200      forall     all      A
    ∃         2203      exists     some     E
@@ -153,13 +154,13 @@ formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥'
        | '>>' | '>>>' | '<<' ) NL? r=formula            #Binary      // programming logic
   | l=formula
-    op=( '=' |'==' | '!=' | '≡' | '≠' ) NL?
+    op=( '=' |'==' | '!=' | '≠' ) NL?
     r=formula                                           #Binary      // programming logic
   | op='-' formula                                      #Unary       // programming logic
   | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
-  | l=formula op=( 'xor' | '^|' | '⊻' ) NL? r=formula   #Binary      // propositional logic
+  | l=formula op=( 'xor' | '^|' | '⊕' ) NL? r=formula   #Binary      // propositional logic
   | l=formula
     op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary      // propositional logic
   | <assoc=right> l=formula
