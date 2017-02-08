@@ -117,36 +117,34 @@ proofStep
 
 primFormula
   : t=( 'true' | 'T' | '⊤'
-      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean     // propositional logic
-  | '(' formula ')'                                     #Paren       // propositional logic
-  | tb='result' '(' formula ( ',' formula )* ')'        #ApplyResult // programming logic
-  | 'result'                                            #Result      // programming logic
-  | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
-  | tb=ID                                               #Var         // propositional logic
-  | NUM                                                 #Int         // programming logic
-  | INT                                                 #IntLit      // programming logic
-  | REAL                                                #RLit        // programming logic
-  | FLOAT                                               #FloatLit    // programming logic
+      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean
+  | '(' formula ')'                                     #Paren
+  | 'result'                                            #Result
+  | ID                                                  #Var
+  | NUM                                                 #Int
+  | INT                                                 #IntLit
+  | REAL                                                #RLit
+  | FLOAT                                               #FloatLit
   | t=( 'B'
       | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
       | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
                | 'S8'   | 'S16'  | 'S32'  | 'S64'
                | 'U8'   | 'U16'  | 'U32'  | 'U64'
       | 'R'    | 'F32'  | 'F64' )
-      '.' ID                                            #TypeAccess  // programming logic
+      '.' ID                                            #TypeAccess
       // ID in { "Min", "Max", "random" }
-  | t=( 'BS'
-      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS' | 'F32S' | 'F64S' )
-    '(' ( exp ( ',' exp )* )? ')'                       #Seq         // programming logic
+  | ( t='ZS'
+    | t=( 'S' | 'IS' ) '[' i=intType ',' v=type ']' )
+    '(' ( formula ( ',' formula )* )? ')'               #Seq
+  | ( t='ZS' '.' id=ID
+    | t=( 'S' | 'IS' )
+      '.' id=ID '[' i=intType ',' v=type ']' )
+    // id == "create"
+    '(' ( formula ( ',' formula )* )? ')'               #SeqCreate
   ;
 
 formula
-  : primFormula ( '.' ID )*                             #PFormula
-    /* ID in { "size" } */
+  : primFormula primFormulaSuffix*                      #PFormula
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
   | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
@@ -155,18 +153,34 @@ formula
     op=( '<' | '<=' | '≤' | '>' | '>=' | '≥'
        | '>>' | '>>>' | '<<' ) NL? r=formula            #Binary      // programming logic
   | l=formula
-    op=( '=' |'==' | '!=' | '≠' ) NL?
+    op=( '=' |'==' | '!=' | '≡' | '≠' ) NL?
     r=formula                                           #Binary      // programming logic
   | op='-' formula                                      #Unary       // programming logic
   | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
-  | l=formula op=( 'xor' | '^|' ) NL? r=formula         #Binary      // propositional logic
+  | l=formula op=( 'xor' | '^|' | '⊻' ) NL? r=formula   #Binary      // propositional logic
   | l=formula
     op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary      // propositional logic
   | <assoc=right> l=formula
     op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary      // propositional logic
   | qformula                                            #Quant       // predicate logic
+  ;
+
+primFormulaSuffix
+  : '(' formulaArgs? ')'                                #FormulaApplySuffix
+  | '.' ID '(' formulaArgs? ')'                         #FormulaMethodInvokeSuffix
+  | '.' ID '(' formulaUpdates ')'                       #FormulaUpdatesSuffix
+  | '.' ID                                              #FormulaAccessSuffix
+  ;
+
+formulaArgs
+  : formula ( ',' formula )*                            #PositionalFormulaArgs
+  | ID '=' formula ( ',' ID '=' formula )*              #NamedFormulaArgs
+  ;
+
+formulaUpdates
+  : formula '->' formula ( ',' formula '->' formula )*
   ;
 
 qformula
@@ -180,18 +194,18 @@ qformula
   ;
 
 type
-  : t=( 'B'
-      | 'Z'   | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
-      | 'N'   | 'N8'   | 'N16'  | 'N32'  | 'N64'
-              | 'S8'   | 'S16'  | 'S32'  | 'S64'
-              | 'U8'   | 'U16'  | 'U32'  | 'U64'
-      | 'R'   | 'F32'  | 'F64'
-      | 'BS'
-      | 'ZS'  | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'  | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-              | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-              | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'  | 'F32S' | 'F64S' )
+  : t=( 'B' | 'R'   | 'F32'  | 'F64' | 'ZS' )
+  | t=( 'S' | 'IS' ) '[' i=intType ',' v=type  ']'
+  | intType
+  | ID
+  ;
+
+intType
+  : t=( 'Z' | 'N'
+      | 'Z8' | 'Z16' | 'Z32' | 'Z64'
+      | 'N8' | 'N16' | 'N32' | 'N64'
+      | 'S8' | 'S16' | 'S32' | 'S64'
+      | 'U8' | 'U16' | 'U32' | 'U64' )
   ;
 
 justification
@@ -317,10 +331,13 @@ stmt
   | 'while' '(' exp ')' NL* t='{'
     ( NL* 'l"""' loopInvariant '"""' )?
     blockEnd                                            #WhileStmt
+  | ID 'match' '{' matchCase+ '}'                       #MatchStmt
   | op=( 'print' | 'println' )
     '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
   | methodDecl                                          #MethodDeclStmt
+  | traitDecl                                           #TraitDeclStmt
+  | recordDecl                                          #RecordDeclStmt
   | 'l"""'
     ( proof
     | sequent
@@ -331,13 +348,29 @@ stmt
   | exp                                                 #ExpStmt
   ;
 
+matchCase
+  : 'case' ID ':' type '=>' stmts
+  ;
+
 methodDecl
   : ( '@' NL* anns+=ID NL* )* 'def' id=ID  NL?
+    // anns is subset of { "pure" , "helper" }
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
     t='{'
     ( NL* 'l"""' methodContract NL* '"""' )?
     blockEnd
+  ;
+
+traitDecl
+  : 'sealed' 'trait' ID
+  ;
+
+recordDecl
+  : '@' ann=ID // t=="record" or t=="irecord"
+    'case' 'class'
+    id=ID '(' ( param ( ',' param )* )? ')'
+    ( 'extends' superTrait=ID )?
   ;
 
 blockEnd
@@ -360,46 +393,30 @@ primExp
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
   | ID                                                  #VarExp
-  | t=( 'BS'
-      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'   | 'F32S' | 'F64S' )
-      '.' ID '(' ( exp ( ',' exp )* )? ')'              #TypeMethodCallExp
-      // ID in { "create" }
   | t=( 'B'
       | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
       | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
                | 'S8'   | 'S16'  | 'S32'  | 'S64'
                | 'U8'   | 'U16'  | 'U32'  | 'U64'
       | 'R'    | 'F32'  | 'F64'
-      | 'BS'
-      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'   | 'F32S' | 'F64S' )
+      | 'ZS' )
       '.' ID                                            #TypeAccessExp
       // ID in { "Min", "Max", "random" }
   | FLOAT                                               #FloatLitExp
   | INT                                                 #IntLitExp
   | REAL                                                #RLitExp
-  | t=( 'BS'
-      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS' | 'F32S' | 'F64S' )
+  | ( t='ZS'
+    | t=( 'S' | 'IS' ) '[' i=intType ',' v=type ']' )
     '(' ( exp ( ',' exp )* )? ')'                       #SeqExp
+  | ( t='ZS' '.' id=ID
+    | t=( 'S' | 'IS' )
+      '.' id=ID '[' i=intType ',' v=type ']' )
+    // id == "create"
+    '(' ( exp ( ',' exp )* )? ')'                       #SeqCreateExp
   ;
 
 exp
-  : tb=ID t='(' ( exp ( ',' exp )* )? ')'               #InvokeExp
-  | primExp ( '.' ID )*                                 #PExp
-    /* ID in { "size",
-               "clone" // primExp === ID
-             } */
+  : primExp primExpSuffix*                              #PExp
   | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
@@ -417,6 +434,22 @@ exp
   | l=exp op='|' NL? r=exp                              #BinaryExp
   ;
 
+primExpSuffix
+  : '(' expArgs? ')'                                    #ExpApplySuffix
+  | '.' ID '(' expArgs? ')'                             #ExpMethodInvokeSuffix
+  | '.' ID '(' expUpdates ')'                           #ExpUpdatesSuffix
+  | '.' ID                                              #ExpAccessSuffix
+  ;
+
+expUpdates
+  : exp '->' exp ( ',' exp '->' exp )*
+  ;
+
+expArgs
+  : exp ( ',' exp )*                                    #PositionalExpArgs
+  | ID '=' exp ( ',' ID '=' exp )*                      #NamedExpArgs
+  ;
+
 loopInvariant
   : tb='{' NL*
     modifies
@@ -432,6 +465,7 @@ modifies
 
 methodContract
   : tb='{' NL*
+    reads?
     ( ( 'requires' | 'pre' ) NL*
       rs+=formula ( NL+ rs+=formula? )* )? NL*
     modifies?
@@ -439,6 +473,9 @@ methodContract
       es+=formula ( NL+ es+=formula? )* )? NL*
     te='}' NL*
   ;
+
+reads
+  : tb='reads' ID ( ',' ID )* NL* ;
 
 invariants
   : tb='{' NL*
