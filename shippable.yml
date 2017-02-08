@@ -21,3 +21,8 @@ build:
   on_failure:
   push:
   cache: true
+
+branches:
+  only:
+    - master
+    - release
