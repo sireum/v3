@@ -63,7 +63,7 @@ object Distros {
     "jdt" -> 32149,
     "scala" -> 32010,
     "sbt" -> 22670,
-    "markdown" -> 31991,
+    "markdown" -> 32455,
     "snakeyaml" -> 24503,
     "antlr" -> 31133,
     "asm" -> 18619,
@@ -74,7 +74,7 @@ object Distros {
     "latex" -> 18476,
     "python" -> 32326,
     "rst" -> 14700,
-    "ignore" -> 30395
+    "ignore" -> 32521
   )
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
