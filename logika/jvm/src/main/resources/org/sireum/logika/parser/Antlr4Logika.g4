@@ -135,10 +135,10 @@ primFormula
       '.' ID                                            #TypeAccess
       // ID in { "Min", "Max", "random" }
   | ( t='ZS'
-    | t=( 'S' | 'IS' ) '[' i=intType ',' v=type ']' )
+    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
     '(' ( formula ( ',' formula )* )? ')'               #Seq
   | ( t='ZS' '.' id=ID
-    | t=( 'S' | 'IS' )
+    | t=( 'MS' | 'IS' )
       '.' id=ID '[' i=intType ',' v=type ']' )
     // id == "create"
     '(' ( formula ( ',' formula )* )? ')'               #SeqCreate
@@ -190,7 +190,7 @@ qformula
     vars+=ID ( ',' vars+=ID )*
     ( ':' type
     | ':' '(' lo=formula ll='<'? '..' lh='<'? hi=formula ')'
-    )? NL?
+    )? NL*
     qf=formula
   ;
 
@@ -200,7 +200,7 @@ name
 
 type
   : baseType ( '[' type ( ',' type )+ ']' )?
-  | t=( 'S' | 'IS' ) '[' i=intType ',' v=type  ']'
+  | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']'
   ;
 
 baseType
@@ -296,7 +296,7 @@ justification
   | tb='invariant'                                      #Invariant
   | tb='fact' name                                      #Fct
   | tb='auto' steps+=NUM*                               #Auto
-  | tb='coq' path                                       #Native
+  | tb='coq' path                                       #Coq
   ;
 
 path
@@ -311,9 +311,9 @@ impor
   ;
 
 proofElements
-  : '{' NL* facts theorems? '}' NL*
-  | '{' NL* facts? theorems '}' NL*
-  | '{' NL* facts theorems '}' NL* ;
+  : tb='{' NL* facts theorems? te='}' NL*
+  | tb='{' NL* facts? theorems te='}' NL*
+  | tb='{' NL* facts theorems te='}' NL* ;
 
 facts
   : 'fact' NL*
@@ -333,8 +333,8 @@ theorem: ID typeParams? '.' NL* formula proof ;
 
 fun
   : tb='def' id=ID typeParams? NL?
-    '(' param ( ',' param )* ')' ':' type
-    funDef?
+    '(' param ( ',' NL* param )* ')' ':' type
+    ( funDef with )?
   ;
 
 funDef
@@ -344,6 +344,14 @@ funDef
 
 funDefCond
   : '=' e=formula ',' NL* 'if' c=formula '(' ID ')'
+  ;
+
+with
+  : 'with' withDef ( NL+ withDef ) NL+
+  ;
+
+withDef
+  : ID ':' type '=' NL? exp
   ;
 
 funDefSimple
@@ -356,8 +364,8 @@ stmts: stmt? ( NL+ stmt? )* ;
 
 stmt
   : '@' ann=ID // ann=='native'
-    modifier=( 'var' | 'val' ) ID ':' type '='
-    ( '???' | NL? exp )                                 #VarDeclStmt
+    modifier=( 'var' | 'val' ) ID ':' type '=' NL?
+    ( '???' | exp )                                     #VarDeclStmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
@@ -408,15 +416,15 @@ recordDecl
   : '@' ann=ID // ann=="record" or ann=="irecord"
     'case' 'class'
     id=ID typeParams? NL?
-    '(' ( param ( ',' param )* )? ')' NL?
+    '(' ( param ( ',' NL* param )* )? ')' NL?
     ( 'extends' name typeArgs? )?
   ;
 
 
 enumDecl
   : '@' ann=ID 'object' id=ID NL? '{' NL? // ann=="enum"
-       'val' values+=ID ( ',' NL? values+=ID )* NL?
-       '=' NL? v=ID NL? // v=="Type"
+       'val' values+=ID ( ',' NL* values+=ID )* NL?
+       '=' NL* v=ID NL* // v=="Type"
     '}'
   ;
 
@@ -457,10 +465,10 @@ primExp
   | INT                                                 #IntLitExp
   | REAL                                                #RLitExp
   | ( t='ZS'
-    | t=( 'S' | 'IS' ) '[' i=intType ',' v=type ']' )
+    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
     '(' ( exp ( ',' exp )* )? ')'                       #SeqExp
   | ( t='ZS' '.' id=ID
-    | t=( 'S' | 'IS' )
+    | t=( 'MS' | 'IS' )
       '.' id=ID '[' i=intType ',' v=type ']' )
     // id == "create"
     '(' ( exp ( ',' exp )* )? ')'                       #SeqCreateExp
@@ -507,6 +515,10 @@ loopInvariant
     modifies
     te='}' NL*
   | tb='{' NL*
+    reads
+    modifies?
+    te='}' NL*
+  | tb='{' NL*
     itb='invariant' NL* formula ( NL+ formula? )*
     reads?
     modifies?
@@ -514,12 +526,12 @@ loopInvariant
   ;
 
 modifies
-  : tb='modifies' name ( ',' name )* NL* ;
+  : tb='modifies' NL* name ( ',' NL* name )* NL* ;
 
 methodContract
   : tb='{' NL*
     contract NL*
-    ( subContract ( NL+ subContract )*  NL* )?
+    ( ( NL+ subContract )+ NL* )?
     te='}' NL*
   ;
 
@@ -537,7 +549,7 @@ subContract
   ;
 
 reads
-  : tb='reads' name ( ',' name )* NL* ;
+  : tb='reads' NL* name ( ',' NL* name )* NL* ;
 
 invariants
   : tb='{' NL*
