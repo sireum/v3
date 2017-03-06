@@ -169,9 +169,9 @@ formula
   ;
 
 primFormulaSuffix
-  : '(' formulaArgs? ')'                                #FormulaApplySuffix
-  | '.' ID '(' formulaArgs? ')'                         #FormulaMethodInvokeSuffix
-  | '.' ID '(' formulaUpdates ')'                       #FormulaUpdatesSuffix
+  : '(' formulaUpdates ')'                              #FormulaUpdatesSuffix
+  |  typeArgs? '(' formulaArgs? ')'                     #FormulaApplySuffix
+  | '.' ID typeArgs? '(' formulaArgs? ')'               #FormulaMethodInvokeSuffix
   | '.' ID                                              #FormulaAccessSuffix
   ;
 
@@ -194,11 +194,19 @@ qformula
     qf=formula
   ;
 
+name
+  : ID ( '.' ID )*
+  ;
+
 type
-  : t=( 'B' | 'R'   | 'F32'  | 'F64' | 'ZS' )
+  : baseType ( '[' type ( ',' type )+ ']' )?
   | t=( 'S' | 'IS' ) '[' i=intType ',' v=type  ']'
+  ;
+
+baseType
+  : t=( 'B' | 'R' | 'F32' | 'F64' | 'ZS' )
   | intType
-  | ID
+  | name
   ;
 
 intType
@@ -207,6 +215,14 @@ intType
       | 'N8' | 'N16' | 'N32' | 'N64'
       | 'S8' | 'S16' | 'S32' | 'S64'
       | 'U8' | 'U16' | 'U32' | 'U64' )
+  ;
+
+typeArgs
+  : '[' type ( ',' type )* ']'
+  ;
+
+typeParams
+  : '[' ID ( ',' ID )* ']'
   ;
 
 justification
@@ -278,8 +294,13 @@ justification
     tb='∃' t=ID // ID=="e"
     step=NUM subProof=NUM                               #ExistsElim
   | tb='invariant'                                      #Invariant
-  | tb='fact' ID                                        #Fct
+  | tb='fact' name                                      #Fct
   | tb='auto' steps+=NUM*                               #Auto
+  | tb='coq' path                                       #Native
+  ;
+
+path
+  : t=( '..' | '.' | '/' | ID )
   ;
 
 program: NL* ( impor NL+ stmts )? ;
@@ -289,18 +310,29 @@ impor
     // org=="org" && sireum=="sireum" && logika=="logika"
   ;
 
+proofElements
+  : '{' NL* facts theorems? '}' NL*
+  | '{' NL* facts? theorems '}' NL*
+  | '{' NL* facts theorems '}' NL* ;
+
 facts
-  : '{' NL*
-    ftb='fact' NL*
+  : 'fact' NL*
     factOrFun ( NL+ factOrFun? )*
-    te='}' NL* ;
+  ;
+
+theorems
+  : 'theorem' NL*
+    theorem ( NL+ theorem? )*
+  ;
 
 factOrFun: fact | fun ;
 
-fact: ID '.' formula ;
+fact: ID typeParams? '.' NL* formula ;
+
+theorem: ID typeParams? '.' NL* formula proof ;
 
 fun
-  : tb='def' ID  NL?
+  : tb='def' id=ID typeParams? NL?
     '(' param ( ',' param )* ')' ':' type
     funDef?
   ;
@@ -323,7 +355,9 @@ param: ID ':' type ;
 stmts: stmt? ( NL+ stmt? )* ;
 
 stmt
-  : modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
+  : '@' ann=ID // ann=='native'
+    modifier=( 'var' | 'val' ) ID ':' type '='
+    ( '???' | NL? exp )                                 #VarDeclStmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
@@ -332,18 +366,20 @@ stmt
   | 'while' '(' exp ')' NL* t='{'
     ( NL* 'l"""' loopInvariant '"""' )?
     blockEnd                                            #WhileStmt
-  | ID 'match' '{' matchCase+ '}'                       #MatchStmt
+  | exp 'match' '{' matchCase+ '}'                      #MatchStmt
   | op=( 'print' | 'println' )
     '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
   | methodDecl                                          #MethodDeclStmt
   | traitDecl                                           #TraitDeclStmt
   | recordDecl                                          #RecordDeclStmt
+  | enumDecl                                            #EnumDeclStmt
+  | objectDecl                                          #ObjectDeclStmt
   | 'l"""'
     ( proof
     | sequent
     | invariants
-    | facts
+    | proofElements
     ) '"""'                                             #LogikaStmt
   | impor                                               #ImportStmt
   | exp                                                 #ExpStmt
@@ -354,8 +390,9 @@ matchCase
   ;
 
 methodDecl
-  : ( '@' NL* anns+=ID NL* )* 'def' id=ID  NL?
-    // anns is subset of { "pure" , "helper" }
+  : ( '@' NL* anns+=ID NL* )* 'def' id=ID typeParams?
+    NL?
+    // anns is subset of { "pure" , "helper", "native" }
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
     t='{'
@@ -364,14 +401,27 @@ methodDecl
   ;
 
 traitDecl
-  : 'sealed' 'trait' ID
+  : 'sealed' 'trait' id=ID typeParams?
   ;
 
 recordDecl
-  : '@' ann=ID // t=="record" or t=="irecord"
+  : '@' ann=ID // ann=="record" or ann=="irecord"
     'case' 'class'
-    id=ID '(' ( param ( ',' param )* )? ')'
-    ( 'extends' superTrait=ID )?
+    id=ID typeParams? NL?
+    '(' ( param ( ',' param )* )? ')' NL?
+    ( 'extends' name typeArgs? )?
+  ;
+
+
+enumDecl
+  : '@' ann=ID 'object' id=ID NL? '{' NL? // ann=="enum"
+       'val' values+=ID ( ',' NL? values+=ID )* NL?
+       '=' NL? v=ID NL? // v=="Type"
+    '}'
+  ;
+
+objectDecl
+  : 'object' ID '{' stmts '}'
   ;
 
 blockEnd
@@ -436,9 +486,9 @@ exp
   ;
 
 primExpSuffix
-  : '(' expArgs? ')'                                    #ExpApplySuffix
-  | '.' ID '(' expArgs? ')'                             #ExpMethodInvokeSuffix
-  | '.' ID '(' expUpdates ')'                           #ExpUpdatesSuffix
+  : '(' expUpdates ')'                                  #ExpUpdatesSuffix
+  | typeArgs? '(' expArgs? ')'                          #ExpApplySuffix
+  | '.' ID typeArgs? '(' expArgs? ')'                   #ExpMethodInvokeSuffix
   | '.' ID                                              #ExpAccessSuffix
   ;
 
@@ -453,30 +503,41 @@ expArgs
 
 loopInvariant
   : tb='{' NL*
+    reads?
     modifies
     te='}' NL*
   | tb='{' NL*
     itb='invariant' NL* formula ( NL+ formula? )*
+    reads?
     modifies?
     te='}' NL*
   ;
 
 modifies
-  : tb='modifies' ID ( ',' ID )* NL* ;
+  : tb='modifies' name ( ',' name )* NL* ;
 
 methodContract
   : tb='{' NL*
-    reads?
+    contract NL*
+    ( subContract ( NL+ subContract )*  NL* )?
+    te='}' NL*
+  ;
+
+contract
+  : reads?
     ( ( 'requires' | 'pre' ) NL*
       rs+=formula ( NL+ rs+=formula? )* )? NL*
     modifies?
     ( ( 'ensures' | 'post' ) NL*
-      es+=formula ( NL+ es+=formula? )* )? NL*
-    te='}' NL*
+      es+=formula ( NL+ es+=formula? )* )?
+  ;
+
+subContract
+  : ID '.' contract
   ;
 
 reads
-  : tb='reads' ID ( ',' ID )* NL* ;
+  : tb='reads' name ( ',' name )* NL* ;
 
 invariants
   : tb='{' NL*
