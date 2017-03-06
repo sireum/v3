@@ -410,6 +410,8 @@ methodDecl
 
 traitDecl
   : 'sealed' 'trait' id=ID typeParams?
+  | '@' ann=ID // ann=="native"
+    'trait' ID
   ;
 
 recordDecl
@@ -424,7 +426,7 @@ recordDecl
 enumDecl
   : '@' ann=ID 'object' id=ID NL? '{' NL? // ann=="enum"
        'val' values+=ID ( ',' NL* values+=ID )* NL?
-       '=' NL* v=ID NL* // v=="Type"
+       '=' NL* v=ID NL* // v=="Value"
     '}'
   ;
 
