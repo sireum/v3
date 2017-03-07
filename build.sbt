@@ -34,6 +34,8 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.1"
 
+val paradiseVersion = "2.1.0"
+
 val sireumVer = "3"
 
 val BUILD_FILENAME = "BUILD"
@@ -165,7 +167,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.sireum" %% "logika-runtime" % "3.0.0-10",
+    "org.sireum" %% "logika-runtime" % "3.0.0-11-SNAPSHOT",
     "org.antlr" % "antlr4-runtime" % "4.6",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.17",
@@ -218,6 +220,7 @@ lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
 lazy val logikaJvm = logikaT._2.settings(
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaT._2.base / "c-runtime" / "include",

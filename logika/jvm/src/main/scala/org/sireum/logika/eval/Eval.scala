@@ -51,28 +51,6 @@ object Eval {
   final private val u16Type = U16Type()
   final private val u32Type = U32Type()
   final private val u64Type = U64Type()
-  final private val bsType = BSType()
-  final private val zsType = ZSType()
-  final private val z8sType = Z8SType()
-  final private val z16sType = Z16SType()
-  final private val z32sType = Z32SType()
-  final private val z64sType = Z64SType()
-  final private val nsType = NSType()
-  final private val n8sType = N8SType()
-  final private val n16sType = N16SType()
-  final private val n32sType = N32SType()
-  final private val n64sType = N64SType()
-  final private val s8sType = S8SType()
-  final private val s16sType = S16SType()
-  final private val s32sType = S32SType()
-  final private val s64sType = S64SType()
-  final private val u8sType = U8SType()
-  final private val u16sType = U16SType()
-  final private val u32sType = U32SType()
-  final private val u64sType = U64SType()
-  final private val rsType = RSType()
-  final private val f32sType = F32SType()
-  final private val f64sType = F64SType()
 
   def simplify(bitWidth: Int, store: Store)(e: Exp): Exp = {
     org.sireum.logika.ast.Rewriter.build[Exp](
@@ -96,92 +74,8 @@ object Eval {
     for (ms <- evalExp(store)(id);
          i <- evalExp(store)(index);
          v <- evalExp(store)(e)) yield ((ms, i, v): @unchecked) match {
-      case (ms: BS.Value, i: Z, v: Boolean) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: ZS.Value, i: Z, v: Z) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: Z8S.Value, i: Z, v: Z8.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: Z16S.Value, i: Z, v: Z16.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: Z32S.Value, i: Z, v: Z32.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: Z64S.Value, i: Z, v: Z64.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: NS.Value, i: Z, v: N) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: N8S.Value, i: Z, v: N8.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: N16S.Value, i: Z, v: N16.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: N32S.Value, i: Z, v: N32.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: N64S.Value, i: Z, v: N64.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: S8S.Value, i: Z, v: S8.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: S16S.Value, i: Z, v: S16.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: S32S.Value, i: Z, v: S32.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: S64S.Value, i: Z, v: S64.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: U8S.Value, i: Z, v: U8.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: U16S.Value, i: Z, v: U16.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: U32S.Value, i: Z, v: U32.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: U64S.Value, i: Z, v: U64.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: RS.Value, i: Z, v: R) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: F32S.Value, i: Z, v: F32.Value) =>
-        val ms2 = ms.clone
-        ms2(i) = v
-        (store + (id.value -> ms2), ms2, v)
-      case (ms: F64S.Value, i: Z, v: F64.Value) =>
-        val ms2 = ms.clone
+      case (ms: MS[_, _], i: LogikaIntegralNumber, v: Value) =>
+        val ms2 = ms.clone.asInstanceOf[MS[LogikaIntegralNumber, Value]]
         ms2(i) = v
         (store + (id.value -> ms2), ms2, v)
     }
@@ -198,7 +92,7 @@ object Eval {
   def toLit(bitWidth: Int, v: Value): Exp = v match {
     case v: Boolean => BooleanLit(v)
     case v: Z => IntLit(v.toString, bitWidth, None)
-    case v: ZRange#Value =>
+    case v: ZT#Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(z8Type))
         case 16 => IntLit(v.toString, 16, Some(z16Type))
@@ -206,21 +100,21 @@ object Eval {
         case 64 => IntLit(v.toString, 64, Some(z64Type))
       }
     case v: N => IntLit(v.toString, bitWidth, Some(nType))
-    case v: NRange#Value =>
+    case v: NT#Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(n8Type))
         case 16 => IntLit(v.toString, 16, Some(n16Type))
         case 32 => IntLit(v.toString, 32, Some(n32Type))
         case 64 => IntLit(v.toString, 64, Some(n64Type))
       }
-    case v: S#Value =>
+    case v: ST#Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(s8Type))
         case 16 => IntLit(v.toString, 16, Some(s16Type))
         case 32 => IntLit(v.toString, 32, Some(s32Type))
         case 64 => IntLit(v.toString, 64, Some(s64Type))
       }
-    case v: U#Value =>
+    case v: UT#Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(u8Type))
         case 16 => IntLit(v.toString, 16, Some(u16Type))
@@ -228,33 +122,12 @@ object Eval {
         case 64 => IntLit(v.toString, 64, Some(u64Type))
       }
     case v: R => RealLit(v.toString)
-    case v: F#Value =>
+    case v: FT#Value =>
       v.bitWidth match {
         case 32 => FloatLit(v.floatValue.toString + "f")
         case 64 => FloatLit(v.doubleValue.toString + "d")
       }
-    case v: BS.Value => SeqLit(bsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: ZS.Value => SeqLit(zsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: Z8S.Value => SeqLit(z8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: Z16S.Value => SeqLit(z16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: Z32S.Value => SeqLit(z32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: Z64S.Value => SeqLit(z64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: NS.Value => SeqLit(nsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: N8S.Value => SeqLit(n8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: N16S.Value => SeqLit(n16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: N32S.Value => SeqLit(n32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: N64S.Value => SeqLit(n64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: S8S.Value => SeqLit(s8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: S16S.Value => SeqLit(s16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: S32S.Value => SeqLit(s32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: S64S.Value => SeqLit(s64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: U8S.Value => SeqLit(u8sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: U16S.Value => SeqLit(u16sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: U32S.Value => SeqLit(u32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: U64S.Value => SeqLit(u64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: RS.Value => SeqLit(rsType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: F32S.Value => SeqLit(f32sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
-    case v: F64S.Value => SeqLit(f64sType, v.elements.toVector.map(e => toLit(bitWidth, e)))
+    case v: S[_, _] => SeqLit(???, v.elements.toVector.map(e => toLit(bitWidth, e)))
   }
 }
 
@@ -266,86 +139,23 @@ private final class Eval(store: Store) {
     case BooleanLit(v) => Some(v)
     case Id(v) => store.get(v)
     case Size(e) => for (v <- eval(e)) yield v match {
-      case v: BS.Value => v.size
-      case v: ZS.Value => v.size
-      case v: Z8S.Value => v.size
-      case v: Z16S.Value => v.size
-      case v: Z32S.Value => v.size
-      case v: Z64S.Value => v.size
-      case v: NS.Value => v.size
-      case v: N8S.Value => v.size
-      case v: N16S.Value => v.size
-      case v: N32S.Value => v.size
-      case v: N64S.Value => v.size
-      case v: S8S.Value => v.size
-      case v: S16S.Value => v.size
-      case v: S32S.Value => v.size
-      case v: S64S.Value => v.size
-      case v: U8S.Value => v.size
-      case v: U16S.Value => v.size
-      case v: U32S.Value => v.size
-      case v: U64S.Value => v.size
-      case v: RS.Value => v.size
-      case v: F32S.Value => v.size
-      case v: F64S.Value => v.size
+      case v: S[_, _] => v.size
     }
     case Clone(id) => for (v <- eval(id)) yield v match {
-      case v: BS.Value => v.clone
-      case v: ZS.Value => v.clone
-      case v: Z8S.Value => v.clone
-      case v: Z16S.Value => v.clone
-      case v: Z32S.Value => v.clone
-      case v: Z64S.Value => v.clone
-      case v: NS.Value => v.clone
-      case v: N8S.Value => v.clone
-      case v: N16S.Value => v.clone
-      case v: N32S.Value => v.clone
-      case v: N64S.Value => v.clone
-      case v: S8S.Value => v.clone
-      case v: S16S.Value => v.clone
-      case v: S32S.Value => v.clone
-      case v: S64S.Value => v.clone
-      case v: U8S.Value => v.clone
-      case v: U16S.Value => v.clone
-      case v: U32S.Value => v.clone
-      case v: U64S.Value => v.clone
-      case v: RS.Value => v.clone
-      case v: F32S.Value => v.clone
-      case v: F64S.Value => v.clone
+      case v: S[_, _] => v.clone
     }
     case _: Result => store.get("result")
     case Apply(id, Seq(arg)) =>
       try for (ms <- eval(id);
                i <- eval(arg)) yield (ms, i) match {
-        case (ms: BS.Value, i: Z) => ms(i)
-        case (ms: ZS.Value, i: Z) => ms(i)
-        case (ms: Z8S.Value, i: Z) => ms(i)
-        case (ms: Z16S.Value, i: Z) => ms(i)
-        case (ms: Z32S.Value, i: Z) => ms(i)
-        case (ms: Z64S.Value, i: Z) => ms(i)
-        case (ms: NS.Value, i: Z) => ms(i)
-        case (ms: N8S.Value, i: Z) => ms(i)
-        case (ms: N16S.Value, i: Z) => ms(i)
-        case (ms: N32S.Value, i: Z) => ms(i)
-        case (ms: N64S.Value, i: Z) => ms(i)
-        case (ms: S8S.Value, i: Z) => ms(i)
-        case (ms: S16S.Value, i: Z) => ms(i)
-        case (ms: S32S.Value, i: Z) => ms(i)
-        case (ms: S64S.Value, i: Z) => ms(i)
-        case (ms: U8S.Value, i: Z) => ms(i)
-        case (ms: U16S.Value, i: Z) => ms(i)
-        case (ms: U32S.Value, i: Z) => ms(i)
-        case (ms: U64S.Value, i: Z) => ms(i)
-        case (ms: RS.Value, i: Z) => ms(i)
-        case (ms: F32S.Value, i: Z) => ms(i)
-        case (ms: F64S.Value, i: Z) => ms(i)
-        case (v, _) if !v.isInstanceOf[MS[_]] => None
+        case (s: S[_, _], i: LogikaIntegralNumber) => s.asInstanceOf[S[LogikaIntegralNumber, Value]](i)
+        case _ => None
       }
       catch {
         case _: IndexOutOfBoundsException => None
       }
-    case e: RandomInt => None
-    case e: ReadInt => None
+    case _: RandomInt => None
+    case _: ReadInt => None
     case e: IntLit =>
       val v = Z(e.normalize)
       Some(if (e.tpeOpt.isDefined) e.tpeOpt.get match {
@@ -695,54 +505,12 @@ private final class Eval(store: Store) {
     case e: Append =>
       for (v1 <- eval(e.left);
            v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-        case (v1: BS.Value, v2: Boolean) => v1 :+ v2
-        case (v1: ZS.Value, v2: Z) => v1 :+ v2
-        case (v1: Z8S.Value, v2: Z8.Value) => v1 :+ v2
-        case (v1: Z16S.Value, v2: Z16.Value) => v1 :+ v2
-        case (v1: Z32S.Value, v2: Z32.Value) => v1 :+ v2
-        case (v1: Z64S.Value, v2: Z64.Value) => v1 :+ v2
-        case (v1: NS.Value, v2: N) => v1 :+ v2
-        case (v1: N8S.Value, v2: N8.Value) => v1 :+ v2
-        case (v1: N16S.Value, v2: N16.Value) => v1 :+ v2
-        case (v1: N32S.Value, v2: N32.Value) => v1 :+ v2
-        case (v1: N64S.Value, v2: N64.Value) => v1 :+ v2
-        case (v1: S8S.Value, v2: S8.Value) => v1 :+ v2
-        case (v1: S16S.Value, v2: S16.Value) => v1 :+ v2
-        case (v1: S32S.Value, v2: S32.Value) => v1 :+ v2
-        case (v1: S64S.Value, v2: S64.Value) => v1 :+ v2
-        case (v1: U8S.Value, v2: U8.Value) => v1 :+ v2
-        case (v1: U16S.Value, v2: U16.Value) => v1 :+ v2
-        case (v1: U32S.Value, v2: U32.Value) => v1 :+ v2
-        case (v1: U64S.Value, v2: U64.Value) => v1 :+ v2
-        case (v1: RS.Value, v2: R) => v1 :+ v2
-        case (v1: F32S.Value, v2: F32.Value) => v1 :+ v2
-        case (v1: F64S.Value, v2: F64.Value) => v1 :+ v2
+        case (v1: S[_, _], v2: Value) => v1.asInstanceOf[S[LogikaIntegralNumber, Value]] :+ v2
       }
     case e: Prepend =>
       for (v1 <- eval(e.left);
            v2 <- eval(e.right)) yield ((v2, v1): @unchecked) match {
-        case (v2: BS.Value, v1: Boolean) => v1 +: v2
-        case (v2: ZS.Value, v1: Z) => v1 +: v2
-        case (v2: Z8S.Value, v1: Z8.Value) => v1 +: v2
-        case (v2: Z16S.Value, v1: Z16.Value) => v1 +: v2
-        case (v2: Z32S.Value, v1: Z32.Value) => v1 +: v2
-        case (v2: Z64S.Value, v1: Z64.Value) => v1 +: v2
-        case (v2: NS.Value, v1: N) => v1 +: v2
-        case (v2: N8S.Value, v1: N8.Value) => v1 +: v2
-        case (v2: N16S.Value, v1: N16.Value) => v1 +: v2
-        case (v2: N32S.Value, v1: N32.Value) => v1 +: v2
-        case (v2: N64S.Value, v1: N64.Value) => v1 +: v2
-        case (v2: S8S.Value, v1: S8.Value) => v1 +: v2
-        case (v2: S16S.Value, v1: S16.Value) => v1 +: v2
-        case (v2: S32S.Value, v1: S32.Value) => v1 +: v2
-        case (v2: S64S.Value, v1: S64.Value) => v1 +: v2
-        case (v2: U8S.Value, v1: U8.Value) => v1 +: v2
-        case (v2: U16S.Value, v1: U16.Value) => v1 +: v2
-        case (v2: U32S.Value, v1: U32.Value) => v1 +: v2
-        case (v2: U64S.Value, v1: U64.Value) => v1 +: v2
-        case (v2: RS.Value, v1: R) => v1 +: v2
-        case (v2: F32S.Value, v1: F32.Value) => v1 +: v2
-        case (v2: F64S.Value, v1: F64.Value) => v1 +: v2
+        case (v2: S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[S[LogikaIntegralNumber, Value]]
       }
     case e: And =>
       for (v1 <- eval(e.left);
@@ -820,28 +588,8 @@ private final class Eval(store: Store) {
         case _ => return None
       }
       Some(e.tpe match {
-        case _: BSType => BS(args.map(_.asInstanceOf[Boolean]): _*)
-        case _: ZSType => ZS(args.map(_.asInstanceOf[Z]): _*)
-        case _: Z8SType => Z8S(args.map(_.asInstanceOf[Z8.Value]): _*)
-        case _: Z16SType => Z16S(args.map(_.asInstanceOf[Z16.Value]): _*)
-        case _: Z32SType => Z32S(args.map(_.asInstanceOf[Z32.Value]): _*)
-        case _: Z64SType => Z64S(args.map(_.asInstanceOf[Z64.Value]): _*)
-        case _: NSType => NS(args.map(_.asInstanceOf[N]): _*)
-        case _: N8SType => N8S(args.map(_.asInstanceOf[N8.Value]): _*)
-        case _: N16SType => N16S(args.map(_.asInstanceOf[N16.Value]): _*)
-        case _: N32SType => N32S(args.map(_.asInstanceOf[N32.Value]): _*)
-        case _: N64SType => N64S(args.map(_.asInstanceOf[N64.Value]): _*)
-        case _: S8SType => S8S(args.map(_.asInstanceOf[S8.Value]): _*)
-        case _: S16SType => S16S(args.map(_.asInstanceOf[S16.Value]): _*)
-        case _: S32SType => S32S(args.map(_.asInstanceOf[S32.Value]): _*)
-        case _: S64SType => S64S(args.map(_.asInstanceOf[S64.Value]): _*)
-        case _: U8SType => U8S(args.map(_.asInstanceOf[U8.Value]): _*)
-        case _: U16SType => U16S(args.map(_.asInstanceOf[U16.Value]): _*)
-        case _: U32SType => U32S(args.map(_.asInstanceOf[U32.Value]): _*)
-        case _: U64SType => U64S(args.map(_.asInstanceOf[U64.Value]): _*)
-        case _: RSType => RS(args.map(_.asInstanceOf[R]): _*)
-        case _: F32SType => F32S(args.map(_.asInstanceOf[F32.Value]): _*)
-        case _: F64SType => F64S(args.map(_.asInstanceOf[F64.Value]): _*)
+        case _: ZSType => MS[Z, Z](args.map(_.asInstanceOf[Z]): _*)
+        case _ => ???
       })
   }
 }
