@@ -72,7 +72,7 @@ object Distros {
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 30456,
+    "python" -> 32326,
     "rst" -> 14700,
     "ignore" -> 30395
   )
