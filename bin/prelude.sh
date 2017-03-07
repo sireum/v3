@@ -27,10 +27,10 @@ COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=8.19.0.1-jdk8.0.112
+ZULU_VERSION=8.20.0.5-jdk8.0.121
 SCALA_VERSION=2.12.1
 SBT_VERSION=0.13.13
-NODE_VERSION=7.5.0
+NODE_VERSION=7.7.1
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then

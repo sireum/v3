@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2016.3.4"
+  val ideaVer = "2016.3.5"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -61,7 +61,7 @@ object Distros {
   val pluginUpdateIdMap = Map(
     "sireum" -> (if (isDev) 31441 else 31441),
     "jdt" -> 32149,
-    "scala" -> 32010,
+    "scala" -> 33086,
     "sbt" -> 22670,
     "markdown" -> 32455,
     "snakeyaml" -> 24503,
@@ -74,7 +74,7 @@ object Distros {
     "latex" -> 18476,
     "python" -> 32326,
     "rst" -> 14700,
-    "ignore" -> 32521
+    "ignore" -> 32828
   )
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
@@ -180,9 +180,10 @@ object Distros {
   def patchVMOptions(platform: String, p: Path): Unit = {
     print(s"Patching $p ... ")
     val content = read ! p
+    val dev = if (isDev) "-dev" else ""
     val newContent = platform match {
-      case "win" => s"${content.trim}\r\n-Dorg.sireum.ive=Sireum$ideaVer\r\n-Dorg.sireum.ive.dev=$isDev\r\n-Dfile.encoding=UTF-8\r\n"
-      case _ => s"${content.trim}\n-Dorg.sireum.ive=Sireum$ideaVer\n-Dorg.sireum.ive.dev=$isDev\n-Dfile.encoding=UTF-8\n"
+      case "win" => s"${content.trim}\r\n-Dorg.sireum.ive=Sireum$ideaVer$dev\r\n-Dorg.sireum.ive.dev=$isDev\r\n-Dfile.encoding=UTF-8\r\n"
+      case _ => s"${content.trim}\n-Dorg.sireum.ive=Sireum$ideaVer$dev\n-Dorg.sireum.ive.dev=$isDev\n-Dfile.encoding=UTF-8\n"
     }
     rm ! p
     write(p, newContent)
