@@ -32,6 +32,8 @@
 #define L_RANDOM_SEQ_MAX 1024
 #endif
 
+B L_random_B(void);
+
 U8 L_random_U8(void);
 
 U16 L_random_U16(void);
