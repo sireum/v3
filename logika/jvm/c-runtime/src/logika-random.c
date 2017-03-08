@@ -26,6 +26,10 @@
 #include <sodium.h>
 #include <logika-random.h>
 
+B L_random_B(void) {
+  return randombytes_uniform(2) == 0;
+}
+
 U8 L_random_U8(void) {
   return (U8) randombytes_uniform(256);
 }
