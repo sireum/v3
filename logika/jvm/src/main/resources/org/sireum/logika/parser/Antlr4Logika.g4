@@ -365,7 +365,8 @@ stmts: stmt? ( NL+ stmt? )* ;
 stmt
   : '@' ann=ID // ann=='native'
     modifier=( 'var' | 'val' ) ID ':' type '=' NL?
-    ( '???' | exp )                                     #VarDeclStmt
+    '{' '}'                                             #VarDeclStmt
+  | modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
