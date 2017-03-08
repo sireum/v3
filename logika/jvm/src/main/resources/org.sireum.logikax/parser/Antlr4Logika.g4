@@ -37,6 +37,7 @@ grammar Antlr4Logika;
    ¬         00AC      not   neg  !        ~
    ∧         2227      and        &        ^
    ∨         2228      or         |        V
+   ⊕         2295      xor        ^|
    →         21D2      implies    ->
    ∀         2200      forall     all      A
    ∃         2203      exists     some     E
@@ -117,36 +118,34 @@ proofStep
 
 primFormula
   : t=( 'true' | 'T' | '⊤'
-      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean     // propositional logic
-  | '(' formula ')'                                     #Paren       // propositional logic
-  | tb='result' '(' formula ( ',' formula )* ')'        #ApplyResult // programming logic
-  | 'result'                                            #Result      // programming logic
-  | ID '(' formula ( ',' formula )* ')'                 #Apply       // predicate logic
-  | tb=ID                                               #Var         // propositional logic
-  | NUM                                                 #Int         // programming logic
-  | INT                                                 #IntLit      // programming logic
-  | REAL                                                #RLit        // programming logic
-  | FLOAT                                               #FloatLit    // programming logic
+      | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean
+  | '(' formula ')'                                     #Paren
+  | 'result'                                            #Result
+  | ID                                                  #Var
+  | NUM                                                 #Int
+  | INT                                                 #IntLit
+  | REAL                                                #RLit
+  | FLOAT                                               #FloatLit
   | t=( 'B'
       | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
       | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
                | 'S8'   | 'S16'  | 'S32'  | 'S64'
                | 'U8'   | 'U16'  | 'U32'  | 'U64'
       | 'R'    | 'F32'  | 'F64' )
-      '.' ID                                            #TypeAccess  // programming logic
+      '.' ID                                            #TypeAccess
       // ID in { "Min", "Max", "random" }
-  | t=( 'BS'
-      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS' | 'F32S' | 'F64S' )
-    '(' ( exp ( ',' exp )* )? ')'                       #Seq         // programming logic
+  | ( t='ZS'
+    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
+    '(' ( formula ( ',' formula )* )? ')'               #Seq
+  | ( t='ZS' '.' id=ID
+    | t=( 'MS' | 'IS' )
+      '.' id=ID '[' i=intType ',' v=type ']' )
+    // id == "create"
+    '(' ( formula ( ',' formula )* )? ')'               #SeqCreate
   ;
 
 formula
-  : primFormula ( '.' ID )*                             #PFormula
-    /* ID in { "size" } */
+  : primFormula primFormulaSuffix*                      #PFormula
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
   | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
@@ -161,12 +160,28 @@ formula
   | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
-  | l=formula op=( 'xor' | '^|' ) NL? r=formula         #Binary      // propositional logic
+  | l=formula op=( 'xor' | '^|' | '⊕' ) NL? r=formula   #Binary      // propositional logic
   | l=formula
     op=( 'or' | '|' | 'V' | '∨' ) NL? r=formula         #Binary      // propositional logic
   | <assoc=right> l=formula
     op=( 'implies' | '->' | '→' ) NL? r=formula         #Binary      // propositional logic
   | qformula                                            #Quant       // predicate logic
+  ;
+
+primFormulaSuffix
+  : '(' formulaUpdates ')'                              #FormulaUpdatesSuffix
+  |  typeArgs? '(' formulaArgs? ')'                     #FormulaApplySuffix
+  | '.' ID typeArgs? '(' formulaArgs? ')'               #FormulaMethodInvokeSuffix
+  | '.' ID                                              #FormulaAccessSuffix
+  ;
+
+formulaArgs
+  : formula ( ',' formula )*                            #PositionalFormulaArgs
+  | ID '=' formula ( ',' ID '=' formula )*              #NamedFormulaArgs
+  ;
+
+formulaUpdates
+  : formula '->' formula ( ',' formula '->' formula )*
   ;
 
 qformula
@@ -175,23 +190,39 @@ qformula
     vars+=ID ( ',' vars+=ID )*
     ( ':' type
     | ':' '(' lo=formula ll='<'? '..' lh='<'? hi=formula ')'
-    )? NL?
+    )? NL*
     qf=formula
   ;
 
+name
+  : ID ( '.' ID )*
+  ;
+
 type
-  : t=( 'B'
-      | 'Z'   | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
-      | 'N'   | 'N8'   | 'N16'  | 'N32'  | 'N64'
-              | 'S8'   | 'S16'  | 'S32'  | 'S64'
-              | 'U8'   | 'U16'  | 'U32'  | 'U64'
-      | 'R'   | 'F32'  | 'F64'
-      | 'BS'
-      | 'ZS'  | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'  | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-              | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-              | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'  | 'F32S' | 'F64S' )
+  : baseType ( '[' type ( ',' type )+ ']' )?
+  | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']'
+  ;
+
+baseType
+  : t=( 'B' | 'R' | 'F32' | 'F64' | 'ZS' )
+  | intType
+  | name
+  ;
+
+intType
+  : t=( 'Z' | 'N'
+      | 'Z8' | 'Z16' | 'Z32' | 'Z64'
+      | 'N8' | 'N16' | 'N32' | 'N64'
+      | 'S8' | 'S16' | 'S32' | 'S64'
+      | 'U8' | 'U16' | 'U32' | 'U64' )
+  ;
+
+typeArgs
+  : '[' type ( ',' type )* ']'
+  ;
+
+typeParams
+  : '[' ID ( ',' ID )* ']'
   ;
 
 justification
@@ -263,8 +294,13 @@ justification
     tb='∃' t=ID // ID=="e"
     step=NUM subProof=NUM                               #ExistsElim
   | tb='invariant'                                      #Invariant
-  | tb='fact' ID                                        #Fct
+  | tb='fact' name                                      #Fct
   | tb='auto' steps+=NUM*                               #Auto
+  | tb='coq' path                                       #Coq
+  ;
+
+path
+  : t=( '..' | '.' | '/' | ID )
   ;
 
 program: NL* ( impor NL+ stmts )? ;
@@ -274,20 +310,31 @@ impor
     // org=="org" && sireum=="sireum" && logika=="logika"
   ;
 
+proofElements
+  : tb='{' NL* facts theorems? te='}' NL*
+  | tb='{' NL* facts? theorems te='}' NL*
+  | tb='{' NL* facts theorems te='}' NL* ;
+
 facts
-  : '{' NL*
-    ftb='fact' NL*
+  : 'fact' NL*
     factOrFun ( NL+ factOrFun? )*
-    te='}' NL* ;
+  ;
+
+theorems
+  : 'theorem' NL*
+    theorem ( NL+ theorem? )*
+  ;
 
 factOrFun: fact | fun ;
 
-fact: ID '.' formula ;
+fact: ID typeParams? '.' NL* formula ;
+
+theorem: ID typeParams? '.' NL* formula proof ;
 
 fun
-  : tb='def' ID  NL?
-    '(' param ( ',' param )* ')' ':' type
-    funDef?
+  : tb='def' id=ID typeParams? NL?
+    '(' param ( ',' NL* param )* ')' ':' type
+    ( funDef with )?
   ;
 
 funDef
@@ -299,6 +346,14 @@ funDefCond
   : '=' e=formula ',' NL* 'if' c=formula '(' ID ')'
   ;
 
+with
+  : 'with' withDef ( NL+ withDef ) NL+
+  ;
+
+withDef
+  : ID ':' type '=' NL? exp
+  ;
+
 funDefSimple
   : '=' e=formula
   ;
@@ -308,7 +363,10 @@ param: ID ':' type ;
 stmts: stmt? ( NL+ stmt? )* ;
 
 stmt
-  : modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
+  : '@' ann=ID // ann=='native'
+    modifier=( 'var' | 'val' ) ID ':' type '=' NL?
+    '{' '}'                                             #VarDeclStmt
+  | modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
   | ID '=' NL? exp                                      #AssignVarStmt
   | 'assume' '(' exp ')'                                #AssumeStmt
   | 'assert' '(' exp ')'                                #AssertStmt
@@ -317,27 +375,64 @@ stmt
   | 'while' '(' exp ')' NL* t='{'
     ( NL* 'l"""' loopInvariant '"""' )?
     blockEnd                                            #WhileStmt
+  | exp 'match' '{' matchCase+ '}'                      #MatchStmt
   | op=( 'print' | 'println' )
     '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
   | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
   | methodDecl                                          #MethodDeclStmt
+  | traitDecl                                           #TraitDeclStmt
+  | recordDecl                                          #RecordDeclStmt
+  | enumDecl                                            #EnumDeclStmt
+  | objectDecl                                          #ObjectDeclStmt
   | 'l"""'
     ( proof
     | sequent
     | invariants
-    | facts
+    | proofElements
     ) '"""'                                             #LogikaStmt
   | impor                                               #ImportStmt
   | exp                                                 #ExpStmt
   ;
 
+matchCase
+  : 'case' ID ':' type '=>' stmts
+  ;
+
 methodDecl
-  : ( '@' NL* anns+=ID NL* )* 'def' id=ID  NL?
+  : ( '@' NL* anns+=ID NL* )* 'def' id=ID typeParams?
+    NL?
+    // anns is subset of { "pure" , "helper", "native" }
     '(' ( param ( ',' param )* )? ')'
     ':' ( type | 'Unit' ) '=' NL*
     t='{'
     ( NL* 'l"""' methodContract NL* '"""' )?
     blockEnd
+  ;
+
+traitDecl
+  : 'sealed' 'trait' id=ID typeParams?
+  | '@' ann=ID // ann=="native"
+    'trait' ID
+  ;
+
+recordDecl
+  : '@' ann=ID // ann=="record" or ann=="irecord"
+    'case' 'class'
+    id=ID typeParams? NL?
+    '(' ( param ( ',' NL* param )* )? ')' NL?
+    ( 'extends' name typeArgs? )?
+  ;
+
+
+enumDecl
+  : '@' ann=ID 'object' id=ID NL? '{' NL? // ann=="enum"
+       'val' values+=ID ( ',' NL* values+=ID )* NL?
+       '=' NL* v=ID NL* // v=="Value"
+    '}'
+  ;
+
+objectDecl
+  : 'object' ID '{' stmts '}'
   ;
 
 blockEnd
@@ -360,46 +455,30 @@ primExp
       | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
   | NUM                                                 #IntExp
   | ID                                                  #VarExp
-  | t=( 'BS'
-      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'   | 'F32S' | 'F64S' )
-      '.' ID '(' ( exp ( ',' exp )* )? ')'              #TypeMethodCallExp
-      // ID in { "create" }
   | t=( 'B'
       | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
       | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
                | 'S8'   | 'S16'  | 'S32'  | 'S64'
                | 'U8'   | 'U16'  | 'U32'  | 'U64'
       | 'R'    | 'F32'  | 'F64'
-      | 'BS'
-      | 'ZS'   | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS'   | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-               | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-               | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS'   | 'F32S' | 'F64S' )
+      | 'ZS' )
       '.' ID                                            #TypeAccessExp
       // ID in { "Min", "Max", "random" }
   | FLOAT                                               #FloatLitExp
   | INT                                                 #IntLitExp
   | REAL                                                #RLitExp
-  | t=( 'BS'
-      | 'ZS' | 'Z8S'  | 'Z16S' | 'Z32S' | 'Z64S'
-      | 'NS' | 'N8S'  | 'N16S' | 'N32S' | 'N64S'
-             | 'S8S'  | 'S16S' | 'S32S' | 'S64S'
-             | 'U8S'  | 'U16S' | 'U32S' | 'U64S'
-      | 'RS' | 'F32S' | 'F64S' )
+  | ( t='ZS'
+    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
     '(' ( exp ( ',' exp )* )? ')'                       #SeqExp
+  | ( t='ZS' '.' id=ID
+    | t=( 'MS' | 'IS' )
+      '.' id=ID '[' i=intType ',' v=type ']' )
+    // id == "create"
+    '(' ( exp ( ',' exp )* )? ')'                       #SeqCreateExp
   ;
 
 exp
-  : tb=ID t='(' ( exp ( ',' exp )* )? ')'               #InvokeExp
-  | primExp ( '.' ID )*                                 #PExp
-    /* ID in { "size",
-               "clone" // primExp === ID
-             } */
+  : primExp primExpSuffix*                              #PExp
   | 'randomInt' '(' ')'                                 #RandomIntExp
   | 'readInt' '(' STRING? ')'                           #ReadIntExp
   | '(' exp ')'                                         #ParenExp
@@ -417,28 +496,63 @@ exp
   | l=exp op='|' NL? r=exp                              #BinaryExp
   ;
 
+primExpSuffix
+  : '(' expUpdates ')'                                  #ExpUpdatesSuffix
+  | typeArgs? '(' expArgs? ')'                          #ExpApplySuffix
+  | '.' ID typeArgs? '(' expArgs? ')'                   #ExpMethodInvokeSuffix
+  | '.' ID                                              #ExpAccessSuffix
+  ;
+
+expUpdates
+  : exp '->' exp ( ',' exp '->' exp )*
+  ;
+
+expArgs
+  : exp ( ',' exp )*                                    #PositionalExpArgs
+  | ID '=' exp ( ',' ID '=' exp )*                      #NamedExpArgs
+  ;
+
 loopInvariant
   : tb='{' NL*
+    reads?
     modifies
     te='}' NL*
   | tb='{' NL*
+    reads
+    modifies?
+    te='}' NL*
+  | tb='{' NL*
     itb='invariant' NL* formula ( NL+ formula? )*
+    reads?
     modifies?
     te='}' NL*
   ;
 
 modifies
-  : tb='modifies' ID ( ',' ID )* NL* ;
+  : tb='modifies' NL* name ( ',' NL* name )* NL* ;
 
 methodContract
   : tb='{' NL*
+    contract NL*
+    ( ( NL+ subContract )+ NL* )?
+    te='}' NL*
+  ;
+
+contract
+  : reads?
     ( ( 'requires' | 'pre' ) NL*
       rs+=formula ( NL+ rs+=formula? )* )? NL*
     modifies?
     ( ( 'ensures' | 'post' ) NL*
-      es+=formula ( NL+ es+=formula? )* )? NL*
-    te='}' NL*
+      es+=formula ( NL+ es+=formula? )* )?
   ;
+
+subContract
+  : ID '.' contract
+  ;
+
+reads
+  : tb='reads' NL* name ( ',' NL* name )* NL* ;
 
 invariants
   : tb='{' NL*
