@@ -127,11 +127,11 @@ lazy val sireumJs =
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  logikaJvm, java, cli, awas
+  logikaJvm, logikaXJvm, java, cli, awas
 )
 
 lazy val subProjectsJs = Seq(
-  utilJs, testJs, pilarJs, logikaJs
+  utilJs, testJs, pilarJs, logikaJs, logikaXJs
 )
 
 lazy val subProjectJvmReferences =
@@ -220,7 +220,6 @@ lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
 lazy val logikaJvm = logikaT._2.settings(
-  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaT._2.base / "c-runtime" / "include",
@@ -229,6 +228,20 @@ lazy val logikaJvm = logikaT._2.settings(
   )
 )
 lazy val logikaJs = logikaT._3
+
+lazy val logikaXPI = new ProjectInfo("logikax", isCross = true, utilPI, testPI)
+lazy val logikaXT = toSbtCrossProject(logikaXPI)
+lazy val logikaXShared = logikaXT._1
+lazy val logikaXJvm = logikaXT._2.settings(
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
+  parallelExecution in Test := false,
+  unmanagedResourceDirectories in Compile ++= Seq(
+    logikaXT._2.base / "c-runtime" / "include",
+    logikaXT._2.base / "c-runtime" / "src",
+    logikaXT._2.base / "c-runtime" / "cmake"
+  )
+)
+lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
 
