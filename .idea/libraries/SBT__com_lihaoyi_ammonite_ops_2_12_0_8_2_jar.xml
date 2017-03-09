@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.lihaoyi:ammonite-ops_2.12:0.8.2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/ammonite-ops_2.12/ammonite-ops_2.12-0.8.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/ammonite-ops_2.12/ammonite-ops_2.12-0.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

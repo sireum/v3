@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.yaml:snakeyaml:1.18:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/bundles/org.yaml/snakeyaml/snakeyaml-1.18.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.yaml/snakeyaml/snakeyaml-1.18-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
