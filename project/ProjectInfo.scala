@@ -76,8 +76,8 @@ final case class ProjectInfo(name: String, isCross: Boolean,
   import ProjectInfo._
 
   projectInfos = projectInfos.:+(this)
-  val id = name.toLowerCase.replace(" ", "-")
-  val baseDir = file(id)
+  val id = name.toLowerCase.replace(' ', '-').replace('/', '-')
+  val baseDir = file(name.toLowerCase.replace(' ', '-'))
 
   def genDot(seen: scala.collection.mutable.Set[String], pw: PrintWriter): Unit = {
     if (seen.contains(name)) return

@@ -11,6 +11,7 @@
       <module name="logikax" target="1.8" />
       <module name="logikax-js" target="1.8" />
       <module name="logikax-jvm" target="1.8" />
+      <module name="logikax-prelude" target="1.8" />
       <module name="pilar" target="1.8" />
       <module name="pilar-js" target="1.8" />
       <module name="pilar-jvm" target="1.8" />

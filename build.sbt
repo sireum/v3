@@ -127,7 +127,7 @@ lazy val sireumJs =
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  logikaJvm, logikaXJvm, java, cli, awas
+  logikaJvm, logikaXJvm, logikaXPrelude, java, cli, awas
 )
 
 lazy val subProjectsJs = Seq(
@@ -143,7 +143,7 @@ lazy val subProjectJvmClasspathDeps =
 lazy val subProjectJsReferences =
   subProjectsJs.map(x => x: ProjectReference)
 
-lazy val sireumSharedSettings = Seq(
+lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVer,
   incOptions := incOptions.value.withNameHashing(true),
@@ -153,13 +153,16 @@ lazy val sireumSharedSettings = Seq(
     "-Ydelambdafy:method", "-feature", "-unchecked"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
   javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "upickle" % "0.4.4"
-  ),
   scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
   parallelExecution in Global := isParallelBuild
+)
+
+lazy val sireumSharedSettings = sireumSettings ++ Seq(
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "upickle" % "0.4.4"
+  )
 )
 
 lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
@@ -167,7 +170,6 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.sireum" %% "logika-runtime" % "3.0.1",
     "org.antlr" % "antlr4-runtime" % "4.6",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.18",
@@ -220,6 +222,7 @@ lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
 lazy val logikaJvm = logikaT._2.settings(
+  libraryDependencies += "org.sireum" %% "logika-runtime" % "3.0.1",
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaT._2.base / "c-runtime" / "include",
@@ -234,6 +237,7 @@ lazy val logikaXT = toSbtCrossProject(logikaXPI)
 lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
+  libraryDependencies += "org.sireum" %% "logika-runtime" % "3.0.1",
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaXT._2.base / "c-runtime" / "include",
@@ -244,6 +248,9 @@ lazy val logikaXJvm = logikaXT._2.settings(
 lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
+
+lazy val logikaXPreludePI = new ProjectInfo("logikax/prelude", isCross = false)
+lazy val logikaXPrelude = toSbtJvmProject(logikaXPreludePI, sireumSettings)
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
 lazy val java = toSbtJvmProject(javaPI)
@@ -258,10 +265,10 @@ lazy val awas = toSbtJvmProject(awasPI)
 
 //
 
-def toSbtJvmProject(pi: ProjectInfo): Project =
+def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(
     id = pi.id,
-    settings = sireumJvmSettings,
+    settings = settings,
     base = pi.baseDir / "jvm").
     dependsOn(pi.dependencies.flatMap { p =>
       if (p.isCross)

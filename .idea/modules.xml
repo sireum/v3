@@ -20,6 +20,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-jvm.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-jvm-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-prelude.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-prelude.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-prelude-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-prelude-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-build.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-js.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-js.iml" />
