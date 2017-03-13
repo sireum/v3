@@ -5,9 +5,9 @@ rm -fR sireum-v3-mac64.zip sireum-v3-linux64.zip sireum-v3-win64.zip sireum-v3-V
 rm -fR sireum-v3-dev-mac64.zip sireum-v3-dev-linux64.zip sireum-v3-dev-win64.zip sireum-v3-dev-VER sireum-v3-dev
 export SIREUM_SKIP_BUILD=false
 if [ "${SIREUM_DEV_DISTROS}" == "true" ]; then
-  git clone -b master https://github.com/sireum/v3.git sireum-v3
+  git clone -b master --recursive https://github.com/sireum/v3.git sireum-v3
 else
-  git clone -b release https://github.com/sireum/v3.git sireum-v3
+  git clone -b release --recursive https://github.com/sireum/v3.git sireum-v3
 fi
 if [ -d idea ] && [ "$SIREUM_IDEA_DISTROS" == "true" ]; then
   cd sireum-v3/distros
