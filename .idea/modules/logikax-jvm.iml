@@ -25,13 +25,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="logikax" exported="" />
+    <orderEntry type="module" module-name="logika-runtime" exported="" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.18:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:machinist_2.12:0.6.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.tinyjee.jgraphx:jgraphx:2.0.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire_2.12:0.13.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.12:0.13.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.12:0.10.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.sireum:logika-runtime_2.12:3.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.12:1.0.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.12:0.8.0:jar" level="project" />

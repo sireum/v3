@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.scalactic:scalactic_2.12:3.0.1:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/bundles/org.scalactic/scalactic_2.12/scalactic_2.12-3.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scalactic/scalactic_2.12/scalactic_2.12-3.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

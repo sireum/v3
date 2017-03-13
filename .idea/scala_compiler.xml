@@ -10,7 +10,7 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
-    <profile name="SBT 1" modules="sireum,awas,cli,java,sireum-js,sireum-jvm,logika-js,logika-jvm,logika,logikax-js,logikax-jvm,logikax-prelude,logikax,pilar-js,pilar-jvm,pilar,test-js,test-jvm,test,util-js,util-jvm,util">
+    <profile name="SBT 1" modules="logikax-prelude,sireum,awas,cli,java,sireum-js,sireum-jvm,logika-jvm,logika,logikax,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -18,6 +18,18 @@
         <parameter value="-target:jvm-1.8" />
         <parameter value="-Ydelambdafy:method" />
       </parameters>
+    </profile>
+    <profile name="SBT 2" modules="logika-js,logikax-js,pilar-js,test-js,util-js">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-Ydelambdafy:method" />
+      </parameters>
+      <plugins>
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scala-js/scalajs-compiler_2.12.1/scalajs-compiler_2.12.1-0.6.13.jar" />
+      </plugins>
     </profile>
     <profile name="SBT 3" modules="sireum-core-js-test,sireum-test-js">
       <option name="featureWarnings" value="true" />
@@ -27,6 +39,18 @@
     </profile>
     <profile name="SBT 4" modules="sireum-pilar-test-js">
       <option name="featureWarnings" value="true" />
+    </profile>
+    <profile name="SBT 5" modules="logika-runtime,logikax-jvm">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-Ydelambdafy:method" />
+      </parameters>
+      <plugins>
+        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scalamacros/paradise_2.12.1/paradise_2.12.1-2.1.0.jar" />
+      </plugins>
     </profile>
   </component>
 </project>

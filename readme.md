@@ -203,14 +203,14 @@ In a bash terminal:
 * Using HTTPS:
 
   ```bash
-  git clone https://github.com/sireum/v3.git sireum-v3
+  git clone --recursive https://github.com/sireum/v3.git sireum-v3
   sireum-v3/sireum
   ```
 
 * Using SSH:
  
   ```bash
-  git clone git@github.com:sireum/v3.git sireum-v3
+  git clone --recursive git@github.com:sireum/v3.git sireum-v3
   sireum-v3/sireum
   ```
   
@@ -245,6 +245,16 @@ Available mode(s):
 logika    Logika Program Verifier and Proof Checker
 util      Utility Tools
 ```
+
+### Updating
+ 
+To get updates, simply do a ``git pull --recurse-submodules`` inside ``sireum-v3`` and run Sireum again:
+
+```bash
+cd sireum-v3
+git pull --recurse-submodules
+./sireum
+```   
 
 ## Testing Sireum using Sbt
 

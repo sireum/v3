@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.scala-lang.modules:scala-xml_2.12:1.0.5:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/bundles/org.scala-lang.modules/scala-xml_2.12/scala-xml_2.12-1.0.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scala-lang.modules/scala-xml_2.12/scala-xml_2.12-1.0.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

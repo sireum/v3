@@ -1,0 +1,3 @@
+[submodule "logika-runtime"]
+	path = logika-runtime
+	url = https://github.com/sireum/v3-logika-runtime

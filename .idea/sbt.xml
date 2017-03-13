@@ -18,6 +18,8 @@
             <option value="$PROJECT_DIR$/js/project" />
             <option value="$PROJECT_DIR$/jvm" />
             <option value="$PROJECT_DIR$/jvm/project" />
+            <option value="$PROJECT_DIR$/logika-runtime/jvm" />
+            <option value="$PROJECT_DIR$/logika-runtime/jvm/project" />
             <option value="$PROJECT_DIR$/logika/js" />
             <option value="$PROJECT_DIR$/logika/js/project" />
             <option value="$PROJECT_DIR$/logika/jvm" />
@@ -28,8 +30,6 @@
             <option value="$PROJECT_DIR$/logikax/js/project" />
             <option value="$PROJECT_DIR$/logikax/jvm" />
             <option value="$PROJECT_DIR$/logikax/jvm/project" />
-            <option value="$PROJECT_DIR$/logikax/prelude/jvm" />
-            <option value="$PROJECT_DIR$/logikax/prelude/jvm/project" />
             <option value="$PROJECT_DIR$/logikax/shared" />
             <option value="$PROJECT_DIR$/logikax/shared/project" />
             <option value="$PROJECT_DIR$/pilar/js" />
