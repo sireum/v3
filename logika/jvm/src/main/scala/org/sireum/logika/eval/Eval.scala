@@ -27,8 +27,8 @@ package org.sireum.logika.eval
 
 import org.sireum.logika._
 import org.sireum.logika.ast._
-import org.sireum.logika.collection.S
-import org.sireum.logika.math.{LogikaIntegralNumber, ZT, NT, ST, UT, FT}
+import org.sireum.logika.collection.{_S, _MS}
+import org.sireum.logika.math.{LogikaIntegralNumber, _Z, _ZT, _NT, _ST, _UT, _FT, _F32, _F64, _R}
 import org.sireum.util._
 
 object Eval {
@@ -94,7 +94,7 @@ object Eval {
   def toLit(bitWidth: Int, v: Value): Exp = v match {
     case v: Boolean => BooleanLit(v)
     case v: Z => IntLit(v.toString, bitWidth, None)
-    case v: ZT#Value =>
+    case v: _ZT#_Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(z8Type))
         case 16 => IntLit(v.toString, 16, Some(z16Type))
@@ -102,21 +102,21 @@ object Eval {
         case 64 => IntLit(v.toString, 64, Some(z64Type))
       }
     case v: N => IntLit(v.toString, bitWidth, Some(nType))
-    case v: NT#Value =>
+    case v: _NT#_Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(n8Type))
         case 16 => IntLit(v.toString, 16, Some(n16Type))
         case 32 => IntLit(v.toString, 32, Some(n32Type))
         case 64 => IntLit(v.toString, 64, Some(n64Type))
       }
-    case v: ST#Value =>
+    case v: _ST#_Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(s8Type))
         case 16 => IntLit(v.toString, 16, Some(s16Type))
         case 32 => IntLit(v.toString, 32, Some(s32Type))
         case 64 => IntLit(v.toString, 64, Some(s64Type))
       }
-    case v: UT#Value =>
+    case v: _UT#_Value =>
       v.bitWidth match {
         case 8 => IntLit(v.toString, 8, Some(u8Type))
         case 16 => IntLit(v.toString, 16, Some(u16Type))
@@ -124,12 +124,12 @@ object Eval {
         case 64 => IntLit(v.toString, 64, Some(u64Type))
       }
     case v: R => RealLit(v.toString)
-    case v: FT#Value =>
+    case v: _FT#_Value =>
       v.bitWidth match {
         case 32 => FloatLit(v.floatValue.toString + "f")
         case 64 => FloatLit(v.doubleValue.toString + "d")
       }
-    case v: S[_, _] =>
+    case v: _S[_, _] =>
       SeqLit(v.property(typeKey),
         v.elements.toVector.map(e => toLit(bitWidth, e)))
   }
@@ -144,16 +144,16 @@ private final class Eval(store: Store) {
       case BooleanLit(v) => Some(v)
       case Id(v) => store.get(v)
       case Size(e) => for (v <- eval(e)) yield v match {
-        case v: S[_, _] => v.size
+        case v: _S[_, _] => v.size
       }
       case Clone(id) => for (v <- eval(id)) yield v match {
-        case v: S[_, _] => v.clone
+        case v: _S[_, _] => v.clone
       }
       case _: Result => store.get("result")
       case Apply(id, Seq(arg)) =>
         try for (ms <- eval(id);
                  i <- eval(arg)) yield (ms, i) match {
-          case (s: S[_, _], i: LogikaIntegralNumber) => s.asInstanceOf[S[LogikaIntegralNumber, Value]](i)
+          case (s: _S[_, _], i: LogikaIntegralNumber) => s.asInstanceOf[_S[LogikaIntegralNumber, Value]](i)
           case _ => None
         }
         catch {
@@ -162,7 +162,7 @@ private final class Eval(store: Store) {
       case _: RandomInt => None
       case _: ReadInt => None
       case e: IntLit =>
-        val v = Z(e.normalize)
+        val v = _Z(e.normalize)
         Some(if (e.tpeOpt.isDefined) e.tpeOpt.get match {
           case _: ZType => v
           case _: Z8Type => v.toZ8
@@ -185,14 +185,14 @@ private final class Eval(store: Store) {
         } else v)
       case e: FloatLit =>
         Some(e.primitiveValue match {
-          case Left(v) => F32(v)
-          case Right(v) => F64(v)
+          case Left(v) => _F32(v)
+          case Right(v) => _F64(v)
         })
-      case e: RealLit => Some(R(e.value))
+      case e: RealLit => Some(_R(e.value))
       case e: IntMin =>
         if (e.bitWidth == 0) None
         else {
-          val v = Z(e.value)
+          val v = _Z(e.value)
           Some(e.integralType match {
             case _: ZType => v.toZ
             case _: Z8Type => v.toZ8
@@ -217,7 +217,7 @@ private final class Eval(store: Store) {
       case e: IntMax =>
         if (e.bitWidth == 0) None
         else {
-          val v = Z(e.value)
+          val v = _Z(e.value)
           Some(e.integralType match {
             case _: ZType => v.toZ
             case _: Z8Type => v.toZ8
@@ -244,51 +244,51 @@ private final class Eval(store: Store) {
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 * v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 * v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 * v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 * v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 * v2
+          case (v1: Z8, v2: Z8) => v1 * v2
+          case (v1: Z16, v2: Z16) => v1 * v2
+          case (v1: Z32, v2: Z32) => v1 * v2
+          case (v1: Z64, v2: Z64) => v1 * v2
           case (v1: N, v2: N) => v1 * v2
-          case (v1: N8.Value, v2: N8.Value) => v1 * v2
-          case (v1: N16.Value, v2: N16.Value) => v1 * v2
-          case (v1: N32.Value, v2: N32.Value) => v1 * v2
-          case (v1: N64.Value, v2: N64.Value) => v1 * v2
-          case (v1: S8.Value, v2: S8.Value) => v1 * v2
-          case (v1: S16.Value, v2: S16.Value) => v1 * v2
-          case (v1: S32.Value, v2: S32.Value) => v1 * v2
-          case (v1: S64.Value, v2: S64.Value) => v1 * v2
-          case (v1: U8.Value, v2: U8.Value) => v1 * v2
-          case (v1: U16.Value, v2: U16.Value) => v1 * v2
-          case (v1: U32.Value, v2: U32.Value) => v1 * v2
-          case (v1: U64.Value, v2: U64.Value) => v1 * v2
+          case (v1: N8, v2: N8) => v1 * v2
+          case (v1: N16, v2: N16) => v1 * v2
+          case (v1: N32, v2: N32) => v1 * v2
+          case (v1: N64, v2: N64) => v1 * v2
+          case (v1: S8, v2: S8) => v1 * v2
+          case (v1: S16, v2: S16) => v1 * v2
+          case (v1: S32, v2: S32) => v1 * v2
+          case (v1: S64, v2: S64) => v1 * v2
+          case (v1: U8, v2: U8) => v1 * v2
+          case (v1: U16, v2: U16) => v1 * v2
+          case (v1: U32, v2: U32) => v1 * v2
+          case (v1: U64, v2: U64) => v1 * v2
           case (v1: R, v2: R) => v1 * v2
-          case (v1: F32.Value, v2: F32.Value) => v1 * v2
-          case (v1: F64.Value, v2: F64.Value) => v1 * v2
+          case (v1: F32, v2: F32) => v1 * v2
+          case (v1: F64, v2: F64) => v1 * v2
         }
       case e: Div =>
         try for (v1 <- eval(e.left);
                  v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 / v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 / v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 / v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 / v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 / v2
+          case (v1: Z8, v2: Z8) => v1 / v2
+          case (v1: Z16, v2: Z16) => v1 / v2
+          case (v1: Z32, v2: Z32) => v1 / v2
+          case (v1: Z64, v2: Z64) => v1 / v2
           case (v1: N, v2: N) => v1 / v2
-          case (v1: N8.Value, v2: N8.Value) => v1 / v2
-          case (v1: N16.Value, v2: N16.Value) => v1 / v2
-          case (v1: N32.Value, v2: N32.Value) => v1 / v2
-          case (v1: N64.Value, v2: N64.Value) => v1 / v2
-          case (v1: S8.Value, v2: S8.Value) => v1 / v2
-          case (v1: S16.Value, v2: S16.Value) => v1 / v2
-          case (v1: S32.Value, v2: S32.Value) => v1 / v2
-          case (v1: S64.Value, v2: S64.Value) => v1 / v2
-          case (v1: U8.Value, v2: U8.Value) => v1 / v2
-          case (v1: U16.Value, v2: U16.Value) => v1 / v2
-          case (v1: U32.Value, v2: U32.Value) => v1 / v2
-          case (v1: U64.Value, v2: U64.Value) => v1 / v2
+          case (v1: N8, v2: N8) => v1 / v2
+          case (v1: N16, v2: N16) => v1 / v2
+          case (v1: N32, v2: N32) => v1 / v2
+          case (v1: N64, v2: N64) => v1 / v2
+          case (v1: S8, v2: S8) => v1 / v2
+          case (v1: S16, v2: S16) => v1 / v2
+          case (v1: S32, v2: S32) => v1 / v2
+          case (v1: S64, v2: S64) => v1 / v2
+          case (v1: U8, v2: U8) => v1 / v2
+          case (v1: U16, v2: U16) => v1 / v2
+          case (v1: U32, v2: U32) => v1 / v2
+          case (v1: U64, v2: U64) => v1 / v2
           case (v1: R, v2: R) => v1 / v2
-          case (v1: F32.Value, v2: F32.Value) => v1 / v2
-          case (v1: F64.Value, v2: F64.Value) => v1 / v2
+          case (v1: F32, v2: F32) => v1 / v2
+          case (v1: F64, v2: F64) => v1 / v2
         } catch {
           case _: ArithmeticException => None
         }
@@ -296,26 +296,26 @@ private final class Eval(store: Store) {
         try for (v1 <- eval(e.left);
                  v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 % v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 % v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 % v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 % v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 % v2
+          case (v1: Z8, v2: Z8) => v1 % v2
+          case (v1: Z16, v2: Z16) => v1 % v2
+          case (v1: Z32, v2: Z32) => v1 % v2
+          case (v1: Z64, v2: Z64) => v1 % v2
           case (v1: N, v2: N) => v1 % v2
-          case (v1: N8.Value, v2: N8.Value) => v1 % v2
-          case (v1: N16.Value, v2: N16.Value) => v1 % v2
-          case (v1: N32.Value, v2: N32.Value) => v1 % v2
-          case (v1: N64.Value, v2: N64.Value) => v1 % v2
-          case (v1: S8.Value, v2: S8.Value) => v1 % v2
-          case (v1: S16.Value, v2: S16.Value) => v1 % v2
-          case (v1: S32.Value, v2: S32.Value) => v1 % v2
-          case (v1: S64.Value, v2: S64.Value) => v1 % v2
-          case (v1: U8.Value, v2: U8.Value) => v1 % v2
-          case (v1: U16.Value, v2: U16.Value) => v1 % v2
-          case (v1: U32.Value, v2: U32.Value) => v1 % v2
-          case (v1: U64.Value, v2: U64.Value) => v1 % v2
+          case (v1: N8, v2: N8) => v1 % v2
+          case (v1: N16, v2: N16) => v1 % v2
+          case (v1: N32, v2: N32) => v1 % v2
+          case (v1: N64, v2: N64) => v1 % v2
+          case (v1: S8, v2: S8) => v1 % v2
+          case (v1: S16, v2: S16) => v1 % v2
+          case (v1: S32, v2: S32) => v1 % v2
+          case (v1: S64, v2: S64) => v1 % v2
+          case (v1: U8, v2: U8) => v1 % v2
+          case (v1: U16, v2: U16) => v1 % v2
+          case (v1: U32, v2: U32) => v1 % v2
+          case (v1: U64, v2: U64) => v1 % v2
           case (v1: R, v2: R) => v1 % v2
-          case (v1: F32.Value, v2: F32.Value) => v1 % v2
-          case (v1: F64.Value, v2: F64.Value) => v1 % v2
+          case (v1: F32, v2: F32) => v1 % v2
+          case (v1: F64, v2: F64) => v1 % v2
         } catch {
           case _: ArithmeticException => None
         }
@@ -323,183 +323,183 @@ private final class Eval(store: Store) {
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 + v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 + v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 + v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 + v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 + v2
+          case (v1: Z8, v2: Z8) => v1 + v2
+          case (v1: Z16, v2: Z16) => v1 + v2
+          case (v1: Z32, v2: Z32) => v1 + v2
+          case (v1: Z64, v2: Z64) => v1 + v2
           case (v1: N, v2: N) => v1 + v2
-          case (v1: N8.Value, v2: N8.Value) => v1 + v2
-          case (v1: N16.Value, v2: N16.Value) => v1 + v2
-          case (v1: N32.Value, v2: N32.Value) => v1 + v2
-          case (v1: N64.Value, v2: N64.Value) => v1 + v2
-          case (v1: S8.Value, v2: S8.Value) => v1 + v2
-          case (v1: S16.Value, v2: S16.Value) => v1 + v2
-          case (v1: S32.Value, v2: S32.Value) => v1 + v2
-          case (v1: S64.Value, v2: S64.Value) => v1 + v2
-          case (v1: U8.Value, v2: U8.Value) => v1 + v2
-          case (v1: U16.Value, v2: U16.Value) => v1 + v2
-          case (v1: U32.Value, v2: U32.Value) => v1 + v2
-          case (v1: U64.Value, v2: U64.Value) => v1 + v2
+          case (v1: N8, v2: N8) => v1 + v2
+          case (v1: N16, v2: N16) => v1 + v2
+          case (v1: N32, v2: N32) => v1 + v2
+          case (v1: N64, v2: N64) => v1 + v2
+          case (v1: S8, v2: S8) => v1 + v2
+          case (v1: S16, v2: S16) => v1 + v2
+          case (v1: S32, v2: S32) => v1 + v2
+          case (v1: S64, v2: S64) => v1 + v2
+          case (v1: U8, v2: U8) => v1 + v2
+          case (v1: U16, v2: U16) => v1 + v2
+          case (v1: U32, v2: U32) => v1 + v2
+          case (v1: U64, v2: U64) => v1 + v2
           case (v1: R, v2: R) => v1 + v2
-          case (v1: F32.Value, v2: F32.Value) => v1 + v2
-          case (v1: F64.Value, v2: F64.Value) => v1 + v2
+          case (v1: F32, v2: F32) => v1 + v2
+          case (v1: F64, v2: F64) => v1 + v2
         }
       case e: Sub =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 - v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 - v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 - v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 - v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 - v2
+          case (v1: Z8, v2: Z8) => v1 - v2
+          case (v1: Z16, v2: Z16) => v1 - v2
+          case (v1: Z32, v2: Z32) => v1 - v2
+          case (v1: Z64, v2: Z64) => v1 - v2
           case (v1: N, v2: N) => v1 - v2
-          case (v1: N8.Value, v2: N8.Value) => v1 - v2
-          case (v1: N16.Value, v2: N16.Value) => v1 - v2
-          case (v1: N32.Value, v2: N32.Value) => v1 - v2
-          case (v1: N64.Value, v2: N64.Value) => v1 - v2
-          case (v1: S8.Value, v2: S8.Value) => v1 - v2
-          case (v1: S16.Value, v2: S16.Value) => v1 - v2
-          case (v1: S32.Value, v2: S32.Value) => v1 - v2
-          case (v1: S64.Value, v2: S64.Value) => v1 - v2
-          case (v1: U8.Value, v2: U8.Value) => v1 - v2
-          case (v1: U16.Value, v2: U16.Value) => v1 - v2
-          case (v1: U32.Value, v2: U32.Value) => v1 - v2
-          case (v1: U64.Value, v2: U64.Value) => v1 - v2
+          case (v1: N8, v2: N8) => v1 - v2
+          case (v1: N16, v2: N16) => v1 - v2
+          case (v1: N32, v2: N32) => v1 - v2
+          case (v1: N64, v2: N64) => v1 - v2
+          case (v1: S8, v2: S8) => v1 - v2
+          case (v1: S16, v2: S16) => v1 - v2
+          case (v1: S32, v2: S32) => v1 - v2
+          case (v1: S64, v2: S64) => v1 - v2
+          case (v1: U8, v2: U8) => v1 - v2
+          case (v1: U16, v2: U16) => v1 - v2
+          case (v1: U32, v2: U32) => v1 - v2
+          case (v1: U64, v2: U64) => v1 - v2
           case (v1: R, v2: R) => v1 - v2
-          case (v1: F32.Value, v2: F32.Value) => v1 - v2
-          case (v1: F64.Value, v2: F64.Value) => v1 - v2
+          case (v1: F32, v2: F32) => v1 - v2
+          case (v1: F64, v2: F64) => v1 - v2
         }
       case e: Lt =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 < v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 < v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 < v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 < v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 < v2
+          case (v1: Z8, v2: Z8) => v1 < v2
+          case (v1: Z16, v2: Z16) => v1 < v2
+          case (v1: Z32, v2: Z32) => v1 < v2
+          case (v1: Z64, v2: Z64) => v1 < v2
           case (v1: N, v2: N) => v1 < v2
-          case (v1: N8.Value, v2: N8.Value) => v1 < v2
-          case (v1: N16.Value, v2: N16.Value) => v1 < v2
-          case (v1: N32.Value, v2: N32.Value) => v1 < v2
-          case (v1: N64.Value, v2: N64.Value) => v1 < v2
-          case (v1: S8.Value, v2: S8.Value) => v1 < v2
-          case (v1: S16.Value, v2: S16.Value) => v1 < v2
-          case (v1: S32.Value, v2: S32.Value) => v1 < v2
-          case (v1: S64.Value, v2: S64.Value) => v1 < v2
-          case (v1: U8.Value, v2: U8.Value) => v1 < v2
-          case (v1: U16.Value, v2: U16.Value) => v1 < v2
-          case (v1: U32.Value, v2: U32.Value) => v1 < v2
-          case (v1: U64.Value, v2: U64.Value) => v1 < v2
+          case (v1: N8, v2: N8) => v1 < v2
+          case (v1: N16, v2: N16) => v1 < v2
+          case (v1: N32, v2: N32) => v1 < v2
+          case (v1: N64, v2: N64) => v1 < v2
+          case (v1: S8, v2: S8) => v1 < v2
+          case (v1: S16, v2: S16) => v1 < v2
+          case (v1: S32, v2: S32) => v1 < v2
+          case (v1: S64, v2: S64) => v1 < v2
+          case (v1: U8, v2: U8) => v1 < v2
+          case (v1: U16, v2: U16) => v1 < v2
+          case (v1: U32, v2: U32) => v1 < v2
+          case (v1: U64, v2: U64) => v1 < v2
           case (v1: R, v2: R) => v1 < v2
-          case (v1: F32.Value, v2: F32.Value) => v1 < v2
-          case (v1: F64.Value, v2: F64.Value) => v1 < v2
+          case (v1: F32, v2: F32) => v1 < v2
+          case (v1: F64, v2: F64) => v1 < v2
         }
       case e: Le =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 <= v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 <= v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 <= v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 <= v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 <= v2
+          case (v1: Z8, v2: Z8) => v1 <= v2
+          case (v1: Z16, v2: Z16) => v1 <= v2
+          case (v1: Z32, v2: Z32) => v1 <= v2
+          case (v1: Z64, v2: Z64) => v1 <= v2
           case (v1: N, v2: N) => v1 <= v2
-          case (v1: N8.Value, v2: N8.Value) => v1 <= v2
-          case (v1: N16.Value, v2: N16.Value) => v1 <= v2
-          case (v1: N32.Value, v2: N32.Value) => v1 <= v2
-          case (v1: N64.Value, v2: N64.Value) => v1 <= v2
-          case (v1: S8.Value, v2: S8.Value) => v1 <= v2
-          case (v1: S16.Value, v2: S16.Value) => v1 <= v2
-          case (v1: S32.Value, v2: S32.Value) => v1 <= v2
-          case (v1: S64.Value, v2: S64.Value) => v1 <= v2
-          case (v1: U8.Value, v2: U8.Value) => v1 <= v2
-          case (v1: U16.Value, v2: U16.Value) => v1 <= v2
-          case (v1: U32.Value, v2: U32.Value) => v1 <= v2
-          case (v1: U64.Value, v2: U64.Value) => v1 <= v2
+          case (v1: N8, v2: N8) => v1 <= v2
+          case (v1: N16, v2: N16) => v1 <= v2
+          case (v1: N32, v2: N32) => v1 <= v2
+          case (v1: N64, v2: N64) => v1 <= v2
+          case (v1: S8, v2: S8) => v1 <= v2
+          case (v1: S16, v2: S16) => v1 <= v2
+          case (v1: S32, v2: S32) => v1 <= v2
+          case (v1: S64, v2: S64) => v1 <= v2
+          case (v1: U8, v2: U8) => v1 <= v2
+          case (v1: U16, v2: U16) => v1 <= v2
+          case (v1: U32, v2: U32) => v1 <= v2
+          case (v1: U64, v2: U64) => v1 <= v2
           case (v1: R, v2: R) => v1 <= v2
-          case (v1: F32.Value, v2: F32.Value) => v1 <= v2
-          case (v1: F64.Value, v2: F64.Value) => v1 <= v2
+          case (v1: F32, v2: F32) => v1 <= v2
+          case (v1: F64, v2: F64) => v1 <= v2
         }
       case e: Gt =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 > v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 > v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 > v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 > v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 > v2
+          case (v1: Z8, v2: Z8) => v1 > v2
+          case (v1: Z16, v2: Z16) => v1 > v2
+          case (v1: Z32, v2: Z32) => v1 > v2
+          case (v1: Z64, v2: Z64) => v1 > v2
           case (v1: N, v2: N) => v1 > v2
-          case (v1: N8.Value, v2: N8.Value) => v1 > v2
-          case (v1: N16.Value, v2: N16.Value) => v1 > v2
-          case (v1: N32.Value, v2: N32.Value) => v1 > v2
-          case (v1: N64.Value, v2: N64.Value) => v1 > v2
-          case (v1: S8.Value, v2: S8.Value) => v1 > v2
-          case (v1: S16.Value, v2: S16.Value) => v1 > v2
-          case (v1: S32.Value, v2: S32.Value) => v1 > v2
-          case (v1: S64.Value, v2: S64.Value) => v1 > v2
-          case (v1: U8.Value, v2: U8.Value) => v1 > v2
-          case (v1: U16.Value, v2: U16.Value) => v1 > v2
-          case (v1: U32.Value, v2: U32.Value) => v1 > v2
-          case (v1: U64.Value, v2: U64.Value) => v1 > v2
+          case (v1: N8, v2: N8) => v1 > v2
+          case (v1: N16, v2: N16) => v1 > v2
+          case (v1: N32, v2: N32) => v1 > v2
+          case (v1: N64, v2: N64) => v1 > v2
+          case (v1: S8, v2: S8) => v1 > v2
+          case (v1: S16, v2: S16) => v1 > v2
+          case (v1: S32, v2: S32) => v1 > v2
+          case (v1: S64, v2: S64) => v1 > v2
+          case (v1: U8, v2: U8) => v1 > v2
+          case (v1: U16, v2: U16) => v1 > v2
+          case (v1: U32, v2: U32) => v1 > v2
+          case (v1: U64, v2: U64) => v1 > v2
           case (v1: R, v2: R) => v1 > v2
-          case (v1: F32.Value, v2: F32.Value) => v1 > v2
-          case (v1: F64.Value, v2: F64.Value) => v1 > v2
+          case (v1: F32, v2: F32) => v1 > v2
+          case (v1: F64, v2: F64) => v1 > v2
         }
       case e: Ge =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Z, v2: Z) => v1 >= v2
-          case (v1: Z8.Value, v2: Z8.Value) => v1 >= v2
-          case (v1: Z16.Value, v2: Z16.Value) => v1 >= v2
-          case (v1: Z32.Value, v2: Z32.Value) => v1 >= v2
-          case (v1: Z64.Value, v2: Z64.Value) => v1 >= v2
+          case (v1: Z8, v2: Z8) => v1 >= v2
+          case (v1: Z16, v2: Z16) => v1 >= v2
+          case (v1: Z32, v2: Z32) => v1 >= v2
+          case (v1: Z64, v2: Z64) => v1 >= v2
           case (v1: N, v2: N) => v1 >= v2
-          case (v1: N8.Value, v2: N8.Value) => v1 >= v2
-          case (v1: N16.Value, v2: N16.Value) => v1 >= v2
-          case (v1: N32.Value, v2: N32.Value) => v1 >= v2
-          case (v1: N64.Value, v2: N64.Value) => v1 >= v2
-          case (v1: S8.Value, v2: S8.Value) => v1 >= v2
-          case (v1: S16.Value, v2: S16.Value) => v1 >= v2
-          case (v1: S32.Value, v2: S32.Value) => v1 >= v2
-          case (v1: S64.Value, v2: S64.Value) => v1 >= v2
-          case (v1: U8.Value, v2: U8.Value) => v1 >= v2
-          case (v1: U16.Value, v2: U16.Value) => v1 >= v2
-          case (v1: U32.Value, v2: U32.Value) => v1 >= v2
-          case (v1: U64.Value, v2: U64.Value) => v1 >= v2
+          case (v1: N8, v2: N8) => v1 >= v2
+          case (v1: N16, v2: N16) => v1 >= v2
+          case (v1: N32, v2: N32) => v1 >= v2
+          case (v1: N64, v2: N64) => v1 >= v2
+          case (v1: S8, v2: S8) => v1 >= v2
+          case (v1: S16, v2: S16) => v1 >= v2
+          case (v1: S32, v2: S32) => v1 >= v2
+          case (v1: S64, v2: S64) => v1 >= v2
+          case (v1: U8, v2: U8) => v1 >= v2
+          case (v1: U16, v2: U16) => v1 >= v2
+          case (v1: U32, v2: U32) => v1 >= v2
+          case (v1: U64, v2: U64) => v1 >= v2
           case (v1: R, v2: R) => v1 >= v2
-          case (v1: F32.Value, v2: F32.Value) => v1 >= v2
-          case (v1: F64.Value, v2: F64.Value) => v1 >= v2
+          case (v1: F32, v2: F32) => v1 >= v2
+          case (v1: F64, v2: F64) => v1 >= v2
         }
       case e: Shr =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: S8.Value, v2: S8.Value) => v1 >> v2
-          case (v1: S16.Value, v2: S16.Value) => v1 >> v2
-          case (v1: S32.Value, v2: S32.Value) => v1 >> v2
-          case (v1: S64.Value, v2: S64.Value) => v1 >> v2
+          case (v1: S8, v2: S8) => v1 >> v2
+          case (v1: S16, v2: S16) => v1 >> v2
+          case (v1: S32, v2: S32) => v1 >> v2
+          case (v1: S64, v2: S64) => v1 >> v2
         }
       case e: UShr =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: S8.Value, v2: S8.Value) => v1 >>> v2
-          case (v1: S16.Value, v2: S16.Value) => v1 >>> v2
-          case (v1: S32.Value, v2: S32.Value) => v1 >>> v2
-          case (v1: S64.Value, v2: S64.Value) => v1 >>> v2
-          case (v1: U8.Value, v2: U8.Value) => v1 >>> v2
-          case (v1: U16.Value, v2: U16.Value) => v1 >>> v2
-          case (v1: U32.Value, v2: U32.Value) => v1 >>> v2
-          case (v1: U64.Value, v2: U64.Value) => v1 >>> v2
+          case (v1: S8, v2: S8) => v1 >>> v2
+          case (v1: S16, v2: S16) => v1 >>> v2
+          case (v1: S32, v2: S32) => v1 >>> v2
+          case (v1: S64, v2: S64) => v1 >>> v2
+          case (v1: U8, v2: U8) => v1 >>> v2
+          case (v1: U16, v2: U16) => v1 >>> v2
+          case (v1: U32, v2: U32) => v1 >>> v2
+          case (v1: U64, v2: U64) => v1 >>> v2
         }
       case e: Shl =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: S8.Value, v2: S8.Value) => v1 << v2
-          case (v1: S16.Value, v2: S16.Value) => v1 << v2
-          case (v1: S32.Value, v2: S32.Value) => v1 << v2
-          case (v1: S64.Value, v2: S64.Value) => v1 << v2
-          case (v1: U8.Value, v2: U8.Value) => v1 << v2
-          case (v1: U16.Value, v2: U16.Value) => v1 << v2
-          case (v1: U32.Value, v2: U32.Value) => v1 << v2
-          case (v1: U64.Value, v2: U64.Value) => v1 << v2
+          case (v1: S8, v2: S8) => v1 << v2
+          case (v1: S16, v2: S16) => v1 << v2
+          case (v1: S32, v2: S32) => v1 << v2
+          case (v1: S64, v2: S64) => v1 << v2
+          case (v1: U8, v2: U8) => v1 << v2
+          case (v1: U16, v2: U16) => v1 << v2
+          case (v1: U32, v2: U32) => v1 << v2
+          case (v1: U64, v2: U64) => v1 << v2
         }
       case e: Eq =>
         for (v1 <- eval(e.left);
@@ -510,51 +510,51 @@ private final class Eval(store: Store) {
       case e: Append =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: S[_, _], v2: Value) => v1.asInstanceOf[S[LogikaIntegralNumber, Value]] :+ v2
+          case (v1: _S[_, _], v2: Value) => v1.asInstanceOf[_S[LogikaIntegralNumber, Value]] :+ v2
         }
       case e: Prepend =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v2, v1): @unchecked) match {
-          case (v2: S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[S[LogikaIntegralNumber, Value]]
+          case (v2: _S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[_S[LogikaIntegralNumber, Value]]
         }
       case e: And =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Boolean, v2: Boolean) => v1 & v2
-          case (v1: S8.Value, v2: S8.Value) => v1 & v2
-          case (v1: S16.Value, v2: S16.Value) => v1 & v2
-          case (v1: S32.Value, v2: S32.Value) => v1 & v2
-          case (v1: S64.Value, v2: S64.Value) => v1 & v2
-          case (v1: U8.Value, v2: U8.Value) => v1 & v2
-          case (v1: U16.Value, v2: U16.Value) => v1 & v2
-          case (v1: U32.Value, v2: U32.Value) => v1 & v2
-          case (v1: U64.Value, v2: U64.Value) => v1 & v2
+          case (v1: S8, v2: S8) => v1 & v2
+          case (v1: S16, v2: S16) => v1 & v2
+          case (v1: S32, v2: S32) => v1 & v2
+          case (v1: S64, v2: S64) => v1 & v2
+          case (v1: U8, v2: U8) => v1 & v2
+          case (v1: U16, v2: U16) => v1 & v2
+          case (v1: U32, v2: U32) => v1 & v2
+          case (v1: U64, v2: U64) => v1 & v2
         }
       case e: Xor =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Boolean, v2: Boolean) => v1 ^ v2
-          case (v1: S8.Value, v2: S8.Value) => v1 ^| v2
-          case (v1: S16.Value, v2: S16.Value) => v1 ^| v2
-          case (v1: S32.Value, v2: S32.Value) => v1 ^| v2
-          case (v1: S64.Value, v2: S64.Value) => v1 ^| v2
-          case (v1: U8.Value, v2: U8.Value) => v1 ^| v2
-          case (v1: U16.Value, v2: U16.Value) => v1 ^| v2
-          case (v1: U32.Value, v2: U32.Value) => v1 ^| v2
-          case (v1: U64.Value, v2: U64.Value) => v1 ^| v2
+          case (v1: S8, v2: S8) => v1 ^| v2
+          case (v1: S16, v2: S16) => v1 ^| v2
+          case (v1: S32, v2: S32) => v1 ^| v2
+          case (v1: S64, v2: S64) => v1 ^| v2
+          case (v1: U8, v2: U8) => v1 ^| v2
+          case (v1: U16, v2: U16) => v1 ^| v2
+          case (v1: U32, v2: U32) => v1 ^| v2
+          case (v1: U64, v2: U64) => v1 ^| v2
         }
       case e: Or =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
           case (v1: Boolean, v2: Boolean) => v1 | v2
-          case (v1: S8.Value, v2: S8.Value) => v1 | v2
-          case (v1: S16.Value, v2: S16.Value) => v1 | v2
-          case (v1: S32.Value, v2: S32.Value) => v1 | v2
-          case (v1: S64.Value, v2: S64.Value) => v1 | v2
-          case (v1: U8.Value, v2: U8.Value) => v1 | v2
-          case (v1: U16.Value, v2: U16.Value) => v1 | v2
-          case (v1: U32.Value, v2: U32.Value) => v1 | v2
-          case (v1: U64.Value, v2: U64.Value) => v1 | v2
+          case (v1: S8, v2: S8) => v1 | v2
+          case (v1: S16, v2: S16) => v1 | v2
+          case (v1: S32, v2: S32) => v1 | v2
+          case (v1: S64, v2: S64) => v1 | v2
+          case (v1: U8, v2: U8) => v1 | v2
+          case (v1: U16, v2: U16) => v1 | v2
+          case (v1: U32, v2: U32) => v1 | v2
+          case (v1: U64, v2: U64) => v1 | v2
         }
       case e: Implies =>
         for (v1 <- eval(e.left);
@@ -564,25 +564,25 @@ private final class Eval(store: Store) {
       case e: Not =>
         for (v <- eval(e.exp)) yield (v: @unchecked) match {
           case v: Boolean => !v
-          case v: S8.Value => ~v
-          case v: S16.Value => ~v
-          case v: S32.Value => ~v
-          case v: S64.Value => ~v
-          case v: U8.Value => ~v
-          case v: U16.Value => ~v
-          case v: U32.Value => ~v
-          case v: U64.Value => ~v
+          case v: S8 => ~v
+          case v: S16 => ~v
+          case v: S32 => ~v
+          case v: S64 => ~v
+          case v: U8 => ~v
+          case v: U16 => ~v
+          case v: U32 => ~v
+          case v: U64 => ~v
         }
       case e: Minus =>
         for (v <- eval(e.exp)) yield (v: @unchecked) match {
           case v: Z => -v
-          case v: S8.Value => -v
-          case v: S16.Value => -v
-          case v: S32.Value => -v
-          case v: S64.Value => -v
+          case v: S8 => -v
+          case v: S16 => -v
+          case v: S32 => -v
+          case v: S64 => -v
           case v: R => -v
-          case v: F32.Value => -v
-          case v: F64.Value => -v
+          case v: F32 => -v
+          case v: F64 => -v
         }
       case _: ForAll => None
       case _: Exists => None
@@ -593,28 +593,28 @@ private final class Eval(store: Store) {
           case _ => return None
         }
         Some(e.tpe match {
-          case _: BSType => MS[Z, Boolean](args.map(_.asInstanceOf[Boolean]): _*)
+          case _: BSType => _MS[Z, Boolean](args.map(_.asInstanceOf[Boolean]): _*)
           case _: ZSType => ZS(args.map(_.asInstanceOf[Z]): _*)
-          case _: Z8SType => Z8S(args.map(_.asInstanceOf[Z8.Value]): _*)
-          case _: Z16SType => Z16S(args.map(_.asInstanceOf[Z16.Value]): _*)
-          case _: Z32SType => Z32S(args.map(_.asInstanceOf[Z32.Value]): _*)
-          case _: Z64SType => Z64S(args.map(_.asInstanceOf[Z64.Value]): _*)
+          case _: Z8SType => Z8S(args.map(_.asInstanceOf[Z8]): _*)
+          case _: Z16SType => Z16S(args.map(_.asInstanceOf[Z16]): _*)
+          case _: Z32SType => Z32S(args.map(_.asInstanceOf[Z32]): _*)
+          case _: Z64SType => Z64S(args.map(_.asInstanceOf[Z64]): _*)
           case _: NSType => NS(args.map(_.asInstanceOf[N]): _*)
-          case _: N8SType => N8S(args.map(_.asInstanceOf[N8.Value]): _*)
-          case _: N16SType => N16S(args.map(_.asInstanceOf[N16.Value]): _*)
-          case _: N32SType => N32S(args.map(_.asInstanceOf[N32.Value]): _*)
-          case _: N64SType => N64S(args.map(_.asInstanceOf[N64.Value]): _*)
-          case _: S8SType => S8S(args.map(_.asInstanceOf[S8.Value]): _*)
-          case _: S16SType => S16S(args.map(_.asInstanceOf[S16.Value]): _*)
-          case _: S32SType => S32S(args.map(_.asInstanceOf[S32.Value]): _*)
-          case _: S64SType => S64S(args.map(_.asInstanceOf[S64.Value]): _*)
-          case _: U8SType => U8S(args.map(_.asInstanceOf[U8.Value]): _*)
-          case _: U16SType => U16S(args.map(_.asInstanceOf[U16.Value]): _*)
-          case _: U32SType => U32S(args.map(_.asInstanceOf[U32.Value]): _*)
-          case _: U64SType => U64S(args.map(_.asInstanceOf[U64.Value]): _*)
+          case _: N8SType => N8S(args.map(_.asInstanceOf[N8]): _*)
+          case _: N16SType => N16S(args.map(_.asInstanceOf[N16]): _*)
+          case _: N32SType => N32S(args.map(_.asInstanceOf[N32]): _*)
+          case _: N64SType => N64S(args.map(_.asInstanceOf[N64]): _*)
+          case _: S8SType => S8S(args.map(_.asInstanceOf[S8]): _*)
+          case _: S16SType => S16S(args.map(_.asInstanceOf[S16]): _*)
+          case _: S32SType => S32S(args.map(_.asInstanceOf[S32]): _*)
+          case _: S64SType => S64S(args.map(_.asInstanceOf[S64]): _*)
+          case _: U8SType => U8S(args.map(_.asInstanceOf[U8]): _*)
+          case _: U16SType => U16S(args.map(_.asInstanceOf[U16]): _*)
+          case _: U32SType => U32S(args.map(_.asInstanceOf[U32]): _*)
+          case _: U64SType => U64S(args.map(_.asInstanceOf[U64]): _*)
           case _: RSType => RS(args.map(_.asInstanceOf[R]): _*)
-          case _: F32SType => F32S(args.map(_.asInstanceOf[F32.Value]): _*)
-          case _: F64SType => F64S(args.map(_.asInstanceOf[F64.Value]): _*)
+          case _: F32SType => F32S(args.map(_.asInstanceOf[F32]): _*)
+          case _: F64SType => F64S(args.map(_.asInstanceOf[F64]): _*)
         }).map { ms => ms.properties(typeKey) = e.tpe; ms }
     }
     r.map({
