@@ -14,10 +14,10 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-prelude.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-prelude.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-prelude-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-prelude-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-runtime.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-runtime.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-runtime-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-runtime-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-api.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-api-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-native.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-native.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-native-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-native-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-js.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-js.iml" />

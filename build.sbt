@@ -228,7 +228,7 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaRuntime)
+).dependsOn(logikaPrelude)
 lazy val logikaJs = logikaT._3
 
 lazy val logikaXPI = new ProjectInfo("logikax", isCross = true, utilPI, testPI)
@@ -247,7 +247,7 @@ lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
 
-lazy val logikaRuntimePI = new ProjectInfo("logika-runtime/runtime", isCross = false)
+lazy val logikaRuntimePI = new ProjectInfo("logika-runtime/native", isCross = false)
 lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.apfloat" % "apfloat" % "1.8.2",
@@ -255,7 +255,7 @@ lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
     "org.spire-math" %% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
-lazy val logikaPreludePI = new ProjectInfo("logika-runtime/prelude", isCross = false, logikaRuntimePI)
+lazy val logikaPreludePI = new ProjectInfo("logika-runtime/api", isCross = false, logikaRuntimePI)
 lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
