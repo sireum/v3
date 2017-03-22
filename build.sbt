@@ -228,10 +228,10 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaPrelude)
+).dependsOn(logikaRuntime, logikaPrelude)
 lazy val logikaJs = logikaT._3
 
-lazy val logikaXPI = new ProjectInfo("logikax", isCross = true, utilPI, testPI)
+lazy val logikaXPI = new ProjectInfo("logika/x", isCross = true, utilPI, testPI)
 lazy val logikaXT = toSbtCrossProject(logikaXPI)
 lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
@@ -242,12 +242,12 @@ lazy val logikaXJvm = logikaXT._2.settings(
     logikaXT._2.base / "c-runtime" / "src",
     logikaXT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaPrelude % "test->test;compile->compile")
+).dependsOn(logikaRuntime, logikaPrelude % "test->test;compile->compile")
 lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
 
-lazy val logikaRuntimePI = new ProjectInfo("logika-runtime/native", isCross = false)
+lazy val logikaRuntimePI = new ProjectInfo("logika/runtime/native", isCross = false)
 lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.apfloat" % "apfloat" % "1.8.2",
@@ -255,11 +255,11 @@ lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
     "org.spire-math" %% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
-lazy val logikaPreludePI = new ProjectInfo("logika-runtime/api", isCross = false, logikaRuntimePI)
+lazy val logikaPreludePI = new ProjectInfo("logika/runtime/api", isCross = false, logikaRuntimePI)
 lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
-  unmanagedResourceDirectories in Compile += file("logika-runtime/prelude/jvm/src/main/scala"),
+  unmanagedResourceDirectories in Compile += file("logika/runtime/api/jvm/src/main/scala"),
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)

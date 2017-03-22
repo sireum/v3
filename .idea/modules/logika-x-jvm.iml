@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="logikax-jvm" external.linked.project.path="$MODULE_DIR$/../../logikax/jvm" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="logika-x-jvm" external.linked.project.path="$MODULE_DIR$/../../logika/x/jvm" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
-    <output url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/classes" />
-    <output-test url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/test-classes" />
+    <output url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/classes" />
+    <output-test url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/test-classes" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../logikax/jvm">
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/main/scala" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/main/scala-2.12" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/src_managed/main" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/test/scala" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/test/scala-2.12" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/src_managed/test" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/c-runtime/cmake" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/c-runtime/include" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/c-runtime/src" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/main/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/resource_managed/main" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/src/test/resources" type="java-test-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../logikax/jvm/target/scala-2.12/resource_managed/test" type="java-test-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/../../logikax/jvm/target" />
+    <content url="file://$MODULE_DIR$/../../logika/x/jvm">
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/main/scala" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/main/scala-2.12" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/src_managed/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/test/scala" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/test/scala-2.12" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/src_managed/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/c-runtime/cmake" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/c-runtime/include" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/c-runtime/src" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/resource_managed/main" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../logika/x/jvm/target/scala-2.12/resource_managed/test" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/../../logika/x/jvm/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="logikax" exported="" />
-    <orderEntry type="module" module-name="logika-runtime-api" exported="" />
+    <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.18:jar" level="project" />
+    <orderEntry type="module" module-name="native-logika-runtime-native" exported="" />
+    <orderEntry type="module" module-name="api-logika-runtime-api" exported="" />
+    <orderEntry type="module" module-name="logika-x" exported="" />
     <orderEntry type="module" module-name="test" exported="" />
     <orderEntry type="module" module-name="test-jvm" exported="" />
     <orderEntry type="module" module-name="util" exported="" />
@@ -54,16 +56,15 @@
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.12.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.12.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-java8-compat_2.12:0.8.0:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.12:1.0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.12:1.0.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-sbt:test-interface:1.0:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scalactic:scalactic_2.12:3.0.1:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.12:3.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.12:0.10.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire-macros_2.12:0.13.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.spire-math:spire_2.12:0.13.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.tinyjee.jgraphx:jgraphx:2.0.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.typelevel:machinist_2.12:0.6.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.18:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.12:1.0.4:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scalactic:scalactic_2.12:3.0.1:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.12:3.0.1:jar" level="project" />
   </component>
 </module>

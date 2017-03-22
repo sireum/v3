@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.8">
+      <module name="api-logika-runtime-api" target="1.8" />
       <module name="awas" target="1.8" />
       <module name="cli" target="1.8" />
       <module name="java" target="1.8" />
@@ -13,10 +14,14 @@
       <module name="logika-runtime-native" target="1.8" />
       <module name="logika-runtime-prelude" target="1.8" />
       <module name="logika-runtime-runtime" target="1.8" />
+      <module name="logika-x" target="1.8" />
+      <module name="logika-x-js" target="1.8" />
+      <module name="logika-x-jvm" target="1.8" />
       <module name="logikax" target="1.8" />
       <module name="logikax-js" target="1.8" />
       <module name="logikax-jvm" target="1.8" />
       <module name="logikax-prelude" target="1.8" />
+      <module name="native-logika-runtime-native" target="1.8" />
       <module name="pilar" target="1.8" />
       <module name="pilar-js" target="1.8" />
       <module name="pilar-jvm" target="1.8" />

@@ -2,28 +2,28 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/api-logika-runtime-api.iml" filepath="$PROJECT_DIR$/.idea/modules/api-logika-runtime-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/awas.iml" filepath="$PROJECT_DIR$/.idea/modules/awas.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/awas-build.iml" filepath="$PROJECT_DIR$/.idea/modules/awas-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cli.iml" filepath="$PROJECT_DIR$/.idea/modules/cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cli-build.iml" filepath="$PROJECT_DIR$/.idea/modules/cli-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/java.iml" filepath="$PROJECT_DIR$/.idea/modules/java.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/java-build.iml" filepath="$PROJECT_DIR$/.idea/modules/java-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jvm-logika-runtime-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/jvm-logika-runtime-api-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jvm-logika-runtime-native-build.iml" filepath="$PROJECT_DIR$/.idea/modules/jvm-logika-runtime-native-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika.iml" filepath="$PROJECT_DIR$/.idea/modules/logika.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-js.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-js.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-jvm-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-api.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-api.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-api-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-native.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-native.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-runtime-native-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-runtime-native-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-js.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-js.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-js-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-jvm.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logikax-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logikax-jvm-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x-js.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x-js.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x-js-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x-jvm.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x-jvm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/logika-x-jvm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/logika-x-jvm-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/native-logika-runtime-native.iml" filepath="$PROJECT_DIR$/.idea/modules/native-logika-runtime-native.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-build.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pilar-js.iml" filepath="$PROJECT_DIR$/.idea/modules/pilar-js.iml" />

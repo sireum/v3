@@ -10,7 +10,7 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
-    <profile name="SBT 1" modules="logikax-prelude,sireum,awas,cli,java,sireum-js,sireum-jvm,logika-jvm,logika,logikax,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
+    <profile name="SBT 1" modules="logikax-prelude,logikax,sireum,awas,cli,java,sireum-js,sireum-jvm,logika-jvm,logika,logika-x,pilar-jvm,pilar,test-jvm,test,util-jvm,util">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -19,7 +19,7 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
-    <profile name="SBT 2" modules="logika-js,logikax-js,pilar-js,test-js,util-js">
+    <profile name="SBT 2" modules="logikax-js,logika-js,logika-x-js,pilar-js,test-js,util-js">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -40,7 +40,7 @@
     <profile name="SBT 4" modules="sireum-pilar-test-js">
       <option name="featureWarnings" value="true" />
     </profile>
-    <profile name="SBT 5" modules="logika-runtime,logika-runtime-prelude,logika-runtime-runtime,logika-runtime-api,logika-runtime-native,logikax-jvm">
+    <profile name="SBT 5" modules="logika-runtime,logika-runtime-prelude,logika-runtime-runtime,logika-runtime-api,logika-runtime-native,logikax-jvm,api-logika-runtime-api,native-logika-runtime-native,logika-x-jvm">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />

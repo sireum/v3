@@ -25,7 +25,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="logika" exported="" />
-    <orderEntry type="module" module-name="logika-runtime-api" exported="" />
+    <orderEntry type="module" module-name="native-logika-runtime-native" exported="" />
+    <orderEntry type="module" module-name="api-logika-runtime-api" exported="" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.18:jar" level="project" />
     <orderEntry type="library" name="SBT: org.jgrapht:jgrapht-ext:1.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.jgrapht:jgrapht-core:1.0.1:jar" level="project" />

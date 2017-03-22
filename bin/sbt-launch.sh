@@ -42,6 +42,8 @@ cd ${SIREUM_HOME}
 for i in "$@" ; do
   if [[ ${i} == "clean" ]]; then
     rm -fR `find . -path "*/target/scala-2.??"`
+    rm -fR `find . -path "*/target/streams"`
+    rm -fR `find . -path "*/target/resolution-cache"`
     break
   fi
 done
