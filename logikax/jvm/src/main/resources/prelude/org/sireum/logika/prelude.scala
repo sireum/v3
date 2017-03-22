@@ -2588,7 +2588,7 @@ object SI {
     c"""{ ensures result = foldRightSpec(s, f, init, s.size - 1) }"""
 
   @native
-  @pure def map[I, E1, E2](s: IS[I, E2], @pure f: E1 => E2): IS[I, E2] =
+  @pure def map[I, E1, E2](s: IS[I, E1], @pure f: E1 => E2): IS[I, E2] =
     c"""{ ensures result.size = s.size
                   ∀i: (0 ..< result.size)  result(i) = f(s(i)) }"""
 
@@ -2599,52 +2599,160 @@ object SI {
                    ∀i: (0 ..< result.size)  result(i) = s(i) }"""
 
   @native
-  @pure def fromU8[I](n: U8, @pure toI: U8 => I): IS[I, B] =
-    c"""{ ensures result.size = toI(u8"8")
-                  ∀i: (u8"0" .. u8"7")
-                    result(toI(i)) = U8.toB(n & (u8"1" << (u8"7" - i))) }"""
+  @pure def fromU8[I](n: U8): IS[I, B] =
+    c"""{ ensures result.size = 8
+                  result(0) = ((n & u8"1"  ) ≠ u8"1"  ) ∧
+                  result(1) = ((n & u8"2"  ) ≠ u8"2"  ) ∧
+                  result(2) = ((n & u8"4"  ) ≠ u8"4"  ) ∧
+                  result(3) = ((n & u8"8"  ) ≠ u8"8"  ) ∧
+                  result(4) = ((n & u8"16" ) ≠ u8"16" ) ∧
+                  result(5) = ((n & u8"32" ) ≠ u8"32" ) ∧
+                  result(6) = ((n & u8"64" ) ≠ u8"64" ) ∧
+                  result(7) = ((n & u8"128") ≠ u8"128")   }"""
 
   @native
-  @pure def fromU16[I](n: U16, @pure toI: U16 => I): IS[I, B] =
-    c"""{ ensures result.size = toI(u16"16")
-                  ∀i: (u16"0" .. u16"15")
-                    result(toI(i)) = U16.toB(n & (u16"1" << (u16"15" - i))) }"""
+  @pure def fromU16[I](n: U16): IS[I, B] =
+    c"""{ ensures result.size = 16
+                  result(0 ) = ((n & u16"1"    ) ≠ u16"1"    ) ∧
+                  result(1 ) = ((n & u16"2"    ) ≠ u16"2"    ) ∧
+                  result(2 ) = ((n & u16"4"    ) ≠ u16"4"    ) ∧
+                  result(3 ) = ((n & u16"8"    ) ≠ u16"8"    ) ∧
+                  result(4 ) = ((n & u16"16"   ) ≠ u16"16"   ) ∧
+                  result(5 ) = ((n & u16"32"   ) ≠ u16"32"   ) ∧
+                  result(6 ) = ((n & u16"64"   ) ≠ u16"64"   ) ∧
+                  result(7 ) = ((n & u16"128"  ) ≠ u16"128"  ) ∧
+                  result(8 ) = ((n & u16"256"  ) ≠ u16"256"  ) ∧
+                  result(9 ) = ((n & u16"512"  ) ≠ u16"512"  ) ∧
+                  result(10) = ((n & u16"1024" ) ≠ u16"1024" ) ∧
+                  result(11) = ((n & u16"2048" ) ≠ u16"2048" ) ∧
+                  result(12) = ((n & u16"4096" ) ≠ u16"4096" ) ∧
+                  result(13) = ((n & u16"8192" ) ≠ u16"8192" ) ∧
+                  result(14) = ((n & u16"16384") ≠ u16"16384") ∧
+                  result(15) = ((n & u16"32768") ≠ u16"32768")   }"""
 
   @native
-  @pure def fromU32[I](n: U32, @pure toI: U32 => I): IS[I, B] =
-    c"""{ ensures result.size = toI(u32"32")
-                  ∀i: (u32"0" .. u32"31")
-                    result(toI(i)) = U32.toB(n & (u32"1" << (u32"31" - i))) }"""
+  @pure def fromU32[I](n: U32): IS[I, B] =
+    c"""{ ensures result.size = 32
+                  result(0 ) = ((n & u32"1"         ) ≠ u32"1"         ) ∧
+                  result(1 ) = ((n & u32"2"         ) ≠ u32"2"         ) ∧
+                  result(2 ) = ((n & u32"4"         ) ≠ u32"4"         ) ∧
+                  result(3 ) = ((n & u32"8"         ) ≠ u32"8"         ) ∧
+                  result(4 ) = ((n & u32"16"        ) ≠ u32"16"        ) ∧
+                  result(5 ) = ((n & u32"32"        ) ≠ u32"32"        ) ∧
+                  result(6 ) = ((n & u32"64"        ) ≠ u32"64"        ) ∧
+                  result(7 ) = ((n & u32"128"       ) ≠ u32"128"       ) ∧
+                  result(8 ) = ((n & u32"256"       ) ≠ u32"256"       ) ∧
+                  result(9 ) = ((n & u32"512"       ) ≠ u32"512"       ) ∧
+                  result(10) = ((n & u32"1024"      ) ≠ u32"1024"      ) ∧
+                  result(11) = ((n & u32"2048"      ) ≠ u32"2048"      ) ∧
+                  result(12) = ((n & u32"4096"      ) ≠ u32"4096"      ) ∧
+                  result(13) = ((n & u32"8192"      ) ≠ u32"8192"      ) ∧
+                  result(14) = ((n & u32"16384"     ) ≠ u32"16384"     ) ∧
+                  result(15) = ((n & u32"32768"     ) ≠ u32"32768"     ) ∧
+                  result(16) = ((n & u32"65536"     ) ≠ u32"65536"     ) ∧
+                  result(17) = ((n & u32"131072"    ) ≠ u32"131072"    ) ∧
+                  result(18) = ((n & u32"262144"    ) ≠ u32"262144"    ) ∧
+                  result(19) = ((n & u32"524288"    ) ≠ u32"524288"    ) ∧
+                  result(20) = ((n & u32"1048576"   ) ≠ u32"1048576"   ) ∧
+                  result(21) = ((n & u32"2097152"   ) ≠ u32"2097152"   ) ∧
+                  result(22) = ((n & u32"4194304"   ) ≠ u32"4194304"   ) ∧
+                  result(23) = ((n & u32"8388608"   ) ≠ u32"8388608"   ) ∧
+                  result(24) = ((n & u32"16777216"  ) ≠ u32"16777216"  ) ∧
+                  result(25) = ((n & u32"33554432"  ) ≠ u32"33554432"  ) ∧
+                  result(26) = ((n & u32"67108864"  ) ≠ u32"67108864"  ) ∧
+                  result(27) = ((n & u32"134217728" ) ≠ u32"134217728" ) ∧
+                  result(28) = ((n & u32"268435456" ) ≠ u32"268435456" ) ∧
+                  result(29) = ((n & u32"536870912" ) ≠ u32"536870912" ) ∧
+                  result(30) = ((n & u32"1073741824") ≠ u32"1073741824") ∧
+                  result(31) = ((n & u32"2147483648") ≠ u32"2147483648")   }"""
 
   @native
-  @pure def fromU64[I](n: U64, @pure toI: U64 => I): IS[I, B] =
-    c"""{ ensures result.size = toI(u64"64")
-                  ∀i: (u64"0" .. u64"63")
-                    result(toI(i)) = U64.toB(n & (u64"1" << (u64"63" - i))) }"""
+  @pure def fromU64[I](n: U64): IS[I, B] =
+    c"""{ ensures result.size = 64
+                  result(0 ) = ((n & u64"1"                  ) ≠ u64"1"                  ) ∧
+                  result(1 ) = ((n & u64"2"                  ) ≠ u64"2"                  ) ∧
+                  result(2 ) = ((n & u64"4"                  ) ≠ u64"4"                  ) ∧
+                  result(3 ) = ((n & u64"8"                  ) ≠ u64"8"                  ) ∧
+                  result(4 ) = ((n & u64"16"                 ) ≠ u64"16"                 ) ∧
+                  result(5 ) = ((n & u64"32"                 ) ≠ u64"32"                 ) ∧
+                  result(6 ) = ((n & u64"64"                 ) ≠ u64"64"                 ) ∧
+                  result(7 ) = ((n & u64"128"                ) ≠ u64"128"                ) ∧
+                  result(8 ) = ((n & u64"256"                ) ≠ u64"256"                ) ∧
+                  result(9 ) = ((n & u64"512"                ) ≠ u64"512"                ) ∧
+                  result(10) = ((n & u64"1024"               ) ≠ u64"1024"               ) ∧
+                  result(11) = ((n & u64"2048"               ) ≠ u64"2048"               ) ∧
+                  result(12) = ((n & u64"4096"               ) ≠ u64"4096"               ) ∧
+                  result(13) = ((n & u64"8192"               ) ≠ u64"8192"               ) ∧
+                  result(14) = ((n & u64"16384"              ) ≠ u64"16384"              ) ∧
+                  result(15) = ((n & u64"32768"              ) ≠ u64"32768"              ) ∧
+                  result(16) = ((n & u64"65536"              ) ≠ u64"65536"              ) ∧
+                  result(17) = ((n & u64"131072"             ) ≠ u64"131072"             ) ∧
+                  result(18) = ((n & u64"262144"             ) ≠ u64"262144"             ) ∧
+                  result(19) = ((n & u64"524288"             ) ≠ u64"524288"             ) ∧
+                  result(20) = ((n & u64"1048576"            ) ≠ u64"1048576"            ) ∧
+                  result(21) = ((n & u64"2097152"            ) ≠ u64"2097152"            ) ∧
+                  result(22) = ((n & u64"4194304"            ) ≠ u64"4194304"            ) ∧
+                  result(23) = ((n & u64"8388608"            ) ≠ u64"8388608"            ) ∧
+                  result(24) = ((n & u64"16777216"           ) ≠ u64"16777216"           ) ∧
+                  result(25) = ((n & u64"33554432"           ) ≠ u64"33554432"           ) ∧
+                  result(26) = ((n & u64"67108864"           ) ≠ u64"67108864"           ) ∧
+                  result(27) = ((n & u64"134217728"          ) ≠ u64"134217728"          ) ∧
+                  result(28) = ((n & u64"268435456"          ) ≠ u64"268435456"          ) ∧
+                  result(29) = ((n & u64"536870912"          ) ≠ u64"536870912"          ) ∧
+                  result(30) = ((n & u64"1073741824"         ) ≠ u64"1073741824"         ) ∧
+                  result(31) = ((n & u64"2147483648"         ) ≠ u64"2147483648"         ) ∧
+                  result(32) = ((n & u64"4294967296"         ) ≠ u64"4294967296"         ) ∧
+                  result(33) = ((n & u64"8589934592"         ) ≠ u64"8589934592"         ) ∧
+                  result(34) = ((n & u64"17179869184"        ) ≠ u64"17179869184"        ) ∧
+                  result(35) = ((n & u64"34359738368"        ) ≠ u64"34359738368"        ) ∧
+                  result(36) = ((n & u64"68719476736"        ) ≠ u64"68719476736"        ) ∧
+                  result(37) = ((n & u64"137438953472"       ) ≠ u64"137438953472"       ) ∧
+                  result(38) = ((n & u64"274877906944"       ) ≠ u64"274877906944"       ) ∧
+                  result(39) = ((n & u64"549755813888"       ) ≠ u64"549755813888"       ) ∧
+                  result(40) = ((n & u64"1099511627776"      ) ≠ u64"1099511627776"      ) ∧
+                  result(41) = ((n & u64"2199023255552"      ) ≠ u64"2199023255552"      ) ∧
+                  result(42) = ((n & u64"4398046511104"      ) ≠ u64"4398046511104"      ) ∧
+                  result(43) = ((n & u64"8796093022208"      ) ≠ u64"8796093022208"      ) ∧
+                  result(44) = ((n & u64"17592186044416"     ) ≠ u64"17592186044416"     ) ∧
+                  result(45) = ((n & u64"35184372088832"     ) ≠ u64"35184372088832"     ) ∧
+                  result(46) = ((n & u64"70368744177664"     ) ≠ u64"70368744177664"     ) ∧
+                  result(47) = ((n & u64"140737488355328"    ) ≠ u64"140737488355328"    ) ∧
+                  result(48) = ((n & u64"281474976710656"    ) ≠ u64"281474976710656"    ) ∧
+                  result(49) = ((n & u64"562949953421312"    ) ≠ u64"562949953421312"    ) ∧
+                  result(50) = ((n & u64"1125899906842624"   ) ≠ u64"1125899906842624"   ) ∧
+                  result(51) = ((n & u64"2251799813685248"   ) ≠ u64"2251799813685248"   ) ∧
+                  result(52) = ((n & u64"4503599627370496"   ) ≠ u64"4503599627370496"   ) ∧
+                  result(53) = ((n & u64"9007199254740992"   ) ≠ u64"9007199254740992"   ) ∧
+                  result(54) = ((n & u64"18014398509481984"  ) ≠ u64"18014398509481984"  ) ∧
+                  result(55) = ((n & u64"36028797018963968"  ) ≠ u64"36028797018963968"  ) ∧
+                  result(56) = ((n & u64"72057594037927936"  ) ≠ u64"72057594037927936"  ) ∧
+                  result(57) = ((n & u64"144115188075855872" ) ≠ u64"144115188075855872" ) ∧
+                  result(58) = ((n & u64"288230376151711744" ) ≠ u64"288230376151711744" ) ∧
+                  result(59) = ((n & u64"576460752303423488" ) ≠ u64"576460752303423488" ) ∧
+                  result(60) = ((n & u64"1152921504606846976") ≠ u64"1152921504606846976") ∧
+                  result(61) = ((n & u64"2305843009213693952") ≠ u64"2305843009213693952") ∧
+                  result(62) = ((n & u64"4611686018427387904") ≠ u64"4611686018427387904") ∧
+                  result(63) = ((n & u64"9223372036854775808") ≠ u64"9223372036854775808")   }"""
 
   @native
-  @pure def toU8[I](s: IS[I, B], @pure toI: U8 => I): U8 =
-    c"""{ requires s.size = toI(u8"8")
-          ensures  ∀i: (u8"0" .. u8"7")
-                     s(toI(i)) = U8.toB(result & (u8"1" << (u8"7" - i))) }"""
+  @pure def toU8[I](s: IS[I, B]): U8 =
+    c"""{ requires s.size = 8
+          ensures  fromU8(result) = s }"""
 
   @native
-  @pure def toU16[I](s: IS[I, B], @pure toI: U16 => I): U16 =
-    c"""{ requires s.size = toI(u16"16")
-          ensures  ∀i: (u16"0" .. u16"15")
-                     s(toI(i)) = U16.toB(result & (u16"1" << (u16"15" - i))) }"""
+  @pure def toU16[I](s: IS[I, B]): U16 =
+    c"""{ requires s.size = 16
+          ensures  fromU16(result) = s }"""
 
   @native
-  @pure def toU32[I](s: IS[I, B], @pure toI: U32 => I): U32 =
-    c"""{ requires s.size = toI(u32"32")
-          ensures  ∀i: (u32"0" .. u32"31")
-                     s(toI(i)) = U32.toB(result & (u32"1" << (u32"31" - i))) }"""
+  @pure def toU32[I](s: IS[I, B]): U32 =
+    c"""{ requires s.size = 32
+          ensures  fromU32(result) = s }"""
 
   @native
-  @pure def toU64[I](s: IS[I, B], @pure toI: U64 => I): U64 =
-    c"""{ requires s.size = toI(u64"64")
-          ensures  ∀i: (u64"0" .. u64"63")
-                     s(toI(i)) = U64.toB(result & (u64"1" << (u64"63" - i))) }"""
+  @pure def toU64[I](s: IS[I, B]): U64 =
+    c"""{ requires s.size = 64
+          ensures  fromU64(result) = s }"""
 }
 
 object SM {
@@ -2692,7 +2800,7 @@ object SM {
           = f(foldLeftSpec(s, f, init, i - 1), s(i)),  if 0 < i ∧ i < s.size  (rec)  }"""
 
   @native
-  @pure def foldLeft[I, E, R](s: MS[I, E], @pure f: (R, E), init: R): R =
+  @pure def foldLeft[I, E, R](s: MS[I, E], @pure f: (R, E) => R, init: R): R =
     c"""{ ensures result = foldLeftSpec(s, f, init, s.size - 1) }"""
 
   c"""{ fact
@@ -2701,16 +2809,16 @@ object SM {
           = f(foldRightSpec(s, f, init, i - 1), s(s.size - i - 1)),  if 1 < i ∧ i ≤ s.size  (rec)  }"""
 
   @native
-  @pure def foldRight[I, E, R](s: MS[I, E], @pure f: (R, E), init: R): R =
+  @pure def foldRight[I, E, R](s: MS[I, E], @pure f: (R, E) => R, init: R): R =
     c"""{ ensures result = foldRightSpec(s, f, init, s.size - 1) }"""
 
   @native
-  @pure def map[I, E1, E2](s: MS[I, E2], @pure f: E1 => E2): MS[I, E2] =
+  @pure def map[I, E1, E2](s: MS[I, E1], @pure f: E1 => E2): MS[I, E2] =
     c"""{ ensures result.size = s.size
                   ∀i: (0 ..< result.size)  result(i) = f(s(i)) }"""
 
   @native
-  def transform[I, E1, E2](s: MS[I, E2], @pure f: E1 => E2): Unit =
+  def transform[I, E](s: MS[I, E], @pure f: E => E): Unit =
     c"""{ modifies s
           ensures  s.size = s_in.size
                    ∀i: (0 ..< s.size)  s(i) = f(s_in(i)) }"""
@@ -2722,50 +2830,158 @@ object SM {
                    ∀i: (0 ..< result.size)  result(i) = s(i) }"""
 
   @native
-  @pure def fromU8[I](n: U8, @pure toI: U8 => I): MS[I, B] =
-    c"""{ ensures result.size = toI(u8"8")
-                  ∀i: (u8"0" .. u8"7")
-                    result(toI(i)) = U8.toB(n & (u8"1" << (u8"7" - i))) }"""
+  @pure def fromU8[I](n: U8): MS[I, B] =
+    c"""{ ensures result.size = 8
+                  result(0) = ((n & u8"1"  ) ≠ u8"1"  ) ∧
+                  result(1) = ((n & u8"2"  ) ≠ u8"2"  ) ∧
+                  result(2) = ((n & u8"4"  ) ≠ u8"4"  ) ∧
+                  result(3) = ((n & u8"8"  ) ≠ u8"8"  ) ∧
+                  result(4) = ((n & u8"16" ) ≠ u8"16" ) ∧
+                  result(5) = ((n & u8"32" ) ≠ u8"32" ) ∧
+                  result(6) = ((n & u8"64" ) ≠ u8"64" ) ∧
+                  result(7) = ((n & u8"128") ≠ u8"128")   }"""
 
   @native
-  @pure def fromU16[I](n: U16, @pure toI: U16 => I): MS[I, B] =
-    c"""{ ensures result.size = toI(u16"16")
-                  ∀i: (u16"0" .. u16"15")
-                    result(toI(i)) = U16.toB(n & (u16"1" << (u16"15" - i))) }"""
+  @pure def fromU16[I](n: U16): MS[I, B] =
+    c"""{ ensures result.size = 16
+                  result(0 ) = ((n & u16"1"    ) ≠ u16"1"    ) ∧
+                  result(1 ) = ((n & u16"2"    ) ≠ u16"2"    ) ∧
+                  result(2 ) = ((n & u16"4"    ) ≠ u16"4"    ) ∧
+                  result(3 ) = ((n & u16"8"    ) ≠ u16"8"    ) ∧
+                  result(4 ) = ((n & u16"16"   ) ≠ u16"16"   ) ∧
+                  result(5 ) = ((n & u16"32"   ) ≠ u16"32"   ) ∧
+                  result(6 ) = ((n & u16"64"   ) ≠ u16"64"   ) ∧
+                  result(7 ) = ((n & u16"128"  ) ≠ u16"128"  ) ∧
+                  result(8 ) = ((n & u16"256"  ) ≠ u16"256"  ) ∧
+                  result(9 ) = ((n & u16"512"  ) ≠ u16"512"  ) ∧
+                  result(10) = ((n & u16"1024" ) ≠ u16"1024" ) ∧
+                  result(11) = ((n & u16"2048" ) ≠ u16"2048" ) ∧
+                  result(12) = ((n & u16"4096" ) ≠ u16"4096" ) ∧
+                  result(13) = ((n & u16"8192" ) ≠ u16"8192" ) ∧
+                  result(14) = ((n & u16"16384") ≠ u16"16384") ∧
+                  result(15) = ((n & u16"32768") ≠ u16"32768")   }"""
 
   @native
-  @pure def fromU32[I](n: U32, @pure toI: U32 => I): MS[I, B] =
-    c"""{ ensures result.size = toI(u32"32")
-                  ∀i: (u32"0" .. u32"31")
-                    result(toI(i)) = U32.toB(n & (u32"1" << (u32"31" - i))) }"""
+  @pure def fromU32[I](n: U32): MS[I, B] =
+    c"""{ ensures result.size = 32
+                  result(0 ) = ((n & u32"1"         ) ≠ u32"1"         ) ∧
+                  result(1 ) = ((n & u32"2"         ) ≠ u32"2"         ) ∧
+                  result(2 ) = ((n & u32"4"         ) ≠ u32"4"         ) ∧
+                  result(3 ) = ((n & u32"8"         ) ≠ u32"8"         ) ∧
+                  result(4 ) = ((n & u32"16"        ) ≠ u32"16"        ) ∧
+                  result(5 ) = ((n & u32"32"        ) ≠ u32"32"        ) ∧
+                  result(6 ) = ((n & u32"64"        ) ≠ u32"64"        ) ∧
+                  result(7 ) = ((n & u32"128"       ) ≠ u32"128"       ) ∧
+                  result(8 ) = ((n & u32"256"       ) ≠ u32"256"       ) ∧
+                  result(9 ) = ((n & u32"512"       ) ≠ u32"512"       ) ∧
+                  result(10) = ((n & u32"1024"      ) ≠ u32"1024"      ) ∧
+                  result(11) = ((n & u32"2048"      ) ≠ u32"2048"      ) ∧
+                  result(12) = ((n & u32"4096"      ) ≠ u32"4096"      ) ∧
+                  result(13) = ((n & u32"8192"      ) ≠ u32"8192"      ) ∧
+                  result(14) = ((n & u32"16384"     ) ≠ u32"16384"     ) ∧
+                  result(15) = ((n & u32"32768"     ) ≠ u32"32768"     ) ∧
+                  result(16) = ((n & u32"65536"     ) ≠ u32"65536"     ) ∧
+                  result(17) = ((n & u32"131072"    ) ≠ u32"131072"    ) ∧
+                  result(18) = ((n & u32"262144"    ) ≠ u32"262144"    ) ∧
+                  result(19) = ((n & u32"524288"    ) ≠ u32"524288"    ) ∧
+                  result(20) = ((n & u32"1048576"   ) ≠ u32"1048576"   ) ∧
+                  result(21) = ((n & u32"2097152"   ) ≠ u32"2097152"   ) ∧
+                  result(22) = ((n & u32"4194304"   ) ≠ u32"4194304"   ) ∧
+                  result(23) = ((n & u32"8388608"   ) ≠ u32"8388608"   ) ∧
+                  result(24) = ((n & u32"16777216"  ) ≠ u32"16777216"  ) ∧
+                  result(25) = ((n & u32"33554432"  ) ≠ u32"33554432"  ) ∧
+                  result(26) = ((n & u32"67108864"  ) ≠ u32"67108864"  ) ∧
+                  result(27) = ((n & u32"134217728" ) ≠ u32"134217728" ) ∧
+                  result(28) = ((n & u32"268435456" ) ≠ u32"268435456" ) ∧
+                  result(29) = ((n & u32"536870912" ) ≠ u32"536870912" ) ∧
+                  result(30) = ((n & u32"1073741824") ≠ u32"1073741824") ∧
+                  result(31) = ((n & u32"2147483648") ≠ u32"2147483648")   }"""
 
   @native
-  @pure def fromU64[I](n: U64, @pure toI: U64 => I): MS[I, B] =
-    c"""{ ensures result.size = toI(u64"64")
-                  ∀i: (u64"0" .. u64"63")
-                    result(toI(i)) = U64.toB(n & (u64"1" << (u64"63" - i))) }"""
+  @pure def fromU64[I](n: U64): MS[I, B] =
+    c"""{ ensures result.size = 64
+                  result(0 ) = ((n & u64"1"                  ) ≠ u64"1"                  ) ∧
+                  result(1 ) = ((n & u64"2"                  ) ≠ u64"2"                  ) ∧
+                  result(2 ) = ((n & u64"4"                  ) ≠ u64"4"                  ) ∧
+                  result(3 ) = ((n & u64"8"                  ) ≠ u64"8"                  ) ∧
+                  result(4 ) = ((n & u64"16"                 ) ≠ u64"16"                 ) ∧
+                  result(5 ) = ((n & u64"32"                 ) ≠ u64"32"                 ) ∧
+                  result(6 ) = ((n & u64"64"                 ) ≠ u64"64"                 ) ∧
+                  result(7 ) = ((n & u64"128"                ) ≠ u64"128"                ) ∧
+                  result(8 ) = ((n & u64"256"                ) ≠ u64"256"                ) ∧
+                  result(9 ) = ((n & u64"512"                ) ≠ u64"512"                ) ∧
+                  result(10) = ((n & u64"1024"               ) ≠ u64"1024"               ) ∧
+                  result(11) = ((n & u64"2048"               ) ≠ u64"2048"               ) ∧
+                  result(12) = ((n & u64"4096"               ) ≠ u64"4096"               ) ∧
+                  result(13) = ((n & u64"8192"               ) ≠ u64"8192"               ) ∧
+                  result(14) = ((n & u64"16384"              ) ≠ u64"16384"              ) ∧
+                  result(15) = ((n & u64"32768"              ) ≠ u64"32768"              ) ∧
+                  result(16) = ((n & u64"65536"              ) ≠ u64"65536"              ) ∧
+                  result(17) = ((n & u64"131072"             ) ≠ u64"131072"             ) ∧
+                  result(18) = ((n & u64"262144"             ) ≠ u64"262144"             ) ∧
+                  result(19) = ((n & u64"524288"             ) ≠ u64"524288"             ) ∧
+                  result(20) = ((n & u64"1048576"            ) ≠ u64"1048576"            ) ∧
+                  result(21) = ((n & u64"2097152"            ) ≠ u64"2097152"            ) ∧
+                  result(22) = ((n & u64"4194304"            ) ≠ u64"4194304"            ) ∧
+                  result(23) = ((n & u64"8388608"            ) ≠ u64"8388608"            ) ∧
+                  result(24) = ((n & u64"16777216"           ) ≠ u64"16777216"           ) ∧
+                  result(25) = ((n & u64"33554432"           ) ≠ u64"33554432"           ) ∧
+                  result(26) = ((n & u64"67108864"           ) ≠ u64"67108864"           ) ∧
+                  result(27) = ((n & u64"134217728"          ) ≠ u64"134217728"          ) ∧
+                  result(28) = ((n & u64"268435456"          ) ≠ u64"268435456"          ) ∧
+                  result(29) = ((n & u64"536870912"          ) ≠ u64"536870912"          ) ∧
+                  result(30) = ((n & u64"1073741824"         ) ≠ u64"1073741824"         ) ∧
+                  result(31) = ((n & u64"2147483648"         ) ≠ u64"2147483648"         ) ∧
+                  result(32) = ((n & u64"4294967296"         ) ≠ u64"4294967296"         ) ∧
+                  result(33) = ((n & u64"8589934592"         ) ≠ u64"8589934592"         ) ∧
+                  result(34) = ((n & u64"17179869184"        ) ≠ u64"17179869184"        ) ∧
+                  result(35) = ((n & u64"34359738368"        ) ≠ u64"34359738368"        ) ∧
+                  result(36) = ((n & u64"68719476736"        ) ≠ u64"68719476736"        ) ∧
+                  result(37) = ((n & u64"137438953472"       ) ≠ u64"137438953472"       ) ∧
+                  result(38) = ((n & u64"274877906944"       ) ≠ u64"274877906944"       ) ∧
+                  result(39) = ((n & u64"549755813888"       ) ≠ u64"549755813888"       ) ∧
+                  result(40) = ((n & u64"1099511627776"      ) ≠ u64"1099511627776"      ) ∧
+                  result(41) = ((n & u64"2199023255552"      ) ≠ u64"2199023255552"      ) ∧
+                  result(42) = ((n & u64"4398046511104"      ) ≠ u64"4398046511104"      ) ∧
+                  result(43) = ((n & u64"8796093022208"      ) ≠ u64"8796093022208"      ) ∧
+                  result(44) = ((n & u64"17592186044416"     ) ≠ u64"17592186044416"     ) ∧
+                  result(45) = ((n & u64"35184372088832"     ) ≠ u64"35184372088832"     ) ∧
+                  result(46) = ((n & u64"70368744177664"     ) ≠ u64"70368744177664"     ) ∧
+                  result(47) = ((n & u64"140737488355328"    ) ≠ u64"140737488355328"    ) ∧
+                  result(48) = ((n & u64"281474976710656"    ) ≠ u64"281474976710656"    ) ∧
+                  result(49) = ((n & u64"562949953421312"    ) ≠ u64"562949953421312"    ) ∧
+                  result(50) = ((n & u64"1125899906842624"   ) ≠ u64"1125899906842624"   ) ∧
+                  result(51) = ((n & u64"2251799813685248"   ) ≠ u64"2251799813685248"   ) ∧
+                  result(52) = ((n & u64"4503599627370496"   ) ≠ u64"4503599627370496"   ) ∧
+                  result(53) = ((n & u64"9007199254740992"   ) ≠ u64"9007199254740992"   ) ∧
+                  result(54) = ((n & u64"18014398509481984"  ) ≠ u64"18014398509481984"  ) ∧
+                  result(55) = ((n & u64"36028797018963968"  ) ≠ u64"36028797018963968"  ) ∧
+                  result(56) = ((n & u64"72057594037927936"  ) ≠ u64"72057594037927936"  ) ∧
+                  result(57) = ((n & u64"144115188075855872" ) ≠ u64"144115188075855872" ) ∧
+                  result(58) = ((n & u64"288230376151711744" ) ≠ u64"288230376151711744" ) ∧
+                  result(59) = ((n & u64"576460752303423488" ) ≠ u64"576460752303423488" ) ∧
+                  result(60) = ((n & u64"1152921504606846976") ≠ u64"1152921504606846976") ∧
+                  result(61) = ((n & u64"2305843009213693952") ≠ u64"2305843009213693952") ∧
+                  result(62) = ((n & u64"4611686018427387904") ≠ u64"4611686018427387904") ∧
+                  result(63) = ((n & u64"9223372036854775808") ≠ u64"9223372036854775808")   }"""
 
   @native
-  @pure def toU8[I](s: MS[I, B], @pure toI: U8 => I): U8 =
-    c"""{ requires s.size = toI(u8"8")
-          ensures  ∀i: (u8"0" .. u8"7")
-                     s(toI(i)) = U8.toB(result & (u8"1" << (u8"7" - i))) }"""
+  @pure def toU8[I](s: MS[I, B]): U8 =
+    c"""{ requires s.size = 8
+          ensures  fromU8(result) = s }"""
 
   @native
-  @pure def toU16[I](s: MS[I, B], @pure toI: U16 => I): U16 =
-    c"""{ requires s.size = toI(u16"16")
-          ensures  ∀i: (u16"0" .. u16"15")
-                     s(toI(i)) = U16.toB(result & (u16"1" << (u16"15" - i))) }"""
+  @pure def toU16[I](s: MS[I, B]): U16 =
+    c"""{ requires s.size = 16
+          ensures  fromU16(result) = s }"""
 
   @native
-  @pure def toU32[I](s: MS[I, B], @pure toI: U32 => I): U32 =
-    c"""{ requires s.size = toI(u32"32")
-          ensures  ∀i: (u32"0" .. u32"31")
-                     s(toI(i)) = U32.toB(result & (u32"1" << (u32"31" - i))) }"""
+  @pure def toU32[I](s: MS[I, B]): U32 =
+    c"""{ requires s.size = 32
+          ensures  fromU32(result) = s }"""
 
   @native
-  @pure def toU64[I](s: MS[I, B], @pure toI: U64 => I): U64 =
-    c"""{ requires s.size = toI(u64"64")
-          ensures  ∀i: (u64"0" .. u64"63")
-                     s(toI(i)) = U64.toB(result & (u64"1" << (u64"63" - i))) }"""
+  @pure def toU64[I](s: MS[I, B]): U64 =
+    c"""{ requires s.size = 64
+          ensures  fromU64(result) = s }"""
 }

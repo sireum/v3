@@ -28,7 +28,7 @@ package org.sireum.logika.eval
 import org.sireum.logika._
 import org.sireum.logika.ast._
 import org.sireum.logika.collection.{_S, _MS}
-import org.sireum.logika.math.{LogikaIntegralNumber, _Z, _ZT, _NT, _ST, _UT, _FT, _F32, _F64, _R}
+import org.sireum.logika.math.{_LogikaIntegralNumber, _Z, _ZT, _NT, _ST, _UT, _FT, _F32, _F64, _R}
 import org.sireum.util._
 
 object Eval {
@@ -76,9 +76,9 @@ object Eval {
     for (ms <- evalExp(store)(id);
          i <- evalExp(store)(index);
          v <- evalExp(store)(e)) yield ((ms, i, v): @unchecked) match {
-      case (ms: MS[_, _], i: LogikaIntegralNumber, v: Value) =>
-        val ms2 = ms.clone.asInstanceOf[MS[LogikaIntegralNumber, Value]]
-        ms2(i) = v
+      case (ms: MS[_, _], i: _LogikaIntegralNumber, v: Value) =>
+        val ms2 = ms.clone.asInstanceOf[MS[_LogikaIntegralNumber, Value]]
+        ms2(i.toZ) = v
         (store + (id.value -> ms2), ms2, v)
     }
 
@@ -153,7 +153,7 @@ private final class Eval(store: Store) {
       case Apply(id, Seq(arg)) =>
         try for (ms <- eval(id);
                  i <- eval(arg)) yield (ms, i) match {
-          case (s: _S[_, _], i: LogikaIntegralNumber) => s.asInstanceOf[_S[LogikaIntegralNumber, Value]](i)
+          case (s: _S[_, _], i: _LogikaIntegralNumber) => s.asInstanceOf[_S[_LogikaIntegralNumber, Value]](i.toZ)
           case _ => None
         }
         catch {
@@ -510,12 +510,12 @@ private final class Eval(store: Store) {
       case e: Append =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: _S[_, _], v2: Value) => v1.asInstanceOf[_S[LogikaIntegralNumber, Value]] :+ v2
+          case (v1: _S[_, _], v2: Value) => v1.asInstanceOf[_S[_LogikaIntegralNumber, Value]] :+ v2
         }
       case e: Prepend =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v2, v1): @unchecked) match {
-          case (v2: _S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[_S[LogikaIntegralNumber, Value]]
+          case (v2: _S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[_S[_LogikaIntegralNumber, Value]]
         }
       case e: And =>
         for (v1 <- eval(e.left);

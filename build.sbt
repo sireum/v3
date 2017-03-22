@@ -237,12 +237,13 @@ lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
+  unmanagedSourceDirectories in Compile += (baseDirectory in logikaXT._2).value / "src" / "main" / "resources" / "prelude",
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaXT._2.base / "c-runtime" / "include",
     logikaXT._2.base / "c-runtime" / "src",
     logikaXT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaRuntime)
+).dependsOn(logikaRuntime % "test->test;compile->compile")
 lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
