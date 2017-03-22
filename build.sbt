@@ -127,7 +127,7 @@ lazy val sireumJs =
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  logikaRuntime, logikaJvm, logikaXJvm, java, cli, awas
+  logikaRuntime, logikaPrelude, logikaJvm, logikaXJvm, java, cli, awas
 )
 
 lazy val subProjectsJs = Seq(
@@ -237,25 +237,29 @@ lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
-  unmanagedSourceDirectories in Compile += (baseDirectory in logikaXT._2).value / "src" / "main" / "resources" / "prelude",
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaXT._2.base / "c-runtime" / "include",
     logikaXT._2.base / "c-runtime" / "src",
     logikaXT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaRuntime % "test->test;compile->compile")
+).dependsOn(logikaPrelude % "test->test;compile->compile")
 lazy val logikaXJs = logikaXT._3
 
 // Jvm Projects
 
-lazy val logikaRuntimePI = new ProjectInfo("logika-runtime", isCross = false)
+lazy val logikaRuntimePI = new ProjectInfo("logika-runtime/runtime", isCross = false)
 lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.apfloat" % "apfloat" % "1.8.2",
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "org.spire-math" %% "spire" % "0.13.0",
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-  ),
+    "org.spire-math" %% "spire" % "0.13.0"),
+  addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)))
+
+lazy val logikaPreludePI = new ProjectInfo("logika-runtime/prelude", isCross = false, logikaRuntimePI)
+lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
+  unmanagedResourceDirectories in Compile += file("logika-runtime/prelude/jvm/src/main/scala"),
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)

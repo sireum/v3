@@ -18,8 +18,10 @@
             <option value="$PROJECT_DIR$/js/project" />
             <option value="$PROJECT_DIR$/jvm" />
             <option value="$PROJECT_DIR$/jvm/project" />
-            <option value="$PROJECT_DIR$/logika-runtime/jvm" />
-            <option value="$PROJECT_DIR$/logika-runtime/jvm/project" />
+            <option value="$PROJECT_DIR$/logika-runtime/prelude/jvm" />
+            <option value="$PROJECT_DIR$/logika-runtime/prelude/jvm/project" />
+            <option value="$PROJECT_DIR$/logika-runtime/runtime/jvm" />
+            <option value="$PROJECT_DIR$/logika-runtime/runtime/jvm/project" />
             <option value="$PROJECT_DIR$/logika/js" />
             <option value="$PROJECT_DIR$/logika/js/project" />
             <option value="$PROJECT_DIR$/logika/jvm" />

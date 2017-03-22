@@ -9,6 +9,8 @@
       <module name="logika-js" target="1.8" />
       <module name="logika-jvm" target="1.8" />
       <module name="logika-runtime" target="1.8" />
+      <module name="logika-runtime-prelude" target="1.8" />
+      <module name="logika-runtime-runtime" target="1.8" />
       <module name="logikax" target="1.8" />
       <module name="logikax-js" target="1.8" />
       <module name="logikax-jvm" target="1.8" />

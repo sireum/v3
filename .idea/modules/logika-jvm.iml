@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module external.linked.project.id="logika-jvm" external.linked.project.path="$MODULE_DIR$/../../logika/jvm" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output url="file://$MODULE_DIR$/../../logika/jvm/target/scala-2.12/classes" />
     <output-test url="file://$MODULE_DIR$/../../logika/jvm/target/scala-2.12/test-classes" />
     <exclude-output />
@@ -25,7 +25,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="logika" exported="" />
-    <orderEntry type="module" module-name="logika-runtime" exported="" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm-util:5.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm-tree:5.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.ow2.asm:asm-commons:5.2:jar" level="project" />
@@ -62,5 +61,6 @@
     <orderEntry type="library" name="SBT: org.jgrapht:jgrapht-core:1.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.jgrapht:jgrapht-ext:1.0.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.yaml:snakeyaml:1.18:jar" level="project" />
+    <orderEntry type="module" module-name="logika-runtime-runtime" exported="" />
   </component>
 </module>

@@ -40,7 +40,7 @@
     <profile name="SBT 4" modules="sireum-pilar-test-js">
       <option name="featureWarnings" value="true" />
     </profile>
-    <profile name="SBT 5" modules="logika-runtime,logikax-jvm">
+    <profile name="SBT 5" modules="logika-runtime,logika-runtime-prelude,logika-runtime-runtime,logikax-jvm">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
