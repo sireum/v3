@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.lihaoyi:scalaparse_2.12:0.4.2:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/scalaparse_2.12/scalaparse_2.12-0.4.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/scalaparse_2.12/scalaparse_2.12-0.4.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -235,6 +235,7 @@ lazy val logikaXPI = new ProjectInfo("logika/x", isCross = true, utilPI, testPI)
 lazy val logikaXT = toSbtCrossProject(logikaXPI)
 lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
+  libraryDependencies += "org.scalameta" %% "scalameta" % "1.6.0",
   addCompilerPlugin("org.scalamacros" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
@@ -257,6 +258,7 @@ lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
 
 lazy val logikaPreludePI = new ProjectInfo("logika/runtime/api", isCross = false, logikaRuntimePI)
 lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
+  scalaSource in Test := baseDirectory.value / "test-src",
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
   unmanagedResourceDirectories in Compile += file("logika/runtime/api/jvm/src/main/scala"),

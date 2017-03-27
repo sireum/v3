@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.scalameta:scalameta_2.12:1.6.0:jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/org.scalameta/scalameta_2.12/scalameta_2.12-1.6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/org.scalameta/scalameta_2.12/scalameta_2.12-1.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
