@@ -27,21 +27,86 @@ package org.sireum.x.logika.ast
 
 import org.sireum.logika._
 
-/* @datatype */ case class
-Name(ids: ISZ[String])
+/* @datatype */ trait
+UnitNode
 
 /* @datatype */ case class
-Program(packageName: Name, block: Block)
+Id(value: String)
+
+/* @datatype */ case class
+Name(ids: ISZ[Id])
+
+/* @datatype */ case class
+Program(fileUriOpt: Option[String],
+        packageName: Name,
+        block: Block)
+  extends UnitNode
 
 /* @datatype */ case class
 Block(stmts: ISZ[Stmt])
 
-/* @datatype */ sealed trait Stmt
+/* @datatype */ trait
+Stmt
 
 /* @datatype */ case class
-ObjectStmt(id: String, stmts: ISZ[Stmt])
+ObjectStmt(id: Id, stmts: ISZ[Stmt])
   extends Stmt
 
 /* @datatype */ case class
-ExtMethodsStmt(isPure: B, id: String)
+MethodStmt(isPure: B,
+           sig: MethodSig,
+           contract: MethodContract,
+           block: Block)
   extends Stmt
+
+/* @datatype */ case class
+ExtMethodStmt(isPure: B,
+              sig: MethodSig,
+              contract: MethodContract)
+  extends Stmt
+
+/* @datatype */ case class
+SpecMethodStmt(sig: MethodSig)
+  extends Stmt
+
+/* @datatype */ case class
+MethodSig(id: Id,
+          typeParams: ISZ[TypeParam],
+          params: ISZ[Param],
+          returnType: Type)
+
+/* @datatype */ case class
+Param(id: Id,
+      tpe: Type)
+
+/* @datatype */ trait
+Type
+
+/* @datatype */ case class
+NamedType(name: Name,
+          typeArgs: ISZ[Type])
+  extends Type
+
+/* @datatype */ case class
+FunType(args: ISZ[Type],
+        ret: ISZ[Type])
+  extends Type
+
+/* @datatype */ case class
+TypeParam(id: Id,
+          superType: Option[NamedType])
+
+/* @datatype */ case class
+MethodContract(reads: ISZ[Name],
+               requires: ISZ[Exp],
+               modifies: ISZ[Name],
+               ensures: ISZ[Exp],
+               subs: ISZ[SubMethodContract])
+
+/* @datatype */ case class
+SubMethodContract(isPure: B,
+                  id: Id,
+                  args: ISZ[Id],
+                  contract: MethodContract)
+
+/* @datatype */ trait Exp

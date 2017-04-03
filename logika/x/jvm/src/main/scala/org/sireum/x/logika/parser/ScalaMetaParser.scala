@@ -31,7 +31,9 @@ import org.sireum.util._
 import org.sireum.logika.{Z, IS}
 import scala.meta._
 
+// TODO: remove asInstanceOf hack (due to IntelliJ's macro annotation inference workaround)
 object ScalaMetaParser {
+
   case class Result(program: Option[AST.Program], tags: ISeq[Tag])
 
   def apply(fileUriOpt: Option[FileResourceUri],
@@ -40,7 +42,7 @@ object ScalaMetaParser {
     text.parse[scala.meta.Source] match {
       case Parsed.Success(x) =>
         println("Input: " + x.structure)
-        new ScalaMetaParser(fileUriOpt).parseSource(x)
+        new ScalaMetaParser(fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
         Result(None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
@@ -64,8 +66,6 @@ object ScalaMetaParser {
 
 import ScalaMetaParser._
 
-sealed trait Stmt
-
 class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
 
@@ -74,88 +74,130 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
     tags +:= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
 
-  def notLogika(pos: scala.meta.Position, message: String): Unit =
+  def errorNotLogika(pos: scala.meta.Position, message: String): Unit =
     error(pos, message + "not in the Logika language.")
 
-  import scala.meta._
+  def errorInLogika(pos: scala.meta.Position, message: String): Unit =
+    error(pos, message + "in the Logika language.")
 
-  def parseSource(source: scala.meta.Source): Result = source.stats match {
+  def translateSource(source: scala.meta.Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
+      val name = AST.Name(packageRef2IS(ref))
       Result(
         Some(AST.Program(
-          AST.Name(packageRef2IS(ref)),
-          AST.Block(stats.toVector.flatMap(parseStat)))), tags)
+          fileUriOpt,
+          name,
+          AST.Block(stats.toVector.flatMap(translateStat(isExt = false))))), tags)
     case q"import org.sireum.logika._" :: stats =>
       Result(
         Some(AST.Program(
+          fileUriOpt,
           AST.Name(Vector()),
-          AST.Block(stats.toVector.flatMap(parseStat)))), tags)
+          AST.Block(stats.toVector.flatMap(translateStat(isExt = false))))), tags)
     case stats =>
       if (stats.nonEmpty)
         error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
       Result(None, tags)
   }
 
-  def parseStat(stat: scala.meta.Stat): Option[AST.Stmt] = stat match {
+  def translateStat(isExt: Boolean)(stat: scala.meta.Stat): Option[AST.Stmt] = stat match {
     case q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" =>
       var hasError = false
-      if (mods.nonEmpty) {
-        hasError = true
-        notLogika(mods.head.pos, "Object modifiers are")
+      var hasExt = false
+      mods match {
+        case mod"@ext" :: Nil => hasExt = true
+        case Nil => // skip
+        case _ =>
+          hasError = true
+          errorNotLogika(mods.head.pos, "Object modifiers other than @ext are")
       }
       if (estats.nonEmpty) {
         hasError = true
-        notLogika(mods.head.pos, "Object early initializations are")
+        errorNotLogika(mods.head.pos, "Object early initializations are")
       }
       if (ctorcalls.nonEmpty) {
         hasError = true
-        notLogika(mods.head.pos, "Object super constructor calls are")
+        errorNotLogika(mods.head.pos, "Object super constructor calls are")
       }
       if (!hasError)
-        Some(AST.ObjectStmt(name.value, stats.toVector.flatMap(parseStat)))
+        Some(AST.ObjectStmt(AST.Id(name.value), stats.toVector.flatMap(translateStat(hasExt))))
       else None
-    case q"..$mods def $name[..$tparams]: $tpeopt = $exp" =>
-      mods match {
-        case mod"@ext" :: rest =>
-          var hasError = false
-          exp match {
-            case Term.Name("$") =>
-              ???
-            case exp: Term.Interpolate if exp.prefix.value == "c" =>
-              ???
-            case _ =>
-              hasError = true
-              error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
-              None
-          }
-        case _ => ???
+    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $exp" =>
+      var hasError = false
+      if (paramss.size > 1) {
+        hasError = true
+        errorNotLogika(mods.head.pos, "Methods with multiple parameter tuples are")
       }
-    case q"..$mods def $name[..$tparams](..$params): $tpeopt = $exp" =>
-      mods match {
-        case mod"@native" :: rest =>
-          var hasError = false
-          exp match {
-            case Term.Name("$") =>
-              ???
-            case exp: Term.Interpolate if exp.prefix.value == "c" =>
-              ???
-            case _ =>
-              hasError = true
-              error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
-              None
-          }
+      if (tpeopt.asInstanceOf[Option[scala.meta.Type]].isEmpty) {
+        hasError = true
+        errorInLogika(name.pos, "Methods have to be given explicit return type")
+      }
+      var isPure = false
+      var isSpec = false
+      for (mod <- mods) mod match {
+        case mod"@pure" => isPure = true
+        case mod"@spec" => isSpec = true
         case _ =>
-          ???
+          hasError = true
+          errorInLogika(mod.pos, s"Only method modifiers @pure and @spec are allowed")
       }
-    case _ => None
+      val sig = AST.MethodSig(
+        AST.Id(name.value),
+        tparams.map(translateTypeParam),
+        paramss.headOption.getOrElse(ivectorEmpty).map(translateParam),
+        translateType(tpeopt.asInstanceOf[Option[scala.meta.Type]].get))
+      if (isExt) {
+        exp match {
+          case Term.Name("$") =>
+            Some(AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
+                ivectorEmpty, ivectorEmpty, ivectorEmpty, ivectorEmpty, ivectorEmpty)))
+          case exp: Term.Interpolate if exp.prefix.value == "c" =>
+            ???
+          case _ =>
+            hasError = true
+            error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
+            None
+        }
+      } else if (isSpec) {
+        exp match {
+          case exp: Term.Interpolate if exp.prefix.value == "c" =>
+            ???
+          case _ =>
+            hasError = true
+            error(exp.pos, "Only c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
+            None
+        }
+      } else {
+        ???
+      }
   }
 
-  def packageRef2IS(ref: Term.Ref): IS[Z, String] =
-    vector2is(ref.toString.split(".").toVector)
+  def translateTypeParam(tp: scala.meta.Type.Param): AST.TypeParam = tp match {
+    case tparam"..$mods $tparamname[..$tparams] >: $stpeopt <: $tpeopt <% ..$tpes : ..$tpes2" =>
+      if (mods.nonEmpty || tparams.nonEmpty ||
+        stpeopt.asInstanceOf[Option[scala.meta.Type]].nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
+        errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> <: <type>' are supported")
+      tpeopt.asInstanceOf[Option[scala.meta.Type]] match {
+        case Some(tpe) =>
+          translateType(tpe) match {
+            case t: AST.NamedType => AST.TypeParam(AST.Id(tparamname.value), Some(t))
+            case _ =>
+              errorNotLogika(tpe.pos, s"Type parameter bound '${tpe.syntax}' is")
+              AST.TypeParam(AST.Id(tparamname.value), None)
+          }
+        case _ => AST.TypeParam(AST.Id(tparamname.value), None)
+      }
+  }
+
+  def translateParam(tp: scala.meta.Term.Param): AST.Param = ???
+
+  def translateType(t: scala.meta.Type): AST.Type = ???
+
+  def packageRef2IS(ref: Term.Ref): IS[Z, AST.Id] =
+    seq2is(ref.toString.split(".").map(AST.Id).toVector)
 
   import scala.language.implicitConversions
 
-  implicit def vector2is[T](s: IVector[T]): IS[Z, T] =
+  implicit def seq2is[T](s: CSeq[T]): IS[Z, T] =
     org.sireum.logika.collection._IS[Z, T](s: _*)
-
 }
