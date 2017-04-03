@@ -55,7 +55,10 @@ and it is used for truth table and a different form of sequent
 file
   : truthTable EOF                                      #TruthTableFile
   | NL* sequent NL* proof? NL* EOF                      #SequentFile
-  | program EOF                                         #ProgramFile
+  | NL* proofElements NL* EOF                           #ProofElementsFile
+  | NL* loopInvariant NL* EOF                           #LoopInvariantFile
+  | NL* methodContract NL* EOF                          #MethodContractFile
+  | NL* invariants NL* EOF                              #InvariantsFile
   ;
 
 truthTable
@@ -126,22 +129,6 @@ primFormula
   | INT                                                 #IntLit
   | REAL                                                #RLit
   | FLOAT                                               #FloatLit
-  | t=( 'B'
-      | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
-      | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
-               | 'S8'   | 'S16'  | 'S32'  | 'S64'
-               | 'U8'   | 'U16'  | 'U32'  | 'U64'
-      | 'R'    | 'F32'  | 'F64' )
-      '.' ID                                            #TypeAccess
-      // ID in { "Min", "Max", "random" }
-  | ( t='ZS'
-    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
-    '(' ( formula ( ',' formula )* )? ')'               #Seq
-  | ( t='ZS' '.' id=ID
-    | t=( 'MS' | 'IS' )
-      '.' id=ID '[' i=intType ',' v=type ']' )
-    // id == "create"
-    '(' ( formula ( ',' formula )* )? ')'               #SeqCreate
   ;
 
 formula
@@ -303,12 +290,14 @@ path
   : t=( '..' | '.' | '/' | ID )
   ;
 
+/*
 program: NL* ( impor NL+ stmts )? ;
 
 impor
   : tb='import' org=ID '.' sireum=ID '.' logika=ID '.' te='_'
     // org=="org" && sireum=="sireum" && logika=="logika"
   ;
+*/
 
 proofElements
   : tb='{' NL* facts theorems? te='}' NL*
@@ -351,7 +340,7 @@ with
   ;
 
 withDef
-  : ID ':' type '=' NL? exp
+  : ID ':' type '=' NL? formula
   ;
 
 funDefSimple
@@ -359,6 +348,8 @@ funDefSimple
   ;
 
 param: ID ':' type ;
+
+/*
 
 stmts: stmt? ( NL+ stmt? )* ;
 
@@ -511,6 +502,7 @@ expArgs
   : exp ( ',' exp )*                                    #PositionalExpArgs
   | ID '=' exp ( ',' ID '=' exp )*                      #NamedExpArgs
   ;
+*/
 
 loopInvariant
   : tb='{' NL*
