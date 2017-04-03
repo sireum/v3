@@ -38,7 +38,9 @@ val metaVersion = "1.6.0"
 
 val paradiseVersion = "3.0.0-M7"
 
-val sireumVer = "3"
+val scalaTestVersion = "3.0.1"
+
+val sireumVersion = "3"
 
 val BUILD_FILENAME = "BUILD"
 
@@ -147,7 +149,7 @@ lazy val subProjectJsReferences =
 
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
-  version := sireumVer,
+  version := sireumVersion,
   incOptions := incOptions.value.withNameHashing(true),
   scalaVersion := scalaVer,
   retrieveManaged := true,
@@ -237,7 +239,10 @@ lazy val logikaXPI = new ProjectInfo("logika/x", isCross = true, utilPI, testPI)
 lazy val logikaXT = toSbtCrossProject(logikaXPI)
 lazy val logikaXShared = logikaXT._1
 lazy val logikaXJvm = logikaXT._2.settings(
-  libraryDependencies += "org.scalameta" %% "scalameta" % metaVersion,
+  libraryDependencies ++= Seq(
+    "org.scalameta" %% "scalameta" % metaVersion,
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+  ),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
@@ -264,7 +269,7 @@ lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
   scalaSource in Test := baseDirectory.value / "test-src",
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),
   unmanagedResourceDirectories in Compile += file("logika/runtime/api/jvm/src/main/scala"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 

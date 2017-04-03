@@ -2,10 +2,14 @@
   <library name="SBT: com.sksamuel.diff:diff:1.1.11:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.sksamuel.diff/diff/diff-1.1.11.jar!/" />
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/sksamuel/diff/diff/1.1.11/diff-1.1.11.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/sksamuel/diff/diff/1.1.11/diff-1.1.11-javadoc.jar!/" />
+    </JAVADOC>
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.sksamuel.diff/diff/diff-1.1.11-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/sksamuel/diff/diff/1.1.11/diff-1.1.11-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

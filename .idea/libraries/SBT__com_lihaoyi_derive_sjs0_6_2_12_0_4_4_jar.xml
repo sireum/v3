@@ -2,10 +2,14 @@
   <library name="SBT: com.lihaoyi:derive_sjs0.6_2.12:0.4.4:jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib_managed/jars/com.lihaoyi/derive_sjs0.6_2.12/derive_sjs0.6_2.12-0.4.4.jar!/" />
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/lihaoyi/derive_sjs0.6_2.12/0.4.4/derive_sjs0.6_2.12-0.4.4.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/lihaoyi/derive_sjs0.6_2.12/0.4.4/derive_sjs0.6_2.12-0.4.4-javadoc.jar!/" />
+    </JAVADOC>
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/lib_managed/srcs/com.lihaoyi/derive_sjs0.6_2.12/derive_sjs0.6_2.12-0.4.4-sources.jar!/" />
+      <root url="jar://$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/com/lihaoyi/derive_sjs0.6_2.12/0.4.4/derive_sjs0.6_2.12-0.4.4-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

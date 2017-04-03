@@ -19,7 +19,7 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
     </profile>
-    <profile name="SBT 2" modules="logikax-js,logika-js,logika-x-js,pilar-js,test-js,util-js">
+    <profile name="SBT 2" modules="logikax-js">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -52,7 +52,7 @@
         <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scalamacros/paradise_2.12.1/paradise_2.12.1-2.1.0.jar" />
       </plugins>
     </profile>
-    <profile name="SBT 6" modules="api-logika-runtime-api,native-logika-runtime-native,logika-x-jvm">
+    <profile name="SBT 7" modules="logika-js,logika-x-js,pilar-js,test-js,util-js">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
@@ -61,7 +61,19 @@
         <parameter value="-Ydelambdafy:method" />
       </parameters>
       <plugins>
-        <plugin path="$PROJECT_DIR$/lib_managed/jars/org.scalameta/paradise_2.12.1/paradise_2.12.1-3.0.0-M7.jar" />
+        <plugin path="$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-js/scalajs-compiler_2.12.1/0.6.15/scalajs-compiler_2.12.1-0.6.15.jar" />
+      </plugins>
+    </profile>
+    <profile name="SBT 8" modules="api-logika-runtime-api,native-logika-runtime-native,logika-x-jvm">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-target:jvm-1.8" />
+        <parameter value="-Ydelambdafy:method" />
+      </parameters>
+      <plugins>
+        <plugin path="$USER_HOME$/.coursier/cache/v1/https/repo1.maven.org/maven2/org/scalameta/paradise_2.12.1/3.0.0-M7/paradise_2.12.1-3.0.0-M7.jar" />
       </plugins>
     </profile>
   </component>

@@ -1,3 +1,4 @@
+/.idea
 /bin/VER
 /bin/sireum.jar
 /apps
@@ -34,3 +35,4 @@ project-dependency.dot
 /awas
 resource_hacker
 /resources/distro/resource_hacker.zip
+Scratch.scala

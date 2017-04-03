@@ -25,8 +25,6 @@
     <orderEntry type="library" name="SBT: org.spire-math:jawn-parser_2.12:0.10.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.12.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.12.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-js:scalajs-test-interface_2.12:0.6.13:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-js:scalajs-library_2.12:0.6.13:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:utest_sjs0.6_2.12:0.4.4:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:upickle_sjs0.6_2.12:0.4.4:jar" level="project" />
     <orderEntry type="library" name="SBT: com.lihaoyi:upickle_2.12:0.4.4:jar" level="project" />
@@ -36,5 +34,7 @@
     <orderEntry type="library" name="SBT: com.lihaoyi:derive_2.12:0.4.4:jar" level="project" />
     <orderEntry type="module" module-name="util" exported="" />
     <orderEntry type="module" module-name="test" exported="" />
+    <orderEntry type="library" name="SBT: org.scala-js:scalajs-library_2.12:0.6.15:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-js:scalajs-test-interface_2.12:0.6.15:jar" level="project" />
   </component>
 </module>
