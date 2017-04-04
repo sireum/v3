@@ -109,4 +109,12 @@ SubMethodContract(isPure: B,
                   args: ISZ[Id],
                   contract: MethodContract)
 
+/* @datatype */ case class
+ExpStmt(exp: Exp)
+  extends Stmt
+
 /* @datatype */ trait Exp
+
+/* @datatype */ case class
+NameExp(name: Name)
+  extends Exp

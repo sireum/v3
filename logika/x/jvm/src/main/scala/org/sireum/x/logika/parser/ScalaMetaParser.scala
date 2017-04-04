@@ -89,89 +89,102 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
         Some(AST.Program(
           fileUriOpt,
           name,
-          AST.Block(ISZ(stats.flatMap(translateStat(isExt = false)): _*)))), tags)
+          AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
     case q"import org.sireum.logika._" :: stats =>
       Result(
         Some(AST.Program(
           fileUriOpt,
           AST.Name(ISZ()),
-          AST.Block(ISZ(stats.flatMap(translateStat(isExt = false)): _*)))), tags)
+          AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
     case stats =>
       if (stats.nonEmpty)
         error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
       Result(None, tags)
   }
 
-  def translateStat(isExt: Boolean)(stat: scala.meta.Stat): Option[AST.Stmt] = stat match {
-    case q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" =>
-      var hasError = false
-      var hasExt = false
-      mods match {
-        case mod"@ext" :: Nil => hasExt = true
-        case Nil => // skip
+  def translateStat(isExt: Boolean)(stat: scala.meta.Stat): AST.Stmt = stat match {
+    case stat: scala.meta.Defn.Object => translateObject(isExt, stat)
+    case stat: scala.meta.Defn.Def => translateDef(isExt, stat)
+    case _ =>
+      val text = syntax(stat)
+      errorNotLogika(stat.pos, s"Statement '$text' is")
+      AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+  }
+
+  def translateObject(isExt: Boolean, tree: Defn.Object): AST.Stmt = {
+    val q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" = tree
+    var hasError = false
+    var hasExt = false
+    mods match {
+      case mod"@ext" :: Nil => hasExt = true
+      case Nil => // skip
+      case _ =>
+        hasError = true
+        errorNotLogika(mods.head.pos, "Object modifiers other than @ext are")
+    }
+    if (estats.nonEmpty) {
+      hasError = true
+      errorNotLogika(mods.head.pos, "Object early initializations are")
+    }
+    if (ctorcalls.nonEmpty) {
+      hasError = true
+      errorNotLogika(mods.head.pos, "Object super constructor calls are")
+    }
+    if (!hasError)
+      AST.ObjectStmt(AST.Id(name.value), ISZ(stats.map(translateStat(hasExt)): _*))
+    else AST.ObjectStmt(AST.Id(name.value), ISZ())
+  }
+
+  def translateDef(isExt: Boolean, tree: Defn.Def): AST.Stmt = {
+    val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $exp" = tree
+    var hasError = false
+    if (paramss.size > 1) {
+      hasError = true
+      errorNotLogika(mods.head.pos, "Methods with multiple parameter tuples are")
+    }
+    if (tpeopt.asInstanceOf[Option[scala.meta.Type]].isEmpty) {
+      hasError = true
+      errorInLogika(name.pos, "Methods have to be given explicit return type")
+    }
+    var isPure = false
+    var isSpec = false
+    for (mod <- mods) mod match {
+      case mod"@pure" => isPure = true
+      case mod"@spec" => isSpec = true
+      case _ =>
+        hasError = true
+        errorInLogika(mod.pos, s"Only method modifiers @pure and @spec are allowed")
+    }
+    val sig = AST.MethodSig(
+      AST.Id(name.value),
+      ISZ(tparams.map(translateTypeParam): _*),
+      ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
+      translateType(tpeopt.asInstanceOf[Option[scala.meta.Type]].get))
+    if (isExt) {
+      exp match {
+        case Term.Name("$") =>
+          AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
+            iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
+        case exp: Term.Interpolate if exp.prefix.value == "c" =>
+          ???
         case _ =>
           hasError = true
-          errorNotLogika(mods.head.pos, "Object modifiers other than @ext are")
+          error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
+          AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
+            iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
-      if (estats.nonEmpty) {
-        hasError = true
-        errorNotLogika(mods.head.pos, "Object early initializations are")
-      }
-      if (ctorcalls.nonEmpty) {
-        hasError = true
-        errorNotLogika(mods.head.pos, "Object super constructor calls are")
-      }
-      if (!hasError)
-        Some(AST.ObjectStmt(AST.Id(name.value), ISZ(stats.flatMap(translateStat(hasExt)): _*)))
-      else None
-    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $exp" =>
-      var hasError = false
-      if (paramss.size > 1) {
-        hasError = true
-        errorNotLogika(mods.head.pos, "Methods with multiple parameter tuples are")
-      }
-      if (tpeopt.asInstanceOf[Option[scala.meta.Type]].isEmpty) {
-        hasError = true
-        errorInLogika(name.pos, "Methods have to be given explicit return type")
-      }
-      var isPure = false
-      var isSpec = false
-      for (mod <- mods) mod match {
-        case mod"@pure" => isPure = true
-        case mod"@spec" => isSpec = true
+    } else if (isSpec) {
+      exp match {
+        case exp: Term.Interpolate if exp.prefix.value == "c" =>
+          ???
         case _ =>
           hasError = true
-          errorInLogika(mod.pos, s"Only method modifiers @pure and @spec are allowed")
+          error(exp.pos, "Only c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
+          AST.SpecMethodStmt(sig)
       }
-      val sig = AST.MethodSig(
-        AST.Id(name.value),
-        ISZ(tparams.map(translateTypeParam): _*),
-        ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
-        translateType(tpeopt.asInstanceOf[Option[scala.meta.Type]].get))
-      if (isExt) {
-        exp match {
-          case Term.Name("$") =>
-            Some(AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
-              iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)))
-          case exp: Term.Interpolate if exp.prefix.value == "c" =>
-            ???
-          case _ =>
-            hasError = true
-            error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
-            None
-        }
-      } else if (isSpec) {
-        exp match {
-          case exp: Term.Interpolate if exp.prefix.value == "c" =>
-            ???
-          case _ =>
-            hasError = true
-            error(exp.pos, "Only c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
-            None
-        }
-      } else {
-        ???
-      }
+    } else {
+      ???
+    }
   }
 
   def translateTypeParam(tp: scala.meta.Type.Param): AST.TypeParam = tp match {
@@ -189,6 +202,14 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
           }
         case _ => AST.TypeParam(AST.Id(tparamname.value), None)
       }
+  }
+
+  def syntax(t: scala.meta.Tree, max: Int = 20): String = {
+    val text = t.syntax
+    (if (text.length < max) text else text.substring(0, max)).
+      replaceAllLiterally("\r", " ").
+      replaceAllLiterally("\n", " ").
+      replaceAllLiterally("\t", " ") + " ..."
   }
 
   def translateParam(tp: scala.meta.Term.Param): AST.Param = ???
