@@ -28,7 +28,7 @@ package org.sireum.x.logika.parser
 
 import org.sireum.x.logika.{ast => AST}
 import org.sireum.util._
-import org.sireum.logika.{Z, IS}
+import org.sireum.logika.{Z, IS, ISZ}
 import scala.meta._
 
 // TODO: remove asInstanceOf hack (due to IntelliJ's macro annotation inference workaround)
@@ -74,6 +74,8 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
     tags +:= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
 
+  def iszEmpty[T]: ISZ[T] = ISZ()
+
   def errorNotLogika(pos: scala.meta.Position, message: String): Unit =
     error(pos, message + "not in the Logika language.")
 
@@ -87,13 +89,13 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
         Some(AST.Program(
           fileUriOpt,
           name,
-          AST.Block(stats.toVector.flatMap(translateStat(isExt = false))))), tags)
+          AST.Block(ISZ(stats.flatMap(translateStat(isExt = false)): _*)))), tags)
     case q"import org.sireum.logika._" :: stats =>
       Result(
         Some(AST.Program(
           fileUriOpt,
-          AST.Name(Vector()),
-          AST.Block(stats.toVector.flatMap(translateStat(isExt = false))))), tags)
+          AST.Name(ISZ()),
+          AST.Block(ISZ(stats.flatMap(translateStat(isExt = false)): _*)))), tags)
     case stats =>
       if (stats.nonEmpty)
         error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
@@ -120,7 +122,7 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
         errorNotLogika(mods.head.pos, "Object super constructor calls are")
       }
       if (!hasError)
-        Some(AST.ObjectStmt(AST.Id(name.value), stats.toVector.flatMap(translateStat(hasExt))))
+        Some(AST.ObjectStmt(AST.Id(name.value), ISZ(stats.flatMap(translateStat(hasExt)): _*)))
       else None
     case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $exp" =>
       var hasError = false
@@ -143,14 +145,14 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
       }
       val sig = AST.MethodSig(
         AST.Id(name.value),
-        tparams.map(translateTypeParam),
-        paramss.headOption.getOrElse(ivectorEmpty).map(translateParam),
+        ISZ(tparams.map(translateTypeParam): _*),
+        ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
         translateType(tpeopt.asInstanceOf[Option[scala.meta.Type]].get))
       if (isExt) {
         exp match {
           case Term.Name("$") =>
             Some(AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
-                ivectorEmpty, ivectorEmpty, ivectorEmpty, ivectorEmpty, ivectorEmpty)))
+              iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)))
           case exp: Term.Interpolate if exp.prefix.value == "c" =>
             ???
           case _ =>
@@ -194,10 +196,5 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
   def translateType(t: scala.meta.Type): AST.Type = ???
 
   def packageRef2IS(ref: Term.Ref): IS[Z, AST.Id] =
-    seq2is(ref.toString.split(".").map(AST.Id).toVector)
-
-  import scala.language.implicitConversions
-
-  implicit def seq2is[T](s: CSeq[T]): IS[Z, T] =
-    org.sireum.logika.collection._IS[Z, T](s: _*)
+    ISZ(ref.toString.split(".").map(AST.Id): _*)
 }
