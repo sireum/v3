@@ -34,19 +34,21 @@ import scala.meta._
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
 object ScalaMetaParser {
 
-  case class Result(program: Option[AST.Program], tags: ISeq[Tag])
+  case class Result(hashLogika: Boolean,
+                    program: Option[AST.Program],
+                    tags: ISeq[Tag])
 
   def apply(isDiet: Boolean,
             fileUriOpt: Option[FileResourceUri],
             text: String): Result = {
     val lines = text.lines
-    val isLogika = lines.nonEmpty && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
+    val hashLogika = lines.hasNext && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
     text.parse[scala.meta.Source] match {
       case Parsed.Success(x) =>
-        println("Input: " + x.structure)
-        new ScalaMetaParser(isLogika, isDiet, fileUriOpt).translateSource(x)
+        //println("Input: " + x.structure)
+        new ScalaMetaParser(hashLogika, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
-        Result(None, ivector(error(fileUriOpt, pe.pos, pe.message)))
+        Result(hashLogika, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
   }
 
@@ -68,7 +70,7 @@ object ScalaMetaParser {
 
 import ScalaMetaParser._
 
-class ScalaMetaParser(isLogika: Boolean,
+class ScalaMetaParser(hashLogika: Boolean,
                       isDiet: Boolean,
                       fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
@@ -83,46 +85,43 @@ class ScalaMetaParser(isLogika: Boolean,
   val unitType = AST.NamedType(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
   def errorNotLogika(pos: scala.meta.Position, message: String): Unit =
-    error(pos, message + "not in the Logika language.")
+    error(pos, message + " not in the Logika language.")
 
   def errorInLogika(pos: scala.meta.Position, message: String): Unit =
-    error(pos, message + "in the Logika language.")
+    error(pos, message + " in the Logika language.")
 
   def translateSource(source: scala.meta.Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
-      if (isLogika) {
+      if (hashLogika) {
         val name = AST.Name(packageRef2IS(ref))
-        Result(
+        Result(hashLogika,
           Some(AST.Program(
             fileUriOpt,
             name,
             AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
-      } else Result(None, tags)
+      } else Result(hashLogika, None, tags)
     case stats@(q"import org.sireum.logika._" :: _) =>
       val shouldParse = fileUriOpt.forall(fileUri =>
         fileUri.endsWith(".logika") ||
           fileUri.endsWith(".sc") ||
-          (isLogika && fileUri.endsWith(".scala")))
+          (hashLogika && fileUri.endsWith(".scala")))
       if (shouldParse)
-        Result(
+        Result(hashLogika,
           Some(AST.Program(
             fileUriOpt,
             AST.Name(ISZ()),
             AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
       else
-        Result(None, tags)
+        Result(hashLogika, None, tags)
     case stats =>
-      if (isLogika) {
-        Result(
+      if (hashLogika)
+        Result(hashLogika,
           Some(AST.Program(
             fileUriOpt,
             AST.Name(ISZ()),
             AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
-      } else {
-        if (stats.nonEmpty)
-          error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
-        Result(None, tags)
-      }
+      else
+        Result(hashLogika, None, tags)
   }
 
   def translateStat(isExt: Boolean)(stat: scala.meta.Stat): AST.Stmt = stat match {
@@ -147,11 +146,11 @@ class ScalaMetaParser(isLogika: Boolean,
     }
     if (estats.nonEmpty) {
       hasError = true
-      errorNotLogika(mods.head.pos, "Object early initializations are")
+      errorNotLogika(estats.head.pos, "Object early initializations are")
     }
     if (ctorcalls.nonEmpty) {
       hasError = true
-      errorNotLogika(mods.head.pos, "Object super constructor calls are")
+      errorNotLogika(ctorcalls.head.pos, "Object super constructor calls are")
     }
     if (!hasError)
       AST.ObjectStmt(AST.Id(name.value), ISZ(stats.map(translateStat(hasExt)): _*))
@@ -163,7 +162,7 @@ class ScalaMetaParser(isLogika: Boolean,
     var hasError = false
     if (paramss.size > 1) {
       hasError = true
-      errorNotLogika(mods.head.pos, "Methods with multiple parameter tuples are")
+      errorNotLogika(name.pos, "Methods with multiple parameter tuples are")
     }
     if (tpeopt.isEmpty) {
       hasError = true
@@ -172,11 +171,25 @@ class ScalaMetaParser(isLogika: Boolean,
     var isPure = false
     var isSpec = false
     for (mod <- mods) mod match {
-      case mod"@pure" => isPure = true
-      case mod"@spec" => isSpec = true
+      case mod"@pure" =>
+        if (isPure) {
+          hasError = true
+          error(mod.pos, "Redundant @pure.")
+        }
+        isPure = true
+      case mod"@spec" =>
+        if (isSpec) {
+          hasError = true
+          error(mod.pos, "Redundant @spec.")
+        }
+        isSpec = true
       case _ =>
         hasError = true
-        errorInLogika(mod.pos, s"Only method modifiers @pure and @spec are allowed")
+        errorInLogika(mod.pos, s"Only either method modifier @pure or @spec is allowed")
+    }
+    if (isPure && isSpec) {
+      hasError = true
+      errorInLogika(mods.head.pos, s"Only either method modifier @pure or @spec is allowed")
     }
     val sig = AST.MethodSig(
       AST.Id(name.value),
@@ -204,22 +217,25 @@ class ScalaMetaParser(isLogika: Boolean,
           AST.SpecMethodStmt(sig, parseDefs(exp))
         case _ =>
           hasError = true
-          error(exp.pos, "Only c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
+          error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
           AST.SpecMethodStmt(sig, ISZ())
       }
     else exp match {
       case exp: scala.meta.Term.Block =>
-        val (mc, stats) = exp.stats.headOption match {
+        val (mc, blockOpt) = exp.stats.headOption match {
           case Some(stat: Term.Interpolate) if stat.prefix.value == "l" =>
-            (parseContract(stat), if (isDiet) ivectorEmpty else exp.stats.tail)
+            (parseContract(stat),
+              if (isDiet) None
+              else Some(AST.Block(ISZ(exp.stats.tail.map(translateStat(isExt = false)): _*))))
           case _ =>
             (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
-              if (isDiet) ivectorEmpty else exp.stats)
+              if (isDiet) None
+              else Some(AST.Block(ISZ(exp.stats.map(translateStat(isExt = false)): _*))))
         }
-        AST.MethodStmt(isPure, sig, mc, AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))
+        AST.MethodStmt(isPure, sig, mc, blockOpt)
       case _ =>
         errorInLogika(exp.pos, "Only block '{ ... }' is allowed for method definitions")
-        AST.MethodStmt(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), AST.Block(ISZ()))
+        AST.MethodStmt(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None)
     }
   }
 
@@ -288,9 +304,11 @@ class ScalaMetaParser(isLogika: Boolean,
 
   def syntax(t: scala.meta.Tree, max: Int = 20): String = {
     val text = t.syntax
-    (if (text.length < max) text else text.substring(0, max)).
-      replaceAllLiterally("\r", " ").
-      replaceAllLiterally("\n", " ").
-      replaceAllLiterally("\t", " ") + " ..."
+    (if (text.length < max) text else text.substring(0, max)).map {
+      case '\r' => ' '
+      case '\t' => ' '
+      case '\n' => ' '
+      case c => c
+    }
   }
 }

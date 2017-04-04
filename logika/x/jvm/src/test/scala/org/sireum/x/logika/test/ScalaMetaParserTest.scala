@@ -25,90 +25,146 @@
 
 package org.sireum.x.logika.test
 
+import org.sireum.util._
 import org.sireum.x.logika.parser.ScalaMetaParser
 
 class ScalaMetaParserTest extends LogikaXSpec {
 
-  def parse(text: String): ScalaMetaParser.Result =
-    ScalaMetaParser(isDiet = false, None, text)
-
   "Passing" - {
 
-    "Empty Source" in {
-      val r = parse(
-        """
-        """)
-      r == ScalaMetaParser.Result(None, Vector())
+    passing("")
+
+    passing("package a.b.c")
+
+    "Object" - {
+
+      passing("object Foo")
+
+      "Method" - {
+
+        passing("object Foo { def f: Z = {} }")
+
+        passing("object Foo { def f(x: Z): Z = {} }")
+
+        passing("object Foo { @spec def f(x: Z): Z = $ }")
+
+        passing("object Foo { @spec def f(x: Z): Z = c\"\"\"{ reads g }\"\"\" }")
+
+        passing("object Foo { @pure def f(x: Z): Z = {} }")
+
+        passing("object Foo { def f[T](x: T, y: Z): T = {} }")
+
+        passing("object Foo { def f[A, B <: A](x: A, y: Z): B = {} }")
+      }
     }
 
-    "Empty Package a.b.c" in {
-      val r = parse(
-        """package a.b.c
-        """)
-      r.program.nonEmpty && r.tags.isEmpty
+    "Ext Object" - {
+
+      passing("@ext object Foo")
+
+      "Method" - {
+
+        passing("@ext object Foo { def f: Z = $ }")
+
+        passing("@ext object Foo { @pure def f: Z = $ }")
+
+        passing("@ext object Foo { def f: Z = c\"\"\"{ reads g }\"\"\" }")
+      }
     }
   }
 
   "Failing" - {
 
-    "Not Package or Logika Import" - {
-      * {
-        val r = parse(
-          """class A
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
+    "Object" - {
+
+      "Modifier" - {
+        val errMsg = "modifiers other than"
+
+        failing("final object A", errMsg)
+
+        failing("private object A", errMsg)
       }
-      * {
-        val r = parse(
-          """trait B
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
-      }
-      * {
-        val r = parse(
-          """object A
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
-      }
-      * {
-        val r = parse(
-          """import a.b.c
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
+
+      failing("object A extends { val x: Z = 5 } with B", "early init")
+
+      failing("object A extends B(5)", "super constructor")
+
+      "Method" - {
+
+        failing("object Foo { def f(x: Z)(y: Z): Z = {} }", "multiple parameter tuples")
+
+        failing("object Foo { def f(x: Z) = {} }", "explicit return type")
+
+        failing("object Foo { def f: Z = 4 }", "Only block")
+
+        val pureOrSpec = "@pure or @spec"
+
+        failing("object Foo { @ext def f(x: Z): Z = {} }", pureOrSpec)
+
+        failing("object Foo { @spec @pure def f(x: Z): Z = $ }", pureOrSpec)
+
+        failing("object Foo { @pure @spec def f(x: Z): Z = $ }", pureOrSpec)
+
+        failing("object Foo { @pure @pure def f(x: Z): Z = {} }", "Redundant @pure")
+
+        failing("object Foo { @spec @spec def f(x: Z): Z = $ }", "Redundant @spec")
+
+        failing("object Foo { @spec def f: Z = 4 }", "@spec method expression")
+
+        val paramTypeForms = "'<id> : <type>'"
+
+        failing("object Foo { def f(x: Z = 5): Z = {} }", paramTypeForms)
+
+        failing("object Foo { def f(@pure x: Z): Z = {} }", paramTypeForms)
+
+        failing("object Foo { def f(x: => Z): Z = {} }", "By name types")
+
+        failing("object Foo { def f(x: Z*): Z = {} }", "Repeated types")
+
+        val typeParamForms = "'<id>' or '<id> <: <type>'"
+
+        failing("object Foo { def f[T >: B](x: Z): Z = {} }", typeParamForms)
+
+        failing("object Foo { def f[T <% B](x: Z): Z = {} }", typeParamForms)
+
+        failing("object Foo { def f[T : TT](x: Z): Z = {} }", typeParamForms)
+
+        failing("object Foo { def f[T <: (Z) => Z](x: Z): Z = {} }", "Type parameter bound")
+
+        failing("object Foo { def f(x: (Z, Z)): Z = {} }", "Type '(Z, Z)' is")
       }
     }
 
-    "Object Modifiers" - {
-      * {
-        val r = parse(
-          """final object A
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
-      }
-      * {
-        val r = parse(
-          """private object A
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
-      }
+    "Ext Object" - {
+      failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
+    }
+  }
+
+  def parse(text: String): ScalaMetaParser.Result =
+    ScalaMetaParser(isDiet = false, None, text)
+
+  def passing(text: String)(implicit pos: org.scalactic.source.Position): Unit =
+    *(text) {
+      val r = parse(s"//#Logika\n$text")
+      val b = r.program.nonEmpty && r.tags.isEmpty
+      if (!b) report(r)
+      b
     }
 
-    "Object Early Initializations" - {
-      * {
-        val r = parse(
-          """object A extends { val x: Z = 5 } with B
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
+  def failing(text: String, msg: String)(implicit pos: org.scalactic.source.Position): Unit =
+    *(text) {
+      val r = parse(s"//#Logika\n$text")
+      val b = r.tags.exists {
+        case t: MessageTag => t.message.contains(msg)
+        case _ => false
       }
+      if (!b) report(r)
+      b
     }
 
-    "Object Super Constructor Calls" - {
-      * {
-        val r = parse(
-          """object A extends with B(5)
-          """)
-        r.program.isEmpty && r.tags.nonEmpty
-      }
-    }
+  def report(r: ScalaMetaParser.Result): Unit = {
+    System.err.println(r.program)
+    val reporter = new ConsoleTagReporter
+    r.tags.foreach(reporter.report)
   }
 }

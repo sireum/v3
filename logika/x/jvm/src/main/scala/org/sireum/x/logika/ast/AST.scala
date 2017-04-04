@@ -56,7 +56,7 @@ ObjectStmt(id: Id, stmts: ISZ[Stmt])
 MethodStmt(isPure: B,
            sig: MethodSig,
            contract: MethodContract,
-           block: Block)
+           blockOpt: Option[Block])
   extends Stmt
 
 /* @datatype */ case class
