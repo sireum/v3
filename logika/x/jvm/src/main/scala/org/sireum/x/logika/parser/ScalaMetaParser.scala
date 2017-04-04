@@ -31,7 +31,7 @@ import org.sireum.util._
 import org.sireum.logika.{Z, IS, ISZ}
 import scala.meta._
 
-// TODO: remove asInstanceOf hack (due to IntelliJ's macro annotation inference workaround)
+// TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
 object ScalaMetaParser {
 
   case class Result(program: Option[AST.Program], tags: ISeq[Tag])
@@ -136,13 +136,13 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
   }
 
   def translateDef(isExt: Boolean, tree: Defn.Def): AST.Stmt = {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $exp" = tree
+    val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: Option[scala.meta.Type]} = $exp" = tree
     var hasError = false
     if (paramss.size > 1) {
       hasError = true
       errorNotLogika(mods.head.pos, "Methods with multiple parameter tuples are")
     }
-    if (tpeopt.asInstanceOf[Option[scala.meta.Type]].isEmpty) {
+    if (tpeopt.isEmpty) {
       hasError = true
       errorInLogika(name.pos, "Methods have to be given explicit return type")
     }
@@ -159,7 +159,7 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
       AST.Id(name.value),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
-      translateType(tpeopt.asInstanceOf[Option[scala.meta.Type]].get))
+      translateType(tpeopt.get))
     if (isExt) {
       exp match {
         case Term.Name("$") =>
@@ -188,12 +188,11 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
   }
 
   def translateTypeParam(tp: scala.meta.Type.Param): AST.TypeParam = tp match {
-    case tparam"..$mods $tparamname[..$tparams] >: $stpeopt <: $tpeopt <% ..$tpes : ..$tpes2" =>
-      if (mods.nonEmpty || tparams.nonEmpty ||
-        stpeopt.asInstanceOf[Option[scala.meta.Type]].nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
+    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: Option[scala.meta.Type]} <: ${tpeopt: Option[scala.meta.Type]} <% ..$tpes : ..$tpes2" =>
+      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
         errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> <: <type>' are supported")
-      tpeopt.asInstanceOf[Option[scala.meta.Type]] match {
-        case Some(tpe) =>
+      tpeopt match {
+        case Some(tpe: scala.meta.Type) =>
           translateType(tpe) match {
             case t: AST.NamedType => AST.TypeParam(AST.Id(tparamname.value), Some(t))
             case _ =>
