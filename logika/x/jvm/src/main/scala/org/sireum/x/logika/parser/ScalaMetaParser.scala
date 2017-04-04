@@ -43,7 +43,7 @@ object ScalaMetaParser {
             text: String): Result = {
     val lines = text.lines
     val hashLogika = lines.hasNext && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
-    text.parse[scala.meta.Source] match {
+    text.parse[Source] match {
       case Parsed.Success(x) =>
         //println("Input: " + x.structure)
         new ScalaMetaParser(hashLogika, isDiet, fileUriOpt).translateSource(x)
@@ -53,7 +53,7 @@ object ScalaMetaParser {
   }
 
   def error(fileUriOpt: Option[FileResourceUri],
-            pos: scala.meta.Position,
+            pos: Position,
             message: String): Tag = {
     val posStart = pos.start
     val posEnd = pos.end
@@ -75,7 +75,7 @@ class ScalaMetaParser(hashLogika: Boolean,
                       fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
 
-  def error(pos: scala.meta.Position,
+  def error(pos: Position,
             message: String): Unit = {
     tags +:= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
@@ -84,13 +84,13 @@ class ScalaMetaParser(hashLogika: Boolean,
 
   val unitType = AST.NamedType(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
-  def errorNotLogika(pos: scala.meta.Position, message: String): Unit =
+  def errorNotLogika(pos: Position, message: String): Unit =
     error(pos, message + " not in the Logika language.")
 
-  def errorInLogika(pos: scala.meta.Position, message: String): Unit =
+  def errorInLogika(pos: Position, message: String): Unit =
     error(pos, message + " in the Logika language.")
 
-  def translateSource(source: scala.meta.Source): Result = source.stats match {
+  def translateSource(source: Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
       if (hashLogika) {
         val name = AST.Name(packageRef2IS(ref))
@@ -124,9 +124,9 @@ class ScalaMetaParser(hashLogika: Boolean,
         Result(hashLogika, None, tags)
   }
 
-  def translateStat(isExt: Boolean)(stat: scala.meta.Stat): AST.Stmt = stat match {
-    case stat: scala.meta.Defn.Object => translateObject(isExt, stat)
-    case stat: scala.meta.Defn.Def => translateDef(isExt, stat)
+  def translateStat(isExt: Boolean)(stat: Stat): AST.Stmt = stat match {
+    case stat: Defn.Object => translateObject(isExt, stat)
+    case stat: Defn.Def => translateDef(isExt, stat)
     case _ =>
       val text = syntax(stat)
       errorNotLogika(stat.pos, s"Statement '$text' is")
@@ -153,12 +153,12 @@ class ScalaMetaParser(hashLogika: Boolean,
       errorNotLogika(ctorcalls.head.pos, "Object super constructor calls are")
     }
     if (!hasError)
-      AST.ObjectStmt(AST.Id(name.value), ISZ(stats.map(translateStat(hasExt)): _*))
-    else AST.ObjectStmt(AST.Id(name.value), ISZ())
+      AST.ObjectStmt(cid(name), ISZ(stats.map(translateStat(hasExt)): _*))
+    else AST.ObjectStmt(cid(name), ISZ())
   }
 
   def translateDef(isExt: Boolean, tree: Defn.Def): AST.Stmt = {
-    val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: Option[scala.meta.Type]} = $exp" = tree
+    val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: Option[Type]} = $exp" = tree
     var hasError = false
     if (paramss.size > 1) {
       hasError = true
@@ -192,7 +192,7 @@ class ScalaMetaParser(hashLogika: Boolean,
       errorInLogika(mods.head.pos, s"Only either method modifier @pure or @spec is allowed")
     }
     val sig = AST.MethodSig(
-      AST.Id(name.value),
+      cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
       tpeopt.map(translateType).getOrElse(unitType))
@@ -221,7 +221,7 @@ class ScalaMetaParser(hashLogika: Boolean,
           AST.SpecMethodStmt(sig, ISZ())
       }
     else exp match {
-      case exp: scala.meta.Term.Block =>
+      case exp: Term.Block =>
         val (mc, blockOpt) = exp.stats.headOption match {
           case Some(stat: Term.Interpolate) if stat.prefix.value == "l" =>
             (parseContract(stat),
@@ -239,46 +239,55 @@ class ScalaMetaParser(hashLogika: Boolean,
     }
   }
 
-  def translateTypeParam(tp: scala.meta.Type.Param): AST.TypeParam = tp match {
-    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: Option[scala.meta.Type]} <: ${tpeopt: Option[scala.meta.Type]} <% ..$tpes : ..$tpes2" =>
+  def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
+    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: Option[Type]} <: ${tpeopt: Option[Type]} <% ..$tpes : ..$tpes2" =>
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
         errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> <: <type>' are supported")
       tpeopt match {
-        case Some(tpe: scala.meta.Type) =>
+        case Some(tpe: Type) =>
           translateType(tpe) match {
-            case t: AST.NamedType => AST.TypeParam(AST.Id(tparamname.value), Some(t))
+            case t: AST.NamedType => AST.TypeParam(cid(tparamname), Some(t))
             case _ =>
               errorNotLogika(tpe.pos, s"Type parameter bound '${tpe.syntax}' is")
-              AST.TypeParam(AST.Id(tparamname.value), None)
+              AST.TypeParam(cid(tparamname), None)
           }
-        case _ => AST.TypeParam(AST.Id(tparamname.value), None)
+        case _ => AST.TypeParam(cid(tparamname), None)
       }
   }
 
-  def translateParam(tp: scala.meta.Term.Param): AST.Param = {
-    val param"..$mods $paramname: ${atpeopt: Option[scala.meta.Type.Arg]} = ${expropt: Option[scala.meta.Term]}" = tp
+  def translateParam(tp: Term.Param): AST.Param = {
+    val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
     if (mods.nonEmpty || atpeopt.isEmpty || expropt.nonEmpty)
       errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
-    lazy val er = AST.Param(AST.Id(paramname.value), unitType)
-    atpeopt.map(ta => AST.Param(AST.Id(paramname.value), translateTypeArg(ta))).getOrElse(er)
+    lazy val er = AST.Param(cid(paramname), unitType)
+    atpeopt.map(ta => AST.Param(cid(paramname), translateTypeArg(ta))).getOrElse(er)
   }
 
-  def translateTypeArg(ta: scala.meta.Type.Arg): AST.Type = ta match {
+  def translateTypeArg(ta: Type.Arg): AST.Type = ta match {
     case targ"${tpe: Type}" =>
       translateType(tpe)
-    case _: scala.meta.Type.Arg.Repeated =>
+    case _: Type.Arg.Repeated =>
       errorNotLogika(ta.pos, "Repeated types '<type>*' are")
       unitType
-    case _: scala.meta.Type.Arg.ByName =>
+    case _: Type.Arg.ByName =>
       errorNotLogika(ta.pos, "By name types '=> <type>' are")
       unitType
   }
 
-  def translateType(t: scala.meta.Type): AST.Type = t match {
+  def translateType(t: Type): AST.Type = t match {
     case t"${name: Type.Name}[..$tpesnel]" =>
-      AST.NamedType(AST.Name(typeName2IS(name)), ISZ(tpesnel.map(translateType): _*))
+      AST.NamedType(AST.Name(ISZ(cid(name))), ISZ(tpesnel.map(translateType): _*))
     case t"${name: Type.Name}" =>
-      AST.NamedType(AST.Name(typeName2IS(name)), ISZ())
+      AST.NamedType(AST.Name(ISZ(cid(name))), ISZ())
+    case t"$ref.$tname" =>
+      def f(t: Term): ISZ[AST.Id] = t match {
+        case q"$expr.$name" => f(expr) :+ cid(name)
+        case q"${name: Term.Name}" => ISZ(cid(name))
+        case _ =>
+          errorInLogika(t.pos, s"Invalid type reference '${t.syntax}'")
+          ISZ(AST.Id("$"))
+      }
+      AST.NamedType(AST.Name(f(ref) :+ cid(tname)), ISZ())
     case t"(..$atpes) => $tpe" =>
       AST.FunType(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
     case _ =>
@@ -296,13 +305,31 @@ class ScalaMetaParser(hashLogika: Boolean,
     AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)
   }
 
-  def typeName2IS(name: Type.Name): ISZ[AST.Id] =
-    ISZ(name.value.split(".").map(AST.Id): _*)
+  def cid(name: Term.Name): AST.Id = cid(name.value, name.pos)
 
-  def packageRef2IS(ref: Term.Ref): ISZ[AST.Id] =
-    ISZ(ref.toString.split(".").map(AST.Id): _*)
+  def cid(name: Type.Param.Name): AST.Id = cid(name.value, name.pos)
 
-  def syntax(t: scala.meta.Tree, max: Int = 20): String = {
+  def cid(name: Term.Param.Name): AST.Id = cid(name.value, name.pos)
+
+  def cid(id: String, pos: Position): AST.Id = {
+    def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || ('0' <= c && c <= '9')
+    if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
+      errorInLogika(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
+    AST.Id(id)
+  }
+
+  def packageRef2IS(ref: Term.Ref): ISZ[AST.Id] = {
+    def f(t: Term): ISZ[AST.Id] = t match {
+      case q"${name: Term.Name}" => ISZ(cid(name))
+      case q"$expr.$name" =>  f(expr) :+ cid(name)
+      case _ => errorInLogika(t.pos, s"Invalid package name '${ref.syntax}'")
+        ISZ(AST.Id("$"))
+    }
+    f(ref)
+  }
+
+  def syntax(t: Tree, max: Int = 20): String = {
     val text = t.syntax
     (if (text.length < max) text else text.substring(0, max)).map {
       case '\r' => ' '
