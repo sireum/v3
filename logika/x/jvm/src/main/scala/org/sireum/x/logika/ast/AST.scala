@@ -66,7 +66,8 @@ ExtMethodStmt(isPure: B,
   extends Stmt
 
 /* @datatype */ case class
-SpecMethodStmt(sig: MethodSig)
+SpecMethodStmt(sig: MethodSig,
+               defs: ISZ[SpecMethodDef])
   extends Stmt
 
 /* @datatype */ case class
@@ -89,7 +90,7 @@ NamedType(name: Name,
 
 /* @datatype */ case class
 FunType(args: ISZ[Type],
-        ret: ISZ[Type])
+        ret: Type)
   extends Type
 
 /* @datatype */ case class
@@ -108,6 +109,9 @@ SubMethodContract(isPure: B,
                   id: Id,
                   args: ISZ[Id],
                   contract: MethodContract)
+
+/* @datatype */ trait
+SpecMethodDef
 
 /* @datatype */ case class
 ExpStmt(exp: Exp)

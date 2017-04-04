@@ -29,17 +29,20 @@ import org.sireum.x.logika.parser.ScalaMetaParser
 
 class ScalaMetaParserTest extends LogikaXSpec {
 
+  def parse(text: String): ScalaMetaParser.Result =
+    ScalaMetaParser(isDiet = false, None, text)
+
   "Passing" - {
 
     "Empty Source" in {
-      val r = ScalaMetaParser(None,
+      val r = parse(
         """
         """)
       r == ScalaMetaParser.Result(None, Vector())
     }
 
     "Empty Package a.b.c" in {
-      val r = ScalaMetaParser(None,
+      val r = parse(
         """package a.b.c
         """)
       r.program.nonEmpty && r.tags.isEmpty
@@ -50,25 +53,25 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     "Not Package or Logika Import" - {
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """class A
           """)
         r.program.isEmpty && r.tags.nonEmpty
       }
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """trait B
           """)
         r.program.isEmpty && r.tags.nonEmpty
       }
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """object A
           """)
         r.program.isEmpty && r.tags.nonEmpty
       }
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """import a.b.c
           """)
         r.program.isEmpty && r.tags.nonEmpty
@@ -77,13 +80,13 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     "Object Modifiers" - {
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """final object A
           """)
         r.program.isEmpty && r.tags.nonEmpty
       }
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """private object A
           """)
         r.program.isEmpty && r.tags.nonEmpty
@@ -92,7 +95,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     "Object Early Initializations" - {
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """object A extends { val x: Z = 5 } with B
           """)
         r.program.isEmpty && r.tags.nonEmpty
@@ -101,7 +104,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     "Object Super Constructor Calls" - {
       * {
-        val r = ScalaMetaParser(None,
+        val r = parse(
           """object A extends with B(5)
           """)
         r.program.isEmpty && r.tags.nonEmpty

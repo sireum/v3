@@ -28,7 +28,7 @@ package org.sireum.x.logika.parser
 
 import org.sireum.x.logika.{ast => AST}
 import org.sireum.util._
-import org.sireum.logika.{Z, IS, ISZ}
+import org.sireum.logika.ISZ
 import scala.meta._
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
@@ -36,13 +36,15 @@ object ScalaMetaParser {
 
   case class Result(program: Option[AST.Program], tags: ISeq[Tag])
 
-  def apply(fileUriOpt: Option[FileResourceUri],
+  def apply(isDiet: Boolean,
+            fileUriOpt: Option[FileResourceUri],
             text: String): Result = {
-
+    val lines = text.lines
+    val isLogika = lines.nonEmpty && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
     text.parse[scala.meta.Source] match {
       case Parsed.Success(x) =>
         println("Input: " + x.structure)
-        new ScalaMetaParser(fileUriOpt).translateSource(x)
+        new ScalaMetaParser(isLogika, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
         Result(None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
@@ -66,7 +68,9 @@ object ScalaMetaParser {
 
 import ScalaMetaParser._
 
-class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
+class ScalaMetaParser(isLogika: Boolean,
+                      isDiet: Boolean,
+                      fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
 
   def error(pos: scala.meta.Position,
@@ -76,6 +80,8 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
 
   def iszEmpty[T]: ISZ[T] = ISZ()
 
+  val unitType = AST.NamedType(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
+
   def errorNotLogika(pos: scala.meta.Position, message: String): Unit =
     error(pos, message + "not in the Logika language.")
 
@@ -84,22 +90,39 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
 
   def translateSource(source: scala.meta.Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
-      val name = AST.Name(packageRef2IS(ref))
-      Result(
-        Some(AST.Program(
-          fileUriOpt,
-          name,
-          AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
-    case q"import org.sireum.logika._" :: stats =>
-      Result(
-        Some(AST.Program(
-          fileUriOpt,
-          AST.Name(ISZ()),
-          AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
+      if (isLogika) {
+        val name = AST.Name(packageRef2IS(ref))
+        Result(
+          Some(AST.Program(
+            fileUriOpt,
+            name,
+            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
+      } else Result(None, tags)
+    case stats@(q"import org.sireum.logika._" :: _) =>
+      val shouldParse = fileUriOpt.forall(fileUri =>
+        fileUri.endsWith(".logika") ||
+          fileUri.endsWith(".sc") ||
+          (isLogika && fileUri.endsWith(".scala")))
+      if (shouldParse)
+        Result(
+          Some(AST.Program(
+            fileUriOpt,
+            AST.Name(ISZ()),
+            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
+      else
+        Result(None, tags)
     case stats =>
-      if (stats.nonEmpty)
-        error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
-      Result(None, tags)
+      if (isLogika) {
+        Result(
+          Some(AST.Program(
+            fileUriOpt,
+            AST.Name(ISZ()),
+            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
+      } else {
+        if (stats.nonEmpty)
+          error(stats.head.pos, s"A Logika program should either start with 'package <name>' or 'import org.sireum.logika._'.")
+        Result(None, tags)
+      }
   }
 
   def translateStat(isExt: Boolean)(stat: scala.meta.Stat): AST.Stmt = stat match {
@@ -159,31 +182,44 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
       AST.Id(name.value),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
-      translateType(tpeopt.get))
-    if (isExt) {
+      tpeopt.map(translateType).getOrElse(unitType))
+    if (isExt)
       exp match {
         case Term.Name("$") =>
           AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
         case exp: Term.Interpolate if exp.prefix.value == "c" =>
-          ???
+          AST.ExtMethodStmt(isPure, sig, parseContract(exp))
         case _ =>
           hasError = true
           error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
           AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
-    } else if (isSpec) {
+    else if (isSpec)
       exp match {
+        case Term.Name("$") =>
+          AST.SpecMethodStmt(sig, ISZ())
         case exp: Term.Interpolate if exp.prefix.value == "c" =>
-          ???
+          AST.SpecMethodStmt(sig, parseDefs(exp))
         case _ =>
           hasError = true
           error(exp.pos, "Only c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
-          AST.SpecMethodStmt(sig)
+          AST.SpecMethodStmt(sig, ISZ())
       }
-    } else {
-      ???
+    else exp match {
+      case exp: scala.meta.Term.Block =>
+        val (mc, stats) = exp.stats.headOption match {
+          case Some(stat: Term.Interpolate) if stat.prefix.value == "l" =>
+            (parseContract(stat), if (isDiet) ivectorEmpty else exp.stats.tail)
+          case _ =>
+            (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
+              if (isDiet) ivectorEmpty else exp.stats)
+        }
+        AST.MethodStmt(isPure, sig, mc, AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))
+      case _ =>
+        errorInLogika(exp.pos, "Only block '{ ... }' is allowed for method definitions")
+        AST.MethodStmt(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), AST.Block(ISZ()))
     }
   }
 
@@ -203,6 +239,53 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
       }
   }
 
+  def translateParam(tp: scala.meta.Term.Param): AST.Param = {
+    val param"..$mods $paramname: ${atpeopt: Option[scala.meta.Type.Arg]} = ${expropt: Option[scala.meta.Term]}" = tp
+    if (mods.nonEmpty || atpeopt.isEmpty || expropt.nonEmpty)
+      errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
+    lazy val er = AST.Param(AST.Id(paramname.value), unitType)
+    atpeopt.map(ta => AST.Param(AST.Id(paramname.value), translateTypeArg(ta))).getOrElse(er)
+  }
+
+  def translateTypeArg(ta: scala.meta.Type.Arg): AST.Type = ta match {
+    case targ"${tpe: Type}" =>
+      translateType(tpe)
+    case _: scala.meta.Type.Arg.Repeated =>
+      errorNotLogika(ta.pos, "Repeated types '<type>*' are")
+      unitType
+    case _: scala.meta.Type.Arg.ByName =>
+      errorNotLogika(ta.pos, "By name types '=> <type>' are")
+      unitType
+  }
+
+  def translateType(t: scala.meta.Type): AST.Type = t match {
+    case t"${name: Type.Name}[..$tpesnel]" =>
+      AST.NamedType(AST.Name(typeName2IS(name)), ISZ(tpesnel.map(translateType): _*))
+    case t"${name: Type.Name}" =>
+      AST.NamedType(AST.Name(typeName2IS(name)), ISZ())
+    case t"(..$atpes) => $tpe" =>
+      AST.FunType(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
+    case _ =>
+      errorNotLogika(t.pos, s"Type '${syntax(t)}' is")
+      unitType
+  }
+
+  def parseDefs(defs: Term.Interpolate): ISZ[AST.SpecMethodDef] = {
+    // TODO: parse defs
+    ISZ()
+  }
+
+  def parseContract(c: Term.Interpolate): AST.MethodContract = {
+    // TODO: parse contract
+    AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)
+  }
+
+  def typeName2IS(name: Type.Name): ISZ[AST.Id] =
+    ISZ(name.value.split(".").map(AST.Id): _*)
+
+  def packageRef2IS(ref: Term.Ref): ISZ[AST.Id] =
+    ISZ(ref.toString.split(".").map(AST.Id): _*)
+
   def syntax(t: scala.meta.Tree, max: Int = 20): String = {
     val text = t.syntax
     (if (text.length < max) text else text.substring(0, max)).
@@ -210,11 +293,4 @@ class ScalaMetaParser(fileUriOpt: Option[FileResourceUri]) {
       replaceAllLiterally("\n", " ").
       replaceAllLiterally("\t", " ") + " ..."
   }
-
-  def translateParam(tp: scala.meta.Term.Param): AST.Param = ???
-
-  def translateType(t: scala.meta.Type): AST.Type = ???
-
-  def packageRef2IS(ref: Term.Ref): IS[Z, AST.Id] =
-    ISZ(ref.toString.split(".").map(AST.Id): _*)
 }
