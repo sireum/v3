@@ -53,6 +53,13 @@ ObjectStmt(id: Id, stmts: ISZ[Stmt])
   extends Stmt
 
 /* @datatype */ case class
+VarStmt(isVal: B,
+        id: Id,
+        tpe: Type,
+        init: Option[Exp])
+  extends Stmt
+
+/* @datatype */ case class
 MethodStmt(isPure: B,
            sig: MethodSig,
            contract: MethodContract,
@@ -67,7 +74,8 @@ ExtMethodStmt(isPure: B,
 
 /* @datatype */ case class
 SpecMethodStmt(sig: MethodSig,
-               defs: ISZ[SpecMethodDef])
+               defs: ISZ[SpecMethodDef],
+               whereOpt: Option[WhereClause])
   extends Stmt
 
 /* @datatype */ case class
@@ -94,6 +102,10 @@ FunType(args: ISZ[Type],
   extends Type
 
 /* @datatype */ case class
+TupleType(args: ISZ[Type])
+  extends Type
+
+/* @datatype */ case class
 TypeParam(id: Id,
           superType: Option[NamedType])
 
@@ -110,8 +122,58 @@ SubMethodContract(isPure: B,
                   args: ISZ[Id],
                   contract: MethodContract)
 
+/* @datatype */ case class
+SpecMethodDef(idOpt: Option[Id],
+              exp: Exp,
+              pattern: Option[Case],
+              cond: Option[Exp])
+
 /* @datatype */ trait
-SpecMethodDef
+Case
+
+/* @datatype */ case class
+TypeCase(id: Id,
+         tpe: Type)
+  extends Case
+
+/* @datatype */ case class
+StructureCase(idOpt: Option[Id],
+              name: Name,
+              patterns: ISZ[Pattern])
+  extends Case
+
+/* @datatype */ case class
+WildcardCase()
+  extends Case
+
+/* @datatype */ trait
+Pattern
+
+/* @datatype */ case class
+VarPattern(id: Id)
+  extends Pattern
+
+/* @datatype */ case class
+StructurePattern(idOpt: Option[Id],
+                 name: Name,
+                 patterns: ISZ[Pattern])
+  extends Pattern
+
+/* @datatype */ case class
+WhereClause(assigns: ISZ[Assign])
+
+/* @datatype */ trait
+Assign
+
+/* @datatype */ case class
+ExpAssign(lhs: Exp,
+          rhs: Exp)
+  extends Assign
+
+/* @datatype */ case class
+PatternAssign(name: Name,
+              patterns: ISZ[Pattern])
+  extends Assign
 
 /* @datatype */ case class
 ExpStmt(exp: Exp)

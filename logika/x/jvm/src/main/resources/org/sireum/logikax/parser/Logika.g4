@@ -55,10 +55,25 @@ and it is used for truth table and a different form of sequent
 file
   : truthTable EOF                                      #TruthTableFile
   | NL* sequent NL* proof? NL* EOF                      #SequentFile
-  | NL* proofElements NL* EOF                           #ProofElementsFile
-  | NL* loopInvariant NL* EOF                           #LoopInvariantFile
-  | NL* methodContract NL* EOF                          #MethodContractFile
+  ;
+
+stmtFile
+  : NL* proof NL* EOF                                   #ProofFile
+  | NL* facts NL* EOF                                   #FactsFile
+  | NL* theorems NL* EOF                                #TheoremsFile
   | NL* invariants NL* EOF                              #InvariantsFile
+  ;
+
+loopInvariantFile
+  : NL* loopInvariant NL* EOF
+  ;
+
+methodContractfile
+  : NL* methodContract NL* EOF
+  ;
+
+funDefFile
+  : NL* funDefs NL* EOF
   ;
 
 truthTable
@@ -78,7 +93,7 @@ row
   ;
 
 bool
-  : t=( 'T' | '⊤' | 'F' | '⊥' )
+  : t=( 'T' | '⊤' | 'F' | '⊥' | '1' | '0' )
   ;
 
 status
@@ -123,7 +138,6 @@ primFormula
   : t=( 'true' | 'T' | '⊤'
       | 'false' | 'F' | '_|_' | '⊥' )                   #Boolean
   | '(' formula ')'                                     #Paren
-  | 'result'                                            #Result
   | ID                                                  #Var
   | NUM                                                 #Int
   | INT                                                 #IntLit
@@ -186,22 +200,8 @@ name
   ;
 
 type
-  : baseType ( '[' type ( ',' type )+ ']' )?
-  | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']'
-  ;
-
-baseType
-  : t=( 'B' | 'R' | 'F32' | 'F64' | 'ZS' )
-  | intType
-  | name
-  ;
-
-intType
-  : t=( 'Z' | 'N'
-      | 'Z8' | 'Z16' | 'Z32' | 'Z64'
-      | 'N8' | 'N16' | 'N32' | 'N64'
-      | 'S8' | 'S16' | 'S32' | 'S64'
-      | 'U8' | 'U16' | 'U32' | 'U64' )
+  : name ( '[' type ( ',' type )* ']' )?
+  | '(' type ( ',' type )+ ')'
   ;
 
 typeArgs
@@ -209,7 +209,11 @@ typeArgs
   ;
 
 typeParams
-  : '[' ID ( ',' ID )* ']'
+  : '[' typeParamArg ( ',' typeParamArg )* ']'
+  ;
+
+typeParamArg
+  : ID ( '<:' type )?
   ;
 
 justification
@@ -290,219 +294,65 @@ path
   : t=( '..' | '.' | '/' | ID )
   ;
 
-/*
-program: NL* ( impor NL+ stmts )? ;
-
-impor
-  : tb='import' org=ID '.' sireum=ID '.' logika=ID '.' te='_'
-    // org=="org" && sireum=="sireum" && logika=="logika"
-  ;
-*/
-
-proofElements
-  : tb='{' NL* facts theorems? te='}' NL*
-  | tb='{' NL* facts? theorems te='}' NL*
-  | tb='{' NL* facts theorems te='}' NL* ;
-
 facts
-  : 'fact' NL*
-    factOrFun ( NL+ factOrFun? )*
+  : tb='{' NL*
+    'fact' NL*
+    fact ( NL+ fact? )*
+    te='}' NL*
   ;
 
 theorems
-  : 'theorem' NL*
+  : tb='{' NL*
+    'theorem' NL*
     theorem ( NL+ theorem? )*
+    te='}' NL*
   ;
-
-factOrFun: fact | fun ;
 
 fact: ID typeParams? '.' NL* formula ;
 
-theorem: ID typeParams? '.' NL* formula proof ;
+theorem: ID typeParams? '.' NL* formula NL* proof ;
 
-fun
-  : tb='def' id=ID typeParams? NL?
-    '(' param ( ',' NL* param )* ')' ':' type
-    ( funDef with )?
-  ;
-
-funDef
-  : NL* funDefCond ( NL+ funDefCond )*                  #FunDefConds
-  | NL* funDefSimple                                    #FunDefEq
+funDefs
+  : '{'
+    NL* funDefCond ( NL+ funDefCond )*
+    ( NL+ where? )?
+    '}'                                                 #FunDefConds
+  | '{'
+    NL* funDefSimple
+    ( NL+ where? )?
+    '}'                                                 #FunDefEq
   ;
 
 funDefCond
   : '=' e=formula ',' NL* 'if' c=formula '(' ID ')'
+  | '=' e=formula ',' NL* 'case' case '(' ID ')'
+  | '=' e=formula ',' NL* 'case' case 'if' c=formula '(' ID ')'
   ;
 
-with
-  : 'with' withDef ( NL+ withDef ) NL+
+case
+  : ID ':' type                                         #TypeCase
+  | ( ID '@' )? name?
+    '(' ( pattern ( ',' pattern )* )? ')'               #PatternCase
+  | '_'                                                 #WildcardCase
   ;
 
-withDef
+pattern
+  : ID                                                  #IdPattern
+  | ( ID '@' )? name?
+    '(' ( pattern ( ',' pattern )* )? ')'               #StructurePattern
+  ;
+
+where
+  : 'where' whereDef ( NL+ whereDef ) NL+
+  ;
+
+whereDef
   : ID ':' type '=' NL? formula
   ;
 
 funDefSimple
-  : '=' e=formula
+  : '=' formula
   ;
-
-param: ID ':' type ;
-
-/*
-
-stmts: stmt? ( NL+ stmt? )* ;
-
-stmt
-  : '@' ann=ID // ann=='native'
-    modifier=( 'var' | 'val' ) ID ':' type '=' NL?
-    '{' '}'                                             #VarDeclStmt
-  | modifier=( 'var' | 'val' ) ID ':' type '=' NL? exp  #VarDeclStmt
-  | ID '=' NL? exp                                      #AssignVarStmt
-  | 'assume' '(' exp ')'                                #AssumeStmt
-  | 'assert' '(' exp ')'                                #AssertStmt
-  | 'if' '(' exp ')' NL* tt='{' ts=blockEnd
-     ( 'else' NL* tf='{' fs=blockEnd )?                 #IfStmt
-  | 'while' '(' exp ')' NL* t='{'
-    ( NL* 'l"""' loopInvariant '"""' )?
-    blockEnd                                            #WhileStmt
-  | exp 'match' '{' matchCase+ '}'                      #MatchStmt
-  | op=( 'print' | 'println' )
-    '(' ( stringOrExp ( ',' stringOrExp )* )? ')'       #PrintStmt
-  | tb=ID '(' index=exp ')' '=' NL? r=exp               #SeqAssignStmt
-  | methodDecl                                          #MethodDeclStmt
-  | traitDecl                                           #TraitDeclStmt
-  | recordDecl                                          #RecordDeclStmt
-  | enumDecl                                            #EnumDeclStmt
-  | objectDecl                                          #ObjectDeclStmt
-  | 'l"""'
-    ( proof
-    | sequent
-    | invariants
-    | proofElements
-    ) '"""'                                             #LogikaStmt
-  | impor                                               #ImportStmt
-  | exp                                                 #ExpStmt
-  ;
-
-matchCase
-  : 'case' ID ':' type '=>' stmts
-  ;
-
-methodDecl
-  : ( '@' NL* anns+=ID NL* )* 'def' id=ID typeParams?
-    NL?
-    // anns is subset of { "pure" , "helper", "native" }
-    '(' ( param ( ',' param )* )? ')'
-    ':' ( type | 'Unit' ) '=' NL*
-    t='{'
-    ( NL* 'l"""' methodContract NL* '"""' )?
-    blockEnd
-  ;
-
-traitDecl
-  : 'sealed' 'trait' id=ID typeParams?
-  | '@' ann=ID // ann=="native"
-    'trait' ID
-  ;
-
-recordDecl
-  : '@' ann=ID // ann=="record" or ann=="irecord"
-    'case' 'class'
-    id=ID typeParams? NL?
-    '(' ( param ( ',' NL* param )* )? ')' NL?
-    ( 'extends' name typeArgs? )?
-  ;
-
-
-enumDecl
-  : '@' ann=ID 'object' id=ID NL? '{' NL? // ann=="enum"
-       'val' values+=ID ( ',' NL* values+=ID )* NL?
-       '=' NL* v=ID NL* // v=="Value"
-    '}'
-  ;
-
-objectDecl
-  : 'object' ID '{' stmts '}'
-  ;
-
-blockEnd
-  : stmts
-    ( returnStmt NL* )?
-    t='}'
-  ;
-
-returnStmt
-  : 'return' exp?
-  ;
-
-stringOrExp
-  : STRING
-  | exp
-  ;
-
-primExp
-  : t=( 'true' | 'T' | '⊤'
-      | 'false' | 'F' | '_|_' | '⊥' )                   #BooleanExp
-  | NUM                                                 #IntExp
-  | ID                                                  #VarExp
-  | t=( 'B'
-      | 'Z'    | 'Z8'   | 'Z16'  | 'Z32'  | 'Z64'
-      | 'N'    | 'N8'   | 'N16'  | 'N32'  | 'N64'
-               | 'S8'   | 'S16'  | 'S32'  | 'S64'
-               | 'U8'   | 'U16'  | 'U32'  | 'U64'
-      | 'R'    | 'F32'  | 'F64'
-      | 'ZS' )
-      '.' ID                                            #TypeAccessExp
-      // ID in { "Min", "Max", "random" }
-  | FLOAT                                               #FloatLitExp
-  | INT                                                 #IntLitExp
-  | REAL                                                #RLitExp
-  | ( t='ZS'
-    | t=( 'MS' | 'IS' ) '[' i=intType ',' v=type ']' )
-    '(' ( exp ( ',' exp )* )? ')'                       #SeqExp
-  | ( t='ZS' '.' id=ID
-    | t=( 'MS' | 'IS' )
-      '.' id=ID '[' i=intType ',' v=type ']' )
-    // id == "create"
-    '(' ( exp ( ',' exp )* )? ')'                       #SeqCreateExp
-  ;
-
-exp
-  : primExp primExpSuffix*                              #PExp
-  | 'randomInt' '(' ')'                                 #RandomIntExp
-  | 'readInt' '(' STRING? ')'                           #ReadIntExp
-  | '(' exp ')'                                         #ParenExp
-  | op=( '-' | '!' | '~' ) exp                          #UnaryExp
-  | l=exp op=( '*' | '/' | '%' ) NL? r=exp              #BinaryExp
-  | l=exp op=( '+' | '-' )  NL? r=exp                   #BinaryExp
-  | <assoc=right> l=exp op='+:' NL? r=exp               #BinaryExp
-  | l=exp op=':+' NL? r=exp                             #BinaryExp
-  | l=exp
-    op=( '>' | '>=' | '<' | '<=' | '>>' | '>>>' | '<<' )
-    NL?  r=exp                                          #BinaryExp
-  | l=exp op=( '==' | '!=' )  NL? r=exp                 #BinaryExp
-  | l=exp op='&' NL? r=exp                              #BinaryExp
-  | l=exp op='^|' NL? r=exp                             #BinaryExp
-  | l=exp op='|' NL? r=exp                              #BinaryExp
-  ;
-
-primExpSuffix
-  : '(' expUpdates ')'                                  #ExpUpdatesSuffix
-  | typeArgs? '(' expArgs? ')'                          #ExpApplySuffix
-  | '.' ID typeArgs? '(' expArgs? ')'                   #ExpMethodInvokeSuffix
-  | '.' ID                                              #ExpAccessSuffix
-  ;
-
-expUpdates
-  : exp '->' exp ( ',' exp '->' exp )*
-  ;
-
-expArgs
-  : exp ( ',' exp )*                                    #PositionalExpArgs
-  | ID '=' exp ( ',' ID '=' exp )*                      #NamedExpArgs
-  ;
-*/
 
 loopInvariant
   : tb='{' NL*

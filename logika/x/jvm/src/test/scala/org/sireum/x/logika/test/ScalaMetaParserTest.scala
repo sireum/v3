@@ -32,30 +32,75 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   "Passing" - {
 
-    passing("")
+    passing("", addLogikaImport = false)
 
-    passing("package a.b.c")
+    passing("import org.sireum.logika._", addLogikaImport = false)
+
+    passing("package a.b.c; import org.sireum.logika._", addLogikaImport = false)
+
+
+    "Var/Val" - {
+
+      passing("val x: Z = 4", isWorksheet = true)
+
+      passing("var x: Z = 4", isWorksheet = true)
+
+      passing("@ext object Foo { var x: Z = 4 }")
+
+      passing("@ext object Foo { var x: Z = $ }")
+
+    }
+
+    "Method" - {
+
+      passing("def f: Z = {}", isWorksheet = true)
+
+      passing("def f(x: Z): Z = {}", isWorksheet = true)
+
+      passing("@spec def f(x: Z): Z = $", isWorksheet = true)
+
+      passing("@spec def f(x: Z): Z = c\"\"\"{ reads g }\"\"\"", isWorksheet = true)
+
+      passing("@pure def f(x: Z): Z = {}", isWorksheet = true)
+
+    }
 
     "Object" - {
 
       passing("object Foo")
 
-      "Method" - {
+      passing("object Bar", isWorksheet = true)
 
-        passing("object Foo { def f: Z = {} }")
+      passing("object Foo { val x: Z = 10; var y: Z = 11 }")
 
-        passing("object Foo { def f(x: Z): Z = {} }")
+    }
 
-        passing("object Foo { @spec def f(x: Z): Z = $ }")
+    "Type" - {
 
-        passing("object Foo { @spec def f(x: Z): Z = c\"\"\"{ reads g }\"\"\" }")
+      passing("def f(x: ISZ[Z]): Z = {}", isWorksheet = true)
 
-        passing("object Foo { @pure def f(x: Z): Z = {} }")
+      passing("def f(x: A[Z, Z]): Z = {}", isWorksheet = true)
 
-        passing("object Foo { def f[T](x: T, y: Z): T = {} }")
+      passing("def f(x: (Z, Z)): Z = {}", isWorksheet = true)
 
-        passing("object Foo { def f[A, B <: A](x: A, y: Z): B = {} }")
-      }
+      passing("def f(x: (Z, Z, (Z))): Z = {}", isWorksheet = true)
+
+      passing("def f(x: (Z, Z, (Z, Y))): Z = {}", isWorksheet = true)
+
+      passing("def f(x: Z => Z): Z = {}", isWorksheet = true)
+
+      passing("def f(x: (Z) => Z): Z = {}", isWorksheet = true)
+
+      passing("def f(x: (Z, Z) => Z): Z = {}", isWorksheet = true)
+
+    }
+
+    "Type Param" - {
+
+      passing("def f[T](x: T, y: Z): T = {}", isWorksheet = true)
+
+      passing("def f[A, B <: A](x: A, y: Z): B = {}", isWorksheet = true)
+
     }
 
     "Ext Object" - {
@@ -75,6 +120,14 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   "Failing" - {
 
+    failing("object Foo", "first statement should be", addLogikaImport = false)
+
+    val packageFirstMember = "first member of packages"
+
+    failing("package a.b.c", packageFirstMember, addLogikaImport = false)
+
+    failing("package a.b.c; object Foo", packageFirstMember, addLogikaImport = false)
+
     "Object" - {
 
       "Modifier" - {
@@ -89,71 +142,117 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
       failing("object A extends B(5)", "super constructor")
 
-      "Method" - {
+    }
 
-        failing("object Foo { def f(x: Z)(y: Z): Z = {} }", "multiple parameter tuples")
+    "Val/Var" - {
 
-        failing("object Foo { def f(x: Z) = {} }", "explicit return type")
+      val topMember = "expected class or object"
 
-        failing("object Foo { def f: Z = 4 }", "Only block")
+      failing("package a; import org.sireum.logika._; val x: Z = 4", topMember, addLogikaImport = false)
 
-        val pureOrSpec = "@pure or @spec"
+      failing("package a; import org.sireum.logika._; var x: Z = 4", topMember, addLogikaImport = false)
 
-        failing("object Foo { @ext def f(x: Z): Z = {} }", pureOrSpec)
+      val dollar = "'$' is only allowed"
 
-        failing("object Foo { @spec @pure def f(x: Z): Z = $ }", pureOrSpec)
+      failing("val x: Z = $", dollar, isWorksheet = true)
 
-        failing("object Foo { @pure @spec def f(x: Z): Z = $ }", pureOrSpec)
+      failing("var x: Z = $", dollar, isWorksheet = true)
 
-        failing("object Foo { @pure @pure def f(x: Z): Z = {} }", "Redundant @pure")
+      val form = "<id> : <type> = <exp>'"
 
-        failing("object Foo { @spec @spec def f(x: Z): Z = $ }", "Redundant @spec")
+      failing("val x = 5", form, isWorksheet = true)
 
-        failing("object Foo { @spec def f: Z = 4 }", "@spec method expression")
+      failing("var x = 5", form, isWorksheet = true)
+
+      failing("val x, y: Z = 5", form, isWorksheet = true)
+
+      failing("var x, y: Z = 5", form, isWorksheet = true)
+
+      failing("var x: Z = _", form, isWorksheet = true)
+
+      failing("var x = _", "unbound placeholder parameter", isWorksheet = true)
+
+    }
+
+    "Method" - {
+
+      failing("def f(x: Z)(y: Z): Z = {}", "multiple parameter tuples", isWorksheet = true)
+
+      failing("def f(x: Z) = {}", "explicit return type", isWorksheet = true)
+
+      failing("def f: Z = 4", "Only block", isWorksheet = true)
+
+      val pureOrSpec = "@pure or @spec"
+
+      failing("@ext def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+
+      failing("@spec @pure def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+
+      failing("@pure @spec def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+
+      failing("@pure @pure def f(x: Z): Z = {}", "Redundant @pure", isWorksheet = true)
+
+      failing("@spec @spec def f(x: Z): Z = {}", "Redundant @spec", isWorksheet = true)
+
+      failing("@spec def f: Z = 4", "@spec method expression", isWorksheet = true)
+
+      "Param" - {
 
         val paramTypeForms = "'<id> : <type>'"
 
-        failing("object Foo { def f(x: Z = 5): Z = {} }", paramTypeForms)
+        failing("def f(x: Z = 5): Z = {}", paramTypeForms, isWorksheet = true)
 
-        failing("object Foo { def f(@pure x: Z): Z = {} }", paramTypeForms)
+        failing("def f(@pure x: Z): Z = {}", paramTypeForms, isWorksheet = true)
 
-        failing("object Foo { def f(x: => Z): Z = {} }", "By name types")
+        failing("def f(x: => Z): Z = {}", "By name types", isWorksheet = true)
 
-        failing("object Foo { def f(x: Z*): Z = {} }", "Repeated types")
-
-        val typeParamForms = "'<id>' or '<id> <: <type>'"
-
-        failing("object Foo { def f[T >: B](x: Z): Z = {} }", typeParamForms)
-
-        failing("object Foo { def f[T <% B](x: Z): Z = {} }", typeParamForms)
-
-        failing("object Foo { def f[T : TT](x: Z): Z = {} }", typeParamForms)
-
-        failing("object Foo { def f[T <: (Z) => Z](x: Z): Z = {} }", "Type parameter bound")
-
-        failing("object Foo { def f(x: (Z, Z)): Z = {} }", "Type '(Z, Z)' is")
+        failing("def f(x: Z*): Z = {}", "Repeated types", isWorksheet = true)
       }
     }
 
+    "Type Param" - {
+
+      val typeParamForms = "'<id>' or '<id> <: <type>'"
+
+      failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
+
+      failing("def f[T <% B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
+
+      failing("def f[T : TT](x: Z): Z = {}", typeParamForms, isWorksheet = true)
+
+      failing("def f[T <: (Z) => Z](x: Z): Z = {}", "Type parameter bound", isWorksheet = true)
+
+    }
+
     "Ext Object" - {
+
+      failing("@ext @ext object Foo", "Redundant @ext")
+
       failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
+
     }
   }
 
-  def parse(text: String): ScalaMetaParser.Result =
-    ScalaMetaParser(isDiet = false, None, text)
+  def parse(text: String, isWorksheet: Boolean): ScalaMetaParser.Result =
+    ScalaMetaParser(isWorksheet, isDiet = false, None, text)
 
-  def passing(text: String)(implicit pos: org.scalactic.source.Position): Unit =
+  def passing(text: String,
+              addLogikaImport: Boolean = true,
+              isWorksheet: Boolean = false)(
+               implicit pos: org.scalactic.source.Position): Unit =
     *(text) {
-      val r = parse(s"//#Logika\n$text")
-      val b = r.program.nonEmpty && r.tags.isEmpty
+      val r = parse(s"// #Logika\n${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text", isWorksheet)
+      val b = r.programOpt.nonEmpty && r.tags.isEmpty
       if (!b) report(r)
       b
     }
 
-  def failing(text: String, msg: String)(implicit pos: org.scalactic.source.Position): Unit =
+  def failing(text: String, msg: String,
+              addLogikaImport: Boolean = true,
+              isWorksheet: Boolean = false)(
+               implicit pos: org.scalactic.source.Position): Unit =
     *(text) {
-      val r = parse(s"//#Logika\n$text")
+      val r = parse(s"// #Logika\n${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text", isWorksheet)
       val b = r.tags.exists {
         case t: MessageTag => t.message.contains(msg)
         case _ => false
@@ -163,7 +262,8 @@ class ScalaMetaParserTest extends LogikaXSpec {
     }
 
   def report(r: ScalaMetaParser.Result): Unit = {
-    System.err.println(r.program)
+    System.err.println(r.text)
+    System.err.println(r.programOpt)
     val reporter = new ConsoleTagReporter
     r.tags.foreach(reporter.report)
   }

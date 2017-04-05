@@ -34,21 +34,31 @@ import scala.meta._
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
 object ScalaMetaParser {
 
-  case class Result(hashLogika: Boolean,
-                    program: Option[AST.Program],
+  object Enclosing extends Enumeration {
+    type Type = Value
+    val Top, Package, Object, ExtObject, Datatype, Record, Method = Value
+  }
+
+  case class Result(text: String,
+                    hashLogika: Boolean,
+                    programOpt: Option[AST.Program],
                     tags: ISeq[Tag])
 
-  def apply(isDiet: Boolean,
+  def apply(isWorksheet: Boolean,
+            isDiet: Boolean,
             fileUriOpt: Option[FileResourceUri],
             text: String): Result = {
     val lines = text.lines
     val hashLogika = lines.hasNext && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
-    text.parse[Source] match {
+    val dialect =
+      if (isWorksheet) scala.meta.dialects.Scala212.copy(allowToplevelTerms = true)
+      else scala.meta.dialects.Scala212
+    dialect(text).parse[Source] match {
       case Parsed.Success(x) =>
         //println("Input: " + x.structure)
-        new ScalaMetaParser(hashLogika, isDiet, fileUriOpt).translateSource(x)
+        new ScalaMetaParser(text, hashLogika, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
-        Result(hashLogika, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
+        Result(text, hashLogika, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
   }
 
@@ -66,11 +76,17 @@ object ScalaMetaParser {
       posEnd.offset - posStart.offset).
       toLocationError(fileUriOpt, "Logika Parser", message)
   }
+
+  def isDollar(t: Term): Boolean = t match {
+    case q"$$" => true
+    case _ => false
+  }
 }
 
 import ScalaMetaParser._
 
-class ScalaMetaParser(hashLogika: Boolean,
+class ScalaMetaParser(text: String,
+                      hashLogika: Boolean,
                       isDiet: Boolean,
                       fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
@@ -93,53 +109,63 @@ class ScalaMetaParser(hashLogika: Boolean,
   def translateSource(source: Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
       if (hashLogika) {
-        val name = AST.Name(packageRef2IS(ref))
-        Result(hashLogika,
-          Some(AST.Program(
-            fileUriOpt,
-            name,
-            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
-      } else Result(hashLogika, None, tags)
-    case stats@(q"import org.sireum.logika._" :: _) =>
+        stats match {
+          case q"import org.sireum.logika._" :: rest =>
+            val name = AST.Name(packageRef2IS(ref))
+            Result(text, hashLogika,
+              Some(AST.Program(
+                fileUriOpt,
+                name,
+                AST.Block(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
+          case _ =>
+            errorInLogika(ref.pos, "The first member of packages should be 'import org.sireum.logika._'")
+            Result(text, hashLogika, None, tags)
+        }
+      } else Result(text, hashLogika, None, tags)
+    case q"import org.sireum.logika._" :: rest =>
       val shouldParse = fileUriOpt.forall(fileUri =>
         fileUri.endsWith(".logika") ||
           fileUri.endsWith(".sc") ||
           (hashLogika && fileUri.endsWith(".scala")))
       if (shouldParse)
-        Result(hashLogika,
+        Result(text, hashLogika,
           Some(AST.Program(
             fileUriOpt,
             AST.Name(ISZ()),
-            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
+            AST.Block(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
       else
-        Result(hashLogika, None, tags)
+        Result(text, hashLogika, None, tags)
+    case Nil =>
+      Result(text, hashLogika, Some(AST.Program(fileUriOpt, AST.Name(ISZ()), AST.Block(ISZ()))), tags)
     case stats =>
       if (hashLogika)
-        Result(hashLogika,
-          Some(AST.Program(
-            fileUriOpt,
-            AST.Name(ISZ()),
-            AST.Block(ISZ(stats.map(translateStat(isExt = false)): _*)))), tags)
-      else
-        Result(hashLogika, None, tags)
+        errorInLogika(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum.logika._'")
+      Result(text, hashLogika, None, tags)
   }
 
-  def translateStat(isExt: Boolean)(stat: Stat): AST.Stmt = stat match {
-    case stat: Defn.Object => translateObject(isExt, stat)
-    case stat: Defn.Def => translateDef(isExt, stat)
+  def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = stat match {
+    case stat: Defn.Object => translateObject(enclosing, stat)
+    case stat: Defn.Val => translateVal(enclosing, stat)
+    case stat: Defn.Var => translateVar(enclosing, stat)
+    case stat: Defn.Def => translateDef(enclosing, stat)
+    case Term.Interpolate(Term.Name("l"), Seq(Lit(s: String)), Nil) => parseLogikaStmt(s)
     case _ =>
       val text = syntax(stat)
       errorNotLogika(stat.pos, s"Statement '$text' is")
       AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
   }
 
-  def translateObject(isExt: Boolean, tree: Defn.Object): AST.Stmt = {
+  def translateObject(enclosing: Enclosing.Type, tree: Defn.Object): AST.Stmt = {
     val q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" = tree
     var hasError = false
     var hasExt = false
-    mods match {
-      case mod"@ext" :: Nil => hasExt = true
-      case Nil => // skip
+    for (mod <- mods) mod match {
+      case mod"@ext" =>
+        if (hasExt) {
+          hasError = true
+          error(mods.head.pos, "Redundant @ext.")
+        }
+        hasExt = true
       case _ =>
         hasError = true
         errorNotLogika(mods.head.pos, "Object modifiers other than @ext are")
@@ -152,12 +178,42 @@ class ScalaMetaParser(hashLogika: Boolean,
       hasError = true
       errorNotLogika(ctorcalls.head.pos, "Object super constructor calls are")
     }
-    if (!hasError)
-      AST.ObjectStmt(cid(name), ISZ(stats.map(translateStat(hasExt)): _*))
-    else AST.ObjectStmt(cid(name), ISZ())
+    if (!hasError) {
+      val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
+      AST.ObjectStmt(cid(name), ISZ(stats.map(tstat): _*))
+    } else AST.ObjectStmt(cid(name), ISZ())
   }
 
-  def translateDef(isExt: Boolean, tree: Defn.Def): AST.Stmt = {
+  def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
+    val q"..$mods val ..$patsnel: ${tpeopt: Option[Type]} = $expr" = stat
+    lazy val er = AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    if (mods.nonEmpty || patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
+      errorInLogika(stat.pos, "Val declaration should have the form: 'val <id> : <type> = <exp>'")
+      er
+    } else if (enclosing != Enclosing.ExtObject && isDollar(expr)) {
+      error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
+      er
+    } else
+      AST.VarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
+        translateType(tpeopt.get), if (isDiet) None else Some(translateExp(expr)))
+  }
+
+  def translateVar(enclosing: Enclosing.Type, stat: Defn.Var): AST.Stmt = {
+    val q"..$mods var ..$patsnel: ${tpeopt: Option[Type]} = ${expropt: Option[Term]}" = stat
+    lazy val er = AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    if (mods.nonEmpty || patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] ||
+      tpeopt.isEmpty || (expropt.isEmpty && enclosing != Enclosing.Method)) {
+      errorInLogika(stat.pos, "Var declaration should have the form: 'var <id> : <type> = <exp>'")
+      er
+    } else if (enclosing != Enclosing.ExtObject && expropt.exists(isDollar)) {
+      error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
+      er
+    } else
+      AST.VarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
+        translateType(tpeopt.get), if (isDiet) None else expropt.map(translateExp))
+  }
+
+  def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
     val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: Option[Type]} = $exp" = tree
     var hasError = false
     if (paramss.size > 1) {
@@ -196,41 +252,42 @@ class ScalaMetaParser(hashLogika: Boolean,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateParam): _*),
       tpeopt.map(translateType).getOrElse(unitType))
-    if (isExt)
+    if (enclosing == Enclosing.ExtObject)
       exp match {
-        case Term.Name("$") =>
+        case q"$$" =>
           AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
-        case exp: Term.Interpolate if exp.prefix.value == "c" =>
-          AST.ExtMethodStmt(isPure, sig, parseContract(exp))
+        case Term.Interpolate(Term.Name("c"), Seq(Lit(s: String)), Nil) =>
+          AST.ExtMethodStmt(isPure, sig, parseContract(s))
         case _ =>
           hasError = true
-          error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" are allowed as Logika @ext object method expression.")
+          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' are allowed as Logika @ext object method expression.")
           AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
     else if (isSpec)
       exp match {
-        case Term.Name("$") =>
-          AST.SpecMethodStmt(sig, ISZ())
-        case exp: Term.Interpolate if exp.prefix.value == "c" =>
-          AST.SpecMethodStmt(sig, parseDefs(exp))
+        case q"$$" =>
+          AST.SpecMethodStmt(sig, ISZ(), None)
+        case Term.Interpolate(Term.Name("c"), Seq(Lit(s: String)), Nil) =>
+          val (defs, where) = parseDefs(s)
+          AST.SpecMethodStmt(sig, defs, where)
         case _ =>
           hasError = true
-          error(exp.pos, "Only $ or c\"\"\"{ ... }\"\"\" is allowed as Logika @spec method expression.")
-          AST.SpecMethodStmt(sig, ISZ())
+          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Logika @spec method expression.")
+          AST.SpecMethodStmt(sig, ISZ(), None)
       }
     else exp match {
       case exp: Term.Block =>
         val (mc, blockOpt) = exp.stats.headOption match {
-          case Some(stat: Term.Interpolate) if stat.prefix.value == "l" =>
-            (parseContract(stat),
+          case Some(Term.Interpolate(Term.Name("l"), Seq(Lit(s: String)), Nil)) =>
+            (parseContract(s),
               if (isDiet) None
-              else Some(AST.Block(ISZ(exp.stats.tail.map(translateStat(isExt = false)): _*))))
+              else Some(AST.Block(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
             (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
               if (isDiet) None
-              else Some(AST.Block(ISZ(exp.stats.map(translateStat(isExt = false)): _*))))
+              else Some(AST.Block(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
         AST.MethodStmt(isPure, sig, mc, blockOpt)
       case _ =>
@@ -279,6 +336,8 @@ class ScalaMetaParser(hashLogika: Boolean,
       AST.NamedType(AST.Name(ISZ(cid(name))), ISZ(tpesnel.map(translateType): _*))
     case t"${name: Type.Name}" =>
       AST.NamedType(AST.Name(ISZ(cid(name))), ISZ())
+    case t"(..$tpesnel)" =>
+      AST.TupleType(ISZ(tpesnel.map(translateType): _*))
     case t"$ref.$tname" =>
       def f(t: Term): ISZ[AST.Id] = t match {
         case q"$expr.$name" => f(expr) :+ cid(name)
@@ -287,6 +346,7 @@ class ScalaMetaParser(hashLogika: Boolean,
           errorInLogika(t.pos, s"Invalid type reference '${t.syntax}'")
           ISZ(AST.Id("$"))
       }
+
       AST.NamedType(AST.Name(f(ref) :+ cid(tname)), ISZ())
     case t"(..$atpes) => $tpe" =>
       AST.FunType(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
@@ -295,15 +355,27 @@ class ScalaMetaParser(hashLogika: Boolean,
       unitType
   }
 
-  def parseDefs(defs: Term.Interpolate): ISZ[AST.SpecMethodDef] = {
-    // TODO: parse defs
-    ISZ()
+  def translateExp(exp: Term): AST.Exp = {
+    // TODO: translate Exp
+    AST.NameExp(AST.Name(ISZ(AST.Id("$"))))
   }
 
-  def parseContract(c: Term.Interpolate): AST.MethodContract = {
+  def parseDefs(text: String): (ISZ[AST.SpecMethodDef], Option[AST.WhereClause]) = {
+    // TODO: parse defs
+    (ISZ(), None)
+  }
+
+  def parseContract(text: String): AST.MethodContract = {
     // TODO: parse contract
     AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)
   }
+
+  def parseLogikaStmt(text: String): AST.Stmt = {
+    // TODO: parse logika stmt
+    AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+  }
+
+  def cid(t: Pat.Var.Term): AST.Id = cid(t.name.value, t.pos)
 
   def cid(name: Term.Name): AST.Id = cid(name.value, name.pos)
 
@@ -313,7 +385,9 @@ class ScalaMetaParser(hashLogika: Boolean,
 
   def cid(id: String, pos: Position): AST.Id = {
     def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+
     def isLetterOrDigit(c: Char): Boolean = isLetter(c) || ('0' <= c && c <= '9')
+
     if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
       errorInLogika(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
     AST.Id(id)
@@ -322,10 +396,11 @@ class ScalaMetaParser(hashLogika: Boolean,
   def packageRef2IS(ref: Term.Ref): ISZ[AST.Id] = {
     def f(t: Term): ISZ[AST.Id] = t match {
       case q"${name: Term.Name}" => ISZ(cid(name))
-      case q"$expr.$name" =>  f(expr) :+ cid(name)
+      case q"$expr.$name" => f(expr) :+ cid(name)
       case _ => errorInLogika(t.pos, s"Invalid package name '${ref.syntax}'")
         ISZ(AST.Id("$"))
     }
+
     f(ref)
   }
 
@@ -336,6 +411,6 @@ class ScalaMetaParser(hashLogika: Boolean,
       case '\t' => ' '
       case '\n' => ' '
       case c => c
-    }
+    } + " ..."
   }
 }
