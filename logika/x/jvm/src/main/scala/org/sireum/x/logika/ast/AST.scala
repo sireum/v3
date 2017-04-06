@@ -37,7 +37,7 @@ Id(value: String)
 Name(ids: ISZ[Id])
 
 /* @datatype */ case class
-Program(fileUriOpt: Option[String],
+Program(fileUriOpt: option[String],
         packageName: Name,
         block: Block)
   extends UnitNode
@@ -49,6 +49,20 @@ Block(stmts: ISZ[Stmt])
 Stmt
 
 /* @datatype */ case class
+CompositeStmt(isRoot: B,
+              isDatatype: B,
+              id: Id,
+              parent: option[Type],
+              params: ISZ[CompositeParam],
+              stmt: ISZ[Stmt])
+  extends Stmt
+
+/* @datatype */ case class
+CompositeParam(isHidden: B,
+               id: Id,
+               tpe: Type)
+
+/* @datatype */ case class
 ObjectStmt(id: Id, stmts: ISZ[Stmt])
   extends Stmt
 
@@ -56,14 +70,20 @@ ObjectStmt(id: Id, stmts: ISZ[Stmt])
 VarStmt(isVal: B,
         id: Id,
         tpe: Type,
-        init: Option[Exp])
+        init: option[Exp])
+  extends Stmt
+
+/* @datatype */ case class
+SpecVarStmt(isVal: B,
+            id: Id,
+            tpe: Type)
   extends Stmt
 
 /* @datatype */ case class
 MethodStmt(isPure: B,
            sig: MethodSig,
            contract: MethodContract,
-           blockOpt: Option[Block])
+           blockOpt: option[Block])
   extends Stmt
 
 /* @datatype */ case class
@@ -75,7 +95,7 @@ ExtMethodStmt(isPure: B,
 /* @datatype */ case class
 SpecMethodStmt(sig: MethodSig,
                defs: ISZ[SpecMethodDef],
-               whereOpt: Option[WhereClause])
+               whereOpt: option[WhereClause])
   extends Stmt
 
 /* @datatype */ case class
@@ -107,7 +127,7 @@ TupleType(args: ISZ[Type])
 
 /* @datatype */ case class
 TypeParam(id: Id,
-          superType: Option[NamedType])
+          superType: option[NamedType])
 
 /* @datatype */ case class
 MethodContract(reads: ISZ[Name],
@@ -123,10 +143,10 @@ SubMethodContract(isPure: B,
                   contract: MethodContract)
 
 /* @datatype */ case class
-SpecMethodDef(idOpt: Option[Id],
+SpecMethodDef(idOpt: option[Id],
               exp: Exp,
-              pattern: Option[Case],
-              cond: Option[Exp])
+              pattern: option[Case],
+              cond: option[Exp])
 
 /* @datatype */ trait
 Case
@@ -137,7 +157,7 @@ TypeCase(id: Id,
   extends Case
 
 /* @datatype */ case class
-StructureCase(idOpt: Option[Id],
+StructureCase(idOpt: option[Id],
               name: Name,
               patterns: ISZ[Pattern])
   extends Case
@@ -154,7 +174,7 @@ VarPattern(id: Id)
   extends Pattern
 
 /* @datatype */ case class
-StructurePattern(idOpt: Option[Id],
+StructurePattern(idOpt: option[Id],
                  name: Name,
                  patterns: ISZ[Pattern])
   extends Pattern

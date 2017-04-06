@@ -32,6 +32,8 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   "Passing" - {
 
+    passing(prelude, addLogikaImport = false, isPrelude = true)
+
     passing("", addLogikaImport = false)
 
     passing("import org.sireum.logika._", addLogikaImport = false)
@@ -44,6 +46,10 @@ class ScalaMetaParserTest extends LogikaXSpec {
       passing("val x: Z = 4", isWorksheet = true)
 
       passing("var x: Z = 4", isWorksheet = true)
+
+      passing("@spec val x: Z = $", isWorksheet = true)
+
+      passing("@spec var x: Z = $", isWorksheet = true)
 
       passing("@ext object Foo { var x: Z = 4 }")
 
@@ -168,10 +174,29 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
       failing("var x, y: Z = 5", form, isWorksheet = true)
 
-      failing("var x: Z = _", form, isWorksheet = true)
+      val specForm = "<id> : <type> = $'"
+
+      failing("@spec val x = 5", specForm, isWorksheet = true)
+
+      failing("@spec var x = 5", specForm, isWorksheet = true)
+
+      failing("@spec val x, y: Z = $", specForm, isWorksheet = true)
+
+      failing("@spec var x, y: Z = $", specForm, isWorksheet = true)
+
+      failing("var x: Z = _", "only allowed inside methods", isWorksheet = true)
 
       failing("var x = _", "unbound placeholder parameter", isWorksheet = true)
 
+      failing("@spec @spec var x: Z = $", "Redundant @spec", isWorksheet = true)
+
+      failing("private var x: Z = $", "Only the @spec modifier", isWorksheet = true)
+
+      val specDollar = "<id> : <type> = $"
+
+      failing("@spec val x: Z = 5", specDollar, isWorksheet = true)
+
+      failing("@spec var x: Z = 5", specDollar, isWorksheet = true)
     }
 
     "Method" - {
@@ -233,15 +258,29 @@ class ScalaMetaParserTest extends LogikaXSpec {
     }
   }
 
-  def parse(text: String, isWorksheet: Boolean): ScalaMetaParser.Result =
-    ScalaMetaParser(isWorksheet, isDiet = false, None, text)
+  def prelude: String = {
+    import java.io._
+
+    val url = classOf[org.sireum.logika._B].getResource("prelude.scala")
+    val f = new File(url.toURI)
+    val fis = new FileInputStream(f)
+    val buffer = new Array[Byte](f.length.toInt)
+    fis.read(buffer)
+    fis.close()
+    new String(buffer)
+  }
+
+  def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean): ScalaMetaParser.Result =
+    ScalaMetaParser(isPrelude, isWorksheet, isDiet = false, None, text)
 
   def passing(text: String,
               addLogikaImport: Boolean = true,
-              isWorksheet: Boolean = false)(
+              isWorksheet: Boolean = false,
+              isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position): Unit =
-    *(text) {
-      val r = parse(s"// #Logika\n${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text", isWorksheet)
+    *(sub(text)) {
+      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text",
+        isWorksheet, isPrelude)
       val b = r.programOpt.nonEmpty && r.tags.isEmpty
       if (!b) report(r)
       b
@@ -249,10 +288,12 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   def failing(text: String, msg: String,
               addLogikaImport: Boolean = true,
-              isWorksheet: Boolean = false)(
+              isWorksheet: Boolean = false,
+              isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position): Unit =
-    *(text) {
-      val r = parse(s"// #Logika\n${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text", isWorksheet)
+    *(sub(text)) {
+      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text",
+        isWorksheet, isPrelude)
       val b = r.tags.exists {
         case t: MessageTag => t.message.contains(msg)
         case _ => false
@@ -260,6 +301,10 @@ class ScalaMetaParserTest extends LogikaXSpec {
       if (!b) report(r)
       b
     }
+
+  def sub(text: String, max: Int = 100): String= {
+    if (text.length <= max) text else text.substring(0, max) + " ... " + text.hashCode.toHexString
+  }
 
   def report(r: ScalaMetaParser.Result): Unit = {
     System.err.println(r.text)

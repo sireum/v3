@@ -28,7 +28,7 @@ package org.sireum.x.logika.parser
 
 import org.sireum.x.logika.{ast => AST}
 import org.sireum.util._
-import org.sireum.logika.ISZ
+import org.sireum.logika.{option, some, none, ISZ}
 import scala.meta._
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
@@ -36,7 +36,7 @@ object ScalaMetaParser {
 
   object Enclosing extends Enumeration {
     type Type = Value
-    val Top, Package, Object, ExtObject, Datatype, Record, Method = Value
+    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Method = Value
   }
 
   case class Result(text: String,
@@ -47,16 +47,25 @@ object ScalaMetaParser {
   def apply(isWorksheet: Boolean,
             isDiet: Boolean,
             fileUriOpt: Option[FileResourceUri],
-            text: String): Result = {
-    val lines = text.lines
-    val hashLogika = lines.hasNext && ("//#Logika" == lines.next.filterNot(_.isWhitespace))
+            text: String): Result =
+    apply(allowLogikaPackage = false, isWorksheet, isDiet, fileUriOpt, text)
+
+  private[logika] def apply(allowLogikaPackage: Boolean,
+                            isWorksheet: Boolean,
+                            isDiet: Boolean,
+                            fileUriOpt: Option[FileResourceUri],
+                            text: String): Result = {
+    val lines = text.trim.lines
+    val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
+    val hashLogika = "//#Logika" == line
     val dialect =
       if (isWorksheet) scala.meta.dialects.Scala212.copy(allowToplevelTerms = true)
       else scala.meta.dialects.Scala212
     dialect(text).parse[Source] match {
       case Parsed.Success(x) =>
         //println("Input: " + x.structure)
-        new ScalaMetaParser(text, hashLogika, isDiet, fileUriOpt).translateSource(x)
+        new ScalaMetaParser(text, allowLogikaPackage, hashLogika,
+          isWorksheet, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
         Result(text, hashLogika, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
@@ -86,14 +95,16 @@ object ScalaMetaParser {
 import ScalaMetaParser._
 
 class ScalaMetaParser(text: String,
+                      allowLogikaPackage: Boolean,
                       hashLogika: Boolean,
+                      isWorksheet: Boolean,
                       isDiet: Boolean,
                       fileUriOpt: Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
 
   def error(pos: Position,
             message: String): Unit = {
-    tags +:= ScalaMetaParser.error(fileUriOpt, pos, message)
+    tags :+= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
 
   def iszEmpty[T]: ISZ[T] = ISZ()
@@ -109,9 +120,20 @@ class ScalaMetaParser(text: String,
   def translateSource(source: Source): Result = source.stats match {
     case List(q"package $ref { ..$stats }") =>
       if (hashLogika) {
-        stats match {
+        val name = AST.Name(packageRef2IS(ref))
+        if (ref.syntax == "org.sireum.logika") {
+          if (allowLogikaPackage)
+            Result(text, hashLogika,
+              Some(AST.Program(
+                fileUriOpt,
+                name,
+                AST.Block(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
+          else {
+            errorInLogika(ref.pos, "Cannot define members of the org.sireum.logika package")
+            Result(text, hashLogika, None, tags)
+          }
+        } else stats match {
           case q"import org.sireum.logika._" :: rest =>
-            val name = AST.Name(packageRef2IS(ref))
             Result(text, hashLogika,
               Some(AST.Program(
                 fileUriOpt,
@@ -144,15 +166,161 @@ class ScalaMetaParser(text: String,
   }
 
   def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = stat match {
-    case stat: Defn.Object => translateObject(enclosing, stat)
     case stat: Defn.Val => translateVal(enclosing, stat)
     case stat: Defn.Var => translateVar(enclosing, stat)
     case stat: Defn.Def => translateDef(enclosing, stat)
+    case stat: Defn.Object => translateObject(enclosing, stat)
+    case stat: Defn.Trait if stat.mods.exists({
+      case mod"@datatype" => true
+      case _ => false
+    }) => translateDatatype(enclosing, stat)
+    case stat: Defn.Class if stat.mods.exists({
+      case mod"@datatype" => true
+      case _ => false
+    }) => translateDatatype(enclosing, stat)
+    case stat: Defn.Class if stat.mods.exists({
+      case mod"@record" => true
+      case _ => false
+    }) => translateRecord(enclosing, stat)
     case Term.Interpolate(Term.Name("l"), Seq(Lit(s: String)), Nil) => parseLogikaStmt(s)
     case _ =>
       val text = syntax(stat)
       errorNotLogika(stat.pos, s"Statement '$text' is")
       AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+  }
+
+  def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+    val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
+      error(tname.pos, "Logika @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
+    var hasDatatype = false
+    for (mod <- mods) mod match {
+      case mod"@datatype" =>
+        if (hasDatatype) {
+          error(mod.pos, "Redundant @datatype.")
+        }
+        hasDatatype = true
+      case _ =>
+        error(mod.pos, "Logika @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
+    }
+    AST.CompositeStmt(isRoot = true,
+      isDatatype = true,
+      cid(tname),
+      None,
+      ISZ(),
+      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*))
+  }
+
+  def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
+    val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
+      ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
+      error(tname.pos, "Logika @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
+    }
+    var hasDatatype = false
+    for (mod <- mods) mod match {
+      case mod"@datatype" =>
+        if (hasDatatype) {
+          error(mod.pos, "Redundant @datatype.")
+        }
+        hasDatatype = true
+      case _ =>
+        error(mod.pos, "Logika @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
+    }
+    val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = true))): _*)
+    AST.CompositeStmt(isRoot = false,
+      isDatatype = true,
+      cid(tname),
+      ctorcalls.headOption.map(translateCtorCall),
+      params,
+      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
+  }
+
+  def translateRecord(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+    val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
+      error(tname.pos, "Logika @record traits have to be of the form '@record trait <id> { ... }'.")
+    var hasRecord = false
+    for (mod <- mods) mod match {
+      case mod"@record" =>
+        if (hasRecord) {
+          error(mod.pos, "Redundant @record.")
+        }
+        hasRecord = true
+      case _ =>
+        error(mod.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+    }
+    AST.CompositeStmt(isRoot = true,
+      isDatatype = false,
+      cid(tname),
+      None,
+      ISZ(),
+      ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*))
+  }
+
+  def translateRecord(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
+    val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
+      ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
+      error(tname.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+    }
+    var hasRecord = false
+    for (mod <- mods) mod match {
+      case mod"@record" =>
+        if (hasRecord) {
+          error(mod.pos, "Redundant @record.")
+        }
+        hasRecord = true
+      case _ =>
+        error(tname.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+    }
+    val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = false))): _*)
+    AST.CompositeStmt(isRoot = false,
+      isDatatype = false,
+      cid(tname),
+      ctorcalls.headOption.map(translateCtorCall),
+      params,
+      ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
+  }
+
+  def translateCtorCall(cc: Ctor.Call): AST.Type = {
+    def f(t: Term): ISZ[AST.Id] = t match {
+      case ctor"${ctorname: Ctor.Name}" => ISZ(cid(ctorname))
+      case ctor"$ref.$ctorname" => f(ref) :+ cid(ctorname)
+      case q"${name: Term.Name}" => ISZ(cid(name))
+      case q"$expr.$name" => f(expr) :+ cid(name)
+    }
+    cc match {
+      case ctor"$ctorref[..$atpesnel]" => AST.NamedType(AST.Name(f(ctorref)), ISZ(atpesnel.map(translateType): _*))
+      case _ => AST.NamedType(AST.Name(f(cc)), ISZ())
+    }
+  }
+
+  def translateCompositeParam(isDatatype: Boolean)(tp: Term.Param): AST.CompositeParam = {
+    val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
+    var hasError = true
+    var hasHidden = false
+    var isVar = false
+    for (mod <- mods) mod match {
+      case mod"@hidden" =>
+        if (hasHidden) {
+          hasError = true
+          error(mod.pos, "Redundant @hidden.")
+        }
+        hasHidden = true
+      case mod"varparam" if isDatatype => isVar = true
+      case _ =>
+        hasError = true
+        if (isDatatype) error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Logika @datatype class.")
+        else error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Logika @record class.")
+    }
+    if (atpeopt.isEmpty || expropt.nonEmpty) {
+      hasError = true
+      if (hasHidden) errorInLogika(tp.pos, "Parameters should have the form '@hidden <id> : <type>'")
+      else errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
+    }
+    if (hasError) AST.CompositeParam(hasHidden, cid(paramname), unitType)
+    else AST.CompositeParam(hasHidden, cid(paramname), translateTypeArg(atpeopt.get))
   }
 
   def translateObject(enclosing: Enclosing.Type, tree: Defn.Object): AST.Stmt = {
@@ -186,29 +354,77 @@ class ScalaMetaParser(text: String,
 
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
     val q"..$mods val ..$patsnel: ${tpeopt: Option[Type]} = $expr" = stat
-    lazy val er = AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
-    if (mods.nonEmpty || patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
-      errorInLogika(stat.pos, "Val declaration should have the form: 'val <id> : <type> = <exp>'")
-      er
-    } else if (enclosing != Enclosing.ExtObject && isDollar(expr)) {
+    var hasError = false
+    var hasSpec = false
+    for (mod <- mods) mod match {
+      case mod"@spec" =>
+        if (hasSpec) {
+          hasError = true
+          error(mod.pos, "Redundant @spec.")
+        }
+        hasSpec = true
+      case _ =>
+        hasError = true
+        error(mod.pos, "Only the @spec modifier is allowed for val declarations.")
+    }
+    if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
+      hasError = true
+      if (hasSpec)
+        errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
+      else
+        errorInLogika(stat.pos, "Val declaration should have the form: 'val <id> : <type> = <exp>'")
+    } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollar(expr)) {
+      hasError = true
       error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
-      er
-    } else
+    } else if (hasSpec && !isDollar(expr)) {
+      hasError = true
+      errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
+    }
+    if (hasError) AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    else if (hasSpec)
+      AST.SpecVarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+    else
       AST.VarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
         translateType(tpeopt.get), if (isDiet) None else Some(translateExp(expr)))
   }
 
   def translateVar(enclosing: Enclosing.Type, stat: Defn.Var): AST.Stmt = {
     val q"..$mods var ..$patsnel: ${tpeopt: Option[Type]} = ${expropt: Option[Term]}" = stat
-    lazy val er = AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
-    if (mods.nonEmpty || patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] ||
-      tpeopt.isEmpty || (expropt.isEmpty && enclosing != Enclosing.Method)) {
-      errorInLogika(stat.pos, "Var declaration should have the form: 'var <id> : <type> = <exp>'")
-      er
-    } else if (enclosing != Enclosing.ExtObject && expropt.exists(isDollar)) {
+    var hasError = false
+    var hasSpec = false
+    for (mod <- mods) mod match {
+      case mod"@spec" =>
+        if (hasSpec) {
+          hasError = true
+          error(mod.pos, "Redundant @spec.")
+        }
+        hasSpec = true
+      case _ =>
+        hasError = true
+        error(mod.pos, "Only the @spec modifier is allowed for var declarations.")
+    }
+    val isDollarExpr = expropt.map(isDollar).getOrElse(false)
+    if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
+      hasError = true
+      if (hasSpec)
+        errorInLogika(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
+      else
+        errorInLogika(stat.pos, "Var declaration should have the form: 'var <id> : <type> = <exp>'")
+    } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollarExpr) {
+      hasError = true
       error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
-      er
-    } else
+    } else if (hasSpec && !isDollarExpr) {
+      hasError = true
+      errorInLogika(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
+    } else if (expropt.isEmpty && enclosing != Enclosing.Method) {
+      hasError = true
+      errorInLogika(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
+    }
+
+    if (hasError) AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    else if (hasSpec)
+      AST.SpecVarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+    else
       AST.VarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
         translateType(tpeopt.get), if (isDiet) None else expropt.map(translateExp))
   }
@@ -379,6 +595,8 @@ class ScalaMetaParser(text: String,
 
   def cid(name: Term.Name): AST.Id = cid(name.value, name.pos)
 
+  def cid(name: Ctor.Name): AST.Id = cid(name.value, name.pos)
+
   def cid(name: Type.Param.Name): AST.Id = cid(name.value, name.pos)
 
   def cid(name: Term.Param.Name): AST.Id = cid(name.value, name.pos)
@@ -412,5 +630,12 @@ class ScalaMetaParser(text: String,
       case '\n' => ' '
       case c => c
     } + " ..."
+  }
+
+  import scala.language.implicitConversions
+
+  implicit def opt[T](opt: Option[T]): option[T] = opt match {
+    case Some(x) => new some(x)
+    case _ => new none()
   }
 }
