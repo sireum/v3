@@ -107,6 +107,8 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
       passing("def f[A, B <: A](x: A, y: Z): B = {}", isWorksheet = true)
 
+      passing("def f[T : TT](x: Z): Z = {}", isWorksheet = true)
+
     }
 
     "Ext Object" - {
@@ -247,13 +249,13 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     "Type Param" - {
 
-      val typeParamForms = "'<id>' or '<id> <: <type>'"
+      val typeParamForms = "'<id>', '<id> : TT', '<id> <: <type>', or '<id> <: <type> : TT'"
 
       failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
       failing("def f[T <% B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
-      failing("def f[T : TT](x: Z): Z = {}", typeParamForms, isWorksheet = true)
+      failing("def f[T : A](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
       failing("def f[T <: (Z) => Z](x: Z): Z = {}", "Type parameter bound", isWorksheet = true)
 

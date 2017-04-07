@@ -36,7 +36,7 @@ object ScalaMetaParser {
 
   object Enclosing extends Enumeration {
     type Type = Value
-    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Method = Value
+    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Method, Block = Value
   }
 
   case class Result(text: String,
@@ -90,6 +90,9 @@ object ScalaMetaParser {
     case q"$$" => true
     case _ => false
   }
+
+  private[ScalaMetaParser] lazy val rExp = AST.IdExp(AST.Id("$"))
+  private[ScalaMetaParser] lazy val rStmt = AST.ExpStmt(rExp)
 }
 
 import ScalaMetaParser._
@@ -166,7 +169,6 @@ class ScalaMetaParser(text: String,
   }
 
   def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = {
-    lazy val er = AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
     stat match {
       case stat: Defn.Val => translateVal(enclosing, stat)
       case stat: Defn.Var => translateVar(enclosing, stat)
@@ -185,51 +187,28 @@ class ScalaMetaParser(text: String,
         case _ => false
       }) => translateRecord(enclosing, stat)
       case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLogikaStmt(enclosing, l.pos, s)
-      case stat: Term.Apply => er // TODO
-      case stat: Term.Assign => er // TODO
-      case stat: Term.Update => er // TODO
-      case stat: Term.If =>
-        var hasError = false
-        if (!stat.thenp.isInstanceOf[Term.Block]) {
-          errorInLogika(stat.thenp.pos, "If-then part should be a block '{ ... }'")
-          hasError = true
-        }
-        if (!(stat.elsep.isInstanceOf[Term.Block] || stat.elsep.isInstanceOf[Term.If])) {
-          errorInLogika(stat.thenp.pos, "If-else part should be either a block '{ ... }' or another if-conditional.")
-          hasError = true
-        }
-        if (hasError) er else er // TODO
-      case stat: Term.Match => er // TODO
-      case stat: Term.While =>
-        if (!stat.body.isInstanceOf[Term.Block]) {
-          errorInLogika(stat.body.pos, "While-loop body should be a block '{ ... }'")
-          er
-        } else er // TODO
-      case stat: Term.Do =>
-        if (!stat.body.isInstanceOf[Term.Block]) {
-          errorInLogika(stat.body.pos, "Do-while-loop body should be a block '{ ... }'")
-          er
-        } else er // TODO
-      case stat: Term.For =>
-        var hasError = false
-        if (!stat.body.isInstanceOf[Term.Block]) {
-          errorInLogika(stat.body.pos, "For-loop body should be a block '{ ... }'")
-          hasError = true
-        }
-        if (hasError) er else er // TODO
+      case stat: Term.Apply => AST.ExpStmt(translateExp(stat))
+      case stat: Term.Assign => rStmt // TODO
+      case stat: Term.Update => rStmt // TODO
+      case stat: Term.If => translateIfStmt(enclosing, stat)
+      case stat: Term.Match => rStmt // TODO
+      case stat: Term.While => translateWhile(enclosing, stat)
+      case stat: Term.Do => translateDoWhile(enclosing, stat)
+      case stat: Term.For => translateFor(enclosing, stat)
       case _ =>
         errorNotLogika(stat.pos, s"Statement '${syntax(stat)}' is")
-        er
+        rStmt
     }
   }
 
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
     var hasError = false
     enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        errorInLogika(stat.pos, "Val declarations can only appear at the top-level, inside objects, or methods")
+        if (isWorksheet) errorInLogika(stat.pos, "Val declarations can only appear at the top-level, inside objects, methods, or code blocks")
+        else errorInLogika(stat.pos, "Val declarations can only appear inside objects, methods, or code blocks")
     }
     val q"..$mods val ..$patsnel: ${tpeopt: Option[Type]} = $expr" = stat
     var hasSpec = false
@@ -257,7 +236,7 @@ class ScalaMetaParser(text: String,
       hasError = true
       errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
     }
-    if (hasError) AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    if (hasError) AST.ExpStmt(AST.IdExp(AST.Id("$")))
     else if (hasSpec)
       AST.SpecVarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
@@ -268,10 +247,11 @@ class ScalaMetaParser(text: String,
   def translateVar(enclosing: Enclosing.Type, stat: Defn.Var): AST.Stmt = {
     var hasError = false
     enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        errorInLogika(stat.pos, "Var declarations can only appear at the top-level, inside objects, or methods")
+        if (isWorksheet) errorInLogika(stat.pos, "Var declarations can only appear at the top-level, inside objects, methods, or code blocks")
+        else errorInLogika(stat.pos, "Var declarations can only appear inside objects, methods, or code blocks")
     }
     val q"..$mods var ..$patsnel: ${tpeopt: Option[Type]} = ${expropt: Option[Term]}" = stat
     var hasSpec = false
@@ -304,7 +284,7 @@ class ScalaMetaParser(text: String,
       errorInLogika(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
     }
 
-    if (hasError) AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    if (hasError) AST.ExpStmt(AST.IdExp(AST.Id("$")))
     else if (hasSpec)
       AST.SpecVarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
@@ -368,14 +348,14 @@ class ScalaMetaParser(text: String,
     else if (isSpec)
       exp match {
         case q"$$" =>
-          AST.SpecMethodStmt(sig, ISZ(), None)
+          AST.SpecMethodStmt(sig, ISZ(), ISZ())
         case Term.Interpolate(Term.Name("c"), Seq(l@Lit(s: String)), Nil) =>
           val (defs, where) = parseDefs(l.pos, s)
-          AST.SpecMethodStmt(sig, defs, where)
+          AST.SpecMethodStmt(sig, defs, ISZ())
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Logika @spec method expression.")
-          AST.SpecMethodStmt(sig, ISZ(), None)
+          AST.SpecMethodStmt(sig, ISZ(), ISZ())
       }
     else exp match {
       case exp: Term.Block =>
@@ -402,7 +382,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
         hasError = true
-        errorInLogika(stat.pos, "Object declarations can only appear at the top-level, package-level, or inside other objects")
+        if (isWorksheet) errorInLogika(stat.pos, "Object declarations can only appear at the top-level, package-level, or inside other objects")
+        else errorInLogika(stat.pos, "Object declarations can only appear at the package-level or inside other objects")
     }
     val q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" = stat
     var hasExt = false
@@ -435,7 +416,8 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        errorInLogika(stat.pos, "Trait declarations can only appear at the top-level, package-level, or inside other objects")
+        if (isWorksheet) errorInLogika(stat.pos, "@datatype trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInLogika(stat.pos, "@datatype trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
@@ -462,7 +444,8 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        errorInLogika(stat.pos, "@datatype class declarations can only appear at the top-level, package-level, or inside other objects")
+        if (isWorksheet) errorInLogika(stat.pos, "@datatype class declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInLogika(stat.pos, "@datatype class declarations can only appear at package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
@@ -489,6 +472,12 @@ class ScalaMetaParser(text: String,
   }
 
   def translateRecord(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+    enclosing match {
+      case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
+      case _ =>
+        if (isWorksheet) errorInLogika(stat.pos, "@record trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInLogika(stat.pos, "@rcord trait declarations can only appear at the package-level or inside objects")
+    }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
       error(tname.pos, "Logika @record traits have to be of the form '@record trait <id> { ... }'.")
@@ -514,7 +503,8 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        errorInLogika(stat.pos, "@datatype class declarations can only appear at the top-level, package-level, or inside other objects")
+        if (isWorksheet) errorInLogika(stat.pos, "@record class declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInLogika(stat.pos, "@rcord class declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
@@ -538,6 +528,153 @@ class ScalaMetaParser(text: String,
       ctorcalls.headOption.map(translateCtorCall),
       params,
       ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
+  }
+
+  def translateIfStmt(enclosing: Enclosing.Type, stat: Term.If): AST.Stmt = {
+    var hasError = false
+    enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+      case _ =>
+        hasError = true
+        if (isWorksheet) errorInLogika(stat.pos, "If-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInLogika(stat.pos, "If-statements can only appear inside methods or code blocks")
+    }
+    if (!stat.thenp.isInstanceOf[Term.Block]) {
+      hasError = true
+      errorInLogika(stat.thenp.pos, "If-then part should be a code block '{ ... }'")
+    }
+    stat.elsep match {
+      case _: Term.Block | _: Term.If =>
+      case _ =>
+        hasError = true
+        errorInLogika(stat.elsep.pos, "If-else part should be either a code block '{ ... }' or another if-conditional.")
+    }
+    if (hasError) rStmt else ((stat.thenp, stat.elsep): @unchecked) match {
+      case (thenp: Term.Block, elsep: Term.Block) =>
+        AST.IfStmt(translateExp(stat.cond),
+          AST.Block(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Block(ISZ(elsep.stats.map(translateStat(enclosing)): _*)))
+      case (thenp: Term.Block, elsep: Term.If) =>
+        AST.IfStmt(translateExp(stat.cond),
+          AST.Block(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Block(ISZ(translateIfStmt(Enclosing.Block, elsep))))
+    }
+  }
+
+  def translateWhile(enclosing: Enclosing.Type, stat: Term.While): AST.Stmt = {
+    var hasError = false
+    enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+      case _ =>
+        hasError = true
+        if (isWorksheet) errorInLogika(stat.pos, "While-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInLogika(stat.pos, "While-statements can only appear inside methods or code blocks")
+    }
+    var reads: ISZ[AST.Name] = ISZ()
+    var invariants: ISZ[AST.Exp] = ISZ()
+    var stats: Seq[Stat] = Seq()
+    stat.body match {
+      case body: Term.Block => body.stats match {
+        case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq()) :: rest =>
+          val (rs, is) = parseLoopContract(l.pos, s)
+          reads = rs
+          invariants = is
+          stats = rest
+        case (t: Term.Interpolate) :: rest =>
+          hasError = true
+          error(t.pos, "Expecting a Logika while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+        case _ =>
+          stats = body.stats
+      }
+      case _ =>
+        hasError = true
+        errorInLogika(stat.body.pos, "While-loop body should be a code block '{ ... }'")
+    }
+    if (hasError) rStmt else
+      AST.WhileStmt(isDoWhile = false, translateExp(stat.expr), reads, invariants,
+        AST.Block(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+  }
+
+  def translateDoWhile(enclosing: Enclosing.Type, stat: Term.Do): AST.Stmt = {
+    var hasError = false
+    enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+      case _ =>
+        hasError = true
+        if (isWorksheet) errorInLogika(stat.pos, "Do-While-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInLogika(stat.pos, "Do-While-statements can only appear inside methods or code blocks")
+    }
+    var reads: ISZ[AST.Name] = ISZ()
+    var invariants: ISZ[AST.Exp] = ISZ()
+    var stats: Seq[Stat] = Seq()
+    stat.body match {
+      case body: Term.Block => body.stats.lastOption match {
+        case Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq())) =>
+          val (rs, is) = parseLoopContract(l.pos, s)
+          reads = rs
+          invariants = is
+          stats = body.stats.dropRight(1)
+        case Some(t: Term.Interpolate) =>
+          hasError = true
+          error(t.pos, "Expecting a Logika do-while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+        case _ =>
+          stats = body.stats
+      }
+      case _ =>
+        hasError = true
+        errorInLogika(stat.body.pos, "Do-While-loop body should be a code block '{ ... }'")
+    }
+    if (hasError) rStmt else
+      AST.WhileStmt(isDoWhile = true, translateExp(stat.expr), reads, invariants,
+        AST.Block(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+  }
+
+  def translateFor(enclosing: Enclosing.Type, stat: Term.For): AST.Stmt = {
+    var hasError = false
+    enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+      case _ =>
+        hasError = true
+        if (isWorksheet) errorInLogika(stat.pos, "For-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInLogika(stat.pos, "For-statements can only appear inside methods or code blocks")
+    }
+    var reads: ISZ[AST.Name] = ISZ()
+    var invariants: ISZ[AST.Exp] = ISZ()
+    var stats: Seq[Stat] = Seq()
+    stat.body match {
+      case body: Term.Block => body.stats match {
+        case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq()) :: rest =>
+          val (rs, is) = parseLoopContract(l.pos, s)
+          reads = rs
+          invariants = is
+          stats = rest
+        case (t: Term.Interpolate) :: rest =>
+          hasError = true
+          error(t.pos, "Expecting a Logika for-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+        case _ =>
+          stats = body.stats
+      }
+      case _ =>
+        hasError = true
+        errorInLogika(stat.body.pos, "While-loop body should be a code block '{ ... }'")
+    }
+    val foo = ISZ("a", "b", "c")
+    for (f <- foo) {
+
+    }
+    if (hasError) rStmt else stat.enums match {
+      case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
+        expr match {
+          case q"$from to $to by $step" =>
+          case q"$from until $to by $step" =>
+          case q"$from to $to" =>
+          case q"$from until $to" =>
+          case q"$s.indices" =>
+          case _ =>
+        }
+      case _ =>
+    }
+    ???
   }
 
   def translateCtorCall(cc: Ctor.Call): AST.Type = {
@@ -583,17 +720,24 @@ class ScalaMetaParser(text: String,
 
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
     case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: Option[Type]} <: ${tpeopt: Option[Type]} <% ..$tpes : ..$tpes2" =>
-      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
-        errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> <: <type>' are supported")
+      var hasError = false
+      var hasTT = false
+      tpes2 match {
+        case Seq(Type.Name("TT")) => hasTT = true
+        case Seq() =>
+        case _ => hasError = true
+      }
+      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || hasError)
+        errorInLogika(tp.pos, "Only type parameters of the forms '<id>', '<id> : TT', '<id> <: <type>', or '<id> <: <type> : TT' are supported")
       tpeopt match {
         case Some(tpe: Type) =>
           translateType(tpe) match {
-            case t: AST.NamedType => AST.TypeParam(cid(tparamname), Some(t))
+            case t: AST.NamedType => AST.TypeParam(cid(tparamname), Some(t), hasTT)
             case _ =>
               errorNotLogika(tpe.pos, s"Type parameter bound '${tpe.syntax}' is")
-              AST.TypeParam(cid(tparamname), None)
+              AST.TypeParam(cid(tparamname), None, hasTT)
           }
-        case _ => AST.TypeParam(cid(tparamname), None)
+        case _ => AST.TypeParam(cid(tparamname), None, hasTT)
       }
   }
 
@@ -601,8 +745,8 @@ class ScalaMetaParser(text: String,
     val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
     if (mods.nonEmpty || atpeopt.isEmpty || expropt.nonEmpty)
       errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
-    lazy val er = AST.Param(cid(paramname), unitType)
-    atpeopt.map(ta => AST.Param(cid(paramname), translateTypeArg(ta))).getOrElse(er)
+    atpeopt.map(ta => AST.Param(cid(paramname), translateTypeArg(ta))).
+      getOrElse(AST.Param(cid(paramname), unitType))
   }
 
   def translateTypeArg(ta: Type.Arg): AST.Type = ta match {
@@ -641,38 +785,37 @@ class ScalaMetaParser(text: String,
   }
 
   def translateExp(exp: Term): AST.Exp = {
-    lazy val er = AST.NameExp(AST.Name(ISZ(AST.Id("$"))))
     exp match {
-      case exp: Term.Name => er // TODO
-      case exp: Term.Select => er // TODO
-      case exp: Term.Apply => er // TODO
-      case exp: Term.ApplyInfix => er // TODO
-      case exp: Term.ApplyUnary => er // TODO
-      case exp: Term.Tuple => er // TODO
+      case exp: Term.Name => rExp // TODO
+      case exp: Term.Select => rExp // TODO
+      case exp: Term.Apply => rExp // TODO
+      case exp: Term.ApplyInfix => rExp // TODO
+      case exp: Term.ApplyUnary => rExp // TODO
+      case exp: Term.Tuple => rExp // TODO
       case exp: Term.If =>
         var hasError = false
         if (exp.thenp.isInstanceOf[Term.Block]) {
           hasError = true
-          errorInLogika(exp.thenp.pos, "If-then expression should not be a block '{ ... }'")
+          errorInLogika(exp.thenp.pos, "If-then expression should not be a code block '{ ... }'")
         }
         if (exp.elsep.isInstanceOf[Term.Block]) {
           hasError = true
-          errorInLogika(exp.thenp.pos, "If-else expression should not be a block '{ ... }'")
+          errorInLogika(exp.thenp.pos, "If-else expression should not be a code block '{ ... }'")
         }
-        if (hasError) er
-        else er // TODO
-      case exp: Term.Eta => er // TODO
-      case exp: Term.Interpolate => er // TODO
-      case exp: Lit => er // TODO
+        if (hasError) rExp
+        else rExp // TODO
+      case exp: Term.Eta => rExp // TODO
+      case exp: Term.Interpolate => rExp // TODO
+      case exp: Lit => rExp // TODO
       case _ =>
         errorNotLogika(exp.pos, s"Expresion '${syntax(exp)}' is")
-        er
+        rExp
     }
   }
 
-  def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], Option[AST.WhereClause]) = {
+  def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], ISZ[AST.Assign]) = {
     // TODO: parse defs
-    (ISZ(), None)
+    (ISZ(), ISZ())
   }
 
   def parseContract(pos: Position, text: String): AST.MethodContract = {
@@ -682,7 +825,12 @@ class ScalaMetaParser(text: String,
 
   def parseLogikaStmt(enclosing: Enclosing.Type, pos: Position, text: String): AST.Stmt = {
     // TODO: parse logika stmt
-    AST.ExpStmt(AST.NameExp(AST.Name(ISZ(AST.Id("$")))))
+    AST.ExpStmt(AST.IdExp(AST.Id("$")))
+  }
+
+  def parseLoopContract(pos: Position, text: String): (ISZ[AST.Name], ISZ[AST.Exp]) = {
+    // TODO: parse while contract
+    (ISZ(), ISZ())
   }
 
   def cid(t: Pat.Var.Term): AST.Id = cid(t.name.value, t.pos)

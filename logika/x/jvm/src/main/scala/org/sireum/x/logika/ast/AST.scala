@@ -97,7 +97,7 @@ ExtMethodStmt(isPure: B,
 /* @datatype */ case class
 SpecMethodStmt(sig: MethodSig,
                defs: ISZ[SpecMethodDef],
-               whereOpt: option[WhereClause])
+               where: ISZ[Assign])
   extends Stmt
 
 /* @datatype */ case class
@@ -130,7 +130,8 @@ TupleType(args: ISZ[Type])
 
 /* @datatype */ case class
 TypeParam(id: Id,
-          superType: option[NamedType])
+          superType: option[NamedType],
+          hasTT: B)
 
 /* @datatype */ case class
 MethodContract(reads: ISZ[Name],
@@ -182,9 +183,6 @@ StructurePattern(idOpt: option[Id],
                  patterns: ISZ[Pattern])
   extends Pattern
 
-/* @datatype */ case class
-WhereClause(assigns: ISZ[Assign])
-
 /* @datatype */ trait
 Assign
 
@@ -202,8 +200,22 @@ PatternAssign(name: Name,
 ExpStmt(exp: Exp)
   extends Stmt
 
+/* @datatype */ case class
+IfStmt(cond: Exp,
+       thenBlock: Block,
+       elseBlock: Block)
+  extends Stmt
+
+/* @datatype */ case class
+WhileStmt(isDoWhile: B,
+          cond: Exp,
+          modifies: ISZ[Name],
+          invariants: ISZ[Exp],
+          block: Block)
+  extends Stmt
+
 /* @datatype */ trait Exp
 
 /* @datatype */ case class
-NameExp(name: Name)
+IdExp(id: Id)
   extends Exp
