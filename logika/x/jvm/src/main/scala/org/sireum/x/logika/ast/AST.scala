@@ -63,7 +63,9 @@ CompositeParam(isHidden: B,
                tpe: Type)
 
 /* @datatype */ case class
-ObjectStmt(id: Id, stmts: ISZ[Stmt])
+ObjectStmt(isExt: B,
+           id: Id,
+           stmts: ISZ[Stmt])
   extends Stmt
 
 /* @datatype */ case class
@@ -101,6 +103,7 @@ SpecMethodStmt(sig: MethodSig,
 /* @datatype */ case class
 MethodSig(id: Id,
           typeParams: ISZ[TypeParam],
+          emptyParams: B,
           params: ISZ[Param],
           returnType: Type)
 

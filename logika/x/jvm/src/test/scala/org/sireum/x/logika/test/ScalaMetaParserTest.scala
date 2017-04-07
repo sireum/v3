@@ -126,7 +126,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   "Failing" - {
 
-    failing("object Foo", "first statement should be", addLogikaImport = false)
+    failing("package org.sireum.logika", "org.sireum.logika", addLogikaImport = false)
 
     val packageFirstMember = "first member of packages"
 
@@ -134,21 +134,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
     failing("package a.b.c; object Foo", packageFirstMember, addLogikaImport = false)
 
-    "Object" - {
-
-      "Modifier" - {
-        val errMsg = "modifiers other than"
-
-        failing("final object A", errMsg)
-
-        failing("private object A", errMsg)
-      }
-
-      failing("object A extends { val x: Z = 5 } with B", "early init")
-
-      failing("object A extends B(5)", "super constructor")
-
-    }
+    failing("object Foo", "first statement should be", addLogikaImport = false)
 
     "Val/Var" - {
 
@@ -235,6 +221,30 @@ class ScalaMetaParserTest extends LogikaXSpec {
       }
     }
 
+    "Object" - {
+
+      "Modifier" - {
+        val errMsg = "modifiers other than"
+
+        failing("final object A", errMsg)
+
+        failing("private object A", errMsg)
+      }
+
+      failing("object A extends { val x: Z = 5 } with B", "early init")
+
+      failing("object A extends B(5)", "super constructor")
+
+    }
+
+    "Ext Object" - {
+
+      failing("@ext @ext object Foo", "Redundant @ext")
+
+      failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
+
+    }
+
     "Type Param" - {
 
       val typeParamForms = "'<id>' or '<id> <: <type>'"
@@ -246,14 +256,6 @@ class ScalaMetaParserTest extends LogikaXSpec {
       failing("def f[T : TT](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
       failing("def f[T <: (Z) => Z](x: Z): Z = {}", "Type parameter bound", isWorksheet = true)
-
-    }
-
-    "Ext Object" - {
-
-      failing("@ext @ext object Foo", "Redundant @ext")
-
-      failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
 
     }
   }
