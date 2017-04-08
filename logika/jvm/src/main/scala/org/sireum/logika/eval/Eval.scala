@@ -35,7 +35,6 @@ object Eval {
   type Value = Any
   type Store = IMap[String, Value]
 
-  final private val typeKey = "type"
   final private val z8Type = Z8Type()
   final private val z16Type = Z16Type()
   final private val z32Type = Z32Type()
@@ -129,8 +128,8 @@ object Eval {
         case 32 => FloatLit(v.floatValue.toString + "f")
         case 64 => FloatLit(v.doubleValue.toString + "d")
       }
-    case v: _S[_, _] =>
-      SeqLit(v.property(typeKey),
+    case v: MS[_, _] =>
+      SeqLit(v.data,
         v.elements.toVector.map(e => toLit(bitWidth, e)))
   }
 }
@@ -144,16 +143,16 @@ private final class Eval(store: Store) {
       case BooleanLit(v) => Some(v)
       case Id(v) => store.get(v)
       case Size(e) => for (v <- eval(e)) yield v match {
-        case v: _S[_, _] => v.size
+        case v: MS[_, _] => v.size
       }
       case Clone(id) => for (v <- eval(id)) yield v match {
-        case v: _S[_, _] => v.clone
+        case v: MS[_, _] => v.clone
       }
       case _: Result => store.get("result")
       case Apply(id, Seq(arg)) =>
         try for (ms <- eval(id);
                  i <- eval(arg)) yield (ms, i) match {
-          case (s: _S[_, _], i: _LogikaIntegralNumber) => s.asInstanceOf[_S[_LogikaIntegralNumber, Value]](i.toZ)
+          case (s: MS[_, _], i: _LogikaIntegralNumber) => s.asInstanceOf[MS[Z, Value]](i.toZ)
           case _ => None
         }
         catch {
@@ -510,12 +509,12 @@ private final class Eval(store: Store) {
       case e: Append =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: _S[_, _], v2: Value) => v1.asInstanceOf[_S[_LogikaIntegralNumber, Value]] :+ v2
+          case (v1: MS[_, _], v2: Value) => v1.asInstanceOf[MS[Z, Value]] :+ v2
         }
       case e: Prepend =>
         for (v1 <- eval(e.left);
              v2 <- eval(e.right)) yield ((v2, v1): @unchecked) match {
-          case (v2: _S[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[_S[_LogikaIntegralNumber, Value]]
+          case (v2: MS[_, _], v1: Boolean) => v1 +: v2.asInstanceOf[MS[Z, Value]]
         }
       case e: And =>
         for (v1 <- eval(e.left);
@@ -615,7 +614,7 @@ private final class Eval(store: Store) {
           case _: RSType => RS(args.map(_.asInstanceOf[R]): _*)
           case _: F32SType => F32S(args.map(_.asInstanceOf[F32]): _*)
           case _: F64SType => F64S(args.map(_.asInstanceOf[F64]): _*)
-        }).map { ms => ms.properties(typeKey) = e.tpe; ms }
+        }).map { ms => ms.data = e.tpe; ms }
     }
     r.map({
       case v: B => v.value
