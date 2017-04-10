@@ -41,7 +41,7 @@ object ScalaMetaParser {
 
   case class Result(text: String,
                     hashLogika: Boolean,
-                    programOpt: Option[AST.Program],
+                    programOpt: Option[AST.TopUnit.Program],
                     tags: ISeq[Tag])
 
   def apply(isWorksheet: Boolean,
@@ -91,8 +91,8 @@ object ScalaMetaParser {
     case _ => false
   }
 
-  private[ScalaMetaParser] lazy val rExp = AST.IdExp(AST.Id("$"))
-  private[ScalaMetaParser] lazy val rStmt = AST.ExpStmt(rExp)
+  private[ScalaMetaParser] lazy val rExp = AST.Exp.Ident(AST.Id("$"))
+  private[ScalaMetaParser] lazy val rStmt = AST.Stmt.Expr(rExp)
 }
 
 import ScalaMetaParser._
@@ -112,7 +112,7 @@ class ScalaMetaParser(text: String,
 
   def iszEmpty[T]: ISZ[T] = ISZ()
 
-  val unitType = AST.NamedType(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
+  val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
   def errorNotLogika(pos: Position, message: String): Unit =
     error(pos, message + " not in the Logika language.")
@@ -127,10 +127,10 @@ class ScalaMetaParser(text: String,
         if (ref.syntax == "org.sireum.logika") {
           if (allowLogikaPackage)
             Result(text, hashLogika,
-              Some(AST.Program(
+              Some(AST.TopUnit.Program(
                 fileUriOpt,
                 name,
-                AST.Block(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
+                AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
           else {
             errorInLogika(ref.pos, "Cannot define members of the org.sireum.logika package")
             Result(text, hashLogika, None, tags)
@@ -138,10 +138,10 @@ class ScalaMetaParser(text: String,
         } else stats match {
           case q"import org.sireum.logika._" :: rest =>
             Result(text, hashLogika,
-              Some(AST.Program(
+              Some(AST.TopUnit.Program(
                 fileUriOpt,
                 name,
-                AST.Block(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
+                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
           case _ =>
             errorInLogika(ref.pos, "The first member of packages should be 'import org.sireum.logika._'")
             Result(text, hashLogika, None, tags)
@@ -154,14 +154,14 @@ class ScalaMetaParser(text: String,
           (hashLogika && fileUri.endsWith(".scala")))
       if (shouldParse)
         Result(text, hashLogika,
-          Some(AST.Program(
+          Some(AST.TopUnit.Program(
             fileUriOpt,
             AST.Name(ISZ()),
-            AST.Block(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
+            AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
       else
         Result(text, hashLogika, None, tags)
     case Nil =>
-      Result(text, hashLogika, Some(AST.Program(fileUriOpt, AST.Name(ISZ()), AST.Block(ISZ()))), tags)
+      Result(text, hashLogika, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ()), AST.Body(ISZ()))), tags)
     case stats =>
       if (hashLogika)
         errorInLogika(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum.logika._'")
@@ -182,13 +182,18 @@ class ScalaMetaParser(text: String,
         case mod"@datatype" => true
         case _ => false
       }) => translateDatatype(enclosing, stat)
+      case stat: Defn.Trait if stat.mods.exists({
+        case mod"@record" => true
+        case _ => false
+      }) => translateRecord(enclosing, stat)
       case stat: Defn.Class if stat.mods.exists({
         case mod"@record" => true
         case _ => false
       }) => translateRecord(enclosing, stat)
       case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLogikaStmt(enclosing, l.pos, s)
-      case stat: Term.Apply => AST.ExpStmt(translateExp(stat))
+      case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case stat: Term.Assign => rStmt // TODO
+      case stat: Term.Block => translateBlock(enclosing, stat)
       case stat: Term.Update => rStmt // TODO
       case stat: Term.If => translateIfStmt(enclosing, stat)
       case stat: Term.Match => rStmt // TODO
@@ -236,11 +241,11 @@ class ScalaMetaParser(text: String,
       hasError = true
       errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
     }
-    if (hasError) AST.ExpStmt(AST.IdExp(AST.Id("$")))
+    if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
     else if (hasSpec)
-      AST.SpecVarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+      AST.Stmt.SpecVar(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
-      AST.VarStmt(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
+      AST.Stmt.Var(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
         translateType(tpeopt.get), if (isDiet) None else Some(translateExp(expr)))
   }
 
@@ -284,11 +289,11 @@ class ScalaMetaParser(text: String,
       errorInLogika(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
     }
 
-    if (hasError) AST.ExpStmt(AST.IdExp(AST.Id("$")))
+    if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
     else if (hasSpec)
-      AST.SpecVarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+      AST.Stmt.SpecVar(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
-      AST.VarStmt(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
+      AST.Stmt.Var(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
         translateType(tpeopt.get), if (isDiet) None else expropt.map(translateExp))
   }
 
@@ -335,44 +340,44 @@ class ScalaMetaParser(text: String,
     if (enclosing == Enclosing.ExtObject)
       exp match {
         case q"$$" =>
-          AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
+          AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
         case Term.Interpolate(Term.Name("c"), Seq(l@Lit(s: String)), Nil) =>
-          AST.ExtMethodStmt(isPure, sig, parseContract(l.pos, s))
+          AST.Stmt.ExtMethod(isPure, sig, parseContract(l.pos, s))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' are allowed as Logika @ext object method expression.")
-          AST.ExtMethodStmt(isPure, sig, AST.MethodContract(
+          AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
     else if (isSpec)
       exp match {
         case q"$$" =>
-          AST.SpecMethodStmt(sig, ISZ(), ISZ())
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
         case Term.Interpolate(Term.Name("c"), Seq(l@Lit(s: String)), Nil) =>
           val (defs, where) = parseDefs(l.pos, s)
-          AST.SpecMethodStmt(sig, defs, ISZ())
+          AST.Stmt.SpecMethod(sig, defs, ISZ())
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Logika @spec method expression.")
-          AST.SpecMethodStmt(sig, ISZ(), ISZ())
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
       }
     else exp match {
       case exp: Term.Block =>
-        val (mc, blockOpt) = exp.stats.headOption match {
+        val (mc, bodyOpt) = exp.stats.headOption match {
           case Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil)) =>
             (parseContract(l.pos, s),
               if (isDiet) None
-              else Some(AST.Block(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
+              else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
             (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
               if (isDiet) None
-              else Some(AST.Block(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
+              else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
-        AST.MethodStmt(isPure, sig, mc, blockOpt)
+        AST.Stmt.Method(isPure, sig, mc, bodyOpt)
       case _ =>
         errorInLogika(exp.pos, "Only block '{ ... }' is allowed for method definitions")
-        AST.MethodStmt(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None)
+        AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None)
     }
   }
 
@@ -408,8 +413,8 @@ class ScalaMetaParser(text: String,
     }
     if (!hasError) {
       val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
-      AST.ObjectStmt(hasExt, cid(name), ISZ(stats.map(tstat): _*))
-    } else AST.ObjectStmt(hasExt, cid(name), ISZ())
+      AST.Stmt.Object(hasExt, cid(name), ISZ(stats.map(tstat): _*))
+    } else AST.Stmt.Object(hasExt, cid(name), ISZ())
   }
 
   def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -432,7 +437,7 @@ class ScalaMetaParser(text: String,
       case _ =>
         error(mod.pos, "Logika @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
     }
-    AST.CompositeStmt(isRoot = true,
+    AST.Stmt.Composite(isRoot = true,
       isDatatype = true,
       cid(tname),
       None,
@@ -463,7 +468,7 @@ class ScalaMetaParser(text: String,
         error(mod.pos, "Logika @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
     }
     val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = true))): _*)
-    AST.CompositeStmt(isRoot = false,
+    AST.Stmt.Composite(isRoot = false,
       isDatatype = true,
       cid(tname),
       ctorcalls.headOption.map(translateCtorCall),
@@ -491,7 +496,7 @@ class ScalaMetaParser(text: String,
       case _ =>
         error(mod.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
-    AST.CompositeStmt(isRoot = true,
+    AST.Stmt.Composite(isRoot = true,
       isDatatype = false,
       cid(tname),
       None,
@@ -522,12 +527,23 @@ class ScalaMetaParser(text: String,
         error(tname.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
     val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = false))): _*)
-    AST.CompositeStmt(isRoot = false,
+    AST.Stmt.Composite(isRoot = false,
       isDatatype = false,
       cid(tname),
       ctorcalls.headOption.map(translateCtorCall),
       params,
       ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
+  }
+
+  def translateBlock(enclosing: Enclosing.Type, stat: Term.Block): AST.Stmt = {
+    enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+        AST.Stmt.Block(AST.Body(ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)))
+      case _ =>
+        if (isWorksheet) errorInLogika(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
+        else errorInLogika(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
+        rStmt
+    }
   }
 
   def translateIfStmt(enclosing: Enclosing.Type, stat: Term.If): AST.Stmt = {
@@ -551,13 +567,13 @@ class ScalaMetaParser(text: String,
     }
     if (hasError) rStmt else ((stat.thenp, stat.elsep): @unchecked) match {
       case (thenp: Term.Block, elsep: Term.Block) =>
-        AST.IfStmt(translateExp(stat.cond),
-          AST.Block(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Block(ISZ(elsep.stats.map(translateStat(enclosing)): _*)))
+        AST.Stmt.If(translateExp(stat.cond),
+          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(ISZ(elsep.stats.map(translateStat(enclosing)): _*)))
       case (thenp: Term.Block, elsep: Term.If) =>
-        AST.IfStmt(translateExp(stat.cond),
-          AST.Block(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Block(ISZ(translateIfStmt(Enclosing.Block, elsep))))
+        AST.Stmt.If(translateExp(stat.cond),
+          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep))))
     }
   }
 
@@ -591,8 +607,8 @@ class ScalaMetaParser(text: String,
         errorInLogika(stat.body.pos, "While-loop body should be a code block '{ ... }'")
     }
     if (hasError) rStmt else
-      AST.WhileStmt(isDoWhile = false, translateExp(stat.expr), reads, invariants,
-        AST.Block(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+      AST.Stmt.While(isDoWhile = false, translateExp(stat.expr), reads, invariants,
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
   }
 
   def translateDoWhile(enclosing: Enclosing.Type, stat: Term.Do): AST.Stmt = {
@@ -625,8 +641,8 @@ class ScalaMetaParser(text: String,
         errorInLogika(stat.body.pos, "Do-While-loop body should be a code block '{ ... }'")
     }
     if (hasError) rStmt else
-      AST.WhileStmt(isDoWhile = true, translateExp(stat.expr), reads, invariants,
-        AST.Block(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+      AST.Stmt.While(isDoWhile = true, translateExp(stat.expr), reads, invariants,
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
   }
 
   def translateFor(enclosing: Enclosing.Type, stat: Term.For): AST.Stmt = {
@@ -686,8 +702,8 @@ class ScalaMetaParser(text: String,
     }
 
     cc match {
-      case ctor"$ctorref[..$atpesnel]" => AST.NamedType(AST.Name(f(ctorref)), ISZ(atpesnel.map(translateType): _*))
-      case _ => AST.NamedType(AST.Name(f(cc)), ISZ())
+      case ctor"$ctorref[..$atpesnel]" => AST.Type.Named(AST.Name(f(ctorref)), ISZ(atpesnel.map(translateType): _*))
+      case _ => AST.Type.Named(AST.Name(f(cc)), ISZ())
     }
   }
 
@@ -732,7 +748,7 @@ class ScalaMetaParser(text: String,
       tpeopt match {
         case Some(tpe: Type) =>
           translateType(tpe) match {
-            case t: AST.NamedType => AST.TypeParam(cid(tparamname), Some(t), hasTT)
+            case t: AST.Type.Named => AST.TypeParam(cid(tparamname), Some(t), hasTT)
             case _ =>
               errorNotLogika(tpe.pos, s"Type parameter bound '${tpe.syntax}' is")
               AST.TypeParam(cid(tparamname), None, hasTT)
@@ -762,11 +778,11 @@ class ScalaMetaParser(text: String,
 
   def translateType(t: Type): AST.Type = t match {
     case t"${name: Type.Name}[..$tpesnel]" =>
-      AST.NamedType(AST.Name(ISZ(cid(name))), ISZ(tpesnel.map(translateType): _*))
+      AST.Type.Named(AST.Name(ISZ(cid(name))), ISZ(tpesnel.map(translateType): _*))
     case t"${name: Type.Name}" =>
-      AST.NamedType(AST.Name(ISZ(cid(name))), ISZ())
+      AST.Type.Named(AST.Name(ISZ(cid(name))), ISZ())
     case t"(..$tpesnel)" =>
-      AST.TupleType(ISZ(tpesnel.map(translateType): _*))
+      AST.Type.Tuple(ISZ(tpesnel.map(translateType): _*))
     case t"$ref.$tname" =>
       def f(t: Term): ISZ[AST.Id] = t match {
         case q"$expr.$name" => f(expr) :+ cid(name)
@@ -776,9 +792,9 @@ class ScalaMetaParser(text: String,
           ISZ(AST.Id("$"))
       }
 
-      AST.NamedType(AST.Name(f(ref) :+ cid(tname)), ISZ())
+      AST.Type.Named(AST.Name(f(ref) :+ cid(tname)), ISZ())
     case t"(..$atpes) => $tpe" =>
-      AST.FunType(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
+      AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
     case _ =>
       errorNotLogika(t.pos, s"Type '${syntax(t)}' is")
       unitType
@@ -825,7 +841,7 @@ class ScalaMetaParser(text: String,
 
   def parseLogikaStmt(enclosing: Enclosing.Type, pos: Position, text: String): AST.Stmt = {
     // TODO: parse logika stmt
-    AST.ExpStmt(AST.IdExp(AST.Id("$")))
+    AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
   }
 
   def parseLoopContract(pos: Position, text: String): (ISZ[AST.Name], ISZ[AST.Exp]) = {

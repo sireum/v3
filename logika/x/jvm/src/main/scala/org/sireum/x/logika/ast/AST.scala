@@ -27,195 +27,190 @@ package org.sireum.x.logika.ast
 
 import org.sireum.logika._
 
-/* @datatype */ trait
-UnitNode
+@datatype trait TopUnit
 
-/* @datatype */ case class
-Id(value: String)
+object TopUnit {
 
-/* @datatype */ case class
-Name(ids: ISZ[Id])
+  @datatype class Program(fileUriOpt: option[String],
+                          packageName: Name,
+                          body: Body)
+    extends TopUnit
 
-/* @datatype */ case class
-Program(fileUriOpt: option[String],
-        packageName: Name,
-        block: Block)
-  extends UnitNode
+}
 
-/* @datatype */ case class
-Block(stmts: ISZ[Stmt])
+@datatype trait Stmt
 
-/* @datatype */ trait
-Stmt
+object Stmt {
 
-/* @datatype */ case class
-CompositeStmt(isRoot: B,
-              isDatatype: B,
-              id: Id,
-              parent: option[Type],
-              params: ISZ[CompositeParam],
-              stmt: ISZ[Stmt])
+  @datatype class Composite(isRoot: B,
+                            isDatatype: B,
+                            id: Id,
+                            parent: option[Type],
+                            params: ISZ[CompositeParam],
+                            stmt: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class Object(isExt: B,
+                         id: Id,
+                         stmts: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class Var(isVal: B,
+                      id: Id,
+                      tpe: Type,
+                      init: option[Exp])
+    extends Stmt
+
+  @datatype class SpecVar(isVal: B,
+                          id: Id,
+                          tpe: Type)
+    extends Stmt
+
+  @datatype class Method(isPure: B,
+                         sig: MethodSig,
+                         contract: MethodContract,
+                         bodyOpt: option[Body])
+    extends Stmt
+
+  @datatype class ExtMethod(isPure: B,
+                            sig: MethodSig,
+                            contract: MethodContract)
+    extends Stmt
+
+  @datatype class SpecMethod(sig: MethodSig,
+                             defs: ISZ[SpecMethodDef],
+                             where: ISZ[Assign])
+    extends Stmt
+
+  @datatype class Expr(exp: Exp)
+    extends Stmt
+
+  @datatype class Block(body: Body)
+    extends Stmt
+
+  @datatype class If(cond: Exp,
+                     thenbody: Body,
+                     elsebody: Body)
+    extends Stmt
+
+  @datatype class While(isDoWhile: B,
+                        cond: Exp,
+                        modifies: ISZ[Name],
+                        invariants: ISZ[Exp],
+                        body: Body)
+    extends Stmt
+
+}
+
+@datatype trait Type
+
+object Type {
+
+  @datatype class Named(name: Name,
+                        typeArgs: ISZ[Type])
+    extends Type
+
+  @datatype class Fun(args: ISZ[Type],
+                      ret: Type)
+    extends Type
+
+  @datatype class Tuple(args: ISZ[Type])
+    extends Type
+
+}
+
+@datatype trait Case
+
+object Case {
+
+  @datatype class Typed(id: Id,
+                        tpe: Type)
+    extends Case
+
+  @datatype class Structure(idOpt: option[Id],
+                            name: Name,
+                            patterns: ISZ[Pattern])
+    extends Case
+
+  @datatype class Wildcard()
+    extends Case
+
+}
+
+@datatype trait Pattern
+
+object Pattern {
+
+  @datatype class Var(id: Id)
+    extends Pattern
+
+  @datatype class Structure(idOpt: option[Id],
+                            nameOpt: option[Name],
+                            patterns: ISZ[Pattern])
+    extends Pattern
+
+}
+
+@datatype trait Assign
+
+object Assign {
+
+  @datatype class Expr(lhs: Exp,
+                       rhs: Exp)
+    extends Assign
+
+  @datatype class Pattern(nameOpt: option[Name],
+                          patterns: ISZ[Pattern])
+    extends Assign
+
+}
+
+@datatype trait Exp
+
+object Exp {
+
+  @datatype class Ident(id: Id)
+    extends Exp
+
+}
+
+@datatype class Id(value: String)
+
+@datatype class Name(ids: ISZ[Id])
+
+@datatype class Body(stmts: ISZ[Stmt])
+
+@datatype class CompositeParam(isHidden: B,
+                               id: Id,
+                               tpe: Type)
   extends Stmt
 
-/* @datatype */ case class
-CompositeParam(isHidden: B,
-               id: Id,
-               tpe: Type)
 
-/* @datatype */ case class
-ObjectStmt(isExt: B,
-           id: Id,
-           stmts: ISZ[Stmt])
-  extends Stmt
+@datatype class MethodSig(id: Id,
+                          typeParams: ISZ[TypeParam],
+                          emptyParams: B,
+                          params: ISZ[Param],
+                          returnType: Type)
 
-/* @datatype */ case class
-VarStmt(isVal: B,
-        id: Id,
-        tpe: Type,
-        init: option[Exp])
-  extends Stmt
+@datatype class Param(id: Id,
+                      tpe: Type)
 
-/* @datatype */ case class
-SpecVarStmt(isVal: B,
-            id: Id,
-            tpe: Type)
-  extends Stmt
+@datatype class TypeParam(id: Id,
+                          superType: option[Type.Named],
+                          hasTT: B)
 
-/* @datatype */ case class
-MethodStmt(isPure: B,
-           sig: MethodSig,
-           contract: MethodContract,
-           blockOpt: option[Block])
-  extends Stmt
+@datatype class MethodContract(reads: ISZ[Name],
+                               requires: ISZ[Exp],
+                               modifies: ISZ[Name],
+                               ensures: ISZ[Exp],
+                               subs: ISZ[SubMethodContract])
 
-/* @datatype */ case class
-ExtMethodStmt(isPure: B,
-              sig: MethodSig,
-              contract: MethodContract)
-  extends Stmt
+@datatype class SubMethodContract(isPure: B,
+                                  id: Id,
+                                  args: ISZ[Id],
+                                  contract: MethodContract)
 
-/* @datatype */ case class
-SpecMethodStmt(sig: MethodSig,
-               defs: ISZ[SpecMethodDef],
-               where: ISZ[Assign])
-  extends Stmt
-
-/* @datatype */ case class
-MethodSig(id: Id,
-          typeParams: ISZ[TypeParam],
-          emptyParams: B,
-          params: ISZ[Param],
-          returnType: Type)
-
-/* @datatype */ case class
-Param(id: Id,
-      tpe: Type)
-
-/* @datatype */ trait
-Type
-
-/* @datatype */ case class
-NamedType(name: Name,
-          typeArgs: ISZ[Type])
-  extends Type
-
-/* @datatype */ case class
-FunType(args: ISZ[Type],
-        ret: Type)
-  extends Type
-
-/* @datatype */ case class
-TupleType(args: ISZ[Type])
-  extends Type
-
-/* @datatype */ case class
-TypeParam(id: Id,
-          superType: option[NamedType],
-          hasTT: B)
-
-/* @datatype */ case class
-MethodContract(reads: ISZ[Name],
-               requires: ISZ[Exp],
-               modifies: ISZ[Name],
-               ensures: ISZ[Exp],
-               subs: ISZ[SubMethodContract])
-
-/* @datatype */ case class
-SubMethodContract(isPure: B,
-                  id: Id,
-                  args: ISZ[Id],
-                  contract: MethodContract)
-
-/* @datatype */ case class
-SpecMethodDef(idOpt: option[Id],
-              exp: Exp,
-              pattern: option[Case],
-              cond: option[Exp])
-
-/* @datatype */ trait
-Case
-
-/* @datatype */ case class
-TypeCase(id: Id,
-         tpe: Type)
-  extends Case
-
-/* @datatype */ case class
-StructureCase(idOpt: option[Id],
-              name: Name,
-              patterns: ISZ[Pattern])
-  extends Case
-
-/* @datatype */ case class
-WildcardCase()
-  extends Case
-
-/* @datatype */ trait
-Pattern
-
-/* @datatype */ case class
-VarPattern(id: Id)
-  extends Pattern
-
-/* @datatype */ case class
-StructurePattern(idOpt: option[Id],
-                 name: Name,
-                 patterns: ISZ[Pattern])
-  extends Pattern
-
-/* @datatype */ trait
-Assign
-
-/* @datatype */ case class
-ExpAssign(lhs: Exp,
-          rhs: Exp)
-  extends Assign
-
-/* @datatype */ case class
-PatternAssign(name: Name,
-              patterns: ISZ[Pattern])
-  extends Assign
-
-/* @datatype */ case class
-ExpStmt(exp: Exp)
-  extends Stmt
-
-/* @datatype */ case class
-IfStmt(cond: Exp,
-       thenBlock: Block,
-       elseBlock: Block)
-  extends Stmt
-
-/* @datatype */ case class
-WhileStmt(isDoWhile: B,
-          cond: Exp,
-          modifies: ISZ[Name],
-          invariants: ISZ[Exp],
-          block: Block)
-  extends Stmt
-
-/* @datatype */ trait Exp
-
-/* @datatype */ case class
-IdExp(id: Id)
-  extends Exp
+@datatype class SpecMethodDef(idOpt: option[Id],
+                              exp: Exp,
+                              pattern: option[Case],
+                              cond: option[Exp])
