@@ -265,7 +265,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
   def prelude: String = {
     import java.io._
 
-    val url = classOf[org.sireum.logika._B].getResource("prelude.scala")
+    val url = classOf[org.sireum.logika._Clonable].getResource("prelude.scala")
     val f = new File(url.toURI)
     val fis = new FileInputStream(f)
     val buffer = new Array[Byte](f.length.toInt)

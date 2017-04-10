@@ -314,7 +314,7 @@ UnrollingSymExeProofContext(unitNode: ast.Program,
         ivector(copy(premises = premises + e))
       case ast.Assume(e) =>
         eval.Eval.evalExp(store)(e) match {
-          case Some(true) =>
+          case Some(eval.Eval.Value(_, true)) =>
           case _ =>
             if (!checkSat("Assumption", nodeLocMap(stmt), premises ++ effectiveSatFacts + e, genMessage = true,
               unsatMsg = s"The assumption is unsatisfiable.",
