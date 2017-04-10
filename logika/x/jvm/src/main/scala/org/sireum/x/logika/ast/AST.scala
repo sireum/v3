@@ -196,7 +196,6 @@ object Exp {
                       tpe: Type)
 
 @datatype class TypeParam(id: Id,
-                          superType: option[Type.Named],
                           hasTT: B)
 
 @datatype class MethodContract(reads: ISZ[Name],

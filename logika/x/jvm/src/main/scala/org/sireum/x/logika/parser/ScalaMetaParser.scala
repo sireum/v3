@@ -743,18 +743,9 @@ class ScalaMetaParser(text: String,
         case Seq() =>
         case _ => hasError = true
       }
-      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || hasError)
-        errorInLogika(tp.pos, "Only type parameters of the forms '<id>', '<id> : TT', '<id> <: <type>', or '<id> <: <type> : TT' are supported")
-      tpeopt match {
-        case Some(tpe: Type) =>
-          translateType(tpe) match {
-            case t: AST.Type.Named => AST.TypeParam(cid(tparamname), Some(t), hasTT)
-            case _ =>
-              errorNotLogika(tpe.pos, s"Type parameter bound '${tpe.syntax}' is")
-              AST.TypeParam(cid(tparamname), None, hasTT)
-          }
-        case _ => AST.TypeParam(cid(tparamname), None, hasTT)
-      }
+      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || hasError)
+        errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> : TT' are supported")
+      AST.TypeParam(cid(tparamname), hasTT)
   }
 
   def translateParam(tp: Term.Param): AST.Param = {
