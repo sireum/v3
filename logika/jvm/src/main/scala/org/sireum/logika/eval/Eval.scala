@@ -261,7 +261,7 @@ private final class Eval(store: Store) {
           case Left(v) => Value(tipe.F32, v)
           case Right(v) => Value(tipe.F64, v)
         })
-      case e: RealLit => Some(Value(tipe.R, math._R(e.value)))
+      case e: RealLit => Some(Value(tipe.R, _R(e.value)))
       case e: IntMin =>
         if (e.bitWidth == 0) None
         else Some(int2v(Some(e.integralType), _Z(e.value)))

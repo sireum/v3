@@ -154,13 +154,15 @@ lazy val sireumSettings = Seq(
   scalaVersion := scalaVer,
   retrieveManaged := true,
   scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
-    "-Ydelambdafy:method", "-feature", "-unchecked"),
+    "-Ydelambdafy:method", "-feature", "-unchecked", "-Xfatal-warnings"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
   javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
   scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  parallelExecution in Global := isParallelBuild
+  parallelExecution in Global := isParallelBuild,
+  libraryDependencies += "com.github.ghik" %% "silencer-lib" % "0.5",
+  addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
 )
 
 lazy val sireumSharedSettings = sireumSettings ++ Seq(
