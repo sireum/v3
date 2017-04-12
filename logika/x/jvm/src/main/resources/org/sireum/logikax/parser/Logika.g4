@@ -147,6 +147,8 @@ primFormula
 
 formula
   : primFormula primFormulaSuffix*                      #PFormula
+  | op='-' formula                                      #Unary       // programming logic
+  | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula op=( '*' | '/' | '%' ) NL? r=formula      #Binary      // programming logic
   | l=formula op=( '+' | '-' ) NL? r=formula            #Binary      // programming logic
   | <assoc=right> l=formula op='+:' NL? r=formula       #Binary      // programming logic
@@ -157,8 +159,6 @@ formula
   | l=formula
     op=( '=' |'==' | '!=' | '≠' ) NL?
     r=formula                                           #Binary      // programming logic
-  | op='-' formula                                      #Unary       // programming logic
-  | op=( 'not' | 'neg' | '!' | '~' | '¬' ) formula      #Unary       // propositional logic
   | l=formula
     op=( 'and' | '&' | '^' | '∧' ) NL? r=formula        #Binary      // propositional logic
   | l=formula op=( 'xor' | '^|' | '⊕' ) NL? r=formula   #Binary      // propositional logic
