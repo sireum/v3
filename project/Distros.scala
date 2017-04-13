@@ -59,18 +59,18 @@ object Distros {
   )
 
   val pluginUpdateIdMap = Map(
-    "sireum" -> (if (isDev) 31441 else 31441),
+    "sireum" -> 31441,
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 33784 else 34147),
+    "scala" -> 34147,
     "markdown" -> 33092,
     "snakeyaml" -> 24503,
-    "antlr" -> 31133,
+    "antlr" -> 34128,
     "asm" -> 18619,
     "bash" -> 31610,
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 33635,
+    "python" -> 33704,
     "rst" -> 14700,
     "ignore" -> 32828
   )
