@@ -93,6 +93,7 @@ lazy val sireumJvm =
     settings = sireumJvmSettings ++ assemblySettings ++
       Seq(
         name := "Sireum.jvm",
+        libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
         mainClass in assembly := Some("org.Sireum"),
         assemblyOutputPath in assembly := file("bin/sireum.jar"),
         test in assembly := {},
