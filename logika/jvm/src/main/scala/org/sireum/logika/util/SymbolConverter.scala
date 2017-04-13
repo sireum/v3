@@ -25,9 +25,7 @@
 
 package org.sireum.logika.util
 
-import java.io.StringReader
-
-import org.antlr.v4.runtime.{ANTLRInputStream, Token}
+import org.antlr.v4.runtime.{CharStreams, Token}
 import org.sireum.logika.parser.Antlr4LogikaLexer
 import org.sireum.util._
 
@@ -216,8 +214,7 @@ object SymbolConverter {
 
   private def tokens(input: String): CSeq[Token] = {
     import scala.collection.JavaConverters._
-    val sr = new StringReader(input)
-    val inputStream = new ANTLRInputStream(sr)
+    val inputStream = CharStreams.fromString(input)
     val lexer = new Antlr4LogikaLexer(inputStream)
     lexer.getAllTokens.asScala
   }

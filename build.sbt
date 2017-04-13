@@ -178,7 +178,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.antlr" % "antlr4-runtime" % "4.6",
+    "org.antlr" % "antlr4-runtime" % "4.7",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.18",
     "org.ow2.asm" % "asm" % "5.2",
@@ -202,7 +202,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   jsEnv := NodeJSEnv().value,
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % "0.4.4"
+    "com.lihaoyi" %%% "utest" % "0.4.5"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
@@ -271,7 +271,7 @@ lazy val runtime = toSbtJvmProject(runtimePI, sireumSettings ++ Seq(
 
 lazy val preludePI = new ProjectInfo("runtime/api", isCross = false, runtimePI)
 lazy val prelude = toSbtJvmProject(preludePI, sireumSettings ++ Seq(
-  scalaSource in Test := baseDirectory.value / "test-src",
+  testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),

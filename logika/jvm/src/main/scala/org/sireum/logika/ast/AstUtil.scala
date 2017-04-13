@@ -25,9 +25,8 @@
 
 package org.sireum.logika.ast
 
-import java.io.StringReader
+import org.antlr.v4.runtime.CharStreams
 import org.sireum.util._
-
 import org.sireum.util.{AccumulatingTagReporter, FileResourceUri, LocationInfo, Natural, Visitor}
 
 object AstUtil {
@@ -55,11 +54,9 @@ object AstUtil {
           contentChars(i) = ' '
 
     import scala.collection.JavaConverters._
-    import org.antlr.v4.runtime.ANTLRInputStream
     import org.sireum.logika.parser.Antlr4LogikaLexer
     import Antlr4LogikaLexer._
-    val sr = new StringReader(content)
-    val inputStream = new ANTLRInputStream(sr)
+    val inputStream = CharStreams.fromString(content)
     val lexer = new Antlr4LogikaLexer(inputStream)
     var inProof = false
     for (t <- lexer.getAllTokens.asScala) t.getType match {

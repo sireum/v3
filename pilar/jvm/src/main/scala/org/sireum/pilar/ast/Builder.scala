@@ -329,8 +329,7 @@ object Builder {
 
     import org.sireum.pilar.parser.Antlr4PilarLexer
 
-    val sr = new StringReader(input)
-    val inputStream = new ANTLRInputStream(sr)
+    val inputStream = CharStreams.fromString(input)
     val lexer = new Antlr4PilarLexer(inputStream)
     val tokens = new CommonTokenStream(lexer)
     val parser = new Antlr4PilarParser(tokens)
@@ -343,7 +342,7 @@ object Builder {
       try Some(parser.modelFile())
       catch {
         case _: ParseCancellationException =>
-          tokens.reset()
+          tokens.seek(0)
           parser.reset()
           parser.getInterpreter.setPredictionMode(PredictionMode.LL)
           parser.setErrorHandler(errorHandler)

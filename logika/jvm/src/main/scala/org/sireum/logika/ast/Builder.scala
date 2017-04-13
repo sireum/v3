@@ -1155,8 +1155,7 @@ object Builder {
       val TruthTable, Sequent, Program = Value
     }
 
-    val sr = new StringReader(input)
-    val inputStream = new ANTLRInputStream(sr)
+    val inputStream = CharStreams.fromString(input)
     val lexer = new Antlr4LogikaLexer(inputStream)
     val tokenStream = new CommonTokenStream(lexer)
     tokenStream.fill()

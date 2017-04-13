@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.6
+// Generated from /Users/robby/Repositories/Sireum/sireum-v3/logika/jvm/src/main/resources/org/sireum/logika/parser/Antlr4Logika.g4 by ANTLR 4.7
 package org.sireum.logika.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4LogikaParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -68,25 +68,26 @@ public class Antlr4LogikaParser extends Parser {
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, "'*'", "'|'", "'T'", "'⊤'", "'F'", "'⊥'", "'-'", "':'", "'['", "']'", 
-		"','", "'|-'", "'⊢'", "'{'", "'}'", "'.'", "'assume'", "'true'", "'false'", 
-		"'_|_'", "'('", "')'", "'result'", "'B'", "'Z'", "'Z8'", "'Z16'", "'Z32'", 
-		"'Z64'", "'N'", "'N8'", "'N16'", "'N32'", "'N64'", "'S8'", "'S16'", "'S32'", 
-		"'S64'", "'U8'", "'U16'", "'U32'", "'U64'", "'R'", "'F32'", "'F64'", "'BS'", 
-		"'ZS'", "'Z8S'", "'Z16S'", "'Z32S'", "'Z64S'", "'NS'", "'N8S'", "'N16S'", 
-		"'N32S'", "'N64S'", "'S8S'", "'S16S'", "'S32S'", "'S64S'", "'U8S'", "'U16S'", 
-		"'U32S'", "'U64S'", "'RS'", "'F32S'", "'F64S'", "'not'", "'neg'", "'!'", 
-		"'~'", "'¬'", "'/'", "'%'", "'+'", "'+:'", "':+'", "'<'", "'<='", "'≤'", 
-		"'>'", "'>='", "'≥'", "'>>'", "'>>>'", "'<<'", "'='", "'=='", "'!='", 
-		"'≠'", "'and'", "'&'", "'^'", "'∧'", "'xor'", "'^|'", "'or'", "'V'", "'∨'", 
-		"'implies'", "'->'", "'→'", "'forall'", "'all'", "'A'", "'∀'", "'exists'", 
-		"'some'", "'E'", "'∃'", "'..'", "'premise'", "'andi'", "'ande1'", "'ande2'", 
-		"'ori1'", "'Vi1'", "'ori2'", "'Vi2'", "'ore'", "'Ve'", "'impliesi'", "'impliese'", 
-		"'noti'", "'negi'", "'note'", "'nege'", "'bottome'", "'falsee'", "'pbc'", 
-		"'subst1'", "'subst2'", "'algebra'", "'foralli'", "'alli'", "'Ai'", "'foralle'", 
-		"'alle'", "'Ae'", "'existsi'", "'somei'", "'Ei'", "'existse'", "'somee'", 
-		"'Ee'", "'invariant'", "'fact'", "'auto'", "'import'", "'_'", "'def'", 
-		"'if'", "'var'", "'val'", "'assert'", "'else'", "'while'", "'l\"\"\"'", 
+		null, "'*'", "'|'", "'T'", "'\u22A4'", "'F'", "'\u22A5'", "'-'", "':'", 
+		"'['", "']'", "','", "'|-'", "'\u22A2'", "'{'", "'}'", "'.'", "'assume'", 
+		"'true'", "'false'", "'_|_'", "'('", "')'", "'result'", "'B'", "'Z'", 
+		"'Z8'", "'Z16'", "'Z32'", "'Z64'", "'N'", "'N8'", "'N16'", "'N32'", "'N64'", 
+		"'S8'", "'S16'", "'S32'", "'S64'", "'U8'", "'U16'", "'U32'", "'U64'", 
+		"'R'", "'F32'", "'F64'", "'BS'", "'ZS'", "'Z8S'", "'Z16S'", "'Z32S'", 
+		"'Z64S'", "'NS'", "'N8S'", "'N16S'", "'N32S'", "'N64S'", "'S8S'", "'S16S'", 
+		"'S32S'", "'S64S'", "'U8S'", "'U16S'", "'U32S'", "'U64S'", "'RS'", "'F32S'", 
+		"'F64S'", "'not'", "'neg'", "'!'", "'~'", "'\u00AC'", "'/'", "'%'", "'+'", 
+		"'+:'", "':+'", "'<'", "'<='", "'\u2264'", "'>'", "'>='", "'\u2265'", 
+		"'>>'", "'>>>'", "'<<'", "'='", "'=='", "'!='", "'\u2260'", "'and'", "'&'", 
+		"'^'", "'\u2227'", "'xor'", "'^|'", "'or'", "'V'", "'\u2228'", "'implies'", 
+		"'->'", "'\u2192'", "'forall'", "'all'", "'A'", "'\u2200'", "'exists'", 
+		"'some'", "'E'", "'\u2203'", "'..'", "'premise'", "'andi'", "'ande1'", 
+		"'ande2'", "'ori1'", "'Vi1'", "'ori2'", "'Vi2'", "'ore'", "'Ve'", "'impliesi'", 
+		"'impliese'", "'noti'", "'negi'", "'note'", "'nege'", "'bottome'", "'falsee'", 
+		"'pbc'", "'subst1'", "'subst2'", "'algebra'", "'foralli'", "'alli'", "'Ai'", 
+		"'foralle'", "'alle'", "'Ae'", "'existsi'", "'somei'", "'Ei'", "'existse'", 
+		"'somee'", "'Ee'", "'invariant'", "'fact'", "'auto'", "'import'", "'_'", 
+		"'def'", "'if'", "'var'", "'val'", "'assert'", "'else'", "'while'", "'l\"\"\"'", 
 		"'\"\"\"'", "'print'", "'println'", "'@'", "'Unit'", "'return'", "'randomInt'", 
 		"'readInt'", "'modifies'", "'requires'", "'pre'", "'ensures'", "'post'"
 	};
@@ -2788,7 +2789,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(545);
 				if (!(("->".equals(_input.LT(1).getText()) ||
 				      "→".equals(_input.LT(1).getText())) &&
-				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"->\".equals(_input.LT(1).getText()) ||\n      \"→\".equals(_input.LT(1).getText())) &&\n     \"i\".equals(_input.LT(2).getText())");
+				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"->\".equals(_input.LT(1).getText()) ||\n      \"\u002F\".equals(_input.LT(1).getText())) &&\n     \"i\".equals(_input.LT(2).getText())");
 				setState(546);
 				((ImpliesIntroContext)_localctx).tb = _input.LT(1);
 				_la = _input.LA(1);
@@ -2813,7 +2814,7 @@ public class Antlr4LogikaParser extends Parser {
 				setState(549);
 				if (!(("->".equals(_input.LT(1).getText()) ||
 				      "→".equals(_input.LT(1).getText())) &&
-				      "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"->\".equals(_input.LT(1).getText()) ||\n      \"→\".equals(_input.LT(1).getText())) &&\n      \"e\".equals(_input.LT(2).getText())");
+				      "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"->\".equals(_input.LT(1).getText()) ||\n      \"\u002F\".equals(_input.LT(1).getText())) &&\n      \"e\".equals(_input.LT(2).getText())");
 				setState(550);
 				((ImpliesElimContext)_localctx).tb = _input.LT(1);
 				_la = _input.LA(1);
@@ -2881,7 +2882,7 @@ public class Antlr4LogikaParser extends Parser {
 				if (!(("!".equals(_input.LT(1).getText()) ||
 				      "~".equals(_input.LT(1).getText()) ||
 				      "¬".equals(_input.LT(1).getText())) &&
-				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"!\".equals(_input.LT(1).getText()) ||\n      \"~\".equals(_input.LT(1).getText()) ||\n      \"¬\".equals(_input.LT(1).getText())) &&\n     \"i\".equals(_input.LT(2).getText())");
+				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"!\".equals(_input.LT(1).getText()) ||\n      \"~\".equals(_input.LT(1).getText()) ||\n      \"\u005A\".equals(_input.LT(1).getText())) &&\n     \"i\".equals(_input.LT(2).getText())");
 				setState(560);
 				((NegIntroContext)_localctx).tb = _input.LT(1);
 				_la = _input.LA(1);
@@ -2907,7 +2908,7 @@ public class Antlr4LogikaParser extends Parser {
 				if (!(("!".equals(_input.LT(1).getText()) ||
 				      "~".equals(_input.LT(1).getText()) ||
 				      "¬".equals(_input.LT(1).getText())) &&
-				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"!\".equals(_input.LT(1).getText()) ||\n      \"~\".equals(_input.LT(1).getText()) ||\n      \"¬\".equals(_input.LT(1).getText())) &&\n     \"e\".equals(_input.LT(2).getText())");
+				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "(\"!\".equals(_input.LT(1).getText()) ||\n      \"~\".equals(_input.LT(1).getText()) ||\n      \"\u005A\".equals(_input.LT(1).getText())) &&\n     \"e\".equals(_input.LT(2).getText())");
 				setState(564);
 				((NegElimContext)_localctx).tb = _input.LT(1);
 				_la = _input.LA(1);
@@ -3090,7 +3091,7 @@ public class Antlr4LogikaParser extends Parser {
 				{
 				setState(598);
 				if (!("∀".equals(_input.LT(1).getText()) &&
-				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"∀\".equals(_input.LT(1).getText()) &&\n     \"i\".equals(_input.LT(2).getText())");
+				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"\u0001\".equals(_input.LT(1).getText()) &&\n     \"i\".equals(_input.LT(2).getText())");
 				setState(599);
 				((ForallIntroContext)_localctx).tb = match(T__105);
 				setState(600);
@@ -3105,7 +3106,7 @@ public class Antlr4LogikaParser extends Parser {
 				{
 				setState(602);
 				if (!("∀".equals(_input.LT(1).getText()) &&
-				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"∀\".equals(_input.LT(1).getText()) &&\n     \"e\".equals(_input.LT(2).getText())");
+				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"\u0001\".equals(_input.LT(1).getText()) &&\n     \"e\".equals(_input.LT(2).getText())");
 				setState(603);
 				((ForallElimContext)_localctx).tb = match(T__105);
 				setState(604);
@@ -3188,7 +3189,7 @@ public class Antlr4LogikaParser extends Parser {
 				{
 				setState(621);
 				if (!("∃".equals(_input.LT(1).getText()) &&
-				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"∃\".equals(_input.LT(1).getText()) &&\n     \"i\".equals(_input.LT(2).getText())");
+				     "i".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"\u0001\".equals(_input.LT(1).getText()) &&\n     \"i\".equals(_input.LT(2).getText())");
 				setState(622);
 				((ExistsIntroContext)_localctx).tb = match(T__109);
 				setState(623);
@@ -3217,7 +3218,7 @@ public class Antlr4LogikaParser extends Parser {
 				{
 				setState(630);
 				if (!("∃".equals(_input.LT(1).getText()) &&
-				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"∃\".equals(_input.LT(1).getText()) &&\n     \"e\".equals(_input.LT(2).getText())");
+				     "e".equals(_input.LT(2).getText()))) throw new FailedPredicateException(this, "\"\u0001\".equals(_input.LT(1).getText()) &&\n     \"e\".equals(_input.LT(2).getText())");
 				setState(631);
 				((ExistsElimContext)_localctx).tb = match(T__109);
 				setState(632);
@@ -6605,7 +6606,7 @@ public class Antlr4LogikaParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\u00bb\u0528\4\2\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\u00bb\u0528\4\2\t"+
 		"\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -6718,7 +6719,7 @@ public class Antlr4LogikaParser extends Parser {
 		"tu\3\2vy\4\2\4\4ee\3\2z{\3\2gh\3\2~\177\3\2\u0080\u0081\3\2HJ\3\2\u0082"+
 		"\u0083\4\2\b\b\26\26\3\2\u0088\u008a\3\2\u008b\u008d\3\2\u008e\u0090\3"+
 		"\2\u0091\u0093\3\2\u009b\u009c\3\2\u00a2\u00a3\4\2\t\tHI\5\2PQSTVX\3\2"+
-		"Z[\3\2\u00aa\u00ab\3\2\u00ac\u00ad\u060e\2h\3\2\2\2\4m\3\2\2\2\6\u00ab"+
+		"Z[\3\2\u00aa\u00ab\3\2\u00ac\u00ad\2\u060e\2h\3\2\2\2\4m\3\2\2\2\6\u00ab"+
 		"\3\2\2\2\b\u00b5\3\2\2\2\n\u00b7\3\2\2\2\f\u00e2\3\2\2\2\16\u0109\3\2"+
 		"\2\2\20\u010b\3\2\2\2\22\u0159\3\2\2\2\24\u018e\3\2\2\2\26\u019e\3\2\2"+
 		"\2\30\u01e1\3\2\2\2\32\u0200\3\2\2\2\34\u0287\3\2\2\2\36\u028c\3\2\2\2"+
