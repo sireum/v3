@@ -23,22 +23,23 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.x.logika.test
+package org.sireum.lang.test
 
+import org.sireum.test._
 import org.sireum.util._
-import org.sireum.x.logika.parser.ScalaMetaParser
+import org.sireum.lang.parser.ScalaMetaParser
 
-class ScalaMetaParserTest extends LogikaXSpec {
+class ScalaMetaParserTest extends SireumSpec {
 
   "Passing" - {
 
-    passing(prelude, addLogikaImport = false, isPrelude = true)
+    passing(prelude, addImport = false, isPrelude = true)
 
-    passing("", addLogikaImport = false)
+    passing("", addImport = false)
 
-    passing("import org.sireum.logika._", addLogikaImport = false)
+    passing("import org.sireum._", addImport = false)
 
-    passing("package a.b.c; import org.sireum.logika._", addLogikaImport = false)
+    passing("package a.b.c; import org.sireum._", addImport = false)
 
 
     "Var/Val" - {
@@ -126,23 +127,23 @@ class ScalaMetaParserTest extends LogikaXSpec {
 
   "Failing" - {
 
-    failing("package org.sireum.logika", "org.sireum.logika", addLogikaImport = false)
+    failing("package org.sireum.logika", "org.sireum.logika", addImport = false)
 
     val packageFirstMember = "first member of packages"
 
-    failing("package a.b.c", packageFirstMember, addLogikaImport = false)
+    failing("package a.b.c", packageFirstMember, addImport = false)
 
-    failing("package a.b.c; object Foo", packageFirstMember, addLogikaImport = false)
+    failing("package a.b.c; object Foo", packageFirstMember, addImport = false)
 
-    failing("object Foo", "first statement should be", addLogikaImport = false)
+    failing("object Foo", "first statement should be", addImport = false)
 
     "Val/Var" - {
 
       val topMember = "expected class or object"
 
-      failing("package a; import org.sireum.logika._; val x: Z = 4", topMember, addLogikaImport = false)
+      failing("package a; import org.sireum._; val x: Z = 4", topMember, addImport = false)
 
-      failing("package a; import org.sireum.logika._; var x: Z = 4", topMember, addLogikaImport = false)
+      failing("package a; import org.sireum._; var x: Z = 4", topMember, addImport = false)
 
       val dollar = "'$' is only allowed"
 
@@ -265,7 +266,7 @@ class ScalaMetaParserTest extends LogikaXSpec {
   def prelude: String = {
     import java.io._
 
-    val url = classOf[org.sireum.logika._Clonable].getResource("prelude.scala")
+    val url = classOf[org.sireum._Clonable].getResource("prelude")
     val f = new File(url.toURI)
     val fis = new FileInputStream(f)
     val buffer = new Array[Byte](f.length.toInt)
@@ -278,12 +279,12 @@ class ScalaMetaParserTest extends LogikaXSpec {
     ScalaMetaParser(isPrelude, isWorksheet, isDiet = false, None, text)
 
   def passing(text: String,
-              addLogikaImport: Boolean = true,
+              addImport: Boolean = true,
               isWorksheet: Boolean = false,
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position): Unit =
     *(sub(text)) {
-      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text",
+      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
       val b = r.programOpt.nonEmpty && r.tags.isEmpty
       if (!b) report(r)
@@ -291,12 +292,12 @@ class ScalaMetaParserTest extends LogikaXSpec {
     }
 
   def failing(text: String, msg: String,
-              addLogikaImport: Boolean = true,
+              addImport: Boolean = true,
               isWorksheet: Boolean = false,
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position): Unit =
     *(sub(text)) {
-      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addLogikaImport) "import org.sireum.logika._; " else ""}$text",
+      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
       val b = r.tags.exists {
         case t: MessageTag => t.message.contains(msg)

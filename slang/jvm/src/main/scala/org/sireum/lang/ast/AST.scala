@@ -23,15 +23,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.x.logika.ast
+package org.sireum.lang.ast
 
-import org.sireum.logika._
+import org.sireum._
 
 @datatype trait TopUnit
 
 object TopUnit {
 
-  @datatype class Program(fileUriOpt: option[String],
+  @datatype class Program(fileUriOpt: Opt[String],
                           packageName: Name,
                           body: Body)
     extends TopUnit
@@ -45,7 +45,7 @@ object Stmt {
   @datatype class Composite(isRoot: B,
                             isDatatype: B,
                             id: Id,
-                            parent: option[Type],
+                            parent: Opt[Type],
                             params: ISZ[CompositeParam],
                             stmt: ISZ[Stmt])
     extends Stmt
@@ -58,7 +58,7 @@ object Stmt {
   @datatype class Var(isVal: B,
                       id: Id,
                       tpe: Type,
-                      init: option[Exp])
+                      init: Opt[Exp])
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
@@ -69,7 +69,7 @@ object Stmt {
   @datatype class Method(isPure: B,
                          sig: MethodSig,
                          contract: MethodContract,
-                         bodyOpt: option[Body])
+                         bodyOpt: Opt[Body])
     extends Stmt
 
   @datatype class ExtMethod(isPure: B,
@@ -127,7 +127,7 @@ object Case {
                         tpe: Type)
     extends Case
 
-  @datatype class Structure(idOpt: option[Id],
+  @datatype class Structure(idOpt: Opt[Id],
                             name: Name,
                             patterns: ISZ[Pattern])
     extends Case
@@ -144,8 +144,8 @@ object Pattern {
   @datatype class Var(id: Id)
     extends Pattern
 
-  @datatype class Structure(idOpt: option[Id],
-                            nameOpt: option[Name],
+  @datatype class Structure(idOpt: Opt[Id],
+                            nameOpt: Opt[Name],
                             patterns: ISZ[Pattern])
     extends Pattern
 
@@ -159,7 +159,7 @@ object Assign {
                        rhs: Exp)
     extends Assign
 
-  @datatype class Pattern(nameOpt: option[Name],
+  @datatype class Pattern(nameOpt: Opt[Name],
                           patterns: ISZ[Pattern])
     extends Assign
 
@@ -209,7 +209,7 @@ object Exp {
                                   args: ISZ[Id],
                                   contract: MethodContract)
 
-@datatype class SpecMethodDef(idOpt: option[Id],
+@datatype class SpecMethodDef(idOpt: Opt[Id],
                               exp: Exp,
-                              pattern: option[Case],
-                              cond: option[Exp])
+                              pattern: Opt[Case],
+                              cond: Opt[Exp])

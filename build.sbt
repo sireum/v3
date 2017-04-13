@@ -133,11 +133,11 @@ lazy val sireumJs =
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  logikaRuntime, logikaPrelude, logikaJvm, logikaXJvm, java, cli, awas
+  runtime, prelude, logikaJvm, slangJvm, java, cli, awas
 )
 
 lazy val subProjectsJs = Seq(
-  utilJs, testJs, pilarJs, logikaJs, logikaXJs
+  utilJs, testJs, pilarJs, logikaJs, slangJs
 )
 
 lazy val subProjectJvmReferences =
@@ -236,13 +236,13 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaRuntime, logikaPrelude)
+).dependsOn(runtime, prelude)
 lazy val logikaJs = logikaT._3
 
-lazy val logikaXPI = new ProjectInfo("logika/x", isCross = true, utilPI, testPI)
-lazy val logikaXT = toSbtCrossProject(logikaXPI)
-lazy val logikaXShared = logikaXT._1
-lazy val logikaXJvm = logikaXT._2.settings(
+lazy val slangPI = new ProjectInfo("slang", isCross = true, utilPI, testPI)
+lazy val slangT = toSbtCrossProject(slangPI)
+lazy val slangShared = slangT._1
+lazy val slangJvm = slangT._2.settings(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
@@ -251,17 +251,17 @@ lazy val logikaXJvm = logikaXT._2.settings(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
-    logikaXT._2.base / "c-runtime" / "include",
-    logikaXT._2.base / "c-runtime" / "src",
-    logikaXT._2.base / "c-runtime" / "cmake"
+    slangT._2.base / "c-runtime" / "include",
+    slangT._2.base / "c-runtime" / "src",
+    slangT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(logikaRuntime, logikaPrelude % "test->test;compile->compile")
-lazy val logikaXJs = logikaXT._3
+).dependsOn(runtime, prelude % "test->test;compile->compile")
+lazy val slangJs = slangT._3
 
 // Jvm Projects
 
-lazy val logikaRuntimePI = new ProjectInfo("logika/runtime/native", isCross = false)
-lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
+lazy val runtimePI = new ProjectInfo("runtime/native", isCross = false)
+lazy val runtime = toSbtJvmProject(runtimePI, sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.apfloat" % "apfloat" % "1.8.2",
@@ -269,13 +269,13 @@ lazy val logikaRuntime = toSbtJvmProject(logikaRuntimePI, sireumSettings ++ Seq(
     "org.spire-math" %% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
-lazy val logikaPreludePI = new ProjectInfo("logika/runtime/api", isCross = false, logikaRuntimePI)
-lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
+lazy val preludePI = new ProjectInfo("runtime/api", isCross = false, runtimePI)
+lazy val prelude = toSbtJvmProject(preludePI, sireumSettings ++ Seq(
   scalaSource in Test := baseDirectory.value / "test-src",
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),
-  unmanagedResourceDirectories in Compile += file("logika/runtime/api/jvm/src/main/scala"),
+  unmanagedResourceDirectories in Compile += file("runtime/api/jvm/src/main/scala"),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 

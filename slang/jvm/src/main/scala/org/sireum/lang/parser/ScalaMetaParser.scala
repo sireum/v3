@@ -24,11 +24,11 @@
  */
 
 
-package org.sireum.x.logika.parser
+package org.sireum.lang.parser
 
-import org.sireum.x.logika.{ast => AST}
+import org.sireum.lang.{ast => AST}
 import org.sireum.util._
-import org.sireum.logika.{option, some, none, ISZ}
+import org.sireum.{Opt, some, none, ISZ}
 import scala.meta._
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
@@ -40,7 +40,7 @@ object ScalaMetaParser {
   }
 
   case class Result(text: String,
-                    hashLogika: Boolean,
+                    hashSireum: Boolean,
                     programOpt: Option[AST.TopUnit.Program],
                     tags: ISeq[Tag])
 
@@ -48,26 +48,28 @@ object ScalaMetaParser {
             isDiet: Boolean,
             fileUriOpt: Option[FileResourceUri],
             text: String): Result =
-    apply(allowLogikaPackage = false, isWorksheet, isDiet, fileUriOpt, text)
+    apply(allowSireumPackage = false, isWorksheet, isDiet, fileUriOpt, text)
 
-  private[logika] def apply(allowLogikaPackage: Boolean,
+  private[sireum] def apply(allowSireumPackage: Boolean,
                             isWorksheet: Boolean,
                             isDiet: Boolean,
                             fileUriOpt: Option[FileResourceUri],
                             text: String): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
-    val hashLogika = "//#Logika" == line
+    val hashSireum = "//#Sireum" == line || "//#Logika" == line
     val dialect =
-      if (isWorksheet) scala.meta.dialects.Scala212.copy(allowToplevelTerms = true)
-      else scala.meta.dialects.Scala212
+      if (isWorksheet) scala.meta.dialects.Scala212.copy(
+        allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
+      else scala.meta.dialects.Scala212.copy(
+        allowLiteralTypes = true, allowTrailingCommas = true)
     dialect(text).parse[Source] match {
       case Parsed.Success(x) =>
         //println("Input: " + x.structure)
-        new ScalaMetaParser(text, allowLogikaPackage, hashLogika,
+        new ScalaMetaParser(text, allowSireumPackage, hashSireum,
           isWorksheet, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
-        Result(text, hashLogika, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
+        Result(text, hashSireum, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
   }
 
@@ -83,7 +85,7 @@ object ScalaMetaParser {
       posEnd.column + 1,
       posStart.offset,
       posEnd.offset - posStart.offset).
-      toLocationError(fileUriOpt, "Logika Parser", message)
+      toLocationError(fileUriOpt, "Slang Parser", message)
   }
 
   def isDollar(t: Term): Boolean = t match {
@@ -98,8 +100,8 @@ object ScalaMetaParser {
 import ScalaMetaParser._
 
 class ScalaMetaParser(text: String,
-                      allowLogikaPackage: Boolean,
-                      hashLogika: Boolean,
+                      allowSireumPackage: Boolean,
+                      hashSireum: Boolean,
                       isWorksheet: Boolean,
                       isDiet: Boolean,
                       fileUriOpt: Option[FileResourceUri]) {
@@ -114,58 +116,69 @@ class ScalaMetaParser(text: String,
 
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
-  def errorNotLogika(pos: Position, message: String): Unit =
-    error(pos, message + " not in the Logika language.")
+  def errorNotSlang(pos: Position, message: String): Unit =
+    error(pos, message + " not in the Sireum language.")
 
-  def errorInLogika(pos: Position, message: String): Unit =
-    error(pos, message + " in the Logika language.")
+  def errorInSlang(pos: Position, message: String): Unit =
+    error(pos, message + " in the Sireum language.")
 
-  def translateSource(source: Source): Result = source.stats match {
-    case List(q"package $ref { ..$stats }") =>
-      if (hashLogika) {
-        val name = AST.Name(packageRef2IS(ref))
-        if (ref.syntax == "org.sireum.logika") {
-          if (allowLogikaPackage)
-            Result(text, hashLogika,
-              Some(AST.TopUnit.Program(
-                fileUriOpt,
-                name,
-                AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
-          else {
-            errorInLogika(ref.pos, "Cannot define members of the org.sireum.logika package")
-            Result(text, hashLogika, None, tags)
-          }
-        } else stats match {
-          case q"import org.sireum.logika._" :: rest =>
-            Result(text, hashLogika,
-              Some(AST.TopUnit.Program(
-                fileUriOpt,
-                name,
-                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
-          case _ =>
-            errorInLogika(ref.pos, "The first member of packages should be 'import org.sireum.logika._'")
-            Result(text, hashLogika, None, tags)
-        }
-      } else Result(text, hashLogika, None, tags)
-    case q"import org.sireum.logika._" :: rest =>
+  def translateSource(source: Source): Result = {
+    def topF(rest: List[Stat]): Result = {
       val shouldParse = fileUriOpt.forall(fileUri =>
         fileUri.endsWith(".logika") ||
           fileUri.endsWith(".sc") ||
-          (hashLogika && fileUri.endsWith(".scala")))
+          (hashSireum && fileUri.endsWith(".scala")))
       if (shouldParse)
-        Result(text, hashLogika,
+        Result(text, hashSireum,
           Some(AST.TopUnit.Program(
             fileUriOpt,
             AST.Name(ISZ()),
             AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
       else
-        Result(text, hashLogika, None, tags)
-    case Nil =>
-      Result(text, hashLogika, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ()), AST.Body(ISZ()))), tags)
-    case stats =>
-      if (hashLogika)
-        errorInLogika(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum.logika._'")
-      Result(text, hashLogika, None, tags)
+        Result(text, hashSireum, None, tags)
+    }
+
+    source.stats match {
+      case List(q"package $ref { ..$stats }") =>
+        if (hashSireum) {
+          val name = AST.Name(packageRef2IS(ref))
+          val refSyntax = ref.syntax
+          if (refSyntax == "org.sireum" || refSyntax.startsWith("org.sireum.")) {
+            if (allowSireumPackage)
+              Result(text, hashSireum,
+                Some(AST.TopUnit.Program(
+                  fileUriOpt,
+                  name,
+                  AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
+            else {
+              errorInSlang(ref.pos, s"Cannot define members of the ${refSyntax} package")
+              Result(text, hashSireum, None, tags)
+            }
+          } else {
+            def packageF(rest: List[Stat]) = Result(text, hashSireum,
+              Some(AST.TopUnit.Program(
+                fileUriOpt,
+                name,
+                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
+
+            stats match {
+              case q"import org.sireum._" :: rest => packageF(rest)
+              case q"import org.sireum.logika._" :: rest => packageF(rest)
+              case _ =>
+                errorInSlang(ref.pos, "The first member of packages should be 'import org.sireum._'")
+                Result(text, hashSireum, None, tags)
+            }
+          }
+        } else Result(text, hashSireum, None, tags)
+      case q"import org.sireum._" :: rest => topF(rest)
+      case q"import org.sireum.logika._" :: rest => topF(rest)
+      case Nil =>
+        Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ()), AST.Body(ISZ()))), tags)
+      case stats =>
+        if (hashSireum)
+          errorInSlang(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum._'")
+        Result(text, hashSireum, None, tags)
+    }
   }
 
   def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = {
@@ -190,7 +203,7 @@ class ScalaMetaParser(text: String,
         case mod"@record" => true
         case _ => false
       }) => translateRecord(enclosing, stat)
-      case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLogikaStmt(enclosing, l.pos, s)
+      case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case stat: Term.Assign => rStmt // TODO
       case stat: Term.Block => translateBlock(enclosing, stat)
@@ -201,7 +214,7 @@ class ScalaMetaParser(text: String,
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
       case _ =>
-        errorNotLogika(stat.pos, s"Statement '${syntax(stat)}' is")
+        errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
     }
   }
@@ -212,8 +225,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "Val declarations can only appear at the top-level, inside objects, methods, or code blocks")
-        else errorInLogika(stat.pos, "Val declarations can only appear inside objects, methods, or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, methods, or code blocks")
+        else errorInSlang(stat.pos, "Val declarations can only appear inside objects, methods, or code blocks")
     }
     val q"..$mods val ..$patsnel: ${tpeopt: Option[Type]} = $expr" = stat
     var hasSpec = false
@@ -231,15 +244,15 @@ class ScalaMetaParser(text: String,
     if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
       hasError = true
       if (hasSpec)
-        errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
+        errorInSlang(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
       else
-        errorInLogika(stat.pos, "Val declaration should have the form: 'val <id> : <type> = <exp>'")
+        errorInSlang(stat.pos, "Val declaration should have the form: 'val <id> : <type> = <exp>'")
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollar(expr)) {
       hasError = true
-      error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
+      error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
     } else if (hasSpec && !isDollar(expr)) {
       hasError = true
-      errorInLogika(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
+      errorInSlang(stat.pos, "@spec val declaration should have the form: '@spec val <id> : <type> = $'")
     }
     if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
     else if (hasSpec)
@@ -255,8 +268,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "Var declarations can only appear at the top-level, inside objects, methods, or code blocks")
-        else errorInLogika(stat.pos, "Var declarations can only appear inside objects, methods, or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Var declarations can only appear at the top-level, inside objects, methods, or code blocks")
+        else errorInSlang(stat.pos, "Var declarations can only appear inside objects, methods, or code blocks")
     }
     val q"..$mods var ..$patsnel: ${tpeopt: Option[Type]} = ${expropt: Option[Term]}" = stat
     var hasSpec = false
@@ -275,18 +288,18 @@ class ScalaMetaParser(text: String,
     if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty) {
       hasError = true
       if (hasSpec)
-        errorInLogika(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
+        errorInSlang(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
       else
-        errorInLogika(stat.pos, "Var declaration should have the form: 'var <id> : <type> = <exp>'")
+        errorInSlang(stat.pos, "Var declaration should have the form: 'var <id> : <type> = <exp>'")
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollarExpr) {
       hasError = true
-      error(stat.pos, "'$' is only allowed in a Logika @ext object or @spec val/var expression.")
+      error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
     } else if (hasSpec && !isDollarExpr) {
       hasError = true
-      errorInLogika(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
+      errorInSlang(stat.pos, "@spec var declaration should have the form: '@spec var <id> : <type> = $'")
     } else if (expropt.isEmpty && enclosing != Enclosing.Method) {
       hasError = true
-      errorInLogika(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
+      errorInSlang(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
     }
 
     if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
@@ -302,11 +315,11 @@ class ScalaMetaParser(text: String,
     var hasError = false
     if (paramss.size > 1) {
       hasError = true
-      errorNotLogika(name.pos, "Methods with multiple parameter tuples are")
+      errorNotSlang(name.pos, "Methods with multiple parameter tuples are")
     }
     if (tpeopt.isEmpty) {
       hasError = true
-      errorInLogika(name.pos, "Methods have to be given explicit return type")
+      errorInSlang(name.pos, "Methods have to be given explicit return type")
     }
     var isPure = false
     var isSpec = false
@@ -325,11 +338,11 @@ class ScalaMetaParser(text: String,
         isSpec = true
       case _ =>
         hasError = true
-        errorInLogika(mod.pos, s"Only either method modifier @pure or @spec is allowed")
+        errorInSlang(mod.pos, s"Only either method modifier @pure or @spec is allowed")
     }
     if (isPure && isSpec) {
       hasError = true
-      errorInLogika(mods.head.pos, s"Only either method modifier @pure or @spec is allowed")
+      errorInSlang(mods.head.pos, s"Only either method modifier @pure or @spec is allowed")
     }
     val sig = AST.MethodSig(
       cid(name),
@@ -346,7 +359,7 @@ class ScalaMetaParser(text: String,
           AST.Stmt.ExtMethod(isPure, sig, parseContract(l.pos, s))
         case _ =>
           hasError = true
-          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' are allowed as Logika @ext object method expression.")
+          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
@@ -359,7 +372,7 @@ class ScalaMetaParser(text: String,
           AST.Stmt.SpecMethod(sig, defs, ISZ())
         case _ =>
           hasError = true
-          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Logika @spec method expression.")
+          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
       }
     else exp match {
@@ -376,7 +389,7 @@ class ScalaMetaParser(text: String,
         }
         AST.Stmt.Method(isPure, sig, mc, bodyOpt)
       case _ =>
-        errorInLogika(exp.pos, "Only block '{ ... }' is allowed for method definitions")
+        errorInSlang(exp.pos, "Only block '{ ... }' is allowed for method definitions")
         AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None)
     }
   }
@@ -387,8 +400,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "Object declarations can only appear at the top-level, package-level, or inside other objects")
-        else errorInLogika(stat.pos, "Object declarations can only appear at the package-level or inside other objects")
+        if (isWorksheet) errorInSlang(stat.pos, "Object declarations can only appear at the top-level, package-level, or inside other objects")
+        else errorInSlang(stat.pos, "Object declarations can only appear at the package-level or inside other objects")
     }
     val q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" = stat
     var hasExt = false
@@ -401,15 +414,15 @@ class ScalaMetaParser(text: String,
         hasExt = true
       case _ =>
         hasError = true
-        errorNotLogika(mods.head.pos, "Object modifiers other than @ext are")
+        errorNotSlang(mods.head.pos, "Object modifiers other than @ext are")
     }
     if (estats.nonEmpty) {
       hasError = true
-      errorNotLogika(estats.head.pos, "Object early initializations are")
+      errorNotSlang(estats.head.pos, "Object early initializations are")
     }
     if (ctorcalls.nonEmpty) {
       hasError = true
-      errorNotLogika(ctorcalls.head.pos, "Object super constructor calls are")
+      errorNotSlang(ctorcalls.head.pos, "Object super constructor calls are")
     }
     if (!hasError) {
       val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
@@ -421,12 +434,12 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        if (isWorksheet) errorInLogika(stat.pos, "@datatype trait declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInLogika(stat.pos, "@datatype trait declarations can only appear at the package-level or inside objects")
+        if (isWorksheet) errorInSlang(stat.pos, "@datatype trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@datatype trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
-      error(tname.pos, "Logika @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
+      error(tname.pos, "Slang @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
     var hasDatatype = false
     for (mod <- mods) mod match {
       case mod"@datatype" =>
@@ -435,7 +448,7 @@ class ScalaMetaParser(text: String,
         }
         hasDatatype = true
       case _ =>
-        error(mod.pos, "Logika @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
+        error(mod.pos, "Slang @datatype traits have to be of the form '@datatype trait <id> { ... }'.")
     }
     AST.Stmt.Composite(isRoot = true,
       isDatatype = true,
@@ -449,13 +462,13 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        if (isWorksheet) errorInLogika(stat.pos, "@datatype class declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInLogika(stat.pos, "@datatype class declarations can only appear at package-level or inside objects")
+        if (isWorksheet) errorInSlang(stat.pos, "@datatype class declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@datatype class declarations can only appear at package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
       ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
-      error(tname.pos, "Logika @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
+      error(tname.pos, "Slang @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
     }
     var hasDatatype = false
     for (mod <- mods) mod match {
@@ -465,7 +478,7 @@ class ScalaMetaParser(text: String,
         }
         hasDatatype = true
       case _ =>
-        error(mod.pos, "Logika @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
+        error(mod.pos, "Slang @datatype classes have to be of the form '@datatype class <id>(...) { ... }'.")
     }
     val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = true))): _*)
     AST.Stmt.Composite(isRoot = false,
@@ -480,12 +493,12 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        if (isWorksheet) errorInLogika(stat.pos, "@record trait declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInLogika(stat.pos, "@rcord trait declarations can only appear at the package-level or inside objects")
+        if (isWorksheet) errorInSlang(stat.pos, "@record trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@rcord trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || ctorcalls.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
-      error(tname.pos, "Logika @record traits have to be of the form '@record trait <id> { ... }'.")
+      error(tname.pos, "Slang @record traits have to be of the form '@record trait <id> { ... }'.")
     var hasRecord = false
     for (mod <- mods) mod match {
       case mod"@record" =>
@@ -494,7 +507,7 @@ class ScalaMetaParser(text: String,
         }
         hasRecord = true
       case _ =>
-        error(mod.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+        error(mod.pos, "Slang @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
     AST.Stmt.Composite(isRoot = true,
       isDatatype = false,
@@ -508,13 +521,13 @@ class ScalaMetaParser(text: String,
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        if (isWorksheet) errorInLogika(stat.pos, "@record class declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInLogika(stat.pos, "@rcord class declarations can only appear at the package-level or inside objects")
+        if (isWorksheet) errorInSlang(stat.pos, "@record class declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@rcord class declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
       ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
-      error(tname.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+      error(tname.pos, "Slang @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
     var hasRecord = false
     for (mod <- mods) mod match {
@@ -524,7 +537,7 @@ class ScalaMetaParser(text: String,
         }
         hasRecord = true
       case _ =>
-        error(tname.pos, "Logika @record classes have to be of the form '@record class <id>(...) { ... }'.")
+        error(tname.pos, "Slang @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
     val params = ISZ(paramss.flatMap(_.map(translateCompositeParam(isDatatype = false))): _*)
     AST.Stmt.Composite(isRoot = false,
@@ -540,8 +553,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
         AST.Stmt.Block(AST.Body(ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)))
       case _ =>
-        if (isWorksheet) errorInLogika(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
-        else errorInLogika(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
+        else errorInSlang(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
         rStmt
     }
   }
@@ -552,18 +565,18 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "If-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInLogika(stat.pos, "If-statements can only appear inside methods or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "If-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInSlang(stat.pos, "If-statements can only appear inside methods or code blocks")
     }
     if (!stat.thenp.isInstanceOf[Term.Block]) {
       hasError = true
-      errorInLogika(stat.thenp.pos, "If-then part should be a code block '{ ... }'")
+      errorInSlang(stat.thenp.pos, "If-then part should be a code block '{ ... }'")
     }
     stat.elsep match {
       case _: Term.Block | _: Term.If =>
       case _ =>
         hasError = true
-        errorInLogika(stat.elsep.pos, "If-else part should be either a code block '{ ... }' or another if-conditional.")
+        errorInSlang(stat.elsep.pos, "If-else part should be either a code block '{ ... }' or another if-conditional.")
     }
     if (hasError) rStmt else ((stat.thenp, stat.elsep): @unchecked) match {
       case (thenp: Term.Block, elsep: Term.Block) =>
@@ -583,8 +596,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "While-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInLogika(stat.pos, "While-statements can only appear inside methods or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "While-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInSlang(stat.pos, "While-statements can only appear inside methods or code blocks")
     }
     var reads: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
@@ -598,13 +611,13 @@ class ScalaMetaParser(text: String,
           stats = rest
         case (t: Term.Interpolate) :: rest =>
           hasError = true
-          error(t.pos, "Expecting a Logika while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+          error(t.pos, "Expecting a Slang while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
           stats = body.stats
       }
       case _ =>
         hasError = true
-        errorInLogika(stat.body.pos, "While-loop body should be a code block '{ ... }'")
+        errorInSlang(stat.body.pos, "While-loop body should be a code block '{ ... }'")
     }
     if (hasError) rStmt else
       AST.Stmt.While(isDoWhile = false, translateExp(stat.expr), reads, invariants,
@@ -617,8 +630,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "Do-While-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInLogika(stat.pos, "Do-While-statements can only appear inside methods or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Do-While-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInSlang(stat.pos, "Do-While-statements can only appear inside methods or code blocks")
     }
     var reads: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
@@ -632,13 +645,13 @@ class ScalaMetaParser(text: String,
           stats = body.stats.dropRight(1)
         case Some(t: Term.Interpolate) =>
           hasError = true
-          error(t.pos, "Expecting a Logika do-while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+          error(t.pos, "Expecting a Slang do-while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
           stats = body.stats
       }
       case _ =>
         hasError = true
-        errorInLogika(stat.body.pos, "Do-While-loop body should be a code block '{ ... }'")
+        errorInSlang(stat.body.pos, "Do-While-loop body should be a code block '{ ... }'")
     }
     if (hasError) rStmt else
       AST.Stmt.While(isDoWhile = true, translateExp(stat.expr), reads, invariants,
@@ -651,8 +664,8 @@ class ScalaMetaParser(text: String,
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInLogika(stat.pos, "For-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInLogika(stat.pos, "For-statements can only appear inside methods or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "For-statements can only appear at the top-level, inside methods, or code blocks")
+        else errorInSlang(stat.pos, "For-statements can only appear inside methods or code blocks")
     }
     var reads: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
@@ -666,13 +679,13 @@ class ScalaMetaParser(text: String,
           stats = rest
         case (t: Term.Interpolate) :: rest =>
           hasError = true
-          error(t.pos, "Expecting a Logika for-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
+          error(t.pos, "Expecting a Slang for-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
           stats = body.stats
       }
       case _ =>
         hasError = true
-        errorInLogika(stat.body.pos, "While-loop body should be a code block '{ ... }'")
+        errorInSlang(stat.body.pos, "While-loop body should be a code block '{ ... }'")
     }
     val foo = ISZ("a", "b", "c")
     for (f <- foo) {
@@ -722,13 +735,13 @@ class ScalaMetaParser(text: String,
       case mod"varparam" if isDatatype => isVar = true
       case _ =>
         hasError = true
-        if (isDatatype) error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Logika @datatype class.")
-        else error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Logika @record class.")
+        if (isDatatype) error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang @datatype class.")
+        else error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang @record class.")
     }
     if (atpeopt.isEmpty || expropt.nonEmpty) {
       hasError = true
-      if (hasHidden) errorInLogika(tp.pos, "Parameters should have the form '@hidden <id> : <type>'")
-      else errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
+      if (hasHidden) errorInSlang(tp.pos, "Parameters should have the form '@hidden <id> : <type>'")
+      else errorInSlang(tp.pos, "Parameters should have the form '<id> : <type>'")
     }
     if (hasError) AST.CompositeParam(hasHidden, cid(paramname), unitType)
     else AST.CompositeParam(hasHidden, cid(paramname), translateTypeArg(atpeopt.get))
@@ -744,14 +757,14 @@ class ScalaMetaParser(text: String,
         case _ => hasError = true
       }
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || hasError)
-        errorInLogika(tp.pos, "Only type parameters of the forms '<id>' or '<id> : TT' are supported")
+        errorInSlang(tp.pos, "Only type parameters of the forms '<id>' or '<id> : TT' are supported")
       AST.TypeParam(cid(tparamname), hasTT)
   }
 
   def translateParam(tp: Term.Param): AST.Param = {
     val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
     if (mods.nonEmpty || atpeopt.isEmpty || expropt.nonEmpty)
-      errorInLogika(tp.pos, "Parameters should have the form '<id> : <type>'")
+      errorInSlang(tp.pos, "Parameters should have the form '<id> : <type>'")
     atpeopt.map(ta => AST.Param(cid(paramname), translateTypeArg(ta))).
       getOrElse(AST.Param(cid(paramname), unitType))
   }
@@ -760,10 +773,10 @@ class ScalaMetaParser(text: String,
     case targ"${tpe: Type}" =>
       translateType(tpe)
     case _: Type.Arg.Repeated =>
-      errorNotLogika(ta.pos, "Repeated types '<type>*' are")
+      errorNotSlang(ta.pos, "Repeated types '<type>*' are")
       unitType
     case _: Type.Arg.ByName =>
-      errorNotLogika(ta.pos, "By name types '=> <type>' are")
+      errorNotSlang(ta.pos, "By name types '=> <type>' are")
       unitType
   }
 
@@ -779,7 +792,7 @@ class ScalaMetaParser(text: String,
         case q"$expr.$name" => f(expr) :+ cid(name)
         case q"${name: Term.Name}" => ISZ(cid(name))
         case _ =>
-          errorInLogika(t.pos, s"Invalid type reference '${t.syntax}'")
+          errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
           ISZ(AST.Id("$"))
       }
 
@@ -787,7 +800,7 @@ class ScalaMetaParser(text: String,
     case t"(..$atpes) => $tpe" =>
       AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
     case _ =>
-      errorNotLogika(t.pos, s"Type '${syntax(t)}' is")
+      errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
       unitType
   }
 
@@ -803,11 +816,11 @@ class ScalaMetaParser(text: String,
         var hasError = false
         if (exp.thenp.isInstanceOf[Term.Block]) {
           hasError = true
-          errorInLogika(exp.thenp.pos, "If-then expression should not be a code block '{ ... }'")
+          errorInSlang(exp.thenp.pos, "If-then expression should not be a code block '{ ... }'")
         }
         if (exp.elsep.isInstanceOf[Term.Block]) {
           hasError = true
-          errorInLogika(exp.thenp.pos, "If-else expression should not be a code block '{ ... }'")
+          errorInSlang(exp.thenp.pos, "If-else expression should not be a code block '{ ... }'")
         }
         if (hasError) rExp
         else rExp // TODO
@@ -815,7 +828,7 @@ class ScalaMetaParser(text: String,
       case exp: Term.Interpolate => rExp // TODO
       case exp: Lit => rExp // TODO
       case _ =>
-        errorNotLogika(exp.pos, s"Expresion '${syntax(exp)}' is")
+        errorNotSlang(exp.pos, s"Expresion '${syntax(exp)}' is")
         rExp
     }
   }
@@ -830,8 +843,8 @@ class ScalaMetaParser(text: String,
     AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)
   }
 
-  def parseLogikaStmt(enclosing: Enclosing.Type, pos: Position, text: String): AST.Stmt = {
-    // TODO: parse logika stmt
+  def parseLStmt(enclosing: Enclosing.Type, pos: Position, text: String): AST.Stmt = {
+    // TODO: parse stmt
     AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
   }
 
@@ -856,7 +869,7 @@ class ScalaMetaParser(text: String,
     def isLetterOrDigit(c: Char): Boolean = isLetter(c) || ('0' <= c && c <= '9')
 
     if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
-      errorInLogika(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
+      errorInSlang(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
     AST.Id(id)
   }
 
@@ -864,7 +877,7 @@ class ScalaMetaParser(text: String,
     def f(t: Term): ISZ[AST.Id] = t match {
       case q"${name: Term.Name}" => ISZ(cid(name))
       case q"$expr.$name" => f(expr) :+ cid(name)
-      case _ => errorInLogika(t.pos, s"Invalid package name '${ref.syntax}'")
+      case _ => errorInSlang(t.pos, s"Invalid package name '${ref.syntax}'")
         ISZ(AST.Id("$"))
     }
 
@@ -883,7 +896,7 @@ class ScalaMetaParser(text: String,
 
   import scala.language.implicitConversions
 
-  implicit def opt[T](opt: Option[T]): option[T] = opt match {
+  implicit def opt[T](opt: Option[T]): Opt[T] = opt match {
     case Some(x) => new some(x)
     case _ => new none()
   }
