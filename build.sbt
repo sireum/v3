@@ -34,13 +34,15 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.1"
 
-val metaVersion = "1.6.0"
+val metaVersion = "1.7.0"
 
-val paradiseVersion = "3.0.0-M7"
+val paradiseVersion = "3.0.0-M8"
 
 val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
+
+val sireumScalacVersion = "3.0.0"
 
 val BUILD_FILENAME = "BUILD"
 
@@ -246,6 +248,7 @@ lazy val logikaXJvm = logikaXT._2.settings(
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   parallelExecution in Test := false,
   unmanagedResourceDirectories in Compile ++= Seq(
     logikaXT._2.base / "c-runtime" / "include",
@@ -273,6 +276,7 @@ lazy val logikaPrelude = toSbtJvmProject(logikaPreludePI, sireumSettings ++ Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),
   unmanagedResourceDirectories in Compile += file("logika/runtime/api/jvm/src/main/scala"),
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
