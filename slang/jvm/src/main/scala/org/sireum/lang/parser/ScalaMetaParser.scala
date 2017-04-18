@@ -57,7 +57,7 @@ object ScalaMetaParser {
                             text: String): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
-    val hashSireum = "//#Sireum" == line || "//#Logika" == line
+    val hashSireum = "//#Sireum" == line
     val dialect =
       if (isWorksheet) scala.meta.dialects.Scala212.copy(
         allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)

@@ -44,6 +44,8 @@ val sireumVersion = "3"
 
 val sireumScalacVersion = "3.0.0-1"
 
+val silencerVersion = "0.5"
+
 val BUILD_FILENAME = "BUILD"
 
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
@@ -164,7 +166,7 @@ lazy val sireumSettings = Seq(
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
   parallelExecution in Global := isParallelBuild,
-  libraryDependencies += "com.github.ghik" %% "silencer-lib" % "0.5",
+  libraryDependencies += "com.github.ghik" %% "silencer-lib" % silencerVersion,
   addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
 )
 
@@ -263,6 +265,7 @@ lazy val slangJs = slangT._3
 
 lazy val runtimePI = new ProjectInfo("runtime/native", isCross = false)
 lazy val runtime = toSbtJvmProject(runtimePI, sireumSettings ++ Seq(
+  unmanagedSourceDirectories in Compile += baseDirectory.value / "src-mixed/main/scala",
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.apfloat" % "apfloat" % "1.8.2",
@@ -272,10 +275,11 @@ lazy val runtime = toSbtJvmProject(runtimePI, sireumSettings ++ Seq(
 
 lazy val preludePI = new ProjectInfo("runtime/api", isCross = false, runtimePI)
 lazy val prelude = toSbtJvmProject(preludePI, sireumSettings ++ Seq(
-  testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
+  //testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+  ),
   unmanagedResourceDirectories in Compile += file("runtime/api/jvm/src/main/scala"),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))

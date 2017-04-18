@@ -284,7 +284,7 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position): Unit =
     *(sub(text)) {
-      val r = parse(s"${if (isPrelude) "" else "// #Logika\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
       val b = r.programOpt.nonEmpty && r.tags.isEmpty
       if (!b) report(r)
