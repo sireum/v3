@@ -308,7 +308,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       var tm = typeMap
       for (p <- md.params)
         tm = TypeChecker.addId(tm, program, p.id, TypeChecker.tipe(bitWidth, p.tpe), p)
-      var tc = copy(typeMap = tm)
+      val tc = copy(typeMap = tm)
       for (e <- md.contract.requires.exps) tc.b(e)(allowFun = true, mOpt)
       tc.check(md.block)(Some(md))
       md.returnTypeOpt match {
@@ -578,6 +578,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                   val op = e.op(false)
                   error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
                   None
+                } else if ((tLeft == F32 || tLeft == F64) && (e.isInstanceOf[Le] || e.isInstanceOf[Ge])) {
+                  val op = e.op(false)
+                  error(e.right, s"Cannot compare $tLeft with $op (only < or > are allowed).")
+                  None
                 } else {
                   e.tipe = tLeft
                   someB
@@ -615,6 +619,10 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               if (!tipeEq(tLeft, tRight)) {
                 val op = if (e.isInstanceOf[Eq]) "equal" else "not-equal"
                 error(e.right, s"The $op binary operator requires the same type on both left and right expressions, but found $tLeft and $tRight, respectively.")
+              } else if (tLeft == F32 || tLeft == F64) {
+                val op = e.op(false)
+                error(e.right, s"Cannot compare $tLeft with $op (only < or > are allowed).")
+                None
               } else {
                 e.tipe = tLeft
               }

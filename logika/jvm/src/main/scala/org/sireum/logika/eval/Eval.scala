@@ -84,15 +84,23 @@ object Eval {
 
   def toZ(n: Any): Z = n match {
     case n: Z => n
-    case n: N => n.toZ
-    case n: Byte => _Z(n)
-    case n: Short => _Z(n)
-    case n: Int => _Z(n)
-    case n: Long => _Z(n)
-    case n: spire.math.UByte => _Z(n.toLong)
-    case n: spire.math.UShort => _Z(n.toLong)
-    case n: spire.math.UInt => _Z(n.toLong)
-    case n: spire.math.ULong => _Z(n.toBigInt)
+    case n: N => org.sireum.N.toZ(n)
+    case n: Z8 => org.sireum.Z8.toZ(n)
+    case n: Z16 => org.sireum.Z16.toZ(n)
+    case n: Z32 => org.sireum.Z32.toZ(n)
+    case n: Z64 => org.sireum.Z64.toZ(n)
+    case n: N8 => org.sireum. N8.toZ(n)
+    case n: N16 => org.sireum.N16.toZ(n)
+    case n: N32 => org.sireum.N32.toZ(n)
+    case n: N64 => org.sireum.N64.toZ(n)
+    case n: S8 => org.sireum. S8.toZ(n)
+    case n: S16 => org.sireum.S16.toZ(n)
+    case n: S32 => org.sireum.S32.toZ(n)
+    case n: S64 => org.sireum.S64.toZ(n)
+    case n: U8 => org.sireum. U8.toZ(n)
+    case n: U16 => org.sireum.U16.toZ(n)
+    case n: U32 => org.sireum.U32.toZ(n)
+    case n: U64 => org.sireum.U64.toZ(n)
   }
 
   def simplify(bitWidth: Int, store: Store)(e: Exp): Exp = {
@@ -133,29 +141,29 @@ object Eval {
            _: IllegalArgumentException => None
     }
 
-  def toLit(bitWidth: Int, v: Value): Exp = (v: @unchecked) match {
-    case Value(_, v: Boolean) => BooleanLit(v)
+  def toLit(bitWidth: Int, l: Value): Exp = (l: @unchecked) match {
+    case Value(_, v: B) => BooleanLit(v.value)
     case Value(_, v: Z) => IntLit(v.toString, bitWidth, None)
-    case Value(tipe.Z8, v: Byte) => IntLit(v.toString, 8, Some(z8Type))
-    case Value(tipe.Z16, v: Short) => IntLit(v.toString, 16, Some(z16Type))
-    case Value(tipe.Z32, v: Int) => IntLit(v.toString, 32, Some(z32Type))
-    case Value(tipe.Z64, v: Long) => IntLit(v.toString, 64, Some(z64Type))
-    case Value(tipe.S8, v: Byte) => IntLit(v.toString, 8, Some(s8Type))
-    case Value(tipe.S16, v: Short) => IntLit(v.toString, 16, Some(s16Type))
-    case Value(tipe.S32, v: Int) => IntLit(v.toString, 32, Some(s32Type))
-    case Value(tipe.S64, v: Long) => IntLit(v.toString, 64, Some(s64Type))
+    case Value(tipe.Z8, v) => IntLit(v.toString, 8, Some(z8Type))
+    case Value(tipe.Z16, v) => IntLit(v.toString, 16, Some(z16Type))
+    case Value(tipe.Z32, v) => IntLit(v.toString, 32, Some(z32Type))
+    case Value(tipe.Z64, v) => IntLit(v.toString, 64, Some(z64Type))
+    case Value(tipe.S8, v) => IntLit(v.toString, 8, Some(s8Type))
+    case Value(tipe.S16, v) => IntLit(v.toString, 16, Some(s16Type))
+    case Value(tipe.S32, v) => IntLit(v.toString, 32, Some(s32Type))
+    case Value(tipe.S64, v) => IntLit(v.toString, 64, Some(s64Type))
     case Value(_, v: N) => IntLit(v.toString, bitWidth, Some(nType))
-    case Value(tipe.N8, v: spire.math.UByte) => IntLit(v.toString, 8, Some(n8Type))
-    case Value(tipe.N16, v: spire.math.UShort) => IntLit(v.toString, 16, Some(n16Type))
-    case Value(tipe.N32, v: spire.math.UInt) => IntLit(v.toString, 32, Some(n32Type))
-    case Value(tipe.N64, v: spire.math.ULong) => IntLit(v.toString, 64, Some(n64Type))
-    case Value(tipe.U8, v: spire.math.UByte) => IntLit(v.toString, 8, Some(u8Type))
-    case Value(tipe.U16, v: spire.math.UShort) => IntLit(v.toString, 16, Some(u16Type))
-    case Value(tipe.U32, v: spire.math.UInt) => IntLit(v.toString, 32, Some(u32Type))
-    case Value(tipe.U64, v: spire.math.ULong) => IntLit(v.toString, 64, Some(u64Type))
+    case Value(tipe.N8, v: N8) => IntLit(v.value.toString, 8, Some(n8Type))
+    case Value(tipe.N16, v: N16) => IntLit(v.value.toString, 16, Some(n16Type))
+    case Value(tipe.N32, v: N32) => IntLit(v.value.toString, 32, Some(n32Type))
+    case Value(tipe.N64, v: N64) => IntLit(v.value.toString, 64, Some(n64Type))
+    case Value(tipe.U8, v: U8) => IntLit(v.value.toString, 8, Some(u8Type))
+    case Value(tipe.U16, v: U16) => IntLit(v.value.toString, 16, Some(u16Type))
+    case Value(tipe.U32, v: U32) => IntLit(v.value.toString, 32, Some(u32Type))
+    case Value(tipe.U64, v: U64) => IntLit(v.value.toString, 64, Some(u64Type))
     case Value(_, v: R) => RealLit(v.toString)
-    case Value(_, v: Float) => FloatLit(v.floatValue.toString + "f")
-    case Value(_, v: Double) => FloatLit(v.doubleValue.toString + "d")
+    case Value(_, v: F32) => FloatLit(v.value.toString + "f")
+    case Value(_, v: F64) => FloatLit(v.value.toString + "d")
     case Value(t: tipe.MSeq, v: MS[_, _]) =>
       SeqLit(tipe2Type(t).asInstanceOf[SeqType],
         v.elements.toVector.map(e => toLit(bitWidth, Value(t.result, e))))
@@ -249,7 +257,7 @@ private final class Eval(store: Store) {
 
   def eval(exp: Exp): Option[Value] = {
     val r: Option[Value] = exp match {
-      case BooleanLit(v) => Some(Value(tipe.B, v))
+      case BooleanLit(v) => Some(Value(tipe.B, v: B))
       case Id(v) => store.get(v)
       case Size(e) => for (v <- eval(e)) yield (v: @unchecked) match {
         case Value(_, v: MS[_, _]) => Value(tipe.Z, v.size)
@@ -273,7 +281,7 @@ private final class Eval(store: Store) {
           case Left(v) => Value(tipe.F32, v)
           case Right(v) => Value(tipe.F64, v)
         })
-      case e: RealLit => Some(Value(tipe.R, org.sireum._R(e.value)))
+      case e: RealLit => Some(Value(tipe.R, org.sireum._Helper.R(e.value)))
       case e: IntMin =>
         if (e.bitWidth == 0) None
         else Some(int2v(Some(e.integralType), _Z(e.value)))
@@ -286,15 +294,15 @@ private final class Eval(store: Store) {
              Value(_, v2) <- eval(e.right);
              v <- ((t, v1, v2): @unchecked) match {
                case (tipe.Z, v1: Z, v2: Z) => Some(v1 * v2)
-               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(org.sireum.Z.toZ8(v1 mul v2))
-               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(org.sireum.Z.toZ16(v1 mul v2))
-               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(org.sireum.Z.toZ32(v1 mul v2))
-               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(org.sireum.Z.toZ64(v1 mul v2))
+               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(v1 * v2)
+               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(v1 * v2)
+               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(v1 * v2)
+               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(v1 * v2)
                case (tipe.N, v1: N, v2: N) => Some(v1 * v2)
-               case (tipe.N8, v1: N8, v2: N8) => tryOpt(org.sireum.Z.toN8(v1 mul v2))
-               case (tipe.N16, v1: N16, v2: N16) => tryOpt(org.sireum.Z.toN16(v1 mul v2))
-               case (tipe.N32, v1: N32, v2: N32) => tryOpt(org.sireum.Z.toN32(v1 mul v2))
-               case (tipe.N64, v1: N64, v2: N64) => tryOpt(org.sireum.Z.toN64(v1 mul v2))
+               case (tipe.N8, v1: N8, v2: N8) => tryOpt(v1 * v2)
+               case (tipe.N16, v1: N16, v2: N16) => tryOpt(v1 * v2)
+               case (tipe.N32, v1: N32, v2: N32) => tryOpt(v1 * v2)
+               case (tipe.N64, v1: N64, v2: N64) => tryOpt(v1 * v2)
                case (tipe.S8, v1: S8, v2: S8) => Some(v1 * v2)
                case (tipe.S16, v1: S16, v2: S16) => Some(v1 * v2)
                case (tipe.S32, v1: S32, v2: S32) => Some(v1 * v2)
@@ -312,15 +320,15 @@ private final class Eval(store: Store) {
              Value(_, v2) <- eval(e.right);
              v <- ((t, v1, v2): @unchecked) match {
                case (tipe.Z, v1: Z, v2: Z) => tryOpt(v1 / v2)
-               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(org.sireum.Z.toZ8(v1 div v2))
-               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(org.sireum.Z.toZ16(v1 div v2))
-               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(org.sireum.Z.toZ32(v1 div v2))
-               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(org.sireum.Z.toZ64(v1 div v2))
+               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(v1 / v2)
+               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(v1 / v2)
+               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(v1 / v2)
+               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(v1 / v2)
                case (tipe.N, v1: N, v2: N) => tryOpt(v1 / v2)
-               case (tipe.N8, v1: N8, v2: N8) => tryOpt(org.sireum.Z.toN8(v1 div v2))
-               case (tipe.N16, v1: N16, v2: N16) => tryOpt(org.sireum.Z.toN16(v1 div v2))
-               case (tipe.N32, v1: N32, v2: N32) => tryOpt(org.sireum.Z.toN32(v1 div v2))
-               case (tipe.N64, v1: N64, v2: N64) => tryOpt(org.sireum.Z.toN64(v1 div v2))
+               case (tipe.N8, v1: N8, v2: N8) => tryOpt(v1 / v2)
+               case (tipe.N16, v1: N16, v2: N16) => tryOpt(v1 / v2)
+               case (tipe.N32, v1: N32, v2: N32) => tryOpt(v1 / v2)
+               case (tipe.N64, v1: N64, v2: N64) => tryOpt(v1 / v2)
                case (tipe.S8, v1: S8, v2: S8) => tryOpt(v1 / v2)
                case (tipe.S16, v1: S16, v2: S16) => tryOpt(v1 / v2)
                case (tipe.S32, v1: S32, v2: S32) => tryOpt(v1 / v2)
@@ -338,15 +346,15 @@ private final class Eval(store: Store) {
              Value(_, v2) <- eval(e.right);
              v <- ((t, v1, v2): @unchecked) match {
                case (tipe.Z, v1: Z, v2: Z) => tryOpt(v1 % v2)
-               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(org.sireum.Z.toZ8(v1 rem v2))
-               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(org.sireum.Z.toZ16(v1 rem v2))
-               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(org.sireum.Z.toZ32(v1 rem v2))
-               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(org.sireum.Z.toZ64(v1 rem v2))
+               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(v1 % v2)
+               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(v1 % v2)
+               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(v1 % v2)
+               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(v1 % v2)
                case (tipe.N, v1: N, v2: N) => tryOpt(v1 % v2)
-               case (tipe.N8, v1: N8, v2: N8) => tryOpt(org.sireum.Z.toN8(v1 rem v2))
-               case (tipe.N16, v1: N16, v2: N16) => tryOpt(org.sireum.Z.toN16(v1 rem v2))
-               case (tipe.N32, v1: N32, v2: N32) => tryOpt(org.sireum.Z.toN32(v1 rem v2))
-               case (tipe.N64, v1: N64, v2: N64) => tryOpt(org.sireum.Z.toN64(v1 rem v2))
+               case (tipe.N8, v1: N8, v2: N8) => tryOpt(v1 % v2)
+               case (tipe.N16, v1: N16, v2: N16) => tryOpt(v1 % v2)
+               case (tipe.N32, v1: N32, v2: N32) => tryOpt(v1 % v2)
+               case (tipe.N64, v1: N64, v2: N64) => tryOpt(v1 % v2)
                case (tipe.S8, v1: S8, v2: S8) => tryOpt(v1 % v2)
                case (tipe.S16, v1: S16, v2: S16) => tryOpt(v1 % v2)
                case (tipe.S32, v1: S32, v2: S32) => tryOpt(v1 % v2)
@@ -364,15 +372,15 @@ private final class Eval(store: Store) {
              Value(_, v2) <- eval(e.right);
              v <- ((t, v1, v2): @unchecked) match {
                case (tipe.Z, v1: Z, v2: Z) => Some(v1 + v2)
-               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(org.sireum.Z.toZ8(v1 add v2))
-               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(org.sireum.Z.toZ16(v1 add v2))
-               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(org.sireum.Z.toZ32(v1 add v2))
-               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(org.sireum.Z.toZ64(v1 add v2))
+               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(v1 + v2)
+               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(v1 + v2)
+               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(v1 + v2)
+               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(v1 + v2)
                case (tipe.N, v1: N, v2: N) => Some(v1 + v2)
-               case (tipe.N8, v1: N8, v2: N8) => tryOpt(org.sireum.Z.toN8(v1 add v2))
-               case (tipe.N16, v1: N16, v2: N16) => tryOpt(org.sireum.Z.toN16(v1 add v2))
-               case (tipe.N32, v1: N32, v2: N32) => tryOpt(org.sireum.Z.toN32(v1 add v2))
-               case (tipe.N64, v1: N64, v2: N64) => tryOpt(org.sireum.Z.toN64(v1 add v2))
+               case (tipe.N8, v1: N8, v2: N8) => tryOpt(v1 + v2)
+               case (tipe.N16, v1: N16, v2: N16) => tryOpt(v1 + v2)
+               case (tipe.N32, v1: N32, v2: N32) => tryOpt(v1 + v2)
+               case (tipe.N64, v1: N64, v2: N64) => tryOpt(v1 + v2)
                case (tipe.S8, v1: S8, v2: S8) => Some(v1 + v2)
                case (tipe.S16, v1: S16, v2: S16) => Some(v1 + v2)
                case (tipe.S32, v1: S32, v2: S32) => Some(v1 + v2)
@@ -390,15 +398,15 @@ private final class Eval(store: Store) {
              Value(_, v2) <- eval(e.right);
              v <- ((t, v1, v2): @unchecked) match {
                case (tipe.Z, v1: Z, v2: Z) => Some(v1 - v2)
-               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(org.sireum.Z.toZ8(v1 sub v2))
-               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(org.sireum.Z.toZ16(v1 sub v2))
-               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(org.sireum.Z.toZ32(v1 sub v2))
-               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(org.sireum.Z.toZ64(v1 sub v2))
+               case (tipe.Z8, v1: Z8, v2: Z8) => tryOpt(v1 - v2)
+               case (tipe.Z16, v1: Z16, v2: Z16) => tryOpt(v1 - v2)
+               case (tipe.Z32, v1: Z32, v2: Z32) => tryOpt(v1 - v2)
+               case (tipe.Z64, v1: Z64, v2: Z64) => tryOpt(v1 - v2)
                case (tipe.N, v1: N, v2: N) => Some(v1 - v2)
-               case (tipe.N8, v1: N8, v2: N8) => tryOpt(org.sireum.Z.toN8(v1 sub v2))
-               case (tipe.N16, v1: N16, v2: N16) => tryOpt(org.sireum.Z.toN16(v1 sub v2))
-               case (tipe.N32, v1: N32, v2: N32) => tryOpt(org.sireum.Z.toN32(v1 sub v2))
-               case (tipe.N64, v1: N64, v2: N64) => tryOpt(org.sireum.Z.toN64(v1 sub v2))
+               case (tipe.N8, v1: N8, v2: N8) => tryOpt(v1 - v2)
+               case (tipe.N16, v1: N16, v2: N16) => tryOpt(v1 - v2)
+               case (tipe.N32, v1: N32, v2: N32) => tryOpt(v1 - v2)
+               case (tipe.N64, v1: N64, v2: N64) => tryOpt(v1 - v2)
                case (tipe.S8, v1: S8, v2: S8) => Some(v1 - v2)
                case (tipe.S16, v1: S16, v2: S16) => Some(v1 - v2)
                case (tipe.S32, v1: S32, v2: S32) => Some(v1 - v2)
@@ -458,8 +466,6 @@ private final class Eval(store: Store) {
           case (tipe.U32, v1: U32, v2: U32) => v1 <= v2
           case (tipe.U64, v1: U64, v2: U64) => v1 <= v2
           case (tipe.R, v1: R, v2: R) => v1 <= v2
-          case (tipe.F32, v1: F32, v2: F32) => v1 <= v2
-          case (tipe.F64, v1: F64, v2: F64) => v1 <= v2
         })
       case e: Gt =>
         for (Value(t, v1) <- eval(e.left);
@@ -508,8 +514,6 @@ private final class Eval(store: Store) {
           case (tipe.U32, v1: U32, v2: U32) => v1 >= v2
           case (tipe.U64, v1: U64, v2: U64) => v1 >= v2
           case (tipe.R, v1: R, v2: R) => v1 >= v2
-          case (tipe.F32, v1: F32, v2: F32) => v1 >= v2
-          case (tipe.F64, v1: F64, v2: F64) => v1 >= v2
         })
       case e: Shr =>
         for (Value(t, v1) <- eval(e.left);
@@ -527,10 +531,10 @@ private final class Eval(store: Store) {
                case (v1: S16, v2: S16) => Some(v1 >>> v2)
                case (v1: S32, v2: S32) => Some(v1 >>> v2)
                case (v1: S64, v2: S64) => Some(v1 >>> v2)
-               case (v1: U8, v2: U8) => tryOpt(v1 >>> org.sireum.U8.toZ32(v2))
-               case (v1: U16, v2: U16) => tryOpt(v1 >>> org.sireum.U16.toZ32(v2))
-               case (v1: U32, v2: U32) => tryOpt(v1 >>> org.sireum.U32.toZ32(v2))
-               case (v1: U64, v2: U64) => tryOpt(v1 >>> org.sireum.U64.toZ32(v2))
+               case (v1: U8, v2: U8) => tryOpt(v1 >>> v2)
+               case (v1: U16, v2: U16) => tryOpt(v1 >>> v2)
+               case (v1: U32, v2: U32) => tryOpt(v1 >>> v2)
+               case (v1: U64, v2: U64) => tryOpt(v1 >>> v2)
              }) yield Value(t, v)
       case e: Shl =>
         for (Value(t, v1) <- eval(e.left);
@@ -540,17 +544,17 @@ private final class Eval(store: Store) {
                case (v1: S16, v2: S16) => Some(v1 << v2)
                case (v1: S32, v2: S32) => Some(v1 << v2)
                case (v1: S64, v2: S64) => Some(v1 << v2)
-               case (v1: U8, v2: U8) => tryOpt(v1 << org.sireum.U8.toZ32(v2))
-               case (v1: U16, v2: U16) => tryOpt(v1 << org.sireum.U16.toZ32(v2))
-               case (v1: U32, v2: U32) => tryOpt(v1 << org.sireum.U32.toZ32(v2))
-               case (v1: U64, v2: U64) => tryOpt(v1 << org.sireum.U64.toZ32(v2))
+               case (v1: U8, v2: U8) => tryOpt(v1 << v2)
+               case (v1: U16, v2: U16) => tryOpt(v1 << v2)
+               case (v1: U32, v2: U32) => tryOpt(v1 << v2)
+               case (v1: U64, v2: U64) => tryOpt(v1 << v2)
              }) yield Value(t, v)
       case e: Eq =>
         for (Value(_, v1) <- eval(e.left);
-             Value(_, v2) <- eval(e.right)) yield Value(tipe.B, v1 == v2)
+             Value(_, v2) <- eval(e.right)) yield Value(tipe.B, v1 == v2: B)
       case e: Ne =>
         for (Value(_, v1) <- eval(e.left);
-             Value(_, v2) <- eval(e.right)) yield Value(tipe.B, v1 != v2)
+             Value(_, v2) <- eval(e.right)) yield Value(tipe.B, v1 != v2: B)
       case e: Append =>
         for (Value(v1Type, v1) <- eval(e.left);
              Value(_, v2) <- eval(e.right)) yield ((v1, v2): @unchecked) match {
@@ -564,7 +568,7 @@ private final class Eval(store: Store) {
       case e: And =>
         for (Value(t, v1) <- eval(e.left);
              Value(_, v2) <- eval(e.right)) yield Value(t, ((v1, v2): @unchecked) match {
-          case (v1: Boolean, v2: Boolean) => v1 & v2
+          case (v1: B, v2: B) => v1 & v2
           case (v1: S8, v2: S8) => v1 & v2
           case (v1: S16, v2: S16) => v1 & v2
           case (v1: S32, v2: S32) => v1 & v2
@@ -577,20 +581,20 @@ private final class Eval(store: Store) {
       case e: Xor =>
         for (Value(t, v1) <- eval(e.left);
              Value(_, v2) <- eval(e.right)) yield Value(t, ((v1, v2): @unchecked) match {
-          case (v1: Boolean, v2: Boolean) => v1 ^ v2
-          case (v1: S8, v2: S8) => v1 ^ v2
-          case (v1: S16, v2: S16) => v1 ^ v2
-          case (v1: S32, v2: S32) => v1 ^ v2
-          case (v1: S64, v2: S64) => v1 ^ v2
-          case (v1: U8, v2: U8) => v1 ^ v2
-          case (v1: U16, v2: U16) => v1 ^ v2
-          case (v1: U32, v2: U32) => v1 ^ v2
-          case (v1: U64, v2: U64) => v1 ^ v2
+          case (v1: B, v2: B) => v1 |^ v2
+          case (v1: S8, v2: S8) => v1 |^ v2
+          case (v1: S16, v2: S16) => v1 |^ v2
+          case (v1: S32, v2: S32) => v1 |^ v2
+          case (v1: S64, v2: S64) => v1 |^ v2
+          case (v1: U8, v2: U8) => v1 |^ v2
+          case (v1: U16, v2: U16) => v1 |^ v2
+          case (v1: U32, v2: U32) => v1 |^ v2
+          case (v1: U64, v2: U64) => v1 |^ v2
         })
       case e: Or =>
         for (Value(t, v1) <- eval(e.left);
              Value(_, v2) <- eval(e.right)) yield Value(t, ((v1, v2): @unchecked) match {
-          case (v1: Boolean, v2: Boolean) => v1 | v2
+          case (v1: B, v2: B) => v1 | v2
           case (v1: S8, v2: S8) => v1 | v2
           case (v1: S16, v2: S16) => v1 | v2
           case (v1: S32, v2: S32) => v1 | v2
@@ -603,11 +607,11 @@ private final class Eval(store: Store) {
       case e: Implies =>
         for (Value(_, v1) <- eval(e.left);
              Value(_, v2) <- eval(e.right)) yield ((v1, v2): @unchecked) match {
-          case (v1: Boolean, v2: Boolean) => Value(tipe.B, !v1 | v2)
+          case (v1: B, v2: B) => Value(tipe.B, !v1 | v2)
         }
       case e: Not =>
         for (Value(t, v) <- eval(e.exp)) yield Value(t, (v: @unchecked) match {
-          case v: Boolean => !v
+          case v: B => !v
           case v: S8 => ~v
           case v: S16 => ~v
           case v: S32 => ~v
@@ -661,25 +665,6 @@ private final class Eval(store: Store) {
           case _: F64SType => Value(tipe.F64S, F64S(args.map(_.asInstanceOf[F64]): _*))
         })
     }
-    r.map({
-      case Value(tipe.S8, n: Int) => Value(tipe.S8, n.toByte)
-      case Value(tipe.S16, n: Int) => Value(tipe.S8, n.toShort)
-      case v => v
-    })
+    r
   }
-
-  import scala.language.implicitConversions
-
-  final implicit class ZOp(n: Any) {
-    def add(m: Any): Z = toZ(n) + toZ(m)
-
-    def sub(m: Any): Z = toZ(n) - toZ(m)
-
-    def mul(m: Any): Z = toZ(n) * toZ(m)
-
-    def div(m: Any): Z = toZ(n) / toZ(m)
-
-    def rem(m: Any): Z = toZ(n) % toZ(m)
-  }
-
 }

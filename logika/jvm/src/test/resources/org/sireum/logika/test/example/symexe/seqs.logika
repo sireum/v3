@@ -335,30 +335,32 @@ l"""⊢ ∀i: (0 <..< rs.size)  rs(i) > rv0"""
 
 l"""⊢ ⊤""" // reset claims
 
+val f32ep: F32 = 5.96e-08f
 var f32s: F32S = F32S(0f, 5f)
-l"""⊢ f32s(0) ≤ 0f ∧ f32s(1) > 0f"""
+l"""⊢ f32s(0) < f32ep ∧ f32s(1) > 0f"""
 f32s(0) = f32s(0) + 1f
-l"""⊢ ¬(∃i: (0 .. 1)  f32s(i) ≤ 0f)"""
+l"""⊢ ¬(∃i: (0 .. 1)  f32s(i) < f32ep)"""
 l"""⊢ ∀i: (0 ..< f32s.size)  f32s(i) > 0f"""
 f32s = f32s :+ 0f
-l"""⊢ f32s(0) > 0f ∧ f32s(1) > 0f ∧ f32s(2) ≤ 0f"""
+l"""⊢ f32s(0) > 0f ∧ f32s(1) > 0f ∧ f32s(2) < f32ep"""
 f32s = 0f +: f32s
-l"""⊢ f32s(0) ≤ 0f ∧ f32s(1) > 0f ∧ f32s(2) > 0f ∧ f32s(3) ≤ 0f"""
+l"""⊢ f32s(0) < f32ep ∧ f32s(1) > 0f ∧ f32s(2) > 0f ∧ f32s(3) < f32ep"""
 f32s(3) = f32s(3) + 1f
-l"""⊢ ∃i: (0 ..< f32s.size)  f32s(i) ≤ 0f"""
+l"""⊢ ∃i: (0 ..< f32s.size)  f32s(i) < f32ep"""
 l"""⊢ ∀i: (0 <..< f32s.size)  f32s(i) > 0f"""
 
 l"""⊢ ⊤""" // reset claims
 
+val f64ep: F64 = 1.19e-07d
 var f64s: F64S = F64S(0d, 5d)
-l"""⊢ f64s(0) ≤ 0d ∧ f64s(1) > 0d"""
+l"""⊢ f64s(0) < f64ep ∧ f64s(1) > 0d"""
 f64s(0) = f64s(0) + 1d
-l"""⊢ ¬(∃i: (0 .. 1)  f64s(i) ≤ 0d)"""
+l"""⊢ ¬(∃i: (0 .. 1)  f64s(i) < f64ep)"""
 l"""⊢ ∀i: (0 ..< f64s.size)  f64s(i) > 0d"""
 f64s = f64s :+ 0d
-l"""⊢ f64s(0) > 0d ∧ f64s(1) > 0d ∧ f64s(2) ≤ 0d"""
+l"""⊢ f64s(0) > 0d ∧ f64s(1) > 0d ∧ f64s(2) < f64ep"""
 f64s = 0d +: f64s
-l"""⊢ f64s(0) ≤ 0d ∧ f64s(1) > 0d ∧ f64s(2) > 0d ∧ f64s(3) ≤ 0d"""
+l"""⊢ f64s(0) < f64ep ∧ f64s(1) > 0d ∧ f64s(2) > 0d ∧ f64s(3) < f64ep"""
 f64s(3) = f64s(3) + 1d
-l"""⊢ ∃i: (0 ..< f64s.size)  f64s(i) ≤ 0d"""
+l"""⊢ ∃i: (0 ..< f64s.size)  f64s(i) < f64ep"""
 l"""⊢ ∀i: (0 <..< f64s.size)  f64s(i) > 0d"""

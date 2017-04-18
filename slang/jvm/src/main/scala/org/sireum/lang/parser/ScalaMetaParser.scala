@@ -28,7 +28,7 @@ package org.sireum.lang.parser
 
 import org.sireum.lang.{ast => AST}
 import org.sireum.util._
-import org.sireum.{Opt, some, none, ISZ}
+import org.sireum.{Option, Some, None, ISZ}
 import scala.meta._
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
@@ -46,14 +46,14 @@ object ScalaMetaParser {
 
   def apply(isWorksheet: Boolean,
             isDiet: Boolean,
-            fileUriOpt: Option[FileResourceUri],
+            fileUriOpt: scala.Option[FileResourceUri],
             text: String): Result =
     apply(allowSireumPackage = false, isWorksheet, isDiet, fileUriOpt, text)
 
   private[sireum] def apply(allowSireumPackage: Boolean,
                             isWorksheet: Boolean,
                             isDiet: Boolean,
-                            fileUriOpt: Option[FileResourceUri],
+                            fileUriOpt: scala.Option[FileResourceUri],
                             text: String): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
@@ -69,11 +69,11 @@ object ScalaMetaParser {
         new ScalaMetaParser(text, allowSireumPackage, hashSireum,
           isWorksheet, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
-        Result(text, hashSireum, None, ivector(error(fileUriOpt, pe.pos, pe.message)))
+        Result(text, hashSireum, None(), ivector(error(fileUriOpt, pe.pos, pe.message)))
     }
   }
 
-  def error(fileUriOpt: Option[FileResourceUri],
+  def error(fileUriOpt: scala.Option[FileResourceUri],
             pos: Position,
             message: String): Tag = {
     val posStart = pos.start
@@ -104,7 +104,7 @@ class ScalaMetaParser(text: String,
                       hashSireum: Boolean,
                       isWorksheet: Boolean,
                       isDiet: Boolean,
-                      fileUriOpt: Option[FileResourceUri]) {
+                      fileUriOpt: scala.Option[FileResourceUri]) {
   var tags: IVector[Tag] = ivectorEmpty
 
   def error(pos: Position,
@@ -117,10 +117,10 @@ class ScalaMetaParser(text: String,
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
   def errorNotSlang(pos: Position, message: String): Unit =
-    error(pos, message + " not in the Sireum language.")
+    error(pos, message + " not in Slang.")
 
   def errorInSlang(pos: Position, message: String): Unit =
-    error(pos, message + " in the Sireum language.")
+    error(pos, message + " in Slang.")
 
   def translateSource(source: Source): Result = {
     def topF(rest: List[Stat]): Result = {
@@ -131,11 +131,11 @@ class ScalaMetaParser(text: String,
       if (shouldParse)
         Result(text, hashSireum,
           Some(AST.TopUnit.Program(
-            fileUriOpt,
+            opt(fileUriOpt),
             AST.Name(ISZ()),
             AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
       else
-        Result(text, hashSireum, None, tags)
+        Result(text, hashSireum, None(), tags)
     }
 
     source.stats match {
@@ -147,17 +147,17 @@ class ScalaMetaParser(text: String,
             if (allowSireumPackage)
               Result(text, hashSireum,
                 Some(AST.TopUnit.Program(
-                  fileUriOpt,
+                  opt(fileUriOpt),
                   name,
                   AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
             else {
-              errorInSlang(ref.pos, s"Cannot define members of the ${refSyntax} package")
-              Result(text, hashSireum, None, tags)
+              errorInSlang(ref.pos, s"Cannot define members of the $refSyntax package")
+              Result(text, hashSireum, None(), tags)
             }
           } else {
             def packageF(rest: List[Stat]) = Result(text, hashSireum,
               Some(AST.TopUnit.Program(
-                fileUriOpt,
+                opt(fileUriOpt),
                 name,
                 AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
 
@@ -166,18 +166,18 @@ class ScalaMetaParser(text: String,
               case q"import org.sireum.logika._" :: rest => packageF(rest)
               case _ =>
                 errorInSlang(ref.pos, "The first member of packages should be 'import org.sireum._'")
-                Result(text, hashSireum, None, tags)
+                Result(text, hashSireum, None(), tags)
             }
           }
-        } else Result(text, hashSireum, None, tags)
+        } else Result(text, hashSireum, None(), tags)
       case q"import org.sireum._" :: rest => topF(rest)
       case q"import org.sireum.logika._" :: rest => topF(rest)
       case Nil =>
-        Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ()), AST.Body(ISZ()))), tags)
+        Result(text, hashSireum, Some(AST.TopUnit.Program(opt(fileUriOpt), AST.Name(ISZ()), AST.Body(ISZ()))), tags)
       case stats =>
         if (hashSireum)
           errorInSlang(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum._'")
-        Result(text, hashSireum, None, tags)
+        Result(text, hashSireum, None(), tags)
     }
   }
 
@@ -213,6 +213,7 @@ class ScalaMetaParser(text: String,
       case stat: Term.While => translateWhile(enclosing, stat)
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
+      case stat: Import => translateImport(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
@@ -228,7 +229,7 @@ class ScalaMetaParser(text: String,
         if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, methods, or code blocks")
         else errorInSlang(stat.pos, "Val declarations can only appear inside objects, methods, or code blocks")
     }
-    val q"..$mods val ..$patsnel: ${tpeopt: Option[Type]} = $expr" = stat
+    val q"..$mods val ..$patsnel: ${tpeopt: scala.Option[Type]} = $expr" = stat
     var hasSpec = false
     for (mod <- mods) mod match {
       case mod"@spec" =>
@@ -259,7 +260,7 @@ class ScalaMetaParser(text: String,
       AST.Stmt.SpecVar(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
       AST.Stmt.Var(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
-        translateType(tpeopt.get), if (isDiet) None else Some(translateExp(expr)))
+        translateType(tpeopt.get), if (isDiet) None() else Some(translateExp(expr)))
   }
 
   def translateVar(enclosing: Enclosing.Type, stat: Defn.Var): AST.Stmt = {
@@ -271,7 +272,7 @@ class ScalaMetaParser(text: String,
         if (isWorksheet) errorInSlang(stat.pos, "Var declarations can only appear at the top-level, inside objects, methods, or code blocks")
         else errorInSlang(stat.pos, "Var declarations can only appear inside objects, methods, or code blocks")
     }
-    val q"..$mods var ..$patsnel: ${tpeopt: Option[Type]} = ${expropt: Option[Term]}" = stat
+    val q"..$mods var ..$patsnel: ${tpeopt: scala.Option[Type]} = ${expropt: scala.Option[Term]}" = stat
     var hasSpec = false
     for (mod <- mods) mod match {
       case mod"@spec" =>
@@ -307,11 +308,11 @@ class ScalaMetaParser(text: String,
       AST.Stmt.SpecVar(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
     else
       AST.Stmt.Var(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
-        translateType(tpeopt.get), if (isDiet) None else expropt.map(translateExp))
+        translateType(tpeopt.get), if (isDiet) None() else opt(expropt.map(translateExp)))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
-    val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: Option[Type]} = $exp" = tree
+    val q"..$mods def $name[..$tparams](...$paramss): ${tpeopt: scala.Option[Type]} = $exp" = tree
     var hasError = false
     if (paramss.size > 1) {
       hasError = true
@@ -378,19 +379,19 @@ class ScalaMetaParser(text: String,
     else exp match {
       case exp: Term.Block =>
         val (mc, bodyOpt) = exp.stats.headOption match {
-          case Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil)) =>
+          case scala.Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil)) =>
             (parseContract(l.pos, s),
-              if (isDiet) None
+              if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
             (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
-              if (isDiet) None
+              if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
         AST.Stmt.Method(isPure, sig, mc, bodyOpt)
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for method definitions")
-        AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None)
+        AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None())
     }
   }
 
@@ -453,7 +454,7 @@ class ScalaMetaParser(text: String,
     AST.Stmt.Composite(isRoot = true,
       isDatatype = true,
       cid(tname),
-      None,
+      None(),
       ISZ(),
       ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*))
   }
@@ -484,7 +485,7 @@ class ScalaMetaParser(text: String,
     AST.Stmt.Composite(isRoot = false,
       isDatatype = true,
       cid(tname),
-      ctorcalls.headOption.map(translateCtorCall),
+      opt(ctorcalls.headOption.map(translateCtorCall)),
       params,
       ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
   }
@@ -512,7 +513,7 @@ class ScalaMetaParser(text: String,
     AST.Stmt.Composite(isRoot = true,
       isDatatype = false,
       cid(tname),
-      None,
+      None(),
       ISZ(),
       ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*))
   }
@@ -543,7 +544,7 @@ class ScalaMetaParser(text: String,
     AST.Stmt.Composite(isRoot = false,
       isDatatype = false,
       cid(tname),
-      ctorcalls.headOption.map(translateCtorCall),
+      opt(ctorcalls.headOption.map(translateCtorCall)),
       params,
       ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
   }
@@ -573,7 +574,7 @@ class ScalaMetaParser(text: String,
       errorInSlang(stat.thenp.pos, "If-then part should be a code block '{ ... }'")
     }
     stat.elsep match {
-      case _: Term.Block | _: Term.If =>
+      case _: Term.Block | _: Term.If | _: Lit.Unit =>
       case _ =>
         hasError = true
         errorInSlang(stat.elsep.pos, "If-else part should be either a code block '{ ... }' or another if-conditional.")
@@ -587,6 +588,10 @@ class ScalaMetaParser(text: String,
         AST.Stmt.If(translateExp(stat.cond),
           AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
           AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep))))
+      case (thenp: Term.Block, elsep: Lit.Unit) =>
+        AST.Stmt.If(translateExp(stat.cond),
+          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(ISZ()))
     }
   }
 
@@ -638,12 +643,12 @@ class ScalaMetaParser(text: String,
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats.lastOption match {
-        case Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq())) =>
+        case scala.Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq())) =>
           val (rs, is) = parseLoopContract(l.pos, s)
           reads = rs
           invariants = is
           stats = body.stats.dropRight(1)
-        case Some(t: Term.Interpolate) =>
+        case scala.Some(t: Term.Interpolate) =>
           hasError = true
           error(t.pos, "Expecting a Slang do-while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
@@ -706,6 +711,11 @@ class ScalaMetaParser(text: String,
     ???
   }
 
+  def translateImport(enclosing: Enclosing.Type,
+                     stat: Import): AST.Stmt = {
+    ???
+  }
+
   def translateCtorCall(cc: Ctor.Call): AST.Type = {
     def f(t: Term): ISZ[AST.Id] = t match {
       case ctor"${ctorname: Ctor.Name}" => ISZ(cid(ctorname))
@@ -721,7 +731,7 @@ class ScalaMetaParser(text: String,
   }
 
   def translateCompositeParam(isDatatype: Boolean)(tp: Term.Param): AST.CompositeParam = {
-    val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
+    val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = tp
     var hasError = true
     var hasHidden = false
     var isVar = false
@@ -748,7 +758,7 @@ class ScalaMetaParser(text: String,
   }
 
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
-    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: Option[Type]} <: ${tpeopt: Option[Type]} <% ..$tpes : ..$tpes2" =>
+    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
       var hasError = false
       var hasTT = false
       tpes2 match {
@@ -762,7 +772,7 @@ class ScalaMetaParser(text: String,
   }
 
   def translateParam(tp: Term.Param): AST.Param = {
-    val param"..$mods $paramname: ${atpeopt: Option[Type.Arg]} = ${expropt: Option[Term]}" = tp
+    val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = tp
     if (mods.nonEmpty || atpeopt.isEmpty || expropt.nonEmpty)
       errorInSlang(tp.pos, "Parameters should have the form '<id> : <type>'")
     atpeopt.map(ta => AST.Param(cid(paramname), translateTypeArg(ta))).
@@ -894,10 +904,8 @@ class ScalaMetaParser(text: String,
     } + " ..."
   }
 
-  import scala.language.implicitConversions
-
-  implicit def opt[T](opt: Option[T]): Opt[T] = opt match {
-    case Some(x) => new some(x)
-    case _ => new none()
+  def opt[T](opt: scala.Option[T]): Option[T] = opt match {
+    case scala.Some(x) => Some(x)
+    case _ => None()
   }
 }

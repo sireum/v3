@@ -31,7 +31,7 @@ import org.sireum._
 
 object TopUnit {
 
-  @datatype class Program(fileUriOpt: Opt[String],
+  @datatype class Program(fileUriOpt: Option[String],
                           packageName: Name,
                           body: Body)
     extends TopUnit
@@ -45,7 +45,7 @@ object Stmt {
   @datatype class Composite(isRoot: B,
                             isDatatype: B,
                             id: Id,
-                            parent: Opt[Type],
+                            parent: Option[Type],
                             params: ISZ[CompositeParam],
                             stmt: ISZ[Stmt])
     extends Stmt
@@ -58,7 +58,7 @@ object Stmt {
   @datatype class Var(isVal: B,
                       id: Id,
                       tpe: Type,
-                      init: Opt[Exp])
+                      init: Option[Exp])
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
@@ -69,7 +69,7 @@ object Stmt {
   @datatype class Method(isPure: B,
                          sig: MethodSig,
                          contract: MethodContract,
-                         bodyOpt: Opt[Body])
+                         bodyOpt: Option[Body])
     extends Stmt
 
   @datatype class ExtMethod(isPure: B,
@@ -127,7 +127,7 @@ object Case {
                         tpe: Type)
     extends Case
 
-  @datatype class Structure(idOpt: Opt[Id],
+  @datatype class Structure(idOpt: Option[Id],
                             name: Name,
                             patterns: ISZ[Pattern])
     extends Case
@@ -144,8 +144,8 @@ object Pattern {
   @datatype class Var(id: Id)
     extends Pattern
 
-  @datatype class Structure(idOpt: Opt[Id],
-                            nameOpt: Opt[Name],
+  @datatype class Structure(idOpt: Option[Id],
+                            nameOpt: Option[Name],
                             patterns: ISZ[Pattern])
     extends Pattern
 
@@ -159,7 +159,7 @@ object Assign {
                        rhs: Exp)
     extends Assign
 
-  @datatype class Pattern(nameOpt: Opt[Name],
+  @datatype class Pattern(nameOpt: Option[Name],
                           patterns: ISZ[Pattern])
     extends Assign
 
@@ -209,7 +209,7 @@ object Exp {
                                   args: ISZ[Id],
                                   contract: MethodContract)
 
-@datatype class SpecMethodDef(idOpt: Opt[Id],
+@datatype class SpecMethodDef(idOpt: Option[Id],
                               exp: Exp,
-                              pattern: Opt[Case],
-                              cond: Opt[Exp])
+                              pattern: Option[Case],
+                              cond: Option[Exp])

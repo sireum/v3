@@ -33,7 +33,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
   "Passing" - {
 
-    passing(prelude, addImport = false, isPrelude = true)
+    //passing(prelude, addImport = false, isPrelude = true)
 
     passing("", addImport = false)
 

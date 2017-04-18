@@ -39,8 +39,8 @@ object Cli {
   }
 
   private implicit class At[T](val a: CSeq[T]) extends AnyVal {
-    def at(i: Int): Option[T] =
-      if (i < a.length) Some(a(i)) else None
+    def at(i: Int): scala.Option[T] =
+      if (i < a.length) scala.Some(a(i)) else scala.None
   }
 
   def oPrintln(line: String): Unit = {
@@ -214,14 +214,14 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-c" | "--class-name" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.className = arg
+            case scala.Some(arg) => option.className = arg
             case _ =>
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
@@ -230,7 +230,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-l" | "--license-file" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
@@ -298,14 +298,14 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-c" | "--class-name" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.className = arg
+            case scala.Some(arg) => option.className = arg
             case _ =>
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
@@ -314,21 +314,21 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-i" | "--imports" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.imports = arg.split(',').map(_.trim)
+            case scala.Some(arg) => option.imports = arg.split(',').map(_.trim)
             case _ =>
               errPrintln("Expected a string value for imports")
           }
         case "-r" | "--roots" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.roots = arg.split(',').map(_.trim)
+            case scala.Some(arg) => option.roots = arg.split(',').map(_.trim)
             case _ =>
               errPrintln("Expected a string value for roots")
           }
         case "-l" | "--license-file" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
@@ -394,14 +394,14 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-c" | "--class-name" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.className = arg
+            case scala.Some(arg) => option.className = arg
             case _ =>
               errPrintln("Expected a string value for class name")
           }
         case "-d" | "--output-dir" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.outputDir = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for output dir")
@@ -410,14 +410,14 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-i" | "--imports" =>
           i += 1
           args.at(i) match {
-            case Some(arg) => option.imports = arg.split(',').map(_.trim)
+            case scala.Some(arg) => option.imports = arg.split(',').map(_.trim)
             case _ =>
               errPrintln("Expected a string value for imports")
           }
         case "-l" | "--license-file" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.licenseFile = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for license file")
@@ -503,7 +503,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-f" | "--formula" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.formula = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for formula")
@@ -512,7 +512,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-t" | "--timeout" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               try {
                 option.timeout = arg.toInt
               } catch {
@@ -530,7 +530,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "-b" | "--bitwidth" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               try {
                 option.bitwidth = arg.toInt
               } catch {
@@ -552,7 +552,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
         case "--c" =>
           i += 1
           args.at(i) match {
-            case Some(arg) =>
+            case scala.Some(arg) =>
               option.c = org.sireum.util.some(arg)
             case _ =>
               errPrintln("Expecting a value for c")

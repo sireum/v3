@@ -23,8 +23,8 @@ object %name% {
   }
 
   private implicit class At[T](val a: CSeq[T]) extends AnyVal {
-    def at(i: Int): Option[T] =
-      if (i < a.length) Some(a(i)) else None
+    def at(i: Int): scala.Option[T] =
+      if (i < a.length) scala.Some(a(i)) else scala.None
   }
 
   def oPrintln(line: String): Unit = {
@@ -166,7 +166,7 @@ optionCaseInt(shortKey, longKey, fieldName, name) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
-    case Some(arg) =>
+    case scala.Some(arg) =>
       try {
         option.%fieldName% = arg.toInt
       } catch {
@@ -183,7 +183,7 @@ optionCaseString(shortKey, longKey, fieldName, name, comma) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
-    case Some(arg) => option.%fieldName% = arg%if(comma)%.split(',').map(_.trim)%endif%
+    case scala.Some(arg) => option.%fieldName% = arg%if(comma)%.split(',').map(_.trim)%endif%
     case _ =>
       errPrintln("Expected a string value for %name%")
   }
@@ -193,7 +193,7 @@ optionCaseOption(shortKey, longKey, fieldName, name, someClass) ::= <<
 case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
-    case Some(arg) =>
+    case scala.Some(arg) =>
       option.%fieldName% = %someClass%(arg)
     case _ =>
       errPrintln("Expecting a value for %name%")
@@ -206,17 +206,17 @@ case %if(shortKey)%"-%shortKey%" | %endif%"--%longKey%" =>
   i += 1
   args.at(i) match {
     %optionCaseEnumElem; separator="\n"%
-    case Some(arg) =>
+    case scala.Some(arg) =>
       errPrintln(s"Only either { %elem; separator=", "% } is allowed for %name% instead of '$arg'")
       return
-    case None =>
+    case _ =>
       errPrintln("Expected either { %elem; separator=", "% } for %name%")
       return
   }
 >>
 
 optionCaseEnumElem(fieldName, elem) ::= <<
-case Some("%elem%") => option.%fieldName% = "%elem%"
+case scala.Some("%elem%") => option.%fieldName% = "%elem%"
 >>
 
 optionCaseStrings(shortKey, longKey, fieldName) ::= <<
