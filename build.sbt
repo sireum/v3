@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2016, Robby, Kansas State University
+ Copyright (c) 2017, Robby, Kansas State University
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-val scalaVer = "2.12.1"
+val scalaVer = "2.12.2"
 
 val metaVersion = "1.7.0"
 
