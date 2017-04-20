@@ -1,0 +1,160 @@
+<program>          ::=  <package>?
+                        import org . sireum . _
+                        <stmt>*
+                        
+<package>          ::=  package <name>
+
+<name>             ::=  <id> ⸨ . <id> ⸩*
+                   
+<stmt>             ::=  <import-stmt>
+                     |  <decl-stmt>
+                     |  <assign-stmt>
+                     |  <if-stmt>
+                     |  <while-stmt>
+                     |  <for-stmt>
+                     |  <return-stmt>
+                     |  <proof-stmt>
+
+<import-stmt>      ::=  import <name> <import-suffix>?
+
+<import-suffix>    ::=  . _
+                     |  . { <import-sels> }
+
+<import-sels>      ::=  <import-sel> ⸨ , <import-sel> ⸩*
+
+<import-sel>       ::=  <id>
+                     |  <id> => <id>
+
+<decl-stmt>        ::=  <var-decl>  
+                     |  <def-decl>
+                     |  <object-decl>
+                     |  <sig-decl>
+                     |  <datatype-decl>
+                     |  <record-decl>
+                     |  <rich-decl>
+                     
+<var-decl>         ::=  val <id> ⸨ : <type> ⸩? = <exp>
+                     |  var <id> ⸨ : <type> ⸩? = <exp>
+                     |  var <id> : <type> = _
+                     |  val <pattern> = <exp>  
+                     |  var <pattern> = <exp>  
+                     |  @spec val <id> : <type> = $
+                     |  @spec var <id> : <type> = $
+                     
+<pattern>          ::=  <id> ⸨ : <type> ⸩?
+                     |  ⸨ <id> @ ⸩? <name> ( <paterns>? )
+                     |  ( <paterns> )
+                     |  _ ⸨ : <type> ⸩?
+
+<patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
+                   
+<def-decl>         ::=  ⸨ @pure ⸩? def <id> <params>? : <type> = <def-body>
+                     |  ⸨ @pure ⸩? def <id> <params>? : <type> = $
+                     |  ⸨ @pure ⸩? def <id> <params>? : <type> = <cdef-contract>
+                     |  ⸨ @pure ⸩? def <id> <params>? : <type>
+                     |  @spec def <id> <params>? : <type> = $
+                     |  @spec def <id> <params>? : <type> = <cdef-contract>
+
+<params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
+
+<param>            ::=  ⸨ @pure ⸩? <id> : <type>
+
+<def-body>         ::=  {
+                          <ldef-contract>?
+                          <stmt>*                     
+                        }
+
+<object-decl>      ::=  object <id> <extends>? { <stmt>* }
+                     |  @ext object <id> { <stmt>* }
+                        
+<extends>          ::=  extends <type> ⸨ with <type> ⸩*
+
+<sig-decl>         ::=  @sig trait <id> <tparams>? <extends>? { <stmt>* }
+
+<tparams>          ::=  [ <tparam> ⸨ , <tparam> ⸩* ]
+
+<tparam>           ::=  <id> ⸨ <: type ⸩?
+
+<datatype-decl>    ::=  @datatype trait <id> <tparams>? <extends>? { <stmt>* }
+                     |  @datatype class <id> <tparams>? <dt-params>? <extends>? { <stmt>* }
+
+<dt-params>        ::=  ( ⸨ <dt-param> ⸨ , <dt-param> ⸩* ⸩? )
+
+<dt-param>         ::=  <adt-param-mod>* <id> : <type>
+
+<adt-param-mod>    ::=  @pure
+                     |  @hidden
+
+<record-decl>      ::=  @record trait <id> <tparams>? <extends>? { <stmt>* }
+                     |  @record class <id> <tparams>? <rd-params>? <extends>? { <stmt>* }
+
+<rd-params>        ::=  ( ⸨ <rd-param> ⸨ , <rd-param> ⸩* ⸩? )
+
+<rd-param>         ::=  <adt-param-mod>* ⸨ var ⸩*  <id> : <type>
+
+<rich-decl>        ::=  @rich trait <id> <tparams> { <stmt>* }
+                     |  @rich class <id> <tparams>? <params>? <extends>? { <stmt>* }
+
+<assign-stmt>      ::=  <lhs> = <exp>
+                     |  up ( <lhs> ) = <exp>
+
+<lhs>              ::=  <id>
+                     |  <lhs> . <id>
+                     |  <lhs> ( <exp> )
+
+<if-stmt>          ::=  if ( <exp> ) { <stmt>* } ⸨ else { <stmt>* } ⸩?
+                     |  if ( <exp> ) { <stmt>* } else <if-stmt>
+
+<while-stmt>       ::=  while ( <exp> ) {
+                          <loop-contract>?
+                          <stmt>*
+                        }
+                     |  do {
+                          <stmt>*
+                          <loop-contract>?
+                        } while ( <exp> )
+
+<for-stmt>         ::=  for ( <for-gen> ) {
+                          <loop-contract>?
+                          <stmt>*
+                        }
+
+<for-gen>          ::=  <id> <- <for-range>
+
+<for-range>        ::=  <exp> until <exp> ⸨ by <exp> ⸩?
+                     |  <exp> to <exp> ⸨ by <exp> ⸩?
+                     |  <exp>
+                     |  <exp> . indices
+                     |  <exp> . reverseIndices
+
+=-=
+=-<
+<-=
+<-<
+>-=
+>->
+=-|   |-<
+<-|   |-=
+<-|   |-<
+>-|   |-=
+>-|   |->
+
+<return-stmt>      ::=  return <exp>?
+
+<proof-stmt>       ::=  assert(<exp>)
+                     |  assert(<exp>, <string-exp>)
+                     |  assume(<exp>)
+                     |  assume(<exp>, <string-exp>)
+                     |  l""" <l-proof> """
+
+<exp>              ::=
+
+<l-proof>          ::=  <fact>
+                     |  <theorem>
+                     |  <invariant>
+                     |  <sequent>
+                     |  <proof>
+
+<cdef-contract>    ::=  c""" <def-contract> """
+
+<ldef-contract>    ::=  l""" <def-contract> """
