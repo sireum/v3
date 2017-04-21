@@ -29,6 +29,7 @@
 
 <decl-stmt>        ::=  <var-decl>  
                      |  <def-decl>
+                     |  <enum-decl>
                      |  <object-decl>
                      |  <sig-decl>
                      |  <datatype-decl>
@@ -56,7 +57,7 @@
                      |  _ ⸨ : <type> ⸩?
 
 <patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
-                   
+
 <def-decl>         ::=  ⸨ @pure ⸩? def <ID> <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <params>? : <type> = $
                      |  ⸨ @pure ⸩? def <ID> <params>? : <type> = <cdef-contract>
@@ -72,6 +73,8 @@
                           <ldef-contract>?
                           <stmt>*                     
                         }
+
+<enum-decl>        ::=  @enum object <ID> { val <ID> ⸨ , <ID> ⸩* = Value }
 
 <object-decl>      ::=  object <ID> <extends>? { <stmt>* }
                      |  @ext object <ID> { <stmt>* }
@@ -104,7 +107,7 @@
 <rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
                      |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
 
-<type-decl>        ::=  type <id> <type-params>? = <type>
+<type-decl>        ::=  type <ID> <type-params>? = <type>
 
 <assign-stmt>      ::=  <lhs> = <exp>
                      |  up ( <lhs> ) = <exp>
@@ -206,7 +209,7 @@
 <args>             ::=  <type-args>? ( ⸨ <exp> ⸨ , <exp> ⸩* ⸩? )
 
 <up>               ::= <exp> -> <exp>
-                     | <id> = <exp>
+                     | <ID> = <exp>
 
 <unary-op>         ::=  !
                      |  +
