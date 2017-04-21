@@ -34,7 +34,8 @@
                      |  <datatype-decl>
                      |  <record-decl>
                      |  <rich-decl>
-                     
+                     |  <type-decl>
+
 <var-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <exp>
                      |  var <ID> ⸨ : <type> ⸩? = <exp>
                      |  var <ID> : <type> = _
@@ -102,6 +103,8 @@
 
 <rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
                      |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
+
+<type-decl>        ::=  type <id> <type-params>? = <type>
 
 <assign-stmt>      ::=  <lhs> = <exp>
                      |  up ( <lhs> ) = <exp>

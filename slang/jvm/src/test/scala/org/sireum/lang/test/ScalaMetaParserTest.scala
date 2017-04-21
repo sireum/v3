@@ -106,7 +106,9 @@ class ScalaMetaParserTest extends SireumSpec {
 
       passing("def f[T](x: T, y: Z): T = {}", isWorksheet = true)
 
-      passing("def f[T : TT](x: Z): Z = {}", isWorksheet = true)
+      passing("def f[T](x: Z): Z = {}", isWorksheet = true)
+
+      passing("def f[A, B <: A](x: A, y: Z): B = {}", isWorksheet = true)
 
     }
 
@@ -151,11 +153,13 @@ class ScalaMetaParserTest extends SireumSpec {
 
       failing("var x: Z = $", dollar, isWorksheet = true)
 
+      val enclosing = "inside methods or code blocks"
+
+      failing("object O { val x = 5 }", enclosing)
+
+      failing("object O { val x = 5 }", enclosing)
+
       val form = "<id> : <type> = <exp>'"
-
-      failing("val x = 5", form, isWorksheet = true)
-
-      failing("var x = 5", form, isWorksheet = true)
 
       failing("val x, y: Z = 5", form, isWorksheet = true)
 
@@ -214,8 +218,6 @@ class ScalaMetaParserTest extends SireumSpec {
 
         failing("def f(x: Z = 5): Z = {}", paramTypeForms, isWorksheet = true)
 
-        failing("def f(@pure x: Z): Z = {}", paramTypeForms, isWorksheet = true)
-
         failing("def f(x: => Z): Z = {}", "By name types", isWorksheet = true)
 
         failing("def f(x: Z*): Z = {}", "Repeated types", isWorksheet = true)
@@ -248,17 +250,13 @@ class ScalaMetaParserTest extends SireumSpec {
 
     "Type Param" - {
 
-      val typeParamForms = "'<id>' or '<id> : TT'"
-
-      failing("def f[A, B <: A](x: A, y: Z): B = {}", typeParamForms, isWorksheet = true)
+      val typeParamForms = "'<id>' or '<id> <: <type>'"
 
       failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
       failing("def f[T <% B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
-      failing("def f[T : A](x: Z): Z = {}", typeParamForms, isWorksheet = true)
-
-      failing("def f[T <: (Z) => Z](x: Z): Z = {}", typeParamForms, isWorksheet = true)
+      failing("def f[T : TT](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
     }
   }

@@ -42,12 +42,19 @@ object TopUnit {
 
 object Stmt {
 
-  @datatype class Composite(isRoot: B,
-                            isDatatype: B,
-                            id: Id,
-                            parent: Option[Type],
-                            params: ISZ[CompositeParam],
-                            stmt: ISZ[Stmt])
+  @datatype class AbstractDatatype(isRoot: B,
+                                   isDatatype: B,
+                                   id: Id,
+                                   typeParams: ISZ[TypeParam],
+                                   params: ISZ[AbstractDatatypeParam],
+                                   parents: ISZ[Type],
+                                   stmt: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class Sig(id: Id,
+                      typeParams: ISZ[TypeParam],
+                      parents: ISZ[Type],
+                      stmt: ISZ[Stmt])
     extends Stmt
 
   @datatype class Object(isExt: B,
@@ -57,8 +64,8 @@ object Stmt {
 
   @datatype class Var(isVal: B,
                       id: Id,
-                      tpe: Type,
-                      init: Option[Exp])
+                      tpeOpt: Option[Type],
+                      initOpt: Option[Exp])
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
@@ -180,9 +187,10 @@ object Exp {
 
 @datatype class Body(stmts: ISZ[Stmt])
 
-@datatype class CompositeParam(isHidden: B,
-                               id: Id,
-                               tpe: Type)
+@datatype class AbstractDatatypeParam(isHidden: B,
+                                      isPure: B,
+                                      id: Id,
+                                      tpe: Type)
   extends Stmt
 
 
@@ -192,11 +200,12 @@ object Exp {
                           params: ISZ[Param],
                           returnType: Type)
 
-@datatype class Param(id: Id,
+@datatype class Param(isPure: B,
+                      id: Id,
                       tpe: Type)
 
 @datatype class TypeParam(id: Id,
-                          hasTT: B)
+                          superTypeOpt: Option[Type])
 
 @datatype class MethodContract(reads: ISZ[Name],
                                requires: ISZ[Exp],
