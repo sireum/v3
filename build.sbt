@@ -42,7 +42,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.0.0-1"
+val sireumScalacVersion = "3.0.0-2"
 
 val silencerVersion = "0.5"
 
@@ -167,6 +167,7 @@ lazy val sireumSettings = Seq(
   apiURL := Some(url("http://v3.sireum.org/api/")),
   parallelExecution in Global := isParallelBuild,
   libraryDependencies += "com.github.ghik" %% "silencer-lib" % silencerVersion,
+  resolvers += Resolver.sonatypeRepo("public"),
   addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
 )
 
