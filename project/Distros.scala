@@ -62,7 +62,7 @@ object Distros {
     "sireum" -> 31441,
     "jdt" -> 32149,
     "scala" -> 34541,
-    "markdown" -> 33092,
+    "markdown" -> 34427,
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 18619,
@@ -70,7 +70,7 @@ object Distros {
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 33704,
+    "python" -> 34430,
     "rst" -> 14700,
     "ignore" -> 32828
   )
