@@ -38,10 +38,13 @@
                      |  <type-decl>
 
 <var-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <exp>
+                     |  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
                      |  var <ID> ⸨ : <type> ⸩? = <exp>
-                     |  var <ID> : <type> = _
-                     |  val <pattern> = <exp>  
-                     |  var <pattern> = <exp>  
+                     |  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
+                     |  val <pattern> = <exp>
+                     |  val <pattern> = <stmt-exp>
+                     |  var <pattern> = <exp>
+                     |  var <pattern> = <stmt-exp>
                      |  @spec val <ID> : <type> = $
                      |  @spec var <ID> : <type> = $
 
@@ -110,7 +113,11 @@
 <type-decl>        ::=  type <ID> <type-params>? = <type>
 
 <assign-stmt>      ::=  <lhs> = <exp>
+                     |  <lhs> = <stmt-exp>
                      |  up ( <lhs> ) = <exp>
+                     |  up ( <lhs> ) = <stmt-exp>
+                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <exp>
+                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <stmt-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>
@@ -168,6 +175,17 @@
                      |  assume(<exp>)
                      |  assume(<exp>, <string-exp>)
                      |  l""" <l-proof> """
+
+<stmt-exp>         ::=  <block-stmt-exp>
+                     |  <if-stmt-exp>
+                     |  <match-stmt-exp>
+
+<block-stmt-exp>   ::=  { <stmt>* <exp> }
+
+<if-stmt-exp>      ::=  if ( <exp> ) { <stmt>* <exp> } else { <stmt>* <exp> }
+                     |  if ( <exp> ) { <stmt>* <exp> } else <if-stmt-exp>
+
+<match-stmt>       ::=  <exp> match { ⸨ <match-case> <exp> ⸩* }
 
 <exp>              ::=  <lit>
                      |  <string-interpolation>
