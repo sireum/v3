@@ -61,7 +61,7 @@ object Distros {
   val pluginUpdateIdMap = Map(
     "sireum" -> 31441,
     "jdt" -> 32149,
-    "scala" -> 34147,
+    "scala" -> 34541,
     "markdown" -> 33092,
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
