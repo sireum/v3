@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.1.1"
+  val ideaVer = "2017.1.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -102,32 +102,12 @@ object Distros {
       case _: Throwable => sys.error("Need 7z.")
     }
 
-    downloadResourceHacker()
     downloadPlugins()
     buildIVE("mac")
     buildIVE("win")
     buildIVE("linux")
 
     //rm ! baseDir / 'distros / 'idea
-  }
-
-  def downloadResourceHacker(): Unit = {
-    val distroPath = pwd / 'resources / 'distro
-    val rhDir = distroPath / 'resource_hacker
-    if (!(rhDir / "ResourceHacker.exe").toIO.exists) {
-      val rhFilename = "resource_hacker.zip"
-      rm ! rhDir
-      rm ! distroPath / rhFilename
-      val url = s"http://www.angusj.com/resourcehacker/$rhFilename"
-      print(s"Downloading $url ... ")
-      %%('wget, "-q", url)(distroPath)
-      println("done!")
-      print(s"Extracting $rhFilename ... ")
-      mkdir ! rhDir
-      %%('unzip, "-qo", s"../$rhFilename")(rhDir)
-      rm ! distroPath / rhFilename
-      println("done!")
-    }
   }
 
   def downloadPlugins(): Unit = {
@@ -207,22 +187,10 @@ object Distros {
   }
 
   def patchIconExe(filePath: Path): Unit = {
-    if (hasExes) {
-      print(s"Replacing $filePath ... ")
-      %%('cp, pwd / 'distros / filePath.last, filePath)
-      println("done!")
-    } else {
-      def toWinePath(p: Path) = "Z:" + p.toString.replaceAllLiterally("/", "\\")
-
-      val wineFilePath = toWinePath(filePath)
-      val icoFilePath = toWinePath(pwd / 'resources / 'distro / 'icons / "idea.ico")
-      print(s"Patching $filePath ... ")
-      %%('wineconsole, pwd / 'resources / 'distro / 'resource_hacker / "ResourceHacker.exe",
-        "-open", wineFilePath, "-save", wineFilePath, "-action", 'addoverwrite,
-        "-res", icoFilePath, "-mask", "ICONGROUP,107,")
-      %%('cp, filePath, pwd / 'distros / filePath.last)
-      println("done!")
-    }
+    require(hasExes)
+    print(s"Replacing $filePath ... ")
+    %%('cp, pwd / 'distros / filePath.last, filePath)
+    println("done!")
   }
 
   def patchIcon(platform: String, path: Path): Unit = {
