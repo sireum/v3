@@ -20,14 +20,13 @@
 <import-stmt>      ::=  import <name> <import-suffix>?
 
 <import-suffix>    ::=  . _
-                     |  . { <import-sels> }
-
-<import-sels>      ::=  <import-sel> ⸨ , <import-sel> ⸩*
+                     |  . { <import-sel> ⸨ , <import-sel> ⸩* }
 
 <import-sel>       ::=  <ID>
                      |  <ID> => <ID>
 
-<decl-stmt>        ::=  <var-decl>  
+<decl-stmt>        ::=  <val-decl>
+                     |  <var-decl>
                      |  <def-decl>
                      |  <enum-decl>
                      |  <object-decl>
@@ -37,15 +36,16 @@
                      |  <rich-decl>
                      |  <type-decl>
 
-<var-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <exp>
+<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <exp>
                      |  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
-                     |  var <ID> ⸨ : <type> ⸩? = <exp>
-                     |  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
                      |  val <pattern> = <exp>
                      |  val <pattern> = <stmt-exp>
+                     |  @spec val <ID> : <type> = $
+
+<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <exp>
+                     |  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
                      |  var <pattern> = <exp>
                      |  var <pattern> = <stmt-exp>
-                     |  @spec val <ID> : <type> = $
                      |  @spec var <ID> : <type> = $
 
 <type>             ::=  <name> <type-args>?
@@ -54,10 +54,10 @@
 
 <type-args>        ::=  [ <type> ⸨ , <type> ⸩* ]
 
-<pattern>          ::=  <ID> ⸨ : <type> ⸩?
+<pattern>          ::=  <ID>
+                     |  _
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
-                     |  ( <paterns> )
-                     |  _ ⸨ : <type> ⸩?
+                     |  ⸨ <ID> @ ⸩? ( <paterns> )
 
 <patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
 
@@ -91,21 +91,21 @@
 <type-param>       ::=  <ID> ⸨ <: type ⸩?
 
 <datatype-decl>    ::=  @datatype trait <ID> <type-params>? <extends>? { <stmt>* }
-                     |  @datatype class <ID> <type-params>? <dt-params>? <extends>? { <stmt>* }
+                     |  @datatype class <ID> <type-params>? <datatype-params>? <extends>? { <stmt>* }
 
-<dt-params>        ::=  ( ⸨ <dt-param> ⸨ , <dt-param> ⸩* ⸩? )
+<datatype-params>  ::=  ( ⸨ <datatype-param> ⸨ , <datatype-param> ⸩* ⸩? )
 
-<dt-param>         ::=  <adt-param-mod>* <ID> : <type>
+<datatype-param>   ::=  <adt-param-mod>* <ID> : <type>
 
 <adt-param-mod>    ::=  @pure
                      |  @hidden
 
 <record-decl>      ::=  @record trait <ID> <type-params>? <extends>? { <stmt>* }
-                     |  @record class <ID> <type-params>? <rd-params>? <extends>? { <stmt>* }
+                     |  @record class <ID> <type-params>? <record-params>? <extends>? { <stmt>* }
 
-<rd-params>        ::=  ( ⸨ <rd-param> ⸨ , <rd-param> ⸩* ⸩? )
+<record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
-<rd-param>         ::=  <adt-param-mod>* ⸨ var ⸩*  <ID> : <type>
+<record-param>     ::=  <adt-param-mod>* ⸨ var ⸩*  <ID> : <type>
 
 <rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
                      |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
@@ -116,8 +116,8 @@
                      |  <lhs> = <stmt-exp>
                      |  up ( <lhs> ) = <exp>
                      |  up ( <lhs> ) = <stmt-exp>
-                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <exp>
-                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <stmt-exp>
+                     |  tup ( ( <lhs> ⸨ , <lhs> ⸩+ ) ) = <exp>
+                     |  tup ( ( <lhs> ⸨ , <lhs> ⸩+ ) ) = <stmt-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>
@@ -162,11 +162,6 @@
                      |  <exp> <-< <exp>
                      |  <exp> >-= <exp>
                      |  <exp> >-> <exp>
-                     |  <exp> =- ( <exp>  ) -< <exp>
-                     |  <exp> <- ( <exp>  ) -= <exp>
-                     |  <exp> <- ( <exp>  ) -< <exp>
-                     |  <exp> >- ( <exp>  ) -= <exp>
-                     |  <exp> >- ( <exp>  ) -> <exp>
 
 <return-stmt>      ::=  return <exp>?
 
@@ -187,21 +182,24 @@
 
 <match-stmt>       ::=  <exp> match { ⸨ <match-case> <exp> ⸩* }
 
+<string-exp>       ::=  <STRING>
+                     |  <STRING-INTERP>
+
 <exp>              ::=  <lit>
-                     |  <string-interpolation>
+                     |  <string-exp>
                      |  <name>
                      |  <exp> _
                      |  ( <exp> ⸨ , <exp> ⸩* )
                      |  <exp> . <ID> <args>?
                      |  <exp> <args>
-                     |  <exp> ( <up> ⸨ , <up> ⸩* )
                      |  <unary-op> <exp>
                      |  <exp> <binary-op> <exp>
                      |  if ( <exp> ) <exp> else <exp>
 
-<lit>              ::=  <INT>
+<lit>              ::=  true
+                     |  false
+                     |  <INT>
                      |  <FLOAT>
-                     |  <STRING>
                      |  z"<INT>"
                      |  z8"<INT>"
                      |  z16"<INT>"
@@ -224,10 +222,11 @@
                      |  f64"<FLOAT>"
                      |  r"<REAL>"
 
-<args>             ::=  <type-args>? ( ⸨ <exp> ⸨ , <exp> ⸩* ⸩? )
+<args>             ::=  <type-args>? ( ⸨ <apply-arg> ⸨ , <apply-arg> ⸩* ⸩? )
 
-<up>               ::= <exp> -> <exp>
-                     | <ID> = <exp>
+<apply-arg>        ::=  <exp>
+                     |  <exp> -> <exp>
+                     |  <ID> = <exp>
 
 <unary-op>         ::=  !
                      |  +
