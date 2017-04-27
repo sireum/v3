@@ -28,9 +28,9 @@ for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
 ZULU_VERSION=8.20.0.5-jdk8.0.121
-SCALA_VERSION=2.12.1
-SBT_VERSION=0.13.13
-NODE_VERSION=7.7.4
+SCALA_VERSION=2.12.2
+SBT_VERSION=0.13.15
+NODE_VERSION=7.9.0
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
@@ -188,7 +188,6 @@ if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   rm -fR sbt
   unzip -oq ${SBT_DROP}
   rm ${SBT_DROP}
-  mv sbt-launcher-packaging-${SBT_VERSION} sbt
   if [ -d "sbt/bin" ]; then
     echo "${SBT_VERSION}" > sbt/VER
   else

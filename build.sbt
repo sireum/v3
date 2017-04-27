@@ -156,6 +156,7 @@ lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
   incOptions := incOptions.value.withNameHashing(true),
+  incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalaVersion := scalaVer,
   retrieveManaged := true,
   scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
