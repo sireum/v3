@@ -17,10 +17,8 @@
                      |  <return-stmt>
                      |  <proof-stmt>
 
-<import-stmt>      ::=  import <name> <import-suffix>?
-
-<import-suffix>    ::=  . _
-                     |  . { <import-sel> ⸨ , <import-sel> ⸩* }
+<import-stmt>      ::=  import <name> ⸨ . { <import-sel> ⸨ , <import-sel> ⸩* } ⸩?
+                     |  import <ID> . _
 
 <import-sel>       ::=  <ID>
                      |  <ID> => <ID>
@@ -63,10 +61,10 @@
 
 <def-decl>         ::=  ⸨ @pure ⸩? def <ID> <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <params>? : <type> = $
-                     |  ⸨ @pure ⸩? def <ID> <params>? : <type> = <cdef-contract>
+                     |  ⸨ @pure ⸩? def <ID> <params>? : <type> = <ldef-contract>
                      |  ⸨ @pure ⸩? def <ID> <params>? : <type>
                      |  @spec def <ID> <params>? : <type> = $
-                     |  @spec def <ID> <params>? : <type> = <cdef-contract>
+                     |  @spec def <ID> <params>? : <type> = <ldef-contract>
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 
@@ -116,8 +114,8 @@
                      |  <lhs> = <stmt-exp>
                      |  up ( <lhs> ) = <exp>
                      |  up ( <lhs> ) = <stmt-exp>
-                     |  tup ( ( <lhs> ⸨ , <lhs> ⸩+ ) ) = <exp>
-                     |  tup ( ( <lhs> ⸨ , <lhs> ⸩+ ) ) = <stmt-exp>
+                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <exp>
+                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <stmt-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>
@@ -265,7 +263,5 @@
                      |  <sequent>
                      |  <proof>
                      |  <theorem>
-
-<cdef-contract>    ::=  c""" <def-contract> """
 
 <ldef-contract>    ::=  l""" <def-contract> """

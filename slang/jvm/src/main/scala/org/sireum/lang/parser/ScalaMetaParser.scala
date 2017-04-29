@@ -405,11 +405,11 @@ class ScalaMetaParser(text: String,
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
-        case Term.Interpolate(Term.Name("c"), Seq(l@Lit(s: String)), Nil) =>
+        case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseContract(l.pos, s))
         case _ =>
           hasError = true
-          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
+          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
       }
@@ -417,12 +417,12 @@ class ScalaMetaParser(text: String,
       exp match {
         case q"$$" =>
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
-        case Term.Interpolate(Term.Name("c"), Seq(l@Lit(s: String)), Nil) =>
+        case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) =>
           val (defs, where) = parseDefs(l.pos, s)
           AST.Stmt.SpecMethod(sig, defs, where)
         case _ =>
           hasError = true
-          error(exp.pos, "Only '$' or 'c\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
+          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
       }
     else exp match {
