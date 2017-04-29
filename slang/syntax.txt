@@ -34,15 +34,11 @@
                      |  <rich-decl>
                      |  <type-decl>
 
-<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <exp>
-                     |  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
-                     |  val <pattern> = <exp>
+<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
                      |  val <pattern> = <stmt-exp>
                      |  @spec val <ID> : <type> = $
 
-<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <exp>
-                     |  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
-                     |  var <pattern> = <exp>
+<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
                      |  var <pattern> = <stmt-exp>
                      |  @spec var <ID> : <type> = $
 
@@ -110,11 +106,8 @@
 
 <type-decl>        ::=  type <ID> <type-params>? = <type>
 
-<assign-stmt>      ::=  <lhs> = <exp>
-                     |  <lhs> = <stmt-exp>
-                     |  up ( <lhs> ) = <exp>
+<assign-stmt>      ::=  <lhs> = <stmt-exp>
                      |  up ( <lhs> ) = <stmt-exp>
-                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <exp>
                      |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <stmt-exp>
 
 <lhs>              ::=  <ID>
@@ -169,7 +162,8 @@
                      |  assume(<exp>, <string-exp>)
                      |  l""" <l-proof> """
 
-<stmt-exp>         ::=  <block-stmt-exp>
+<stmt-exp>         ::=  <exp>
+                     |  <block-stmt-exp>
                      |  <if-stmt-exp>
                      |  <match-stmt-exp>
 
