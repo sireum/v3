@@ -42,25 +42,17 @@ object TopUnit {
 
 object Stmt {
 
-  @datatype class AbstractDatatype(isRoot: B,
-                                   isDatatype: B,
-                                   id: Id,
-                                   typeParams: ISZ[TypeParam],
-                                   params: ISZ[AbstractDatatypeParam],
-                                   parents: ISZ[Type],
-                                   stmt: ISZ[Stmt])
-    extends Stmt
+  @datatype class Import(importers: ISZ[Import.Importer]) extends Stmt
 
-  @datatype class Sig(id: Id,
-                      typeParams: ISZ[TypeParam],
-                      parents: ISZ[Type],
-                      stmt: ISZ[Stmt])
-    extends Stmt
+  @datatype class RichImport(id: Id) extends Stmt
 
-  @datatype class Object(isExt: B,
-                         id: Id,
-                         stmts: ISZ[Stmt])
-    extends Stmt
+  object Import {
+
+    @datatype class Importer(name: Name, selectors: ISZ[Selector])
+
+    @datatype class Selector(from: Id, to: Id)
+
+  }
 
   @datatype class Var(isVal: B,
                       id: Id,
@@ -89,7 +81,32 @@ object Stmt {
                              where: ISZ[Assign])
     extends Stmt
 
-  @datatype class Expr(exp: Exp)
+  @datatype class Enum(id: Id,
+                       elements: ISZ[Id])
+    extends Stmt
+
+  @datatype class Object(isExt: B,
+                         id: Id,
+                         stmts: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class Sig(id: Id,
+                      typeParams: ISZ[TypeParam],
+                      parents: ISZ[Type],
+                      stmt: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class AbstractDatatype(isRoot: B,
+                                   isDatatype: B,
+                                   id: Id,
+                                   typeParams: ISZ[TypeParam],
+                                   params: ISZ[AbstractDatatypeParam],
+                                   parents: ISZ[Type],
+                                   stmt: ISZ[Stmt])
+    extends Stmt
+
+  @datatype class TypeAlias(id: Id,
+                            tpe: Type)
     extends Stmt
 
   @datatype class Block(body: Body)
@@ -107,7 +124,11 @@ object Stmt {
                         body: Body)
     extends Stmt
 
+  @datatype class Expr(exp: Exp)
+    extends Stmt
+
 }
+
 
 @datatype trait Type
 

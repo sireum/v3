@@ -284,7 +284,7 @@ class ScalaMetaParserTest extends SireumSpec {
     *(sub(text)) {
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
-      val b = r.programOpt.nonEmpty && r.tags.isEmpty
+      val b = r.programOpt.nonEmpty && r.tags.elements.isEmpty
       if (!b) report(r)
       b
     }
@@ -297,7 +297,7 @@ class ScalaMetaParserTest extends SireumSpec {
     *(sub(text)) {
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
-      val b = r.tags.exists {
+      val b = r.tags.elements.exists {
         case t: MessageTag => t.message.contains(msg)
         case _ => false
       }

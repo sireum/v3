@@ -42,7 +42,7 @@ object ScalaMetaParser {
   case class Result(text: String,
                     hashSireum: Boolean,
                     programOpt: Option[AST.TopUnit.Program],
-                    tags: ISeq[Tag])
+                    tags: ISZ[Tag])
 
   def apply(isWorksheet: Boolean,
             isDiet: Boolean,
@@ -57,7 +57,7 @@ object ScalaMetaParser {
                             text: String): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
-    val hashSireum = "//#Sireum" == line
+    val hashSireum = line.contains("#Sireum")
     val dialect =
       if (isWorksheet) scala.meta.dialects.Scala212.copy(
         allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
@@ -69,7 +69,7 @@ object ScalaMetaParser {
         new ScalaMetaParser(text, allowSireumPackage, hashSireum,
           isWorksheet, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
-        Result(text, hashSireum, None(), ivector(error(fileUriOpt, pe.pos, pe.message)))
+        Result(text, hashSireum, None(), ISZ(error(fileUriOpt, pe.pos, pe.message)))
     }
   }
 
@@ -105,7 +105,7 @@ class ScalaMetaParser(text: String,
                       isWorksheet: Boolean,
                       isDiet: Boolean,
                       fileUriOpt: scala.Option[FileResourceUri]) {
-  var tags: IVector[Tag] = ivectorEmpty
+  var tags: ISZ[Tag] = ISZ()
 
   def error(pos: Position,
             message: String): Unit = {
@@ -183,33 +183,37 @@ class ScalaMetaParser(text: String,
 
   def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = {
     stat match {
+      case stat: Import => translateImport(enclosing, stat)
       case stat: Defn.Val => translateVal(enclosing, stat)
       case stat: Defn.Var => translateVar(enclosing, stat)
       case stat: Decl.Def => translateDef(enclosing, stat)
       case stat: Defn.Def => translateDef(enclosing, stat)
+      case stat: Defn.Object if stat.mods.exists({
+        case mod"@enum" => true
+        case _ => false
+      }) => translateEnum(enclosing, stat)
       case stat: Defn.Object => translateObject(enclosing, stat)
-      case stat: Defn.Trait if stat.mods.exists({
-        case mod"@datatype" => true
-        case _ => false
-      }) => translateDatatype(enclosing, stat)
-      case stat: Defn.Class if stat.mods.exists({
-        case mod"@datatype" => true
-        case _ => false
-      }) => translateDatatype(enclosing, stat)
-      case stat: Defn.Trait if stat.mods.exists({
-        case mod"@record" => true
-        case _ => false
-      }) => translateRecord(enclosing, stat)
-      case stat: Defn.Class if stat.mods.exists({
-        case mod"@record" => true
-        case _ => false
-      }) => translateRecord(enclosing, stat)
       case stat: Defn.Trait if stat.mods.exists({
         case mod"@sig" => true
         case _ => false
       }) => translateSig(enclosing, stat)
+      case stat: Defn.Trait if stat.mods.exists({
+        case mod"@datatype" => true
+        case _ => false
+      }) => translateDatatype(enclosing, stat)
+      case stat: Defn.Class if stat.mods.exists({
+        case mod"@datatype" => true
+        case _ => false
+      }) => translateDatatype(enclosing, stat)
+      case stat: Defn.Trait if stat.mods.exists({
+        case mod"@record" => true
+        case _ => false
+      }) => translateRecord(enclosing, stat)
+      case stat: Defn.Class if stat.mods.exists({
+        case mod"@record" => true
+        case _ => false
+      }) => translateRecord(enclosing, stat)
       case stat: Decl.Type => translateTypeAlias(enclosing, stat)
-      case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case stat: Term.Assign => rStmt // TODO
       case stat: Term.Block => translateBlock(enclosing, stat)
@@ -219,11 +223,34 @@ class ScalaMetaParser(text: String,
       case stat: Term.While => translateWhile(enclosing, stat)
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
-      case stat: Import => translateImport(enclosing, stat)
+      case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
     }
+  }
+
+  def translateImport(enclosing: Enclosing.Type,
+                      stat: Import): AST.Stmt = stat.importers match {
+    case Seq(Importer(ref: Term.Name, Seq(Importee.Wildcard()))) =>
+      AST.Stmt.RichImport(cid(ref))
+    case _ =>
+      var importers = ISZ[AST.Stmt.Import.Importer]()
+      for (importer <- stat.importers) {
+        val ref = packageRef2IS(importer.ref)
+        val name = AST.Name(ref)
+        var sels = ISZ[AST.Stmt.Import.Selector]()
+        for (importee <- importer.importees) importee match {
+          case importee"$finame => $tiname" =>
+            sels +:= AST.Stmt.Import.Selector(cid(finame), cid(tiname))
+          case importee"${iname: Name.Indeterminate}" =>
+            val id = cid(iname)
+            sels +:= AST.Stmt.Import.Selector(id, id)
+          case _ => errorNotSlang(importee.pos, s"Importee '${importee.syntax}' from ${importer.ref.syntax} is")
+        }
+        importers +:= AST.Stmt.Import.Importer(name, sels)
+      }
+      AST.Stmt.Import(importers)
   }
 
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
@@ -442,6 +469,10 @@ class ScalaMetaParser(text: String,
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for method definitions")
         AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None())
     }
+  }
+
+  def translateEnum(enclosing: Enclosing.Type, stat: Defn.Object): AST.Stmt = {
+    rStmt // TODO
   }
 
   def translateObject(enclosing: Enclosing.Type, stat: Defn.Object): AST.Stmt = {
@@ -794,11 +825,6 @@ class ScalaMetaParser(text: String,
     rStmt // TODO
   }
 
-  def translateImport(enclosing: Enclosing.Type,
-                      stat: Import): AST.Stmt = {
-    rStmt // TODO
-  }
-
   def translateCtorCall(cc: Ctor.Call): AST.Type = {
     def f(t: Term): ISZ[AST.Id] = t match {
       case ctor"${ctorname: Ctor.Name}" => ISZ(cid(ctorname))
@@ -968,6 +994,8 @@ class ScalaMetaParser(text: String,
   def cid(name: Type.Param.Name): AST.Id = cid(name.value, name.pos)
 
   def cid(name: Term.Param.Name): AST.Id = cid(name.value, name.pos)
+
+  def cid(name: Name.Indeterminate): AST.Id = cid(name.value, name.pos)
 
   def cid(id: String, pos: Position): AST.Id = {
     def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
