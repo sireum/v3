@@ -36,7 +36,7 @@ object ScalaMetaParser {
 
   object Enclosing extends Enumeration {
     type Type = Value
-    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Sig, Method, Block = Value
+    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Sig, RichClass, Method, Block = Value
   }
 
   case class Result(text: String,
@@ -256,11 +256,11 @@ class ScalaMetaParser(text: String,
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
     var hasError = false
     enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, methods, or code blocks")
-        else errorInSlang(stat.pos, "Val declarations can only appear inside objects, methods, or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, classes, methods, or code blocks")
+        else errorInSlang(stat.pos, "Val declarations can only appear inside objects, classes, methods, or code blocks")
     }
     val q"..$mods val ..$patsnel: ${tpeopt: scala.Option[Type]} = $expr" = stat
     var hasSpec = false
@@ -282,35 +282,42 @@ class ScalaMetaParser(text: String,
       hasError = true
       if (isWorksheet) errorInSlang(stat.pos, "Untyped val declarations can only appear at the top-level, inside methods, or code blocks")
       else errorInSlang(stat.pos, "Untyped val declarations can only appear inside methods or code blocks")
-    } else if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term]) {
+    } else if (patsnel.size != 1) {
       hasError = true
-      if (hasSpec)
-        errorInSlang(stat.pos, "@spec val declarations should have the form: '@spec val <id> : <type> = $'")
-      else
-        errorInSlang(stat.pos, "Val declarations should have the form: 'val <id> : <type> = <exp>'")
+      errorInSlang(stat.pos, "Cannot define multiple vals in a single statement")
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollar(expr)) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
-    } else if (hasSpec && !isDollar(expr)) {
+    } else if (hasSpec && (!isDollar(expr) || !patsnel.head.isInstanceOf[Pat.Var.Term])) {
       hasError = true
       errorInSlang(stat.pos, "@spec val declarations should have the form: '@spec val <id> : <type> = $'")
     }
-    if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
+    if (hasError) rStmt
     else if (hasSpec)
       AST.Stmt.SpecVar(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
-    else
-      AST.Stmt.Var(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
-        opt(tpeopt.map(translateType)), if (isDiet) None() else Some(translateExp(expr)))
+    else patsnel.head match {
+      case x: Pat.Var.Term =>
+        AST.Stmt.Var(isVal = true, cid(x),
+          opt(tpeopt.map(translateType)), if (isDiet) None() else Some(translateAssignExp(expr)))
+      case pattern =>
+        val pat = translatePattern(pattern)
+        pat match {
+          case _: AST.Pattern.Structure =>
+          case _ => error(pattern.pos, s"Unallowable val pattern: '${pattern.syntax}'")
+        }
+        AST.Stmt.VarPattern(isVal = true, pat,
+          opt(tpeopt.map(translateType)), if (isDiet) None() else Some(translateAssignExp(expr)))
+    }
   }
 
   def translateVar(enclosing: Enclosing.Type, stat: Defn.Var): AST.Stmt = {
     var hasError = false
     enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method | Enclosing.Block =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.RecordClass | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "Var declarations can only appear at the top-level, inside objects, methods, or code blocks")
-        else errorInSlang(stat.pos, "Var declarations can only appear inside objects, methods, or code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, classes, methods, or code blocks")
+        else errorInSlang(stat.pos, "Val declarations can only appear inside objects, @record classes, methods, or code blocks")
     }
     val q"..$mods var ..$patsnel: ${tpeopt: scala.Option[Type]} = ${expropt: scala.Option[Term]}" = stat
     var hasSpec = false
@@ -326,33 +333,42 @@ class ScalaMetaParser(text: String,
         error(mod.pos, "Only the @spec modifier is allowed for var declarations.")
     }
     val isDollarExpr = expropt.map(isDollar).getOrElse(false)
-    if (tpeopt.isEmpty && !(enclosing == Enclosing.Top || enclosing == Enclosing.Method || enclosing == Enclosing.Block)) {
+    if (tpeopt.isEmpty && !(enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
+      case _ => false
+    })) {
       hasError = true
       if (isWorksheet) errorInSlang(stat.pos, "Untyped var declarations can only appear at the top-level, inside methods, or code blocks")
       else errorInSlang(stat.pos, "Untyped var declarations can only appear inside methods or code blocks")
-    } else if (patsnel.size != 1 || !patsnel.head.isInstanceOf[Pat.Var.Term]) {
+    } else if (patsnel.size != 1) {
       hasError = true
-      if (hasSpec)
-        errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec var <id> : <type> = $'")
-      else
-        errorInSlang(stat.pos, "Var declarations should have the form: 'var <id> : <type> = <exp>'")
+      errorInSlang(stat.pos, "Cannot define multiple vars in a single statement")
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollarExpr) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
-    } else if (hasSpec && !isDollarExpr) {
+    } else if (hasSpec && (!isDollarExpr || !patsnel.head.isInstanceOf[Pat.Var.Term])) {
       hasError = true
-      errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec var <id> : <type> = $'")
-    } else if (expropt.isEmpty && enclosing != Enclosing.Method) {
+      errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec val <id> : <type> = $'")
+    } else if (expropt.isEmpty) {
       hasError = true
-      errorInSlang(stat.pos, "Uninitialized '_' var declarations are only allowed inside methods")
+      errorInSlang(stat.pos, "Uninitialized '_' var declarations are disallowed")
     }
-
-    if (hasError) AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
+    if (hasError) rStmt
     else if (hasSpec)
       AST.Stmt.SpecVar(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
-    else
-      AST.Stmt.Var(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]),
-        opt(tpeopt.map(translateType)), if (isDiet) None() else opt(expropt.map(translateExp)))
+    else patsnel.head match {
+      case x: Pat.Var.Term =>
+        AST.Stmt.Var(isVal = false, cid(x),
+          opt(tpeopt.map(translateType)), if (isDiet) None() else Some(translateAssignExp(expropt.get)))
+      case pattern =>
+        val pat = translatePattern(pattern)
+        pat match {
+          case _: AST.Pattern.Structure =>
+          case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
+        }
+        AST.Stmt.VarPattern(isVal = false, pat,
+          opt(tpeopt.map(translateType)), if (isDiet) None() else Some(translateAssignExp(expropt.get)))
+    }
   }
 
   def translateDef(enclosing: Enclosing.Type, stat: Decl.Def): AST.Stmt = {
@@ -936,6 +952,14 @@ class ScalaMetaParser(text: String,
       unitType
   }
 
+  def translateAssignExp(exp: Term): AST.AssignExp = {
+    rStmt // TODO
+  }
+
+  def translatePattern(pat: Pat): AST.Pattern = {
+    AST.Pattern.Wildcard() // TODO
+  }
+
   def translateExp(exp: Term): AST.Exp = {
     exp match {
       case exp: Term.Name => rExp // TODO
@@ -965,7 +989,7 @@ class ScalaMetaParser(text: String,
     }
   }
 
-  def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], ISZ[AST.Assign]) = {
+  def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], ISZ[AST.Stmt.Assign]) = {
     // TODO: parse defs
     (ISZ(), ISZ())
   }

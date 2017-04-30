@@ -159,11 +159,15 @@ class ScalaMetaParserTest extends SireumSpec {
 
       failing("object O { val x = 5 }", enclosing)
 
-      val form = "<id> : <type> = <exp>'"
+      val multiple = "Cannot define multiple"
 
-      failing("val x, y: Z = 5", form, isWorksheet = true)
+      failing("val x, y: Z = 5", multiple, isWorksheet = true)
 
-      failing("var x, y: Z = 5", form, isWorksheet = true)
+      failing("var x, y: Z = 5", multiple, isWorksheet = true)
+
+      failing("@spec val x, y: Z = $", multiple, isWorksheet = true)
+
+      failing("@spec var x, y: Z = $", multiple, isWorksheet = true)
 
       val specForm = "<id> : <type> = $'"
 
@@ -171,11 +175,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
       failing("@spec var x = 5", specForm, isWorksheet = true)
 
-      failing("@spec val x, y: Z = $", specForm, isWorksheet = true)
-
-      failing("@spec var x, y: Z = $", specForm, isWorksheet = true)
-
-      failing("var x: Z = _", "only allowed inside methods", isWorksheet = true)
+      failing("var x: Z = _", "Uninitialized", isWorksheet = true)
 
       failing("var x = _", "unbound placeholder parameter", isWorksheet = true)
 

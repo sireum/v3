@@ -35,12 +35,12 @@
                      |  <type-decl>
 
 <val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
-                     |  val <pattern> = <stmt-exp>
                      |  @spec val <ID> : <type> = $
+                     |  val <pattern> = <stmt-exp>
 
 <var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
-                     |  var <pattern> = <stmt-exp>
                      |  @spec var <ID> : <type> = $
+                     |  var <pattern> = <stmt-exp>
 
 <type>             ::=  <name> <type-args>?
                      |  ( <type> ⸨ , <type> ⸩+ )
@@ -108,7 +108,7 @@
 
 <assign-stmt>      ::=  <lhs> = <stmt-exp>
                      |  up ( <lhs> ) = <stmt-exp>
-                     |  tup ( <lhs> ⸨ , <lhs> ⸩+ ) = <stmt-exp>
+                     |  pat ( <pattern> ) = <stmt-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>

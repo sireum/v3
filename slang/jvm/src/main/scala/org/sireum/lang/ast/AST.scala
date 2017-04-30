@@ -40,6 +40,8 @@ object TopUnit {
 
 @datatype trait Stmt
 
+@sig sealed trait AssignExp
+
 object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer]) extends Stmt
@@ -57,7 +59,13 @@ object Stmt {
   @datatype class Var(isVal: B,
                       id: Id,
                       tpeOpt: Option[Type],
-                      initOpt: Option[Exp])
+                      initOpt: Option[AssignExp])
+    extends Stmt
+
+  @datatype class VarPattern(isVal: B,
+                             pattern: Pattern,
+                             tpeOpt: Option[Type],
+                             initOpt: Option[AssignExp])
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
@@ -109,13 +117,21 @@ object Stmt {
                             tpe: Type)
     extends Stmt
 
-  @datatype class Block(body: Body)
+  @datatype class Assign(lhs: Exp,
+                         rhs: AssignExp)
     extends Stmt
+
+  @datatype class AssignPattern(lhs: Pattern,
+                                rhs: AssignExp)
+    extends Stmt
+
+  @datatype class Block(body: Body)
+    extends Stmt with AssignExp
 
   @datatype class If(cond: Exp,
                      thenbody: Body,
                      elsebody: Body)
-    extends Stmt
+    extends Stmt with AssignExp
 
   @datatype class While(isDoWhile: B,
                         cond: Exp,
@@ -125,7 +141,7 @@ object Stmt {
     extends Stmt
 
   @datatype class Expr(exp: Exp)
-    extends Stmt
+    extends Stmt with AssignExp
 
 }
 
@@ -172,24 +188,13 @@ object Pattern {
   @datatype class Var(id: Id)
     extends Pattern
 
+  @datatype class Wildcard
+    extends Pattern
+
   @datatype class Structure(idOpt: Option[Id],
                             nameOpt: Option[Name],
                             patterns: ISZ[Pattern])
     extends Pattern
-
-}
-
-@datatype trait Assign
-
-object Assign {
-
-  @datatype class Expr(lhs: Exp,
-                       rhs: Exp)
-    extends Assign
-
-  @datatype class Pattern(nameOpt: Option[Name],
-                          patterns: ISZ[Pattern])
-    extends Assign
 
 }
 
