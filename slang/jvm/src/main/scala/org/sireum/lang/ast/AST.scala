@@ -95,12 +95,14 @@ object Stmt {
 
   @datatype class Object(isExt: B,
                          id: Id,
+                         parents: ISZ[Type],
                          stmts: ISZ[Stmt])
     extends Stmt
 
   @datatype class Sig(id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type],
+                      selfTypeOpt: Option[Type],
                       stmt: ISZ[Stmt])
     extends Stmt
 
@@ -113,7 +115,16 @@ object Stmt {
                                    stmt: ISZ[Stmt])
     extends Stmt
 
+  @datatype class Rich(isRoot: B,
+                       id: Id,
+                       typeParams: ISZ[TypeParam],
+                       params: ISZ[Param],
+                       parents: ISZ[Type],
+                       stmt: ISZ[Stmt])
+    extends Stmt
+
   @datatype class TypeAlias(id: Id,
+                            typeParams: ISZ[TypeParam],
                             tpe: Type)
     extends Stmt
 
@@ -222,8 +233,7 @@ object Exp {
 
 @datatype class MethodSig(id: Id,
                           typeParams: ISZ[TypeParam],
-                          emptyParams: B,
-                          params: ISZ[Param],
+                          paramsOpt: Option[ISZ[Param]],
                           returnType: Type)
 
 @datatype class Param(isPure: B,

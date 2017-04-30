@@ -236,7 +236,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
       failing("object A extends { val x: Z = 5 } with B", "early init")
 
-      failing("object A extends B(5)", "super constructor")
+      failing("object A extends B(5)", "Super constructor")
 
     }
 

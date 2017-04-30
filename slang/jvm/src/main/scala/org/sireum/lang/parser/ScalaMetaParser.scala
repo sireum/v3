@@ -36,7 +36,7 @@ object ScalaMetaParser {
 
   object Enclosing extends Enumeration {
     type Type = Value
-    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Sig, RichClass, Method, Block = Value
+    val Top, Package, Object, ExtObject, DatatypeTrait, DatatypeClass, RecordTrait, RecordClass, Sig, RichTrait, RichClass, Method, Block = Value
   }
 
   case class Result(text: String,
@@ -93,6 +93,11 @@ object ScalaMetaParser {
     case _ => false
   }
 
+  def hasSelfType(p: Term.Param): Boolean = {
+    val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = p
+    mods.nonEmpty || !paramname.isInstanceOf[Name.Anonymous] || atpeopt.nonEmpty || expropt.nonEmpty
+  }
+
   private[ScalaMetaParser] lazy val rExp = AST.Exp.Ident(AST.Id("$"))
   private[ScalaMetaParser] lazy val rStmt = AST.Stmt.Expr(rExp)
 }
@@ -111,8 +116,6 @@ class ScalaMetaParser(text: String,
             message: String): Unit = {
     tags :+= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
-
-  def iszEmpty[T]: ISZ[T] = ISZ()
 
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
 
@@ -188,31 +191,24 @@ class ScalaMetaParser(text: String,
       case stat: Defn.Var => translateVar(enclosing, stat)
       case stat: Decl.Def => translateDef(enclosing, stat)
       case stat: Defn.Def => translateDef(enclosing, stat)
-      case stat: Defn.Object if stat.mods.exists({
-        case mod"@enum" => true
-        case _ => false
-      }) => translateEnum(enclosing, stat)
       case stat: Defn.Object => translateObject(enclosing, stat)
-      case stat: Defn.Trait if stat.mods.exists({
-        case mod"@sig" => true
-        case _ => false
-      }) => translateSig(enclosing, stat)
-      case stat: Defn.Trait if stat.mods.exists({
-        case mod"@datatype" => true
-        case _ => false
-      }) => translateDatatype(enclosing, stat)
-      case stat: Defn.Class if stat.mods.exists({
-        case mod"@datatype" => true
-        case _ => false
-      }) => translateDatatype(enclosing, stat)
-      case stat: Defn.Trait if stat.mods.exists({
-        case mod"@record" => true
-        case _ => false
-      }) => translateRecord(enclosing, stat)
-      case stat: Defn.Class if stat.mods.exists({
-        case mod"@record" => true
-        case _ => false
-      }) => translateRecord(enclosing, stat)
+      case stat: Defn.Trait =>
+        for (mod <- stat.mods) mod match {
+          case mod"@sig" => return translateSig(enclosing, stat)
+          case mod"@datatype" => return translateDatatype(enclosing, stat)
+          case mod"@record" => return translateRecord(enclosing, stat)
+          case mod"@rich" => return translateRich(enclosing, stat)
+        }
+        errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
+        rStmt
+      case stat: Defn.Class =>
+        for (mod <- stat.mods) mod match {
+          case mod"@datatype" => return translateDatatype(enclosing, stat)
+          case mod"@record" => return translateRecord(enclosing, stat)
+          case mod"@rich" => return translateRich(enclosing, stat)
+        }
+        errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
+        rStmt
       case stat: Decl.Type => translateTypeAlias(enclosing, stat)
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case stat: Term.Assign => rStmt // TODO
@@ -373,8 +369,8 @@ class ScalaMetaParser(text: String,
 
   def translateDef(enclosing: Enclosing.Type, stat: Decl.Def): AST.Stmt = {
     enclosing match {
-      case Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.Sig =>
-      case _ => errorInSlang(stat.pos, "Method declarations can only appear inside @datatype, @record, or @sig traits")
+      case Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.Sig | Enclosing.RichTrait =>
+      case _ => errorInSlang(stat.pos, "Method declarations without a body can only appear inside traits")
     }
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = stat
     var hasError = false
@@ -397,8 +393,7 @@ class ScalaMetaParser(text: String,
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      paramss.isEmpty,
-      ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateDefParam): _*),
+      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       translateType(tpe))
     AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None())
   }
@@ -440,21 +435,20 @@ class ScalaMetaParser(text: String,
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      paramss.isEmpty,
-      ISZ(paramss.headOption.getOrElse(ivectorEmpty).map(translateDefParam): _*),
+      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       tpeopt.map(translateType).getOrElse(unitType))
     if (enclosing == Enclosing.ExtObject)
       exp match {
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseContract(l.pos, s))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty))
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()))
       }
     else if (isSpec)
       exp match {
@@ -476,19 +470,15 @@ class ScalaMetaParser(text: String,
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
-            (AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty),
+            (AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
         AST.Stmt.Method(isPure, sig, mc, bodyOpt)
       case _ =>
-        errorInSlang(exp.pos, "Only block '{ ... }' is allowed for method definitions")
-        AST.Stmt.Method(isPure, sig, AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty), None())
+        errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
+        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None())
     }
-  }
-
-  def translateEnum(enclosing: Enclosing.Type, stat: Defn.Object): AST.Stmt = {
-    rStmt // TODO
   }
 
   def translateObject(enclosing: Enclosing.Type, stat: Defn.Object): AST.Stmt = {
@@ -502,6 +492,7 @@ class ScalaMetaParser(text: String,
     }
     val q"..$mods object $name extends { ..$estats } with ..$ctorcalls { ..$stats }" = stat
     var hasExt = false
+    var hasEnum = false
     for (mod <- mods) mod match {
       case mod"@ext" =>
         if (hasExt) {
@@ -509,22 +500,75 @@ class ScalaMetaParser(text: String,
           error(mods.head.pos, "Redundant @ext.")
         }
         hasExt = true
+      case mod"@enum" =>
+        if (hasEnum) {
+          hasError = true
+          error(mod.pos, "Redundant @enum.")
+        }
+        hasEnum = true
       case _ =>
         hasError = true
         errorNotSlang(mods.head.pos, "Object modifiers other than @ext are")
     }
-    if (estats.nonEmpty) {
+    if (hasExt && (estats.nonEmpty || ctorcalls.nonEmpty)) {
+      hasError = true
+      error(name.pos, "Slang @ext objects have to be of the form '@ext object <id> { ... }'.")
+    } else if (hasEnum && (estats.nonEmpty || ctorcalls.nonEmpty)) {
+      error(stat.pos, "Slang @enum declarations should have the form: '@enum object <ID> { ... }'")
+    } else if (estats.nonEmpty) {
       hasError = true
       errorNotSlang(estats.head.pos, "Object early initializations are")
     }
-    if (ctorcalls.nonEmpty) {
-      hasError = true
-      errorNotSlang(ctorcalls.head.pos, "Object super constructor calls are")
-    }
-    if (!hasError) {
+    if (hasEnum) {
+      val elements: Seq[AST.Id] = (for (stat <- stats) yield stat match {
+        case Lit.Symbol(symbol) => scala.Some(cid(symbol.name.substring(1), stat.pos))
+        case _ =>
+          error(stat.pos, s"An @enum element should be a single quote immediately followed by <ID> (i.e., a symbol).")
+          scala.None
+      }).flatten
+
+      AST.Stmt.Enum(cid(name), ISZ(elements: _*))
+    } else if (!hasError) {
       val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
-      AST.Stmt.Object(hasExt, cid(name), ISZ(stats.map(tstat): _*))
-    } else AST.Stmt.Object(hasExt, cid(name), ISZ())
+      AST.Stmt.Object(
+        hasExt, cid(name),
+        ISZ(ctorcalls.map(translateCtorCall): _*),
+        ISZ(stats.map(tstat): _*))
+    } else AST.Stmt.Object(hasExt, cid(name), ISZ(), ISZ())
+  }
+
+  def translateSig(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+    enclosing match {
+      case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
+      case _ =>
+        if (isWorksheet) errorInSlang(stat.pos, "@sig trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@sig trait declarations can only appear at the package-level or inside objects")
+    }
+    val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (estats.nonEmpty)
+      error(tname.pos, "Slang @sig traits have to be of the form '@sig trait <id> ... { ... }'.")
+
+    val param"$_: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = param
+
+    if (!param.name.isInstanceOf[Name.Anonymous] || expropt.nonEmpty) {
+      errorNotSlang(tname.pos, s"Self type: ${syntax(param)} is")
+    }
+
+    var hasSealed = false
+    for (mod <- mods) mod match {
+      case mod"sealed" =>
+        if (hasSealed) {
+          error(mod.pos, "Redundant 'sealed'.")
+        }
+        hasSealed = true
+      case _ =>
+        error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @sig traits.")
+    }
+    AST.Stmt.Sig(cid(tname),
+      ISZ(tparams.map(translateTypeParam): _*),
+      ISZ(ctorcalls.map(translateCtorCall): _*),
+      opt(atpeopt.map(translateTypeArg)),
+      ISZ(stats.map(translateStat(Enclosing.Sig)): _*))
   }
 
   def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -535,7 +579,7 @@ class ScalaMetaParser(text: String,
         else errorInSlang(stat.pos, "@datatype trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (estats.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
+    if (estats.nonEmpty || hasSelfType(param))
       error(tname.pos, "Slang @datatype traits have to be of the form '@datatype trait <id> ... { ... }'.")
     var hasDatatype = false
     for (mod <- mods) mod match {
@@ -565,7 +609,7 @@ class ScalaMetaParser(text: String,
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
-      ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
+      ctorcalls.size > 1 || hasSelfType(param)) {
       error(tname.pos, "Slang @datatype classes have to be of the form '@datatype class <id> ... (...) ... { ... }'.")
     }
     var hasDatatype = false
@@ -596,7 +640,7 @@ class ScalaMetaParser(text: String,
         else errorInSlang(stat.pos, "@rcord trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (estats.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
+    if (estats.nonEmpty || hasSelfType(param))
       error(tname.pos, "Slang @record traits have to be of the form '@record trait <id> ... { ... }'.")
     var hasRecord = false
     for (mod <- mods) mod match {
@@ -626,7 +670,7 @@ class ScalaMetaParser(text: String,
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
-      ctorcalls.size > 1 || !param.name.isInstanceOf[Name.Anonymous]) {
+      ctorcalls.size > 1 || hasSelfType(param)) {
       error(tname.pos, "Slang @record classes have to be of the form '@record class <id>(...) { ... }'.")
     }
     var hasRecord = false
@@ -649,34 +693,70 @@ class ScalaMetaParser(text: String,
       ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
   }
 
-  def translateSig(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+  def translateRich(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
-        if (isWorksheet) errorInSlang(stat.pos, "@sig trait declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInSlang(stat.pos, "@sig trait declarations can only appear at the package-level or inside objects")
+        if (isWorksheet) errorInSlang(stat.pos, "@rich trait declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@rich trait declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (estats.nonEmpty || !param.name.isInstanceOf[Name.Anonymous])
-      error(tname.pos, "Slang @sig traits have to be of the form '@sig trait <id> ... { ... }'.")
-    var hasSealed = false
+    if (estats.nonEmpty || hasSelfType(param))
+      error(tname.pos, "Slang @rich traits have to be of the form '@rich trait <id> ... { ... }'.")
+    var hasRich = false
     for (mod <- mods) mod match {
-      case mod"sealed" =>
-        if (hasSealed) {
-          error(mod.pos, "Redundant 'sealed'.")
+      case mod"@rich" =>
+        if (hasRich) {
+          error(mod.pos, "Redundant @rich.")
         }
-        hasSealed = true
+        hasRich = true
       case _ =>
-        error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @sig traits.")
+        error(mod.pos, "No modifiers are allowed for Slang @rich traits.")
     }
-    AST.Stmt.Sig(cid(tname),
+    AST.Stmt.Rich(isRoot = true,
+      cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
+      ISZ(),
       ISZ(ctorcalls.map(translateCtorCall): _*),
-      ISZ(stats.map(translateStat(Enclosing.Sig)): _*))
+      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*))
+  }
+
+  def translateRich(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
+    enclosing match {
+      case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
+      case _ =>
+        if (isWorksheet) errorInSlang(stat.pos, "@rich class declarations can only appear at the top-level, package-level, or inside objects")
+        else errorInSlang(stat.pos, "@rich class declarations can only appear at package-level or inside objects")
+    }
+    val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
+      ctorcalls.size > 1 || hasSelfType(param)) {
+      error(tname.pos, "Slang @rich classes have to be of the form '@rich class <id> ... (...) ... { ... }'.")
+    }
+    var hasRich = false
+    for (mod <- mods) mod match {
+      case mod"@rich" =>
+        if (hasRich) {
+          error(mod.pos, "Redundant @rich.")
+        }
+        hasRich = true
+      case _ =>
+        error(mod.pos, "No modifiers are allowed for Slang @rich classes.")
+    }
+    AST.Stmt.Rich(isRoot = false,
+      cid(tname),
+      ISZ(tparams.map(translateTypeParam): _*),
+      ISZ(paramss.flatMap(_.map(translateParam)): _*),
+      ISZ(ctorcalls.map(translateCtorCall): _*),
+      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
   }
 
   def translateTypeAlias(enclosing: Enclosing.Type, stat: Decl.Type): AST.Stmt = {
-    rStmt // TODO
+    val q"..$mods type $tname[..$tparams] = $tpe" = stat
+    if (mods.nonEmpty) {
+      error(stat.pos, "Slang type definitions should be of the form: 'type <ID> ... = <type>'.")
+    }
+    AST.Stmt.TypeAlias(cid(tname), ISZ(tparams.map(translateTypeParam): _*), translateType(tpe))
   }
 
   def translateBlock(enclosing: Enclosing.Type, stat: Term.Block): AST.Stmt = {
@@ -847,6 +927,9 @@ class ScalaMetaParser(text: String,
       case ctor"$ref.$ctorname" => f(ref) :+ cid(ctorname)
       case q"${name: Term.Name}" => ISZ(cid(name))
       case q"$expr.$name" => f(expr) :+ cid(name)
+      case _ =>
+        errorNotSlang(t.pos, s"Super constructor call: '${syntax(t)}' is")
+        ISZ(AST.Id("?"))
     }
 
     cc match {
@@ -897,7 +980,7 @@ class ScalaMetaParser(text: String,
       AST.TypeParam(cid(tparamname), opt(tpeopt.map(translateType)))
   }
 
-  def translateDefParam(tp: Term.Param): AST.Param = {
+  def translateParam(tp: Term.Param): AST.Param = {
     val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = tp
     var hasPure = false
     for (mod <- mods) mod match {
@@ -996,7 +1079,7 @@ class ScalaMetaParser(text: String,
 
   def parseContract(pos: Position, text: String): AST.MethodContract = {
     // TODO: parse contract
-    AST.MethodContract(iszEmpty, iszEmpty, iszEmpty, iszEmpty, iszEmpty)
+    AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
   }
 
   def parseLStmt(enclosing: Enclosing.Type, pos: Position, text: String): AST.Stmt = {

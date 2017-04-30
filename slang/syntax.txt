@@ -42,6 +42,31 @@
                      |  @spec var <ID> : <type> = $
                      |  var <pattern> = <assign-exp>
 
+<def-decl>         ::=  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
+                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <def-body>
+                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = $
+                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <ldef-contract>
+                     |  @spec def <ID> <type-params>? <params>? : <type> = $
+                     |  @spec def <ID> <type-params>? <params>? : <type> = <ldef-contract>
+
+<enum-decl>        ::=  @enum object <ID> { <SYMBOL>* }
+
+<object-decl>      ::=  object <ID> <extends>? { <stmt>* }
+                     |  @ext object <ID> { <stmt>* }
+
+<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
+
+<datatype-decl>    ::=  @datatype trait <ID> <type-params>? <extends>? { <stmt>* }
+                     |  @datatype class <ID> <type-params>? <datatype-params>? <extends>? { <stmt>* }
+
+<record-decl>      ::=  @record trait <ID> <type-params>? <extends>? { <stmt>* }
+                     |  @record class <ID> <type-params>? <record-params>? <extends>? { <stmt>* }
+
+<rich-decl>        ::=  @rich trait <ID> <type-params> <extends>? { <stmt>* }
+                     |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
+
+<type-decl>        ::=  type <ID> <type-params>? = <type>
+
 <type>             ::=  <name> <type-args>?
                      |  ( <type> ⸨ , <type> ⸩+ )
                      |  <type> => <type>
@@ -58,14 +83,9 @@
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
                      |  ⸨ <ID> @ ⸩? ( <paterns> )
 
-<patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
+<type-params>      ::=  [ <type-param> ⸨ , <type-param> ⸩* ]
 
-<def-decl>         ::=  ⸨ @pure ⸩? def <ID> <params>? : <type> = <def-body>
-                     |  ⸨ @pure ⸩? def <ID> <params>? : <type> = $
-                     |  ⸨ @pure ⸩? def <ID> <params>? : <type> = <ldef-contract>
-                     |  ⸨ @pure ⸩? def <ID> <params>? : <type>
-                     |  @spec def <ID> <params>? : <type> = $
-                     |  @spec def <ID> <params>? : <type> = <ldef-contract>
+<type-param>       ::=  <ID> ⸨ <: type ⸩?
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 
@@ -73,24 +93,10 @@
 
 <def-body>         ::=  {
                           <ldef-contract>?
-                          <stmt>*                     
+                          <stmt>*
                         }
 
-<enum-decl>        ::=  @enum object <ID> { val <ID> ⸨ , <ID> ⸩* = Value }
-
-<object-decl>      ::=  object <ID> <extends>? { <stmt>* }
-                     |  @ext object <ID> { <stmt>* }
-                        
 <extends>          ::=  extends <type> ⸨ with <type> ⸩*
-
-<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
-
-<type-params>      ::=  [ <type-param> ⸨ , <type-param> ⸩* ]
-
-<type-param>       ::=  <ID> ⸨ <: type ⸩?
-
-<datatype-decl>    ::=  @datatype trait <ID> <type-params>? <extends>? { <stmt>* }
-                     |  @datatype class <ID> <type-params>? <datatype-params>? <extends>? { <stmt>* }
 
 <datatype-params>  ::=  ( ⸨ <datatype-param> ⸨ , <datatype-param> ⸩* ⸩? )
 
@@ -99,17 +105,9 @@
 <adt-param-mod>    ::=  @pure
                      |  @hidden
 
-<record-decl>      ::=  @record trait <ID> <type-params>? <extends>? { <stmt>* }
-                     |  @record class <ID> <type-params>? <record-params>? <extends>? { <stmt>* }
-
 <record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
 <record-param>     ::=  <adt-param-mod>* ⸨ var ⸩*  <ID> : <type>
-
-<rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
-                     |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
-
-<type-decl>        ::=  type <ID> <type-params>? = <type>
 
 <assign-stmt>      ::=  <lhs> = <assign-exp>
                      |  up ( <lhs> ) = <assign-exp>
