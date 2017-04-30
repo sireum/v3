@@ -34,19 +34,24 @@
                      |  <rich-decl>
                      |  <type-decl>
 
-<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <stmt-exp>
+<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <assign-exp>
                      |  @spec val <ID> : <type> = $
-                     |  val <pattern> = <stmt-exp>
+                     |  val <pattern> = <assign-exp>
 
-<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <stmt-exp>
+<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <assign-exp>
                      |  @spec var <ID> : <type> = $
-                     |  var <pattern> = <stmt-exp>
+                     |  var <pattern> = <assign-exp>
 
 <type>             ::=  <name> <type-args>?
                      |  ( <type> ⸨ , <type> ⸩+ )
                      |  <type> => <type>
 
 <type-args>        ::=  [ <type> ⸨ , <type> ⸩* ]
+
+<assign-exp>       ::=  <exp>
+                     |  <block-assign-exp>
+                     |  <if-assign-exp>
+                     |  <match-assign-exp>
 
 <pattern>          ::=  <ID>
                      |  _
@@ -106,9 +111,9 @@
 
 <type-decl>        ::=  type <ID> <type-params>? = <type>
 
-<assign-stmt>      ::=  <lhs> = <stmt-exp>
-                     |  up ( <lhs> ) = <stmt-exp>
-                     |  pat ( <pattern> ) = <stmt-exp>
+<assign-stmt>      ::=  <lhs> = <assign-exp>
+                     |  up ( <lhs> ) = <assign-exp>
+                     |  pat ( <pattern> ) = <assign-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>
@@ -123,7 +128,7 @@
 <if-stmt>          ::=  if ( <exp> ) { <stmt>* } ⸨ else { <stmt>* } ⸩?
                      |  if ( <exp> ) { <stmt>* } else <if-stmt>
 
-<match-stmt>       ::=  <exp> match { <match-case>* }
+<match-stmt>       ::=  <exp> match { <match-case>+ }
 
 <match-case>       ::=  case <lit> => <stmt>*
                      |  case <pattern> ⸨ if <exp> ⸩? => <stmt>*
@@ -162,17 +167,12 @@
                      |  assume(<exp>, <string-exp>)
                      |  l""" <l-proof> """
 
-<stmt-exp>         ::=  <exp>
-                     |  <block-stmt-exp>
-                     |  <if-stmt-exp>
-                     |  <match-stmt-exp>
+<block-assign-exp> ::=  { <stmt>* <exp> }
 
-<block-stmt-exp>   ::=  { <stmt>* <exp> }
+<if-assign-exp>    ::=  if ( <exp> ) <block-assign-exp> else <block-assign-exp>
+                     |  if ( <exp> ) <block-assign-exp> else <if-assign-exp>
 
-<if-stmt-exp>      ::=  if ( <exp> ) { <stmt>* <exp> } else { <stmt>* <exp> }
-                     |  if ( <exp> ) { <stmt>* <exp> } else <if-stmt-exp>
-
-<match-stmt>       ::=  <exp> match { ⸨ <match-case> <exp> ⸩* }
+<match-assign-exp> ::=  <exp> match { ⸨ <match-case> <exp> ⸩+ }
 
 <string-exp>       ::=  <STRING>
                      |  <STRING-INTERP>
