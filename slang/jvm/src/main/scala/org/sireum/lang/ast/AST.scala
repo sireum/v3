@@ -132,6 +132,10 @@ object Stmt {
                          rhs: AssignExp)
     extends Stmt
 
+  @datatype class AssignUp(lhs: Exp,
+                           rhs: AssignExp)
+    extends Stmt
+
   @datatype class AssignPattern(lhs: Pattern,
                                 rhs: AssignExp)
     extends Stmt
@@ -142,6 +146,10 @@ object Stmt {
   @datatype class If(cond: Exp,
                      thenbody: Body,
                      elsebody: Body)
+    extends Stmt with AssignExp
+
+  @datatype class Match(cond: Exp,
+                        cases: ISZ[Case])
     extends Stmt with AssignExp
 
   @datatype class While(isDoWhile: B,
@@ -156,6 +164,9 @@ object Stmt {
 
 }
 
+@datatype class Case(pattern: Pattern,
+                     condOpt: Option[Exp],
+                     body: Body)
 
 @datatype trait Type
 
@@ -174,32 +185,20 @@ object Type {
 
 }
 
-@datatype trait Case
-
-object Case {
-
-  @datatype class Typed(id: Id,
-                        tpe: Type)
-    extends Case
-
-  @datatype class Structure(idOpt: Option[Id],
-                            name: Name,
-                            patterns: ISZ[Pattern])
-    extends Case
-
-  @datatype class Wildcard()
-    extends Case
-
-}
-
 @datatype trait Pattern
 
 object Pattern {
 
-  @datatype class Var(id: Id)
+  @datatype class Literal(lit: Lit)
+    extends Pattern
+
+  @datatype class Variable(id: Id)
     extends Pattern
 
   @datatype class Wildcard
+    extends Pattern
+
+  @datatype class SeqWildcard
     extends Pattern
 
   @datatype class Structure(idOpt: Option[Id],
@@ -211,9 +210,85 @@ object Pattern {
 
 @datatype trait Exp
 
+@sig sealed trait Lit
+
 object Exp {
 
+  @datatype class LitB(value: B)
+    extends Exp with Lit
+
+  @datatype class LitZ(value: Z)
+    extends Exp with Lit
+
+  @datatype class LitZ8(value: Z8)
+    extends Exp with Lit
+
+  @datatype class LitZ16(value: Z16)
+    extends Exp with Lit
+
+  @datatype class LitZ32(value: Z32)
+    extends Exp with Lit
+
+  @datatype class LitZ64(value: Z64)
+    extends Exp with Lit
+
+  @datatype class LitN(value: N)
+    extends Exp with Lit
+
+  @datatype class LitN8(value: N8)
+    extends Exp with Lit
+
+  @datatype class LitN16(value: N16)
+    extends Exp with Lit
+
+  @datatype class LitN32(value: N32)
+    extends Exp with Lit
+
+  @datatype class LitN64(value: N64)
+    extends Exp with Lit
+
+  @datatype class LitS8(value: S8)
+    extends Exp with Lit
+
+  @datatype class LitS16(value: S16)
+    extends Exp with Lit
+
+  @datatype class LitS32(value: S32)
+    extends Exp with Lit
+
+  @datatype class LitS64(value: S64)
+    extends Exp with Lit
+
+  @datatype class LitU8(value: U8)
+    extends Exp with Lit
+
+  @datatype class LitU16(value: U16)
+    extends Exp with Lit
+
+  @datatype class LitU32(value: U32)
+    extends Exp with Lit
+
+  @datatype class LitU64(value: U64)
+    extends Exp with Lit
+
+  @datatype class LitF32(value: F32)
+    extends Exp with Lit
+
+  @datatype class LitF64(value: F64)
+    extends Exp with Lit
+
+  @datatype class LitR(value: R)
+    extends Exp with Lit
+
   @datatype class Ident(id: Id)
+    extends Exp
+
+  @datatype class Apply(exp: Exp,
+                        args: ISZ[Exp])
+    extends Exp
+
+  @datatype class ApplyNamed(exp: Exp,
+                             args: ISZ[(Id, Exp)])
     extends Exp
 
 }

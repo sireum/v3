@@ -9,12 +9,14 @@
 <stmt>             ::=  <import-stmt>
                      |  <decl-stmt>
                      |  <assign-stmt>
-                     |  <print-stmt>
+                     |  <block-stmt>
                      |  <if-stmt>
                      |  <match-stmt>
                      |  <while-stmt>
                      |  <for-stmt>
                      |  <return-stmt>
+                     |  <print-stmt>
+                     |  <exp-stmt>
                      |  <proof-stmt>
 
 <import-stmt>      ::=  import <name> ⸨ . { <import-sel> ⸨ , <import-sel> ⸩* } ⸩?
@@ -80,6 +82,7 @@
 
 <pattern>          ::=  <ID>
                      |  _
+                     |  _*
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
                      |  ⸨ <ID> @ ⸩? ( <paterns> )
 
@@ -117,12 +120,6 @@
                      |  <lhs> . <ID>
                      |  <lhs> ( <exp> )
 
-<print-stmt>       ::=  print ( <print-arg> ⸨ , <print-arg> ⸩* )
-                     |  println ( ⸨ <print-arg> ⸨ , <print-arg> ⸩* ⸩? )
-
-<print-arg>        ::=  <exp>
-                     |  <string-exp>
-
 <if-stmt>          ::=  if ( <exp> ) { <stmt>* } ⸨ else { <stmt>* } ⸩?
                      |  if ( <exp> ) { <stmt>* } else <if-stmt>
 
@@ -149,7 +146,7 @@
 
 <for-range>        ::=  <exp>
                      |  <exp> . indices
-                     |  <exp> . reverseIndices
+                     |  <exp> . indices . reverse
                      |  <exp> =-= <exp>
                      |  <exp> =-< <exp>
                      |  <exp> <-= <exp>
@@ -158,6 +155,12 @@
                      |  <exp> >-> <exp>
 
 <return-stmt>      ::=  return <exp>?
+
+<print-stmt>       ::=  print ( <print-arg> ⸨ , <print-arg> ⸩* )
+                     |  println ( ⸨ <print-arg> ⸨ , <print-arg> ⸩* ⸩? )
+
+<print-arg>        ::=  <exp>
+                     |  <string-exp>
 
 <proof-stmt>       ::=  assert(<exp>)
                      |  assert(<exp>, <string-exp>)
