@@ -14,7 +14,7 @@ RUN locale-gen en_US en_US.UTF-8 && \
                        libc6-dev libgmp-dev libsodium-dev libc6-dev-i386 libgmp-dev:i386 libsodium-dev:i386 nano && \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
-    git clone -b --recursive master https://github.com/sireum/v3.git sireum-v3 && \
+    git clone --recursive -b master https://github.com/sireum/v3.git sireum-v3 && \
     JAVA_OPTIONS="-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss2m -XX:+CMSClassUnloadingEnabled" && \
     $SIREUM_HOME/bin/sbt-launch.sh clean test:compile && \
     SIREUM_PARALLEL_BUILD=false && \
