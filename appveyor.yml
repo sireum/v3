@@ -18,12 +18,12 @@ environment:
   PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
-  - '%APPVEYOR_BUILD_FOLDER%\platform'
-  - '%APPVEYOR_BUILD_FOLDER%\apps'
-  - C:\Users\appveyor\.m2
-  - C:\Users\appveyor\.ivy2
-  - C:\Users\appveyor\.coursier
-  - C:\Users\appveyor\.sbt
+  - platform -> bin\prelude.sh
+  - apps -> bin\prelude.sh
+  - '%USERPROFILE%\.m2'
+  - '%USERPROFILE%\.ivy2'
+  - '%USERPROFILE%\.coursier'
+  - '%USERPROFILE%\.sbt'
 
 install:
   - bash -lc "pacman --noconfirm -S unzip"
@@ -31,6 +31,3 @@ install:
 
 build_script:
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile"
-
-test_script:
-  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"
