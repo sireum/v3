@@ -165,6 +165,7 @@ lazy val sireumSettings = Seq(
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
   javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
   scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
+  logBuffered in Test := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
   parallelExecution in Global := isParallelBuild,
@@ -257,6 +258,7 @@ lazy val runtimeJs = runtimeT._3
 
 lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimePI)
 lazy val preludeT = toSbtCrossProject(preludePI, Seq(
+  testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
