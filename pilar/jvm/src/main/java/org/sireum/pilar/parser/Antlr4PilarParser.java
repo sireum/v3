@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.6
+// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.7
 package org.sireum.pilar.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -1695,7 +1695,7 @@ public class Antlr4PilarParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3 \u014d\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3 \u014d\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\3\2\3\2\3\2\3\3\7\3/\n\3\f\3\16\3\62\13"+
@@ -1721,9 +1721,9 @@ public class Antlr4PilarParser extends Parser {
 		"\13\22\3\22\3\22\7\22\u0131\n\22\f\22\16\22\u0134\13\22\5\22\u0136\n\22"+
 		"\3\23\3\23\3\23\3\23\7\23\u013c\n\23\f\23\16\23\u013f\13\23\5\23\u0141"+
 		"\n\23\3\23\3\23\3\24\3\24\3\24\3\25\3\25\3\25\5\25\u014b\n\25\3\25\2\2"+
-		"\26\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(\2\2\u0164\2*\3\2\2\2"+
-		"\4\60\3\2\2\2\6=\3\2\2\2\b?\3\2\2\2\nH\3\2\2\2\f`\3\2\2\2\16g\3\2\2\2"+
-		"\20w\3\2\2\2\22\u0080\3\2\2\2\24\u009d\3\2\2\2\26\u00c9\3\2\2\2\30\u010b"+
+		"\26\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(\2\2\2\u0164\2*\3\2\2"+
+		"\2\4\60\3\2\2\2\6=\3\2\2\2\b?\3\2\2\2\nH\3\2\2\2\f`\3\2\2\2\16g\3\2\2"+
+		"\2\20w\3\2\2\2\22\u0080\3\2\2\2\24\u009d\3\2\2\2\26\u00c9\3\2\2\2\30\u010b"+
 		"\3\2\2\2\32\u010d\3\2\2\2\34\u0112\3\2\2\2\36\u0119\3\2\2\2 \u0120\3\2"+
 		"\2\2\"\u0135\3\2\2\2$\u0137\3\2\2\2&\u0144\3\2\2\2(\u0147\3\2\2\2*+\5"+
 		"\4\3\2+,\7\2\2\3,\3\3\2\2\2-/\5(\25\2.-\3\2\2\2/\62\3\2\2\2\60.\3\2\2"+

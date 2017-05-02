@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.6
+// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.7
 package org.sireum.pilar.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarLexer extends Lexer {
-	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -24,6 +24,10 @@ public class Antlr4PilarLexer extends Lexer {
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, T__25=26, LIT=27, ID=28, WS=29, ERROR_CHAR=30;
+	public static String[] channelNames = {
+		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
+	};
+
 	public static String[] modeNames = {
 		"DEFAULT_MODE"
 	};
@@ -95,13 +99,16 @@ public class Antlr4PilarLexer extends Lexer {
 	public String getSerializedATN() { return _serializedATN; }
 
 	@Override
+	public String[] getChannelNames() { return channelNames; }
+
+	@Override
 	public String[] getModeNames() { return modeNames; }
 
 	@Override
 	public ATN getATN() { return _ATN; }
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\2 \u00eb\b\1\4\2\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2 \u00eb\b\1\4\2\t"+
 		"\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -124,17 +131,17 @@ public class Antlr4PilarLexer extends Lexer {
 		"\63\33\65\34\67\359\36;\37= \3\2\13\16\2\13\f\16\17\"\"$%)+..==BBbb}}"+
 		"\177\177\u00ad\u00ad\3\2$$\3\2\u00bd\u00bd\6\2&&C\\aac|\7\2&&\62;C\\a"+
 		"ac|\n\2##\'(,-/\61>A``~~\u0080\u0080\16\2\13\f\16\17\"\"$%)+..<=BBbb}"+
-		"}\177\177\u00ad\u00ad\5\2\13\f\16\17bb\5\2\13\f\16\17\"\"\u00f7\2\3\3"+
-		"\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2\2"+
-		"\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31\3"+
-		"\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2\2\2\2#\3\2\2\2\2"+
-		"%\3\2\2\2\2\'\3\2\2\2\2)\3\2\2\2\2+\3\2\2\2\2-\3\2\2\2\2/\3\2\2\2\2\61"+
-		"\3\2\2\2\2\63\3\2\2\2\2\65\3\2\2\2\2\67\3\2\2\2\29\3\2\2\2\2;\3\2\2\2"+
-		"\2=\3\2\2\2\3?\3\2\2\2\5F\3\2\2\2\7J\3\2\2\2\tL\3\2\2\2\13P\3\2\2\2\r"+
-		"R\3\2\2\2\17T\3\2\2\2\21V\3\2\2\2\23X\3\2\2\2\25Z\3\2\2\2\27\\\3\2\2\2"+
-		"\31a\3\2\2\2\33d\3\2\2\2\35i\3\2\2\2\37p\3\2\2\2!w\3\2\2\2#{\3\2\2\2%"+
-		"~\3\2\2\2\'\u0083\3\2\2\2)\u0088\3\2\2\2+\u008f\3\2\2\2-\u0096\3\2\2\2"+
-		"/\u009e\3\2\2\2\61\u00a0\3\2\2\2\63\u00a5\3\2\2\2\65\u00aa\3\2\2\2\67"+
+		"}\177\177\u00ad\u00ad\5\2\13\f\16\17bb\5\2\13\f\16\17\"\"\2\u00f7\2\3"+
+		"\3\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2\2\2"+
+		"\2\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2\2\27\3\2\2\2\2\31"+
+		"\3\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2\2\2\2#\3\2\2\2"+
+		"\2%\3\2\2\2\2\'\3\2\2\2\2)\3\2\2\2\2+\3\2\2\2\2-\3\2\2\2\2/\3\2\2\2\2"+
+		"\61\3\2\2\2\2\63\3\2\2\2\2\65\3\2\2\2\2\67\3\2\2\2\29\3\2\2\2\2;\3\2\2"+
+		"\2\2=\3\2\2\2\3?\3\2\2\2\5F\3\2\2\2\7J\3\2\2\2\tL\3\2\2\2\13P\3\2\2\2"+
+		"\rR\3\2\2\2\17T\3\2\2\2\21V\3\2\2\2\23X\3\2\2\2\25Z\3\2\2\2\27\\\3\2\2"+
+		"\2\31a\3\2\2\2\33d\3\2\2\2\35i\3\2\2\2\37p\3\2\2\2!w\3\2\2\2#{\3\2\2\2"+
+		"%~\3\2\2\2\'\u0083\3\2\2\2)\u0088\3\2\2\2+\u008f\3\2\2\2-\u0096\3\2\2"+
+		"\2/\u009e\3\2\2\2\61\u00a0\3\2\2\2\63\u00a5\3\2\2\2\65\u00aa\3\2\2\2\67"+
 		"\u00c7\3\2\2\29\u00e0\3\2\2\2;\u00e3\3\2\2\2=\u00e9\3\2\2\2?@\7i\2\2@"+
 		"A\7n\2\2AB\7q\2\2BC\7d\2\2CD\7c\2\2DE\7n\2\2E\4\3\2\2\2FG\7x\2\2GH\7c"+
 		"\2\2HI\7t\2\2I\6\3\2\2\2JK\7=\2\2K\b\3\2\2\2LM\7f\2\2MN\7g\2\2NO\7h\2"+
