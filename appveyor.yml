@@ -4,6 +4,12 @@ image: Visual Studio 2017
 
 clone_folder: c:\sireum-v3
 
+clone_script:
+  - ps: git clone -q $("--branch=" + $Env:APPVEYOR_REPO_BRANCH) $("https://github.com/" + $Env:APPVEYOR_REPO_NAME + ".git") $Env:APPVEYOR_BUILD_FOLDER
+  - ps: if (!$Env:APPVEYOR_PULL_REQUEST_NUMBER) {$("git checkout -qf " + $Env:APPVEYOR_REPO_COMMIT)}
+  - ps: if ($Env:APPVEYOR_PULL_REQUEST_NUMBER) {git fetch -q origin +refs/pull/$($Env:APPVEYOR_PULL_REQUEST_NUMBER)/merge; git checkout -qf FETCH_HEAD}
+  - ps: git submodule update -q --init --recursive
+
 environment:
   matrix:
   - COMPILER: msys2
@@ -12,6 +18,7 @@ environment:
     MSYS2_DIR: msys64
     MSYSTEM: MINGW64
     BIT: 64
+  PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
   - '%APPVEYOR_BUILD_FOLDER%\platform'
@@ -21,11 +28,11 @@ cache:
   - '%USERPROFILE%\.coursier'
 
 install:
-  - set CI_TESTING=1
-  - '%APPVEYOR_BUILD_FOLDER%\resources\appveyor\install.bat'
+  - 'bash -lc "pacman --noconfirm -S unzip"'
+  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"'
 
 build_script:
-  - '%APPVEYOR_BUILD_FOLDER%\resources\appveyor\build.bat'
+  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile"'
 
 test_script:
-  - '%APPVEYOR_BUILD_FOLDER%\resources\appveyor\test.bat'
+  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"'
