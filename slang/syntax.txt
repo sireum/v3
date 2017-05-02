@@ -15,7 +15,6 @@
                      |  <while-stmt>
                      |  <for-stmt>
                      |  <return-stmt>
-                     |  <print-stmt>
                      |  <exp-stmt>
                      |  <proof-stmt>
 
@@ -137,12 +136,10 @@
                           <loop-contract>?
                         } while ( <exp> )
 
-<for-stmt>         ::=  for ( <for-gen> ) {
+<for-stmt>         ::=  for ( <ID> <- <for-range> ) {
                           <loop-contract>?
                           <stmt>*
                         }
-
-<for-gen>          ::=  <ID> <- <for-range>
 
 <for-range>        ::=  <exp>
                      |  <exp> . indices
@@ -152,17 +149,7 @@
 
 <return-stmt>      ::=  return <exp>?
 
-<print-stmt>       ::=  print ( <print-arg> ⸨ , <print-arg> ⸩* )
-                     |  println ( ⸨ <print-arg> ⸨ , <print-arg> ⸩* ⸩? )
-
-<print-arg>        ::=  <exp>
-                     |  <string-exp>
-
-<proof-stmt>       ::=  assert(<exp>)
-                     |  assert(<exp>, <string-exp>)
-                     |  assume(<exp>)
-                     |  assume(<exp>, <string-exp>)
-                     |  l""" <l-proof> """
+<proof-stmt>       ::=  l""" <l-proof> """
 
 <block-assign-exp> ::=  { <stmt>* <exp> }
 
@@ -171,11 +158,8 @@
 
 <match-assign-exp> ::=  <exp> match { ⸨ <match-case> <exp> ⸩+ }
 
-<string-exp>       ::=  <STRING>
-                     |  <STRING-INTERP>
-
 <exp>              ::=  <lit>
-                     |  <string-exp>
+                     |  <STRING-INTERP>
                      |  <name>
                      |  <exp> _
                      |  ( <exp> ⸨ , <exp> ⸩* )
@@ -210,6 +194,7 @@
                      |  f32"<FLOAT>"
                      |  f64"<FLOAT>"
                      |  r"<REAL>"
+                     |  <STRING>
 
 <args>             ::=  <type-args>? ( ⸨ <apply-arg> ⸨ , <apply-arg> ⸩* ⸩? )
 

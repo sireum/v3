@@ -171,6 +171,9 @@ object Stmt {
                       body: Body)
     extends Stmt
 
+  @datatype class Return(expOpt: Option[Exp])
+    extends Stmt
+
   @datatype class Expr(exp: Exp)
     extends Stmt with AssignExp
 

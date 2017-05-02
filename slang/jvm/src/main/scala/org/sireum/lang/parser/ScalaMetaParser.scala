@@ -218,6 +218,7 @@ class ScalaMetaParser(text: String,
       case stat: Term.While => translateWhile(enclosing, stat)
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
+      case stat: Term.Return => translateReturn(enclosing, stat)
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case _ =>
@@ -443,7 +444,7 @@ class ScalaMetaParser(text: String,
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             ISZ(), ISZ(), ISZ(), ISZ(), ISZ()))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil) =>
-          AST.Stmt.ExtMethod(isPure, sig, parseContract(l.pos, s))
+          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(l.pos, s))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
@@ -466,7 +467,7 @@ class ScalaMetaParser(text: String,
       case exp: Term.Block =>
         val (mc, bodyOpt) = exp.stats.headOption match {
           case scala.Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Nil)) =>
-            (parseContract(l.pos, s),
+            (parseMethodContract(l.pos, s),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
@@ -1125,7 +1126,7 @@ class ScalaMetaParser(text: String,
     def expArg(arg: Term.Arg): AST.Exp = arg match {
       case arg"${expr: Term}" => translateExp(expr)
       case _ =>
-        errorInSlang(arg.pos, s"Invalid for-statment enumerator argument: '${syntax(arg)}'")
+        errorInSlang(arg.pos, s"Invalid for-statement enumerator argument: '${syntax(arg)}'")
         rExp
     }
 
@@ -1169,6 +1170,14 @@ class ScalaMetaParser(text: String,
     rStmt
   }
 
+  def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
+    stmtCheck(enclosing, stat, "Return-statements")
+    stat.expr match {
+      case Lit.Unit(_) => AST.Stmt.Return(None())
+      case _ => AST.Stmt.Return(Some(translateExp(stat.expr)))
+    }
+  }
+
   def translateExp(exp: Term): AST.Exp = {
     exp match {
       case exp: Term.Name => rExp // TODO
@@ -1202,8 +1211,29 @@ class ScalaMetaParser(text: String,
     AST.Exp.LitB(true) // TODO
   }
 
-  def translateApply(fun: AST.Exp, args: Seq[Term.Arg ]): AST.Exp = {
-    rExp // TODO
+  def translateApply(fun: AST.Exp, args: Seq[Term.Arg]): AST.Exp = {
+    def expArg(arg: Term.Arg): AST.Exp = arg match {
+      case arg"${expr: Term}" => translateExp(expr)
+    }
+
+    def namedArg(arg: Term.Arg): (AST.Id, AST.Exp) = arg match {
+      case arg"${name: Term.Name} = $aexpr" => (cid(name), translateExp(aexpr))
+    }
+
+    var isNamed = false
+    var isPositional = false
+    for (arg <- args) arg match {
+      case _: Term.Arg.Repeated =>
+        errorInSlang(arg.pos, s"Repeated argument: '${syntax(arg)}'")
+        return rExp
+      case _: Term.Arg.Named => isNamed = true
+      case _ => isPositional = true
+    }
+    if (isNamed && isPositional) {
+      errorInSlang(args.head.pos, "Cannot mix positional and named arguments")
+      rExp
+    } else if (isNamed) AST.Exp.ApplyNamed(fun, ISZ(args.map(namedArg): _*))
+    else AST.Exp.Apply(fun, ISZ(args.map(expArg): _*))
   }
 
   def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], ISZ[AST.Stmt.Assign]) = {
@@ -1211,7 +1241,7 @@ class ScalaMetaParser(text: String,
     (ISZ(), ISZ())
   }
 
-  def parseContract(pos: Position, text: String): AST.MethodContract = {
+  def parseMethodContract(pos: Position, text: String): AST.MethodContract = {
     // TODO: parse contract
     AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
   }
@@ -1222,7 +1252,7 @@ class ScalaMetaParser(text: String,
   }
 
   def parseLoopContract(pos: Position, text: String): (ISZ[AST.Name], ISZ[AST.Exp]) = {
-    // TODO: parse while contract
+    // TODO: parse loop contract
     (ISZ(), ISZ())
   }
 
