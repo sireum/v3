@@ -95,7 +95,7 @@ final class ForwardProgramTestDefProvider(tf: TestFramework)
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = false,
-        timeout = 2000,
+        timeout = 5000,
         checkSatEnabled = true,
         bitWidth = 0,
         loopBound = 10,
