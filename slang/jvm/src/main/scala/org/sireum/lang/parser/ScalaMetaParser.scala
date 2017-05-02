@@ -953,35 +953,40 @@ class ScalaMetaParser(text: String,
     else AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), translateTypeArg(atpeopt.get))
   }
 
+  def stmtCheck(enclosing: Enclosing.Type, stat: Term, kind: String): Boolean = enclosing match {
+    case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
+    case _ =>
+      if (isWorksheet) errorInSlang(stat.pos, s"$kind can only appear at the top-level, inside methods, or code blocks")
+      else errorInSlang(stat.pos, s"$kind can only appear inside methods or code blocks")
+      false
+  }
+
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Assign): AST.Stmt = {
+    stmtCheck(enclosing, stat, "Assigments")
     AST.Stmt.Assign(translateExp(stat.lhs), translateAssignExp(stat.rhs))
   }
 
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Update): AST.Stmt = {
-    def expArg(arg: Term.Arg): scala.Option[AST.Exp] = arg match {
-      case arg"${expr: Term}" => scala.Some(translateExp(expr))
-      case _ => scala.None
+    def expArg(arg: Term.Arg): AST.Exp = arg match {
+      case arg"${expr: Term}" => translateExp(expr)
     }
 
-    def patArg(arg: Term.Arg): scala.Option[AST.Pattern] = arg match {
-      case arg"${expr: Term}" => scala.Some(translatePattern(expr))
-      case _ => scala.None
+    def patArg(arg: Term.Arg): AST.Pattern = arg match {
+      case arg"${expr: Term}" => translatePattern(expr)
+      case _ =>
+        error(arg.pos, "Slang non-tuple pat should be of the form: 'pat( <pattern> ) = ...'")
+        AST.Pattern.Wildcard()
     }
 
-    def patVar(arg: Term.Arg): scala.Option[AST.Pattern] = arg match {
-      case arg"${expr: Term.Name}" => scala.Some(AST.Pattern.Variable(cid(expr)))
-      case _ => scala.None
+    def patVar(arg: Term.Arg): AST.Pattern = arg match {
+      case arg"${expr: Term.Name}" => AST.Pattern.Variable(cid(expr))
     }
 
+    stmtCheck(enclosing, stat, "Assigments")
     stat.fun match {
       case Term.Name("up") =>
-        if (stat.argss.size == 1 && stat.argss.head.size == 1)
-          expArg(stat.argss.head.head) match {
-            case scala.Some(exp) => AST.Stmt.AssignUp(exp, translateAssignExp(stat.rhs))
-            case _ =>
-              error(stat.argss.head.head.pos, "Slang up should be of the form: 'up(...) = ...'")
-              rStmt
-          }
+        if (stat.argss.size == 1 && stat.argss.head.size == 1 && stat.argss.head.head.isInstanceOf[Term])
+          AST.Stmt.AssignUp(expArg(stat.argss.head.head), translateAssignExp(stat.rhs))
         else {
           error(stat.pos, "Slang up should be of the form: 'up(...) = ...'")
           rStmt
@@ -995,16 +1000,13 @@ class ScalaMetaParser(text: String,
               case _ => false
             })) {
               AST.Stmt.AssignPattern(AST.Pattern.Structure(None(), None(),
-                ISZ(args.flatMap(patVar): _*)), translateAssignExp(stat.rhs))
+                ISZ(args.map(patVar): _*)), translateAssignExp(stat.rhs))
             } else {
               error(stat.pos, "Slang tuple pat should be of the form: 'pat( <ID>, <ID>, ... ) = ...'")
               rStmt
             }
           } else {
-            patArg(args.head) match {
-              case scala.Some(lhs) => AST.Stmt.AssignPattern(lhs, translateAssignExp(stat.rhs))
-              case _ => rStmt
-            }
+            AST.Stmt.AssignPattern(patArg(args.head), translateAssignExp(stat.rhs))
           }
         } else {
           error(stat.pos, "Slang pat should be of the form: 'pat(...) = ...'")
@@ -1013,7 +1015,7 @@ class ScalaMetaParser(text: String,
       case _ =>
         var lhs = translateExp(stat.fun)
         for (args <- stat.argss) {
-          lhs = AST.Exp.Apply(lhs, ISZ(args.flatMap(expArg): _*))
+          lhs = translateApply(lhs, args)
         }
         AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs))
     }
@@ -1022,14 +1024,7 @@ class ScalaMetaParser(text: String,
   def translateIfStmt(enclosing: Enclosing.Type,
                       stat: Term.If,
                       balanced: Boolean): AST.Stmt.If = {
-    var hasError = false
-    enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-      case _ =>
-        hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "If-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInSlang(stat.pos, "If-statements can only appear inside methods or code blocks")
-    }
+    var hasError = stmtCheck(enclosing, stat, "If-statements")
     if (!stat.thenp.isInstanceOf[Term.Block]) {
       hasError = true
       errorInSlang(stat.thenp.pos, "If-then part should be a code block")
@@ -1060,18 +1055,20 @@ class ScalaMetaParser(text: String,
   }
 
   def translateMatch(enclosing: Enclosing.Type, stat: Term.Match): AST.Stmt.Match = {
-    AST.Stmt.Match(rExp, ISZ()) // TODO
+    stmtCheck(enclosing, stat, "Match-statements")
+    AST.Stmt.Match(translateExp(stat.expr),
+      ISZ(stat.cases.map(translateCase): _*))
+  }
+
+  def translateCase(stat: Case): AST.Case = {
+    AST.Case(translatePattern(stat.pat), opt(stat.cond.map(translateExp)), stat.body match {
+      case b: Term.Block => AST.Body(ISZ(b.stats.map(translateStat(Enclosing.Block)): _*))
+      case b => AST.Body(ISZ(translateStat(Enclosing.Block)(b)))
+    })
   }
 
   def translateWhile(enclosing: Enclosing.Type, stat: Term.While): AST.Stmt = {
-    var hasError = false
-    enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-      case _ =>
-        hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "While-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInSlang(stat.pos, "While-statements can only appear inside methods or code blocks")
-    }
+    var hasError = stmtCheck(enclosing, stat, "While-statements")
     var reads: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
     var stats: Seq[Stat] = Seq()
@@ -1093,19 +1090,12 @@ class ScalaMetaParser(text: String,
         errorInSlang(stat.body.pos, "While-loop body should be a code block")
     }
     if (hasError) rStmt else
-      AST.Stmt.While(isDoWhile = false, translateExp(stat.expr), reads, invariants,
+      AST.Stmt.While(translateExp(stat.expr), reads, invariants,
         AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
   }
 
   def translateDoWhile(enclosing: Enclosing.Type, stat: Term.Do): AST.Stmt = {
-    var hasError = false
-    enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-      case _ =>
-        hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "Do-While-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInSlang(stat.pos, "Do-While-statements can only appear inside methods or code blocks")
-    }
+    var hasError = stmtCheck(enclosing, stat, "Do-while-statements")
     var reads: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
     var stats: Seq[Stat] = Seq()
@@ -1127,27 +1117,27 @@ class ScalaMetaParser(text: String,
         errorInSlang(stat.body.pos, "Do-While-loop body should be a code block")
     }
     if (hasError) rStmt else
-      AST.Stmt.While(isDoWhile = true, translateExp(stat.expr), reads, invariants,
+      AST.Stmt.DoWhile(translateExp(stat.expr), reads, invariants,
         AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
   }
 
   def translateFor(enclosing: Enclosing.Type, stat: Term.For): AST.Stmt = {
-    var hasError = false
-    enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+    def expArg(arg: Term.Arg): AST.Exp = arg match {
+      case arg"${expr: Term}" => translateExp(expr)
       case _ =>
-        hasError = true
-        if (isWorksheet) errorInSlang(stat.pos, "For-statements can only appear at the top-level, inside methods, or code blocks")
-        else errorInSlang(stat.pos, "For-statements can only appear inside methods or code blocks")
+        errorInSlang(arg.pos, s"Invalid for-statment enumerator argument: '${syntax(arg)}'")
+        rExp
     }
-    var reads: ISZ[AST.Name] = ISZ()
+
+    var hasError = stmtCheck(enclosing, stat, "For-statements")
+    var modifies: ISZ[AST.Name] = ISZ()
     var invariants: ISZ[AST.Exp] = ISZ()
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats match {
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: String)), Seq()) :: rest =>
-          val (rs, is) = parseLoopContract(l.pos, s)
-          reads = rs
+          val (ms, is) = parseLoopContract(l.pos, s)
+          modifies = ms
           invariants = is
           stats = rest
         case (t: Term.Interpolate) :: rest =>
@@ -1162,20 +1152,21 @@ class ScalaMetaParser(text: String,
     }
     if (hasError) rStmt else stat.enums match {
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
-        expr match {
-          case q"$from =-= $to" =>
-          case q"$from =-< $to" =>
-          case q"$from <-= $to" =>
-          case q"$from <-< $to" =>
-          case q"$from >-= $to" =>
-          case q"$from >-> $to" =>
-          case q"$s.indices" =>
-          case q"$s.indices.reverse" =>
-          case _ =>
+        val range = expr match {
+          case q"$start until $end by $by" => AST.Range.Step(isInclusive = false, translateExp(start), expArg(end), Some(expArg(by)))
+          case q"$start to $end by $by" => AST.Range.Step(isInclusive = true, translateExp(start), expArg(end), Some(expArg(by)))
+          case q"$start until $end" => AST.Range.Step(isInclusive = false, translateExp(start), expArg(end), None())
+          case q"$start to $end" => AST.Range.Step(isInclusive = true, translateExp(start), expArg(end), None())
+          case q"$s.indices" => AST.Range.Indices(isReverse = false, translateExp(s))
+          case q"$s.indices.reverse" => AST.Range.Indices(isReverse = true, translateExp(s))
+          case _ => AST.Range.Expr(translateExp(expr))
         }
-      case _ =>
+        AST.Stmt.For(cid(id), range, modifies, invariants,
+          AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+      case Seq(enum) => errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(enum)}'")
+      case _ => errorInSlang(stat.pos, s"For-statements can only have one enumerator")
     }
-    rStmt // TODO
+    rStmt
   }
 
   def translateExp(exp: Term): AST.Exp = {
@@ -1209,6 +1200,10 @@ class ScalaMetaParser(text: String,
 
   def translateLit(lit: Lit): AST.Exp with AST.Lit = {
     AST.Exp.LitB(true) // TODO
+  }
+
+  def translateApply(fun: AST.Exp, args: Seq[Term.Arg ]): AST.Exp = {
+    rExp // TODO
   }
 
   def parseDefs(pos: Position, text: String): (ISZ[AST.SpecMethodDef], ISZ[AST.Stmt.Assign]) = {

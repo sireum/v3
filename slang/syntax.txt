@@ -80,7 +80,8 @@
                      |  <if-assign-exp>
                      |  <match-assign-exp>
 
-<pattern>          ::=  <ID>
+<pattern>          ::=  <lit>
+                     |  <ID>
                      |  _
                      |  _*
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
@@ -125,8 +126,7 @@
 
 <match-stmt>       ::=  <exp> match { <match-case>+ }
 
-<match-case>       ::=  case <lit> => <stmt>*
-                     |  case <pattern> ⸨ if <exp> ⸩? => <stmt>*
+<case>             ::=  case <pattern> ⸨ if <exp> ⸩? => <stmt>*
 
 <while-stmt>       ::=  while ( <exp> ) {
                           <loop-contract>?
@@ -147,12 +147,8 @@
 <for-range>        ::=  <exp>
                      |  <exp> . indices
                      |  <exp> . indices . reverse
-                     |  <exp> =-= <exp>
-                     |  <exp> =-< <exp>
-                     |  <exp> <-= <exp>
-                     |  <exp> <-< <exp>
-                     |  <exp> >-= <exp>
-                     |  <exp> >-> <exp>
+                     |  <exp> until <exp> ⸨ by <exp> ⸩?
+                     |  <exp> to <exp> ⸨ by <exp> ⸩?
 
 <return-stmt>      ::=  return <exp>?
 

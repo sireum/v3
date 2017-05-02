@@ -152,11 +152,23 @@ object Stmt {
                         cases: ISZ[Case])
     extends Stmt with AssignExp
 
-  @datatype class While(isDoWhile: B,
-                        cond: Exp,
+  @datatype class While(cond: Exp,
                         modifies: ISZ[Name],
                         invariants: ISZ[Exp],
                         body: Body)
+    extends Stmt
+
+  @datatype class DoWhile(cond: Exp,
+                          modifies: ISZ[Name],
+                          invariants: ISZ[Exp],
+                          body: Body)
+    extends Stmt
+
+  @datatype class For(id: Id,
+                      range: Range,
+                      modifies: ISZ[Name],
+                      invariants: ISZ[Exp],
+                      body: Body)
     extends Stmt
 
   @datatype class Expr(exp: Exp)
@@ -167,6 +179,18 @@ object Stmt {
 @datatype class Case(pattern: Pattern,
                      condOpt: Option[Exp],
                      body: Body)
+
+@datatype trait Range
+
+object Range {
+
+  @datatype class Expr(exp: Exp) extends Range
+
+  @datatype class Indices(isReverse: B, exp: Exp) extends Range
+
+  @datatype class Step(isInclusive: B, start: Exp, end: Exp, byOpt: Option[Exp]) extends Range
+
+}
 
 @datatype trait Type
 
