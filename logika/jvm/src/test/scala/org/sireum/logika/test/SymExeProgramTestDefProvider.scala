@@ -31,10 +31,15 @@ import org.sireum.logika.Checker
 import org.sireum.logika.message.{Check, CheckerKind, ProofFile}
 import org.sireum.test._
 import org.sireum.util._
-import org.sireum.util.jvm.FileUtil
+import org.sireum.util.jvm.{FileUtil, OsUtil, OsArch}
 
 final class SymExeProgramTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
+
+  val tmMult = OsUtil.detect match {
+    case OsArch.Win => 100
+    case _ => 1
+  }
 
   override def testDefs: ISeq[TestDef] =
     ((1 to 1).toVector.map { x =>
@@ -57,10 +62,10 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("symexe/pure-invoke", check("symexe/pure-invoke", 0, isSummarizing = true)) :+
       ConditionTest("symexe/pure-invoke2", check("symexe/pure-invoke2", 0, isSummarizing = true)) :+
       ConditionTest("usymexe/abs-top", check("symexe/abs-top", 8, isSummarizing = false)) :+
-      ConditionTest("usymexe/ffsS8-top", check("symexe/ffsS8-top", 8, isSummarizing = false)) :+
-      ConditionTest("usymexe/ffsU32-top", check("symexe/ffsU32-top", 8, isSummarizing = false)) :+
-      ConditionTest("usymexe/ffsS8-loop", check("symexe/ffsS8-loop", 8, isSummarizing = false)) :+
-      ConditionTest("usymexe/ffsU32-loop", check("symexe/ffsU32-loop", 8, isSummarizing = false)) :+
+      ConditionTest("usymexe/ffsS8-top", check("symexe/ffsS8-top", 8, isSummarizing = false, timeout = 5000 * tmMult)) :+
+      ConditionTest("usymexe/ffsU32-top", check("symexe/ffsU32-top", 8, isSummarizing = false, timeout = 5000 * tmMult)) :+
+      ConditionTest("usymexe/ffsS8-loop", check("symexe/ffsS8-loop", 8, isSummarizing = false, timeout = 5000 * tmMult)) :+
+      ConditionTest("usymexe/ffsU32-loop", check("symexe/ffsU32-loop", 8, isSummarizing = false, timeout = 5000 * tmMult)) :+
       ConditionTest("usymexe/ffsU32-loop-bug", check("symexe/ffsU32-loop-bug", 8, isSummarizing = false, hasError = true))
       ) ++
       (1 to 14).toVector.map { x =>
@@ -95,7 +100,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true)) :+
       ConditionTest("forward/square", check("forward/square", 0, isSummarizing = true))
 
-  def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false): Boolean = {
+  def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false, timeout: Int = 2000): Boolean = {
     var uri = s"example/$filename.logika"
     val r = try new InputStreamReader(getClass.getResourceAsStream(uri))
     catch {
@@ -130,7 +135,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
         proofs = ivector(ProofFile(Some(uri), text)),
         lastOnly = false,
         autoEnabled = true,
-        timeout = 5000,
+        timeout = timeout,
         checkSatEnabled = true,
         bitWidth = bitWidth,
         loopBound = 32,
