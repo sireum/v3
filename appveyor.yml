@@ -26,11 +26,11 @@ cache:
   - C:\Users\appveyor\.sbt
 
 install:
-  - 'bash -lc "pacman --noconfirm -S unzip"'
-  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"'
+  - bash -lc "pacman --noconfirm -S unzip"
+  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"
 
 build_script:
-  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile"'
+  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile"
 
 test_script:
-  - 'bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"'
+  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"
