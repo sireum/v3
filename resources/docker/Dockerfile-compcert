@@ -4,7 +4,8 @@ ENV SIREUM_HOME=/opt/sireum-v3 \
     JAVA_HOME=/opt/sireum-v3/platform/java \
     SCALA_HOME=/opt/sireum-v3/platform/scala \
     SBT_HOME=/opt/sireum-v3/platform/sbt \
-    PATH=/opt/sireum-v3:/opt/sireum-v3/platform/java/bin:/opt/sireum-v3/platform/sbt/bin:/opt/sireum-v3/platform/scala/bin:/opt/sireum-v3/apps/z3/bin:$PATH
+    NODE_HOME=/opt/sireum-v3/platform/node \
+    PATH=/opt/sireum-v3:/opt/sireum-v3/platform/java/bin:/opt/sireum-v3/platform/sbt/bin:/opt/sireum-v3/platform/scala/bin:/opt/sireum-v3/apps/z3/bin:/opt/sireum-v3/platform/node/bin:$PATH
 RUN locale-gen en_US en_US.UTF-8 && \
     dpkg-reconfigure locales && \
     dpkg --add-architecture i386 && \

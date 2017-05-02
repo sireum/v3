@@ -42,7 +42,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.0.0-4"
+val sireumScalacVersion = "3.0.0-5"
 
 val silencerVersion = "0.5"
 
@@ -136,11 +136,12 @@ lazy val sireumJs =
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  runtime, prelude, logikaJvm, slangJvm, java, cli, awas
+  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awas
 )
 
 lazy val subProjectsJs = Seq(
-  utilJs, testJs, pilarJs, logikaJs, slangJs
+  utilJs, testJs, pilarJs,
+  runtimeJs, preludeJs, logikaJs, slangJs
 )
 
 lazy val subProjectJvmReferences =
@@ -204,7 +205,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   parallelExecution in Test := false,
   relativeSourceMaps := true,
   scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
-  jsEnv := NodeJSEnv().value,
+  jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "com.lihaoyi" %%% "utest" % "0.4.5"
@@ -241,50 +242,47 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(runtime, prelude)
+).dependsOn(runtimeJvm, preludeJvm)
 lazy val logikaJs = logikaT._3
 
-lazy val slangPI = new ProjectInfo("slang", isCross = true, utilPI, testPI)
-lazy val slangT = toSbtCrossProject(slangPI)
-lazy val slangShared = slangT._1
-lazy val slangJvm = slangT._2.settings(
+lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
+lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
+  libraryDependencies ++= Seq(
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.spire-math" %%% "spire" % "0.13.0"),
+  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
+lazy val runtimeShared = runtimeT._1
+lazy val runtimeJvm = runtimeT._2
+lazy val runtimeJs = runtimeT._3
+
+lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimePI)
+lazy val preludeT = toSbtCrossProject(preludePI, Seq(
+  libraryDependencies ++= Seq(
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
+  ),
+  unmanagedResourceDirectories in Compile += file("runtime/prelude/shared/src/main/scala"),
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
+  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
+lazy val preludeShared = preludeT._1
+lazy val preludeJvm = preludeT._2
+lazy val preludeJs = preludeT._3
+
+lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI, utilPI, testPI)
+lazy val slangT = toSbtCrossProject(slangPI, Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  parallelExecution in Test := false,
-  unmanagedResourceDirectories in Compile ++= Seq(
-    slangT._2.base / "c-runtime" / "include",
-    slangT._2.base / "c-runtime" / "src",
-    slangT._2.base / "c-runtime" / "cmake"
-  )
-).dependsOn(runtime, prelude % "test->test;compile->compile")
+  parallelExecution in Test := true
+))
+lazy val slangShared = slangT._1
+lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
 
 // Jvm Projects
-
-lazy val runtimePI = new ProjectInfo("runtime/native", isCross = false)
-lazy val runtime = toSbtJvmProject(runtimePI, sireumSettings ++ Seq(
-  unmanagedSourceDirectories in Compile += baseDirectory.value / "src-mixed/main/scala",
-  libraryDependencies ++= Seq(
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.apfloat" % "apfloat" % "1.8.2",
-    "org.scala-lang" % "scala-reflect" % scalaVer,
-    "org.spire-math" %% "spire" % "0.13.0"),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
-
-lazy val preludePI = new ProjectInfo("runtime/api", isCross = false, runtimePI)
-lazy val prelude = toSbtJvmProject(preludePI, sireumSettings ++ Seq(
-  //testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
-  libraryDependencies ++= Seq(
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-  ),
-  unmanagedResourceDirectories in Compile += file("runtime/api/jvm/src/main/scala"),
-  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
 lazy val java = toSbtJvmProject(javaPI)
@@ -312,10 +310,10 @@ def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSe
     }: _*).
     settings(name := pi.name).disablePlugins(AssemblyPlugin)
 
-def toSbtCrossProject(pi: ProjectInfo): (Project, Project, Project) = {
+def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector()): (Project, Project, Project) = {
   val shared = Project(
     id = pi.id,
-    settings = sireumSharedSettings,
+    settings = sireumSharedSettings ++ settings,
     base = pi.baseDir / "shared").
     dependsOn(pi.dependencies.map { p =>
       ClasspathDependency(LocalProject(p.id), None)
@@ -325,24 +323,24 @@ def toSbtCrossProject(pi: ProjectInfo): (Project, Project, Project) = {
     jvmId = pi.id + "-jvm",
     jsId = pi.id + "-js",
     base = pi.baseDir,
-    crossType = CrossType.Full)
+    crossType = CrossType.Full).settings(name := pi.id)
   val jvm =
-    cp.jvm.settings(sireumJvmSettings).disablePlugins(AssemblyPlugin).
+    cp.jvm.settings(sireumJvmSettings ++ settings).disablePlugins(AssemblyPlugin).
       dependsOn(shared).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), None)
+        ClasspathDependency(LocalProject(p.id), Some("test->test;compile->compile"))
       }: _*).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-jvm"), None)
+        ClasspathDependency(LocalProject(p.id + "-jvm"), Some("test->test;compile->compile"))
       }: _*)
   val js =
-    cp.js.settings(sireumJsSettings).disablePlugins(AssemblyPlugin).
+    cp.js.settings(sireumJsSettings ++ settings).disablePlugins(AssemblyPlugin).
       dependsOn(shared).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), None)
+        ClasspathDependency(LocalProject(p.id), Some("test->test;compile->compile"))
       }: _*).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-js"), None)
+        ClasspathDependency(LocalProject(p.id + "-js"), Some("test->test;compile->compile"))
       }: _*).enablePlugins(ScalaJSPlugin)
   (shared, jvm, js)
 }
