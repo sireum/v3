@@ -1,6 +1,6 @@
 # Sireum: A Software Analysis Platform (v3)
 
-[![Run Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge?branch=master)](https://app.shippable.com/projects/569e46641895ca44747022a7) [![Build status](https://ci.appveyor.com/api/projects/status/qtkk5xjok78ah46x?svg=true)](https://ci.appveyor.com/project/robby-phd/v3)
+[![Shippable Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge?branch=master)](https://app.shippable.com/projects/569e46641895ca44747022a7) [![Travis CI Status](https://travis-ci.org/sireum/v3.svg?branch=master)](https://travis-ci.org/sireum/v3) [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/qtkk5xjok78ah46x?svg=true)](https://ci.appveyor.com/project/robby-phd/v3)
 
 
 [Simplified BSD License](license.md)
