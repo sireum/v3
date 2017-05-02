@@ -20,7 +20,6 @@ environment:
 cache:
   - platform -> bin\prelude.sh
   - apps -> bin\prelude.sh
-  - '%USERPROFILE%\.m2'
   - '%USERPROFILE%\.ivy2'
   - '%USERPROFILE%\.coursier'
   - '%USERPROFILE%\.sbt'
@@ -31,3 +30,6 @@ install:
 
 build_script:
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile"
+
+test_script:
+  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"
