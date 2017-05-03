@@ -136,7 +136,7 @@
                           <loop-contract>?
                         } while ( <exp> )
 
-<for-stmt>         ::=  for ( <ID> <- <for-range> ) {
+<for-stmt>         ::=  for ( <ID> <- <for-range> if <exp> ) {
                           <loop-contract>?
                           <stmt>*
                         }
@@ -162,38 +162,43 @@
                      |  <STRING-INTERP>
                      |  <name>
                      |  <exp> _
+                     |  <unary-op> <exp>
+                     |  <exp> <binary-op> <exp>
                      |  ( <exp> ⸨ , <exp> ⸩* )
                      |  <exp> . <ID> <args>?
                      |  <exp> <args>
-                     |  <unary-op> <exp>
-                     |  <exp> <binary-op> <exp>
                      |  if ( <exp> ) <exp> else <exp>
 
 <lit>              ::=  true
                      |  false
+                     |  <CHAR>
                      |  <INT>
-                     |  <FLOAT>
-                     |  z"<INT>"
-                     |  z8"<INT>"
-                     |  z16"<INT>"
-                     |  z32"<INT>"
-                     |  z64"<INT>"
-                     |  n"<INT>"
-                     |  n8"<INT>"
-                     |  n16"<INT>"
-                     |  n32"<INT>"
-                     |  n64"<INT>"
-                     |  s8"<INT>"
-                     |  s16"<INT>"
-                     |  s32"<INT>"
-                     |  s64"<INT>"
-                     |  u8"<INT>"
-                     |  u16"<INT>"
-                     |  u32"<INT>"
-                     |  u64"<INT>"
+                     |  <LONG>
+                     |  z"<NUM>"
+                     |  z8"<NUM>"
+                     |  z16"<NUM>"
+                     |  z32"<NUM>"
+                     |  z64"<NUM>"
+                     |  n"<NUM>"
+                     |  n8"<NUM>"
+                     |  n16"<NUM>"
+                     |  n32"<NUM>"
+                     |  n64"<NUM>"
+                     |  s8"<NUM>"
+                     |  s16"<NUM>"
+                     |  s32"<NUM>"
+                     |  s64"<NUM>"
+                     |  u8"<NUM>"
+                     |  u16"<NUM>"
+                     |  u32"<NUM>"
+                     |  u64"<NUM>"
                      |  f32"<FLOAT>"
-                     |  f64"<FLOAT>"
+                     |  f64"<DOUBLE>"
                      |  r"<REAL>"
+                     |  bb"<INT>" [ <type> ]
+                     |  bl"<INT>" [ <type> ]
+                     |  <FLOAT>
+                     |  <DOUBLE>
                      |  <STRING>
 
 <args>             ::=  <type-args>? ( ⸨ <apply-arg> ⸨ , <apply-arg> ⸩* ⸩? )

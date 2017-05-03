@@ -167,6 +167,7 @@ object Stmt {
 
   @datatype class For(id: Id,
                       range: Range,
+                      condOpt: Option[Exp],
                       modifies: ISZ[Name],
                       invariants: ISZ[Exp],
                       body: Body)
@@ -245,6 +246,9 @@ object Exp {
   @datatype class LitB(value: B)
     extends Exp with Lit
 
+  @datatype class LitC(value: C)
+    extends Exp with Lit
+
   @datatype class LitZ(value: Z)
     extends Exp with Lit
 
@@ -308,15 +312,83 @@ object Exp {
   @datatype class LitR(value: R)
     extends Exp with Lit
 
+  @datatype class LitBv(value: ISZ[B],
+                        tpe: Type)
+    extends Exp with Lit
+
+  @datatype class LitString(value: String)
+    extends Exp with Lit
+
+  @datatype class StringInterpolate(lits: ISZ[LitString],
+                                    args: ISZ[Exp])
+    extends Exp
+
+  @enum object UnaryOp {
+    'Not
+    'Plus
+    'Minus
+    'Complement
+  }
+
+  @datatype class Unary(op: UnaryOp.Type,
+                        exp: Exp)
+    extends Exp
+
+  @enum object BinaryOp {
+    'Add
+    'Sub
+    'Mul
+    'Div
+    'Rem
+    'Eq
+    'Ne
+    'Shl
+    'Shr
+    'Ushr
+    'Lt
+    'Le
+    'Gt
+    'Ge
+    'And
+    'Or
+    'Xor
+    'Imply
+  }
+
+  @datatype class Binary(left: Exp,
+                         op: BinaryOp.Type,
+                         right: Exp)
+    extends Exp
+
   @datatype class Ident(id: Id)
     extends Exp
 
-  @datatype class Apply(exp: Exp,
-                        args: ISZ[Exp])
+  @datatype class Eta(exp: Exp)
     extends Exp
 
-  @datatype class ApplyNamed(exp: Exp,
-                             args: ISZ[(Id, Exp)])
+  @datatype class Tuple(args: ISZ[Exp])
+    extends Exp
+
+  @datatype class Select(receiverOpt: Option[Exp],
+                         id: Id,
+                         targs: ISZ[Type])
+    extends Exp
+
+  @datatype class Invoke(receiverOpt: Option[Exp],
+                         id: Id,
+                         targs: ISZ[Type],
+                         args: ISZ[Exp])
+    extends Exp
+
+  @datatype class InvokeNamed(receiverOpt: Option[Exp],
+                         id: Id,
+                         targs: ISZ[Type],
+                         args: ISZ[(Id, Exp)])
+    extends Exp
+
+  @datatype class If(cond: Exp,
+                     thenExp: Exp,
+                     elseExp: Exp)
     extends Exp
 
 }
