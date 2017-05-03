@@ -14,11 +14,11 @@ package %packageName%
 %endif%
 object %name% {
   private type CSeq[T] = scala.collection.Seq[T]
-  private type M = Vector[(String, (CSeq[String], Int, Product) => Unit)]
+  private type M = Vector[(Predef.String, (CSeq[Predef.String], Int, Product) => Unit)]
 
   final val topCommand = "%topCommand%"
 
-  final def main(args: Array[String]): Unit = {
+  final def main(args: Array[Predef.String]): Unit = {
     new Cli(oPrintln, ePrintln).parseSireumOption(args, 0)
   }
 
@@ -27,18 +27,18 @@ object %name% {
       if (i < a.length) scala.Some(a(i)) else scala.None
   }
 
-  def oPrintln(line: String): Unit = {
+  def oPrintln(line: Predef.String): Unit = {
     Console.out.println(line)
     Console.out.flush()
   }
 
-  def ePrintln(line: String): Unit = {
+  def ePrintln(line: Predef.String): Unit = {
     Console.err.println(line)
     Console.err.flush()
   }
 }
 
-final class %name%(outPrintln: String => Unit, errPrintln: String => Unit) {
+final class %name%(outPrintln: Predef.String => Unit, errPrintln: Predef.String => Unit) {
 
   import %name%._
 
@@ -48,7 +48,7 @@ final class %name%(outPrintln: String => Unit, errPrintln: String => Unit) {
 
   %mainDef; separator="\n\n"%
 
-  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
+  private def select(args: CSeq[Predef.String], index: Int, m: M, o: Product): Unit = {
     val arg = args(index)
     m.indexWhere(_._1 == arg) match {
       case -1 =>
@@ -93,7 +93,7 @@ modeUsage(header, command, mode) ::= <<
 >>
 
 modeDef(className, packageName, modeUsage) ::= <<
-def parse%className%(args: CSeq[String],
+def parse%className%(args: CSeq[Predef.String],
                      index: Int,
                      o: Product = %packageName%.%className%()): Unit = {
 
@@ -118,7 +118,7 @@ mainUsage(header, command, arg, option) ::= <<
 >>
 
 mainDef(className, packageName, optionCase, handler, mainUsage, arg) ::= <<
-def parse%className%(args: CSeq[String],
+def parse%className%(args: CSeq[Predef.String],
                            index: Int,
                            o: Product = %packageName%.%className%()): Unit = {
   val option = o.asInstanceOf[%packageName%.%className%]

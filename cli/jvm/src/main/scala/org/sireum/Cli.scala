@@ -30,11 +30,11 @@ package org.sireum
 
 object Cli {
   private type CSeq[T] = scala.collection.Seq[T]
-  private type M = Vector[(String, (CSeq[String], Int, Product) => Unit)]
+  private type M = Vector[(Predef.String, (CSeq[Predef.String], Int, Product) => Unit)]
 
   final val topCommand = "sireum"
 
-  final def main(args: Array[String]): Unit = {
+  final def main(args: Array[Predef.String]): Unit = {
     new Cli(oPrintln, ePrintln).parseSireumOption(args, 0)
   }
 
@@ -43,18 +43,18 @@ object Cli {
       if (i < a.length) scala.Some(a(i)) else scala.None
   }
 
-  def oPrintln(line: String): Unit = {
+  def oPrintln(line: Predef.String): Unit = {
     Console.out.println(line)
     Console.out.flush()
   }
 
-  def ePrintln(line: String): Unit = {
+  def ePrintln(line: Predef.String): Unit = {
     Console.err.println(line)
     Console.err.flush()
   }
 }
 
-final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
+final class Cli(outPrintln: Predef.String => Unit, errPrintln: Predef.String => Unit) {
 
   import Cli._
 
@@ -72,7 +72,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     ("rewriter", parseRewriterGenOption)
   )
 
-  def parseSireumOption(args: CSeq[String],
+  def parseSireumOption(args: CSeq[Predef.String],
                        index: Int,
                        o: Product = org.sireum.option.SireumOption()): Unit = {
 
@@ -96,7 +96,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     select(args, index, modeSireumOptionMap, o)
   }
 
-  def parseUtilOption(args: CSeq[String],
+  def parseUtilOption(args: CSeq[Predef.String],
                        index: Int,
                        o: Product = org.sireum.option.UtilOption()): Unit = {
 
@@ -118,7 +118,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     select(args, index, modeUtilOptionMap, o)
   }
 
-  def parseUtilReflectOption(args: CSeq[String],
+  def parseUtilReflectOption(args: CSeq[Predef.String],
                        index: Int,
                        o: Product = org.sireum.option.UtilReflectOption()): Unit = {
 
@@ -141,7 +141,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     select(args, index, modeUtilReflectOptionMap, o)
   }
 
-  def parseUtilOptionOption(args: CSeq[String],
+  def parseUtilOptionOption(args: CSeq[Predef.String],
                              index: Int,
                              o: Product = org.sireum.option.UtilOptionOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.UtilOptionOption]
@@ -181,7 +181,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
-  def parseCliGenOption(args: CSeq[String],
+  def parseCliGenOption(args: CSeq[Predef.String],
                              index: Int,
                              o: Product = org.sireum.option.CliGenOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.CliGenOption]
@@ -261,7 +261,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
-  def parseJsonGenOption(args: CSeq[String],
+  def parseJsonGenOption(args: CSeq[Predef.String],
                              index: Int,
                              o: Product = org.sireum.option.JsonGenOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.JsonGenOption]
@@ -359,7 +359,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
-  def parseRewriterGenOption(args: CSeq[String],
+  def parseRewriterGenOption(args: CSeq[Predef.String],
                              index: Int,
                              o: Product = org.sireum.option.RewriterGenOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.RewriterGenOption]
@@ -448,7 +448,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
-  def parseLogikaOption(args: CSeq[String],
+  def parseLogikaOption(args: CSeq[Predef.String],
                              index: Int,
                              o: Product = org.sireum.option.LogikaOption()): Unit = {
     val option = o.asInstanceOf[org.sireum.option.LogikaOption]
@@ -578,7 +578,7 @@ final class Cli(outPrintln: String => Unit, errPrintln: String => Unit) {
     }
   }
 
-  private def select(args: CSeq[String], index: Int, m: M, o: Product): Unit = {
+  private def select(args: CSeq[Predef.String], index: Int, m: M, o: Product): Unit = {
     val arg = args(index)
     m.indexWhere(_._1 == arg) match {
       case -1 =>
