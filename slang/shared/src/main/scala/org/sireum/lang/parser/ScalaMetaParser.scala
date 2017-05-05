@@ -1093,12 +1093,16 @@ class ScalaMetaParser(text: Predef.String,
       case _ =>
         var lhs = translateExp(stat.fun)
         var prevPos = stat.fun.pos
-        for (args <- stat.argss) {
-          val pos = if (args.nonEmpty) {
-            prevPos = args.last.pos
-            args.head.pos
-          } else prevPos
-          lhs = translateApply(lhs, pos, args)
+        if(stat.argss.nonEmpty) {
+          for (args <- stat.argss) {
+            val pos = if (args.nonEmpty) {
+              prevPos = args.last.pos
+              args.head.pos
+            } else prevPos
+            lhs = translateApply(lhs, pos, args)
+          }
+        } else {
+          errorInSlang(stat.pos, s"Invalid update form: '${syntax(stat)}'")
         }
         AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs))
     }
@@ -1280,16 +1284,17 @@ class ScalaMetaParser(text: Predef.String,
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
-      case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty && aexprssnel.nonEmpty =>
+      case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
         translateInvoke(scala.Some(expr), name, tpes, aexprssnel)
-      case q"$expr.$name(...$aexprssnel)" if aexprssnel.nonEmpty =>
+      case q"$expr.$name(...$aexprssnel)" =>
         translateInvoke(scala.Some(expr), name, List(), aexprssnel)
+      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, name, tpes, aexprssnel)
       case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, name, List(), aexprssnel)
       case q"$expr.$name[..$tpes]" if tpes.nonEmpty => translateSelect(expr, name, tpes)
       case q"$expr.$name" => translateSelect(expr, name, List())
       case exp: Term.If => translateIfExp(exp)
       case _ =>
-        errorNotSlang(exp.pos, s"Expresion '${syntax(exp)}' is")
+        errorNotSlang(exp.pos, s"Expresion '${exp.structure}' is")
         rExp
     }
   }
@@ -1462,7 +1467,7 @@ class ScalaMetaParser(text: Predef.String,
 
   def translateInvoke(receiverOpt: scala.Option[Term], name: Term.Name,
                       tpes: Seq[Type], argss: Seq[Seq[Term.Arg]]): AST.Exp = {
-    var r: AST.Exp = translateArgs(argss.head) match {
+    var r: AST.Exp = translateArgss(argss) match {
       case Left(args) => AST.Exp.InvokeNamed(opt(receiverOpt.map(translateExp)), cid(name),
         ISZ(tpes.map(translateType): _*), args)
       case Right(args) => AST.Exp.Invoke(opt(receiverOpt.map(translateExp)), cid(name),
@@ -1501,6 +1506,12 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasError) rExp
     else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep))
+  }
+
+  def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
+    if (argss.isEmpty) return Right(ISZ())
+    val Seq(args) = argss
+    translateArgs(args)
   }
 
   def translateArgs(args: Seq[Term.Arg]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
@@ -1594,12 +1605,12 @@ class ScalaMetaParser(text: Predef.String,
 
   def syntax(t: Tree, max: Int = 20): Predef.String = {
     val text = t.syntax
-    (if (text.length < max) text else text.substring(0, max)).map {
+    (if (text.length < max) text else text.substring(0, max) + "...").map {
       case '\r' => ' '
       case '\t' => ' '
       case '\n' => ' '
       case c => c
-    } + "..."
+    }
   }
 
   def opt[T](opt: scala.Option[T]): Option[T] = opt match {

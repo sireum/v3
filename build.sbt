@@ -276,8 +276,8 @@ lazy val slangT = toSbtCrossProject(slangPI, Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
+  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := true
 ))
 lazy val slangShared = slangT._1
@@ -298,6 +298,7 @@ lazy val awas = toSbtJvmProject(awasPI)
 // Js Projects
 
 //
+val depOpt = Some("test->test;compile->compile;test->compile")
 
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(
@@ -306,9 +307,9 @@ def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSe
     base = pi.baseDir / "jvm").
     dependsOn(pi.dependencies.flatMap { p =>
       if (p.isCross)
-        Seq(ClasspathDependency(LocalProject(p.id), None),
-          ClasspathDependency(LocalProject(p.id + "-jvm"), None))
-      else Seq(ClasspathDependency(LocalProject(p.id), None))
+        Seq(ClasspathDependency(LocalProject(p.id), depOpt),
+          ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
+      else Seq(ClasspathDependency(LocalProject(p.id), depOpt))
     }: _*).
     settings(name := pi.name).disablePlugins(AssemblyPlugin)
 
@@ -318,7 +319,7 @@ def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector())
     settings = sireumSharedSettings ++ settings,
     base = pi.baseDir / "shared").
     dependsOn(pi.dependencies.map { p =>
-      ClasspathDependency(LocalProject(p.id), None)
+      ClasspathDependency(LocalProject(p.id), depOpt)
     }: _*).
     settings(name := pi.name).disablePlugins(AssemblyPlugin)
   val cp = CrossProject(
@@ -328,21 +329,21 @@ def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector())
     crossType = CrossType.Full).settings(name := pi.id)
   val jvm =
     cp.jvm.settings(sireumJvmSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared).
+      dependsOn(shared % depOpt.get).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), Some("test->test;compile->compile"))
+        ClasspathDependency(LocalProject(p.id), depOpt)
       }: _*).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-jvm"), Some("test->test;compile->compile"))
+        ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
       }: _*)
   val js =
     cp.js.settings(sireumJsSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared).
+      dependsOn(shared % depOpt.get).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), Some("test->test;compile->compile"))
+        ClasspathDependency(LocalProject(p.id), depOpt)
       }: _*).
       dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-js"), Some("test->test;compile->compile"))
+        ClasspathDependency(LocalProject(p.id + "-js"), depOpt)
       }: _*).enablePlugins(ScalaJSPlugin)
   (shared, jvm, js)
 }

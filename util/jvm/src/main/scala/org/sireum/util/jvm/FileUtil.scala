@@ -75,10 +75,7 @@ object FileUtil {
     sb.toString
   }
 
-  def readFile(fileUri: FileResourceUri): (String, FileResourceUri) = {
-    val uri = new URI(fileUri)
-    val file = new File(uri)
-
+  def readFile(file: File): (String, FileResourceUri) = {
     assert(file.exists)
 
     val size = file.length
@@ -86,10 +83,13 @@ object FileUtil {
     assert(size < Int.MaxValue)
 
     val buffer = new Array[Byte](size.toInt)
-    val stream = uri.toURL.openStream
+    val stream = file.toURI.toURL.openStream
     stream.read(buffer)
     (new String(buffer), file.getAbsoluteFile.toURI.toASCIIString)
   }
+
+  def readFile(fileUri: FileResourceUri): (String, FileResourceUri) =
+    readFile(new File(new URI(fileUri)))
 
   def readFileLines(fileUri: FileResourceUri): (ISeq[String], FileResourceUri) = {
     val uri = new URI(fileUri)
