@@ -50,7 +50,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("symexe/max", check("symexe/max", 0, isSummarizing = true)) :+
       ConditionTest("symexe/abs", check("symexe/abs", 8, isSummarizing = true)) :+
       ConditionTest("symexe/abs-top", check("symexe/abs-top", 8, isSummarizing = true)) :+
-      ConditionTest("symexe/prims", check("symexe/prims", 0, isSummarizing = true)) :+
+      ConditionTest("symexe/prims", check("symexe/prims", 0, isSummarizing = true, timeout = 8000 * tmMult)) :+
       ConditionTest("symexe/seqs", check("symexe/seqs", 0, isSummarizing = true)) :+
       ConditionTest("symexe/ffsS8", check("symexe/ffsS8", 0, isSummarizing = true)) :+
       ConditionTest("symexe/ffsS8-top", check("symexe/ffsS8-top", 0, isSummarizing = true)) :+
