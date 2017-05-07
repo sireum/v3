@@ -1,4 +1,5 @@
 @import scalatags.Text.tags2._
+@import org.sireum.web.Playground._
 
 @def button(buttonId: String, icon: String, clsAttrs: Seq[String], iconAttrs: Seq[String]): Frag = {
   a(id := buttonId, cls := s"""button ${clsAttrs.mkString(" ")}""", border := "none",
@@ -40,15 +41,15 @@
 
     @div(cls := "nav-center")
       @div(cls := "nav-item")
-        @smallTopButton("add", "fa fa-plus")
-      @div(cls := "nav-item")
-        @p(cls := "control")
+        @div(cls := "field grouped")
+          @smallTopButton("add", "fa fa-plus")
           @span(cls := "select")
             @select(id := "filename")
+              @option(selected := true)
+                @filename("Untitled")
               @option
-                Untitled @raw("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-      @div(cls := "nav-item")
-        @smallTopButton("add", "fa fa-minus")
+                @filename("Untitled2")
+          @smallTopButton("add", "fa fa-minus")
 
     @div(cls :="nav-right nav-menu is-active")
       @div(cls := "nav-item")

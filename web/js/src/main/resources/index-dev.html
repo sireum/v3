@@ -11,115 +11,11 @@
     <script type="text/javascript" src="min/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="../web-jsdeps.js">/</script>
     <script type="text/javascript" src="../web-fastopt.js"></script>
-    <script type="text/javascript">
-    var slangId = "slang";
-    var slangModelText = `return {
-      keywords: [
-        'case', 'class', 'def', 'do', 'else', 'extends', 'false',
-        'for', 'if', 'import', 'match', 'object',
-        'package', 'return', 'sealed', 'this', 'trait',
-        'true', 'type', 'val', 'var', 'while', 'with', 'yield',
-        'T', 'F'
-      ],
-
-      typeKeywords: [
-        'B',
-        'Z', 'Z8', 'Z16', 'Z32', 'Z64',
-        'N', 'N8', 'N16', 'N32', 'N64',
-        'S8', 'S16', 'S32', 'S64',
-        'U8', 'U16', 'U32', 'U64',
-        'F32', 'F64', 'R',
-        'IS', 'MS',
-        'MSZ', 'MSZ8', 'MSZ16', 'MSZ32', 'MSZ64',
-        'MSN', 'MSN8', 'MSN16', 'MSN32', 'MSN64',
-        'MSS8', 'MSS16', 'MSS32', 'MSS64',
-        'MSU8', 'MSU16', 'MSU32', 'MSU64',
-        'ISZ', 'ISZ8', 'ISZ16', 'ISZ32', 'ISZ64',
-        'ISN', 'ISN8', 'ISN16', 'ISN32', 'ISN64',
-        'ISS8', 'ISS16', 'ISS32', 'ISS64',
-        'ISU8', 'ISU16', 'ISU32', 'ISU64',
-        'Unit'
-      ],
-
-      operators: [
-        '=', '>', '<', '!', '~', ':',
-        '==', '<=', '>=', '!=',
-        '+', '-', '*', '/', '&', '|', '|^', '%', '<<',
-        '>>', '>>>'
-      ],
-
-      symbols:  /[=><!~?:&|+\\-*\\/\\^%]+/,
-
-      escapes: /\\\\(?:[abfnrtv\\\\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
-
-      tokenizer: {
-        root: [
-          // identifiers and keywords
-          [/[a-z_$][\\w$]*/, { cases: { '@typeKeywords': 'keyword',
-                                       '@keywords': 'keyword',
-                                       '@default': 'identifier' } }],
-
-          [/[A-Z][\\w\\$]*/, 'type.identifier' ],  // to show class names nicely
-
-          // whitespace
-          { include: '@whitespace' },
-
-          // delimiters and operators
-          [/[{}()\\[\\]]/, '@brackets'],
-          [/@symbols/, { cases: { '@operators': 'operator',
-                                  '@default'  : '' } } ],
-
-          // @ annotations.
-          [/@\\s*[a-zA-Z_\\$][\\w\\$]*/, { token: 'annotation' }],
-
-          // numbers
-          [/\\d*\\.\\d+([eE][\\-+]?\\d+)?/, 'number.float'],
-          [/0[xX][0-9a-fA-F]+/, 'number.hex'],
-          [/\\d+/, 'number'],
-
-          // delimiter: after number because of .\\d floats
-          [/[;,.]/, 'delimiter'],
-
-          // strings
-          [/\"([^\"\\\\]|\\\\.)*$/, 'string.invalid' ],  // non-teminated string
-          [/\"/,  { token: 'string.quote', bracket: '@open', next: '@string' } ],
-
-          // characters
-          [/'[^\\\\']'/, 'string'],
-          [/(')(@escapes)(')/, ['string','string.escape','string']],
-          [/'/, 'string.invalid']
-        ],
-
-        comment: [
-          [/[^\\/*]+/, 'comment' ],
-          [/\\/\\*/,    'comment', '@push' ],    // nested comment
-          [\"\\\\*/\",    'comment', '@pop'  ],
-          [/[\\/*]/,   'comment' ]
-        ],
-
-        string: [
-          [/[^\\\\\"]+/,  'string'],
-          [/@escapes/, 'string.escape'],
-          [/\\\\./,      'string.escape.invalid'],
-          [/\"/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ]
-        ],
-
-        whitespace: [
-          [/[ \\t\\r\\n]+/, 'white'],
-          [/\\/\\*/,       'comment', '@comment' ],
-          [/\\/\\/.*$/,    'comment'],
-        ],
-      },
-    };`;
-    </script>
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
 <script>
 	require.config({ paths: { 'vs': 'min/vs' }});
 	require(['vs/editor/editor.main'], function() {
-	  monaco.languages.register({ id: slangId });
-	  var langModel = monaco.editor.createModel(slangModelText, 'javascript');
-      monaco.languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"));
       org.sireum.web.Main.main();
 	});
 </script>
