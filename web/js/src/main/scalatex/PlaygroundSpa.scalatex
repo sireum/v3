@@ -35,9 +35,9 @@
       @div(cls := "nav-item")
         @div(cls := "container is-fluid")
           @div(cls :="field is-grouped")
-            @topButton("run", "fa fa-play")
-            @topButton("veriry", "fa fa-check")
-            @topButton("options", "fa fa-cog")
+            @smallTopButton("run", "fa fa-play")
+            @smallTopButton("verify", "fa fa-check")
+            @smallTopButton("options", "fa fa-cog")
 
     @div(cls := "nav-center")
       @div(cls := "nav-item")
