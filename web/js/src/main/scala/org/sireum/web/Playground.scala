@@ -62,7 +62,7 @@ object Playground {
     val editor = monaco.editor.Editor.create($[Div]("#editor"),
       jsObj[IEditorConstructionOptions](
         value = "",
-        language = "slang",
+        language = slangId,
         fontSize = 16
       ))
 
