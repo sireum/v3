@@ -297,11 +297,10 @@ lazy val webT = toSbtCrossProject(webPI, Seq(
 lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(
-  scalaJSUseMainModuleInitializer := true,
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
-  jsDependencies += "org.webjars" % "jquery" % "2.1.4" / "2.1.4/jquery.js",
   libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
     "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
     "com.lihaoyi" %%% "scalatags" % "0.6.5"
   )

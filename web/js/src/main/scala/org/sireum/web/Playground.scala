@@ -25,13 +25,43 @@
 
 package org.sireum.web
 
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import monaco.editor.IEditorConstructionOptions
+import org.scalajs.dom
+import org.scalajs.dom.raw.{Event, UIEvent}
+import org.scalajs.jquery.jQuery
 
+import org.sireum.web.util.JsObject
 
-@JSExportTopLevel("org.sireum.web.Main")
-object Main {
-  @JSExport
-  def main(): Unit = {
-    Playground()
+import scala.scalajs.js
+import scalatex.PlaygroundSpa
+
+object Playground {
+
+  def updateView(editor: monaco.editor.IEditor): Unit = {
+    val height = dom.window.innerHeight - 90
+    jQuery("#view").height(height)
+    jQuery("#columns").height(height)
+    jQuery("#editor").height(height)
+    jQuery("#output").height(height)
+    editor.layout()
+    editor.focus()
+    jQuery("body").css("background-color", "#8e44ad")
+    jQuery("#output").css("background-color", "lightgrey")
   }
+
+  def apply(): Unit = {
+    jQuery("body").append(PlaygroundSpa().render)
+
+    js.Dynamic.literal
+    val editor = monaco.editor.Editor.create(dom.document.getElementById("editor"), JsObject(
+      value = "",
+      language = "slang",
+      fontSize = 16
+    ).asInstanceOf[IEditorConstructionOptions])
+
+    dom.document.onreadystatechange = (_: Event) => updateView(editor)
+    dom.window.onresize = (_: UIEvent) => updateView(editor)
+  }
+
+  val slangId = "slang"
 }

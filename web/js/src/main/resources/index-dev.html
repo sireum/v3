@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="bulma/pulse.min.css"/>
     <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css"/>
     <script type="text/javascript" src="min/vs/loader.js"></script>
+    <script type="text/javascript" src="min/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../web-jsdeps.js">/</script>
+    <script type="text/javascript" src="../web-fastopt.js"></script>
     <script type="text/javascript">
     var slangId = "slang";
     var slangModelText = `return {
@@ -111,33 +114,13 @@
     </script>
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
-<script type="text/javascript" src="../web-jsdeps.js">/</script>
-<script type="text/javascript" src="../web-fastopt.js"></script>
 <script>
 	require.config({ paths: { 'vs': 'min/vs' }});
 	require(['vs/editor/editor.main'], function() {
 	  monaco.languages.register({ id: slangId });
 	  var langModel = monaco.editor.createModel(slangModelText, 'javascript');
       monaco.languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"));
-	  var editor = monaco.editor.create(document.getElementById('editor'), {
-	  	value: '',
-	  	language: slangId,
-	  	fontSize: '16'
-	  });
-	  function updateView() {
-	    var height = (window.innerHeight ? window.innerHeight : $(window).height()) - 90;
-	    var width = window.innerWidth ? window.innerWidth : $(window).width();
-	    $('#view').height(height);
-	    $('#columns').height(height);
-	    $('#editor').height(height);
-	    $('#output').height(height);
-        editor.layout();
-        editor.focus();
-        $('body').css('background-color', '#8e44ad');
-        $('#output').css('background-color', 'lightgrey');
-      }
-	  $(document).ready(updateView);
-      $(window).resize(updateView);
+      org.sireum.web.Main.main();
 	});
 </script>
 </body>

@@ -23,15 +23,15 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.web
+package org.sireum.web.util
 
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.language.dynamics
+import scala.scalajs.js
 
+object JsObject extends scala.Dynamic {
+  def applyDynamicNamed[T](name: String)(fields: (String, Any)*): T =
+    js.Dictionary(fields: _*).asInstanceOf[T]
 
-@JSExportTopLevel("org.sireum.web.Main")
-object Main {
-  @JSExport
-  def main(): Unit = {
-    Playground()
-  }
+  def applyDynamic[T](name: String)(fields: (String, Any)*): T =
+    js.Dictionary(fields: _*).asInstanceOf[T]
 }
