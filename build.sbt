@@ -284,6 +284,29 @@ lazy val slangShared = slangT._1
 lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
 
+lazy val webPI = new ProjectInfo("web", isCross = true, runtimePI, preludePI, utilPI)
+lazy val webT = toSbtCrossProject(webPI, Seq(
+  libraryDependencies ++= Seq(
+    "org.scalameta" %% "scalameta" % metaVersion,
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+  ),
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
+  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
+  parallelExecution in Test := true
+))
+lazy val webShared = webT._1
+lazy val webJvm = webT._2
+lazy val webJs = webT._3.settings(
+  scalaJSUseMainModuleInitializer := true,
+  skip in packageJSDependencies := false,
+  jsDependencies += RuntimeDOM,
+  jsDependencies += "org.webjars" % "jquery" % "2.1.4" / "2.1.4/jquery.js",
+  libraryDependencies ++= Seq(
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
+    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+  )
+).settings(scalatex.SbtPlugin.projectSettings: _*)
+
 // Jvm Projects
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
