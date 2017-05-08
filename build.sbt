@@ -58,101 +58,6 @@ val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
 traceLevel in iveDistros := -1
 
-lazy val sireum = Project(
-  id = "sireum",
-  settings = sireumSharedSettings ++ Seq(
-    name := "Sireum",
-    distros := {
-      Distros.build()
-    },
-    iveDistros := {
-      Distros.buildIVE()
-    },
-    devDistros := {
-      Distros.buildDev()
-    },
-    devIveDistros := {
-      Distros.buildIVEDev()
-    },
-    depDot := {
-      val args = spaceDelimited("<arg>").parsed
-      dotDependency(args)
-    },
-    initialize := {
-      val required = "1.8"
-      val current = sys.props("java.specification.version")
-      assert(current == required, s"Unsupported Java version: $current (required: $required)")
-    },
-    publish := {},
-    publishLocal := {}
-  ),
-  base = file(".")
-).aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
-
-lazy val sireumJvm =
-  Project(
-    id = "sireum-jvm",
-    settings = sireumJvmSettings ++ assemblySettings ++
-      Seq(
-        name := "Sireum.jvm",
-        libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
-        mainClass in assembly := Some("org.Sireum"),
-        assemblyOutputPath in assembly := file("bin/sireum.jar"),
-        test in assembly := {},
-        logLevel in assembly := Level.Error,
-        assemblyMergeStrategy in assembly := {
-          case PathList("org", "sireum", _*) => new MergeStrategy {
-            override def name: String = "sireum"
-
-            override def apply(tempDir: File, path: String,
-                               files: Seq[File]): Either[String, Seq[(File, String)]] = {
-              if (files.size == 1) return Right(Seq(files.head -> path))
-              val nonSharedFiles =
-                files.flatMap { f =>
-                  val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
-                  if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
-                }
-              Right(Seq(nonSharedFiles.head -> path))
-            }
-          }
-          case x =>
-            val oldStrategy = (assemblyMergeStrategy in assembly).value
-            oldStrategy(x)
-        }
-      ),
-    base = file("jvm")).
-    aggregate(subProjectJvmReferences: _*).
-    dependsOn(subProjectJvmClasspathDeps: _*)
-
-lazy val sireumJs =
-  Project(
-    id = "sireum-js",
-    settings = sireumSharedSettings ++
-      Seq(
-        name := "Sireum.js"),
-    base = file("js")).
-    aggregate(subProjectJsReferences: _*).
-    disablePlugins(AssemblyPlugin)
-
-lazy val subProjectsJvm = Seq(
-  utilJvm, testJvm, pilarJvm,
-  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awas
-)
-
-lazy val subProjectsJs = Seq(
-  utilJs, testJs, pilarJs,
-  runtimeJs, preludeJs, logikaJs, slangJs
-)
-
-lazy val subProjectJvmReferences =
-  subProjectsJvm.map(x => x: ProjectReference)
-
-lazy val subProjectJvmClasspathDeps =
-  subProjectsJvm.map(x => x: ClasspathDep[ProjectReference])
-
-lazy val subProjectJsReferences =
-  subProjectsJs.map(x => x: ProjectReference)
-
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
@@ -214,6 +119,56 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
 
+val depOpt = Some("test->test;compile->compile;test->compile")
+
+def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
+  Project(
+    id = pi.id,
+    settings = settings,
+    base = pi.baseDir / "jvm").
+    dependsOn(pi.dependencies.flatMap { p =>
+      if (p.isCross)
+        Seq(ClasspathDependency(LocalProject(p.id), depOpt),
+          ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
+      else Seq(ClasspathDependency(LocalProject(p.id), depOpt))
+    }: _*).
+    settings(name := pi.name).disablePlugins(AssemblyPlugin)
+
+def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector()): (Project, Project, Project) = {
+  val shared = Project(
+    id = pi.id,
+    settings = sireumSharedSettings ++ settings,
+    base = pi.baseDir / "shared").
+    dependsOn(pi.dependencies.map { p =>
+      ClasspathDependency(LocalProject(p.id), depOpt)
+    }: _*).
+    settings(name := pi.name).disablePlugins(AssemblyPlugin)
+  val cp = CrossProject(
+    jvmId = pi.id + "-jvm",
+    jsId = pi.id + "-js",
+    base = pi.baseDir,
+    crossType = CrossType.Full).settings(name := pi.id)
+  val jvm =
+    cp.jvm.settings(sireumJvmSettings ++ settings).disablePlugins(AssemblyPlugin).
+      dependsOn(shared % depOpt.get).
+      dependsOn(pi.dependencies.map { p =>
+        ClasspathDependency(LocalProject(p.id), depOpt)
+      }: _*).
+      dependsOn(pi.dependencies.map { p =>
+        ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
+      }: _*)
+  val js =
+    cp.js.settings(sireumJsSettings ++ settings).disablePlugins(AssemblyPlugin).
+      dependsOn(shared % depOpt.get).
+      dependsOn(pi.dependencies.map { p =>
+        ClasspathDependency(LocalProject(p.id), depOpt)
+      }: _*).
+      dependsOn(pi.dependencies.map { p =>
+        ClasspathDependency(LocalProject(p.id + "-js"), depOpt)
+      }: _*).enablePlugins(ScalaJSPlugin)
+  (shared, jvm, js)
+}
+
 // Cross Projects
 lazy val utilPI = new ProjectInfo("util", isCross = true)
 lazy val utilT = toSbtCrossProject(utilPI)
@@ -273,6 +228,7 @@ lazy val preludeJs = preludeT._3
 lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI, utilPI, testPI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "fastparse" % "0.4.2",
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
@@ -319,53 +275,101 @@ lazy val awas = toSbtJvmProject(awasPI)
 
 // Js Projects
 
+
 //
-val depOpt = Some("test->test;compile->compile;test->compile")
 
-def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
+lazy val subProjectsJvm = Seq(
+  utilJvm, testJvm, pilarJvm,
+  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awas
+)
+
+lazy val subProjectsJs = Seq(
+  utilJs, testJs, pilarJs,
+  runtimeJs, preludeJs, logikaJs, slangJs
+)
+
+lazy val subProjectJvmReferences =
+  subProjectsJvm.map(x => x: ProjectReference)
+
+lazy val subProjectJvmClasspathDeps =
+  subProjectsJvm.map(x => x: ClasspathDep[ProjectReference])
+
+lazy val subProjectJsReferences =
+  subProjectsJs.map(x => x: ProjectReference)
+
+lazy val sireumJvm =
   Project(
-    id = pi.id,
-    settings = settings,
-    base = pi.baseDir / "jvm").
-    dependsOn(pi.dependencies.flatMap { p =>
-      if (p.isCross)
-        Seq(ClasspathDependency(LocalProject(p.id), depOpt),
-          ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
-      else Seq(ClasspathDependency(LocalProject(p.id), depOpt))
-    }: _*).
-    settings(name := pi.name).disablePlugins(AssemblyPlugin)
+    id = "sireum-jvm",
+    settings = sireumJvmSettings ++ assemblySettings ++
+      Seq(
+        name := "Sireum.jvm",
+        libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
+        mainClass in assembly := Some("org.Sireum"),
+        assemblyOutputPath in assembly := file("bin/sireum.jar"),
+        test in assembly := {},
+        logLevel in assembly := Level.Error,
+        assemblyMergeStrategy in assembly := {
+          case PathList("org", "sireum", _*) => new MergeStrategy {
+            override def name: String = "sireum"
 
-def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector()): (Project, Project, Project) = {
-  val shared = Project(
-    id = pi.id,
-    settings = sireumSharedSettings ++ settings,
-    base = pi.baseDir / "shared").
-    dependsOn(pi.dependencies.map { p =>
-      ClasspathDependency(LocalProject(p.id), depOpt)
-    }: _*).
-    settings(name := pi.name).disablePlugins(AssemblyPlugin)
-  val cp = CrossProject(
-    jvmId = pi.id + "-jvm",
-    jsId = pi.id + "-js",
-    base = pi.baseDir,
-    crossType = CrossType.Full).settings(name := pi.id)
-  val jvm =
-    cp.jvm.settings(sireumJvmSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared % depOpt.get).
-      dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), depOpt)
-      }: _*).
-      dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
-      }: _*)
-  val js =
-    cp.js.settings(sireumJsSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared % depOpt.get).
-      dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id), depOpt)
-      }: _*).
-      dependsOn(pi.dependencies.map { p =>
-        ClasspathDependency(LocalProject(p.id + "-js"), depOpt)
-      }: _*).enablePlugins(ScalaJSPlugin)
-  (shared, jvm, js)
-}
+            override def apply(tempDir: File, path: String,
+                               files: Seq[File]): Either[String, Seq[(File, String)]] = {
+              if (files.size == 1) return Right(Seq(files.head -> path))
+              val nonSharedFiles =
+                files.flatMap { f =>
+                  val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
+                  if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
+                }
+              Right(Seq(nonSharedFiles.head -> path))
+            }
+          }
+          case x =>
+            val oldStrategy = (assemblyMergeStrategy in assembly).value
+            oldStrategy(x)
+        }
+      ),
+    base = file("jvm")).
+    aggregate(subProjectJvmReferences: _*).
+    dependsOn(subProjectJvmClasspathDeps: _*)
+
+lazy val sireumJs =
+  Project(
+    id = "sireum-js",
+    settings = sireumSharedSettings ++
+      Seq(
+        name := "Sireum.js"),
+    base = file("js")).
+    aggregate(subProjectJsReferences: _*).
+    disablePlugins(AssemblyPlugin)
+
+
+lazy val sireum = Project(
+  id = "sireum",
+  settings = sireumSharedSettings ++ Seq(
+    name := "Sireum",
+    distros := {
+      Distros.build()
+    },
+    iveDistros := {
+      Distros.buildIVE()
+    },
+    devDistros := {
+      Distros.buildDev()
+    },
+    devIveDistros := {
+      Distros.buildIVEDev()
+    },
+    depDot := {
+      val args = spaceDelimited("<arg>").parsed
+      dotDependency(args)
+    },
+    initialize := {
+      val required = "1.8"
+      val current = sys.props("java.specification.version")
+      assert(current == required, s"Unsupported Java version: $current (required: $required)")
+    },
+    publish := {},
+    publishLocal := {}
+  ),
+  base = file(".")
+).aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
