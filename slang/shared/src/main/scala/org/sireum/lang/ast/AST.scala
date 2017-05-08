@@ -47,11 +47,9 @@ object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer]) extends Stmt
 
-  @datatype class RichImport(id: Id) extends Stmt
-
   object Import {
 
-    @datatype class Importer(name: Name, selectors: ISZ[Selector])
+    @datatype class Importer(name: Name, selectorsOpt: Option[ISZ[Selector]])
 
     @datatype class Selector(from: Id, to: Id)
 

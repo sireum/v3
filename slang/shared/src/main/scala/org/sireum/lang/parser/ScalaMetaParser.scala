@@ -275,8 +275,8 @@ class ScalaMetaParser(text: Predef.String,
 
   def translateImport(enclosing: Enclosing.Type,
                       stat: Import): AST.Stmt = stat.importers match {
-    case Seq(Importer(ref: Term.Name, Seq(Importee.Wildcard()))) =>
-      AST.Stmt.RichImport(cid(ref))
+    case Seq(Importer(ref: Term.Ref, Seq(Importee.Wildcard()))) =>
+      AST.Stmt.Import(ISZ(AST.Stmt.Import.Importer(AST.Name(ref2IS(ref)), Some(ISZ()))))
     case _ =>
       var importers = ISZ[AST.Stmt.Import.Importer]()
       for (importer <- stat.importers) {
@@ -291,7 +291,7 @@ class ScalaMetaParser(text: Predef.String,
             sels +:= AST.Stmt.Import.Selector(id, id)
           case _ => errorNotSlang(importee.pos, s"Importee '${importee.syntax}' from ${importer.ref.syntax} is")
         }
-        importers +:= AST.Stmt.Import.Importer(name, sels)
+        importers +:= AST.Stmt.Import.Importer(name, Some(sels))
       }
       AST.Stmt.Import(importers)
   }

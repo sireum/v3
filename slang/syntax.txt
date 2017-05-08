@@ -19,7 +19,7 @@
                      |  <proof-stmt>
 
 <import-stmt>      ::=  import <name> ⸨ . { <import-sel> ⸨ , <import-sel> ⸩* } ⸩?
-                     |  import <ID> . _
+                     |  import <name> . _
 
 <import-sel>       ::=  <ID>
                      |  <ID> => <ID>
