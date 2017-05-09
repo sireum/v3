@@ -255,7 +255,7 @@ class ScalaMetaParser(text: Predef.String,
         }
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
-      case stat: Decl.Type => translateTypeAlias(enclosing, stat)
+      case stat: Defn.Type => translateTypeAlias(enclosing, stat)
       case stat: Term.Assign => translateAssign(enclosing, stat)
       case stat: Term.Update => translateAssign(enclosing, stat)
       case stat: Term.Block => translateBlock(enclosing, stat)
@@ -268,7 +268,7 @@ class ScalaMetaParser(text: Predef.String,
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
       case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: Predef.String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case _ =>
-        errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
+        errorNotSlang(stat.pos, s"Statement '${(stat).structure}' is")
         rStmt
     }
   }
@@ -319,8 +319,7 @@ class ScalaMetaParser(text: Predef.String,
         error(mod.pos, "Only the @spec modifier is allowed for val declarations.")
     }
     if (tpeopt.isEmpty && !(enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-        !patsnel.head.isInstanceOf[Pat.Var.Term] || hasSpec
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
       case _ => false
     })) {
       hasError = true
@@ -332,9 +331,9 @@ class ScalaMetaParser(text: Predef.String,
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollar(expr)) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
-    } else if (hasSpec && (!isDollar(expr) || !patsnel.head.isInstanceOf[Pat.Var.Term])) {
+    } else if (hasSpec && (!isDollar(expr) || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty)) {
       hasError = true
-      errorInSlang(stat.pos, "@spec val declarations should have the form: '@spec val <id> : <type> = $'")
+      errorInSlang(stat.pos, "@spec val declarations should have the form: '@spec val〈ID〉:〈type〉= $'")
     }
     if (hasError) rStmt
     else if (hasSpec)
@@ -383,9 +382,11 @@ class ScalaMetaParser(text: Predef.String,
         error(mod.pos, "Only the @spec modifier is allowed for var declarations.")
     }
     val isDollarExpr = expropt.map(isDollar).getOrElse(false)
-    if (tpeopt.isEmpty && !(enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-        !patsnel.head.isInstanceOf[Pat.Var.Term] || hasSpec
+    if (!patsnel.head.isInstanceOf[Pat.Var.Term] && tpeopt.isEmpty) {
+      hasError = true
+      errorInSlang(patsnel.head.pos, "Pattern var declarations cannot be explicitly typed")
+    } else if (tpeopt.isEmpty && !(enclosing match {
+      case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
       case _ => false
     })) {
       hasError = true
@@ -397,9 +398,9 @@ class ScalaMetaParser(text: Predef.String,
     } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollarExpr) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
-    } else if (hasSpec && (!isDollarExpr || !patsnel.head.isInstanceOf[Pat.Var.Term])) {
+    } else if (hasSpec && (!isDollarExpr || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty)) {
       hasError = true
-      errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec val <id> : <type> = $'")
+      errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec val〈ID〉:〈type〉= $'")
     } else if (expropt.isEmpty) {
       hasError = true
       errorInSlang(stat.pos, "Uninitialized '_' var declarations are disallowed")
@@ -590,9 +591,9 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasExt && (estats.nonEmpty || ctorcalls.nonEmpty)) {
       hasError = true
-      error(name.pos, "Slang @ext objects have to be of the form '@ext object <id> { ... }'.")
+      error(name.pos, "Slang @ext objects have to be of the form '@ext object〈ID〉{ ... }'.")
     } else if (hasEnum && (estats.nonEmpty || ctorcalls.nonEmpty)) {
-      error(stat.pos, "Slang @enum declarations should have the form: '@enum object <ID> { ... }'")
+      error(stat.pos, "Slang @enum declarations should have the form: '@enum object〈ID〉{ ... }'")
     } else if (estats.nonEmpty) {
       hasError = true
       errorNotSlang(estats.head.pos, "Object early initializations are")
@@ -601,7 +602,7 @@ class ScalaMetaParser(text: Predef.String,
       val elements: Seq[AST.Id] = (for (stat <- stats) yield stat match {
         case Lit.Symbol(symbol) => scala.Some(cid(symbol.name.substring(1), stat.pos))
         case _ =>
-          error(stat.pos, s"An @enum element should be a single quote immediately followed by <ID> (i.e., a symbol).")
+          error(stat.pos, s"An @enum element should be a single quote immediately followed by〈ID〉(i.e., a symbol).")
           scala.None
       }).flatten
 
@@ -624,7 +625,7 @@ class ScalaMetaParser(text: Predef.String,
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty)
-      error(tname.pos, "Slang @sig traits have to be of the form '@sig trait <id> ... { ... }'.")
+      error(tname.pos, "Slang @sig traits have to be of the form '@sig trait〈ID〉... { ... }'.")
 
     val param"$_: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = param
 
@@ -632,8 +633,14 @@ class ScalaMetaParser(text: Predef.String,
       errorNotSlang(tname.pos, s"Self type: ${syntax(param)} is")
     }
 
+    var hasSig = false
     var hasSealed = false
     for (mod <- mods) mod match {
+      case mod"@sig" =>
+        if (hasSig) {
+          error(mod.pos, "Redundant '@sig'.")
+        }
+        hasSig = true
       case mod"sealed" =>
         if (hasSealed) {
           error(mod.pos, "Redundant 'sealed'.")
@@ -658,7 +665,7 @@ class ScalaMetaParser(text: Predef.String,
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || hasSelfType(param))
-      error(tname.pos, "Slang @datatype traits have to be of the form '@datatype trait <id> ... { ... }'.")
+      error(tname.pos, "Slang @datatype traits have to be of the form '@datatype trait〈ID〉... { ... }'.")
     var hasDatatype = false
     for (mod <- mods) mod match {
       case mod"@datatype" =>
@@ -688,7 +695,7 @@ class ScalaMetaParser(text: Predef.String,
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
       ctorcalls.size > 1 || hasSelfType(param)) {
-      error(tname.pos, "Slang @datatype classes have to be of the form '@datatype class <id> ... (...) ... { ... }'.")
+      error(tname.pos, "Slang @datatype classes have to be of the form '@datatype class〈ID〉... (...) ... { ... }'.")
     }
     var hasDatatype = false
     for (mod <- mods) mod match {
@@ -719,7 +726,7 @@ class ScalaMetaParser(text: Predef.String,
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || hasSelfType(param))
-      error(tname.pos, "Slang @record traits have to be of the form '@record trait <id> ... { ... }'.")
+      error(tname.pos, "Slang @record traits have to be of the form '@record trait〈ID〉... { ... }'.")
     var hasRecord = false
     for (mod <- mods) mod match {
       case mod"@record" =>
@@ -749,7 +756,7 @@ class ScalaMetaParser(text: Predef.String,
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
       ctorcalls.size > 1 || hasSelfType(param)) {
-      error(tname.pos, "Slang @record classes have to be of the form '@record class <id>(...) { ... }'.")
+      error(tname.pos, "Slang @record classes have to be of the form '@record class〈ID〉(...) { ... }'.")
     }
     var hasRecord = false
     for (mod <- mods) mod match {
@@ -780,7 +787,7 @@ class ScalaMetaParser(text: Predef.String,
     }
     val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (estats.nonEmpty || hasSelfType(param))
-      error(tname.pos, "Slang @rich traits have to be of the form '@rich trait <id> ... { ... }'.")
+      error(tname.pos, "Slang @rich traits have to be of the form '@rich trait〈ID〉... { ... }'.")
     var hasRich = false
     for (mod <- mods) mod match {
       case mod"@rich" =>
@@ -809,7 +816,7 @@ class ScalaMetaParser(text: Predef.String,
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
     if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
       ctorcalls.size > 1 || hasSelfType(param)) {
-      error(tname.pos, "Slang @rich classes have to be of the form '@rich class <id> ... (...) ... { ... }'.")
+      error(tname.pos, "Slang @rich classes have to be of the form '@rich class〈ID〉... (...) ... { ... }'.")
     }
     var hasRich = false
     for (mod <- mods) mod match {
@@ -829,10 +836,10 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
   }
 
-  def translateTypeAlias(enclosing: Enclosing.Type, stat: Decl.Type): AST.Stmt = {
+  def translateTypeAlias(enclosing: Enclosing.Type, stat: Defn.Type): AST.Stmt = {
     val q"..$mods type $tname[..$tparams] = $tpe" = stat
     if (mods.nonEmpty) {
-      error(stat.pos, "Slang type definitions should be of the form: 'type <ID> ... = <type>'.")
+      error(stat.pos, "Slang type definitions should be of the form: 'type〈ID〉... =〈type〉'.")
     }
     AST.Stmt.TypeAlias(cid(tname), ISZ(tparams.map(translateTypeParam): _*), translateType(tpe))
   }
@@ -865,10 +872,10 @@ class ScalaMetaParser(text: Predef.String,
     case targ"${tpe: Type}" =>
       translateType(tpe)
     case _: Type.Arg.Repeated =>
-      errorNotSlang(ta.pos, "Repeated types '<type>*' are")
+      errorNotSlang(ta.pos, "Repeated types '〈type〉*' are")
       unitType
     case _: Type.Arg.ByName =>
-      errorNotSlang(ta.pos, "By name types '=> <type>' are")
+      errorNotSlang(ta.pos, "By name types '=> 〈type〉' are")
       unitType
   }
 
@@ -944,7 +951,7 @@ class ScalaMetaParser(text: Predef.String,
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
     case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
-        errorInSlang(tp.pos, "Only type parameters of the forms '<id>' or '<id> <: <type>' are")
+        errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' or '〈ID〉<:〈type〉' are")
       AST.TypeParam(cid(tparamname), opt(tpeopt.map(translateType)))
   }
 
@@ -962,7 +969,7 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (atpeopt.isEmpty || expropt.nonEmpty) {
       val pure = if (hasPure) "@pure " else ""
-      errorInSlang(tp.pos, s"The parameter should have the form '$pure<id> : <type>'")
+      errorInSlang(tp.pos, s"The parameter should have the form '$pure〈ID〉:〈type〉'")
     }
     atpeopt.map(ta => AST.Param(hasPure, cid(paramname), translateTypeArg(ta))).
       getOrElse(AST.Param(hasPure, cid(paramname), unitType))
@@ -1025,7 +1032,7 @@ class ScalaMetaParser(text: Predef.String,
       hasError = true
       val hidden = if (hasHidden) "@hidden " else ""
       val pure = if (hasPure) "@pure" else ""
-      errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden$pure<id> : <type>'")
+      errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden$pure〈ID〉:〈type〉'")
     }
     if (hasError) AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), unitType)
     else AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), translateTypeArg(atpeopt.get))
@@ -1052,12 +1059,12 @@ class ScalaMetaParser(text: Predef.String,
     def patArg(arg: Term.Arg): AST.Pattern = arg match {
       case arg"${expr: Term}" => translatePattern(expr)
       case _ =>
-        error(arg.pos, "Slang non-tuple pat should be of the form: 'pat( <pattern> ) = ...'")
+        error(arg.pos, "Slang non-tuple pat should be of the form: 'pat(〈pattern〉) = ...'")
         AST.Pattern.Wildcard()
     }
 
     def patVar(arg: Term.Arg): AST.Pattern = arg match {
-      case arg"${expr: Term.Name}" => AST.Pattern.Variable(cid(expr))
+      case arg: Term.Name => AST.Pattern.Variable(cid(arg))
     }
 
     stmtCheck(enclosing, stat, "Assigments")
@@ -1080,7 +1087,7 @@ class ScalaMetaParser(text: Predef.String,
               AST.Stmt.AssignPattern(AST.Pattern.Structure(None(), None(),
                 ISZ(args.map(patVar): _*)), translateAssignExp(stat.rhs))
             } else {
-              error(stat.pos, "Slang tuple pat should be of the form: 'pat( <ID>, <ID>, ... ) = ...'")
+              error(stat.pos, "Slang tuple pat should be of the form: 'pat(〈ID〉,〈ID〉, ... ) = ...'")
               rStmt
             }
           } else {
@@ -1520,7 +1527,7 @@ class ScalaMetaParser(text: Predef.String,
     }
 
     def namedArg(arg: Term.Arg): (AST.Id, AST.Exp) = arg match {
-      case arg"${name: Term.Name} = $aexpr" => (cid(name), translateExp(aexpr))
+      case arg: Term.Arg.Named => (cid(arg.name), expArg(arg.expr))
     }
 
     var isNamed = false
