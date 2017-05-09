@@ -170,11 +170,15 @@ class ScalaMetaParserTest extends SireumSpec {
 
         failing("@spec var x, y: Z = $", multiple, isWorksheet = true)
 
-        val specForm = "<id> : <type> = $'"
+        val specForm = "should have the form: '@spec"
 
         failing("@spec val x = 5", specForm, isWorksheet = true)
 
         failing("@spec var x = 5", specForm, isWorksheet = true)
+
+        failing("@spec val x: Z = 5", specForm, isWorksheet = true)
+
+        failing("@spec var x: Z = 5", specForm, isWorksheet = true)
 
         failing("var x: Z = _", "Uninitialized", isWorksheet = true)
 
@@ -183,12 +187,6 @@ class ScalaMetaParserTest extends SireumSpec {
         failing("@spec @spec var x: Z = $", "Redundant @spec", isWorksheet = true)
 
         failing("private var x: Z = $", "Only the @spec modifier", isWorksheet = true)
-
-        val specDollar = "<id> : <type> = $"
-
-        failing("@spec val x: Z = 5", specDollar, isWorksheet = true)
-
-        failing("@spec var x: Z = 5", specDollar, isWorksheet = true)
       }
 
       "Method" - {
@@ -215,7 +213,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
         "Param" - {
 
-          val paramTypeForms = "'<id> : <type>'"
+          val paramTypeForms = "parameter should have the form"
 
           failing("def f(x: Z = 5): Z = {}", paramTypeForms, isWorksheet = true)
 
@@ -251,7 +249,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
       "Type Param" - {
 
-        val typeParamForms = "'<id>' or '<id> <: <type>'"
+        val typeParamForms = "type parameters of the forms"
 
         failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
