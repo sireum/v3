@@ -32,7 +32,7 @@ package object util {
   type PosInteger = Int
   type CharSentinel = Int
 
-  type Uri = String
+  type Uri = Predef.String
   type FileResourceUri = Uri
 
   type --\[-D, +I] = PartialFunction[D, I]
