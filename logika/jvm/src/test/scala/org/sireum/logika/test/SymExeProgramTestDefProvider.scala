@@ -36,7 +36,7 @@ import org.sireum.util.jvm.{FileUtil, OsUtil, OsArch}
 final class SymExeProgramTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
-  val tmMult = OsUtil.detect match {
+  val tmMult: Int = OsUtil.detect match {
     case OsArch.Linux => 1
     case _ => 0
   }

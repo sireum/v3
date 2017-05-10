@@ -36,6 +36,11 @@ import org.sireum.util.jvm._
 final class Z3TestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
+  val tmMult: Int = OsUtil.detect match {
+    case OsArch.Linux => 1
+    case _ => 0
+  }
+
   override def testDefs: ISeq[TestDef] =
     (1 to 1).toVector.map { x =>
       val name = f"z3-$x%02d"
@@ -66,7 +71,7 @@ final class Z3TestDefProvider(tf: TestFramework)
           _,
           Ensures(Seq(e2))), _)), _)) =>
             implicit val nlm = p.nodeLocMap
-            Z3.isValid(2000, isSymExe = false, 0, ivector(e1), ivector(e2))._2 == Z3.Unsat
+            Z3.isValid(2000 * tmMult, isSymExe = false, 0, ivector(e1), ivector(e2))._2 == Z3.Unsat
           case _ => false
         }
       }
