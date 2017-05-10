@@ -25,10 +25,13 @@
 
 package org.sireum.web.playground
 
-import monaco.editor.{IEditorConstructionOptions, IModelContentChangedEvent2}
+import monaco.KeyCode
+import monaco.editor.{EndOfLinePreference, ICommandHandler, IEditorConstructionOptions, IModelContentChangedEvent2}
 import org.scalajs.dom
-import org.scalajs.dom.html.Div
+import org.scalajs.dom.MouseEvent
+import org.scalajs.dom.html.{Anchor, Div}
 import org.scalajs.dom.raw.{Event, UIEvent}
+import org.sireum.web.ui.Modal
 
 import scala.scalajs.js
 import scalatex.PlaygroundSpa
@@ -37,6 +40,8 @@ import org.sireum.web.util._
 object Playground {
 
   var editor: monaco.editor.IStandaloneCodeEditor = _
+
+  def editorValue: String = editor.getModel().getValue(EndOfLinePreference.LF, preserveBOM = false)
 
   def updateView(): Unit = {
     val height = s"${dom.window.innerHeight - 90}px"
@@ -67,12 +72,45 @@ object Playground {
     Files.loadFiles()
 
     editor.getModel().onDidChangeContent((e: IModelContentChangedEvent2) =>
-      if (e.text.contains('\n')) Files.save(editor.getPosition().lineNumber.toInt + 1, 1))
+      if (e.text.contains('\n'))
+        Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt + 1, 1, editorValue))
+
+    editor.addCommand(KeyCode.F1, (() => ()).asInstanceOf[ICommandHandler], "")
     dom.window.onunload = (_: Event) =>
-      Files.save(editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt)
+      Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt, editorValue)
 
     dom.document.onreadystatechange = (_: Event) => updateView()
     dom.window.onresize = (_: UIEvent) => updateView()
+
+    $[Anchor]("#add-file").onclick = (_: MouseEvent) => {
+      Modal.textInput("New File", "Filename:", "Enter filename",
+        filename => Files.isValidNewFilename(filename),
+        filename => Files.newFile(filename, None)
+      )
+    }
+    $[Anchor]("#duplicate-file").onclick = (_: MouseEvent) => {
+      Modal.textInput("Duplicate File", "Filename:", "Enter filename",
+        filename => Files.isValidNewFilename(filename),
+        filename => Files.newFile(filename, Some(editorValue))
+      )
+    }
+    $[Anchor]("#rename-file").onclick = (_: MouseEvent) => {
+      Modal.textInput("Rename File", "Filename:", "Enter filename",
+        filename => Files.isValidNewFilename(filename),
+        filename => {
+          val isSingle = Files.lookupFilenames()._2.length == 1
+          Files.deleteFile(Files.selectedFilename)
+          Files.newFile(filename, Some(editorValue))
+          if (isSingle) Files.deleteFile(Files.untitled)
+        }
+      )
+    }
+    $[Anchor]("#delete-file").onclick = (_: MouseEvent) => {
+      val f = Files.selectedFilename
+      Modal.confirm(s"Delete File",
+        s"Are you sure you want to delete $f?",
+        () => Files.deleteFile(f))
+    }
   }
 
   val slangId = "slang"

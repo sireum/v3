@@ -36,30 +36,50 @@ import scala.scalajs.js
 import scalatags.Text.all._
 
 object Files {
+  val slangExt = ".slang"
   val fileKey = "sireum://"
   val lastFilenameKey = "org.sireum.filename.last"
   val filenamesKey = "org.sireum.filenames"
   val cursorKey = "org.sireum.cursor"
   val newText = "import org.sireum._\n\n"
+  val newTextLine: Int = newText.count(_ == '\n')
+  val untitled: String = "Untitled" + slangExt
 
   final case class FileData(line: Int, column: Int, text: String)
 
   lazy val filenameSelection: Select = {
     val r = $[Select]("#filename")
-    r.onchange = { (_: Event) => load() }
+    r.onchange = { (_: Event) => load(Files.selectedFilename) }
     r
   }
 
-  def lookup(key: String): Option[String] = {
+  def lookup(key: String): Option[String] =
     Option(dom.window.localStorage.getItem(key))
-  }
 
-  def update(key: String, value: String): Unit = {
+  def update(key: String, value: String): Unit =
     dom.window.localStorage.setItem(key, value)
+
+  def remove(key: String): Unit = {
+    dom.window.localStorage.removeItem(key)
   }
 
-  def load(): Unit = {
-    val FileData(l, c, text) = lookup(fileKey + selectedFilename) match {
+  def updateFilenames(fs: js.Array[String]): Unit =
+    update(filenamesKey, js.JSON.stringify(fs))
+
+  def lookupFilenames(): (String, js.Array[String]) = {
+    lookup(filenamesKey) match {
+      case Some(fs) => (lookup(lastFilenameKey).getOrElse(untitled), js.JSON.parse(fs).asInstanceOf[js.Array[String]])
+      case _ =>
+        val f = untitled
+        val fs = js.Array(f)
+        updateFilenames(js.Array(f))
+        (f, fs)
+    }
+  }
+
+  def load(filename: String): Unit = {
+    filenameSelection.selectedIndex = lookupFilenames()._2.indexOf(filename)
+    val FileData(l, c, text) = lookup(fileKey + filename) match {
       case Some(data) =>
         import upickle.default._
         read[FileData](data)
@@ -68,14 +88,14 @@ object Files {
     }
     editor.getModel().setValue(text)
     editor.setPosition(jsObj(lineNumber = l, column = c))
+    update(lastFilenameKey, filename)
+    editor.focus()
   }
 
-  def save(line: Int, column: Int): Unit = {
+  def save(filename: String, line: Int, column: Int, text: String): Unit = {
     import upickle.default._
-    val text = editor.getModel().getValue(EndOfLinePreference.LF, preserveBOM = false)
-    val pos = editor.getPosition()
     val data = FileData(line = line, column = column, text = text)
-    update(fileKey + selectedFilename, write(data))
+    update(fileKey + filename, write(data))
   }
 
   def selectedFilename: String = {
@@ -83,23 +103,59 @@ object Files {
     filenameSelection.options(selectedIndex).value.replaceAllLiterally(" ", "")
   }
 
-  def loadFiles(): Unit = {
-    val (selected, filenames) = lookup(filenamesKey) match {
-      case Some(fs) => (lookup(lastFilenameKey).get, js.JSON.parse(fs).asInstanceOf[js.Array[String]])
-      case _ =>
-        val fs = js.Array("Untitled.slang")
-        update(filenamesKey, js.JSON.stringify(fs))
-        ("Untitled.slang", fs)
+  def isValidFilename(filename: String): Boolean =
+    filename.trim != "" && filename.head != '/' && filename.last != '/' && filename.forall {
+      case '/' => true
+      case c => c.isLetterOrDigit
     }
-    updateSelection(selected, filenames)
+
+  def isValidNewFilename(filename: String): Boolean =
+    isValidFilename(filename) && {
+      val fs = Files.lookupFilenames()._2
+      !fs.contains(filename + slangExt)
+    }
+
+  def newFile(filename: String, textOpt: Option[String]): Unit = {
+    val (_, fs) = lookupFilenames()
+    val f = filename + slangExt
+    val newFs = (fs :+ f).sorted
+    textOpt match {
+      case Some(text) => save(f, 1, 1, text)
+      case _ =>
+    }
+    updateFilenames(newFs)
+    updateSelection(f, newFs)
+  }
+
+  def deleteFile(filename: String): Unit = {
+    remove(fileKey + filename)
+    val (_, fs) = lookupFilenames()
+    if (fs.length == 1) {
+      val newFs = js.Array(untitled)
+      updateFilenames(newFs)
+      updateSelection(untitled, newFs)
+    } else {
+      val i = fs.indexOf(filename)
+      val selectedFilename = fs(
+        if (i == 0) 1
+        else if (i == fs.length - 1) i - 1
+        else i + 1)
+      fs.remove(i)
+      updateFilenames(fs)
+      updateSelection(selectedFilename, fs)
+    }
+  }
+
+  def loadFiles(): Unit = {
+    val (selected, fs) = lookupFilenames()
+    updateSelection(selected, fs)
   }
 
   def updateSelection(selectedFilename: String, filenames: js.Array[String]): Unit = {
     require(filenames.contains(selectedFilename))
-    filenameSelection.innerHTML = (for (f <- filenames.sorted) yield
+    filenameSelection.innerHTML = (for (f <- filenames) yield
       option(selected := (f == selectedFilename), filename(f)).render).mkString("\n")
-    update(lastFilenameKey, selectedFilename)
-    load()
+    load(selectedFilename)
   }
 
   def filename(name: String): RawFrag =
