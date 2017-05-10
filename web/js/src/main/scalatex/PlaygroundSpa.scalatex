@@ -1,7 +1,7 @@
 @import scalatags.Text.tags2._
-@import org.sireum.web.Playground._
+@import org.sireum.web.playground.Files.filename
 
-@def button(buttonId: String, icon: String, clsAttrs: Seq[String], iconAttrs: Seq[String]): Frag = {
+@def iconButton(buttonId: String, icon: String, clsAttrs: Seq[String], iconAttrs: Seq[String]): Frag = {
   a(id := buttonId, cls := s"""button ${clsAttrs.mkString(" ")}""", border := "none",
     span(cls := s"""icon ${iconAttrs.mkString(" ")}""",
       i(cls := icon)
@@ -10,19 +10,19 @@
 }
 
 @def topButton(buttonId: String, icon: String): Frag = {
-  button(buttonId, icon, Seq("is-primary"), Seq())
+  iconButton(buttonId, icon, Seq("is-primary"), Seq())
 }
 
 @def editorButton(buttonId: String, icon: String): Frag = {
-  button(buttonId, icon, Seq("is-light"), Seq("is-small"))
+  iconButton(buttonId, icon, Seq("is-light"), Seq("is-small"))
 }
 
 @def smallTopButton(buttonId: String, icon: String): Frag = {
-  button(buttonId, icon, Seq("is-primary"), Seq("is-small"))
+  iconButton(buttonId, icon, Seq("is-primary"), Seq("is-small"))
 }
 
 @def leftButton(buttonId: String, icon: String): Frag = {
-  button(buttonId, icon, Seq("is-primary", "is-outlined"), Seq())
+  iconButton(buttonId, icon, Seq("is-primary", "is-outlined"), Seq())
 }
 
 @div(id := "view", width := "100%")
@@ -35,21 +35,19 @@
       @div(cls := "nav-item")
         @div(cls := "container is-fluid")
           @div(cls :="field is-grouped")
-            @smallTopButton("run", "fa fa-play")
-            @smallTopButton("verify", "fa fa-check")
-            @smallTopButton("options", "fa fa-cog")
+            @topButton("run", "fa fa-play")
+            @topButton("verify", "fa fa-check")
+            @topButton("options", "fa fa-cog")
 
     @div(cls := "nav-center")
       @div(cls := "nav-item")
         @div(cls := "field grouped")
-          @smallTopButton("add", "fa fa-plus")
+          @topButton("add", "fa fa-plus")
+          @topButton("duplicate", "fa fa-copy")
           @span(cls := "select")
             @select(id := "filename")
-              @option(selected := true)
-                @filename("Untitled")
-              @option
-                @filename("Untitled2")
-          @smallTopButton("add", "fa fa-minus")
+          @topButton("rename", "fa fa-pencil-square-o")
+          @topButton("delete", "fa fa-minus")
 
     @div(cls :="nav-right nav-menu is-active")
       @div(cls := "nav-item")

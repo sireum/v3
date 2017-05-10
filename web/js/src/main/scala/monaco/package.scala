@@ -23,17 +23,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.web
-
-import org.sireum.web.playground.Playground
-
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-
-
-@JSExportTopLevel("org.sireum.web.Main")
-object Main {
-  @JSExport
-  def main(): Unit = {
-    Playground()
-  }
+package object monaco {
+  type KeyCode = Double
 }

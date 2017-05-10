@@ -23,24 +23,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.web
+package org.sireum.web.playground
 
-import monaco.editor.IEditorConstructionOptions
+import monaco.editor.{IEditorConstructionOptions, IModelContentChangedEvent2}
 import org.scalajs.dom
 import org.scalajs.dom.html.Div
 import org.scalajs.dom.raw.{Event, UIEvent}
-import org.sireum.web.util._
 
-import scalatags.Text.all._
 import scala.scalajs.js
 import scalatex.PlaygroundSpa
+import org.sireum.web.util._
 
 object Playground {
 
-  def filename(name: String): RawFrag =
-    raw(s"$name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
+  var editor: monaco.editor.IStandaloneCodeEditor = _
 
-  def updateView(editor: monaco.editor.IEditor): Unit = {
+  def updateView(): Unit = {
     val height = s"${dom.window.innerHeight - 90}px"
     $[Div]("#editor").style.height = height
     val output = $[Div]("#output")
@@ -54,27 +52,27 @@ object Playground {
   def apply(): Unit = {
     dom.document.body.appendChild(render(PlaygroundSpa()))
 
-    monaco.languages.Languages.register(jsObj(id = slangId ))
+    monaco.languages.Languages.register(jsObj(id = slangId))
     val langModel = monaco.editor.Editor.createModel(slangModelText, "javascript")
     monaco.languages.Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"))
 
     js.Dynamic.literal
-    val editor = monaco.editor.Editor.create($[Div]("#editor"),
+    editor = monaco.editor.Editor.create($[Div]("#editor"),
       jsObj[IEditorConstructionOptions](
         value = "",
         language = slangId,
         fontSize = 16
       ))
 
-    dom.document.onreadystatechange = (_: Event) => updateView(editor)
-    dom.window.onresize = (_: UIEvent) => updateView(editor)
+    Files.loadFiles()
 
-//    dom.window.setTimeout(() => {
-//      val filenameSelection = $[Select]("#filename")
-//      val innerHtml = filenameSelection.options.map { o => o.selected = false; o.innerHTML }.mkString("\n")
-//      val newOption = option(selected := true, filename("Very Long Filename Here")).render
-//      filenameSelection.innerHTML = s"$innerHtml\n$newOption"
-//    }, 2000)
+    editor.getModel().onDidChangeContent((e: IModelContentChangedEvent2) =>
+      if (e.text.contains('\n')) Files.save(editor.getPosition().lineNumber.toInt + 1, 1))
+    dom.window.onunload = (_: Event) =>
+      Files.save(editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt)
+
+    dom.document.onreadystatechange = (_: Event) => updateView()
+    dom.window.onresize = (_: UIEvent) => updateView()
   }
 
   val slangId = "slang"
