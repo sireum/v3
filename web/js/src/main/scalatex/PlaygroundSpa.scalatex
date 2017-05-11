@@ -29,9 +29,9 @@
   @nav(cls := "nav")
 
     @div(cls := "nav-left")
-      @a(cls := "nav-item")
-        @h1(cls := "title is-4")
-          Sireum
+      @div(cls := "nav-item")
+        @topButton("home", "fa fa-home")
+        @p(cls := "title is-4"){@raw("&nbsp;")Sireum Playground}
       @div(cls := "nav-item")
         @div(cls := "container is-fluid")
           @div(cls :="field is-grouped")

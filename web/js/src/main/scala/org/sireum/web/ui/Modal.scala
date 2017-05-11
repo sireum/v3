@@ -28,8 +28,9 @@ package org.sireum.web.ui
 
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
-import org.scalajs.dom.html.{Anchor, Button, Div, Input}
-import org.scalajs.dom.raw.KeyboardEvent
+import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
+import org.scalajs.dom.raw.{Element, KeyboardEvent}
+import org.sireum.web.playground.GitHub
 
 import scalatags.Text.all._
 import scalatags.Text.tags2._
@@ -55,7 +56,7 @@ object Modal {
           ),
           footer(cls := "modal-card-foot",
             a(id := "modal-ok", cls := "button is-success")("Ok"),
-            a(id := "modal-cancel", cls := "button is-danger")("Cancel")
+            a(id := "modal-cancel", cls := "button is-danger is-focused")("Cancel")
           )
         )
       )
@@ -70,25 +71,22 @@ object Modal {
       dom.document.body.removeChild(modal)
     }
 
-    def ok(): Unit = {
+    val okButton = $[Anchor]("#modal-ok")
+    okButton.onclick = (_: MouseEvent) => {
       close()
       success()
     }
 
-    val okButton = $[Anchor]("#modal-ok")
     val closeF = (_: MouseEvent) => close()
-    okButton.onclick = (_: MouseEvent) => ok()
     $[Button]("#modal-delete").onclick = closeF
     $[Anchor]("#modal-cancel").onclick = closeF
 
     dom.document.onkeyup = (e: KeyboardEvent) => {
       e.keyCode match {
         case `escape` => close()
-        case `enter` => ok()
         case _ =>
       }
     }
-
   }
 
   def textInput(titleText: String,
@@ -131,6 +129,7 @@ object Modal {
 
     val okButton = $[Anchor]("#modal-ok")
     val textInput = $[Input]("#modal-input")
+
     def ok(): Unit = {
       if (okButton.getAttribute("disabled") != "true") {
         close()
@@ -138,10 +137,12 @@ object Modal {
       }
     }
 
-    val closeF = (_: MouseEvent) => close()
     okButton.onclick = (_: MouseEvent) => ok()
+
+    val closeF = (_: MouseEvent) => close()
     $[Button]("#modal-delete").onclick = closeF
     $[Anchor]("#modal-cancel").onclick = closeF
+
     textInput.onkeyup = (e: KeyboardEvent) => {
       e.keyCode match {
         case `escape` => close()
@@ -150,7 +151,7 @@ object Modal {
           if (validator(textInput.value)) {
             textInput.className = "input is-success"
             okButton.className = "button is-success"
-            okButton.setAttribute("disabled", "false")
+            okButton.removeAttribute("disabled")
           } else {
             textInput.className = "input is-danger"
             okButton.className = "button"
@@ -158,6 +159,7 @@ object Modal {
           }
       }
     }
+
     dom.document.onkeyup = (e: KeyboardEvent) => {
       e.keyCode match {
         case `escape` => close()
@@ -165,6 +167,192 @@ object Modal {
         case _ =>
       }
     }
+
     textInput.focus()
+  }
+
+
+  def gitHubToken(titleText: String,
+                  authOpt: Option[GitHub.RepoAuth],
+                  pull: GitHub.RepoAuth => Unit,
+                  push: GitHub.RepoAuth => Unit): Unit = {
+    val modal = render[Div](
+      div(cls := "modal is-active",
+        div(cls := "modal-background"),
+        div(cls := "modal-card",
+          header(cls := "modal-card-head",
+            p(cls := "modal-card-title")(titleText),
+            button(id := "modal-delete", cls := "delete")
+          ),
+          section(cls := "modal-card-body",
+            div(cls := "field",
+              label(cls := "label")("User/Organization"),
+              p(cls := "control",
+                input(id := "modal-input-user", cls := "input is-danger", `type` := "text", placeholder := "Enter user/organization")
+              )
+            ),
+            div(cls := "field",
+              label(cls := "label")("Repository"),
+              p(cls := "control",
+                input(id := "modal-input-repo", cls := "input is-danger", `type` := "text", placeholder := "Enter repository")
+              )
+            ),
+            div(cls := "field",
+              label(cls := "label")("Personal Token"),
+              p(cls := "control",
+                input(id := "modal-input-token", cls := "input is-danger", `type` := "text", placeholder := "Enter token")
+              )
+            ),
+            div(cls := "field",
+              label(cls := "label")("URL"),
+              p(id := "modal-github-url")("https://github.com/<user>/<repo>.git")
+            )
+          ),
+          footer(cls := "modal-card-foot",
+            a(id := "modal-pull", cls := "button")("Pull"),
+            a(id := "modal-push", cls := "button")("Push"),
+            a(id := "modal-cancel", cls := "button is-danger")("Cancel")
+          )
+        )
+      )
+    )
+
+    val oldKeyup = dom.document.onkeyup
+
+    dom.document.body.appendChild(modal)
+
+    val userInput = $[Input]("#modal-input-user")
+    val repoInput = $[Input]("#modal-input-repo")
+    val tokenInput = $[Input]("#modal-input-token")
+    val pullButton = $[Anchor]("#modal-pull")
+    val pushButton = $[Anchor]("#modal-push")
+    val gitHubUrl = $[Paragraph]("#modal-github-url")
+
+    def updateUrl(): Unit = {
+      var ok = true
+      val user = if (userInput.value.trim != "") userInput.value else {
+        ok = false
+        "<user>"
+      }
+      val repo = if (repoInput.value.trim != "") repoInput.value else {
+        ok = false
+        "<repo>"
+      }
+      val url = s"https://github.com/$user/$repo.git"
+      if (ok) gitHubUrl.innerHTML = s"""<a target="_blank" href="$url">$url</a>"""
+      else gitHubUrl.innerHTML = url
+    }
+
+    def updateUserInput(): Unit = {
+      if (userInput.value.trim != "") userInput.className = "input"
+      else userInput.className = "input is-danger"
+      updateUrl()
+      updatePullPushButtons()
+    }
+
+    def updateRepoInput(): Unit = {
+      if (repoInput.value.trim != "") repoInput.className = "input"
+      else repoInput.className = "input is-danger"
+      updateUrl()
+      updatePullPushButtons()
+    }
+
+    def updateTokenInput(): Unit = {
+      if (tokenInput.value.trim != "") tokenInput.className = "input"
+      else tokenInput.className = "input is-danger"
+      updatePullPushButtons()
+    }
+
+    def updatePullPushButtons(): Unit =
+      if (!pushButton.className.contains("is-loading") && !pullButton.className.contains("is-loading"))
+        if (!userInput.className.contains("is-danger") &&
+          !repoInput.className.contains("is-danger") &&
+          !tokenInput.className.contains("is-danger")) {
+          pullButton.className = "button is-primary"
+          pushButton.className = "button is-primary"
+          pullButton.removeAttribute("disabled")
+          pushButton.removeAttribute("disabled")
+        } else {
+          pullButton.className = "button"
+          pushButton.className = "button"
+          pullButton.setAttribute("disabled", "true")
+          pushButton.setAttribute("disabled", "true")
+        }
+
+    def close(): Unit = {
+      dom.document.onkeyup = oldKeyup
+      dom.document.body.removeChild(modal)
+    }
+
+    var notifyCloseOpt: Option[() => Unit] = None
+
+    def closeNotify(): Unit = {
+      notifyCloseOpt.foreach(f => f())
+      notifyCloseOpt = None
+    }
+
+    val couldNotConnect: () => Unit = () => {
+      notifyCloseOpt = Some(Notification.notify(
+        $[Element](".modal-card-body"), Notification.Kind.Error,
+        "Could not connect to the specified repository."))
+    }
+
+    pullButton.onclick = (_: MouseEvent) => {
+      if (pullButton.getAttribute("disabled") != "true") {
+        closeNotify()
+        pullButton.className += " is-loading"
+        pushButton.setAttribute("disabled", "true")
+        val auth = GitHub.RepoAuth(userInput.value, repoInput.value, tokenInput.value)
+        GitHub.test(auth, () => {
+          close()
+          pull(auth)
+        }, couldNotConnect)
+      }
+    }
+
+    pushButton.onclick = (_: MouseEvent) => {
+      if (pushButton.getAttribute("disabled") != "true") {
+        closeNotify()
+        pushButton.className += " is-loading"
+        pullButton.setAttribute("disabled", "true")
+        val auth = GitHub.RepoAuth(userInput.value, repoInput.value, tokenInput.value)
+        GitHub.test(auth, () => {
+          close()
+          push(auth)
+        },
+          couldNotConnect)
+      }
+    }
+
+    val closeF = (_: MouseEvent) => close()
+    $[Button]("#modal-delete").onclick = closeF
+    $[Anchor]("#modal-cancel").onclick = closeF
+
+    userInput.onkeyup = (_: KeyboardEvent) => updateUserInput()
+    repoInput.onkeyup = (_: KeyboardEvent) => updateRepoInput()
+    tokenInput.onkeyup = (_: KeyboardEvent) => updateTokenInput()
+
+    dom.document.onkeyup = (e: KeyboardEvent) => {
+      e.keyCode match {
+        case `escape` => close()
+        case _ =>
+      }
+    }
+
+    authOpt match {
+      case Some(auth) =>
+        userInput.value = auth.user
+        repoInput.value = auth.repo
+        tokenInput.value = auth.token
+      case _ =>
+    }
+
+    updateUserInput()
+    updateRepoInput()
+    updateTokenInput()
+
+    if (userInput.value.trim == "") userInput.focus()
+    else if (repoInput.value.trim == "") repoInput.focus()
+    else if (tokenInput.value.trim == "") tokenInput.focus()
   }
 }

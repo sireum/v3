@@ -14,9 +14,13 @@
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
 <script>
+    var GitHub = null;
 	require.config({ paths: { 'vs': 'min/vs' }});
 	require(['vs/editor/editor.main'], function() {
-      org.sireum.web.Main.main();
+	  require(['min/GitHub.bundle.min'], function(gh) {
+	    GitHub = gh;
+        org.sireum.web.Main.main();
+      });
 	});
 </script>
 </body>

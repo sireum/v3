@@ -82,19 +82,17 @@ object Playground {
     dom.document.onreadystatechange = (_: Event) => updateView()
     dom.window.onresize = (_: UIEvent) => updateView()
 
-    $[Anchor]("#add-file").onclick = (_: MouseEvent) => {
+    $[Anchor]("#add-file").onclick = (_: MouseEvent) =>
       Modal.textInput("New File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
         filename => Files.newFile(filename, None)
       )
-    }
-    $[Anchor]("#duplicate-file").onclick = (_: MouseEvent) => {
+    $[Anchor]("#duplicate-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Duplicate File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
         filename => Files.newFile(filename, Some(editorValue))
       )
-    }
-    $[Anchor]("#rename-file").onclick = (_: MouseEvent) => {
+    $[Anchor]("#rename-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Rename File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
         filename => {
@@ -104,13 +102,23 @@ object Playground {
           if (isSingle) Files.deleteFile(Files.untitled)
         }
       )
-    }
+
     $[Anchor]("#delete-file").onclick = (_: MouseEvent) => {
       val f = Files.selectedFilename
       Modal.confirm(s"Delete File",
         s"Are you sure you want to delete $f?",
         () => Files.deleteFile(f))
     }
+    $[Anchor]("#github").onclick = (_: MouseEvent) =>
+      Modal.gitHubToken(
+        "GitHub",
+        GitHub.lookup(),
+        auth => {
+          None
+        },
+        auth => {
+          None
+        })
   }
 
   val slangId = "slang"

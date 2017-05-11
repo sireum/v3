@@ -104,7 +104,7 @@ object Files {
   }
 
   def isValidFilename(filename: String): Boolean =
-    filename.trim != "" && filename.head != '/' && filename.last != '/' && filename.forall {
+    filename.trim != "" &&      filename.forall {
       case '/' => true
       case c => c.isLetterOrDigit
     }
