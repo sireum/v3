@@ -32,6 +32,7 @@ import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
 import org.scalajs.dom.raw.{Element, KeyboardEvent}
 import org.sireum.web.playground.GitHub
 
+import scala.collection.immutable.SortedSet
 import scalatags.Text.all._
 import scalatags.Text.tags2._
 import org.sireum.web.util._
@@ -173,9 +174,10 @@ object Modal {
 
 
   def gitHubToken(titleText: String,
-                  authOpt: Option[GitHub.RepoAuth],
-                  pull: GitHub.RepoAuth => Unit,
-                  push: GitHub.RepoAuth => Unit): Unit = {
+                  repoAuthOpt: Option[GitHub.RepoAuth],
+                  fileFilter: String => Boolean,
+                  pull: (GitHub.RepoAuth, SortedSet[String]) => Unit,
+                  push: (GitHub.RepoAuth, SortedSet[String]) => Unit): Unit = {
     val modal = render[Div](
       div(cls := "modal is-active",
         div(cls := "modal-background"),
@@ -302,11 +304,12 @@ object Modal {
         closeNotify()
         pullButton.className += " is-loading"
         pushButton.setAttribute("disabled", "true")
-        val auth = GitHub.RepoAuth(userInput.value, repoInput.value, tokenInput.value)
-        GitHub.test(auth, () => {
+        pullButton.setAttribute("disabled", "true")
+        val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
+        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs => {
           close()
-          pull(auth)
-        }, couldNotConnect)
+          pull(repoAuth, fs)
+        }), couldNotConnect)
       }
     }
 
@@ -314,13 +317,13 @@ object Modal {
       if (pushButton.getAttribute("disabled") != "true") {
         closeNotify()
         pushButton.className += " is-loading"
+        pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
-        val auth = GitHub.RepoAuth(userInput.value, repoInput.value, tokenInput.value)
-        GitHub.test(auth, () => {
+        val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
+        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs => {
           close()
-          push(auth)
-        },
-          couldNotConnect)
+          push(repoAuth, fs)
+        }), couldNotConnect)
       }
     }
 
@@ -339,7 +342,7 @@ object Modal {
       }
     }
 
-    authOpt match {
+    repoAuthOpt match {
       case Some(auth) =>
         userInput.value = auth.user
         repoInput.value = auth.repo

@@ -28,6 +28,7 @@ package org.sireum.web.playground
 import org.scalajs.dom
 import org.sireum.web.util._
 
+import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 
 object GitHub {
@@ -58,7 +59,7 @@ object GitHub {
 
   def findFiles(repoAuth: GitHub.RepoAuth,
                 filePathFilter: String => Boolean,
-                success: js.Array[String] => Unit): Unit = {
+                success: SortedSet[String] => Unit): Unit = {
     val repo = new github.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
 
     def recurseDir(path: String, f: List[String] => Unit): Unit = {
@@ -81,8 +82,8 @@ object GitHub {
     }
 
     repo.getContributors({
-      case (null, result, _) if result != null => recurseDir(null, l => success(js.Array(l.sorted: _*)))
-      case (null, _, _) => success(js.Array())
+      case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
+      case (null, _, _) => success(SortedSet())
     })
   }
 }

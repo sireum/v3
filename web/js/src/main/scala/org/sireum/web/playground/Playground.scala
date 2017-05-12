@@ -113,10 +113,11 @@ object Playground {
       Modal.gitHubToken(
         "GitHub",
         GitHub.lookup(),
-        auth => {
+        _.endsWith(Files.slangExt),
+        (repoAuth, fs) => {
           None
         },
-        auth => {
+        (repoAuth, fs) => {
           None
         })
   }
