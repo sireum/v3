@@ -25,7 +25,6 @@
 
 package org.sireum.web.playground
 
-import monaco.editor.EndOfLinePreference
 import org.scalajs.dom
 import org.scalajs.dom.html.Select
 import org.scalajs.dom.raw.Event
@@ -36,10 +35,11 @@ import scala.scalajs.js
 import scalatags.Text.all._
 
 object Files {
-  val slangExt = ".slang"
   val fileKey = "sireum://"
-  val lastFilenameKey = "org.sireum.filename.last"
   val filenamesKey = "org.sireum.filenames"
+  val lastFilenameKey = "org.sireum.filename.last"
+
+  val slangExt = ".slang"
   val cursorKey = "org.sireum.cursor"
   val newText = "import org.sireum._\n\n"
   val newTextLine: Int = newText.count(_ == '\n')
@@ -61,6 +61,18 @@ object Files {
 
   def remove(key: String): Unit = {
     dom.window.localStorage.removeItem(key)
+  }
+
+  def erase(): Unit = {
+    val ls = dom.window.localStorage
+    ls.removeItem(filenamesKey)
+    ls.removeItem(lastFilenameKey)
+    for (i <- 0 until ls.length) {
+      ls.key(i) match {
+        case k if k.startsWith(fileKey) => ls.removeItem(k)
+        case _ =>
+      }
+    }
   }
 
   def updateFilenames(fs: js.Array[String]): Unit =
@@ -104,7 +116,7 @@ object Files {
   }
 
   def isValidFilename(filename: String): Boolean =
-    filename.trim != "" &&      filename.forall {
+    filename.trim != "" && filename.forall {
       case '/' => true
       case c => c.isLetterOrDigit
     }

@@ -26,10 +26,10 @@
 package org.sireum.web.playground
 
 import org.scalajs.dom
-import org.sireum.web.util._
 
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.scalajs.js
+import org.sireum.web.util._
 
 object GitHub {
 
@@ -47,10 +47,17 @@ object GitHub {
     dom.window.sessionStorage.setItem(repoAuthKey, write(repoAuth))
   }
 
+  def erase(): Unit = {
+    dom.window.sessionStorage.removeItem(repoAuthKey)
+  }
+
+  def gitHubRepo(repoAuth: RepoAuth): github.Repository =
+    new github.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
+
   def test(repoAuth: GitHub.RepoAuth,
            success: () => Unit,
            error: () => Unit): Unit =
-    new github.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo).getDetails {
+    gitHubRepo(repoAuth).getDetails {
       case (null, _, _) =>
         update(repoAuth)
         success()
@@ -60,14 +67,14 @@ object GitHub {
   def findFiles(repoAuth: GitHub.RepoAuth,
                 filePathFilter: String => Boolean,
                 success: SortedSet[String] => Unit): Unit = {
-    val repo = new github.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
+    val repo = gitHubRepo(repoAuth)
 
     def recurseDir(path: String, f: List[String] => Unit): Unit = {
       repo.getContents(null, path, raw = false, {
         case (null, (files: js.Array[js.Dynamic]@unchecked), _) =>
-          def dir(fs: List[String], dirPaths: List[String]): Unit = dirPaths match {
-            case Nil => f(fs)
-            case head :: tail => recurseDir(head, fs2 => dir(fs ++ fs2, tail))
+          def dir(acc: List[String], dirPaths: List[String]): Unit = dirPaths match {
+            case Nil => f(acc)
+            case head :: tail => recurseDir(head, fs2 => dir(acc ++ fs2, tail))
           }
 
           var fs = List[String]()
@@ -85,5 +92,28 @@ object GitHub {
       case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
       case (null, _, _) => success(SortedSet())
     })
+  }
+
+  def downloadFiles(repoAuth: GitHub.RepoAuth,
+                    files: Iterable[String],
+                    success: SortedMap[String, String] => Unit,
+                    error: List[String] => Unit): Unit = {
+    val repo = gitHubRepo(repoAuth)
+
+    def recurseFiles(acc: SortedMap[String, String], errs: List[String], fs: List[String]): Unit = fs match {
+      case Nil => if (errs.isEmpty) success(acc) else error(errs.reverse)
+      case head :: tail =>
+        repo.getContents(null, head, raw = false, {
+          case (err, result, _) if err == null =>
+            ((result.`type`.toString, result.`encoding`.toString): @unchecked) match {
+              case ("file", "base64") => recurseFiles(acc + (head -> dom.window.atob(result.`content`.toString)), errs, tail)
+              case ("submodule", _) => recurseFiles(acc, errs, tail)
+              case ("file", encoding) => recurseFiles(acc, s"Unsupported file encoding $encoding for $head" :: errs, tail)
+            }
+          case _ => recurseFiles(acc, s"Could not get file content of $head" :: errs, tail)
+        })
+    }
+
+    recurseFiles(SortedMap(), List(), files.toList)
   }
 }

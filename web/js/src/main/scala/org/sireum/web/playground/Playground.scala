@@ -109,16 +109,27 @@ object Playground {
         s"Are you sure you want to delete $f?",
         () => Files.deleteFile(f))
     }
+
+    $[Anchor]("#clean").onclick = (_: MouseEvent) => {
+      Modal.confirm(s"Erase Data",
+        s"Are you sure you want to erase all data including files, etc.?",
+        () => {
+          GitHub.erase()
+          Files.erase()
+          Files.loadFiles()
+        })
+    }
+
     $[Anchor]("#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
         "GitHub",
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
-        (repoAuth, fs) => {
-          None
+        (_, fm) => {
+          dom.console.log(js.Dictionary(fm.toList: _*))
         },
-        (repoAuth, fs) => {
-          None
+        (_, fm) => {
+          dom.console.log(js.Dictionary(fm.toList: _*))
         })
   }
 

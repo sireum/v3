@@ -32,7 +32,7 @@ import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
 import org.scalajs.dom.raw.{Element, KeyboardEvent}
 import org.sireum.web.playground.GitHub
 
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedMap, SortedSet}
 import scalatags.Text.all._
 import scalatags.Text.tags2._
 import org.sireum.web.util._
@@ -176,8 +176,8 @@ object Modal {
   def gitHubToken(titleText: String,
                   repoAuthOpt: Option[GitHub.RepoAuth],
                   fileFilter: String => Boolean,
-                  pull: (GitHub.RepoAuth, SortedSet[String]) => Unit,
-                  push: (GitHub.RepoAuth, SortedSet[String]) => Unit): Unit = {
+                  pull: (GitHub.RepoAuth, SortedMap[String, String]) => Unit,
+                  push: (GitHub.RepoAuth, SortedMap[String, String]) => Unit): Unit = {
     val modal = render[Div](
       div(cls := "modal is-active",
         div(cls := "modal-background"),
@@ -296,7 +296,13 @@ object Modal {
     val couldNotConnect: () => Unit = () => {
       notifyCloseOpt = Some(Notification.notify(
         $[Element](".modal-card-body"), Notification.Kind.Error,
-        "Could not connect to the specified repository."))
+        raw("Could not connect to the specified repository.")))
+    }
+
+    def fileErrors(errs: List[String]): Unit = {
+      notifyCloseOpt = Some(Notification.notify(
+        $[Element](".modal-card-body"), Notification.Kind.Error,
+        ul(errs.map(err => li(raw(err))): _*)))
     }
 
     pullButton.onclick = (_: MouseEvent) => {
@@ -306,10 +312,12 @@ object Modal {
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
         val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
-        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs => {
-          close()
-          pull(repoAuth, fs)
-        }), couldNotConnect)
+        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs =>
+          GitHub.downloadFiles(repoAuth, fs, fm => {
+            close()
+            pull(repoAuth, fm)
+          }, fileErrors)
+        ), couldNotConnect)
       }
     }
 
@@ -320,10 +328,12 @@ object Modal {
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
         val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
-        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs => {
-          close()
-          push(repoAuth, fs)
-        }), couldNotConnect)
+        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs =>
+          GitHub.downloadFiles(repoAuth, fs, fm => {
+            close()
+            push(repoAuth, fm)
+          }, fileErrors)
+        ), couldNotConnect)
       }
     }
 

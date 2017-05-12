@@ -38,7 +38,7 @@ object Notification {
     val Plain, Primary, Info, Warning, Error, Success = Value
   }
 
-  def notify(parent: Element, tpe: Kind.Type, message: String): () => Unit = {
+  def notify(parent: Element, tpe: Kind.Type, message: Frag): () => Unit = {
     val ncls = tpe match {
       case Kind.Plain => ""
       case Kind.Primary => "is-primary"
@@ -50,9 +50,7 @@ object Notification {
 
     val bid = s"notify-delete-${System.currentTimeMillis()}"
 
-    val notification = render[Div](div(cls := s"notification $ncls", button(id := bid, cls := "delete")) {
-      message
-    })
+    val notification = render[Div](div(cls := s"notification $ncls", button(id := bid, cls := "delete"))(message))
 
     parent.appendChild(notification)
 

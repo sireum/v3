@@ -53,6 +53,7 @@
       @div(cls := "nav-item")
         @div(cls := "container is-fluid")
           @div(cls :="field is-grouped")
+            @topButton("clean", "fa fa-eraser")
             @topButton("download", "fa fa-download")
             @topButton("upload", "fa fa-upload")
             @topButton("github", "fa fa-github")
