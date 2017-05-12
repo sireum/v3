@@ -188,7 +188,7 @@ object Modal {
           ),
           section(cls := "modal-card-body",
             div(cls := "field",
-              label(cls := "label")("User/Organization"),
+              label(cls := "label")("Owner"),
               p(cls := "control",
                 input(id := "modal-input-user", cls := "input is-danger", `type` := "text", placeholder := "Enter user/organization")
               )
@@ -200,7 +200,7 @@ object Modal {
               )
             ),
             div(cls := "field",
-              label(cls := "label")("Personal Token"),
+              label(cls := "label")(raw("""Personal Access Token (<a target="_blank" href="https://github.com/settings/tokens/new">with full control of private repositories</a>)""")),
               p(cls := "control",
                 input(id := "modal-input-token", cls := "input is-danger", `type` := "text", placeholder := "Enter token")
               )
@@ -234,11 +234,11 @@ object Modal {
       var ok = true
       val user = if (userInput.value.trim != "") userInput.value else {
         ok = false
-        "<user>"
+        "〈owner〉"
       }
       val repo = if (repoInput.value.trim != "") repoInput.value else {
         ok = false
-        "<repo>"
+        "〈repo〉"
       }
       val url = s"https://github.com/$user/$repo.git"
       if (ok) gitHubUrl.innerHTML = s"""<a target="_blank" href="$url">$url</a>"""
