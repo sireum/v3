@@ -25,7 +25,7 @@
 
 package org.sireum.web.playground
 
-import ffi.{FileSaver, JsZip, ZipObject}
+import ffi.{FileSaver, Zip, ZipObject}
 import org.scalajs.dom
 import org.scalajs.dom.html.Select
 import org.scalajs.dom.raw.{FileList, FileReader, ProgressEvent}
@@ -251,7 +251,7 @@ object Files {
     def recurseArrayBuffer(abs: List[(String, ArrayBuffer)]): Unit = abs match {
       case Nil => recurseZips(zips)
       case head :: tail =>
-        val f = JsZip.loadAsync(head._2, jsObj(createFolders = true, checkCRC32 = true)).toFuture
+        val f = Zip.loadAsync(head._2, jsObj(createFolders = true, checkCRC32 = true)).toFuture
         f.onComplete {
           case Success(zip) =>
             zip.forEach((path, o) => if (path.endsWith(Files.slangExt)) zips ::= (path, o))
@@ -276,7 +276,7 @@ object Files {
   }
 
   def saveZip(filename: String): Unit = {
-    val zip = new JsZip
+    val zip = new Zip
     val (_, fs) = lookupFilenames()
     for (f <- fs) {
       val i = f.lastIndexOf('/')

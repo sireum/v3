@@ -32,16 +32,16 @@ import scala.scalajs.js.typedarray.ArrayBuffer
 
 @js.native
 @JSGlobal("JSZip")
-object JsZip extends js.Object {
-  def loadAsync(a: ArrayBuffer, option: js.Dynamic): Promise[JsZip] = js.native
+object Zip extends js.Object {
+  def loadAsync(a: ArrayBuffer, option: js.Dynamic): Promise[Zip] = js.native
 }
 
 @js.native
 @JSGlobal("JSZip")
-class JsZip extends js.Object {
+class Zip extends js.Object {
   def forEach(f: js.Function2[String, ZipObject, Unit]): Unit = js.native
   def file(name: String, content: String): Unit = js.native
-  def folder(name: String): JsZipFolder = js.native
+  def folder(name: String): ZipFolder = js.native
   def generateAsync(option: js.Dynamic): Promise[js.Dynamic] = js.native
 }
 
@@ -51,6 +51,6 @@ trait ZipObject extends js.Object {
 }
 
 @js.native
-trait JsZipFolder extends js.Object {
+trait ZipFolder extends js.Object {
   def file(name: String, content: String): Unit = js.native
 }
