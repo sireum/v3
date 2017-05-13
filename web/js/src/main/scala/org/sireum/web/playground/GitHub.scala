@@ -60,6 +60,12 @@ object GitHub {
   def gitHubRepo(repoAuth: RepoAuth): Repository =
     new ffi.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
 
+  def rateLimit(repoAuth: RepoAuth, success: Int => Unit): Unit =
+    new ffi.GitHub(jsObj(token = repoAuth.token)).getRateLimit().getRateLimit({
+      case (err, result, _) if err == null => success(result.rate.remaining.toString.toInt)
+      case _ =>
+    })
+
   def test(repoAuth: GitHub.RepoAuth,
            success: () => Unit,
            error: () => Unit): Unit =

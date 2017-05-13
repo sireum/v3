@@ -28,7 +28,7 @@ package org.sireum.web.ui
 
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
-import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
+import org.scalajs.dom.html.{Anchor, Button, Div, Input, Label, Paragraph}
 import org.scalajs.dom.raw.KeyboardEvent
 import org.sireum.web.playground.{GitHub, Playground}
 
@@ -183,6 +183,7 @@ object Modal {
                   fileFilter: String => Boolean,
                   pull: (GitHub.RepoAuth, SortedMap[String, String]) => Unit,
                   push: (GitHub.RepoAuth, SortedMap[String, String]) => Unit): Unit = {
+    val tokenRawLabel = """Personal Access Token (<a target="_blank" href="https://github.com/settings/tokens/new">with full control of private repositories</a>)"""
     val modal = render[Div](
       div(cls := "modal is-active",
         div(cls := "modal-background"),
@@ -205,7 +206,7 @@ object Modal {
               )
             ),
             div(cls := "field",
-              label(cls := "label")(raw("""Personal Access Token (<a target="_blank" href="https://github.com/settings/tokens/new">with full control of private repositories</a>)""")),
+              label(id := "token", cls := "label")(raw(tokenRawLabel)),
               p(cls := "control",
                 input(id := "modal-input-token", cls := "input is-danger", `type` := "text", placeholder := "Enter token")
               )
@@ -234,6 +235,7 @@ object Modal {
     val pullButton = $[Anchor]("#modal-pull")
     val pushButton = $[Anchor]("#modal-push")
     val gitHubUrl = $[Paragraph]("#modal-github-url")
+    val tokenLabel = $[Label]("#token")
 
     def updateUrl(): Unit = {
       var ok = true
@@ -268,6 +270,16 @@ object Modal {
       if (tokenInput.value.trim != "") tokenInput.className = "input"
       else tokenInput.className = "input is-danger"
       updatePullPushButtons()
+      if (pullButton.getAttribute("disabled") != "true") {
+        val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
+        val innerHtml = tokenLabel.innerHTML
+        tokenLabel.innerHTML = tokenRawLabel
+        GitHub.rateLimit(repoAuth, remaining => {
+          val i = innerHtml.indexOf("<")
+          val j = innerHtml.indexOf("</a>")
+          tokenLabel.innerHTML = innerHtml.substring(0, i) + s"""<a target="_blank" href="https://developer.github.com/v3/#rate-limiting">rate limit remaining: $remaining""" + innerHtml.substring(j)
+        })
+      }
     }
 
     def updatePullPushButtons(force: Boolean = false): Unit =
@@ -296,6 +308,7 @@ object Modal {
       Notification.notify(Notification.Kind.Error, err)
       updatePullPushButtons(force = true)
     }
+
     val couldNotConnect = () => notifyError("Could not connect to the repository.")
 
     pullButton.onclick = (_: MouseEvent) => {

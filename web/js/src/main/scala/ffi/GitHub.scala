@@ -39,6 +39,7 @@ object GitHub {
 @JSGlobal
 class GitHub(auth: RequestableAuth = ???, apiBase: String = ???) extends js.Object {
   def getRepo(user: String, repo: String): Repository = js.native
+  def getRateLimit(): RateLimit = js.native
 }
 
 @js.native
@@ -60,4 +61,9 @@ trait Repository extends js.Object {
 @js.native
 trait WriteOption extends js.Object {
   var encode: Boolean = js.native
+}
+
+@js.native
+trait RateLimit extends js.Object {
+  def getRateLimit(cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
 }
