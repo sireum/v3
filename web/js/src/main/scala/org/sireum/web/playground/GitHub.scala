@@ -138,7 +138,7 @@ object GitHub {
       case Nil =>
       case (f, cm) :: tail => cm match {
         case ChangeMode.Add | ChangeMode.Update =>
-          val message = if (cm == ChangeMode.Add) "Added." else "Updated."
+          val message = if (cm == ChangeMode.Add) s"Added $f." else s"Updated $f."
           repo.writeFile("master", s"$f?timestamp=0", Files.lookupContent(f).get, message, jsObj(encode = true), {
             case (err, _, _) if err == null => recurseChanges(tail)
             case (err, _, _) => throw Escape(err.message.toString)
