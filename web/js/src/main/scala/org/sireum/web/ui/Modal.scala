@@ -29,8 +29,8 @@ package org.sireum.web.ui
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
-import org.scalajs.dom.raw.{Element, KeyboardEvent}
-import org.sireum.web.playground.GitHub
+import org.scalajs.dom.raw.KeyboardEvent
+import org.sireum.web.playground.{GitHub, Playground}
 
 import scala.collection.immutable.SortedMap
 import scalatags.Text.all._
@@ -71,6 +71,7 @@ object Modal {
     def close(): Unit = {
       dom.document.onkeyup = oldKeyup
       dom.document.body.removeChild(modal)
+      Playground.editor.focus()
     }
 
     val okButton = $[Anchor]("#modal-ok")
@@ -129,6 +130,7 @@ object Modal {
     def close(): Unit = {
       dom.document.onkeyup = oldKeyup
       dom.document.body.removeChild(modal)
+      Playground.editor.focus()
     }
 
     val okButton = $[Anchor]("#modal-ok")
@@ -287,6 +289,7 @@ object Modal {
     def close(): Unit = {
       dom.document.onkeyup = oldKeyup
       dom.document.body.removeChild(modal)
+      Playground.editor.focus()
     }
 
     def notifyError(err: String): Unit = {
