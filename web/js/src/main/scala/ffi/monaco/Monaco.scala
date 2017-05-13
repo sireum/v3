@@ -23,6 +23,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package ffi
+
 import scala.scalajs.js
 import js.annotation._
 import js.|
@@ -602,8 +604,8 @@ package monaco {
 
   package editor {
 
-    import monaco.Monaco.MarkedString
-    import monaco.editor.Editor.{BuiltinTheme, LineNumbersOption}
+    import ffi.monaco.Monaco.MarkedString
+    import ffi.monaco.editor.Editor.{BuiltinTheme, LineNumbersOption}
     import org.scalajs.dom.Element
 
     @js.native
@@ -2194,8 +2196,8 @@ package monaco {
 
   package languages {
 
-    import monaco.Monaco.MarkedString
-    import monaco.languages.Languages.{CharacterPair, Definition}
+    import ffi.monaco.Monaco.MarkedString
+    import ffi.monaco.languages.Languages.{CharacterPair, Definition}
 
     import scala.scalajs.js.RegExp
 
@@ -2648,7 +2650,7 @@ package monaco {
 
     package typescript {
 
-      import monaco.languages.typescript.Typescript.CompilerOptionsValue
+      import ffi.monaco.languages.typescript.Typescript.CompilerOptionsValue
 
       @js.native
       sealed trait ModuleKind extends js.Object {

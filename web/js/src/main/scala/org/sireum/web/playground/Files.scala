@@ -25,14 +25,21 @@
 
 package org.sireum.web.playground
 
+import ffi.{FileSaver, JsZip, ZipObject}
 import org.scalajs.dom
 import org.scalajs.dom.html.Select
+import org.scalajs.dom.raw.{FileList, FileReader, ProgressEvent}
 import org.sireum.web.playground.Playground.editor
+import org.sireum.web.ui.Notification
+
 import scala.collection.immutable.SortedMap
 import org.sireum.web.util._
 
 import scala.scalajs.js
+import scala.scalajs.js.typedarray.ArrayBuffer
+import scala.util.{Failure, Success}
 import scalatags.Text.all._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Files {
 
@@ -125,7 +132,8 @@ object Files {
   }
 
   def isValidFilename(filename: String): Boolean =
-    filename.trim != "" && filename.forall {
+    filename.trim != "" && !filename(0).isDigit && filename(0) != '/' &&
+      filename.last != '/' && filename.forall {
       case '/' => true
       case c => c.isLetterOrDigit
     }
@@ -201,7 +209,7 @@ object Files {
     }
     Files.lookupContent(Files.untitled) match {
       case Some(text) if text.trim == Files.newText.trim => Files.deleteFile(Files.untitled)
-      case x =>
+      case _ =>
     }
   }
 
@@ -216,5 +224,70 @@ object Files {
     for (f <- fileContentMap.keys if !fs.contains(f))
       r += f -> ChangeMode.Delete
     r
+  }
+
+  def loadZips(files: FileList, success: SortedMap[String, String] => Unit): Unit = {
+    var fileContentMap = SortedMap[String, String]()
+
+    def recurseZips(zips: List[(String, ZipObject)]): Unit = zips match {
+      case Nil => success(fileContentMap)
+      case head :: tail =>
+        val (path, o) = head
+        o.async("text").toFuture.onComplete {
+          case Success(text) =>
+            fileContentMap.get(path) match {
+              case Some(_) =>
+                Notification.notify(Notification.Kind.Error, s"Found duplicate entry for $path; please upload the zip files separately.")
+              case _ =>
+                fileContentMap += path -> text.toString
+                recurseZips(tail)
+            }
+          case Failure(_) => Notification.notify(Notification.Kind.Error, s"Error encountered when reading $head.")
+        }
+    }
+
+    var zips = List[(String, ZipObject)]()
+
+    def recurseArrayBuffer(abs: List[(String, ArrayBuffer)]): Unit = abs match {
+      case Nil => recurseZips(zips)
+      case head :: tail =>
+        val f = JsZip.loadAsync(head._2, jsObj(createFolders = true, checkCRC32 = true)).toFuture
+        f.onComplete {
+          case Success(zip) =>
+            zip.forEach((path, o) => if (path.endsWith(Files.slangExt)) zips ::= (path, o))
+            recurseArrayBuffer(tail)
+          case Failure(_) =>
+            Notification.notify(Notification.Kind.Error, s"Error encountered when reading ${head._1}.")
+        }
+    }
+
+    var abs = List[(String, ArrayBuffer)]()
+
+    def recurseFiles(i: Int): Unit = if (i < files.length) {
+      val r = new FileReader
+      r.onloadend = (_: ProgressEvent) => {
+        abs ::= (files(i).name, r.result.asInstanceOf[ArrayBuffer])
+        recurseFiles(i + 1)
+      }
+      r.readAsArrayBuffer(files(i))
+    } else recurseArrayBuffer(abs)
+
+    recurseFiles(0)
+  }
+
+  def saveZip(filename: String): Unit = {
+    val zip = new JsZip
+    val (_, fs) = lookupFilenames()
+    for (f <- fs) {
+      val i = f.lastIndexOf('/')
+      if (i < 0) zip.file(f, lookupContent(f).get) else {
+        val folder = zip.folder(f.substring(0, i))
+        folder.file(f.substring(i + 1), lookupContent(f).get)
+      }
+    }
+    zip.generateAsync(jsObj(`type` = "blob")).toFuture.onComplete {
+      case Success(blob) => FileSaver.saveAs(blob, filename)
+      case Failure(t) => Notification.notify(Notification.Kind.Error, s"Error encountered when generating a zip file for $filename (reason: ${t.getMessage}).")
+    }
   }
 }

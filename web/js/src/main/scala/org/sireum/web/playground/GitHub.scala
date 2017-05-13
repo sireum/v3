@@ -25,18 +25,21 @@
 
 package org.sireum.web.playground
 
+import ffi.Repository
 import org.scalajs.dom
 import org.sireum.web.playground.Files.ChangeMode
+import org.sireum.web.ui.Notification
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.scalajs.js
 import org.sireum.web.util._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Failure
+
 object GitHub {
 
   final case class RepoAuth(user: String, repo: String, token: String)
-
-  final case class Escape(msg: String) extends RuntimeException
 
   val repoAuthKey = "org.sireum.github"
 
@@ -54,8 +57,8 @@ object GitHub {
     dom.window.sessionStorage.removeItem(repoAuthKey)
   }
 
-  def gitHubRepo(repoAuth: RepoAuth): github.Repository =
-    new github.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
+  def gitHubRepo(repoAuth: RepoAuth): Repository =
+    new ffi.GitHub(jsObj(token = repoAuth.token)).getRepo(repoAuth.user, repoAuth.repo)
 
   def test(repoAuth: GitHub.RepoAuth,
            success: () => Unit,
@@ -78,7 +81,8 @@ object GitHub {
         case (null, (files: js.Array[js.Dynamic]@unchecked), _) =>
           def dir(acc: List[String], dirPaths: List[String]): Unit = dirPaths match {
             case Nil => f(acc)
-            case head :: tail => recurseDir(head, fs2 => dir(acc ++ fs2, tail))
+            case head :: tail =>
+              recurseDir(head, fs2 => dir(acc ++ fs2, tail))
           }
 
           var fs = List[String]()
@@ -89,18 +93,14 @@ object GitHub {
             case _ =>
           }
           dir(fs, dirPaths)
-        case (err, _, _) => throw Escape(err.message.toString)
+        case (err, _, _) => Notification.notify(Notification.Kind.Error, s"Error encountered when accessing directory ${if (path == null) "/" else path} (reason: ${err.message}).")
       })
     }
 
-    try {
-      repo.getContributors({
-        case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
-        case (null, _, _) => success(SortedSet())
-      })
-    } catch {
-      case Escape(msg) => error(msg)
-    }
+    repo.getContributors({
+      case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
+      case (null, _, _) => success(SortedSet())
+    })
   }
 
   def downloadFiles(repoAuth: GitHub.RepoAuth,
@@ -117,47 +117,46 @@ object GitHub {
             ((result.`type`.toString, result.`encoding`.toString): @unchecked) match {
               case ("file", "base64") => recurseFiles(acc + (head -> dom.window.atob(result.`content`.toString)), tail)
               case ("submodule", _) => recurseFiles(acc, tail)
-              case ("file", encoding) => throw Escape(s"Unsupported file encoding $encoding for $head")
+              case ("file", encoding) => Notification.notify(Notification.Kind.Error, s"Unsupported file encoding $encoding for $head.")
             }
-          case (err, _, _) => throw Escape(s"Could not get the file content of $head (reason: ${err.message.toString})")
+          case (err, _, _) => Notification.notify(Notification.Kind.Error, s"Could not get the file content of $head (reason: ${err.message.toString}).")
         })
     }
 
-    try recurseFiles(SortedMap(), files.toList)
-    catch {
-      case Escape(msg) => error(msg)
-    }
+    recurseFiles(SortedMap(), files.toList)
   }
 
-  def pushChanges(repoAuth: GitHub.RepoAuth, changes: SortedMap[String, ChangeMode.Type], error: String => Unit): Unit = {
+  def pushChanges(repoAuth: GitHub.RepoAuth, changes: SortedMap[String, ChangeMode.Type],
+                  success: () => Unit, error: String => Unit): Unit = {
     val repo = gitHubRepo(repoAuth)
 
     var branch = "master"
 
     def recurseChanges(cs: List[(String, ChangeMode.Type)]): Unit = cs match {
-      case Nil =>
+      case Nil => success()
       case (f, cm) :: tail => cm match {
         case ChangeMode.Add | ChangeMode.Update =>
           val message = if (cm == ChangeMode.Add) s"Added $f." else s"Updated $f."
           repo.writeFile("master", s"$f?timestamp=0", Files.lookupContent(f).get, message, jsObj(encode = true), {
             case (err, _, _) if err == null => recurseChanges(tail)
-            case (err, _, _) => throw Escape(err.message.toString)
-          })
+            case (err, _, _) => Notification.notify(Notification.Kind.Error, s"Could not push file content of $f (reason: ${err.message.toString}).")
+          }).toFuture.onComplete {
+            case Failure(t) => Notification.notify(Notification.Kind.Error, s"Could not push file content of $f (reason: ${t.getMessage}).")
+            case _ =>
+          }
         case ChangeMode.Delete =>
           repo.deleteFile("master", s"$f?timestamp=0", {
             case (err, _, _) if err == null => recurseChanges(tail)
-            case (err, _, _) => throw Escape(err.message.toString)
+            case (err, _, _) => Notification.notify(Notification.Kind.Error, s"Could not delete file $f (reason: ${err.message.toString}).")
           })
       }
     }
 
     repo.getDetails({
-      case (_, result, _) =>
+      case (err, result, _) if err == null =>
         branch = result.default_branch.toString
-        try recurseChanges(changes.toList)
-        catch {
-          case Escape(msg) => error(msg)
-        }
-    })
+        recurseChanges(changes.toList)
+      case (err, _, _) => Notification.notify(Notification.Kind.Error, s"Could not determine the default repository branch (reason: ${err.message.toString}).")
+     })
   }
 }

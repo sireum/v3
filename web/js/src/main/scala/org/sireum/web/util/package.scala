@@ -73,8 +73,15 @@ package object util {
     js.eval(text).asInstanceOf[T]
   }
 
+  def click(selector: String): Unit =
+    jQuery(selector).trigger("click")
+
   @js.native
   trait HtmlTemplateElement extends Element {
     def content: DocumentFragment
+  }
+
+  implicit class ToDynamic(val o: js.Any) extends AnyVal {
+    def dyn: js.Dynamic = o.asInstanceOf[js.Dynamic]
   }
 }

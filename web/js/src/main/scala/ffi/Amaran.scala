@@ -23,8 +23,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import scala.scalajs.js
+package ffi
 
-package object github {
-  type RequestableCallback = js.Function3[js.Dynamic, js.Dynamic, js.Dynamic, js.Any]
+import scala.scalajs.js
+import scala.scalajs.js.annotation.JSGlobalScope
+
+@js.native
+@JSGlobalScope
+object Amaran extends js.Object {
+  def amaran(option: js.Object): Unit = js.native
 }

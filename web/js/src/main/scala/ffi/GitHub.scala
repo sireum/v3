@@ -23,13 +23,41 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package amaran
+
+package ffi
+
+import GitHub.RequestableCallback
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobalScope
+import scala.scalajs.js.annotation.JSGlobal
+
+object GitHub {
+  type RequestableCallback = js.Function3[js.Dynamic, js.Dynamic, js.Dynamic, js.Any]
+}
 
 @js.native
-@JSGlobalScope
-object Amaran extends js.Object {
-  def amaran(option: js.Object): Unit = js.native
+@JSGlobal
+class GitHub(auth: RequestableAuth = ???, apiBase: String = ???) extends js.Object {
+  def getRepo(user: String, repo: String): Repository = js.native
+}
+
+@js.native
+trait RequestableAuth extends js.Object {
+  var username: String = js.native
+  var password: String = js.native
+  var token: String = js.native
+}
+
+@js.native
+trait Repository extends js.Object {
+  def getContents(ref: String, path: String, raw: Boolean, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def getDetails(cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def getContributors(cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def writeFile(branch: String, path: String, content: String, message: String, option: WriteOption, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def deleteFile(branch: String, path: String, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+}
+
+@js.native
+trait WriteOption extends js.Object {
+  var encode: Boolean = js.native
 }

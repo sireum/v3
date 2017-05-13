@@ -25,21 +25,25 @@
 
 package org.sireum.web.playground
 
-import monaco.KeyCode
-import monaco.editor.{EndOfLinePreference, ICommandHandler, IEditorConstructionOptions, IModelContentChangedEvent2}
+import ffi.monaco.KeyCode
+import ffi.monaco.editor.{EndOfLinePreference, ICommandHandler, IEditorConstructionOptions, IModelContentChangedEvent2}
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
-import org.scalajs.dom.html.{Anchor, Div, Select}
-import org.scalajs.dom.raw.{Event, UIEvent}
+import org.scalajs.dom.html.{Anchor, Div, Input, Select}
+import org.scalajs.dom.raw._
 import org.sireum.web.ui.{Modal, Notification}
+import scalatags.Text.all._
+
 
 import scala.scalajs.js
 import scalatex.PlaygroundSpa
 import org.sireum.web.util._
 
+import scala.collection.immutable.SortedMap
+
 object Playground {
 
-  var editor: monaco.editor.IStandaloneCodeEditor = _
+  var editor: ffi.monaco.editor.IStandaloneCodeEditor = _
 
   def editorValue: String = editor.getModel().getValue(EndOfLinePreference.LF, preserveBOM = false)
 
@@ -57,12 +61,11 @@ object Playground {
   def apply(): Unit = {
     dom.document.body.appendChild(render(PlaygroundSpa()))
 
-    monaco.languages.Languages.register(jsObj(id = slangId))
-    val langModel = monaco.editor.Editor.createModel(slangModelText, "javascript")
-    monaco.languages.Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"))
+    ffi.monaco.languages.Languages.register(jsObj(id = slangId))
+    val langModel = ffi.monaco.editor.Editor.createModel(slangModelText, "javascript")
+    ffi.monaco.languages.Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"))
 
-    js.Dynamic.literal
-    editor = monaco.editor.Editor.create($[Div]("#editor"),
+    editor = ffi.monaco.editor.Editor.create($[Div]("#editor"),
       jsObj[IEditorConstructionOptions](
         value = "",
         language = slangId,
@@ -131,27 +134,39 @@ object Playground {
         })
     }
 
-    import scalatags.Text.all._
+    def incoming(title: String, successfulMessage: String, noChangesMessage: String,
+                 fm: SortedMap[String, String]): Unit = if (fm.nonEmpty) {
+      val changes = Files.incomingChanges(fm)
+      if (changes.nonEmpty) {
+        val tbl = table(cls := "table",
+          thead(tr(th("File"), th("Change"))),
+          tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
+        Modal.confirm(title,
+          div(cls := "field", label(cls := "label")("Are you sure you want to incorporate the following incoming changes?"), tbl),
+          () => {
+            Files.mergeIncoming(changes, fm)
+            Notification.notify(Notification.Kind.Success, successfulMessage)
+          })
+      } else Notification.notify(Notification.Kind.Info, noChangesMessage)
+    }
+
+    $[Anchor]("#download").onclick = (_: MouseEvent) =>
+      Modal.textInput("Download As Zip", "Filename:", "Enter filename", _.nonEmpty,
+        name => Files.saveZip(name + ".zip"))
+
+
+    $[Anchor]("#upload").onclick = (_: MouseEvent) => click("#file-input")
+    val fileInput = $[Input]("#file-input")
+    fileInput.onchange = (e: Event) => Files.loadZips(e.target.dyn.files.asInstanceOf[FileList], fm =>
+      incoming("Upload Zip", "Upload was successful.", "There were no changes to incorporate.", fm))
+
 
     $[Anchor]("#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
         "GitHub",
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
-        (_, fm) => if (fm.nonEmpty) {
-          val changes = Files.incomingChanges(fm)
-          if (changes.nonEmpty) {
-            val tbl = table(cls := "table",
-              thead(tr(th("File"), th("Change"))),
-              tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
-            Modal.confirm("Pull From GitHub",
-              div(cls := "field", label(cls := "label")("Are you sure you want to incorporate the following incoming changes?"), tbl),
-              () => {
-                Files.mergeIncoming(changes, fm)
-                Notification.notify(Notification.Kind.Success, "Pull was successful.")
-              })
-          } else Notification.notify(Notification.Kind.Info, s"There were no changes to pull.")
-        },
+        (_, fm) => incoming("Pull From GitHub", "Pull was successful.", "There were no changes to pull.", fm),
         (repoAuth, fm) => if (fm.nonEmpty) {
           val changes = Files.outgoingChanges(fm)
           if (changes.nonEmpty) {
@@ -160,8 +175,8 @@ object Playground {
               tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
             Modal.confirm("Push To GitHub",
               div(cls := "field", label(cls := "label")("Are you sure you want to perform the following outgoing changes?"), tbl),
-              () => GitHub.pushChanges(repoAuth, changes, err =>
-                Notification.notify(Notification.Kind.Error, s"Push was unsuccessful (reason: $err).")))
+              () => GitHub.pushChanges(repoAuth, changes, () => Notification.notify(Notification.Kind.Success, "Push was successful."),
+                err => Notification.notify(Notification.Kind.Error, s"Push was unsuccessful (reason: $err).")))
           } else Notification.notify(Notification.Kind.Info, s"There were no changes to push.")
         })
   }

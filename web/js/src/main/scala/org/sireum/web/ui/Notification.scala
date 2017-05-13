@@ -25,7 +25,7 @@
 
 package org.sireum.web.ui
 
-import amaran.Amaran
+import ffi.Amaran
 import org.scalajs.dom.html.{Button, Div}
 import org.scalajs.dom.raw.{Element, MouseEvent}
 

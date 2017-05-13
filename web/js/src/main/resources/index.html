@@ -11,17 +11,23 @@
     <script type="text/javascript" src="min/vs/loader.js"></script>
     <script type="text/javascript" src="min/jquery.js"></script>
     <script type="text/javascript" src="min/jquery.amaran.js"></script>
+    <script type="text/javascript" src="min/FileSaver.js"></script>
     <script type="text/javascript" src="min/web-opt.js"></script>
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
+<input id="file-input" type="file" name="name" style="display: none;" accept=".zip,application/zip" multiple />
 <script>
     var GitHub = null;
     var amaran = $.amaran;
+    var JSZip = null;
 	require.config({ paths: { 'vs': 'min/vs' }});
 	require(['vs/editor/editor.main'], function() {
 	  require(['min/GitHub'], function(gh) {
 	    GitHub = gh;
-        org.sireum.web.Main.main();
+        require(['min/jszip'], function(jszip) {
+          JSZip = jszip;
+          org.sireum.web.Main.main();
+        });
       });
 	});
 </script>
