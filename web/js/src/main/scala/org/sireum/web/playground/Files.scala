@@ -27,14 +27,20 @@ package org.sireum.web.playground
 
 import org.scalajs.dom
 import org.scalajs.dom.html.Select
-import org.scalajs.dom.raw.Event
 import org.sireum.web.playground.Playground.editor
+import scala.collection.immutable.SortedMap
 import org.sireum.web.util._
 
 import scala.scalajs.js
 import scalatags.Text.all._
 
 object Files {
+
+  object ChangeMode extends Enumeration {
+    type Type = Value
+    val Add, Delete, Overwrite, Update = Value
+  }
+
   val fileKey = "sireum://"
   val filenamesKey = "org.sireum.filenames"
   val lastFilenameKey = "org.sireum.filename.last"
@@ -47,11 +53,7 @@ object Files {
 
   final case class FileData(line: Int, column: Int, text: String)
 
-  lazy val filenameSelection: Select = {
-    val r = $[Select]("#filename")
-    r.onchange = { (_: Event) => load(Files.selectedFilename) }
-    r
-  }
+  lazy val filenameSelection: Select = $[Select]("#filename")
 
   def lookup(key: String): Option[String] =
     Option(dom.window.localStorage.getItem(key))
@@ -67,12 +69,19 @@ object Files {
     val ls = dom.window.localStorage
     ls.removeItem(filenamesKey)
     ls.removeItem(lastFilenameKey)
+    var keys = List[String]()
     for (i <- 0 until ls.length) {
       ls.key(i) match {
-        case k if k.startsWith(fileKey) => ls.removeItem(k)
+        case k if k.startsWith(fileKey) => keys ::= k
         case _ =>
       }
     }
+    keys.foreach(ls.removeItem)
+  }
+
+  def lookupContent(filename: String): Option[String] = {
+    import upickle.default._
+    lookup(fileKey + filename).map(read[FileData](_).text)
   }
 
   def updateFilenames(fs: js.Array[String]): Unit =
@@ -127,9 +136,9 @@ object Files {
       !fs.contains(filename + slangExt)
     }
 
-  def newFile(filename: String, textOpt: Option[String]): Unit = {
+  def newFile(f: String, textOpt: Option[String]): Unit = {
+    require(f.endsWith(slangExt))
     val (_, fs) = lookupFilenames()
-    val f = filename + slangExt
     val newFs = (fs :+ f).sorted
     textOpt match {
       case Some(text) => save(f, 1, 1, text)
@@ -173,4 +182,37 @@ object Files {
   def filename(name: String): RawFrag =
     raw(s"$name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
 
+
+  def incomingChanges(filenames: Iterable[String]): SortedMap[String, ChangeMode.Type] = {
+    val fs = lookupFilenames()._2.toSet
+    var r = SortedMap[String, ChangeMode.Type]()
+    for (f <- filenames)
+      if (fs.contains(f)) r += f -> ChangeMode.Overwrite
+      else r += f -> ChangeMode.Add
+    r
+  }
+
+  def mergeIncoming(changes: SortedMap[String, ChangeMode.Type], fileContentMap: SortedMap[String, String]): Unit = {
+    for ((f, cm) <- changes) (cm: @unchecked) match {
+      case ChangeMode.Add => Files.newFile(f, Some(fileContentMap(f)))
+      case ChangeMode.Overwrite => Files.deleteFile(f); Files.newFile(f, Some(fileContentMap(f)))
+    }
+    Files.lookupContent(Files.untitled) match {
+      case Some(text) if text.trim == Files.newText.trim => Files.deleteFile(Files.untitled)
+      case x =>
+    }
+  }
+
+  def outgoingChanges(fileContentMap: Map[String, String]): SortedMap[String, ChangeMode.Type] = {
+    var r = SortedMap[String, ChangeMode.Type]()
+    val fs = lookupFilenames()._2.toSet
+    for (f <- fs)
+      if (fileContentMap.contains(f)) {
+        if (lookupContent(f).get != fileContentMap(f))
+          r += f -> ChangeMode.Update
+      } else r += f -> ChangeMode.Add
+    for (f <- fileContentMap.keys if !fs.contains(f))
+      r += f -> ChangeMode.Delete
+    r
+  }
 }

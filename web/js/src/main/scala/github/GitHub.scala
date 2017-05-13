@@ -47,4 +47,11 @@ trait Repository extends js.Object {
   def getContents(ref: String, path: String, raw: Boolean, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
   def getDetails(cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
   def getContributors(cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def writeFile(branch: String, path: String, content: String, message: String, option: WriteOption, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+  def deleteFile(branch: String, path: String, cb: RequestableCallback): js.Promise[js.Dynamic] = js.native
+}
+
+@js.native
+trait WriteOption extends js.Object {
+  var encode: Boolean = js.native
 }

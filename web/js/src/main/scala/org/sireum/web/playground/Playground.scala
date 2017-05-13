@@ -29,7 +29,7 @@ import monaco.KeyCode
 import monaco.editor.{EndOfLinePreference, ICommandHandler, IEditorConstructionOptions, IModelContentChangedEvent2}
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
-import org.scalajs.dom.html.{Anchor, Div}
+import org.scalajs.dom.html.{Anchor, Div, Select}
 import org.scalajs.dom.raw.{Event, UIEvent}
 import org.sireum.web.ui.Modal
 
@@ -69,6 +69,9 @@ object Playground {
         fontSize = 16
       ))
 
+    def save(): Unit =
+      Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt, editorValue)
+
     Files.loadFiles()
 
     editor.getModel().onDidChangeContent((e: IModelContentChangedEvent2) =>
@@ -76,8 +79,14 @@ object Playground {
         Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt + 1, 1, editorValue))
 
     editor.addCommand(KeyCode.F1, (() => ()).asInstanceOf[ICommandHandler], "")
-    dom.window.onunload = (_: Event) =>
-      Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt, editorValue)
+    dom.window.onunload = (_: Event) => save()
+
+    editor.onDidBlurEditor(() => save())
+    editor.onDidBlurEditorText(() => save())
+
+    $[Select]("#filename").onchange = { (_: Event) =>
+      Files.load(Files.selectedFilename)
+    }
 
     dom.document.onreadystatechange = (_: Event) => updateView()
     dom.window.onresize = (_: UIEvent) => updateView()
@@ -85,20 +94,22 @@ object Playground {
     $[Anchor]("#add-file").onclick = (_: MouseEvent) =>
       Modal.textInput("New File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
-        filename => Files.newFile(filename, None)
+        filename => Files.newFile(filename + Files.slangExt, None)
       )
+
     $[Anchor]("#duplicate-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Duplicate File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
-        filename => Files.newFile(filename, Some(editorValue))
+        filename => Files.newFile(filename + Files.slangExt, Some(editorValue))
       )
+
     $[Anchor]("#rename-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Rename File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
         filename => {
           val isSingle = Files.lookupFilenames()._2.length == 1
           Files.deleteFile(Files.selectedFilename)
-          Files.newFile(filename, Some(editorValue))
+          Files.newFile(filename + Files.slangExt, Some(editorValue))
           if (isSingle) Files.deleteFile(Files.untitled)
         }
       )
@@ -120,16 +131,32 @@ object Playground {
         })
     }
 
+    import scalatags.Text.all._
+
     $[Anchor]("#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
         "GitHub",
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
-        (_, fm) => {
-          dom.console.log(js.Dictionary(fm.toList: _*))
+        (_, fm) => if (fm.nonEmpty) {
+          val changes = Files.incomingChanges(fm.keys)
+          val tbl = table(cls := "table",
+            thead(tr(th("File"), th("Change"))),
+            tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
+          Modal.confirm("Pull From GitHub",
+            div(cls := "field", label(cls := "label")("Are you sure you want to incorporate the following incoming changes?"), tbl),
+            () => Files.mergeIncoming(changes, fm)) // TODO: alert success
         },
-        (_, fm) => {
-          dom.console.log(js.Dictionary(fm.toList: _*))
+        (repoAuth, fm) => if (fm.nonEmpty) {
+          val changes = Files.outgoingChanges(fm)
+          if (changes.nonEmpty) {
+            val tbl = table(cls := "table",
+              thead(tr(th("File"), th("Change"))),
+              tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
+            Modal.confirm("Push To GitHub",
+              div(cls := "field", label(cls := "label")("Are you sure you want to perform the following outgoing changes?"), tbl),
+              () => GitHub.pushChanges(repoAuth, changes, err => dom.console.log(err))) // TODO: alert error
+          } // TODO: alert no changes
         })
   }
 

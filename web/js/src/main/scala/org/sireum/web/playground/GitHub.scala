@@ -26,6 +26,7 @@
 package org.sireum.web.playground
 
 import org.scalajs.dom
+import org.sireum.web.playground.Files.ChangeMode
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.scalajs.js
@@ -34,6 +35,8 @@ import org.sireum.web.util._
 object GitHub {
 
   final case class RepoAuth(user: String, repo: String, token: String)
+
+  final case class Escape(msg: String) extends RuntimeException
 
   val repoAuthKey = "org.sireum.github"
 
@@ -66,11 +69,12 @@ object GitHub {
 
   def findFiles(repoAuth: GitHub.RepoAuth,
                 filePathFilter: String => Boolean,
-                success: SortedSet[String] => Unit): Unit = {
+                success: SortedSet[String] => Unit,
+                error: String => Unit): Unit = {
     val repo = gitHubRepo(repoAuth)
 
     def recurseDir(path: String, f: List[String] => Unit): Unit = {
-      repo.getContents(null, path, raw = false, {
+      repo.getContents(null, if (path == null) null else s"$path?timestamp=0", raw = false, {
         case (null, (files: js.Array[js.Dynamic]@unchecked), _) =>
           def dir(acc: List[String], dirPaths: List[String]): Unit = dirPaths match {
             case Nil => f(acc)
@@ -85,35 +89,75 @@ object GitHub {
             case _ =>
           }
           dir(fs, dirPaths)
+        case (err, _, _) => throw Escape(err.message.toString)
       })
     }
 
-    repo.getContributors({
-      case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
-      case (null, _, _) => success(SortedSet())
-    })
+    try {
+      repo.getContributors({
+        case (null, result, _) if result != null => recurseDir(null, l => success(SortedSet(l: _*)))
+        case (null, _, _) => success(SortedSet())
+      })
+    } catch {
+      case Escape(msg) => error(msg)
+    }
   }
 
   def downloadFiles(repoAuth: GitHub.RepoAuth,
                     files: Iterable[String],
                     success: SortedMap[String, String] => Unit,
-                    error: List[String] => Unit): Unit = {
+                    error: String => Unit): Unit = {
     val repo = gitHubRepo(repoAuth)
 
-    def recurseFiles(acc: SortedMap[String, String], errs: List[String], fs: List[String]): Unit = fs match {
-      case Nil => if (errs.isEmpty) success(acc) else error(errs.reverse)
+    def recurseFiles(acc: SortedMap[String, String], fs: List[String]): Unit = fs match {
+      case Nil => success(acc)
       case head :: tail =>
-        repo.getContents(null, head, raw = false, {
+        repo.getContents(null, s"$head?timestamp=0", raw = false, {
           case (err, result, _) if err == null =>
             ((result.`type`.toString, result.`encoding`.toString): @unchecked) match {
-              case ("file", "base64") => recurseFiles(acc + (head -> dom.window.atob(result.`content`.toString)), errs, tail)
-              case ("submodule", _) => recurseFiles(acc, errs, tail)
-              case ("file", encoding) => recurseFiles(acc, s"Unsupported file encoding $encoding for $head" :: errs, tail)
+              case ("file", "base64") => recurseFiles(acc + (head -> dom.window.atob(result.`content`.toString)), tail)
+              case ("submodule", _) => recurseFiles(acc, tail)
+              case ("file", encoding) => throw Escape(s"Unsupported file encoding $encoding for $head")
             }
-          case _ => recurseFiles(acc, s"Could not get file content of $head" :: errs, tail)
+          case (err, _, _) => throw Escape(s"Could not get the file content of $head (reason: ${err.message.toString})")
         })
     }
 
-    recurseFiles(SortedMap(), List(), files.toList)
+    try recurseFiles(SortedMap(), files.toList)
+    catch {
+      case Escape(msg) => error(msg)
+    }
+  }
+
+  def pushChanges(repoAuth: GitHub.RepoAuth, changes: SortedMap[String, ChangeMode.Type], error: String => Unit): Unit = {
+    val repo = gitHubRepo(repoAuth)
+
+    var branch = "master"
+
+    def recurseChanges(cs: List[(String, ChangeMode.Type)]): Unit = cs match {
+      case Nil =>
+      case (f, cm) :: tail => cm match {
+        case ChangeMode.Add | ChangeMode.Update =>
+          val message = if (cm == ChangeMode.Add) "Added." else "Updated."
+          repo.writeFile("master", s"$f?timestamp=0", Files.lookupContent(f).get, message, jsObj(encode = true), {
+            case (err, _, _) if err == null => recurseChanges(tail)
+            case (err, _, _) => throw Escape(err.message.toString)
+          })
+        case ChangeMode.Delete =>
+          repo.deleteFile("master", s"$f?timestamp=0", {
+            case (err, _, _) if err == null => recurseChanges(tail)
+            case (err, _, _) => throw Escape(err.message.toString)
+          })
+      }
+    }
+
+    repo.getDetails({
+      case (_, result, _) =>
+        branch = result.default_branch.toString
+        try recurseChanges(changes.toList)
+        catch {
+          case Escape(msg) => error(msg)
+        }
+    })
   }
 }

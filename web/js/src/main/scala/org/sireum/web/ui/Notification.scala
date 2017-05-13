@@ -38,6 +38,9 @@ object Notification {
     val Plain, Primary, Info, Warning, Error, Success = Value
   }
 
+  def notify(parent: Element, tpe: Kind.Type, message: String): () => Unit =
+    notify(parent, tpe, raw(message))
+
   def notify(parent: Element, tpe: Kind.Type, message: Frag): () => Unit = {
     val ncls = tpe match {
       case Kind.Plain => ""

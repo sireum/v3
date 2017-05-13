@@ -26,5 +26,5 @@
 import scala.scalajs.js
 
 package object github {
-  type RequestableCallback = js.Function3[js.Any, js.Dynamic, js.Dynamic, js.Any]
+  type RequestableCallback = js.Function3[js.Dynamic, js.Dynamic, js.Dynamic, js.Any]
 }

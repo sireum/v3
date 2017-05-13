@@ -32,7 +32,7 @@ import org.scalajs.dom.html.{Anchor, Button, Div, Input, Paragraph}
 import org.scalajs.dom.raw.{Element, KeyboardEvent}
 import org.sireum.web.playground.GitHub
 
-import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.collection.immutable.SortedMap
 import scalatags.Text.all._
 import scalatags.Text.tags2._
 import org.sireum.web.util._
@@ -41,8 +41,11 @@ object Modal {
   val escape = 27
   val enter = 13
 
+  def confirm(titleText: String, labelText: String, success: () => Unit): Unit =
+    confirm(titleText, div(cls := "field", label(cls := "label")(labelText)), success)
+
   def confirm(titleText: String,
-              labelText: String,
+              body: Frag,
               success: () => Unit): Unit = {
     val modal = render[Div](
       div(cls := "modal is-active",
@@ -52,9 +55,7 @@ object Modal {
             p(cls := "modal-card-title")(titleText),
             button(id := "modal-delete", cls := "delete")
           ),
-          section(cls := "modal-card-body",
-            div(cls := "field", label(cls := "label")(labelText))
-          ),
+          section(cls := "modal-card-body", body),
           footer(cls := "modal-card-foot",
             a(id := "modal-ok", cls := "button is-success")("Ok"),
             a(id := "modal-cancel", cls := "button is-danger is-focused")("Cancel")
@@ -73,9 +74,11 @@ object Modal {
     }
 
     val okButton = $[Anchor]("#modal-ok")
-    okButton.onclick = (_: MouseEvent) => {
-      close()
+    okButton.onclick = (_: MouseEvent) => if (okButton.getAttribute("disabled") != "true") {
+      okButton.className += " is-loading"
+      okButton.setAttribute("disabled", "true")
       success()
+      close()
     }
 
     val closeF = (_: MouseEvent) => close()
@@ -296,13 +299,13 @@ object Modal {
     val couldNotConnect: () => Unit = () => {
       notifyCloseOpt = Some(Notification.notify(
         $[Element](".modal-card-body"), Notification.Kind.Error,
-        raw("Could not connect to the specified repository.")))
+        "Could not connect to the specified repository."))
     }
 
-    def fileErrors(errs: List[String]): Unit = {
+    def fileError(err: String): Unit = {
       notifyCloseOpt = Some(Notification.notify(
         $[Element](".modal-card-body"), Notification.Kind.Error,
-        ul(errs.map(err => li(raw(err))): _*)))
+        err))
     }
 
     pullButton.onclick = (_: MouseEvent) => {
@@ -312,12 +315,15 @@ object Modal {
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
         val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
-        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs =>
-          GitHub.downloadFiles(repoAuth, fs, fm => {
-            close()
-            pull(repoAuth, fm)
-          }, fileErrors)
-        ), couldNotConnect)
+        GitHub.test(repoAuth, () =>
+          GitHub.findFiles(repoAuth, fileFilter, fs =>
+            GitHub.downloadFiles(repoAuth, fs, fm => {
+              close()
+              pull(repoAuth, fm)
+            }, fileError),
+            fileError),
+          couldNotConnect
+        )
       }
     }
 
@@ -328,12 +334,14 @@ object Modal {
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
         val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
-        GitHub.test(repoAuth, () => GitHub.findFiles(repoAuth, fileFilter, fs =>
-          GitHub.downloadFiles(repoAuth, fs, fm => {
-            close()
-            push(repoAuth, fm)
-          }, fileErrors)
-        ), couldNotConnect)
+        GitHub.test(repoAuth, () =>
+          GitHub.findFiles(repoAuth, fileFilter, fs =>
+            GitHub.downloadFiles(repoAuth, fs, fm => {
+              close()
+              push(repoAuth, fm)
+            }, fileError),
+            fileError),
+          couldNotConnect)
       }
     }
 
