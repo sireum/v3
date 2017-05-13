@@ -34,8 +34,6 @@ import org.scalajs.dom.raw._
 import org.sireum.web.ui.{Modal, Notification}
 import scalatags.Text.all._
 
-
-import scala.scalajs.js
 import scalatex.PlaygroundSpa
 import org.sireum.web.util._
 

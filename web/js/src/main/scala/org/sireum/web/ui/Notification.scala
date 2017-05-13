@@ -26,12 +26,6 @@
 package org.sireum.web.ui
 
 import ffi.Amaran
-import org.scalajs.dom.html.{Button, Div}
-import org.scalajs.dom.raw.{Element, MouseEvent}
-
-import scalatags.Text.all._
-import org.sireum.web.util._
-
 import scala.scalajs.js
 
 object Notification {
