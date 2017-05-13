@@ -178,8 +178,7 @@ object Modal {
   }
 
 
-  def gitHubToken(titleText: String,
-                  repoAuthOpt: Option[GitHub.RepoAuth],
+  def gitHubToken(repoAuthOpt: Option[GitHub.RepoAuth],
                   fileFilter: String => Boolean,
                   pull: (GitHub.RepoAuth, SortedMap[String, String]) => Unit,
                   push: (GitHub.RepoAuth, SortedMap[String, String]) => Unit): Unit = {
@@ -189,7 +188,10 @@ object Modal {
         div(cls := "modal-background"),
         div(cls := "modal-card",
           header(cls := "modal-card-head",
-            p(cls := "modal-card-title")(titleText),
+            div(cls := "modal-card-title",
+              span(cls := "icon is-medium", i(cls := "fa fa-github")),
+              span(raw("&nbsp;GitHub"))
+            ),
             button(id := "modal-delete", cls := "delete")
           ),
           section(cls := "modal-card-body",
@@ -217,8 +219,16 @@ object Modal {
             )
           ),
           footer(cls := "modal-card-foot",
-            a(id := "modal-pull", cls := "button")("Pull"),
-            a(id := "modal-push", cls := "button")("Push"),
+            a(id := "modal-pull", cls := "button",
+              span(raw("&nbsp;")),
+              span(cls := "icon", i(cls := "fa fa-cloud-download")),
+              span(raw("&nbsp;&nbsp;Pull&nbsp;"))
+            ),
+            a(id := "modal-push", cls := "button",
+              span(raw("&nbsp;")),
+              span(cls := "icon", i(cls := "fa fa-cloud-upload")),
+              span(raw("&nbsp;&nbsp;Push&nbsp;"))
+            ),
             a(id := "modal-cancel", cls := "button is-danger")("Cancel")
           )
         )

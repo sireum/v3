@@ -161,7 +161,6 @@ object Playground {
 
     $[Anchor]("#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
-        "GitHub",
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
         (_, fm) => incoming("Pull From GitHub", "Pull was successful.", "There were no changes to pull.", fm),
