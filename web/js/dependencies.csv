@@ -1,6 +1,7 @@
-Name,                            Version,  URL
-Bulma (Bootswatch Pulse Theme),  0.4.1,    https://github.com/jenil/bulmaswatch
-Monaco Editor,                   0.8.3,    https://github.com/Microsoft/monaco-editor
-Font Awesome,                    4.7.0,    https://github.com/FortAwesome/Font-Awesome
-JQuery,                          3.2.1,    https://github.com/jquery/jquery
-GitHub.js,                       3.0.0,    https://github.com/github-tools/github
+Name,                            Version,  License,  URL
+Amaran                           0.5.3,    MIT       https://github.com/hakanersu/AmaranJS
+Bulma (Bootswatch Pulse Theme),  0.4.1,    MIT       https://github.com/jenil/bulmaswatch
+Font Awesome,                    4.7.0,    MIT/OFL   https://github.com/FortAwesome/Font-Awesome
+GitHub.js,                       3.0.0,    BSD       https://github.com/github-tools/github
+JQuery,                          3.2.1,    MIT       https://github.com/jquery/jquery
+Monaco Editor,                   0.8.3,    MIT       https://github.com/Microsoft/monaco-editor

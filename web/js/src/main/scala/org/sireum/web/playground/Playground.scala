@@ -31,7 +31,7 @@ import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html.{Anchor, Div, Select}
 import org.scalajs.dom.raw.{Event, UIEvent}
-import org.sireum.web.ui.Modal
+import org.sireum.web.ui.{Modal, Notification}
 
 import scala.scalajs.js
 import scalatex.PlaygroundSpa
@@ -139,13 +139,18 @@ object Playground {
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
         (_, fm) => if (fm.nonEmpty) {
-          val changes = Files.incomingChanges(fm.keys)
-          val tbl = table(cls := "table",
-            thead(tr(th("File"), th("Change"))),
-            tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
-          Modal.confirm("Pull From GitHub",
-            div(cls := "field", label(cls := "label")("Are you sure you want to incorporate the following incoming changes?"), tbl),
-            () => Files.mergeIncoming(changes, fm)) // TODO: alert success
+          val changes = Files.incomingChanges(fm)
+          if (changes.nonEmpty) {
+            val tbl = table(cls := "table",
+              thead(tr(th("File"), th("Change"))),
+              tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
+            Modal.confirm("Pull From GitHub",
+              div(cls := "field", label(cls := "label")("Are you sure you want to incorporate the following incoming changes?"), tbl),
+              () => {
+                Files.mergeIncoming(changes, fm)
+                Notification.notify(Notification.Kind.Success, "Pull was successful.")
+              })
+          } else Notification.notify(Notification.Kind.Info, s"There were no changes to pull.")
         },
         (repoAuth, fm) => if (fm.nonEmpty) {
           val changes = Files.outgoingChanges(fm)
@@ -155,8 +160,9 @@ object Playground {
               tbody(changes.map(p => tr(th(p._1), td(p._2.toString))).toList))
             Modal.confirm("Push To GitHub",
               div(cls := "field", label(cls := "label")("Are you sure you want to perform the following outgoing changes?"), tbl),
-              () => GitHub.pushChanges(repoAuth, changes, err => dom.console.log(err))) // TODO: alert error
-          } // TODO: alert no changes
+              () => GitHub.pushChanges(repoAuth, changes, err =>
+                Notification.notify(Notification.Kind.Error, s"Push was unsuccessful (reason: $err).")))
+          } else Notification.notify(Notification.Kind.Info, s"There were no changes to push.")
         })
   }
 

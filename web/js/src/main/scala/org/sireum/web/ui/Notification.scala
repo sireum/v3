@@ -25,11 +25,14 @@
 
 package org.sireum.web.ui
 
+import amaran.Amaran
 import org.scalajs.dom.html.{Button, Div}
 import org.scalajs.dom.raw.{Element, MouseEvent}
 
 import scalatags.Text.all._
 import org.sireum.web.util._
+
+import scala.scalajs.js
 
 object Notification {
 
@@ -38,33 +41,26 @@ object Notification {
     val Plain, Primary, Info, Warning, Error, Success = Value
   }
 
-  def notify(parent: Element, tpe: Kind.Type, message: String): () => Unit =
-    notify(parent, tpe, raw(message))
-
-  def notify(parent: Element, tpe: Kind.Type, message: Frag): () => Unit = {
-    val ncls = tpe match {
-      case Kind.Plain => ""
-      case Kind.Primary => "is-primary"
-      case Kind.Info => "is-warning"
-      case Kind.Warning => "is-warning"
-      case Kind.Error => "is-danger"
-      case Kind.Success => "is-success"
+  def notify(tpe: Kind.Type, message: String): Unit = {
+    val (bgColor, color) = tpe match {
+      case Kind.Plain => ("#f9f5fb", "#4e4e4e")
+      case Kind.Primary => ("#8e44ad", "#ffffff")
+      case Kind.Info => ("#3498db", "#ffffff")
+      case Kind.Warning => ("#ff7518", "#ffffff")
+      case Kind.Error => ("#e74c3c", "#ffffff")
+      case Kind.Success => ("#2ecc71", "#ffffff")
     }
-
-    val bid = s"notify-delete-${System.currentTimeMillis()}"
-
-    val notification = render[Div](div(cls := s"notification $ncls", button(id := bid, cls := "delete"))(message))
-
-    parent.appendChild(notification)
-
-    var isClosed = false
-    val close: () => Unit = () => if (!isClosed) {
-      isClosed = true
-      parent.removeChild(notification)
-    }
-
-    $[Button](s"#$bid").onclick = (_: MouseEvent) => close()
-
-    close
+    Amaran.amaran(js.Dynamic.literal(
+      theme = "colorful",
+      content = js.Dynamic.literal(
+        bgcolor = bgColor,
+        color = color,
+        message = message
+      ),
+      position = "bottom right",
+      inEffect = "slideRight",
+      outEffect = "slideRight",
+      resetTimeout = "true"
+    ))
   }
 }

@@ -183,12 +183,14 @@ object Files {
     raw(s"$name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
 
 
-  def incomingChanges(filenames: Iterable[String]): SortedMap[String, ChangeMode.Type] = {
+  def incomingChanges(fileContentMap: SortedMap[String, String]): SortedMap[String, ChangeMode.Type] = {
     val fs = lookupFilenames()._2.toSet
     var r = SortedMap[String, ChangeMode.Type]()
-    for (f <- filenames)
-      if (fs.contains(f)) r += f -> ChangeMode.Overwrite
-      else r += f -> ChangeMode.Add
+    for (f <- fileContentMap.keys)
+      if (fs.contains(f)) {
+        if (lookupContent(f).get != fileContentMap(f))
+          r += f -> ChangeMode.Overwrite
+      } else r += f -> ChangeMode.Add
     r
   }
 

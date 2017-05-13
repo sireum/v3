@@ -268,8 +268,8 @@ object Modal {
       updatePullPushButtons()
     }
 
-    def updatePullPushButtons(): Unit =
-      if (!pushButton.className.contains("is-loading") && !pullButton.className.contains("is-loading"))
+    def updatePullPushButtons(force: Boolean = false): Unit =
+      if (force || (!pushButton.className.contains("is-loading") && !pullButton.className.contains("is-loading")))
         if (!userInput.className.contains("is-danger") &&
           !repoInput.className.contains("is-danger") &&
           !tokenInput.className.contains("is-danger")) {
@@ -289,28 +289,14 @@ object Modal {
       dom.document.body.removeChild(modal)
     }
 
-    var notifyCloseOpt: Option[() => Unit] = None
-
-    def closeNotify(): Unit = {
-      notifyCloseOpt.foreach(f => f())
-      notifyCloseOpt = None
+    def notifyError(err: String): Unit = {
+      Notification.notify(Notification.Kind.Error, err)
+      updatePullPushButtons(force = true)
     }
-
-    val couldNotConnect: () => Unit = () => {
-      notifyCloseOpt = Some(Notification.notify(
-        $[Element](".modal-card-body"), Notification.Kind.Error,
-        "Could not connect to the specified repository."))
-    }
-
-    def fileError(err: String): Unit = {
-      notifyCloseOpt = Some(Notification.notify(
-        $[Element](".modal-card-body"), Notification.Kind.Error,
-        err))
-    }
+    val couldNotConnect = () => notifyError("Could not connect to the repository.")
 
     pullButton.onclick = (_: MouseEvent) => {
       if (pullButton.getAttribute("disabled") != "true") {
-        closeNotify()
         pullButton.className += " is-loading"
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
@@ -320,8 +306,8 @@ object Modal {
             GitHub.downloadFiles(repoAuth, fs, fm => {
               close()
               pull(repoAuth, fm)
-            }, fileError),
-            fileError),
+            }, notifyError),
+            notifyError),
           couldNotConnect
         )
       }
@@ -329,7 +315,6 @@ object Modal {
 
     pushButton.onclick = (_: MouseEvent) => {
       if (pushButton.getAttribute("disabled") != "true") {
-        closeNotify()
         pushButton.className += " is-loading"
         pushButton.setAttribute("disabled", "true")
         pullButton.setAttribute("disabled", "true")
@@ -339,9 +324,10 @@ object Modal {
             GitHub.downloadFiles(repoAuth, fs, fm => {
               close()
               push(repoAuth, fm)
-            }, fileError),
-            fileError),
-          couldNotConnect)
+            }, notifyError),
+            notifyError),
+          couldNotConnect
+        )
       }
     }
 

@@ -7,13 +7,16 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <link rel="stylesheet" href="min/css/bulma-pulse.css"/>
     <link rel="stylesheet" href="min/css/font-awesome.css"/>
+    <link rel="stylesheet" href="min/css/amaran.css"/>
     <script type="text/javascript" src="min/vs/loader.js"></script>
     <script type="text/javascript" src="min/jquery.js"></script>
+    <script type="text/javascript" src="min/jquery.amaran.js"></script>
     <script type="text/javascript" src="web-fastopt.js"></script>
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
 <script>
     var GitHub = null;
+    var amaran = $.amaran;
 	require.config({ paths: { 'vs': 'min/vs' }});
 	require(['vs/editor/editor.main'], function() {
 	  require(['min/GitHub'], function(gh) {
