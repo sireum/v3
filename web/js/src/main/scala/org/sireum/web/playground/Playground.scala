@@ -101,7 +101,14 @@ object Playground {
         else dom.window.setTimeout(wait, 500)
       wait()
     }
-    dom.window.onresize = (_: UIEvent) => updateView()
+    dom.window.onresize = (_: UIEvent) => {
+      lazy val wait: () => Unit = () =>
+        if (Z3 != null) {
+          updateView()
+        }
+        else dom.window.setTimeout(wait, 500)
+      wait()
+    }
 
     val runButton = $[Anchor](mainDiv, "#run")
     runButton.onclick = (_: MouseEvent) =>
