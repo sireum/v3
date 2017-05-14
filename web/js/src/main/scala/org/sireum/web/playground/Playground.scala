@@ -91,11 +91,13 @@ object Playground {
     $[Select](mainDiv, "#filename").onchange = (_: Event) => Files.load(Files.selectedFilename)
 
     dom.document.onreadystatechange = (_: Event) => {
-      dom.document.body.appendChild(mainDiv)
-      updateView()
-      Files.loadFiles()
       lazy val wait: () => Unit = () =>
-        if (Z3 != null) dom.document.body.removeChild($[Div]("#welcome"))
+        if (Z3 != null) {
+          dom.document.body.appendChild(mainDiv)
+          updateView()
+          Files.loadFiles()
+          dom.document.body.removeChild($[Div]("#welcome"))
+        }
         else dom.window.setTimeout(wait, 500)
       wait()
     }
