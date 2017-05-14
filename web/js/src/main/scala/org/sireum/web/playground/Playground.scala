@@ -25,15 +25,17 @@
 
 package org.sireum.web.playground
 
+import ffi.Z3
 import ffi.monaco.KeyCode
-import ffi.monaco.editor.{EndOfLinePreference, ICommandHandler, IEditorConstructionOptions, IModelContentChangedEvent2}
+import ffi.monaco.editor._
+import ffi.monaco.languages.Languages
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html.{Anchor, Div, Input, Select}
 import org.scalajs.dom.raw._
 import org.sireum.web.ui.{Modal, Notification}
-import scalatags.Text.all._
 
+import scalatags.Text.all._
 import scalatex.PlaygroundSpa
 import org.sireum.web.util._
 
@@ -53,17 +55,19 @@ object Playground {
     editor.layout()
     editor.focus()
     dom.document.body.style.backgroundColor = "#8e44ad"
-    output.style.backgroundColor = "lightgrey"
+    output.style.backgroundColor = "#f8f3fa"
   }
 
   def apply(): Unit = {
-    dom.document.body.appendChild(render(PlaygroundSpa()))
+    Languages.register(jsObj(id = slangId))
+    Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + slangModelText + "; })()"))
 
-    ffi.monaco.languages.Languages.register(jsObj(id = slangId))
-    val langModel = ffi.monaco.editor.Editor.createModel(slangModelText, "javascript")
-    ffi.monaco.languages.Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + langModel.getValue() + "; })()"))
+    Languages.register(jsObj(id = smt2Id))
+    Languages.setMonarchTokensProvider(smt2Id, eval("(function(){ " + smt2ModelText + "; })()"))
 
-    editor = ffi.monaco.editor.Editor.create($[Div]("#editor"),
+    val mainDiv = render[Div](PlaygroundSpa())
+
+    editor = Editor.create($[Div](mainDiv, "#editor"),
       jsObj[IEditorConstructionOptions](
         value = "",
         language = slangId,
@@ -71,9 +75,8 @@ object Playground {
       ))
 
     def save(): Unit =
-      Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt, editor.getPosition().column.toInt, editorValue)
-
-    Files.loadFiles()
+      Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt,
+        editor.getPosition().column.toInt, editorValue)
 
     editor.getModel().onDidChangeContent((e: IModelContentChangedEvent2) =>
       if (e.text.contains('\n'))
@@ -85,44 +88,61 @@ object Playground {
     editor.onDidBlurEditor(() => save())
     editor.onDidBlurEditorText(() => save())
 
-    $[Select]("#filename").onchange = { (_: Event) =>
-      Files.load(Files.selectedFilename)
-    }
+    $[Select](mainDiv, "#filename").onchange = (_: Event) => Files.load(Files.selectedFilename)
 
-    dom.document.onreadystatechange = (_: Event) => updateView()
+    dom.document.onreadystatechange = (_: Event) => {
+      dom.document.body.appendChild(mainDiv)
+      updateView()
+      Files.loadFiles()
+      dom.document.body.removeChild($[Div]("#welcome"))
+    }
     dom.window.onresize = (_: UIEvent) => updateView()
 
-    $[Anchor]("#add-file").onclick = (_: MouseEvent) =>
+    $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) =>
+      if (Files.selectedFilename.endsWith(Files.smtExt))
+        $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
+      else Notification.notify(Notification.Kind.Info, s"Slang verification coming soon.")
+
+    def appendSlangExtIfNoExt(filename: String): String =
+      if (filename.endsWith(Files.slangExt) || filename.endsWith(Files.smtExt))
+        filename
+      else filename + Files.slangExt
+
+    $[Anchor](mainDiv, "#add-file").onclick = (_: MouseEvent) =>
       Modal.textInput("New File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
-        filename => Files.newFile(filename + Files.slangExt, None)
+        filename => Files.newFile(appendSlangExtIfNoExt(filename), None)
       )
 
-    $[Anchor]("#duplicate-file").onclick = (_: MouseEvent) =>
+    $[Anchor](mainDiv, "#duplicate-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Duplicate File", "Filename:", "Enter filename",
         filename => Files.isValidNewFilename(filename),
-        filename => Files.newFile(filename + Files.slangExt, Some(editorValue))
+        filename => Files.newFile(appendSlangExtIfNoExt(filename), Some(editorValue))
       )
 
-    $[Anchor]("#rename-file").onclick = (_: MouseEvent) =>
+    $[Anchor](mainDiv, "#rename-file").onclick = (_: MouseEvent) =>
       Modal.textInput("Rename File", "Filename:", "Enter filename",
-        filename => Files.isValidNewFilename(filename),
+        filename => Files.isValidNewFilename(filename) && {
+          val selected = Files.selectedFilename
+          val newName = appendSlangExtIfNoExt(filename)
+          selected.substring(selected.lastIndexOf('.')) == newName.substring(newName.lastIndexOf('.'))
+        },
         filename => {
           val isSingle = Files.lookupFilenames()._2.length == 1
           Files.deleteFile(Files.selectedFilename)
-          Files.newFile(filename + Files.slangExt, Some(editorValue))
+          Files.newFile(appendSlangExtIfNoExt(filename), Some(editorValue))
           if (isSingle) Files.deleteFile(Files.untitled)
         }
       )
 
-    $[Anchor]("#delete-file").onclick = (_: MouseEvent) => {
+    $[Anchor](mainDiv, "#delete-file").onclick = (_: MouseEvent) => {
       val f = Files.selectedFilename
       Modal.confirm(s"Delete File",
         s"Are you sure you want to delete $f?",
         () => Files.deleteFile(f))
     }
 
-    $[Anchor]("#clean").onclick = (_: MouseEvent) => {
+    $[Anchor](mainDiv, "#clean").onclick = (_: MouseEvent) =>
       Modal.confirm(s"Erase Data",
         s"Are you sure you want to erase all data including files, etc.?",
         () => {
@@ -130,7 +150,6 @@ object Playground {
           Files.erase()
           Files.loadFiles()
         })
-    }
 
     def incoming(title: String, successfulMessage: String, noChangesMessage: String,
                  fm: SortedMap[String, String]): Unit = if (fm.nonEmpty) {
@@ -148,18 +167,18 @@ object Playground {
       } else Notification.notify(Notification.Kind.Info, noChangesMessage)
     }
 
-    $[Anchor]("#download").onclick = (_: MouseEvent) =>
+    $[Anchor](mainDiv, "#download").onclick = (_: MouseEvent) =>
       Modal.textInput("Download As Zip", "Filename:", "Enter filename", _.nonEmpty,
         name => Files.saveZip(name + ".zip"))
 
 
-    $[Anchor]("#upload").onclick = (_: MouseEvent) => click("#file-input")
+    $[Anchor](mainDiv, "#upload").onclick = (_: MouseEvent) => click("#file-input")
     val fileInput = $[Input]("#file-input")
     fileInput.onchange = (e: Event) => Files.loadZips(e.target.dyn.files.asInstanceOf[FileList], fm =>
       incoming("Upload Zip", "Upload was successful.", "There were no changes to incorporate.", fm))
 
 
-    $[Anchor]("#github").onclick = (_: MouseEvent) =>
+    $[Anchor](mainDiv, "#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
         GitHub.lookup(),
         _.endsWith(Files.slangExt),
@@ -179,6 +198,7 @@ object Playground {
   }
 
   val slangId = "slang"
+  val smt2Id = "smt2"
 
   val slangModelText: String =
     """return {
@@ -280,4 +300,112 @@ object Playground {
       |  },
       |};
     """.stripMargin.trim
+
+  val smt2ModelText: String =
+    """
+      |// Difficulty: "Easy"
+      |// SMT 2.0 language
+      |// See http://www.rise4fun.com/z3 or http://www.smtlib.org/ for more information
+      |return {
+      |
+      |  // Set defaultToken to invalid to see what you do not tokenize yet
+      |  // defaultToken: 'invalid',
+      |
+      |  keywords: [
+      |    'define-fun', 'define-const', 'assert', 'push', 'pop', 'assert', 'check-sat',
+      |    'declare-const', 'declare-fun', 'get-model', 'get-value', 'declare-sort',
+      |    'declare-datatypes', 'reset', 'eval', 'set-logic', 'help', 'get-assignment',
+      |    'exit', 'get-proof', 'get-unsat-core', 'echo', 'let', 'forall', 'exists',
+      |    'define-sort', 'set-option', 'get-option', 'set-info', 'check-sat-using', 'apply', 'simplify',
+      |    'display', 'as', '!', 'get-info', 'declare-map', 'declare-rel', 'declare-var', 'rule',
+      |    'query', 'get-user-tactics'
+      |  ],
+      |
+      | operators: [
+      |    '=', '>', '<', '<=', '>=', '=>', '+', '-', '*', '/',
+      |  ],
+      |
+      |  builtins: [
+      |    'mod', 'div', 'rem', '^', 'to_real', 'and', 'or', 'not', 'distinct',
+      |    'to_int', 'is_int', '~', 'xor', 'if', 'ite', 'true', 'false', 'root-obj',
+      |    'sat', 'unsat', 'const', 'map', 'store', 'select', 'sat', 'unsat',
+      |    'bit1', 'bit0', 'bvneg', 'bvadd', 'bvsub', 'bvmul', 'bvsdiv', 'bvudiv', 'bvsrem',
+      |    'bvurem', 'bvsmod',  'bvule', 'bvsle', 'bvuge', 'bvsge', 'bvult',
+      |    'bvslt', 'bvugt', 'bvsgt', 'bvand', 'bvor', 'bvnot', 'bvxor', 'bvnand',
+      |    'bvnor', 'bvxnor', 'concat', 'sign_extend', 'zero_extend', 'extract',
+      |    'repeat', 'bvredor', 'bvredand', 'bvcomp', 'bvshl', 'bvlshr', 'bvashr',
+      |    'rotate_left', 'rotate_right', 'get-assertions'
+      |  ],
+      |
+      |  brackets: [
+      |    ['(',')','delimiter.parenthesis'],
+      |    ['{','}','delimiter.curly'],
+      |    ['[',']','delimiter.square']
+      |  ],
+      |
+      |  // we include these common regular expressions
+      |  symbols:  /[=><~&|+\-*\/%@#]+/,
+      |
+      |  // C# style strings
+      |  escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+      |
+      |  // The main tokenizer for our languages
+      |  tokenizer: {
+      |    root: [
+      |      // identifiers and keywords
+      |      [/[a-z_][\w\-\.']*/, { cases: { '@builtins': 'predefined.identifier',
+      |                                      '@keywords': 'keyword',
+      |                                      '@default': 'identifier' } }],
+      |      [/[A-Z][\w\-\.']*/, 'type.identifier' ],
+      |      [/[:][\w\-\.']*/, 'string.identifier' ],
+      |      [/[$?][\w\-\.']*/, 'constructor.identifier' ],
+      |
+      |      // whitespace
+      |      { include: '@whitespace' },
+      |
+      |      // delimiters and operators
+      |      [/[()\[\]]/, '@brackets'],
+      |      [/@symbols/, { cases: { '@operators': 'predefined.operator',
+      |                              '@default'  : 'operator' } } ],
+      |
+      |
+      |      // numbers
+      |      [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+      |      [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+      |      [/#[xX][0-9a-fA-F]+/, 'number.hex'],
+      |      [/#b[0-1]+/, 'number.binary'],
+      |      [/\d+/, 'number'],
+      |
+      |      // delimiter: after number because of .\d floats
+      |      [/[,.]/, 'delimiter'],
+      |
+      |      // strings
+      |      [/"([^"\\]|\\.)*$/, 'string.invalid' ],  // non-teminated string
+      |      [/"/,  { token: 'string.quote', bracket: '@open', next: '@string' } ],
+      |
+      |      // user values
+      |      [/\{/, { token: 'string.curly', bracket: '@open', next: '@uservalue' } ],
+      |    ],
+      |
+      |    uservalue: [
+      |      [/[^\\\}]+/, 'string' ],
+      |      [/\}/,       { token: 'string.curly', bracket: '@close', next: '@pop' } ],
+      |      [/\\\}/,     'string.escape'],
+      |      [/./,        'string']  // recover
+      |    ],
+      |
+      |    string: [
+      |      [/[^\\"]+/,  'string'],
+      |      [/@escapes/, 'string.escape'],
+      |      [/\\./,      'string.escape.invalid'],
+      |      [/"/,        { token: 'string.quote', bracket: '@close', next: '@pop' } ]
+      |    ],
+      |
+      |    whitespace: [
+      |      [/[ \t\r\n]+/, 'white'],
+      |      [/;.*$/,    'comment'],
+      |    ],
+      |  },
+      |};
+    """.stripMargin
 }

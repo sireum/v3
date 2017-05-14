@@ -31,5 +31,5 @@ import scala.scalajs.js.annotation.JSGlobalScope
 @js.native
 @JSGlobalScope
 object Amaran extends js.Object {
-  def amaran(option: js.Object): Unit = js.native
+  def Amaran(option: js.Object): Unit = js.native
 }

@@ -25,6 +25,7 @@
 
 package org.sireum.web.playground
 
+import ffi.monaco.editor.Editor
 import ffi.{FileSaver, Zip, ZipObject}
 import org.scalajs.dom
 import org.scalajs.dom.html.Select
@@ -53,6 +54,7 @@ object Files {
   val lastFilenameKey = "org.sireum.filename.last"
 
   val slangExt = ".slang"
+  val smtExt = ".smt2"
   val cursorKey = "org.sireum.cursor"
   val newText = "import org.sireum._\n\n"
   val newTextLine: Int = newText.count(_ == '\n')
@@ -112,9 +114,11 @@ object Files {
         import upickle.default._
         read[FileData](data)
       case _ =>
-        FileData(newText.count(_ == '\n') + 1, 1, newText)
+        if (filename.endsWith(slangExt)) FileData(newText.count(_ == '\n') + 1, 1, newText)
+        else FileData(1, 1, "")
     }
-    editor.getModel().setValue(text)
+    editor.setModel(Editor.createModel(text,
+      if (filename.endsWith(slangExt)) Playground.slangId else Playground.smt2Id))
     editor.setPosition(jsObj(lineNumber = l, column = c))
     update(lastFilenameKey, filename)
     editor.focus()
@@ -138,14 +142,20 @@ object Files {
       case c => c.isLetterOrDigit
     }
 
-  def isValidNewFilename(filename: String): Boolean =
-    isValidFilename(filename) && {
-      val fs = Files.lookupFilenames()._2
-      !fs.contains(filename + slangExt)
-    }
+  def isValidNewFilename(filename: String): Boolean = {
+    def isValid(filename: String): Boolean =
+      isValidFilename(filename) && {
+        val fs = Files.lookupFilenames()._2
+        !fs.contains(filename)
+      }
+
+    if (filename.endsWith(slangExt) || filename.endsWith(smtExt))
+      isValid(filename.substring(0, filename.lastIndexOf('.')))
+    else isValid(filename)
+  }
 
   def newFile(f: String, textOpt: Option[String]): Unit = {
-    require(f.endsWith(slangExt))
+    require(f.endsWith(slangExt) || f.endsWith(smtExt))
     val (_, fs) = lookupFilenames()
     val newFs = (fs :+ f).sorted
     textOpt match {
@@ -254,7 +264,7 @@ object Files {
         val f = Zip.loadAsync(head._2, jsObj(createFolders = true, checkCRC32 = true)).toFuture
         f.onComplete {
           case Success(zip) =>
-            zip.forEach((path, o) => if (path.endsWith(Files.slangExt)) zips ::= (path, o))
+            zip.forEach((path, o) => if (path.endsWith(Files.slangExt) || path.endsWith(Files.smtExt)) zips ::= (path, o))
             recurseArrayBuffer(tail)
           case Failure(_) =>
             Notification.notify(Notification.Kind.Error, s"Error encountered when reading ${head._1}.")

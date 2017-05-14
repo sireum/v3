@@ -26,12 +26,11 @@
 package org.sireum.web
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.{DocumentFragment, Element, NodeList}
+import org.scalajs.dom.raw.{DocumentFragment, Element, Node, NodeList}
 import org.scalajs.jquery.jQuery
 
 import scala.scalajs.js
 import scalatags.generic.Frag
-
 import scala.language.dynamics
 
 package object util {
@@ -41,6 +40,32 @@ package object util {
 
     def applyDynamic[T](name: String)(fields: (String, Any)*): T =
       js.Dictionary(fields: _*).asInstanceOf[T]
+  }
+
+  def $[T](node: Element, selector: String): T = {
+    var rOpt: Option[T] = None
+
+    def recId(node: Element, id: String): Unit = {
+      if (node.id == id)
+        rOpt = Some(node.asInstanceOf[T])
+      val childNodes = node.children
+      for (i <- 0 until childNodes.length if rOpt.isEmpty)
+        recId(childNodes(i), id)
+
+    }
+
+    def recClass(node: Element, cls: String): Unit = {
+      if (Option(node.getAttribute("class")).exists(_.split(" ").contains(cls)))
+        rOpt = Some(node.asInstanceOf[T])
+      val childNodes = node.children
+      for (i <- 0 until childNodes.length if rOpt.isEmpty)
+        recId(childNodes(i), cls)
+    }
+
+    if (selector.startsWith("#")) recId(node, selector.substring(1))
+    else if (selector.startsWith(".")) recClass(node, selector.substring(1))
+    val Some(r) = rOpt
+    r
   }
 
   def $[T](selector: String): T = {

@@ -16,20 +16,33 @@
 </head>
 <body style="height: 100%; width: 100%; margin:0;">
 <input id="file-input" type="file" name="name" style="display: none;" accept=".zip,application/zip" multiple />
+<div id="welcome" class="modal is-active is-primary">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <h1 class="title is-1 is-loading">Sireum Playground</h1>
+        <!-- Any other Bulma elements you want -->
+    </div>
+</div>
 <script>
-    var GitHub = null;
-    var amaran = $.amaran;
-    var JSZip = null;
-	require.config({ paths: { 'vs': 'min/vs' }});
-	require(['vs/editor/editor.main'], function() {
-	  require(['min/GitHub'], function(gh) {
-	    GitHub = gh;
-        require(['min/jszip'], function(jszip) {
-          JSZip = jszip;
-          org.sireum.web.Main.main();
-        });
-      });
-	});
+var GitHub = null;
+var Amaran = $.amaran;
+var JSZip = null;
+var Z3 = null;
+require.config({ paths: { 'vs': 'min/vs' }});
+require(['vs/editor/editor.main', 'min/GitHub', 'min/jszip', 'module.z3'],
+  function(vs, gh, jszip, z3) {
+    GitHub = gh;
+    JSZip = jszip;
+    z3('').then(function(_z3) {
+      Z3 = _z3;
+      Z3.load = function () {
+        return z3('');
+      };
+      done();
+    });
+    org.sireum.web.Main.main();
+  }
+);
 </script>
 </body>
 </html>

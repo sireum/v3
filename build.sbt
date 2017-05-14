@@ -257,6 +257,12 @@ lazy val webJs = webT._3.settings(
   crossTarget in (Compile, packageJSDependencies) := (classDirectory in Compile).value,
   crossTarget in (Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in (Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
+  unmanagedResources in Compile ++= Seq(
+    baseDirectory.value / "z3.js/loader.js",
+    baseDirectory.value / "z3.js/module.z3.js",
+    baseDirectory.value / "z3.js/z3.js.mem",
+    baseDirectory.value / "z3.js/z3.wrapped.js"
+  ),
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(

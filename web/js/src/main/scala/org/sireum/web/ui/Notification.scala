@@ -44,7 +44,7 @@ object Notification {
       case Kind.Error => ("#e74c3c", "#ffffff")
       case Kind.Success => ("#2ecc71", "#ffffff")
     }
-    Amaran.amaran(js.Dynamic.literal(
+    Amaran.Amaran(js.Dynamic.literal(
       theme = "colorful",
       content = js.Dynamic.literal(
         bgcolor = bgColor,
