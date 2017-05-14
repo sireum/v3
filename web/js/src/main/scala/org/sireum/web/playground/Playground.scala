@@ -120,7 +120,7 @@ object Playground {
         try {
           Z3.exception = false
           $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
-          if (Z3.exception) Notification.notify(Notification.Kind.Error, s"Encountered an error when executing query using Z3.js.")
+          if (Z3.exception) Notification.notify(Notification.Kind.Error, s"Encountered an error when executing the query using Z3.js.")
           else Notification.notify(Notification.Kind.Success, s"Z3.js successfully executed the query.")
           Z3.exception = false
         } catch {
