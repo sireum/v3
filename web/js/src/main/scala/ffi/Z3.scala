@@ -31,13 +31,13 @@ import scala.scalajs.js.annotation.JSGlobal
 
 @js.native
 @JSGlobal
-object Z3 extends js.Object {
+object Z3 extends Z3 {
   def load(): Promise[Z3] = js.native
-
-  def query(smt2: String): String = js.native
 }
 
 @js.native
 trait Z3 extends js.Object {
   def query(smt2: String): String = js.native
+
+  var exception: Boolean = js.native
 }

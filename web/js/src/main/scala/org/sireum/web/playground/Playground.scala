@@ -118,7 +118,11 @@ object Playground {
     $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => {
       if (Files.selectedFilename.endsWith(Files.smtExt))
         try {
+          Z3.exception = false
           $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
+          if (Z3.exception) Notification.notify(Notification.Kind.Error, s"Encountered an error when executing query using Z3.js.")
+          else Notification.notify(Notification.Kind.Success, s"Z3.js successfully executed the query.")
+          Z3.exception = false
         } catch {
           case t: Throwable => Notification.notify(Notification.Kind.Error, s"Error encountered when calling Z3.js (reason ${t.getMessage}).")
         }
