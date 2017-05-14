@@ -94,14 +94,30 @@ object Playground {
       dom.document.body.appendChild(mainDiv)
       updateView()
       Files.loadFiles()
-      dom.document.body.removeChild($[Div]("#welcome"))
+      lazy val wait: () => Unit = () =>
+        if (Z3 != null) dom.document.body.removeChild($[Div]("#welcome"))
+        else dom.window.setTimeout(wait, 500)
+      wait()
     }
     dom.window.onresize = (_: UIEvent) => updateView()
 
-    $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) =>
+    val runButton = $[Anchor](mainDiv, "#run")
+    runButton.onclick = (_: MouseEvent) =>
+      if (runButton.getAttribute("disabled") != "true")
+        Notification.notify(Notification.Kind.Info, s"Slang execution coming soon.")
+
+    $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => {
       if (Files.selectedFilename.endsWith(Files.smtExt))
-        $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
+        try {
+          $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
+        } catch {
+          case t: Throwable => Notification.notify(Notification.Kind.Error, s"Error encountered when calling Z3.js (reason ${t.getMessage}).")
+        }
       else Notification.notify(Notification.Kind.Info, s"Slang verification coming soon.")
+    }
+
+    $[Anchor](mainDiv, "#options").onclick = (_: MouseEvent) =>
+      Notification.notify(Notification.Kind.Info, s"Sireum configuration coming soon.")
 
     def appendSlangExtIfNoExt(filename: String): String =
       if (filename.endsWith(Files.slangExt) || filename.endsWith(Files.smtExt))

@@ -28,7 +28,7 @@ package org.sireum.web.playground
 import ffi.monaco.editor.Editor
 import ffi.{FileSaver, Zip, ZipObject}
 import org.scalajs.dom
-import org.scalajs.dom.html.Select
+import org.scalajs.dom.html.{Anchor, Select}
 import org.scalajs.dom.raw.{FileList, FileReader, ProgressEvent}
 import org.sireum.web.playground.Playground.editor
 import org.sireum.web.ui.Notification
@@ -117,8 +117,15 @@ object Files {
         if (filename.endsWith(slangExt)) FileData(newText.count(_ == '\n') + 1, 1, newText)
         else FileData(1, 1, "")
     }
-    editor.setModel(Editor.createModel(text,
-      if (filename.endsWith(slangExt)) Playground.slangId else Playground.smt2Id))
+    val runButton = $[Anchor]("#run")
+    val langId = if (filename.endsWith(slangExt)) {
+      runButton.removeAttribute("disabled")
+      Playground.slangId
+    } else {
+      runButton.setAttribute("disabled", "true")
+      Playground.smt2Id
+    }
+    editor.setModel(Editor.createModel(text, langId))
     editor.setPosition(jsObj(lineNumber = l, column = c))
     update(lastFilenameKey, filename)
     editor.focus()
