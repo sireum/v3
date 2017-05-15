@@ -31,17 +31,31 @@ var Amaran = $.amaran;
 var JSZip = null;
 var Z3 = null;
 require.config({ paths: { 'vs': 'min/vs' }});
-require(['vs/editor/editor.main', 'min/GitHub', 'min/jszip', 'module.z3'],
+require(['vs/editor/editor.main', 'min/GitHub', 'min/jszip'],
   function(vs, gh, jszip, z3) {
     GitHub = gh;
     JSZip = jszip;
-    z3('').then(function(_z3) {
-      Z3 = _z3;
-      Z3.load = function () {
-        return z3('');
+    if (document.location.host) {
+      require(['module.z3'], function (z3) {
+        z3('').then(function(_z3) {
+          Z3 = _z3;
+          Z3.load = function () {
+            return z3('');
+          };
+          done();
+        });
+      });
+    } else {
+      Z3 = {
+        'load' : function () {
+          return Z3;
+        },
+        'query' : function (problem) {
+          Z3.exception = true;
+          return "Z3.js is not available under file:// protocol.";
+        }
       };
-      done();
-    });
+    }
     org.sireum.web.Main.main();
   }
 );
