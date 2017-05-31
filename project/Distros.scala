@@ -66,7 +66,7 @@ object Distros {
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 18619,
-    "bash" -> 34877,
+    "bash" -> 34743,
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
