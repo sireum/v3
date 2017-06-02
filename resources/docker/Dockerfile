@@ -10,9 +10,17 @@ RUN locale-gen en_US en_US.UTF-8 && \
     dpkg-reconfigure locales && \
     dpkg --add-architecture i386 && \
     apt-get update && \
-    apt-get install -y wget git unzip libgomp1 xz-utils build-essential automake cmake aspcud \
+    apt-get install -y wget git unzip libgomp1 xz-utils build-essential automake cmake aspcud curl python \
                        libc6-dev libgmp-dev libsodium-dev libc6-dev-i386 libgmp-dev:i386 libsodium-dev:i386 nano && \
     rm -rf /var/lib/apt/lists/* && \
+    cd /opt && \
+    curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz && \
+    tar xzf emsdk-portable.tar.gz && \
+    rm -f emsdk-portable.tar.gz && \
+    cd emsdk-portable && \
+    ./emsdk update && \
+    ./emsdk install latest && \
+    ./emsdk activate latest && \
     cd /opt && \
     git clone --recursive -b master https://github.com/sireum/v3.git sireum-v3 && \
     JAVA_OPTIONS="-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss2m -XX:+CMSClassUnloadingEnabled" && \
