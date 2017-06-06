@@ -32,10 +32,14 @@ import org.sireum.util.jvm.FileUtil._
 
 class ScalaMetaParserJvmTest extends SireumSpec {
   val rootDir = new File(getClass.getResource(".").getPath, "../../../../../../../../../")
+
   val preludePackagePath = new File(rootDir, "runtime/prelude/shared/src/main/scala/org/sireum/")
   val slangPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang")
-  val optionPath = new File(preludePackagePath, "Option.scala")
+
   val preludePath = new File(preludePackagePath, "prelude.scala")
+
+  val mapPath = new File(preludePackagePath, "Map.scala")
+  val optionPath = new File(preludePackagePath, "Option.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
 
   val smpt = new ScalaMetaParserTest
@@ -45,9 +49,11 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
     "Passing" - {
 
-      smpt.passing(readFile(optionPath)._1, addImport = false, isPrelude = true)
-
       smpt.passing(readFile(preludePath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(mapPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(optionPath)._1, addImport = false, isPrelude = true)
 
       smpt.passing(readFile(slangAstPath)._1, addImport = false, isPrelude = true)
     }

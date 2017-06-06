@@ -86,7 +86,11 @@ object ScalaMetaParser {
     "∧" -> AST.Exp.BinaryOp.And,
     "∨" -> AST.Exp.BinaryOp.Or,
     "⊻" -> AST.Exp.BinaryOp.Xor,
-    "→" -> AST.Exp.BinaryOp.Imply)
+    "→" -> AST.Exp.BinaryOp.Imply,
+    ":+" -> AST.Exp.BinaryOp.Append,
+    "+:" -> AST.Exp.BinaryOp.Prepend,
+    "++" -> AST.Exp.BinaryOp.AppendAll,
+    "--" -> AST.Exp.BinaryOp.RemoveAll)
 
   case class Result(text: Predef.String,
                     hashSireum: Boolean,
@@ -1050,11 +1054,11 @@ class ScalaMetaParser(text: Predef.String,
   }
 
   def stmtCheck(enclosing: Enclosing.Type, stat: Term, kind: Predef.String): Boolean = enclosing match {
-    case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
+    case Enclosing.Top | Enclosing.Method | Enclosing.Block => false
     case _ =>
       if (isWorksheet) errorInSlang(stat.pos, s"$kind can only appear at the top-level, inside methods, or code blocks")
       else errorInSlang(stat.pos, s"$kind can only appear inside methods or code blocks")
-      false
+      true
   }
 
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Assign): AST.Stmt = {
@@ -1277,10 +1281,9 @@ class ScalaMetaParser(text: Predef.String,
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
         AST.Stmt.For(cid(id), translateRange(expr), None(),
           modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
-      case Seq(enum) => errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(enum)}'")
-      case _ => errorInSlang(stat.pos, s"For-statements can only have one enumerator")
+      case _ =>
+        errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(stat)}'"); rStmt
     }
-    rStmt
   }
 
   def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
@@ -1308,9 +1311,9 @@ class ScalaMetaParser(text: Predef.String,
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
       case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
-        translateInvoke(scala.Some(expr), name, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, expr.pos.end))
+        translateInvoke(scala.Some(expr), name, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name(...$aexprssnel)" =>
-        translateInvoke(scala.Some(expr), name, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, expr.pos.end))
+        translateInvoke(scala.Some(expr), name, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
       case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, name, tpes, aexprssnel, exp.pos)
       case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, name, List(), aexprssnel, exp.pos)
       case q"$expr.$name[..$tpes]" if tpes.nonEmpty =>
@@ -1606,9 +1609,13 @@ class ScalaMetaParser(text: Predef.String,
   def cid(id: Predef.String, pos: Position): AST.Id = {
     def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
-    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || ('0' <= c && c <= '9')
+    def isDigit(c: Char): Boolean = '0' <= c && c <= '9'
 
-    if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
+    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || isDigit(c)
+
+    if (id.head == '_' && id.tail.forall(isDigit)) {
+      // OK
+    } else if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
       errorInSlang(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
 
     cidNoCheck(id, pos)

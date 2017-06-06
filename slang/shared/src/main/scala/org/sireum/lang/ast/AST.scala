@@ -382,6 +382,10 @@ object Exp {
     'Or
     'Xor
     'Imply
+    'Append
+    'Prepend
+    'AppendAll
+    'RemoveAll
   }
 
   @datatype class Binary(left: Exp,
@@ -480,7 +484,27 @@ object Exp {
                              resOpt: Option[ResolvedInfo],
                              typeOpt: Option[Type])
 
-@datatype class ResolvedInfo(uri: String)
+@datatype class ResolvedInfo(kind: SymbolKind.Type,
+                             ids: ISZ[String])
+
+@enum object SymbolKind {
+  'Package
+  'Val
+  'Var
+  'Method
+  'ExtMethod
+  'SpecMethod
+  'Object
+  'Sig
+  'DatatypeTrait
+  'DatatypeClass
+  'RecordTrait
+  'RecordClass
+  'RichTrait
+  'RichClass
+  'Enum
+  'TypeAlias
+}
 
 @datatype class PosInfo(fileUriOpt: Option[String],
                         beginLine: Z,
