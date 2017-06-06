@@ -700,8 +700,7 @@ class ScalaMetaParser(text: Predef.String,
         else errorInSlang(stat.pos, "@datatype class declarations can only appear at package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
-      ctorcalls.size > 1 || hasSelfType(param)) {
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty || hasSelfType(param)) {
       error(tname.pos, "Slang @datatype classes have to be of the form '@datatype class〈ID〉... (...) ... { ... }'.")
     }
     var hasDatatype = false
@@ -763,8 +762,7 @@ class ScalaMetaParser(text: Predef.String,
         else errorInSlang(stat.pos, "@record class declarations can only appear at the package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
-      ctorcalls.size > 1 || hasSelfType(param)) {
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty || hasSelfType(param)) {
       error(tname.pos, "Slang @record classes have to be of the form '@record class〈ID〉(...) { ... }'.")
     }
     var hasRecord = false
