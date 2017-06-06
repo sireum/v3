@@ -39,13 +39,17 @@ object TopUnit {
 
 }
 
-@datatype trait Stmt
+@datatype trait Stmt {
+  def attr: Attr
+}
 
 @sig sealed trait AssignExp
 
 object Stmt {
 
-  @datatype class Import(importers: ISZ[Import.Importer]) extends Stmt
+  @datatype class Import(importers: ISZ[Import.Importer],
+                         @hidden attr: Attr)
+    extends Stmt
 
   object Import {
 
@@ -58,51 +62,60 @@ object Stmt {
   @datatype class Var(isVal: B,
                       id: Id,
                       tpeOpt: Option[Type],
-                      initOpt: Option[AssignExp])
+                      initOpt: Option[AssignExp],
+                      @hidden attr: Attr)
     extends Stmt
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
                              tpeOpt: Option[Type],
-                             initOpt: Option[AssignExp])
+                             initOpt: Option[AssignExp],
+                             @hidden attr: Attr)
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
                           id: Id,
-                          tpe: Type)
+                          tpe: Type,
+                          @hidden attr: Attr)
     extends Stmt
 
   @datatype class Method(isPure: B,
                          sig: MethodSig,
                          contract: MethodContract,
-                         bodyOpt: Option[Body])
+                         bodyOpt: Option[Body],
+                         @hidden attr: Attr)
     extends Stmt
 
   @datatype class ExtMethod(isPure: B,
                             sig: MethodSig,
-                            contract: MethodContract)
+                            contract: MethodContract,
+                            @hidden attr: Attr)
     extends Stmt
 
   @datatype class SpecMethod(sig: MethodSig,
                              defs: ISZ[SpecMethodDef],
-                             where: ISZ[Assign])
+                             where: ISZ[Assign],
+                             @hidden attr: Attr)
     extends Stmt
 
   @datatype class Enum(id: Id,
-                       elements: ISZ[Id])
+                       elements: ISZ[Id],
+                       @hidden attr: Attr)
     extends Stmt
 
   @datatype class Object(isExt: B,
                          id: Id,
                          parents: ISZ[Type],
-                         stmts: ISZ[Stmt])
+                         stmts: ISZ[Stmt],
+                         @hidden attr: Attr)
     extends Stmt
 
   @datatype class Sig(id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type],
                       selfTypeOpt: Option[Type],
-                      stmt: ISZ[Stmt])
+                      stmt: ISZ[Stmt],
+                      @hidden attr: Attr)
     extends Stmt
 
   @datatype class AbstractDatatype(isRoot: B,
@@ -111,7 +124,8 @@ object Stmt {
                                    typeParams: ISZ[TypeParam],
                                    params: ISZ[AbstractDatatypeParam],
                                    parents: ISZ[Type],
-                                   stmt: ISZ[Stmt])
+                                   stmt: ISZ[Stmt],
+                                   @hidden attr: Attr)
     extends Stmt
 
   @datatype class Rich(isRoot: B,
@@ -119,48 +133,58 @@ object Stmt {
                        typeParams: ISZ[TypeParam],
                        params: ISZ[Param],
                        parents: ISZ[Type],
-                       stmt: ISZ[Stmt])
+                       stmt: ISZ[Stmt],
+                       @hidden attr: Attr)
     extends Stmt
 
   @datatype class TypeAlias(id: Id,
                             typeParams: ISZ[TypeParam],
-                            tpe: Type)
+                            tpe: Type,
+                            @hidden attr: Attr)
     extends Stmt
 
   @datatype class Assign(lhs: Exp,
-                         rhs: AssignExp)
+                         rhs: AssignExp,
+                         @hidden attr: Attr)
     extends Stmt
 
   @datatype class AssignUp(lhs: Exp,
-                           rhs: AssignExp)
+                           rhs: AssignExp,
+                           @hidden attr: Attr)
     extends Stmt
 
   @datatype class AssignPattern(lhs: Pattern,
-                                rhs: AssignExp)
+                                rhs: AssignExp,
+                                @hidden attr: Attr)
     extends Stmt
 
-  @datatype class Block(body: Body)
+  @datatype class Block(body: Body,
+                        @hidden attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class If(cond: Exp,
                      thenbody: Body,
-                     elsebody: Body)
+                     elsebody: Body,
+                     @hidden attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class Match(cond: Exp,
-                        cases: ISZ[Case])
+                        cases: ISZ[Case],
+                        @hidden attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class While(cond: Exp,
                         modifies: ISZ[Name],
                         invariants: ISZ[Exp],
-                        body: Body)
+                        body: Body,
+                        @hidden attr: Attr)
     extends Stmt
 
   @datatype class DoWhile(cond: Exp,
                           modifies: ISZ[Name],
                           invariants: ISZ[Exp],
-                          body: Body)
+                          body: Body,
+                          @hidden attr: Attr)
     extends Stmt
 
   @datatype class For(id: Id,
@@ -168,13 +192,16 @@ object Stmt {
                       condOpt: Option[Exp],
                       modifies: ISZ[Name],
                       invariants: ISZ[Exp],
-                      body: Body)
+                      body: Body,
+                      @hidden attr: Attr)
     extends Stmt
 
-  @datatype class Return(expOpt: Option[Exp])
+  @datatype class Return(expOpt: Option[Exp],
+                         @hidden attr: Attr)
     extends Stmt
 
-  @datatype class Expr(exp: Exp)
+  @datatype class Expr(exp: Exp,
+                       @hidden attr: Attr)
     extends Stmt with AssignExp
 
 }
@@ -200,14 +227,17 @@ object Range {
 object Type {
 
   @datatype class Named(name: Name,
-                        typeArgs: ISZ[Type])
+                        typeArgs: ISZ[Type],
+                        attr: TypedAttr)
     extends Type
 
   @datatype class Fun(args: ISZ[Type],
-                      ret: Type)
+                      ret: Type,
+                      attr: TypedAttr)
     extends Type
 
-  @datatype class Tuple(args: ISZ[Type])
+  @datatype class Tuple(args: ISZ[Type],
+                        attr: TypedAttr)
     extends Type
 
 }
@@ -329,7 +359,8 @@ object Exp {
   }
 
   @datatype class Unary(op: UnaryOp.Type,
-                        exp: Exp)
+                        exp: Exp,
+                        @hidden attr: TypedAttr)
     extends Exp
 
   @enum object BinaryOp {
@@ -355,45 +386,55 @@ object Exp {
 
   @datatype class Binary(left: Exp,
                          op: BinaryOp.Type,
-                         right: Exp)
+                         right: Exp,
+                         @hidden attr: TypedAttr)
     extends Exp
 
-  @datatype class Ident(id: Id)
+  @datatype class Ident(id: Id,
+                        @hidden attr: ResolvedAttr)
     extends Exp
 
-  @datatype class Eta(exp: Exp)
+  @datatype class Eta(exp: Exp,
+                      @hidden attr: ResolvedAttr)
     extends Exp
 
-  @datatype class Tuple(args: ISZ[Exp])
+  @datatype class Tuple(args: ISZ[Exp],
+                        @hidden attr: TypedAttr)
     extends Exp
 
   @datatype class Select(receiverOpt: Option[Exp],
                          id: Id,
-                         targs: ISZ[Type])
+                         targs: ISZ[Type],
+                         @hidden attr: ResolvedAttr)
     extends Exp
 
   @datatype class Invoke(receiverOpt: Option[Exp],
                          id: Id,
                          targs: ISZ[Type],
-                         args: ISZ[Exp])
+                         args: ISZ[Exp],
+                         @hidden attr: ResolvedAttr)
     extends Exp
 
   @datatype class InvokeNamed(receiverOpt: Option[Exp],
-                         id: Id,
-                         targs: ISZ[Type],
-                         args: ISZ[(Id, Exp)])
+                              id: Id,
+                              targs: ISZ[Type],
+                              args: ISZ[(Id, Exp)],
+                              @hidden attr: ResolvedAttr)
     extends Exp
 
   @datatype class If(cond: Exp,
                      thenExp: Exp,
-                     elseExp: Exp)
+                     elseExp: Exp,
+                     @hidden attr: TypedAttr)
     extends Exp
 
 }
 
-@datatype class Id(value: String)
+@datatype class Id(value: String,
+                   @hidden attr: Attr)
 
-@datatype class Name(ids: ISZ[Id])
+@datatype class Name(ids: ISZ[Id],
+                     @hidden attr: Attr)
 
 @datatype class Body(stmts: ISZ[Stmt])
 
@@ -401,8 +442,6 @@ object Exp {
                                       isPure: B,
                                       id: Id,
                                       tpe: Type)
-  extends Stmt
-
 
 @datatype class MethodSig(id: Id,
                           typeParams: ISZ[TypeParam],
@@ -431,3 +470,22 @@ object Exp {
                               exp: Exp,
                               pattern: Option[Case],
                               cond: Option[Exp])
+
+@datatype class Attr(posInfoOpt: Option[PosInfo])
+
+@datatype class TypedAttr(posInfoOpt: Option[PosInfo],
+                          typeOpt: Option[Type])
+
+@datatype class ResolvedAttr(posInfoOpt: Option[PosInfo],
+                             resOpt: Option[ResolvedInfo],
+                             typeOpt: Option[Type])
+
+@datatype class ResolvedInfo(uri: String)
+
+@datatype class PosInfo(fileUriOpt: Option[String],
+                        beginLine: Z,
+                        beginColumn: Z,
+                        endLine: Z,
+                        endColumn: Z,
+                        offset: Z,
+                        length: Z)

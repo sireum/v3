@@ -146,8 +146,13 @@ object ScalaMetaParser {
     mods.nonEmpty || !paramname.isInstanceOf[Name.Anonymous] || atpeopt.nonEmpty || expropt.nonEmpty
   }
 
-  private[ScalaMetaParser] lazy val rExp = AST.Exp.Ident(AST.Id("$"))
-  private[ScalaMetaParser] lazy val rStmt = AST.Stmt.Expr(rExp)
+  private[ScalaMetaParser] lazy val emptyAttr = AST.Attr(posInfoOpt = None())
+  private[ScalaMetaParser] lazy val emptyTypedAttr = AST.TypedAttr(posInfoOpt = None(), typeOpt = None())
+  private[ScalaMetaParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posInfoOpt = None(), resOpt = None(), typeOpt = None())
+
+  private[ScalaMetaParser] lazy val rDollarId = AST.Id("$", emptyAttr)
+  private[ScalaMetaParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
+  private[ScalaMetaParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
 }
 
 import ScalaMetaParser._
@@ -165,7 +170,7 @@ class ScalaMetaParser(text: Predef.String,
     tags :+= ScalaMetaParser.error(fileUriOpt, pos, message)
   }
 
-  val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit"))), ISZ())
+  val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit", emptyAttr)), emptyAttr), ISZ(), emptyTypedAttr)
 
   def errorNotSlang(pos: Position, message: Predef.String): Unit =
     error(pos, message + " not in Slang.")
@@ -183,7 +188,7 @@ class ScalaMetaParser(text: Predef.String,
         Result(text, hashSireum,
           Some(AST.TopUnit.Program(
             opt(fileUriOpt.map(_2String)),
-            AST.Name(ISZ()),
+            AST.Name(ISZ(), emptyAttr),
             AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
       else
         Result(text, hashSireum, None(), tags)
@@ -194,7 +199,7 @@ class ScalaMetaParser(text: Predef.String,
     source.stats match {
       case List(q"package $ref { ..$stats }") =>
         if (hashSireum) {
-          val name = AST.Name(ref2IS(ref))
+          val name = AST.Name(ref2IS(ref), attr(ref.pos))
           val refSyntax = ref.syntax
           if (refSyntax == "org.sireum" || refSyntax.startsWith("org.sireum.")) {
             if (allowSireumPackage)
@@ -222,7 +227,7 @@ class ScalaMetaParser(text: Predef.String,
       case q"import org.sireum._" :: rest => topF(rest)
       case q"import org.sireum.logika._" :: rest => topF(rest)
       case Nil =>
-        Result(text, hashSireum, Some(AST.TopUnit.Program(uriOpt, AST.Name(ISZ()), AST.Body(ISZ()))), tags)
+        Result(text, hashSireum, Some(AST.TopUnit.Program(uriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ()))), tags)
       case stats =>
         if (hashSireum)
           errorInSlang(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum._'")
@@ -265,10 +270,10 @@ class ScalaMetaParser(text: Predef.String,
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
       case stat: Term.Return => translateReturn(enclosing, stat)
-      case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat))
+      case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
       case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: Predef.String)), Nil) => parseLStmt(enclosing, l.pos, s)
       case _ =>
-        errorNotSlang(stat.pos, s"Statement '${(stat).structure}' is")
+        errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
         rStmt
     }
   }
@@ -276,12 +281,12 @@ class ScalaMetaParser(text: Predef.String,
   def translateImport(enclosing: Enclosing.Type,
                       stat: Import): AST.Stmt = stat.importers match {
     case Seq(Importer(ref: Term.Ref, Seq(Importee.Wildcard()))) =>
-      AST.Stmt.Import(ISZ(AST.Stmt.Import.Importer(AST.Name(ref2IS(ref)), Some(ISZ()))))
+      AST.Stmt.Import(ISZ(AST.Stmt.Import.Importer(AST.Name(ref2IS(ref), attr(ref.pos)), Some(ISZ()))), attr(stat.pos))
     case _ =>
       var importers = ISZ[AST.Stmt.Import.Importer]()
       for (importer <- stat.importers) {
         val ref = ref2IS(importer.ref)
-        val name = AST.Name(ref)
+        val name = AST.Name(ref, attr(importer.ref.pos))
         var sels = ISZ[AST.Stmt.Import.Selector]()
         for (importee <- importer.importees) importee match {
           case importee"$finame => $tiname" =>
@@ -293,7 +298,7 @@ class ScalaMetaParser(text: Predef.String,
         }
         importers +:= AST.Stmt.Import.Importer(name, Some(sels))
       }
-      AST.Stmt.Import(importers)
+      AST.Stmt.Import(importers, attr(stat.pos))
   }
 
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
@@ -337,13 +342,13 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasError) rStmt
     else if (hasSpec)
-      AST.Stmt.SpecVar(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+      AST.Stmt.SpecVar(isVal = true, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get), attr(stat.pos))
     else patsnel.head match {
       case x: Pat.Var.Term =>
         val r = AST.Stmt.Var(isVal = true, cid(x),
           opt(tpeopt.map(translateType)),
           if (isDiet && tpeopt.nonEmpty) None()
-          else Some(translateAssignExp(expr)))
+          else Some(translateAssignExp(expr)), attr(stat.pos))
         if (tpeopt.isEmpty) checkTyped(expr.pos, r)
         r
       case pattern =>
@@ -355,7 +360,7 @@ class ScalaMetaParser(text: Predef.String,
           case _ => error(pattern.pos, s"Unallowable val pattern: '${pattern.syntax}'")
         }
         AST.Stmt.VarPattern(isVal = true, pat,
-          None(), if (isDiet) None() else Some(translateAssignExp(expr)))
+          None(), if (isDiet) None() else Some(translateAssignExp(expr)), attr(stat.pos))
     }
   }
 
@@ -407,13 +412,13 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasError) rStmt
     else if (hasSpec)
-      AST.Stmt.SpecVar(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get))
+      AST.Stmt.SpecVar(isVal = false, cid(patsnel.head.asInstanceOf[Pat.Var.Term]), translateType(tpeopt.get), attr(stat.pos))
     else patsnel.head match {
       case x: Pat.Var.Term =>
         val r = AST.Stmt.Var(isVal = false, cid(x),
           opt(tpeopt.map(translateType)),
           if (isDiet && tpeopt.nonEmpty || enclosing == Enclosing.ExtObject) None()
-          else Some(translateAssignExp(expropt.get)))
+          else Some(translateAssignExp(expropt.get)), attr(stat.pos))
         if (tpeopt.isEmpty) checkTyped(expropt.get.pos, r)
         r
       case pattern =>
@@ -425,7 +430,7 @@ class ScalaMetaParser(text: Predef.String,
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
         AST.Stmt.VarPattern(isVal = false, pat,
-          None(), if (isDiet) None() else Some(translateAssignExp(expropt.get)))
+          None(), if (isDiet) None() else Some(translateAssignExp(expropt.get)), attr(stat.pos))
     }
   }
 
@@ -474,7 +479,7 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       translateType(tpe))
-    AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None())
+    AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -520,26 +525,26 @@ class ScalaMetaParser(text: Predef.String,
       exp match {
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()))
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
-          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(l.pos, s))
+          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(l.pos, s), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()))
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
       }
     else if (isSpec)
       exp match {
         case q"$$" =>
-          AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
           val (defs, where) = parseDefs(l.pos, s)
-          AST.Stmt.SpecMethod(sig, defs, where)
+          AST.Stmt.SpecMethod(sig, defs, where, attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
-          AST.Stmt.SpecMethod(sig, ISZ(), ISZ())
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
       }
     else exp match {
       case exp: Term.Block =>
@@ -553,10 +558,10 @@ class ScalaMetaParser(text: Predef.String,
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
-        AST.Stmt.Method(isPure, sig, mc, bodyOpt)
+        AST.Stmt.Method(isPure, sig, mc, bodyOpt, attr(tree.pos))
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None())
+        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
     }
   }
 
@@ -606,14 +611,14 @@ class ScalaMetaParser(text: Predef.String,
           scala.None
       }).flatten
 
-      AST.Stmt.Enum(cid(name), ISZ(elements: _*))
+      AST.Stmt.Enum(cid(name), ISZ(elements: _*), attr(stat.pos))
     } else if (!hasError) {
       val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
       AST.Stmt.Object(
         hasExt, cid(name),
         ISZ(ctorcalls.map(translateExtend): _*),
-        ISZ(stats.map(tstat): _*))
-    } else AST.Stmt.Object(hasExt, cid(name), ISZ(), ISZ())
+        ISZ(stats.map(tstat): _*), attr(stat.pos))
+    } else AST.Stmt.Object(hasExt, cid(name), ISZ(), ISZ(), attr(stat.pos))
   }
 
   def translateSig(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -653,7 +658,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
       opt(atpeopt.map(translateTypeArg)),
-      ISZ(stats.map(translateStat(Enclosing.Sig)): _*))
+      ISZ(stats.map(translateStat(Enclosing.Sig)): _*),
+      attr(stat.pos))
   }
 
   def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -682,7 +688,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*))
+      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*),
+      attr(stat.pos))
   }
 
   def translateDatatype(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
@@ -714,7 +721,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       params,
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
+      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*),
+      attr(stat.pos))
   }
 
   def translateRecord(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -743,7 +751,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*))
+      ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*),
+      attr(stat.pos))
   }
 
   def translateRecord(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
@@ -775,7 +784,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       params,
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*))
+      ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*),
+      attr(stat.pos))
   }
 
   def translateRich(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
@@ -803,7 +813,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*))
+      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*),
+      attr(stat.pos))
   }
 
   def translateRich(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
@@ -833,7 +844,8 @@ class ScalaMetaParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.flatMap(_.map(translateParam)): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*))
+      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*),
+      attr(stat.pos))
   }
 
   def translateTypeAlias(enclosing: Enclosing.Type, stat: Defn.Type): AST.Stmt = {
@@ -841,28 +853,28 @@ class ScalaMetaParser(text: Predef.String,
     if (mods.nonEmpty) {
       error(stat.pos, "Slang type definitions should be of the form: 'type〈ID〉... =〈type〉'.")
     }
-    AST.Stmt.TypeAlias(cid(tname), ISZ(tparams.map(translateTypeParam): _*), translateType(tpe))
+    AST.Stmt.TypeAlias(cid(tname), ISZ(tparams.map(translateTypeParam): _*), translateType(tpe), attr(stat.pos))
   }
 
   def translateType(t: Type): AST.Type = t match {
     case t"${name: Type.Name}[..$tpesnel]" =>
-      AST.Type.Named(AST.Name(ISZ(cid(name))), ISZ(tpesnel.map(translateType): _*))
+      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
     case t"${name: Type.Name}" =>
-      AST.Type.Named(AST.Name(ISZ(cid(name))), ISZ())
+      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(), typedAttr(t.pos))
     case t"(..$tpesnel)" =>
-      AST.Type.Tuple(ISZ(tpesnel.map(translateType): _*))
+      AST.Type.Tuple(ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
     case t"$ref.$tname" =>
       def f(t: Term): ISZ[AST.Id] = t match {
         case q"$expr.$name" => f(expr) :+ cid(name)
         case q"${name: Term.Name}" => ISZ(cid(name))
         case _ =>
           errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
-          ISZ(AST.Id("$"))
+          ISZ(rDollarId)
       }
 
-      AST.Type.Named(AST.Name(f(ref) :+ cid(tname)), ISZ())
+      AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
     case t"(..$atpes) => $tpe" =>
-      AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe))
+      AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe), typedAttr(t.pos))
     case _ =>
       errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
       unitType
@@ -884,21 +896,21 @@ class ScalaMetaParser(text: Predef.String,
     case exp: Term.If if exp.thenp.isInstanceOf[Term.Block] =>
       translateIfStmt(Enclosing.Block, exp, balanced = true)
     case exp: Term.Match => translateMatch(Enclosing.Block, exp)
-    case _ => AST.Stmt.Expr(translateExp(exp))
+    case _ => AST.Stmt.Expr(translateExp(exp), attr(exp.pos))
   }
 
   def translatePattern(pat: Pat): AST.Pattern = {
     pat match {
       case p"$pname @ $ref[..$tpes](..$apats)" =>
         if (tpes.nonEmpty) errorInSlang(tpes.head.pos, "Cannot supply type arguments for extraction pattern")
-        AST.Pattern.Structure(Some(cid(pname.name)), Some(AST.Name(ref2IS(ref))),
+        AST.Pattern.Structure(Some(cid(pname.name)), Some(AST.Name(ref2IS(ref), attr(ref.pos))),
           ISZ(apats.map(translatePatternArg): _*))
       case p"$pname @ (..$patsnel)" =>
         AST.Pattern.Structure(Some(cid(pname.name)), None(),
           ISZ(patsnel.map(translatePattern): _*))
       case p"$ref[..$tpes](..$apats)" =>
         if (tpes.nonEmpty) errorInSlang(tpes.head.pos, "Cannot supply type arguments for extraction pattern")
-        AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(ref))),
+        AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(ref), attr(ref.pos))),
           ISZ(apats.map(translatePatternArg): _*))
       case p"(..$patsnel)" if patsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*))
@@ -923,7 +935,7 @@ class ScalaMetaParser(text: Predef.String,
           val args = aexprssnel.head
           expr match {
             case expr: Term.Ref =>
-              return AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(expr))),
+              return AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(expr), attr(expr.pos))),
                 ISZ(args.map(translatePatternArg): _*))
             case _ =>
           }
@@ -978,11 +990,11 @@ class ScalaMetaParser(text: Predef.String,
   def translateBlock(enclosing: Enclosing.Type, stat: Term.Block): AST.Stmt.Block = {
     enclosing match {
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-        AST.Stmt.Block(AST.Body(ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)))
+        AST.Stmt.Block(AST.Body(ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
       case _ =>
         if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
         else errorInSlang(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
-        AST.Stmt.Block(AST.Body(ISZ()))
+        AST.Stmt.Block(AST.Body(ISZ()), emptyAttr)
     }
   }
 
@@ -994,12 +1006,13 @@ class ScalaMetaParser(text: Predef.String,
       case q"$expr.$name" => f(expr) :+ cid(name)
       case _ =>
         errorNotSlang(t.pos, s"Super constructor call: '${syntax(t)}' is")
-        ISZ(AST.Id("?"))
+        ISZ(rDollarId)
     }
 
     cc match {
-      case ctor"$ctorref[..$atpesnel]" => AST.Type.Named(AST.Name(f(ctorref)), ISZ(atpesnel.map(translateType): _*))
-      case _ => AST.Type.Named(AST.Name(f(cc)), ISZ())
+      case ctor"$ctorref[..$atpesnel]" => AST.Type.Named(
+        AST.Name(f(ctorref), attr(ctorref.pos)), ISZ(atpesnel.map(translateType): _*), typedAttr(cc.pos))
+      case _ => AST.Type.Named(AST.Name(f(cc), attr(cc.pos)), ISZ(), typedAttr(cc.pos))
     }
   }
 
@@ -1048,7 +1061,7 @@ class ScalaMetaParser(text: Predef.String,
 
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Assign): AST.Stmt = {
     stmtCheck(enclosing, stat, "Assigments")
-    AST.Stmt.Assign(translateExp(stat.lhs), translateAssignExp(stat.rhs))
+    AST.Stmt.Assign(translateExp(stat.lhs), translateAssignExp(stat.rhs), attr(stat.pos))
   }
 
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Update): AST.Stmt = {
@@ -1071,7 +1084,7 @@ class ScalaMetaParser(text: Predef.String,
     stat.fun match {
       case Term.Name("up") =>
         if (stat.argss.size == 1 && stat.argss.head.size == 1 && stat.argss.head.head.isInstanceOf[Term])
-          AST.Stmt.AssignUp(expArg(stat.argss.head.head), translateAssignExp(stat.rhs))
+          AST.Stmt.AssignUp(expArg(stat.argss.head.head), translateAssignExp(stat.rhs), attr(stat.pos))
         else {
           error(stat.pos, "Slang up should be of the form: 'up(...) = ...'")
           rStmt
@@ -1085,13 +1098,13 @@ class ScalaMetaParser(text: Predef.String,
               case _ => false
             })) {
               AST.Stmt.AssignPattern(AST.Pattern.Structure(None(), None(),
-                ISZ(args.map(patVar): _*)), translateAssignExp(stat.rhs))
+                ISZ(args.map(patVar): _*)), translateAssignExp(stat.rhs), attr(stat.pos))
             } else {
               error(stat.pos, "Slang tuple pat should be of the form: 'pat(〈ID〉,〈ID〉, ... ) = ...'")
               rStmt
             }
           } else {
-            AST.Stmt.AssignPattern(patArg(args.head), translateAssignExp(stat.rhs))
+            AST.Stmt.AssignPattern(patArg(args.head), translateAssignExp(stat.rhs), attr(stat.pos))
           }
         } else {
           error(stat.pos, "Slang pat should be of the form: 'pat(...) = ...'")
@@ -1100,18 +1113,17 @@ class ScalaMetaParser(text: Predef.String,
       case _ =>
         var lhs = translateExp(stat.fun)
         var prevPos = stat.fun.pos
-        if(stat.argss.nonEmpty) {
+        if (stat.argss.nonEmpty) {
           for (args <- stat.argss) {
-            val pos = if (args.nonEmpty) {
-              prevPos = args.last.pos
-              args.head.pos
-            } else prevPos
-            lhs = translateApply(lhs, pos, args)
+            val pos =
+              if (args.nonEmpty) Position.Range(args.head.pos.input, args.head.pos.start, args.last.pos.end)
+              else prevPos
+            lhs = translateApply(lhs, args, pos)
           }
         } else {
           errorInSlang(stat.pos, s"Invalid update form: '${syntax(stat)}'")
         }
-        AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs))
+        AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs), attr(stat.pos))
     }
   }
 
@@ -1130,28 +1142,32 @@ class ScalaMetaParser(text: Predef.String,
         errorInSlang(stat.elsep.pos, "If-else part should be either a code block or another if-conditional.")
     }
     val cond = translateExp(stat.cond)
-    if (hasError) AST.Stmt.If(cond, AST.Body(ISZ()), AST.Body(ISZ()))
+    if (hasError) AST.Stmt.If(cond, AST.Body(ISZ()), AST.Body(ISZ()), emptyAttr)
     else ((stat.thenp, stat.elsep): @unchecked) match {
       case (thenp: Term.Block, elsep: Term.Block) =>
         AST.Stmt.If(cond,
           AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ(elsep.stats.map(translateStat(enclosing)): _*)))
+          AST.Body(ISZ(elsep.stats.map(translateStat(enclosing)): _*)),
+          attr(stat.pos))
       case (thenp: Term.Block, elsep: Term.If) =>
         AST.Stmt.If(cond,
           AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, balanced))))
+          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, balanced))),
+          attr(stat.pos))
       case (thenp: Term.Block, elsep: Lit.Unit) =>
         if (balanced) error(elsep.pos, "Expecting a code block with an expression.")
         AST.Stmt.If(cond,
           AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ()))
+          AST.Body(ISZ()),
+          attr(stat.pos))
     }
   }
 
   def translateMatch(enclosing: Enclosing.Type, stat: Term.Match): AST.Stmt.Match = {
     stmtCheck(enclosing, stat, "Match-statements")
     AST.Stmt.Match(translateExp(stat.expr),
-      ISZ(stat.cases.map(translateCase): _*))
+      ISZ(stat.cases.map(translateCase): _*),
+      attr(stat.pos))
   }
 
   def translateCase(stat: Case): AST.Case = {
@@ -1185,7 +1201,8 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasError) rStmt else
       AST.Stmt.While(translateExp(stat.expr), reads, invariants,
-        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
+        attr(stat.pos))
   }
 
   def translateDoWhile(enclosing: Enclosing.Type, stat: Term.Do): AST.Stmt = {
@@ -1212,7 +1229,8 @@ class ScalaMetaParser(text: Predef.String,
     }
     if (hasError) rStmt else
       AST.Stmt.DoWhile(translateExp(stat.expr), reads, invariants,
-        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
+        attr(stat.pos))
   }
 
   def translateFor(enclosing: Enclosing.Type, stat: Term.For): AST.Stmt = {
@@ -1257,10 +1275,10 @@ class ScalaMetaParser(text: Predef.String,
     if (hasError) rStmt else stat.enums match {
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr", enumerator"if $cond") =>
         AST.Stmt.For(cid(id), translateRange(expr), Some(translateExp(cond)),
-          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
         AST.Stmt.For(cid(id), translateRange(expr), None(),
-          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)))
+          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
       case Seq(enum) => errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(enum)}'")
       case _ => errorInSlang(stat.pos, s"For-statements can only have one enumerator")
     }
@@ -1270,8 +1288,8 @@ class ScalaMetaParser(text: Predef.String,
   def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
     stmtCheck(enclosing, stat, "Return-statements")
     stat.expr match {
-      case Lit.Unit(_) => AST.Stmt.Return(None())
-      case _ => AST.Stmt.Return(Some(translateExp(stat.expr)))
+      case Lit.Unit(_) => AST.Stmt.Return(None(), attr(stat.pos))
+      case _ => AST.Stmt.Return(Some(translateExp(stat.expr)), attr(stat.pos))
     }
   }
 
@@ -1286,19 +1304,20 @@ class ScalaMetaParser(text: Predef.String,
         case List(Lit.String(_)) => true
         case _ => false
       }) => translateLitBv(isBigEndian = expr.prefix.value == "bb", expr, tpesnel.head)
-      case exp: Term.Name => AST.Exp.Ident(cid(exp))
-      case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr))
-      case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*))
+      case exp: Term.Name => AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
+      case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr), resolvedAttr(exp.pos))
+      case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
       case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
-        translateInvoke(scala.Some(expr), name, tpes, aexprssnel)
+        translateInvoke(scala.Some(expr), name, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, expr.pos.end))
       case q"$expr.$name(...$aexprssnel)" =>
-        translateInvoke(scala.Some(expr), name, List(), aexprssnel)
-      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, name, tpes, aexprssnel)
-      case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, name, List(), aexprssnel)
-      case q"$expr.$name[..$tpes]" if tpes.nonEmpty => translateSelect(expr, name, tpes)
-      case q"$expr.$name" => translateSelect(expr, name, List())
+        translateInvoke(scala.Some(expr), name, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, expr.pos.end))
+      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, name, tpes, aexprssnel, exp.pos)
+      case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, name, List(), aexprssnel, exp.pos)
+      case q"$expr.$name[..$tpes]" if tpes.nonEmpty =>
+        translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
+      case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
       case _ =>
         errorNotSlang(exp.pos, s"Expresion '${exp.structure}' is")
@@ -1440,7 +1459,7 @@ class ScalaMetaParser(text: Predef.String,
 
   def translateUnaryExp(t: Term.ApplyUnary): AST.Exp = {
     unops.get(t.op.value) match {
-      case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg))
+      case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg), typedAttr(t.op.pos))
       case _ =>
         error(t.op.pos, s"Only the following unary operators can be used in Slang: ${unops.keys.toVector.sorted.mkString(", ")}")
         rExp
@@ -1461,7 +1480,7 @@ class ScalaMetaParser(text: Predef.String,
     t.args match {
       case List(right) =>
         binops.get(t.op.value) match {
-          case scala.Some(op) => AST.Exp.Binary(translateExp(t.lhs), op, expArg(right))
+          case scala.Some(op) => AST.Exp.Binary(translateExp(t.lhs), op, expArg(right), typedAttr(t.op.pos))
           case _ =>
             error(t.op.pos, s"Only the following binary operators can be used in Slang: ${binops.keys.toVector.sorted.mkString(", ")}")
             rExp
@@ -1473,27 +1492,26 @@ class ScalaMetaParser(text: Predef.String,
   }
 
   def translateInvoke(receiverOpt: scala.Option[Term], name: Term.Name,
-                      tpes: Seq[Type], argss: Seq[Seq[Term.Arg]]): AST.Exp = {
+                      tpes: Seq[Type], argss: Seq[Seq[Term.Arg]], pos: Position): AST.Exp = {
     var r: AST.Exp = translateArgss(argss) match {
       case Left(args) => AST.Exp.InvokeNamed(opt(receiverOpt.map(translateExp)), cid(name),
-        ISZ(tpes.map(translateType): _*), args)
+        ISZ(tpes.map(translateType): _*), args, resolvedAttr(pos))
       case Right(args) => AST.Exp.Invoke(opt(receiverOpt.map(translateExp)), cid(name),
-        ISZ(tpes.map(translateType): _*), args)
+        ISZ(tpes.map(translateType): _*), args, resolvedAttr(pos))
     }
     var prevPos = name.pos
     for (i <- 1 until argss.size) {
       val args = argss(i)
-      val pos = if (args.nonEmpty) {
-        prevPos = args.last.pos
-        args.head.pos
-      } else prevPos
-      r = translateApply(r, pos, argss(i))
+      val pos =
+        if (args.nonEmpty) Position.Range(args.head.pos.input, args.head.pos.start, args.last.pos.end)
+        else prevPos
+      r = translateApply(r, argss(i), pos)
     }
     r
   }
 
-  def translateSelect(receiver: Term, name: Term.Name, tpes: Seq[Type]): AST.Exp = {
-    AST.Exp.Select(Some(translateExp(receiver)), cid(name), ISZ(tpes.map(translateType): _*))
+  def translateSelect(receiver: Term, name: Term.Name, tpes: Seq[Type], pos: Position): AST.Exp = {
+    AST.Exp.Select(Some(translateExp(receiver)), cid(name), ISZ(tpes.map(translateType): _*), resolvedAttr(pos))
   }
 
   def translateIfExp(exp: Term.If): AST.Exp = {
@@ -1512,7 +1530,7 @@ class ScalaMetaParser(text: Predef.String,
       case _ =>
     }
     if (hasError) rExp
-    else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep))
+    else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep), typedAttr(exp.pos))
   }
 
   def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
@@ -1546,10 +1564,10 @@ class ScalaMetaParser(text: Predef.String,
     else Right(ISZ(args.map(expArg): _*))
   }
 
-  def translateApply(fun: AST.Exp, pos: Position, termArgs: Seq[Term.Arg]): AST.Exp =
+  def translateApply(fun: AST.Exp, termArgs: Seq[Term.Arg], pos: Position): AST.Exp =
     translateArgs(termArgs) match {
-      case Left(args) => AST.Exp.InvokeNamed(Some(fun), cidNoCheck("apply", pos), ISZ(), args)
-      case Right(args) => AST.Exp.Invoke(Some(fun), cidNoCheck("apply", pos), ISZ(), args)
+      case Left(args) => AST.Exp.InvokeNamed(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
+      case Right(args) => AST.Exp.Invoke(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
     }
 
   def parseDefs(pos: Position, text: Predef.String): (ISZ[AST.SpecMethodDef], ISZ[AST.Stmt.Assign]) = {
@@ -1564,7 +1582,7 @@ class ScalaMetaParser(text: Predef.String,
 
   def parseLStmt(enclosing: Enclosing.Type, pos: Position, text: Predef.String): AST.Stmt = {
     // TODO: parse stmt
-    AST.Stmt.Expr(AST.Exp.Ident(AST.Id("$")))
+    rStmt
   }
 
   def parseLoopContract(pos: Position, text: Predef.String): (ISZ[AST.Name], ISZ[AST.Exp]) = {
@@ -1584,9 +1602,8 @@ class ScalaMetaParser(text: Predef.String,
 
   def cid(name: Name.Indeterminate): AST.Id = cid(name.value, name.pos)
 
-  def cidNoCheck(id: Predef.String, pos: Position): AST.Id = {
-    AST.Id(id)
-  }
+  def cidNoCheck(id: Predef.String, pos: Position): AST.Id =
+    AST.Id(id, attr(pos))
 
   def cid(id: Predef.String, pos: Position): AST.Id = {
     def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
@@ -1599,12 +1616,31 @@ class ScalaMetaParser(text: Predef.String,
     cidNoCheck(id, pos)
   }
 
+  def attr(pos: Position): AST.Attr = AST.Attr(posInfoOpt = posInfoOpt(pos))
+
+  def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posInfoOpt = posInfoOpt(pos), typeOpt = None())
+
+  def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posInfoOpt = posInfoOpt(pos), resOpt = None(), typeOpt = None())
+
+  def posInfoOpt(pos: Position): Option[AST.PosInfo] = Some(AST.PosInfo(
+    fileUriOpt = fileUriOpt match {
+      case scala.Some(uri) => Some(uri)
+      case _ => None[String]()
+    },
+    beginLine = pos.start.line,
+    beginColumn = pos.start.column,
+    endLine = pos.end.line,
+    endColumn = pos.end.column,
+    offset = pos.start.offset,
+    length = pos.end.offset - pos.start.offset + 1
+  ))
+
   def ref2IS(ref: Term.Ref): ISZ[AST.Id] = {
     def f(t: Term): ISZ[AST.Id] = t match {
       case q"${name: Term.Name}" => ISZ(cid(name))
       case q"$expr.$name" => f(expr) :+ cid(name)
       case _ => errorInSlang(t.pos, s"Invalid name reference '${ref.syntax}'")
-        ISZ(AST.Id("$"))
+        ISZ(rDollarId)
     }
 
     f(ref)
