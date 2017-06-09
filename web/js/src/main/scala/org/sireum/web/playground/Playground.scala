@@ -25,7 +25,6 @@
 
 package org.sireum.web.playground
 
-import ffi.Z3
 import ffi.monaco.KeyCode
 import ffi.monaco.editor._
 import ffi.monaco.languages.Languages
@@ -91,24 +90,12 @@ object Playground {
     $[Select](mainDiv, "#filename").onchange = (_: Event) => Files.load(Files.selectedFilename)
 
     dom.document.onreadystatechange = (_: Event) => {
-      lazy val wait: () => Unit = () =>
-        if (Z3 != null) {
-          dom.document.body.appendChild(mainDiv)
-          updateView()
-          Files.loadFiles()
-          dom.document.body.removeChild($[Div]("#welcome"))
-        }
-        else dom.window.setTimeout(wait, 500)
-      wait()
+      dom.document.body.appendChild(mainDiv)
+      updateView()
+      Files.loadFiles()
+      dom.document.body.removeChild($[Div]("#welcome"))
     }
-    dom.window.onresize = (_: UIEvent) => {
-      lazy val wait: () => Unit = () =>
-        if (Z3 != null) {
-          updateView()
-        }
-        else dom.window.setTimeout(wait, 500)
-      wait()
-    }
+    dom.window.onresize = (_: UIEvent) => updateView()
 
     val runButton = $[Anchor](mainDiv, "#run")
     runButton.onclick = (_: MouseEvent) =>
@@ -117,15 +104,7 @@ object Playground {
 
     $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => {
       if (Files.selectedFilename.endsWith(Files.smtExt))
-        try {
-          Z3.exception = false
-          $[Div](mainDiv, "#output").innerHTML = pre(Z3.query(editorValue)).render
-          if (Z3.exception) Notification.notify(Notification.Kind.Error, s"Encountered an error when executing the query using Z3.js.")
-          else Notification.notify(Notification.Kind.Success, s"Z3.js successfully executed the query.")
-          Z3.exception = false
-        } catch {
-          case t: Throwable => Notification.notify(Notification.Kind.Error, s"Error encountered when calling Z3.js (reason ${t.getMessage}).")
-        }
+        Z3.query(editorValue, result => $[Div](mainDiv, "#output").innerHTML = pre(result).render)
       else Notification.notify(Notification.Kind.Info, s"Slang verification coming soon.")
     }
 
@@ -177,6 +156,7 @@ object Playground {
         () => {
           GitHub.erase()
           Files.erase()
+          Z3.erase()
           Files.loadFiles()
         })
 

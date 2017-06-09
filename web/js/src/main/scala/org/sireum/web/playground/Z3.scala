@@ -23,21 +23,43 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package ffi
+package org.sireum.web.playground
 
-import scala.scalajs.js
-import scala.scalajs.js.Promise
-import scala.scalajs.js.annotation.JSGlobal
+import org.scalajs.dom
+import org.scalajs.dom.WebSocket
+import org.sireum.web.ui.Modal
+import org.sireum.web.util._
 
-@js.native
-@JSGlobal
-object Z3 extends Z3 {
-  def load(): Promise[Z3] = js.native
-}
+import scala.scalajs.js.{Date, JSON}
 
-@js.native
-trait Z3 extends js.Object {
-  def query(smt2: String): String = js.native
+object Z3 {
+  val portKey = "org.sireum.wsd.port"
+  var last: Double = 0
 
-  var exception: Boolean = js.native
+  def lookupPort: Int =
+    Option(dom.window.localStorage.getItem(portKey)).map(_.toInt).getOrElse(8888)
+
+  def updatePort(value: Int): Unit =
+    dom.window.localStorage.setItem(portKey, value.toString)
+
+  def erase(): Unit = {
+    dom.window.localStorage.removeItem(portKey)
+  }
+
+  def query(script: String, callback: String => Unit): Unit = {
+    val ws = new WebSocket(s"ws://localhost:$lookupPort")
+    ws.onmessage = e => {
+      val o = JSON.parse(e.data.toString)
+      if (o.id.toString.toDouble >= last) callback(o.output.toString)
+      ws.close(3001)
+    }
+    ws.onclose = e => {
+      if (e.code != 3001)
+        Modal.wsd(lookupPort, port => {
+          if (port != lookupPort) updatePort(port)
+          query(script, callback)
+        })
+    }
+    ws.onopen = _ => ws.send(JSON.stringify(jsObj(id = new Date().getTime().toString, input = script)))
+  }
 }

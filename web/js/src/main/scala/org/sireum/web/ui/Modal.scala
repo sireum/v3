@@ -388,4 +388,76 @@ object Modal {
     else if (repoInput.value.trim == "") repoInput.focus()
     else if (tokenInput.value.trim == "") tokenInput.focus()
   }
+
+  def wsd(port: Int, success: Int => Unit): Unit = {
+    val modal = render[Div](
+      div(cls := "modal is-active",
+        div(cls := "modal-background"),
+        div(cls := "modal-card",
+          header(cls := "modal-card-head",
+            p(cls := "modal-card-title")("Sireum WebSocket Daemon Required"),
+            button(id := "modal-delete", cls := "delete")
+          ),
+          section(cls := "modal-card-body",
+            div(cls := "field",
+              label(cls := "label")("Port"),
+              p(cls := "control",
+                input(id := "modal-input-port", cls := "input", `type` := "text", placeholder := port.toString)
+              )
+            ),
+            p("Please download and run ",
+              a(target := "_blank", href := "https://github.com/sireum/v3-wsd.js", "Sireum WebSocket Daemon (WSD)."))
+          ),
+          footer(cls := "modal-card-foot",
+            a(id := "modal-ok", cls := "button is-success")("Ok"),
+            a(id := "modal-cancel", cls := "button is-danger is-focused")("Cancel")
+          )
+        )
+      )
+    )
+
+    val oldKeyup = dom.document.onkeyup
+
+    dom.document.body.appendChild(modal)
+
+    val portInput = $[Input]("#modal-input-port")
+
+    def close(): Unit = {
+      dom.document.onkeyup = oldKeyup
+      dom.document.body.removeChild(modal)
+      Playground.editor.focus()
+    }
+
+    val okButton = $[Anchor]("#modal-ok")
+    okButton.onclick = (_: MouseEvent) => if (okButton.getAttribute("disabled") != "true") {
+      okButton.className += " is-loading"
+      okButton.setAttribute("disabled", "true")
+      val text = portInput.value.trim
+      if ("" == text) success(port) else success(portInput.value.toInt)
+      close()
+    }
+
+    val closeF = (_: MouseEvent) => close()
+    $[Button]("#modal-delete").onclick = closeF
+    $[Anchor]("#modal-cancel").onclick = closeF
+
+    portInput.onkeyup = _ => {
+      try {
+        portInput.value.trim.toInt
+        portInput.className = "input"
+        okButton.removeAttribute("disabled")
+      } catch {
+        case _: Exception =>
+          portInput.className = "input is-danger"
+          okButton.setAttribute("disabled", "true")
+      }
+    }
+
+    dom.document.onkeyup = (e: KeyboardEvent) => {
+      e.keyCode match {
+        case `escape` => close()
+        case _ =>
+      }
+    }
+  }
 }

@@ -1,9 +1,6 @@
 [submodule "runtime"]
 	path = runtime
 	url = https://github.com/sireum/v3-runtime
-[submodule "web/js/z3.js"]
-	path = web/js/z3.js
-	url = https://github.com/sireum/z3.js.git
-[submodule "distros/z3wsd.js"]
-	path = resources/distro/z3wsd.js
-	url = https://github.com/sireum/z3wsd.js
+[submodule "distros/wsd.js"]
+	path = resources/distro/wsd.js
+	url = https://github.com/sireum/v3-wsd.js

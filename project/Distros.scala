@@ -379,7 +379,7 @@ object Distros {
           """@echo off
             |setlocal
             |set SCRIPT_HOME=%~dp0
-            |%SCRIPT_HOME%\node.exe %SCRIPT_HOME%\z3wsd.js %*
+            |%SCRIPT_HOME%\node.exe %SCRIPT_HOME%\wsd.js %*
           """.stripMargin.trim)
       case _ =>
         cp(baseDir / 'distros / s"sireum-v3$dev" / 'platform / 'node / 'bin / 'node, baseDir / 'distros / "sireum-v3-wsd" / 'node)
@@ -387,11 +387,11 @@ object Distros {
         write(baseDir / 'distros / "sireum-v3-wsd" / "run.sh",
           """#!/bin/bash -e
             |SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
-            |$SCRIPT_HOME/node $SCRIPT_HOME/z3wsd.js $*
+            |$SCRIPT_HOME/node $SCRIPT_HOME/wsd.js $*
           """.stripMargin.trim)
         %('chmod, "755", "run.sh")(baseDir / 'distros / "sireum-v3-wsd")
     }
-    cp(pwd / 'resources / 'distro / "z3wsd.js" / "z3wsd.js", baseDir / 'distros / "sireum-v3-wsd" / "z3wsd.js")
+    cp(pwd / 'resources / 'distro / "wsd.js" / "wsd.js", baseDir / 'distros / "sireum-v3-wsd" / "wsd.js")
     %%('npm, "install", "ws")(baseDir / 'distros / "sireum-v3-wsd")
     rm! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
 
