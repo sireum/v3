@@ -332,6 +332,9 @@ object Distros {
     rm ! baseDir / 'distros / s"sireum-v3$dev-mac64.zip"
     rm ! baseDir / 'distros / s"sireum-v3$dev-win64.zip"
     rm ! baseDir / 'distros / s"sireum-v3$dev-linux64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3-wsd-mac64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3-wsd-win64.zip"
+    rm ! baseDir / 'distros / s"sireum-v3-wsd-linux64.zip"
     rm ! baseDir / 'distros / s"sireum-v3$dev-VER"
     write(baseDir / 'distros / s"sireum-v3$dev-VER", VER)
     build("mac")
@@ -361,6 +364,40 @@ object Distros {
     rm ! baseDir / 'distros / "sireum-v3" / 'bin / "prelude.sh"
     if (isDev) mv(baseDir / 'distros / "sireum-v3", baseDir / 'distros / s"sireum-v3$dev")
     %('zip, "-qr", s"sireum-v3$dev-${platform}64.zip", s"sireum-v3$dev")(baseDir / 'distros)
+
+    println(s"Building Sireum WSD for ${platform}64...")
+    println()
+
+    rm ! baseDir / 'distros / "sireum-v3-wsd"
+    mkdir ! baseDir / 'distros / "sireum-v3-wsd"
+
+    platform match {
+      case "win" =>
+        cp(baseDir / 'distros / s"sireum-v3$dev" / 'platform / 'node / 'bin / "node.exe", baseDir / 'distros / "sireum-v3-wsd" / "node.exe")
+        cp(baseDir / 'distros / s"sireum-v3$dev" / 'apps / 'z3 / 'bin / "z3.exe", baseDir / 'distros / "sireum-v3-wsd" / "z3.exe")
+        write(baseDir / 'distros / "sireum-v3-wsd" / "run.bat",
+          """@echo off
+            |setlocal
+            |set SCRIPT_HOME=%~dp0
+            |%SCRIPT_HOME%\node.exe %SCRIPT_HOME%\z3wsd.js %*
+          """.stripMargin.trim)
+      case _ =>
+        cp(baseDir / 'distros / s"sireum-v3$dev" / 'platform / 'node / 'bin / 'node, baseDir / 'distros / "sireum-v3-wsd" / 'node)
+        cp(baseDir / 'distros / s"sireum-v3$dev" / 'apps / 'z3 / 'bin / 'z3, baseDir / 'distros / "sireum-v3-wsd" / 'z3)
+        write(baseDir / 'distros / "sireum-v3-wsd" / "run.sh",
+          """#!/bin/bash -e
+            |SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
+            |$SCRIPT_HOME/node $SCRIPT_HOME/z3wsd.js $*
+          """.stripMargin.trim)
+        %('chmod, "755", "run.sh")(baseDir / 'distros / "sireum-v3-wsd")
+    }
+    cp(pwd / 'resources / 'distro / "z3wsd.js" / "z3wsd.js", baseDir / 'distros / "sireum-v3-wsd" / "z3wsd.js")
+    %%('npm, "install", "ws")(baseDir / 'distros / "sireum-v3-wsd")
+    rm! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
+
+    %('zip, "-qr", s"sireum-v3-wsd-${platform}64.zip", s"sireum-v3-wsd")(baseDir / 'distros)
+
+    rm ! baseDir / 'distros / s"sireum-v3-wsd"
     rm ! baseDir / 'distros / s"sireum-v3$dev"
   }
 }

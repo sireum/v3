@@ -3,6 +3,7 @@ export SCRIPT_DIR=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 rm -fR sireum-v3-mac64.zip sireum-v3-linux64.zip sireum-v3-win64.zip sireum-v3-VER sireum-v3
 rm -fR sireum-v3-dev-mac64.zip sireum-v3-dev-linux64.zip sireum-v3-dev-win64.zip sireum-v3-dev-VER sireum-v3-dev
+rm -fR sireum-v3-wsd-mac64.zip sireum-v3-wsd-linux64.zip sireum-v3-wsd-win64.zip
 export SIREUM_SKIP_BUILD=false
 if [ "${SIREUM_DEV_DISTROS}" == "true" ]; then
   git clone -b master --recursive https://github.com/sireum/v3.git sireum-v3
