@@ -5,5 +5,5 @@
 	path = web/js/z3.js
 	url = https://github.com/sireum/z3.js.git
 [submodule "distros/z3wsd.js"]
-	path = distros/z3wsd.js
+	path = resources/distro/z3wsd.js
 	url = https://github.com/sireum/z3wsd.js
