@@ -34,9 +34,9 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.2"
 
-val metaVersion = "1.8.0"
+val metaVersion = "1.7.0"
 
-val paradiseVersion = "3.0.0-M9"
+val paradiseVersion = "3.0.0-M8"
 
 val scalaTestVersion = "3.0.1"
 
@@ -228,7 +228,7 @@ lazy val preludeJs = preludeT._3
 lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI, utilPI, testPI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "fastparse" % "0.4.3",
+    "com.lihaoyi" %%% "fastparse" % "0.4.2",
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
@@ -257,12 +257,6 @@ lazy val webJs = webT._3.settings(
   crossTarget in (Compile, packageJSDependencies) := (classDirectory in Compile).value,
   crossTarget in (Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in (Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
-  unmanagedResources in Compile ++= Seq(
-    baseDirectory.value / "z3.js/loader.js",
-    baseDirectory.value / "z3.js/module.z3.js",
-    baseDirectory.value / "z3.js/z3.js.mem",
-    baseDirectory.value / "z3.js/z3.wrapped.js"
-  ),
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(

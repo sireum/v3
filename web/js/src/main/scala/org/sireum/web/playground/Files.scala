@@ -58,7 +58,7 @@ object Files {
   val cursorKey = "org.sireum.cursor"
   val newText = "import org.sireum._\n\n"
   val newTextLine: Int = newText.count(_ == '\n')
-  val untitled: String = "Untitled" + slangExt
+  val untitled: String = "Untitled" + smtExt
 
   final case class FileData(line: Int, column: Int, text: String)
 

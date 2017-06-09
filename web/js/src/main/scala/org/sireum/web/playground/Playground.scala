@@ -104,12 +104,18 @@ object Playground {
 
     $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => {
       if (Files.selectedFilename.endsWith(Files.smtExt))
-        Z3.query(editorValue, result => $[Div](mainDiv, "#output").innerHTML = pre(result).render)
+        Z3.query(editorValue, result => {
+          $[Div](mainDiv, "#output").innerHTML = pre(result).render
+          Notification.notify(Notification.Kind.Success, s"Successfully invoked Z3.")
+        })
       else Notification.notify(Notification.Kind.Info, s"Slang verification coming soon.")
     }
 
-    $[Anchor](mainDiv, "#options").onclick = (_: MouseEvent) =>
-      Notification.notify(Notification.Kind.Info, s"Sireum configuration coming soon.")
+    val optionsButton = $[Anchor](mainDiv, "#options")
+    optionsButton.setAttribute("disabled", "true")
+    optionsButton.onclick = (_: MouseEvent) =>
+      if (optionsButton.getAttribute("disabled") != "true")
+        Notification.notify(Notification.Kind.Info, s"Sireum configuration coming soon.")
 
     def appendSlangExtIfNoExt(filename: String): String =
       if (filename.endsWith(Files.slangExt) || filename.endsWith(Files.smtExt))
