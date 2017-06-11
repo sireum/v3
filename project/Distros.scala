@@ -379,7 +379,8 @@ object Distros {
           """@echo off
             |setlocal
             |set SCRIPT_HOME=%~dp0
-            |%SCRIPT_HOME%\node.exe %SCRIPT_HOME%\wsd.js %*
+            |set PATH=%SCRIPT_HOME%;%PATH%
+            |node.exe %SCRIPT_HOME%\wsd.js %*
           """.stripMargin.trim)
       case _ =>
         cp(baseDir / 'distros / s"sireum-v3$dev" / 'platform / 'node / 'bin / 'node, baseDir / 'distros / "sireum-v3-wsd" / 'node)
@@ -387,7 +388,8 @@ object Distros {
         write(baseDir / 'distros / "sireum-v3-wsd" / "run.sh",
           """#!/bin/bash -e
             |SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
-            |$SCRIPT_HOME/node $SCRIPT_HOME/wsd.js $*
+            |export PATH=$SCRIPT_HOME:$PATH
+            |node $SCRIPT_HOME/wsd.js $*
           """.stripMargin.trim)
         %('chmod, "755", "run.sh")(baseDir / 'distros / "sireum-v3-wsd")
     }
