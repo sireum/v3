@@ -39,6 +39,7 @@ import scalatex.PlaygroundSpa
 import org.sireum.web.util._
 
 import scala.collection.immutable.SortedMap
+import scala.scalajs.js
 
 object Playground {
 
@@ -48,16 +49,26 @@ object Playground {
 
   def updateView(): Unit = {
     val height = s"${dom.window.innerHeight - 90}px"
-    $[Div]("#editor").style.height = height
-    val output = $[Div]("#output")
-    output.style.height = height
-    editor.layout()
-    editor.focus()
-    dom.document.body.style.backgroundColor = "#8e44ad"
-    output.style.backgroundColor = "#f8f3fa"
+    val editorDiv = $[Div]("#editor")
+    if (!js.isUndefined(editorDiv)) {
+      editorDiv.style.height = height
+      val output = $[Div]("#output")
+      output.style.height = height
+      editor.layout()
+      editor.focus()
+      dom.document.body.style.backgroundColor = "#8e44ad"
+      output.style.backgroundColor = "#f8f3fa"
+    } else dom.window.setTimeout(() => updateView(), 500)
   }
 
   def apply(): Unit = {
+    if (detectedPlatform == Platform.Unsupported) {
+      dom.document.body.removeChild($[Div]("#welcome"))
+      Modal.halt("Unsupported Operating System (OS)",
+      s"Sireum Playground does not currently support your OS: '${dom.window.navigator.appVersion}'.")
+      return
+    }
+
     Languages.register(jsObj(id = slangId))
     Languages.setMonarchTokensProvider(slangId, eval("(function(){ " + slangModelText + "; })()"))
 
@@ -81,7 +92,7 @@ object Playground {
       if (e.text.contains('\n'))
         Files.save(Files.selectedFilename, editor.getPosition().lineNumber.toInt + 1, 1, editorValue))
 
-    editor.addCommand(KeyCode.F1, (() => ()).asInstanceOf[ICommandHandler], "")
+    editor.addCommand(KeyCode.F1, jsObj[ICommandHandler](apply = (() => ()): js.Function0[Unit]), "")
     dom.window.onunload = (_: Event) => save()
 
     editor.onDidBlurEditor(() => save())
@@ -98,18 +109,22 @@ object Playground {
     dom.window.onresize = (_: UIEvent) => updateView()
 
     val runButton = $[Anchor](mainDiv, "#run")
-    runButton.onclick = (_: MouseEvent) =>
+    def run(): Unit =
       if (runButton.getAttribute("disabled") != "true")
         Notification.notify(Notification.Kind.Info, s"Slang execution coming soon.")
+    runButton.onclick = (_: MouseEvent) => run()
+    editor.addCommand(KeyCode.F8, jsObj[ICommandHandler](apply = (() => run()): js.Function0[Unit]), "")
 
-    $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => {
+    def verify(): Unit =
       if (Files.selectedFilename.endsWith(Files.smtExt))
-        Z3.query(editorValue, result => {
+        Z3.query(editorValue, (status, result) => {
           $[Div](mainDiv, "#output").innerHTML = pre(result).render
-          Notification.notify(Notification.Kind.Success, s"Successfully invoked Z3.")
+          if (status) Notification.notify(Notification.Kind.Success, s"Successfully invoked Z3.")
+          else Notification.notify(Notification.Kind.Error, s"Z3 invocation unsuccessful.")
         })
       else Notification.notify(Notification.Kind.Info, s"Slang verification coming soon.")
-    }
+    $[Anchor](mainDiv, "#verify").onclick = (_: MouseEvent) => verify()
+    editor.addCommand(KeyCode.F9, jsObj[ICommandHandler](apply = (() => verify()): js.Function0[Unit]), "")
 
     val optionsButton = $[Anchor](mainDiv, "#options")
     optionsButton.setAttribute("disabled", "true")

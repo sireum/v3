@@ -41,6 +41,22 @@ object Modal {
   val escape = 27
   val enter = 13
 
+  def halt(titleText: String, labelText: String): Unit = {
+    val modal = render[Div](
+      div(cls := "modal is-active",
+        div(cls := "modal-background"),
+        div(cls := "modal-card",
+          header(cls := "modal-card-head",
+            p(cls := "modal-card-title")(titleText)),
+          section(cls := "modal-card-body",
+            div(cls := "field", label(cls := "label")(labelText))),
+          footer(cls := "modal-card-foot")
+        )
+      )
+    )
+    dom.document.body.appendChild(modal)
+  }
+
   def confirm(titleText: String, labelText: String, success: () => Unit): Unit =
     confirm(titleText, div(cls := "field", label(cls := "label")(labelText)), success)
 
@@ -389,7 +405,7 @@ object Modal {
     else if (tokenInput.value.trim == "") tokenInput.focus()
   }
 
-  def wsd(port: Int, success: Int => Unit): Unit = {
+  def wsd(host: String, port: Int, success: (String, Int) => Unit): Unit = {
     val modal = render[Div](
       div(cls := "modal is-active",
         div(cls := "modal-background"),
@@ -400,11 +416,13 @@ object Modal {
           ),
           section(cls := "modal-card-body",
             div(cls := "field",
+              label(cls := "label")("Host"),
+              p(cls := "control",
+                input(id := "modal-input-host", cls := "input", `type` := "text", placeholder := host))),
+            div(cls := "field",
               label(cls := "label")("Port"),
               p(cls := "control",
-                input(id := "modal-input-port", cls := "input", `type` := "text", placeholder := port.toString)
-              )
-            ),
+                input(id := "modal-input-port", cls := "input", `type` := "text", placeholder := port.toString))),
             p("Please download and run ",
               a(target := "_blank", href := "https://github.com/sireum/v3-wsd.js", "Sireum WebSocket Daemon (WSD)."))
           ),
@@ -420,6 +438,7 @@ object Modal {
 
     dom.document.body.appendChild(modal)
 
+    val hostInput = $[Input]("#modal-input-host")
     val portInput = $[Input]("#modal-input-port")
 
     def close(): Unit = {
@@ -432,14 +451,33 @@ object Modal {
     okButton.onclick = (_: MouseEvent) => if (okButton.getAttribute("disabled") != "true") {
       okButton.className += " is-loading"
       okButton.setAttribute("disabled", "true")
+      val h = if ("" == hostInput.value) host else hostInput.value
       val text = portInput.value.trim
-      if ("" == text) success(port) else success(portInput.value.toInt)
+      if ("" == text) success(h, port)
+      else success(h, portInput.value.toInt)
       close()
     }
 
     val closeF = (_: MouseEvent) => close()
     $[Button]("#modal-delete").onclick = closeF
     $[Anchor]("#modal-cancel").onclick = closeF
+
+    hostInput.onkeyup = _ => {
+      val text = hostInput.value
+      val ok = text.headOption.forall(_.isLetterOrDigit) &&
+        text.lastOption.forall(_.isLetterOrDigit) &&
+        text.forall({
+          case '.' | '-' => true
+          case c => c.isLetterOrDigit
+        })
+      if (ok) {
+        hostInput.className = "input"
+        okButton.removeAttribute("disabled")
+      } else {
+        hostInput.className = "input is-danger"
+        okButton.setAttribute("disabled", "true")
+      }
+    }
 
     portInput.onkeyup = _ => {
       try {
@@ -460,4 +498,5 @@ object Modal {
       }
     }
   }
+
 }

@@ -33,29 +33,50 @@ import org.sireum.web.util._
 import scala.scalajs.js.{Date, JSON}
 
 object Z3 {
+  val hostKey = "org.sireum.wsd.host"
   val portKey = "org.sireum.wsd.port"
   var last: Double = 0
 
+  def lookup(key: String): Option[String] =
+    Option(dom.window.localStorage.getItem(key))
+
+  def update(key: String, value: String): Unit =
+    dom.window.localStorage.setItem(key, value)
+
+  def lookupHost: String =
+    lookup(hostKey).getOrElse("localhost")
+
+  def updateHost(value: String): Unit =
+    update(hostKey, value)
+
   def lookupPort: Int =
-    Option(dom.window.localStorage.getItem(portKey)).map(_.toInt).getOrElse(8888)
+    lookup(portKey).map(_.toInt).getOrElse(8888)
 
   def updatePort(value: Int): Unit =
-    dom.window.localStorage.setItem(portKey, value.toString)
+    update(portKey, value.toString)
 
   def erase(): Unit = {
+    dom.window.localStorage.removeItem(hostKey)
     dom.window.localStorage.removeItem(portKey)
   }
 
-  def query(script: String, callback: String => Unit): Unit = {
-    val ws = new WebSocket(s"ws://localhost:$lookupPort")
+  def query(script: String, callback: (Boolean, String) => Unit): Unit = {
+    val host = {
+      val h = lookupHost
+      if (h == "localhost" && (detectedPlatform == Platform.iOS || detectedPlatform == Platform.Android))
+        "santos09.cs.ksu.edu"
+      else h
+    }
+    val ws = new WebSocket(s"ws://$host:$lookupPort")
     ws.onmessage = e => {
       val o = JSON.parse(e.data.toString)
-      if (o.id.toString.toDouble >= last) callback(o.output.toString)
+      if (o.id.toString.toDouble >= last) callback(o.status.toString.toBoolean, o.output.toString)
       ws.close(3001)
     }
     ws.onclose = e => {
       if (e.code != 3001)
-        Modal.wsd(lookupPort, port => {
+        Modal.wsd(lookupHost, lookupPort, (host, port) => {
+          if (host != lookupHost) updateHost(host)
           if (port != lookupPort) updatePort(port)
           query(script, callback)
         })

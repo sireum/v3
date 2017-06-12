@@ -8,6 +8,8 @@ cp -R $SIREUM_HOME/web/js/target/scala-2.12/classes/* playground/
 cd playground
 rm -R ffi org scalatex index-dev.html JS_DEPENDENCIES web-jsdeps.js min/web-jsdeps.min.js min/web-opt.js.map
 echo "play.sireum.org" > CNAME
+sed  -i.old -e '$ d' min/web-opt.js
+rm -f min/web-opt.js.old
 git add --all
 git commit -a -m "Updated."
 git push

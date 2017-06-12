@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="min/css/bulma-pulse.css"/>
     <link rel="stylesheet" href="min/css/font-awesome.css"/>
     <link rel="stylesheet" href="min/css/amaran.css"/>
+    <link rel="stylesheet" href="min/css/balloon.css"/>
     <script type="text/javascript" src="min/vs/loader.js"></script>
     <script type="text/javascript" src="min/jquery.js"></script>
     <script type="text/javascript" src="min/jquery.amaran.js"></script>
@@ -26,17 +27,15 @@
     </div>
 </div>
 <script>
-var GitHub = null;
 var Amaran = $.amaran;
+var GitHub = null;
 var JSZip = null;
 require.config({ paths: { 'vs': 'min/vs' }});
-require(['vs/editor/editor.main', 'min/GitHub', 'min/jszip'],
-  function(vs, gh, jszip) {
-    GitHub = gh;
-    JSZip = jszip;
-    org.sireum.web.Main.main();
-  }
-);
+require(['vs/editor/editor.main', 'min/GitHub', 'min/jszip'], function (vs, gh, jszip) {
+  GitHub = gh;
+  JSZip = jszip;
+  org.sireum.web.Main.main();
+});
 </script>
 </body>
 </html>

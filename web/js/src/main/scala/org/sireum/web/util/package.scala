@@ -34,6 +34,23 @@ import scalatags.generic.Frag
 import scala.language.dynamics
 
 package object util {
+
+  object Platform extends Enumeration {
+    type Type = Value
+    val Unsupported, Mac, Linux, Windows, iOS, Android = Value
+  }
+
+  val detectedPlatform: Platform.Type = {
+    val ua = dom.window.navigator.userAgent
+    if (ua.indexOf("like Mac") != -1) Platform.iOS
+    else if (ua.indexOf("Mac") != -1) Platform.Mac
+    else if (ua.indexOf("Android") != -1) Platform.Android
+    else if (ua.indexOf("Linux") != -1) Platform.Linux
+    else if (ua.indexOf("X11") != -1) Platform.Linux
+    else if (ua.indexOf("Win") != -1) Platform.Windows
+    else Platform.Unsupported
+  }
+
   object jsObj extends scala.Dynamic {
     def applyDynamicNamed[T](name: String)(fields: (String, Any)*): T =
       js.Dictionary(fields: _*).asInstanceOf[T]
@@ -69,11 +86,11 @@ package object util {
   }
 
   def $[T](selector: String): T = {
-    jQuery(selector)(0).asInstanceOf[T]
+    Option(jQuery(selector)).map(_(0)).orNull.asInstanceOf[T]
   }
 
   def $$[T](selector: String): js.Array[T] = {
-    jQuery(selector).asInstanceOf[js.Array[T]]
+    Option(jQuery(selector)).orNull.asInstanceOf[js.Array[T]]
   }
 
   def create[T](tagName: String): T = {
