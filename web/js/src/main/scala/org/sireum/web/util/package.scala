@@ -40,15 +40,9 @@ package object util {
     val Unsupported, Mac, Linux, Windows, iOS, Android = Value
   }
 
-  val detectedPlatform: Platform.Type = {
-    val ua = dom.window.navigator.userAgent
-    if (ua.indexOf("like Mac") != -1) Platform.iOS
-    else if (ua.indexOf("Mac") != -1) Platform.Mac
-    else if (ua.indexOf("Android") != -1) Platform.Android
-    else if (ua.indexOf("Linux") != -1) Platform.Linux
-    else if (ua.indexOf("X11") != -1) Platform.Linux
-    else if (ua.indexOf("Win") != -1) Platform.Windows
-    else Platform.Unsupported
+  object Browser extends Enumeration {
+    type Type = Value
+    val Unsupported, Safari, Firefox, Chrome = Value
   }
 
   object jsObj extends scala.Dynamic {
@@ -58,6 +52,27 @@ package object util {
     def applyDynamic[T](name: String)(fields: (String, Any)*): T =
       js.Dictionary(fields: _*).asInstanceOf[T]
   }
+
+  val detectedPlatform: Platform.Type = {
+    val ua = dom.window.navigator.userAgent
+    if (ua.contains("like Mac")) Platform.iOS
+    else if (ua.contains("Mac")) Platform.Mac
+    else if (ua.contains("Android")) Platform.Android
+    else if (ua.contains("Linux")) Platform.Linux
+    else if (ua.contains("X11")) Platform.Linux
+    else if (ua.contains("Win")) Platform.Windows
+    else Platform.Unsupported
+  }
+
+  val detectedBrowser: Browser.Type = {
+    val ua = dom.window.navigator.userAgent
+    if (ua.contains("Chrome")) Browser.Chrome
+    else if (ua.contains("Safari")) Browser.Safari
+    else if (ua.contains("Firefox")) Browser.Firefox
+    else Browser.Unsupported
+  }
+
+  val isMobile: Boolean = detectedPlatform == Platform.iOS || detectedPlatform == Platform.Android
 
   def $[T](node: Element, selector: String): T = {
     var rOpt: Option[T] = None
@@ -113,6 +128,10 @@ package object util {
 
   def eval[T](text: String): T = {
     js.eval(text).asInstanceOf[T]
+  }
+
+  def delay(n: Long): Unit = {
+    jQuery.asInstanceOf[js.Dynamic].delay(n)
   }
 
   def click(selector: String): Unit =

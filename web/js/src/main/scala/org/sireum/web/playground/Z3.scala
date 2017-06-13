@@ -35,6 +35,10 @@ import scala.scalajs.js.{Date, JSON}
 object Z3 {
   val hostKey = "org.sireum.wsd.host"
   val portKey = "org.sireum.wsd.port"
+  val localHost = "localhost"
+  val mobileHostName = "praetorian"
+  val mobileHostDomain = "cs.ksu.edu"
+  val mobileHost = mobileHostName + mobileHostDomain
   var last: Double = 0
 
   def lookup(key: String): Option[String] =
@@ -44,7 +48,7 @@ object Z3 {
     dom.window.localStorage.setItem(key, value)
 
   def lookupHost: String =
-    lookup(hostKey).getOrElse("localhost")
+    lookup(hostKey).getOrElse(localHost)
 
   def updateHost(value: String): Unit =
     update(hostKey, value)
@@ -60,17 +64,20 @@ object Z3 {
     dom.window.localStorage.removeItem(portKey)
   }
 
-  def query(script: String, callback: (Boolean, String) => Unit): Unit = {
-    val host = {
-      val h = lookupHost
-      if (h == "localhost" && (detectedPlatform == Platform.iOS || detectedPlatform == Platform.Android))
-        "santos09.cs.ksu.edu"
-      else h
+  private def query(script: String, callback: (Boolean, String) => Unit, isAsync: Boolean): Unit = {
+    val host = lookupHost match {
+      case `mobileHost` if !isMobile => localHost
+      case `localHost` if isMobile => mobileHost
+      case h => h
     }
+    val currentTime = new Date().getTime()
+    if (isAsync) last = currentTime
     val ws = new WebSocket(s"ws://$host:$lookupPort")
     ws.onmessage = e => {
       val o = JSON.parse(e.data.toString)
-      if (o.id.toString.toDouble >= last) callback(o.status.toString.toBoolean, o.output.toString)
+      if (isAsync) {
+        if (last == currentTime) callback(o.status.toString.toBoolean, o.output.toString)
+      } else callback(o.status.toString.toBoolean, o.output.toString)
       ws.close(3001)
     }
     ws.onclose = e => {
@@ -78,9 +85,19 @@ object Z3 {
         Modal.wsd(lookupHost, lookupPort, (host, port) => {
           if (host != lookupHost) updateHost(host)
           if (port != lookupPort) updatePort(port)
-          query(script, callback)
+          query(script, callback, isAsync)
         })
     }
-    ws.onopen = _ => ws.send(JSON.stringify(jsObj(id = new Date().getTime().toString, input = script)))
+    ws.onopen = _ => ws.send(JSON.stringify(jsObj(service = "z3", id = currentTime.toString, input = script)))
+  }
+
+  def queryAsync(script: String, callback: (Boolean, String) => Unit): Unit =
+    query(script, callback, isAsync = true)
+
+  def querySync(script: String): (Boolean, String) = {
+    var r: Option[(Boolean, String)] = None
+    query(script, (status, result) => r = Some((status, result)), isAsync = false)
+    while (r.isEmpty) delay(250)
+    r.get
   }
 }

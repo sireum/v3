@@ -47,7 +47,7 @@ object Playground {
 
   def editorValue: String = editor.getModel().getValue(EndOfLinePreference.LF, preserveBOM = false)
 
-  def updateView(): Unit = {
+  def updateView(f: () => Unit): Unit = {
     val height = s"${dom.window.innerHeight - 90}px"
     val editorDiv = $[Div]("#editor")
     if (!js.isUndefined(editorDiv)) {
@@ -58,14 +58,20 @@ object Playground {
       editor.focus()
       dom.document.body.style.backgroundColor = "#8e44ad"
       output.style.backgroundColor = "#f8f3fa"
-    } else dom.window.setTimeout(() => updateView(), 500)
+      f()
+    } else dom.window.setTimeout(() => updateView(f), 500)
   }
 
   def apply(): Unit = {
-    if (detectedPlatform == Platform.Unsupported) {
+    if (detectedPlatform == Platform.Unsupported && detectedBrowser == Browser.Unsupported ||
+      detectedPlatform == Platform.Android && detectedBrowser == Browser.Chrome) {
       dom.document.body.removeChild($[Div]("#welcome"))
-      Modal.halt("Unsupported Operating System (OS)",
-      s"Sireum Playground does not currently support your OS: '${dom.window.navigator.appVersion}'.")
+      Modal.halt("Unsupported Operating System (OS) and Browser",
+      raw(s"Sireum Playground does not currently support your OS and browser:<br><br>" +
+        s"<blockquote>'${dom.window.navigator.appVersion}'</blockquote><br>" +
+        "Supported OSs are macOS, iOS, Linux, Android, and Windows, and " +
+        "supported browsers are Safari, Firefox, and Chrome, " +
+        "with the exception of Chrome under Android."))
       return
     }
 
@@ -102,11 +108,12 @@ object Playground {
 
     dom.document.onreadystatechange = (_: Event) => {
       dom.document.body.appendChild(mainDiv)
-      updateView()
-      Files.loadFiles()
-      dom.document.body.removeChild($[Div]("#welcome"))
+      updateView(() => {
+        Files.loadFiles()
+        dom.document.body.removeChild($[Div]("#welcome"))
+      })
     }
-    dom.window.onresize = (_: UIEvent) => updateView()
+    dom.window.onresize = (_: UIEvent) => updateView(() => ())
 
     val runButton = $[Anchor](mainDiv, "#run")
     def run(): Unit =
@@ -117,7 +124,7 @@ object Playground {
 
     def verify(): Unit =
       if (Files.selectedFilename.endsWith(Files.smtExt))
-        Z3.query(editorValue, (status, result) => {
+        Z3.queryAsync(editorValue, (status, result) => {
           $[Div](mainDiv, "#output").innerHTML = pre(result).render
           if (status) Notification.notify(Notification.Kind.Success, s"Successfully invoked Z3.")
           else Notification.notify(Notification.Kind.Error, s"Z3 invocation unsuccessful.")
@@ -211,9 +218,9 @@ object Playground {
     $[Anchor](mainDiv, "#github").onclick = (_: MouseEvent) =>
       Modal.gitHubToken(
         GitHub.lookup(),
-        _.endsWith(Files.slangExt),
+        path => path.endsWith(Files.slangExt) || path.endsWith(Files.smtExt),
         (_, fm) => incoming("Pull From GitHub", "Pull was successful.", "There were no changes to pull.", fm),
-        (repoAuth, fm) => if (fm.nonEmpty) {
+        (repoAuth, fm) => {
           val changes = Files.outgoingChanges(fm)
           if (changes.nonEmpty) {
             val tbl = table(cls := "table",

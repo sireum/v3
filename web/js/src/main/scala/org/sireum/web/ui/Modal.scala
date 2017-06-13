@@ -41,7 +41,7 @@ object Modal {
   val escape = 27
   val enter = 13
 
-  def halt(titleText: String, labelText: String): Unit = {
+  def halt(titleText: String, labelText: Frag): Unit = {
     val modal = render[Div](
       div(cls := "modal is-active",
         div(cls := "modal-background"),
@@ -345,10 +345,13 @@ object Modal {
         val repoAuth = GitHub.RepoAuth(userInput.value.trim, repoInput.value.trim, tokenInput.value.trim)
         GitHub.test(repoAuth, () =>
           GitHub.findFiles(repoAuth, fileFilter, fs =>
-            GitHub.downloadFiles(repoAuth, fs, fm => {
-              close()
-              pull(repoAuth, fm)
-            }, notifyError),
+            if (fs.isEmpty)
+              notifyError(s"Could not find Sireum Playground files in the specified repository.")
+            else
+              GitHub.downloadFiles(repoAuth, fs, fm => {
+                close()
+                pull(repoAuth, fm)
+              }, notifyError),
             notifyError),
           couldNotConnect
         )
