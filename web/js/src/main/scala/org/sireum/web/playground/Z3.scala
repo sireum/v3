@@ -37,7 +37,7 @@ object Z3 {
   val portKey = "org.sireum.wsd.port"
   val localHost = "localhost"
   val mobileHostName = "praetorian"
-  val mobileHostDomain = "cs.ksu.edu"
+  val mobileHostDomain = ".cs.ksu.edu"
   val mobileHost = mobileHostName + mobileHostDomain
   var last: Double = 0
 
