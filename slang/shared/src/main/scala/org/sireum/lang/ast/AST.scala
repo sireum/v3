@@ -485,7 +485,8 @@ object Exp {
                              typeOpt: Option[Type])
 
 @datatype class ResolvedInfo(kind: SymbolKind.Type,
-                             ids: ISZ[String])
+                             ids: ISZ[String],
+                             externFileUriOpt: Option[String])
 
 @enum object SymbolKind {
   'Package
