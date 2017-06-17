@@ -34,9 +34,9 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.2"
 
-val metaVersion = "1.7.0"
+val metaVersion = "1.8.0"
 
-val paradiseVersion = "3.0.0-M8"
+val paradiseVersion = "3.0.0-M9"
 
 val scalaTestVersion = "3.0.1"
 
@@ -98,7 +98,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.ow2.asm" % "asm-util" % "5.2",
     "org.jgrapht" % "jgrapht-core" % "1.0.1",
     "org.jgrapht" % "jgrapht-ext" % "1.0.1",
-    "com.lihaoyi" %% "ammonite-ops" % "0.9.5",
+    "com.lihaoyi" %% "ammonite-ops" % "0.9.9",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),
@@ -228,7 +228,7 @@ lazy val preludeJs = preludeT._3
 lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI, utilPI, testPI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "fastparse" % "0.4.2",
+    "com.lihaoyi" %%% "fastparse" % "0.4.3",
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
@@ -264,7 +264,7 @@ lazy val webJs = webT._3.settings(
     "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
     "com.lihaoyi" %%% "scalatags" % "0.6.5"
   )
-).settings(scalatex.SbtPlugin.projectSettings: _*)
+)
 
 // Jvm Projects
 

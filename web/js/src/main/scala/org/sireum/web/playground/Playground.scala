@@ -35,7 +35,6 @@ import org.scalajs.dom.raw._
 import org.sireum.web.ui.{Modal, Notification}
 
 import scalatags.Text.all._
-import scalatex.PlaygroundSpa
 import org.sireum.web.util._
 
 import scala.collection.immutable.SortedMap
@@ -81,7 +80,7 @@ object Playground {
     Languages.register(jsObj(id = smt2Id))
     Languages.setMonarchTokensProvider(smt2Id, eval("(function(){ " + smt2ModelText + "; })()"))
 
-    val mainDiv = render[Div](PlaygroundSpa())
+    val mainDiv = render[Div](mainPage())
 
     editor = Editor.create($[Div](mainDiv, "#editor"),
       jsObj[IEditorConstructionOptions](
@@ -232,6 +231,65 @@ object Playground {
                 err => Notification.notify(Notification.Kind.Error, s"Push was unsuccessful (reason: $err).")))
           } else Notification.notify(Notification.Kind.Info, s"There were no changes to push.")
         })
+  }
+
+  import scalatags.Text.tags2.{attr, _}
+
+  def iconButton(buttonId: String, icon: String, tooltipPos: String, tooltip: String, clsAttrs: Seq[String], iconAttrs: Seq[String]): Frag = {
+    a(id := buttonId, cls := s"""button ${clsAttrs.mkString(" ")}""", border := "none", attr("data-balloon-pos") := tooltipPos, attr("data-balloon") := tooltip,
+      span(cls := s"""icon ${iconAttrs.mkString(" ")}""",
+        i(cls := icon)
+      )
+    )
+  }
+
+  def topButton(buttonId: String, icon: String, tooltipPos: String, tooltip: String): Frag = {
+    iconButton(buttonId, icon, tooltipPos, tooltip, Seq("is-primary"), Seq())
+  }
+
+  def mainPage(): Frag = {
+    div(id := "view", width := "100%",
+      nav(cls := "nav",
+        div(cls := "nav-left",
+          div(cls := "nav-item",
+            topButton("home", "fa fa-home", "right", "Home"),
+            p(cls := "title is-4", raw("&nbsp; Sireum Playground"))),
+          div(cls := "nav-item",
+            div(cls := "container is-fluid",
+              div(cls :="field is-grouped",
+                topButton("run", "fa fa-play", "right", "Run script (F8)"),
+                topButton("verify", "fa fa-check", "right", "Check script (F9)"),
+                topButton("options", "fa fa-cog", "right", "Configure"))))),
+
+        div(cls := "nav-center",
+          div(cls := "nav-item",
+            div(cls := "field grouped",
+              topButton("add-file", "fa fa-plus", "left", "Add file"),
+              topButton("duplicate-file", "fa fa-copy", "left", "Duplicate file"),
+              span(cls := "select",
+                select(id := "filename")),
+              topButton("rename-file", "fa fa-pencil-square-o", "right", "Rename file"),
+              topButton("delete-file", "fa fa-minus", "right", "Delete file")))),
+
+        div(cls :="nav-right nav-menu is-active",
+          div(cls := "nav-item",
+            div(cls := "container is-fluid",
+              div(cls :="field is-grouped",
+                topButton("clean", "fa fa-eraser", "left", "Erase all data"),
+                topButton("download", "fa fa-download", "left", "Download files as a zip file"),
+                topButton("upload", "fa fa-upload", "left", "Upload files from a zip file"),
+                topButton("github", "fa fa-github", "left", "GitHub integration")))))),
+
+      div(id := "columns", cls := "columns is-gapless", backgroundColor := "white",
+        div(cls := "column is-fullheight is-7",
+          div(id := "editor")),
+        div(cls := "column is-fullheight is-5",
+          div(id := "output", overflow := "auto", fontSize := "20px"))),
+
+      div(id := "footer", position := "absolute", bottom := "10px", right := "10px",
+        p(
+          span(color := "white",
+            "SAnToS Laboratory, Kansas State University"))))
   }
 
   val slangId = "slang"
