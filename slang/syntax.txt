@@ -46,9 +46,9 @@
 <def-decl>         ::=  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = $
-                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <ldef-contract>
+                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <cdef-contract>
                      |  @spec def <ID> <type-params>? <params>? : <type> = $
-                     |  @spec def <ID> <type-params>? <params>? : <type> = <ldef-contract>
+                     |  @spec def <ID> <type-params>? <params>? : <type> = <spec-cdef>
 
 <enum-decl>        ::=  @enum object <ID> { <SYMBOL>* }
 
@@ -149,7 +149,7 @@
 
 <return-stmt>      ::=  return <exp>?
 
-<proof-stmt>       ::=  l""" <l-proof> """
+<proof-stmt>       ::=  l""" <l-stmt> """
 
 <block-assign-exp> ::=  { <stmt>* <exp> }
 
@@ -239,10 +239,18 @@
                      |  ⊻
                      |  →
 
-<l-proof>          ::=  <fact>
-                     |  <invariant>
-                     |  <sequent>
-                     |  <proof>
-                     |  <theorem>
+<cdef-contract>    ::=  c""" <def-contract> """
 
 <ldef-contract>    ::=  l""" <def-contract> """
+
+<loop-contract>    ::=  l""" <loop-inv-mod> """
+
+<spec-cdef>        ::=  c""" <spec-defs> """
+
+<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L131-L142
+
+<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L144-L151
+
+<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L153-L154
+
+<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L156-L209
