@@ -25,6 +25,7 @@
 
 package org.sireum.lang.parser
 
+import scala.collection.immutable.ListSet
 import scala.meta._
 import scala.meta.inputs.Input
 import scala.meta.internal.parsers.{InfixMode, ScalametaParser}
@@ -33,9 +34,10 @@ import scala.meta.tokenizers.TokenizeException
 import scala.meta.tokens.Token.{Colon, Comma, Dot, Ident, LeftBracket, LeftParen, RightBracket, RightParen}
 
 object LParser {
-  val forallTokens = Set("∀", "A")
-  val existsTokens = Set("∃", "E")
-  val quantTokens: Set[String] = forallTokens ++ existsTokens
+  val forallTokens = ListSet("∀", "A", "all", "forall")
+  val existsTokens = ListSet("∃", "E", "some", "exists")
+  val quantTokens: ListSet[String] = forallTokens ++ existsTokens
+  val lStmtFirst = ListSet("requires", "theorem", "fact")
 
   lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
 
@@ -70,8 +72,8 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   }
 
   /** {{{
-   *  SimpleExpr    ::= QuantExpr
-   *                  |  ... super.simpleExpr()
+   *  SimpleExpr     ::= QuantExpr
+   *                   |  ... super.simpleExpr()
    *  }}}
    */
   override def simpleExpr(): Term = {
@@ -80,15 +82,15 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   }
 
   /** {{{
-   *  QuantExpr     ::= ( Id<∀> | Id<A> | Id<∃> | Id<E> ) Id {`,' Id} `:' Domain Expr
+   *  QuantExpr      ::= ( Id<∀> | Id<A> | Id<∃> | Id<E> ) Id {`,' Id} `:' Domain Expr
    *
-   *  Domain        ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
-   *                  |  Type
+   *  Domain         ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
+   *                   |  Type
    *  }}}
    */
   private def quantExpr(): Term = autoPos {
+    acceptKw(quantTokens)
     val isForAll = forallTokens.contains(token.text)
-    accept[Ident]
 
     val ids: Term = identifiers()
 
@@ -121,6 +123,101 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
           Term.Ascribe(ids, t),
           e)
       )
+    }
+  }
+
+
+  /** {{{
+   *  DefContract    ::= [ Ident<requires> {nl} { NamedExpr {nl} } ]
+   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
+   *                     [ Ident<ensures> {nl} { NamedExpr {nl} } ]
+   *                     { SubContract {nl} }
+   *
+   *  NamedExpr      ::= [Ident `.' [nl]] Expr
+   *
+   *  SubContract    ::= def Ident `(' PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
+   *
+   *  PureOpt        ::= [`@' Ident<pure>]
+   *
+   *  SpecDefs       ::= { SpecDef {nl} }
+   *
+   *  SpecDef        ::= `=' NamedExpr [`,' ( [case Pattern] [Guard] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
+   *
+   *  WhereDefs      ::= Ident<where> { {nl} WhereDef }
+   *
+   *  WhereDef       ::= val Ident `:' Type `=' Expr
+   *                   |  def Ident `(' [Params] `)' `:' Type { {nl} SpecDef }
+   *
+   *  LoopInvMod     ::= [ Ident<invariant> {nl} { NamedExpr {nl} } ]
+   *                     [ Ident<modifies> Expr {`,' Expr} {nl} ]
+   *
+   *  LClause        ::= Invariants
+   *                   |  Facts
+   *                   |  Theorems
+   *                   |  Sequent
+   *                   |  Proof
+   *
+   *  Invariants     ::= {nl} Ident<invariant> {nl} { NamedExpr {nl} }
+   *
+   *  Facts          ::= {nl} Ident<fact> {nl} { Fact {nl} }
+   *
+   *  Fact           ::= NamedExpr
+   *
+   *  Theorems       ::= {nl} Ident<theorem> {nl} { Theorem {nl} }
+   *
+   *  Theorem        ::= NamedExpr Sequent
+   *
+   *  Sequent        ::= {nl} Claims {nl} ( Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ]
+   *
+   *  Claims         ::= Expr {`,' {nl} Expr}
+   *
+   *  Proof          ::= {nl} `{' { {nl} ProofStep } {nl} `}' {nl}
+   *
+   *  ProofStep      ::= Int `.' Expr Just
+   *                   |  Int `.' SubProof
+   *
+   *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
+   *
+   *  AssumeStep     ::= Int `.' Expr Ident<assume>
+   *                   |  Int `.' Ident `:' Type
+   *                   |  Int `.' Ident `:' Type Expr Ident<assume>
+   *
+   *  Just           ::= Ident<premise>
+   *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int
+   *                   |  ( Ident<∧> | Ident<^> ) Ident<e1>                                 Int
+   *                   |  ( Ident<∧> | Ident<^> ) Ident<e2>                                 Int
+   *                   |  ( Ident<∨> Ident<i1> | Ident<Vi1> )                               Int
+   *                   |  ( Ident<∨> Ident<i2> | Ident<Vi2> )                               Int
+   *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int
+   *                   |  ( Ident<→> | Ident<->> ) Ident<i>                                 Int
+   *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int
+   *                   |  ( Ident<¬> | Ident<~> ) Ident<i>                                  Int
+   *                   |  ( Ident<¬> | Ident<~> ) Ident<e>                                  Int Int
+   *                   |  ( Ident<⊥> | Ident<_|_> ) Ident<e>                                Int
+   *                   |  Ident<pbc>                                                        Int
+   *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
+   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr {`,' Expr}
+   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr {`,' Expr}
+   *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int {`,' Int Int}
+   *                   |  Ident<fact>                                                       Int
+   *                   |  Ident<invariant>
+   *                   |  Ident<subst1>                                                     Int Int
+   *                   |  Ident<subst2>                                                     Int Int
+   *                   |  Ident<algebra>                                                    {Int}
+   *                   |  Ident<auto>                                                       {Int}
+   *  }}}
+   */
+  def lStmt(): Unit = {
+  }
+
+  def acceptKw(kws: ListSet[String]): String = {
+    val text = token.text
+    if (token.is[Ident] && kws.contains(text)) {
+      val r = token.text
+      next()
+      r
+    } else {
+      reporter.syntaxError(s"${kws.mkString(" or ")} expected but $text found", at = token)
     }
   }
 
