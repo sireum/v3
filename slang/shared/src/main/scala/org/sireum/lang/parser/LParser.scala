@@ -128,7 +128,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
 
   /** {{{
-   *  DefContract    ::= [ Ident<requires> {nl} NamedExprs ]
+   *  DefContract    ::= {nl} [ Ident<requires> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
    *                     [ Ident<ensures> {nl} NamedExprs ]
    *                     { SubContract {nl} }
@@ -141,7 +141,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *
    *  PureOpt        ::= [`@' Ident<pure>]
    *
-   *  SpecDefs       ::= { SpecDef {nl} }
+   *  SpecDefs       ::= {nl} { SpecDef {nl} }
    *
    *  SpecDef        ::= `=' NamedExpr [`,' ( [case Pattern] [Guard] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
    *
@@ -150,7 +150,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *  WhereDef       ::= val Ident `:' Type `=' Expr
    *                   |  def Ident `(' [Params] `)' `:' Type { {nl} SpecDef }
    *
-   *  LoopInvMod     ::= [ Ident<invariant> {nl} NamedExprs ]
+   *  LoopInvMod     ::= {nl} [ Ident<invariant> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
    *
    *  LClause        ::= Invariants
