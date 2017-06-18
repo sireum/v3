@@ -128,10 +128,12 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
 
   /** {{{
-   *  DefContract    ::= [ Ident<requires> {nl} { NamedExpr {nl} } ]
+   *  DefContract    ::= [ Ident<requires> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
-   *                     [ Ident<ensures> {nl} { NamedExpr {nl} } ]
+   *                     [ Ident<ensures> {nl} NamedExprs ]
    *                     { SubContract {nl} }
+   *
+   *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
    *
    *  NamedExpr      ::= [Ident `.' [nl]] Expr
    *
@@ -148,8 +150,8 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *  WhereDef       ::= val Ident `:' Type `=' Expr
    *                   |  def Ident `(' [Params] `)' `:' Type { {nl} SpecDef }
    *
-   *  LoopInvMod     ::= [ Ident<invariant> {nl} { NamedExpr {nl} } ]
-   *                     [ Ident<modifies> Expr {`,' Expr} {nl} ]
+   *  LoopInvMod     ::= [ Ident<invariant> {nl} NamedExprs ]
+   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
    *
    *  LClause        ::= Invariants
    *                   |  Facts
@@ -157,7 +159,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *                   |  Sequent
    *                   |  Proof
    *
-   *  Invariants     ::= {nl} Ident<invariant> {nl} { NamedExpr {nl} }
+   *  Invariants     ::= {nl} Ident<invariant> {nl} NamedExprs
    *
    *  Facts          ::= {nl} Ident<fact> {nl} { Fact {nl} }
    *
@@ -191,8 +193,8 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int
    *                   |  ( Ident<→> | Ident<->> ) Ident<i>                                 Int
    *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int
-   *                   |  ( Ident<¬> | Ident<~> ) Ident<i>                                  Int
-   *                   |  ( Ident<¬> | Ident<~> ) Ident<e>                                  Int Int
+   *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<i>                       Int
+   *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<e>                       Int Int
    *                   |  ( Ident<⊥> | Ident<_|_> ) Ident<e>                                Int
    *                   |  Ident<pbc>                                                        Int
    *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
@@ -200,7 +202,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr {`,' Expr}
    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int {`,' Int Int}
    *                   |  Ident<fact>                                                       Int
-   *                   |  Ident<invariant>
+   *                   |  Ident<invariant>                                                  [Ident]
    *                   |  Ident<subst1>                                                     Int Int
    *                   |  Ident<subst2>                                                     Int Int
    *                   |  Ident<algebra>                                                    {Int}
