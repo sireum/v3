@@ -29,11 +29,20 @@ import scala.collection.immutable.ListSet
 import scala.meta._
 import scala.meta.inputs.Input
 import scala.meta.internal.parsers.{InfixMode, ScalametaParser}
+import scala.meta.internal.tokens.TokenInfo
 import scala.meta.parsers.{Parse, ParseException, Parsed}
 import scala.meta.tokenizers.TokenizeException
 import scala.meta.tokens.Token.{Colon, Comma, Dot, Ident, LeftBracket, LeftParen, RightBracket, RightParen}
 
 object LParser {
+
+  final case class DefContract(requires: List[(Option[Ident], Term)],
+                               modifies: List[Term],
+                               ensures: List[(Option[Ident], Term)],
+                               subs: List[SubContract])
+
+  final case class SubContract(id: Ident, params: List[(Boolean, Ident)], contract: DefContract)
+
   val forallTokens = ListSet("∀", "A", "all", "forall")
   val existsTokens = ListSet("∃", "E", "some", "exists")
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
@@ -69,6 +78,12 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     def argType(): Type = typ()
 
     def functionArgType(): Type.Arg = paramType()
+  }
+
+  def acceptToken[T <: Token : TokenInfo]: T = {
+    val t = token
+    accept[T]
+    t.asInstanceOf[T]
   }
 
   /** {{{
@@ -129,19 +144,96 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
   /** {{{
    *  DefContract    ::= {nl} [ Ident<requires> {nl} NamedExprs ]
-   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
+   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
    *                     [ Ident<ensures> {nl} NamedExprs ]
-   *                     { SubContract {nl} }
+   *                     { SubContract {nl} } EOF
    *
    *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
    *
-   *  NamedExpr      ::= [Ident `.' [nl]] Expr
+   *  NamedExpr      ::= [Ident `:' [nl]] Expr
    *
-   *  SubContract    ::= def Ident `(' PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
+   *  SubContract    ::= def Ident `(' [ PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
    *
    *  PureOpt        ::= [`@' Ident<pure>]
-   *
-   *  SpecDefs       ::= {nl} { SpecDef {nl} }
+   *  }}}
+   */
+  def defContract(): DefContract = {
+    def pureOpt(): Boolean = {
+      if (token.is[Token.At] && ahead(token.text == "pure")) {
+        nextTwice()
+        true
+      } else false
+    }
+
+    def subContract(): List[SubContract] = {
+      var r = List[SubContract]()
+      while (token.isNot[Token.EOF]) {
+        accept[Token.KwDef]
+        val ident = acceptToken[Token.Ident]
+        accept[Token.LeftParen]
+        val params = if (token.isNot[Token.RightParen]) {
+          var ps = List[(Boolean, Ident)]((pureOpt(), acceptToken[Ident]))
+          while (token.is[Comma]) {
+            next()
+            ps ::= (pureOpt(), acceptToken[Ident])
+          }
+          ps
+        } else List()
+        accept[Token.RightParen]
+        newLinesOpt()
+        r ::= SubContract(ident, params.reverse, defContract())
+      }
+      r.reverse
+    }
+
+    newLinesOpt()
+    val requires = if (token.text == "requires") {
+      next()
+      newLinesOpt()
+      namedExprs(!(token.text == "modifies" || token.text == "ensures" || token.is[Token.KwDef] || token.is[Token.EOF]))
+    } else List()
+    val modifies = if (token.text == "modifies") {
+      next()
+      newLinesOpt()
+      var r = List[Term](expr())
+      while (token.is[Comma]) {
+        next()
+        newLinesOpt()
+        r ::= expr()
+      }
+      newLinesOpt()
+      r.reverse
+    } else List()
+    val ensures = if (token.text == "ensures") {
+      next()
+      newLinesOpt()
+      namedExprs(!(token.is[Token.KwDef] || token.is[Token.EOF]))
+    } else List()
+    DefContract(requires, modifies, ensures, subContract())
+  }
+
+  def namedExprs(continue: => Boolean): List[(Option[Ident], Term)] = {
+    def namedExpr(): (Option[Ident], Term) =
+      if (token.is[Ident] && ahead(token.is[Colon])) {
+        val ident = acceptToken[Ident]
+        next()
+        newLineOpt()
+        (Some(ident), expr())
+      } else {
+        (None, expr())
+      }
+
+    var r = List(namedExpr())
+    newLinesOpt()
+    while (continue) {
+      r ::= namedExpr()
+      newLinesOpt()
+    }
+    r.reverse
+  }
+
+  /** {{{
+   *  SpecDefs       ::= {nl} { SpecDef {nl} } EOF
    *
    *  SpecDef        ::= `=' NamedExpr [`,' ( [case Pattern] [Guard] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
    *
@@ -149,27 +241,35 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *
    *  WhereDef       ::= val Ident `:' Type `=' Expr
    *                   |  def Ident `(' [Params] `)' `:' Type { {nl} SpecDef }
-   *
+   *  }}}
+   */
+  def specDefs(): Unit = {}
+
+  /** {{{
    *  LoopInvMod     ::= {nl} [ Ident<invariant> {nl} NamedExprs ]
-   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} {nl} ]
-   *
+   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
+   *  }}}
+   */
+  def loopInvMode(): Unit = {}
+
+  /** {{{
    *  LClause        ::= Invariants
    *                   |  Facts
    *                   |  Theorems
    *                   |  Sequent
-   *                   |  Proof
+   *                   |  Proof EOF
    *
-   *  Invariants     ::= {nl} Ident<invariant> {nl} NamedExprs
+   *  Invariants     ::= {nl} Ident<invariant> {nl} NamedExprs EOF
    *
-   *  Facts          ::= {nl} Ident<fact> {nl} { Fact {nl} }
+   *  Facts          ::= {nl} Ident<fact> {nl} { Fact {nl} } EOF
    *
    *  Fact           ::= NamedExpr
    *
-   *  Theorems       ::= {nl} Ident<theorem> {nl} { Theorem {nl} }
+   *  Theorems       ::= {nl} Ident<theorem> {nl} { Theorem {nl} } EOF
    *
    *  Theorem        ::= NamedExpr Sequent
    *
-   *  Sequent        ::= {nl} Claims {nl} ( Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ]
+   *  Sequent        ::= {nl} Claims {nl} ( Ident<|-> | Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ] EOF
    *
    *  Claims         ::= Expr {`,' {nl} Expr}
    *
@@ -209,8 +309,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *                   |  Ident<auto>                                                       {Int}
    *  }}}
    */
-  def lStmt(): Unit = {
-  }
+  def lClause(): Unit = {}
 
   def acceptKw(kws: ListSet[String]): String = {
     val text = token.text
@@ -224,13 +323,11 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   }
 
   def identifiers(): Term = {
-    var t = token
-    accept[Ident]
+    var t = acceptToken[Ident]
     var ids = List(atPos(t.start, t.end)(Term.Name(t.text)))
     while (token.is[Comma]) {
       next()
-      t = token
-      accept[Ident]
+      t = acceptToken[Ident]
       ids ::= atPos(t.start, t.end)(Term.Name(t.text))
     }
     if (ids.size == 1) ids.head
