@@ -25,6 +25,5 @@
 package scala.meta.tokens
 
 object TokensHelper {
-  def map(tokens: Tokens, f: Token => Token): Tokens =
-    Tokens(tokens.tokens.map(f), tokens.start, tokens.end)
+  def extractArray(tokens: Tokens): Array[Token] = tokens.tokens
 }
