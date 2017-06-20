@@ -32,7 +32,8 @@ import scala.meta.internal.parsers.{InfixMode, ScalametaParser}
 import scala.meta.internal.tokens.TokenInfo
 import scala.meta.parsers.{Parse, ParseException, Parsed}
 import scala.meta.tokenizers.TokenizeException
-import scala.meta.tokens.Token.{BOF, Colon, Comma, EOF, Ident, LeftBracket, LeftParen, RightBracket, RightParen}
+import scala.meta.tokens.TokensHelper
+import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwDef, LeftBrace, LeftBracket, LeftParen, RightBracket, RightParen}
 
 object LParser {
 
@@ -47,6 +48,21 @@ object LParser {
   val existsTokens = ListSet("∃", "E", "some", "exists")
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
   val lStmtFirst = ListSet("requires", "theorem", "fact")
+  val implyInternalSym = "$->:"
+  val internalOpMap = Map(
+    "→" -> implyInternalSym,
+    "->" -> implyInternalSym,
+    "∧" -> "&",
+    "^" -> "&",
+    "∨" -> "|",
+    "V" -> "|",
+    "¬" -> "!",
+    "≠" -> "!=",
+    "≤" -> "<=",
+    "≥" -> ">=",
+    "⊤" -> "T",
+    "⊥" -> "F"
+  )
 
   lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
 
@@ -73,7 +89,12 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   parser =>
 
   object loutPattern extends PatternContextSensitive {
-    override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = t
+    override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
+      token match {
+        case Ident(value) if value.forall(Character.isJavaIdentifierPart) => t
+        case _ => super.infixTypeRest(t, mode)
+      }
+    }
 
     def argType(): Type = typ()
 
@@ -82,10 +103,19 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
   class LimitingTokenIterator(var i: Int, end: Int) extends TokenIterator {
     def hasNext: Boolean = i < parserTokens.length - 1
-    def next(): Token = { if (!hasNext) throw new NoSuchElementException(); i += 1; token }
+
+    def next(): Token = {
+      if (!hasNext) throw new NoSuchElementException()
+      i += 1
+      token
+    }
+
     def prevTokenPos: Int = if (i > 0) parserTokenPositions(Math.min(i, parserTokens.length - 1) - 1) else -1
+
     def tokenPos: Int = if (i > -1) parserTokenPositions(Math.min(i, parserTokens.length - 1)) else -1
+
     def token: Token = if (i > end) parserTokens(parserTokens.length - 1) else parserTokens(i)
+
     def fork: TokenIterator = new LimitingTokenIterator(i, end)
   }
 
@@ -95,7 +125,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   )
 
   @inline final def aheadNF[T](body: => T): T = {
-    next();
+    next()
     body
   }
 
@@ -120,7 +150,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     },
     () => {
       var text = token.text
-      val r = (isIdentOf("→") || isIdentOf("->") || isIdentOf("¬") || isIdentOf("~") || isIdentOf("!") || isIdentOf("∀") || isIdentOf("∃")) &&
+      val r = (isIdentOf(implyInternalSym) || isIdentOf("¬") || isIdentOf("~") || isIdentOf("!") || isIdentOf("∀") || isIdentOf("∃")) &&
         ahead {
           text += token.text
           (isIdentOf("i") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
@@ -136,7 +166,29 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     }
   )
 
-  in = new LimitingTokenIterator(0, parserTokens.length - 1)
+  {
+    in = new LimitingTokenIterator(0, parserTokens.length - 1)
+
+    val sTokens = TokensHelper.extractArray(scannerTokens)
+    val pTokens = TokensHelper.extractArray(parserTokens)
+    var iS = 0
+    var iP = 0
+    while (iS < sTokens.length) {
+      sTokens(iS) match {
+        case t@Ident(value) => internalOpMap.get(value) match {
+          case Some(op) =>
+            val t2 = t.copy(value = op)
+            sTokens(iS) = t2
+            while (t.isNot[Ident] || (t ne pTokens(iP))) iP += 1
+            pTokens(iP) = t2
+          case _ =>
+        }
+        case _ =>
+      }
+      iS += 1
+    }
+  }
+
 
   def findJust(): Option[String] = {
     if (token.is[Ident] && justFirst.contains(token.text))
@@ -241,11 +293,11 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
     def subContract(): List[SubContract] = {
       var r = List[SubContract]()
-      while (token.isNot[Token.EOF]) {
-        accept[Token.KwDef]
-        val ident = acceptToken[Token.Ident]
-        accept[Token.LeftParen]
-        val params = if (token.isNot[Token.RightParen]) {
+      while (token.isNot[EOF]) {
+        accept[KwDef]
+        val ident = acceptToken[Ident]
+        accept[LeftParen]
+        val params = if (token.isNot[RightParen]) {
           var ps = List[(Boolean, Ident)]((pureOpt(), acceptToken[Ident]))
           while (token.is[Comma]) {
             next()
@@ -253,7 +305,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
           }
           ps
         } else List()
-        accept[Token.RightParen]
+        accept[RightParen]
         newLinesOpt()
         r ::= SubContract(ident, params.reverse, defContract())
       }
@@ -264,7 +316,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     val requires = if (isIdentOf("requires")) {
       next()
       newLinesOpt()
-      namedExprs(!(isIdentOf("modifies") || isIdentOf("ensures") || token.is[Token.KwDef] || token.is[Token.EOF]))
+      namedExprs(!(isIdentOf("modifies") || isIdentOf("ensures") || token.is[KwDef] || token.is[EOF]))
     } else List()
     val modifies = if (isIdentOf("modifies")) {
       next()
@@ -281,7 +333,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     val ensures = if (isIdentOf("ensures")) {
       next()
       newLinesOpt()
-      namedExprs(!(token.is[Token.KwDef] || token.is[Token.EOF]))
+      namedExprs(!(token.is[KwDef] || token.is[EOF]))
     } else List()
     DefContract(requires, modifies, ensures, subContract())
   }
@@ -411,8 +463,8 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
 
   def proofStep(): Unit = {
     val n = acceptToken[Token.Constant.Int].value.toInt
-    accept[Token.Dot]
-    if (token.is[Token.LeftBrace]) {
+    accept[Dot]
+    if (token.is[LeftBrace]) {
       // TODO
     } else {
       exprJust(n)
