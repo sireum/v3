@@ -233,11 +233,11 @@
 
 // Note: Unicode operators are only available in the proof context
 
-<unary-op>         ::=  !
-                     |  +
+<unary-op>         ::=  +
                      |  -
                      |  ~
                      |  ¬
+                     |  !
 
 <binary-op>        ::=  +
                      |  -
