@@ -68,6 +68,11 @@
 
 <type-decl>        ::=  type <ID> <type-params>? = <type>
 
+// Notes:
+// Built-in basic types: B, <int-type>, F32, F64, R, Unit
+// Built-in <int-type>: Z, Z8, Z16, Z32, Z64, N, N8, N16, N32, N64, S8, S16, S32, S64, U8, U16, U32, U64
+// Built-in sequences: IS [ <int-type> , <type> ], ISZ [ <type> ], MS [ <int-type> , <type> ], MSZ [ <type> ]
+
 <type>             ::=  <name> <type-args>?
                      |  ( <type> ⸨ , <type> ⸩+ )
                      |  <type> => <type>
@@ -168,6 +173,25 @@
                      |  <exp> . <ID> <args>?
                      |  <exp> <args>
                      |  if ( <exp> ) <exp> else <exp>
+                     |  <quant-op> ID ⸨ , <ID> ⸩* : <domain> <exp>  // Note: Only available in the proof context
+
+<quant-op>         ::=  ∀
+                     |  A
+                     |  all
+                     |  forall
+                     |  ∃
+                     |  E
+                     |  some
+                     |  exists
+
+<domain>           ::=  <type>
+                     |  <lrange> <exp> , <exp> <rrange>
+
+<lrange>           ::=  [
+                     |  (
+
+<rrange>           ::=  ]
+                     |  )
 
 <lit>              ::=  true
                      |  false
@@ -195,8 +219,8 @@
                      |  f32"<FLOAT>"
                      |  f64"<DOUBLE>"
                      |  r"<REAL>"
-                     |  bb"<INT>" [ <type> ]
-                     |  bl"<INT>" [ <type> ]
+                     |  bb"<INT>" [ <int-type> ]
+                     |  bl"<INT>" [ <int-type> ]
                      |  <FLOAT>
                      |  <DOUBLE>
                      |  <STRING>
@@ -206,6 +230,8 @@
 <apply-arg>        ::=  <exp>
                      |  <exp> -> <exp>
                      |  <ID> = <exp>
+
+// Note: Unicode operators are only available in the proof context
 
 <unary-op>         ::=  !
                      |  +
@@ -218,26 +244,33 @@
                      |  *
                      |  /
                      |  %
+                     |  ≡
                      |  ==
+                     |  ≠
                      |  !=
                      |  <<
                      |  >>
                      |  >>>
                      |  <
+                     |  ≤
                      |  <=
                      |  >
-                     |  >=
-                     |  &
-                     |  |
-                     |  |^
-                     |  ≡
-                     |  ≠
-                     |  ≤
                      |  ≥
-                     |  ∧
-                     |  ∨
-                     |  ⊻
-                     |  →
+                     |  >=
+                     |  ∧   // and
+                     |  ^   // and
+                     |  &   // and
+                     |  ∨   // or
+                     |  V   // or (i.e., capital V)
+                     |  |   // or
+                     |  ⊻   // xor
+                     |  |^  // xor
+                     |  ->  // implies, only in the proof context, right-associative
+                     |  →   // implies, right-associative
+                     |  :+  // append
+                     |  +:  // prepend, right-associative
+                     |  ++  // append all
+                     |  --  // remove all
 
 <cdef-contract>    ::=  c""" <def-contract> """
 
@@ -247,10 +280,10 @@
 
 <spec-cdef>        ::=  c""" <spec-defs> """
 
-<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L272-L283
+<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L283-L294
 
-<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L362-L369
+<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L373-L380
 
-<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L375-L376
+<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L386-L387
 
-<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L382-L436
+<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L393-L447

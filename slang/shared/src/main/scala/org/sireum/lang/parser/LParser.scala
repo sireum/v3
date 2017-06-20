@@ -61,7 +61,9 @@ object LParser {
     "≤" -> "<=",
     "≥" -> ">=",
     "⊤" -> "T",
-    "⊥" -> "F"
+    "⊥" -> "F",
+    "≡" -> "==",
+    "⊻" -> "|^"
   )
 
   lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
@@ -132,7 +134,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   val justPrefix: List[() => Option[String]] = List(
     () => {
       var text = "∧"
-      val r = (isIdentOf("∧") || isIdentOf("^")) &&
+      val r = isIdentOf("&") &&
         ahead {
           text += token.text
           (isIdentOf("i") || isIdentOf("e1") || isIdentOf("e2")) && aheadNF(token.is[Token.Constant.Int])
@@ -141,7 +143,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     },
     () => {
       var text = "∨"
-      val r = isIdentOf("∨") &&
+      val r = isIdentOf("|") &&
         ahead {
           text += token.text
           (isIdentOf("i1") || isIdentOf("i2") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
@@ -150,7 +152,7 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     },
     () => {
       var text = token.text
-      val r = (isIdentOf(implyInternalSym) || isIdentOf("¬") || isIdentOf("~") || isIdentOf("!") || isIdentOf("∀") || isIdentOf("∃")) &&
+      val r = (isIdentOf(implyInternalSym) || isIdentOf("!") || isIdentOf("∀") || isIdentOf("∃")) &&
         ahead {
           text += token.text
           (isIdentOf("i") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
@@ -158,11 +160,20 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
       if (r) Some(text) else None
     },
     () => {
-      if (isIdentOf("⊥") && ahead(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))) Some("⊥e") else None
+      if (isIdentOf("F") && ahead(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))) Some("⊥e") else None
     },
     () => {
-      if (isIdentOf("_") && ahead(isIdentOf("|") && aheadNF(isIdentOf("_") &&
-        aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))))) Some("⊥e") else None
+      if ( {
+        val t1 = token
+        isIdentOf("_") && ahead {
+          val t2 = token
+          isIdentOf("|") && t2.pos.start.offset == t1.pos.start.offset + 1 && aheadNF {
+            val t3 = token
+            isIdentOf("_") && t3.pos.start.offset == t2.pos.start.offset + 1 &&
+              aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))
+          }
+        }
+      }) Some("⊥e") else None
     }
   )
 
