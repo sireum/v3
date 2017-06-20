@@ -265,8 +265,8 @@
                      |  |   // or
                      |  ⊻   // xor
                      |  |^  // xor
-                     |  ->  // implies, only in the proof context, right-associative
                      |  →   // implies, right-associative
+                     |  ->  // implies, only in the proof context, right-associative
                      |  :+  // append
                      |  +:  // prepend, right-associative
                      |  ++  // append all
