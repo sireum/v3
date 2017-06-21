@@ -418,10 +418,10 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
    *
    *  AssumeStep     ::= Int `.' Expr Ident<assume>
-   *                   |  Int `.' Ident `:' Type
-   *                   |  Int `.' Ident `:' Type Expr Ident<assume>
+    *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type }
+    *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type } Expr Ident<assume>
    *
-   *  Just           ::=  Ident<assume>
+    *  Just           ::= Ident<assume>
    *                   |  Ident<premise>
    *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int
    *                   |  ( Ident<∧> | Ident<^> ) Ident<e1>                                 Int
@@ -436,15 +436,15 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *                   |  ( Ident<⊥> | Ident<_> `|' Ident<_> ) Ident<e>                     Int
    *                   |  Ident<pbc>                                                        Int
    *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
-   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr {`,' Expr}
-   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr {`,' Expr}
-   *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int {`,' Int Int}
+    *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr { `,' Expr }
+    *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr { `,' Expr }
+    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
    *                   |  Ident<fact>                                                       QualId
    *                   |  Ident<invariant>                                                  [QualId]
    *                   |  Ident<subst>                                                      Int ( '<' | '>' ) Int
-   *                   |  Ident<algebra>                                                    {Int}
-   *                   |  Ident<auto>                                                       {Int}
-   *                   |  Ident<coq>                                                        String {Int}
+    *                   |  Ident<algebra>                                                    { Int }
+    *                   |  Ident<auto>                                                       { Int }
+    *                   |  Ident<coq>                                                        String { Int }
    *  }}}
    */
   def lClause(): Unit = {
