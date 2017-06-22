@@ -275,7 +275,9 @@ lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI
 lazy val cli = toSbtJvmProject(cliPI)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = false, utilPI, testPI)
-lazy val awas = toSbtJvmProject(awasPI)
+lazy val awas = toSbtJvmProject(awasPI).settings(
+  parallelExecution in Test := false
+)
 
 // Js Projects
 
