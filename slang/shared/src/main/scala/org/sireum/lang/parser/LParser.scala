@@ -73,7 +73,8 @@ object LParser {
     def step: Token.Constant.Int
   }
 
-  final case class SubProof(assumeStep: AssumeProofStep,
+  final case class SubProof(step: Token.Constant.Int,
+                            assumeStep: AssumeProofStep,
                             steps: List[ProofStep]) extends ProofStep
 
   final case class Ps(step: Token.Constant.Int, exp: Term, just: Just)
