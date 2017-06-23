@@ -136,6 +136,7 @@ object LParser {
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
   val lStmtFirst = ListSet("requires", "theorem", "fact")
   val implyInternalSym = "$->:"
+  val sequentTokens = Set("⊢", "|-")
   val internalOpMap = Map(
     "→" -> implyInternalSym,
     "->" -> implyInternalSym,
@@ -190,7 +191,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     def functionArgType(): Type.Arg = paramType()
   }
 
-  class LimitingTokenIterator(var i: Int, end: Int) extends TokenIterator {
+  class LimitingTokenIterator(var i: Int, val end: Int) extends TokenIterator {
     def hasNext: Boolean = i < parserTokens.length - 1
 
     def next(): Token = {
@@ -368,18 +369,18 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   /** {{{
    *  DefContract    ::= BOF {nl}
    *                     [ Ident<requires> {nl} NamedExprs ]
-   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
+   *                     [ Ident<modifies> {nl} Expr { `,' {nl} Expr } ] {nl}
    *                     [ Ident<ensures> {nl} NamedExprs ]
    *                     { SubContract {nl} }
    *                     EOF
    *
    *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
    *
-   *  NamedExpr      ::= [Ident `:' [nl]] Expr
+   *  NamedExpr      ::= [ Ident `:' {nl} ] Expr
    *
    *  SubContract    ::= def Ident `(' [ PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
    *
-   *  PureOpt        ::= [`@' Ident<pure>]
+   *  PureOpt        ::= [ `@' Ident<pure> ]
    *  }}}
    */
   def defContract(): DefContract = {
@@ -446,7 +447,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     if (token.is[Ident] && ahead(token.is[Colon])) {
       val ident = acceptToken[Ident]
       next()
-      newLineOpt()
+      newLinesOpt()
       (Some(ident), expr())
     } else {
       (None, expr())
@@ -606,7 +607,13 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     val r: LClause =
       if (isIdentOf("invariant")) invariants()
       else if (isIdentOf("fact")) facts()
-      else null // TODO
+      else if (isIdentOf("theorem")) theorems()
+      else if (token.is[LeftBracket]) proof()
+      else {
+        val i = findTokenPos(t => sequentTokens.contains(t.text))
+        if (i < 0) reporter.syntaxError(s"invariant, fact, theorem, { ... }, or ... ⊢ ... expected", at = token)
+        sequent(i)
+      }
     accept[EOF]
     r
   }
@@ -624,7 +631,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   /** {{{
    *  Facts          ::= Ident<fact> {nl} Fact {nl} { Fact {nl} }
    *
-   *  Fact           ::= Ident `:' [nl] Expr
+   *  Fact           ::= Ident `:' {nl} Expr
    *  }}}
    */
   private def facts(): Facts = {
@@ -638,20 +645,75 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   }
 
   /** {{{
-   *  Theorems       ::= Ident<theorem> {nl} { Theorem {nl} }
+   *  Theorems       ::= Ident<theorem> {nl} Theorem {nl} { Theorem {nl} }
    *
-   *  Theorem        ::= Ident `:' [nl] Sequent
+   *  Theorem        ::= Ident `:' {nl} Sequent
    *  }}}
    */
-  private def theorems(): Unit = {}
+  private def theorems(): Theorem = {
+    def theorem(): (Ident, Sequent) = {
+      val id = acceptToken[Ident]
+      accept[Colon]
+      newLinesOpt()
+      (id, sequent())
+    }
+    next()
+    newLinesOpt()
+    var ts = List(theorem())
+    newLinesOpt()
+    while(token.is[Ident]) {
+      ts ::= theorem()
+      newLinesOpt()
+    }
+    Theorem(ts.reverse)
+  }
 
   /** {{{
-   *  Sequent        ::= Claims {nl} ( Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ]
+   *  Sequent        ::= Exprs {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
    *
-   *  Claims         ::= Expr {`,' {nl} Expr}
+   *  Exprs         ::= Expr {`,' {nl} Expr}
    *  }}}
    */
-  def sequent(): Unit = {}
+  def sequent(sequentIndex: Int = findTokenPos(t => sequentTokens.contains(t.text))): Sequent = {
+    if (sequentIndex < 0) reporter.syntaxError(s"... ⊢ ... expected", at = token)
+    var oldIn = in.asInstanceOf[LimitingTokenIterator]
+    in = new LimitingTokenIterator(oldIn.i, sequentIndex - 1)
+    val premises = exprs()
+    in = new LimitingTokenIterator(sequentIndex + 1, oldIn.end)
+    newLinesOpt()
+    val proofIndex = findTokenPos(t => t.is[LeftBracket])
+    if (proofIndex < 0) {
+      val conclusions = exprs()
+      newLinesOpt()
+      Sequent(premises, conclusions, None)
+    } else {
+      oldIn = in.asInstanceOf[LimitingTokenIterator]
+      in = new LimitingTokenIterator(oldIn.i, proofIndex - 1)
+      val conclusions = exprs()
+      in = new LimitingTokenIterator(proofIndex, oldIn.end)
+      Sequent(premises, conclusions, Some(proof()))
+    }
+  }
+
+  def exprs(): List[Term] = {
+    var r = List(expr())
+    while (token.is[Comma]) {
+      next()
+      newLinesOpt()
+      r ::= expr()
+    }
+    r.reverse
+  }
+
+  def findTokenPos(p: Token => Boolean): Int = {
+    val lti = in.fork.asInstanceOf[LimitingTokenIterator]
+    var found = p(lti.token)
+    while(!found && token.isNot[EOF]) {
+      lti.next()
+      found = p(lti.token)
+    }
+    if (found) lti.i else -1
+  }
 
   /** {{{
    *  Proof          ::= `{' { {nl} ProofStep } {nl} `}' {nl}
@@ -679,8 +741,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *                   |  ( Ident<⊥> | Ident<_> `|' Ident<_> ) Ident<e>                     Int
    *                   |  Ident<pbc>                                                        Int
    *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
-   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr { `,' Expr }
-   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr { `,' Expr }
+   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int {nl} Expr { `,' {nl} Expr }
+   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int {nl} Expr { `,' {nl} Expr }
    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
    *                   |  Ident<fact>                                                       QualId
    *                   |  Ident<invariant>                                                  [QualId]
@@ -690,9 +752,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *                   |  Ident<coq>                                                        String { Int }
    *  }}}
    */
-  private def proof(): Unit = {
-
-  }
+  private def proof(): Proof = ???
 
   def exprJust(stepNo: Int): (Term, Any) = {
     def just(kind: String): Unit = {
