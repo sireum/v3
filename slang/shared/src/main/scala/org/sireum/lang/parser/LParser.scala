@@ -33,7 +33,7 @@ import scala.meta.internal.tokens.TokenInfo
 import scala.meta.parsers.{Parse, ParseException, Parsed}
 import scala.meta.tokenizers.TokenizeException
 import scala.meta.tokens.TokensHelper
-import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwDef, LeftBrace, LeftBracket, LeftParen, RightBracket, RightParen}
+import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBracket, RightParen}
 
 object LParser {
 
@@ -43,6 +43,92 @@ object LParser {
                                subs: List[SubContract])
 
   final case class SubContract(id: Ident, params: List[(Boolean, Ident)], contract: DefContract)
+
+  sealed trait WhereDef
+
+  final case class ValWhereDef(id: Ident, tipe: Type, exp: Term) extends WhereDef
+
+  final case class DefWhereDef(id: Ident, params: List[(Ident, Type)], rTipe: Type, defs: List[SpecDef]) extends WhereDef
+
+  final case class SpecDef(idOpt: Option[Ident],
+                           exp: Term,
+                           isOtherwise: Boolean,
+                           patternOpt: Option[Pat.Arg],
+                           guardOpt: Option[Term],
+                           where: List[WhereDef])
+
+  sealed trait LClause
+
+  final case class Invariants(value: List[(Option[Ident], Term)]) extends LClause
+
+  final case class Facts(value: List[(Ident, Term)]) extends LClause
+
+  final case class Theorem(value: List[(Ident, Sequent)]) extends LClause
+
+  final case class Sequent(premises: List[Term], conclusions: List[Term], proofOpt: Option[Proof]) extends LClause
+
+  final case class Proof(steps: List[ProofStep]) extends LClause
+
+  sealed trait ProofStep {
+    def step: Token.Constant.Int
+  }
+
+  final case class SubProof(assumeStep: AssumeProofStep,
+                            steps: List[ProofStep]) extends ProofStep
+
+  final case class Ps(step: Token.Constant.Int, exp: Term, just: Just)
+
+  sealed trait AssumeProofStep extends ProofStep
+
+  final case class Aps(step: Token.Constant.Int, exp: Term)
+
+  final case class ForallIntroAps(step: Token.Constant.Int, fresh: List[(Ident, Type)])
+
+  final case class ExistsElimAps(step: Token.Constant.Int, fresh: List[(Ident, Type)], exp: Term)
+
+  sealed trait Just {
+    def pos: Position
+  }
+
+  final case class Premise(pos: Position) extends Just
+
+  final case class AndIntro(pos: Position, steps: List[Token.Constant.Int]) extends Just
+
+  final case class AndElim(pos: Position, is1: Boolean, andStep: Token.Constant.Int) extends Just
+
+  final case class OrIntro(pos: Position, is1: Boolean, step: Token.Constant.Int) extends Just
+
+  final case class OrElim(pos: Position, orStep: Token.Constant.Int, subProofSteps: List[Token.Constant.Int]) extends Just
+
+  final case class ImplyIntro(pos: Position, subProofStep: Token.Constant.Int) extends Just
+
+  final case class ImplyElim(pos: Position, implyStep: Token.Constant.Int, steps: List[Token.Constant.Int]) extends Just
+
+  final case class NegIntro(pos: Position, subProofStep: Token.Constant.Int) extends Just
+
+  final case class NegElim(pos: Position, step: Token.Constant.Int, negStep: Token.Constant.Int) extends Just
+
+  final case class BottomElim(pos: Position, subProofStep: Token.Constant.Int) extends Just
+
+  final case class Pbc(pos: Position, subProofStep: Token.Constant.Int) extends Just
+
+  final case class ForallIntro(pos: Position, subProofStep: Token.Constant.Int) extends Just
+
+  final case class ForallElim(pos: Position, forallStep: Token.Constant.Int, args: List[Term]) extends Just
+
+  final case class ExistsIntro(pos: Position, forallStep: Token.Constant.Int, args: List[Term]) extends Just
+
+  final case class ExistsElim(pos: Position, existsStep: Token.Constant.Int, subProofStep: Token.Constant.Int) extends Just
+
+  final case class Fact(pos: Position, name: List[Ident]) extends Just
+
+  final case class Invariant(pos: Position, name: List[Ident]) extends Just
+
+  final case class Subst(pos: Position, isRight: Boolean, eqStep: Token.Constant.Int, step: Token.Constant.Int) extends Just
+
+  final case class Auto(pos: Position, isAlgebra: Boolean, steps: List[Token.Constant.Int]) extends Just
+
+  final case class Coq(pos: Position, path: List[Token.Constant.String], steps: List[Token.Constant.Int]) extends Just
 
   val forallTokens = ListSet("∀", "A", "all", "forall")
   val existsTokens = ListSet("∃", "E", "some", "exists")
@@ -87,7 +173,7 @@ object LParser {
 
 import LParser._
 
-class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dialect) {
+final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dialect) {
   parser =>
 
   object loutPattern extends PatternContextSensitive {
@@ -126,10 +212,14 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     "fact", "invariant", "subst", "algebra", "auto", "coq"
   )
 
-  @inline final def aheadNF[T](body: => T): T = {
+  @inline def aheadNF[T](body: => T): T = {
     next()
     body
   }
+
+  @inline def tokenCurrOrAfterNl(p: => Boolean): Boolean =
+    p || TokensHelper.isNl(token) && ahead(p)
+
 
   val justPrefix: List[() => Option[String]] = List(
     () => {
@@ -211,12 +301,6 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     None
   }
 
-  def parse[T](rule: this.type => T): T = {
-    accept[BOF]
-    val t = rule(this)
-    t
-  }
-
   def acceptToken[T <: Token : TokenInfo]: T = {
     val t = token
     accept[T]
@@ -234,7 +318,9 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   }
 
   /** {{{
-   *  QuantExpr      ::= ( Id<∀> | Id<A> | Id<∃> | Id<E> ) Id {`,' Id} `:' Domain Expr
+   *  QuantExpr      ::= QuantOp Id {`,' Id} `:' Domain Expr
+   *
+   *  QuantOp        ::= Id<∀> | Id<A> | Id<all> | Id<forall> | Id<∃> | Id<E> | Id<some> | Id<exists>
    *
    *  Domain         ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
    *                   |  Type
@@ -278,12 +364,13 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
     }
   }
 
-
   /** {{{
-   *  DefContract    ::= {nl} [ Ident<requires> {nl} NamedExprs ]
+   *  DefContract    ::= BOF {nl}
+   *                     [ Ident<requires> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
    *                     [ Ident<ensures> {nl} NamedExprs ]
-   *                     { SubContract {nl} } EOF
+   *                     { SubContract {nl} }
+   *                     EOF
    *
    *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
    *
@@ -323,43 +410,48 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
       r.reverse
     }
 
+    accept[BOF]
     newLinesOpt()
-    val requires = if (isIdentOf("requires")) {
+    val requires: List[(Option[Ident], Term)] = if (isIdentOf("requires")) {
       next()
       newLinesOpt()
       namedExprs(!(isIdentOf("modifies") || isIdentOf("ensures") || token.is[KwDef] || token.is[EOF]))
     } else List()
-    val modifies = if (isIdentOf("modifies")) {
-      next()
-      newLinesOpt()
-      var r = List[Term](expr())
-      while (token.is[Comma]) {
-        next()
-        newLinesOpt()
-        r ::= expr()
-      }
-      newLinesOpt()
-      r.reverse
-    } else List()
-    val ensures = if (isIdentOf("ensures")) {
+    val mods: List[Term] = modifies()
+    val ensures: List[(Option[Ident], Term)] = if (isIdentOf("ensures")) {
       next()
       newLinesOpt()
       namedExprs(!(token.is[KwDef] || token.is[EOF]))
     } else List()
-    DefContract(requires, modifies, ensures, subContract())
+    val r = DefContract(requires, mods, ensures, subContract())
+    accept[EOF]
+    r
   }
 
-  def namedExprs(continue: => Boolean): List[(Option[Ident], Term)] = {
-    def namedExpr(): (Option[Ident], Term) =
-      if (token.is[Ident] && ahead(token.is[Colon])) {
-        val ident = acceptToken[Ident]
-        next()
-        newLineOpt()
-        (Some(ident), expr())
-      } else {
-        (None, expr())
-      }
+  def modifies(): List[Term] = if (isIdentOf("modifies")) {
+    next()
+    newLinesOpt()
+    var r = List[Term](expr())
+    while (token.is[Comma]) {
+      next()
+      newLinesOpt()
+      r ::= expr()
+    }
+    newLinesOpt()
+    r.reverse
+  } else List()
 
+  def namedExpr(): (Option[Ident], Term) =
+    if (token.is[Ident] && ahead(token.is[Colon])) {
+      val ident = acceptToken[Ident]
+      next()
+      newLineOpt()
+      (Some(ident), expr())
+    } else {
+      (None, expr())
+    }
+
+  def namedExprs(continue: => Boolean): List[(Option[Ident], Term)] = {
     var r = List(namedExpr())
     newLinesOpt()
     while (continue) {
@@ -370,47 +462,198 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
   }
 
   /** {{{
-   *  SpecDefs       ::= {nl} { SpecDef {nl} } EOF
+   *  SpecDefs       ::= BOF
+   *                     {nl} SpecDef {nl} { SpecDef {nl} } [ WhereDefs {nl} ]
+   *                     EOF
    *
-   *  SpecDef        ::= `=' NamedExpr [`,' ( [case Pattern] [Guard] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
+   *  SpecDef        ::= `=' NamedExpr [`,' ( [ case Pattern ] [ Guard ] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
    *
-   *  WhereDefs      ::= Ident<where> { {nl} WhereDef }
+   *  WhereDefs      ::= Ident<where> {nl} WhereDef { {nl} WhereDef }
    *
    *  WhereDef       ::= val Ident `:' Type `=' Expr
-   *                   |  def Ident `(' [Params] `)' `:' Type { {nl} SpecDef }
+   *                   |  def Ident `(' SpecParams `)' `:' Type {nl} SpecDef { {nl} SpecDef }
+   *
+   *  SpecParams     ::= SpecParam { `,' SpecParam }
+   *
+   *  SpecParam      ::= Id `:' Type
    *  }}}
    */
-  def specDefs(): Unit = {}
+  def specDefs(): (List[SpecDef], List[WhereDef]) = {
+    accept[BOF]
+    newLinesOpt()
+    var sds = List(specDef())
+    newLinesOpt()
+    while (token.isNot[EOF]) {
+      sds ::= specDef()
+      newLinesOpt()
+    }
+    val r = (sds.reverse, if (isIdentOf("where")) {
+      val wds = whereDefs()
+      newLinesOpt()
+      wds
+    } else List())
+    accept[EOF]
+    r
+  }
+
+  def specDef(): SpecDef = {
+    accept[Token.Equals]
+    val (idOpt, e) = namedExpr()
+    val (isOtherwise, patternOpt, guardOpt) = if (token.is[Comma]) {
+      next()
+      val pOpt = if (token.is[KwCase]) {
+        next()
+        Some(pattern())
+      } else None
+      val gOpt = if (token.is[KwIf]) {
+        next()
+        Some(expr())
+      } else None
+      (false, pOpt, gOpt)
+    } else if (isIdentOf("otherwise")) (true, None, None)
+    else (false, None, None)
+    newLinesOpt()
+    val wds = if (isIdentOf("where")) whereDefs() else List()
+    SpecDef(idOpt, e, isOtherwise, patternOpt, guardOpt, wds)
+  }
+
+  private def whereDefs(): List[WhereDef] = {
+    def specParam(): (Ident, Type) = {
+      val id = acceptToken[Ident]
+      accept[Colon]
+      (id, loutPattern.typ())
+    }
+
+    def specParams(): List[(Ident, Type)] = {
+      var r = List(specParam())
+      while (token.is[Comma]) {
+        next()
+        r ::= specParam()
+      }
+      r.reverse
+    }
+
+    def whereDef(): WhereDef = {
+      if (token.is[KwVal]) {
+        next()
+        val id = acceptToken[Ident]
+        accept[Colon]
+        val t = loutPattern.typ()
+        accept[Token.Equals]
+        val e = expr()
+        ValWhereDef(id, t, e)
+      } else {
+        accept[KwDef]
+        val id = acceptToken[Ident]
+        accept[LeftParen]
+        val params = specParams()
+        accept[RightParen]
+        accept[Colon]
+        val t = loutPattern.typ()
+        newLinesOpt()
+        var sds = List(specDef())
+        while (tokenCurrOrAfterNl(token.is[Token.Equals])) {
+          newLinesOpt()
+          sds ::= specDef()
+        }
+        DefWhereDef(id, params, t, sds.reverse)
+      }
+    }
+
+    next()
+    newLinesOpt()
+    var r = List(whereDef())
+    while (tokenCurrOrAfterNl(token.is[Token.Equals])) {
+      newLinesOpt()
+      r ::= whereDef()
+    }
+    r.reverse
+  }
 
   /** {{{
-   *  LoopInvMod     ::= {nl} [ Ident<invariant> {nl} NamedExprs ]
+   *  LoopInvMod     ::= BOF {nl}
+   *                     [ Ident<invariant> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
+   *                     EOF
    *  }}}
    */
-  def loopInvMode(): Unit = {}
+  def loopInvMode(): (List[(Option[Ident], Term)], List[Term]) = {
+    accept[BOF]
+    val is = if (isIdentOf("invariant")) {
+      next()
+      newLinesOpt()
+      namedExprs(token.isNot[EOF] || !isIdentOf("modifies"))
+    } else List()
+    val mods = modifies()
+    accept[EOF]
+    (is, mods)
+  }
 
   /** {{{
-   *  LClause        ::= Invariants
-   *                   |  Facts
-   *                   |  Theorems
-   *                   |  Sequent
-   *                   |  Proof EOF
+   *  LClause        ::= BOF {nl}
+   *                     ( Invariants
+   *                     | Facts
+   *                     | Theorems
+   *                     | Sequent
+   *                     | Proof
+   *                     ) EOF
+   *  }}}
+   */
+  def lClause(): LClause = {
+    accept[BOF]
+    newLinesOpt()
+    val r: LClause =
+      if (isIdentOf("invariant")) invariants()
+      else if (isIdentOf("fact")) facts()
+      else null // TODO
+    accept[EOF]
+    r
+  }
+
+  /** {{{
+   *  Invariants     ::= Ident<invariant> {nl} NamedExprs
+   *  }}}
+   */
+  private def invariants(): Invariants = {
+    next()
+    newLinesOpt()
+    Invariants(namedExprs(token.isNot[EOF]))
+  }
+
+  /** {{{
+   *  Facts          ::= Ident<fact> {nl} Fact {nl} { Fact {nl} }
    *
-   *  Invariants     ::= {nl} Ident<invariant> {nl} NamedExprs EOF
+   *  Fact           ::= Ident `:' [nl] Expr
+   *  }}}
+   */
+  private def facts(): Facts = {
+    next()
+    newLinesOpt()
+    val nes = namedExprs(token.isNot[EOF])
+    for ((idOpt, e) <- nes if idOpt.isEmpty) {
+      reporter.syntaxError("A Slang fact needs to be named.", at = e.tokens(dialect).head)
+    }
+    Facts(nes.map(p => (p._1.get, p._2)))
+  }
+
+  /** {{{
+   *  Theorems       ::= Ident<theorem> {nl} { Theorem {nl} }
    *
-   *  Facts          ::= {nl} Ident<fact> {nl} { Fact {nl} } EOF
-   *
-   *  Fact           ::= NamedExpr
-   *
-   *  Theorems       ::= {nl} Ident<theorem> {nl} { Theorem {nl} } EOF
-   *
-   *  Theorem        ::= NamedExpr Sequent
-   *
-   *  Sequent        ::= {nl} Claims {nl} ( Ident<|-> | Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ] EOF
+   *  Theorem        ::= Ident `:' [nl] Sequent
+   *  }}}
+   */
+  private def theorems(): Unit = {}
+
+  /** {{{
+   *  Sequent        ::= Claims {nl} ( Ident<|-> | Ident<⊢> ) {nl} Claims {nl} [ Proof ]
    *
    *  Claims         ::= Expr {`,' {nl} Expr}
-   *
-   *  Proof          ::= {nl} `{' { {nl} ProofStep } {nl} `}' {nl}
+   *  }}}
+   */
+  def sequent(): Unit = {}
+
+  /** {{{
+   *  Proof          ::= `{' { {nl} ProofStep } {nl} `}' {nl}
    *
    *  ProofStep      ::= Int `.' Expr Just
    *                   |  Int `.' SubProof
@@ -418,43 +661,43 @@ class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dia
    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
    *
    *  AssumeStep     ::= Int `.' Expr Ident<assume>
-    *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type }
-    *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type } Expr Ident<assume>
+   *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type }
+   *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type } Expr Ident<assume>
    *
-    *  Just           ::= Ident<assume>
-   *                   |  Ident<premise>
-   *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int
+   *  Just           ::= Ident<premise>
+   *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int { Int }
    *                   |  ( Ident<∧> | Ident<^> ) Ident<e1>                                 Int
    *                   |  ( Ident<∧> | Ident<^> ) Ident<e2>                                 Int
    *                   |  ( Ident<∨> Ident<i1> | Ident<Vi1> )                               Int
    *                   |  ( Ident<∨> Ident<i2> | Ident<Vi2> )                               Int
-   *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int
+   *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int { Int }
    *                   |  ( Ident<→> | Ident<->> ) Ident<i>                                 Int
-   *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int
+   *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int { Int }
    *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<i>                       Int
    *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<e>                       Int Int
    *                   |  ( Ident<⊥> | Ident<_> `|' Ident<_> ) Ident<e>                     Int
    *                   |  Ident<pbc>                                                        Int
    *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
-    *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr { `,' Expr }
-    *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr { `,' Expr }
-    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
+   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int Expr { `,' Expr }
+   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int Expr { `,' Expr }
+   *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
    *                   |  Ident<fact>                                                       QualId
    *                   |  Ident<invariant>                                                  [QualId]
    *                   |  Ident<subst>                                                      Int ( '<' | '>' ) Int
-    *                   |  Ident<algebra>                                                    { Int }
-    *                   |  Ident<auto>                                                       { Int }
-    *                   |  Ident<coq>                                                        String { Int }
+   *                   |  Ident<algebra>                                                    { Int }
+   *                   |  Ident<auto>                                                       { Int }
+   *                   |  Ident<coq>                                                        String { Int }
    *  }}}
    */
-  def lClause(): Unit = {
-  }
-
-  def just(kind: String): Unit = {
+  private def proof(): Unit = {
 
   }
 
   def exprJust(stepNo: Int): (Term, Any) = {
+    def just(kind: String): Unit = {
+
+    }
+
     val oldIn = in
     val (justPos, justKind) = try {
       in = oldIn.fork

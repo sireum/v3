@@ -25,5 +25,6 @@
 package scala.meta.tokens
 
 object TokensHelper {
-  def extractArray(tokens: Tokens): Array[Token] = tokens.tokens
+  def extractArray(ts: Tokens): Array[Token] = ts.tokens
+  def isNl(t: Token): Boolean = t.is[Token.LF] || t.is[Token.LFLF]
 }
