@@ -83,9 +83,9 @@ object LParser {
 
   final case class Aps(step: Token.Constant.Int, exp: Term) extends AssumeProofStep
 
-  final case class ForallIntroAps(step: Token.Constant.Int, fresh: List[(Ident, Type)]) extends AssumeProofStep
+  final case class ForallIntroAps(step: Token.Constant.Int, fresh: List[(List[Ident], Option[Either[Type, (Term, Boolean, Term, Boolean)]])]) extends AssumeProofStep
 
-  final case class ExistsElimAps(step: Token.Constant.Int, fresh: List[(Ident, Type)], exp: Term) extends AssumeProofStep
+  final case class ExistsElimAps(step: Token.Constant.Int, fresh: List[(List[Ident], Option[Either[Type, (Term, Boolean, Term, Boolean)]])], exp: Term) extends AssumeProofStep
 
   sealed trait Just {
     def pos: Position
@@ -294,6 +294,11 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
 
   def findJust(): (Int, String, Int) = {
+    def continue: Boolean =
+      if (token.is[RightBrace] || token.is[EOF]) false
+      else if (TokensHelper.isNl(token) && ahead(token.is[Token.Constant.Int] && aheadNF(token.is[Dot]))) false
+      else true
+
     def find(): Option[(String, Int)] = {
       if (token.is[Ident] && justFirst.contains(token.text))
         return Some((token.text, 1))
@@ -303,11 +308,12 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       }
       None
     }
+
     val oldIn = in
     try {
       in = oldIn.fork
       var just: Option[(String, Int)] = None
-      while (in.hasNext && just.isEmpty) {
+      while (continue && just.isEmpty) {
         next()
         just = find()
       }
@@ -334,22 +340,66 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   }
 
   /** {{{
-   *  QuantExpr      ::= QuantOp Id {`,' Id} `:' Domain Expr
+   *  QuantExpr      ::= QuantOp Idents [ `:' Domain ] [nl] Expr
    *
-   *  QuantOp        ::= Id<∀> | Id<A> | Id<all> | Id<forall> | Id<∃> | Id<E> | Id<some> | Id<exists>
+   *  Idents         ::= Ident { `,' Ident }
+   *
+   *  QuantOp        ::= Ident<∀> | Ident<A> | Ident<all> | Ident<forall> | Ident<∃> | Ident<E> | Ident<some> | Ident<exists>
    *
    *  Domain         ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
    *                   |  Type
    *  }}}
    */
   private def quantExpr(): Term = autoPos {
+    def acceptKw(kws: ListSet[String]): String = {
+      val text = token.text
+      if (token.is[Ident] && kws.contains(text)) {
+        val r = token.text
+        next()
+        r
+      } else {
+        reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but $text found", at = token)
+      }
+    }
+
     acceptKw(quantTokens)
     val isForAll = forallTokens.contains(token.text)
 
-    val ids: Term = identifiers()
+    val ids: Term = identsTerm()
 
-    accept[Colon]
+    if (token.isNot[Colon]) {
+      newLineOpt()
+      val e = expr()
+      Term.Apply(
+        Term.Name("L$Quant"),
+        List[Term](Lit.Boolean(isForAll), ids, e))
+    } else {
+      next()
+      domain() match {
+        case Left(t) =>
+          newLineOpt()
+          val e = expr()
+          Term.Apply(
+            Term.Name("L$Quant"),
+            List[Term](
+              Lit.Boolean(isForAll),
+              Term.Ascribe(ids, t),
+              e))
+        case Right((lo, loExact, hi, hiExact)) =>
+          newLineOpt()
+          val e = expr()
+          Term.Apply(
+            Term.Name("L$Quant"),
+            List[Term](
+              Lit.Boolean(isForAll),
+              ids,
+              Term.Tuple(List(lo, Lit.Boolean(loExact), hi, Lit.Boolean(hiExact))),
+              e))
+      }
+    }
+  }
 
+  def domain(): Either[Type, (Term, Boolean, Term, Boolean)] =
     if (token.is[LeftParen] || token.is[LeftBracket]) {
       val loExact = token.is[LeftBracket]
       next()
@@ -358,26 +408,22 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       val hi = expr()
       val hiExact = token.is[RightBracket]
       if (hiExact) next() else accept[RightParen]
-      val e = expr()
-      Term.Apply(
-        Term.Name("L$Quant"),
-        List[Term](
-          Lit.Boolean(isForAll),
-          ids,
-          Term.Tuple(List(lo, Lit.Boolean(loExact), hi, Lit.Boolean(hiExact))),
-          e)
-      )
-    } else {
-      val t = loutPattern.typ()
-      val e = expr()
-      Term.Apply(
-        Term.Name("L$Quant"),
-        List[Term](
-          Lit.Boolean(isForAll),
-          Term.Ascribe(ids, t),
-          e)
-      )
+      Right((lo, loExact, hi, hiExact))
+    } else Left(loutPattern.typ())
+
+  def idents(): List[Ident] = {
+    var ids = List(acceptToken[Ident])
+    while (token.is[Comma]) {
+      next()
+      ids ::= acceptToken[Ident]
     }
+    ids.reverse
+  }
+
+  def identsTerm(): Term = {
+    val ids = idents().map(t => atPos(t.start, t.end)(Term.Name(t.text)))
+    if (ids.size == 1) ids.head
+    else Term.Tuple(ids.reverse)
   }
 
   /** {{{
@@ -671,11 +717,12 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       newLinesOpt()
       (id, sequent())
     }
+
     next()
     newLinesOpt()
     var ts = List(theorem())
     newLinesOpt()
-    while(token.is[Ident]) {
+    while (token.is[Ident]) {
       ts ::= theorem()
       newLinesOpt()
     }
@@ -722,7 +769,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   def findTokenPos(p: Token => Boolean): Int = {
     val lti = in.fork.asInstanceOf[LimitingTokenIterator]
     var found = p(lti.token)
-    while(!found && token.isNot[EOF]) {
+    while (!found && token.isNot[EOF]) {
       lti.next()
       found = p(lti.token)
     }
@@ -738,8 +785,10 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
    *
    *  AssumeStep     ::= Int `.' Expr Ident<assume>
-   *                   |  Int `.' Ident `:' Type { `,' {nl} Ident `:' Type }
-   *                   |  Int `.' Ident `:' Type { `,' {nl} Ident `:' Type } {nl} Expr Ident<assume>
+   *                   |  Int `.' Idents Ident<assume>
+   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } Ident<assume>
+   *                   |  Int `.' Idents {nl} Expr Ident<assume>
+   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } {nl} Expr Ident<assume>
    *
    *  Just           ::= Ident<premise>
    *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int { Int }
@@ -863,39 +912,42 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     }
 
     def assumeStep(): AssumeProofStep = {
-      val n = acceptInt
-      accept[Dot]
-      if (token.is[Ident] && ahead(token.is[Colon])) {
-        var freshVars = List(freshVar())
-        while (token.is[Comma]) {
-          next()
-          newLinesOpt()
-          freshVars ::= freshVar()
-        }
-        val (justPos, justKind, justOffset) = findJust()
-        if (justPos < 0) {
-          ForallIntroAps(n, freshVars.reverse)
-        } else if (justKind != "assume") {
-          reporter.syntaxError(s"Assume justification expected but found $justKind", at = parserTokens(justPos))
-        } else {
-          newLinesOpt()
-          val (e, _) = exprJustH(justPos, justKind, justOffset)
-          ExistsElimAps(n, freshVars.reverse, e)
-        }
-      } else {
-        val (justPos, justKind, _) = findJust()
-        if (justPos < 0) {
-          reporter.syntaxError(s"Assume justification expected", at = token)
-        } else if (justKind != "assume") {
-          reporter.syntaxError(s"Assume justification expected but found $justKind", at = parserTokens(justPos))
-        }
-        val oldIn = in.asInstanceOf[LimitingTokenIterator]
+      val n = acceptToken[Token.Constant.Int]
+      val (justPos, justKind, _) = findJust()
+      def isAssume: Boolean = in.asInstanceOf[LimitingTokenIterator].i == justPos
+      if (justPos < 0) reporter.syntaxError(s"Could not find assume justification.", at = token)
+      else if ("assume" != justKind) reporter.syntaxError(s"Expected assume but found $justKind.", at = parserTokens(justPos))
+      val oldIn = in.asInstanceOf[LimitingTokenIterator]
+      try {
         in = new LimitingTokenIterator(oldIn.i, justPos - 1)
         val e = expr()
-        in = new LimitingTokenIterator(justPos, oldIn.end)
-        next()
-        Aps(n, e)
-      }
+        if (isAssume) Aps(n, e)
+        else {
+          in = new LimitingTokenIterator(oldIn.i, justPos - 1)
+          val ids = idents()
+          if (isAssume) ForallIntroAps(n, List((ids, None)))
+          else if (token.is[Colon]) {
+            next()
+            var fresh = List((ids, Some(domain())))
+            while (tokenCurrOrAfterNl(token.is[Ident] && aheadNF(token.is[Comma] || token.is[Colon]))) {
+              newLinesOpt()
+              fresh ::= (idents(), Some(domain()))
+            }
+            if (isAssume) ForallIntroAps(n, fresh.reverse)
+            else {
+              newLinesOpt()
+              val e = expr()
+              if (isAssume) ExistsElimAps(n, fresh.reverse, e)
+              else reporter.syntaxError(s"Expected assume but found ${token.text}", at = token)
+            }
+          } else {
+            newLinesOpt()
+            val e = expr()
+            if (isAssume) ExistsElimAps(n, List((ids, None)), e)
+            else reporter.syntaxError(s"Expected assume but found ${token.text}", at = token)
+          }
+        }
+      } finally in = new LimitingTokenIterator(justPos + 1, oldIn.end)
     }
 
     def subProof(step: Token.Constant.Int): SubProof = {
@@ -933,28 +985,5 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     accept[RightBrace]
     newLinesOpt()
     Proof(pss.reverse)
-  }
-
-  def acceptKw(kws: ListSet[String]): String = {
-    val text = token.text
-    if (token.is[Ident] && kws.contains(text)) {
-      val r = token.text
-      next()
-      r
-    } else {
-      reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but $text found", at = token)
-    }
-  }
-
-  def identifiers(): Term = {
-    var t = acceptToken[Ident]
-    var ids = List(atPos(t.start, t.end)(Term.Name(t.text)))
-    while (token.is[Comma]) {
-      next()
-      t = acceptToken[Ident]
-      ids ::= atPos(t.start, t.end)(Term.Name(t.text))
-    }
-    if (ids.size == 1) ids.head
-    else Term.Tuple(ids.reverse)
   }
 }
