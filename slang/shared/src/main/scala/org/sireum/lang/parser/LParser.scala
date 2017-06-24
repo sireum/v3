@@ -33,7 +33,7 @@ import scala.meta.internal.tokens.TokenInfo
 import scala.meta.parsers.{Parse, ParseException, Parsed}
 import scala.meta.tokenizers.TokenizeException
 import scala.meta.tokens.TokensHelper
-import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBracket, RightParen}
+import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBrace, RightBracket, RightParen}
 
 object LParser {
 
@@ -77,15 +77,15 @@ object LParser {
                             assumeStep: AssumeProofStep,
                             steps: List[ProofStep]) extends ProofStep
 
-  final case class Ps(step: Token.Constant.Int, exp: Term, just: Just)
+  final case class Ps(step: Token.Constant.Int, exp: Term, just: Just) extends ProofStep
 
   sealed trait AssumeProofStep extends ProofStep
 
-  final case class Aps(step: Token.Constant.Int, exp: Term)
+  final case class Aps(step: Token.Constant.Int, exp: Term) extends AssumeProofStep
 
-  final case class ForallIntroAps(step: Token.Constant.Int, fresh: List[(Ident, Type)])
+  final case class ForallIntroAps(step: Token.Constant.Int, fresh: List[(Ident, Type)]) extends AssumeProofStep
 
-  final case class ExistsElimAps(step: Token.Constant.Int, fresh: List[(Ident, Type)], exp: Term)
+  final case class ExistsElimAps(step: Token.Constant.Int, fresh: List[(Ident, Type)], exp: Term) extends AssumeProofStep
 
   sealed trait Just {
     def pos: Position
@@ -117,19 +117,19 @@ object LParser {
 
   final case class ForallElim(pos: Position, forallStep: Token.Constant.Int, args: List[Term]) extends Just
 
-  final case class ExistsIntro(pos: Position, forallStep: Token.Constant.Int, args: List[Term]) extends Just
+  final case class ExistsIntro(pos: Position, existsStep: Token.Constant.Int, args: List[Term]) extends Just
 
   final case class ExistsElim(pos: Position, existsStep: Token.Constant.Int, subProofStep: Token.Constant.Int) extends Just
 
-  final case class Fact(pos: Position, name: List[Ident]) extends Just
+  final case class Fact(pos: Position, ref: Term.Ref) extends Just
 
-  final case class Invariant(pos: Position, name: List[Ident]) extends Just
+  final case class Invariant(pos: Position, refOpt: Option[Term.Ref]) extends Just
 
   final case class Subst(pos: Position, isRight: Boolean, eqStep: Token.Constant.Int, step: Token.Constant.Int) extends Just
 
   final case class Auto(pos: Position, isAlgebra: Boolean, steps: List[Token.Constant.Int]) extends Just
 
-  final case class Coq(pos: Position, path: List[Token.Constant.String], steps: List[Token.Constant.Int]) extends Just
+  final case class Coq(pos: Position, path: Token.Constant.String, steps: List[Token.Constant.Int]) extends Just
 
   val forallTokens = ListSet("∀", "A", "all", "forall")
   val existsTokens = ListSet("∃", "E", "some", "exists")
@@ -223,7 +223,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     p || TokensHelper.isNl(token) && ahead(p)
 
 
-  val justPrefix: List[() => Option[String]] = List(
+  val justPrefix: List[() => Option[(String, Int)]] = List(
     () => {
       var text = "∧"
       val r = isIdentOf("&") &&
@@ -231,7 +231,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
           text += token.text
           (isIdentOf("i") || isIdentOf("e1") || isIdentOf("e2")) && aheadNF(token.is[Token.Constant.Int])
         }
-      if (r) Some(text) else None
+      if (r) Some((text, 2)) else None
     },
     () => {
       var text = "∨"
@@ -240,7 +240,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
           text += token.text
           (isIdentOf("i1") || isIdentOf("i2") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
         }
-      if (r) Some(text) else None
+      if (r) Some((text, 2)) else None
     },
     () => {
       var text = token.text
@@ -249,10 +249,10 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
           text += token.text
           (isIdentOf("i") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
         }
-      if (r) Some(text) else None
+      if (r) Some((text, 2)) else None
     },
     () => {
-      if (isIdentOf("F") && ahead(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))) Some("⊥e") else None
+      if (isIdentOf("F") && ahead(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))) Some(("⊥e", 2)) else None
     },
     () => {
       if ( {
@@ -265,7 +265,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
               aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))
           }
         }
-      }) Some("⊥e") else None
+      }) Some(("⊥e", 4)) else None
     }
   )
 
@@ -293,14 +293,26 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   }
 
 
-  def findJust(): Option[String] = {
-    if (token.is[Ident] && justFirst.contains(token.text))
-      return Some(token.text)
-    for (jp <- justPrefix) {
-      val r = jp()
-      if (r.isDefined) return r
+  def findJust(): (Int, String, Int) = {
+    def find(): Option[(String, Int)] = {
+      if (token.is[Ident] && justFirst.contains(token.text))
+        return Some((token.text, 1))
+      for (jp <- justPrefix) {
+        val r = jp()
+        if (r.isDefined) return r
+      }
+      None
     }
-    None
+    val oldIn = in
+    try {
+      in = oldIn.fork
+      var just: Option[(String, Int)] = None
+      while (in.hasNext && just.isEmpty) {
+        next()
+        just = find()
+      }
+      if (just.isDefined) (in.asInstanceOf[LimitingTokenIterator].i, just.get._1, just.get._2) else (-1, "", 0)
+    } finally in = oldIn
   }
 
   def acceptToken[T <: Token : TokenInfo]: T = {
@@ -308,6 +320,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     accept[T]
     t.asInstanceOf[T]
   }
+
+  def acceptInt: Token.Constant.Int = acceptToken[Token.Constant.Int]
 
   /** {{{
    *  SimpleExpr     ::= QuantExpr
@@ -608,10 +622,10 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       if (isIdentOf("invariant")) invariants()
       else if (isIdentOf("fact")) facts()
       else if (isIdentOf("theorem")) theorems()
-      else if (token.is[LeftBracket]) proof()
+      else if (token.is[LeftBrace]) proof()
       else {
         val i = findTokenPos(t => sequentTokens.contains(t.text))
-        if (i < 0) reporter.syntaxError(s"invariant, fact, theorem, { ... }, or ... ⊢ ... expected", at = token)
+        if (i < 0) reporter.syntaxError(s"Either invariant, fact, theorem, { ... }, or ... ⊢ ... expected", at = token)
         sequent(i)
       }
     accept[EOF]
@@ -669,7 +683,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   }
 
   /** {{{
-   *  Sequent        ::= Exprs {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
+   *  Sequent       ::= Exprs {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
    *
    *  Exprs         ::= Expr {`,' {nl} Expr}
    *  }}}
@@ -681,7 +695,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     val premises = exprs()
     in = new LimitingTokenIterator(sequentIndex + 1, oldIn.end)
     newLinesOpt()
-    val proofIndex = findTokenPos(t => t.is[LeftBracket])
+    val proofIndex = findTokenPos(t => t.is[LeftBrace])
     if (proofIndex < 0) {
       val conclusions = exprs()
       newLinesOpt()
@@ -724,8 +738,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
    *
    *  AssumeStep     ::= Int `.' Expr Ident<assume>
-   *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type }
-   *                   |  Int `.' Ident `:' Type { `,' Ident `:' Type } Expr Ident<assume>
+   *                   |  Int `.' Ident `:' Type { `,' {nl} Ident `:' Type }
+   *                   |  Int `.' Ident `:' Type { `,' {nl} Ident `:' Type } {nl} Expr Ident<assume>
    *
    *  Just           ::= Ident<premise>
    *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int { Int }
@@ -745,45 +759,180 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int {nl} Expr { `,' {nl} Expr }
    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
    *                   |  Ident<fact>                                                       QualId
-   *                   |  Ident<invariant>                                                  [QualId]
+   *                   |  Ident<invariant>                                                  [ QualId ]
    *                   |  Ident<subst>                                                      Int ( '<' | '>' ) Int
    *                   |  Ident<algebra>                                                    { Int }
    *                   |  Ident<auto>                                                       { Int }
    *                   |  Ident<coq>                                                        String { Int }
    *  }}}
    */
-  private def proof(): Proof = ???
-
-  def exprJust(stepNo: Int): (Term, Any) = {
-    def just(kind: String): Unit = {
-
-    }
-
-    val oldIn = in
-    val (justPos, justKind) = try {
-      in = oldIn.fork
-      var just: Option[String] = None
-      while (in.hasNext && just.isEmpty) {
-        next()
-        just = findJust()
+  private def proof(): Proof = {
+    def just(kind: String, offset: Int): Just = {
+      val startPoint = token.pos.start
+      (0 until offset - 1).foreach(_ => next())
+      val endPoint = token.pos.end
+      next()
+      val pos = Position.Range(Input.Slice(input, startPoint.offset, endPoint.offset), startPoint, endPoint)
+      kind match {
+        case "premise" => Premise(pos)
+        case "∧i" =>
+          var steps = List(acceptInt)
+          steps ::= acceptInt
+          while (token.is[Token.Constant.Int]) {
+            steps ::= acceptInt
+          }
+          AndIntro(pos, steps.reverse)
+        case "∧e1" => AndElim(pos, is1 = true, acceptInt)
+        case "∧e2" => AndElim(pos, is1 = false, acceptInt)
+        case "∨i1" => OrIntro(pos, is1 = true, acceptInt)
+        case "∨i2" => OrIntro(pos, is1 = false, acceptInt)
+        case "∨e" =>
+          val orStep = acceptInt
+          var steps = List(acceptInt)
+          steps ::= acceptInt
+          while (token.is[Token.Constant.Int]) {
+            steps ::= acceptInt
+          }
+          OrElim(pos, orStep, steps.reverse)
+        case "→i" => ImplyIntro(pos, acceptInt)
+        case "→e" =>
+          val implyStep = acceptInt
+          var steps = List(acceptInt)
+          while (token.is[Token.Constant.Int]) {
+            steps ::= acceptInt
+          }
+          ImplyElim(pos, implyStep, steps.reverse)
+        case "¬i" => NegIntro(pos, acceptInt)
+        case "¬e" =>
+          val step = acceptInt
+          NegElim(pos, step, acceptInt)
+        case "⊥e" => BottomElim(pos, acceptInt)
+        case "pbc" => Pbc(pos, acceptInt)
+        case "∀i" => ForallIntro(pos, acceptInt)
+        case "∀e" =>
+          val qstep = acceptInt
+          newLinesOpt()
+          ForallElim(pos, qstep, exprs())
+        case "∃i" =>
+          val qstep = acceptInt
+          newLinesOpt()
+          ExistsIntro(pos, qstep, exprs())
+        case "∃e" =>
+          val existsStep = acceptInt
+          ExistsElim(pos, existsStep, acceptInt)
+        case "fact" => Fact(pos, qualId())
+        case "invariant" => if (token.is[Ident]) Invariant(pos, Some(qualId())) else Invariant(pos, None)
+        case "subst" =>
+          val eqStep = acceptInt
+          val isRight = ">" == acceptToken[Ident].value
+          Subst(pos, isRight, eqStep, acceptInt)
+        case "algebra" | "auto" =>
+          val isAlgebra = "algebra" == kind
+          var steps = List[Token.Constant.Int]()
+          while (token.is[Token.Constant.Int]) {
+            steps ::= acceptInt
+          }
+          Auto(pos, isAlgebra, steps.reverse)
+        case "coq" =>
+          val path = acceptToken[Token.Constant.String]
+          var steps = List[Token.Constant.Int]()
+          while (token.is[Token.Constant.Int]) {
+            steps ::= acceptInt
+          }
+          Coq(pos, path, steps.reverse)
       }
-      if (just.isDefined) (in.asInstanceOf[LimitingTokenIterator].i, just.get) else (-1, "")
-    } finally in = oldIn
-    if (justPos == -1) reporter.syntaxError(s"No justification found for proof step $stepNo.", at = token)
-    in = new LimitingTokenIterator(in.tokenPos, justPos - 1)
-    val e = expr()
-    in = new LimitingTokenIterator(justPos, parserTokens.length - 1)
-    (e, just(justKind))
-  }
-
-  def proofStep(): Unit = {
-    val n = acceptToken[Token.Constant.Int].value.toInt
-    accept[Dot]
-    if (token.is[LeftBrace]) {
-      // TODO
-    } else {
-      exprJust(n)
     }
+
+    def exprJustH(justPos: Int, justKind: String, justOffset: Int): (Term, Just) = {
+      in = new LimitingTokenIterator(in.tokenPos, justPos - 1)
+      val e = expr()
+      in = new LimitingTokenIterator(justPos, parserTokens.length - 1)
+      (e, just(justKind, justOffset))
+    }
+
+    def exprJust(stepNo: Token.Constant.Int): (Term, Just) = {
+      val (justPos, justKind, justOffset) = findJust()
+      if (justPos == -1) reporter.syntaxError(s"No justification found for proof step ${stepNo.value}.", at = token)
+      exprJustH(justPos, justKind, justOffset)
+    }
+
+    def freshVar(): (Ident, Type) = {
+      val id = acceptToken[Ident]
+      accept[Colon]
+      (id, loutPattern.typ())
+    }
+
+    def assumeStep(): AssumeProofStep = {
+      val n = acceptInt
+      accept[Dot]
+      if (token.is[Ident] && ahead(token.is[Colon])) {
+        var freshVars = List(freshVar())
+        while (token.is[Comma]) {
+          next()
+          newLinesOpt()
+          freshVars ::= freshVar()
+        }
+        val (justPos, justKind, justOffset) = findJust()
+        if (justPos < 0) {
+          ForallIntroAps(n, freshVars.reverse)
+        } else if (justKind != "assume") {
+          reporter.syntaxError(s"Assume justification expected but found $justKind", at = parserTokens(justPos))
+        } else {
+          newLinesOpt()
+          val (e, _) = exprJustH(justPos, justKind, justOffset)
+          ExistsElimAps(n, freshVars.reverse, e)
+        }
+      } else {
+        val (justPos, justKind, _) = findJust()
+        if (justPos < 0) {
+          reporter.syntaxError(s"Assume justification expected", at = token)
+        } else if (justKind != "assume") {
+          reporter.syntaxError(s"Assume justification expected but found $justKind", at = parserTokens(justPos))
+        }
+        val oldIn = in.asInstanceOf[LimitingTokenIterator]
+        in = new LimitingTokenIterator(oldIn.i, justPos - 1)
+        val e = expr()
+        in = new LimitingTokenIterator(justPos, oldIn.end)
+        next()
+        Aps(n, e)
+      }
+    }
+
+    def subProof(step: Token.Constant.Int): SubProof = {
+      next()
+      newLinesOpt()
+      val as = assumeStep()
+      var pss = List[ProofStep]()
+      while (tokenCurrOrAfterNl(token.isNot[RightBrace])) {
+        newLinesOpt()
+        pss ::= proofStep()
+      }
+      newLinesOpt()
+      accept[RightBrace]
+      SubProof(step, as, pss.reverse)
+    }
+
+    def proofStep(): ProofStep = {
+      val n = acceptInt
+      accept[Dot]
+      if (token.is[LeftBrace]) {
+        subProof(n)
+      } else {
+        val (e, j) = exprJust(n)
+        Ps(n, e, j)
+      }
+    }
+
+    accept[LeftBrace]
+    var pss = List[ProofStep]()
+    while (tokenCurrOrAfterNl(token.isNot[RightBrace])) {
+      newLinesOpt()
+      pss ::= proofStep()
+    }
+    newLinesOpt()
+    accept[RightBrace]
+    newLinesOpt()
+    Proof(pss.reverse)
   }
 
   def acceptKw(kws: ListSet[String]): String = {
@@ -793,7 +942,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       next()
       r
     } else {
-      reporter.syntaxError(s"${kws.mkString(" or ")} expected but $text found", at = token)
+      reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but $text found", at = token)
     }
   }
 

@@ -173,7 +173,7 @@
                      |  <exp> . <ID> <args>?
                      |  <exp> <args>
                      |  if ( <exp> ) <exp> else <exp>
-                     |  <quant-op> ID ⸨ , <ID> ⸩* : <domain> <exp>  // Note: Only available in the proof context
+                     |  <quant-op> ID ⸨ , <ID> ⸩* : <domain> <exp>  // only in the proof context
 
 <quant-op>         ::=  ∀
                      |  A
@@ -266,7 +266,7 @@
                      |  ⊻   // xor
                      |  |^  // xor
                      |  →   // implies, right-associative
-                     |  ->  // implies, only in the proof context, right-associative
+                     |  ->  // implies, right-associative, only in the proof context
                      |  :+  // append
                      |  +:  // prepend, right-associative
                      |  ++  // append all
@@ -280,10 +280,10 @@
 
 <spec-cdef>        ::=  c""" <spec-defs> """
 
-<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L368-L381
+<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L384-L397
 
-<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L364-L478
+<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L481-L494
 
-<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L574-L577
+<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L590-L593
 
-<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L593-L599
+<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L609-L615
