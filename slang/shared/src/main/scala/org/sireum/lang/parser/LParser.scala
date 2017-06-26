@@ -131,6 +131,34 @@ object LParser {
 
   final case class Coq(pos: Position, path: Token.Constant.String, steps: List[Token.Constant.Int]) extends Just
 
+  final case class TruthTable(star: Point,
+                              pluses: List[Point],
+                              vars: List[Ident],
+                              sep: Point,
+                              formula: Either[Sequent, Term],
+                              rows: List[TruthTableRow],
+                              conclusionOpt: Option[TruthTableConclusion])
+
+  final case class BLit(pos: Point, value: Boolean)
+
+  final case class TruthTableRow(assignment: List[BLit],
+                                 sep: Point,
+                                 values: List[BLit])
+
+  sealed trait TruthTableConclusion
+
+  final case object Valid extends TruthTableConclusion
+
+  final case class Invalid(assignments: List[List[BLit]]) extends TruthTableConclusion
+
+  final case object Tautology extends TruthTableConclusion
+
+  final case object Contradiction extends TruthTableConclusion
+
+  final case class Contingent(trueAssignments: List[List[BLit]],
+                              falseAssignments: List[List[BLit]])
+    extends TruthTableConclusion
+
   val forallTokens = ListSet("∀", "A", "all", "forall")
   val existsTokens = ListSet("∃", "E", "some", "exists")
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
@@ -153,6 +181,8 @@ object LParser {
     "≡" -> "==",
     "⊻" -> "|^"
   )
+
+  def isSequentToken(t: Token): Boolean = t.is[Ident] && sequentTokens.contains(t.text)
 
   lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
 
@@ -670,7 +700,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       else if (isIdentOf("theorem")) theorems()
       else if (token.is[LeftBrace]) proof()
       else {
-        val i = findTokenPos(t => sequentTokens.contains(t.text))
+        val i = findTokenPos(isSequentToken)
         if (i < 0) reporter.syntaxError(s"Either invariant, fact, theorem, { ... }, or ... ⊢ ... expected", at = token)
         sequent(i)
       }
@@ -730,19 +760,22 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   }
 
   /** {{{
-   *  Sequent       ::= Exprs {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
+   *  Sequent       ::= [ Exprs ] {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
    *
    *  Exprs         ::= Expr {`,' {nl} Expr}
    *  }}}
    */
-  def sequent(sequentIndex: Int = findTokenPos(t => sequentTokens.contains(t.text))): Sequent = {
+  def sequent(sequentIndex: Int = findTokenPos(isSequentToken), noProof: Boolean = false): Sequent = {
     if (sequentIndex < 0) reporter.syntaxError(s"... ⊢ ... expected", at = token)
+    val emptyPremises = tokenCurrOrAfterNl(isSequentToken(token))
     var oldIn = in.asInstanceOf[LimitingTokenIterator]
-    in = new LimitingTokenIterator(oldIn.i, sequentIndex - 1)
-    val premises = exprs()
+    val premises = if (emptyPremises) List() else {
+      in = new LimitingTokenIterator(oldIn.i, sequentIndex - 1)
+      exprs()
+    }
     in = new LimitingTokenIterator(sequentIndex + 1, oldIn.end)
     newLinesOpt()
-    val proofIndex = findTokenPos(t => t.is[LeftBrace])
+    val proofIndex = if (noProof) -1 else findTokenPos(_.is[LeftBrace])
     if (proofIndex < 0) {
       val conclusions = exprs()
       newLinesOpt()
@@ -914,7 +947,9 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     def assumeStep(): AssumeProofStep = {
       val n = acceptToken[Token.Constant.Int]
       val (justPos, justKind, _) = findJust()
+
       def isAssume: Boolean = in.asInstanceOf[LimitingTokenIterator].i == justPos
+
       if (justPos < 0) reporter.syntaxError(s"Could not find assume justification.", at = token)
       else if ("assume" != justKind) reporter.syntaxError(s"Expected assume but found $justKind.", at = parserTokens(justPos))
       val oldIn = in.asInstanceOf[LimitingTokenIterator]
@@ -985,5 +1020,161 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     accept[RightBrace]
     newLinesOpt()
     Proof(pss.reverse)
+  }
+
+  /** {{{
+   *  TruthTable     ::= BOF {nl}
+   *                     { Ident<+> } Ident<*> { Ident<+> } {nl}
+   *                     Ident<----...> {nl}
+   *                     { Ident } Ident<|> ( Sequent | Expr ) {nl}   // Sequent without Proof
+   *                     Ident<----...> {nl}
+   *                     { TruthTableRow {nl} }
+   *                     Ident<----...> {nl}
+   *                     [ TruthTableConc {nl} ]
+   *                     EOF
+   *
+   *  TruthTableRow  ::= [ BLits ] Ident<|> BLits
+   *
+   *  BLits          ::= BLit { BLit }
+   *
+   *  BLit           ::= Ident<T> | Ident<F>                          // Can be sequenced without whitespace
+   *
+   *  TruthTableConc ::= Ident<Valid>
+   *                   |  Ident<Invalid> { {nl} `[' BLits `]' }
+   *                   |  Ident<Tautology>
+   *                   |  Ident<Contradiction>
+   *                   |  Ident<Contingent> {nl}
+   *                      Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
+   *                      Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
+   *  }}}
+   */
+  def truthTable(): TruthTable = {
+    def conclusion(isSequent: Boolean): Option[TruthTableConclusion] = {
+      def assignment(): List[BLit] = {
+        newLinesOpt()
+        accept[LeftBracket]
+        val r = blits()
+        accept[RightBracket]
+        r
+      }
+      if (token.isNot[Ident]) return None
+      val text = token.text
+      next()
+      val r = if (isSequent)
+        text match {
+          case "Valid" => Valid
+          case "Invalid" =>
+            var assignments = List[List[BLit]]()
+            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
+              assignments ::= assignment()
+            Invalid(assignments.reverse)
+          case _ => reporter.syntaxError(s"Either Valid or Invalid expected but found $text", at = token)
+        }
+      else
+        text match {
+          case "Tautology" => Tautology
+          case "Contradiction" => Contradiction
+          case "Contingent" =>
+            newLinesOpt()
+            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
+            next()
+            accept[Colon]
+            var truthAssignments = List(assignment())
+            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
+              truthAssignments ::= assignment()
+            newLinesOpt()
+            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
+            next()
+            accept[Colon]
+            var falseAssignments = List(assignment())
+            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
+              falseAssignments ::= assignment()
+            Contingent(truthAssignments.reverse, falseAssignments.reverse)
+          case _ => reporter.syntaxError(s"Either Tautology, Contradiction, or Contingent expected but found $text", at = token)
+        }
+      newLinesOpt()
+      Some(r)
+    }
+
+    def blits(): List[BLit] = {
+      def isBlit: Boolean = token.text.forall(c => c == 'T' || c == 'F')
+
+      def blit(): List[BLit] = {
+        val text = token.text
+        next()
+        val offset = token.pos.start.offset
+        (for (j <- 0 until text.length) yield {
+          BLit(Point.Offset(input, offset + 1), text.charAt(j) == 'T')
+        }).toList
+      }
+
+      var r = List[BLit]()
+      while (isBlit) {
+        r ++= blit()
+      }
+      r
+    }
+
+    def isHLine: Boolean = token.text.length > 3 && token.text.forall(_ == '-')
+
+    def acceptHLine(): Unit = {
+      if (isHLine) next()
+      else reporter.syntaxError(s"----... expected but found ${token.text}", at = token)
+      newLinesOpt()
+    }
+
+    var vars = List[Ident]()
+    var sep: Point = Point.None
+    var formula: Either[Sequent, Term] = Right(Term.Name(""))
+
+    def header(): Unit = {
+      while (!isIdentOf("|")) {
+        vars ::= acceptToken[Ident]
+      }
+      vars = vars.reverse
+      sep = token.pos.start
+      next()
+      formula = if (findTokenPos(isSequentToken) < 0) Right(expr()) else Left(sequent())
+      newLinesOpt()
+    }
+
+    var pluses = List[Point]()
+    var star: Point = Point.None
+
+    def start(): Unit = {
+      while (isIdentOf("+")) {
+        pluses ::= token.pos.start
+      }
+      if (isIdentOf("*")) star = token.pos.start
+      else reporter.syntaxError(s"* expected but found ${token.text}", at = token)
+      while (isIdentOf("+")) {
+        pluses ::= token.pos.start
+      }
+      newLinesOpt()
+      pluses = pluses.reverse
+    }
+
+    var rows = List[TruthTableRow]()
+
+    def row(): Unit = {
+      val assignment = if (!isIdentOf("|")) blits() else List()
+      if (!isIdentOf("|")) reporter.syntaxError(s"| expected but found ${token.text}", at = token)
+      val sep = token.pos.start
+      rows ::= TruthTableRow(assignment, sep, blits())
+      newLinesOpt()
+    }
+
+    accept[BOF]
+    newLinesOpt()
+    start()
+    acceptHLine()
+    header()
+    acceptHLine()
+    while (!isHLine) row()
+    acceptHLine()
+    val r = TruthTable(star, pluses, vars, sep, formula, rows.reverse, conclusion(formula.isLeft))
+    newLinesOpt()
+    accept[EOF]
+    r
   }
 }
