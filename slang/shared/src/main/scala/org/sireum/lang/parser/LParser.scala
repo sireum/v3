@@ -131,18 +131,18 @@ object LParser {
 
   final case class Coq(pos: Position, path: Token.Constant.String, steps: List[Token.Constant.Int]) extends Just
 
-  final case class TruthTable(star: Point,
-                              pluses: List[Point],
+  final case class TruthTable(star: Int,
+                              pluses: List[Int],
                               vars: List[Ident],
-                              sep: Point,
+                              sepColumn: Int,
                               formula: Either[Sequent, Term],
                               rows: List[TruthTableRow],
                               conclusionOpt: Option[TruthTableConclusion])
 
-  final case class BLit(pos: Point, value: Boolean)
+  final case class BLit(column: Int, value: Boolean)
 
   final case class TruthTableRow(assignment: List[BLit],
-                                 sep: Point,
+                                 column: Int,
                                  values: List[BLit])
 
   sealed trait TruthTableConclusion
@@ -802,7 +802,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   def findTokenPos(p: Token => Boolean): Int = {
     val lti = in.fork.asInstanceOf[LimitingTokenIterator]
     var found = p(lti.token)
-    while (!found && token.isNot[EOF]) {
+    while (!found && lti.token.isNot[EOF]) {
       lti.next()
       found = p(lti.token)
     }
@@ -990,7 +990,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       newLinesOpt()
       val as = assumeStep()
       var pss = List[ProofStep]()
-      while (tokenCurrOrAfterNl(token.isNot[RightBrace])) {
+      while (tokenCurrOrAfterNl(token.isNot[RightBrace]) && token.isNot[EOF]) {
         newLinesOpt()
         pss ::= proofStep()
       }
@@ -1012,7 +1012,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
     accept[LeftBrace]
     var pss = List[ProofStep]()
-    while (tokenCurrOrAfterNl(token.isNot[RightBrace])) {
+    while (tokenCurrOrAfterNl(token.isNot[RightBrace]) && token.isNot[EOF]) {
       newLinesOpt()
       pss ::= proofStep()
     }
@@ -1044,8 +1044,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *                   |  Ident<Tautology>
    *                   |  Ident<Contradiction>
    *                   |  Ident<Contingent> {nl}
-   *                      Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
-   *                      Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
+    *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
+    *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
    *  }}}
    */
   def truthTable(): TruthTable = {
@@ -1076,6 +1076,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
           case "Contradiction" => Contradiction
           case "Contingent" =>
             newLinesOpt()
+            if (isIdentOf("-")) next()
             if (!isIdentOf("T")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
             next()
             accept[Colon]
@@ -1083,6 +1084,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
             while (tokenCurrOrAfterNl(token.is[LeftBracket]))
               truthAssignments ::= assignment()
             newLinesOpt()
+            if (isIdentOf("-")) next()
             if (!isIdentOf("F")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
             next()
             accept[Colon]
@@ -1097,18 +1099,18 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     }
 
     def blits(): List[BLit] = {
-      def isBlit: Boolean = token.text.forall(c => c == 'T' || c == 'F')
+      def isBlit: Boolean = token.is[Ident] && token.text.forall(c => c == 'T' || c == 'F')
 
       def blit(): List[BLit] = {
         val text = token.text
         next()
-        val offset = token.pos.start.offset
+        val column = token.pos.start.column
         (for (j <- 0 until text.length) yield {
-          BLit(Point.Offset(input, offset + 1), text.charAt(j) == 'T')
+          BLit(column + j, text.charAt(j) == 'T')
         }).toList
       }
 
-      var r = List[BLit]()
+      var r = blit()
       while (isBlit) {
         r ++= blit()
       }
@@ -1125,30 +1127,37 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
     var vars = List[Ident]()
     var sep: Point = Point.None
-    var formula: Either[Sequent, Term] = Right(Term.Name(""))
+    var formula: Either[Sequent, Term] = null
 
     def header(): Unit = {
-      while (!isIdentOf("|")) {
+      while (!isIdentOf("|") && token.isNot[EOF]) {
         vars ::= acceptToken[Ident]
       }
       vars = vars.reverse
       sep = token.pos.start
       next()
-      formula = if (findTokenPos(isSequentToken) < 0) Right(expr()) else Left(sequent())
+      formula =
+        if (findTokenPos(isSequentToken) < 0) Right(expr())
+        else Left(sequent())
       newLinesOpt()
     }
 
-    var pluses = List[Point]()
+    var pluses = List[Int]()
     var star: Point = Point.None
 
     def start(): Unit = {
       while (isIdentOf("+")) {
-        pluses ::= token.pos.start
+        pluses ::= token.pos.start.column
+        next()
       }
-      if (isIdentOf("*")) star = token.pos.start
+      if (isIdentOf("*")) {
+        star = token.pos.start
+        next()
+      }
       else reporter.syntaxError(s"* expected but found ${token.text}", at = token)
       while (isIdentOf("+")) {
-        pluses ::= token.pos.start
+        pluses ::= token.pos.start.column
+        next()
       }
       newLinesOpt()
       pluses = pluses.reverse
@@ -1159,8 +1168,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     def row(): Unit = {
       val assignment = if (!isIdentOf("|")) blits() else List()
       if (!isIdentOf("|")) reporter.syntaxError(s"| expected but found ${token.text}", at = token)
-      val sep = token.pos.start
-      rows ::= TruthTableRow(assignment, sep, blits())
+      next()
+      rows ::= TruthTableRow(assignment, token.pos.start.column, blits())
       newLinesOpt()
     }
 
@@ -1170,9 +1179,11 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     acceptHLine()
     header()
     acceptHLine()
-    while (!isHLine) row()
+    while (!isHLine && token.isNot[EOF]) {
+      row()
+    }
     acceptHLine()
-    val r = TruthTable(star, pluses, vars, sep, formula, rows.reverse, conclusion(formula.isLeft))
+    val r = TruthTable(star.offset, pluses, vars, sep.column, formula, rows.reverse, conclusion(formula.isLeft))
     newLinesOpt()
     accept[EOF]
     r

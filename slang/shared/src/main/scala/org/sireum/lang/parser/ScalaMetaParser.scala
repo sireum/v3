@@ -92,6 +92,12 @@ object ScalaMetaParser {
     "++" -> AST.Exp.BinaryOp.AppendAll,
     "--" -> AST.Exp.BinaryOp.RemoveAll)
 
+  def scalaDialect(isWorksheet: Boolean) =
+    if (isWorksheet) scala.meta.dialects.Scala212.copy(
+      allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
+    else scala.meta.dialects.Scala212.copy(
+      allowLiteralTypes = true, allowTrailingCommas = true)
+
   case class Result(text: Predef.String,
                     hashSireum: Boolean,
                     programOpt: Option[AST.TopUnit.Program],
@@ -111,11 +117,7 @@ object ScalaMetaParser {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
     val hashSireum = line.contains("#Sireum")
-    val dialect =
-      if (isWorksheet) scala.meta.dialects.Scala212.copy(
-        allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
-      else scala.meta.dialects.Scala212.copy(
-        allowLiteralTypes = true, allowTrailingCommas = true)
+    val dialect = scalaDialect(isWorksheet)
     dialect(text).parse[Source] match {
       case Parsed.Success(x) =>
         new ScalaMetaParser(text, allowSireumPackage, hashSireum,
