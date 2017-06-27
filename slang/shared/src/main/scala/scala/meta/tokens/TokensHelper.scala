@@ -27,4 +27,9 @@ package scala.meta.tokens
 object TokensHelper {
   def extractArray(ts: Tokens): Array[Token] = ts.tokens
   def isNl(t: Token): Boolean = t.is[Token.LF] || t.is[Token.LFLF]
+  def name(t: Token): String = {
+    val name = t.name
+    if (name.startsWith("\\")) s"$name"
+    else s"${t.name} '${t.text}'"
+  }
 }

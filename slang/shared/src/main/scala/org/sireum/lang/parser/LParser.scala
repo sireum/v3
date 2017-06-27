@@ -815,8 +815,8 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
    *
    *  AssumeStep     ::= Int `.' Expr Ident<assume>
-   *                   |  Int `.' Idents Ident<assume>
-   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } Ident<assume>
+   *                   |  Int `.' Idents
+   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain }
    *                   |  Int `.' Idents {nl} Expr Ident<assume>
    *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } {nl} Expr Ident<assume>
    *
@@ -942,39 +942,47 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
       def isAssume: Boolean = in.asInstanceOf[LimitingTokenIterator].i == justPos
 
-      if (justPos < 0) reporter.syntaxError(s"Could not find assume justification.", at = token)
-      else if ("assume" != justKind) reporter.syntaxError(s"Expected assume but found $justKind.", at = parserTokens(justPos))
-      val oldIn = in.asInstanceOf[LimitingTokenIterator]
-      try {
-        in = new LimitingTokenIterator(oldIn.i, justPos - 1)
-        val e = expr()
-        if (isAssume) Aps(n, e)
-        else {
+      if (justPos < 0) {
+        val ids = idents()
+        if (token.is[Colon]) {
+          next()
+          var fresh = List((ids, Some(domain())))
+          while (tokenCurrOrAfterNl(token.is[Ident] && aheadNF(token.is[Comma] || token.is[Colon]))) {
+            newLinesOpt()
+            fresh ::= (idents(), Some(domain()))
+          }
+          ForallIntroAps(n, fresh.reverse)
+        } else ForallIntroAps(n, List((ids, None)))
+      } else if ("assume" != justKind) reporter.syntaxError(s"Expected assume but $justKind found", at = parserTokens(justPos))
+      else {
+        val oldIn = in.asInstanceOf[LimitingTokenIterator]
+        try {
           in = new LimitingTokenIterator(oldIn.i, justPos - 1)
-          val ids = idents()
-          if (isAssume) ForallIntroAps(n, List((ids, None)))
-          else if (token.is[Colon]) {
-            next()
-            var fresh = List((ids, Some(domain())))
-            while (tokenCurrOrAfterNl(token.is[Ident] && aheadNF(token.is[Comma] || token.is[Colon]))) {
-              newLinesOpt()
-              fresh ::= (idents(), Some(domain()))
-            }
-            if (isAssume) ForallIntroAps(n, fresh.reverse)
-            else {
+          val e = expr()
+          if (isAssume) Aps(n, e)
+          else {
+            in = new LimitingTokenIterator(oldIn.i, justPos - 1)
+            val ids = idents()
+            if (token.is[Colon]) {
+              next()
+              var fresh = List((ids, Some(domain())))
+              while (tokenCurrOrAfterNl(token.is[Ident] && aheadNF(token.is[Comma] || token.is[Colon]))) {
+                newLinesOpt()
+                fresh ::= (idents(), Some(domain()))
+              }
               newLinesOpt()
               val e = expr()
               if (isAssume) ExistsElimAps(n, fresh.reverse, e)
-              else reporter.syntaxError(s"Expected assume but found ${token.text}", at = token)
+              else reporter.syntaxError(s"Expected assume but ${TokensHelper.name(token)} found", at = token)
+            } else {
+              newLinesOpt()
+              val e = expr()
+              if (isAssume) ExistsElimAps(n, List((ids, None)), e)
+              else reporter.syntaxError(s"Expected assume but ${TokensHelper.name(token)} found", at = token)
             }
-          } else {
-            newLinesOpt()
-            val e = expr()
-            if (isAssume) ExistsElimAps(n, List((ids, None)), e)
-            else reporter.syntaxError(s"Expected assume but found ${token.text}", at = token)
           }
-        }
-      } finally in = new LimitingTokenIterator(justPos + 1, oldIn.end)
+        } finally in = new LimitingTokenIterator(justPos + 1, oldIn.end)
+      }
     }
 
     def subProof(step: Token.Constant.Int): SubProof = {
@@ -1072,7 +1080,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
           case "Contingent" =>
             newLinesOpt()
             if (isIdentOf("-")) next()
-            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
+            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
             var truthAssignments = List(assignment())
@@ -1080,7 +1088,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
               truthAssignments ::= assignment()
             newLinesOpt()
             if (isIdentOf("-")) next()
-            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but found ${token.text}", at = token)
+            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
             var falseAssignments = List(assignment())
@@ -1105,6 +1113,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
         }).toList
       }
 
+      if (!isBlit) reporter.syntaxError(s"Either T or F expected, but ${TokensHelper.name(token)} found", at = token)
       var r = blit()
       while (isBlit) {
         r ++= blit()
@@ -1119,7 +1128,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
     def acceptHLine(): Unit = {
       if (isHLine(token)) next()
-      else reporter.syntaxError(s"----... expected but found ${token.text}", at = token)
+      else reporter.syntaxError(s"----... expected but ${TokensHelper.name(token)} found", at = token)
       newLinesOpt()
     }
 
@@ -1147,7 +1156,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       if (isIdentOf("*")) {
         stars ::= token.pos.start.column
         next()
-      } else reporter.syntaxError(s"* expected but found ${token.text}", at = token)
+      } else reporter.syntaxError(s"* expected but ${TokensHelper.name(token)} found", at = token)
 
       while (isIdentOf("*")) {
         stars ::= token.pos.start.column
@@ -1161,7 +1170,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
 
     def row(): Unit = {
       val assignment = if (!isIdentOf("|")) blits() else List()
-      if (!isIdentOf("|")) reporter.syntaxError(s"| expected but found ${token.text}", at = token)
+      if (!isIdentOf("|")) reporter.syntaxError(s"| expected but ${TokensHelper.name(token)} found", at = token)
       next()
       rows ::= TruthTableRow(assignment, token.pos.start.column, blits())
       newLinesOpt()

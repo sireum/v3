@@ -587,7 +587,7 @@ class LParserTest extends SireumSpec {
           |  1. ∀x gt(inc(x), x)                      premise
           |  2. ∀x gt(x, dec(x))                      premise
           |  3. {
-          |       4. a                                assume
+          |       4. a
           |       5. gt(inc(a), a)                    ∀e 1 a
           |       6. gt(a, dec(a))                    ∀e 2 a
           |       7. gt(inc(a), a) ∧ gt(a, dec(a))    ∧i 5 6
@@ -603,7 +603,7 @@ class LParserTest extends SireumSpec {
           |  1. ∀x human(x) → mortal(x)               premise
           |  2. ∀y mortal(y) → soul(y)                premise
           |  3. {
-          |       4. a                                assume
+          |       4. a
           |       5. {
           |            6. human(a)                    assume
           |            7. human(a) → mortal(a)        ∀e 1 a
@@ -625,7 +625,7 @@ class LParserTest extends SireumSpec {
           |  2. {
           |       3. ∀y healthy(y)                    assume
           |       4. {
-          |            5. a                           assume
+          |            5. a
           |            6. healthy(a)                  ∀e 3 a
           |            7. healthy(a) → happy(a)       ∀e 1 a
           |            8. happy(a)                    →e 7 6
