@@ -146,13 +146,11 @@ object LParser {
 
   sealed trait TruthTableConclusion
 
-  final case object Valid extends TruthTableConclusion
-
-  final case class Invalid(assignments: List[List[BLit]]) extends TruthTableConclusion
+  final case class Validity(isValid: Boolean, assignments: List[List[BLit]]) extends TruthTableConclusion
 
   final case object Tautology extends TruthTableConclusion
 
-  final case object Contradiction extends TruthTableConclusion
+  final case object Contradictory extends TruthTableConclusion
 
   final case class Contingent(trueAssignments: List[List[BLit]],
                               falseAssignments: List[List[BLit]])
@@ -801,7 +799,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
   def findTokenPos(p: Token => Boolean, continue: Token => Boolean): Int = {
     val lti = in.fork.asInstanceOf[LimitingTokenIterator]
     var found = p(lti.token)
-    while (!found && token.isNot[EOF] && continue(lti.token)) {
+    while (!found && lti.token.isNot[EOF] && continue(lti.token)) {
       lti.next()
       found = p(lti.token)
     }
@@ -1038,10 +1036,10 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *
    *  BLit           ::= Ident<T> | Ident<F>                          // Can be sequenced without whitespace
    *
-   *  TruthTableConc ::= Ident<Valid>
+    *  TruthTableConc ::= Ident<Valid> { {nl} `[' BLits `]' }
    *                   |  Ident<Invalid> { {nl} `[' BLits `]' }
    *                   |  Ident<Tautology>
-   *                   |  Ident<Contradiction>
+    *                   |  Ident<Contradictory>
    *                   |  Ident<Contingent> {nl}
     *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
     *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
@@ -1062,18 +1060,20 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       next()
       val r = if (isSequent)
         text match {
-          case "Valid" => Valid
-          case "Invalid" =>
-            var assignments = List[List[BLit]]()
-            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
+          case "Valid" | "Invalid" =>
+            val isValid = text == "Valid"
+            var assignments = List[List[BLit]](assignment())
+            newLinesOpt()
+            while (tokenCurrOrAfterNl(token.is[LeftBracket])) {
               assignments ::= assignment()
-            Invalid(assignments.reverse)
+            }
+            Validity(isValid, assignments.reverse)
           case _ => reporter.syntaxError(s"Either Valid or Invalid expected but found $text", at = token)
         }
       else
         text match {
           case "Tautology" => Tautology
-          case "Contradiction" => Contradiction
+          case "Contradictory" => Contradictory
           case "Contingent" =>
             newLinesOpt()
             if (isIdentOf("-")) next()
@@ -1092,7 +1092,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
             while (tokenCurrOrAfterNl(token.is[LeftBracket]))
               falseAssignments ::= assignment()
             Contingent(truthAssignments.reverse, falseAssignments.reverse)
-          case _ => reporter.syntaxError(s"Either Tautology, Contradiction, or Contingent expected but found $text", at = token)
+          case _ => reporter.syntaxError(s"Either Tautology, Contradictory, or Contingent expected but found $text", at = token)
         }
       newLinesOpt()
       Some(r)
@@ -1117,7 +1117,10 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       r
     }
 
-    def isHLine(t: Token): Boolean = token.text.length > 3 && token.text.forall(_ == '-')
+    def isHLine(t: Token): Boolean = {
+      val text = t.text
+      t.is[Ident] && text.length > 3 && text.forall(_ == '-')
+    }
 
     def acceptHLine(): Unit = {
       if (isHLine(token)) next()
@@ -1136,7 +1139,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       vars = vars.reverse
       sep = token.pos.start
       next()
-      val i = findTokenPos(isSequentToken, isHLine)
+      val i = findTokenPos(isSequentToken, t => !isHLine(t))
       formula =
         if (i < 0) Right(expr())
         else Left((parserTokens(i).pos.start.column, sequent()))
