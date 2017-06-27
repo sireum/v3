@@ -923,7 +923,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     }
 
     def exprJustH(justPos: Int, justKind: String, justOffset: Int): (Term, Just) = {
-      in = new LimitingTokenIterator(in.tokenPos, justPos - 1)
+      in = new LimitingTokenIterator(in.asInstanceOf[LimitingTokenIterator].i, justPos - 1)
       val e = expr()
       in = new LimitingTokenIterator(justPos, parserTokens.length - 1)
       (e, just(justKind, justOffset))
@@ -935,14 +935,9 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
       exprJustH(justPos, justKind, justOffset)
     }
 
-    def freshVar(): (Ident, Type) = {
-      val id = acceptToken[Ident]
-      accept[Colon]
-      (id, loutPattern.typ())
-    }
-
     def assumeStep(): AssumeProofStep = {
       val n = acceptToken[Token.Constant.Int]
+      accept[Dot]
       val (justPos, justKind, _) = findJust()
 
       def isAssume: Boolean = in.asInstanceOf[LimitingTokenIterator].i == justPos
