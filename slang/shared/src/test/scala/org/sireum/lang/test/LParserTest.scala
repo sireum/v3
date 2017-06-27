@@ -178,10 +178,10 @@ class LParserTest extends SireumSpec {
           |--------------------
           |p q | p → q, ¬q ⊢ ¬p
           |--------------------
-          |T T |   T    F  T  F
-          |T F |   F    T  T  F
-          |F T |   T    F  T  T
-          |F F |   T    T  T  T
+          |T T |   T    F     F
+          |T F |   F    T     F
+          |F T |   T    F     T
+          |F F |   T    T     T
           |--------------------
           |
           |Valid [FF]
@@ -224,10 +224,10 @@ class LParserTest extends SireumSpec {
           |--------------------
           |p q | p → q, ¬q ⊢ ¬q
           |--------------------
-          |T T |   T    F  T F
-          |T F |   F    T  T T
-          |F T |   T    F  T F
-          |F F |   T    T  T T
+          |T T |   T    F    F
+          |T F |   F    T    T
+          |F T |   T    F    F
+          |F F |   T    T    T
           |--------------------
           |
           |Valid [FF]
@@ -266,10 +266,10 @@ class LParserTest extends SireumSpec {
           |----------------
           |p q | p → q ⊢ ¬q
           |----------------
-          |T T |   T   F F
-          |T F |   F   T T
-          |F T |   T   F F
-          |F F |   T   T T
+          |T T |   T     F
+          |T F |   F     T
+          |F T |   T     F
+          |F F |   T     T
           |----------------
           |
           |Invalid [TT] [FT]
