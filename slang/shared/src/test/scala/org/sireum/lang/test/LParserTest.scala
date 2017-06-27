@@ -272,7 +272,7 @@ class LParserTest extends SireumSpec {
           |F F |   T   T T
           |----------------
           |
-          |Valid [TT] [FT]
+          |Invalid [TT] [FT]
         """.stripMargin)
 
       parseTruthTable("sequent-2-b",
