@@ -160,7 +160,6 @@ object LParser {
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
   val lStmtFirst = ListSet("requires", "theorem", "fact")
   val implyInternalSym = "$->:"
-  val sequentTokens = Set("⊢", "|-")
   val internalOpMap = Map(
     "→" -> implyInternalSym,
     "->" -> implyInternalSym,
@@ -301,7 +300,7 @@ final class LParser(input: Input,
           case Some(op) =>
             val t2 = t.copy(value = op)
             sTokens(iS) = t2
-            while (t.isNot[Ident] || (t ne pTokens(iP))) iP += 1
+            while (t ne pTokens(iP)) iP += 1
             pTokens(iP) = t2
           case _ =>
         }
@@ -311,7 +310,10 @@ final class LParser(input: Input,
     }
   }
 
-  def isSequentToken(t: Token): Boolean = t.is[Ident] && t.text == "|-"
+  def isSequentToken(t: Token): Boolean = t match {
+    case Ident(value) => "|-" == value
+    case _ => false
+  }
 
   def findJust(): (Int, String, Int) = {
     def continue: Boolean =
@@ -319,14 +321,14 @@ final class LParser(input: Input,
       else if (TokensHelper.isNl(token) && ahead(token.is[Token.Constant.Int] && aheadNF(token.is[Dot]))) false
       else true
 
-    def find(): Option[(String, Int)] = {
-      if (token.is[Ident] && justFirst.contains(token.text))
-        return Some((token.text, 1))
-      for (jp <- justPrefix) {
-        val r = jp()
-        if (r.isDefined) return r
-      }
-      None
+    def find(): Option[(String, Int)] = token match {
+      case Ident(value) if justFirst.contains(value) => return Some((value, 1))
+      case _ =>
+        for (jp <- justPrefix) {
+          val r = jp()
+          if (r.isDefined) return r
+        }
+        None
     }
 
     val oldIn = in
@@ -354,9 +356,9 @@ final class LParser(input: Input,
    *                   |  ... super.simpleExpr()
    *  }}}
    */
-  override def simpleExpr(): Term = {
-    if (token.is[Ident] && quantTokens.contains(token.text)) quantExpr()
-    else super.simpleExpr()
+  override def simpleExpr(): Term = token match {
+    case Ident(value) if quantTokens.contains(value) => quantExpr()
+    case _ => super.simpleExpr()
   }
 
   /** {{{
@@ -371,19 +373,14 @@ final class LParser(input: Input,
    *  }}}
    */
   private def quantExpr(): Term = autoPos {
-    def acceptKw(kws: ListSet[String]): String = {
-      val text = token.text
-      if (token.is[Ident] && kws.contains(text)) {
-        val r = token.text
+    def acceptKw(kws: ListSet[String]): String = token match {
+      case Ident(value) if kws.contains(value) =>
         next()
-        r
-      } else {
-        reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but $text found", at = token)
-      }
+        value
+      case _ => reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but ${TokensHelper.name(token)} ('${token.text}') found", at = token)
     }
 
-    acceptKw(quantTokens)
-    val isForAll = forallTokens.contains(token.text)
+    val isForAll = forallTokens.contains(acceptKw(quantTokens))
 
     val ids: Term = identsTerm()
 
@@ -441,7 +438,7 @@ final class LParser(input: Input,
   }
 
   def identsTerm(): Term = {
-    val ids = idents().map(t => atPos(t.start, t.end)(Term.Name(t.text)))
+    val ids = idents().map(t => atPos(t.start, t.end)(Term.Name(t.value)))
     if (ids.size == 1) ids.head
     else Term.Tuple(ids.reverse)
   }
@@ -1052,7 +1049,10 @@ final class LParser(input: Input,
       }
 
       if (token.isNot[Ident]) return None
-      val text = token.text
+      val text = token match {
+        case Ident(value) => value
+        case _ => return None
+      }
       next()
       val r = if (isSequent)
         text match {
@@ -1095,14 +1095,16 @@ final class LParser(input: Input,
     }
 
     def blits(): List[BLit] = {
-      def isBlit: Boolean = token.is[Ident] && token.text.forall(c => c == 'T' || c == 'F')
+      def isBlit: Boolean = token match {
+        case Ident(value) => value.forall(c => c == 'T' || c == 'F')
+        case _ => false
+      }
 
       def blit(): List[BLit] = {
-        val text = token.text
-        next()
+        val value = acceptToken[Ident].value
         val column = token.pos.start.column
-        (for (j <- 0 until text.length) yield {
-          BLit(column + j, text.charAt(j) == 'T')
+        (for (j <- 0 until value.length) yield {
+          BLit(column + j, value.charAt(j) == 'T')
         }).toList
       }
 
@@ -1114,9 +1116,9 @@ final class LParser(input: Input,
       r
     }
 
-    def isHLine(t: Token): Boolean = {
-      val text = t.text
-      t.is[Ident] && text.length > 3 && text.forall(_ == '-')
+    def isHLine(t: Token): Boolean = token match {
+      case Ident(value) => value.length > 3 && value.forall(_ == '-')
+      case _ => false
     }
 
     def acceptHLine(): Unit = {

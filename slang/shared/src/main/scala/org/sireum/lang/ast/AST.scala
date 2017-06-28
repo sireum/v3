@@ -327,84 +327,110 @@ object Pattern {
 
 object Exp {
 
-  @datatype class LitB(value: B)
+  @datatype class LitB(value: B,
+                       @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitC(value: C)
+  @datatype class LitC(value: C,
+                       @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitZ(value: Z)
+  @datatype class LitZ(value: Z,
+                       @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitZ8(value: Z8)
+  @datatype class LitZ8(value: Z8,
+                        @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitZ16(value: Z16)
+  @datatype class LitZ16(value: Z16,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitZ32(value: Z32)
+  @datatype class LitZ32(value: Z32,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitZ64(value: Z64)
+  @datatype class LitZ64(value: Z64,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitN(value: N)
+  @datatype class LitN(value: N,
+                       @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitN8(value: N8)
+  @datatype class LitN8(value: N8,
+                        @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitN16(value: N16)
+  @datatype class LitN16(value: N16,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitN32(value: N32)
+  @datatype class LitN32(value: N32,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitN64(value: N64)
+  @datatype class LitN64(value: N64,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitS8(value: S8)
+  @datatype class LitS8(value: S8,
+                        @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitS16(value: S16)
+  @datatype class LitS16(value: S16,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitS32(value: S32)
+  @datatype class LitS32(value: S32,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitS64(value: S64)
+  @datatype class LitS64(value: S64,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitU8(value: U8)
+  @datatype class LitU8(value: U8,
+                        @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitU16(value: U16)
+  @datatype class LitU16(value: U16,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitU32(value: U32)
+  @datatype class LitU32(value: U32,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitU64(value: U64)
+  @datatype class LitU64(value: U64,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitF32(value: F32)
+  @datatype class LitF32(value: F32,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitF64(value: F64)
+  @datatype class LitF64(value: F64,
+                         @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitR(value: R)
+  @datatype class LitR(value: R,
+                       @hidden attr: Attr)
     extends Exp with Lit
 
   @datatype class LitBv(value: ISZ[B],
-                        tpe: Type)
+                        tpe: Type,
+                        @hidden attr: Attr)
     extends Exp with Lit
 
-  @datatype class LitString(value: String)
+  @datatype class LitString(value: String,
+                            @hidden attr: Attr)
     extends Exp with Lit
 
   @datatype class StringInterpolate(lits: ISZ[LitString],
-                                    args: ISZ[Exp])
+                                    args: ISZ[Exp],
+                                    @hidden attr: Attr)
     extends Exp
 
   @enum object UnaryOp {
@@ -509,9 +535,9 @@ object Domain {
     extends Domain
 
   @datatype class Range(lo: Exp,
-                        loExact: B,
+                        loExact: Exp.LitB,
                         hi: Exp,
-                        hiExact: B,
+                        hiExact: Exp.LitB,
                         @hidden attr: TypedAttr)
     extends Domain
 

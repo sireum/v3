@@ -1328,28 +1328,28 @@ class SlangParser(text: Predef.String,
   }
 
   def translateLit(lit: Lit): AST.Exp with AST.Lit = lit match {
-    case Lit.Boolean(value) => AST.Exp.LitB(value)
-    case Lit.Char(value) => AST.Exp.LitC(value)
-    case Lit.Int(value) => AST.Exp.LitZ(value)
-    case Lit.Long(value) => AST.Exp.LitZ(value)
+    case Lit.Boolean(value) => AST.Exp.LitB(value, attr(lit.pos))
+    case Lit.Char(value) => AST.Exp.LitC(value, attr(lit.pos))
+    case Lit.Int(value) => AST.Exp.LitZ(value, attr(lit.pos))
+    case Lit.Long(value) => AST.Exp.LitZ(value, attr(lit.pos))
     case Lit.Float(value) =>
-      try AST.Exp.LitF32(value.toFloat)
+      try AST.Exp.LitF32(value.toFloat, attr(lit.pos))
       catch {
         case _: NumberFormatException =>
           error(lit.pos, "Invalid 32-bit float number form.")
-          AST.Exp.LitF32(0.0f)
+          AST.Exp.LitF32(0.0f, attr(lit.pos))
       }
     case Lit.Double(value) =>
-      try AST.Exp.LitF64(value.toDouble)
+      try AST.Exp.LitF64(value.toDouble, attr(lit.pos))
       catch {
         case _: NumberFormatException =>
           error(lit.pos, "Invalid 64-bit double number form.")
-          AST.Exp.LitF64(0.0d)
+          AST.Exp.LitF64(0.0d, attr(lit.pos))
       }
-    case Lit.String(value) => AST.Exp.LitString(value)
+    case Lit.String(value) => AST.Exp.LitString(value, attr(lit.pos))
     case _ =>
       errorNotSlang(lit.pos, s"Literal '${syntax(lit)}' is")
-      AST.Exp.LitB(false)
+      AST.Exp.LitB(false, attr(lit.pos))
   }
 
   def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit = {
@@ -1358,32 +1358,32 @@ class SlangParser(text: Predef.String,
       case _ => false
     })) {
       errorNotSlang(lit.pos, s"Literal '${syntax(lit)}' is")
-      return AST.Exp.LitB(false)
+      return AST.Exp.LitB(false, attr(lit.pos))
     }
     val List(Lit.String(value)) = lit.parts
     try {
       val r = lit.prefix.value match {
-        case "z" => AST.Exp.LitZ(Numbers.toZ(BigInt(value)))
-        case "z8" => AST.Exp.LitZ8(Numbers.toZ8(BigInt(value)))
-        case "z16" => AST.Exp.LitZ16(Numbers.toZ16(BigInt(value)))
-        case "z32" => AST.Exp.LitZ32(Numbers.toZ32(BigInt(value)))
-        case "z64" => AST.Exp.LitZ64(Numbers.toZ64(BigInt(value)))
-        case "n" => AST.Exp.LitN(Numbers.toN(BigInt(value)))
-        case "n8" => AST.Exp.LitN8(Numbers.toN8(BigInt(value)))
-        case "n16" => AST.Exp.LitN16(Numbers.toN16(BigInt(value)))
-        case "n32" => AST.Exp.LitN32(Numbers.toN32(BigInt(value)))
-        case "n64" => AST.Exp.LitN64(Numbers.toN64(BigInt(value)))
-        case "s8" => AST.Exp.LitS8(Numbers.toS8Exact(BigInt(value)))
-        case "s16" => AST.Exp.LitS16(Numbers.toS16Exact(BigInt(value)))
-        case "s32" => AST.Exp.LitS32(Numbers.toS32Exact(BigInt(value)))
-        case "s64" => AST.Exp.LitS64(Numbers.toS64Exact(BigInt(value)))
-        case "u8" => AST.Exp.LitU8(Numbers.toU8Exact(BigInt(value)))
-        case "u16" => AST.Exp.LitU16(Numbers.toU16Exact(BigInt(value)))
-        case "u32" => AST.Exp.LitU32(Numbers.toU32Exact(BigInt(value)))
-        case "u64" => AST.Exp.LitU64(Numbers.toU64Exact(BigInt(value)))
-        case "f32" => AST.Exp.LitF32(Numbers.toF32(value.toFloat))
-        case "f64" => AST.Exp.LitF64(Numbers.toF64(value.toDouble))
-        case "r" => AST.Exp.LitR(Numbers.toR(value))
+        case "z" => AST.Exp.LitZ(Numbers.toZ(BigInt(value)), attr(lit.pos))
+        case "z8" => AST.Exp.LitZ8(Numbers.toZ8(BigInt(value)), attr(lit.pos))
+        case "z16" => AST.Exp.LitZ16(Numbers.toZ16(BigInt(value)), attr(lit.pos))
+        case "z32" => AST.Exp.LitZ32(Numbers.toZ32(BigInt(value)), attr(lit.pos))
+        case "z64" => AST.Exp.LitZ64(Numbers.toZ64(BigInt(value)), attr(lit.pos))
+        case "n" => AST.Exp.LitN(Numbers.toN(BigInt(value)), attr(lit.pos))
+        case "n8" => AST.Exp.LitN8(Numbers.toN8(BigInt(value)), attr(lit.pos))
+        case "n16" => AST.Exp.LitN16(Numbers.toN16(BigInt(value)), attr(lit.pos))
+        case "n32" => AST.Exp.LitN32(Numbers.toN32(BigInt(value)), attr(lit.pos))
+        case "n64" => AST.Exp.LitN64(Numbers.toN64(BigInt(value)), attr(lit.pos))
+        case "s8" => AST.Exp.LitS8(Numbers.toS8Exact(BigInt(value)), attr(lit.pos))
+        case "s16" => AST.Exp.LitS16(Numbers.toS16Exact(BigInt(value)), attr(lit.pos))
+        case "s32" => AST.Exp.LitS32(Numbers.toS32Exact(BigInt(value)), attr(lit.pos))
+        case "s64" => AST.Exp.LitS64(Numbers.toS64Exact(BigInt(value)), attr(lit.pos))
+        case "u8" => AST.Exp.LitU8(Numbers.toU8Exact(BigInt(value)), attr(lit.pos))
+        case "u16" => AST.Exp.LitU16(Numbers.toU16Exact(BigInt(value)), attr(lit.pos))
+        case "u32" => AST.Exp.LitU32(Numbers.toU32Exact(BigInt(value)), attr(lit.pos))
+        case "u64" => AST.Exp.LitU64(Numbers.toU64Exact(BigInt(value)), attr(lit.pos))
+        case "f32" => AST.Exp.LitF32(Numbers.toF32(value.toFloat), attr(lit.pos))
+        case "f64" => AST.Exp.LitF64(Numbers.toF64(value.toDouble), attr(lit.pos))
+        case "r" => AST.Exp.LitR(Numbers.toR(value), attr(lit.pos))
       }
       return r
     } catch {
@@ -1391,7 +1391,7 @@ class SlangParser(text: Predef.String,
       case _: NumberFormatException =>
     }
     error(lit.pos, s"Invalid ${lit.prefix.value.toUpperCase} number: '${syntax(lit)}'")
-    AST.Exp.LitB(false)
+    AST.Exp.LitB(false, attr(lit.pos))
   }
 
   def translateLitBv(isBigEndian: Boolean,
@@ -1423,14 +1423,14 @@ class SlangParser(text: Predef.String,
           case 'f' => 15
           case _ =>
             error(lit.pos, s"Invalid bit-vector literal: '${syntax(lit)}'")
-            return AST.Exp.LitB(false)
+            return AST.Exp.LitB(false, attr(lit.pos))
         }
         for (j <- 0 until 4 if (1 << j & n) != 0) {
           bs += (i * 4 + j)
         }
       }
       AST.Exp.LitBv(ISZ((0 until size).map(bs(_): B): _*),
-        translateType(indexType)) // TODO: Optimize ISZ for B
+        translateType(indexType), attr(lit.pos)) // TODO: Optimize ISZ for B
     } else {
       val v3 = if (isBigEndian) v2.reverse else v2
       val size = v3.length
@@ -1441,23 +1441,23 @@ class SlangParser(text: Predef.String,
           case '1' => bs += i
           case _ =>
             error(lit.pos, s"Invalid bit-vector literal: '${syntax(lit)}'")
-            return AST.Exp.LitB(false)
+            return AST.Exp.LitB(false, attr(lit.pos))
         }
       }
       AST.Exp.LitBv(ISZ((0 until size).map(bs(_): B): _*),
-        translateType(indexType)) // TODO: Optimize ISZ for B
+        translateType(indexType), attr(lit.pos)) // TODO: Optimize ISZ for B
     }
   }
 
   def translateStringInterpolate(s: Term.Interpolate): AST.Exp.StringInterpolate =
     AST.Exp.StringInterpolate(
       ISZ(s.parts.map({
-        case Lit.String(value) => AST.Exp.LitString(value)
+        case Lit.String(value) => AST.Exp.LitString(value, attr(s.pos))
         case _ =>
           error(s.pos, s"Invalid string interpolation: '${syntax(s)}'")
-          AST.Exp.LitString("")
+          AST.Exp.LitString("", attr(s.pos))
       }): _*),
-      ISZ(s.args.map(translateExp): _*))
+      ISZ(s.args.map(translateExp): _*), attr(s.pos))
 
   def translateUnaryExp(t: Term.ApplyUnary): AST.Exp = {
     unops.get(t.op.value) match {
