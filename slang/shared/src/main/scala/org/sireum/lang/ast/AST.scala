@@ -28,13 +28,29 @@ package org.sireum.lang.ast
 
 import org.sireum._
 
-@datatype trait TopUnit
+@datatype trait TopUnit {
+  def fileUriOpt: Option[String]
+}
 
 object TopUnit {
 
   @datatype class Program(fileUriOpt: Option[String],
                           packageName: Name,
                           body: Body)
+    extends TopUnit
+
+  @datatype class Sequent(fileUriOpt: Option[String],
+                          sequent: LClause.Sequent)
+    extends TopUnit
+
+
+  @datatype class TruthTable(fileUriOpt: Option[String],
+                             stars: ISZ[Z],
+                             vars: ISZ[Id],
+                             sepColumn: Z,
+                             sequent: LClause.Sequent,
+                             rows: ISZ[org.sireum.lang.ast.TruthTable.Row],
+                             conclusionOpt: Option[org.sireum.lang.ast.TruthTable.Conclusion])
     extends TopUnit
 
 }
@@ -93,8 +109,7 @@ object Stmt {
     extends Stmt
 
   @datatype class SpecMethod(sig: MethodSig,
-                             defs: ISZ[SpecMethodDef],
-                             where: ISZ[Assign],
+                             defs: ISZ[SpecDef],
                              @hidden attr: Attr)
     extends Stmt
 
@@ -200,9 +215,36 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt
 
+  @datatype class LStmt(clause: LClause,
+                        @hidden attr: Attr)
+    extends Stmt
+
   @datatype class Expr(exp: Exp,
                        @hidden attr: Attr)
     extends Stmt with AssignExp
+
+}
+
+@datatype trait LClause
+
+object LClause {
+
+  @datatype class Invariants(value: ISZ[(Option[Id], Exp)])
+    extends LClause
+
+  @datatype class Facts(value: ISZ[(Id, Exp)])
+    extends LClause
+
+  @datatype class Theorem(value: ISZ[(Id, Sequent)])
+    extends LClause
+
+  @datatype class Sequent(premises: ISZ[Exp],
+                          conclusions: ISZ[Exp],
+                          proofOpt: Option[Proof])
+    extends LClause
+
+  @datatype class Proof(steps: ISZ[ProofStep])
+    extends LClause
 
 }
 
@@ -216,9 +258,14 @@ object Range {
 
   @datatype class Expr(exp: Exp) extends Range
 
-  @datatype class Indices(isReverse: B, exp: Exp) extends Range
+  @datatype class Indices(isReverse: B,
+                          exp: Exp)
+    extends Range
 
-  @datatype class Step(isInclusive: B, start: Exp, end: Exp, byOpt: Option[Exp]) extends Range
+  @datatype class Step(isInclusive: B,
+                       start: Exp,
+                       end: Exp,
+                       byOpt: Option[Exp]) extends Range
 
 }
 
@@ -432,6 +479,33 @@ object Exp {
                      @hidden attr: TypedAttr)
     extends Exp
 
+  @datatype class Quant(isForall: B,
+                        varFragments: ISZ[VarFragment],
+                        exp: Exp)
+    extends Exp
+
+}
+
+@datatype class VarFragment(ids: ISZ[Id],
+                            domainOpt: Option[Domain])
+
+@datatype trait Domain {
+  def attr: TypedAttr
+}
+
+object Domain {
+
+  @datatype class Type(tipe: org.sireum.lang.ast.Type,
+                       @hidden attr: TypedAttr)
+    extends Domain
+
+  @datatype class Range(lo: Exp,
+                        loExact: B,
+                        hi: Exp,
+                        hiExact: B,
+                        @hidden attr: TypedAttr)
+    extends Domain
+
 }
 
 @datatype class Id(value: String,
@@ -459,21 +533,204 @@ object Exp {
 @datatype class TypeParam(id: Id,
                           superTypeOpt: Option[Type])
 
-@datatype class MethodContract(reads: ISZ[Name],
-                               requires: ISZ[Exp],
-                               modifies: ISZ[Name],
-                               ensures: ISZ[Exp],
-                               subs: ISZ[SubMethodContract])
+@datatype class MethodContract(requires: ISZ[(Option[Id], Exp)],
+                               modifies: ISZ[Exp],
+                               ensures: ISZ[(Option[Id], Exp)],
+                               subs: ISZ[SubContract])
 
-@datatype class SubMethodContract(isPure: B,
-                                  id: Id,
-                                  args: ISZ[Id],
-                                  contract: MethodContract)
+@datatype class SubContract(id: Id,
+                            params: ISZ[(B, Id)],
+                            contract: MethodContract)
 
-@datatype class SpecMethodDef(idOpt: Option[Id],
-                              exp: Exp,
-                              pattern: Option[Case],
-                              cond: Option[Exp])
+@datatype trait WhereDef
+
+object WhereDef {
+
+  @datatype class Val(id: Id,
+                      tipe: Type,
+                      exp: Exp) extends WhereDef
+
+  @datatype class Def(id: Id,
+                      params: ISZ[Param],
+                      rTipe: Type,
+                      defs: ISZ[SpecDef]) extends WhereDef
+
+}
+
+@datatype class SpecDef(idOpt: Option[Id],
+                        exp: Exp,
+                        isOtherwise: B,
+                        patternOpt: Option[Pattern],
+                        guardOpt: Option[Exp],
+                        where: ISZ[WhereDef])
+
+@datatype trait ProofStep {
+  def step: Exp.LitZ
+}
+
+object ProofStep {
+
+  @datatype class Regular(step: Exp.LitZ,
+                          exp: Exp,
+                          just: Just)
+    extends ProofStep
+
+  @datatype class SubProof(step: Exp.LitZ,
+                           assumeStep: AssumeProofStep,
+                           steps: ISZ[ProofStep])
+    extends ProofStep
+
+}
+
+@datatype trait AssumeProofStep {
+  def step: Exp.LitZ
+}
+
+object AssumeProofStep {
+
+  @datatype class Regular(step: Exp.LitZ,
+                          exp: Exp)
+    extends AssumeProofStep
+
+  @datatype class ForallIntroAps(step: Exp.LitZ,
+                                 varFragments: ISZ[VarFragment])
+    extends AssumeProofStep
+
+  @datatype class ExistsElimAps(step: Exp.LitZ,
+                                varFragments: ISZ[VarFragment],
+                                exp: Exp)
+    extends AssumeProofStep
+
+}
+
+@datatype trait Just {
+  def attr: Attr
+}
+
+object Just {
+
+  @datatype class Premise(@hidden attr: Attr) extends Just
+
+  @datatype class AndIntro(steps: ISZ[Exp.LitZ],
+                           @hidden attr: Attr)
+    extends Just
+
+  @datatype class AndElim(is1: B,
+                          andStep: Exp.LitZ,
+                          @hidden attr: Attr)
+    extends Just
+
+  @datatype class OrIntro(is1: B,
+                          step: Exp.LitZ,
+                          @hidden attr: Attr)
+    extends Just
+
+  @datatype class OrElim(orStep: Exp.LitZ,
+                         subProofSteps: ISZ[Exp.LitZ],
+                         @hidden attr: Attr)
+    extends Just
+
+  @datatype class ImplyIntro(subProofStep:
+                             Exp.LitZ,
+                             @hidden attr: Attr)
+    extends Just
+
+  @datatype class ImplyElim(implyStep: Exp.LitZ,
+                            steps: ISZ[Exp.LitZ],
+                            @hidden attr: Attr)
+    extends Just
+
+  @datatype class NegIntro(subProofStep: Exp.LitZ,
+                           @hidden attr: Attr)
+    extends Just
+
+  @datatype class NegElim(step: Exp.LitZ,
+                          negStep: Exp.LitZ,
+                          @hidden attr: Attr)
+    extends Just
+
+  @datatype class BottomElim(subProofStep: Exp.LitZ,
+                             @hidden attr: Attr)
+    extends Just
+
+  @datatype class Pbc(subProofStep: Exp.LitZ,
+                      @hidden attr: Attr)
+    extends Just
+
+  @datatype class ForallIntro(subProofStep: Exp.LitZ,
+                              @hidden attr: Attr)
+    extends Just
+
+  @datatype class ForallElim(forallStep: Exp.LitZ,
+                             args: ISZ[Exp],
+                             @hidden attr: Attr)
+    extends Just
+
+  @datatype class ExistsIntro(existsStep: Exp.LitZ,
+                              args: ISZ[Exp],
+                              @hidden attr: Attr)
+    extends Just
+
+  @datatype class ExistsElim(existsStep: Exp.LitZ,
+                             subProofStep: Exp.LitZ,
+                             @hidden attr: Attr)
+    extends Just
+
+  @datatype class Fact(name: Name,
+                       @hidden attr: Attr)
+    extends Just
+
+  @datatype class Invariant(nameOpt: Option[Name],
+                            @hidden attr: Attr)
+    extends Just
+
+  @datatype class Subst(isRight: B,
+                        eqStep: Exp.LitZ,
+                        step: Exp.LitZ,
+                        @hidden attr: Attr)
+    extends Just
+
+  @datatype class Auto(isAlgebra: B,
+                       steps: ISZ[Exp.LitZ],
+                       @hidden attr: Attr)
+    extends Just
+
+  @datatype class Coq(path: Exp.LitString,
+                      steps: ISZ[Exp.LitZ],
+                      @hidden attr: Attr)
+    extends Just
+
+}
+
+object TruthTable {
+
+  @datatype class Row(assignment: ISZ[Exp.LitB],
+                      column: Int,
+                      values: ISZ[Exp.LitB])
+
+  @datatype trait Conclusion {
+    def attr: Attr
+  }
+
+  object Conclusion {
+
+    @datatype class Validity(isValid: B,
+                             assignments: ISZ[ISZ[Exp.LitB]],
+                             @hidden attr: Attr)
+      extends Conclusion
+
+    @datatype class Tautology(@hidden attr: Attr) extends Conclusion
+
+    @datatype class Contradictory(@hidden attr: Attr) extends Conclusion
+
+    @datatype class Contingent(trueAssignments: ISZ[ISZ[Exp.LitB]],
+                               falseAssignments: ISZ[ISZ[Exp.LitB]],
+                               @hidden attr: Attr)
+      extends Conclusion
+
+  }
+
+}
 
 @datatype class Attr(posInfoOpt: Option[PosInfo])
 

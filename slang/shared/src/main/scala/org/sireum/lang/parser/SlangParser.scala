@@ -485,7 +485,7 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       translateType(tpe))
-    AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
+    AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -531,26 +531,25 @@ class SlangParser(text: Predef.String,
       exp match {
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+            ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(l.pos, s), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+            ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
       }
     else if (isSpec)
       exp match {
         case q"$$" =>
-          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
+          AST.Stmt.SpecMethod(sig, ISZ(), attr(tree.pos))
         case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
-          val (defs, where) = parseDefs(l.pos, s)
-          AST.Stmt.SpecMethod(sig, defs, where, attr(tree.pos))
+          AST.Stmt.SpecMethod(sig, parseDefs(l.pos, s), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
-          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
+          AST.Stmt.SpecMethod(sig, ISZ(), attr(tree.pos))
       }
     else exp match {
       case exp: Term.Block =>
@@ -560,14 +559,14 @@ class SlangParser(text: Predef.String,
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
-            (AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
+            (AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
         AST.Stmt.Method(isPure, sig, mc, bodyOpt, attr(tree.pos))
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
     }
   }
 
@@ -1573,14 +1572,14 @@ class SlangParser(text: Predef.String,
       case Right(args) => AST.Exp.Invoke(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
     }
 
-  def parseDefs(pos: Position, text: Predef.String): (ISZ[AST.SpecMethodDef], ISZ[AST.Stmt.Assign]) = {
+  def parseDefs(pos: Position, text: Predef.String): ISZ[AST.SpecDef] = {
     // TODO: parse defs
-    (ISZ(), ISZ())
+    ISZ()
   }
 
   def parseMethodContract(pos: Position, text: Predef.String): AST.MethodContract = {
     // TODO: parse contract
-    AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
+    AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ())
   }
 
   def parseLStmt(enclosing: Enclosing.Type, pos: Position, text: Predef.String): AST.Stmt = {
