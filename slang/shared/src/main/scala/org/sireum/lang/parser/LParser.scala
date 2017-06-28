@@ -203,8 +203,6 @@ object LParser {
 import LParser._
 
 final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dialect) {
-  parser =>
-
   object loutPattern extends PatternContextSensitive {
     override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
       token match {
@@ -1186,6 +1184,14 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     acceptHLine()
     val r = TruthTable(stars, vars, sep.column, formula, rows.reverse, conclusion(formula.isLeft))
     newLinesOpt()
+    accept[EOF]
+    r
+  }
+
+  def sequentFile(): Sequent = {
+    accept[BOF]
+    newLinesOpt()
+    val r = sequent()
     accept[EOF]
     r
   }

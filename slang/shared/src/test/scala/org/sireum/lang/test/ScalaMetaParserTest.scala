@@ -27,7 +27,7 @@ package org.sireum.lang.test
 
 import org.sireum.test._
 import org.sireum.util._
-import org.sireum.lang.parser.ScalaMetaParser
+import org.sireum.lang.parser.SlangParser
 
 class ScalaMetaParserTest extends SireumSpec {
   {
@@ -261,8 +261,8 @@ class ScalaMetaParserTest extends SireumSpec {
     }
   }
 
-  def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean): ScalaMetaParser.Result =
-    ScalaMetaParser(isPrelude, isWorksheet, isDiet = false, None, text)
+  def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean): SlangParser.Result =
+    SlangParser(isPrelude, isWorksheet, isDiet = false, None, text)
 
   def passing(text: String,
               addImport: Boolean = true,
@@ -297,7 +297,7 @@ class ScalaMetaParserTest extends SireumSpec {
     if (text.length <= max) text else text.substring(0, max) + " ... " + text.hashCode.toHexString
   }
 
-  def report(r: ScalaMetaParser.Result): Unit = {
+  def report(r: SlangParser.Result): Unit = {
     System.err.println(r.text)
     System.err.println(r.programOpt)
     val reporter = new ConsoleTagReporter

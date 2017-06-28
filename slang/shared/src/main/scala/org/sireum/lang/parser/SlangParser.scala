@@ -33,7 +33,7 @@ import org.sireum.math.Numbers
 import scala.meta._
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
-object ScalaMetaParser {
+object SlangParser {
 
   @enum object Enclosing {
     'Top
@@ -120,7 +120,7 @@ object ScalaMetaParser {
     val dialect = scalaDialect(isWorksheet)
     dialect(text).parse[Source] match {
       case Parsed.Success(x) =>
-        new ScalaMetaParser(text, allowSireumPackage, hashSireum,
+        new SlangParser(text, allowSireumPackage, hashSireum,
           isWorksheet, isDiet, fileUriOpt).translateSource(x)
       case pe: Parsed.Error =>
         Result(text, hashSireum, None(), ISZ(error(fileUriOpt, pe.pos, pe.message)))
@@ -152,28 +152,28 @@ object ScalaMetaParser {
     mods.nonEmpty || !paramname.isInstanceOf[Name.Anonymous] || atpeopt.nonEmpty || expropt.nonEmpty
   }
 
-  private[ScalaMetaParser] lazy val emptyAttr = AST.Attr(posInfoOpt = None())
-  private[ScalaMetaParser] lazy val emptyTypedAttr = AST.TypedAttr(posInfoOpt = None(), typeOpt = None())
-  private[ScalaMetaParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posInfoOpt = None(), resOpt = None(), typeOpt = None())
+  private[SlangParser] lazy val emptyAttr = AST.Attr(posInfoOpt = None())
+  private[SlangParser] lazy val emptyTypedAttr = AST.TypedAttr(posInfoOpt = None(), typeOpt = None())
+  private[SlangParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posInfoOpt = None(), resOpt = None(), typeOpt = None())
 
-  private[ScalaMetaParser] lazy val rDollarId = AST.Id("$", emptyAttr)
-  private[ScalaMetaParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
-  private[ScalaMetaParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
+  private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
+  private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
+  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
 }
 
-import ScalaMetaParser._
+import SlangParser._
 
-class ScalaMetaParser(text: Predef.String,
-                      allowSireumPackage: Boolean,
-                      hashSireum: Boolean,
-                      isWorksheet: Boolean,
-                      isDiet: Boolean,
-                      fileUriOpt: scala.Option[FileResourceUri]) {
+class SlangParser(text: Predef.String,
+                  allowSireumPackage: Boolean,
+                  hashSireum: Boolean,
+                  isWorksheet: Boolean,
+                  isDiet: Boolean,
+                  fileUriOpt: scala.Option[FileResourceUri]) {
   var tags: ISZ[Tag] = ISZ()
 
   def error(pos: Position,
             message: Predef.String): Unit = {
-    tags :+= ScalaMetaParser.error(fileUriOpt, pos, message)
+    tags :+= SlangParser.error(fileUriOpt, pos, message)
   }
 
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit", emptyAttr)), emptyAttr), ISZ(), emptyTypedAttr)

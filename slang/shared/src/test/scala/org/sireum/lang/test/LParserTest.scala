@@ -25,7 +25,7 @@
 
 package org.sireum.lang.test
 
-import org.sireum.lang.parser.{LParser, ScalaMetaParser}
+import org.sireum.lang.parser.{LParser, SlangParser}
 import org.sireum.test.SireumSpec
 
 import scala.meta._
@@ -722,7 +722,7 @@ class LParserTest extends SireumSpec {
 
   def parser[T](title: String, input: String)(f: LParser => Boolean)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = spec.*(title) {
-    val parser = new LParser(Input.String(input), ScalaMetaParser.scalaDialect(true))
+    val parser = new LParser(Input.String(input), SlangParser.scalaDialect(true))
     val r: Boolean = try {
       f(parser)
       //println(fparser(parser)
