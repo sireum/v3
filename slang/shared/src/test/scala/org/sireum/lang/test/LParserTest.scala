@@ -707,26 +707,35 @@ class LParserTest extends SireumSpec {
 
   def parsePredicate(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input)(_.lClause().isInstanceOf[LParser.Sequent])
+    parser(title, input) { p =>
+      p.sequentFile()
+      true
+    }
 
   def parsePropositional(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input)(_.lClause().isInstanceOf[LParser.Sequent])
+    parser(title, input) { p =>
+      p.sequentFile()
+      true
+    }
 
   def parseTruthTable(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input) { parser =>
-      parser.truthTable()
+    parser(title, input) { p =>
+      p.truthTable()
       true
     }
 
   def parser[T](title: String, input: String)(f: LParser => Boolean)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = spec.*(title) {
-    val parser = new LParser(Input.String(input), SlangParser.scalaDialect(true))
     val r: Boolean = try {
-      f(parser)
+      LParser[Boolean](input)(f)
       //println(fparser(parser)
     } catch {
+      case e: TokenizeException =>
+        Console.err.println(s"[${e.pos.start.line}, ${e.pos.end.line}] ${e.getMessage}")
+        e.printStackTrace()
+        false
       case e: ParseException =>
         Console.err.println(s"[${e.pos.start.line}, ${e.pos.end.line}] ${e.getMessage}")
         e.printStackTrace()

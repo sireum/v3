@@ -30,10 +30,9 @@ import scala.meta._
 import scala.meta.inputs.Input
 import scala.meta.internal.parsers.{InfixMode, ScalametaParser}
 import scala.meta.internal.tokens.TokenInfo
-import scala.meta.parsers.{Parse, ParseException, Parsed}
-import scala.meta.tokenizers.TokenizeException
 import scala.meta.tokens.TokensHelper
 import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBrace, RightBracket, RightParen}
+import org.sireum.lang.{ast => AST}
 
 object LParser {
 
@@ -176,33 +175,28 @@ object LParser {
     "⊤" -> "T",
     "⊥" -> "F",
     "≡" -> "==",
-    "⊻" -> "|^"
+    "⊻" -> "|^",
+    "⊢" -> "|-"
   )
 
-  def isSequentToken(t: Token): Boolean = t.is[Ident] && sequentTokens.contains(t.text)
-
-  lazy val parseTerm: Parse[Term] = toParse(_.parseTerm())
-
-  implicit class ParseString(text: String)(implicit dialect: Dialect) {
-    def parseFormula: Parsed[Term] = parseTerm(Input.String(text), dialect)
-  }
-
-  def toParse[T](fn: LParser => T): Parse[T] = (input, dialect) => {
-    try {
-      val parser = new LParser(input, dialect)
-      Parsed.Success(fn(parser))
-    } catch {
-      case details@TokenizeException(pos, message) =>
-        Parsed.Error(pos, message, details)
-      case details@ParseException(pos, message) =>
-        Parsed.Error(pos, message, details)
-    }
+  def apply[T](text: String)(f: LParser => T): T = {
+    val slangParser = new SlangParser(allowSireumPackage = false,
+      hashSireum = false,
+      isDiet = false,
+      fileUriOpt = None,
+      isWorksheet = false,
+      text = text)
+    f(new LParser(Input.String(text), SlangParser.scalaDialect(isWorksheet = false), slangParser))
   }
 }
 
 import LParser._
 
-final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(input, dialect) {
+final class LParser(input: Input,
+                    dialect: Dialect,
+                    sparser: SlangParser)
+  extends ScalametaParser(input, dialect) {
+
   object loutPattern extends PatternContextSensitive {
     override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
       token match {
@@ -317,6 +311,7 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
     }
   }
 
+  def isSequentToken(t: Token): Boolean = t.is[Ident] && t.text == "|-"
 
   def findJust(): (Int, String, Int) = {
     def continue: Boolean =
@@ -1037,13 +1032,13 @@ final class LParser(input: Input, dialect: Dialect) extends ScalametaParser(inpu
    *
    *  BLit           ::= Ident<T> | Ident<F>                          // Can be sequenced without whitespace
    *
-    *  TruthTableConc ::= Ident<Valid> { {nl} `[' BLits `]' }
+   *  TruthTableConc ::= Ident<Valid> { {nl} `[' BLits `]' }
    *                   |  Ident<Invalid> { {nl} `[' BLits `]' }
    *                   |  Ident<Tautology>
-    *                   |  Ident<Contradictory>
+   *                   |  Ident<Contradictory>
    *                   |  Ident<Contingent> {nl}
-    *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
-    *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
+   *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
+   *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
    *  }}}
    */
   def truthTable(): TruthTable = {
