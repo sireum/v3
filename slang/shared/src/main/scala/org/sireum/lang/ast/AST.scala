@@ -229,14 +229,20 @@ object Stmt {
 
 object LClause {
 
-  @datatype class Invariants(value: ISZ[(Option[Id], Exp)])
+  @datatype class Invariants(value: ISZ[ContractExp])
     extends LClause
 
-  @datatype class Facts(value: ISZ[(Id, Exp)])
+  @datatype class Facts(value: ISZ[Fact])
     extends LClause
 
-  @datatype class Theorem(value: ISZ[(Id, Sequent)])
+  @datatype class Fact(id: Id,
+                       exp: Exp)
+
+  @datatype class Theorems(value: ISZ[Theorem])
     extends LClause
+
+  @datatype class Theorem(id: Id,
+                          sequent: Sequent)
 
   @datatype class Sequent(premises: ISZ[Exp],
                           conclusions: ISZ[Exp],
@@ -247,6 +253,9 @@ object LClause {
     extends LClause
 
 }
+
+@datatype class ContractExp(idOpt: Option[Id],
+                            exp: Exp)
 
 @datatype class Case(pattern: Pattern,
                      condOpt: Option[Exp],
@@ -533,9 +542,9 @@ object Domain {
 @datatype class TypeParam(id: Id,
                           superTypeOpt: Option[Type])
 
-@datatype class MethodContract(requires: ISZ[(Option[Id], Exp)],
+@datatype class MethodContract(requires: ISZ[ContractExp],
                                modifies: ISZ[Exp],
-                               ensures: ISZ[(Option[Id], Exp)],
+                               ensures: ISZ[ContractExp],
                                subs: ISZ[SubContract])
 
 @datatype class SubContract(id: Id,
