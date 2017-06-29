@@ -272,7 +272,7 @@ class ScalaMetaParserTest extends SireumSpec {
     spec.*(sub(text)) {
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
-      val b = r.programOpt.nonEmpty && r.tags.elements.isEmpty
+      val b = r.unitOpt.nonEmpty && r.tags.elements.isEmpty
       if (!b) report(r)
       b
     }
@@ -299,7 +299,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
   def report(r: SlangParser.Result): Unit = {
     System.err.println(r.text)
-    System.err.println(r.programOpt)
+    System.err.println(r.unitOpt)
     val reporter = new ConsoleTagReporter
     r.tags.foreach(reporter.report)
   }

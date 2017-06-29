@@ -25,6 +25,7 @@
 
 package org.sireum.lang.test
 
+import org.sireum.{None => SNone}
 import org.sireum.lang.parser.{LParser, SlangParser}
 import org.sireum.test.SireumSpec
 
@@ -313,26 +314,26 @@ class LParserTest extends SireumSpec {
         """.stripMargin)
 
       parsePropositional("and-1",
-      """p, q, r  ⊢  r ∧ (q ∧ p)
-        |{
-        |  1. p                        premise
-        |  2. q                        premise
-        |  3. r                        premise
-        |  4. q ∧ p                    ∧i 2 1
-        |  5. r ∧ (q ∧ p)              ∧i 3 4
-        |}
-      """.stripMargin)
+        """p, q, r  ⊢  r ∧ (q ∧ p)
+          |{
+          |  1. p                        premise
+          |  2. q                        premise
+          |  3. r                        premise
+          |  4. q ∧ p                    ∧i 2 1
+          |  5. r ∧ (q ∧ p)              ∧i 3 4
+          |}
+        """.stripMargin)
 
       parsePropositional("and-2",
-      """p ∧ (q ∧ r)  ⊢  r ∧ p
-        |{
-        |  1. p ∧ (q ∧ r)              premise
-        |  2. p                        ∧e1 1
-        |  3. q ∧ r                    ∧e2 1
-        |  4. r                        ∧e2 3
-        |  5. r ∧ p                    ∧i 4 2
-        |}
-      """.stripMargin)
+        """p ∧ (q ∧ r)  ⊢  r ∧ p
+          |{
+          |  1. p ∧ (q ∧ r)              premise
+          |  2. p                        ∧e1 1
+          |  3. q ∧ r                    ∧e2 1
+          |  4. r                        ∧e2 3
+          |  5. r ∧ p                    ∧i 4 2
+          |}
+        """.stripMargin)
 
       parsePropositional("or-1",
         """p  ⊢  p ∨ q
@@ -505,21 +506,21 @@ class LParserTest extends SireumSpec {
         """.stripMargin)
 
       parsePropositional("negation-5",
-        """p  ⊢  ¬¬p
+        """p  ⊢  ¬(¬p)
           |{
           |  1. p                        premise
           |  2. {
           |       3. ¬p                  assume
           |       4. ⊥                   ¬e 1 3
           |     }
-          |  5. ¬¬p                      ¬i 2
+          |  5. ¬(¬p)                    ¬i 2
           |}
         """.stripMargin)
 
       parsePropositional("negation-6",
-        """¬¬p  ⊢  p
+        """¬(¬p)  ⊢  p
           |{
-          |  1. ¬¬p                      premise
+          |  1. ¬(¬p)                    premise
           |  2. {
           |       3. ¬p                  assume
           |       4. ⊥                   ¬e 3 1
@@ -569,7 +570,7 @@ class LParserTest extends SireumSpec {
 
     "Predicate" - {
 
-      parsePropositional("universal-1",
+      parsePredicate("universal-1",
         """∀x human(x) → mortal(x),  human(Socrates)  ⊢
           |  mortal(Socrates)
           |{
@@ -580,7 +581,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("universal-2",
+      parsePredicate("universal-2",
         """∀x gt(inc(x), x),  ∀x gt(x, dec(x))  ⊢
           |  ∀x gt(inc(x), x) ∧ gt(x, dec(x))
           |{
@@ -596,7 +597,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("universal-3",
+      parsePredicate("universal-3",
         """∀x human(x) → mortal(x),  ∀y mortal(y) → soul(y)  ⊢
           |  ∀x human(x) → soul(x)
           |{
@@ -617,7 +618,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("universal-4",
+      parsePredicate("universal-4",
         """∀x healthy(x) → happy(x)  ⊢
           |  (∀y healthy(y)) → ∀x happy(x)
           |{
@@ -636,7 +637,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("existensial-1",
+      parsePredicate("existensial-1",
         """human(Socrates),  mortal(Socrates)  ⊢
           |  ∃x human(x) ∧ mortal(x)
           |{
@@ -647,7 +648,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("existensial-2",
+      parsePredicate("existensial-2",
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y vowel(y) ∧ ∃x holds(x, y)
           |{
@@ -659,7 +660,7 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("existensial-3",
+      parsePredicate("existensial-3",
         """vowel(e),  holds(square14, e)  ⊢
           |  ∃y,x vowel(y) ∧ holds(x, y)
           |{
@@ -670,14 +671,15 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("existensial-4",
+      parsePredicate("existensial-4",
         """∀x human(x) → mortal(x),  ∃y human(y)  ⊢
           |  ∃z mortal(z)
           |{
           |  1. ∀x human(x) → mortal(x)               premise
           |  2. ∃y human(y)                           premise
           |  3. {
-          |       4. a  human(a)                      assume
+          |       4. a
+          |          human(a)                         assume
           |       5. human(a) → mortal(a)             ∀e 1 a
           |       6. mortal(a)                        →e 5 4
           |       7. ∃z mortal(z)                     ∃i 6 a
@@ -686,17 +688,18 @@ class LParserTest extends SireumSpec {
           |}
         """.stripMargin)
 
-      parsePropositional("existensial-5",
+      parsePredicate("existensial-5",
         """∃s covered(s) ∧ (∃c vowel(c) ∧ holds(s, c)),
           |(∃x covered(x)) → ¬gameOver  ⊢  ¬gameOver
           |{
           |  1. ∃s covered(s) ∧ (∃c vowel(c) ∧ holds(s, c))         premise
           |  2. (∃x covered(x)) → ¬gameOver                         premise
           |  3. {
-          |       4. a  covered(a) ∧ (∃c vowel(c) ∧ holds(a, c))    assume
+          |       4. a
+          |          covered(a) ∧ (∃c vowel(c) ∧ holds(a, c))       assume
           |       5. covered(a)                                     ∧e1 4
           |       6. ∃x covered(x)                                  ∃i 5 a
-          |      }
+          |     }
           |  7. ∃x covered(x)                                       ∃e 1 3
           |  8. ¬gameOver                                           →e 2 7
           |}
@@ -708,23 +711,32 @@ class LParserTest extends SireumSpec {
   def parsePredicate(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
-      p.sequentFile()
-      true
+      val r = p.sequentFile(SNone())
+      check(r)
     }
 
   def parsePropositional(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
-      p.sequentFile()
-      true
+      val r = p.sequentFile(SNone())
+      if (title.endsWith("-4")) println(r)
+      check(r)
     }
 
   def parseTruthTable(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
-      p.truthTable()
-      true
+      val r = p.truthTable(SNone())
+      check(r)
     }
+
+  def check(r: SlangParser.Result): Boolean = {
+    if (r.tags.nonEmpty) {
+      r.tags.foreach(Console.err.println)
+      Console.err.flush()
+    }
+    r.tags.isEmpty
+  }
 
   def parser[T](title: String, input: String)(f: LParser => Boolean)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = spec.*(title) {

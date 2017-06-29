@@ -79,20 +79,13 @@ object SlangParser {
     "&" -> AST.Exp.BinaryOp.And,
     "|" -> AST.Exp.BinaryOp.Or,
     "|^" -> AST.Exp.BinaryOp.Xor,
-    "≡" -> AST.Exp.BinaryOp.Eq,
-    "≠" -> AST.Exp.BinaryOp.Ne,
-    "≤" -> AST.Exp.BinaryOp.Le,
-    "≥" -> AST.Exp.BinaryOp.Ge,
-    "∧" -> AST.Exp.BinaryOp.And,
-    "∨" -> AST.Exp.BinaryOp.Or,
-    "⊻" -> AST.Exp.BinaryOp.Xor,
-    "→" -> AST.Exp.BinaryOp.Imply,
+    LParser.implyInternalSym -> AST.Exp.BinaryOp.Imply,
     ":+" -> AST.Exp.BinaryOp.Append,
     "+:" -> AST.Exp.BinaryOp.Prepend,
     "++" -> AST.Exp.BinaryOp.AppendAll,
     "--" -> AST.Exp.BinaryOp.RemoveAll)
 
-  def scalaDialect(isWorksheet: Boolean) =
+  def scalaDialect(isWorksheet: Boolean): Dialect =
     if (isWorksheet) scala.meta.dialects.Scala212.copy(
       allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
     else scala.meta.dialects.Scala212.copy(
@@ -100,7 +93,7 @@ object SlangParser {
 
   case class Result(text: Predef.String,
                     hashSireum: Boolean,
-                    programOpt: Option[AST.TopUnit.Program],
+                    unitOpt: Option[AST.TopUnit],
                     tags: ISZ[Tag])
 
   def apply(isWorksheet: Boolean,
@@ -1296,6 +1289,11 @@ class SlangParser(text: Predef.String,
   }
 
   def translateExp(exp: Term): AST.Exp = {
+    def fresh(t: Term): ISZ[AST.Id] = t match {
+      case t: Term.Name => ISZ(cid(t))
+      case t: Term.Tuple => ISZ(t.args.map(arg => cid(arg.asInstanceOf[Term.Name])): _*)
+    }
+
     exp match {
       case exp: Lit => translateLit(exp)
       case exp: Term.Interpolate =>
@@ -1306,11 +1304,41 @@ class SlangParser(text: Predef.String,
         case List(Lit.String(_)) => true
         case _ => false
       }) => translateLitBv(isBigEndian = expr.prefix.value == "bb", expr, tpesnel.head)
-      case exp: Term.Name => AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
+      case exp: Term.Name =>
+        if (exp.value.forall(c => c == '¬' || c == '~' || c == '!')) {
+          val l = exp.value.toList.reverse
+          var s = s"${l.head}..."
+          for (c <- l.tail) {
+            s = s"$c($s)"
+          }
+          error(exp.pos, s"'${exp.value}' should be written as '$s'.")
+          rExp
+        } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
       case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr), resolvedAttr(exp.pos))
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
+      case q"L$$Quant(..$args)" =>
+        val es = args.map { case arg"${exp: Term}" => exp }
+        es match {
+          case Seq(b: Lit.Boolean, q"$ids: $t", e) =>
+            AST.Exp.Quant(
+              b.value,
+              ISZ(AST.VarFragment(fresh(ids),
+                Some(AST.Domain.Type(translateType(t), typedAttr(t.pos))))),
+              translateExp(e))
+          case Seq(b: Lit.Boolean, ids, e) =>
+            AST.Exp.Quant(
+              b.value,
+              ISZ(AST.VarFragment(fresh(ids), None())),
+              translateExp(e))
+          case Seq(b: Lit.Boolean, ids, tt@Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean)), e) =>
+            AST.Exp.Quant(
+              b.value,
+              ISZ(AST.VarFragment(fresh(ids),
+                Some(AST.Domain.Range(translateExp(lo), loExact.value, translateExp(hi), hiExact.value, typedAttr(tt.pos))))),
+              translateExp(e))
+        }
       case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
         translateInvoke(scala.Some(expr), name, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name(...$aexprssnel)" =>
@@ -1463,7 +1491,7 @@ class SlangParser(text: Predef.String,
     unops.get(t.op.value) match {
       case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg), typedAttr(t.op.pos))
       case _ =>
-        error(t.op.pos, s"Only the following unary operators can be used in Slang: ${unops.keys.toVector.sorted.mkString(", ")}")
+        errorNotSlang(t.op.pos, s"'${t.op.value}' is not a unary operator")
         rExp
     }
   }
@@ -1484,7 +1512,7 @@ class SlangParser(text: Predef.String,
         binops.get(t.op.value) match {
           case scala.Some(op) => AST.Exp.Binary(translateExp(t.lhs), op, expArg(right), typedAttr(t.op.pos))
           case _ =>
-            error(t.op.pos, s"Only the following binary operators can be used in Slang: ${binops.keys.toVector.sorted.mkString(", ")}")
+            errorNotSlang(t.op.pos, s"'${t.op.value}' is not a binary operator")
             rExp
         }
       case _ =>

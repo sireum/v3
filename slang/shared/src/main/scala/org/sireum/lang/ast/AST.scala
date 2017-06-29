@@ -535,9 +535,9 @@ object Domain {
     extends Domain
 
   @datatype class Range(lo: Exp,
-                        loExact: Exp.LitB,
+                        loExact: B,
                         hi: Exp,
-                        hiExact: Exp.LitB,
+                        hiExact: B,
                         @hidden attr: TypedAttr)
     extends Domain
 
@@ -605,9 +605,9 @@ object WhereDef {
 
 object ProofStep {
 
-  @datatype class Regular(step: Exp.LitZ,
-                          exp: Exp,
-                          just: Just)
+  @datatype class Basic(step: Exp.LitZ,
+                        exp: Exp,
+                        just: Just)
     extends ProofStep
 
   @datatype class SubProof(step: Exp.LitZ,
@@ -740,7 +740,7 @@ object Just {
 object TruthTable {
 
   @datatype class Row(assignment: ISZ[Exp.LitB],
-                      column: Int,
+                      column: Z,
                       values: ISZ[Exp.LitB])
 
   @datatype trait Conclusion {

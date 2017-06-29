@@ -280,10 +280,10 @@
 
 <spec-cdef>        ::=  c""" <spec-defs> """
 
-<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L447-L460
+<def-contract>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L355-L368
 
-<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L544-L557
+<spec-defs>        ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L452-L465
 
-<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L653-L656
+<loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L561-L564
 
-<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L672-L678
+<l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L580-L586
