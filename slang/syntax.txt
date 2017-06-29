@@ -1,3 +1,7 @@
+<unit>             ::=  <program>
+                     |  <sequent>
+                     |  <truth-table>
+
 <program>          ::=  <package>?
                         import org . sireum . _
                         <stmt>*
@@ -287,3 +291,7 @@
 <loop-inv-mod>     ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L561-L564
 
 <l-clause>         ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L580-L586
+
+<sequent>          ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L580-L586
+
+<truth-table>      ::=  ... see https://github.com/sireum/v3/blob/master/slang/shared/src/main/scala/org/sireum/lang/parser/LParser.scala#L949-L971
