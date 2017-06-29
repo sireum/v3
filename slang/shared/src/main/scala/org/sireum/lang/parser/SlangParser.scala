@@ -270,7 +270,7 @@ class SlangParser(text: Predef.String,
       case stat: Term.For => translateFor(enclosing, stat)
       case stat: Term.Return => translateReturn(enclosing, stat)
       case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
-      case Term.Interpolate(Term.Name("l"), Seq(l@Lit(s: Predef.String)), Nil) => parseLStmt(enclosing, l.pos, s)
+      case stat@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
         rStmt
@@ -525,8 +525,8 @@ class SlangParser(text: Predef.String,
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
             ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
-        case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
-          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(l.pos, s), attr(tree.pos))
+        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(exp), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
@@ -537,8 +537,8 @@ class SlangParser(text: Predef.String,
       exp match {
         case q"$$" =>
           AST.Stmt.SpecMethod(sig, ISZ(), attr(tree.pos))
-        case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil) =>
-          AST.Stmt.SpecMethod(sig, parseDefs(l.pos, s), attr(tree.pos))
+        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+          AST.Stmt.SpecMethod(sig, parseDefs(exp), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
@@ -547,8 +547,8 @@ class SlangParser(text: Predef.String,
     else exp match {
       case exp: Term.Block =>
         val (mc, bodyOpt) = exp.stats.headOption match {
-          case scala.Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Nil)) =>
-            (parseMethodContract(l.pos, s),
+          case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
+            (parseMethodContract(l),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
@@ -1180,8 +1180,8 @@ class SlangParser(text: Predef.String,
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats match {
-        case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Seq()) :: rest =>
-          val (rs, is) = parseLoopContract(l.pos, s)
+        case (l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) :: rest =>
+          val (rs, is) = parseLoopContract(l)
           reads = rs
           invariants = is
           stats = rest
@@ -1208,8 +1208,8 @@ class SlangParser(text: Predef.String,
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats.lastOption match {
-        case scala.Some(Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Seq())) =>
-          val (rs, is) = parseLoopContract(l.pos, s)
+        case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
+          val (rs, is) = parseLoopContract(l)
           reads = rs
           invariants = is
           stats = body.stats.dropRight(1)
@@ -1253,8 +1253,8 @@ class SlangParser(text: Predef.String,
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats match {
-        case Term.Interpolate(Term.Name("l"), Seq(l@Lit.String(s)), Seq()) :: rest =>
-          val (ms, is) = parseLoopContract(l.pos, s)
+        case (l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) :: rest =>
+          val (ms, is) = parseLoopContract(l)
           modifies = ms
           invariants = is
           stats = rest
@@ -1381,12 +1381,17 @@ class SlangParser(text: Predef.String,
   }
 
   def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit = {
+    def errR = AST.Exp.LitB(false, attr(lit.pos))
+    if (text.substring(lit.pos.start.offset, lit.pos.end.offset).startsWith(lit.prefix.value + "\"\"\"")) {
+      error(lit.pos, "'" + lit.prefix.value + "\"...\"' should be used instead of '" + lit.prefix.value + "\"\"...\"\"\"'.")
+      return errR
+    }
     if (lit.args.nonEmpty || !(lit.parts match {
       case List(Lit.String(_)) => true
       case _ => false
     })) {
       errorNotSlang(lit.pos, s"Literal '${syntax(lit)}' is")
-      return AST.Exp.LitB(false, attr(lit.pos))
+      return errR
     }
     val List(Lit.String(value)) = lit.parts
     try {
@@ -1600,22 +1605,35 @@ class SlangParser(text: Predef.String,
       case Right(args) => AST.Exp.Invoke(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
     }
 
-  def parseDefs(pos: Position, text: Predef.String): ISZ[AST.SpecDef] = {
+  def checkLSyntax(exp: Term.Interpolate): Boolean = {
+    val startOffset = exp.pos.start.offset
+    val c = text.charAt(startOffset)
+    if (!text.substring(startOffset + 1, exp.pos.end.offset).startsWith("\"\"\"")) {
+      error(exp.pos, "'" + c + "\"\"\"...\"\"\"' should be used instead of '" + c + "\"...\"'.")
+      false
+    } else true
+  }
+
+  def parseDefs(exp: Term.Interpolate): ISZ[AST.SpecDef] = {
+    if (!checkLSyntax(exp)) return ISZ()
     // TODO: parse defs
     ISZ()
   }
 
-  def parseMethodContract(pos: Position, text: Predef.String): AST.MethodContract = {
+  def parseMethodContract(exp: Term.Interpolate): AST.MethodContract = {
+    if (!checkLSyntax(exp)) return AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ())
     // TODO: parse contract
     AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ())
   }
 
-  def parseLStmt(enclosing: Enclosing.Type, pos: Position, text: Predef.String): AST.Stmt = {
+  def parseLStmt(enclosing: Enclosing.Type, exp: Term.Interpolate): AST.Stmt = {
+    if (!checkLSyntax(exp)) return rStmt
     // TODO: parse stmt
     rStmt
   }
 
-  def parseLoopContract(pos: Position, text: Predef.String): (ISZ[AST.Name], ISZ[AST.Exp]) = {
+  def parseLoopContract(exp: Term.Interpolate): (ISZ[AST.Name], ISZ[AST.Exp]) = {
+    if (!checkLSyntax(exp)) return (ISZ(), ISZ())
     // TODO: parse loop contract
     (ISZ(), ISZ())
   }
@@ -1681,7 +1699,7 @@ class SlangParser(text: Predef.String,
   }
 
   def syntax(t: Tree, max: Int = 20): Predef.String = {
-    val text = t.syntax
+    val text = this.text.substring(t.pos.start.offset, t.pos.end.offset)
     (if (text.length < max) text else text.substring(0, max) + "...").map {
       case '\r' => ' '
       case '\t' => ' '

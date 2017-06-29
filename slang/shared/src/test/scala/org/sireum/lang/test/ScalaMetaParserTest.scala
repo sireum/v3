@@ -67,7 +67,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
         passing("@spec def f(x: Z): Z = $", isWorksheet = true)
 
-        passing("@spec def f(x: Z): Z = l\"\"\"{ reads g }\"\"\"", isWorksheet = true)
+        passing("@spec def f(x: Z): Z = l\"\"\"reads g\"\"\"", isWorksheet = true)
 
         passing("@pure def f(x: Z): Z = {}", isWorksheet = true)
 
@@ -123,7 +123,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
           passing("@ext object Foo { @pure def f: Z = $ }")
 
-          passing("@ext object Foo { def f: Z = l\"\"\"{ reads g }\"\"\" }")
+          passing("@ext object Foo { def f: Z = l\"\"\"reads g\"\"\" }")
         }
       }
     }
