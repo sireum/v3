@@ -31,7 +31,7 @@ import org.sireum.lang.ast.{ContractExp, VarFragment, WhereDef}
 import scala.collection.immutable.ListSet
 import scala.meta._
 import scala.meta.inputs.Input
-import scala.meta.internal.parsers.{InfixMode, ScalametaParser}
+import scala.meta.internal.parsers.{InfixMode, ModifiedScalametaParser}
 import scala.meta.internal.tokens.TokenInfo
 import scala.meta.tokens.TokensHelper
 import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBrace, RightBracket, RightParen}
@@ -64,13 +64,18 @@ object LParser {
   )
 
   def apply[T](text: String)(f: LParser => T): T = {
-    val slangParser = new SlangParser(allowSireumPackage = false,
+    val input = Input.String(text)
+    val dialect = SlangParser.scalaDialect(isWorksheet = false)
+    val slangParser = new SlangParser(
+      input = input,
+      dialect = dialect,
+      allowSireumPackage = false,
       hashSireum = false,
       isDiet = false,
       fileUriOpt = None,
       isWorksheet = false,
       text = text)
-    f(new LParser(Input.String(text), SlangParser.scalaDialect(isWorksheet = false), slangParser))
+    f(new LParser(input, dialect, slangParser))
   }
 }
 
@@ -79,7 +84,7 @@ import LParser._
 final class LParser(input: Input,
                     dialect: Dialect,
                     sparser: SlangParser)
-  extends ScalametaParser(input, dialect) {
+  extends ModifiedScalametaParser(input, dialect) {
 
   object loutPattern extends PatternContextSensitive {
     override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
@@ -236,14 +241,28 @@ final class LParser(input: Input,
     t.asInstanceOf[T]
   }
 
+  def acceptIdent(expected: String): Ident = token match {
+    case Ident(value) if value == expected =>
+      val r = token.asInstanceOf[Ident]
+      next()
+      r
+    case _ => reporter.syntaxError(s"$expected expected but ${TokensHelper.name(token)} found.", at = token)
+  }
+
   def acceptInt: AST.Exp.LitZ = {
     val t = acceptToken[Token.Constant.Int]
     AST.Exp.LitZ(_Z(t.value.toInt), sparser.attr(t.pos))
   }
 
+  override def isInfixOp(): Boolean = token match {
+    case Ident(value) if value.forall(Character.isJavaIdentifierPart) || value == "∀" || value == "∃" => false
+    case Ident(_) => true
+    case _ => false
+  }
+
   /** {{{
-   *  SimpleExpr     ::= QuantExpr
-   *                   |  ... super.simpleExpr()
+   *  SimplExpr      ::= QuantExpr
+   *                    |  ... super.simpleExpr()
    *  }}}
    */
   override def simpleExpr(): Term = token match {
@@ -252,7 +271,7 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  QuantExpr      ::= QuantOp Idents [ `:' Domain ] [nl] Expr
+   *  QuantExpr      ::= QuantOp Idents [ `:' Domain ] [nl] PostfixExpr
    *
    *  Idents         ::= Ident { `,' Ident }
    *
@@ -267,7 +286,7 @@ final class LParser(input: Input,
       case Ident(value) if kws.contains(value) =>
         next()
         value
-      case _ => reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but ${TokensHelper.name(token)} ('${token.text}') found", at = token)
+      case _ => reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but ${TokensHelper.name(token)} found", at = token)
     }
 
     val isForAll = forallTokens.contains(acceptKw(quantTokens))
@@ -353,6 +372,7 @@ final class LParser(input: Input,
 
   /** {{{
    *  DefContract    ::= BOF {nl}
+   *                     [ Ident<reads> {nl} Expr { `,' {nl} Expr } ] {nl}
    *                     [ Ident<requires> {nl} NamedExprs ]
    *                     [ Ident<modifies> {nl} Expr { `,' {nl} Expr } ] {nl}
    *                     [ Ident<ensures> {nl} NamedExprs ]
@@ -363,12 +383,12 @@ final class LParser(input: Input,
    *
    *  NamedExpr      ::= [ Ident `:' {nl} ] Expr
    *
-   *  SubContract    ::= def Ident `(' [ PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
+   *  SubContract    ::= def Ident `(' PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
    *
    *  PureOpt        ::= [ `@' Ident<pure> ]
    *  }}}
    */
-  def defContract(): AST.MethodContract = {
+  def defContract(): AST.Contract = {
     def pureOpt(): B = {
       if (token.is[Token.At] && ahead(isIdentOf("pure"))) {
         nextTwice()
@@ -399,23 +419,24 @@ final class LParser(input: Input,
 
     accept[BOF]
     newLinesOpt()
+    val reads: List[AST.Exp] = readsModifies("reads")
     val requires: List[ContractExp] = if (isIdentOf("requires")) {
       next()
       newLinesOpt()
       namedExprs(!(isIdentOf("modifies") || isIdentOf("ensures") || token.is[KwDef] || token.is[EOF]))
     } else List()
-    val mods: List[AST.Exp] = modifies()
+    val mods: List[AST.Exp] = readsModifies("modifies")
     val ensures: List[ContractExp] = if (isIdentOf("ensures")) {
       next()
       newLinesOpt()
       namedExprs(!(token.is[KwDef] || token.is[EOF]))
     } else List()
-    val r = AST.MethodContract(isz(requires), isz(mods), isz(ensures), isz(subContract()))
+    val r = AST.Contract(isz(reads), isz(requires), isz(mods), isz(ensures), isz(subContract()))
     accept[EOF]
     r
   }
 
-  def modifies(): List[AST.Exp] = if (isIdentOf("modifies")) {
+  def readsModifies(keyword: String): List[AST.Exp] = if (isIdentOf(keyword)) {
     next()
     newLinesOpt()
     var r = List(sparser.translateExp(expr()))
@@ -453,7 +474,7 @@ final class LParser(input: Input,
    *                     {nl} SpecDef {nl} { SpecDef {nl} } [ WhereDefs {nl} ]
    *                     EOF
    *
-   *  SpecDef        ::= `=' NamedExpr [`,' ( [ case Pattern ] [ Guard ] | Ident<otherwise> ) ] {nl} [ WhereDefs ]
+   *  SpecDef        ::= `=' NamedExpr [`,' ( [ case Pattern ] [ if PostfixExpr ] | Ident<otherwise> ) ]
    *
    *  WhereDefs      ::= Ident<where> {nl} WhereDef { {nl} WhereDef }
    *
@@ -494,14 +515,12 @@ final class LParser(input: Input,
       } else SNone()
       val gOpt: SOption[AST.Exp] = if (token.is[KwIf]) {
         next()
-        SSome(sparser.translateExp(expr()))
+        SSome(sparser.translateExp(postfixExpr()))
       } else SNone()
       (F, pOpt, gOpt)
     } else if (isIdentOf("otherwise")) (T, SNone[AST.Pattern](), SNone[AST.Exp]())
     else (F, SNone[AST.Pattern](), SNone[AST.Exp]())
-    newLinesOpt()
-    val wds = if (isIdentOf("where")) whereDefs() else List()
-    AST.SpecDef(idOpt, e, isOtherwise, patternOpt, guardOpt, isz(wds))
+    AST.SpecDef(idOpt, e, isOtherwise, patternOpt, guardOpt)
   }
 
   private def whereDefs(): List[WhereDef] = {
@@ -571,7 +590,7 @@ final class LParser(input: Input,
       newLinesOpt()
       namedExprs(token.isNot[EOF] || !isIdentOf("modifies"))
     } else List()
-    val mods = modifies()
+    val mods = readsModifies("modifies")
     accept[EOF]
     (is, mods)
   }
@@ -746,7 +765,7 @@ final class LParser(input: Input,
    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
    *                   |  Ident<fact>                                                       QualId
    *                   |  Ident<invariant>                                                  [ QualId ]
-   *                   |  Ident<subst>                                                      Int ( '<' | '>' ) Int
+   *                   |  Ident<subst>                                                      ( '<' | '>' ) Int Int
    *                   |  Ident<algebra>                                                    { Int }
    *                   |  Ident<auto>                                                       { Int }
    *                   |  Ident<coq>                                                        String { Int }
@@ -811,8 +830,8 @@ final class LParser(input: Input,
           if (token.is[Ident]) AST.Just.Invariant(SSome(name()), attr)
           else AST.Just.Invariant(SNone(), attr)
         case "subst" =>
-          val eqStep = acceptInt
           val isRight = if (">" == acceptToken[Ident].value) T else F
+          val eqStep = acceptInt
           AST.Just.Subst(isRight, eqStep, acceptInt, attr)
         case "algebra" | "auto" =>
           val isAlgebra = if ("algebra" == kind) T else F
@@ -987,10 +1006,10 @@ final class LParser(input: Input,
         case _ => return SNone()
       }
       val attr = sparser.attr(token.pos)
-      next()
       val r = if (isSequent)
         text match {
           case "Valid" | "Invalid" =>
+            next()
             val isValid = if (text == "Valid") T else F
             var assignments = List[ISZ[AST.Exp.LitB]](isz(assignment()))
             newLinesOpt()
@@ -1002,14 +1021,17 @@ final class LParser(input: Input,
         }
       else
         text match {
-          case "Tautology" => AST.TruthTable.Conclusion.Tautology(attr)
-          case "Contradictory" => AST.TruthTable.Conclusion.Contradictory(attr)
+          case "Tautology" =>
+            next()
+            AST.TruthTable.Conclusion.Tautology(attr)
+          case "Contradictory" =>
+            next()
+            AST.TruthTable.Conclusion.Contradictory(attr)
           case "Contingent" =>
+            next()
             newLinesOpt()
             if (isIdentOf("-")) next()
-            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${
-              TokensHelper.name(token)
-            } found", at = token)
+            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
             var truthAssignments = List(isz(assignment()))
@@ -1017,9 +1039,7 @@ final class LParser(input: Input,
               truthAssignments ::= isz(assignment())
             newLinesOpt()
             if (isIdentOf("-")) next()
-            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${
-              TokensHelper.name(token)
-            } found", at = token)
+            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
             var falseAssignments = List(isz(assignment()))
@@ -1047,9 +1067,7 @@ final class LParser(input: Input,
         }).toList
       }
 
-      if (!isBlit) reporter.syntaxError(s"Either T or F expected, but ${
-        TokensHelper.name(token)
-      } found", at = token)
+      if (!isBlit) reporter.syntaxError(s"Either T or F expected, but ${TokensHelper.name(token)} found", at = token)
       var r = blit()
       while (isBlit) {
         r ++= blit()
@@ -1064,16 +1082,14 @@ final class LParser(input: Input,
 
     def acceptHLine(): Unit = {
       if (isHLine(token)) next()
-      else reporter.syntaxError(s"----... expected but ${
-        TokensHelper.name(token)
-      } found", at = token)
+      else reporter.syntaxError(s"----... expected but ${TokensHelper.name(token)} found", at = token)
       newLinesOpt()
     }
 
     var vars = List[AST.Id]()
     var sep: Point = Point.None
     var formula: AST.LClause.Sequent = null
-    var isSequent = false
+    var isSequent: B = F
 
     def header(): Unit = {
       while (!isIdentOf("|") && token.isNot[EOF]) {
@@ -1081,12 +1097,12 @@ final class LParser(input: Input,
       }
       vars = vars.reverse
       sep = token.pos.start
-      next()
+      acceptIdent("|")
       val i = findTokenPos(isSequentToken, t => !isHLine(t))
       formula =
         if (i < 0) AST.LClause.Sequent(ISZ(), ISZ(sparser.translateExp(expr())), SNone())
         else {
-          isSequent = true
+          isSequent = T
           sequent(noProof = true)
         }
       newLinesOpt()
@@ -1098,9 +1114,7 @@ final class LParser(input: Input,
       if (isIdentOf("*")) {
         stars ::= _Z(token.pos.start.column)
         next()
-      } else reporter.syntaxError(s"* expected but ${
-        TokensHelper.name(token)
-      } found", at = token)
+      } else reporter.syntaxError(s"* expected but ${TokensHelper.name(token)} found", at = token)
 
       while (isIdentOf("*")) {
         stars ::= token.pos.start.column
@@ -1114,10 +1128,7 @@ final class LParser(input: Input,
 
     def row(): Unit = {
       val assignment = if (!isIdentOf("|")) blits() else List()
-      if (!isIdentOf("|")) reporter.syntaxError(s"| expected but ${
-        TokensHelper.name(token)
-      } found", at = token)
-      next()
+      acceptIdent("|")
       rows ::= AST.TruthTable.Row(isz(assignment), _Z(token.pos.start.column), isz(blits()))
       newLinesOpt()
     }
@@ -1130,7 +1141,15 @@ final class LParser(input: Input,
     acceptHLine()
     while (!isHLine(token) && token.isNot[EOF]) row()
     acceptHLine()
-    val r = AST.TopUnit.TruthTable(fileUriOpt, isz(stars), isz(vars), _Z(sep.column), formula, isz(rows.reverse), conclusion(isSequent))
+    val r = AST.TopUnit.TruthTable(
+      fileUriOpt,
+      isz(stars),
+      isz(vars),
+      _Z(sep.column),
+      isSequent,
+      formula,
+      isz(rows.reverse),
+      conclusion(isSequent))
     newLinesOpt()
     accept[EOF]
     SlangParser.Result(input.text, hashSireum = false, SSome(r), sparser.tags)

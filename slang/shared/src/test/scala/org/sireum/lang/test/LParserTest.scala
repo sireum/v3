@@ -25,6 +25,7 @@
 
 package org.sireum.lang.test
 
+import org.sireum.lang.ast.TopUnit
 import org.sireum.{None => SNone}
 import org.sireum.lang.parser.{LParser, SlangParser}
 import org.sireum.test.SireumSpec
@@ -36,6 +37,7 @@ class LParserTest extends SireumSpec {
     implicit val _spec: SireumSpec = this
 
     "Truth Table" - {
+
       parseTruthTable("and",
         """        *
           |------------
@@ -667,7 +669,7 @@ class LParserTest extends SireumSpec {
           |  1. vowel(e)                              premise
           |  2. holds(square14, e)                    premise
           |  3. vowel(e) ∧ holds(square14, e)         ∧i 1 2
-          |  4. ∃y,x vowel(y) ∧ holds(x, y)           ∃i 3 e square14
+          |  4. ∃y,x vowel(y) ∧ holds(x, y)           ∃i 3 e, square14
           |}
         """.stripMargin)
 
@@ -712,22 +714,21 @@ class LParserTest extends SireumSpec {
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.sequentFile(SNone())
-      check(r)
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.Sequent])
     }
 
   def parsePropositional(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.sequentFile(SNone())
-      if (title.endsWith("-4")) println(r)
-      check(r)
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.Sequent])
     }
 
   def parseTruthTable(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.truthTable(SNone())
-      check(r)
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTable])
     }
 
   def check(r: SlangParser.Result): Boolean = {

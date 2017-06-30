@@ -28,9 +28,11 @@ package org.sireum.lang.parser
 
 import org.sireum.lang.{ast => AST}
 import org.sireum.util._
-import org.sireum.{B, Option, Some, None, ISZ, String, _2String, enum}
+import org.sireum.{B, ISZ, None, Option, Some, String, _2String, enum}
 import org.sireum.math.Numbers
+
 import scala.meta._
+import scala.meta.internal.parsers.ScalametaParser
 
 // TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
 object SlangParser {
@@ -110,14 +112,9 @@ object SlangParser {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
     val hashSireum = line.contains("#Sireum")
-    val dialect = scalaDialect(isWorksheet)
-    dialect(text).parse[Source] match {
-      case Parsed.Success(x) =>
-        new SlangParser(text, allowSireumPackage, hashSireum,
-          isWorksheet, isDiet, fileUriOpt).translateSource(x)
-      case pe: Parsed.Error =>
-        Result(text, hashSireum, None(), ISZ(error(fileUriOpt, pe.pos, pe.message)))
-    }
+    val (dialect, input) = scalaDialect(isWorksheet)(text)
+    new SlangParser(text, input, dialect, allowSireumPackage, hashSireum,
+      isWorksheet, isDiet, fileUriOpt).parseTopUnit()
   }
 
   def error(fileUriOpt: scala.Option[FileResourceUri],
@@ -157,16 +154,57 @@ object SlangParser {
 import SlangParser._
 
 class SlangParser(text: Predef.String,
+                  input: Input,
+                  dialect: Dialect,
                   allowSireumPackage: Boolean,
                   hashSireum: Boolean,
                   isWorksheet: Boolean,
                   isDiet: Boolean,
                   fileUriOpt: scala.Option[FileResourceUri]) {
   var tags: ISZ[Tag] = ISZ()
+  var lPointOpt: scala.Option[(Int, Int, Int)] = scala.None
+
+  def parseTopUnit(): Result = {
+    val parser = new ScalametaParser(input, dialect)
+
+    try {
+      if (fileUriOpt.getOrElse("").endsWith(".scala")) {
+        if (hashSireum) translateSource(parser.parseSource())
+        else Result(text, hashSireum, None(), tags)
+      } else {
+        val oldIn = parser.in
+        parser.in = oldIn.fork
+        parser.next()
+        parser.newLinesOpt()
+        if (parser.isIdentOf("*")) {
+          new LParser(input, dialect, this).truthTable(opt(fileUriOpt.map(_2String)))
+        } else if (parser.token.is[Token.KwPackage] || parser.token.is[Token.KwImport] || parser.token.is[Token.EOF]) {
+          parser.in = oldIn
+          translateSource(parser.parseSource())
+        } else {
+          new LParser(input, dialect, this).sequentFile(opt(fileUriOpt.map(_2String)))
+        }
+      }
+    } catch {
+      case e: ParseException =>
+        error(e.pos, e.shortMessage)
+        Result(text, hashSireum, None(), tags)
+      case e: TokenizeException =>
+        error(e.pos, e.shortMessage)
+        Result(text, hashSireum, None(), tags)
+    }
+  }
 
   def error(pos: Position,
             message: Predef.String): Unit = {
-    tags :+= SlangParser.error(fileUriOpt, pos, message)
+    lPointOpt match {
+      case scala.Some((startOffset, _, _)) =>
+        tags :+= SlangParser.error(fileUriOpt,
+          Position.Range(input, startOffset + pos.start.offset, startOffset + pos.end.offset),
+          message)
+      case _ =>
+        tags :+= SlangParser.error(fileUriOpt, pos, message)
+    }
   }
 
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit", emptyAttr)), emptyAttr), ISZ(), emptyTypedAttr)
@@ -478,7 +516,7 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       translateType(tpe))
-    AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
+    AST.Stmt.Method(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -520,46 +558,47 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       tpeopt.map(translateType).getOrElse(unitType))
-    if (enclosing == Enclosing.ExtObject)
+    if (isSpec)
       exp match {
         case q"$$" =>
-          AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
         case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
-          AST.Stmt.ExtMethod(isPure, sig, parseMethodContract(exp), attr(tree.pos))
-        case _ =>
-          hasError = true
-          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
-          AST.Stmt.ExtMethod(isPure, sig, AST.MethodContract(
-            ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
-      }
-    else if (isSpec)
-      exp match {
-        case q"$$" =>
-          AST.Stmt.SpecMethod(sig, ISZ(), attr(tree.pos))
-        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
-          AST.Stmt.SpecMethod(sig, parseDefs(exp), attr(tree.pos))
+          val (sds, wds) = parseDefs(exp)
+          AST.Stmt.SpecMethod(sig, sds, wds, attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
-          AST.Stmt.SpecMethod(sig, ISZ(), attr(tree.pos))
+          AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
+      }
+    else if (enclosing == Enclosing.ExtObject)
+      exp match {
+        case q"$$" =>
+          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+          AST.Stmt.ExtMethod(isPure, sig, parseContract(exp), attr(tree.pos))
+        case _ =>
+          hasError = true
+          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
+          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
       }
     else exp match {
       case exp: Term.Block =>
         val (mc, bodyOpt) = exp.stats.headOption match {
           case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
-            (parseMethodContract(l),
+            (parseContract(l),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
           case _ =>
-            (AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()),
+            (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
         AST.Stmt.Method(isPure, sig, mc, bodyOpt, attr(tree.pos))
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(isPure, sig, AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+        AST.Stmt.Method(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
     }
   }
 
@@ -1175,17 +1214,17 @@ class SlangParser(text: Predef.String,
 
   def translateWhile(enclosing: Enclosing.Type, stat: Term.While): AST.Stmt = {
     var hasError = stmtCheck(enclosing, stat, "While-statements")
-    var reads: ISZ[AST.Name] = ISZ()
-    var invariants: ISZ[AST.Exp] = ISZ()
+    var invariants: ISZ[AST.ContractExp] = ISZ()
+    var mods: ISZ[AST.Exp] = ISZ()
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats match {
         case (l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) :: rest =>
-          val (rs, is) = parseLoopContract(l)
-          reads = rs
+          val (is, ms) = parseLoopContract(l)
           invariants = is
+          mods = ms
           stats = rest
-        case (t: Term.Interpolate) :: rest =>
+        case (t: Term.Interpolate) :: _ =>
           hasError = true
           error(t.pos, "Expecting a Slang while-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
@@ -1196,21 +1235,21 @@ class SlangParser(text: Predef.String,
         errorInSlang(stat.body.pos, "While-loop body should be a code block")
     }
     if (hasError) rStmt else
-      AST.Stmt.While(translateExp(stat.expr), reads, invariants,
+      AST.Stmt.While(translateExp(stat.expr), invariants, mods,
         AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
         attr(stat.pos))
   }
 
   def translateDoWhile(enclosing: Enclosing.Type, stat: Term.Do): AST.Stmt = {
     var hasError = stmtCheck(enclosing, stat, "Do-while-statements")
-    var reads: ISZ[AST.Name] = ISZ()
-    var invariants: ISZ[AST.Exp] = ISZ()
+    var modifies: ISZ[AST.Exp] = ISZ()
+    var invariants: ISZ[AST.ContractExp] = ISZ()
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats.lastOption match {
         case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
-          val (rs, is) = parseLoopContract(l)
-          reads = rs
+          val (is, ms) = parseLoopContract(l)
+          modifies = ms
           invariants = is
           stats = body.stats.dropRight(1)
         case scala.Some(t: Term.Interpolate) =>
@@ -1224,7 +1263,7 @@ class SlangParser(text: Predef.String,
         errorInSlang(stat.body.pos, "Do-While-loop body should be a code block")
     }
     if (hasError) rStmt else
-      AST.Stmt.DoWhile(translateExp(stat.expr), reads, invariants,
+      AST.Stmt.DoWhile(translateExp(stat.expr), invariants, modifies,
         AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
         attr(stat.pos))
   }
@@ -1248,13 +1287,13 @@ class SlangParser(text: Predef.String,
     }
 
     var hasError = stmtCheck(enclosing, stat, "For-statements")
-    var modifies: ISZ[AST.Name] = ISZ()
-    var invariants: ISZ[AST.Exp] = ISZ()
+    var modifies: ISZ[AST.Exp] = ISZ()
+    var invariants: ISZ[AST.ContractExp] = ISZ()
     var stats: Seq[Stat] = Seq()
     stat.body match {
       case body: Term.Block => body.stats match {
         case (l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) :: rest =>
-          val (ms, is) = parseLoopContract(l)
+          val (is, ms) = parseLoopContract(l)
           modifies = ms
           invariants = is
           stats = rest
@@ -1271,10 +1310,10 @@ class SlangParser(text: Predef.String,
     if (hasError) rStmt else stat.enums match {
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr", enumerator"if $cond") =>
         AST.Stmt.For(cid(id), translateRange(expr), Some(translateExp(cond)),
-          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
+          invariants, modifies, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
       case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
         AST.Stmt.For(cid(id), translateRange(expr), None(),
-          modifies, invariants, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
+          invariants, modifies, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
       case _ =>
         errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(stat)}'"); rStmt
     }
@@ -1350,7 +1389,7 @@ class SlangParser(text: Predef.String,
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
       case _ =>
-        errorNotSlang(exp.pos, s"Expresion '${exp.structure}' is")
+        errorNotSlang(exp.pos, s"Expresion '${syntax(exp)}' is")
         rExp
     }
   }
@@ -1381,7 +1420,13 @@ class SlangParser(text: Predef.String,
   }
 
   def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit = {
+    def toBigInt(value: Predef.String): BigInt = {
+      if (value.toUpperCase().startsWith("0X")) BigInt(value.substring(2), 16)
+      else BigInt(value)
+    }
+
     def errR = AST.Exp.LitB(false, attr(lit.pos))
+
     if (text.substring(lit.pos.start.offset, lit.pos.end.offset).startsWith(lit.prefix.value + "\"\"\"")) {
       error(lit.pos, "'" + lit.prefix.value + "\"...\"' should be used instead of '" + lit.prefix.value + "\"\"...\"\"\"'.")
       return errR
@@ -1396,32 +1441,32 @@ class SlangParser(text: Predef.String,
     val List(Lit.String(value)) = lit.parts
     try {
       val r = lit.prefix.value match {
-        case "z" => AST.Exp.LitZ(Numbers.toZ(BigInt(value)), attr(lit.pos))
-        case "z8" => AST.Exp.LitZ8(Numbers.toZ8(BigInt(value)), attr(lit.pos))
-        case "z16" => AST.Exp.LitZ16(Numbers.toZ16(BigInt(value)), attr(lit.pos))
-        case "z32" => AST.Exp.LitZ32(Numbers.toZ32(BigInt(value)), attr(lit.pos))
-        case "z64" => AST.Exp.LitZ64(Numbers.toZ64(BigInt(value)), attr(lit.pos))
-        case "n" => AST.Exp.LitN(Numbers.toN(BigInt(value)), attr(lit.pos))
-        case "n8" => AST.Exp.LitN8(Numbers.toN8(BigInt(value)), attr(lit.pos))
-        case "n16" => AST.Exp.LitN16(Numbers.toN16(BigInt(value)), attr(lit.pos))
-        case "n32" => AST.Exp.LitN32(Numbers.toN32(BigInt(value)), attr(lit.pos))
-        case "n64" => AST.Exp.LitN64(Numbers.toN64(BigInt(value)), attr(lit.pos))
-        case "s8" => AST.Exp.LitS8(Numbers.toS8Exact(BigInt(value)), attr(lit.pos))
-        case "s16" => AST.Exp.LitS16(Numbers.toS16Exact(BigInt(value)), attr(lit.pos))
-        case "s32" => AST.Exp.LitS32(Numbers.toS32Exact(BigInt(value)), attr(lit.pos))
-        case "s64" => AST.Exp.LitS64(Numbers.toS64Exact(BigInt(value)), attr(lit.pos))
-        case "u8" => AST.Exp.LitU8(Numbers.toU8Exact(BigInt(value)), attr(lit.pos))
-        case "u16" => AST.Exp.LitU16(Numbers.toU16Exact(BigInt(value)), attr(lit.pos))
-        case "u32" => AST.Exp.LitU32(Numbers.toU32Exact(BigInt(value)), attr(lit.pos))
-        case "u64" => AST.Exp.LitU64(Numbers.toU64Exact(BigInt(value)), attr(lit.pos))
+        case "z" => AST.Exp.LitZ(Numbers.toZ(toBigInt(value)), attr(lit.pos))
+        case "z8" => AST.Exp.LitZ8(Numbers.toZ8(toBigInt(value)), attr(lit.pos))
+        case "z16" => AST.Exp.LitZ16(Numbers.toZ16(toBigInt(value)), attr(lit.pos))
+        case "z32" => AST.Exp.LitZ32(Numbers.toZ32(toBigInt(value)), attr(lit.pos))
+        case "z64" => AST.Exp.LitZ64(Numbers.toZ64(toBigInt(value)), attr(lit.pos))
+        case "n" => AST.Exp.LitN(Numbers.toN(toBigInt(value)), attr(lit.pos))
+        case "n8" => AST.Exp.LitN8(Numbers.toN8(toBigInt(value)), attr(lit.pos))
+        case "n16" => AST.Exp.LitN16(Numbers.toN16(toBigInt(value)), attr(lit.pos))
+        case "n32" => AST.Exp.LitN32(Numbers.toN32(toBigInt(value)), attr(lit.pos))
+        case "n64" => AST.Exp.LitN64(Numbers.toN64(toBigInt(value)), attr(lit.pos))
+        case "s8" => AST.Exp.LitS8(Numbers.toS8Exact(toBigInt(value)), attr(lit.pos))
+        case "s16" => AST.Exp.LitS16(Numbers.toS16Exact(toBigInt(value)), attr(lit.pos))
+        case "s32" => AST.Exp.LitS32(Numbers.toS32Exact(toBigInt(value)), attr(lit.pos))
+        case "s64" => AST.Exp.LitS64(Numbers.toS64Exact(toBigInt(value)), attr(lit.pos))
+        case "u8" => AST.Exp.LitU8(Numbers.toU8Exact(toBigInt(value)), attr(lit.pos))
+        case "u16" => AST.Exp.LitU16(Numbers.toU16Exact(toBigInt(value)), attr(lit.pos))
+        case "u32" => AST.Exp.LitU32(Numbers.toU32Exact(toBigInt(value)), attr(lit.pos))
+        case "u64" => AST.Exp.LitU64(Numbers.toU64Exact(toBigInt(value)), attr(lit.pos))
         case "f32" => AST.Exp.LitF32(Numbers.toF32(value.toFloat), attr(lit.pos))
         case "f64" => AST.Exp.LitF64(Numbers.toF64(value.toDouble), attr(lit.pos))
         case "r" => AST.Exp.LitR(Numbers.toR(value), attr(lit.pos))
       }
       return r
     } catch {
-      case _: IllegalArgumentException =>
-      case _: NumberFormatException =>
+      case e: IllegalArgumentException =>
+      case e: NumberFormatException =>
     }
     error(lit.pos, s"Invalid ${lit.prefix.value.toUpperCase} number: '${syntax(lit)}'")
     AST.Exp.LitB(false, attr(lit.pos))
@@ -1496,7 +1541,7 @@ class SlangParser(text: Predef.String,
     unops.get(t.op.value) match {
       case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg), typedAttr(t.op.pos))
       case _ =>
-        errorNotSlang(t.op.pos, s"'${t.op.value}' is not a unary operator")
+        errorInSlang(t.op.pos, s"'${t.op.value}' is not a unary operator")
         rExp
     }
   }
@@ -1517,7 +1562,7 @@ class SlangParser(text: Predef.String,
         binops.get(t.op.value) match {
           case scala.Some(op) => AST.Exp.Binary(translateExp(t.lhs), op, expArg(right), typedAttr(t.op.pos))
           case _ =>
-            errorNotSlang(t.op.pos, s"'${t.op.value}' is not a binary operator")
+            errorInSlang(t.op.pos, s"'${t.op.value}' is not a binary operator")
             rExp
         }
       case _ =>
@@ -1528,6 +1573,11 @@ class SlangParser(text: Predef.String,
 
   def translateInvoke(receiverOpt: scala.Option[Term], name: Term.Name,
                       tpes: Seq[Type], argss: Seq[Seq[Term.Arg]], pos: Position): AST.Exp = {
+    def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
+      if (argss.isEmpty) return Right(ISZ())
+      translateArgs(argss.head)
+    }
+
     var r: AST.Exp = translateArgss(argss) match {
       case Left(args) => AST.Exp.InvokeNamed(opt(receiverOpt.map(translateExp)), cid(name),
         ISZ(tpes.map(translateType): _*), args, resolvedAttr(pos))
@@ -1540,6 +1590,7 @@ class SlangParser(text: Predef.String,
       val pos =
         if (args.nonEmpty) Position.Range(args.head.pos.input, args.head.pos.start, args.last.pos.end)
         else prevPos
+      prevPos = pos
       r = translateApply(r, argss(i), pos)
     }
     r
@@ -1566,12 +1617,6 @@ class SlangParser(text: Predef.String,
     }
     if (hasError) rExp
     else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep), typedAttr(exp.pos))
-  }
-
-  def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
-    if (argss.isEmpty) return Right(ISZ())
-    val Seq(args) = argss
-    translateArgs(args)
   }
 
   def translateArgs(args: Seq[Term.Arg]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
@@ -1614,28 +1659,73 @@ class SlangParser(text: Predef.String,
     } else true
   }
 
-  def parseDefs(exp: Term.Interpolate): ISZ[AST.SpecDef] = {
-    if (!checkLSyntax(exp)) return ISZ()
-    // TODO: parse defs
-    ISZ()
+  def lParser[T](exp: Term.Interpolate)(f: LParser => T): T = {
+    val start = exp.pos.start
+    val startOffset = start.offset + 4
+    val startLine = start.line
+    val startColum = start.column
+    val endOffset = exp.pos.end.offset - 3
+    lPointOpt = scala.Some((startOffset, startLine, startColum))
+    try f(new LParser(Input.Slice(input, startOffset, endOffset), dialect, this))
+    catch {
+      case e: ParseException => throw ParseException(
+        Position.Range(input, startOffset + e.pos.start.offset,
+          startOffset + e.pos.end.offset), e.shortMessage)
+      case e: TokenizeException => throw TokenizeException(
+        Position.Range(input, startOffset + e.pos.start.offset,
+          startOffset + e.pos.end.offset), e.shortMessage)
+    } finally lPointOpt = scala.None
   }
 
-  def parseMethodContract(exp: Term.Interpolate): AST.MethodContract = {
-    if (!checkLSyntax(exp)) return AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ())
-    // TODO: parse contract
-    AST.MethodContract(ISZ(), ISZ(), ISZ(), ISZ())
+  def parseDefs(exp: Term.Interpolate): (ISZ[AST.SpecDef], ISZ[AST.WhereDef]) = {
+    if (!checkLSyntax(exp)) return (ISZ(), ISZ())
+    lParser(exp) { parser =>
+      val (sds, wds) = parser.specDefs()
+      (ISZ(sds: _*), ISZ(wds: _*))
+    }
+  }
+
+  def parseContract(exp: Term.Interpolate): AST.Contract = {
+    if (!checkLSyntax(exp)) return AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
+    lParser(exp)(_.defContract())
   }
 
   def parseLStmt(enclosing: Enclosing.Type, exp: Term.Interpolate): AST.Stmt = {
+    def isProofSequentContext: Boolean = enclosing match {
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.Method
+           | Enclosing.Block | Enclosing.DatatypeClass | Enclosing.RecordClass => true
+      case _ => false
+    }
+
+    def isInvariantContext: Boolean = enclosing match {
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject => true
+      case _ => false
+    }
+
+    def isFactsTheoremsContext: Boolean = enclosing match {
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject
+           | Enclosing.DatatypeTrait | Enclosing.DatatypeClass | Enclosing.RecordTrait
+           | Enclosing.RecordClass | Enclosing.Sig => true
+      case _ => false
+    }
+
     if (!checkLSyntax(exp)) return rStmt
-    // TODO: parse stmt
-    rStmt
+    val clause = lParser(exp)(_.lClause())
+    clause match {
+      case _: AST.LClause.Sequent if !isProofSequentContext => error(exp.pos, "Invalid sequent location.")
+      case _: AST.LClause.Proof if !isProofSequentContext => error(exp.pos, "Invalid proof location.")
+      case _: AST.LClause.Invariants if !isInvariantContext => error(exp.pos, "Invalid invariant location.")
+      case _: AST.LClause.Facts if !isFactsTheoremsContext => error(exp.pos, "Invalid fact location.")
+      case _: AST.LClause.Theorems if !isFactsTheoremsContext => error(exp.pos, "Invalid theorem location.")
+      case _ =>
+    }
+    AST.Stmt.LStmt(clause, attr(exp.pos))
   }
 
-  def parseLoopContract(exp: Term.Interpolate): (ISZ[AST.Name], ISZ[AST.Exp]) = {
+  def parseLoopContract(exp: Term.Interpolate): (ISZ[AST.ContractExp], ISZ[AST.Exp]) = {
     if (!checkLSyntax(exp)) return (ISZ(), ISZ())
-    // TODO: parse loop contract
-    (ISZ(), ISZ())
+    val (invs, mods) = lParser(exp)(_.loopInvMode())
+    (ISZ(invs: _*), ISZ(mods: _*))
   }
 
   def cid(t: Pat.Var.Term): AST.Id = cid(t.name.value, t.pos)
@@ -1658,7 +1748,7 @@ class SlangParser(text: Predef.String,
 
     def isDigit(c: Char): Boolean = '0' <= c && c <= '9'
 
-    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || isDigit(c)
+    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || isDigit(c) || c == '_'
 
     if (id.head == '_' && id.tail.forall(isDigit)) {
       // OK
@@ -1674,18 +1764,21 @@ class SlangParser(text: Predef.String,
 
   def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posInfoOpt = posInfoOpt(pos), resOpt = None(), typeOpt = None())
 
-  def posInfoOpt(pos: Position): Option[AST.PosInfo] = Some(AST.PosInfo(
-    fileUriOpt = fileUriOpt match {
-      case scala.Some(uri) => Some(uri)
-      case _ => None[String]()
-    },
-    beginLine = pos.start.line,
-    beginColumn = pos.start.column,
-    endLine = pos.end.line,
-    endColumn = pos.end.column,
-    offset = pos.start.offset,
-    length = pos.end.offset - pos.start.offset + 1
-  ))
+  def posInfoOpt(pos: Position): Option[AST.PosInfo] = {
+    val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
+    Some(AST.PosInfo(
+      fileUriOpt = fileUriOpt match {
+        case scala.Some(uri) => Some(uri)
+        case _ => None[String]()
+      },
+      beginLine = startLine + pos.start.line - 1,
+      beginColumn = startColumn + pos.start.column - 1,
+      endLine = startLine + pos.end.line - 1,
+      endColumn = startColumn + pos.end.column - 1,
+      offset = startOffset + pos.start.offset,
+      length = pos.end.offset - pos.start.offset + 1
+    ))
+  }
 
   def ref2IS(ref: Term.Ref): ISZ[AST.Id] = {
     def f(t: Term): ISZ[AST.Id] = t match {
@@ -1699,7 +1792,8 @@ class SlangParser(text: Predef.String,
   }
 
   def syntax(t: Tree, max: Int = 20): Predef.String = {
-    val text = this.text.substring(t.pos.start.offset, t.pos.end.offset)
+    val startOffset = lPointOpt.map(_._1).getOrElse(0)
+    val text = this.text.substring(startOffset + t.pos.start.offset, startOffset + t.pos.end.offset)
     (if (text.length < max) text else text.substring(0, max) + "...").map {
       case '\r' => ' '
       case '\t' => ' '

@@ -67,7 +67,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
         passing("@spec def f(x: Z): Z = $", isWorksheet = true)
 
-        passing("@spec def f(x: Z): Z = l\"\"\"reads g\"\"\"", isWorksheet = true)
+        passing("@spec def f(x: Z): Z = l\"\"\" = 1\"\"\"", isWorksheet = true)
 
         passing("@pure def f(x: Z): Z = {}", isWorksheet = true)
 
@@ -123,7 +123,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
           passing("@ext object Foo { @pure def f: Z = $ }")
 
-          passing("@ext object Foo { def f: Z = l\"\"\"reads g\"\"\" }")
+          passing("@ext object Foo { def f: Z = l\"\"\"reads g\nmodifies g\"\"\" }")
         }
       }
     }
@@ -138,7 +138,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
       failing("package a.b.c; object Foo", packageFirstMember, addImport = false)
 
-      failing("object Foo", "first statement should be", addImport = false)
+      failing("object Foo", "⊢", addImport = false)
 
       "Val/Var" - {
 
@@ -290,7 +290,7 @@ class ScalaMetaParserTest extends SireumSpec {
         case _ => false
       }
       if (!b) report(r)
-        b
+      b
     }
 
   def sub(text: String, max: Int = 100): String = {

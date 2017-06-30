@@ -48,6 +48,7 @@ object TopUnit {
                              stars: ISZ[Z],
                              vars: ISZ[Id],
                              sepColumn: Z,
+                             isSequent: B,
                              sequent: LClause.Sequent,
                              rows: ISZ[org.sireum.lang.ast.TruthTable.Row],
                              conclusionOpt: Option[org.sireum.lang.ast.TruthTable.Conclusion])
@@ -97,19 +98,20 @@ object Stmt {
 
   @datatype class Method(isPure: B,
                          sig: MethodSig,
-                         contract: MethodContract,
+                         contract: Contract,
                          bodyOpt: Option[Body],
                          @hidden attr: Attr)
     extends Stmt
 
   @datatype class ExtMethod(isPure: B,
                             sig: MethodSig,
-                            contract: MethodContract,
+                            contract: Contract,
                             @hidden attr: Attr)
     extends Stmt
 
   @datatype class SpecMethod(sig: MethodSig,
                              defs: ISZ[SpecDef],
+                             where: ISZ[WhereDef],
                              @hidden attr: Attr)
     extends Stmt
 
@@ -189,15 +191,15 @@ object Stmt {
     extends Stmt with AssignExp
 
   @datatype class While(cond: Exp,
-                        modifies: ISZ[Name],
-                        invariants: ISZ[Exp],
+                        invariants: ISZ[ContractExp],
+                        modifies: ISZ[Exp],
                         body: Body,
                         @hidden attr: Attr)
     extends Stmt
 
   @datatype class DoWhile(cond: Exp,
-                          modifies: ISZ[Name],
-                          invariants: ISZ[Exp],
+                          invariants: ISZ[ContractExp],
+                          modifies: ISZ[Exp],
                           body: Body,
                           @hidden attr: Attr)
     extends Stmt
@@ -205,8 +207,8 @@ object Stmt {
   @datatype class For(id: Id,
                       range: Range,
                       condOpt: Option[Exp],
-                      modifies: ISZ[Name],
-                      invariants: ISZ[Exp],
+                      invariants: ISZ[ContractExp],
+                      modifies: ISZ[Exp],
                       body: Body,
                       @hidden attr: Attr)
     extends Stmt
@@ -568,14 +570,15 @@ object Domain {
 @datatype class TypeParam(id: Id,
                           superTypeOpt: Option[Type])
 
-@datatype class MethodContract(requires: ISZ[ContractExp],
-                               modifies: ISZ[Exp],
-                               ensures: ISZ[ContractExp],
-                               subs: ISZ[SubContract])
+@datatype class Contract(reads: ISZ[Exp],
+                         requires: ISZ[ContractExp],
+                         modifies: ISZ[Exp],
+                         ensures: ISZ[ContractExp],
+                         subs: ISZ[SubContract])
 
 @datatype class SubContract(id: Id,
                             params: ISZ[(B, Id)],
-                            contract: MethodContract)
+                            contract: Contract)
 
 @datatype trait WhereDef
 
@@ -596,8 +599,7 @@ object WhereDef {
                         exp: Exp,
                         isOtherwise: B,
                         patternOpt: Option[Pattern],
-                        guardOpt: Option[Exp],
-                        where: ISZ[WhereDef])
+                        guardOpt: Option[Exp])
 
 @datatype trait ProofStep {
   def step: Exp.LitZ
