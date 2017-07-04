@@ -39,15 +39,23 @@ object Transformer {
 
   @sig trait Pre[Context] {
 
+    @pure def transformTopUnit(ctx: Context, topUnit: TopUnit): PreResult[Context, TopUnit] = {
+      topUnit match {
+        case topUnit: TopUnit.Program => transformProgram(ctx, topUnit)
+        case topUnit: TopUnit.SequentUnit => transformSequentUnit(ctx, topUnit)
+        case topUnit: TopUnit.TruthTableUnit => transformTruthTableUnit(ctx, topUnit)
+      }
+    }
+
     @pure def transformProgram(ctx: Context, program: TopUnit.Program): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformSequent(ctx: Context, sequent: TopUnit.SequentUnit): PreResult[Context, TopUnit] = {
+    @pure def transformSequentUnit(ctx: Context, sequent: TopUnit.SequentUnit): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTable(ctx: Context, truthTable: TopUnit.TruthTableUnit): PreResult[Context, TopUnit] = {
+    @pure def transformTruthTableUnit(ctx: Context, truthTable: TopUnit.TruthTableUnit): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
@@ -55,15 +63,23 @@ object Transformer {
 
   @sig trait Post[Context] {
 
+    @pure def transformTopUnit(ctx: Context, topUnit: TopUnit): Result[Context, TopUnit] = {
+      topUnit match {
+        case topUnit: TopUnit.Program => transformProgram(ctx, topUnit)
+        case topUnit: TopUnit.SequentUnit => transformSequentUnit(ctx, topUnit)
+        case topUnit: TopUnit.TruthTableUnit => transformTruthTableUnit(ctx, topUnit)
+      }
+    }
+
     @pure def transformProgram(ctx: Context, program: TopUnit.Program): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
 
-    @pure def transformSequent(ctx: Context, sequent: TopUnit.SequentUnit): Result[Context, TopUnit] = {
+    @pure def transformSequentUnit(ctx: Context, sequent: TopUnit.SequentUnit): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTable(ctx: Context, truthTable: TopUnit.TruthTableUnit): Result[Context, TopUnit] = {
+    @pure def transformTruthTableUnit(ctx: Context, truthTable: TopUnit.TruthTableUnit): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
   }
@@ -75,11 +91,7 @@ import Transformer._
 @datatype class Transformer[Context](pre: Pre[Context], post: Post[Context]) {
 
   @pure def transformTopUnit(ctx: Context, topUnit: TopUnit): Result[Context, TopUnit] = {
-    val preR: PreResult[Context, TopUnit] = topUnit match {
-      case topUnit: TopUnit.Program => pre.transformProgram(ctx, topUnit)
-      case topUnit: TopUnit.SequentUnit => pre.transformSequent(ctx, topUnit)
-      case topUnit: TopUnit.TruthTableUnit => pre.transformTruthTable(ctx, topUnit)
-    }
+    val preR = pre.transformTopUnit(ctx, topUnit)
     val r: Result[Context, TopUnit] = if (preR.continue) {
       transformTopUnitCont(preR.ctx, preR.resultOpt.getOrElse(topUnit), preR.resultOpt.nonEmpty)
     } else if (preR.resultOpt.nonEmpty) {
@@ -89,11 +101,7 @@ import Transformer._
     }
     val hasChanged = r.resultOpt.nonEmpty
     val temp = r.resultOpt.getOrElse(topUnit)
-    val postR: Result[Context, TopUnit] = temp match {
-      case program: TopUnit.Program => post.transformProgram(r.ctx, program)
-      case sequent: TopUnit.SequentUnit => post.transformSequent(r.ctx, sequent)
-      case truthTable: TopUnit.TruthTableUnit => post.transformTruthTable(r.ctx, truthTable)
-    }
+    val postR = post.transformTopUnit(ctx, temp)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -133,18 +141,18 @@ import Transformer._
     }
   }
 
-  @pure def transformISZ[T](ctx: Context, is: IS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
-    var is2 = ISZ[T]()
+  @pure def transformISZ[T](ctx: Context, s: IS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
+    var s2 = ISZ[T]()
     var changed = F
     var ctxi = ctx
-    for (e <- is) {
+    for (e <- s) {
       val r = f(ctxi, e)
       ctxi = r.ctx
       changed = changed | r.resultOpt.nonEmpty
-      is2 = is2 :+ r.resultOpt.getOrElse(e)
+      s2 = s2 :+ r.resultOpt.getOrElse(e)
     }
     if (changed) {
-      return Result(ctxi, Some(is2))
+      return Result(ctxi, Some(s2))
     } else {
       return Result(ctxi, None())
     }

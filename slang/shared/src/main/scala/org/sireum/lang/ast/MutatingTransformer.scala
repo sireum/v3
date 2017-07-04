@@ -35,15 +35,23 @@ object MutatingTransformer {
 
   @sig trait Pre {
 
+    def transformTopUnit(topUnit: TopUnit): PreResult[TopUnit] = {
+      topUnit match {
+        case topUnit: TopUnit.Program => transformProgram(topUnit)
+        case topUnit: TopUnit.SequentUnit => transformSequentUnit(topUnit)
+        case topUnit: TopUnit.TruthTableUnit => transformTruthTableUnit(topUnit)
+      }
+    }
+
     def transformProgram(program: TopUnit.Program): PreResult[TopUnit] = {
       return PreResult(T, None())
     }
 
-    def transformSequent(sequent: TopUnit.SequentUnit): PreResult[TopUnit] = {
+    def transformSequentUnit(sequent: TopUnit.SequentUnit): PreResult[TopUnit] = {
       return PreResult(T, None())
     }
 
-    def transformTruthTable(truthTable: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
+    def transformTruthTableUnit(truthTable: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
       return PreResult(T, None())
     }
 
@@ -51,15 +59,23 @@ object MutatingTransformer {
 
   @sig trait Post {
 
+    def transformTopUnit(topUnit: TopUnit): Option[TopUnit] = {
+      topUnit match {
+        case topUnit: TopUnit.Program => transformProgram(topUnit)
+        case topUnit: TopUnit.SequentUnit => transformSequentUnit(topUnit)
+        case topUnit: TopUnit.TruthTableUnit => transformTruthTableUnit(topUnit)
+      }
+    }
+
     def transformProgram(program: TopUnit.Program): Option[TopUnit] = {
       return None()
     }
 
-    def transformSequent(sequent: TopUnit.SequentUnit): Option[TopUnit] = {
+    def transformSequentUnit(sequent: TopUnit.SequentUnit): Option[TopUnit] = {
       return None()
     }
 
-    def transformTruthTable(truthTable: TopUnit.TruthTableUnit): Option[TopUnit] = {
+    def transformTruthTableUnit(truthTable: TopUnit.TruthTableUnit): Option[TopUnit] = {
       return None()
     }
   }
@@ -71,11 +87,7 @@ import MutatingTransformer._
 @record class MutatingTransformer(pre: Pre, post: Post) {
 
   def transformTopUnit(topUnit: TopUnit): Option[TopUnit] = {
-    val preR: PreResult[TopUnit] = topUnit match {
-      case topUnit: TopUnit.Program => pre.transformProgram(topUnit)
-      case topUnit: TopUnit.SequentUnit => pre.transformSequent(topUnit)
-      case topUnit: TopUnit.TruthTableUnit => pre.transformTruthTable(topUnit)
-    }
+    val preR = pre.transformTopUnit(topUnit)
     val r: Option[TopUnit] = if (preR.continue) {
       transformTopUnitCont(preR.resultOpt.getOrElse(topUnit), preR.resultOpt.nonEmpty)
     } else if (preR.resultOpt.nonEmpty) {
@@ -85,11 +97,7 @@ import MutatingTransformer._
     }
     val hasChanged = r.nonEmpty
     val temp = r.getOrElse(topUnit)
-    val postR: Option[TopUnit] = temp match {
-      case program: TopUnit.Program => post.transformProgram(program)
-      case sequent: TopUnit.SequentUnit => post.transformSequent(sequent)
-      case truthTable: TopUnit.TruthTableUnit => post.transformTruthTable(truthTable)
-    }
+    val postR = post.transformTopUnit(temp)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -129,16 +137,16 @@ import MutatingTransformer._
     }
   }
 
-  def transformISZ[T](is: IS[Z, T], f: T => Option[T]): Option[IS[Z, T]] = {
-    var is2 = ISZ[T]()
+  def transformISZ[T](s: IS[Z, T], f: T => Option[T]): Option[IS[Z, T]] = {
+    var s2 = ISZ[T]()
     var changed = F
-    for (e <- is) {
+    for (e <- s) {
       val r = f(e)
       changed = changed | r.nonEmpty
-      is2 = is2 :+ r.getOrElse(e)
+      s2 = s2 :+ r.getOrElse(e)
     }
     if (changed) {
-      return Some(is2)
+      return Some(s2)
     } else {
       return None()
     }
