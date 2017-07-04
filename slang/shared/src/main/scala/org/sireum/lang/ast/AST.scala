@@ -39,19 +39,19 @@ object TopUnit {
                           body: Body)
     extends TopUnit
 
-  @datatype class Sequent(fileUriOpt: Option[String],
-                          sequent: LClause.Sequent)
+  @datatype class SequentUnit(fileUriOpt: Option[String],
+                              sequent: LClause.Sequent)
     extends TopUnit
 
 
-  @datatype class TruthTable(fileUriOpt: Option[String],
-                             stars: ISZ[Z],
-                             vars: ISZ[Id],
-                             sepColumn: Z,
-                             isSequent: B,
-                             sequent: LClause.Sequent,
-                             rows: ISZ[org.sireum.lang.ast.TruthTable.Row],
-                             conclusionOpt: Option[org.sireum.lang.ast.TruthTable.Conclusion])
+  @datatype class TruthTableUnit(fileUriOpt: Option[String],
+                                 stars: ISZ[Z],
+                                 vars: ISZ[Id],
+                                 sepColumn: Z,
+                                 isSequent: B,
+                                 sequent: LClause.Sequent,
+                                 rows: ISZ[TruthTable.Row],
+                                 conclusionOpt: Option[TruthTable.Conclusion])
     extends TopUnit
 
 }

@@ -1141,7 +1141,7 @@ final class LParser(input: Input,
     acceptHLine()
     while (!isHLine(token) && token.isNot[EOF]) row()
     acceptHLine()
-    val r = AST.TopUnit.TruthTable(
+    val r = AST.TopUnit.TruthTableUnit(
       fileUriOpt,
       isz(stars),
       isz(vars),
@@ -1160,6 +1160,6 @@ final class LParser(input: Input,
     newLinesOpt()
     val r = sequent()
     accept[EOF]
-    SlangParser.Result(input.text, hashSireum = false, SSome(AST.TopUnit.Sequent(fileUriOpt, r)), sparser.tags)
+    SlangParser.Result(input.text, hashSireum = false, SSome(AST.TopUnit.SequentUnit(fileUriOpt, r)), sparser.tags)
   }
 }

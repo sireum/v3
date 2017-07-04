@@ -714,21 +714,21 @@ class LParserTest extends SireumSpec {
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.sequentFile(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.Sequent])
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
     }
 
   def parsePropositional(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.sequentFile(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.Sequent])
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
     }
 
   def parseTruthTable(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     parser(title, input) { p =>
       val r = p.truthTable(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTable])
+      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
     }
 
   def check(r: SlangParser.Result): Boolean = {

@@ -39,11 +39,11 @@ object MutatingTransformer {
       return PreResult(T, None())
     }
 
-    def transformSequent(sequent: TopUnit.Sequent): PreResult[TopUnit] = {
+    def transformSequent(sequent: TopUnit.SequentUnit): PreResult[TopUnit] = {
       return PreResult(T, None())
     }
 
-    def transformTruthTable(truthTable: TopUnit.TruthTable): PreResult[TopUnit] = {
+    def transformTruthTable(truthTable: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
       return PreResult(T, None())
     }
 
@@ -55,11 +55,11 @@ object MutatingTransformer {
       return None()
     }
 
-    def transformSequent(sequent: TopUnit.Sequent): Option[TopUnit] = {
+    def transformSequent(sequent: TopUnit.SequentUnit): Option[TopUnit] = {
       return None()
     }
 
-    def transformTruthTable(truthTable: TopUnit.TruthTable): Option[TopUnit] = {
+    def transformTruthTable(truthTable: TopUnit.TruthTableUnit): Option[TopUnit] = {
       return None()
     }
   }
@@ -73,8 +73,8 @@ import MutatingTransformer._
   def transformTopUnit(topUnit: TopUnit): Option[TopUnit] = {
     val preR: PreResult[TopUnit] = topUnit match {
       case topUnit: TopUnit.Program => pre.transformProgram(topUnit)
-      case topUnit: TopUnit.Sequent => pre.transformSequent(topUnit)
-      case topUnit: TopUnit.TruthTable => pre.transformTruthTable(topUnit)
+      case topUnit: TopUnit.SequentUnit => pre.transformSequent(topUnit)
+      case topUnit: TopUnit.TruthTableUnit => pre.transformTruthTable(topUnit)
     }
     val r: Option[TopUnit] = if (preR.continue) {
       transformTopUnitCont(preR.resultOpt.getOrElse(topUnit), preR.resultOpt.nonEmpty)
@@ -87,8 +87,8 @@ import MutatingTransformer._
     val temp = r.getOrElse(topUnit)
     val postR: Option[TopUnit] = temp match {
       case program: TopUnit.Program => post.transformProgram(program)
-      case sequent: TopUnit.Sequent => post.transformSequent(sequent)
-      case truthTable: TopUnit.TruthTable => post.transformTruthTable(truthTable)
+      case sequent: TopUnit.SequentUnit => post.transformSequent(sequent)
+      case truthTable: TopUnit.TruthTableUnit => post.transformTruthTable(truthTable)
     }
     if (postR.nonEmpty) {
       return postR
@@ -109,14 +109,14 @@ import MutatingTransformer._
         } else {
           return None()
         }
-      case topUnit@TopUnit.Sequent(_, sequent) =>
+      case topUnit@TopUnit.SequentUnit(_, sequent) =>
         val r1 = transformSequent(sequent)
         if (hasChanged | r1.nonEmpty) {
           return Some(topUnit(sequent = r1.getOrElse(sequent)))
         } else {
           return None()
         }
-      case topUnit@TopUnit.TruthTable(_, _, vars, _, _, sequent, rows, conclusionOpt) =>
+      case topUnit@TopUnit.TruthTableUnit(_, _, vars, _, _, sequent, rows, conclusionOpt) =>
         val r1 = transformISZ(vars, transformId _)
         val r2 = transformSequent(sequent)
         val r3 = transformISZ(rows, transformRow _)
