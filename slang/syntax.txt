@@ -89,7 +89,7 @@
                      |  <match-assign-exp>
 
 <pattern>          ::=  <lit>
-                     |  <ID>
+                     |  <ID> ⸨ : <type> ⸩?
                      |  _
                      |  _*
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )

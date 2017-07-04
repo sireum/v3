@@ -104,11 +104,11 @@ object SlangParser {
             text: Predef.String): Result =
     apply(allowSireumPackage = false, isWorksheet, isDiet, fileUriOpt, text)
 
-  private[sireum] def apply(allowSireumPackage: Boolean,
-                            isWorksheet: Boolean,
-                            isDiet: Boolean,
-                            fileUriOpt: scala.Option[FileResourceUri],
-                            text: Predef.String): Result = {
+  def apply(allowSireumPackage: Boolean,
+            isWorksheet: Boolean,
+            isDiet: Boolean,
+            fileUriOpt: scala.Option[FileResourceUri],
+            text: Predef.String): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
     val hashSireum = line.contains("#Sireum")
@@ -300,9 +300,9 @@ class SlangParser(text: Predef.String,
       case stat: Defn.Type => translateTypeAlias(enclosing, stat)
       case stat: Term.Assign => translateAssign(enclosing, stat)
       case stat: Term.Update => translateAssign(enclosing, stat)
-      case stat: Term.Block => translateBlock(enclosing, stat)
-      case stat: Term.If => translateIfStmt(enclosing, stat, balanced = false)
-      case stat: Term.Match => translateMatch(enclosing, stat)
+      case stat: Term.Block => translateBlock(enclosing, stat, isAssignExp = false)
+      case stat: Term.If => translateIfStmt(enclosing, stat, isAssignExp = false)
+      case stat: Term.Match => translateMatch(enclosing, stat, isAssignExp = false)
       case stat: Term.While => translateWhile(enclosing, stat)
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
@@ -360,6 +360,7 @@ class SlangParser(text: Predef.String,
         hasError = true
         error(mod.pos, "Only the @spec modifier is allowed for val declarations.")
     }
+    val isDollarExpr = isDollar(expr)
     if (tpeopt.isEmpty && !(enclosing match {
       case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
       case _ => false
@@ -370,7 +371,7 @@ class SlangParser(text: Predef.String,
     } else if (patsnel.size != 1) {
       hasError = true
       errorInSlang(stat.pos, "Cannot define multiple vals in a single statement")
-    } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollar(expr)) {
+    } else if (isDollarExpr && !(hasSpec || enclosing == Enclosing.ExtObject)) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
     } else if (hasSpec && (!isDollar(expr) || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty)) {
@@ -385,7 +386,7 @@ class SlangParser(text: Predef.String,
         val r = AST.Stmt.Var(isVal = true, cid(x),
           opt(tpeopt.map(translateType)),
           if (isDiet && tpeopt.nonEmpty) None()
-          else Some(translateAssignExp(expr)), attr(stat.pos))
+          else if (isDollarExpr) None() else Some(translateAssignExp(expr)), attr(stat.pos))
         if (tpeopt.isEmpty) checkTyped(expr.pos, r)
         r
       case pattern =>
@@ -424,10 +425,7 @@ class SlangParser(text: Predef.String,
         error(mod.pos, "Only the @spec modifier is allowed for var declarations.")
     }
     val isDollarExpr = expropt.map(isDollar).getOrElse(false)
-    if (!patsnel.head.isInstanceOf[Pat.Var.Term] && tpeopt.isEmpty) {
-      hasError = true
-      errorInSlang(patsnel.head.pos, "Pattern var declarations cannot be explicitly typed")
-    } else if (tpeopt.isEmpty && !(enclosing match {
+    if (tpeopt.isEmpty && !(enclosing match {
       case Enclosing.Top | Enclosing.Method | Enclosing.Block => true
       case _ => false
     })) {
@@ -437,12 +435,12 @@ class SlangParser(text: Predef.String,
     } else if (patsnel.size != 1) {
       hasError = true
       errorInSlang(stat.pos, "Cannot define multiple vars in a single statement")
-    } else if (!(hasSpec || enclosing == Enclosing.ExtObject) && isDollarExpr) {
+    } else if (isDollarExpr && !(hasSpec || enclosing == Enclosing.ExtObject)) {
       hasError = true
       error(stat.pos, "'$' is only allowed in a Slang @ext object or @spec val/var expression.")
     } else if (hasSpec && (!isDollarExpr || !patsnel.head.isInstanceOf[Pat.Var.Term] || tpeopt.isEmpty)) {
       hasError = true
-      errorInSlang(stat.pos, "@spec var declarations should have the form: '@spec val〈ID〉:〈type〉= $'")
+      errorInSlang(stat.pos, "@spec val declarations should have the form: '@spec var〈ID〉:〈type〉= $'")
     } else if (expropt.isEmpty) {
       hasError = true
       errorInSlang(stat.pos, "Uninitialized '_' var declarations are disallowed")
@@ -454,8 +452,8 @@ class SlangParser(text: Predef.String,
       case x: Pat.Var.Term =>
         val r = AST.Stmt.Var(isVal = false, cid(x),
           opt(tpeopt.map(translateType)),
-          if (isDiet && tpeopt.nonEmpty || enclosing == Enclosing.ExtObject) None()
-          else Some(translateAssignExp(expropt.get)), attr(stat.pos))
+          if (isDiet && tpeopt.nonEmpty) None()
+          else if (isDollarExpr) None() else opt(expropt.map(translateAssignExp)), attr(stat.pos))
         if (tpeopt.isEmpty) checkTyped(expropt.get.pos, r)
         r
       case pattern =>
@@ -467,11 +465,11 @@ class SlangParser(text: Predef.String,
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
         AST.Stmt.VarPattern(isVal = false, pat,
-          None(), if (isDiet) None() else Some(translateAssignExp(expropt.get)), attr(stat.pos))
+          None(), if (isDiet) None() else opt(expropt.map(translateAssignExp)), attr(stat.pos))
     }
   }
 
-  def checkTyped(pos: Position, stmt: AST.Stmt.Var): Unit = {
+  def checkTyped(pos: => Position, stmt: AST.Stmt.Var): Unit = {
     var hasError = false
 
     def check(stmt: Any): Unit = stmt match {
@@ -915,6 +913,30 @@ class SlangParser(text: Predef.String,
       unitType
   }
 
+  def translateType(t: Pat.Type): AST.Type = t match {
+    case pt"${pvt: Pat.Var.Type}[..$ptpesnel]" =>
+      AST.Type.Named(AST.Name(ISZ(cid(pvt.name)), attr(pvt.pos)), ISZ(ptpesnel.map(translateType): _*), typedAttr(t.pos))
+    case pt"${pvt: Pat.Var.Type}" =>
+      AST.Type.Named(AST.Name(ISZ(cid(pvt.name)), attr(pvt.pos)), ISZ(), typedAttr(t.pos))
+    case pt"(..$ptpesnel)" =>
+      AST.Type.Tuple(ISZ(ptpesnel.map(translateType): _*), typedAttr(t.pos))
+    case pt"$ref.$tname" =>
+      def f(t: Term): ISZ[AST.Id] = t match {
+        case q"$expr.$name" => f(expr) :+ cid(name)
+        case q"${name: Term.Name}" => ISZ(cid(name))
+        case _ =>
+          errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
+          ISZ(rDollarId)
+      }
+
+      AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
+    case t"(..$ptpes) => $ptpe" =>
+      AST.Type.Fun(ISZ(ptpes.map(translateTypeArg): _*), translateType(ptpe), typedAttr(t.pos))
+    case _ =>
+      errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
+      unitType
+  }
+
   def translateTypeArg(ta: Type.Arg): AST.Type = ta match {
     case targ"${tpe: Type}" =>
       translateType(tpe)
@@ -927,11 +949,22 @@ class SlangParser(text: Predef.String,
   }
 
   def translateAssignExp(exp: Term): AST.Stmt with AST.AssignExp = exp match {
-    case exp: Term.Block => translateBlock(Enclosing.Block, exp)
+    case exp: Term.Block => translateBlock(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.If if exp.thenp.isInstanceOf[Term.Block] =>
-      translateIfStmt(Enclosing.Block, exp, balanced = true)
-    case exp: Term.Match => translateMatch(Enclosing.Block, exp)
+      translateIfStmt(Enclosing.Block, exp, isAssignExp = true)
+    case exp: Term.Match => translateMatch(Enclosing.Block, exp, isAssignExp = true)
     case _ => AST.Stmt.Expr(translateExp(exp), attr(exp.pos))
+  }
+
+  def translateStmtsExp(pos: Position, stats: Seq[Stat]): ISZ[AST.Stmt] = {
+    stats.lastOption match {
+      case scala.Some(exp: Term) => ISZ(stats.dropRight(1).map(translateStat(Enclosing.Block)) :+ AST.Stmt.Expr(translateExp(exp), attr(exp.pos)): _*)
+      case scala.Some(stat) =>
+        error(stat.pos, s"Expecting an expression but '${syntax(stat)}' found.")
+        ISZ()
+      case _ => error(pos, s"Expecting an expression but none found.")
+        ISZ()
+    }
   }
 
   def translatePattern(pat: Pat): AST.Pattern = {
@@ -949,7 +982,8 @@ class SlangParser(text: Predef.String,
           ISZ(apats.map(translatePatternArg): _*))
       case p"(..$patsnel)" if patsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*))
-      case q"${name: Pat.Var.Term}" => AST.Pattern.Variable(cid(name))
+      case p"${name: Pat.Var.Term} : $tpe" => AST.Pattern.Variable(cid(name), Some(translateType(tpe)))
+      case q"${name: Pat.Var.Term}" => AST.Pattern.Variable(cid(name), None())
       case p"_" => AST.Pattern.Wildcard()
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
@@ -980,7 +1014,7 @@ class SlangParser(text: Predef.String,
       case q"(..$exprsnel)" if exprsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(),
           ISZ(exprsnel.map(translatePattern): _*))
-      case q"${name: Term.Name}" => AST.Pattern.Variable(cid(name))
+      case q"${name: Term.Name}" => AST.Pattern.Variable(cid(name), None())
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
@@ -1022,10 +1056,13 @@ class SlangParser(text: Predef.String,
       getOrElse(AST.Param(hasPure, cid(paramname), unitType))
   }
 
-  def translateBlock(enclosing: Enclosing.Type, stat: Term.Block): AST.Stmt.Block = {
+  def translateBlock(enclosing: Enclosing.Type, stat: Term.Block, isAssignExp: Boolean): AST.Stmt.Block = {
     enclosing match {
       case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-        AST.Stmt.Block(AST.Body(ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
+        val stmts =
+          if (isAssignExp) translateStmtsExp(stat.pos, stat.stats)
+          else ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)
+        AST.Stmt.Block(AST.Body(stmts), attr(stat.pos))
       case _ =>
         if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
         else errorInSlang(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
@@ -1112,7 +1149,7 @@ class SlangParser(text: Predef.String,
     }
 
     def patVar(arg: Term.Arg): AST.Pattern = arg match {
-      case arg: Term.Name => AST.Pattern.Variable(cid(arg))
+      case arg: Term.Name => AST.Pattern.Variable(cid(arg), None())
     }
 
     stmtCheck(enclosing, stat, "Assigments")
@@ -1164,7 +1201,7 @@ class SlangParser(text: Predef.String,
 
   def translateIfStmt(enclosing: Enclosing.Type,
                       stat: Term.If,
-                      balanced: Boolean): AST.Stmt.If = {
+                      isAssignExp: Boolean): AST.Stmt.If = {
     var hasError = stmtCheck(enclosing, stat, "If-statements")
     if (!stat.thenp.isInstanceOf[Term.Block]) {
       hasError = true
@@ -1181,16 +1218,22 @@ class SlangParser(text: Predef.String,
     else ((stat.thenp, stat.elsep): @unchecked) match {
       case (thenp: Term.Block, elsep: Term.Block) =>
         AST.Stmt.If(cond,
-          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ(elsep.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(
+            if (isAssignExp) translateStmtsExp(thenp.pos, thenp.stats)
+            else ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(
+            if (isAssignExp) translateStmtsExp(elsep.pos, elsep.stats)
+            else ISZ(elsep.stats.map(translateStat(enclosing)): _*)),
           attr(stat.pos))
       case (thenp: Term.Block, elsep: Term.If) =>
         AST.Stmt.If(cond,
-          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, balanced))),
+          AST.Body(
+            if (isAssignExp) translateStmtsExp(thenp.pos, thenp.stats)
+            else ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, isAssignExp))),
           attr(stat.pos))
       case (thenp: Term.Block, elsep: Lit.Unit) =>
-        if (balanced) error(elsep.pos, "Expecting a code block with an expression.")
+        if (isAssignExp) error(elsep.pos, "Expecting a code block with an expression.")
         AST.Stmt.If(cond,
           AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
           AST.Body(ISZ()),
@@ -1198,18 +1241,27 @@ class SlangParser(text: Predef.String,
     }
   }
 
-  def translateMatch(enclosing: Enclosing.Type, stat: Term.Match): AST.Stmt.Match = {
+  def translateMatch(enclosing: Enclosing.Type, stat: Term.Match, isAssignExp: Boolean): AST.Stmt.Match = {
+    def translateCase(stat: Case): AST.Case = {
+      AST.Case(translatePattern(stat.pat), opt(stat.cond.map(translateExp)), stat.body match {
+        case b: Term.Block => AST.Body(
+          if (isAssignExp) translateStmtsExp(b.pos, b.stats)
+          else ISZ(b.stats.map(translateStat(Enclosing.Block)): _*))
+        case b: Term if isAssignExp =>
+          AST.Body(
+            if (isAssignExp) ISZ(AST.Stmt.Expr(translateExp(b), attr(b.pos)))
+            else ISZ(translateStat(Enclosing.Block)(b)))
+        case b if isAssignExp =>
+          error(stat.body.pos, s"Expecting an expression but '${syntax(b)}' found.")
+          AST.Body(ISZ())
+        case b => AST.Body(ISZ(translateStat(Enclosing.Block)(b)))
+      })
+    }
+
     stmtCheck(enclosing, stat, "Match-statements")
     AST.Stmt.Match(translateExp(stat.expr),
       ISZ(stat.cases.map(translateCase): _*),
       attr(stat.pos))
-  }
-
-  def translateCase(stat: Case): AST.Case = {
-    AST.Case(translatePattern(stat.pat), opt(stat.cond.map(translateExp)), stat.body match {
-      case b: Term.Block => AST.Body(ISZ(b.stats.map(translateStat(Enclosing.Block)): _*))
-      case b => AST.Body(ISZ(translateStat(Enclosing.Block)(b)))
-    })
   }
 
   def translateWhile(enclosing: Enclosing.Type, stat: Term.While): AST.Stmt = {

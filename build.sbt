@@ -98,7 +98,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.ow2.asm" % "asm-util" % "5.2",
     "org.jgrapht" % "jgrapht-core" % "1.0.1",
     "org.jgrapht" % "jgrapht-ext" % "1.0.1",
-    "com.lihaoyi" %% "ammonite-ops" % "0.9.9",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.0",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),

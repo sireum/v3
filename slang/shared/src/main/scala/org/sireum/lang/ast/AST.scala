@@ -307,7 +307,8 @@ object Pattern {
   @datatype class Literal(lit: Lit)
     extends Pattern
 
-  @datatype class Variable(id: Id)
+  @datatype class Variable(id: Id,
+                           typeOpt: Option[Type])
     extends Pattern
 
   @datatype class Wildcard
