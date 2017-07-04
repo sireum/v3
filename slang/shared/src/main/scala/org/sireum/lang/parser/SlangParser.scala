@@ -914,12 +914,8 @@ class SlangParser(text: Predef.String,
   }
 
   def translateType(t: Pat.Type): AST.Type = t match {
-    case pt"${pvt: Pat.Var.Type}[..$ptpesnel]" =>
-      AST.Type.Named(AST.Name(ISZ(cid(pvt.name)), attr(pvt.pos)), ISZ(ptpesnel.map(translateType): _*), typedAttr(t.pos))
-    case pt"${pvt: Pat.Var.Type}" =>
-      AST.Type.Named(AST.Name(ISZ(cid(pvt.name)), attr(pvt.pos)), ISZ(), typedAttr(t.pos))
-    case pt"(..$ptpesnel)" =>
-      AST.Type.Tuple(ISZ(ptpesnel.map(translateType): _*), typedAttr(t.pos))
+    case t"${name: Type.Name}" =>
+      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(), typedAttr(t.pos))
     case pt"$ref.$tname" =>
       def f(t: Term): ISZ[AST.Id] = t match {
         case q"$expr.$name" => f(expr) :+ cid(name)
@@ -928,10 +924,7 @@ class SlangParser(text: Predef.String,
           errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
           ISZ(rDollarId)
       }
-
       AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
-    case t"(..$ptpes) => $ptpe" =>
-      AST.Type.Fun(ISZ(ptpes.map(translateTypeArg): _*), translateType(ptpe), typedAttr(t.pos))
     case _ =>
       errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
       unitType
