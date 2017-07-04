@@ -1618,7 +1618,7 @@ class SlangParser(text: Predef.String,
 
   def translateInvoke(receiverOpt: scala.Option[Term], name: Term.Name,
                       tpes: Seq[Type], argss: Seq[Seq[Term.Arg]], pos: Position): AST.Exp = {
-    def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
+    def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
       if (argss.isEmpty) return Right(ISZ())
       translateArgs(argss.head)
     }
@@ -1664,13 +1664,13 @@ class SlangParser(text: Predef.String,
     else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep), typedAttr(exp.pos))
   }
 
-  def translateArgs(args: Seq[Term.Arg]): Either[ISZ[(AST.Id, AST.Exp)], ISZ[AST.Exp]] = {
+  def translateArgs(args: Seq[Term.Arg]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
     def expArg(arg: Term.Arg): AST.Exp = arg match {
       case arg"${expr: Term}" => translateExp(expr)
     }
 
-    def namedArg(arg: Term.Arg): (AST.Id, AST.Exp) = arg match {
-      case arg: Term.Arg.Named => (cid(arg.name), expArg(arg.expr))
+    def namedArg(arg: Term.Arg): AST.NamedArg = arg match {
+      case arg: Term.Arg.Named => AST.NamedArg(cid(arg.name), expArg(arg.expr))
     }
 
     var isNamed = false

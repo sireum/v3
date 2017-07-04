@@ -507,7 +507,7 @@ object Exp {
   @datatype class InvokeNamed(receiverOpt: Option[Exp],
                               id: Id,
                               targs: ISZ[Type],
-                              args: ISZ[(Id, Exp)],
+                              args: ISZ[NamedArg],
                               @hidden attr: ResolvedAttr)
     extends Exp
 
@@ -523,6 +523,9 @@ object Exp {
     extends Exp
 
 }
+
+@datatype class NamedArg(id: Id,
+                         arg: Exp)
 
 @datatype class VarFragment(ids: ISZ[Id],
                             domainOpt: Option[Domain])
@@ -578,8 +581,11 @@ object Domain {
                          subs: ISZ[SubContract])
 
 @datatype class SubContract(id: Id,
-                            params: ISZ[(B, Id)],
+                            params: ISZ[SubContractParam],
                             contract: Contract)
+
+@datatype class SubContractParam(isPure: B,
+                                 id: Id)
 
 @datatype trait WhereDef
 

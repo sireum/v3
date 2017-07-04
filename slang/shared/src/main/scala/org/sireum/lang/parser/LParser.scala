@@ -403,10 +403,10 @@ final class LParser(input: Input,
         val ident = id(acceptToken[Ident])
         accept[LeftParen]
         val params = if (token.isNot[RightParen]) {
-          var ps = List[(B, AST.Id)]((pureOpt(), id(acceptToken[Ident])))
+          var ps = List(AST.SubContractParam(pureOpt(), id(acceptToken[Ident])))
           while (token.is[Comma]) {
             next()
-            ps ::= (pureOpt(), id(acceptToken[Ident]))
+            ps ::= AST.SubContractParam(pureOpt(), id(acceptToken[Ident]))
           }
           ps
         } else List()
