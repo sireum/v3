@@ -87,8 +87,8 @@ import Transformer._
       Result(preR.ctx, None())
     }
     val hasChanged = r.resultOpt.nonEmpty
-    val topUnit2 = preR.resultOpt.getOrElse(topUnit)
-    val postR: Result[Context, TopUnit] = topUnit2 match {
+    val temp = r.resultOpt.getOrElse(topUnit)
+    val postR: Result[Context, TopUnit] = temp match {
       case program: TopUnit.Program => post.transformProgram(r.ctx, program)
       case sequent: TopUnit.Sequent => post.transformSequent(r.ctx, sequent)
       case truthTable: TopUnit.TruthTable => post.transformTruthTable(r.ctx, truthTable)
@@ -96,7 +96,7 @@ import Transformer._
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
-      return Result(postR.ctx, Some(topUnit2))
+      return Result(postR.ctx, Some(temp))
     } else {
       return Result(postR.ctx, None())
     }
@@ -154,8 +154,8 @@ import Transformer._
       case Some(v) =>
         val r = f(ctx, v)
         r.resultOpt match {
-          case Some(_) => Result(r.ctx, Some(r.resultOpt))
-          case _ => Result(r.ctx, None())
+          case Some(_) => return Result(r.ctx, Some(r.resultOpt))
+          case _ => return Result(r.ctx, None())
         }
       case _ => return Result(ctx, None())
     }
