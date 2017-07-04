@@ -1052,10 +1052,14 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
 
   def deduce(num: Natural, exp: ast.Exp, steps: ast.Node.Seq[ast.Num],
              isAuto: Boolean): Boolean = {
+    var hasError = false
+    if (!isAuto && !checkAlgebraExp(exp)) {
+      error(exp, s"Could not apply algebra on formula with any logical connective other than negation.")
+      hasError = true
+    }
     val antecedents =
       if (steps.nonEmpty) {
         var as = ast.Node.emptySeq[ast.Exp]
-        var hasError = false
         for (numOrId <- steps)
           findRegularStepExp(numOrId, num) match {
             case Some(e) =>
