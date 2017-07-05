@@ -333,36 +333,6 @@ As a workaround, set the ``SIREUM_PARALLEL_BUILD`` environment variable to
 export SIREUM_PARALLEL_BUILD=false
 ```
 
-#### Ivy2 Cache Corruption
- 
-In the case that your Ivy2 cache is corrupted;
-Sbt will complain about unresolved dependencies, e.g.:
-
-```
-...
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn] 	::          UNRESOLVED DEPENDENCIES         ::
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn] 	:: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
-[warn] 	::::::::::::::::::::::::::::::::::::::::::::::
-[warn]
-[warn] 	Note: Unresolved dependencies path:
-[warn] 		junit:junit:4.11
-[warn] 		  +- com.novocode:junit-interface:0.11 (.../sireum-v3/project/SireumBuild.scala#...)
-[warn] 		  +- org.sireum:sireum-core-test_2.11:3.0-SNAPSHOT ()
-...
-sbt.ResolveException: unresolved dependency: junit#junit;4.11: configuration not found in junit#junit;4.11: 'master(compile)'. Missing configuration: 'compile'. It was required from com.novocode#junit-interface;0.11 compile
-	at sbt.IvyActions$.sbt$IvyActions$$resolve(IvyActions.scala:291)
-	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:188)
-	at sbt.IvyActions$$anonfun$updateEither$1.apply(IvyActions.scala:165)
-  ...
-```
-
-To fix it, you can delete your Ivy2 cache in, for example, `~/.ivy2/cache` (you can delete only the specific
-corrupted library cache such as junit for the example above; in the worst case, delete all cache).
-
-Once you deleted the corrupted cache, run Sbt again and it should work.
-
 #### Other Issues?
 
 Please file a [new GitHub issue](https://github.com/sireum/v3/issues).
@@ -375,35 +345,48 @@ The jar will be located at `sireum-v3/bin/sireum.jar`
 
 ## Development Environments
 
-[IntelliJ IDEA](https://www.jetbrains.com/idea/)-based Sireum IVE (or IDEA Ultimate/Community Edition)
-are the recommended IDEs for Sireum v3 development.
+[IntelliJ IDEA](https://www.jetbrains.com/idea/)-based Sireum IVE described above 
+(or standard IDEA Ultimate/Community Editions) are the recommended IDEs for Sireum v3 development.
  
 [CLion](https://www.jetbrains.com/clion/) is recommended for C/C++ related development.
 JetBrains has graciously provided free licenses JetBrains' toolbox (including CLion) 
 for Sireum project members.
 
-### Setting Preferences
+### Setting Up Sireum IVE for Sireum v3 Development
 
-* Set IntelliJ's Sbt’s preferences by opening `IntelliJ`->`Preference`->`Build, Execution, Deployment`->`Build Tools`->`SBT`
+*Note: If* ``.idea`` *already exists, remove it first.*
 
-  * `Max Heap Size`: `4096`
+1. Retrieve Sireum IVE **Development** build (see above).
 
-  * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled`
+   Increase memory settings for Sireum IVE in ``<SIREUM-IVE-HOME>/.../bin/idea.vmoptions``
+   or ``<SIREUM-IVE-HOME>/.../bin/idea64.vmoptions``.
 
-* IntelliJ uses `make` as the default build system.
-  For Scala projects, it is best to Sbt using the ([idea-sbt-plugin](https://github.com/orfjackal/idea-sbt-plugin)) plugin.
-  
-  * Set `idea-sbt-plugin` settings by opening `IntelliJ`->`Preference`->`Other Settings`->`SBT`
+2. In Sireum IVE starting dialog window,
 
-    * `VM parameters`: `-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled`
+   ![sireum-ive](resources/images/01-sireum-ive.png)
 
-    * Check `Use alternative JRE` and point it to `platform/java`
+   select "Import Project".
+   
+3. In the "Import Project" dialog window,
 
-  * In `Run`->`Edit Configurations...`->`Defaults`->{`Application`, `JUnit`, etc.}:
+   ![sireum-ive](resources/images/02-import-project.png)
+   
+   select "Import project from external model", select "SBT", and then click "Next".
+   
+4. Next,
 
-    * Remove `Make` in `Before launch:`
+   ![sireum-ive](resources/images/03-import-config.png)
+   
+   set the "Project JDK" to "/Applications/Sireum.app/Contents/Resources/sireum-v3/platform/java".
+   
+   Then, expand "Global SBT settings": 
 
-    * Add `SBT` in `Before launch:` then select either `products` (for apps) or `test:products` (for tests) and
-      check `Run in current module...`
-      
-    * Add `SIREUM_HOME` environment variable and set it to the absolute path of the directory containing this file.
+   * `Max Heap Size`: `4096`
+   
+   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled -Dorg.sireum.home=<SIREUM_HOME>`
+
+5. In the "SBT Project Data To Import" dialog,
+
+   ![sireum-ive](resources/images/04-import-modules.png)
+   
+   all modules should have been selected by default; click "OK".
