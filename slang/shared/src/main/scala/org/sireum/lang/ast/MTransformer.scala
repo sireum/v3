@@ -28,7 +28,7 @@ package org.sireum.lang.ast
 
 import org.sireum._
 
-object MutatingTransformer {
+object MTransformer {
 
   @datatype class PreResult[T](continue: B,
                                resultOpt: Option[T])
@@ -82,9 +82,9 @@ object MutatingTransformer {
 
 }
 
-import MutatingTransformer._
+import MTransformer._
 
-@record class MutatingTransformer(pre: Pre, post: Post) {
+@record class MTransformer(pre: Pre, post: Post) {
 
   def transformTopUnit(topUnit: TopUnit): Option[TopUnit] = {
     val preR = pre.transformTopUnit(topUnit)
