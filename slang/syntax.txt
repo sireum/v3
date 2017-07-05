@@ -119,7 +119,7 @@
 
 <record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
-<record-param>     ::=  <adt-param-mod>* ⸨ var ⸩*  <ID> : <type>
+<record-param>     ::=  <adt-param-mod>* ⸨ var ⸩?  <ID> : <type>
 
 <assign-stmt>      ::=  <lhs> = <assign-exp>
                      |  up ( <lhs> ) = <assign-exp>

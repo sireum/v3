@@ -1100,7 +1100,7 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant @pure.")
         }
         hasPure = true
-      case mod"varparam" if isDatatype => isVar = true
+      case mod"varparam" if !isDatatype => isVar = true
       case _ =>
         hasError = true
         if (isDatatype) error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang @datatype class.")
