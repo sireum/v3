@@ -142,17 +142,18 @@ import ITransformer._
   }
 
   @pure def transformISZ[T](ctx: Context, s: IS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
-    var s2 = ISZ[T]()
+    val s2 = SI.toMS(s)
     var changed = F
     var ctxi = ctx
-    for (e <- s) {
+    for (i <- s2.indices) {
+      val e = s(i)
       val r = f(ctxi, e)
       ctxi = r.ctx
       changed = changed | r.resultOpt.nonEmpty
-      s2 = s2 :+ r.resultOpt.getOrElse(e)
+      s2(i) = r.resultOpt.getOrElse(e)
     }
     if (changed) {
-      return Result(ctxi, Some(s2))
+      return Result(ctxi, Some(SM.toIS(s2)))
     } else {
       return Result(ctxi, None())
     }

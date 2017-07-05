@@ -138,15 +138,16 @@ import MTransformer._
   }
 
   def transformISZ[T](s: IS[Z, T], f: T => Option[T]): Option[IS[Z, T]] = {
-    var s2 = ISZ[T]()
+    val s2 = SI.toMS(s)
     var changed = F
-    for (e <- s) {
+    for (i <- s2.indices) {
+      val e = s(i)
       val r = f(e)
       changed = changed | r.nonEmpty
-      s2 = s2 :+ r.getOrElse(e)
+      s2(i) = r.getOrElse(e)
     }
     if (changed) {
-      return Some(s2)
+      return Some(SM.toIS(s2))
     } else {
       return None()
     }
