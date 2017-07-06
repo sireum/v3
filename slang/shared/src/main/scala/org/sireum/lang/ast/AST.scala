@@ -311,7 +311,7 @@ object Pattern {
                            typeOpt: Option[Type])
     extends Pattern
 
-  @datatype class Wildcard
+  @datatype class Wildcard(typeOpt: Option[Type])
     extends Pattern
 
   @datatype class SeqWildcard

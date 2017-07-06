@@ -90,7 +90,7 @@
 
 <pattern>          ::=  <lit>
                      |  <ID> ⸨ : <type> ⸩?
-                     |  _
+                     |  _ ⸨ : <type> ⸩?
                      |  _*
                      |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
                      |  ⸨ <ID> @ ⸩? ( <paterns> )

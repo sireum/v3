@@ -977,11 +977,12 @@ class SlangParser(text: Predef.String,
         AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*))
       case p"${name: Pat.Var.Term} : $tpe" => AST.Pattern.Variable(cid(name), Some(translateType(tpe)))
       case q"${name: Pat.Var.Term}" => AST.Pattern.Variable(cid(name), None())
-      case p"_" => AST.Pattern.Wildcard()
+      case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)))
+      case p"_" => AST.Pattern.Wildcard(None())
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard()
+        AST.Pattern.Wildcard(None())
     }
   }
 
@@ -1003,7 +1004,7 @@ class SlangParser(text: Predef.String,
           }
         }
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard()
+        AST.Pattern.Wildcard(None())
       case q"(..$exprsnel)" if exprsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(),
           ISZ(exprsnel.map(translatePattern): _*))
@@ -1011,7 +1012,7 @@ class SlangParser(text: Predef.String,
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard()
+        AST.Pattern.Wildcard(None())
     }
   }
 
@@ -1019,7 +1020,7 @@ class SlangParser(text: Predef.String,
     case arg"${expr: Term}" => translatePattern(expr)
     case _ =>
       errorInSlang(patArg.pos, s"Invalid pattern: '${syntax(patArg)}'")
-      AST.Pattern.Wildcard()
+      AST.Pattern.Wildcard(None())
   }
 
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
@@ -1138,7 +1139,7 @@ class SlangParser(text: Predef.String,
       case arg"${expr: Term}" => translatePattern(expr)
       case _ =>
         error(arg.pos, "Slang non-tuple pat should be of the form: 'pat(〈pattern〉) = ...'")
-        AST.Pattern.Wildcard()
+        AST.Pattern.Wildcard(None())
     }
 
     def patVar(arg: Term.Arg): AST.Pattern = arg match {
