@@ -1399,6 +1399,7 @@ class SlangParser(text: Predef.String,
           error(exp.pos, s"'${exp.value}' should be written as '$s'.")
           rExp
         } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
+      case q"this" => AST.Exp.This(typedAttr(exp.pos))
       case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr), resolvedAttr(exp.pos))
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)

@@ -55,12 +55,10 @@ import Resolver._
     ???
   }
 
-  def declarePackage(ids: ISZ[AST.Id]): Unit = {
-    val name = AST.Util.ids2strings(ids)
+  def declarePackage(name: ISZ[String], posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
       case Some(_: PackageInfo) =>
       case Some(_) =>
-        val posOpt = ids(ids.size - 1).attr.posInfoOpt
         reporter.error(posOpt, s"Cannot declare package name because the name has already been used for a non-package.")
       case _ => globalNameMap = globalNameMap.put(name, PackageInfo(name))
     }
@@ -71,15 +69,17 @@ import Resolver._
     if (name.ids.isEmpty) {
       return Some(rootPackageInfo)
     }
-    var currentIds = ISZ(ids(0))
-    declarePackage(currentIds)
+    var currentName = ISZ(ids(0).value)
+    var currentPosOpt = ids(0).attr.posInfoOpt
+    declarePackage(currentName, currentPosOpt)
 
     for (i <- 1 until ids.size) {
-      currentIds = currentIds :+ ids(i)
-      declarePackage(currentIds)
+      currentName = currentName :+ ids(i).value
+      currentPosOpt = ids(i).attr.posInfoOpt
+      declarePackage(currentName, currentPosOpt)
     }
 
-    globalNameMap.get(AST.Util.ids2strings(currentIds)) match {
+    globalNameMap.get(currentName) match {
       case Some(info: PackageInfo) => return Some(info)
       case _ => return None()
     }

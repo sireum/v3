@@ -436,6 +436,8 @@ object Exp {
                                     @hidden attr: Attr)
     extends Exp
 
+  @datatype class This(@hidden attr: TypedAttr) extends Exp
+
   @enum object UnaryOp {
     'Not
     'Plus

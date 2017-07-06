@@ -170,6 +170,7 @@
 <exp>              ::=  <lit>
                      |  <STRING-INTERP>
                      |  <name>
+                     |  this
                      |  <exp> _
                      |  <unary-op> <exp>
                      |  <exp> <binary-op> <exp>
