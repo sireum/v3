@@ -32,9 +32,41 @@ import org.sireum.lang.{ast => AST}
 
 object Resolver {
 
+  @enum object Var {
+    'Val
+    'Var
+    'SpecVar
+    'SpecVal
+  }
+
   @datatype trait Info
 
-  @datatype class PackageInfo(ids: ISZ[String])
+  @datatype class PackageInfo(ids: ISZ[String]) extends Info
+
+  @datatype class ObjectInfo(ids: ISZ[String], isExt: B) extends Info
+
+  @datatype class EnumInfo(ids: ISZ[String],
+                           elements: ISZ[String])
+    extends Info
+
+  @datatype class SigInfo(ids: ISZ[String],
+                          methods: Map[String, AST.Stmt.Method],
+                          imports: ISZ[AST.Stmt.Import],
+                          ast: AST.Stmt.Sig)
+    extends Info
+
+  @datatype class AbstractDatatypeInfo(ids: ISZ[String],
+                                       vars: Map[String, AST.Stmt.Var],
+                                       methods: Map[String, AST.Stmt.Method],
+                                       imports: ISZ[AST.Stmt.Import],
+                                       ast: AST.Stmt.AbstractDatatype)
+    extends Info
+
+  @datatype class RichInfo(ids: ISZ[String],
+                           isRoot: B,
+                           methods: Map[String, AST.Stmt.Method],
+                           imports: ISZ[AST.Stmt.Import],
+                           ast: AST.Stmt.Rich)
     extends Info
 
   val rootPackageInfo: PackageInfo = PackageInfo(ISZ())

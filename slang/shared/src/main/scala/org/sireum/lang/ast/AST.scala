@@ -70,9 +70,16 @@ object Stmt {
 
   object Import {
 
-    @datatype class Importer(name: Name, selectorsOpt: Option[ISZ[Selector]])
+    @datatype class Importer(name: Name,
+                             selector: Option[Selector])
 
-    @datatype class Selector(from: Id, to: Id)
+    @datatype trait Selector
+
+    @datatype class MultiSelector(selectors: ISZ[NamedSelector]) extends Selector
+
+    @datatype class WildcardSelector extends Selector
+
+    @datatype class NamedSelector(from: Id, to: Id)
 
   }
 

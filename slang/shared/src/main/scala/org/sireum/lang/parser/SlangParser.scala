@@ -316,26 +316,34 @@ class SlangParser(text: Predef.String,
   }
 
   def translateImport(enclosing: Enclosing.Type,
-                      stat: Import): AST.Stmt = stat.importers match {
-    case Seq(Importer(ref: Term.Ref, Seq(Importee.Wildcard()))) =>
-      AST.Stmt.Import(ISZ(AST.Stmt.Import.Importer(AST.Name(ref2IS(ref), attr(ref.pos)), Some(ISZ()))), attr(stat.pos))
-    case _ =>
-      var importers = ISZ[AST.Stmt.Import.Importer]()
-      for (importer <- stat.importers) {
-        val ref = ref2IS(importer.ref)
-        val name = AST.Name(ref, attr(importer.ref.pos))
-        var sels = ISZ[AST.Stmt.Import.Selector]()
-        for (importee <- importer.importees) importee match {
-          case importee"$finame => $tiname" =>
-            sels +:= AST.Stmt.Import.Selector(cid(finame), cid(tiname))
-          case importee"${iname: Name.Indeterminate}" =>
-            val id = cid(iname)
-            sels +:= AST.Stmt.Import.Selector(id, id)
-          case _ => errorNotSlang(importee.pos, s"Importee '${importee.syntax}' from ${importer.ref.syntax} is")
+                      stat: Import): AST.Stmt = {
+    enclosing match {
+      case Enclosing.Top | Enclosing.Package | Enclosing.Method =>
+      case _ =>
+        if (isWorksheet) errorInSlang(stat.pos, "Imports can only appear at the top-level or inside packages.")
+        else errorInSlang(stat.pos, "Imports can only appear inside packages.")
+    }
+    stat.importers match {
+      case Seq(Importer(ref: Term.Ref, Seq(Importee.Wildcard()))) =>
+        AST.Stmt.Import(ISZ(AST.Stmt.Import.Importer(AST.Name(ref2IS(ref), attr(ref.pos)), Some(AST.Stmt.Import.WildcardSelector()))), attr(stat.pos))
+      case _ =>
+        var importers = ISZ[AST.Stmt.Import.Importer]()
+        for (importer <- stat.importers) {
+          val ref = ref2IS(importer.ref)
+          val name = AST.Name(ref, attr(importer.ref.pos))
+          var sels = ISZ[AST.Stmt.Import.NamedSelector]()
+          for (importee <- importer.importees) importee match {
+            case importee"$finame => $tiname" =>
+              sels +:= AST.Stmt.Import.NamedSelector(cid(finame), cid(tiname))
+            case importee"${iname: Name.Indeterminate}" =>
+              val id = cid(iname)
+              sels +:= AST.Stmt.Import.NamedSelector(id, id)
+            case _ => errorNotSlang(importee.pos, s"Importee '${importee.syntax}' from ${importer.ref.syntax} is")
+          }
+          importers +:= AST.Stmt.Import.Importer(name, Some(AST.Stmt.Import.MultiSelector(sels)))
         }
-        importers +:= AST.Stmt.Import.Importer(name, Some(sels))
-      }
-      AST.Stmt.Import(importers, attr(stat.pos))
+        AST.Stmt.Import(importers, attr(stat.pos))
+    }
   }
 
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
@@ -1436,7 +1444,7 @@ class SlangParser(text: Predef.String,
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
       case _ =>
-        errorNotSlang(exp.pos, s"Expresion '${syntax(exp)}' is")
+        errorNotSlang(exp.pos, s"Expression '${syntax(exp)}' is")
         rExp
     }
   }
