@@ -26,8 +26,12 @@
 package org.sireum.lang.test
 
 import org.sireum.test._
+import org.sireum.{ISZ, String => SString, Option => SOption, Some => SSome, Map => SMap}
 import org.sireum.util._
+import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
+import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
+import org.sireum.lang.util.Reporter
 
 class ScalaMetaParserTest extends SireumSpec {
   {
@@ -272,8 +276,28 @@ class ScalaMetaParserTest extends SireumSpec {
     spec.*(sub(text)) {
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude)
-      val b = r.unitOpt.nonEmpty && r.tags.elements.isEmpty
+      var b = r.unitOpt.nonEmpty && r.tags.elements.isEmpty
       if (!b) report(r)
+      else {
+        val gdr = GlobalDeclarationResolver(SMap.empty[ISZ[SString], Resolver.Info],
+          SMap.empty[ISZ[SString], Resolver.TypeInfo], new Reporter {
+            def error(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
+              b = false
+              posOpt match {
+                case SSome(posInfo) => Console.err.println(s"[${posInfo.beginLine}, ${posInfo.beginColumn}] $message")
+                case _ => Console.err.println(message)
+              }
+              Console.err.flush()
+            }
+
+            def warn(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
+            }
+          })
+        r.unitOpt.foreach {
+          case p: AST.TopUnit.Program => gdr.resolveProgram(p)
+          case _ => b = false
+        }
+      }
       b
     }
 

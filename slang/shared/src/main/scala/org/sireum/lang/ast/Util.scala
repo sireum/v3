@@ -37,4 +37,12 @@ object Util {
     }
     return SM.toIS(r)
   }
+
+  @pure def fileUriOptEq(posOpt1: Option[PosInfo], posOpt2: Option[PosInfo]): B = {
+    (posOpt1, posOpt2) match {
+      case (Some(pos1), Some(pos2)) => return pos1.fileUriOpt == pos2.fileUriOpt
+      case (None(), None()) => return T
+      case _ => return F
+    }
+  }
 }

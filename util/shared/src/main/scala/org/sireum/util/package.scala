@@ -177,7 +177,7 @@ package object util {
   @inline
   final def bigCIntersect[T](it: Iterable[CSet[T]]): CSet[T] =
     it.size match {
-      case 0 => Set()
+      case 0 => scala.collection.immutable.Set()
       case 1 => it.iterator.next()
       case _ => it.reduce(cintersect[T])
     }
@@ -185,7 +185,7 @@ package object util {
   @inline
   final def bigCUnion[T](it: Iterable[CSet[T]]): CSet[T] =
     it.size match {
-      case 0 => Set()
+      case 0 => scala.collection.immutable.Set()
       case 1 => it.iterator.next()
       case _ => it.reduce(cunion[T])
     }
@@ -199,7 +199,7 @@ package object util {
   @inline
   final def bigIIntersect[T](it: Iterable[ISet[T]]): ISet[T] =
     it.size match {
-      case 0 => Set()
+      case 0 => scala.collection.immutable.Set()
       case 1 => it.iterator.next()
       case _ => it.reduce(iintersect[T])
     }
@@ -207,7 +207,7 @@ package object util {
   @inline
   final def bigIUnion[T](it: Iterable[ISet[T]]): ISet[T] =
     it.size match {
-      case 0 => Set()
+      case 0 => scala.collection.immutable.Set()
       case 1 => it.iterator.next()
       case _ => it.reduce(iunion[T])
     }

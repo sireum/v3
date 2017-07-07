@@ -27,93 +27,118 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
-import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
 object Resolver {
 
-  @enum object Var {
-    'Val
-    'Var
-    'SpecVar
-    'SpecVal
-  }
-
   @datatype trait Info
 
-  @datatype class PackageInfo(ids: ISZ[String]) extends Info
+  @datatype trait TypeInfo {
 
-  @datatype class ObjectInfo(ids: ISZ[String], isExt: B) extends Info
+    def canHaveCompanion: B
 
-  @datatype class EnumInfo(ids: ISZ[String],
-                           elements: ISZ[String])
+    def posInfoOpt: Option[AST.PosInfo]
+  }
+
+  @datatype class PackageInfo(name: ISZ[String]) extends Info
+
+  @datatype class VarInfo(name: ISZ[String],
+                          imports: ISZ[AST.Stmt.Import],
+                          ast: AST.Stmt.Var) extends Info
+
+  @datatype class SpecVarInfo(name: ISZ[String],
+                              imports: ISZ[AST.Stmt.Import],
+                              ast: AST.Stmt.SpecVar) extends Info
+
+  @datatype class MethodInfo(name: ISZ[String],
+                             imports: ISZ[AST.Stmt.Import],
+                             ast: AST.Stmt.Method) extends Info
+
+  @datatype class SpecMethodInfo(name: ISZ[String],
+                                 imports: ISZ[AST.Stmt.Import],
+                                 ast: AST.Stmt.SpecMethod) extends Info
+
+  @datatype class ObjectInfo(name: ISZ[String],
+                             isExt: B)
     extends Info
 
-  @datatype class SigInfo(ids: ISZ[String],
+  @datatype class ExtMethodInfo(name: ISZ[String],
+                                imports: ISZ[AST.Stmt.Import],
+                                ast: AST.Stmt.ExtMethod)
+    extends Info
+
+  @datatype class EnumInfo(name: ISZ[String],
+                           elements: Set[String])
+    extends Info
+
+  @datatype class SigInfo(name: ISZ[String],
+                          specVars: Map[String, AST.Stmt.SpecVar],
+                          specMethods: Map[String, AST.Stmt.SpecMethod],
                           methods: Map[String, AST.Stmt.Method],
                           imports: ISZ[AST.Stmt.Import],
                           ast: AST.Stmt.Sig)
-    extends Info
+    extends TypeInfo {
 
-  @datatype class AbstractDatatypeInfo(ids: ISZ[String],
+    def canHaveCompanion: B = {
+      return T
+    }
+
+    def posInfoOpt: Option[AST.PosInfo] = {
+      return ast.attr.posInfoOpt
+    }
+  }
+
+  @datatype class AbstractDatatypeInfo(name: ISZ[String],
+                                       specVars: Map[String, AST.Stmt.SpecVar],
                                        vars: Map[String, AST.Stmt.Var],
+                                       specMethods: Map[String, AST.Stmt.SpecMethod],
                                        methods: Map[String, AST.Stmt.Method],
                                        imports: ISZ[AST.Stmt.Import],
                                        ast: AST.Stmt.AbstractDatatype)
-    extends Info
+    extends TypeInfo {
 
-  @datatype class RichInfo(ids: ISZ[String],
-                           isRoot: B,
+    def canHaveCompanion: B = {
+      return T
+    }
+
+    def posInfoOpt: Option[AST.PosInfo] = {
+      return ast.attr.posInfoOpt
+    }
+  }
+
+  @datatype class RichInfo(name: ISZ[String],
                            methods: Map[String, AST.Stmt.Method],
                            imports: ISZ[AST.Stmt.Import],
                            ast: AST.Stmt.Rich)
-    extends Info
+    extends TypeInfo {
+
+    def canHaveCompanion: B = {
+      return T
+    }
+
+    def posInfoOpt: Option[AST.PosInfo] = {
+      return ast.attr.posInfoOpt
+    }
+  }
+
+  @datatype class TypeAliasInfo(name: ISZ[String],
+                                imports: ISZ[AST.Stmt.Import],
+                                ast: AST.Stmt.TypeAlias)
+    extends TypeInfo {
+
+    def canHaveCompanion: B = {
+      return F
+    }
+
+    def posInfoOpt: Option[AST.PosInfo] = {
+      return ast.attr.posInfoOpt
+    }
+  }
+
+  @datatype class Members(specVars: Map[String, AST.Stmt.SpecVar],
+                          vars: Map[String, AST.Stmt.Var],
+                          specMethods: Map[String, AST.Stmt.SpecMethod],
+                          methods: Map[String, AST.Stmt.Method])
 
   val rootPackageInfo: PackageInfo = PackageInfo(ISZ())
-}
-
-import Resolver._
-
-@record class GlobalDeclarationResolver(var globalNameMap: Map[ISZ[String], Resolver.Info],
-                                        var packageInfo: PackageInfo,
-                                        reporter: Reporter) {
-
-  def resolveProgram(program: AST.TopUnit.Program): AST.TopUnit.Program = {
-    declarePackageName(program.packageName) match {
-      case Some(info) => packageInfo = info
-      case _ => return program
-    }
-
-    ???
-  }
-
-  def declarePackage(name: ISZ[String], posOpt: Option[AST.PosInfo]): Unit = {
-    globalNameMap.get(name) match {
-      case Some(_: PackageInfo) =>
-      case Some(_) =>
-        reporter.error(posOpt, s"Cannot declare package name because the name has already been used for a non-package.")
-      case _ => globalNameMap = globalNameMap.put(name, PackageInfo(name))
-    }
-  }
-
-  def declarePackageName(name: AST.Name): Option[PackageInfo] = {
-    val ids = name.ids
-    if (name.ids.isEmpty) {
-      return Some(rootPackageInfo)
-    }
-    var currentName = ISZ(ids(0).value)
-    var currentPosOpt = ids(0).attr.posInfoOpt
-    declarePackage(currentName, currentPosOpt)
-
-    for (i <- 1 until ids.size) {
-      currentName = currentName :+ ids(i).value
-      currentPosOpt = ids(i).attr.posInfoOpt
-      declarePackage(currentName, currentPosOpt)
-    }
-
-    globalNameMap.get(currentName) match {
-      case Some(info: PackageInfo) => return Some(info)
-      case _ => return None()
-    }
-  }
 }

@@ -398,6 +398,11 @@ class SlangParser(text: Predef.String,
         if (tpeopt.isEmpty) checkTyped(expr.pos, r)
         r
       case pattern =>
+        enclosing match {
+          case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass =>
+            errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
+          case _ =>
+        }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Val pattern cannot be explicitly typed")
         val pat = translatePattern(pattern)
@@ -465,6 +470,11 @@ class SlangParser(text: Predef.String,
         if (tpeopt.isEmpty) checkTyped(expropt.get.pos, r)
         r
       case pattern =>
+        enclosing match {
+          case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass =>
+            errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
+          case _ =>
+        }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Var pattern cannot be explicitly typed")
         val pat = translatePattern(pattern)
@@ -983,6 +993,8 @@ class SlangParser(text: Predef.String,
           ISZ(apats.map(translatePatternArg): _*))
       case p"(..$patsnel)" if patsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*))
+      case p"${ref: Term.Ref}.$ename" =>
+        AST.Pattern.Ref(AST.Name(ref2IS(ref) :+ cid(ename), attr(pat.pos)))
       case p"${name: Pat.Var.Term} : $tpe" => AST.Pattern.Variable(cid(name), Some(translateType(tpe)))
       case q"${name: Pat.Var.Term}" => AST.Pattern.Variable(cid(name), None())
       case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)))
@@ -1753,14 +1765,14 @@ class SlangParser(text: Predef.String,
     }
 
     def isInvariantContext: Boolean = enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject => true
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject
+           | Enclosing.DatatypeTrait | Enclosing.DatatypeClass | Enclosing.RecordTrait
+           | Enclosing.RecordClass | Enclosing.Sig => true
       case _ => false
     }
 
     def isFactsTheoremsContext: Boolean = enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject
-           | Enclosing.DatatypeTrait | Enclosing.DatatypeClass | Enclosing.RecordTrait
-           | Enclosing.RecordClass | Enclosing.Sig => true
+      case Enclosing.Top | Enclosing.Object => true
       case _ => false
     }
 
@@ -1826,10 +1838,10 @@ class SlangParser(text: Predef.String,
         case scala.Some(uri) => Some(uri)
         case _ => None[String]()
       },
-      beginLine = startLine + pos.start.line - 1,
-      beginColumn = startColumn + pos.start.column - 1,
-      endLine = startLine + pos.end.line - 1,
-      endColumn = startColumn + pos.end.column - 1,
+      beginLine = startLine + pos.start.line + 1,
+      beginColumn = startColumn + pos.start.column + 1,
+      endLine = startLine + pos.end.line + 1,
+      endColumn = startColumn + pos.end.column + 1,
       offset = startOffset + pos.start.offset,
       length = pos.end.offset - pos.start.offset + 1
     ))

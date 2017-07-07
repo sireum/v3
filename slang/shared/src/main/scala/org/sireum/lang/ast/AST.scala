@@ -138,7 +138,7 @@ object Stmt {
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type],
                       selfTypeOpt: Option[Type],
-                      stmt: ISZ[Stmt],
+                      stmts: ISZ[Stmt],
                       @hidden attr: Attr)
     extends Stmt
 
@@ -148,7 +148,7 @@ object Stmt {
                                    typeParams: ISZ[TypeParam],
                                    params: ISZ[AbstractDatatypeParam],
                                    parents: ISZ[Type],
-                                   stmt: ISZ[Stmt],
+                                   stmts: ISZ[Stmt],
                                    @hidden attr: Attr)
     extends Stmt
 
@@ -157,7 +157,7 @@ object Stmt {
                        typeParams: ISZ[TypeParam],
                        params: ISZ[Param],
                        parents: ISZ[Type],
-                       stmt: ISZ[Stmt],
+                       stmts: ISZ[Stmt],
                        @hidden attr: Attr)
     extends Stmt
 
@@ -312,6 +312,9 @@ object Type {
 object Pattern {
 
   @datatype class Literal(lit: Lit)
+    extends Pattern
+
+  @datatype class Ref(name: Name)
     extends Pattern
 
   @datatype class Variable(id: Id,
@@ -823,4 +826,11 @@ object TruthTable {
                         endLine: Z,
                         endColumn: Z,
                         offset: Z,
-                        length: Z)
+                        length: Z) {
+  assert(beginLine >= 1, "beginLine")
+  assert(beginColumn >= 1, "beginColumn")
+  assert(endLine >= 1, "endLine")
+  assert(endColumn >= 1, "endColumn")
+  assert(offset >= 0, "offset")
+  assert(length >= 0, "length")
+}
