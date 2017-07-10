@@ -1,0 +1,185 @@
+main(fileUri, packageName, name, preMethod, postMethod, transformHelper) ::= <<
+// #Sireum
+$if(fileUri)$
+// This file is auto-generated from $fileUri$
+$endif$
+package $packageName$
+
+import org.sireum._
+
+object $name$ {
+
+  @datatype class PreResult[T](continue: B,
+                               resultOpt: Option[T])
+
+  @sig trait Pre {
+
+    $preMethod; separator="\n\n"$
+
+  }
+
+  @sig trait Post {
+
+    $postMethod; separator="\n\n"$
+
+  }
+
+  $tranformHelper; separator="\n\n"$
+
+}
+
+import $name$._
+
+@record class $name$(pre: Pre, post: Post) {
+
+  $transformMethod; separator="\n\n"$
+
+}
+>>
+
+preMethodRoot(typeName, type) ::= <<
+def transform$typeName$(o: $type$): PreResult[$type$] = {
+  o match {
+    $preMethodRootCase; separator="\n"$
+  }
+}
+>>
+
+preMethodRootCase(typeName, type) ::= <<
+case o: $type$ => return transform$typeName$(o)
+>>
+
+preMethod(typeName, type) ::= <<
+def transform$typeName$(o: $type$): PreResult[$type$] = {
+  return PreResult(T, None())
+}
+>>
+
+postMethodRoot(typeName, type) ::= <<
+def transform$typeName$(o: $type$): Option[$type$] = {
+  o match {
+    $postMethodRootCase; separator="\n"$
+  }
+}
+>>
+
+postMethodRootCase(typeName, type) ::= <<
+case o: $type$ => return transform$typeName$(o)
+>>
+
+postMethod(typeName, type) ::= <<
+def transform$typeName$(o: $type$): Option[$type$] = {
+  return None()
+}
+>>
+
+transformerMethod(typeName, type, transformMethodCase) ::= <<
+def transform$typeName$(o: $type$): Option[$type$] = {
+  val preR: PreResult[$type$] = pre.transform$typeName$(o)
+  val r: Option[$type$] = if (preR.continue) {
+    val o2: $type$ = preR.resultOpt.getOrElse(o)
+    val hasChanged: B = preR.resultOpt.nonEmpty
+    o2 match {
+      $transformMethodCase; separator="\n"$
+    }
+  } else if (preR.resultOpt.nonEmpty) {
+    Some(preR.resultOpt.getOrElse(o))
+  } else {
+    None()
+  }
+  val hasChanged: B = r.nonEmpty
+  val o2: $type$ = r.getOrElse(o)
+  val postR: Option[$type$] = post.transform$typeName$(o2)
+  if (postR.nonEmpty) {
+    return postR
+  } else if (hasChanged) {
+    return Some(o2)
+  } else {
+    return None()
+  }
+}
+>>
+
+transformMethodCase(type, transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+case o2: $type$ =>
+  $transformMethodCaseMember; separator="\n"$
+  if (hasChanged$tranformMethodCaseChanged$) {
+    return Some(o2($transformMethodCaseUpdate; separator=", "$))
+  } else {
+    return None()
+  }
+>>
+
+transformMethodCaseMember(i, typeName, type, fieldName) ::= <<
+val r$i$: Option[$type$] = transform$typeName$(o.$fieldName$)
+>>
+
+transformMethodCaseMemberIS(i, indexType, typeName, type, fieldName) ::= <<
+val r$i$: Option[IS[$indexType$, $type$]] = transformIS$indexType$($fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseMemberMS(i, indexType, typeName, type, fieldName) ::= <<
+val r$i$: Option[MS[$indexType$, $type$]] = transformMS$indexType$($fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseMemberOption(i, typeName, type, fieldName) ::= <<
+val r$i$: Option[Option[$type$]] = transformOption($fieldName$, transform$typeName$ _)
+>>
+
+tranformMethodCaseChanged(i) ::= <<
+| r$i$.nonEmpty
+>>
+
+transformMethodCaseUpdate(i, fieldName) ::= <<
+$fieldName$ = r$i$.getOrElse(o2.$fieldName$)
+>>
+
+transformOption() ::= <<
+def transformOption[T](option: Option[T], f: T => Option[T]): Option[Option[T]] = {
+  option match {
+    case Some(v) =>
+      val r = f(v)
+      r match {
+        case Some(_) => return Some(r)
+        case _ => return None()
+      }
+    case _ => return None()
+  }
+}
+>>
+
+transformIS(indexType) ::= <<
+def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[IS[$indexType$, T]] = {
+  val s2: MS[$indexType$, T] = SI.toMS(s)
+  var changed: B = F
+  for (i <- s2.indices) {
+    val e: T = s(i)
+    val r: Option[T] = f(e)
+    changed = changed | r.nonEmpty
+    s2(i) = r.getOrElse(e)
+  }
+  if (changed) {
+    return Some(SM.toIS(s2))
+  } else {
+    return None()
+  }
+}
+>>
+
+tranformMS(indexType) ::= <<
+def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[IS[$indexType$, T]] = {
+  var s2: MS[$indexType$, T] = MS[Z, T]()
+  var changed: B = F
+  for (i <- s2.indices) {
+    val e: T = s(i)
+    val r: Option[T] = f(e)
+    changed = changed | r.nonEmpty
+    s2 = s2 :+ r.getOrElse(e)
+  }
+  if (changed) {
+    return Some(s2)
+  } else {
+    return None()
+  }
+}
+>>
