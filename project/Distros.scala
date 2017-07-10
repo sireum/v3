@@ -58,7 +58,7 @@ object Distros {
     "latex" -> "idea-latex.jar"
   )
 
-  val pluginUpdateIdMap = Map(
+  lazy val pluginUpdateIdMap = Map(
     "sireum" -> (if (isDev) 0 else 31441),
     "jdt" -> 32149,
     "scala" -> 36674,
