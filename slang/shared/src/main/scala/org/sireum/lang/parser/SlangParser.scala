@@ -307,7 +307,9 @@ class SlangParser(text: Predef.String,
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
       case stat: Term.Return => translateReturn(enclosing, stat)
-      case stat: Term.Apply => AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
+      case stat: Term.Apply =>
+        stmtCheck(enclosing, stat, s"${syntax(stat)}")
+        AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
       case stat@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
@@ -399,9 +401,10 @@ class SlangParser(text: Predef.String,
         r
       case pattern =>
         enclosing match {
-          case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass =>
-            errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
+          case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
           case _ =>
+            if (isWorksheet) errorInSlang(pattern.pos, "Val pattern can only appear at the top-level, inside methods or code blocks")
+            else errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
         }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Val pattern cannot be explicitly typed")
@@ -471,9 +474,10 @@ class SlangParser(text: Predef.String,
         r
       case pattern =>
         enclosing match {
-          case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass =>
-            errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
+          case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
           case _ =>
+            if (isWorksheet) errorInSlang(pattern.pos, "Var pattern can only appear at the top-level, inside methods or code blocks")
+            else errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
         }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Var pattern cannot be explicitly typed")
@@ -1072,14 +1076,14 @@ class SlangParser(text: Predef.String,
 
   def translateBlock(enclosing: Enclosing.Type, stat: Term.Block, isAssignExp: Boolean): AST.Stmt.Block = {
     enclosing match {
-      case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.Method | Enclosing.Block =>
         val stmts =
           if (isAssignExp) translateStmtsExp(stat.pos, stat.stats)
           else ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)
         AST.Stmt.Block(AST.Body(stmts), attr(stat.pos))
       case _ =>
-        if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside methods, or other code blocks")
-        else errorInSlang(stat.pos, "Code-blocks can only appear inside methods or other code blocks")
+        if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside @datatype classes, @record classes, methods, or other code blocks")
+        else errorInSlang(stat.pos, "Code-blocks can only appear inside @datatype classes, @record classes, methods or other code blocks")
         AST.Stmt.Block(AST.Body(ISZ()), emptyAttr)
     }
   }

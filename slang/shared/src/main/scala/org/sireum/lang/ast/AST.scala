@@ -827,10 +827,21 @@ object TruthTable {
                         endColumn: Z,
                         offset: Z,
                         length: Z) {
-  assert(beginLine >= 1, "beginLine")
-  assert(beginColumn >= 1, "beginColumn")
-  assert(endLine >= 1, "endLine")
-  assert(endColumn >= 1, "endColumn")
-  assert(offset >= 0, "offset")
-  assert(length >= 0, "length")
+  {
+    assert(beginLine >= 1, "beginLine")
+    assert(beginColumn >= 1, "beginColumn")
+    assert(endLine >= 1, "endLine")
+    assert(endColumn >= 1, "endColumn")
+    assert(offset >= 0, "offset")
+    assert(length >= 0, "length")
+  }
+
+  l"""invariant beginLine ≥ 1
+                beginColumn ≥ 1
+                endLine ≥ 1
+                endColumn ≥ 1
+                offset ≥ 0
+                length ≥ 0
+   """
+
 }
