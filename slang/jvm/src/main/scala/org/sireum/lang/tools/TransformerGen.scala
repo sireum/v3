@@ -63,8 +63,8 @@ object TransformerGen {
 }
 
 class TransformerGen(stg: STGroup,
-                     globalNameMap: Map[ISZ[String], Resolver.Info],
-                     globalTypeMap: Map[ISZ[String], Resolver.TypeInfo],
+                     globalNameMap: SMap[ISZ[SString], Resolver.Info],
+                     globalTypeMap: SMap[ISZ[SString], Resolver.TypeInfo],
                      reporter: Reporter) {
   def gen(): ST = {
     ???
