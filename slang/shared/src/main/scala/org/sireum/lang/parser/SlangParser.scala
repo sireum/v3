@@ -911,28 +911,31 @@ class SlangParser(text: Predef.String,
     AST.Stmt.TypeAlias(cid(tname), ISZ(tparams.map(translateTypeParam): _*), translateType(tpe), attr(stat.pos))
   }
 
-  def translateType(t: Type): AST.Type = t match {
-    case t"${name: Type.Name}[..$tpesnel]" =>
-      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
-    case t"${name: Type.Name}" =>
-      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(), typedAttr(t.pos))
-    case t"(..$tpesnel)" =>
-      AST.Type.Tuple(ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
-    case t"$ref.$tname" =>
-      def f(t: Term): ISZ[AST.Id] = t match {
-        case q"$expr.$name" => f(expr) :+ cid(name)
-        case q"${name: Term.Name}" => ISZ(cid(name))
-        case _ =>
-          errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
-          ISZ(rDollarId)
-      }
-
-      AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
-    case t"(..$atpes) => $tpe" =>
-      AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe), typedAttr(t.pos))
-    case _ =>
-      errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
-      unitType
+  def translateType(t: Type): AST.Type = {
+    def f(t: Term): ISZ[AST.Id] = t match {
+      case q"$expr.$name" => f(expr) :+ cid(name)
+      case q"${name: Term.Name}" => ISZ(cid(name))
+      case _ =>
+        errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
+        ISZ(rDollarId)
+    }
+    t match {
+      case t"$ref.$tname[..$tpesnel]" =>
+        AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
+      case t"${name: Type.Name}[..$tpesnel]" =>
+        AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
+      case t"${name: Type.Name}" =>
+        AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(), typedAttr(t.pos))
+      case t"(..$tpesnel)" =>
+        AST.Type.Tuple(ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
+      case t"$ref.$tname" =>
+        AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
+      case t"(..$atpes) => $tpe" =>
+        AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe), typedAttr(t.pos))
+      case _ =>
+        errorNotSlang(t.pos, s"Type '${syntax(t)}' (${t.structure}) is")
+        unitType
+    }
   }
 
   def translateType(t: Pat.Type): AST.Type = t match {
@@ -948,7 +951,7 @@ class SlangParser(text: Predef.String,
       }
       AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
     case _ =>
-      errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
+      errorNotSlang(t.pos, s"Pattern type '${syntax(t)}' is")
       unitType
   }
 
@@ -1108,7 +1111,7 @@ class SlangParser(text: Predef.String,
 
   def translateAbstractDatatypeParam(isDatatype: Boolean)(tp: Term.Param): AST.AbstractDatatypeParam = {
     val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = tp
-    var hasError = true
+    var hasError = false
     var hasHidden = false
     var hasPure = false
     var isVar = false
