@@ -25,12 +25,48 @@
 
 package org.sireum.lang.tools
 
-import org.stringtemplate.v4.{ST, STGroup}
+import org.sireum.lang.ast._
+import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
+import org.sireum.lang.util.Reporter
+import org.stringtemplate.v4.{ST, STGroup, STGroupFile}
+import org.sireum.{ISZ, Map => SMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object TransformerGen {
 
+  def gen(program: TopUnit.Program,
+          reporter: Reporter = new Reporter {
+            def error(posOpt: SOption[PosInfo], message: SString): Unit = {
+              posOpt match {
+                case SSome(pos) => Console.err.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
+                case _ => Console.err.println(message)
+              }
+              Console.err.flush()
+            }
+
+            def warn(posOpt: SOption[PosInfo], message: SString): Unit = {
+              posOpt match {
+                case SSome(pos) => Console.out.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
+                case _ => Console.out.println(message)
+              }
+              Console.out.flush()
+            }
+          }): ST = {
+    val gdr = GlobalDeclarationResolver(
+      SMap.empty[ISZ[SString], Resolver.Info],
+      SMap.empty[ISZ[SString], Resolver.TypeInfo],
+      reporter
+    )
+    gdr.resolveProgram(program)
+    new TransformerGen(new STGroupFile(getClass.getResource("mtransformer.stg"), "UTF-8", '$', '$'),
+      gdr.globalNameMap, gdr.globalTypeMap, reporter).gen()
+  }
 }
 
-class TransformerGen(stg: STGroup) {
-
+class TransformerGen(stg: STGroup,
+                     globalNameMap: Map[ISZ[String], Resolver.Info],
+                     globalTypeMap: Map[ISZ[String], Resolver.TypeInfo],
+                     reporter: Reporter) {
+  def gen(): ST = {
+    ???
+  }
 }
