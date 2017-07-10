@@ -61,9 +61,9 @@ object MTransformer {
 
     def transformTopUnit(topUnit: TopUnit): Option[TopUnit] = {
       topUnit match {
-        case topUnit: TopUnit.Program => transformProgram(topUnit)
-        case topUnit: TopUnit.SequentUnit => transformSequentUnit(topUnit)
-        case topUnit: TopUnit.TruthTableUnit => transformTruthTableUnit(topUnit)
+        case topUnit: TopUnit.Program => return transformProgram(topUnit)
+        case topUnit: TopUnit.SequentUnit => return transformSequentUnit(topUnit)
+        case topUnit: TopUnit.TruthTableUnit => return transformTruthTableUnit(topUnit)
       }
     }
 
@@ -76,6 +76,50 @@ object MTransformer {
     }
 
     def transformTruthTableUnit(truthTable: TopUnit.TruthTableUnit): Option[TopUnit] = {
+      return None()
+    }
+  }
+
+  def transformOption[T](option: Option[T], f: T => Option[T]): Option[Option[T]] = {
+    option match {
+      case Some(v) =>
+        val r = f(v)
+        r match {
+          case Some(_) => return Some(r)
+          case _ => return None()
+        }
+      case _ => return None()
+    }
+  }
+
+  def transformISZ[T](s: IS[Z, T], f: T => Option[T]): Option[IS[Z, T]] = {
+    val s2 = SI.toMS(s)
+    var changed = F
+    for (i <- s2.indices) {
+      val e = s(i)
+      val r = f(e)
+      changed = changed | r.nonEmpty
+      s2(i) = r.getOrElse(e)
+    }
+    if (changed) {
+      return Some(SM.toIS(s2))
+    } else {
+      return None()
+    }
+  }
+
+  def transformMSZ[T](s: MS[Z, T], f: T => Option[T]): Option[MS[Z, T]] = {
+    var s2 = MS[Z, T]()
+    var changed = F
+    for (i <- s2.indices) {
+      val e = s(i)
+      val r = f(e)
+      changed = changed | r.nonEmpty
+      s2 = s2 :+ r.getOrElse(e)
+    }
+    if (changed) {
+      return Some(s2)
+    } else {
       return None()
     }
   }
@@ -134,34 +178,6 @@ import MTransformer._
         } else {
           return None()
         }
-    }
-  }
-
-  def transformISZ[T](s: IS[Z, T], f: T => Option[T]): Option[IS[Z, T]] = {
-    val s2 = SI.toMS(s)
-    var changed = F
-    for (i <- s2.indices) {
-      val e = s(i)
-      val r = f(e)
-      changed = changed | r.nonEmpty
-      s2(i) = r.getOrElse(e)
-    }
-    if (changed) {
-      return Some(SM.toIS(s2))
-    } else {
-      return None()
-    }
-  }
-
-  def transformOption[T](option: Option[T], f: T => Option[T]): Option[Option[T]] = {
-    option match {
-      case Some(v) =>
-        val r = f(v)
-        r match {
-          case Some(_) => return Some(r)
-          case _ => return None()
-        }
-      case _ => return None()
     }
   }
 

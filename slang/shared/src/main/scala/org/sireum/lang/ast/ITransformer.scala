@@ -84,6 +84,54 @@ object ITransformer {
     }
   }
 
+  @pure def transformOption[Context, T](ctx: Context, option: Option[T], @pure f: (Context, T) => Result[Context, T]): Result[Context, Option[T]] = {
+    option match {
+      case Some(v) =>
+        val r = f(ctx, v)
+        r.resultOpt match {
+          case Some(_) => return Result(r.ctx, Some(r.resultOpt))
+          case _ => return Result(r.ctx, None())
+        }
+      case _ => return Result(ctx, None())
+    }
+  }
+
+  @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
+    val s2 = SI.toMS(s)
+    var changed = F
+    var ctxi = ctx
+    for (i <- s2.indices) {
+      val e = s(i)
+      val r = f(ctxi, e)
+      ctxi = r.ctx
+      changed = changed | r.resultOpt.nonEmpty
+      s2(i) = r.resultOpt.getOrElse(e)
+    }
+    if (changed) {
+      return Result(ctxi, Some(SM.toIS(s2)))
+    } else {
+      return Result(ctxi, None())
+    }
+  }
+
+  @pure def transformMSZ[Context, T](ctx: Context, s: MS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, MS[Z, T]] = {
+    var s2 = MS[Z, T]()
+    var changed = F
+    var ctxi = ctx
+    for (i <- s2.indices) {
+      val e = s(i)
+      val r = f(ctxi, e)
+      ctxi = r.ctx
+      changed = changed | r.resultOpt.nonEmpty
+      s2 = s2 :+ r.resultOpt.getOrElse(e)
+    }
+    if (changed) {
+      return Result(ctxi, Some(s2))
+    } else {
+      return Result(ctxi, None())
+    }
+  }
+
 }
 
 import ITransformer._
@@ -138,36 +186,6 @@ import ITransformer._
         } else {
           return Result(r4.ctx, None())
         }
-    }
-  }
-
-  @pure def transformISZ[T](ctx: Context, s: IS[Z, T], @pure f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
-    val s2 = SI.toMS(s)
-    var changed = F
-    var ctxi = ctx
-    for (i <- s2.indices) {
-      val e = s(i)
-      val r = f(ctxi, e)
-      ctxi = r.ctx
-      changed = changed | r.resultOpt.nonEmpty
-      s2(i) = r.resultOpt.getOrElse(e)
-    }
-    if (changed) {
-      return Result(ctxi, Some(SM.toIS(s2)))
-    } else {
-      return Result(ctxi, None())
-    }
-  }
-
-  @pure def transformOption[T](ctx: Context, option: Option[T], @pure f: (Context, T) => Result[Context, T]): Result[Context, Option[T]] = {
-    option match {
-      case Some(v) =>
-        val r = f(ctx, v)
-        r.resultOpt match {
-          case Some(_) => return Result(r.ctx, Some(r.resultOpt))
-          case _ => return Result(r.ctx, None())
-        }
-      case _ => return Result(ctx, None())
     }
   }
 
