@@ -38,7 +38,7 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
   val preludePath = new File(preludePackagePath, "prelude.scala")
 
-  val latticePath = new File(preludePackagePath, "Lattice.scala")
+  val posetPath = new File(preludePackagePath, "Poset.scala")
   val setPath = new File(preludePackagePath, "Set.scala")
   val mapPath = new File(preludePackagePath, "Map.scala")
   val optionPath = new File(preludePackagePath, "Option.scala")
@@ -51,7 +51,7 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
     "Passing" - {
 
-      smpt.passing(readFile(latticePath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(posetPath)._1, addImport = false, isPrelude = true)
 
       smpt.passing(readFile(setPath)._1, addImport = false, isPrelude = true)
 
