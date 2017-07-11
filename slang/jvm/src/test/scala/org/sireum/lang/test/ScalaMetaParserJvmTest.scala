@@ -25,24 +25,12 @@
 
 package org.sireum.lang.test
 
-import java.io._
+import Paths._
 
 import org.sireum.test._
 import org.sireum.util.jvm.FileUtil._
 
 class ScalaMetaParserJvmTest extends SireumSpec {
-  val rootDir = new File(getClass.getResource(".").getPath, "../../../../../../../../../")
-
-  val preludePackagePath = new File(rootDir, "runtime/prelude/shared/src/main/scala/org/sireum/")
-  val slangPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang")
-
-  val preludePath = new File(preludePackagePath, "prelude.scala")
-
-  val posetPath = new File(preludePackagePath, "Poset.scala")
-  val setPath = new File(preludePackagePath, "Set.scala")
-  val mapPath = new File(preludePackagePath, "Map.scala")
-  val optionPath = new File(preludePackagePath, "Option.scala")
-  val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
 
   val smpt = new ScalaMetaParserTest
 

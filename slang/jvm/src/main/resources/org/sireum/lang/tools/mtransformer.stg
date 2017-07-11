@@ -1,9 +1,11 @@
-main(fileUri, packageName, name, preMethod, postMethod, transformHelper) ::= <<
+main(fileUri, packageName, name, preMethod, postMethod, transformHelper, transformMethod) ::= <<
 // #Sireum
 $if(fileUri)$
 // This file is auto-generated from $fileUri$
 $endif$
-package $packageName$
+$if(packageName)$
+package $packageName; separator="."$
+$endif$
 
 import org.sireum._
 
@@ -24,7 +26,7 @@ object $name$ {
 
   }
 
-  $tranformHelper; separator="\n\n"$
+  $transformHelper; separator="\n\n"$
 
 }
 
@@ -37,7 +39,7 @@ import $name$._
 }
 >>
 
-preMethodRoot(typeName, type) ::= <<
+preMethodRoot(typeName, type, preMethodRootCase) ::= <<
 def transform$typeName$(o: $type$): PreResult[$type$] = {
   o match {
     $preMethodRootCase; separator="\n"$
@@ -49,13 +51,13 @@ preMethodRootCase(typeName, type) ::= <<
 case o: $type$ => return transform$typeName$(o)
 >>
 
-preMethod(typeName, type) ::= <<
-def transform$typeName$(o: $type$): PreResult[$type$] = {
+preMethod(typeName, type, superType) ::= <<
+def transform$typeName$(o: $type$): PreResult[$superType$] = {
   return PreResult(T, None())
 }
 >>
 
-postMethodRoot(typeName, type) ::= <<
+postMethodRoot(typeName, type, postMethodRootCase) ::= <<
 def transform$typeName$(o: $type$): Option[$type$] = {
   o match {
     $postMethodRootCase; separator="\n"$
@@ -67,21 +69,19 @@ postMethodRootCase(typeName, type) ::= <<
 case o: $type$ => return transform$typeName$(o)
 >>
 
-postMethod(typeName, type) ::= <<
-def transform$typeName$(o: $type$): Option[$type$] = {
+postMethod(typeName, type, superType) ::= <<
+def transform$typeName$(o: $type$): Option[$superType$] = {
   return None()
 }
 >>
 
-transformerMethod(typeName, type, transformMethodCase) ::= <<
+transformMethod(typeName, type, transformMethodMatch) ::= <<
 def transform$typeName$(o: $type$): Option[$type$] = {
   val preR: PreResult[$type$] = pre.transform$typeName$(o)
   val r: Option[$type$] = if (preR.continue) {
     val o2: $type$ = preR.resultOpt.getOrElse(o)
     val hasChanged: B = preR.resultOpt.nonEmpty
-    o2 match {
-      $transformMethodCase; separator="\n"$
-    }
+    $transformMethodMatch$
   } else if (preR.resultOpt.nonEmpty) {
     Some(preR.resultOpt.getOrElse(o))
   } else {
@@ -100,30 +100,44 @@ def transform$typeName$(o: $type$): Option[$type$] = {
 }
 >>
 
+transformMethodMatch(type, transformMethodCase) ::= <<
+val rOpt: Option[$type$] = o2 match {
+  $transformMethodCase; separator="\n"$
+}
+rOpt
+>>
+
+transformMethodMatchSimple(transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+$transformMethodCaseMember; separator="\n"$
+if (hasChanged$tranformMethodCaseChanged$)
+  Some(o2($transformMethodCaseUpdate; separator=", "$))
+else
+  None()
+>>
+
 transformMethodCase(type, transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
-  if (hasChanged$tranformMethodCaseChanged$) {
-    return Some(o2($transformMethodCaseUpdate; separator=", "$))
-  } else {
-    return None()
-  }
+  if (hasChanged$tranformMethodCaseChanged$)
+    Some(o2($transformMethodCaseUpdate; separator=", "$))
+  else
+    None()
 >>
 
 transformMethodCaseMember(i, typeName, type, fieldName) ::= <<
-val r$i$: Option[$type$] = transform$typeName$(o.$fieldName$)
+val r$i$: Option[$type$] = transform$typeName$(o2.$fieldName$)
 >>
 
 transformMethodCaseMemberIS(i, indexType, typeName, type, fieldName) ::= <<
-val r$i$: Option[IS[$indexType$, $type$]] = transformIS$indexType$($fieldName$, transform$typeName$ _)
+val r$i$: Option[IS[$indexType$, $type$]] = transformIS$indexType$(o2.$fieldName$, transform$typeName$ _)
 >>
 
 transformMethodCaseMemberMS(i, indexType, typeName, type, fieldName) ::= <<
-val r$i$: Option[MS[$indexType$, $type$]] = transformMS$indexType$($fieldName$, transform$typeName$ _)
+val r$i$: Option[MS[$indexType$, $type$]] = transformMS$indexType$(o2.$fieldName$, transform$typeName$ _)
 >>
 
 transformMethodCaseMemberOption(i, typeName, type, fieldName) ::= <<
-val r$i$: Option[Option[$type$]] = transformOption($fieldName$, transform$typeName$ _)
+val r$i$: Option[Option[$type$]] = transformOption(o2.$fieldName$, transform$typeName$ _)
 >>
 
 tranformMethodCaseChanged(i) ::= <<

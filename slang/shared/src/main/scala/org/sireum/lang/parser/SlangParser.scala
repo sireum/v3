@@ -1091,7 +1091,7 @@ class SlangParser(text: Predef.String,
     }
   }
 
-  def translateExtend(cc: Ctor.Call): AST.Type = {
+  def translateExtend(cc: Ctor.Call): AST.Type.Named = {
     def f(t: Term): ISZ[AST.Id] = t match {
       case ctor"${ctorname: Ctor.Name}" => ISZ(cid(ctorname))
       case ctor"$ref.$ctorname" => f(ref) :+ cid(ctorname)

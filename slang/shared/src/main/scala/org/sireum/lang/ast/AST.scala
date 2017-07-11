@@ -85,21 +85,21 @@ object Stmt {
 
   @datatype class Var(isVal: B,
                       id: Id,
-                      tpeOpt: Option[Type],
+                      tipeOpt: Option[Type],
                       initOpt: Option[AssignExp],
                       @hidden attr: Attr)
     extends Stmt
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
-                             tpeOpt: Option[Type],
+                             tipeOpt: Option[Type],
                              initOpt: Option[AssignExp],
                              @hidden attr: Attr)
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
                           id: Id,
-                          tpe: Type,
+                          tipe: Type,
                           @hidden attr: Attr)
     extends Stmt
 
@@ -136,7 +136,7 @@ object Stmt {
 
   @datatype class Sig(id: Id,
                       typeParams: ISZ[TypeParam],
-                      parents: ISZ[Type],
+                      parents: ISZ[Type.Named],
                       selfTypeOpt: Option[Type],
                       stmts: ISZ[Stmt],
                       @hidden attr: Attr)
@@ -147,7 +147,7 @@ object Stmt {
                                    id: Id,
                                    typeParams: ISZ[TypeParam],
                                    params: ISZ[AbstractDatatypeParam],
-                                   parents: ISZ[Type],
+                                   parents: ISZ[Type.Named],
                                    stmts: ISZ[Stmt],
                                    @hidden attr: Attr)
     extends Stmt
@@ -156,14 +156,14 @@ object Stmt {
                        id: Id,
                        typeParams: ISZ[TypeParam],
                        params: ISZ[Param],
-                       parents: ISZ[Type],
+                       parents: ISZ[Type.Named],
                        stmts: ISZ[Stmt],
                        @hidden attr: Attr)
     extends Stmt
 
   @datatype class TypeAlias(id: Id,
                             typeParams: ISZ[TypeParam],
-                            tpe: Type,
+                            tipe: Type,
                             @hidden attr: Attr)
     extends Stmt
 
@@ -433,7 +433,7 @@ object Exp {
     extends Exp with Lit
 
   @datatype class LitBv(value: ISZ[B],
-                        tpe: Type,
+                        tipe: Type,
                         @hidden attr: Attr)
     extends Exp with Lit
 
@@ -572,7 +572,7 @@ object Domain {
 @datatype class AbstractDatatypeParam(isHidden: B,
                                       isPure: B,
                                       id: Id,
-                                      tpe: Type)
+                                      tipe: Type)
 
 @datatype class MethodSig(id: Id,
                           typeParams: ISZ[TypeParam],
@@ -581,7 +581,7 @@ object Domain {
 
 @datatype class Param(isPure: B,
                       id: Id,
-                      tpe: Type)
+                      tipe: Type)
 
 @datatype class TypeParam(id: Id,
                           superTypeOpt: Option[Type])
