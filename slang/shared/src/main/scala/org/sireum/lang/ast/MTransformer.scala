@@ -34,8 +34,8 @@ import org.sireum._
 
 object MTransformer {
 
-  @datatype class PreResult[T](continue: B,
-                               resultOpt: Option[T])
+  @record class PreResult[T](continue: B,
+                             resultOpt: Option[T])
 
   @sig trait Pre {
 
