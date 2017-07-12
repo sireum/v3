@@ -43,5 +43,5 @@ object Paths {
   val optionPath = new File(preludePackagePath, "Option.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
-  val slangITransformerPath = new File(slangPackagePath, "ast/ITransformer.scala")
+  val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
 }

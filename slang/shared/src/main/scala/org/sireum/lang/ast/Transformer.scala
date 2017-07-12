@@ -32,7 +32,7 @@ package org.sireum.lang.ast
 
 import org.sireum._
 
-object ITransformer {
+object Transformer {
 
   @datatype class PreResult[Context, T](ctx: Context,
                                         continue: B,
@@ -1591,9 +1591,9 @@ object ITransformer {
 
 }
 
-import ITransformer._
+import Transformer._
 
-@record class ITransformer[Context](pre: Pre[Context], post: Post[Context]) {
+@record class Transformer[Context](pre: Pre[Context], post: Post[Context]) {
 
   @pure def transformTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
     val preR: PreResult[Context, TopUnit] = pre.transformTopUnit(ctx, o)

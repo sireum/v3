@@ -21,7 +21,7 @@ import org.sireum._
 object $name$ {
 
   @record class PreResult[T](continue: B,
-                             resultOpt: Option[T])
+                             resultOpt: MOption[T])
 
   @sig trait Pre {
 
@@ -62,12 +62,12 @@ case o: $type$ => return transform$typeName$(o)
 
 preMethod(typeName, type, superType) ::= <<
 def transform$typeName$(o: $type$): PreResult[$superType$] = {
-  return PreResult(T, None())
+  return PreResult(T, MNone())
 }
 >>
 
 postMethodRoot(typeName, type, postMethodRootCase) ::= <<
-def transform$typeName$(o: $type$): Option[$type$] = {
+def transform$typeName$(o: $type$): MOption[$type$] = {
   o match {
     $postMethodRootCase; separator="\n"$
   }
@@ -79,66 +79,66 @@ case o: $type$ => return transform$typeName$(o)
 >>
 
 postMethod(typeName, type, superType) ::= <<
-def transform$typeName$(o: $type$): Option[$superType$] = {
-  return None()
+def transform$typeName$(o: $type$): MOption[$superType$] = {
+  return MNone()
 }
 >>
 
 transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <<
-def transform$typeName$(o: $type$): Option[$type$] = {
+def transform$typeName$(o: $type$): MOption[$type$] = {
   val preR: PreResult[$type$] = pre.transform$typeName$(o)$if(preAdapt)$ $preAdapt$$endif$
-  val r: Option[$type$] = if (preR.continue) {
+  val r: MOption[$type$] = if (preR.continue) {
     val o2: $type$ = preR.resultOpt.getOrElse(o)
     val hasChanged: B = preR.resultOpt.nonEmpty
     $transformMethodMatch$
   } else if (preR.resultOpt.nonEmpty) {
-    Some(preR.resultOpt.getOrElse(o))
+    MSome(preR.resultOpt.getOrElse(o))
   } else {
-    None()
+    MNone()
   }
   val hasChanged: B = r.nonEmpty
   val o2: $type$ = r.getOrElse(o)
-  val postR: Option[$type$] = post.transform$typeName$(o2)$if(postAdapt)$ $postAdapt$$endif$
+  val postR: MOption[$type$] = post.transform$typeName$(o2)$if(postAdapt)$ $postAdapt$$endif$
   if (postR.nonEmpty) {
     return postR
   } else if (hasChanged) {
-    return Some(o2)
+    return MSome(o2)
   } else {
-    return None()
+    return MNone()
   }
 }
 >>
 
 preAdaptDown(type) ::= <<
 match {
-    case PreResult(continue, Some(r: $type$)) => PreResult(continue, Some[$type$](r))
-    case _ => assert(F); PreResult(F, None[$type$]())
+    case PreResult(continue, MSome(r: $type$)) => PreResult(continue, MSome[$type$](r))
+    case _ => assert(F); PreResult(F, MNone[$type$]())
   }
 >>
 
 preAdaptUp(type) ::= <<
 match {
-    case PreResult(continue, Some(r)) => PreResult(continue, Some[$type$](r))
-    case PreResult(continue, _) => PreResult(continue, None[$type$]())
+    case PreResult(continue, MSome(r)) => PreResult(continue, MSome[$type$](r))
+    case PreResult(continue, _) => PreResult(continue, MNone[$type$]())
   }
 >>
 
 postAdaptDown(type) ::= <<
 match {
-    case Some(result: $type$) => Some[$type$](result)
-    case _ => assert(F); None[$type$]()
+    case MSome(result: $type$) => MSome[$type$](result)
+    case _ => assert(F); MNone[$type$]()
   }
 >>
 
 postAdaptUp(type) ::= <<
 match {
-    case Some(r) => Some[$type$](r)
-    case _ => None[$type$]()
+    case MSome(r) => MSome[$type$](r)
+    case _ => MNone[$type$]()
   }
 >>
 
 transformMethodMatch(type, transformMethodCase) ::= <<
-val rOpt: Option[$type$] = o2 match {
+val rOpt: MOption[$type$] = o2 match {
   $transformMethodCase; separator="\n"$
 }
 rOpt
@@ -147,34 +147,38 @@ rOpt
 transformMethodMatchSimple(transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 $transformMethodCaseMember; separator="\n"$
 if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
-  Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
+  MSome(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
 else
-  None()
+  MNone()
 >>
 
 transformMethodCase(type, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
   if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
-    Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
+    MSome(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
   else
-    None()
+    MNone()
 >>
 
 transformMethodCaseMember(i, typeName, type, fieldName) ::= <<
-val r$i$: Option[$type$] = transform$typeName$(o2.$fieldName$)
+val r$i$: MOption[$type$] = transform$typeName$(o2.$fieldName$)
 >>
 
 transformMethodCaseMemberIS(i, indexType, typeName, type, fieldName) ::= <<
-val r$i$: Option[IS[$indexType$, $type$]] = transformIS$indexType$(o2.$fieldName$, transform$typeName$ _)
+val r$i$: MOption[IS[$indexType$, $type$]] = transformIS$indexType$(o2.$fieldName$, transform$typeName$ _)
 >>
 
 transformMethodCaseMemberMS(i, indexType, typeName, type, fieldName) ::= <<
-val r$i$: Option[MS[$indexType$, $type$]] = transformMS$indexType$(o2.$fieldName$, transform$typeName$ _)
+val r$i$: MOption[MS[$indexType$, $type$]] = transformMS$indexType$(o2.$fieldName$, transform$typeName$ _)
 >>
 
 transformMethodCaseMemberOption(i, typeName, type, fieldName) ::= <<
-val r$i$: Option[Option[$type$]] = transformOption(o2.$fieldName$, transform$typeName$ _)
+val r$i$: MOption[Option[$type$]] = transformOption(o2.$fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseMemberMOption(i, typeName, type, fieldName) ::= <<
+val r$i$: MOption[MOption[$type$]] = transformOption(o2.$fieldName$, transform$typeName$ _)
 >>
 
 transformMethodCaseChanged(i) ::= <<
@@ -186,51 +190,65 @@ $fieldName$ = r$i$.getOrElse(o2.$fieldName$)
 >>
 
 transformOption() ::= <<
-def transformOption[T](option: Option[T], f: T => Option[T]): Option[Option[T]] = {
+def transformOption[T](option: Option[T], f: T => MOption[T]): MOption[Option[T]] = {
   option match {
     case Some(v) =>
       val r = f(v)
       r match {
-        case Some(_) => return Some(r)
-        case _ => return None()
+        case MSome(v2) => return MSome(Some(v2))
+        case _ => return MNone()
       }
-    case _ => return None()
+    case _ => return MNone()
+  }
+}
+>>
+
+transformMOption() ::= <<
+def transformMOption[T](option: MOption[T], f: T => MOption[T]): MOption[MOption[T]] = {
+  option match {
+    case MSome(v) =>
+      val r = f(v)
+      r match {
+        case MSome(_) => return MSome(r)
+        case _ => return MNone()
+      }
+    case _ => return MNone()
   }
 }
 >>
 
 transformIS(indexType) ::= <<
-def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[IS[$indexType$, T]] = {
+def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => MOption[T]): MOption[IS[$indexType$, T]] = {
   val s2: MS[$indexType$, T] = SI.toMS(s)
   var changed: B = F
   for (i <- s2.indices) {
     val e: T = s(i)
-    val r: Option[T] = f(e)
+    val r: MOption[T] = f(e)
     changed = changed | r.nonEmpty
     s2(i) = r.getOrElse(e)
   }
   if (changed) {
-    return Some(SM.toIS(s2))
+    return MSome(SM.toIS(s2))
   } else {
-    return None()
+    return MNone()
   }
 }
 >>
 
 transformMS(indexType) ::= <<
-def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[IS[$indexType$, T]] = {
+def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => MOption[T]): MOption[IS[$indexType$, T]] = {
   var s2: MS[$indexType$, T] = MS[Z, T]()
   var changed: B = F
   for (i <- s2.indices) {
     val e: T = s(i)
-    val r: Option[T] = f(e)
+    val r: MOption[T] = f(e)
     changed = changed | r.nonEmpty
     s2 = s2 :+ r.getOrElse(e)
   }
   if (changed) {
-    return Some(s2)
+    return MSome(s2)
   } else {
-    return None()
+    return MNone()
   }
 }
 >>

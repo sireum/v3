@@ -80,7 +80,7 @@ object TransformerGen {
           isImmutable,
           licenseOpt.map(FileUtil.readFile(_)._1.trim),
           Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
-          nameOpt.getOrElse(if (isImmutable) "ITransformer" else "MTransformer"),
+          nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"),
           Util.ids2strings(p.packageName.ids),
           gdr.globalNameMap,
           gdr.globalTypeMap,
@@ -103,8 +103,7 @@ class TransformerGen(isImmutable: Boolean,
 
   val stg = new STGroupFile(
     getClass.getResource(
-      if (isImmutable) "itransformer.stg"
-      else "mtransformer.stg"),
+      if (isImmutable) "transformer.stg" else "mtransformer.stg"),
     "UTF-8", '$', '$')
   val stMain = stg.getInstanceOf("main")
   val packagePrefix =
@@ -157,6 +156,7 @@ class TransformerGen(isImmutable: Boolean,
   }
 
   var optionAdded = false
+  var moptionAdded = false
   var collAdded = Set[String]()
   var specificAdded = Set[String]()
 
@@ -348,11 +348,17 @@ class TransformerGen(isImmutable: Boolean,
       val fieldName = p.id.value.value
       p.tipe match {
         case t: Type.Named =>
-          typeString(t) match {
-            case "IS" =>
+          val ts = typeString(t)
+          ts match {
+            case "IS" | "MS" =>
+              val isImmutable = ts == "IS"
+              if (this.isImmutable && !isImmutable) {
+                reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+                return
+              }
               adtNameOpt(ti.name, t.typeArgs(1)) match {
                 case Some(name) =>
-                  transformMethodCaseMemberS(isImmutable = true, i,
+                  transformMethodCaseMemberS(isImmutable, i,
                     typeString(t.typeArgs(0).asInstanceOf[Type.Named]),
                     name, fieldName)
                   i += 1
@@ -361,60 +367,49 @@ class TransformerGen(isImmutable: Boolean,
             case "ISZ" | "ISZ8" | "ISZ16" | "ISZ32" | "ISZ64"
                  | "ISN" | "ISN8" | "ISN16" | "ISN32" | "ISN64"
                  | "ISS8" | "ISS16" | "ISS32" | "ISS64"
-                 | "ISU8" | "ISU16" | "ISU32" | "ISU64" =>
-              adtNameOpt(ti.name, t.typeArgs(0)) match {
-                case Some(name) =>
-                  transformMethodCaseMemberS(isImmutable = true, i,
-                    typeString(t).substring(2),
-                    name, fieldName)
-                  i += 1
-                case _ =>
-              }
-            case "MS" =>
-              if (isImmutable) {
-                reporter.error(p.id.attr.posInfoOpt, s"Unsupported type for parameter ${p.id.value}")
-                return
-              }
-              adtNameOpt(ti.name, t.typeArgs(1)) match {
-                case Some(name) =>
-                  transformMethodCaseMemberS(isImmutable = false, i,
-                    typeString(t.typeArgs(0).asInstanceOf[Type.Named]),
-                    name, fieldName)
-                  i += 1
-                case _ =>
-              }
-            case "MSZ" | "MSZ8" | "MSZ16" | "MSZ32" | "MSZ64"
+                 | "ISU8" | "ISU16" | "ISU32" | "ISU64"
+                 | "MSZ" | "MSZ8" | "MSZ16" | "MSZ32" | "MSZ64"
                  | "MSN" | "MSN8" | "MSN16" | "MSN32" | "MSN64"
                  | "MSS8" | "MSS16" | "MSS32" | "MSS64"
                  | "MSU8" | "MSU16" | "MSU32" | "MSU64" =>
-              if (isImmutable) {
-                reporter.error(p.id.attr.posInfoOpt, s"Unsupported type for parameter ${p.id.value}")
+              val isImmutable = ts.substring(0, 2) == "IS"
+              if (this.isImmutable && !isImmutable) {
+                reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti.name, t.typeArgs(0)) match {
                 case Some(name) =>
-                  transformMethodCaseMemberS(isImmutable = false, i,
-                    typeString(t).substring(2),
+                  transformMethodCaseMemberS(isImmutable, i,
+                    ts.substring(2),
                     name, fieldName)
                   i += 1
                 case _ =>
               }
-            case "Option" =>
+            case "Option" | "MOption" =>
+              val isImmutable = ts == "Option"
+              if (this.isImmutable && !isImmutable) {
+                reporter.error(p.id.attr.posInfoOpt, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
+                return
+              }
               adtNameOpt(ti.name, t.typeArgs(0)) match {
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
-                  val transformMethodCaseMemberOptionST = stg.getInstanceOf("transformMethodCaseMemberOption").
+                  val transformMethodCaseMemberOptionST = stg.getInstanceOf(
+                    if (isImmutable) "transformMethodCaseMemberOption" else "transformMethodCaseMemberMOption").
                     add("i", i).
                     add("typeName", adTypeName).
                     add("type", adTypeString).
                     add("fieldName", fieldName)
-                  if (isImmutable && i != 0) transformMethodCaseMemberOptionST.add("j", i - 1)
+                  if (this.isImmutable && i != 0) transformMethodCaseMemberOptionST.add("j", i - 1)
                   st.add("transformMethodCaseMember", transformMethodCaseMemberOptionST)
                   addChangedUpdate(i, fieldName)
-                  if (!optionAdded) {
+                  if (isImmutable && !optionAdded) {
                     optionAdded = true
                     stMain.add("transformHelper", stg.getInstanceOf("transformOption"))
+                  } else if (!isImmutable && !moptionAdded) {
+                    moptionAdded = true
+                    stMain.add("transformHelper", stg.getInstanceOf("transformMOption"))
                   }
                   transformSpecific(name)
                   i += 1

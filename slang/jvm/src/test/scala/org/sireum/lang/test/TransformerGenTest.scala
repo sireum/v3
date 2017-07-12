@@ -36,7 +36,7 @@ class TransformerGenTest extends SireumSpec {
 
   *(gen(slangAstPath, slangMTransformerPath, isImmutable = false))
 
-  *(gen(slangAstPath, slangITransformerPath, isImmutable = true))
+  *(gen(slangAstPath, slangTransformerPath, isImmutable = true))
 
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
     val rOpt = TransformerGen(allowSireumPackage = true,
