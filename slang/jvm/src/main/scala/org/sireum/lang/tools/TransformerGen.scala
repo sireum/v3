@@ -195,12 +195,12 @@ class TransformerGen(isImmutable: Boolean,
       add("typeName", rootTypeName).add("type", rootTypeString)
     val postMethodRootST = stg.getInstanceOf("postMethodRoot").
       add("typeName", rootTypeName).add("type", rootTypeString)
-    val tranformMethodMatchST = stg.getInstanceOf("transformMethodMatch").
+    val transformMethodMatchST = stg.getInstanceOf("transformMethodMatch").
       add("type", rootTypeString)
     val transformMethodST = stg.getInstanceOf("transformMethod").
       add("typeName", rootTypeName).
       add("type", rootTypeString).
-      add("transformMethodMatch", tranformMethodMatchST)
+      add("transformMethodMatch", transformMethodMatchST)
     if (isSig) {
       transformMethodST.
         add("preAdapt",
@@ -226,7 +226,7 @@ class TransformerGen(isImmutable: Boolean,
             add("type", childTypeString))
           val transformMethodCaseST = stg.getInstanceOf("transformMethodCase").
             add("type", childTypeString)
-          tranformMethodMatchST.add("transformMethodCase", transformMethodCaseST)
+          transformMethodMatchST.add("transformMethodCase", transformMethodCaseST)
           genAdtChild(transformMethodCaseST, childTI)
         case _ =>
       }
@@ -235,7 +235,7 @@ class TransformerGen(isImmutable: Boolean,
 
   def genAdt(ti: Resolver.AbstractDatatypeInfo): Unit = {
     if (!ti.ast.isDatatype && isImmutable) {
-      reporter.error(ti.ast.id.attr.posInfoOpt, s"Cannot generate immutable tranformer for @record ${ti.ast.id.value}.")
+      reporter.error(ti.ast.id.attr.posInfoOpt, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
       return
     }
     if (ti.ast.isRoot) genRoot(ti.name, isSig = false)
@@ -257,13 +257,13 @@ class TransformerGen(isImmutable: Boolean,
           add("type", adTypeString).
           add("superType", superTypeString))
       if (poset.parentsOf(ti.name).isEmpty) {
-        val tranformMethodMatchSimpleST = stg.getInstanceOf("transformMethodMatchSimple")
+        val transformMethodMatchSimpleST = stg.getInstanceOf("transformMethodMatchSimple")
         stMain.add("transformMethod",
           stg.getInstanceOf("transformMethod").
             add("typeName", adTypeName).
             add("type", adTypeString).
-            add("transformMethodMatch", tranformMethodMatchSimpleST))
-        genAdtChild(tranformMethodMatchSimpleST, ti)
+            add("transformMethodMatch", transformMethodMatchSimpleST))
+        genAdtChild(transformMethodMatchSimpleST, ti)
       }
     }
   }
@@ -297,8 +297,8 @@ class TransformerGen(isImmutable: Boolean,
 
   def genAdtChild(st: ST, ti: Resolver.AbstractDatatypeInfo): Unit = {
     def addChangedUpdate(i: Int, fieldName: String): Unit = {
-      st.add("tranformMethodCaseChanged",
-        stg.getInstanceOf("tranformMethodCaseChanged").
+      st.add("transformMethodCaseChanged",
+        stg.getInstanceOf("transformMethodCaseChanged").
           add("i", i))
       st.add("transformMethodCaseUpdate",
         stg.getInstanceOf("transformMethodCaseUpdate").

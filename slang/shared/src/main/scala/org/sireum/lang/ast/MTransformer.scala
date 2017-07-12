@@ -1571,13 +1571,13 @@ import MTransformer._
         case o2: TopUnit.Program =>
           val r0: Option[Name] = transformName(o2.packageName)
           val r1: Option[Body] = transformBody(o2.body)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(packageName = r0.getOrElse(o2.packageName), body = r1.getOrElse(o2.body)))
           else
             None()
         case o2: TopUnit.SequentUnit =>
           val r0: Option[LClause.Sequent] = transformLClauseSequent(o2.sequent)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(sequent = r0.getOrElse(o2.sequent)))
           else
             None()
@@ -1586,7 +1586,7 @@ import MTransformer._
           val r1: Option[LClause.Sequent] = transformLClauseSequent(o2.sequent)
           val r2: Option[IS[Z, TruthTable.Row]] = transformISZ(o2.rows, transformTruthTableRow _)
           val r3: Option[Option[TruthTable.Conclusion]] = transformOption(o2.conclusionOpt, transformTruthTableConclusion _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(vars = r0.getOrElse(o2.vars), sequent = r1.getOrElse(o2.sequent), rows = r2.getOrElse(o2.rows), conclusionOpt = r3.getOrElse(o2.conclusionOpt)))
           else
             None()
@@ -1620,7 +1620,7 @@ import MTransformer._
       val r0: Option[IS[Z, Exp]] = transformISZ(o2.premises, transformExp _)
       val r1: Option[IS[Z, Exp]] = transformISZ(o2.conclusions, transformExp _)
       val r2: Option[Option[LClause.Proof]] = transformOption(o2.proofOpt, transformLClauseProof _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(premises = r0.getOrElse(o2.premises), conclusions = r1.getOrElse(o2.conclusions), proofOpt = r2.getOrElse(o2.proofOpt)))
       else
         None()
@@ -1653,7 +1653,7 @@ import MTransformer._
       val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep _)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(steps = r0.getOrElse(o2.steps)))
       else
         None()
@@ -1686,7 +1686,7 @@ import MTransformer._
         case o2: Stmt.Import =>
           val r0: Option[IS[Z, Stmt.Import.Importer]] = transformISZ(o2.importers, transformStmtImportImporter _)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(importers = r0.getOrElse(o2.importers), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -1694,7 +1694,7 @@ import MTransformer._
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[Option[Type]] = transformOption(o2.tipeOpt, transformType _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), tipeOpt = r1.getOrElse(o2.tipeOpt), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1702,7 +1702,7 @@ import MTransformer._
           val r0: Option[Pattern] = transformPattern(o2.pattern)
           val r1: Option[Option[Type]] = transformOption(o2.tipeOpt, transformType _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(pattern = r0.getOrElse(o2.pattern), tipeOpt = r1.getOrElse(o2.tipeOpt), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1710,7 +1710,7 @@ import MTransformer._
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[Type] = transformType(o2.tipe)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), tipe = r1.getOrElse(o2.tipe), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1719,7 +1719,7 @@ import MTransformer._
           val r1: Option[Contract] = transformContract(o2.contract)
           val r2: Option[Option[Body]] = transformOption(o2.bodyOpt, transformBody _)
           val r3: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(sig = r0.getOrElse(o2.sig), contract = r1.getOrElse(o2.contract), bodyOpt = r2.getOrElse(o2.bodyOpt), attr = r3.getOrElse(o2.attr)))
           else
             None()
@@ -1727,7 +1727,7 @@ import MTransformer._
           val r0: Option[MethodSig] = transformMethodSig(o2.sig)
           val r1: Option[Contract] = transformContract(o2.contract)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(sig = r0.getOrElse(o2.sig), contract = r1.getOrElse(o2.contract), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1736,7 +1736,7 @@ import MTransformer._
           val r1: Option[IS[Z, SpecDef]] = transformISZ(o2.defs, transformSpecDef _)
           val r2: Option[IS[Z, WhereDef]] = transformISZ(o2.where, transformWhereDef _)
           val r3: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(sig = r0.getOrElse(o2.sig), defs = r1.getOrElse(o2.defs), where = r2.getOrElse(o2.where), attr = r3.getOrElse(o2.attr)))
           else
             None()
@@ -1744,7 +1744,7 @@ import MTransformer._
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[IS[Z, Id]] = transformISZ(o2.elements, transformId _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), elements = r1.getOrElse(o2.elements), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1753,7 +1753,7 @@ import MTransformer._
           val r1: Option[IS[Z, Type]] = transformISZ(o2.parents, transformType _)
           val r2: Option[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt _)
           val r3: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), parents = r1.getOrElse(o2.parents), stmts = r2.getOrElse(o2.stmts), attr = r3.getOrElse(o2.attr)))
           else
             None()
@@ -1764,7 +1764,7 @@ import MTransformer._
           val r3: Option[Option[Type]] = transformOption(o2.selfTypeOpt, transformType _)
           val r4: Option[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt _)
           val r5: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), parents = r2.getOrElse(o2.parents), selfTypeOpt = r3.getOrElse(o2.selfTypeOpt), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
           else
             None()
@@ -1775,7 +1775,7 @@ import MTransformer._
           val r3: Option[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed _)
           val r4: Option[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt _)
           val r5: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), params = r2.getOrElse(o2.params), parents = r3.getOrElse(o2.parents), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
           else
             None()
@@ -1786,7 +1786,7 @@ import MTransformer._
           val r3: Option[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed _)
           val r4: Option[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt _)
           val r5: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), params = r2.getOrElse(o2.params), parents = r3.getOrElse(o2.parents), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
           else
             None()
@@ -1795,35 +1795,35 @@ import MTransformer._
           val r1: Option[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam _)
           val r2: Option[Type] = transformType(o2.tipe)
           val r3: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), tipe = r2.getOrElse(o2.tipe), attr = r3.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.Assign =>
           val r0: Option[Exp] = transformExp(o2.lhs)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(lhs = r0.getOrElse(o2.lhs), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.AssignUp =>
           val r0: Option[Exp] = transformExp(o2.lhs)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(lhs = r0.getOrElse(o2.lhs), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.AssignPattern =>
           val r0: Option[Pattern] = transformPattern(o2.lhs)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(lhs = r0.getOrElse(o2.lhs), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.Block =>
           val r0: Option[Body] = transformBody(o2.body)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(body = r0.getOrElse(o2.body), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -1832,7 +1832,7 @@ import MTransformer._
           val r1: Option[Body] = transformBody(o2.thenbody)
           val r2: Option[Body] = transformBody(o2.elsebody)
           val r3: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(cond = r0.getOrElse(o2.cond), thenbody = r1.getOrElse(o2.thenbody), elsebody = r2.getOrElse(o2.elsebody), attr = r3.getOrElse(o2.attr)))
           else
             None()
@@ -1840,7 +1840,7 @@ import MTransformer._
           val r0: Option[Exp] = transformExp(o2.cond)
           val r1: Option[IS[Z, Case]] = transformISZ(o2.cases, transformCase _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(cond = r0.getOrElse(o2.cond), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -1850,7 +1850,7 @@ import MTransformer._
           val r2: Option[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
           val r3: Option[Body] = transformBody(o2.body)
           val r4: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
             Some(o2(cond = r0.getOrElse(o2.cond), invariants = r1.getOrElse(o2.invariants), modifies = r2.getOrElse(o2.modifies), body = r3.getOrElse(o2.body), attr = r4.getOrElse(o2.attr)))
           else
             None()
@@ -1860,7 +1860,7 @@ import MTransformer._
           val r2: Option[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
           val r3: Option[Body] = transformBody(o2.body)
           val r4: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
             Some(o2(cond = r0.getOrElse(o2.cond), invariants = r1.getOrElse(o2.invariants), modifies = r2.getOrElse(o2.modifies), body = r3.getOrElse(o2.body), attr = r4.getOrElse(o2.attr)))
           else
             None()
@@ -1872,28 +1872,28 @@ import MTransformer._
           val r4: Option[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
           val r5: Option[Body] = transformBody(o2.body)
           val r6: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty| r6.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty| r6.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), range = r1.getOrElse(o2.range), condOpt = r2.getOrElse(o2.condOpt), invariants = r3.getOrElse(o2.invariants), modifies = r4.getOrElse(o2.modifies), body = r5.getOrElse(o2.body), attr = r6.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.Return =>
           val r0: Option[Option[Exp]] = transformOption(o2.expOpt, transformExp _)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(expOpt = r0.getOrElse(o2.expOpt), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.LStmt =>
           val r0: Option[LClause] = transformLClause(o2.clause)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(clause = r0.getOrElse(o2.clause), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Stmt.Expr =>
           val r0: Option[Exp] = transformExp(o2.exp)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -1927,7 +1927,7 @@ import MTransformer._
       val r0: Option[Name] = transformName(o2.name)
       val r1: Option[IS[Z, Type]] = transformISZ(o2.typeArgs, transformType _)
       val r2: Option[TypedAttr] = transformTypedAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(name = r0.getOrElse(o2.name), typeArgs = r1.getOrElse(o2.typeArgs), attr = r2.getOrElse(o2.attr)))
       else
         None()
@@ -1958,7 +1958,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Name] = transformName(o2.name)
       val r1: Option[Option[Stmt.Import.Selector]] = transformOption(o2.selector, transformStmtImportSelector _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(name = r0.getOrElse(o2.name), selector = r1.getOrElse(o2.selector)))
       else
         None()
@@ -1987,7 +1987,7 @@ import MTransformer._
       val rOpt: Option[Stmt.Import.Selector] = o2 match {
         case o2: Stmt.Import.MultiSelector =>
           val r0: Option[IS[Z, Stmt.Import.NamedSelector]] = transformISZ(o2.selectors, transformStmtImportNamedSelector _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(selectors = r0.getOrElse(o2.selectors)))
           else
             None()
@@ -2022,7 +2022,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.from)
       val r1: Option[Id] = transformId(o2.to)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(from = r0.getOrElse(o2.from), to = r1.getOrElse(o2.to)))
       else
         None()
@@ -2051,19 +2051,19 @@ import MTransformer._
       val rOpt: Option[LClause] = o2 match {
         case o2: LClause.Invariants =>
           val r0: Option[IS[Z, ContractExp]] = transformISZ(o2.value, transformContractExp _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(value = r0.getOrElse(o2.value)))
           else
             None()
         case o2: LClause.Facts =>
           val r0: Option[IS[Z, LClause.Fact]] = transformISZ(o2.value, transformLClauseFact _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(value = r0.getOrElse(o2.value)))
           else
             None()
         case o2: LClause.Theorems =>
           val r0: Option[IS[Z, LClause.Theorem]] = transformISZ(o2.value, transformLClauseTheorem _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(value = r0.getOrElse(o2.value)))
           else
             None()
@@ -2071,13 +2071,13 @@ import MTransformer._
           val r0: Option[IS[Z, Exp]] = transformISZ(o2.premises, transformExp _)
           val r1: Option[IS[Z, Exp]] = transformISZ(o2.conclusions, transformExp _)
           val r2: Option[Option[LClause.Proof]] = transformOption(o2.proofOpt, transformLClauseProof _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(premises = r0.getOrElse(o2.premises), conclusions = r1.getOrElse(o2.conclusions), proofOpt = r2.getOrElse(o2.proofOpt)))
           else
             None()
         case o2: LClause.Proof =>
           val r0: Option[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(steps = r0.getOrElse(o2.steps)))
           else
             None()
@@ -2107,7 +2107,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[Exp] = transformExp(o2.exp)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), exp = r1.getOrElse(o2.exp)))
       else
         None()
@@ -2135,7 +2135,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[LClause.Sequent] = transformLClauseSequent(o2.sequent)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), sequent = r1.getOrElse(o2.sequent)))
       else
         None()
@@ -2163,7 +2163,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Option[Id]] = transformOption(o2.idOpt, transformId _)
       val r1: Option[Exp] = transformExp(o2.exp)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(idOpt = r0.getOrElse(o2.idOpt), exp = r1.getOrElse(o2.exp)))
       else
         None()
@@ -2192,7 +2192,7 @@ import MTransformer._
       val r0: Option[Pattern] = transformPattern(o2.pattern)
       val r1: Option[Option[Exp]] = transformOption(o2.condOpt, transformExp _)
       val r2: Option[Body] = transformBody(o2.body)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(pattern = r0.getOrElse(o2.pattern), condOpt = r1.getOrElse(o2.condOpt), body = r2.getOrElse(o2.body)))
       else
         None()
@@ -2221,13 +2221,13 @@ import MTransformer._
       val rOpt: Option[Range] = o2 match {
         case o2: Range.Expr =>
           val r0: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(exp = r0.getOrElse(o2.exp)))
           else
             None()
         case o2: Range.Indices =>
           val r0: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(exp = r0.getOrElse(o2.exp)))
           else
             None()
@@ -2235,7 +2235,7 @@ import MTransformer._
           val r0: Option[Exp] = transformExp(o2.start)
           val r1: Option[Exp] = transformExp(o2.end)
           val r2: Option[Option[Exp]] = transformOption(o2.byOpt, transformExp _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(start = r0.getOrElse(o2.start), end = r1.getOrElse(o2.end), byOpt = r2.getOrElse(o2.byOpt)))
           else
             None()
@@ -2268,7 +2268,7 @@ import MTransformer._
           val r0: Option[Name] = transformName(o2.name)
           val r1: Option[IS[Z, Type]] = transformISZ(o2.typeArgs, transformType _)
           val r2: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(name = r0.getOrElse(o2.name), typeArgs = r1.getOrElse(o2.typeArgs), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -2276,14 +2276,14 @@ import MTransformer._
           val r0: Option[IS[Z, Type]] = transformISZ(o2.args, transformType _)
           val r1: Option[Type] = transformType(o2.ret)
           val r2: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(args = r0.getOrElse(o2.args), ret = r1.getOrElse(o2.ret), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Type.Tuple =>
           val r0: Option[IS[Z, Type]] = transformISZ(o2.args, transformType _)
           val r1: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(args = r0.getOrElse(o2.args), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -2319,20 +2319,20 @@ import MTransformer._
             None()
         case o2: Pattern.Ref =>
           val r0: Option[Name] = transformName(o2.name)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(name = r0.getOrElse(o2.name)))
           else
             None()
         case o2: Pattern.Variable =>
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[Option[Type]] = transformOption(o2.typeOpt, transformType _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), typeOpt = r1.getOrElse(o2.typeOpt)))
           else
             None()
         case o2: Pattern.Wildcard =>
           val r0: Option[Option[Type]] = transformOption(o2.typeOpt, transformType _)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(typeOpt = r0.getOrElse(o2.typeOpt)))
           else
             None()
@@ -2345,7 +2345,7 @@ import MTransformer._
           val r0: Option[Option[Id]] = transformOption(o2.idOpt, transformId _)
           val r1: Option[Option[Name]] = transformOption(o2.nameOpt, transformName _)
           val r2: Option[IS[Z, Pattern]] = transformISZ(o2.patterns, transformPattern _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(idOpt = r0.getOrElse(o2.idOpt), nameOpt = r1.getOrElse(o2.nameOpt), patterns = r2.getOrElse(o2.patterns)))
           else
             None()
@@ -2376,152 +2376,152 @@ import MTransformer._
       val rOpt: Option[Exp] = o2 match {
         case o2: Exp.LitB =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitC =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitZ =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitZ8 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitZ16 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitZ32 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitZ64 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitN =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitN8 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitN16 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitN32 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitN64 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitS8 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitS16 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitS32 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitS64 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitU8 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitU16 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitU32 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitU64 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitF32 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitF64 =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitR =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitBv =>
           val r0: Option[Type] = transformType(o2.tipe)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(tipe = r0.getOrElse(o2.tipe), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.LitString =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
@@ -2529,20 +2529,20 @@ import MTransformer._
           val r0: Option[IS[Z, Exp.LitString]] = transformISZ(o2.lits, transformExpLitString _)
           val r1: Option[IS[Z, Exp]] = transformISZ(o2.args, transformExp _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(lits = r0.getOrElse(o2.lits), args = r1.getOrElse(o2.args), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.This =>
           val r0: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.Unary =>
           val r0: Option[Exp] = transformExp(o2.exp)
           val r1: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -2550,28 +2550,28 @@ import MTransformer._
           val r0: Option[Exp] = transformExp(o2.left)
           val r1: Option[Exp] = transformExp(o2.right)
           val r2: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(left = r0.getOrElse(o2.left), right = r1.getOrElse(o2.right), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.Ident =>
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[ResolvedAttr] = transformResolvedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.Eta =>
           val r0: Option[Exp] = transformExp(o2.exp)
           val r1: Option[ResolvedAttr] = transformResolvedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.Tuple =>
           val r0: Option[IS[Z, Exp]] = transformISZ(o2.args, transformExp _)
           val r1: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(args = r0.getOrElse(o2.args), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -2580,7 +2580,7 @@ import MTransformer._
           val r1: Option[Id] = transformId(o2.id)
           val r2: Option[IS[Z, Type]] = transformISZ(o2.targs, transformType _)
           val r3: Option[ResolvedAttr] = transformResolvedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(receiverOpt = r0.getOrElse(o2.receiverOpt), id = r1.getOrElse(o2.id), targs = r2.getOrElse(o2.targs), attr = r3.getOrElse(o2.attr)))
           else
             None()
@@ -2590,7 +2590,7 @@ import MTransformer._
           val r2: Option[IS[Z, Type]] = transformISZ(o2.targs, transformType _)
           val r3: Option[IS[Z, Exp]] = transformISZ(o2.args, transformExp _)
           val r4: Option[ResolvedAttr] = transformResolvedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
             Some(o2(receiverOpt = r0.getOrElse(o2.receiverOpt), id = r1.getOrElse(o2.id), targs = r2.getOrElse(o2.targs), args = r3.getOrElse(o2.args), attr = r4.getOrElse(o2.attr)))
           else
             None()
@@ -2600,7 +2600,7 @@ import MTransformer._
           val r2: Option[IS[Z, Type]] = transformISZ(o2.targs, transformType _)
           val r3: Option[IS[Z, NamedArg]] = transformISZ(o2.args, transformNamedArg _)
           val r4: Option[ResolvedAttr] = transformResolvedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
             Some(o2(receiverOpt = r0.getOrElse(o2.receiverOpt), id = r1.getOrElse(o2.id), targs = r2.getOrElse(o2.targs), args = r3.getOrElse(o2.args), attr = r4.getOrElse(o2.attr)))
           else
             None()
@@ -2609,14 +2609,14 @@ import MTransformer._
           val r1: Option[Exp] = transformExp(o2.thenExp)
           val r2: Option[Exp] = transformExp(o2.elseExp)
           val r3: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(cond = r0.getOrElse(o2.cond), thenExp = r1.getOrElse(o2.thenExp), elseExp = r2.getOrElse(o2.elseExp), attr = r3.getOrElse(o2.attr)))
           else
             None()
         case o2: Exp.Quant =>
           val r0: Option[IS[Z, VarFragment]] = transformISZ(o2.varFragments, transformVarFragment _)
           val r1: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(varFragments = r0.getOrElse(o2.varFragments), exp = r1.getOrElse(o2.exp)))
           else
             None()
@@ -2648,7 +2648,7 @@ import MTransformer._
       val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Attr] = transformAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(attr = r0.getOrElse(o2.attr)))
       else
         None()
@@ -2679,7 +2679,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[Exp] = transformExp(o2.arg)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), arg = r1.getOrElse(o2.arg)))
       else
         None()
@@ -2707,7 +2707,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[IS[Z, Id]] = transformISZ(o2.ids, transformId _)
       val r1: Option[Option[Domain]] = transformOption(o2.domainOpt, transformDomain _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(ids = r0.getOrElse(o2.ids), domainOpt = r1.getOrElse(o2.domainOpt)))
       else
         None()
@@ -2737,7 +2737,7 @@ import MTransformer._
         case o2: Domain.Type =>
           val r0: Option[Type] = transformType(o2.tipe)
           val r1: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(tipe = r0.getOrElse(o2.tipe), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -2745,7 +2745,7 @@ import MTransformer._
           val r0: Option[Exp] = transformExp(o2.lo)
           val r1: Option[Exp] = transformExp(o2.hi)
           val r2: Option[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(lo = r0.getOrElse(o2.lo), hi = r1.getOrElse(o2.hi), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -2774,7 +2774,7 @@ import MTransformer._
       val o2: Id = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Attr] = transformAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(attr = r0.getOrElse(o2.attr)))
       else
         None()
@@ -2802,7 +2802,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[IS[Z, Id]] = transformISZ(o2.ids, transformId _)
       val r1: Option[Attr] = transformAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(ids = r0.getOrElse(o2.ids), attr = r1.getOrElse(o2.attr)))
       else
         None()
@@ -2829,7 +2829,7 @@ import MTransformer._
       val o2: Body = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt _)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(stmts = r0.getOrElse(o2.stmts)))
       else
         None()
@@ -2857,7 +2857,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[Type] = transformType(o2.tipe)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), tipe = r1.getOrElse(o2.tipe)))
       else
         None()
@@ -2886,7 +2886,7 @@ import MTransformer._
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam _)
       val r2: Option[Type] = transformType(o2.returnType)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), returnType = r2.getOrElse(o2.returnType)))
       else
         None()
@@ -2914,7 +2914,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[Type] = transformType(o2.tipe)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), tipe = r1.getOrElse(o2.tipe)))
       else
         None()
@@ -2942,7 +2942,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[Option[Type]] = transformOption(o2.superTypeOpt, transformType _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), superTypeOpt = r1.getOrElse(o2.superTypeOpt)))
       else
         None()
@@ -2973,7 +2973,7 @@ import MTransformer._
       val r2: Option[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
       val r3: Option[IS[Z, ContractExp]] = transformISZ(o2.ensures, transformContractExp _)
       val r4: Option[IS[Z, SubContract]] = transformISZ(o2.subs, transformSubContract _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
         Some(o2(reads = r0.getOrElse(o2.reads), requires = r1.getOrElse(o2.requires), modifies = r2.getOrElse(o2.modifies), ensures = r3.getOrElse(o2.ensures), subs = r4.getOrElse(o2.subs)))
       else
         None()
@@ -3002,7 +3002,7 @@ import MTransformer._
       val r0: Option[Id] = transformId(o2.id)
       val r1: Option[IS[Z, SubContractParam]] = transformISZ(o2.params, transformSubContractParam _)
       val r2: Option[Contract] = transformContract(o2.contract)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id), params = r1.getOrElse(o2.params), contract = r2.getOrElse(o2.contract)))
       else
         None()
@@ -3029,7 +3029,7 @@ import MTransformer._
       val o2: SubContractParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Id] = transformId(o2.id)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(id = r0.getOrElse(o2.id)))
       else
         None()
@@ -3060,7 +3060,7 @@ import MTransformer._
           val r0: Option[Id] = transformId(o2.id)
           val r1: Option[Type] = transformType(o2.tipe)
           val r2: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), tipe = r1.getOrElse(o2.tipe), exp = r2.getOrElse(o2.exp)))
           else
             None()
@@ -3069,7 +3069,7 @@ import MTransformer._
           val r1: Option[IS[Z, Param]] = transformISZ(o2.params, transformParam _)
           val r2: Option[Type] = transformType(o2.rTipe)
           val r3: Option[IS[Z, SpecDef]] = transformISZ(o2.defs, transformSpecDef _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             Some(o2(id = r0.getOrElse(o2.id), params = r1.getOrElse(o2.params), rTipe = r2.getOrElse(o2.rTipe), defs = r3.getOrElse(o2.defs)))
           else
             None()
@@ -3101,7 +3101,7 @@ import MTransformer._
       val r1: Option[Exp] = transformExp(o2.exp)
       val r2: Option[Option[Pattern]] = transformOption(o2.patternOpt, transformPattern _)
       val r3: Option[Option[Exp]] = transformOption(o2.guardOpt, transformExp _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
         Some(o2(idOpt = r0.getOrElse(o2.idOpt), exp = r1.getOrElse(o2.exp), patternOpt = r2.getOrElse(o2.patternOpt), guardOpt = r3.getOrElse(o2.guardOpt)))
       else
         None()
@@ -3132,7 +3132,7 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[Exp] = transformExp(o2.exp)
           val r2: Option[Just] = transformJust(o2.just)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), exp = r1.getOrElse(o2.exp), just = r2.getOrElse(o2.just)))
           else
             None()
@@ -3140,7 +3140,7 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[AssumeProofStep] = transformAssumeProofStep(o2.assumeStep)
           val r2: Option[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), assumeStep = r1.getOrElse(o2.assumeStep), steps = r2.getOrElse(o2.steps)))
           else
             None()
@@ -3172,7 +3172,7 @@ import MTransformer._
       val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Attr] = transformAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(attr = r0.getOrElse(o2.attr)))
       else
         None()
@@ -3205,14 +3205,14 @@ import MTransformer._
         case o2: AssumeProofStep.Regular =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), exp = r1.getOrElse(o2.exp)))
           else
             None()
         case o2: AssumeProofStep.ForallIntroAps =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[IS[Z, VarFragment]] = transformISZ(o2.varFragments, transformVarFragment _)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), varFragments = r1.getOrElse(o2.varFragments)))
           else
             None()
@@ -3220,7 +3220,7 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[IS[Z, VarFragment]] = transformISZ(o2.varFragments, transformVarFragment _)
           val r2: Option[Exp] = transformExp(o2.exp)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), varFragments = r1.getOrElse(o2.varFragments), exp = r2.getOrElse(o2.exp)))
           else
             None()
@@ -3251,28 +3251,28 @@ import MTransformer._
       val rOpt: Option[Just] = o2 match {
         case o2: Just.Premise =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.AndIntro =>
           val r0: Option[IS[Z, Exp.LitZ]] = transformISZ(o2.steps, transformExpLitZ _)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(steps = r0.getOrElse(o2.steps), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.AndElim =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.andStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(andStep = r0.getOrElse(o2.andStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.OrIntro =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3280,14 +3280,14 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.orStep)
           val r1: Option[IS[Z, Exp.LitZ]] = transformISZ(o2.subProofSteps, transformExpLitZ _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(orStep = r0.getOrElse(o2.orStep), subProofSteps = r1.getOrElse(o2.subProofSteps), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.ImplyIntro =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(subProofStep = r0.getOrElse(o2.subProofStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3295,14 +3295,14 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.implyStep)
           val r1: Option[IS[Z, Exp.LitZ]] = transformISZ(o2.steps, transformExpLitZ _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(implyStep = r0.getOrElse(o2.implyStep), steps = r1.getOrElse(o2.steps), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.NegIntro =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(subProofStep = r0.getOrElse(o2.subProofStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3310,28 +3310,28 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r1: Option[Exp.LitZ] = transformExpLitZ(o2.negStep)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(step = r0.getOrElse(o2.step), negStep = r1.getOrElse(o2.negStep), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.BottomElim =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(subProofStep = r0.getOrElse(o2.subProofStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.Pbc =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(subProofStep = r0.getOrElse(o2.subProofStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.ForallIntro =>
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(subProofStep = r0.getOrElse(o2.subProofStep), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3339,7 +3339,7 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.forallStep)
           val r1: Option[IS[Z, Exp]] = transformISZ(o2.args, transformExp _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(forallStep = r0.getOrElse(o2.forallStep), args = r1.getOrElse(o2.args), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -3347,7 +3347,7 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.existsStep)
           val r1: Option[IS[Z, Exp]] = transformISZ(o2.args, transformExp _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(existsStep = r0.getOrElse(o2.existsStep), args = r1.getOrElse(o2.args), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -3355,21 +3355,21 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.existsStep)
           val r1: Option[Exp.LitZ] = transformExpLitZ(o2.subProofStep)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(existsStep = r0.getOrElse(o2.existsStep), subProofStep = r1.getOrElse(o2.subProofStep), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.Fact =>
           val r0: Option[Name] = transformName(o2.name)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(name = r0.getOrElse(o2.name), attr = r1.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.Invariant =>
           val r0: Option[Option[Name]] = transformOption(o2.nameOpt, transformName _)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(nameOpt = r0.getOrElse(o2.nameOpt), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3377,14 +3377,14 @@ import MTransformer._
           val r0: Option[Exp.LitZ] = transformExpLitZ(o2.eqStep)
           val r1: Option[Exp.LitZ] = transformExpLitZ(o2.step)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(eqStep = r0.getOrElse(o2.eqStep), step = r1.getOrElse(o2.step), attr = r2.getOrElse(o2.attr)))
           else
             None()
         case o2: Just.Auto =>
           val r0: Option[IS[Z, Exp.LitZ]] = transformISZ(o2.steps, transformExpLitZ _)
           val r1: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
             Some(o2(steps = r0.getOrElse(o2.steps), attr = r1.getOrElse(o2.attr)))
           else
             None()
@@ -3392,7 +3392,7 @@ import MTransformer._
           val r0: Option[Exp.LitString] = transformExpLitString(o2.path)
           val r1: Option[IS[Z, Exp.LitZ]] = transformISZ(o2.steps, transformExpLitZ _)
           val r2: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
             Some(o2(path = r0.getOrElse(o2.path), steps = r1.getOrElse(o2.steps), attr = r2.getOrElse(o2.attr)))
           else
             None()
@@ -3422,7 +3422,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[IS[Z, Exp.LitB]] = transformISZ(o2.assignment, transformExpLitB _)
       val r1: Option[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(assignment = r0.getOrElse(o2.assignment), values = r1.getOrElse(o2.values)))
       else
         None()
@@ -3452,7 +3452,7 @@ import MTransformer._
       val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Attr] = transformAttr(o2.attr)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(attr = r0.getOrElse(o2.attr)))
       else
         None()
@@ -3484,25 +3484,25 @@ import MTransformer._
       val rOpt: Option[TruthTable.Conclusion] = o2 match {
         case o2: TruthTable.Conclusion.Validity =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: TruthTable.Conclusion.Tautology =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: TruthTable.Conclusion.Contradictory =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
         case o2: TruthTable.Conclusion.Contingent =>
           val r0: Option[Attr] = transformAttr(o2.attr)
-          if (hasChanged| r0.nonEmpty)
+          if (hasChanged | r0.nonEmpty)
             Some(o2(attr = r0.getOrElse(o2.attr)))
           else
             None()
@@ -3531,7 +3531,7 @@ import MTransformer._
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
-      if (hasChanged| r0.nonEmpty)
+      if (hasChanged | r0.nonEmpty)
         Some(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt)))
       else
         None()
@@ -3559,7 +3559,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Option[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
       val r1: Option[Option[Type]] = transformOption(o2.typeOpt, transformType _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty)
         Some(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt), typeOpt = r1.getOrElse(o2.typeOpt)))
       else
         None()
@@ -3588,7 +3588,7 @@ import MTransformer._
       val r0: Option[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
       val r1: Option[Option[ResolvedInfo]] = transformOption(o2.resOpt, transformResolvedInfo _)
       val r2: Option[Option[Type]] = transformOption(o2.typeOpt, transformType _)
-      if (hasChanged| r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
         Some(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt), resOpt = r1.getOrElse(o2.resOpt), typeOpt = r2.getOrElse(o2.typeOpt)))
       else
         None()

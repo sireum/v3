@@ -136,18 +136,18 @@ val rOpt: Option[$type$] = o2 match {
 rOpt
 >>
 
-transformMethodMatchSimple(transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+transformMethodMatchSimple(transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 $transformMethodCaseMember; separator="\n"$
-if (hasChanged$tranformMethodCaseChanged$)
+if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
   Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
 else
   None()
 >>
 
-transformMethodCase(type, transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+transformMethodCase(type, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
-  if (hasChanged$tranformMethodCaseChanged$)
+  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
     Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
   else
     None()
@@ -169,7 +169,7 @@ transformMethodCaseMemberOption(i, typeName, type, fieldName) ::= <<
 val r$i$: Option[Option[$type$]] = transformOption(o2.$fieldName$, transform$typeName$ _)
 >>
 
-tranformMethodCaseChanged(i) ::= <<
+transformMethodCaseChanged(i) ::= <<
 | r$i$.nonEmpty
 >>
 
@@ -209,7 +209,7 @@ def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[
 }
 >>
 
-tranformMS(indexType) ::= <<
+transformMS(indexType) ::= <<
 def transformIS$indexType$[T](s: IS[$indexType$, T], f: T => Option[T]): Option[IS[$indexType$, T]] = {
   var s2: MS[$indexType$, T] = MS[Z, T]()
   var changed: B = F
