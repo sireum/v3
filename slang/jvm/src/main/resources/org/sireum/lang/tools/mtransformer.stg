@@ -1,5 +1,6 @@
 main(fileUri, packageName, name, preMethod, postMethod, transformHelper, transformMethod) ::= <<
 // #Sireum
+// @formatter:off
 $if(fileUri)$
 // This file is auto-generated from $fileUri$
 $endif$
@@ -75,9 +76,9 @@ def transform$typeName$(o: $type$): Option[$superType$] = {
 }
 >>
 
-transformMethod(typeName, type, transformMethodMatch) ::= <<
+transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <<
 def transform$typeName$(o: $type$): Option[$type$] = {
-  val preR: PreResult[$type$] = pre.transform$typeName$(o)
+  val preR: PreResult[$type$] = pre.transform$typeName$(o)$if(preAdapt)$ $preAdapt$$endif$
   val r: Option[$type$] = if (preR.continue) {
     val o2: $type$ = preR.resultOpt.getOrElse(o)
     val hasChanged: B = preR.resultOpt.nonEmpty
@@ -89,7 +90,7 @@ def transform$typeName$(o: $type$): Option[$type$] = {
   }
   val hasChanged: B = r.nonEmpty
   val o2: $type$ = r.getOrElse(o)
-  val postR: Option[$type$] = post.transform$typeName$(o2)
+  val postR: Option[$type$] = post.transform$typeName$(o2)$if(postAdapt)$ $postAdapt$$endif$
   if (postR.nonEmpty) {
     return postR
   } else if (hasChanged) {
@@ -98,6 +99,34 @@ def transform$typeName$(o: $type$): Option[$type$] = {
     return None()
   }
 }
+>>
+
+preAdaptDown(type) ::= <<
+match {
+      case PreResult(continue, Some(r: $type$)) => PreResult(continue, Some[$type$](r))
+      case _ => assert(F); PreResult(F, None[$type$]())
+    }
+>>
+
+preAdaptUp(type) ::= <<
+match {
+      case PreResult(continue, Some(r)) => PreResult(continue, Some[$type$](r))
+      case PreResult(continue, _) => PreResult(continue, None[$type$]())
+    }
+>>
+
+postAdaptDown(type) ::= <<
+match {
+      case Some(result: $type$) => Some[$type$](result)
+      case _ => assert(F); None[$type$]()
+    }
+>>
+
+postAdaptUp(type) ::= <<
+match {
+      case Some(r) => Some[$type$](r)
+      case _ => None[$type$]()
+    }
 >>
 
 transformMethodMatch(type, transformMethodCase) ::= <<
@@ -110,7 +139,7 @@ rOpt
 transformMethodMatchSimple(transformMethodCaseMember, tranformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 $transformMethodCaseMember; separator="\n"$
 if (hasChanged$tranformMethodCaseChanged$)
-  Some(o2($transformMethodCaseUpdate; separator=", "$))
+  Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
 else
   None()
 >>
@@ -119,7 +148,7 @@ transformMethodCase(type, transformMethodCaseMember, tranformMethodCaseChanged, 
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
   if (hasChanged$tranformMethodCaseChanged$)
-    Some(o2($transformMethodCaseUpdate; separator=", "$))
+    Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
   else
     None()
 >>
