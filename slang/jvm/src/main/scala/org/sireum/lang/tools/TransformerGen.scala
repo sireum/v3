@@ -40,6 +40,7 @@ import org.sireum.util.jvm.FileUtil
 object TransformerGen {
   def apply(allowSireumPackage: Boolean,
             isImmutable: Boolean,
+            licenseOpt: Option[File],
             src: File,
             dest: File,
             nameOpt: Option[String],
@@ -77,6 +78,7 @@ object TransformerGen {
         gdr.resolveProgram(p)
         Some(new TransformerGen(
           isImmutable,
+          licenseOpt.map(FileUtil.readFile(_)._1.trim),
           Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
           nameOpt.getOrElse(if (isImmutable) "ITransformer" else "MTransformer"),
           Util.ids2strings(p.packageName.ids),
@@ -91,6 +93,7 @@ object TransformerGen {
 }
 
 class TransformerGen(isImmutable: Boolean,
+                     licenseOpt: Option[String],
                      fileUriOpt: Option[String],
                      name: String,
                      packageName: ISZ[SString],
@@ -98,7 +101,11 @@ class TransformerGen(isImmutable: Boolean,
                      globalTypeMap: SMap[ISZ[SString], Resolver.TypeInfo],
                      reporter: Reporter) {
 
-  val stg = new STGroupFile(getClass.getResource("mtransformer.stg"), "UTF-8", '$', '$')
+  val stg = new STGroupFile(
+    getClass.getResource(
+      if (isImmutable) "itransformer.stg"
+      else "mtransformer.stg"),
+    "UTF-8", '$', '$')
   val stMain = stg.getInstanceOf("main")
   val packagePrefix =
     if (packageName.isEmpty) ""
@@ -154,6 +161,7 @@ class TransformerGen(isImmutable: Boolean,
   var specificAdded = Set[String]()
 
   def gen(): ST = {
+    licenseOpt.foreach(stMain.add("license", _))
     fileUriOpt.foreach(stMain.add("fileUri", _))
     for (id <- packageName) {
       stMain.add("packageName", id.value)
@@ -313,13 +321,17 @@ class TransformerGen(isImmutable: Boolean,
     def transformMethodCaseMemberS(isImmutable: Boolean, i: Int, indexType: String, name: ISZ[SString], fieldName: String): Unit = {
       val adTypeString = typeString(name)
       val adTypeName = typeName(adTypeString)
-      st.add("transformMethodCaseMember",
-        stg.getInstanceOf(if (isImmutable) "transformMethodCaseMemberIS" else "transformMethodCaseMemberMS").
+      val transformMethodCaseMemberSST =
+        stg.getInstanceOf(
+          if (isImmutable) "transformMethodCaseMemberIS"
+          else "transformMethodCaseMemberMS").
           add("i", i).
           add("indexType", indexType).
           add("typeName", adTypeName).
           add("type", adTypeString).
-          add("fieldName", fieldName))
+          add("fieldName", fieldName)
+      if (this.isImmutable && i != 0) transformMethodCaseMemberSST.add("j", i - 1)
+      st.add("transformMethodCaseMember", transformMethodCaseMemberSST)
       addChangedUpdate(i, fieldName)
       val coll = (if (isImmutable) "IS" else "MS") + indexType
       if (!collAdded.contains(coll)) {
@@ -392,12 +404,13 @@ class TransformerGen(isImmutable: Boolean,
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
-                  st.add("transformMethodCaseMember",
-                    stg.getInstanceOf("transformMethodCaseMemberOption").
-                      add("i", i).
-                      add("typeName", adTypeName).
-                      add("type", adTypeString).
-                      add("fieldName", fieldName))
+                  val transformMethodCaseMemberOptionST = stg.getInstanceOf("transformMethodCaseMemberOption").
+                    add("i", i).
+                    add("typeName", adTypeName).
+                    add("type", adTypeString).
+                    add("fieldName", fieldName)
+                  if (isImmutable && i != 0) transformMethodCaseMemberOptionST.add("j", i - 1)
+                  st.add("transformMethodCaseMember", transformMethodCaseMemberOptionST)
                   addChangedUpdate(i, fieldName)
                   if (!optionAdded) {
                     optionAdded = true
@@ -412,12 +425,13 @@ class TransformerGen(isImmutable: Boolean,
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
-                  st.add("transformMethodCaseMember",
-                    stg.getInstanceOf("transformMethodCaseMember").
-                      add("i", i).
-                      add("typeName", adTypeName).
-                      add("type", adTypeString).
-                      add("fieldName", fieldName))
+                  val transformMethodCaseMemberST = stg.getInstanceOf("transformMethodCaseMember").
+                    add("i", i).
+                    add("typeName", adTypeName).
+                    add("type", adTypeString).
+                    add("fieldName", fieldName)
+                  if (isImmutable && i != 0) transformMethodCaseMemberST.add("j", i - 1)
+                  st.add("transformMethodCaseMember", transformMethodCaseMemberST)
                   addChangedUpdate(i, fieldName)
                   transformSpecific(name)
                   i += 1
@@ -428,6 +442,7 @@ class TransformerGen(isImmutable: Boolean,
           reporter.error(p.id.attr.posInfoOpt, s"Unsupported type for parameter ${p.id.value}")
       }
     }
+    if (isImmutable && i != 0) st.add("i", i - 1)
   }
 
   def adtNameOpt(name: ISZ[SString], tipe: Type): Option[ISZ[SString]] = {

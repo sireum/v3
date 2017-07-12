@@ -1,8 +1,16 @@
-main(fileUri, packageName, name, preMethod, postMethod, transformHelper, transformMethod) ::= <<
+main(license, fileUri, packageName, name, preMethod, postMethod, transformHelper, transformMethod) ::= <<
 // #Sireum
 // @formatter:off
+
+$if(license)$
+/*
+ $license$
+ */
+
+$endif$
 $if(fileUri)$
 // This file is auto-generated from $fileUri$
+
 $endif$
 $if(packageName)$
 package $packageName; separator="."$

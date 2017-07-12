@@ -30,6 +30,8 @@ import java.io.File
 object Paths {
   val rootDir: File = new File(getClass.getResource(".").getPath, "../../../../../../../../../").getCanonicalFile
 
+  val licensePath = new File(rootDir, "license.txt")
+
   val preludePackagePath = new File(rootDir, "runtime/prelude/shared/src/main/scala/org/sireum/")
   val slangPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang")
 
@@ -41,4 +43,5 @@ object Paths {
   val optionPath = new File(preludePackagePath, "Option.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
+  val slangITransformerPath = new File(slangPackagePath, "ast/ITransformer.scala")
 }

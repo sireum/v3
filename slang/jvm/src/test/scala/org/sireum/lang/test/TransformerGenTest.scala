@@ -34,10 +34,13 @@ import org.sireum.util.jvm.FileUtil
 
 class TransformerGenTest extends SireumSpec {
 
-  * (gen(slangAstPath, slangMTransformerPath, isImmutable = false))
+  *(gen(slangAstPath, slangMTransformerPath, isImmutable = false))
+
+  *(gen(slangAstPath, slangITransformerPath, isImmutable = true))
 
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
-    val rOpt = TransformerGen(allowSireumPackage = true, isImmutable, src, dest, None)
+    val rOpt = TransformerGen(allowSireumPackage = true,
+      isImmutable, Some(licensePath), src, dest, None)
     rOpt match {
       case Some(r) =>
         val expected = FileUtil.readFile(dest)._1
