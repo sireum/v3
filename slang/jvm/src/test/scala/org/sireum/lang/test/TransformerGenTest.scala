@@ -25,6 +25,8 @@
 
 package org.sireum.lang.test
 
+import java.io.File
+
 import org.sireum.test.SireumSpec
 import Paths._
 import org.sireum.lang.tools.TransformerGen
@@ -32,22 +34,20 @@ import org.sireum.util.jvm.FileUtil
 
 class TransformerGenTest extends SireumSpec {
 
-  * {
-    val rOpt = TransformerGen(
-      allowSireumPackage = true,
-      isImmutable = false,
-      slangAstPath.toURI.toASCIIString, None)
+  * (gen(slangAstPath, slangMTransformerPath, isImmutable = false))
+
+  def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
+    val rOpt = TransformerGen(allowSireumPackage = true, isImmutable, src, dest, None)
     rOpt match {
       case Some(r) =>
-        val expected = FileUtil.readFile(slangMTransformerPath)._1
+        val expected = FileUtil.readFile(dest)._1
         if (r != expected) {
-          //FileUtil.writeFile(slangMTransformerPath, r)
-          Console.err.println(r)
-          Console.err.flush()
+          //FileUtil.writeFile(dest, r)
+          //Console.err.println(r)
+          //Console.err.flush()
           false
         } else true
       case _ => false
     }
-
   }
 }

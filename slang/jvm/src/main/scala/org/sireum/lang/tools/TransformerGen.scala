@@ -25,6 +25,8 @@
 
 package org.sireum.lang.tools
 
+import java.io.File
+
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
@@ -38,7 +40,8 @@ import org.sireum.util.jvm.FileUtil
 object TransformerGen {
   def apply(allowSireumPackage: Boolean,
             isImmutable: Boolean,
-            fileUri: String,
+            src: File,
+            dest: File,
             nameOpt: Option[String],
             reporter: Reporter = new Reporter {
               def error(posOpt: SOption[PosInfo], message: SString): Unit = {
@@ -57,12 +60,13 @@ object TransformerGen {
                 Console.out.flush()
               }
             }): Option[String] = {
-    val input = FileUtil.readFile(fileUri)._1
-    val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, Some(fileUri), input)
+    val srcText = FileUtil.readFile(src)._1
+    val srcUri = FileUtil.toUri(src)
+    val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, Some(srcUri), srcText)
     if (r.tags.nonEmpty) {
       for (tag <- r.tags) (tag: @unchecked) match {
         case tag: ErrorTag with LocationInfoTag with MessageTag =>
-          reporter.error(SSome(PosInfo(SSome(fileUri), tag.lineBegin, tag.columnBegin,
+          reporter.error(SSome(PosInfo(SSome(srcUri), tag.lineBegin, tag.columnBegin,
             tag.lineEnd, tag.columnEnd, tag.offset, tag.length)), tag.message)
       }
       return None
@@ -73,12 +77,12 @@ object TransformerGen {
         gdr.resolveProgram(p)
         Some(new TransformerGen(
           isImmutable,
-          Some(fileUri),
+          Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
           nameOpt.getOrElse(if (isImmutable) "ITransformer" else "MTransformer"),
           Util.ids2strings(p.packageName.ids),
           gdr.globalNameMap,
           gdr.globalTypeMap,
-          reporter).gen().render())
+          reporter).gen().render().replaceAllLiterally(System.lineSeparator, "\n").trim)
       case _ =>
         reporter.error(SNone(), "Expecting program input.")
         return None

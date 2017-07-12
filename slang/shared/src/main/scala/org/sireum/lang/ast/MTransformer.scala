@@ -1,6 +1,6 @@
 // #Sireum
 // @formatter:off
-// This file is auto-generated from file:/Users/robby/Repositories/Sireum/sireum-v3/slang/shared/src/main/scala/org/sireum/lang/ast/AST.scala
+// This file is auto-generated from AST.scala
 package org.sireum.lang.ast
 
 import org.sireum._
