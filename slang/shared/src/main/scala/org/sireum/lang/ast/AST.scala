@@ -104,6 +104,7 @@ object Stmt {
     extends Stmt
 
   @datatype class Method(isPure: B,
+                         hasOverride: B,
                          sig: MethodSig,
                          contract: Contract,
                          bodyOpt: Option[Body],

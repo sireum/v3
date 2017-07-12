@@ -48,7 +48,7 @@
                      |  var <pattern> = <assign-exp>
 
 <def-decl>         ::=  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
-                     |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <def-body>
+                     |  ⸨ @pure ⸩? ⸨ override ⸩? def <ID> <type-params>? <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = $
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <ldef-contract>
                      |  @spec def <ID> <type-params>? <params>? : <type> = $

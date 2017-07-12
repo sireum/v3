@@ -520,6 +520,7 @@ class SlangParser(text: Predef.String,
       errorNotSlang(name.pos, "Methods with multiple parameter tuples are")
     }
     var isPure = false
+    var hasOverride = false
     for (mod <- mods) mod match {
       case mod"@pure" =>
         if (isPure) {
@@ -527,6 +528,12 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant @pure.")
         }
         isPure = true
+      case mod"override" =>
+        if (hasOverride) {
+          hasError = true
+          error(mod.pos, "Redundant override.")
+        }
+        hasOverride = true
       case _ =>
         hasError = true
         errorInSlang(mod.pos, s"Only the @pure method modifier is allowed for method declarations")
@@ -536,7 +543,7 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
       translateType(tpe))
-    AST.Stmt.Method(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
+    AST.Stmt.Method(isPure, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -552,6 +559,7 @@ class SlangParser(text: Predef.String,
     }
     var isPure = false
     var isSpec = false
+    var hasOverride = false
     for (mod <- mods) mod match {
       case mod"@pure" =>
         if (isPure) {
@@ -565,13 +573,23 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant @spec.")
         }
         isSpec = true
+      case mod"override" =>
+        if (hasOverride) {
+          hasError = true
+          error(mod.pos, "Redundant override.")
+        }
+        hasOverride
       case _ =>
         hasError = true
         errorInSlang(mod.pos, s"Only either method modifier @pure or @spec is allowed for method definitions")
     }
     if (isPure && isSpec) {
       hasError = true
-      errorInSlang(mods.head.pos, s"Only either method modifier @pure or @spec is allowed")
+      errorInSlang(mods.head.pos, s"Methods cannot be annotated with both @pure or @spec (@spec methods are always @pure)")
+    }
+    if (hasOverride && isSpec) {
+      hasError = true
+      errorInSlang(mods.head.pos, s"@spec methods cannot have an override modifier")
     }
     val sig = AST.MethodSig(
       cid(name),
@@ -590,7 +608,9 @@ class SlangParser(text: Predef.String,
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
       }
-    else if (enclosing == Enclosing.ExtObject)
+    else if (enclosing == Enclosing.ExtObject) {
+      if (hasOverride)
+        errorInSlang(exp.pos, s"Extension methods cannot have an override modifier")
       exp match {
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
@@ -603,7 +623,7 @@ class SlangParser(text: Predef.String,
           AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
             ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
       }
-    else exp match {
+    } else exp match {
       case exp: Term.Block =>
         val (mc, bodyOpt) = exp.stats.headOption match {
           case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
@@ -615,10 +635,10 @@ class SlangParser(text: Predef.String,
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
-        AST.Stmt.Method(isPure, sig, mc, bodyOpt, attr(tree.pos))
+        AST.Stmt.Method(isPure, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+        AST.Stmt.Method(isPure, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
     }
   }
 
