@@ -1,0 +1,244 @@
+main(license, fileUri, packageName, name, preMethod, postMethod, transformHelper, transformMethod) ::= <<
+// #Sireum
+// @formatter:off
+
+$if(license)$
+/*
+ $license$
+ */
+
+$endif$
+$if(fileUri)$
+// This file is auto-generated from $fileUri$
+
+$endif$
+$if(packageName)$
+package $packageName; separator="."$
+$endif$
+
+import org.sireum._
+
+object $name$ {
+
+  @datatype class PreResult[Context, T](ctx: Context,
+                                        continue: B,
+                                        resultOpt: Option[T])
+
+  @datatype class Result[Context, T](ctx: Context,
+                                     resultOpt: Option[T])
+
+  @sig trait Pre[Context] {
+
+    $preMethod; separator="\n\n"$
+
+  }
+
+  @sig trait Post[Context] {
+
+    $postMethod; separator="\n\n"$
+
+  }
+
+  $transformHelper; separator="\n\n"$
+
+}
+
+import $name$._
+
+@record class $name$[Context](pre: Pre[Context], post: Post[Context]) {
+
+  $transformMethod; separator="\n\n"$
+
+}
+>>
+
+preMethodRoot(typeName, type, preMethodRootCase) ::= <<
+@pure def transform$typeName$(ctx: Context, o: $type$): PreResult[Context, $type$] = {
+  o match {
+    $preMethodRootCase; separator="\n"$
+  }
+}
+>>
+
+preMethodRootCase(typeName, type) ::= <<
+case o: $type$ => return transform$typeName$(ctx, o)
+>>
+
+preMethod(typeName, type, superType) ::= <<
+@pure def transform$typeName$(ctx: Context, o: $type$): PreResult[Context, $superType$] = {
+  return PreResult(ctx, T, None())
+}
+>>
+
+postMethodRoot(typeName, type, postMethodRootCase) ::= <<
+@pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $type$] = {
+  o match {
+    $postMethodRootCase; separator="\n"$
+  }
+}
+>>
+
+postMethodRootCase(typeName, type) ::= <<
+case o: $type$ => return transform$typeName$(ctx, o)
+>>
+
+postMethod(typeName, type, superType) ::= <<
+@pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $superType$] = {
+  return Result(ctx, None())
+}
+>>
+
+transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <<
+@pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $type$] = {
+  val preR: PreResult[Context, $type$] = pre.transform$typeName$(ctx, o)$if(preAdapt)$ $preAdapt$$endif$
+  val r: Result[Context, $type$] = if (preR.continue) {
+    val o2: $type$ = preR.resultOpt.getOrElse(o)
+    val hasChanged: B = preR.resultOpt.nonEmpty
+    $transformMethodMatch$
+  } else if (preR.resultOpt.nonEmpty) {
+    Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+  } else {
+    Result(preR.ctx, None())
+  }
+  val hasChanged: B = r.resultOpt.nonEmpty
+  val o2: $type$ = r.resultOpt.getOrElse(o)
+  val postR: Result[Context, $type$] = post.transform$typeName$(r.ctx, o2)$if(postAdapt)$ $postAdapt$$endif$
+  if (postR.resultOpt.nonEmpty) {
+    return postR
+  } else if (hasChanged) {
+    return Result(postR.ctx, Some(o2))
+  } else {
+    return Result(postR.ctx, None())
+  }
+}
+>>
+
+preAdaptDown(type) ::= <<
+match {
+    case PreResult(preCtx, continue, Some(r: $type$)) => PreResult(preCtx, continue, Some[$type$](r))
+    case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[$type$]())
+  }
+>>
+
+preAdaptUp(type) ::= <<
+match {
+    case PreResult(preCtx, continue, Some(r)) => PreResult(preCtx, continue, Some[$type$](r))
+    case PreResult(preCtx, continue, _) => PreResult(preCtx, continue, None[$type$]())
+  }
+>>
+
+postAdaptDown(type) ::= <<
+match {
+    case Result(postCtx, Some(result: $type$)) => Result(postCtx, Some[$type$](result))
+    case Result(postCtx, _) => assert(F); Result(postCtx, None[$type$]())
+  }
+>>
+
+postAdaptUp(type) ::= <<
+match {
+    case Result(postCtx, Some(r)) => Result(postCtx, Some[$type$](r))
+    case Result(postCtx, _) => Result(postCtx, None[$type$]())
+  }
+>>
+
+transformMethodMatch(type, transformMethodCase) ::= <<
+val rOpt: Result[Context, $type$] = o2 match {
+  $transformMethodCase; separator="\n"$
+}
+rOpt
+>>
+
+transformMethodMatchSimple(i, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+$transformMethodCaseMember; separator="\n"$
+if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+  Result($if(i)$r$i$.ctx$else$ctx$endif$, Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$))
+else
+  Result($if(i)$r$i$.ctx$else$ctx$endif$, None())
+>>
+
+transformMethodCase(i, type, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
+case o2: $type$ =>
+  $transformMethodCaseMember; separator="\n"$
+  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+    Result($if(i)$r$i$.ctx$else$ctx$endif$, Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$))
+  else
+    Result($if(i)$r$i$.ctx$else$ctx$endif$, None())
+>>
+
+transformMethodCaseMember(i, j, typeName, type, fieldName) ::= <<
+val r$i$: Result[Context, $type$] = transform$typeName$($if(j)$r$j$.ctx$else$ctx$endif$, o2.$fieldName$)
+>>
+
+transformMethodCaseMemberIS(i, j, indexType, typeName, type, fieldName) ::= <<
+val r$i$: Result[Context, IS[$indexType$, $type$]] = transformIS$indexType$($if(j)$r$j$.ctx$else$ctx$endif$, o2.$fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseMemberMS(i, j, indexType, typeName, type, fieldName) ::= <<
+val r$i$: Result[Context, MS[$indexType$, $type$]] = transformMS$indexType$($if(j)$r$j$.ctx$else$ctx$endif$, o2.$fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseMemberOption(i, j, typeName, type, fieldName) ::= <<
+val r$i$: Result[Context, Option[$type$]] = transformOption($if(j)$r$j$.ctx$else$ctx$endif$, o2.$fieldName$, transform$typeName$ _)
+>>
+
+transformMethodCaseChanged(i) ::= <<
+| r$i$.resultOpt.nonEmpty
+>>
+
+transformMethodCaseUpdate(i, fieldName) ::= <<
+$fieldName$ = r$i$.resultOpt.getOrElse(o2.$fieldName$)
+>>
+
+transformOption() ::= <<
+@pure def transformOption[Context, T](ctx: Context, option: Option[T], @pure f: (Context, T) => Result[Context, T]): Result[Context, Option[T]] = {
+  option match {
+    case Some(v) =>
+      val r = f(ctx, v)
+      r.resultOpt match {
+        case Some(_) => return Result(r.ctx, Some(r.resultOpt))
+        case _ => return Result(r.ctx, None())
+      }
+    case _ => return Result(ctx, None())
+  }
+}
+>>
+
+transformIS(indexType) ::= <<
+@pure def transformIS$indexType$[Context, T](ctx: Context, s: IS[$indexType$, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[$indexType$, T]] = {
+  val s2: MS[$indexType$, T] = SI.toMS(s)
+  var changed: B = F
+  var ctxi = ctx
+  for (i <- s2.indices) {
+    val e: T = s(i)
+    val r: Result[Context, T] = f(ctxi, e)
+    ctxi = r.ctx
+    changed = changed | r.resultOpt.nonEmpty
+    s2(i) = r.resultOpt.getOrElse(e)
+  }
+  if (changed) {
+    return Result(ctxi, Some(SM.toIS(s2)))
+  } else {
+    return Result(ctxi, None())
+  }
+}
+>>
+
+transformMS(indexType) ::= <<
+@pure def transformMS$indexType$[Context, T](ctx: Context, s: MS[$indexType$, T], f: (Context, T) => Result[Context, T]): Result[Context, MS[$indexType$, T]] = {
+  var s2: MS[$indexType$, T] = MS[Z, T]()
+  var changed: B = F
+  var ctxi = ctx
+  for (i <- s2.indices) {
+    val e: T = s(i)
+    val r: Result[Context, T] = f(ctxi, e)
+    ctxi = r.ctx
+    changed = changed | r.resultOpt.nonEmpty
+    s2 = s2 :+ r.resultOpt.getOrElse(e)
+  }
+  if (changed) {
+    return Result(ctxi, Some(s2))
+  } else {
+    return Result(ctxi, None())
+  }
+}
+>>
