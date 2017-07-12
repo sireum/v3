@@ -103,30 +103,30 @@ def transform$typeName$(o: $type$): Option[$type$] = {
 
 preAdaptDown(type) ::= <<
 match {
-      case PreResult(continue, Some(r: $type$)) => PreResult(continue, Some[$type$](r))
-      case _ => assert(F); PreResult(F, None[$type$]())
-    }
+    case PreResult(continue, Some(r: $type$)) => PreResult(continue, Some[$type$](r))
+    case _ => assert(F); PreResult(F, None[$type$]())
+  }
 >>
 
 preAdaptUp(type) ::= <<
 match {
-      case PreResult(continue, Some(r)) => PreResult(continue, Some[$type$](r))
-      case PreResult(continue, _) => PreResult(continue, None[$type$]())
-    }
+    case PreResult(continue, Some(r)) => PreResult(continue, Some[$type$](r))
+    case PreResult(continue, _) => PreResult(continue, None[$type$]())
+  }
 >>
 
 postAdaptDown(type) ::= <<
 match {
-      case Some(result: $type$) => Some[$type$](result)
-      case _ => assert(F); None[$type$]()
-    }
+    case Some(result: $type$) => Some[$type$](result)
+    case _ => assert(F); None[$type$]()
+  }
 >>
 
 postAdaptUp(type) ::= <<
 match {
-      case Some(r) => Some[$type$](r)
-      case _ => None[$type$]()
-    }
+    case Some(r) => Some[$type$](r)
+    case _ => None[$type$]()
+  }
 >>
 
 transformMethodMatch(type, transformMethodCase) ::= <<
