@@ -114,7 +114,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % "0.4.7"
+    "com.lihaoyi" %%% "utest" % "0.4.8"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
@@ -261,7 +261,7 @@ lazy val webJs = webT._3.settings(
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
     "com.lihaoyi" %%% "scalatags" % "0.6.5"
   )
 )
