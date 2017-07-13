@@ -125,23 +125,23 @@ class TransformerGen(isImmutable: Boolean,
 
     for (ti <- globalTypeMap.values) {
       ti match {
-        case ti: Resolver.AbstractDatatypeInfo if ti.ast.isRoot =>
+        case ti: Resolver.TypeInfo.AbstractDatatype if ti.ast.isRoot =>
           r = r.addNode(ti.name)
-        case ti: Resolver.SigInfo =>
+        case ti: Resolver.TypeInfo.Sig =>
           r = r.addNode(ti.name)
         case _ =>
       }
     }
     for (ti <- globalTypeMap.values) {
       ti match {
-        case ti: Resolver.AbstractDatatypeInfo if !ti.ast.isRoot =>
+        case ti: Resolver.TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
           for (t <- ti.ast.parents) {
             findParent(ti.name, Util.ids2strings(t.name.ids)) match {
               case Some(parentIds) =>
                 globalTypeMap.get(parentIds) match {
-                  case SSome(parent: Resolver.AbstractDatatypeInfo) =>
+                  case SSome(parent: Resolver.TypeInfo.AbstractDatatype) =>
                     r = r.addChildren(parent.name, ISZ(ti.name))
-                  case SSome(parent: Resolver.SigInfo) =>
+                  case SSome(parent: Resolver.TypeInfo.Sig) =>
                     r = r.addChildren(parent.name, ISZ(ti.name))
                   case _ =>
                 }
@@ -171,7 +171,7 @@ class TransformerGen(isImmutable: Boolean,
 
     for (ti <- globalTypeMap.values) {
       ti match {
-        case ti: Resolver.AbstractDatatypeInfo => genAdt(ti)
+        case ti: Resolver.TypeInfo.AbstractDatatype => genAdt(ti)
         case _ =>
       }
     }
@@ -183,7 +183,7 @@ class TransformerGen(isImmutable: Boolean,
     var r: Resolver.QName = ISZ()
     for (name <- poset.parentsOf(n).elements if r.isEmpty)
       globalTypeMap.get(name) match {
-        case SSome(_: Resolver.AbstractDatatypeInfo) => r = name
+        case SSome(_: Resolver.TypeInfo.AbstractDatatype) => r = name
         case _ =>
       }
     if (r.isEmpty) None else Some(r)
@@ -194,7 +194,7 @@ class TransformerGen(isImmutable: Boolean,
     val currPackageName = ISZ(currName.elements.dropRight(1): _*)
     val n = currPackageName ++ name
     globalTypeMap.get(n) match {
-      case SSome(_: Resolver.AbstractDatatypeInfo) => return Some(n)
+      case SSome(_: Resolver.TypeInfo.AbstractDatatype) => return Some(n)
       case _ =>
     }
     findName(currPackageName, name)
@@ -227,7 +227,7 @@ class TransformerGen(isImmutable: Boolean,
     stMain.add("transformMethod", transformMethodST)
     for (childIds <- poset.descendantsOf(name).elements) {
       globalTypeMap.get(childIds) match {
-        case SSome(childTI: Resolver.AbstractDatatypeInfo) if !childTI.ast.isRoot =>
+        case SSome(childTI: Resolver.TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
           val childTypeString = typeString(childIds)
           val childTypeName = typeName(childTypeString)
           preMethodRootST.add("preMethodRootCase", stg.getInstanceOf("preMethodRootCase").
@@ -245,7 +245,7 @@ class TransformerGen(isImmutable: Boolean,
     }
   }
 
-  def genAdt(ti: Resolver.AbstractDatatypeInfo): Unit = {
+  def genAdt(ti: Resolver.TypeInfo.AbstractDatatype): Unit = {
     if (!ti.ast.isDatatype && isImmutable) {
       reporter.error(ti.ast.id.attr.posInfoOpt, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
       return
@@ -282,7 +282,7 @@ class TransformerGen(isImmutable: Boolean,
 
   def transformSpecific(name: Resolver.QName): Unit = {
     globalTypeMap.get(name) match {
-      case SSome(ti: Resolver.AbstractDatatypeInfo) if !ti.ast.isRoot && adtParent(ti.name).nonEmpty =>
+      case SSome(ti: Resolver.TypeInfo.AbstractDatatype) if !ti.ast.isRoot && adtParent(ti.name).nonEmpty =>
         val adTypeString = typeString(name)
         if (specificAdded.contains(adTypeString)) {
           return
@@ -302,12 +302,12 @@ class TransformerGen(isImmutable: Boolean,
               stg.getInstanceOf("postAdaptDown").
                 add("type", adTypeString)))
         genAdtChild(transformMethodMatchSimpleST, ti)
-      case SSome(ti: Resolver.SigInfo) => genRoot(name, isSig = true)
+      case SSome(ti: Resolver.TypeInfo.Sig) => genRoot(name, isSig = true)
       case _ =>
     }
   }
 
-  def genAdtChild(st: ST, ti: Resolver.AbstractDatatypeInfo): Unit = {
+  def genAdtChild(st: ST, ti: Resolver.TypeInfo.AbstractDatatype): Unit = {
     def addChangedUpdate(i: Int, fieldName: String): Unit = {
       st.add("transformMethodCaseChanged",
         stg.getInstanceOf("transformMethodCaseChanged").
@@ -450,7 +450,7 @@ class TransformerGen(isImmutable: Boolean,
   def adtNameOpt(name: Resolver.QName, ids: Resolver.QName): Option[Resolver.QName] = {
     findName(name, ids) match {
       case Some(adtName) => globalTypeMap.get(adtName) match {
-        case SSome(ti: Resolver.AbstractDatatypeInfo) => Some(ti.name)
+        case SSome(ti: Resolver.TypeInfo.AbstractDatatype) => Some(ti.name)
         case _ => None
       }
       case _ =>
