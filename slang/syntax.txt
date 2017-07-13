@@ -152,6 +152,7 @@
                         }
 
 <for-range>        ::=  <exp>
+                     |  <exp> . reverse
                      |  <exp> . indices
                      |  <exp> . indices . reverse
                      |  <exp> until <exp> ⸨ by <exp> ⸩?

@@ -1990,9 +1990,9 @@ import Transformer._
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Name] = transformName(ctx, o2.name)
-      val r1: Result[Context, Option[Stmt.Import.Selector]] = transformOption(r0.ctx, o2.selector, transformStmtImportSelector _)
+      val r1: Result[Context, Option[Stmt.Import.Selector]] = transformOption(r0.ctx, o2.selectorOpt, transformStmtImportSelector _)
       if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name), selector = r1.resultOpt.getOrElse(o2.selector))))
+        Result(r1.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name), selectorOpt = r1.resultOpt.getOrElse(o2.selectorOpt))))
       else
         Result(r1.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {

@@ -1984,9 +1984,9 @@ import MTransformer._
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Name] = transformName(o2.name)
-      val r1: MOption[Option[Stmt.Import.Selector]] = transformOption(o2.selector, transformStmtImportSelector _)
+      val r1: MOption[Option[Stmt.Import.Selector]] = transformOption(o2.selectorOpt, transformStmtImportSelector _)
       if (hasChanged | r0.nonEmpty| r1.nonEmpty)
-        MSome(o2(name = r0.getOrElse(o2.name), selector = r1.getOrElse(o2.selector)))
+        MSome(o2(name = r0.getOrElse(o2.name), selectorOpt = r1.getOrElse(o2.selectorOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {

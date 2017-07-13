@@ -1369,7 +1369,8 @@ class SlangParser(text: Predef.String,
       case q"$start to $end" => AST.Range.Step(isInclusive = true, translateExp(start), expArg(end), None())
       case q"$s.indices" => AST.Range.Indices(isReverse = false, translateExp(s))
       case q"$s.indices.reverse" => AST.Range.Indices(isReverse = true, translateExp(s))
-      case _ => AST.Range.Expr(translateExp(r))
+      case q"$s.reverse" => AST.Range.Expr(isReverse = true, translateExp(s))
+      case _ => AST.Range.Expr(isReverse = false, translateExp(r))
     }
 
     def expArg(arg: Term.Arg): AST.Exp = arg match {

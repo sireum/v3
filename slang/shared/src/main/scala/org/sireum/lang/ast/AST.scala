@@ -71,7 +71,7 @@ object Stmt {
   object Import {
 
     @datatype class Importer(name: Name,
-                             selector: Option[Selector])
+                             selectorOpt: Option[Selector])
 
     @datatype trait Selector
 
@@ -275,7 +275,9 @@ object LClause {
 
 object Range {
 
-  @datatype class Expr(exp: Exp) extends Range
+  @datatype class Expr(isReverse: B,
+                       exp: Exp)
+    extends Range
 
   @datatype class Indices(isReverse: B,
                           exp: Exp)

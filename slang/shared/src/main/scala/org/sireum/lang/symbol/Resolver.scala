@@ -33,13 +33,6 @@ object Resolver {
 
   @datatype trait Info
 
-  @datatype trait TypeInfo {
-
-    def canHaveCompanion: B
-
-    def posInfoOpt: Option[AST.PosInfo]
-  }
-
   @datatype class PackageInfo(name: ISZ[String]) extends Info
 
   @datatype class VarInfo(name: ISZ[String],
@@ -70,6 +63,23 @@ object Resolver {
   @datatype class EnumInfo(name: ISZ[String],
                            elements: Set[String])
     extends Info
+
+  @datatype trait TypeInfo {
+
+    def canHaveCompanion: B
+
+    def posInfoOpt: Option[AST.PosInfo]
+  }
+
+  @datatype class BuiltIn(name: ISZ[String])
+    extends TypeInfo {
+    def canHaveCompanion: B = {
+      return F
+    }
+    def posInfoOpt: Option[AST.PosInfo] = {
+      return None()
+    }
+  }
 
   @datatype class SigInfo(name: ISZ[String],
                           specVars: Map[String, AST.Stmt.SpecVar],
