@@ -44,23 +44,7 @@ object TransformerGen {
             src: File,
             dest: File,
             nameOpt: Option[String],
-            reporter: Reporter = new Reporter {
-              def error(posOpt: SOption[PosInfo], message: SString): Unit = {
-                posOpt match {
-                  case SSome(pos) => Console.err.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
-                  case _ => Console.err.println(message)
-                }
-                Console.err.flush()
-              }
-
-              def warn(posOpt: SOption[PosInfo], message: SString): Unit = {
-                posOpt match {
-                  case SSome(pos) => Console.out.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
-                  case _ => Console.out.println(message)
-                }
-                Console.out.flush()
-              }
-            }): Option[String] = {
+            reporter: Reporter): Option[String] = {
     val srcText = FileUtil.readFile(src)._1
     val srcUri = FileUtil.toUri(src)
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, Some(srcUri), srcText)
@@ -136,15 +120,11 @@ class TransformerGen(isImmutable: Boolean,
       ti match {
         case ti: Resolver.TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
           for (t <- ti.ast.parents) {
-            findParent(ti.name, Util.ids2strings(t.name.ids)) match {
-              case Some(parentIds) =>
-                globalTypeMap.get(parentIds) match {
-                  case SSome(parent: Resolver.TypeInfo.AbstractDatatype) =>
-                    r = r.addChildren(parent.name, ISZ(ti.name))
-                  case SSome(parent: Resolver.TypeInfo.Sig) =>
-                    r = r.addChildren(parent.name, ISZ(ti.name))
-                  case _ =>
-                }
+            ti.scope.resolveType(globalTypeMap, Util.ids2strings(t.name.ids)) match {
+              case SSome(parent: Resolver.TypeInfo.AbstractDatatype) =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
+              case SSome(parent: Resolver.TypeInfo.Sig) =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
               case _ =>
                 reporter.error(t.attr.posInfoOpt, s"Could not find ${typeString(ti.name)}'s super type ${typeString(Util.ids2strings(t.name.ids))}.")
             }
@@ -187,17 +167,6 @@ class TransformerGen(isImmutable: Boolean,
         case _ =>
       }
     if (r.isEmpty) None else Some(r)
-  }
-
-  def findName(currName: Resolver.QName, name: Resolver.QName): Option[Resolver.QName] = {
-    if (currName.isEmpty) return None
-    val currPackageName = ISZ(currName.elements.dropRight(1): _*)
-    val n = currPackageName ++ name
-    globalTypeMap.get(n) match {
-      case SSome(_: Resolver.TypeInfo.AbstractDatatype) => return Some(n)
-      case _ =>
-    }
-    findName(currPackageName, name)
   }
 
   def genRoot(name: Resolver.QName, isSig: Boolean): Unit = {
@@ -356,7 +325,7 @@ class TransformerGen(isImmutable: Boolean,
                 reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
-              adtNameOpt(ti.name, t.typeArgs(1)) match {
+              adtNameOpt(ti, t.typeArgs(1)) match {
                 case Some(name) =>
                   transformMethodCaseMemberS(isImmutable, i,
                     typeString(t.typeArgs(0).asInstanceOf[Type.Named]),
@@ -377,7 +346,7 @@ class TransformerGen(isImmutable: Boolean,
                 reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
-              adtNameOpt(ti.name, t.typeArgs(0)) match {
+              adtNameOpt(ti, t.typeArgs(0)) match {
                 case Some(name) =>
                   transformMethodCaseMemberS(isImmutable, i,
                     ts.substring(2),
@@ -391,7 +360,7 @@ class TransformerGen(isImmutable: Boolean,
                 reporter.error(p.id.attr.posInfoOpt, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
-              adtNameOpt(ti.name, t.typeArgs(0)) match {
+              adtNameOpt(ti, t.typeArgs(0)) match {
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
@@ -416,7 +385,7 @@ class TransformerGen(isImmutable: Boolean,
                 case _ =>
               }
             case _ =>
-              adtNameOpt(ti.name, Util.ids2strings(t.name.ids)) match {
+              adtNameOpt(ti, Util.ids2strings(t.name.ids), t.attr.posInfoOpt) match {
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
@@ -440,20 +409,19 @@ class TransformerGen(isImmutable: Boolean,
     if (isImmutable && i != 0) st.add("i", i - 1)
   }
 
-  def adtNameOpt(name: Resolver.QName, tipe: Type): Option[Resolver.QName] = {
+  def adtNameOpt(ti: Resolver.TypeInfo.AbstractDatatype, tipe: Type): Option[Resolver.QName] = {
     tipe match {
-      case tipe: Type.Named => adtNameOpt(name, Util.ids2strings(tipe.name.ids))
+      case tipe: Type.Named => adtNameOpt(ti, Util.ids2strings(tipe.name.ids), tipe.attr.posInfoOpt)
       case _ => None
     }
   }
 
-  def adtNameOpt(name: Resolver.QName, ids: Resolver.QName): Option[Resolver.QName] = {
-    findName(name, ids) match {
-      case Some(adtName) => globalTypeMap.get(adtName) match {
-        case SSome(ti: Resolver.TypeInfo.AbstractDatatype) => Some(ti.name)
-        case _ => None
-      }
+  def adtNameOpt(ti: Resolver.TypeInfo.AbstractDatatype, ids: Resolver.QName, posInfoOpt: SOption[PosInfo]): Option[Resolver.QName] = {
+    ti.scope.resolveType(globalTypeMap, ids) match {
+      case SSome(ti: Resolver.TypeInfo.AbstractDatatype) => Some(ti.name)
+      case SSome(_) => None
       case _ =>
+        reporter.error(posInfoOpt, s"Could not find ${typeString(ids)}.")
         None
     }
   }

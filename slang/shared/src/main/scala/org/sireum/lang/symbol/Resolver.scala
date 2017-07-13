@@ -138,9 +138,18 @@ object Resolver {
 
         }
 
-        val enclosedOpt = globalNameMap.get(enclosingName ++ name)
-        if (enclosedOpt.nonEmpty) {
-          return enclosedOpt
+        val globalOpt = globalNameMap.get(name)
+        if (globalOpt.nonEmpty) {
+          return globalOpt
+        }
+
+        var en = enclosingName
+        while (en != packageName) {
+          val enclosedOpt = globalNameMap.get(en ++ name)
+          if (enclosedOpt.nonEmpty) {
+            return enclosedOpt
+          }
+          en = SI.dropRight(en, 1)
         }
 
         nameMap.get(name) match {
@@ -214,9 +223,18 @@ object Resolver {
           return builtInTypeOpt
         }
 
-        val enclosedTypeOpt = globalTypeMap.get(enclosingName ++ name)
-        if (enclosedTypeOpt.nonEmpty) {
-          return enclosedTypeOpt
+        val globalTypeOpt = globalTypeMap.get(name)
+        if (globalTypeOpt.nonEmpty) {
+          return globalTypeOpt
+        }
+
+        var en = enclosingName
+        while (en != packageName) {
+          val enclosedTypeOpt = globalTypeMap.get(en ++ name)
+          if (enclosedTypeOpt.nonEmpty) {
+            return enclosedTypeOpt
+          }
+          en = SI.dropRight(en, 1)
         }
 
         typeMap.get(name) match {
@@ -239,7 +257,9 @@ object Resolver {
 
   }
 
-  @datatype trait Info
+  @datatype trait Info {
+    def name: QName
+  }
 
   object Info {
 
@@ -278,6 +298,8 @@ object Resolver {
 
   @datatype trait TypeInfo {
 
+    def name: QName
+
     def canHaveCompanion: B
 
     def posInfoOpt: Option[AST.PosInfo]
@@ -293,6 +315,15 @@ object Resolver {
 
       def posInfoOpt: Option[AST.PosInfo] = {
         return None()
+      }
+    }
+
+    @datatype class Enum(name: QName,
+                         elements: Set[String],
+                         posInfoOpt: Option[AST.PosInfo])
+      extends TypeInfo {
+      def canHaveCompanion: B = {
+        return F
       }
     }
 
@@ -370,6 +401,8 @@ object Resolver {
   val rootPackageInfo: Info.Package = Info.Package(ISZ())
   val builtInPackageName: QName = ISZ()
   val builtInTypeNames: Map[QName, TypeInfo] = Map(ISZ(
+    (ISZ("B"), TypeInfo.BuiltIn(builtInPackageName :+ "B")),
+    (ISZ("C"), TypeInfo.BuiltIn(builtInPackageName :+ "C")),
     (ISZ("Z"), TypeInfo.BuiltIn(builtInPackageName :+ "Z")),
     (ISZ("Z8"), TypeInfo.BuiltIn(builtInPackageName :+ "Z8")),
     (ISZ("Z16"), TypeInfo.BuiltIn(builtInPackageName :+ "Z16")),
@@ -428,7 +461,8 @@ object Resolver {
     (ISZ("MSU8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU8")),
     (ISZ("MSU16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU16")),
     (ISZ("MSU32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU32")),
-    (ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64"))
+    (ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")),
+    (ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String"))
   ))
 
 }

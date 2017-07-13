@@ -682,7 +682,7 @@ class SlangParser(text: Predef.String,
     }
     if (hasEnum) {
       val elements: Seq[AST.Id] = (for (stat <- stats) yield stat match {
-        case Lit.Symbol(symbol) => scala.Some(cid(symbol.name.substring(1), stat.pos))
+        case Lit.Symbol(symbol) => scala.Some(cid(symbol.name, stat.pos))
         case _ =>
           error(stat.pos, s"An @enum element should be a single quote immediately followed by〈ID〉(i.e., a symbol).")
           scala.None

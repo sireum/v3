@@ -82,9 +82,14 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.id.value
         var elements = Set.empty[String]
         for (e <- stmt.elements) {
-          elements = elements.add(e.value)
+          if (elements.contains(e.value)) {
+            reporter.error(e.attr.posInfoOpt, s"Redeclaration of @enum element ${e.value}.")
+          } else {
+            elements = elements.add(e.value)
+          }
         }
         declareName("enumeration", name, Resolver.Info.Enum(name, elements), stmt.attr.posInfoOpt)
+        declareType("enumeration", name :+ "Type", Resolver.TypeInfo.Enum(name, elements, stmt.attr.posInfoOpt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
 
