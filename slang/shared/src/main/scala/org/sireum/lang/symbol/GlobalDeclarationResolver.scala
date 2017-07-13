@@ -30,11 +30,11 @@ import org.sireum._
 import org.sireum.lang.util.{Reporter}
 import org.sireum.lang.{ast => AST}
 
-@record class GlobalDeclarationResolver(var globalNameMap: Map[ISZ[String], Resolver.Info],
-                                        var globalTypeMap: Map[ISZ[String], Resolver.TypeInfo],
+@record class GlobalDeclarationResolver(var globalNameMap: Resolver.NameMap,
+                                        var globalTypeMap: Resolver.TypeMap,
                                         reporter: Reporter) {
 
-  var currentName: ISZ[String] = ISZ()
+  var currentName: Resolver.QName = ISZ()
   var currentImports: ISZ[AST.Stmt.Import] = ISZ()
 
   def resolveProgram(program: AST.TopUnit.Program): Unit = {
@@ -165,7 +165,7 @@ import org.sireum.lang.{ast => AST}
   }
 
   def declareName(entity: String,
-                  name: ISZ[String],
+                  name: Resolver.QName,
                   info: Resolver.Info,
                   posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
@@ -175,7 +175,7 @@ import org.sireum.lang.{ast => AST}
   }
 
   def declareType(entity: String,
-                  name: ISZ[String],
+                  name: Resolver.QName,
                   info: Resolver.TypeInfo,
                   posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
@@ -194,7 +194,7 @@ import org.sireum.lang.{ast => AST}
     }
   }
 
-  def declarePackage(name: ISZ[String], posOpt: Option[AST.PosInfo]): Unit = {
+  def declarePackage(name: Resolver.QName, posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
       case Some(_: Resolver.PackageInfo) =>
       case Some(_) => reporter.error(posOpt, "Cannot declare package because the name has already been used for a non-package entity.")

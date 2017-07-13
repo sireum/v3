@@ -96,9 +96,9 @@ class TransformerGen(isImmutable: Boolean,
                      licenseOpt: Option[String],
                      fileUriOpt: Option[String],
                      name: String,
-                     packageName: ISZ[SString],
-                     globalNameMap: SMap[ISZ[SString], Resolver.Info],
-                     globalTypeMap: SMap[ISZ[SString], Resolver.TypeInfo],
+                     packageName: Resolver.QName,
+                     globalNameMap: Resolver.NameMap,
+                     globalTypeMap: Resolver.TypeMap,
                      reporter: Reporter) {
 
   val stg = new STGroupFile(
@@ -110,10 +110,10 @@ class TransformerGen(isImmutable: Boolean,
     if (packageName.isEmpty) ""
     else packageName.elements.mkString(".") + "."
 
-  val poset: Poset[ISZ[SString]] = {
-    var r = Poset.empty[ISZ[SString]]
+  val poset: Poset[Resolver.QName] = {
+    var r = Poset.empty[Resolver.QName]
 
-    def findParent(childName: ISZ[SString], name: ISZ[SString]): Option[ISZ[SString]] = {
+    def findParent(childName: Resolver.QName, name: Resolver.QName): Option[Resolver.QName] = {
       if (childName.isEmpty) return None
       val childPackageName = ISZ(childName.elements.dropRight(1): _*)
       val n = childPackageName ++ name
@@ -179,8 +179,8 @@ class TransformerGen(isImmutable: Boolean,
     stMain
   }
 
-  def adtParent(n: ISZ[SString]): Option[ISZ[SString]] = {
-    var r = ISZ[SString]()
+  def adtParent(n: Resolver.QName): Option[Resolver.QName] = {
+    var r: Resolver.QName = ISZ()
     for (name <- poset.parentsOf(n).elements if r.isEmpty)
       globalTypeMap.get(name) match {
         case SSome(_: Resolver.AbstractDatatypeInfo) => r = name
@@ -189,7 +189,7 @@ class TransformerGen(isImmutable: Boolean,
     if (r.isEmpty) None else Some(r)
   }
 
-  def findName(currName: ISZ[SString], name: ISZ[SString]): Option[ISZ[SString]] = {
+  def findName(currName: Resolver.QName, name: Resolver.QName): Option[Resolver.QName] = {
     if (currName.isEmpty) return None
     val currPackageName = ISZ(currName.elements.dropRight(1): _*)
     val n = currPackageName ++ name
@@ -200,7 +200,7 @@ class TransformerGen(isImmutable: Boolean,
     findName(currPackageName, name)
   }
 
-  def genRoot(name: ISZ[SString], isSig: Boolean): Unit = {
+  def genRoot(name: Resolver.QName, isSig: Boolean): Unit = {
     val rootTypeString = typeString(name)
     val rootTypeName = typeName(rootTypeString)
     val preMethodRootST = stg.getInstanceOf("preMethodRoot").
@@ -280,7 +280,7 @@ class TransformerGen(isImmutable: Boolean,
     }
   }
 
-  def transformSpecific(name: ISZ[SString]): Unit = {
+  def transformSpecific(name: Resolver.QName): Unit = {
     globalTypeMap.get(name) match {
       case SSome(ti: Resolver.AbstractDatatypeInfo) if !ti.ast.isRoot && adtParent(ti.name).nonEmpty =>
         val adTypeString = typeString(name)
@@ -318,7 +318,7 @@ class TransformerGen(isImmutable: Boolean,
           add("fieldName", fieldName))
     }
 
-    def transformMethodCaseMemberS(isImmutable: Boolean, i: Int, indexType: String, name: ISZ[SString], fieldName: String): Unit = {
+    def transformMethodCaseMemberS(isImmutable: Boolean, i: Int, indexType: String, name: Resolver.QName, fieldName: String): Unit = {
       val adTypeString = typeString(name)
       val adTypeName = typeName(adTypeString)
       val transformMethodCaseMemberSST =
@@ -440,14 +440,14 @@ class TransformerGen(isImmutable: Boolean,
     if (isImmutable && i != 0) st.add("i", i - 1)
   }
 
-  def adtNameOpt(name: ISZ[SString], tipe: Type): Option[ISZ[SString]] = {
+  def adtNameOpt(name: Resolver.QName, tipe: Type): Option[Resolver.QName] = {
     tipe match {
       case tipe: Type.Named => adtNameOpt(name, Util.ids2strings(tipe.name.ids))
       case _ => None
     }
   }
 
-  def adtNameOpt(name: ISZ[SString], ids: ISZ[SString]): Option[ISZ[SString]] = {
+  def adtNameOpt(name: Resolver.QName, ids: Resolver.QName): Option[Resolver.QName] = {
     findName(name, ids) match {
       case Some(adtName) => globalTypeMap.get(adtName) match {
         case SSome(ti: Resolver.AbstractDatatypeInfo) => Some(ti.name)
@@ -462,7 +462,7 @@ class TransformerGen(isImmutable: Boolean,
     typeString(Util.ids2strings(t.name.ids))
   }
 
-  def typeString(ids: ISZ[SString]): String = {
+  def typeString(ids: Resolver.QName): String = {
     val typeName = ids.elements.mkString(".")
     if (typeName.startsWith(packagePrefix)) typeName.substring(packagePrefix.length)
     else typeName
