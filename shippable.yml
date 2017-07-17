@@ -16,9 +16,16 @@ build:
     options: "-e HOME=/root"
   ci:
     - git submodule update --init --recursive
-    - bin/sbt-launch.sh clean test:compile test
+    - bin/sbt-launch.sh clean test:compile
+    - bin/sbt-launch.sh test
   post_ci:
   on_success:
   on_failure:
   push:
   cache: true
+  cache_dir_list:
+    - $HOME/.ivy2
+    - $HOME/.coursier
+    - $HOME/.sbt
+    - $SHIPPABLE_BUILD_DIR/platform
+    - $SHIPPABLE_BUILD_DIR/apps
