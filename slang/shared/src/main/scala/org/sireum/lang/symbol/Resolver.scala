@@ -33,9 +33,9 @@ object Resolver {
 
   type QName = ISZ[String]
 
-  type NameMap = Map[QName, Info]
+  type NameMap = HashMap[QName, Info]
 
-  type TypeMap = Map[QName, TypeInfo]
+  type TypeMap = HashMap[QName, TypeInfo]
 
 
   @record trait Scope {
@@ -50,7 +50,8 @@ object Resolver {
 
   object Scope {
 
-    @record class Local(nameMap: Map[String, Info],
+    @record class Local(nameMap: HashMap[String, Info],
+                        typeMap: HashMap[String, TypeInfo],
                         outerOpt: Option[Scope]) {
 
       def resolveName(globalNameMap: NameMap,
@@ -69,6 +70,12 @@ object Resolver {
 
       def resolveType(globalTypeMap: TypeMap,
                       name: QName): Option[TypeInfo] = {
+        if (name.size == 1) {
+          val typeInfoOpt = typeMap.get(name(0))
+          if (typeInfoOpt.nonEmpty) {
+            return typeInfoOpt
+          }
+        }
         outerOpt match {
           case Some(scope) => return scope.resolveType(globalTypeMap, name)
           case _ => return None()
@@ -81,8 +88,8 @@ object Resolver {
                          imports: ISZ[AST.Stmt.Import])
       extends Scope {
 
-      var nameMap: Map[QName, Option[Info]] = Map.empty
-      var typeMap: Map[QName, Option[TypeInfo]] = Map.empty
+      var nameMap: HashMap[QName, Option[Info]] = HashMap.empty
+      var typeMap: HashMap[QName, Option[TypeInfo]] = HashMap.empty
 
       @pure def outerOpt: Option[Scope] = {
         return None()
@@ -328,9 +335,9 @@ object Resolver {
     }
 
     @datatype class Sig(name: QName,
-                        specVars: Map[String, AST.Stmt.SpecVar],
-                        specMethods: Map[String, AST.Stmt.SpecMethod],
-                        methods: Map[String, AST.Stmt.Method],
+                        specVars: HashMap[String, AST.Stmt.SpecVar],
+                        specMethods: HashMap[String, AST.Stmt.SpecMethod],
+                        methods: HashMap[String, AST.Stmt.Method],
                         scope: Scope.Global,
                         ast: AST.Stmt.Sig)
       extends TypeInfo {
@@ -345,10 +352,10 @@ object Resolver {
     }
 
     @datatype class AbstractDatatype(name: QName,
-                                     specVars: Map[String, AST.Stmt.SpecVar],
-                                     vars: Map[String, AST.Stmt.Var],
-                                     specMethods: Map[String, AST.Stmt.SpecMethod],
-                                     methods: Map[String, AST.Stmt.Method],
+                                     specVars: HashMap[String, AST.Stmt.SpecVar],
+                                     vars: HashMap[String, AST.Stmt.Var],
+                                     specMethods: HashMap[String, AST.Stmt.SpecMethod],
+                                     methods: HashMap[String, AST.Stmt.Method],
                                      scope: Scope.Global,
                                      ast: AST.Stmt.AbstractDatatype)
       extends TypeInfo {
@@ -363,7 +370,7 @@ object Resolver {
     }
 
     @datatype class Rich(name: QName,
-                         methods: Map[String, AST.Stmt.Method],
+                         methods: HashMap[String, AST.Stmt.Method],
                          scope: Scope.Global,
                          ast: AST.Stmt.Rich)
       extends TypeInfo {
@@ -391,78 +398,77 @@ object Resolver {
       }
     }
 
-    @datatype class Members(specVars: Map[String, AST.Stmt.SpecVar],
-                            vars: Map[String, AST.Stmt.Var],
-                            specMethods: Map[String, AST.Stmt.SpecMethod],
-                            methods: Map[String, AST.Stmt.Method])
+    @datatype class Members(specVars: HashMap[String, AST.Stmt.SpecVar],
+                            vars: HashMap[String, AST.Stmt.Var],
+                            specMethods: HashMap[String, AST.Stmt.SpecMethod],
+                            methods: HashMap[String, AST.Stmt.Method])
 
   }
 
   val rootPackageInfo: Info.Package = Info.Package(ISZ())
   val builtInPackageName: QName = ISZ()
-  val builtInTypeNames: Map[QName, TypeInfo] = Map(ISZ(
-    (ISZ("B"), TypeInfo.BuiltIn(builtInPackageName :+ "B")),
-    (ISZ("C"), TypeInfo.BuiltIn(builtInPackageName :+ "C")),
-    (ISZ("Z"), TypeInfo.BuiltIn(builtInPackageName :+ "Z")),
-    (ISZ("Z8"), TypeInfo.BuiltIn(builtInPackageName :+ "Z8")),
-    (ISZ("Z16"), TypeInfo.BuiltIn(builtInPackageName :+ "Z16")),
-    (ISZ("Z32"), TypeInfo.BuiltIn(builtInPackageName :+ "Z32")),
-    (ISZ("Z64"), TypeInfo.BuiltIn(builtInPackageName :+ "Z64")),
-    (ISZ("N"), TypeInfo.BuiltIn(builtInPackageName :+ "N")),
-    (ISZ("N8"), TypeInfo.BuiltIn(builtInPackageName :+ "N8")),
-    (ISZ("N16"), TypeInfo.BuiltIn(builtInPackageName :+ "N16")),
-    (ISZ("N32"), TypeInfo.BuiltIn(builtInPackageName :+ "N32")),
-    (ISZ("N64"), TypeInfo.BuiltIn(builtInPackageName :+ "N64")),
-    (ISZ("S8"), TypeInfo.BuiltIn(builtInPackageName :+ "S8")),
-    (ISZ("S16"), TypeInfo.BuiltIn(builtInPackageName :+ "S16")),
-    (ISZ("S32"), TypeInfo.BuiltIn(builtInPackageName :+ "S32")),
-    (ISZ("S64"), TypeInfo.BuiltIn(builtInPackageName :+ "S64")),
-    (ISZ("U8"), TypeInfo.BuiltIn(builtInPackageName :+ "U8")),
-    (ISZ("U16"), TypeInfo.BuiltIn(builtInPackageName :+ "U16")),
-    (ISZ("U32"), TypeInfo.BuiltIn(builtInPackageName :+ "U32")),
-    (ISZ("U64"), TypeInfo.BuiltIn(builtInPackageName :+ "U64")),
-    (ISZ("F32"), TypeInfo.BuiltIn(builtInPackageName :+ "F32")),
-    (ISZ("F64"), TypeInfo.BuiltIn(builtInPackageName :+ "F64")),
-    (ISZ("R"), TypeInfo.BuiltIn(builtInPackageName :+ "R")),
-    (ISZ("IS"), TypeInfo.BuiltIn(builtInPackageName :+ "IS")),
-    (ISZ("MS"), TypeInfo.BuiltIn(builtInPackageName :+ "MS")),
-    (ISZ("ISZ"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ")),
-    (ISZ("ISZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ8")),
-    (ISZ("ISZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ16")),
-    (ISZ("ISZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ32")),
-    (ISZ("ISZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ64")),
-    (ISZ("ISN"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN")),
-    (ISZ("ISN8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN8")),
-    (ISZ("ISN16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN16")),
-    (ISZ("ISN32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN32")),
-    (ISZ("ISN64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN64")),
-    (ISZ("ISS8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS8")),
-    (ISZ("ISS16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS16")),
-    (ISZ("ISS32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS32")),
-    (ISZ("ISS64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS64")),
-    (ISZ("ISU8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU8")),
-    (ISZ("ISU16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU16")),
-    (ISZ("ISU32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU32")),
-    (ISZ("ISU64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU64")),
-    (ISZ("MSZ"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ")),
-    (ISZ("MSZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ8")),
-    (ISZ("MSZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ16")),
-    (ISZ("MSZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ32")),
-    (ISZ("MSZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ64")),
-    (ISZ("MSN"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN")),
-    (ISZ("MSN8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN8")),
-    (ISZ("MSN16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN16")),
-    (ISZ("MSN32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN32")),
-    (ISZ("MSN64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN64")),
-    (ISZ("MSS8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS8")),
-    (ISZ("MSS16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS16")),
-    (ISZ("MSS32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS32")),
-    (ISZ("MSS64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS64")),
-    (ISZ("MSU8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU8")),
-    (ISZ("MSU16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU16")),
-    (ISZ("MSU32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU32")),
-    (ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")),
-    (ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String"))
-  ))
+  val builtInTypeNames: HashMap[QName, TypeInfo] = HashMap.emptyInit[QName, TypeInfo](128).
+    put(ISZ("B"), TypeInfo.BuiltIn(builtInPackageName :+ "B")).
+    put(ISZ("C"), TypeInfo.BuiltIn(builtInPackageName :+ "C")).
+    put(ISZ("Z"), TypeInfo.BuiltIn(builtInPackageName :+ "Z")).
+    put(ISZ("Z8"), TypeInfo.BuiltIn(builtInPackageName :+ "Z8")).
+    put(ISZ("Z16"), TypeInfo.BuiltIn(builtInPackageName :+ "Z16")).
+    put(ISZ("Z32"), TypeInfo.BuiltIn(builtInPackageName :+ "Z32")).
+    put(ISZ("Z64"), TypeInfo.BuiltIn(builtInPackageName :+ "Z64")).
+    put(ISZ("N"), TypeInfo.BuiltIn(builtInPackageName :+ "N")).
+    put(ISZ("N8"), TypeInfo.BuiltIn(builtInPackageName :+ "N8")).
+    put(ISZ("N16"), TypeInfo.BuiltIn(builtInPackageName :+ "N16")).
+    put(ISZ("N32"), TypeInfo.BuiltIn(builtInPackageName :+ "N32")).
+    put(ISZ("N64"), TypeInfo.BuiltIn(builtInPackageName :+ "N64")).
+    put(ISZ("S8"), TypeInfo.BuiltIn(builtInPackageName :+ "S8")).
+    put(ISZ("S16"), TypeInfo.BuiltIn(builtInPackageName :+ "S16")).
+    put(ISZ("S32"), TypeInfo.BuiltIn(builtInPackageName :+ "S32")).
+    put(ISZ("S64"), TypeInfo.BuiltIn(builtInPackageName :+ "S64")).
+    put(ISZ("U8"), TypeInfo.BuiltIn(builtInPackageName :+ "U8")).
+    put(ISZ("U16"), TypeInfo.BuiltIn(builtInPackageName :+ "U16")).
+    put(ISZ("U32"), TypeInfo.BuiltIn(builtInPackageName :+ "U32")).
+    put(ISZ("U64"), TypeInfo.BuiltIn(builtInPackageName :+ "U64")).
+    put(ISZ("F32"), TypeInfo.BuiltIn(builtInPackageName :+ "F32")).
+    put(ISZ("F64"), TypeInfo.BuiltIn(builtInPackageName :+ "F64")).
+    put(ISZ("R"), TypeInfo.BuiltIn(builtInPackageName :+ "R")).
+    put(ISZ("IS"), TypeInfo.BuiltIn(builtInPackageName :+ "IS")).
+    put(ISZ("MS"), TypeInfo.BuiltIn(builtInPackageName :+ "MS")).
+    put(ISZ("ISZ"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ")).
+    put(ISZ("ISZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ8")).
+    put(ISZ("ISZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ16")).
+    put(ISZ("ISZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ32")).
+    put(ISZ("ISZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ64")).
+    put(ISZ("ISN"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN")).
+    put(ISZ("ISN8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN8")).
+    put(ISZ("ISN16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN16")).
+    put(ISZ("ISN32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN32")).
+    put(ISZ("ISN64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN64")).
+    put(ISZ("ISS8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS8")).
+    put(ISZ("ISS16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS16")).
+    put(ISZ("ISS32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS32")).
+    put(ISZ("ISS64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS64")).
+    put(ISZ("ISU8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU8")).
+    put(ISZ("ISU16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU16")).
+    put(ISZ("ISU32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU32")).
+    put(ISZ("ISU64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU64")).
+    put(ISZ("MSZ"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ")).
+    put(ISZ("MSZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ8")).
+    put(ISZ("MSZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ16")).
+    put(ISZ("MSZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ32")).
+    put(ISZ("MSZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ64")).
+    put(ISZ("MSN"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN")).
+    put(ISZ("MSN8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN8")).
+    put(ISZ("MSN16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN16")).
+    put(ISZ("MSN32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN32")).
+    put(ISZ("MSN64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN64")).
+    put(ISZ("MSS8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS8")).
+    put(ISZ("MSS16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS16")).
+    put(ISZ("MSS32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS32")).
+    put(ISZ("MSS64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS64")).
+    put(ISZ("MSU8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU8")).
+    put(ISZ("MSU16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU16")).
+    put(ISZ("MSU32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU32")).
+    put(ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")).
+    put(ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String"))
 
 }

@@ -32,7 +32,7 @@ import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.Reporter
 import org.stringtemplate.v4.{ST, STGroup, STGroupFile}
-import org.sireum.{ISZ, Poset, Map => SMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.math._Z
 import org.sireum.util.{ErrorTag, LocationInfoTag, MessageTag, WarningTag}
 import org.sireum.util.jvm.FileUtil
@@ -58,7 +58,7 @@ object TransformerGen {
     }
     r.unitOpt match {
       case SSome(p: TopUnit.Program) =>
-        val gdr = GlobalDeclarationResolver(SMap.empty, SMap.empty, reporter)
+        val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
         gdr.resolveProgram(p)
         Some(new TransformerGen(
           isImmutable,
@@ -94,6 +94,14 @@ class TransformerGen(isImmutable: Boolean,
     if (packageName.isEmpty) ""
     else packageName.elements.mkString(".") + "."
 
+  val globalTypes: Seq[Resolver.TypeInfo] = {
+    globalTypeMap.values.elements.sortWith((ti1, ti2) => {
+      ((ti1.posInfoOpt, ti2.posInfoOpt): @unchecked) match {
+        case (SSome(pi1), SSome(pi2)) => pi1.offset < pi2.offset
+      }
+    })
+  }
+
   val poset: Poset[Resolver.QName] = {
     var r = Poset.empty[Resolver.QName]
 
@@ -107,7 +115,7 @@ class TransformerGen(isImmutable: Boolean,
       findParent(childPackageName, name)
     }
 
-    for (ti <- globalTypeMap.values) {
+    for (ti <- globalTypes) {
       ti match {
         case ti: Resolver.TypeInfo.AbstractDatatype if ti.ast.isRoot =>
           r = r.addNode(ti.name)
@@ -116,7 +124,7 @@ class TransformerGen(isImmutable: Boolean,
         case _ =>
       }
     }
-    for (ti <- globalTypeMap.values) {
+    for (ti <- globalTypes) {
       ti match {
         case ti: Resolver.TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
           for (t <- ti.ast.parents) {
@@ -149,7 +157,7 @@ class TransformerGen(isImmutable: Boolean,
 
     stMain.add("name", name)
 
-    for (ti <- globalTypeMap.values) {
+    for (ti <- globalTypes) {
       ti match {
         case ti: Resolver.TypeInfo.AbstractDatatype => genAdt(ti)
         case _ =>

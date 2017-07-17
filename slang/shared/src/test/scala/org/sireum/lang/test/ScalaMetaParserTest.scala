@@ -26,7 +26,7 @@
 package org.sireum.lang.test
 
 import org.sireum.test._
-import org.sireum.{ISZ, String => SString, Option => SOption, Some => SSome, Map => SMap}
+import org.sireum.{ISZ, String => SString, Option => SOption, Some => SSome, HashMap => SHashMap}
 import org.sireum.util._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
@@ -279,8 +279,8 @@ class ScalaMetaParserTest extends SireumSpec {
       var b = r.unitOpt.nonEmpty && r.tags.elements.isEmpty
       if (!b) report(r)
       else {
-        val gdr = GlobalDeclarationResolver(SMap.empty[ISZ[SString], Resolver.Info],
-          SMap.empty[ISZ[SString], Resolver.TypeInfo], new Reporter {
+        val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
+          SHashMap.empty[ISZ[SString], Resolver.TypeInfo], new Reporter {
             def error(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
               b = false
               posOpt match {

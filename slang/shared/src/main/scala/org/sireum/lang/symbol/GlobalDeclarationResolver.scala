@@ -139,10 +139,10 @@ import org.sireum.lang.{ast => AST}
   }
 
   def resolveMembers(stmts: ISZ[AST.Stmt]): Resolver.TypeInfo.Members = {
-    var specVars = Map.empty[String, AST.Stmt.SpecVar]
-    var vars = Map.empty[String, AST.Stmt.Var]
-    var specMethods = Map.empty[String, AST.Stmt.SpecMethod]
-    var methods = Map.empty[String, AST.Stmt.Method]
+    var specVars = HashMap.empty[String, AST.Stmt.SpecVar]
+    var vars = HashMap.empty[String, AST.Stmt.Var]
+    var specMethods = HashMap.empty[String, AST.Stmt.SpecMethod]
+    var methods = HashMap.empty[String, AST.Stmt.Method]
 
     @pure def checkId(id: AST.Id): Unit = {
       val name = id.value
