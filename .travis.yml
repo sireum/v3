@@ -14,4 +14,5 @@ install:
   - bin/prelude.sh
 
 script:
-  - bin/sbt-launch.sh clean test:compile test
+  - bin/sbt-launch.sh clean test:compile test:fastOptJS
+  - bin/sbt-launch.sh test
