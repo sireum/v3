@@ -1474,11 +1474,12 @@ class SlangParser(text: Predef.String,
               translateExp(e))
         }
       case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
-        translateInvoke(scala.Some(expr), name, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
+        translateInvoke(scala.Some(expr), cid(name), name.pos, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name(...$aexprssnel)" =>
-        translateInvoke(scala.Some(expr), name, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
-      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, name, tpes, aexprssnel, exp.pos)
-      case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, name, List(), aexprssnel, exp.pos)
+        translateInvoke(scala.Some(expr), cid(name), name.pos, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
+      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, cid(name), name.pos, tpes, aexprssnel, exp.pos)
+      case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, cid(name), name.pos, List(), aexprssnel, exp.pos)
+      case q"${fun@q"this"}(...$aexprssnel)" => translateInvoke(scala.None, cidNoCheck("this", fun.pos), fun.pos, List(), aexprssnel, exp.pos)
       case q"$expr.$name[..$tpes]" if tpes.nonEmpty =>
         translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
@@ -1666,7 +1667,7 @@ class SlangParser(text: Predef.String,
     }
   }
 
-  def translateInvoke(receiverOpt: scala.Option[Term], name: Term.Name,
+  def translateInvoke(receiverOpt: scala.Option[Term], name: AST.Id, namePos: Position,
                       tpes: Seq[Type], argss: Seq[Seq[Term.Arg]], pos: Position): AST.Exp = {
     def translateArgss(argss: Seq[Seq[Term.Arg]]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
       if (argss.isEmpty) return Right(ISZ())
@@ -1674,12 +1675,12 @@ class SlangParser(text: Predef.String,
     }
 
     var r: AST.Exp = translateArgss(argss) match {
-      case Left(args) => AST.Exp.InvokeNamed(opt(receiverOpt.map(translateExp)), cid(name),
+      case Left(args) => AST.Exp.InvokeNamed(opt(receiverOpt.map(translateExp)), name,
         ISZ(tpes.map(translateType): _*), args, resolvedAttr(pos))
-      case Right(args) => AST.Exp.Invoke(opt(receiverOpt.map(translateExp)), cid(name),
+      case Right(args) => AST.Exp.Invoke(opt(receiverOpt.map(translateExp)), name,
         ISZ(tpes.map(translateType): _*), args, resolvedAttr(pos))
     }
-    var prevPos = name.pos
+    var prevPos = namePos
     for (i <- 1 until argss.size) {
       val args = argss(i)
       val pos =
@@ -1716,6 +1717,7 @@ class SlangParser(text: Predef.String,
 
   def translateArgs(args: Seq[Term.Arg]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
     def expArg(arg: Term.Arg): AST.Exp = arg match {
+      case q"$e1 -> $e2" => AST.Exp.Tuple(ISZ(translateExp(e1), expArg(e2)), typedAttr(arg.pos))
       case arg"${expr: Term}" => translateExp(expr)
     }
 

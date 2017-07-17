@@ -45,6 +45,14 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
       smpt.passing(readFile(mapPath)._1, addImport = false, isPrelude = true)
 
+      smpt.passing(readFile(hashSetPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(hashMapPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(hashSSetPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(hashSMapPath)._1, addImport = false, isPrelude = true)
+
       smpt.passing(readFile(optionPath)._1, addImport = false, isPrelude = true)
 
       smpt.passing(readFile(preludePath)._1, addImport = false, isPrelude = true)
