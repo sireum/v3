@@ -83,9 +83,9 @@ object Resolver {
       }
     }
 
-    @datatype class Global(enclosingName: QName,
-                           packageName: QName,
-                           imports: ISZ[AST.Stmt.Import])
+    @datatype class Global(packageName: QName,
+                           imports: ISZ[AST.Stmt.Import],
+                           enclosingName: QName)
       extends Scope {
 
       @pure def outerOpt: Option[Scope] = {

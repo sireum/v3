@@ -51,8 +51,10 @@ import org.sireum.lang.{ast => AST}
     }
   }
 
-  @memoize def scope(name: Resolver.QName, imports: ISZ[AST.Stmt.Import]): Resolver.Scope.Global = {
-    return Resolver.Scope.Global(SI.dropRight(name, 1), packageName, imports)
+  @memoize def scope(packageName: Resolver.QName,
+                     imports: ISZ[AST.Stmt.Import],
+                     name: Resolver.QName): Resolver.Scope.Global = {
+    return Resolver.Scope.Global(packageName, imports, SI.dropRight(name, 1))
   }
 
   def resolveGlobalStmt(stmt: AST.Stmt): Unit = {
@@ -62,23 +64,23 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Resolver.Info.Var(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.Var(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Resolver.Info.SpecVar(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.SpecVar(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.Method =>
         val name = currentName :+ stmt.sig.id.value
         declareName("method", name,
-          Resolver.Info.Method(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.Method(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.ExtMethod =>
         val name = currentName :+ stmt.sig.id.value
         declareName("extension method", name,
-          Resolver.Info.ExtMethod(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.ExtMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.SpecMethod =>
         val name = currentName :+ stmt.sig.id.value
         declareName("specification method", name,
-          Resolver.Info.SpecMethod(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Set.empty[String]
@@ -118,23 +120,23 @@ import org.sireum.lang.{ast => AST}
         val members = resolveMembers(stmt.stmts)
         assert(members.vars.isEmpty)
         declareType("sig", name, Resolver.TypeInfo.Sig(name, members.specVars,
-          members.specMethods, members.methods, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
           Resolver.TypeInfo.AbstractDatatype(name, members.specVars, members.vars, members.specMethods,
-            members.methods, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+            members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.Rich =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         assert(members.specVars.isEmpty & members.vars.isEmpty & members.specMethods.isEmpty)
         declareType("rich", name, Resolver.TypeInfo.Rich(name, members.methods,
-          scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
         declareType("type alias", name,
-          Resolver.TypeInfo.TypeAlias(name, scope(name, currentImports), stmt), stmt.attr.posInfoOpt)
+          Resolver.TypeInfo.TypeAlias(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
       case _ =>
     }
   }
