@@ -19,7 +19,7 @@
                      |  <while-stmt>
                      |  <for-stmt>
                      |  <return-stmt>
-                     |  <exp-stmt>
+                     |  <exp>
                      |  <proof-stmt>
 
 <import-stmt>      ::=  import <name> ⸨ . { <import-sel> ⸨ , <import-sel> ⸩* } ⸩?
@@ -48,11 +48,15 @@
                      |  var <pattern> = <assign-exp>
 
 <def-decl>         ::=  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
-                     |  ⸨ @pure ⸩? ⸨ override ⸩? def <ID> <type-params>? <params>? : <type> = <def-body>
+                     |  <def-mod> def <ID> <type-params>? <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = $
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <ldef-contract>
                      |  @spec def <ID> <type-params>? <params>? : <type> = $
                      |  @spec def <ID> <type-params>? <params>? : <type> = <spec-ldef>
+
+<def-mod>          ::=  @pure ⸨ override ⸩?
+                     |  ⸨ @pure ⸩? override
+                     |  @memoize
 
 <enum-decl>        ::=  @enum object <ID> { <SYMBOL>* }
 
@@ -93,8 +97,10 @@
                      |  <ID> : <type>
                      |  _ ⸨ : <type> ⸩?
                      |  _*
-                     |  ⸨ <ID> @ ⸩? <name> ( <paterns>? )
-                     |  ⸨ <ID> @ ⸩? ( <paterns> )
+                     |  ⸨ <ID> @ ⸩? <name> ( <patterns>? )
+                     |  ⸨ <ID> @ ⸩? ( <patterns> )
+
+<patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
 
 <type-params>      ::=  [ <type-param> ⸨ , <type-param> ⸩* ]
 
@@ -102,7 +108,10 @@
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 
-<param>            ::=  ⸨ @pure ⸩? <ID> : <type>
+<param>            ::=  ⸨ <param-mod> ⸩? <ID> : <type>
+
+<param-mod>        ::= @pure
+                     | @hidden // only for @memoize def
 
 <def-body>         ::=  {
                           <ldef-contract>?
@@ -113,10 +122,10 @@
 
 <datatype-params>  ::=  ( ⸨ <datatype-param> ⸨ , <datatype-param> ⸩* ⸩? )
 
-<datatype-param>   ::=  <adt-param-mod>* <ID> : <type>
+<datatype-param>   ::=  <adt-param-mod>? <ID> : <type>
 
-<adt-param-mod>    ::=  @pure
-                     |  @hidden
+<adt-param-mod>    ::=  @pure ⸨ @hidden ⸩?
+                     |  @hidden ⸨ @pure ⸩?
 
 <record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
@@ -160,7 +169,7 @@
 
 <return-stmt>      ::=  return <exp>?
 
-<proof-stmt>       ::=  l""" <l-stmt> """
+<proof-stmt>       ::=  l""" <l-clause> """
 
 <block-assign-exp> ::=  { <stmt>* <exp> }
 
@@ -303,7 +312,7 @@
 
 <named-exps>       ::=  ⸨ ⸨ <ID> : ⸩? <exp> ⸩+  // newline separated
 
-<sub-contract>     ::=  def <ID> ( ⸨ @pure ⸩? <ID> ⸨ , @pure <ID> ⸩* ) <def-contract>
+<sub-contract>     ::=  def <ID> ( ⸨ @pure ⸩? <ID> ⸨ , ⸨ @pure ⸩? <ID> ⸩* ) <def-contract>
 
 
 <spec-defs>        ::=  <spec-def>+            // newline separated

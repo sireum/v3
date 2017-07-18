@@ -536,14 +536,15 @@ class SlangParser(text: Predef.String,
         hasOverride = true
       case _ =>
         hasError = true
-        errorInSlang(mod.pos, s"Only the @pure method modifier is allowed for method declarations")
+        errorInSlang(mod.pos, s"Only the @pure and/or override method modifiers are allowed for method declarations")
     }
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
+      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam(isMemoize = false)): _*))),
       translateType(tpe))
-    AST.Stmt.Method(isPure, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
+    val purity = if (isPure) AST.Purity.Pure else AST.Purity.Impure
+    AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -560,6 +561,7 @@ class SlangParser(text: Predef.String,
     var isPure = false
     var isSpec = false
     var hasOverride = false
+    var isMemoize = false
     for (mod <- mods) mod match {
       case mod"@pure" =>
         if (isPure) {
@@ -573,28 +575,47 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant @spec.")
         }
         isSpec = true
+      case mod"@memoize" =>
+        if (isMemoize) {
+          hasError = true
+          error(mod.pos, "Redundant @memoize.")
+        }
+        isMemoize = true
       case mod"override" =>
         if (hasOverride) {
           hasError = true
           error(mod.pos, "Redundant override.")
         }
-        hasOverride
+        hasOverride = true
       case _ =>
         hasError = true
-        errorInSlang(mod.pos, s"Only either method modifier @pure or @spec is allowed for method definitions")
+        errorInSlang(mod.pos, s"Only either method modifier @pure, @memoize, @spec, and/or override is allowed for method definitions")
+    }
+    if (isPure && isMemoize) {
+      hasError = true
+      errorInSlang(mods.head.pos, s"Methods cannot be annotated with both @memoize and @pure (@memoize methods are always @pure)")
     }
     if (isPure && isSpec) {
       hasError = true
-      errorInSlang(mods.head.pos, s"Methods cannot be annotated with both @pure or @spec (@spec methods are always @pure)")
+      errorInSlang(mods.head.pos, s"Methods cannot be annotated with both @pure and @spec (@spec methods are always @pure)")
+    }
+    if (isMemoize && isSpec) {
+      hasError = true
+      errorInSlang(mods.head.pos, s"Methods cannot be annotated with both @memoize and @spec")
     }
     if (hasOverride && isSpec) {
       hasError = true
       errorInSlang(mods.head.pos, s"@spec methods cannot have an override modifier")
     }
+    if (hasOverride && isMemoize) {
+      hasError = true
+      errorInSlang(mods.head.pos, s"@memoize methods cannot have an override modifier")
+    }
+    val purity = if (isMemoize) AST.Purity.Memoize else if (isPure) AST.Purity.Pure else AST.Purity.Impure
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam): _*))),
+      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam(isMemoize)): _*))),
       tpeopt.map(translateType).getOrElse(unitType))
     if (isSpec)
       exp match {
@@ -635,10 +656,10 @@ class SlangParser(text: Predef.String,
               if (isDiet) None[AST.Body]()
               else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
         }
-        AST.Stmt.Method(isPure, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
+        AST.Stmt.Method(purity, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
       case _ =>
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(isPure, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+        AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
     }
   }
 
@@ -917,7 +938,7 @@ class SlangParser(text: Predef.String,
     AST.Stmt.Rich(isRoot = false,
       cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
-      ISZ(paramss.flatMap(_.map(translateParam)): _*),
+      ISZ(paramss.flatMap(_.map(translateParam(isMemoize = false))): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
       ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*),
       attr(stat.pos))
@@ -1077,24 +1098,33 @@ class SlangParser(text: Predef.String,
       AST.TypeParam(cid(tparamname), opt(tpeopt.map(translateType)))
   }
 
-  def translateParam(tp: Term.Param): AST.Param = {
+  def translateParam(isMemoize: Boolean)(tp: Term.Param): AST.Param = {
     val param"..$mods $paramname: ${atpeopt: scala.Option[Type.Arg]} = ${expropt: scala.Option[Term]}" = tp
     var hasPure = false
+    var hasHidden = false
     for (mod <- mods) mod match {
       case mod"@pure" =>
         if (hasPure) {
           error(mod.pos, "Redundant @pure.")
         }
         hasPure = true
+      case mod"@hidden" =>
+        if (isMemoize) {
+          if (hasHidden) {
+            error(mod.pos, "Redundant @hidden.")
+          }
+          hasHidden = true
+        } else errorInSlang(mod.pos, "@hidden is only allowed for @memoize methods")
       case _ =>
         error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang method.")
     }
     if (atpeopt.isEmpty || expropt.nonEmpty) {
-      val pure = if (hasPure) "@pure " else ""
-      errorInSlang(tp.pos, s"The parameter should have the form '$pure〈ID〉:〈type〉'")
+      val mod = if (hasPure) "@pure " else if (hasHidden) "@hidden " else ""
+      errorInSlang(tp.pos, s"The parameter should have the form '$mod〈ID〉:〈type〉'")
     }
-    atpeopt.map(ta => AST.Param(hasPure, cid(paramname), translateTypeArg(ta))).
-      getOrElse(AST.Param(hasPure, cid(paramname), unitType))
+    val mod = if (hasPure) AST.ParamMod.Pure else if (hasHidden) AST.ParamMod.Hidden else AST.ParamMod.NoMod
+    atpeopt.map(ta => AST.Param(mod, cid(paramname), translateTypeArg(ta))).
+      getOrElse(AST.Param(mod, cid(paramname), unitType))
   }
 
   def translateBlock(enclosing: Enclosing.Type, stat: Term.Block, isAssignExp: Boolean): AST.Stmt.Block = {

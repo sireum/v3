@@ -62,6 +62,12 @@ object TopUnit {
 
 @sig sealed trait AssignExp
 
+@enum object Purity {
+  'Impure
+  'Pure
+  'Memoize
+}
+
 object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer],
@@ -103,7 +109,7 @@ object Stmt {
                           @hidden attr: Attr)
     extends Stmt
 
-  @datatype class Method(isPure: B,
+  @datatype class Method(purity: Purity.Type,
                          hasOverride: B,
                          sig: MethodSig,
                          contract: Contract,
@@ -582,7 +588,13 @@ object Domain {
                           paramsOpt: Option[ISZ[Param]],
                           returnType: Type)
 
-@datatype class Param(isPure: B,
+@enum object ParamMod {
+  'NoMod
+  'Pure
+  'Hidden
+}
+
+@datatype class Param(mod: ParamMod.Type,
                       id: Id,
                       tipe: Type)
 

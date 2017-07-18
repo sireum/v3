@@ -201,13 +201,15 @@ class ScalaMetaParserTest extends SireumSpec {
 
         failing("def f: Z = 4", "Only block", isWorksheet = true)
 
-        val pureOrSpec = "@pure or @spec"
+        val mod = "modifier @pure, @memoize, @spec, and/or override"
 
-        failing("@ext def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+        failing("@ext def f(x: Z): Z = {}", mod, isWorksheet = true)
 
-        failing("@spec @pure def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+        val pureSpec = "both @pure and @spec"
 
-        failing("@pure @spec def f(x: Z): Z = {}", pureOrSpec, isWorksheet = true)
+        failing("@spec @pure def f(x: Z): Z = {}", pureSpec, isWorksheet = true)
+
+        failing("@pure @spec def f(x: Z): Z = {}", pureSpec, isWorksheet = true)
 
         failing("@pure @pure def f(x: Z): Z = {}", "Redundant @pure", isWorksheet = true)
 

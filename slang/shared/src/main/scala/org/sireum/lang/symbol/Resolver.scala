@@ -38,24 +38,24 @@ object Resolver {
   type TypeMap = HashMap[QName, TypeInfo]
 
 
-  @record trait Scope {
+  @datatype trait Scope {
     @pure def outerOpt: Option[Scope]
 
-    def resolveName(globalNameMap: NameMap,
-                    name: QName): Option[Info]
+    @pure def resolveName(globalNameMap: NameMap,
+                          name: QName): Option[Info]
 
-    def resolveType(globalTypeMap: TypeMap,
-                    name: QName): Option[TypeInfo]
+    @pure def resolveType(globalTypeMap: TypeMap,
+                          name: QName): Option[TypeInfo]
   }
 
   object Scope {
 
-    @record class Local(nameMap: HashMap[String, Info],
-                        typeMap: HashMap[String, TypeInfo],
-                        outerOpt: Option[Scope]) {
+    @datatype class Local(nameMap: HashMap[String, Info],
+                          typeMap: HashMap[String, TypeInfo],
+                          outerOpt: Option[Scope]) {
 
-      def resolveName(globalNameMap: NameMap,
-                      name: QName): Option[Info] = {
+      @pure def resolveName(globalNameMap: NameMap,
+                            name: QName): Option[Info] = {
         if (name.size == 1) {
           val infoOpt = nameMap.get(name(0))
           if (infoOpt.nonEmpty) {
@@ -68,8 +68,8 @@ object Resolver {
         }
       }
 
-      def resolveType(globalTypeMap: TypeMap,
-                      name: QName): Option[TypeInfo] = {
+      @pure def resolveType(globalTypeMap: TypeMap,
+                            name: QName): Option[TypeInfo] = {
         if (name.size == 1) {
           val typeInfoOpt = typeMap.get(name(0))
           if (typeInfoOpt.nonEmpty) {
@@ -83,67 +83,17 @@ object Resolver {
       }
     }
 
-    @record class Global(enclosingName: QName,
-                         packageName: QName,
-                         imports: ISZ[AST.Stmt.Import])
+    @datatype class Global(enclosingName: QName,
+                           packageName: QName,
+                           imports: ISZ[AST.Stmt.Import])
       extends Scope {
-
-      var nameMap: HashMap[QName, Option[Info]] = HashMap.empty
-      var typeMap: HashMap[QName, Option[TypeInfo]] = HashMap.empty
 
       @pure def outerOpt: Option[Scope] = {
         return None()
       }
 
-      def resolveName(globalNameMap: NameMap,
-                      name: QName): Option[Info] = {
-        @pure def resolveImported(name: QName): Option[Info] = {
-          for (impor <- imports.reverse) {
-            for (importer <- impor.importers.reverse) {
-              val contextName = AST.Util.ids2strings(importer.name.ids)
-              importer.selectorOpt match {
-                case Some(selector: AST.Stmt.Import.MultiSelector) =>
-                  val nss = selector.selectors
-                  for (ns <- nss.reverse) {
-                    if (name == ISZ(ns.to.value)) {
-                      val n = contextName :+ ns.from.value
-                      val rOpt = globalNameMap.get(packageName ++ n)
-                      if (rOpt.nonEmpty) {
-                        return rOpt
-                      }
-                      val rGlobalOpt = globalNameMap.get(n)
-                      if (rGlobalOpt.nonEmpty) {
-                        return rGlobalOpt
-                      }
-                    }
-                  }
-                case Some(_: AST.Stmt.Import.WildcardSelector) =>
-                  val n = contextName ++ name
-                  val rOpt = globalNameMap.get(n)
-                  if (rOpt.nonEmpty) {
-                    return rOpt
-                  }
-                  val rGlobalOpt = globalNameMap.get(packageName ++ n)
-                  if (rGlobalOpt.nonEmpty) {
-                    return rGlobalOpt
-                  }
-                case None() =>
-                  if (ISZ(contextName(contextName.size - 1)) == name) {
-                    val rOpt = globalNameMap.get(packageName ++ contextName)
-                    if (rOpt.nonEmpty) {
-                      return rOpt
-                    }
-                    val rGlobalOpt = globalNameMap.get(contextName)
-                    if (rGlobalOpt.nonEmpty) {
-                      return rGlobalOpt
-                    }
-                  }
-              }
-            }
-          }
-          return None()
-
-        }
+      @pure def resolveName(globalNameMap: NameMap,
+                            name: QName): Option[Info] = {
 
         val globalOpt = globalNameMap.get(name)
         if (globalOpt.nonEmpty) {
@@ -159,72 +109,66 @@ object Resolver {
           en = SI.dropRight(en, 1)
         }
 
-        nameMap.get(name) match {
-          case Some(rOpt) =>
-            rOpt match {
-              case Some(_) => return rOpt
-              case _ =>
-            }
-          case _ =>
-            val importedOpt = resolveImported(name)
-            nameMap.put(name, importedOpt)
-            if (importedOpt.nonEmpty) {
-              return importedOpt
-            }
+        val importedOpt = resolveImported(globalNameMap, packageName, imports, name)
+        if (importedOpt.nonEmpty) {
+          return importedOpt
         }
 
         return globalNameMap.get(packageName ++ name)
       }
 
-      def resolveType(globalTypeMap: TypeMap,
-                      name: QName): Option[TypeInfo] = {
-        @pure def resolveImportedType(name: QName): Option[TypeInfo] = {
-          for (impor <- imports.reverse) {
-            for (importer <- impor.importers.reverse) {
-              val contextName = AST.Util.ids2strings(importer.name.ids)
-              importer.selectorOpt match {
-                case Some(selector: AST.Stmt.Import.MultiSelector) =>
-                  val nss = selector.selectors
-                  for (ns <- nss.reverse) {
-                    if (name == ISZ(ns.to.value)) {
-                      val n = contextName :+ ns.from.value
-                      val rOpt = globalTypeMap.get(packageName ++ n)
-                      if (rOpt.nonEmpty) {
-                        return rOpt
-                      }
-                      val rGlobalOpt = globalTypeMap.get(n)
-                      if (rGlobalOpt.nonEmpty) {
-                        return rGlobalOpt
-                      }
-                    }
-                  }
-                case Some(_: AST.Stmt.Import.WildcardSelector) =>
-                  val n = contextName ++ name
-                  val rOpt = globalTypeMap.get(packageName ++ n)
-                  if (rOpt.nonEmpty) {
-                    return rOpt
-                  }
-                  val rGlobalOpt = globalTypeMap.get(n)
-                  if (rGlobalOpt.nonEmpty) {
-                    return rGlobalOpt
-                  }
-                case None() =>
-                  if (ISZ(contextName(contextName.size - 1)) == name) {
-                    val rOpt = globalTypeMap.get(packageName ++ contextName)
+      @memoize def resolveImported(@hidden globalNameMap: NameMap,
+                                   @hidden packageName: QName,
+                                   @hidden imports: ISZ[AST.Stmt.Import],
+                                   name: QName): Option[Info] = {
+        for (impor <- imports.reverse) {
+          for (importer <- impor.importers.reverse) {
+            val contextName = AST.Util.ids2strings(importer.name.ids)
+            importer.selectorOpt match {
+              case Some(selector: AST.Stmt.Import.MultiSelector) =>
+                val nss = selector.selectors
+                for (ns <- nss.reverse) {
+                  if (name == ISZ(ns.to.value)) {
+                    val n = contextName :+ ns.from.value
+                    val rOpt = globalNameMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
                     }
-                    val rGlobalOpt = globalTypeMap.get(contextName)
+                    val rGlobalOpt = globalNameMap.get(n)
                     if (rGlobalOpt.nonEmpty) {
                       return rGlobalOpt
                     }
                   }
-              }
+                }
+              case Some(_: AST.Stmt.Import.WildcardSelector) =>
+                val n = contextName ++ name
+                val rOpt = globalNameMap.get(n)
+                if (rOpt.nonEmpty) {
+                  return rOpt
+                }
+                val rGlobalOpt = globalNameMap.get(packageName ++ n)
+                if (rGlobalOpt.nonEmpty) {
+                  return rGlobalOpt
+                }
+              case None() =>
+                if (ISZ(contextName(contextName.size - 1)) == name) {
+                  val rOpt = globalNameMap.get(packageName ++ contextName)
+                  if (rOpt.nonEmpty) {
+                    return rOpt
+                  }
+                  val rGlobalOpt = globalNameMap.get(contextName)
+                  if (rGlobalOpt.nonEmpty) {
+                    return rGlobalOpt
+                  }
+                }
             }
           }
-          return None()
         }
+        return None()
+      }
 
+      @pure def resolveType(globalTypeMap: TypeMap,
+                            name: QName): Option[TypeInfo] = {
         val builtInTypeOpt = builtInTypeNames.get(name)
         if (builtInTypeOpt.nonEmpty) {
           return builtInTypeOpt
@@ -244,22 +188,63 @@ object Resolver {
           en = SI.dropRight(en, 1)
         }
 
-        typeMap.get(name) match {
-          case Some(rOpt) =>
-            rOpt match {
-              case Some(_) => return rOpt
-              case _ =>
-            }
-          case _ =>
-            val importedTypeOpt = resolveImportedType(name)
-            typeMap.put(name, importedTypeOpt)
-            if (importedTypeOpt.nonEmpty) {
-              return importedTypeOpt
-            }
+        val importedTypeOpt = resolveImportedType(globalTypeMap, packageName, imports, name)
+        if (importedTypeOpt.nonEmpty) {
+          return importedTypeOpt
         }
 
         return globalTypeMap.get(packageName ++ name)
       }
+    }
+
+    @memoize def resolveImportedType(@hidden globalTypeMap: TypeMap,
+                                     @hidden packageName: QName,
+                                     @hidden imports: ISZ[AST.Stmt.Import],
+                                     name: QName): Option[TypeInfo] = {
+      for (impor <- imports.reverse) {
+        for (importer <- impor.importers.reverse) {
+          val contextName = AST.Util.ids2strings(importer.name.ids)
+          importer.selectorOpt match {
+            case Some(selector: AST.Stmt.Import.MultiSelector) =>
+              val nss = selector.selectors
+              for (ns <- nss.reverse) {
+                if (name == ISZ(ns.to.value)) {
+                  val n = contextName :+ ns.from.value
+                  val rOpt = globalTypeMap.get(packageName ++ n)
+                  if (rOpt.nonEmpty) {
+                    return rOpt
+                  }
+                  val rGlobalOpt = globalTypeMap.get(n)
+                  if (rGlobalOpt.nonEmpty) {
+                    return rGlobalOpt
+                  }
+                }
+              }
+            case Some(_: AST.Stmt.Import.WildcardSelector) =>
+              val n = contextName ++ name
+              val rOpt = globalTypeMap.get(packageName ++ n)
+              if (rOpt.nonEmpty) {
+                return rOpt
+              }
+              val rGlobalOpt = globalTypeMap.get(n)
+              if (rGlobalOpt.nonEmpty) {
+                return rGlobalOpt
+              }
+            case None() =>
+              if (ISZ(contextName(contextName.size - 1)) == name) {
+                val rOpt = globalTypeMap.get(packageName ++ contextName)
+                if (rOpt.nonEmpty) {
+                  return rOpt
+                }
+                val rGlobalOpt = globalTypeMap.get(contextName)
+                if (rGlobalOpt.nonEmpty) {
+                  return rGlobalOpt
+                }
+              }
+          }
+        }
+      }
+      return None()
     }
 
   }
