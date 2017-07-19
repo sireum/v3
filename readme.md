@@ -383,7 +383,7 @@ for Sireum project members.
 
    * `Max Heap Size`: `4096`
    
-   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss1M -XX:+CMSClassUnloadingEnabled -Dorg.sireum.home=<SIREUM_HOME>`
+   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss2M -XX:+CMSClassUnloadingEnabled -Dorg.sireum.home=<SIREUM_HOME>`
 
 5. In the "SBT Project Data To Import" dialog,
 
