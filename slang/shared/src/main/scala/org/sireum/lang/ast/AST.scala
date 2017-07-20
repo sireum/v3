@@ -218,9 +218,7 @@ object Stmt {
                           @hidden attr: Attr)
     extends Stmt
 
-  @datatype class For(id: Id,
-                      range: Range,
-                      condOpt: Option[Exp],
+  @datatype class For(enumGen: EnumGen.For,
                       invariants: ISZ[ContractExp],
                       modifies: ISZ[Exp],
                       body: Body,
@@ -277,24 +275,33 @@ object LClause {
                      condOpt: Option[Exp],
                      body: Body)
 
-@datatype trait Range
+object EnumGen {
 
-object Range {
+  @datatype trait Range
 
-  @datatype class Expr(isReverse: B,
-                       exp: Exp)
-    extends Range
+  object Range {
 
-  @datatype class Indices(isReverse: B,
-                          exp: Exp)
-    extends Range
+    @datatype class Expr(isReverse: B,
+                         exp: Exp)
+      extends Range
 
-  @datatype class Step(isInclusive: B,
-                       start: Exp,
-                       end: Exp,
-                       byOpt: Option[Exp]) extends Range
+    @datatype class Indices(isReverse: B,
+                            exp: Exp)
+      extends Range
+
+    @datatype class Step(isInclusive: B,
+                         start: Exp,
+                         end: Exp,
+                         byOpt: Option[Exp]) extends Range
+
+  }
+
+  @datatype class For(id: Id,
+                      range: Range,
+                      condOpt: Option[Exp])
 
 }
+
 
 @datatype trait Type
 
@@ -343,7 +350,9 @@ object Pattern {
 
 }
 
-@datatype trait Exp
+@datatype trait Exp {
+  def posOpt: Option[PosInfo]
+}
 
 @sig sealed trait Lit
 
@@ -351,111 +360,246 @@ object Exp {
 
   @datatype class LitB(value: B,
                        @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitC(value: C,
                        @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitZ(value: Z,
                        @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitZ8(value: Z8,
                         @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitZ16(value: Z16,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitZ32(value: Z32,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitZ64(value: Z64,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitN(value: N,
                        @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitN8(value: N8,
                         @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitN16(value: N16,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitN32(value: N32,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitN64(value: N64,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitS8(value: S8,
                         @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitS16(value: S16,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitS32(value: S32,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitS64(value: S64,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitU8(value: U8,
                         @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitU16(value: U16,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitU32(value: U32,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitU64(value: U64,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitF32(value: F32,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitF64(value: F64,
                          @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitR(value: R,
                        @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitBv(value: ISZ[B],
                         tipe: Type,
                         @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class LitString(value: String,
                             @hidden attr: Attr)
-    extends Exp with Lit
+    extends Exp with Lit {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class StringInterpolate(lits: ISZ[LitString],
                                     args: ISZ[Exp],
                                     @hidden attr: Attr)
-    extends Exp
+    extends Exp {
 
-  @datatype class This(@hidden attr: TypedAttr) extends Exp
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
+
+  @datatype class This(@hidden attr: TypedAttr) extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @enum object UnaryOp {
     'Not
@@ -467,7 +611,12 @@ object Exp {
   @datatype class Unary(op: UnaryOp.Type,
                         exp: Exp,
                         @hidden attr: TypedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @enum object BinaryOp {
     'Add
@@ -498,51 +647,106 @@ object Exp {
                          op: BinaryOp.Type,
                          right: Exp,
                          @hidden attr: TypedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Ident(id: Id,
                         @hidden attr: ResolvedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Eta(exp: Exp,
                       @hidden attr: ResolvedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Tuple(args: ISZ[Exp],
                         @hidden attr: TypedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Select(receiverOpt: Option[Exp],
                          id: Id,
                          targs: ISZ[Type],
                          @hidden attr: ResolvedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Invoke(receiverOpt: Option[Exp],
                          id: Id,
                          targs: ISZ[Type],
                          args: ISZ[Exp],
                          @hidden attr: ResolvedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class InvokeNamed(receiverOpt: Option[Exp],
                               id: Id,
                               targs: ISZ[Type],
                               args: ISZ[NamedArg],
                               @hidden attr: ResolvedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class If(cond: Exp,
                      thenExp: Exp,
                      elseExp: Exp,
                      @hidden attr: TypedAttr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
+
+  @datatype class ForYield(enumGens: ISZ[EnumGen.For],
+                           exp: Exp,
+                           @hidden attr: Attr)
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Quant(isForall: B,
                         varFragments: ISZ[VarFragment],
                         exp: Exp,
                         @hidden attr: Attr)
-    extends Exp
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
 }
 

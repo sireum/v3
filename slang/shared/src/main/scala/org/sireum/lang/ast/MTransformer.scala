@@ -258,23 +258,27 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
-    def preRange(o: Range): PreResult[Range] = {
+    def preEnumGenRange(o: EnumGen.Range): PreResult[EnumGen.Range] = {
       o match {
-        case o: Range.Expr => return preRangeExpr(o)
-        case o: Range.Indices => return preRangeIndices(o)
-        case o: Range.Step => return preRangeStep(o)
+        case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(o)
+        case o: EnumGen.Range.Indices => return preEnumGenRangeIndices(o)
+        case o: EnumGen.Range.Step => return preEnumGenRangeStep(o)
       }
     }
 
-    def preRangeExpr(o: Range.Expr): PreResult[Range] = {
+    def preEnumGenRangeExpr(o: EnumGen.Range.Expr): PreResult[EnumGen.Range] = {
       return PreResult(T, MNone())
     }
 
-    def preRangeIndices(o: Range.Indices): PreResult[Range] = {
+    def preEnumGenRangeIndices(o: EnumGen.Range.Indices): PreResult[EnumGen.Range] = {
       return PreResult(T, MNone())
     }
 
-    def preRangeStep(o: Range.Step): PreResult[Range] = {
+    def preEnumGenRangeStep(o: EnumGen.Range.Step): PreResult[EnumGen.Range] = {
+      return PreResult(T, MNone())
+    }
+
+    def preEnumGenFor(o: EnumGen.For): PreResult[EnumGen.For] = {
       return PreResult(T, MNone())
     }
 
@@ -371,6 +375,7 @@ object MTransformer {
         case o: Exp.Invoke => return preExpInvoke(o)
         case o: Exp.InvokeNamed => return preExpInvokeNamed(o)
         case o: Exp.If => return preExpIf(o)
+        case o: Exp.ForYield => return preExpForYield(o)
         case o: Exp.Quant => return preExpQuant(o)
       }
     }
@@ -516,6 +521,10 @@ object MTransformer {
     }
 
     def preExpIf(o: Exp.If): PreResult[Exp] = {
+      return PreResult(T, MNone())
+    }
+
+    def preExpForYield(o: Exp.ForYield): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
@@ -1013,23 +1022,27 @@ object MTransformer {
       return MNone()
     }
 
-    def postRange(o: Range): MOption[Range] = {
+    def postEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
       o match {
-        case o: Range.Expr => return postRangeExpr(o)
-        case o: Range.Indices => return postRangeIndices(o)
-        case o: Range.Step => return postRangeStep(o)
+        case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(o)
+        case o: EnumGen.Range.Indices => return postEnumGenRangeIndices(o)
+        case o: EnumGen.Range.Step => return postEnumGenRangeStep(o)
       }
     }
 
-    def postRangeExpr(o: Range.Expr): MOption[Range] = {
+    def postEnumGenRangeExpr(o: EnumGen.Range.Expr): MOption[EnumGen.Range] = {
       return MNone()
     }
 
-    def postRangeIndices(o: Range.Indices): MOption[Range] = {
+    def postEnumGenRangeIndices(o: EnumGen.Range.Indices): MOption[EnumGen.Range] = {
       return MNone()
     }
 
-    def postRangeStep(o: Range.Step): MOption[Range] = {
+    def postEnumGenRangeStep(o: EnumGen.Range.Step): MOption[EnumGen.Range] = {
+      return MNone()
+    }
+
+    def postEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
       return MNone()
     }
 
@@ -1126,6 +1139,7 @@ object MTransformer {
         case o: Exp.Invoke => return postExpInvoke(o)
         case o: Exp.InvokeNamed => return postExpInvokeNamed(o)
         case o: Exp.If => return postExpIf(o)
+        case o: Exp.ForYield => return postExpForYield(o)
         case o: Exp.Quant => return postExpQuant(o)
       }
     }
@@ -1271,6 +1285,10 @@ object MTransformer {
     }
 
     def postExpIf(o: Exp.If): MOption[Exp] = {
+      return MNone()
+    }
+
+    def postExpForYield(o: Exp.ForYield): MOption[Exp] = {
       return MNone()
     }
 
@@ -1888,15 +1906,13 @@ import MTransformer._
           else
             MNone()
         case o2: Stmt.For =>
-          val r0: MOption[Id] = transformId(o2.id)
-          val r1: MOption[Range] = transformRange(o2.range)
-          val r2: MOption[Option[Exp]] = transformOption(o2.condOpt, transformExp _)
-          val r3: MOption[IS[Z, ContractExp]] = transformISZ(o2.invariants, transformContractExp _)
-          val r4: MOption[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
-          val r5: MOption[Body] = transformBody(o2.body)
-          val r6: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty| r5.nonEmpty| r6.nonEmpty)
-            MSome(o2(id = r0.getOrElse(o2.id), range = r1.getOrElse(o2.range), condOpt = r2.getOrElse(o2.condOpt), invariants = r3.getOrElse(o2.invariants), modifies = r4.getOrElse(o2.modifies), body = r5.getOrElse(o2.body), attr = r6.getOrElse(o2.attr)))
+          val r0: MOption[EnumGen.For] = transformEnumGenFor(o2.enumGen)
+          val r1: MOption[IS[Z, ContractExp]] = transformISZ(o2.invariants, transformContractExp _)
+          val r2: MOption[IS[Z, Exp]] = transformISZ(o2.modifies, transformExp _)
+          val r3: MOption[Body] = transformBody(o2.body)
+          val r4: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty| r4.nonEmpty)
+            MSome(o2(enumGen = r0.getOrElse(o2.enumGen), invariants = r1.getOrElse(o2.invariants), modifies = r2.getOrElse(o2.modifies), body = r3.getOrElse(o2.body), attr = r4.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Return =>
@@ -2236,25 +2252,25 @@ import MTransformer._
     }
   }
 
-  def transformRange(o: Range): MOption[Range] = {
-    val preR: PreResult[Range] = pp.preRange(o)
-    val r: MOption[Range] = if (preR.continue) {
-      val o2: Range = preR.resultOpt.getOrElse(o)
+  def transformEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
+    val preR: PreResult[EnumGen.Range] = pp.preEnumGenRange(o)
+    val r: MOption[EnumGen.Range] = if (preR.continue) {
+      val o2: EnumGen.Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val rOpt: MOption[Range] = o2 match {
-        case o2: Range.Expr =>
+      val rOpt: MOption[EnumGen.Range] = o2 match {
+        case o2: EnumGen.Range.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
           if (hasChanged | r0.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp)))
           else
             MNone()
-        case o2: Range.Indices =>
+        case o2: EnumGen.Range.Indices =>
           val r0: MOption[Exp] = transformExp(o2.exp)
           if (hasChanged | r0.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp)))
           else
             MNone()
-        case o2: Range.Step =>
+        case o2: EnumGen.Range.Step =>
           val r0: MOption[Exp] = transformExp(o2.start)
           val r1: MOption[Exp] = transformExp(o2.end)
           val r2: MOption[Option[Exp]] = transformOption(o2.byOpt, transformExp _)
@@ -2270,8 +2286,37 @@ import MTransformer._
       MNone()
     }
     val hasChanged: B = r.nonEmpty
-    val o2: Range = r.getOrElse(o)
-    val postR: MOption[Range] = pp.postRange(o2)
+    val o2: EnumGen.Range = r.getOrElse(o)
+    val postR: MOption[EnumGen.Range] = pp.postEnumGenRange(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
+    val preR: PreResult[EnumGen.For] = pp.preEnumGenFor(o)
+    val r: MOption[EnumGen.For] = if (preR.continue) {
+      val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Id] = transformId(o2.id)
+      val r1: MOption[EnumGen.Range] = transformEnumGenRange(o2.range)
+      val r2: MOption[Option[Exp]] = transformOption(o2.condOpt, transformExp _)
+      if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+        MSome(o2(id = r0.getOrElse(o2.id), range = r1.getOrElse(o2.range), condOpt = r2.getOrElse(o2.condOpt)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: EnumGen.For = r.getOrElse(o)
+    val postR: MOption[EnumGen.For] = pp.postEnumGenFor(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2634,6 +2679,14 @@ import MTransformer._
           val r3: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty| r3.nonEmpty)
             MSome(o2(cond = r0.getOrElse(o2.cond), thenExp = r1.getOrElse(o2.thenExp), elseExp = r2.getOrElse(o2.elseExp), attr = r3.getOrElse(o2.attr)))
+          else
+            MNone()
+        case o2: Exp.ForYield =>
+          val r0: MOption[IS[Z, EnumGen.For]] = transformISZ(o2.enumGens, transformEnumGenFor _)
+          val r1: MOption[Exp] = transformExp(o2.exp)
+          val r2: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+            MSome(o2(enumGens = r0.getOrElse(o2.enumGens), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.Quant =>

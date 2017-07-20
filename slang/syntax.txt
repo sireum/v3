@@ -155,10 +155,12 @@
                           <loop-contract>?
                         } while ( <exp> )
 
-<for-stmt>         ::=  for ( <ID> <- <for-range> if <exp> ) {
+<for-stmt>         ::=  for ( <for-enum-gen> ) {
                           <loop-contract>?
                           <stmt>*
                         }
+
+<for-enum-gen>     ::=  <ID> <- <for-range> ⸨ if <exp> ⸩?
 
 <for-range>        ::=  <exp>
                      |  <exp> . reverse
@@ -189,6 +191,7 @@
                      |  <exp> . <ID> <args>?
                      |  <exp> <args>
                      |  if ( <exp> ) <exp> else <exp>
+                     |  for ( <for-enum-gen> ⸨ ; <for-enum-gen> ⸩* ) yield <exp>
                      |  <quant-op> <ID> ⸨ , <ID> ⸩* : <domain> <exp>  // only in the proof context
 
 <quant-op>         ::=  ∀

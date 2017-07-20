@@ -960,6 +960,7 @@ class SlangParser(text: Predef.String,
         errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
         ISZ(rDollarId)
     }
+
     t match {
       case t"$ref.$tname[..$tpesnel]" =>
         AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(tpesnel.map(translateType): _*), typedAttr(t.pos))
@@ -990,6 +991,7 @@ class SlangParser(text: Predef.String,
           errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
           ISZ(rDollarId)
       }
+
       AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
     case _ =>
       errorNotSlang(t.pos, s"Pattern type '${syntax(t)}' is")
@@ -1392,24 +1394,6 @@ class SlangParser(text: Predef.String,
   }
 
   def translateFor(enclosing: Enclosing.Type, stat: Term.For): AST.Stmt = {
-    def translateRange(r: Term): AST.Range = r match {
-      case q"$start until $end by $by" => AST.Range.Step(isInclusive = false, translateExp(start), expArg(end), Some(expArg(by)))
-      case q"$start to $end by $by" => AST.Range.Step(isInclusive = true, translateExp(start), expArg(end), Some(expArg(by)))
-      case q"$start until $end" => AST.Range.Step(isInclusive = false, translateExp(start), expArg(end), None())
-      case q"$start to $end" => AST.Range.Step(isInclusive = true, translateExp(start), expArg(end), None())
-      case q"$s.indices" => AST.Range.Indices(isReverse = false, translateExp(s))
-      case q"$s.indices.reverse" => AST.Range.Indices(isReverse = true, translateExp(s))
-      case q"$s.reverse" => AST.Range.Expr(isReverse = true, translateExp(s))
-      case _ => AST.Range.Expr(isReverse = false, translateExp(r))
-    }
-
-    def expArg(arg: Term.Arg): AST.Exp = arg match {
-      case arg"${expr: Term}" => translateExp(expr)
-      case _ =>
-        errorInSlang(arg.pos, s"Invalid for-statement enumerator argument: '${syntax(arg)}'")
-        rExp
-    }
-
     var hasError = stmtCheck(enclosing, stat, "For-statements")
     var modifies: ISZ[AST.Exp] = ISZ()
     var invariants: ISZ[AST.ContractExp] = ISZ()
@@ -1431,16 +1415,53 @@ class SlangParser(text: Predef.String,
         hasError = true
         errorInSlang(stat.body.pos, "For-loop body should be a code block")
     }
-    if (hasError) rStmt else stat.enums match {
-      case Seq(enumerator"${id: Pat.Var.Term} <- $expr", enumerator"if $cond") =>
-        AST.Stmt.For(cid(id), translateRange(expr), Some(translateExp(cond)),
-          invariants, modifies, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
-      case Seq(enumerator"${id: Pat.Var.Term} <- $expr") =>
-        AST.Stmt.For(cid(id), translateRange(expr), None(),
-          invariants, modifies, AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
-      case _ =>
-        errorNotSlang(stat.pos, s"For-loop enumerator: '${syntax(stat)}'"); rStmt
+    if (hasError) rStmt else {
+      var enums = translateEnumGens(stat.enums)
+      if (enums.size.toInt == 1) {
+        AST.Stmt.For(enums(0), invariants, modifies,
+          AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
+      } else if (enums.size.toInt > 1) {
+        errorInSlang(stat.pos, s"For-loops can only one enumerator")
+        rStmt
+      } else rStmt
     }
+  }
+
+  def translateRange(r: Term): AST.EnumGen.Range = {
+    def expArg(arg: Term.Arg): AST.Exp = arg match {
+      case arg"${expr: Term}" => translateExp(expr)
+      case _ =>
+        errorInSlang(arg.pos, s"Invalid for-statement enumerator argument: '${syntax(arg)}'")
+        rExp
+    }
+
+    r match {
+      case q"$start until $end by $by" => AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), expArg(end), Some(expArg(by)))
+      case q"$start to $end by $by" => AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), expArg(end), Some(expArg(by)))
+      case q"$start until $end" => AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), expArg(end), None())
+      case q"$start to $end" => AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), expArg(end), None())
+      case q"$s.indices" => AST.EnumGen.Range.Indices(isReverse = false, translateExp(s))
+      case q"$s.indices.reverse" => AST.EnumGen.Range.Indices(isReverse = true, translateExp(s))
+      case q"$s.reverse" => AST.EnumGen.Range.Expr(isReverse = true, translateExp(s))
+      case _ => AST.EnumGen.Range.Expr(isReverse = false, translateExp(r))
+    }
+  }
+
+  def translateEnumGens(enums: Seq[Enumerator]): ISZ[AST.EnumGen.For] = enums match {
+    case head :: enumerator"if $cond" :: rest =>
+      head match {
+        case enumerator"${id: Pat.Var.Term} <- $expr" =>
+          AST.EnumGen.For(cid(id), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
+        case _ =>
+          errorNotSlang(head.pos, s"For-loop enumerator: '${syntax(head)}'")
+          ISZ()
+      }
+    case enumerator"${id: Pat.Var.Term} <- $expr" :: rest =>
+      AST.EnumGen.For(cid(id), translateRange(expr), None()) +: translateEnumGens(rest)
+    case Nil => ISZ()
+    case _ =>
+      errorNotSlang(enums.head.pos, s"For-loop enumerator: '${syntax(enums.head)}'")
+      ISZ()
   }
 
   def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
@@ -1514,6 +1535,7 @@ class SlangParser(text: Predef.String,
         translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
+      case exp: Term.ForYield => translateForYield(exp)
       case _ =>
         errorNotSlang(exp.pos, s"Expression '${syntax(exp)}' is")
         rExp
@@ -1743,6 +1765,22 @@ class SlangParser(text: Predef.String,
     }
     if (hasError) rExp
     else AST.Exp.If(translateExp(exp.cond), translateExp(exp.thenp), translateExp(exp.elsep), typedAttr(exp.pos))
+  }
+
+  def translateForYield(exp: Term.ForYield): AST.Exp = {
+    val enums = translateEnumGens(exp.enums)
+    var hasError = enums.isEmpty
+    exp.body match {
+      case body: Term.Block =>
+        hasError = true
+        errorInSlang(body.pos, "For-yield expression should not be a code block")
+      case body: Lit.Unit =>
+        hasError = true
+        errorInSlang(body.pos, "For-yield expression should not be empty")
+      case _ =>
+    }
+    if (hasError) rExp
+    else AST.Exp.ForYield(enums, translateExp(exp.body), attr(exp.pos))
   }
 
   def translateArgs(args: Seq[Term.Arg]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {

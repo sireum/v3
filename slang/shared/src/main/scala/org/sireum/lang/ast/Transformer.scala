@@ -262,23 +262,27 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preRange(ctx: Context, o: Range): PreResult[Context, Range] = {
+    @pure def preEnumGenRange(ctx: Context, o: EnumGen.Range): PreResult[Context, EnumGen.Range] = {
       o match {
-        case o: Range.Expr => return preRangeExpr(ctx, o)
-        case o: Range.Indices => return preRangeIndices(ctx, o)
-        case o: Range.Step => return preRangeStep(ctx, o)
+        case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(ctx, o)
+        case o: EnumGen.Range.Indices => return preEnumGenRangeIndices(ctx, o)
+        case o: EnumGen.Range.Step => return preEnumGenRangeStep(ctx, o)
       }
     }
 
-    @pure def preRangeExpr(ctx: Context, o: Range.Expr): PreResult[Context, Range] = {
+    @pure def preEnumGenRangeExpr(ctx: Context, o: EnumGen.Range.Expr): PreResult[Context, EnumGen.Range] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preRangeIndices(ctx: Context, o: Range.Indices): PreResult[Context, Range] = {
+    @pure def preEnumGenRangeIndices(ctx: Context, o: EnumGen.Range.Indices): PreResult[Context, EnumGen.Range] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preRangeStep(ctx: Context, o: Range.Step): PreResult[Context, Range] = {
+    @pure def preEnumGenRangeStep(ctx: Context, o: EnumGen.Range.Step): PreResult[Context, EnumGen.Range] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preEnumGenFor(ctx: Context, o: EnumGen.For): PreResult[Context, EnumGen.For] = {
       return PreResult(ctx, T, None())
     }
 
@@ -375,6 +379,7 @@ object Transformer {
         case o: Exp.Invoke => return preExpInvoke(ctx, o)
         case o: Exp.InvokeNamed => return preExpInvokeNamed(ctx, o)
         case o: Exp.If => return preExpIf(ctx, o)
+        case o: Exp.ForYield => return preExpForYield(ctx, o)
         case o: Exp.Quant => return preExpQuant(ctx, o)
       }
     }
@@ -520,6 +525,10 @@ object Transformer {
     }
 
     @pure def preExpIf(ctx: Context, o: Exp.If): PreResult[Context, Exp] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preExpForYield(ctx: Context, o: Exp.ForYield): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1017,23 +1026,27 @@ object Transformer {
       return Result(ctx, None())
     }
 
-    @pure def postRange(ctx: Context, o: Range): Result[Context, Range] = {
+    @pure def postEnumGenRange(ctx: Context, o: EnumGen.Range): Result[Context, EnumGen.Range] = {
       o match {
-        case o: Range.Expr => return postRangeExpr(ctx, o)
-        case o: Range.Indices => return postRangeIndices(ctx, o)
-        case o: Range.Step => return postRangeStep(ctx, o)
+        case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(ctx, o)
+        case o: EnumGen.Range.Indices => return postEnumGenRangeIndices(ctx, o)
+        case o: EnumGen.Range.Step => return postEnumGenRangeStep(ctx, o)
       }
     }
 
-    @pure def postRangeExpr(ctx: Context, o: Range.Expr): Result[Context, Range] = {
+    @pure def postEnumGenRangeExpr(ctx: Context, o: EnumGen.Range.Expr): Result[Context, EnumGen.Range] = {
       return Result(ctx, None())
     }
 
-    @pure def postRangeIndices(ctx: Context, o: Range.Indices): Result[Context, Range] = {
+    @pure def postEnumGenRangeIndices(ctx: Context, o: EnumGen.Range.Indices): Result[Context, EnumGen.Range] = {
       return Result(ctx, None())
     }
 
-    @pure def postRangeStep(ctx: Context, o: Range.Step): Result[Context, Range] = {
+    @pure def postEnumGenRangeStep(ctx: Context, o: EnumGen.Range.Step): Result[Context, EnumGen.Range] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postEnumGenFor(ctx: Context, o: EnumGen.For): Result[Context, EnumGen.For] = {
       return Result(ctx, None())
     }
 
@@ -1130,6 +1143,7 @@ object Transformer {
         case o: Exp.Invoke => return postExpInvoke(ctx, o)
         case o: Exp.InvokeNamed => return postExpInvokeNamed(ctx, o)
         case o: Exp.If => return postExpIf(ctx, o)
+        case o: Exp.ForYield => return postExpForYield(ctx, o)
         case o: Exp.Quant => return postExpQuant(ctx, o)
       }
     }
@@ -1275,6 +1289,10 @@ object Transformer {
     }
 
     @pure def postExpIf(ctx: Context, o: Exp.If): Result[Context, Exp] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postExpForYield(ctx: Context, o: Exp.ForYield): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
@@ -1893,17 +1911,15 @@ import Transformer._
           else
             Result(r4.ctx, None())
         case o2: Stmt.For =>
-          val r0: Result[Context, Id] = transformId(ctx, o2.id)
-          val r1: Result[Context, Range] = transformRange(r0.ctx, o2.range)
-          val r2: Result[Context, Option[Exp]] = transformOption(r1.ctx, o2.condOpt, transformExp _)
-          val r3: Result[Context, IS[Z, ContractExp]] = transformISZ(r2.ctx, o2.invariants, transformContractExp _)
-          val r4: Result[Context, IS[Z, Exp]] = transformISZ(r3.ctx, o2.modifies, transformExp _)
-          val r5: Result[Context, Body] = transformBody(r4.ctx, o2.body)
-          val r6: Result[Context, Attr] = transformAttr(r5.ctx, o2.attr)
-          if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty| r3.resultOpt.nonEmpty| r4.resultOpt.nonEmpty| r5.resultOpt.nonEmpty| r6.resultOpt.nonEmpty)
-            Result(r6.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), range = r1.resultOpt.getOrElse(o2.range), condOpt = r2.resultOpt.getOrElse(o2.condOpt), invariants = r3.resultOpt.getOrElse(o2.invariants), modifies = r4.resultOpt.getOrElse(o2.modifies), body = r5.resultOpt.getOrElse(o2.body), attr = r6.resultOpt.getOrElse(o2.attr))))
+          val r0: Result[Context, EnumGen.For] = transformEnumGenFor(ctx, o2.enumGen)
+          val r1: Result[Context, IS[Z, ContractExp]] = transformISZ(r0.ctx, o2.invariants, transformContractExp _)
+          val r2: Result[Context, IS[Z, Exp]] = transformISZ(r1.ctx, o2.modifies, transformExp _)
+          val r3: Result[Context, Body] = transformBody(r2.ctx, o2.body)
+          val r4: Result[Context, Attr] = transformAttr(r3.ctx, o2.attr)
+          if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty| r3.resultOpt.nonEmpty| r4.resultOpt.nonEmpty)
+            Result(r4.ctx, Some(o2(enumGen = r0.resultOpt.getOrElse(o2.enumGen), invariants = r1.resultOpt.getOrElse(o2.invariants), modifies = r2.resultOpt.getOrElse(o2.modifies), body = r3.resultOpt.getOrElse(o2.body), attr = r4.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r6.ctx, None())
+            Result(r4.ctx, None())
         case o2: Stmt.Return =>
           val r0: Result[Context, Option[Exp]] = transformOption(ctx, o2.expOpt, transformExp _)
           val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
@@ -2241,25 +2257,25 @@ import Transformer._
     }
   }
 
-  @pure def transformRange(ctx: Context, o: Range): Result[Context, Range] = {
-    val preR: PreResult[Context, Range] = pp.preRange(ctx, o)
-    val r: Result[Context, Range] = if (preR.continue) {
-      val o2: Range = preR.resultOpt.getOrElse(o)
+  @pure def transformEnumGenRange(ctx: Context, o: EnumGen.Range): Result[Context, EnumGen.Range] = {
+    val preR: PreResult[Context, EnumGen.Range] = pp.preEnumGenRange(ctx, o)
+    val r: Result[Context, EnumGen.Range] = if (preR.continue) {
+      val o2: EnumGen.Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val rOpt: Result[Context, Range] = o2 match {
-        case o2: Range.Expr =>
+      val rOpt: Result[Context, EnumGen.Range] = o2 match {
+        case o2: EnumGen.Range.Expr =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
           if (hasChanged | r0.resultOpt.nonEmpty)
             Result(r0.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp))))
           else
             Result(r0.ctx, None())
-        case o2: Range.Indices =>
+        case o2: EnumGen.Range.Indices =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
           if (hasChanged | r0.resultOpt.nonEmpty)
             Result(r0.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp))))
           else
             Result(r0.ctx, None())
-        case o2: Range.Step =>
+        case o2: EnumGen.Range.Step =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.start)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.end)
           val r2: Result[Context, Option[Exp]] = transformOption(r1.ctx, o2.byOpt, transformExp _)
@@ -2275,8 +2291,37 @@ import Transformer._
       Result(preR.ctx, None())
     }
     val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: Range = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Range] = pp.postRange(r.ctx, o2)
+    val o2: EnumGen.Range = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, EnumGen.Range] = pp.postEnumGenRange(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformEnumGenFor(ctx: Context, o: EnumGen.For): Result[Context, EnumGen.For] = {
+    val preR: PreResult[Context, EnumGen.For] = pp.preEnumGenFor(ctx, o)
+    val r: Result[Context, EnumGen.For] = if (preR.continue) {
+      val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Id] = transformId(ctx, o2.id)
+      val r1: Result[Context, EnumGen.Range] = transformEnumGenRange(r0.ctx, o2.range)
+      val r2: Result[Context, Option[Exp]] = transformOption(r1.ctx, o2.condOpt, transformExp _)
+      if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty)
+        Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), range = r1.resultOpt.getOrElse(o2.range), condOpt = r2.resultOpt.getOrElse(o2.condOpt))))
+      else
+        Result(r2.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: EnumGen.For = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, EnumGen.For] = pp.postEnumGenFor(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2641,6 +2686,14 @@ import Transformer._
             Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenExp = r1.resultOpt.getOrElse(o2.thenExp), elseExp = r2.resultOpt.getOrElse(o2.elseExp), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
             Result(r3.ctx, None())
+        case o2: Exp.ForYield =>
+          val r0: Result[Context, IS[Z, EnumGen.For]] = transformISZ(ctx, o2.enumGens, transformEnumGenFor _)
+          val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(enumGens = r0.resultOpt.getOrElse(o2.enumGens), exp = r1.resultOpt.getOrElse(o2.exp), attr = r2.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r2.ctx, None())
         case o2: Exp.Quant =>
           val r0: Result[Context, IS[Z, VarFragment]] = transformISZ(ctx, o2.varFragments, transformVarFragment _)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
