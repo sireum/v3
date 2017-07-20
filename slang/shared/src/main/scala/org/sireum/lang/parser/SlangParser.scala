@@ -1499,6 +1499,8 @@ class SlangParser(text: Predef.String,
           rExp
         } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
       case q"this" => AST.Exp.This(typedAttr(exp.pos))
+      case q"super[${name: Name.Indeterminate}]" => AST.Exp.Super(Some(cid(name)), typedAttr(exp.pos))
+      case q"super" => AST.Exp.Super(None(), typedAttr(exp.pos))
       case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr), resolvedAttr(exp.pos))
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)

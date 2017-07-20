@@ -36,7 +36,7 @@ if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ] || [ ! -x ${Z
   exit 1
 fi
 PATH=${NODE_BIN}:${PATH}
-: ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=900m -Xss2M -XX:+CMSClassUnloadingEnabled}
+: ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m -XX:+CMSClassUnloadingEnabled}
 : ${JAVA_PROPERTIES:=-Dsbt.log.format=false}
 cd ${SIREUM_HOME}
 for i in "$@" ; do

@@ -601,6 +601,14 @@ object Exp {
     }
   }
 
+  @datatype class Super(idOpt: Option[Id],
+                        @hidden attr: TypedAttr) extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
+
   @enum object UnaryOp {
     'Not
     'Plus

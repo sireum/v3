@@ -5,7 +5,6 @@ services:
 env:
   global:
     - SIREUM_PARALLEL_BUILD=false
-    - JAVA_OPTIONS="-Xmx2G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss2m -XX:+CMSClassUnloadingEnabled"
 
 build:
   pre_ci:

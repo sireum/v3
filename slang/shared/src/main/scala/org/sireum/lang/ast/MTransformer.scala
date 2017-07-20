@@ -366,6 +366,7 @@ object MTransformer {
         case o: Exp.LitString => return preExpLitString(o)
         case o: Exp.StringInterpolate => return preExpStringInterpolate(o)
         case o: Exp.This => return preExpThis(o)
+        case o: Exp.Super => return preExpSuper(o)
         case o: Exp.Unary => return preExpUnary(o)
         case o: Exp.Binary => return preExpBinary(o)
         case o: Exp.Ident => return preExpIdent(o)
@@ -485,6 +486,10 @@ object MTransformer {
     }
 
     def preExpThis(o: Exp.This): PreResult[Exp] = {
+      return PreResult(T, MNone())
+    }
+
+    def preExpSuper(o: Exp.Super): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
@@ -1130,6 +1135,7 @@ object MTransformer {
         case o: Exp.LitString => return postExpLitString(o)
         case o: Exp.StringInterpolate => return postExpStringInterpolate(o)
         case o: Exp.This => return postExpThis(o)
+        case o: Exp.Super => return postExpSuper(o)
         case o: Exp.Unary => return postExpUnary(o)
         case o: Exp.Binary => return postExpBinary(o)
         case o: Exp.Ident => return postExpIdent(o)
@@ -1249,6 +1255,10 @@ object MTransformer {
     }
 
     def postExpThis(o: Exp.This): MOption[Exp] = {
+      return MNone()
+    }
+
+    def postExpSuper(o: Exp.Super): MOption[Exp] = {
       return MNone()
     }
 
@@ -2605,6 +2615,13 @@ import MTransformer._
           val r0: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged | r0.nonEmpty)
             MSome(o2(attr = r0.getOrElse(o2.attr)))
+          else
+            MNone()
+        case o2: Exp.Super =>
+          val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId _)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged | r0.nonEmpty | r1.nonEmpty)
+            MSome(o2(idOpt = r0.getOrElse(o2.idOpt), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.Unary =>

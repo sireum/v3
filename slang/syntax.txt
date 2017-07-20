@@ -184,6 +184,7 @@
                      |  <STRING-INTERP>
                      |  <name>
                      |  this
+                     |  super ⸨ [ <name> ] ⸩?
                      |  <exp> _
                      |  <unary-op> <exp>
                      |  <exp> <binary-op> <exp>

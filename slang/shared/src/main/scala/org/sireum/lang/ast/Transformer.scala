@@ -370,6 +370,7 @@ object Transformer {
         case o: Exp.LitString => return preExpLitString(ctx, o)
         case o: Exp.StringInterpolate => return preExpStringInterpolate(ctx, o)
         case o: Exp.This => return preExpThis(ctx, o)
+        case o: Exp.Super => return preExpSuper(ctx, o)
         case o: Exp.Unary => return preExpUnary(ctx, o)
         case o: Exp.Binary => return preExpBinary(ctx, o)
         case o: Exp.Ident => return preExpIdent(ctx, o)
@@ -489,6 +490,10 @@ object Transformer {
     }
 
     @pure def preExpThis(ctx: Context, o: Exp.This): PreResult[Context, Exp] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preExpSuper(ctx: Context, o: Exp.Super): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1134,6 +1139,7 @@ object Transformer {
         case o: Exp.LitString => return postExpLitString(ctx, o)
         case o: Exp.StringInterpolate => return postExpStringInterpolate(ctx, o)
         case o: Exp.This => return postExpThis(ctx, o)
+        case o: Exp.Super => return postExpSuper(ctx, o)
         case o: Exp.Unary => return postExpUnary(ctx, o)
         case o: Exp.Binary => return postExpBinary(ctx, o)
         case o: Exp.Ident => return postExpIdent(ctx, o)
@@ -1253,6 +1259,10 @@ object Transformer {
     }
 
     @pure def postExpThis(ctx: Context, o: Exp.This): Result[Context, Exp] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postExpSuper(ctx: Context, o: Exp.Super): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
@@ -2612,6 +2622,13 @@ import Transformer._
             Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
             Result(r0.ctx, None())
+        case o2: Exp.Super =>
+          val r0: Result[Context, Option[Id]] = transformOption(ctx, o2.idOpt, transformId _)
+          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
+          if (hasChanged | r0.resultOpt.nonEmpty | r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(idOpt = r0.resultOpt.getOrElse(o2.idOpt), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
         case o2: Exp.Unary =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
           val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
