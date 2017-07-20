@@ -35,4 +35,6 @@ import org.sireum.lang.ast.PosInfo
   def error(posOpt: Option[PosInfo], message: String): Unit
 
   def warn(posOpt: Option[PosInfo], message: String): Unit
+
+  def info(posOpt: Option[PosInfo], message: String): Unit
 }

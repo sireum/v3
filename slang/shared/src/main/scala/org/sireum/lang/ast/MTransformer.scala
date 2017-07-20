@@ -2639,8 +2639,9 @@ import MTransformer._
         case o2: Exp.Quant =>
           val r0: MOption[IS[Z, VarFragment]] = transformISZ(o2.varFragments, transformVarFragment _)
           val r1: MOption[Exp] = transformExp(o2.exp)
-          if (hasChanged | r0.nonEmpty| r1.nonEmpty)
-            MSome(o2(varFragments = r0.getOrElse(o2.varFragments), exp = r1.getOrElse(o2.exp)))
+          val r2: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
+            MSome(o2(varFragments = r0.getOrElse(o2.varFragments), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
       }

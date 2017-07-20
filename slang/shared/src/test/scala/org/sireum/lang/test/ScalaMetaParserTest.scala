@@ -283,7 +283,7 @@ class ScalaMetaParserTest extends SireumSpec {
       else {
         val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
           SHashMap.empty[ISZ[SString], Resolver.TypeInfo], new Reporter {
-            def error(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
+            def internalError(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
               b = false
               posOpt match {
                 case SSome(posInfo) => Console.err.println(s"[${posInfo.beginLine}, ${posInfo.beginColumn}] $message")
@@ -292,8 +292,13 @@ class ScalaMetaParserTest extends SireumSpec {
               Console.err.flush()
             }
 
-            def warn(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
+            def error(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
+              internalError(posOpt, message)
             }
+
+            def warn(posOpt: SOption[AST.PosInfo], message: SString): Unit = {}
+
+            def info(posOpt: SOption[AST.PosInfo], message: SString): Unit = {}
           })
         r.unitOpt.foreach {
           case p: AST.TopUnit.Program => gdr.resolveProgram(p)

@@ -46,13 +46,17 @@ class TransformerGenTest extends SireumSpec {
     val rOpt = TransformerGen(allowSireumPackage = true,
       isImmutable, Some(licensePath), src, dest, None,
       new Reporter {
-        def error(posOpt: SOption[PosInfo], message: SString): Unit = {
+        def internalError(posOpt: SOption[PosInfo], message: SString): Unit = {
           hasIssue = true
           posOpt match {
             case SSome(pos) => Console.err.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
             case _ => Console.err.println(message)
           }
           Console.err.flush()
+        }
+
+        def error(posOpt: SOption[PosInfo], message: SString): Unit = {
+          internalError(posOpt, message)
         }
 
         def warn(posOpt: SOption[PosInfo], message: SString): Unit = {
@@ -63,6 +67,8 @@ class TransformerGenTest extends SireumSpec {
           }
           Console.out.flush()
         }
+
+        def info(posOpt: SOption[PosInfo], message: SString): Unit = {}
       })
     rOpt match {
       case Some(r) =>

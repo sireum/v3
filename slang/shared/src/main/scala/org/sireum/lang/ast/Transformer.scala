@@ -2644,10 +2644,11 @@ import Transformer._
         case o2: Exp.Quant =>
           val r0: Result[Context, IS[Z, VarFragment]] = transformISZ(ctx, o2.varFragments, transformVarFragment _)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
-          if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(varFragments = r0.resultOpt.getOrElse(o2.varFragments), exp = r1.resultOpt.getOrElse(o2.exp))))
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(varFragments = r0.resultOpt.getOrElse(o2.varFragments), exp = r1.resultOpt.getOrElse(o2.exp), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r1.ctx, None())
+            Result(r2.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
