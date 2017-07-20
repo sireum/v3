@@ -58,6 +58,18 @@ class ScalaMetaParserJvmTest extends SireumSpec {
       smpt.passing(readFile(preludePath)._1, addImport = false, isPrelude = true)
 
       smpt.passing(readFile(slangAstPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangAstUtilPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangTransformerPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangMTransformerPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangGlobalDeclarationResolverPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangResolverPath)._1, addImport = false, isPrelude = true)
+
+      smpt.passing(readFile(slangSequentResolverPath)._1, addImport = false, isPrelude = true)
     }
   }
 }

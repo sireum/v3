@@ -46,6 +46,11 @@ object Paths {
   val hashSMapPath = new File(preludePackagePath, "HashSMap.scala")
   val optionPath = new File(preludePackagePath, "Option.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
+  val slangAstUtilPath = new File(slangPackagePath, "ast/Util.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
   val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
+  val slangGlobalDeclarationResolverPath = new File(slangPackagePath, "symbol/GlobalDeclarationResolver.scala")
+  val slangResolverPath = new File(slangPackagePath, "symbol/Resolver.scala")
+  val slangSequentResolverPath = new File(slangPackagePath, "symbol/SequentResolver.scala")
+  val slangReporterPath = new File(slangPackagePath, "util/Reporter.scala")
 }
