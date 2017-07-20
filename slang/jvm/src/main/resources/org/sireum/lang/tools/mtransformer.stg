@@ -23,13 +23,9 @@ object $name$ {
   @record class PreResult[T](continue: B,
                              resultOpt: MOption[T])
 
-  @sig trait Pre {
+  @sig trait PrePost {
 
     $preMethod; separator="\n\n"$
-
-  }
-
-  @sig trait Post {
 
     $postMethod; separator="\n\n"$
 
@@ -41,7 +37,7 @@ object $name$ {
 
 import $name$._
 
-@record class $name$(pre: Pre, post: Post) {
+@record class $name$(pp: PrePost) {
 
   $transformMethod; separator="\n\n"$
 
@@ -49,7 +45,7 @@ import $name$._
 >>
 
 preMethodRoot(typeName, type, preMethodRootCase) ::= <<
-def transform$typeName$(o: $type$): PreResult[$type$] = {
+def pre$typeName$(o: $type$): PreResult[$type$] = {
   o match {
     $preMethodRootCase; separator="\n"$
   }
@@ -57,17 +53,17 @@ def transform$typeName$(o: $type$): PreResult[$type$] = {
 >>
 
 preMethodRootCase(typeName, type) ::= <<
-case o: $type$ => return transform$typeName$(o)
+case o: $type$ => return pre$typeName$(o)
 >>
 
 preMethod(typeName, type, superType) ::= <<
-def transform$typeName$(o: $type$): PreResult[$superType$] = {
+def pre$typeName$(o: $type$): PreResult[$superType$] = {
   return PreResult(T, MNone())
 }
 >>
 
 postMethodRoot(typeName, type, postMethodRootCase) ::= <<
-def transform$typeName$(o: $type$): MOption[$type$] = {
+def post$typeName$(o: $type$): MOption[$type$] = {
   o match {
     $postMethodRootCase; separator="\n"$
   }
@@ -75,18 +71,18 @@ def transform$typeName$(o: $type$): MOption[$type$] = {
 >>
 
 postMethodRootCase(typeName, type) ::= <<
-case o: $type$ => return transform$typeName$(o)
+case o: $type$ => return post$typeName$(o)
 >>
 
 postMethod(typeName, type, superType) ::= <<
-def transform$typeName$(o: $type$): MOption[$superType$] = {
+def post$typeName$(o: $type$): MOption[$superType$] = {
   return MNone()
 }
 >>
 
 transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <<
 def transform$typeName$(o: $type$): MOption[$type$] = {
-  val preR: PreResult[$type$] = pre.transform$typeName$(o)$if(preAdapt)$ $preAdapt$$endif$
+  val preR: PreResult[$type$] = pp.pre$typeName$(o)$if(preAdapt)$ $preAdapt$$endif$
   val r: MOption[$type$] = if (preR.continue) {
     val o2: $type$ = preR.resultOpt.getOrElse(o)
     val hasChanged: B = preR.resultOpt.nonEmpty
@@ -98,7 +94,7 @@ def transform$typeName$(o: $type$): MOption[$type$] = {
   }
   val hasChanged: B = r.nonEmpty
   val o2: $type$ = r.getOrElse(o)
-  val postR: MOption[$type$] = post.transform$typeName$(o2)$if(postAdapt)$ $postAdapt$$endif$
+  val postR: MOption[$type$] = pp.post$typeName$(o2)$if(postAdapt)$ $postAdapt$$endif$
   if (postR.nonEmpty) {
     return postR
   } else if (hasChanged) {

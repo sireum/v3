@@ -142,9 +142,9 @@ object SlangParser {
     mods.nonEmpty || !paramname.isInstanceOf[Name.Anonymous] || atpeopt.nonEmpty || expropt.nonEmpty
   }
 
-  private[SlangParser] lazy val emptyAttr = AST.Attr(posInfoOpt = None())
-  private[SlangParser] lazy val emptyTypedAttr = AST.TypedAttr(posInfoOpt = None(), typeOpt = None())
-  private[SlangParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posInfoOpt = None(), resOpt = None(), typeOpt = None())
+  private[SlangParser] lazy val emptyAttr = AST.Attr(posOpt = None())
+  private[SlangParser] lazy val emptyTypedAttr = AST.TypedAttr(posOpt = None(), typeOpt = None())
+  private[SlangParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posOpt = None(), resOpt = None(), typeOpt = None())
 
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
@@ -974,7 +974,7 @@ class SlangParser(text: Predef.String,
       case t"(..$atpes) => $tpe" =>
         AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe), typedAttr(t.pos))
       case _ =>
-        errorNotSlang(t.pos, s"Type '${syntax(t)}' (${t.structure}) is")
+        errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
         unitType
     }
   }
@@ -1490,18 +1490,18 @@ class SlangParser(text: Predef.String,
               b.value,
               ISZ(AST.VarFragment(fresh(ids),
                 Some(AST.Domain.Type(translateType(t), typedAttr(t.pos))))),
-              translateExp(e))
+              translateExp(e), attr(exp.pos))
           case Seq(b: Lit.Boolean, ids, e) =>
             AST.Exp.Quant(
               b.value,
               ISZ(AST.VarFragment(fresh(ids), None())),
-              translateExp(e))
+              translateExp(e), attr(exp.pos))
           case Seq(b: Lit.Boolean, ids, tt@Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean)), e) =>
             AST.Exp.Quant(
               b.value,
               ISZ(AST.VarFragment(fresh(ids),
                 Some(AST.Domain.Range(translateExp(lo), loExact.value, translateExp(hi), hiExact.value, typedAttr(tt.pos))))),
-              translateExp(e))
+              translateExp(e), attr(exp.pos))
         }
       case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
         translateInvoke(scala.Some(expr), cid(name), name.pos, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
@@ -1885,13 +1885,13 @@ class SlangParser(text: Predef.String,
     cidNoCheck(id, pos)
   }
 
-  def attr(pos: Position): AST.Attr = AST.Attr(posInfoOpt = posInfoOpt(pos))
+  def attr(pos: Position): AST.Attr = AST.Attr(posOpt = posOpt(pos))
 
-  def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posInfoOpt = posInfoOpt(pos), typeOpt = None())
+  def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posOpt = posOpt(pos), typeOpt = None())
 
-  def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posInfoOpt = posInfoOpt(pos), resOpt = None(), typeOpt = None())
+  def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posOpt = posOpt(pos), resOpt = None(), typeOpt = None())
 
-  def posInfoOpt(pos: Position): Option[AST.PosInfo] = {
+  def posOpt(pos: Position): Option[AST.PosInfo] = {
     val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
     Some(AST.PosInfo(
       fileUriOpt = fileUriOpt match {

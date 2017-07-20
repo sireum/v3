@@ -64,51 +64,51 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Resolver.Info.Var(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.Var(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Resolver.Info.SpecVar(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.SpecVar(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Method =>
         val name = currentName :+ stmt.sig.id.value
         declareName("method", name,
-          Resolver.Info.Method(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.Method(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.ExtMethod =>
         val name = currentName :+ stmt.sig.id.value
         declareName("extension method", name,
-          Resolver.Info.ExtMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.ExtMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecMethod =>
         val name = currentName :+ stmt.sig.id.value
         declareName("specification method", name,
-          Resolver.Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Set.empty[String]
         for (e <- stmt.elements) {
           if (elements.contains(e.value)) {
-            reporter.error(e.attr.posInfoOpt, s"Redeclaration of @enum element ${e.value}.")
+            reporter.error(e.attr.posOpt, s"Redeclaration of @enum element ${e.value}.")
           } else {
             elements = elements.add(e.value)
           }
         }
-        declareName("enumeration", name, Resolver.Info.Enum(name, elements), stmt.attr.posInfoOpt)
-        declareType("enumeration", name :+ "Type", Resolver.TypeInfo.Enum(name, elements, stmt.attr.posInfoOpt), stmt.attr.posInfoOpt)
+        declareName("enumeration", name, Resolver.Info.Enum(name, elements), stmt.attr.posOpt)
+        declareType("enumeration", name :+ "Type", Resolver.TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
 
         globalTypeMap.get(name) match {
           case Some(info) =>
-            val posOpt = stmt.attr.posInfoOpt
+            val posOpt = stmt.attr.posOpt
             if (stmt.isExt | !info.canHaveCompanion) {
               reporter.error(posOpt, s"Cannot declare extension object because the name has already been declared previously.")
-            } else if (!AST.Util.fileUriOptEq(posOpt, info.posInfoOpt)) {
+            } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {
               reporter.error(posOpt, s"Cannot declare companion object for a type defined in a different compilation unit.")
             }
           case _ =>
         }
 
         declareName(if (stmt.isExt) "extension object" else "object", name,
-          Resolver.Info.Object(name, stmt.isExt), stmt.attr.posInfoOpt)
+          Resolver.Info.Object(name, stmt.isExt), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
@@ -120,23 +120,23 @@ import org.sireum.lang.{ast => AST}
         val members = resolveMembers(stmt.stmts)
         assert(members.vars.isEmpty)
         declareType("sig", name, Resolver.TypeInfo.Sig(name, members.specVars,
-          members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
           Resolver.TypeInfo.AbstractDatatype(name, members.specVars, members.vars, members.specMethods,
-            members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+            members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Rich =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         assert(members.specVars.isEmpty & members.vars.isEmpty & members.specMethods.isEmpty)
         declareType("rich", name, Resolver.TypeInfo.Rich(name, members.methods,
-          scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
         declareType("type alias", name,
-          Resolver.TypeInfo.TypeAlias(name, scope(packageName, currentImports, name), stmt), stmt.attr.posInfoOpt)
+          Resolver.TypeInfo.TypeAlias(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case _ =>
     }
   }
@@ -156,7 +156,7 @@ import org.sireum.lang.{ast => AST}
         else if (methods.contains(name)) T
         else F
       if (declared) {
-        reporter.error(id.attr.posInfoOpt, s"Member $name has been previously declared.")
+        reporter.error(id.attr.posOpt, s"Member $name has been previously declared.")
       }
     }
 
@@ -198,7 +198,7 @@ import org.sireum.lang.{ast => AST}
       case Some(objectInfo: Resolver.Info.Object) if !objectInfo.isExt =>
         if (!info.canHaveCompanion) {
           reporter.error(posOpt, s"Cannot declare $entity because the name has already been declared previously.")
-        } else if (!AST.Util.fileUriOptEq(posOpt, info.posInfoOpt)) {
+        } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {
           reporter.error(posOpt, s"Cannot declare $entity whose object companion is in a different compilation unit.")
         }
       case Some(_) => reporter.error(posOpt, s"Cannot declare $entity because the name has already been declared previously.")
@@ -224,12 +224,12 @@ import org.sireum.lang.{ast => AST}
       return Some(Resolver.rootPackageInfo)
     }
     var currentName = ISZ(ids(0).value)
-    var currentPosOpt = ids(0).attr.posInfoOpt
+    var currentPosOpt = ids(0).attr.posOpt
     declarePackage(currentName, currentPosOpt)
 
     for (i <- 1 until ids.size) {
       currentName = currentName :+ ids(i).value
-      currentPosOpt = ids(i).attr.posInfoOpt
+      currentPosOpt = ids(i).attr.posOpt
       declarePackage(currentName, currentPosOpt)
     }
 

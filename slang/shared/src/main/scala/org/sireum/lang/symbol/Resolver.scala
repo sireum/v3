@@ -52,7 +52,8 @@ object Resolver {
 
     @datatype class Local(nameMap: HashMap[String, Info],
                           typeMap: HashMap[String, TypeInfo],
-                          outerOpt: Option[Scope]) {
+                          outerOpt: Option[Scope])
+      extends Scope {
 
       @pure def resolveName(globalNameMap: NameMap,
                             name: QName): Option[Info] = {
@@ -291,6 +292,14 @@ object Resolver {
                          elements: Set[String])
       extends Info
 
+    @datatype class FreshVar(name: QName,
+                             ast: AST.Id)
+      extends Info
+
+    @datatype class QuantVar(name: QName,
+                             id: AST.Id)
+      extends Info
+
   }
 
   @datatype trait TypeInfo {
@@ -299,7 +308,7 @@ object Resolver {
 
     def canHaveCompanion: B
 
-    def posInfoOpt: Option[AST.PosInfo]
+    def posOpt: Option[AST.PosInfo]
   }
 
   object TypeInfo {
@@ -310,14 +319,14 @@ object Resolver {
         return F
       }
 
-      def posInfoOpt: Option[AST.PosInfo] = {
+      def posOpt: Option[AST.PosInfo] = {
         return None()
       }
     }
 
     @datatype class Enum(name: QName,
                          elements: Set[String],
-                         posInfoOpt: Option[AST.PosInfo])
+                         posOpt: Option[AST.PosInfo])
       extends TypeInfo {
       def canHaveCompanion: B = {
         return F
@@ -336,8 +345,8 @@ object Resolver {
         return T
       }
 
-      def posInfoOpt: Option[AST.PosInfo] = {
-        return ast.attr.posInfoOpt
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
       }
     }
 
@@ -354,8 +363,8 @@ object Resolver {
         return T
       }
 
-      def posInfoOpt: Option[AST.PosInfo] = {
-        return ast.attr.posInfoOpt
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
       }
     }
 
@@ -369,8 +378,8 @@ object Resolver {
         return T
       }
 
-      def posInfoOpt: Option[AST.PosInfo] = {
-        return ast.attr.posInfoOpt
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
       }
     }
 
@@ -383,8 +392,8 @@ object Resolver {
         return F
       }
 
-      def posInfoOpt: Option[AST.PosInfo] = {
-        return ast.attr.posInfoOpt
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
       }
     }
 

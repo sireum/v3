@@ -41,1522 +41,1517 @@ object Transformer {
   @datatype class Result[Context, T](ctx: Context,
                                      resultOpt: Option[T])
 
-  @sig trait Pre[Context] {
+  @sig trait PrePost[Context] {
 
-    @pure def transformTopUnit(ctx: Context, o: TopUnit): PreResult[Context, TopUnit] = {
+    @pure def preTopUnit(ctx: Context, o: TopUnit): PreResult[Context, TopUnit] = {
       o match {
-        case o: TopUnit.Program => return transformTopUnitProgram(ctx, o)
-        case o: TopUnit.SequentUnit => return transformTopUnitSequentUnit(ctx, o)
-        case o: TopUnit.TruthTableUnit => return transformTopUnitTruthTableUnit(ctx, o)
+        case o: TopUnit.Program => return preTopUnitProgram(ctx, o)
+        case o: TopUnit.SequentUnit => return preTopUnitSequentUnit(ctx, o)
+        case o: TopUnit.TruthTableUnit => return preTopUnitTruthTableUnit(ctx, o)
       }
     }
 
-    @pure def transformTopUnitProgram(ctx: Context, o: TopUnit.Program): PreResult[Context, TopUnit] = {
+    @pure def preTopUnitProgram(ctx: Context, o: TopUnit.Program): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTopUnitSequentUnit(ctx: Context, o: TopUnit.SequentUnit): PreResult[Context, TopUnit] = {
+    @pure def preTopUnitSequentUnit(ctx: Context, o: TopUnit.SequentUnit): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTopUnitTruthTableUnit(ctx: Context, o: TopUnit.TruthTableUnit): PreResult[Context, TopUnit] = {
+    @pure def preTopUnitTruthTableUnit(ctx: Context, o: TopUnit.TruthTableUnit): PreResult[Context, TopUnit] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmt(ctx: Context, o: Stmt): PreResult[Context, Stmt] = {
+    @pure def preStmt(ctx: Context, o: Stmt): PreResult[Context, Stmt] = {
       o match {
-        case o: Stmt.Import => return transformStmtImport(ctx, o)
-        case o: Stmt.Var => return transformStmtVar(ctx, o)
-        case o: Stmt.VarPattern => return transformStmtVarPattern(ctx, o)
-        case o: Stmt.SpecVar => return transformStmtSpecVar(ctx, o)
-        case o: Stmt.Method => return transformStmtMethod(ctx, o)
-        case o: Stmt.ExtMethod => return transformStmtExtMethod(ctx, o)
-        case o: Stmt.SpecMethod => return transformStmtSpecMethod(ctx, o)
-        case o: Stmt.Enum => return transformStmtEnum(ctx, o)
-        case o: Stmt.Object => return transformStmtObject(ctx, o)
-        case o: Stmt.Sig => return transformStmtSig(ctx, o)
-        case o: Stmt.AbstractDatatype => return transformStmtAbstractDatatype(ctx, o)
-        case o: Stmt.Rich => return transformStmtRich(ctx, o)
-        case o: Stmt.TypeAlias => return transformStmtTypeAlias(ctx, o)
-        case o: Stmt.Assign => return transformStmtAssign(ctx, o)
-        case o: Stmt.AssignUp => return transformStmtAssignUp(ctx, o)
-        case o: Stmt.AssignPattern => return transformStmtAssignPattern(ctx, o)
-        case o: Stmt.Block => return transformStmtBlock(ctx, o)
-        case o: Stmt.If => return transformStmtIf(ctx, o)
-        case o: Stmt.Match => return transformStmtMatch(ctx, o)
-        case o: Stmt.While => return transformStmtWhile(ctx, o)
-        case o: Stmt.DoWhile => return transformStmtDoWhile(ctx, o)
-        case o: Stmt.For => return transformStmtFor(ctx, o)
-        case o: Stmt.Return => return transformStmtReturn(ctx, o)
-        case o: Stmt.LStmt => return transformStmtLStmt(ctx, o)
-        case o: Stmt.Expr => return transformStmtExpr(ctx, o)
+        case o: Stmt.Import => return preStmtImport(ctx, o)
+        case o: Stmt.Var => return preStmtVar(ctx, o)
+        case o: Stmt.VarPattern => return preStmtVarPattern(ctx, o)
+        case o: Stmt.SpecVar => return preStmtSpecVar(ctx, o)
+        case o: Stmt.Method => return preStmtMethod(ctx, o)
+        case o: Stmt.ExtMethod => return preStmtExtMethod(ctx, o)
+        case o: Stmt.SpecMethod => return preStmtSpecMethod(ctx, o)
+        case o: Stmt.Enum => return preStmtEnum(ctx, o)
+        case o: Stmt.Object => return preStmtObject(ctx, o)
+        case o: Stmt.Sig => return preStmtSig(ctx, o)
+        case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(ctx, o)
+        case o: Stmt.Rich => return preStmtRich(ctx, o)
+        case o: Stmt.TypeAlias => return preStmtTypeAlias(ctx, o)
+        case o: Stmt.Assign => return preStmtAssign(ctx, o)
+        case o: Stmt.AssignUp => return preStmtAssignUp(ctx, o)
+        case o: Stmt.AssignPattern => return preStmtAssignPattern(ctx, o)
+        case o: Stmt.Block => return preStmtBlock(ctx, o)
+        case o: Stmt.If => return preStmtIf(ctx, o)
+        case o: Stmt.Match => return preStmtMatch(ctx, o)
+        case o: Stmt.While => return preStmtWhile(ctx, o)
+        case o: Stmt.DoWhile => return preStmtDoWhile(ctx, o)
+        case o: Stmt.For => return preStmtFor(ctx, o)
+        case o: Stmt.Return => return preStmtReturn(ctx, o)
+        case o: Stmt.LStmt => return preStmtLStmt(ctx, o)
+        case o: Stmt.Expr => return preStmtExpr(ctx, o)
       }
     }
 
-    @pure def transformStmtImport(ctx: Context, o: Stmt.Import): PreResult[Context, Stmt] = {
+    @pure def preStmtImport(ctx: Context, o: Stmt.Import): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): PreResult[Context, Stmt.Import.Importer] = {
+    @pure def preStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): PreResult[Context, Stmt.Import.Importer] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtImportSelector(ctx: Context, o: Stmt.Import.Selector): PreResult[Context, Stmt.Import.Selector] = {
+    @pure def preStmtImportSelector(ctx: Context, o: Stmt.Import.Selector): PreResult[Context, Stmt.Import.Selector] = {
       o match {
-        case o: Stmt.Import.MultiSelector => return transformStmtImportMultiSelector(ctx, o)
-        case o: Stmt.Import.WildcardSelector => return transformStmtImportWildcardSelector(ctx, o)
+        case o: Stmt.Import.MultiSelector => return preStmtImportMultiSelector(ctx, o)
+        case o: Stmt.Import.WildcardSelector => return preStmtImportWildcardSelector(ctx, o)
       }
     }
 
-    @pure def transformStmtImportMultiSelector(ctx: Context, o: Stmt.Import.MultiSelector): PreResult[Context, Stmt.Import.Selector] = {
+    @pure def preStmtImportMultiSelector(ctx: Context, o: Stmt.Import.MultiSelector): PreResult[Context, Stmt.Import.Selector] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtImportWildcardSelector(ctx: Context, o: Stmt.Import.WildcardSelector): PreResult[Context, Stmt.Import.Selector] = {
+    @pure def preStmtImportWildcardSelector(ctx: Context, o: Stmt.Import.WildcardSelector): PreResult[Context, Stmt.Import.Selector] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtImportNamedSelector(ctx: Context, o: Stmt.Import.NamedSelector): PreResult[Context, Stmt.Import.NamedSelector] = {
+    @pure def preStmtImportNamedSelector(ctx: Context, o: Stmt.Import.NamedSelector): PreResult[Context, Stmt.Import.NamedSelector] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtVar(ctx: Context, o: Stmt.Var): PreResult[Context, Stmt] = {
+    @pure def preStmtVar(ctx: Context, o: Stmt.Var): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtVarPattern(ctx: Context, o: Stmt.VarPattern): PreResult[Context, Stmt] = {
+    @pure def preStmtVarPattern(ctx: Context, o: Stmt.VarPattern): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtSpecVar(ctx: Context, o: Stmt.SpecVar): PreResult[Context, Stmt] = {
+    @pure def preStmtSpecVar(ctx: Context, o: Stmt.SpecVar): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtMethod(ctx: Context, o: Stmt.Method): PreResult[Context, Stmt] = {
+    @pure def preStmtMethod(ctx: Context, o: Stmt.Method): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtExtMethod(ctx: Context, o: Stmt.ExtMethod): PreResult[Context, Stmt] = {
+    @pure def preStmtExtMethod(ctx: Context, o: Stmt.ExtMethod): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtSpecMethod(ctx: Context, o: Stmt.SpecMethod): PreResult[Context, Stmt] = {
+    @pure def preStmtSpecMethod(ctx: Context, o: Stmt.SpecMethod): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtEnum(ctx: Context, o: Stmt.Enum): PreResult[Context, Stmt] = {
+    @pure def preStmtEnum(ctx: Context, o: Stmt.Enum): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtObject(ctx: Context, o: Stmt.Object): PreResult[Context, Stmt] = {
+    @pure def preStmtObject(ctx: Context, o: Stmt.Object): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtSig(ctx: Context, o: Stmt.Sig): PreResult[Context, Stmt] = {
+    @pure def preStmtSig(ctx: Context, o: Stmt.Sig): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): PreResult[Context, Stmt] = {
+    @pure def preStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtRich(ctx: Context, o: Stmt.Rich): PreResult[Context, Stmt] = {
+    @pure def preStmtRich(ctx: Context, o: Stmt.Rich): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtTypeAlias(ctx: Context, o: Stmt.TypeAlias): PreResult[Context, Stmt] = {
+    @pure def preStmtTypeAlias(ctx: Context, o: Stmt.TypeAlias): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtAssign(ctx: Context, o: Stmt.Assign): PreResult[Context, Stmt] = {
+    @pure def preStmtAssign(ctx: Context, o: Stmt.Assign): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtAssignUp(ctx: Context, o: Stmt.AssignUp): PreResult[Context, Stmt] = {
+    @pure def preStmtAssignUp(ctx: Context, o: Stmt.AssignUp): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): PreResult[Context, Stmt] = {
+    @pure def preStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtBlock(ctx: Context, o: Stmt.Block): PreResult[Context, Stmt] = {
+    @pure def preStmtBlock(ctx: Context, o: Stmt.Block): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtIf(ctx: Context, o: Stmt.If): PreResult[Context, Stmt] = {
+    @pure def preStmtIf(ctx: Context, o: Stmt.If): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtMatch(ctx: Context, o: Stmt.Match): PreResult[Context, Stmt] = {
+    @pure def preStmtMatch(ctx: Context, o: Stmt.Match): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtWhile(ctx: Context, o: Stmt.While): PreResult[Context, Stmt] = {
+    @pure def preStmtWhile(ctx: Context, o: Stmt.While): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtDoWhile(ctx: Context, o: Stmt.DoWhile): PreResult[Context, Stmt] = {
+    @pure def preStmtDoWhile(ctx: Context, o: Stmt.DoWhile): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtFor(ctx: Context, o: Stmt.For): PreResult[Context, Stmt] = {
+    @pure def preStmtFor(ctx: Context, o: Stmt.For): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtReturn(ctx: Context, o: Stmt.Return): PreResult[Context, Stmt] = {
+    @pure def preStmtReturn(ctx: Context, o: Stmt.Return): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtLStmt(ctx: Context, o: Stmt.LStmt): PreResult[Context, Stmt] = {
+    @pure def preStmtLStmt(ctx: Context, o: Stmt.LStmt): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformStmtExpr(ctx: Context, o: Stmt.Expr): PreResult[Context, Stmt] = {
+    @pure def preStmtExpr(ctx: Context, o: Stmt.Expr): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClause(ctx: Context, o: LClause): PreResult[Context, LClause] = {
+    @pure def preLClause(ctx: Context, o: LClause): PreResult[Context, LClause] = {
       o match {
-        case o: LClause.Invariants => return transformLClauseInvariants(ctx, o)
-        case o: LClause.Facts => return transformLClauseFacts(ctx, o)
-        case o: LClause.Theorems => return transformLClauseTheorems(ctx, o)
-        case o: LClause.Sequent => return transformLClauseSequent(ctx, o)
-        case o: LClause.Proof => return transformLClauseProof(ctx, o)
+        case o: LClause.Invariants => return preLClauseInvariants(ctx, o)
+        case o: LClause.Facts => return preLClauseFacts(ctx, o)
+        case o: LClause.Theorems => return preLClauseTheorems(ctx, o)
+        case o: LClause.Sequent => return preLClauseSequent(ctx, o)
+        case o: LClause.Proof => return preLClauseProof(ctx, o)
       }
     }
 
-    @pure def transformLClauseInvariants(ctx: Context, o: LClause.Invariants): PreResult[Context, LClause] = {
+    @pure def preLClauseInvariants(ctx: Context, o: LClause.Invariants): PreResult[Context, LClause] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseFacts(ctx: Context, o: LClause.Facts): PreResult[Context, LClause] = {
+    @pure def preLClauseFacts(ctx: Context, o: LClause.Facts): PreResult[Context, LClause] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseFact(ctx: Context, o: LClause.Fact): PreResult[Context, LClause.Fact] = {
+    @pure def preLClauseFact(ctx: Context, o: LClause.Fact): PreResult[Context, LClause.Fact] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseTheorems(ctx: Context, o: LClause.Theorems): PreResult[Context, LClause] = {
+    @pure def preLClauseTheorems(ctx: Context, o: LClause.Theorems): PreResult[Context, LClause] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseTheorem(ctx: Context, o: LClause.Theorem): PreResult[Context, LClause.Theorem] = {
+    @pure def preLClauseTheorem(ctx: Context, o: LClause.Theorem): PreResult[Context, LClause.Theorem] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): PreResult[Context, LClause] = {
+    @pure def preLClauseSequent(ctx: Context, o: LClause.Sequent): PreResult[Context, LClause] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): PreResult[Context, LClause] = {
+    @pure def preLClauseProof(ctx: Context, o: LClause.Proof): PreResult[Context, LClause] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformContractExp(ctx: Context, o: ContractExp): PreResult[Context, ContractExp] = {
+    @pure def preContractExp(ctx: Context, o: ContractExp): PreResult[Context, ContractExp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformCase(ctx: Context, o: Case): PreResult[Context, Case] = {
+    @pure def preCase(ctx: Context, o: Case): PreResult[Context, Case] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformRange(ctx: Context, o: Range): PreResult[Context, Range] = {
+    @pure def preRange(ctx: Context, o: Range): PreResult[Context, Range] = {
       o match {
-        case o: Range.Expr => return transformRangeExpr(ctx, o)
-        case o: Range.Indices => return transformRangeIndices(ctx, o)
-        case o: Range.Step => return transformRangeStep(ctx, o)
+        case o: Range.Expr => return preRangeExpr(ctx, o)
+        case o: Range.Indices => return preRangeIndices(ctx, o)
+        case o: Range.Step => return preRangeStep(ctx, o)
       }
     }
 
-    @pure def transformRangeExpr(ctx: Context, o: Range.Expr): PreResult[Context, Range] = {
+    @pure def preRangeExpr(ctx: Context, o: Range.Expr): PreResult[Context, Range] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformRangeIndices(ctx: Context, o: Range.Indices): PreResult[Context, Range] = {
+    @pure def preRangeIndices(ctx: Context, o: Range.Indices): PreResult[Context, Range] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformRangeStep(ctx: Context, o: Range.Step): PreResult[Context, Range] = {
+    @pure def preRangeStep(ctx: Context, o: Range.Step): PreResult[Context, Range] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformType(ctx: Context, o: Type): PreResult[Context, Type] = {
+    @pure def preType(ctx: Context, o: Type): PreResult[Context, Type] = {
       o match {
-        case o: Type.Named => return transformTypeNamed(ctx, o)
-        case o: Type.Fun => return transformTypeFun(ctx, o)
-        case o: Type.Tuple => return transformTypeTuple(ctx, o)
+        case o: Type.Named => return preTypeNamed(ctx, o)
+        case o: Type.Fun => return preTypeFun(ctx, o)
+        case o: Type.Tuple => return preTypeTuple(ctx, o)
       }
     }
 
-    @pure def transformTypeNamed(ctx: Context, o: Type.Named): PreResult[Context, Type] = {
+    @pure def preTypeNamed(ctx: Context, o: Type.Named): PreResult[Context, Type] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTypeFun(ctx: Context, o: Type.Fun): PreResult[Context, Type] = {
+    @pure def preTypeFun(ctx: Context, o: Type.Fun): PreResult[Context, Type] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTypeTuple(ctx: Context, o: Type.Tuple): PreResult[Context, Type] = {
+    @pure def preTypeTuple(ctx: Context, o: Type.Tuple): PreResult[Context, Type] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPattern(ctx: Context, o: Pattern): PreResult[Context, Pattern] = {
+    @pure def prePattern(ctx: Context, o: Pattern): PreResult[Context, Pattern] = {
       o match {
-        case o: Pattern.Literal => return transformPatternLiteral(ctx, o)
-        case o: Pattern.Ref => return transformPatternRef(ctx, o)
-        case o: Pattern.Variable => return transformPatternVariable(ctx, o)
-        case o: Pattern.Wildcard => return transformPatternWildcard(ctx, o)
-        case o: Pattern.SeqWildcard => return transformPatternSeqWildcard(ctx, o)
-        case o: Pattern.Structure => return transformPatternStructure(ctx, o)
+        case o: Pattern.Literal => return prePatternLiteral(ctx, o)
+        case o: Pattern.Ref => return prePatternRef(ctx, o)
+        case o: Pattern.Variable => return prePatternVariable(ctx, o)
+        case o: Pattern.Wildcard => return prePatternWildcard(ctx, o)
+        case o: Pattern.SeqWildcard => return prePatternSeqWildcard(ctx, o)
+        case o: Pattern.Structure => return prePatternStructure(ctx, o)
       }
     }
 
-    @pure def transformPatternLiteral(ctx: Context, o: Pattern.Literal): PreResult[Context, Pattern] = {
+    @pure def prePatternLiteral(ctx: Context, o: Pattern.Literal): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPatternRef(ctx: Context, o: Pattern.Ref): PreResult[Context, Pattern] = {
+    @pure def prePatternRef(ctx: Context, o: Pattern.Ref): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPatternVariable(ctx: Context, o: Pattern.Variable): PreResult[Context, Pattern] = {
+    @pure def prePatternVariable(ctx: Context, o: Pattern.Variable): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPatternWildcard(ctx: Context, o: Pattern.Wildcard): PreResult[Context, Pattern] = {
+    @pure def prePatternWildcard(ctx: Context, o: Pattern.Wildcard): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPatternSeqWildcard(ctx: Context, o: Pattern.SeqWildcard): PreResult[Context, Pattern] = {
+    @pure def prePatternSeqWildcard(ctx: Context, o: Pattern.SeqWildcard): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPatternStructure(ctx: Context, o: Pattern.Structure): PreResult[Context, Pattern] = {
+    @pure def prePatternStructure(ctx: Context, o: Pattern.Structure): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExp(ctx: Context, o: Exp): PreResult[Context, Exp] = {
+    @pure def preExp(ctx: Context, o: Exp): PreResult[Context, Exp] = {
       o match {
-        case o: Exp.LitB => return transformExpLitB(ctx, o)
-        case o: Exp.LitC => return transformExpLitC(ctx, o)
-        case o: Exp.LitZ => return transformExpLitZ(ctx, o)
-        case o: Exp.LitZ8 => return transformExpLitZ8(ctx, o)
-        case o: Exp.LitZ16 => return transformExpLitZ16(ctx, o)
-        case o: Exp.LitZ32 => return transformExpLitZ32(ctx, o)
-        case o: Exp.LitZ64 => return transformExpLitZ64(ctx, o)
-        case o: Exp.LitN => return transformExpLitN(ctx, o)
-        case o: Exp.LitN8 => return transformExpLitN8(ctx, o)
-        case o: Exp.LitN16 => return transformExpLitN16(ctx, o)
-        case o: Exp.LitN32 => return transformExpLitN32(ctx, o)
-        case o: Exp.LitN64 => return transformExpLitN64(ctx, o)
-        case o: Exp.LitS8 => return transformExpLitS8(ctx, o)
-        case o: Exp.LitS16 => return transformExpLitS16(ctx, o)
-        case o: Exp.LitS32 => return transformExpLitS32(ctx, o)
-        case o: Exp.LitS64 => return transformExpLitS64(ctx, o)
-        case o: Exp.LitU8 => return transformExpLitU8(ctx, o)
-        case o: Exp.LitU16 => return transformExpLitU16(ctx, o)
-        case o: Exp.LitU32 => return transformExpLitU32(ctx, o)
-        case o: Exp.LitU64 => return transformExpLitU64(ctx, o)
-        case o: Exp.LitF32 => return transformExpLitF32(ctx, o)
-        case o: Exp.LitF64 => return transformExpLitF64(ctx, o)
-        case o: Exp.LitR => return transformExpLitR(ctx, o)
-        case o: Exp.LitBv => return transformExpLitBv(ctx, o)
-        case o: Exp.LitString => return transformExpLitString(ctx, o)
-        case o: Exp.StringInterpolate => return transformExpStringInterpolate(ctx, o)
-        case o: Exp.This => return transformExpThis(ctx, o)
-        case o: Exp.Unary => return transformExpUnary(ctx, o)
-        case o: Exp.Binary => return transformExpBinary(ctx, o)
-        case o: Exp.Ident => return transformExpIdent(ctx, o)
-        case o: Exp.Eta => return transformExpEta(ctx, o)
-        case o: Exp.Tuple => return transformExpTuple(ctx, o)
-        case o: Exp.Select => return transformExpSelect(ctx, o)
-        case o: Exp.Invoke => return transformExpInvoke(ctx, o)
-        case o: Exp.InvokeNamed => return transformExpInvokeNamed(ctx, o)
-        case o: Exp.If => return transformExpIf(ctx, o)
-        case o: Exp.Quant => return transformExpQuant(ctx, o)
+        case o: Exp.LitB => return preExpLitB(ctx, o)
+        case o: Exp.LitC => return preExpLitC(ctx, o)
+        case o: Exp.LitZ => return preExpLitZ(ctx, o)
+        case o: Exp.LitZ8 => return preExpLitZ8(ctx, o)
+        case o: Exp.LitZ16 => return preExpLitZ16(ctx, o)
+        case o: Exp.LitZ32 => return preExpLitZ32(ctx, o)
+        case o: Exp.LitZ64 => return preExpLitZ64(ctx, o)
+        case o: Exp.LitN => return preExpLitN(ctx, o)
+        case o: Exp.LitN8 => return preExpLitN8(ctx, o)
+        case o: Exp.LitN16 => return preExpLitN16(ctx, o)
+        case o: Exp.LitN32 => return preExpLitN32(ctx, o)
+        case o: Exp.LitN64 => return preExpLitN64(ctx, o)
+        case o: Exp.LitS8 => return preExpLitS8(ctx, o)
+        case o: Exp.LitS16 => return preExpLitS16(ctx, o)
+        case o: Exp.LitS32 => return preExpLitS32(ctx, o)
+        case o: Exp.LitS64 => return preExpLitS64(ctx, o)
+        case o: Exp.LitU8 => return preExpLitU8(ctx, o)
+        case o: Exp.LitU16 => return preExpLitU16(ctx, o)
+        case o: Exp.LitU32 => return preExpLitU32(ctx, o)
+        case o: Exp.LitU64 => return preExpLitU64(ctx, o)
+        case o: Exp.LitF32 => return preExpLitF32(ctx, o)
+        case o: Exp.LitF64 => return preExpLitF64(ctx, o)
+        case o: Exp.LitR => return preExpLitR(ctx, o)
+        case o: Exp.LitBv => return preExpLitBv(ctx, o)
+        case o: Exp.LitString => return preExpLitString(ctx, o)
+        case o: Exp.StringInterpolate => return preExpStringInterpolate(ctx, o)
+        case o: Exp.This => return preExpThis(ctx, o)
+        case o: Exp.Unary => return preExpUnary(ctx, o)
+        case o: Exp.Binary => return preExpBinary(ctx, o)
+        case o: Exp.Ident => return preExpIdent(ctx, o)
+        case o: Exp.Eta => return preExpEta(ctx, o)
+        case o: Exp.Tuple => return preExpTuple(ctx, o)
+        case o: Exp.Select => return preExpSelect(ctx, o)
+        case o: Exp.Invoke => return preExpInvoke(ctx, o)
+        case o: Exp.InvokeNamed => return preExpInvokeNamed(ctx, o)
+        case o: Exp.If => return preExpIf(ctx, o)
+        case o: Exp.Quant => return preExpQuant(ctx, o)
       }
     }
 
-    @pure def transformExpLitB(ctx: Context, o: Exp.LitB): PreResult[Context, Exp] = {
+    @pure def preExpLitB(ctx: Context, o: Exp.LitB): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitC(ctx: Context, o: Exp.LitC): PreResult[Context, Exp] = {
+    @pure def preExpLitC(ctx: Context, o: Exp.LitC): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): PreResult[Context, Exp] = {
+    @pure def preExpLitZ(ctx: Context, o: Exp.LitZ): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitZ8(ctx: Context, o: Exp.LitZ8): PreResult[Context, Exp] = {
+    @pure def preExpLitZ8(ctx: Context, o: Exp.LitZ8): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitZ16(ctx: Context, o: Exp.LitZ16): PreResult[Context, Exp] = {
+    @pure def preExpLitZ16(ctx: Context, o: Exp.LitZ16): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitZ32(ctx: Context, o: Exp.LitZ32): PreResult[Context, Exp] = {
+    @pure def preExpLitZ32(ctx: Context, o: Exp.LitZ32): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitZ64(ctx: Context, o: Exp.LitZ64): PreResult[Context, Exp] = {
+    @pure def preExpLitZ64(ctx: Context, o: Exp.LitZ64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitN(ctx: Context, o: Exp.LitN): PreResult[Context, Exp] = {
+    @pure def preExpLitN(ctx: Context, o: Exp.LitN): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitN8(ctx: Context, o: Exp.LitN8): PreResult[Context, Exp] = {
+    @pure def preExpLitN8(ctx: Context, o: Exp.LitN8): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitN16(ctx: Context, o: Exp.LitN16): PreResult[Context, Exp] = {
+    @pure def preExpLitN16(ctx: Context, o: Exp.LitN16): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitN32(ctx: Context, o: Exp.LitN32): PreResult[Context, Exp] = {
+    @pure def preExpLitN32(ctx: Context, o: Exp.LitN32): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitN64(ctx: Context, o: Exp.LitN64): PreResult[Context, Exp] = {
+    @pure def preExpLitN64(ctx: Context, o: Exp.LitN64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitS8(ctx: Context, o: Exp.LitS8): PreResult[Context, Exp] = {
+    @pure def preExpLitS8(ctx: Context, o: Exp.LitS8): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitS16(ctx: Context, o: Exp.LitS16): PreResult[Context, Exp] = {
+    @pure def preExpLitS16(ctx: Context, o: Exp.LitS16): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitS32(ctx: Context, o: Exp.LitS32): PreResult[Context, Exp] = {
+    @pure def preExpLitS32(ctx: Context, o: Exp.LitS32): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitS64(ctx: Context, o: Exp.LitS64): PreResult[Context, Exp] = {
+    @pure def preExpLitS64(ctx: Context, o: Exp.LitS64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitU8(ctx: Context, o: Exp.LitU8): PreResult[Context, Exp] = {
+    @pure def preExpLitU8(ctx: Context, o: Exp.LitU8): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitU16(ctx: Context, o: Exp.LitU16): PreResult[Context, Exp] = {
+    @pure def preExpLitU16(ctx: Context, o: Exp.LitU16): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitU32(ctx: Context, o: Exp.LitU32): PreResult[Context, Exp] = {
+    @pure def preExpLitU32(ctx: Context, o: Exp.LitU32): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitU64(ctx: Context, o: Exp.LitU64): PreResult[Context, Exp] = {
+    @pure def preExpLitU64(ctx: Context, o: Exp.LitU64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitF32(ctx: Context, o: Exp.LitF32): PreResult[Context, Exp] = {
+    @pure def preExpLitF32(ctx: Context, o: Exp.LitF32): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitF64(ctx: Context, o: Exp.LitF64): PreResult[Context, Exp] = {
+    @pure def preExpLitF64(ctx: Context, o: Exp.LitF64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitR(ctx: Context, o: Exp.LitR): PreResult[Context, Exp] = {
+    @pure def preExpLitR(ctx: Context, o: Exp.LitR): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitBv(ctx: Context, o: Exp.LitBv): PreResult[Context, Exp] = {
+    @pure def preExpLitBv(ctx: Context, o: Exp.LitBv): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpLitString(ctx: Context, o: Exp.LitString): PreResult[Context, Exp] = {
+    @pure def preExpLitString(ctx: Context, o: Exp.LitString): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpStringInterpolate(ctx: Context, o: Exp.StringInterpolate): PreResult[Context, Exp] = {
+    @pure def preExpStringInterpolate(ctx: Context, o: Exp.StringInterpolate): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpThis(ctx: Context, o: Exp.This): PreResult[Context, Exp] = {
+    @pure def preExpThis(ctx: Context, o: Exp.This): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpUnary(ctx: Context, o: Exp.Unary): PreResult[Context, Exp] = {
+    @pure def preExpUnary(ctx: Context, o: Exp.Unary): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpBinary(ctx: Context, o: Exp.Binary): PreResult[Context, Exp] = {
+    @pure def preExpBinary(ctx: Context, o: Exp.Binary): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpIdent(ctx: Context, o: Exp.Ident): PreResult[Context, Exp] = {
+    @pure def preExpIdent(ctx: Context, o: Exp.Ident): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpEta(ctx: Context, o: Exp.Eta): PreResult[Context, Exp] = {
+    @pure def preExpEta(ctx: Context, o: Exp.Eta): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpTuple(ctx: Context, o: Exp.Tuple): PreResult[Context, Exp] = {
+    @pure def preExpTuple(ctx: Context, o: Exp.Tuple): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpSelect(ctx: Context, o: Exp.Select): PreResult[Context, Exp] = {
+    @pure def preExpSelect(ctx: Context, o: Exp.Select): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpInvoke(ctx: Context, o: Exp.Invoke): PreResult[Context, Exp] = {
+    @pure def preExpInvoke(ctx: Context, o: Exp.Invoke): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpInvokeNamed(ctx: Context, o: Exp.InvokeNamed): PreResult[Context, Exp] = {
+    @pure def preExpInvokeNamed(ctx: Context, o: Exp.InvokeNamed): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpIf(ctx: Context, o: Exp.If): PreResult[Context, Exp] = {
+    @pure def preExpIf(ctx: Context, o: Exp.If): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformExpQuant(ctx: Context, o: Exp.Quant): PreResult[Context, Exp] = {
+    @pure def preExpQuant(ctx: Context, o: Exp.Quant): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformNamedArg(ctx: Context, o: NamedArg): PreResult[Context, NamedArg] = {
+    @pure def preNamedArg(ctx: Context, o: NamedArg): PreResult[Context, NamedArg] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformVarFragment(ctx: Context, o: VarFragment): PreResult[Context, VarFragment] = {
+    @pure def preVarFragment(ctx: Context, o: VarFragment): PreResult[Context, VarFragment] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformDomain(ctx: Context, o: Domain): PreResult[Context, Domain] = {
+    @pure def preDomain(ctx: Context, o: Domain): PreResult[Context, Domain] = {
       o match {
-        case o: Domain.Type => return transformDomainType(ctx, o)
-        case o: Domain.Range => return transformDomainRange(ctx, o)
+        case o: Domain.Type => return preDomainType(ctx, o)
+        case o: Domain.Range => return preDomainRange(ctx, o)
       }
     }
 
-    @pure def transformDomainType(ctx: Context, o: Domain.Type): PreResult[Context, Domain] = {
+    @pure def preDomainType(ctx: Context, o: Domain.Type): PreResult[Context, Domain] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformDomainRange(ctx: Context, o: Domain.Range): PreResult[Context, Domain] = {
+    @pure def preDomainRange(ctx: Context, o: Domain.Range): PreResult[Context, Domain] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformId(ctx: Context, o: Id): PreResult[Context, Id] = {
+    @pure def preId(ctx: Context, o: Id): PreResult[Context, Id] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformName(ctx: Context, o: Name): PreResult[Context, Name] = {
+    @pure def preName(ctx: Context, o: Name): PreResult[Context, Name] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformBody(ctx: Context, o: Body): PreResult[Context, Body] = {
+    @pure def preBody(ctx: Context, o: Body): PreResult[Context, Body] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformAbstractDatatypeParam(ctx: Context, o: AbstractDatatypeParam): PreResult[Context, AbstractDatatypeParam] = {
+    @pure def preAbstractDatatypeParam(ctx: Context, o: AbstractDatatypeParam): PreResult[Context, AbstractDatatypeParam] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformMethodSig(ctx: Context, o: MethodSig): PreResult[Context, MethodSig] = {
+    @pure def preMethodSig(ctx: Context, o: MethodSig): PreResult[Context, MethodSig] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformParam(ctx: Context, o: Param): PreResult[Context, Param] = {
+    @pure def preParam(ctx: Context, o: Param): PreResult[Context, Param] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTypeParam(ctx: Context, o: TypeParam): PreResult[Context, TypeParam] = {
+    @pure def preTypeParam(ctx: Context, o: TypeParam): PreResult[Context, TypeParam] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformContract(ctx: Context, o: Contract): PreResult[Context, Contract] = {
+    @pure def preContract(ctx: Context, o: Contract): PreResult[Context, Contract] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformSubContract(ctx: Context, o: SubContract): PreResult[Context, SubContract] = {
+    @pure def preSubContract(ctx: Context, o: SubContract): PreResult[Context, SubContract] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformSubContractParam(ctx: Context, o: SubContractParam): PreResult[Context, SubContractParam] = {
+    @pure def preSubContractParam(ctx: Context, o: SubContractParam): PreResult[Context, SubContractParam] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformWhereDef(ctx: Context, o: WhereDef): PreResult[Context, WhereDef] = {
+    @pure def preWhereDef(ctx: Context, o: WhereDef): PreResult[Context, WhereDef] = {
       o match {
-        case o: WhereDef.Val => return transformWhereDefVal(ctx, o)
-        case o: WhereDef.Def => return transformWhereDefDef(ctx, o)
+        case o: WhereDef.Val => return preWhereDefVal(ctx, o)
+        case o: WhereDef.Def => return preWhereDefDef(ctx, o)
       }
     }
 
-    @pure def transformWhereDefVal(ctx: Context, o: WhereDef.Val): PreResult[Context, WhereDef] = {
+    @pure def preWhereDefVal(ctx: Context, o: WhereDef.Val): PreResult[Context, WhereDef] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformWhereDefDef(ctx: Context, o: WhereDef.Def): PreResult[Context, WhereDef] = {
+    @pure def preWhereDefDef(ctx: Context, o: WhereDef.Def): PreResult[Context, WhereDef] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformSpecDef(ctx: Context, o: SpecDef): PreResult[Context, SpecDef] = {
+    @pure def preSpecDef(ctx: Context, o: SpecDef): PreResult[Context, SpecDef] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformProofStep(ctx: Context, o: ProofStep): PreResult[Context, ProofStep] = {
+    @pure def preProofStep(ctx: Context, o: ProofStep): PreResult[Context, ProofStep] = {
       o match {
-        case o: ProofStep.Basic => return transformProofStepBasic(ctx, o)
-        case o: ProofStep.SubProof => return transformProofStepSubProof(ctx, o)
+        case o: ProofStep.Basic => return preProofStepBasic(ctx, o)
+        case o: ProofStep.SubProof => return preProofStepSubProof(ctx, o)
       }
     }
 
-    @pure def transformProofStepBasic(ctx: Context, o: ProofStep.Basic): PreResult[Context, ProofStep] = {
+    @pure def preProofStepBasic(ctx: Context, o: ProofStep.Basic): PreResult[Context, ProofStep] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformProofStepSubProof(ctx: Context, o: ProofStep.SubProof): PreResult[Context, ProofStep] = {
+    @pure def preProofStepSubProof(ctx: Context, o: ProofStep.SubProof): PreResult[Context, ProofStep] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformAssumeProofStep(ctx: Context, o: AssumeProofStep): PreResult[Context, AssumeProofStep] = {
+    @pure def preAssumeProofStep(ctx: Context, o: AssumeProofStep): PreResult[Context, AssumeProofStep] = {
       o match {
-        case o: AssumeProofStep.Regular => return transformAssumeProofStepRegular(ctx, o)
-        case o: AssumeProofStep.ForallIntroAps => return transformAssumeProofStepForallIntroAps(ctx, o)
-        case o: AssumeProofStep.ExistsElimAps => return transformAssumeProofStepExistsElimAps(ctx, o)
+        case o: AssumeProofStep.Regular => return preAssumeProofStepRegular(ctx, o)
+        case o: AssumeProofStep.ForallIntroAps => return preAssumeProofStepForallIntroAps(ctx, o)
+        case o: AssumeProofStep.ExistsElimAps => return preAssumeProofStepExistsElimAps(ctx, o)
       }
     }
 
-    @pure def transformAssumeProofStepRegular(ctx: Context, o: AssumeProofStep.Regular): PreResult[Context, AssumeProofStep] = {
+    @pure def preAssumeProofStepRegular(ctx: Context, o: AssumeProofStep.Regular): PreResult[Context, AssumeProofStep] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformAssumeProofStepForallIntroAps(ctx: Context, o: AssumeProofStep.ForallIntroAps): PreResult[Context, AssumeProofStep] = {
+    @pure def preAssumeProofStepForallIntroAps(ctx: Context, o: AssumeProofStep.ForallIntroAps): PreResult[Context, AssumeProofStep] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformAssumeProofStepExistsElimAps(ctx: Context, o: AssumeProofStep.ExistsElimAps): PreResult[Context, AssumeProofStep] = {
+    @pure def preAssumeProofStepExistsElimAps(ctx: Context, o: AssumeProofStep.ExistsElimAps): PreResult[Context, AssumeProofStep] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJust(ctx: Context, o: Just): PreResult[Context, Just] = {
+    @pure def preJust(ctx: Context, o: Just): PreResult[Context, Just] = {
       o match {
-        case o: Just.Premise => return transformJustPremise(ctx, o)
-        case o: Just.AndIntro => return transformJustAndIntro(ctx, o)
-        case o: Just.AndElim => return transformJustAndElim(ctx, o)
-        case o: Just.OrIntro => return transformJustOrIntro(ctx, o)
-        case o: Just.OrElim => return transformJustOrElim(ctx, o)
-        case o: Just.ImplyIntro => return transformJustImplyIntro(ctx, o)
-        case o: Just.ImplyElim => return transformJustImplyElim(ctx, o)
-        case o: Just.NegIntro => return transformJustNegIntro(ctx, o)
-        case o: Just.NegElim => return transformJustNegElim(ctx, o)
-        case o: Just.BottomElim => return transformJustBottomElim(ctx, o)
-        case o: Just.Pbc => return transformJustPbc(ctx, o)
-        case o: Just.ForallIntro => return transformJustForallIntro(ctx, o)
-        case o: Just.ForallElim => return transformJustForallElim(ctx, o)
-        case o: Just.ExistsIntro => return transformJustExistsIntro(ctx, o)
-        case o: Just.ExistsElim => return transformJustExistsElim(ctx, o)
-        case o: Just.Fact => return transformJustFact(ctx, o)
-        case o: Just.Invariant => return transformJustInvariant(ctx, o)
-        case o: Just.Subst => return transformJustSubst(ctx, o)
-        case o: Just.Auto => return transformJustAuto(ctx, o)
-        case o: Just.Coq => return transformJustCoq(ctx, o)
+        case o: Just.Premise => return preJustPremise(ctx, o)
+        case o: Just.AndIntro => return preJustAndIntro(ctx, o)
+        case o: Just.AndElim => return preJustAndElim(ctx, o)
+        case o: Just.OrIntro => return preJustOrIntro(ctx, o)
+        case o: Just.OrElim => return preJustOrElim(ctx, o)
+        case o: Just.ImplyIntro => return preJustImplyIntro(ctx, o)
+        case o: Just.ImplyElim => return preJustImplyElim(ctx, o)
+        case o: Just.NegIntro => return preJustNegIntro(ctx, o)
+        case o: Just.NegElim => return preJustNegElim(ctx, o)
+        case o: Just.BottomElim => return preJustBottomElim(ctx, o)
+        case o: Just.Pbc => return preJustPbc(ctx, o)
+        case o: Just.ForallIntro => return preJustForallIntro(ctx, o)
+        case o: Just.ForallElim => return preJustForallElim(ctx, o)
+        case o: Just.ExistsIntro => return preJustExistsIntro(ctx, o)
+        case o: Just.ExistsElim => return preJustExistsElim(ctx, o)
+        case o: Just.Fact => return preJustFact(ctx, o)
+        case o: Just.Invariant => return preJustInvariant(ctx, o)
+        case o: Just.Subst => return preJustSubst(ctx, o)
+        case o: Just.Auto => return preJustAuto(ctx, o)
+        case o: Just.Coq => return preJustCoq(ctx, o)
       }
     }
 
-    @pure def transformJustPremise(ctx: Context, o: Just.Premise): PreResult[Context, Just] = {
+    @pure def preJustPremise(ctx: Context, o: Just.Premise): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustAndIntro(ctx: Context, o: Just.AndIntro): PreResult[Context, Just] = {
+    @pure def preJustAndIntro(ctx: Context, o: Just.AndIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustAndElim(ctx: Context, o: Just.AndElim): PreResult[Context, Just] = {
+    @pure def preJustAndElim(ctx: Context, o: Just.AndElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustOrIntro(ctx: Context, o: Just.OrIntro): PreResult[Context, Just] = {
+    @pure def preJustOrIntro(ctx: Context, o: Just.OrIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustOrElim(ctx: Context, o: Just.OrElim): PreResult[Context, Just] = {
+    @pure def preJustOrElim(ctx: Context, o: Just.OrElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustImplyIntro(ctx: Context, o: Just.ImplyIntro): PreResult[Context, Just] = {
+    @pure def preJustImplyIntro(ctx: Context, o: Just.ImplyIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustImplyElim(ctx: Context, o: Just.ImplyElim): PreResult[Context, Just] = {
+    @pure def preJustImplyElim(ctx: Context, o: Just.ImplyElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustNegIntro(ctx: Context, o: Just.NegIntro): PreResult[Context, Just] = {
+    @pure def preJustNegIntro(ctx: Context, o: Just.NegIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustNegElim(ctx: Context, o: Just.NegElim): PreResult[Context, Just] = {
+    @pure def preJustNegElim(ctx: Context, o: Just.NegElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustBottomElim(ctx: Context, o: Just.BottomElim): PreResult[Context, Just] = {
+    @pure def preJustBottomElim(ctx: Context, o: Just.BottomElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustPbc(ctx: Context, o: Just.Pbc): PreResult[Context, Just] = {
+    @pure def preJustPbc(ctx: Context, o: Just.Pbc): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustForallIntro(ctx: Context, o: Just.ForallIntro): PreResult[Context, Just] = {
+    @pure def preJustForallIntro(ctx: Context, o: Just.ForallIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustForallElim(ctx: Context, o: Just.ForallElim): PreResult[Context, Just] = {
+    @pure def preJustForallElim(ctx: Context, o: Just.ForallElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustExistsIntro(ctx: Context, o: Just.ExistsIntro): PreResult[Context, Just] = {
+    @pure def preJustExistsIntro(ctx: Context, o: Just.ExistsIntro): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustExistsElim(ctx: Context, o: Just.ExistsElim): PreResult[Context, Just] = {
+    @pure def preJustExistsElim(ctx: Context, o: Just.ExistsElim): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustFact(ctx: Context, o: Just.Fact): PreResult[Context, Just] = {
+    @pure def preJustFact(ctx: Context, o: Just.Fact): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustInvariant(ctx: Context, o: Just.Invariant): PreResult[Context, Just] = {
+    @pure def preJustInvariant(ctx: Context, o: Just.Invariant): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustSubst(ctx: Context, o: Just.Subst): PreResult[Context, Just] = {
+    @pure def preJustSubst(ctx: Context, o: Just.Subst): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustAuto(ctx: Context, o: Just.Auto): PreResult[Context, Just] = {
+    @pure def preJustAuto(ctx: Context, o: Just.Auto): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformJustCoq(ctx: Context, o: Just.Coq): PreResult[Context, Just] = {
+    @pure def preJustCoq(ctx: Context, o: Just.Coq): PreResult[Context, Just] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTableRow(ctx: Context, o: TruthTable.Row): PreResult[Context, TruthTable.Row] = {
+    @pure def preTruthTableRow(ctx: Context, o: TruthTable.Row): PreResult[Context, TruthTable.Row] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): PreResult[Context, TruthTable.Conclusion] = {
+    @pure def preTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): PreResult[Context, TruthTable.Conclusion] = {
       o match {
-        case o: TruthTable.Conclusion.Validity => return transformTruthTableConclusionValidity(ctx, o)
-        case o: TruthTable.Conclusion.Tautology => return transformTruthTableConclusionTautology(ctx, o)
-        case o: TruthTable.Conclusion.Contradictory => return transformTruthTableConclusionContradictory(ctx, o)
-        case o: TruthTable.Conclusion.Contingent => return transformTruthTableConclusionContingent(ctx, o)
+        case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(ctx, o)
+        case o: TruthTable.Conclusion.Tautology => return preTruthTableConclusionTautology(ctx, o)
+        case o: TruthTable.Conclusion.Contradictory => return preTruthTableConclusionContradictory(ctx, o)
+        case o: TruthTable.Conclusion.Contingent => return preTruthTableConclusionContingent(ctx, o)
       }
     }
 
-    @pure def transformTruthTableConclusionValidity(ctx: Context, o: TruthTable.Conclusion.Validity): PreResult[Context, TruthTable.Conclusion] = {
+    @pure def preTruthTableConclusionValidity(ctx: Context, o: TruthTable.Conclusion.Validity): PreResult[Context, TruthTable.Conclusion] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTableConclusionTautology(ctx: Context, o: TruthTable.Conclusion.Tautology): PreResult[Context, TruthTable.Conclusion] = {
+    @pure def preTruthTableConclusionTautology(ctx: Context, o: TruthTable.Conclusion.Tautology): PreResult[Context, TruthTable.Conclusion] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTableConclusionContradictory(ctx: Context, o: TruthTable.Conclusion.Contradictory): PreResult[Context, TruthTable.Conclusion] = {
+    @pure def preTruthTableConclusionContradictory(ctx: Context, o: TruthTable.Conclusion.Contradictory): PreResult[Context, TruthTable.Conclusion] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTruthTableConclusionContingent(ctx: Context, o: TruthTable.Conclusion.Contingent): PreResult[Context, TruthTable.Conclusion] = {
+    @pure def preTruthTableConclusionContingent(ctx: Context, o: TruthTable.Conclusion.Contingent): PreResult[Context, TruthTable.Conclusion] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformAttr(ctx: Context, o: Attr): PreResult[Context, Attr] = {
+    @pure def preAttr(ctx: Context, o: Attr): PreResult[Context, Attr] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformTypedAttr(ctx: Context, o: TypedAttr): PreResult[Context, TypedAttr] = {
+    @pure def preTypedAttr(ctx: Context, o: TypedAttr): PreResult[Context, TypedAttr] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformResolvedAttr(ctx: Context, o: ResolvedAttr): PreResult[Context, ResolvedAttr] = {
+    @pure def preResolvedAttr(ctx: Context, o: ResolvedAttr): PreResult[Context, ResolvedAttr] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformResolvedInfo(ctx: Context, o: ResolvedInfo): PreResult[Context, ResolvedInfo] = {
+    @pure def preResolvedInfo(ctx: Context, o: ResolvedInfo): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def transformPosInfo(ctx: Context, o: PosInfo): PreResult[Context, PosInfo] = {
+    @pure def prePosInfo(ctx: Context, o: PosInfo): PreResult[Context, PosInfo] = {
       return PreResult(ctx, T, None())
     }
 
-  }
-
-  @sig trait Post[Context] {
-
-    @pure def transformTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
+    @pure def postTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
       o match {
-        case o: TopUnit.Program => return transformTopUnitProgram(ctx, o)
-        case o: TopUnit.SequentUnit => return transformTopUnitSequentUnit(ctx, o)
-        case o: TopUnit.TruthTableUnit => return transformTopUnitTruthTableUnit(ctx, o)
+        case o: TopUnit.Program => return postTopUnitProgram(ctx, o)
+        case o: TopUnit.SequentUnit => return postTopUnitSequentUnit(ctx, o)
+        case o: TopUnit.TruthTableUnit => return postTopUnitTruthTableUnit(ctx, o)
       }
     }
 
-    @pure def transformTopUnitProgram(ctx: Context, o: TopUnit.Program): Result[Context, TopUnit] = {
+    @pure def postTopUnitProgram(ctx: Context, o: TopUnit.Program): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTopUnitSequentUnit(ctx: Context, o: TopUnit.SequentUnit): Result[Context, TopUnit] = {
+    @pure def postTopUnitSequentUnit(ctx: Context, o: TopUnit.SequentUnit): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTopUnitTruthTableUnit(ctx: Context, o: TopUnit.TruthTableUnit): Result[Context, TopUnit] = {
+    @pure def postTopUnitTruthTableUnit(ctx: Context, o: TopUnit.TruthTableUnit): Result[Context, TopUnit] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmt(ctx: Context, o: Stmt): Result[Context, Stmt] = {
+    @pure def postStmt(ctx: Context, o: Stmt): Result[Context, Stmt] = {
       o match {
-        case o: Stmt.Import => return transformStmtImport(ctx, o)
-        case o: Stmt.Var => return transformStmtVar(ctx, o)
-        case o: Stmt.VarPattern => return transformStmtVarPattern(ctx, o)
-        case o: Stmt.SpecVar => return transformStmtSpecVar(ctx, o)
-        case o: Stmt.Method => return transformStmtMethod(ctx, o)
-        case o: Stmt.ExtMethod => return transformStmtExtMethod(ctx, o)
-        case o: Stmt.SpecMethod => return transformStmtSpecMethod(ctx, o)
-        case o: Stmt.Enum => return transformStmtEnum(ctx, o)
-        case o: Stmt.Object => return transformStmtObject(ctx, o)
-        case o: Stmt.Sig => return transformStmtSig(ctx, o)
-        case o: Stmt.AbstractDatatype => return transformStmtAbstractDatatype(ctx, o)
-        case o: Stmt.Rich => return transformStmtRich(ctx, o)
-        case o: Stmt.TypeAlias => return transformStmtTypeAlias(ctx, o)
-        case o: Stmt.Assign => return transformStmtAssign(ctx, o)
-        case o: Stmt.AssignUp => return transformStmtAssignUp(ctx, o)
-        case o: Stmt.AssignPattern => return transformStmtAssignPattern(ctx, o)
-        case o: Stmt.Block => return transformStmtBlock(ctx, o)
-        case o: Stmt.If => return transformStmtIf(ctx, o)
-        case o: Stmt.Match => return transformStmtMatch(ctx, o)
-        case o: Stmt.While => return transformStmtWhile(ctx, o)
-        case o: Stmt.DoWhile => return transformStmtDoWhile(ctx, o)
-        case o: Stmt.For => return transformStmtFor(ctx, o)
-        case o: Stmt.Return => return transformStmtReturn(ctx, o)
-        case o: Stmt.LStmt => return transformStmtLStmt(ctx, o)
-        case o: Stmt.Expr => return transformStmtExpr(ctx, o)
+        case o: Stmt.Import => return postStmtImport(ctx, o)
+        case o: Stmt.Var => return postStmtVar(ctx, o)
+        case o: Stmt.VarPattern => return postStmtVarPattern(ctx, o)
+        case o: Stmt.SpecVar => return postStmtSpecVar(ctx, o)
+        case o: Stmt.Method => return postStmtMethod(ctx, o)
+        case o: Stmt.ExtMethod => return postStmtExtMethod(ctx, o)
+        case o: Stmt.SpecMethod => return postStmtSpecMethod(ctx, o)
+        case o: Stmt.Enum => return postStmtEnum(ctx, o)
+        case o: Stmt.Object => return postStmtObject(ctx, o)
+        case o: Stmt.Sig => return postStmtSig(ctx, o)
+        case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(ctx, o)
+        case o: Stmt.Rich => return postStmtRich(ctx, o)
+        case o: Stmt.TypeAlias => return postStmtTypeAlias(ctx, o)
+        case o: Stmt.Assign => return postStmtAssign(ctx, o)
+        case o: Stmt.AssignUp => return postStmtAssignUp(ctx, o)
+        case o: Stmt.AssignPattern => return postStmtAssignPattern(ctx, o)
+        case o: Stmt.Block => return postStmtBlock(ctx, o)
+        case o: Stmt.If => return postStmtIf(ctx, o)
+        case o: Stmt.Match => return postStmtMatch(ctx, o)
+        case o: Stmt.While => return postStmtWhile(ctx, o)
+        case o: Stmt.DoWhile => return postStmtDoWhile(ctx, o)
+        case o: Stmt.For => return postStmtFor(ctx, o)
+        case o: Stmt.Return => return postStmtReturn(ctx, o)
+        case o: Stmt.LStmt => return postStmtLStmt(ctx, o)
+        case o: Stmt.Expr => return postStmtExpr(ctx, o)
       }
     }
 
-    @pure def transformStmtImport(ctx: Context, o: Stmt.Import): Result[Context, Stmt] = {
+    @pure def postStmtImport(ctx: Context, o: Stmt.Import): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): Result[Context, Stmt.Import.Importer] = {
+    @pure def postStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): Result[Context, Stmt.Import.Importer] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtImportSelector(ctx: Context, o: Stmt.Import.Selector): Result[Context, Stmt.Import.Selector] = {
+    @pure def postStmtImportSelector(ctx: Context, o: Stmt.Import.Selector): Result[Context, Stmt.Import.Selector] = {
       o match {
-        case o: Stmt.Import.MultiSelector => return transformStmtImportMultiSelector(ctx, o)
-        case o: Stmt.Import.WildcardSelector => return transformStmtImportWildcardSelector(ctx, o)
+        case o: Stmt.Import.MultiSelector => return postStmtImportMultiSelector(ctx, o)
+        case o: Stmt.Import.WildcardSelector => return postStmtImportWildcardSelector(ctx, o)
       }
     }
 
-    @pure def transformStmtImportMultiSelector(ctx: Context, o: Stmt.Import.MultiSelector): Result[Context, Stmt.Import.Selector] = {
+    @pure def postStmtImportMultiSelector(ctx: Context, o: Stmt.Import.MultiSelector): Result[Context, Stmt.Import.Selector] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtImportWildcardSelector(ctx: Context, o: Stmt.Import.WildcardSelector): Result[Context, Stmt.Import.Selector] = {
+    @pure def postStmtImportWildcardSelector(ctx: Context, o: Stmt.Import.WildcardSelector): Result[Context, Stmt.Import.Selector] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtImportNamedSelector(ctx: Context, o: Stmt.Import.NamedSelector): Result[Context, Stmt.Import.NamedSelector] = {
+    @pure def postStmtImportNamedSelector(ctx: Context, o: Stmt.Import.NamedSelector): Result[Context, Stmt.Import.NamedSelector] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtVar(ctx: Context, o: Stmt.Var): Result[Context, Stmt] = {
+    @pure def postStmtVar(ctx: Context, o: Stmt.Var): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtVarPattern(ctx: Context, o: Stmt.VarPattern): Result[Context, Stmt] = {
+    @pure def postStmtVarPattern(ctx: Context, o: Stmt.VarPattern): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtSpecVar(ctx: Context, o: Stmt.SpecVar): Result[Context, Stmt] = {
+    @pure def postStmtSpecVar(ctx: Context, o: Stmt.SpecVar): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtMethod(ctx: Context, o: Stmt.Method): Result[Context, Stmt] = {
+    @pure def postStmtMethod(ctx: Context, o: Stmt.Method): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtExtMethod(ctx: Context, o: Stmt.ExtMethod): Result[Context, Stmt] = {
+    @pure def postStmtExtMethod(ctx: Context, o: Stmt.ExtMethod): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtSpecMethod(ctx: Context, o: Stmt.SpecMethod): Result[Context, Stmt] = {
+    @pure def postStmtSpecMethod(ctx: Context, o: Stmt.SpecMethod): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtEnum(ctx: Context, o: Stmt.Enum): Result[Context, Stmt] = {
+    @pure def postStmtEnum(ctx: Context, o: Stmt.Enum): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtObject(ctx: Context, o: Stmt.Object): Result[Context, Stmt] = {
+    @pure def postStmtObject(ctx: Context, o: Stmt.Object): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtSig(ctx: Context, o: Stmt.Sig): Result[Context, Stmt] = {
+    @pure def postStmtSig(ctx: Context, o: Stmt.Sig): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): Result[Context, Stmt] = {
+    @pure def postStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtRich(ctx: Context, o: Stmt.Rich): Result[Context, Stmt] = {
+    @pure def postStmtRich(ctx: Context, o: Stmt.Rich): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtTypeAlias(ctx: Context, o: Stmt.TypeAlias): Result[Context, Stmt] = {
+    @pure def postStmtTypeAlias(ctx: Context, o: Stmt.TypeAlias): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtAssign(ctx: Context, o: Stmt.Assign): Result[Context, Stmt] = {
+    @pure def postStmtAssign(ctx: Context, o: Stmt.Assign): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtAssignUp(ctx: Context, o: Stmt.AssignUp): Result[Context, Stmt] = {
+    @pure def postStmtAssignUp(ctx: Context, o: Stmt.AssignUp): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): Result[Context, Stmt] = {
+    @pure def postStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtBlock(ctx: Context, o: Stmt.Block): Result[Context, Stmt] = {
+    @pure def postStmtBlock(ctx: Context, o: Stmt.Block): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtIf(ctx: Context, o: Stmt.If): Result[Context, Stmt] = {
+    @pure def postStmtIf(ctx: Context, o: Stmt.If): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtMatch(ctx: Context, o: Stmt.Match): Result[Context, Stmt] = {
+    @pure def postStmtMatch(ctx: Context, o: Stmt.Match): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtWhile(ctx: Context, o: Stmt.While): Result[Context, Stmt] = {
+    @pure def postStmtWhile(ctx: Context, o: Stmt.While): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtDoWhile(ctx: Context, o: Stmt.DoWhile): Result[Context, Stmt] = {
+    @pure def postStmtDoWhile(ctx: Context, o: Stmt.DoWhile): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtFor(ctx: Context, o: Stmt.For): Result[Context, Stmt] = {
+    @pure def postStmtFor(ctx: Context, o: Stmt.For): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtReturn(ctx: Context, o: Stmt.Return): Result[Context, Stmt] = {
+    @pure def postStmtReturn(ctx: Context, o: Stmt.Return): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtLStmt(ctx: Context, o: Stmt.LStmt): Result[Context, Stmt] = {
+    @pure def postStmtLStmt(ctx: Context, o: Stmt.LStmt): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformStmtExpr(ctx: Context, o: Stmt.Expr): Result[Context, Stmt] = {
+    @pure def postStmtExpr(ctx: Context, o: Stmt.Expr): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClause(ctx: Context, o: LClause): Result[Context, LClause] = {
+    @pure def postLClause(ctx: Context, o: LClause): Result[Context, LClause] = {
       o match {
-        case o: LClause.Invariants => return transformLClauseInvariants(ctx, o)
-        case o: LClause.Facts => return transformLClauseFacts(ctx, o)
-        case o: LClause.Theorems => return transformLClauseTheorems(ctx, o)
-        case o: LClause.Sequent => return transformLClauseSequent(ctx, o)
-        case o: LClause.Proof => return transformLClauseProof(ctx, o)
+        case o: LClause.Invariants => return postLClauseInvariants(ctx, o)
+        case o: LClause.Facts => return postLClauseFacts(ctx, o)
+        case o: LClause.Theorems => return postLClauseTheorems(ctx, o)
+        case o: LClause.Sequent => return postLClauseSequent(ctx, o)
+        case o: LClause.Proof => return postLClauseProof(ctx, o)
       }
     }
 
-    @pure def transformLClauseInvariants(ctx: Context, o: LClause.Invariants): Result[Context, LClause] = {
+    @pure def postLClauseInvariants(ctx: Context, o: LClause.Invariants): Result[Context, LClause] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseFacts(ctx: Context, o: LClause.Facts): Result[Context, LClause] = {
+    @pure def postLClauseFacts(ctx: Context, o: LClause.Facts): Result[Context, LClause] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseFact(ctx: Context, o: LClause.Fact): Result[Context, LClause.Fact] = {
+    @pure def postLClauseFact(ctx: Context, o: LClause.Fact): Result[Context, LClause.Fact] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseTheorems(ctx: Context, o: LClause.Theorems): Result[Context, LClause] = {
+    @pure def postLClauseTheorems(ctx: Context, o: LClause.Theorems): Result[Context, LClause] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseTheorem(ctx: Context, o: LClause.Theorem): Result[Context, LClause.Theorem] = {
+    @pure def postLClauseTheorem(ctx: Context, o: LClause.Theorem): Result[Context, LClause.Theorem] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause] = {
+    @pure def postLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause] = {
       return Result(ctx, None())
     }
 
-    @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause] = {
+    @pure def postLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause] = {
       return Result(ctx, None())
     }
 
-    @pure def transformContractExp(ctx: Context, o: ContractExp): Result[Context, ContractExp] = {
+    @pure def postContractExp(ctx: Context, o: ContractExp): Result[Context, ContractExp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformCase(ctx: Context, o: Case): Result[Context, Case] = {
+    @pure def postCase(ctx: Context, o: Case): Result[Context, Case] = {
       return Result(ctx, None())
     }
 
-    @pure def transformRange(ctx: Context, o: Range): Result[Context, Range] = {
+    @pure def postRange(ctx: Context, o: Range): Result[Context, Range] = {
       o match {
-        case o: Range.Expr => return transformRangeExpr(ctx, o)
-        case o: Range.Indices => return transformRangeIndices(ctx, o)
-        case o: Range.Step => return transformRangeStep(ctx, o)
+        case o: Range.Expr => return postRangeExpr(ctx, o)
+        case o: Range.Indices => return postRangeIndices(ctx, o)
+        case o: Range.Step => return postRangeStep(ctx, o)
       }
     }
 
-    @pure def transformRangeExpr(ctx: Context, o: Range.Expr): Result[Context, Range] = {
+    @pure def postRangeExpr(ctx: Context, o: Range.Expr): Result[Context, Range] = {
       return Result(ctx, None())
     }
 
-    @pure def transformRangeIndices(ctx: Context, o: Range.Indices): Result[Context, Range] = {
+    @pure def postRangeIndices(ctx: Context, o: Range.Indices): Result[Context, Range] = {
       return Result(ctx, None())
     }
 
-    @pure def transformRangeStep(ctx: Context, o: Range.Step): Result[Context, Range] = {
+    @pure def postRangeStep(ctx: Context, o: Range.Step): Result[Context, Range] = {
       return Result(ctx, None())
     }
 
-    @pure def transformType(ctx: Context, o: Type): Result[Context, Type] = {
+    @pure def postType(ctx: Context, o: Type): Result[Context, Type] = {
       o match {
-        case o: Type.Named => return transformTypeNamed(ctx, o)
-        case o: Type.Fun => return transformTypeFun(ctx, o)
-        case o: Type.Tuple => return transformTypeTuple(ctx, o)
+        case o: Type.Named => return postTypeNamed(ctx, o)
+        case o: Type.Fun => return postTypeFun(ctx, o)
+        case o: Type.Tuple => return postTypeTuple(ctx, o)
       }
     }
 
-    @pure def transformTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type] = {
+    @pure def postTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTypeFun(ctx: Context, o: Type.Fun): Result[Context, Type] = {
+    @pure def postTypeFun(ctx: Context, o: Type.Fun): Result[Context, Type] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTypeTuple(ctx: Context, o: Type.Tuple): Result[Context, Type] = {
+    @pure def postTypeTuple(ctx: Context, o: Type.Tuple): Result[Context, Type] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPattern(ctx: Context, o: Pattern): Result[Context, Pattern] = {
+    @pure def postPattern(ctx: Context, o: Pattern): Result[Context, Pattern] = {
       o match {
-        case o: Pattern.Literal => return transformPatternLiteral(ctx, o)
-        case o: Pattern.Ref => return transformPatternRef(ctx, o)
-        case o: Pattern.Variable => return transformPatternVariable(ctx, o)
-        case o: Pattern.Wildcard => return transformPatternWildcard(ctx, o)
-        case o: Pattern.SeqWildcard => return transformPatternSeqWildcard(ctx, o)
-        case o: Pattern.Structure => return transformPatternStructure(ctx, o)
+        case o: Pattern.Literal => return postPatternLiteral(ctx, o)
+        case o: Pattern.Ref => return postPatternRef(ctx, o)
+        case o: Pattern.Variable => return postPatternVariable(ctx, o)
+        case o: Pattern.Wildcard => return postPatternWildcard(ctx, o)
+        case o: Pattern.SeqWildcard => return postPatternSeqWildcard(ctx, o)
+        case o: Pattern.Structure => return postPatternStructure(ctx, o)
       }
     }
 
-    @pure def transformPatternLiteral(ctx: Context, o: Pattern.Literal): Result[Context, Pattern] = {
+    @pure def postPatternLiteral(ctx: Context, o: Pattern.Literal): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPatternRef(ctx: Context, o: Pattern.Ref): Result[Context, Pattern] = {
+    @pure def postPatternRef(ctx: Context, o: Pattern.Ref): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPatternVariable(ctx: Context, o: Pattern.Variable): Result[Context, Pattern] = {
+    @pure def postPatternVariable(ctx: Context, o: Pattern.Variable): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPatternWildcard(ctx: Context, o: Pattern.Wildcard): Result[Context, Pattern] = {
+    @pure def postPatternWildcard(ctx: Context, o: Pattern.Wildcard): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPatternSeqWildcard(ctx: Context, o: Pattern.SeqWildcard): Result[Context, Pattern] = {
+    @pure def postPatternSeqWildcard(ctx: Context, o: Pattern.SeqWildcard): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPatternStructure(ctx: Context, o: Pattern.Structure): Result[Context, Pattern] = {
+    @pure def postPatternStructure(ctx: Context, o: Pattern.Structure): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExp(ctx: Context, o: Exp): Result[Context, Exp] = {
+    @pure def postExp(ctx: Context, o: Exp): Result[Context, Exp] = {
       o match {
-        case o: Exp.LitB => return transformExpLitB(ctx, o)
-        case o: Exp.LitC => return transformExpLitC(ctx, o)
-        case o: Exp.LitZ => return transformExpLitZ(ctx, o)
-        case o: Exp.LitZ8 => return transformExpLitZ8(ctx, o)
-        case o: Exp.LitZ16 => return transformExpLitZ16(ctx, o)
-        case o: Exp.LitZ32 => return transformExpLitZ32(ctx, o)
-        case o: Exp.LitZ64 => return transformExpLitZ64(ctx, o)
-        case o: Exp.LitN => return transformExpLitN(ctx, o)
-        case o: Exp.LitN8 => return transformExpLitN8(ctx, o)
-        case o: Exp.LitN16 => return transformExpLitN16(ctx, o)
-        case o: Exp.LitN32 => return transformExpLitN32(ctx, o)
-        case o: Exp.LitN64 => return transformExpLitN64(ctx, o)
-        case o: Exp.LitS8 => return transformExpLitS8(ctx, o)
-        case o: Exp.LitS16 => return transformExpLitS16(ctx, o)
-        case o: Exp.LitS32 => return transformExpLitS32(ctx, o)
-        case o: Exp.LitS64 => return transformExpLitS64(ctx, o)
-        case o: Exp.LitU8 => return transformExpLitU8(ctx, o)
-        case o: Exp.LitU16 => return transformExpLitU16(ctx, o)
-        case o: Exp.LitU32 => return transformExpLitU32(ctx, o)
-        case o: Exp.LitU64 => return transformExpLitU64(ctx, o)
-        case o: Exp.LitF32 => return transformExpLitF32(ctx, o)
-        case o: Exp.LitF64 => return transformExpLitF64(ctx, o)
-        case o: Exp.LitR => return transformExpLitR(ctx, o)
-        case o: Exp.LitBv => return transformExpLitBv(ctx, o)
-        case o: Exp.LitString => return transformExpLitString(ctx, o)
-        case o: Exp.StringInterpolate => return transformExpStringInterpolate(ctx, o)
-        case o: Exp.This => return transformExpThis(ctx, o)
-        case o: Exp.Unary => return transformExpUnary(ctx, o)
-        case o: Exp.Binary => return transformExpBinary(ctx, o)
-        case o: Exp.Ident => return transformExpIdent(ctx, o)
-        case o: Exp.Eta => return transformExpEta(ctx, o)
-        case o: Exp.Tuple => return transformExpTuple(ctx, o)
-        case o: Exp.Select => return transformExpSelect(ctx, o)
-        case o: Exp.Invoke => return transformExpInvoke(ctx, o)
-        case o: Exp.InvokeNamed => return transformExpInvokeNamed(ctx, o)
-        case o: Exp.If => return transformExpIf(ctx, o)
-        case o: Exp.Quant => return transformExpQuant(ctx, o)
+        case o: Exp.LitB => return postExpLitB(ctx, o)
+        case o: Exp.LitC => return postExpLitC(ctx, o)
+        case o: Exp.LitZ => return postExpLitZ(ctx, o)
+        case o: Exp.LitZ8 => return postExpLitZ8(ctx, o)
+        case o: Exp.LitZ16 => return postExpLitZ16(ctx, o)
+        case o: Exp.LitZ32 => return postExpLitZ32(ctx, o)
+        case o: Exp.LitZ64 => return postExpLitZ64(ctx, o)
+        case o: Exp.LitN => return postExpLitN(ctx, o)
+        case o: Exp.LitN8 => return postExpLitN8(ctx, o)
+        case o: Exp.LitN16 => return postExpLitN16(ctx, o)
+        case o: Exp.LitN32 => return postExpLitN32(ctx, o)
+        case o: Exp.LitN64 => return postExpLitN64(ctx, o)
+        case o: Exp.LitS8 => return postExpLitS8(ctx, o)
+        case o: Exp.LitS16 => return postExpLitS16(ctx, o)
+        case o: Exp.LitS32 => return postExpLitS32(ctx, o)
+        case o: Exp.LitS64 => return postExpLitS64(ctx, o)
+        case o: Exp.LitU8 => return postExpLitU8(ctx, o)
+        case o: Exp.LitU16 => return postExpLitU16(ctx, o)
+        case o: Exp.LitU32 => return postExpLitU32(ctx, o)
+        case o: Exp.LitU64 => return postExpLitU64(ctx, o)
+        case o: Exp.LitF32 => return postExpLitF32(ctx, o)
+        case o: Exp.LitF64 => return postExpLitF64(ctx, o)
+        case o: Exp.LitR => return postExpLitR(ctx, o)
+        case o: Exp.LitBv => return postExpLitBv(ctx, o)
+        case o: Exp.LitString => return postExpLitString(ctx, o)
+        case o: Exp.StringInterpolate => return postExpStringInterpolate(ctx, o)
+        case o: Exp.This => return postExpThis(ctx, o)
+        case o: Exp.Unary => return postExpUnary(ctx, o)
+        case o: Exp.Binary => return postExpBinary(ctx, o)
+        case o: Exp.Ident => return postExpIdent(ctx, o)
+        case o: Exp.Eta => return postExpEta(ctx, o)
+        case o: Exp.Tuple => return postExpTuple(ctx, o)
+        case o: Exp.Select => return postExpSelect(ctx, o)
+        case o: Exp.Invoke => return postExpInvoke(ctx, o)
+        case o: Exp.InvokeNamed => return postExpInvokeNamed(ctx, o)
+        case o: Exp.If => return postExpIf(ctx, o)
+        case o: Exp.Quant => return postExpQuant(ctx, o)
       }
     }
 
-    @pure def transformExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp] = {
+    @pure def postExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitC(ctx: Context, o: Exp.LitC): Result[Context, Exp] = {
+    @pure def postExpLitC(ctx: Context, o: Exp.LitC): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp] = {
+    @pure def postExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitZ8(ctx: Context, o: Exp.LitZ8): Result[Context, Exp] = {
+    @pure def postExpLitZ8(ctx: Context, o: Exp.LitZ8): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitZ16(ctx: Context, o: Exp.LitZ16): Result[Context, Exp] = {
+    @pure def postExpLitZ16(ctx: Context, o: Exp.LitZ16): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitZ32(ctx: Context, o: Exp.LitZ32): Result[Context, Exp] = {
+    @pure def postExpLitZ32(ctx: Context, o: Exp.LitZ32): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitZ64(ctx: Context, o: Exp.LitZ64): Result[Context, Exp] = {
+    @pure def postExpLitZ64(ctx: Context, o: Exp.LitZ64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitN(ctx: Context, o: Exp.LitN): Result[Context, Exp] = {
+    @pure def postExpLitN(ctx: Context, o: Exp.LitN): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitN8(ctx: Context, o: Exp.LitN8): Result[Context, Exp] = {
+    @pure def postExpLitN8(ctx: Context, o: Exp.LitN8): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitN16(ctx: Context, o: Exp.LitN16): Result[Context, Exp] = {
+    @pure def postExpLitN16(ctx: Context, o: Exp.LitN16): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitN32(ctx: Context, o: Exp.LitN32): Result[Context, Exp] = {
+    @pure def postExpLitN32(ctx: Context, o: Exp.LitN32): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitN64(ctx: Context, o: Exp.LitN64): Result[Context, Exp] = {
+    @pure def postExpLitN64(ctx: Context, o: Exp.LitN64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitS8(ctx: Context, o: Exp.LitS8): Result[Context, Exp] = {
+    @pure def postExpLitS8(ctx: Context, o: Exp.LitS8): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitS16(ctx: Context, o: Exp.LitS16): Result[Context, Exp] = {
+    @pure def postExpLitS16(ctx: Context, o: Exp.LitS16): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitS32(ctx: Context, o: Exp.LitS32): Result[Context, Exp] = {
+    @pure def postExpLitS32(ctx: Context, o: Exp.LitS32): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitS64(ctx: Context, o: Exp.LitS64): Result[Context, Exp] = {
+    @pure def postExpLitS64(ctx: Context, o: Exp.LitS64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitU8(ctx: Context, o: Exp.LitU8): Result[Context, Exp] = {
+    @pure def postExpLitU8(ctx: Context, o: Exp.LitU8): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitU16(ctx: Context, o: Exp.LitU16): Result[Context, Exp] = {
+    @pure def postExpLitU16(ctx: Context, o: Exp.LitU16): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitU32(ctx: Context, o: Exp.LitU32): Result[Context, Exp] = {
+    @pure def postExpLitU32(ctx: Context, o: Exp.LitU32): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitU64(ctx: Context, o: Exp.LitU64): Result[Context, Exp] = {
+    @pure def postExpLitU64(ctx: Context, o: Exp.LitU64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitF32(ctx: Context, o: Exp.LitF32): Result[Context, Exp] = {
+    @pure def postExpLitF32(ctx: Context, o: Exp.LitF32): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitF64(ctx: Context, o: Exp.LitF64): Result[Context, Exp] = {
+    @pure def postExpLitF64(ctx: Context, o: Exp.LitF64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitR(ctx: Context, o: Exp.LitR): Result[Context, Exp] = {
+    @pure def postExpLitR(ctx: Context, o: Exp.LitR): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitBv(ctx: Context, o: Exp.LitBv): Result[Context, Exp] = {
+    @pure def postExpLitBv(ctx: Context, o: Exp.LitBv): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp] = {
+    @pure def postExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpStringInterpolate(ctx: Context, o: Exp.StringInterpolate): Result[Context, Exp] = {
+    @pure def postExpStringInterpolate(ctx: Context, o: Exp.StringInterpolate): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpThis(ctx: Context, o: Exp.This): Result[Context, Exp] = {
+    @pure def postExpThis(ctx: Context, o: Exp.This): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpUnary(ctx: Context, o: Exp.Unary): Result[Context, Exp] = {
+    @pure def postExpUnary(ctx: Context, o: Exp.Unary): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpBinary(ctx: Context, o: Exp.Binary): Result[Context, Exp] = {
+    @pure def postExpBinary(ctx: Context, o: Exp.Binary): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpIdent(ctx: Context, o: Exp.Ident): Result[Context, Exp] = {
+    @pure def postExpIdent(ctx: Context, o: Exp.Ident): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpEta(ctx: Context, o: Exp.Eta): Result[Context, Exp] = {
+    @pure def postExpEta(ctx: Context, o: Exp.Eta): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpTuple(ctx: Context, o: Exp.Tuple): Result[Context, Exp] = {
+    @pure def postExpTuple(ctx: Context, o: Exp.Tuple): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpSelect(ctx: Context, o: Exp.Select): Result[Context, Exp] = {
+    @pure def postExpSelect(ctx: Context, o: Exp.Select): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpInvoke(ctx: Context, o: Exp.Invoke): Result[Context, Exp] = {
+    @pure def postExpInvoke(ctx: Context, o: Exp.Invoke): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpInvokeNamed(ctx: Context, o: Exp.InvokeNamed): Result[Context, Exp] = {
+    @pure def postExpInvokeNamed(ctx: Context, o: Exp.InvokeNamed): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpIf(ctx: Context, o: Exp.If): Result[Context, Exp] = {
+    @pure def postExpIf(ctx: Context, o: Exp.If): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformExpQuant(ctx: Context, o: Exp.Quant): Result[Context, Exp] = {
+    @pure def postExpQuant(ctx: Context, o: Exp.Quant): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
-    @pure def transformNamedArg(ctx: Context, o: NamedArg): Result[Context, NamedArg] = {
+    @pure def postNamedArg(ctx: Context, o: NamedArg): Result[Context, NamedArg] = {
       return Result(ctx, None())
     }
 
-    @pure def transformVarFragment(ctx: Context, o: VarFragment): Result[Context, VarFragment] = {
+    @pure def postVarFragment(ctx: Context, o: VarFragment): Result[Context, VarFragment] = {
       return Result(ctx, None())
     }
 
-    @pure def transformDomain(ctx: Context, o: Domain): Result[Context, Domain] = {
+    @pure def postDomain(ctx: Context, o: Domain): Result[Context, Domain] = {
       o match {
-        case o: Domain.Type => return transformDomainType(ctx, o)
-        case o: Domain.Range => return transformDomainRange(ctx, o)
+        case o: Domain.Type => return postDomainType(ctx, o)
+        case o: Domain.Range => return postDomainRange(ctx, o)
       }
     }
 
-    @pure def transformDomainType(ctx: Context, o: Domain.Type): Result[Context, Domain] = {
+    @pure def postDomainType(ctx: Context, o: Domain.Type): Result[Context, Domain] = {
       return Result(ctx, None())
     }
 
-    @pure def transformDomainRange(ctx: Context, o: Domain.Range): Result[Context, Domain] = {
+    @pure def postDomainRange(ctx: Context, o: Domain.Range): Result[Context, Domain] = {
       return Result(ctx, None())
     }
 
-    @pure def transformId(ctx: Context, o: Id): Result[Context, Id] = {
+    @pure def postId(ctx: Context, o: Id): Result[Context, Id] = {
       return Result(ctx, None())
     }
 
-    @pure def transformName(ctx: Context, o: Name): Result[Context, Name] = {
+    @pure def postName(ctx: Context, o: Name): Result[Context, Name] = {
       return Result(ctx, None())
     }
 
-    @pure def transformBody(ctx: Context, o: Body): Result[Context, Body] = {
+    @pure def postBody(ctx: Context, o: Body): Result[Context, Body] = {
       return Result(ctx, None())
     }
 
-    @pure def transformAbstractDatatypeParam(ctx: Context, o: AbstractDatatypeParam): Result[Context, AbstractDatatypeParam] = {
+    @pure def postAbstractDatatypeParam(ctx: Context, o: AbstractDatatypeParam): Result[Context, AbstractDatatypeParam] = {
       return Result(ctx, None())
     }
 
-    @pure def transformMethodSig(ctx: Context, o: MethodSig): Result[Context, MethodSig] = {
+    @pure def postMethodSig(ctx: Context, o: MethodSig): Result[Context, MethodSig] = {
       return Result(ctx, None())
     }
 
-    @pure def transformParam(ctx: Context, o: Param): Result[Context, Param] = {
+    @pure def postParam(ctx: Context, o: Param): Result[Context, Param] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTypeParam(ctx: Context, o: TypeParam): Result[Context, TypeParam] = {
+    @pure def postTypeParam(ctx: Context, o: TypeParam): Result[Context, TypeParam] = {
       return Result(ctx, None())
     }
 
-    @pure def transformContract(ctx: Context, o: Contract): Result[Context, Contract] = {
+    @pure def postContract(ctx: Context, o: Contract): Result[Context, Contract] = {
       return Result(ctx, None())
     }
 
-    @pure def transformSubContract(ctx: Context, o: SubContract): Result[Context, SubContract] = {
+    @pure def postSubContract(ctx: Context, o: SubContract): Result[Context, SubContract] = {
       return Result(ctx, None())
     }
 
-    @pure def transformSubContractParam(ctx: Context, o: SubContractParam): Result[Context, SubContractParam] = {
+    @pure def postSubContractParam(ctx: Context, o: SubContractParam): Result[Context, SubContractParam] = {
       return Result(ctx, None())
     }
 
-    @pure def transformWhereDef(ctx: Context, o: WhereDef): Result[Context, WhereDef] = {
+    @pure def postWhereDef(ctx: Context, o: WhereDef): Result[Context, WhereDef] = {
       o match {
-        case o: WhereDef.Val => return transformWhereDefVal(ctx, o)
-        case o: WhereDef.Def => return transformWhereDefDef(ctx, o)
+        case o: WhereDef.Val => return postWhereDefVal(ctx, o)
+        case o: WhereDef.Def => return postWhereDefDef(ctx, o)
       }
     }
 
-    @pure def transformWhereDefVal(ctx: Context, o: WhereDef.Val): Result[Context, WhereDef] = {
+    @pure def postWhereDefVal(ctx: Context, o: WhereDef.Val): Result[Context, WhereDef] = {
       return Result(ctx, None())
     }
 
-    @pure def transformWhereDefDef(ctx: Context, o: WhereDef.Def): Result[Context, WhereDef] = {
+    @pure def postWhereDefDef(ctx: Context, o: WhereDef.Def): Result[Context, WhereDef] = {
       return Result(ctx, None())
     }
 
-    @pure def transformSpecDef(ctx: Context, o: SpecDef): Result[Context, SpecDef] = {
+    @pure def postSpecDef(ctx: Context, o: SpecDef): Result[Context, SpecDef] = {
       return Result(ctx, None())
     }
 
-    @pure def transformProofStep(ctx: Context, o: ProofStep): Result[Context, ProofStep] = {
+    @pure def postProofStep(ctx: Context, o: ProofStep): Result[Context, ProofStep] = {
       o match {
-        case o: ProofStep.Basic => return transformProofStepBasic(ctx, o)
-        case o: ProofStep.SubProof => return transformProofStepSubProof(ctx, o)
+        case o: ProofStep.Basic => return postProofStepBasic(ctx, o)
+        case o: ProofStep.SubProof => return postProofStepSubProof(ctx, o)
       }
     }
 
-    @pure def transformProofStepBasic(ctx: Context, o: ProofStep.Basic): Result[Context, ProofStep] = {
+    @pure def postProofStepBasic(ctx: Context, o: ProofStep.Basic): Result[Context, ProofStep] = {
       return Result(ctx, None())
     }
 
-    @pure def transformProofStepSubProof(ctx: Context, o: ProofStep.SubProof): Result[Context, ProofStep] = {
+    @pure def postProofStepSubProof(ctx: Context, o: ProofStep.SubProof): Result[Context, ProofStep] = {
       return Result(ctx, None())
     }
 
-    @pure def transformAssumeProofStep(ctx: Context, o: AssumeProofStep): Result[Context, AssumeProofStep] = {
+    @pure def postAssumeProofStep(ctx: Context, o: AssumeProofStep): Result[Context, AssumeProofStep] = {
       o match {
-        case o: AssumeProofStep.Regular => return transformAssumeProofStepRegular(ctx, o)
-        case o: AssumeProofStep.ForallIntroAps => return transformAssumeProofStepForallIntroAps(ctx, o)
-        case o: AssumeProofStep.ExistsElimAps => return transformAssumeProofStepExistsElimAps(ctx, o)
+        case o: AssumeProofStep.Regular => return postAssumeProofStepRegular(ctx, o)
+        case o: AssumeProofStep.ForallIntroAps => return postAssumeProofStepForallIntroAps(ctx, o)
+        case o: AssumeProofStep.ExistsElimAps => return postAssumeProofStepExistsElimAps(ctx, o)
       }
     }
 
-    @pure def transformAssumeProofStepRegular(ctx: Context, o: AssumeProofStep.Regular): Result[Context, AssumeProofStep] = {
+    @pure def postAssumeProofStepRegular(ctx: Context, o: AssumeProofStep.Regular): Result[Context, AssumeProofStep] = {
       return Result(ctx, None())
     }
 
-    @pure def transformAssumeProofStepForallIntroAps(ctx: Context, o: AssumeProofStep.ForallIntroAps): Result[Context, AssumeProofStep] = {
+    @pure def postAssumeProofStepForallIntroAps(ctx: Context, o: AssumeProofStep.ForallIntroAps): Result[Context, AssumeProofStep] = {
       return Result(ctx, None())
     }
 
-    @pure def transformAssumeProofStepExistsElimAps(ctx: Context, o: AssumeProofStep.ExistsElimAps): Result[Context, AssumeProofStep] = {
+    @pure def postAssumeProofStepExistsElimAps(ctx: Context, o: AssumeProofStep.ExistsElimAps): Result[Context, AssumeProofStep] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJust(ctx: Context, o: Just): Result[Context, Just] = {
+    @pure def postJust(ctx: Context, o: Just): Result[Context, Just] = {
       o match {
-        case o: Just.Premise => return transformJustPremise(ctx, o)
-        case o: Just.AndIntro => return transformJustAndIntro(ctx, o)
-        case o: Just.AndElim => return transformJustAndElim(ctx, o)
-        case o: Just.OrIntro => return transformJustOrIntro(ctx, o)
-        case o: Just.OrElim => return transformJustOrElim(ctx, o)
-        case o: Just.ImplyIntro => return transformJustImplyIntro(ctx, o)
-        case o: Just.ImplyElim => return transformJustImplyElim(ctx, o)
-        case o: Just.NegIntro => return transformJustNegIntro(ctx, o)
-        case o: Just.NegElim => return transformJustNegElim(ctx, o)
-        case o: Just.BottomElim => return transformJustBottomElim(ctx, o)
-        case o: Just.Pbc => return transformJustPbc(ctx, o)
-        case o: Just.ForallIntro => return transformJustForallIntro(ctx, o)
-        case o: Just.ForallElim => return transformJustForallElim(ctx, o)
-        case o: Just.ExistsIntro => return transformJustExistsIntro(ctx, o)
-        case o: Just.ExistsElim => return transformJustExistsElim(ctx, o)
-        case o: Just.Fact => return transformJustFact(ctx, o)
-        case o: Just.Invariant => return transformJustInvariant(ctx, o)
-        case o: Just.Subst => return transformJustSubst(ctx, o)
-        case o: Just.Auto => return transformJustAuto(ctx, o)
-        case o: Just.Coq => return transformJustCoq(ctx, o)
+        case o: Just.Premise => return postJustPremise(ctx, o)
+        case o: Just.AndIntro => return postJustAndIntro(ctx, o)
+        case o: Just.AndElim => return postJustAndElim(ctx, o)
+        case o: Just.OrIntro => return postJustOrIntro(ctx, o)
+        case o: Just.OrElim => return postJustOrElim(ctx, o)
+        case o: Just.ImplyIntro => return postJustImplyIntro(ctx, o)
+        case o: Just.ImplyElim => return postJustImplyElim(ctx, o)
+        case o: Just.NegIntro => return postJustNegIntro(ctx, o)
+        case o: Just.NegElim => return postJustNegElim(ctx, o)
+        case o: Just.BottomElim => return postJustBottomElim(ctx, o)
+        case o: Just.Pbc => return postJustPbc(ctx, o)
+        case o: Just.ForallIntro => return postJustForallIntro(ctx, o)
+        case o: Just.ForallElim => return postJustForallElim(ctx, o)
+        case o: Just.ExistsIntro => return postJustExistsIntro(ctx, o)
+        case o: Just.ExistsElim => return postJustExistsElim(ctx, o)
+        case o: Just.Fact => return postJustFact(ctx, o)
+        case o: Just.Invariant => return postJustInvariant(ctx, o)
+        case o: Just.Subst => return postJustSubst(ctx, o)
+        case o: Just.Auto => return postJustAuto(ctx, o)
+        case o: Just.Coq => return postJustCoq(ctx, o)
       }
     }
 
-    @pure def transformJustPremise(ctx: Context, o: Just.Premise): Result[Context, Just] = {
+    @pure def postJustPremise(ctx: Context, o: Just.Premise): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustAndIntro(ctx: Context, o: Just.AndIntro): Result[Context, Just] = {
+    @pure def postJustAndIntro(ctx: Context, o: Just.AndIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustAndElim(ctx: Context, o: Just.AndElim): Result[Context, Just] = {
+    @pure def postJustAndElim(ctx: Context, o: Just.AndElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustOrIntro(ctx: Context, o: Just.OrIntro): Result[Context, Just] = {
+    @pure def postJustOrIntro(ctx: Context, o: Just.OrIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustOrElim(ctx: Context, o: Just.OrElim): Result[Context, Just] = {
+    @pure def postJustOrElim(ctx: Context, o: Just.OrElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustImplyIntro(ctx: Context, o: Just.ImplyIntro): Result[Context, Just] = {
+    @pure def postJustImplyIntro(ctx: Context, o: Just.ImplyIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustImplyElim(ctx: Context, o: Just.ImplyElim): Result[Context, Just] = {
+    @pure def postJustImplyElim(ctx: Context, o: Just.ImplyElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustNegIntro(ctx: Context, o: Just.NegIntro): Result[Context, Just] = {
+    @pure def postJustNegIntro(ctx: Context, o: Just.NegIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustNegElim(ctx: Context, o: Just.NegElim): Result[Context, Just] = {
+    @pure def postJustNegElim(ctx: Context, o: Just.NegElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustBottomElim(ctx: Context, o: Just.BottomElim): Result[Context, Just] = {
+    @pure def postJustBottomElim(ctx: Context, o: Just.BottomElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustPbc(ctx: Context, o: Just.Pbc): Result[Context, Just] = {
+    @pure def postJustPbc(ctx: Context, o: Just.Pbc): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustForallIntro(ctx: Context, o: Just.ForallIntro): Result[Context, Just] = {
+    @pure def postJustForallIntro(ctx: Context, o: Just.ForallIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustForallElim(ctx: Context, o: Just.ForallElim): Result[Context, Just] = {
+    @pure def postJustForallElim(ctx: Context, o: Just.ForallElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustExistsIntro(ctx: Context, o: Just.ExistsIntro): Result[Context, Just] = {
+    @pure def postJustExistsIntro(ctx: Context, o: Just.ExistsIntro): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustExistsElim(ctx: Context, o: Just.ExistsElim): Result[Context, Just] = {
+    @pure def postJustExistsElim(ctx: Context, o: Just.ExistsElim): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustFact(ctx: Context, o: Just.Fact): Result[Context, Just] = {
+    @pure def postJustFact(ctx: Context, o: Just.Fact): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustInvariant(ctx: Context, o: Just.Invariant): Result[Context, Just] = {
+    @pure def postJustInvariant(ctx: Context, o: Just.Invariant): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustSubst(ctx: Context, o: Just.Subst): Result[Context, Just] = {
+    @pure def postJustSubst(ctx: Context, o: Just.Subst): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustAuto(ctx: Context, o: Just.Auto): Result[Context, Just] = {
+    @pure def postJustAuto(ctx: Context, o: Just.Auto): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformJustCoq(ctx: Context, o: Just.Coq): Result[Context, Just] = {
+    @pure def postJustCoq(ctx: Context, o: Just.Coq): Result[Context, Just] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTableRow(ctx: Context, o: TruthTable.Row): Result[Context, TruthTable.Row] = {
+    @pure def postTruthTableRow(ctx: Context, o: TruthTable.Row): Result[Context, TruthTable.Row] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): Result[Context, TruthTable.Conclusion] = {
+    @pure def postTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): Result[Context, TruthTable.Conclusion] = {
       o match {
-        case o: TruthTable.Conclusion.Validity => return transformTruthTableConclusionValidity(ctx, o)
-        case o: TruthTable.Conclusion.Tautology => return transformTruthTableConclusionTautology(ctx, o)
-        case o: TruthTable.Conclusion.Contradictory => return transformTruthTableConclusionContradictory(ctx, o)
-        case o: TruthTable.Conclusion.Contingent => return transformTruthTableConclusionContingent(ctx, o)
+        case o: TruthTable.Conclusion.Validity => return postTruthTableConclusionValidity(ctx, o)
+        case o: TruthTable.Conclusion.Tautology => return postTruthTableConclusionTautology(ctx, o)
+        case o: TruthTable.Conclusion.Contradictory => return postTruthTableConclusionContradictory(ctx, o)
+        case o: TruthTable.Conclusion.Contingent => return postTruthTableConclusionContingent(ctx, o)
       }
     }
 
-    @pure def transformTruthTableConclusionValidity(ctx: Context, o: TruthTable.Conclusion.Validity): Result[Context, TruthTable.Conclusion] = {
+    @pure def postTruthTableConclusionValidity(ctx: Context, o: TruthTable.Conclusion.Validity): Result[Context, TruthTable.Conclusion] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTableConclusionTautology(ctx: Context, o: TruthTable.Conclusion.Tautology): Result[Context, TruthTable.Conclusion] = {
+    @pure def postTruthTableConclusionTautology(ctx: Context, o: TruthTable.Conclusion.Tautology): Result[Context, TruthTable.Conclusion] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTableConclusionContradictory(ctx: Context, o: TruthTable.Conclusion.Contradictory): Result[Context, TruthTable.Conclusion] = {
+    @pure def postTruthTableConclusionContradictory(ctx: Context, o: TruthTable.Conclusion.Contradictory): Result[Context, TruthTable.Conclusion] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTruthTableConclusionContingent(ctx: Context, o: TruthTable.Conclusion.Contingent): Result[Context, TruthTable.Conclusion] = {
+    @pure def postTruthTableConclusionContingent(ctx: Context, o: TruthTable.Conclusion.Contingent): Result[Context, TruthTable.Conclusion] = {
       return Result(ctx, None())
     }
 
-    @pure def transformAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
+    @pure def postAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
       return Result(ctx, None())
     }
 
-    @pure def transformTypedAttr(ctx: Context, o: TypedAttr): Result[Context, TypedAttr] = {
+    @pure def postTypedAttr(ctx: Context, o: TypedAttr): Result[Context, TypedAttr] = {
       return Result(ctx, None())
     }
 
-    @pure def transformResolvedAttr(ctx: Context, o: ResolvedAttr): Result[Context, ResolvedAttr] = {
+    @pure def postResolvedAttr(ctx: Context, o: ResolvedAttr): Result[Context, ResolvedAttr] = {
       return Result(ctx, None())
     }
 
-    @pure def transformResolvedInfo(ctx: Context, o: ResolvedInfo): Result[Context, ResolvedInfo] = {
+    @pure def postResolvedInfo(ctx: Context, o: ResolvedInfo): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
-    @pure def transformPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
+    @pure def postPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
       return Result(ctx, None())
     }
-
   }
 
   @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
@@ -1593,10 +1588,10 @@ object Transformer {
 
 import Transformer._
 
-@record class Transformer[Context](pre: Pre[Context], post: Post[Context]) {
+@record class Transformer[Context](pp: PrePost[Context]) {
 
   @pure def transformTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
-    val preR: PreResult[Context, TopUnit] = pre.transformTopUnit(ctx, o)
+    val preR: PreResult[Context, TopUnit] = pp.preTopUnit(ctx, o)
     val r: Result[Context, TopUnit] = if (preR.continue) {
       val o2: TopUnit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1632,7 +1627,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TopUnit = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, TopUnit] = post.transformTopUnit(r.ctx, o2)
+    val postR: Result[Context, TopUnit] = pp.postTopUnit(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1643,7 +1638,7 @@ import Transformer._
   }
 
   @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause.Sequent] = {
-    val preR: PreResult[Context, LClause.Sequent] = pre.transformLClauseSequent(ctx, o) match {
+    val preR: PreResult[Context, LClause.Sequent] = pp.preLClauseSequent(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: LClause.Sequent)) => PreResult(preCtx, continue, Some[LClause.Sequent](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Sequent]())
     }
@@ -1664,7 +1659,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: LClause.Sequent = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Sequent] = post.transformLClauseSequent(r.ctx, o2) match {
+    val postR: Result[Context, LClause.Sequent] = pp.postLClauseSequent(r.ctx, o2) match {
       case Result(postCtx, Some(result: LClause.Sequent)) => Result(postCtx, Some[LClause.Sequent](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Sequent]())
     }
@@ -1678,7 +1673,7 @@ import Transformer._
   }
 
   @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause.Proof] = {
-    val preR: PreResult[Context, LClause.Proof] = pre.transformLClauseProof(ctx, o) match {
+    val preR: PreResult[Context, LClause.Proof] = pp.preLClauseProof(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: LClause.Proof)) => PreResult(preCtx, continue, Some[LClause.Proof](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Proof]())
     }
@@ -1697,7 +1692,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: LClause.Proof = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Proof] = post.transformLClauseProof(r.ctx, o2) match {
+    val postR: Result[Context, LClause.Proof] = pp.postLClauseProof(r.ctx, o2) match {
       case Result(postCtx, Some(result: LClause.Proof)) => Result(postCtx, Some[LClause.Proof](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Proof]())
     }
@@ -1711,7 +1706,7 @@ import Transformer._
   }
 
   @pure def transformStmt(ctx: Context, o: Stmt): Result[Context, Stmt] = {
-    val preR: PreResult[Context, Stmt] = pre.transformStmt(ctx, o)
+    val preR: PreResult[Context, Stmt] = pp.preStmt(ctx, o)
     val r: Result[Context, Stmt] = if (preR.continue) {
       val o2: Stmt = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1939,7 +1934,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Stmt = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Stmt] = post.transformStmt(r.ctx, o2)
+    val postR: Result[Context, Stmt] = pp.postStmt(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1950,7 +1945,7 @@ import Transformer._
   }
 
   @pure def transformTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type.Named] = {
-    val preR: PreResult[Context, Type.Named] = pre.transformTypeNamed(ctx, o) match {
+    val preR: PreResult[Context, Type.Named] = pp.preTypeNamed(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: Type.Named)) => PreResult(preCtx, continue, Some[Type.Named](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Type.Named]())
     }
@@ -1971,7 +1966,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Type.Named = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Type.Named] = post.transformTypeNamed(r.ctx, o2) match {
+    val postR: Result[Context, Type.Named] = pp.postTypeNamed(r.ctx, o2) match {
       case Result(postCtx, Some(result: Type.Named)) => Result(postCtx, Some[Type.Named](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[Type.Named]())
     }
@@ -1985,7 +1980,7 @@ import Transformer._
   }
 
   @pure def transformStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): Result[Context, Stmt.Import.Importer] = {
-    val preR: PreResult[Context, Stmt.Import.Importer] = pre.transformStmtImportImporter(ctx, o)
+    val preR: PreResult[Context, Stmt.Import.Importer] = pp.preStmtImportImporter(ctx, o)
     val r: Result[Context, Stmt.Import.Importer] = if (preR.continue) {
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2002,7 +1997,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Stmt.Import.Importer = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Stmt.Import.Importer] = post.transformStmtImportImporter(r.ctx, o2)
+    val postR: Result[Context, Stmt.Import.Importer] = pp.postStmtImportImporter(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2013,7 +2008,7 @@ import Transformer._
   }
 
   @pure def transformStmtImportSelector(ctx: Context, o: Stmt.Import.Selector): Result[Context, Stmt.Import.Selector] = {
-    val preR: PreResult[Context, Stmt.Import.Selector] = pre.transformStmtImportSelector(ctx, o)
+    val preR: PreResult[Context, Stmt.Import.Selector] = pp.preStmtImportSelector(ctx, o)
     val r: Result[Context, Stmt.Import.Selector] = if (preR.continue) {
       val o2: Stmt.Import.Selector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2038,7 +2033,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Stmt.Import.Selector = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Stmt.Import.Selector] = post.transformStmtImportSelector(r.ctx, o2)
+    val postR: Result[Context, Stmt.Import.Selector] = pp.postStmtImportSelector(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2049,7 +2044,7 @@ import Transformer._
   }
 
   @pure def transformStmtImportNamedSelector(ctx: Context, o: Stmt.Import.NamedSelector): Result[Context, Stmt.Import.NamedSelector] = {
-    val preR: PreResult[Context, Stmt.Import.NamedSelector] = pre.transformStmtImportNamedSelector(ctx, o)
+    val preR: PreResult[Context, Stmt.Import.NamedSelector] = pp.preStmtImportNamedSelector(ctx, o)
     val r: Result[Context, Stmt.Import.NamedSelector] = if (preR.continue) {
       val o2: Stmt.Import.NamedSelector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2066,7 +2061,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Stmt.Import.NamedSelector = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Stmt.Import.NamedSelector] = post.transformStmtImportNamedSelector(r.ctx, o2)
+    val postR: Result[Context, Stmt.Import.NamedSelector] = pp.postStmtImportNamedSelector(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2077,7 +2072,7 @@ import Transformer._
   }
 
   @pure def transformLClause(ctx: Context, o: LClause): Result[Context, LClause] = {
-    val preR: PreResult[Context, LClause] = pre.transformLClause(ctx, o)
+    val preR: PreResult[Context, LClause] = pp.preLClause(ctx, o)
     val r: Result[Context, LClause] = if (preR.continue) {
       val o2: LClause = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2123,7 +2118,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: LClause = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause] = post.transformLClause(r.ctx, o2)
+    val postR: Result[Context, LClause] = pp.postLClause(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2134,7 +2129,7 @@ import Transformer._
   }
 
   @pure def transformLClauseFact(ctx: Context, o: LClause.Fact): Result[Context, LClause.Fact] = {
-    val preR: PreResult[Context, LClause.Fact] = pre.transformLClauseFact(ctx, o)
+    val preR: PreResult[Context, LClause.Fact] = pp.preLClauseFact(ctx, o)
     val r: Result[Context, LClause.Fact] = if (preR.continue) {
       val o2: LClause.Fact = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2151,7 +2146,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: LClause.Fact = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Fact] = post.transformLClauseFact(r.ctx, o2)
+    val postR: Result[Context, LClause.Fact] = pp.postLClauseFact(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2162,7 +2157,7 @@ import Transformer._
   }
 
   @pure def transformLClauseTheorem(ctx: Context, o: LClause.Theorem): Result[Context, LClause.Theorem] = {
-    val preR: PreResult[Context, LClause.Theorem] = pre.transformLClauseTheorem(ctx, o)
+    val preR: PreResult[Context, LClause.Theorem] = pp.preLClauseTheorem(ctx, o)
     val r: Result[Context, LClause.Theorem] = if (preR.continue) {
       val o2: LClause.Theorem = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2179,7 +2174,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: LClause.Theorem = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Theorem] = post.transformLClauseTheorem(r.ctx, o2)
+    val postR: Result[Context, LClause.Theorem] = pp.postLClauseTheorem(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2190,7 +2185,7 @@ import Transformer._
   }
 
   @pure def transformContractExp(ctx: Context, o: ContractExp): Result[Context, ContractExp] = {
-    val preR: PreResult[Context, ContractExp] = pre.transformContractExp(ctx, o)
+    val preR: PreResult[Context, ContractExp] = pp.preContractExp(ctx, o)
     val r: Result[Context, ContractExp] = if (preR.continue) {
       val o2: ContractExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2207,7 +2202,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: ContractExp = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, ContractExp] = post.transformContractExp(r.ctx, o2)
+    val postR: Result[Context, ContractExp] = pp.postContractExp(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2218,7 +2213,7 @@ import Transformer._
   }
 
   @pure def transformCase(ctx: Context, o: Case): Result[Context, Case] = {
-    val preR: PreResult[Context, Case] = pre.transformCase(ctx, o)
+    val preR: PreResult[Context, Case] = pp.preCase(ctx, o)
     val r: Result[Context, Case] = if (preR.continue) {
       val o2: Case = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2236,7 +2231,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Case = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Case] = post.transformCase(r.ctx, o2)
+    val postR: Result[Context, Case] = pp.postCase(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2247,7 +2242,7 @@ import Transformer._
   }
 
   @pure def transformRange(ctx: Context, o: Range): Result[Context, Range] = {
-    val preR: PreResult[Context, Range] = pre.transformRange(ctx, o)
+    val preR: PreResult[Context, Range] = pp.preRange(ctx, o)
     val r: Result[Context, Range] = if (preR.continue) {
       val o2: Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2281,7 +2276,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Range = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Range] = post.transformRange(r.ctx, o2)
+    val postR: Result[Context, Range] = pp.postRange(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2292,7 +2287,7 @@ import Transformer._
   }
 
   @pure def transformType(ctx: Context, o: Type): Result[Context, Type] = {
-    val preR: PreResult[Context, Type] = pre.transformType(ctx, o)
+    val preR: PreResult[Context, Type] = pp.preType(ctx, o)
     val r: Result[Context, Type] = if (preR.continue) {
       val o2: Type = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2329,7 +2324,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Type = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Type] = post.transformType(r.ctx, o2)
+    val postR: Result[Context, Type] = pp.postType(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2340,7 +2335,7 @@ import Transformer._
   }
 
   @pure def transformPattern(ctx: Context, o: Pattern): Result[Context, Pattern] = {
-    val preR: PreResult[Context, Pattern] = pre.transformPattern(ctx, o)
+    val preR: PreResult[Context, Pattern] = pp.prePattern(ctx, o)
     val r: Result[Context, Pattern] = if (preR.continue) {
       val o2: Pattern = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2391,7 +2386,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Pattern = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Pattern] = post.transformPattern(r.ctx, o2)
+    val postR: Result[Context, Pattern] = pp.postPattern(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2402,7 +2397,7 @@ import Transformer._
   }
 
   @pure def transformExp(ctx: Context, o: Exp): Result[Context, Exp] = {
-    val preR: PreResult[Context, Exp] = pre.transformExp(ctx, o)
+    val preR: PreResult[Context, Exp] = pp.preExp(ctx, o)
     val r: Result[Context, Exp] = if (preR.continue) {
       val o2: Exp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2662,7 +2657,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp] = post.transformExp(r.ctx, o2)
+    val postR: Result[Context, Exp] = pp.postExp(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2673,7 +2668,7 @@ import Transformer._
   }
 
   @pure def transformExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp.LitString] = {
-    val preR: PreResult[Context, Exp.LitString] = pre.transformExpLitString(ctx, o) match {
+    val preR: PreResult[Context, Exp.LitString] = pp.preExpLitString(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: Exp.LitString)) => PreResult(preCtx, continue, Some[Exp.LitString](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitString]())
     }
@@ -2692,7 +2687,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp.LitString = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitString] = post.transformExpLitString(r.ctx, o2) match {
+    val postR: Result[Context, Exp.LitString] = pp.postExpLitString(r.ctx, o2) match {
       case Result(postCtx, Some(result: Exp.LitString)) => Result(postCtx, Some[Exp.LitString](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitString]())
     }
@@ -2706,7 +2701,7 @@ import Transformer._
   }
 
   @pure def transformNamedArg(ctx: Context, o: NamedArg): Result[Context, NamedArg] = {
-    val preR: PreResult[Context, NamedArg] = pre.transformNamedArg(ctx, o)
+    val preR: PreResult[Context, NamedArg] = pp.preNamedArg(ctx, o)
     val r: Result[Context, NamedArg] = if (preR.continue) {
       val o2: NamedArg = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2723,7 +2718,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: NamedArg = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, NamedArg] = post.transformNamedArg(r.ctx, o2)
+    val postR: Result[Context, NamedArg] = pp.postNamedArg(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2734,7 +2729,7 @@ import Transformer._
   }
 
   @pure def transformVarFragment(ctx: Context, o: VarFragment): Result[Context, VarFragment] = {
-    val preR: PreResult[Context, VarFragment] = pre.transformVarFragment(ctx, o)
+    val preR: PreResult[Context, VarFragment] = pp.preVarFragment(ctx, o)
     val r: Result[Context, VarFragment] = if (preR.continue) {
       val o2: VarFragment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2751,7 +2746,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: VarFragment = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, VarFragment] = post.transformVarFragment(r.ctx, o2)
+    val postR: Result[Context, VarFragment] = pp.postVarFragment(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2762,7 +2757,7 @@ import Transformer._
   }
 
   @pure def transformDomain(ctx: Context, o: Domain): Result[Context, Domain] = {
-    val preR: PreResult[Context, Domain] = pre.transformDomain(ctx, o)
+    val preR: PreResult[Context, Domain] = pp.preDomain(ctx, o)
     val r: Result[Context, Domain] = if (preR.continue) {
       val o2: Domain = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2791,7 +2786,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Domain = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Domain] = post.transformDomain(r.ctx, o2)
+    val postR: Result[Context, Domain] = pp.postDomain(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2802,7 +2797,7 @@ import Transformer._
   }
 
   @pure def transformId(ctx: Context, o: Id): Result[Context, Id] = {
-    val preR: PreResult[Context, Id] = pre.transformId(ctx, o)
+    val preR: PreResult[Context, Id] = pp.preId(ctx, o)
     val r: Result[Context, Id] = if (preR.continue) {
       val o2: Id = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2818,7 +2813,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Id = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Id] = post.transformId(r.ctx, o2)
+    val postR: Result[Context, Id] = pp.postId(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2829,7 +2824,7 @@ import Transformer._
   }
 
   @pure def transformName(ctx: Context, o: Name): Result[Context, Name] = {
-    val preR: PreResult[Context, Name] = pre.transformName(ctx, o)
+    val preR: PreResult[Context, Name] = pp.preName(ctx, o)
     val r: Result[Context, Name] = if (preR.continue) {
       val o2: Name = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2846,7 +2841,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Name = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Name] = post.transformName(r.ctx, o2)
+    val postR: Result[Context, Name] = pp.postName(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2857,7 +2852,7 @@ import Transformer._
   }
 
   @pure def transformBody(ctx: Context, o: Body): Result[Context, Body] = {
-    val preR: PreResult[Context, Body] = pre.transformBody(ctx, o)
+    val preR: PreResult[Context, Body] = pp.preBody(ctx, o)
     val r: Result[Context, Body] = if (preR.continue) {
       val o2: Body = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2873,7 +2868,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Body = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Body] = post.transformBody(r.ctx, o2)
+    val postR: Result[Context, Body] = pp.postBody(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2884,7 +2879,7 @@ import Transformer._
   }
 
   @pure def transformAbstractDatatypeParam(ctx: Context, o: AbstractDatatypeParam): Result[Context, AbstractDatatypeParam] = {
-    val preR: PreResult[Context, AbstractDatatypeParam] = pre.transformAbstractDatatypeParam(ctx, o)
+    val preR: PreResult[Context, AbstractDatatypeParam] = pp.preAbstractDatatypeParam(ctx, o)
     val r: Result[Context, AbstractDatatypeParam] = if (preR.continue) {
       val o2: AbstractDatatypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2901,7 +2896,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: AbstractDatatypeParam = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, AbstractDatatypeParam] = post.transformAbstractDatatypeParam(r.ctx, o2)
+    val postR: Result[Context, AbstractDatatypeParam] = pp.postAbstractDatatypeParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2912,7 +2907,7 @@ import Transformer._
   }
 
   @pure def transformMethodSig(ctx: Context, o: MethodSig): Result[Context, MethodSig] = {
-    val preR: PreResult[Context, MethodSig] = pre.transformMethodSig(ctx, o)
+    val preR: PreResult[Context, MethodSig] = pp.preMethodSig(ctx, o)
     val r: Result[Context, MethodSig] = if (preR.continue) {
       val o2: MethodSig = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2930,7 +2925,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: MethodSig = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, MethodSig] = post.transformMethodSig(r.ctx, o2)
+    val postR: Result[Context, MethodSig] = pp.postMethodSig(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2941,7 +2936,7 @@ import Transformer._
   }
 
   @pure def transformParam(ctx: Context, o: Param): Result[Context, Param] = {
-    val preR: PreResult[Context, Param] = pre.transformParam(ctx, o)
+    val preR: PreResult[Context, Param] = pp.preParam(ctx, o)
     val r: Result[Context, Param] = if (preR.continue) {
       val o2: Param = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2958,7 +2953,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Param = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Param] = post.transformParam(r.ctx, o2)
+    val postR: Result[Context, Param] = pp.postParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2969,7 +2964,7 @@ import Transformer._
   }
 
   @pure def transformTypeParam(ctx: Context, o: TypeParam): Result[Context, TypeParam] = {
-    val preR: PreResult[Context, TypeParam] = pre.transformTypeParam(ctx, o)
+    val preR: PreResult[Context, TypeParam] = pp.preTypeParam(ctx, o)
     val r: Result[Context, TypeParam] = if (preR.continue) {
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2986,7 +2981,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TypeParam = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, TypeParam] = post.transformTypeParam(r.ctx, o2)
+    val postR: Result[Context, TypeParam] = pp.postTypeParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2997,7 +2992,7 @@ import Transformer._
   }
 
   @pure def transformContract(ctx: Context, o: Contract): Result[Context, Contract] = {
-    val preR: PreResult[Context, Contract] = pre.transformContract(ctx, o)
+    val preR: PreResult[Context, Contract] = pp.preContract(ctx, o)
     val r: Result[Context, Contract] = if (preR.continue) {
       val o2: Contract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3017,7 +3012,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Contract = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Contract] = post.transformContract(r.ctx, o2)
+    val postR: Result[Context, Contract] = pp.postContract(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3028,7 +3023,7 @@ import Transformer._
   }
 
   @pure def transformSubContract(ctx: Context, o: SubContract): Result[Context, SubContract] = {
-    val preR: PreResult[Context, SubContract] = pre.transformSubContract(ctx, o)
+    val preR: PreResult[Context, SubContract] = pp.preSubContract(ctx, o)
     val r: Result[Context, SubContract] = if (preR.continue) {
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3046,7 +3041,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: SubContract = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, SubContract] = post.transformSubContract(r.ctx, o2)
+    val postR: Result[Context, SubContract] = pp.postSubContract(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3057,7 +3052,7 @@ import Transformer._
   }
 
   @pure def transformSubContractParam(ctx: Context, o: SubContractParam): Result[Context, SubContractParam] = {
-    val preR: PreResult[Context, SubContractParam] = pre.transformSubContractParam(ctx, o)
+    val preR: PreResult[Context, SubContractParam] = pp.preSubContractParam(ctx, o)
     val r: Result[Context, SubContractParam] = if (preR.continue) {
       val o2: SubContractParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3073,7 +3068,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: SubContractParam = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, SubContractParam] = post.transformSubContractParam(r.ctx, o2)
+    val postR: Result[Context, SubContractParam] = pp.postSubContractParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3084,7 +3079,7 @@ import Transformer._
   }
 
   @pure def transformWhereDef(ctx: Context, o: WhereDef): Result[Context, WhereDef] = {
-    val preR: PreResult[Context, WhereDef] = pre.transformWhereDef(ctx, o)
+    val preR: PreResult[Context, WhereDef] = pp.preWhereDef(ctx, o)
     val r: Result[Context, WhereDef] = if (preR.continue) {
       val o2: WhereDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3115,7 +3110,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: WhereDef = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, WhereDef] = post.transformWhereDef(r.ctx, o2)
+    val postR: Result[Context, WhereDef] = pp.postWhereDef(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3126,7 +3121,7 @@ import Transformer._
   }
 
   @pure def transformSpecDef(ctx: Context, o: SpecDef): Result[Context, SpecDef] = {
-    val preR: PreResult[Context, SpecDef] = pre.transformSpecDef(ctx, o)
+    val preR: PreResult[Context, SpecDef] = pp.preSpecDef(ctx, o)
     val r: Result[Context, SpecDef] = if (preR.continue) {
       val o2: SpecDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3145,7 +3140,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: SpecDef = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, SpecDef] = post.transformSpecDef(r.ctx, o2)
+    val postR: Result[Context, SpecDef] = pp.postSpecDef(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3156,7 +3151,7 @@ import Transformer._
   }
 
   @pure def transformProofStep(ctx: Context, o: ProofStep): Result[Context, ProofStep] = {
-    val preR: PreResult[Context, ProofStep] = pre.transformProofStep(ctx, o)
+    val preR: PreResult[Context, ProofStep] = pp.preProofStep(ctx, o)
     val r: Result[Context, ProofStep] = if (preR.continue) {
       val o2: ProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3186,7 +3181,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: ProofStep = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, ProofStep] = post.transformProofStep(r.ctx, o2)
+    val postR: Result[Context, ProofStep] = pp.postProofStep(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3197,7 +3192,7 @@ import Transformer._
   }
 
   @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp.LitZ] = {
-    val preR: PreResult[Context, Exp.LitZ] = pre.transformExpLitZ(ctx, o) match {
+    val preR: PreResult[Context, Exp.LitZ] = pp.preExpLitZ(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: Exp.LitZ)) => PreResult(preCtx, continue, Some[Exp.LitZ](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitZ]())
     }
@@ -3216,7 +3211,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp.LitZ = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitZ] = post.transformExpLitZ(r.ctx, o2) match {
+    val postR: Result[Context, Exp.LitZ] = pp.postExpLitZ(r.ctx, o2) match {
       case Result(postCtx, Some(result: Exp.LitZ)) => Result(postCtx, Some[Exp.LitZ](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitZ]())
     }
@@ -3230,7 +3225,7 @@ import Transformer._
   }
 
   @pure def transformAssumeProofStep(ctx: Context, o: AssumeProofStep): Result[Context, AssumeProofStep] = {
-    val preR: PreResult[Context, AssumeProofStep] = pre.transformAssumeProofStep(ctx, o)
+    val preR: PreResult[Context, AssumeProofStep] = pp.preAssumeProofStep(ctx, o)
     val r: Result[Context, AssumeProofStep] = if (preR.continue) {
       val o2: AssumeProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3266,7 +3261,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: AssumeProofStep = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, AssumeProofStep] = post.transformAssumeProofStep(r.ctx, o2)
+    val postR: Result[Context, AssumeProofStep] = pp.postAssumeProofStep(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3277,7 +3272,7 @@ import Transformer._
   }
 
   @pure def transformJust(ctx: Context, o: Just): Result[Context, Just] = {
-    val preR: PreResult[Context, Just] = pre.transformJust(ctx, o)
+    val preR: PreResult[Context, Just] = pp.preJust(ctx, o)
     val r: Result[Context, Just] = if (preR.continue) {
       val o2: Just = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3438,7 +3433,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Just = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Just] = post.transformJust(r.ctx, o2)
+    val postR: Result[Context, Just] = pp.postJust(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3449,7 +3444,7 @@ import Transformer._
   }
 
   @pure def transformTruthTableRow(ctx: Context, o: TruthTable.Row): Result[Context, TruthTable.Row] = {
-    val preR: PreResult[Context, TruthTable.Row] = pre.transformTruthTableRow(ctx, o)
+    val preR: PreResult[Context, TruthTable.Row] = pp.preTruthTableRow(ctx, o)
     val r: Result[Context, TruthTable.Row] = if (preR.continue) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3466,7 +3461,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TruthTable.Row = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, TruthTable.Row] = post.transformTruthTableRow(r.ctx, o2)
+    val postR: Result[Context, TruthTable.Row] = pp.postTruthTableRow(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3477,7 +3472,7 @@ import Transformer._
   }
 
   @pure def transformExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp.LitB] = {
-    val preR: PreResult[Context, Exp.LitB] = pre.transformExpLitB(ctx, o) match {
+    val preR: PreResult[Context, Exp.LitB] = pp.preExpLitB(ctx, o) match {
       case PreResult(preCtx, continue, Some(r: Exp.LitB)) => PreResult(preCtx, continue, Some[Exp.LitB](r))
       case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitB]())
     }
@@ -3496,7 +3491,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp.LitB = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitB] = post.transformExpLitB(r.ctx, o2) match {
+    val postR: Result[Context, Exp.LitB] = pp.postExpLitB(r.ctx, o2) match {
       case Result(postCtx, Some(result: Exp.LitB)) => Result(postCtx, Some[Exp.LitB](result))
       case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitB]())
     }
@@ -3510,7 +3505,7 @@ import Transformer._
   }
 
   @pure def transformTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): Result[Context, TruthTable.Conclusion] = {
-    val preR: PreResult[Context, TruthTable.Conclusion] = pre.transformTruthTableConclusion(ctx, o)
+    val preR: PreResult[Context, TruthTable.Conclusion] = pp.preTruthTableConclusion(ctx, o)
     val r: Result[Context, TruthTable.Conclusion] = if (preR.continue) {
       val o2: TruthTable.Conclusion = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3548,7 +3543,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TruthTable.Conclusion = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, TruthTable.Conclusion] = post.transformTruthTableConclusion(r.ctx, o2)
+    val postR: Result[Context, TruthTable.Conclusion] = pp.postTruthTableConclusion(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3559,13 +3554,13 @@ import Transformer._
   }
 
   @pure def transformAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
-    val preR: PreResult[Context, Attr] = pre.transformAttr(ctx, o)
+    val preR: PreResult[Context, Attr] = pp.preAttr(ctx, o)
     val r: Result[Context, Attr] = if (preR.continue) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posInfoOpt, transformPosInfo _)
+      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo _)
       if (hasChanged | r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(posInfoOpt = r0.resultOpt.getOrElse(o2.posInfoOpt))))
+        Result(r0.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt))))
       else
         Result(r0.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
@@ -3575,7 +3570,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Attr = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Attr] = post.transformAttr(r.ctx, o2)
+    val postR: Result[Context, Attr] = pp.postAttr(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3586,14 +3581,14 @@ import Transformer._
   }
 
   @pure def transformTypedAttr(ctx: Context, o: TypedAttr): Result[Context, TypedAttr] = {
-    val preR: PreResult[Context, TypedAttr] = pre.transformTypedAttr(ctx, o)
+    val preR: PreResult[Context, TypedAttr] = pp.preTypedAttr(ctx, o)
     val r: Result[Context, TypedAttr] = if (preR.continue) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posInfoOpt, transformPosInfo _)
+      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo _)
       val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.typeOpt, transformType _)
       if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(posInfoOpt = r0.resultOpt.getOrElse(o2.posInfoOpt), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt))))
+        Result(r1.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt))))
       else
         Result(r1.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
@@ -3603,7 +3598,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TypedAttr = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, TypedAttr] = post.transformTypedAttr(r.ctx, o2)
+    val postR: Result[Context, TypedAttr] = pp.postTypedAttr(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3614,15 +3609,15 @@ import Transformer._
   }
 
   @pure def transformResolvedAttr(ctx: Context, o: ResolvedAttr): Result[Context, ResolvedAttr] = {
-    val preR: PreResult[Context, ResolvedAttr] = pre.transformResolvedAttr(ctx, o)
+    val preR: PreResult[Context, ResolvedAttr] = pp.preResolvedAttr(ctx, o)
     val r: Result[Context, ResolvedAttr] = if (preR.continue) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posInfoOpt, transformPosInfo _)
+      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo _)
       val r1: Result[Context, Option[ResolvedInfo]] = transformOption(r0.ctx, o2.resOpt, transformResolvedInfo _)
       val r2: Result[Context, Option[Type]] = transformOption(r1.ctx, o2.typeOpt, transformType _)
       if (hasChanged | r0.resultOpt.nonEmpty| r1.resultOpt.nonEmpty| r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(posInfoOpt = r0.resultOpt.getOrElse(o2.posInfoOpt), resOpt = r1.resultOpt.getOrElse(o2.resOpt), typeOpt = r2.resultOpt.getOrElse(o2.typeOpt))))
+        Result(r2.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), resOpt = r1.resultOpt.getOrElse(o2.resOpt), typeOpt = r2.resultOpt.getOrElse(o2.typeOpt))))
       else
         Result(r2.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
@@ -3632,7 +3627,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: ResolvedAttr = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, ResolvedAttr] = post.transformResolvedAttr(r.ctx, o2)
+    val postR: Result[Context, ResolvedAttr] = pp.postResolvedAttr(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3643,7 +3638,7 @@ import Transformer._
   }
 
   @pure def transformResolvedInfo(ctx: Context, o: ResolvedInfo): Result[Context, ResolvedInfo] = {
-    val preR: PreResult[Context, ResolvedInfo] = pre.transformResolvedInfo(ctx, o)
+    val preR: PreResult[Context, ResolvedInfo] = pp.preResolvedInfo(ctx, o)
     val r: Result[Context, ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3658,7 +3653,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: ResolvedInfo = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, ResolvedInfo] = post.transformResolvedInfo(r.ctx, o2)
+    val postR: Result[Context, ResolvedInfo] = pp.postResolvedInfo(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3669,7 +3664,7 @@ import Transformer._
   }
 
   @pure def transformPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
-    val preR: PreResult[Context, PosInfo] = pre.transformPosInfo(ctx, o)
+    val preR: PreResult[Context, PosInfo] = pp.prePosInfo(ctx, o)
     val r: Result[Context, PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3684,7 +3679,7 @@ import Transformer._
     }
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: PosInfo = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, PosInfo] = post.transformPosInfo(r.ctx, o2)
+    val postR: Result[Context, PosInfo] = pp.postPosInfo(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

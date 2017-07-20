@@ -30,6 +30,8 @@ import org.sireum.lang.ast.PosInfo
 
 @sig trait Reporter {
 
+  def internalError(posOpt: Option[PosInfo], message: String): Unit
+
   def error(posOpt: Option[PosInfo], message: String): Unit
 
   def warn(posOpt: Option[PosInfo], message: String): Unit

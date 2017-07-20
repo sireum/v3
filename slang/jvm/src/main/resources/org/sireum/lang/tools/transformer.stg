@@ -27,16 +27,11 @@ object $name$ {
   @datatype class Result[Context, T](ctx: Context,
                                      resultOpt: Option[T])
 
-  @sig trait Pre[Context] {
+  @sig trait PrePost[Context] {
 
     $preMethod; separator="\n\n"$
 
-  }
-
-  @sig trait Post[Context] {
-
     $postMethod; separator="\n\n"$
-
   }
 
   $transformHelper; separator="\n\n"$
@@ -45,7 +40,7 @@ object $name$ {
 
 import $name$._
 
-@record class $name$[Context](pre: Pre[Context], post: Post[Context]) {
+@record class $name$[Context](pp: PrePost[Context]) {
 
   $transformMethod; separator="\n\n"$
 
@@ -53,7 +48,7 @@ import $name$._
 >>
 
 preMethodRoot(typeName, type, preMethodRootCase) ::= <<
-@pure def transform$typeName$(ctx: Context, o: $type$): PreResult[Context, $type$] = {
+@pure def pre$typeName$(ctx: Context, o: $type$): PreResult[Context, $type$] = {
   o match {
     $preMethodRootCase; separator="\n"$
   }
@@ -61,17 +56,17 @@ preMethodRoot(typeName, type, preMethodRootCase) ::= <<
 >>
 
 preMethodRootCase(typeName, type) ::= <<
-case o: $type$ => return transform$typeName$(ctx, o)
+case o: $type$ => return pre$typeName$(ctx, o)
 >>
 
 preMethod(typeName, type, superType) ::= <<
-@pure def transform$typeName$(ctx: Context, o: $type$): PreResult[Context, $superType$] = {
+@pure def pre$typeName$(ctx: Context, o: $type$): PreResult[Context, $superType$] = {
   return PreResult(ctx, T, None())
 }
 >>
 
 postMethodRoot(typeName, type, postMethodRootCase) ::= <<
-@pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $type$] = {
+@pure def post$typeName$(ctx: Context, o: $type$): Result[Context, $type$] = {
   o match {
     $postMethodRootCase; separator="\n"$
   }
@@ -79,18 +74,18 @@ postMethodRoot(typeName, type, postMethodRootCase) ::= <<
 >>
 
 postMethodRootCase(typeName, type) ::= <<
-case o: $type$ => return transform$typeName$(ctx, o)
+case o: $type$ => return post$typeName$(ctx, o)
 >>
 
 postMethod(typeName, type, superType) ::= <<
-@pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $superType$] = {
+@pure def post$typeName$(ctx: Context, o: $type$): Result[Context, $superType$] = {
   return Result(ctx, None())
 }
 >>
 
 transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <<
 @pure def transform$typeName$(ctx: Context, o: $type$): Result[Context, $type$] = {
-  val preR: PreResult[Context, $type$] = pre.transform$typeName$(ctx, o)$if(preAdapt)$ $preAdapt$$endif$
+  val preR: PreResult[Context, $type$] = pp.pre$typeName$(ctx, o)$if(preAdapt)$ $preAdapt$$endif$
   val r: Result[Context, $type$] = if (preR.continue) {
     val o2: $type$ = preR.resultOpt.getOrElse(o)
     val hasChanged: B = preR.resultOpt.nonEmpty
@@ -102,7 +97,7 @@ transformMethod(typeName, type, transformMethodMatch, preAdapt, postAdapt) ::= <
   }
   val hasChanged: B = r.resultOpt.nonEmpty
   val o2: $type$ = r.resultOpt.getOrElse(o)
-  val postR: Result[Context, $type$] = post.transform$typeName$(r.ctx, o2)$if(postAdapt)$ $postAdapt$$endif$
+  val postR: Result[Context, $type$] = pp.post$typeName$(r.ctx, o2)$if(postAdapt)$ $postAdapt$$endif$
   if (postR.resultOpt.nonEmpty) {
     return postR
   } else if (hasChanged) {

@@ -37,1519 +37,1515 @@ object MTransformer {
   @record class PreResult[T](continue: B,
                              resultOpt: MOption[T])
 
-  @sig trait Pre {
+  @sig trait PrePost {
 
-    def transformTopUnit(o: TopUnit): PreResult[TopUnit] = {
+    def preTopUnit(o: TopUnit): PreResult[TopUnit] = {
       o match {
-        case o: TopUnit.Program => return transformTopUnitProgram(o)
-        case o: TopUnit.SequentUnit => return transformTopUnitSequentUnit(o)
-        case o: TopUnit.TruthTableUnit => return transformTopUnitTruthTableUnit(o)
+        case o: TopUnit.Program => return preTopUnitProgram(o)
+        case o: TopUnit.SequentUnit => return preTopUnitSequentUnit(o)
+        case o: TopUnit.TruthTableUnit => return preTopUnitTruthTableUnit(o)
       }
     }
 
-    def transformTopUnitProgram(o: TopUnit.Program): PreResult[TopUnit] = {
+    def preTopUnitProgram(o: TopUnit.Program): PreResult[TopUnit] = {
       return PreResult(T, MNone())
     }
 
-    def transformTopUnitSequentUnit(o: TopUnit.SequentUnit): PreResult[TopUnit] = {
+    def preTopUnitSequentUnit(o: TopUnit.SequentUnit): PreResult[TopUnit] = {
       return PreResult(T, MNone())
     }
 
-    def transformTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
+    def preTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmt(o: Stmt): PreResult[Stmt] = {
+    def preStmt(o: Stmt): PreResult[Stmt] = {
       o match {
-        case o: Stmt.Import => return transformStmtImport(o)
-        case o: Stmt.Var => return transformStmtVar(o)
-        case o: Stmt.VarPattern => return transformStmtVarPattern(o)
-        case o: Stmt.SpecVar => return transformStmtSpecVar(o)
-        case o: Stmt.Method => return transformStmtMethod(o)
-        case o: Stmt.ExtMethod => return transformStmtExtMethod(o)
-        case o: Stmt.SpecMethod => return transformStmtSpecMethod(o)
-        case o: Stmt.Enum => return transformStmtEnum(o)
-        case o: Stmt.Object => return transformStmtObject(o)
-        case o: Stmt.Sig => return transformStmtSig(o)
-        case o: Stmt.AbstractDatatype => return transformStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return transformStmtRich(o)
-        case o: Stmt.TypeAlias => return transformStmtTypeAlias(o)
-        case o: Stmt.Assign => return transformStmtAssign(o)
-        case o: Stmt.AssignUp => return transformStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return transformStmtAssignPattern(o)
-        case o: Stmt.Block => return transformStmtBlock(o)
-        case o: Stmt.If => return transformStmtIf(o)
-        case o: Stmt.Match => return transformStmtMatch(o)
-        case o: Stmt.While => return transformStmtWhile(o)
-        case o: Stmt.DoWhile => return transformStmtDoWhile(o)
-        case o: Stmt.For => return transformStmtFor(o)
-        case o: Stmt.Return => return transformStmtReturn(o)
-        case o: Stmt.LStmt => return transformStmtLStmt(o)
-        case o: Stmt.Expr => return transformStmtExpr(o)
+        case o: Stmt.Import => return preStmtImport(o)
+        case o: Stmt.Var => return preStmtVar(o)
+        case o: Stmt.VarPattern => return preStmtVarPattern(o)
+        case o: Stmt.SpecVar => return preStmtSpecVar(o)
+        case o: Stmt.Method => return preStmtMethod(o)
+        case o: Stmt.ExtMethod => return preStmtExtMethod(o)
+        case o: Stmt.SpecMethod => return preStmtSpecMethod(o)
+        case o: Stmt.Enum => return preStmtEnum(o)
+        case o: Stmt.Object => return preStmtObject(o)
+        case o: Stmt.Sig => return preStmtSig(o)
+        case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
+        case o: Stmt.Rich => return preStmtRich(o)
+        case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
+        case o: Stmt.Assign => return preStmtAssign(o)
+        case o: Stmt.AssignUp => return preStmtAssignUp(o)
+        case o: Stmt.AssignPattern => return preStmtAssignPattern(o)
+        case o: Stmt.Block => return preStmtBlock(o)
+        case o: Stmt.If => return preStmtIf(o)
+        case o: Stmt.Match => return preStmtMatch(o)
+        case o: Stmt.While => return preStmtWhile(o)
+        case o: Stmt.DoWhile => return preStmtDoWhile(o)
+        case o: Stmt.For => return preStmtFor(o)
+        case o: Stmt.Return => return preStmtReturn(o)
+        case o: Stmt.LStmt => return preStmtLStmt(o)
+        case o: Stmt.Expr => return preStmtExpr(o)
       }
     }
 
-    def transformStmtImport(o: Stmt.Import): PreResult[Stmt] = {
+    def preStmtImport(o: Stmt.Import): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtImportImporter(o: Stmt.Import.Importer): PreResult[Stmt.Import.Importer] = {
+    def preStmtImportImporter(o: Stmt.Import.Importer): PreResult[Stmt.Import.Importer] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtImportSelector(o: Stmt.Import.Selector): PreResult[Stmt.Import.Selector] = {
+    def preStmtImportSelector(o: Stmt.Import.Selector): PreResult[Stmt.Import.Selector] = {
       o match {
-        case o: Stmt.Import.MultiSelector => return transformStmtImportMultiSelector(o)
-        case o: Stmt.Import.WildcardSelector => return transformStmtImportWildcardSelector(o)
+        case o: Stmt.Import.MultiSelector => return preStmtImportMultiSelector(o)
+        case o: Stmt.Import.WildcardSelector => return preStmtImportWildcardSelector(o)
       }
     }
 
-    def transformStmtImportMultiSelector(o: Stmt.Import.MultiSelector): PreResult[Stmt.Import.Selector] = {
+    def preStmtImportMultiSelector(o: Stmt.Import.MultiSelector): PreResult[Stmt.Import.Selector] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): PreResult[Stmt.Import.Selector] = {
+    def preStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): PreResult[Stmt.Import.Selector] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtImportNamedSelector(o: Stmt.Import.NamedSelector): PreResult[Stmt.Import.NamedSelector] = {
+    def preStmtImportNamedSelector(o: Stmt.Import.NamedSelector): PreResult[Stmt.Import.NamedSelector] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtVar(o: Stmt.Var): PreResult[Stmt] = {
+    def preStmtVar(o: Stmt.Var): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtVarPattern(o: Stmt.VarPattern): PreResult[Stmt] = {
+    def preStmtVarPattern(o: Stmt.VarPattern): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtSpecVar(o: Stmt.SpecVar): PreResult[Stmt] = {
+    def preStmtSpecVar(o: Stmt.SpecVar): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtMethod(o: Stmt.Method): PreResult[Stmt] = {
+    def preStmtMethod(o: Stmt.Method): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtExtMethod(o: Stmt.ExtMethod): PreResult[Stmt] = {
+    def preStmtExtMethod(o: Stmt.ExtMethod): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtSpecMethod(o: Stmt.SpecMethod): PreResult[Stmt] = {
+    def preStmtSpecMethod(o: Stmt.SpecMethod): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtEnum(o: Stmt.Enum): PreResult[Stmt] = {
+    def preStmtEnum(o: Stmt.Enum): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtObject(o: Stmt.Object): PreResult[Stmt] = {
+    def preStmtObject(o: Stmt.Object): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtSig(o: Stmt.Sig): PreResult[Stmt] = {
+    def preStmtSig(o: Stmt.Sig): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
+    def preStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtRich(o: Stmt.Rich): PreResult[Stmt] = {
+    def preStmtRich(o: Stmt.Rich): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtTypeAlias(o: Stmt.TypeAlias): PreResult[Stmt] = {
+    def preStmtTypeAlias(o: Stmt.TypeAlias): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtAssign(o: Stmt.Assign): PreResult[Stmt] = {
+    def preStmtAssign(o: Stmt.Assign): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtAssignUp(o: Stmt.AssignUp): PreResult[Stmt] = {
+    def preStmtAssignUp(o: Stmt.AssignUp): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtAssignPattern(o: Stmt.AssignPattern): PreResult[Stmt] = {
+    def preStmtAssignPattern(o: Stmt.AssignPattern): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtBlock(o: Stmt.Block): PreResult[Stmt] = {
+    def preStmtBlock(o: Stmt.Block): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtIf(o: Stmt.If): PreResult[Stmt] = {
+    def preStmtIf(o: Stmt.If): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtMatch(o: Stmt.Match): PreResult[Stmt] = {
+    def preStmtMatch(o: Stmt.Match): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtWhile(o: Stmt.While): PreResult[Stmt] = {
+    def preStmtWhile(o: Stmt.While): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtDoWhile(o: Stmt.DoWhile): PreResult[Stmt] = {
+    def preStmtDoWhile(o: Stmt.DoWhile): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtFor(o: Stmt.For): PreResult[Stmt] = {
+    def preStmtFor(o: Stmt.For): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtReturn(o: Stmt.Return): PreResult[Stmt] = {
+    def preStmtReturn(o: Stmt.Return): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtLStmt(o: Stmt.LStmt): PreResult[Stmt] = {
+    def preStmtLStmt(o: Stmt.LStmt): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformStmtExpr(o: Stmt.Expr): PreResult[Stmt] = {
+    def preStmtExpr(o: Stmt.Expr): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClause(o: LClause): PreResult[LClause] = {
+    def preLClause(o: LClause): PreResult[LClause] = {
       o match {
-        case o: LClause.Invariants => return transformLClauseInvariants(o)
-        case o: LClause.Facts => return transformLClauseFacts(o)
-        case o: LClause.Theorems => return transformLClauseTheorems(o)
-        case o: LClause.Sequent => return transformLClauseSequent(o)
-        case o: LClause.Proof => return transformLClauseProof(o)
+        case o: LClause.Invariants => return preLClauseInvariants(o)
+        case o: LClause.Facts => return preLClauseFacts(o)
+        case o: LClause.Theorems => return preLClauseTheorems(o)
+        case o: LClause.Sequent => return preLClauseSequent(o)
+        case o: LClause.Proof => return preLClauseProof(o)
       }
     }
 
-    def transformLClauseInvariants(o: LClause.Invariants): PreResult[LClause] = {
+    def preLClauseInvariants(o: LClause.Invariants): PreResult[LClause] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseFacts(o: LClause.Facts): PreResult[LClause] = {
+    def preLClauseFacts(o: LClause.Facts): PreResult[LClause] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseFact(o: LClause.Fact): PreResult[LClause.Fact] = {
+    def preLClauseFact(o: LClause.Fact): PreResult[LClause.Fact] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseTheorems(o: LClause.Theorems): PreResult[LClause] = {
+    def preLClauseTheorems(o: LClause.Theorems): PreResult[LClause] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseTheorem(o: LClause.Theorem): PreResult[LClause.Theorem] = {
+    def preLClauseTheorem(o: LClause.Theorem): PreResult[LClause.Theorem] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseSequent(o: LClause.Sequent): PreResult[LClause] = {
+    def preLClauseSequent(o: LClause.Sequent): PreResult[LClause] = {
       return PreResult(T, MNone())
     }
 
-    def transformLClauseProof(o: LClause.Proof): PreResult[LClause] = {
+    def preLClauseProof(o: LClause.Proof): PreResult[LClause] = {
       return PreResult(T, MNone())
     }
 
-    def transformContractExp(o: ContractExp): PreResult[ContractExp] = {
+    def preContractExp(o: ContractExp): PreResult[ContractExp] = {
       return PreResult(T, MNone())
     }
 
-    def transformCase(o: Case): PreResult[Case] = {
+    def preCase(o: Case): PreResult[Case] = {
       return PreResult(T, MNone())
     }
 
-    def transformRange(o: Range): PreResult[Range] = {
+    def preRange(o: Range): PreResult[Range] = {
       o match {
-        case o: Range.Expr => return transformRangeExpr(o)
-        case o: Range.Indices => return transformRangeIndices(o)
-        case o: Range.Step => return transformRangeStep(o)
+        case o: Range.Expr => return preRangeExpr(o)
+        case o: Range.Indices => return preRangeIndices(o)
+        case o: Range.Step => return preRangeStep(o)
       }
     }
 
-    def transformRangeExpr(o: Range.Expr): PreResult[Range] = {
+    def preRangeExpr(o: Range.Expr): PreResult[Range] = {
       return PreResult(T, MNone())
     }
 
-    def transformRangeIndices(o: Range.Indices): PreResult[Range] = {
+    def preRangeIndices(o: Range.Indices): PreResult[Range] = {
       return PreResult(T, MNone())
     }
 
-    def transformRangeStep(o: Range.Step): PreResult[Range] = {
+    def preRangeStep(o: Range.Step): PreResult[Range] = {
       return PreResult(T, MNone())
     }
 
-    def transformType(o: Type): PreResult[Type] = {
+    def preType(o: Type): PreResult[Type] = {
       o match {
-        case o: Type.Named => return transformTypeNamed(o)
-        case o: Type.Fun => return transformTypeFun(o)
-        case o: Type.Tuple => return transformTypeTuple(o)
+        case o: Type.Named => return preTypeNamed(o)
+        case o: Type.Fun => return preTypeFun(o)
+        case o: Type.Tuple => return preTypeTuple(o)
       }
     }
 
-    def transformTypeNamed(o: Type.Named): PreResult[Type] = {
+    def preTypeNamed(o: Type.Named): PreResult[Type] = {
       return PreResult(T, MNone())
     }
 
-    def transformTypeFun(o: Type.Fun): PreResult[Type] = {
+    def preTypeFun(o: Type.Fun): PreResult[Type] = {
       return PreResult(T, MNone())
     }
 
-    def transformTypeTuple(o: Type.Tuple): PreResult[Type] = {
+    def preTypeTuple(o: Type.Tuple): PreResult[Type] = {
       return PreResult(T, MNone())
     }
 
-    def transformPattern(o: Pattern): PreResult[Pattern] = {
+    def prePattern(o: Pattern): PreResult[Pattern] = {
       o match {
-        case o: Pattern.Literal => return transformPatternLiteral(o)
-        case o: Pattern.Ref => return transformPatternRef(o)
-        case o: Pattern.Variable => return transformPatternVariable(o)
-        case o: Pattern.Wildcard => return transformPatternWildcard(o)
-        case o: Pattern.SeqWildcard => return transformPatternSeqWildcard(o)
-        case o: Pattern.Structure => return transformPatternStructure(o)
+        case o: Pattern.Literal => return prePatternLiteral(o)
+        case o: Pattern.Ref => return prePatternRef(o)
+        case o: Pattern.Variable => return prePatternVariable(o)
+        case o: Pattern.Wildcard => return prePatternWildcard(o)
+        case o: Pattern.SeqWildcard => return prePatternSeqWildcard(o)
+        case o: Pattern.Structure => return prePatternStructure(o)
       }
     }
 
-    def transformPatternLiteral(o: Pattern.Literal): PreResult[Pattern] = {
+    def prePatternLiteral(o: Pattern.Literal): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformPatternRef(o: Pattern.Ref): PreResult[Pattern] = {
+    def prePatternRef(o: Pattern.Ref): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformPatternVariable(o: Pattern.Variable): PreResult[Pattern] = {
+    def prePatternVariable(o: Pattern.Variable): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformPatternWildcard(o: Pattern.Wildcard): PreResult[Pattern] = {
+    def prePatternWildcard(o: Pattern.Wildcard): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformPatternSeqWildcard(o: Pattern.SeqWildcard): PreResult[Pattern] = {
+    def prePatternSeqWildcard(o: Pattern.SeqWildcard): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformPatternStructure(o: Pattern.Structure): PreResult[Pattern] = {
+    def prePatternStructure(o: Pattern.Structure): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
-    def transformExp(o: Exp): PreResult[Exp] = {
+    def preExp(o: Exp): PreResult[Exp] = {
       o match {
-        case o: Exp.LitB => return transformExpLitB(o)
-        case o: Exp.LitC => return transformExpLitC(o)
-        case o: Exp.LitZ => return transformExpLitZ(o)
-        case o: Exp.LitZ8 => return transformExpLitZ8(o)
-        case o: Exp.LitZ16 => return transformExpLitZ16(o)
-        case o: Exp.LitZ32 => return transformExpLitZ32(o)
-        case o: Exp.LitZ64 => return transformExpLitZ64(o)
-        case o: Exp.LitN => return transformExpLitN(o)
-        case o: Exp.LitN8 => return transformExpLitN8(o)
-        case o: Exp.LitN16 => return transformExpLitN16(o)
-        case o: Exp.LitN32 => return transformExpLitN32(o)
-        case o: Exp.LitN64 => return transformExpLitN64(o)
-        case o: Exp.LitS8 => return transformExpLitS8(o)
-        case o: Exp.LitS16 => return transformExpLitS16(o)
-        case o: Exp.LitS32 => return transformExpLitS32(o)
-        case o: Exp.LitS64 => return transformExpLitS64(o)
-        case o: Exp.LitU8 => return transformExpLitU8(o)
-        case o: Exp.LitU16 => return transformExpLitU16(o)
-        case o: Exp.LitU32 => return transformExpLitU32(o)
-        case o: Exp.LitU64 => return transformExpLitU64(o)
-        case o: Exp.LitF32 => return transformExpLitF32(o)
-        case o: Exp.LitF64 => return transformExpLitF64(o)
-        case o: Exp.LitR => return transformExpLitR(o)
-        case o: Exp.LitBv => return transformExpLitBv(o)
-        case o: Exp.LitString => return transformExpLitString(o)
-        case o: Exp.StringInterpolate => return transformExpStringInterpolate(o)
-        case o: Exp.This => return transformExpThis(o)
-        case o: Exp.Unary => return transformExpUnary(o)
-        case o: Exp.Binary => return transformExpBinary(o)
-        case o: Exp.Ident => return transformExpIdent(o)
-        case o: Exp.Eta => return transformExpEta(o)
-        case o: Exp.Tuple => return transformExpTuple(o)
-        case o: Exp.Select => return transformExpSelect(o)
-        case o: Exp.Invoke => return transformExpInvoke(o)
-        case o: Exp.InvokeNamed => return transformExpInvokeNamed(o)
-        case o: Exp.If => return transformExpIf(o)
-        case o: Exp.Quant => return transformExpQuant(o)
+        case o: Exp.LitB => return preExpLitB(o)
+        case o: Exp.LitC => return preExpLitC(o)
+        case o: Exp.LitZ => return preExpLitZ(o)
+        case o: Exp.LitZ8 => return preExpLitZ8(o)
+        case o: Exp.LitZ16 => return preExpLitZ16(o)
+        case o: Exp.LitZ32 => return preExpLitZ32(o)
+        case o: Exp.LitZ64 => return preExpLitZ64(o)
+        case o: Exp.LitN => return preExpLitN(o)
+        case o: Exp.LitN8 => return preExpLitN8(o)
+        case o: Exp.LitN16 => return preExpLitN16(o)
+        case o: Exp.LitN32 => return preExpLitN32(o)
+        case o: Exp.LitN64 => return preExpLitN64(o)
+        case o: Exp.LitS8 => return preExpLitS8(o)
+        case o: Exp.LitS16 => return preExpLitS16(o)
+        case o: Exp.LitS32 => return preExpLitS32(o)
+        case o: Exp.LitS64 => return preExpLitS64(o)
+        case o: Exp.LitU8 => return preExpLitU8(o)
+        case o: Exp.LitU16 => return preExpLitU16(o)
+        case o: Exp.LitU32 => return preExpLitU32(o)
+        case o: Exp.LitU64 => return preExpLitU64(o)
+        case o: Exp.LitF32 => return preExpLitF32(o)
+        case o: Exp.LitF64 => return preExpLitF64(o)
+        case o: Exp.LitR => return preExpLitR(o)
+        case o: Exp.LitBv => return preExpLitBv(o)
+        case o: Exp.LitString => return preExpLitString(o)
+        case o: Exp.StringInterpolate => return preExpStringInterpolate(o)
+        case o: Exp.This => return preExpThis(o)
+        case o: Exp.Unary => return preExpUnary(o)
+        case o: Exp.Binary => return preExpBinary(o)
+        case o: Exp.Ident => return preExpIdent(o)
+        case o: Exp.Eta => return preExpEta(o)
+        case o: Exp.Tuple => return preExpTuple(o)
+        case o: Exp.Select => return preExpSelect(o)
+        case o: Exp.Invoke => return preExpInvoke(o)
+        case o: Exp.InvokeNamed => return preExpInvokeNamed(o)
+        case o: Exp.If => return preExpIf(o)
+        case o: Exp.Quant => return preExpQuant(o)
       }
     }
 
-    def transformExpLitB(o: Exp.LitB): PreResult[Exp] = {
+    def preExpLitB(o: Exp.LitB): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitC(o: Exp.LitC): PreResult[Exp] = {
+    def preExpLitC(o: Exp.LitC): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitZ(o: Exp.LitZ): PreResult[Exp] = {
+    def preExpLitZ(o: Exp.LitZ): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitZ8(o: Exp.LitZ8): PreResult[Exp] = {
+    def preExpLitZ8(o: Exp.LitZ8): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitZ16(o: Exp.LitZ16): PreResult[Exp] = {
+    def preExpLitZ16(o: Exp.LitZ16): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitZ32(o: Exp.LitZ32): PreResult[Exp] = {
+    def preExpLitZ32(o: Exp.LitZ32): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitZ64(o: Exp.LitZ64): PreResult[Exp] = {
+    def preExpLitZ64(o: Exp.LitZ64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitN(o: Exp.LitN): PreResult[Exp] = {
+    def preExpLitN(o: Exp.LitN): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitN8(o: Exp.LitN8): PreResult[Exp] = {
+    def preExpLitN8(o: Exp.LitN8): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitN16(o: Exp.LitN16): PreResult[Exp] = {
+    def preExpLitN16(o: Exp.LitN16): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitN32(o: Exp.LitN32): PreResult[Exp] = {
+    def preExpLitN32(o: Exp.LitN32): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitN64(o: Exp.LitN64): PreResult[Exp] = {
+    def preExpLitN64(o: Exp.LitN64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitS8(o: Exp.LitS8): PreResult[Exp] = {
+    def preExpLitS8(o: Exp.LitS8): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitS16(o: Exp.LitS16): PreResult[Exp] = {
+    def preExpLitS16(o: Exp.LitS16): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitS32(o: Exp.LitS32): PreResult[Exp] = {
+    def preExpLitS32(o: Exp.LitS32): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitS64(o: Exp.LitS64): PreResult[Exp] = {
+    def preExpLitS64(o: Exp.LitS64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitU8(o: Exp.LitU8): PreResult[Exp] = {
+    def preExpLitU8(o: Exp.LitU8): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitU16(o: Exp.LitU16): PreResult[Exp] = {
+    def preExpLitU16(o: Exp.LitU16): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitU32(o: Exp.LitU32): PreResult[Exp] = {
+    def preExpLitU32(o: Exp.LitU32): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitU64(o: Exp.LitU64): PreResult[Exp] = {
+    def preExpLitU64(o: Exp.LitU64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitF32(o: Exp.LitF32): PreResult[Exp] = {
+    def preExpLitF32(o: Exp.LitF32): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitF64(o: Exp.LitF64): PreResult[Exp] = {
+    def preExpLitF64(o: Exp.LitF64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitR(o: Exp.LitR): PreResult[Exp] = {
+    def preExpLitR(o: Exp.LitR): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitBv(o: Exp.LitBv): PreResult[Exp] = {
+    def preExpLitBv(o: Exp.LitBv): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpLitString(o: Exp.LitString): PreResult[Exp] = {
+    def preExpLitString(o: Exp.LitString): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpStringInterpolate(o: Exp.StringInterpolate): PreResult[Exp] = {
+    def preExpStringInterpolate(o: Exp.StringInterpolate): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpThis(o: Exp.This): PreResult[Exp] = {
+    def preExpThis(o: Exp.This): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpUnary(o: Exp.Unary): PreResult[Exp] = {
+    def preExpUnary(o: Exp.Unary): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpBinary(o: Exp.Binary): PreResult[Exp] = {
+    def preExpBinary(o: Exp.Binary): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpIdent(o: Exp.Ident): PreResult[Exp] = {
+    def preExpIdent(o: Exp.Ident): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpEta(o: Exp.Eta): PreResult[Exp] = {
+    def preExpEta(o: Exp.Eta): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpTuple(o: Exp.Tuple): PreResult[Exp] = {
+    def preExpTuple(o: Exp.Tuple): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpSelect(o: Exp.Select): PreResult[Exp] = {
+    def preExpSelect(o: Exp.Select): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpInvoke(o: Exp.Invoke): PreResult[Exp] = {
+    def preExpInvoke(o: Exp.Invoke): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpInvokeNamed(o: Exp.InvokeNamed): PreResult[Exp] = {
+    def preExpInvokeNamed(o: Exp.InvokeNamed): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpIf(o: Exp.If): PreResult[Exp] = {
+    def preExpIf(o: Exp.If): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformExpQuant(o: Exp.Quant): PreResult[Exp] = {
+    def preExpQuant(o: Exp.Quant): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
-    def transformNamedArg(o: NamedArg): PreResult[NamedArg] = {
+    def preNamedArg(o: NamedArg): PreResult[NamedArg] = {
       return PreResult(T, MNone())
     }
 
-    def transformVarFragment(o: VarFragment): PreResult[VarFragment] = {
+    def preVarFragment(o: VarFragment): PreResult[VarFragment] = {
       return PreResult(T, MNone())
     }
 
-    def transformDomain(o: Domain): PreResult[Domain] = {
+    def preDomain(o: Domain): PreResult[Domain] = {
       o match {
-        case o: Domain.Type => return transformDomainType(o)
-        case o: Domain.Range => return transformDomainRange(o)
+        case o: Domain.Type => return preDomainType(o)
+        case o: Domain.Range => return preDomainRange(o)
       }
     }
 
-    def transformDomainType(o: Domain.Type): PreResult[Domain] = {
+    def preDomainType(o: Domain.Type): PreResult[Domain] = {
       return PreResult(T, MNone())
     }
 
-    def transformDomainRange(o: Domain.Range): PreResult[Domain] = {
+    def preDomainRange(o: Domain.Range): PreResult[Domain] = {
       return PreResult(T, MNone())
     }
 
-    def transformId(o: Id): PreResult[Id] = {
+    def preId(o: Id): PreResult[Id] = {
       return PreResult(T, MNone())
     }
 
-    def transformName(o: Name): PreResult[Name] = {
+    def preName(o: Name): PreResult[Name] = {
       return PreResult(T, MNone())
     }
 
-    def transformBody(o: Body): PreResult[Body] = {
+    def preBody(o: Body): PreResult[Body] = {
       return PreResult(T, MNone())
     }
 
-    def transformAbstractDatatypeParam(o: AbstractDatatypeParam): PreResult[AbstractDatatypeParam] = {
+    def preAbstractDatatypeParam(o: AbstractDatatypeParam): PreResult[AbstractDatatypeParam] = {
       return PreResult(T, MNone())
     }
 
-    def transformMethodSig(o: MethodSig): PreResult[MethodSig] = {
+    def preMethodSig(o: MethodSig): PreResult[MethodSig] = {
       return PreResult(T, MNone())
     }
 
-    def transformParam(o: Param): PreResult[Param] = {
+    def preParam(o: Param): PreResult[Param] = {
       return PreResult(T, MNone())
     }
 
-    def transformTypeParam(o: TypeParam): PreResult[TypeParam] = {
+    def preTypeParam(o: TypeParam): PreResult[TypeParam] = {
       return PreResult(T, MNone())
     }
 
-    def transformContract(o: Contract): PreResult[Contract] = {
+    def preContract(o: Contract): PreResult[Contract] = {
       return PreResult(T, MNone())
     }
 
-    def transformSubContract(o: SubContract): PreResult[SubContract] = {
+    def preSubContract(o: SubContract): PreResult[SubContract] = {
       return PreResult(T, MNone())
     }
 
-    def transformSubContractParam(o: SubContractParam): PreResult[SubContractParam] = {
+    def preSubContractParam(o: SubContractParam): PreResult[SubContractParam] = {
       return PreResult(T, MNone())
     }
 
-    def transformWhereDef(o: WhereDef): PreResult[WhereDef] = {
+    def preWhereDef(o: WhereDef): PreResult[WhereDef] = {
       o match {
-        case o: WhereDef.Val => return transformWhereDefVal(o)
-        case o: WhereDef.Def => return transformWhereDefDef(o)
+        case o: WhereDef.Val => return preWhereDefVal(o)
+        case o: WhereDef.Def => return preWhereDefDef(o)
       }
     }
 
-    def transformWhereDefVal(o: WhereDef.Val): PreResult[WhereDef] = {
+    def preWhereDefVal(o: WhereDef.Val): PreResult[WhereDef] = {
       return PreResult(T, MNone())
     }
 
-    def transformWhereDefDef(o: WhereDef.Def): PreResult[WhereDef] = {
+    def preWhereDefDef(o: WhereDef.Def): PreResult[WhereDef] = {
       return PreResult(T, MNone())
     }
 
-    def transformSpecDef(o: SpecDef): PreResult[SpecDef] = {
+    def preSpecDef(o: SpecDef): PreResult[SpecDef] = {
       return PreResult(T, MNone())
     }
 
-    def transformProofStep(o: ProofStep): PreResult[ProofStep] = {
+    def preProofStep(o: ProofStep): PreResult[ProofStep] = {
       o match {
-        case o: ProofStep.Basic => return transformProofStepBasic(o)
-        case o: ProofStep.SubProof => return transformProofStepSubProof(o)
+        case o: ProofStep.Basic => return preProofStepBasic(o)
+        case o: ProofStep.SubProof => return preProofStepSubProof(o)
       }
     }
 
-    def transformProofStepBasic(o: ProofStep.Basic): PreResult[ProofStep] = {
+    def preProofStepBasic(o: ProofStep.Basic): PreResult[ProofStep] = {
       return PreResult(T, MNone())
     }
 
-    def transformProofStepSubProof(o: ProofStep.SubProof): PreResult[ProofStep] = {
+    def preProofStepSubProof(o: ProofStep.SubProof): PreResult[ProofStep] = {
       return PreResult(T, MNone())
     }
 
-    def transformAssumeProofStep(o: AssumeProofStep): PreResult[AssumeProofStep] = {
+    def preAssumeProofStep(o: AssumeProofStep): PreResult[AssumeProofStep] = {
       o match {
-        case o: AssumeProofStep.Regular => return transformAssumeProofStepRegular(o)
-        case o: AssumeProofStep.ForallIntroAps => return transformAssumeProofStepForallIntroAps(o)
-        case o: AssumeProofStep.ExistsElimAps => return transformAssumeProofStepExistsElimAps(o)
+        case o: AssumeProofStep.Regular => return preAssumeProofStepRegular(o)
+        case o: AssumeProofStep.ForallIntroAps => return preAssumeProofStepForallIntroAps(o)
+        case o: AssumeProofStep.ExistsElimAps => return preAssumeProofStepExistsElimAps(o)
       }
     }
 
-    def transformAssumeProofStepRegular(o: AssumeProofStep.Regular): PreResult[AssumeProofStep] = {
+    def preAssumeProofStepRegular(o: AssumeProofStep.Regular): PreResult[AssumeProofStep] = {
       return PreResult(T, MNone())
     }
 
-    def transformAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): PreResult[AssumeProofStep] = {
+    def preAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): PreResult[AssumeProofStep] = {
       return PreResult(T, MNone())
     }
 
-    def transformAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): PreResult[AssumeProofStep] = {
+    def preAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): PreResult[AssumeProofStep] = {
       return PreResult(T, MNone())
     }
 
-    def transformJust(o: Just): PreResult[Just] = {
+    def preJust(o: Just): PreResult[Just] = {
       o match {
-        case o: Just.Premise => return transformJustPremise(o)
-        case o: Just.AndIntro => return transformJustAndIntro(o)
-        case o: Just.AndElim => return transformJustAndElim(o)
-        case o: Just.OrIntro => return transformJustOrIntro(o)
-        case o: Just.OrElim => return transformJustOrElim(o)
-        case o: Just.ImplyIntro => return transformJustImplyIntro(o)
-        case o: Just.ImplyElim => return transformJustImplyElim(o)
-        case o: Just.NegIntro => return transformJustNegIntro(o)
-        case o: Just.NegElim => return transformJustNegElim(o)
-        case o: Just.BottomElim => return transformJustBottomElim(o)
-        case o: Just.Pbc => return transformJustPbc(o)
-        case o: Just.ForallIntro => return transformJustForallIntro(o)
-        case o: Just.ForallElim => return transformJustForallElim(o)
-        case o: Just.ExistsIntro => return transformJustExistsIntro(o)
-        case o: Just.ExistsElim => return transformJustExistsElim(o)
-        case o: Just.Fact => return transformJustFact(o)
-        case o: Just.Invariant => return transformJustInvariant(o)
-        case o: Just.Subst => return transformJustSubst(o)
-        case o: Just.Auto => return transformJustAuto(o)
-        case o: Just.Coq => return transformJustCoq(o)
+        case o: Just.Premise => return preJustPremise(o)
+        case o: Just.AndIntro => return preJustAndIntro(o)
+        case o: Just.AndElim => return preJustAndElim(o)
+        case o: Just.OrIntro => return preJustOrIntro(o)
+        case o: Just.OrElim => return preJustOrElim(o)
+        case o: Just.ImplyIntro => return preJustImplyIntro(o)
+        case o: Just.ImplyElim => return preJustImplyElim(o)
+        case o: Just.NegIntro => return preJustNegIntro(o)
+        case o: Just.NegElim => return preJustNegElim(o)
+        case o: Just.BottomElim => return preJustBottomElim(o)
+        case o: Just.Pbc => return preJustPbc(o)
+        case o: Just.ForallIntro => return preJustForallIntro(o)
+        case o: Just.ForallElim => return preJustForallElim(o)
+        case o: Just.ExistsIntro => return preJustExistsIntro(o)
+        case o: Just.ExistsElim => return preJustExistsElim(o)
+        case o: Just.Fact => return preJustFact(o)
+        case o: Just.Invariant => return preJustInvariant(o)
+        case o: Just.Subst => return preJustSubst(o)
+        case o: Just.Auto => return preJustAuto(o)
+        case o: Just.Coq => return preJustCoq(o)
       }
     }
 
-    def transformJustPremise(o: Just.Premise): PreResult[Just] = {
+    def preJustPremise(o: Just.Premise): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustAndIntro(o: Just.AndIntro): PreResult[Just] = {
+    def preJustAndIntro(o: Just.AndIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustAndElim(o: Just.AndElim): PreResult[Just] = {
+    def preJustAndElim(o: Just.AndElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustOrIntro(o: Just.OrIntro): PreResult[Just] = {
+    def preJustOrIntro(o: Just.OrIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustOrElim(o: Just.OrElim): PreResult[Just] = {
+    def preJustOrElim(o: Just.OrElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustImplyIntro(o: Just.ImplyIntro): PreResult[Just] = {
+    def preJustImplyIntro(o: Just.ImplyIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustImplyElim(o: Just.ImplyElim): PreResult[Just] = {
+    def preJustImplyElim(o: Just.ImplyElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustNegIntro(o: Just.NegIntro): PreResult[Just] = {
+    def preJustNegIntro(o: Just.NegIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustNegElim(o: Just.NegElim): PreResult[Just] = {
+    def preJustNegElim(o: Just.NegElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustBottomElim(o: Just.BottomElim): PreResult[Just] = {
+    def preJustBottomElim(o: Just.BottomElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustPbc(o: Just.Pbc): PreResult[Just] = {
+    def preJustPbc(o: Just.Pbc): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustForallIntro(o: Just.ForallIntro): PreResult[Just] = {
+    def preJustForallIntro(o: Just.ForallIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustForallElim(o: Just.ForallElim): PreResult[Just] = {
+    def preJustForallElim(o: Just.ForallElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustExistsIntro(o: Just.ExistsIntro): PreResult[Just] = {
+    def preJustExistsIntro(o: Just.ExistsIntro): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustExistsElim(o: Just.ExistsElim): PreResult[Just] = {
+    def preJustExistsElim(o: Just.ExistsElim): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustFact(o: Just.Fact): PreResult[Just] = {
+    def preJustFact(o: Just.Fact): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustInvariant(o: Just.Invariant): PreResult[Just] = {
+    def preJustInvariant(o: Just.Invariant): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustSubst(o: Just.Subst): PreResult[Just] = {
+    def preJustSubst(o: Just.Subst): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustAuto(o: Just.Auto): PreResult[Just] = {
+    def preJustAuto(o: Just.Auto): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformJustCoq(o: Just.Coq): PreResult[Just] = {
+    def preJustCoq(o: Just.Coq): PreResult[Just] = {
       return PreResult(T, MNone())
     }
 
-    def transformTruthTableRow(o: TruthTable.Row): PreResult[TruthTable.Row] = {
+    def preTruthTableRow(o: TruthTable.Row): PreResult[TruthTable.Row] = {
       return PreResult(T, MNone())
     }
 
-    def transformTruthTableConclusion(o: TruthTable.Conclusion): PreResult[TruthTable.Conclusion] = {
+    def preTruthTableConclusion(o: TruthTable.Conclusion): PreResult[TruthTable.Conclusion] = {
       o match {
-        case o: TruthTable.Conclusion.Validity => return transformTruthTableConclusionValidity(o)
-        case o: TruthTable.Conclusion.Tautology => return transformTruthTableConclusionTautology(o)
-        case o: TruthTable.Conclusion.Contradictory => return transformTruthTableConclusionContradictory(o)
-        case o: TruthTable.Conclusion.Contingent => return transformTruthTableConclusionContingent(o)
+        case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(o)
+        case o: TruthTable.Conclusion.Tautology => return preTruthTableConclusionTautology(o)
+        case o: TruthTable.Conclusion.Contradictory => return preTruthTableConclusionContradictory(o)
+        case o: TruthTable.Conclusion.Contingent => return preTruthTableConclusionContingent(o)
       }
     }
 
-    def transformTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): PreResult[TruthTable.Conclusion] = {
+    def preTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): PreResult[TruthTable.Conclusion] = {
       return PreResult(T, MNone())
     }
 
-    def transformTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): PreResult[TruthTable.Conclusion] = {
+    def preTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): PreResult[TruthTable.Conclusion] = {
       return PreResult(T, MNone())
     }
 
-    def transformTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): PreResult[TruthTable.Conclusion] = {
+    def preTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): PreResult[TruthTable.Conclusion] = {
       return PreResult(T, MNone())
     }
 
-    def transformTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): PreResult[TruthTable.Conclusion] = {
+    def preTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): PreResult[TruthTable.Conclusion] = {
       return PreResult(T, MNone())
     }
 
-    def transformAttr(o: Attr): PreResult[Attr] = {
+    def preAttr(o: Attr): PreResult[Attr] = {
       return PreResult(T, MNone())
     }
 
-    def transformTypedAttr(o: TypedAttr): PreResult[TypedAttr] = {
+    def preTypedAttr(o: TypedAttr): PreResult[TypedAttr] = {
       return PreResult(T, MNone())
     }
 
-    def transformResolvedAttr(o: ResolvedAttr): PreResult[ResolvedAttr] = {
+    def preResolvedAttr(o: ResolvedAttr): PreResult[ResolvedAttr] = {
       return PreResult(T, MNone())
     }
 
-    def transformResolvedInfo(o: ResolvedInfo): PreResult[ResolvedInfo] = {
+    def preResolvedInfo(o: ResolvedInfo): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
-    def transformPosInfo(o: PosInfo): PreResult[PosInfo] = {
+    def prePosInfo(o: PosInfo): PreResult[PosInfo] = {
       return PreResult(T, MNone())
     }
 
-  }
-
-  @sig trait Post {
-
-    def transformTopUnit(o: TopUnit): MOption[TopUnit] = {
+    def postTopUnit(o: TopUnit): MOption[TopUnit] = {
       o match {
-        case o: TopUnit.Program => return transformTopUnitProgram(o)
-        case o: TopUnit.SequentUnit => return transformTopUnitSequentUnit(o)
-        case o: TopUnit.TruthTableUnit => return transformTopUnitTruthTableUnit(o)
+        case o: TopUnit.Program => return postTopUnitProgram(o)
+        case o: TopUnit.SequentUnit => return postTopUnitSequentUnit(o)
+        case o: TopUnit.TruthTableUnit => return postTopUnitTruthTableUnit(o)
       }
     }
 
-    def transformTopUnitProgram(o: TopUnit.Program): MOption[TopUnit] = {
+    def postTopUnitProgram(o: TopUnit.Program): MOption[TopUnit] = {
       return MNone()
     }
 
-    def transformTopUnitSequentUnit(o: TopUnit.SequentUnit): MOption[TopUnit] = {
+    def postTopUnitSequentUnit(o: TopUnit.SequentUnit): MOption[TopUnit] = {
       return MNone()
     }
 
-    def transformTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): MOption[TopUnit] = {
+    def postTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): MOption[TopUnit] = {
       return MNone()
     }
 
-    def transformStmt(o: Stmt): MOption[Stmt] = {
+    def postStmt(o: Stmt): MOption[Stmt] = {
       o match {
-        case o: Stmt.Import => return transformStmtImport(o)
-        case o: Stmt.Var => return transformStmtVar(o)
-        case o: Stmt.VarPattern => return transformStmtVarPattern(o)
-        case o: Stmt.SpecVar => return transformStmtSpecVar(o)
-        case o: Stmt.Method => return transformStmtMethod(o)
-        case o: Stmt.ExtMethod => return transformStmtExtMethod(o)
-        case o: Stmt.SpecMethod => return transformStmtSpecMethod(o)
-        case o: Stmt.Enum => return transformStmtEnum(o)
-        case o: Stmt.Object => return transformStmtObject(o)
-        case o: Stmt.Sig => return transformStmtSig(o)
-        case o: Stmt.AbstractDatatype => return transformStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return transformStmtRich(o)
-        case o: Stmt.TypeAlias => return transformStmtTypeAlias(o)
-        case o: Stmt.Assign => return transformStmtAssign(o)
-        case o: Stmt.AssignUp => return transformStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return transformStmtAssignPattern(o)
-        case o: Stmt.Block => return transformStmtBlock(o)
-        case o: Stmt.If => return transformStmtIf(o)
-        case o: Stmt.Match => return transformStmtMatch(o)
-        case o: Stmt.While => return transformStmtWhile(o)
-        case o: Stmt.DoWhile => return transformStmtDoWhile(o)
-        case o: Stmt.For => return transformStmtFor(o)
-        case o: Stmt.Return => return transformStmtReturn(o)
-        case o: Stmt.LStmt => return transformStmtLStmt(o)
-        case o: Stmt.Expr => return transformStmtExpr(o)
+        case o: Stmt.Import => return postStmtImport(o)
+        case o: Stmt.Var => return postStmtVar(o)
+        case o: Stmt.VarPattern => return postStmtVarPattern(o)
+        case o: Stmt.SpecVar => return postStmtSpecVar(o)
+        case o: Stmt.Method => return postStmtMethod(o)
+        case o: Stmt.ExtMethod => return postStmtExtMethod(o)
+        case o: Stmt.SpecMethod => return postStmtSpecMethod(o)
+        case o: Stmt.Enum => return postStmtEnum(o)
+        case o: Stmt.Object => return postStmtObject(o)
+        case o: Stmt.Sig => return postStmtSig(o)
+        case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
+        case o: Stmt.Rich => return postStmtRich(o)
+        case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
+        case o: Stmt.Assign => return postStmtAssign(o)
+        case o: Stmt.AssignUp => return postStmtAssignUp(o)
+        case o: Stmt.AssignPattern => return postStmtAssignPattern(o)
+        case o: Stmt.Block => return postStmtBlock(o)
+        case o: Stmt.If => return postStmtIf(o)
+        case o: Stmt.Match => return postStmtMatch(o)
+        case o: Stmt.While => return postStmtWhile(o)
+        case o: Stmt.DoWhile => return postStmtDoWhile(o)
+        case o: Stmt.For => return postStmtFor(o)
+        case o: Stmt.Return => return postStmtReturn(o)
+        case o: Stmt.LStmt => return postStmtLStmt(o)
+        case o: Stmt.Expr => return postStmtExpr(o)
       }
     }
 
-    def transformStmtImport(o: Stmt.Import): MOption[Stmt] = {
+    def postStmtImport(o: Stmt.Import): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
+    def postStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
       return MNone()
     }
 
-    def transformStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
+    def postStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
       o match {
-        case o: Stmt.Import.MultiSelector => return transformStmtImportMultiSelector(o)
-        case o: Stmt.Import.WildcardSelector => return transformStmtImportWildcardSelector(o)
+        case o: Stmt.Import.MultiSelector => return postStmtImportMultiSelector(o)
+        case o: Stmt.Import.WildcardSelector => return postStmtImportWildcardSelector(o)
       }
     }
 
-    def transformStmtImportMultiSelector(o: Stmt.Import.MultiSelector): MOption[Stmt.Import.Selector] = {
+    def postStmtImportMultiSelector(o: Stmt.Import.MultiSelector): MOption[Stmt.Import.Selector] = {
       return MNone()
     }
 
-    def transformStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): MOption[Stmt.Import.Selector] = {
+    def postStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): MOption[Stmt.Import.Selector] = {
       return MNone()
     }
 
-    def transformStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
+    def postStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
       return MNone()
     }
 
-    def transformStmtVar(o: Stmt.Var): MOption[Stmt] = {
+    def postStmtVar(o: Stmt.Var): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtVarPattern(o: Stmt.VarPattern): MOption[Stmt] = {
+    def postStmtVarPattern(o: Stmt.VarPattern): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtSpecVar(o: Stmt.SpecVar): MOption[Stmt] = {
+    def postStmtSpecVar(o: Stmt.SpecVar): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtMethod(o: Stmt.Method): MOption[Stmt] = {
+    def postStmtMethod(o: Stmt.Method): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtExtMethod(o: Stmt.ExtMethod): MOption[Stmt] = {
+    def postStmtExtMethod(o: Stmt.ExtMethod): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtSpecMethod(o: Stmt.SpecMethod): MOption[Stmt] = {
+    def postStmtSpecMethod(o: Stmt.SpecMethod): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtEnum(o: Stmt.Enum): MOption[Stmt] = {
+    def postStmtEnum(o: Stmt.Enum): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtObject(o: Stmt.Object): MOption[Stmt] = {
+    def postStmtObject(o: Stmt.Object): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtSig(o: Stmt.Sig): MOption[Stmt] = {
+    def postStmtSig(o: Stmt.Sig): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
+    def postStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtRich(o: Stmt.Rich): MOption[Stmt] = {
+    def postStmtRich(o: Stmt.Rich): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtTypeAlias(o: Stmt.TypeAlias): MOption[Stmt] = {
+    def postStmtTypeAlias(o: Stmt.TypeAlias): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtAssign(o: Stmt.Assign): MOption[Stmt] = {
+    def postStmtAssign(o: Stmt.Assign): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtAssignUp(o: Stmt.AssignUp): MOption[Stmt] = {
+    def postStmtAssignUp(o: Stmt.AssignUp): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtAssignPattern(o: Stmt.AssignPattern): MOption[Stmt] = {
+    def postStmtAssignPattern(o: Stmt.AssignPattern): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtBlock(o: Stmt.Block): MOption[Stmt] = {
+    def postStmtBlock(o: Stmt.Block): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtIf(o: Stmt.If): MOption[Stmt] = {
+    def postStmtIf(o: Stmt.If): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtMatch(o: Stmt.Match): MOption[Stmt] = {
+    def postStmtMatch(o: Stmt.Match): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtWhile(o: Stmt.While): MOption[Stmt] = {
+    def postStmtWhile(o: Stmt.While): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtDoWhile(o: Stmt.DoWhile): MOption[Stmt] = {
+    def postStmtDoWhile(o: Stmt.DoWhile): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtFor(o: Stmt.For): MOption[Stmt] = {
+    def postStmtFor(o: Stmt.For): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtReturn(o: Stmt.Return): MOption[Stmt] = {
+    def postStmtReturn(o: Stmt.Return): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtLStmt(o: Stmt.LStmt): MOption[Stmt] = {
+    def postStmtLStmt(o: Stmt.LStmt): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformStmtExpr(o: Stmt.Expr): MOption[Stmt] = {
+    def postStmtExpr(o: Stmt.Expr): MOption[Stmt] = {
       return MNone()
     }
 
-    def transformLClause(o: LClause): MOption[LClause] = {
+    def postLClause(o: LClause): MOption[LClause] = {
       o match {
-        case o: LClause.Invariants => return transformLClauseInvariants(o)
-        case o: LClause.Facts => return transformLClauseFacts(o)
-        case o: LClause.Theorems => return transformLClauseTheorems(o)
-        case o: LClause.Sequent => return transformLClauseSequent(o)
-        case o: LClause.Proof => return transformLClauseProof(o)
+        case o: LClause.Invariants => return postLClauseInvariants(o)
+        case o: LClause.Facts => return postLClauseFacts(o)
+        case o: LClause.Theorems => return postLClauseTheorems(o)
+        case o: LClause.Sequent => return postLClauseSequent(o)
+        case o: LClause.Proof => return postLClauseProof(o)
       }
     }
 
-    def transformLClauseInvariants(o: LClause.Invariants): MOption[LClause] = {
+    def postLClauseInvariants(o: LClause.Invariants): MOption[LClause] = {
       return MNone()
     }
 
-    def transformLClauseFacts(o: LClause.Facts): MOption[LClause] = {
+    def postLClauseFacts(o: LClause.Facts): MOption[LClause] = {
       return MNone()
     }
 
-    def transformLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
+    def postLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
       return MNone()
     }
 
-    def transformLClauseTheorems(o: LClause.Theorems): MOption[LClause] = {
+    def postLClauseTheorems(o: LClause.Theorems): MOption[LClause] = {
       return MNone()
     }
 
-    def transformLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
+    def postLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
       return MNone()
     }
 
-    def transformLClauseSequent(o: LClause.Sequent): MOption[LClause] = {
+    def postLClauseSequent(o: LClause.Sequent): MOption[LClause] = {
       return MNone()
     }
 
-    def transformLClauseProof(o: LClause.Proof): MOption[LClause] = {
+    def postLClauseProof(o: LClause.Proof): MOption[LClause] = {
       return MNone()
     }
 
-    def transformContractExp(o: ContractExp): MOption[ContractExp] = {
+    def postContractExp(o: ContractExp): MOption[ContractExp] = {
       return MNone()
     }
 
-    def transformCase(o: Case): MOption[Case] = {
+    def postCase(o: Case): MOption[Case] = {
       return MNone()
     }
 
-    def transformRange(o: Range): MOption[Range] = {
+    def postRange(o: Range): MOption[Range] = {
       o match {
-        case o: Range.Expr => return transformRangeExpr(o)
-        case o: Range.Indices => return transformRangeIndices(o)
-        case o: Range.Step => return transformRangeStep(o)
+        case o: Range.Expr => return postRangeExpr(o)
+        case o: Range.Indices => return postRangeIndices(o)
+        case o: Range.Step => return postRangeStep(o)
       }
     }
 
-    def transformRangeExpr(o: Range.Expr): MOption[Range] = {
+    def postRangeExpr(o: Range.Expr): MOption[Range] = {
       return MNone()
     }
 
-    def transformRangeIndices(o: Range.Indices): MOption[Range] = {
+    def postRangeIndices(o: Range.Indices): MOption[Range] = {
       return MNone()
     }
 
-    def transformRangeStep(o: Range.Step): MOption[Range] = {
+    def postRangeStep(o: Range.Step): MOption[Range] = {
       return MNone()
     }
 
-    def transformType(o: Type): MOption[Type] = {
+    def postType(o: Type): MOption[Type] = {
       o match {
-        case o: Type.Named => return transformTypeNamed(o)
-        case o: Type.Fun => return transformTypeFun(o)
-        case o: Type.Tuple => return transformTypeTuple(o)
+        case o: Type.Named => return postTypeNamed(o)
+        case o: Type.Fun => return postTypeFun(o)
+        case o: Type.Tuple => return postTypeTuple(o)
       }
     }
 
-    def transformTypeNamed(o: Type.Named): MOption[Type] = {
+    def postTypeNamed(o: Type.Named): MOption[Type] = {
       return MNone()
     }
 
-    def transformTypeFun(o: Type.Fun): MOption[Type] = {
+    def postTypeFun(o: Type.Fun): MOption[Type] = {
       return MNone()
     }
 
-    def transformTypeTuple(o: Type.Tuple): MOption[Type] = {
+    def postTypeTuple(o: Type.Tuple): MOption[Type] = {
       return MNone()
     }
 
-    def transformPattern(o: Pattern): MOption[Pattern] = {
+    def postPattern(o: Pattern): MOption[Pattern] = {
       o match {
-        case o: Pattern.Literal => return transformPatternLiteral(o)
-        case o: Pattern.Ref => return transformPatternRef(o)
-        case o: Pattern.Variable => return transformPatternVariable(o)
-        case o: Pattern.Wildcard => return transformPatternWildcard(o)
-        case o: Pattern.SeqWildcard => return transformPatternSeqWildcard(o)
-        case o: Pattern.Structure => return transformPatternStructure(o)
+        case o: Pattern.Literal => return postPatternLiteral(o)
+        case o: Pattern.Ref => return postPatternRef(o)
+        case o: Pattern.Variable => return postPatternVariable(o)
+        case o: Pattern.Wildcard => return postPatternWildcard(o)
+        case o: Pattern.SeqWildcard => return postPatternSeqWildcard(o)
+        case o: Pattern.Structure => return postPatternStructure(o)
       }
     }
 
-    def transformPatternLiteral(o: Pattern.Literal): MOption[Pattern] = {
+    def postPatternLiteral(o: Pattern.Literal): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformPatternRef(o: Pattern.Ref): MOption[Pattern] = {
+    def postPatternRef(o: Pattern.Ref): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformPatternVariable(o: Pattern.Variable): MOption[Pattern] = {
+    def postPatternVariable(o: Pattern.Variable): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformPatternWildcard(o: Pattern.Wildcard): MOption[Pattern] = {
+    def postPatternWildcard(o: Pattern.Wildcard): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformPatternSeqWildcard(o: Pattern.SeqWildcard): MOption[Pattern] = {
+    def postPatternSeqWildcard(o: Pattern.SeqWildcard): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformPatternStructure(o: Pattern.Structure): MOption[Pattern] = {
+    def postPatternStructure(o: Pattern.Structure): MOption[Pattern] = {
       return MNone()
     }
 
-    def transformExp(o: Exp): MOption[Exp] = {
+    def postExp(o: Exp): MOption[Exp] = {
       o match {
-        case o: Exp.LitB => return transformExpLitB(o)
-        case o: Exp.LitC => return transformExpLitC(o)
-        case o: Exp.LitZ => return transformExpLitZ(o)
-        case o: Exp.LitZ8 => return transformExpLitZ8(o)
-        case o: Exp.LitZ16 => return transformExpLitZ16(o)
-        case o: Exp.LitZ32 => return transformExpLitZ32(o)
-        case o: Exp.LitZ64 => return transformExpLitZ64(o)
-        case o: Exp.LitN => return transformExpLitN(o)
-        case o: Exp.LitN8 => return transformExpLitN8(o)
-        case o: Exp.LitN16 => return transformExpLitN16(o)
-        case o: Exp.LitN32 => return transformExpLitN32(o)
-        case o: Exp.LitN64 => return transformExpLitN64(o)
-        case o: Exp.LitS8 => return transformExpLitS8(o)
-        case o: Exp.LitS16 => return transformExpLitS16(o)
-        case o: Exp.LitS32 => return transformExpLitS32(o)
-        case o: Exp.LitS64 => return transformExpLitS64(o)
-        case o: Exp.LitU8 => return transformExpLitU8(o)
-        case o: Exp.LitU16 => return transformExpLitU16(o)
-        case o: Exp.LitU32 => return transformExpLitU32(o)
-        case o: Exp.LitU64 => return transformExpLitU64(o)
-        case o: Exp.LitF32 => return transformExpLitF32(o)
-        case o: Exp.LitF64 => return transformExpLitF64(o)
-        case o: Exp.LitR => return transformExpLitR(o)
-        case o: Exp.LitBv => return transformExpLitBv(o)
-        case o: Exp.LitString => return transformExpLitString(o)
-        case o: Exp.StringInterpolate => return transformExpStringInterpolate(o)
-        case o: Exp.This => return transformExpThis(o)
-        case o: Exp.Unary => return transformExpUnary(o)
-        case o: Exp.Binary => return transformExpBinary(o)
-        case o: Exp.Ident => return transformExpIdent(o)
-        case o: Exp.Eta => return transformExpEta(o)
-        case o: Exp.Tuple => return transformExpTuple(o)
-        case o: Exp.Select => return transformExpSelect(o)
-        case o: Exp.Invoke => return transformExpInvoke(o)
-        case o: Exp.InvokeNamed => return transformExpInvokeNamed(o)
-        case o: Exp.If => return transformExpIf(o)
-        case o: Exp.Quant => return transformExpQuant(o)
+        case o: Exp.LitB => return postExpLitB(o)
+        case o: Exp.LitC => return postExpLitC(o)
+        case o: Exp.LitZ => return postExpLitZ(o)
+        case o: Exp.LitZ8 => return postExpLitZ8(o)
+        case o: Exp.LitZ16 => return postExpLitZ16(o)
+        case o: Exp.LitZ32 => return postExpLitZ32(o)
+        case o: Exp.LitZ64 => return postExpLitZ64(o)
+        case o: Exp.LitN => return postExpLitN(o)
+        case o: Exp.LitN8 => return postExpLitN8(o)
+        case o: Exp.LitN16 => return postExpLitN16(o)
+        case o: Exp.LitN32 => return postExpLitN32(o)
+        case o: Exp.LitN64 => return postExpLitN64(o)
+        case o: Exp.LitS8 => return postExpLitS8(o)
+        case o: Exp.LitS16 => return postExpLitS16(o)
+        case o: Exp.LitS32 => return postExpLitS32(o)
+        case o: Exp.LitS64 => return postExpLitS64(o)
+        case o: Exp.LitU8 => return postExpLitU8(o)
+        case o: Exp.LitU16 => return postExpLitU16(o)
+        case o: Exp.LitU32 => return postExpLitU32(o)
+        case o: Exp.LitU64 => return postExpLitU64(o)
+        case o: Exp.LitF32 => return postExpLitF32(o)
+        case o: Exp.LitF64 => return postExpLitF64(o)
+        case o: Exp.LitR => return postExpLitR(o)
+        case o: Exp.LitBv => return postExpLitBv(o)
+        case o: Exp.LitString => return postExpLitString(o)
+        case o: Exp.StringInterpolate => return postExpStringInterpolate(o)
+        case o: Exp.This => return postExpThis(o)
+        case o: Exp.Unary => return postExpUnary(o)
+        case o: Exp.Binary => return postExpBinary(o)
+        case o: Exp.Ident => return postExpIdent(o)
+        case o: Exp.Eta => return postExpEta(o)
+        case o: Exp.Tuple => return postExpTuple(o)
+        case o: Exp.Select => return postExpSelect(o)
+        case o: Exp.Invoke => return postExpInvoke(o)
+        case o: Exp.InvokeNamed => return postExpInvokeNamed(o)
+        case o: Exp.If => return postExpIf(o)
+        case o: Exp.Quant => return postExpQuant(o)
       }
     }
 
-    def transformExpLitB(o: Exp.LitB): MOption[Exp] = {
+    def postExpLitB(o: Exp.LitB): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitC(o: Exp.LitC): MOption[Exp] = {
+    def postExpLitC(o: Exp.LitC): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitZ(o: Exp.LitZ): MOption[Exp] = {
+    def postExpLitZ(o: Exp.LitZ): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitZ8(o: Exp.LitZ8): MOption[Exp] = {
+    def postExpLitZ8(o: Exp.LitZ8): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitZ16(o: Exp.LitZ16): MOption[Exp] = {
+    def postExpLitZ16(o: Exp.LitZ16): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitZ32(o: Exp.LitZ32): MOption[Exp] = {
+    def postExpLitZ32(o: Exp.LitZ32): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitZ64(o: Exp.LitZ64): MOption[Exp] = {
+    def postExpLitZ64(o: Exp.LitZ64): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitN(o: Exp.LitN): MOption[Exp] = {
+    def postExpLitN(o: Exp.LitN): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitN8(o: Exp.LitN8): MOption[Exp] = {
+    def postExpLitN8(o: Exp.LitN8): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitN16(o: Exp.LitN16): MOption[Exp] = {
+    def postExpLitN16(o: Exp.LitN16): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitN32(o: Exp.LitN32): MOption[Exp] = {
+    def postExpLitN32(o: Exp.LitN32): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitN64(o: Exp.LitN64): MOption[Exp] = {
+    def postExpLitN64(o: Exp.LitN64): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitS8(o: Exp.LitS8): MOption[Exp] = {
+    def postExpLitS8(o: Exp.LitS8): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitS16(o: Exp.LitS16): MOption[Exp] = {
+    def postExpLitS16(o: Exp.LitS16): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitS32(o: Exp.LitS32): MOption[Exp] = {
+    def postExpLitS32(o: Exp.LitS32): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitS64(o: Exp.LitS64): MOption[Exp] = {
+    def postExpLitS64(o: Exp.LitS64): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitU8(o: Exp.LitU8): MOption[Exp] = {
+    def postExpLitU8(o: Exp.LitU8): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitU16(o: Exp.LitU16): MOption[Exp] = {
+    def postExpLitU16(o: Exp.LitU16): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitU32(o: Exp.LitU32): MOption[Exp] = {
+    def postExpLitU32(o: Exp.LitU32): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitU64(o: Exp.LitU64): MOption[Exp] = {
+    def postExpLitU64(o: Exp.LitU64): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitF32(o: Exp.LitF32): MOption[Exp] = {
+    def postExpLitF32(o: Exp.LitF32): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitF64(o: Exp.LitF64): MOption[Exp] = {
+    def postExpLitF64(o: Exp.LitF64): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitR(o: Exp.LitR): MOption[Exp] = {
+    def postExpLitR(o: Exp.LitR): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitBv(o: Exp.LitBv): MOption[Exp] = {
+    def postExpLitBv(o: Exp.LitBv): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpLitString(o: Exp.LitString): MOption[Exp] = {
+    def postExpLitString(o: Exp.LitString): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpStringInterpolate(o: Exp.StringInterpolate): MOption[Exp] = {
+    def postExpStringInterpolate(o: Exp.StringInterpolate): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpThis(o: Exp.This): MOption[Exp] = {
+    def postExpThis(o: Exp.This): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpUnary(o: Exp.Unary): MOption[Exp] = {
+    def postExpUnary(o: Exp.Unary): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpBinary(o: Exp.Binary): MOption[Exp] = {
+    def postExpBinary(o: Exp.Binary): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpIdent(o: Exp.Ident): MOption[Exp] = {
+    def postExpIdent(o: Exp.Ident): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpEta(o: Exp.Eta): MOption[Exp] = {
+    def postExpEta(o: Exp.Eta): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpTuple(o: Exp.Tuple): MOption[Exp] = {
+    def postExpTuple(o: Exp.Tuple): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpSelect(o: Exp.Select): MOption[Exp] = {
+    def postExpSelect(o: Exp.Select): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpInvoke(o: Exp.Invoke): MOption[Exp] = {
+    def postExpInvoke(o: Exp.Invoke): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpInvokeNamed(o: Exp.InvokeNamed): MOption[Exp] = {
+    def postExpInvokeNamed(o: Exp.InvokeNamed): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpIf(o: Exp.If): MOption[Exp] = {
+    def postExpIf(o: Exp.If): MOption[Exp] = {
       return MNone()
     }
 
-    def transformExpQuant(o: Exp.Quant): MOption[Exp] = {
+    def postExpQuant(o: Exp.Quant): MOption[Exp] = {
       return MNone()
     }
 
-    def transformNamedArg(o: NamedArg): MOption[NamedArg] = {
+    def postNamedArg(o: NamedArg): MOption[NamedArg] = {
       return MNone()
     }
 
-    def transformVarFragment(o: VarFragment): MOption[VarFragment] = {
+    def postVarFragment(o: VarFragment): MOption[VarFragment] = {
       return MNone()
     }
 
-    def transformDomain(o: Domain): MOption[Domain] = {
+    def postDomain(o: Domain): MOption[Domain] = {
       o match {
-        case o: Domain.Type => return transformDomainType(o)
-        case o: Domain.Range => return transformDomainRange(o)
+        case o: Domain.Type => return postDomainType(o)
+        case o: Domain.Range => return postDomainRange(o)
       }
     }
 
-    def transformDomainType(o: Domain.Type): MOption[Domain] = {
+    def postDomainType(o: Domain.Type): MOption[Domain] = {
       return MNone()
     }
 
-    def transformDomainRange(o: Domain.Range): MOption[Domain] = {
+    def postDomainRange(o: Domain.Range): MOption[Domain] = {
       return MNone()
     }
 
-    def transformId(o: Id): MOption[Id] = {
+    def postId(o: Id): MOption[Id] = {
       return MNone()
     }
 
-    def transformName(o: Name): MOption[Name] = {
+    def postName(o: Name): MOption[Name] = {
       return MNone()
     }
 
-    def transformBody(o: Body): MOption[Body] = {
+    def postBody(o: Body): MOption[Body] = {
       return MNone()
     }
 
-    def transformAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
+    def postAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
       return MNone()
     }
 
-    def transformMethodSig(o: MethodSig): MOption[MethodSig] = {
+    def postMethodSig(o: MethodSig): MOption[MethodSig] = {
       return MNone()
     }
 
-    def transformParam(o: Param): MOption[Param] = {
+    def postParam(o: Param): MOption[Param] = {
       return MNone()
     }
 
-    def transformTypeParam(o: TypeParam): MOption[TypeParam] = {
+    def postTypeParam(o: TypeParam): MOption[TypeParam] = {
       return MNone()
     }
 
-    def transformContract(o: Contract): MOption[Contract] = {
+    def postContract(o: Contract): MOption[Contract] = {
       return MNone()
     }
 
-    def transformSubContract(o: SubContract): MOption[SubContract] = {
+    def postSubContract(o: SubContract): MOption[SubContract] = {
       return MNone()
     }
 
-    def transformSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
+    def postSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
       return MNone()
     }
 
-    def transformWhereDef(o: WhereDef): MOption[WhereDef] = {
+    def postWhereDef(o: WhereDef): MOption[WhereDef] = {
       o match {
-        case o: WhereDef.Val => return transformWhereDefVal(o)
-        case o: WhereDef.Def => return transformWhereDefDef(o)
+        case o: WhereDef.Val => return postWhereDefVal(o)
+        case o: WhereDef.Def => return postWhereDefDef(o)
       }
     }
 
-    def transformWhereDefVal(o: WhereDef.Val): MOption[WhereDef] = {
+    def postWhereDefVal(o: WhereDef.Val): MOption[WhereDef] = {
       return MNone()
     }
 
-    def transformWhereDefDef(o: WhereDef.Def): MOption[WhereDef] = {
+    def postWhereDefDef(o: WhereDef.Def): MOption[WhereDef] = {
       return MNone()
     }
 
-    def transformSpecDef(o: SpecDef): MOption[SpecDef] = {
+    def postSpecDef(o: SpecDef): MOption[SpecDef] = {
       return MNone()
     }
 
-    def transformProofStep(o: ProofStep): MOption[ProofStep] = {
+    def postProofStep(o: ProofStep): MOption[ProofStep] = {
       o match {
-        case o: ProofStep.Basic => return transformProofStepBasic(o)
-        case o: ProofStep.SubProof => return transformProofStepSubProof(o)
+        case o: ProofStep.Basic => return postProofStepBasic(o)
+        case o: ProofStep.SubProof => return postProofStepSubProof(o)
       }
     }
 
-    def transformProofStepBasic(o: ProofStep.Basic): MOption[ProofStep] = {
+    def postProofStepBasic(o: ProofStep.Basic): MOption[ProofStep] = {
       return MNone()
     }
 
-    def transformProofStepSubProof(o: ProofStep.SubProof): MOption[ProofStep] = {
+    def postProofStepSubProof(o: ProofStep.SubProof): MOption[ProofStep] = {
       return MNone()
     }
 
-    def transformAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
+    def postAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
       o match {
-        case o: AssumeProofStep.Regular => return transformAssumeProofStepRegular(o)
-        case o: AssumeProofStep.ForallIntroAps => return transformAssumeProofStepForallIntroAps(o)
-        case o: AssumeProofStep.ExistsElimAps => return transformAssumeProofStepExistsElimAps(o)
+        case o: AssumeProofStep.Regular => return postAssumeProofStepRegular(o)
+        case o: AssumeProofStep.ForallIntroAps => return postAssumeProofStepForallIntroAps(o)
+        case o: AssumeProofStep.ExistsElimAps => return postAssumeProofStepExistsElimAps(o)
       }
     }
 
-    def transformAssumeProofStepRegular(o: AssumeProofStep.Regular): MOption[AssumeProofStep] = {
+    def postAssumeProofStepRegular(o: AssumeProofStep.Regular): MOption[AssumeProofStep] = {
       return MNone()
     }
 
-    def transformAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): MOption[AssumeProofStep] = {
+    def postAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): MOption[AssumeProofStep] = {
       return MNone()
     }
 
-    def transformAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): MOption[AssumeProofStep] = {
+    def postAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): MOption[AssumeProofStep] = {
       return MNone()
     }
 
-    def transformJust(o: Just): MOption[Just] = {
+    def postJust(o: Just): MOption[Just] = {
       o match {
-        case o: Just.Premise => return transformJustPremise(o)
-        case o: Just.AndIntro => return transformJustAndIntro(o)
-        case o: Just.AndElim => return transformJustAndElim(o)
-        case o: Just.OrIntro => return transformJustOrIntro(o)
-        case o: Just.OrElim => return transformJustOrElim(o)
-        case o: Just.ImplyIntro => return transformJustImplyIntro(o)
-        case o: Just.ImplyElim => return transformJustImplyElim(o)
-        case o: Just.NegIntro => return transformJustNegIntro(o)
-        case o: Just.NegElim => return transformJustNegElim(o)
-        case o: Just.BottomElim => return transformJustBottomElim(o)
-        case o: Just.Pbc => return transformJustPbc(o)
-        case o: Just.ForallIntro => return transformJustForallIntro(o)
-        case o: Just.ForallElim => return transformJustForallElim(o)
-        case o: Just.ExistsIntro => return transformJustExistsIntro(o)
-        case o: Just.ExistsElim => return transformJustExistsElim(o)
-        case o: Just.Fact => return transformJustFact(o)
-        case o: Just.Invariant => return transformJustInvariant(o)
-        case o: Just.Subst => return transformJustSubst(o)
-        case o: Just.Auto => return transformJustAuto(o)
-        case o: Just.Coq => return transformJustCoq(o)
+        case o: Just.Premise => return postJustPremise(o)
+        case o: Just.AndIntro => return postJustAndIntro(o)
+        case o: Just.AndElim => return postJustAndElim(o)
+        case o: Just.OrIntro => return postJustOrIntro(o)
+        case o: Just.OrElim => return postJustOrElim(o)
+        case o: Just.ImplyIntro => return postJustImplyIntro(o)
+        case o: Just.ImplyElim => return postJustImplyElim(o)
+        case o: Just.NegIntro => return postJustNegIntro(o)
+        case o: Just.NegElim => return postJustNegElim(o)
+        case o: Just.BottomElim => return postJustBottomElim(o)
+        case o: Just.Pbc => return postJustPbc(o)
+        case o: Just.ForallIntro => return postJustForallIntro(o)
+        case o: Just.ForallElim => return postJustForallElim(o)
+        case o: Just.ExistsIntro => return postJustExistsIntro(o)
+        case o: Just.ExistsElim => return postJustExistsElim(o)
+        case o: Just.Fact => return postJustFact(o)
+        case o: Just.Invariant => return postJustInvariant(o)
+        case o: Just.Subst => return postJustSubst(o)
+        case o: Just.Auto => return postJustAuto(o)
+        case o: Just.Coq => return postJustCoq(o)
       }
     }
 
-    def transformJustPremise(o: Just.Premise): MOption[Just] = {
+    def postJustPremise(o: Just.Premise): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustAndIntro(o: Just.AndIntro): MOption[Just] = {
+    def postJustAndIntro(o: Just.AndIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustAndElim(o: Just.AndElim): MOption[Just] = {
+    def postJustAndElim(o: Just.AndElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustOrIntro(o: Just.OrIntro): MOption[Just] = {
+    def postJustOrIntro(o: Just.OrIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustOrElim(o: Just.OrElim): MOption[Just] = {
+    def postJustOrElim(o: Just.OrElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustImplyIntro(o: Just.ImplyIntro): MOption[Just] = {
+    def postJustImplyIntro(o: Just.ImplyIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustImplyElim(o: Just.ImplyElim): MOption[Just] = {
+    def postJustImplyElim(o: Just.ImplyElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustNegIntro(o: Just.NegIntro): MOption[Just] = {
+    def postJustNegIntro(o: Just.NegIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustNegElim(o: Just.NegElim): MOption[Just] = {
+    def postJustNegElim(o: Just.NegElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustBottomElim(o: Just.BottomElim): MOption[Just] = {
+    def postJustBottomElim(o: Just.BottomElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustPbc(o: Just.Pbc): MOption[Just] = {
+    def postJustPbc(o: Just.Pbc): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustForallIntro(o: Just.ForallIntro): MOption[Just] = {
+    def postJustForallIntro(o: Just.ForallIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustForallElim(o: Just.ForallElim): MOption[Just] = {
+    def postJustForallElim(o: Just.ForallElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustExistsIntro(o: Just.ExistsIntro): MOption[Just] = {
+    def postJustExistsIntro(o: Just.ExistsIntro): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustExistsElim(o: Just.ExistsElim): MOption[Just] = {
+    def postJustExistsElim(o: Just.ExistsElim): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustFact(o: Just.Fact): MOption[Just] = {
+    def postJustFact(o: Just.Fact): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustInvariant(o: Just.Invariant): MOption[Just] = {
+    def postJustInvariant(o: Just.Invariant): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustSubst(o: Just.Subst): MOption[Just] = {
+    def postJustSubst(o: Just.Subst): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustAuto(o: Just.Auto): MOption[Just] = {
+    def postJustAuto(o: Just.Auto): MOption[Just] = {
       return MNone()
     }
 
-    def transformJustCoq(o: Just.Coq): MOption[Just] = {
+    def postJustCoq(o: Just.Coq): MOption[Just] = {
       return MNone()
     }
 
-    def transformTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
+    def postTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
       return MNone()
     }
 
-    def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
+    def postTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
       o match {
-        case o: TruthTable.Conclusion.Validity => return transformTruthTableConclusionValidity(o)
-        case o: TruthTable.Conclusion.Tautology => return transformTruthTableConclusionTautology(o)
-        case o: TruthTable.Conclusion.Contradictory => return transformTruthTableConclusionContradictory(o)
-        case o: TruthTable.Conclusion.Contingent => return transformTruthTableConclusionContingent(o)
+        case o: TruthTable.Conclusion.Validity => return postTruthTableConclusionValidity(o)
+        case o: TruthTable.Conclusion.Tautology => return postTruthTableConclusionTautology(o)
+        case o: TruthTable.Conclusion.Contradictory => return postTruthTableConclusionContradictory(o)
+        case o: TruthTable.Conclusion.Contingent => return postTruthTableConclusionContingent(o)
       }
     }
 
-    def transformTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): MOption[TruthTable.Conclusion] = {
+    def postTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): MOption[TruthTable.Conclusion] = {
       return MNone()
     }
 
-    def transformTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): MOption[TruthTable.Conclusion] = {
+    def postTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): MOption[TruthTable.Conclusion] = {
       return MNone()
     }
 
-    def transformTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): MOption[TruthTable.Conclusion] = {
+    def postTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): MOption[TruthTable.Conclusion] = {
       return MNone()
     }
 
-    def transformTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): MOption[TruthTable.Conclusion] = {
+    def postTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): MOption[TruthTable.Conclusion] = {
       return MNone()
     }
 
-    def transformAttr(o: Attr): MOption[Attr] = {
+    def postAttr(o: Attr): MOption[Attr] = {
       return MNone()
     }
 
-    def transformTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
+    def postTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
       return MNone()
     }
 
-    def transformResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
+    def postResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
       return MNone()
     }
 
-    def transformResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
+    def postResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
       return MNone()
     }
 
-    def transformPosInfo(o: PosInfo): MOption[PosInfo] = {
+    def postPosInfo(o: PosInfo): MOption[PosInfo] = {
       return MNone()
     }
 
@@ -1587,10 +1583,10 @@ object MTransformer {
 
 import MTransformer._
 
-@record class MTransformer(pre: Pre, post: Post) {
+@record class MTransformer(pp: PrePost) {
 
   def transformTopUnit(o: TopUnit): MOption[TopUnit] = {
-    val preR: PreResult[TopUnit] = pre.transformTopUnit(o)
+    val preR: PreResult[TopUnit] = pp.preTopUnit(o)
     val r: MOption[TopUnit] = if (preR.continue) {
       val o2: TopUnit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1626,7 +1622,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TopUnit = r.getOrElse(o)
-    val postR: MOption[TopUnit] = post.transformTopUnit(o2)
+    val postR: MOption[TopUnit] = pp.postTopUnit(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1637,7 +1633,7 @@ import MTransformer._
   }
 
   def transformLClauseSequent(o: LClause.Sequent): MOption[LClause.Sequent] = {
-    val preR: PreResult[LClause.Sequent] = pre.transformLClauseSequent(o) match {
+    val preR: PreResult[LClause.Sequent] = pp.preLClauseSequent(o) match {
       case PreResult(continue, MSome(r: LClause.Sequent)) => PreResult(continue, MSome[LClause.Sequent](r))
       case _ => assert(F); PreResult(F, MNone[LClause.Sequent]())
     }
@@ -1658,7 +1654,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Sequent = r.getOrElse(o)
-    val postR: MOption[LClause.Sequent] = post.transformLClauseSequent(o2) match {
+    val postR: MOption[LClause.Sequent] = pp.postLClauseSequent(o2) match {
       case MSome(result: LClause.Sequent) => MSome[LClause.Sequent](result)
       case _ => assert(F); MNone[LClause.Sequent]()
     }
@@ -1672,7 +1668,7 @@ import MTransformer._
   }
 
   def transformLClauseProof(o: LClause.Proof): MOption[LClause.Proof] = {
-    val preR: PreResult[LClause.Proof] = pre.transformLClauseProof(o) match {
+    val preR: PreResult[LClause.Proof] = pp.preLClauseProof(o) match {
       case PreResult(continue, MSome(r: LClause.Proof)) => PreResult(continue, MSome[LClause.Proof](r))
       case _ => assert(F); PreResult(F, MNone[LClause.Proof]())
     }
@@ -1691,7 +1687,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Proof = r.getOrElse(o)
-    val postR: MOption[LClause.Proof] = post.transformLClauseProof(o2) match {
+    val postR: MOption[LClause.Proof] = pp.postLClauseProof(o2) match {
       case MSome(result: LClause.Proof) => MSome[LClause.Proof](result)
       case _ => assert(F); MNone[LClause.Proof]()
     }
@@ -1705,7 +1701,7 @@ import MTransformer._
   }
 
   def transformStmt(o: Stmt): MOption[Stmt] = {
-    val preR: PreResult[Stmt] = pre.transformStmt(o)
+    val preR: PreResult[Stmt] = pp.preStmt(o)
     val r: MOption[Stmt] = if (preR.continue) {
       val o2: Stmt = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1933,7 +1929,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt = r.getOrElse(o)
-    val postR: MOption[Stmt] = post.transformStmt(o2)
+    val postR: MOption[Stmt] = pp.postStmt(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1944,7 +1940,7 @@ import MTransformer._
   }
 
   def transformTypeNamed(o: Type.Named): MOption[Type.Named] = {
-    val preR: PreResult[Type.Named] = pre.transformTypeNamed(o) match {
+    val preR: PreResult[Type.Named] = pp.preTypeNamed(o) match {
       case PreResult(continue, MSome(r: Type.Named)) => PreResult(continue, MSome[Type.Named](r))
       case _ => assert(F); PreResult(F, MNone[Type.Named]())
     }
@@ -1965,7 +1961,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Type.Named = r.getOrElse(o)
-    val postR: MOption[Type.Named] = post.transformTypeNamed(o2) match {
+    val postR: MOption[Type.Named] = pp.postTypeNamed(o2) match {
       case MSome(result: Type.Named) => MSome[Type.Named](result)
       case _ => assert(F); MNone[Type.Named]()
     }
@@ -1979,7 +1975,7 @@ import MTransformer._
   }
 
   def transformStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
-    val preR: PreResult[Stmt.Import.Importer] = pre.transformStmtImportImporter(o)
+    val preR: PreResult[Stmt.Import.Importer] = pp.preStmtImportImporter(o)
     val r: MOption[Stmt.Import.Importer] = if (preR.continue) {
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1996,7 +1992,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.Importer = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.Importer] = post.transformStmtImportImporter(o2)
+    val postR: MOption[Stmt.Import.Importer] = pp.postStmtImportImporter(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2007,7 +2003,7 @@ import MTransformer._
   }
 
   def transformStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
-    val preR: PreResult[Stmt.Import.Selector] = pre.transformStmtImportSelector(o)
+    val preR: PreResult[Stmt.Import.Selector] = pp.preStmtImportSelector(o)
     val r: MOption[Stmt.Import.Selector] = if (preR.continue) {
       val o2: Stmt.Import.Selector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2032,7 +2028,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.Selector = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.Selector] = post.transformStmtImportSelector(o2)
+    val postR: MOption[Stmt.Import.Selector] = pp.postStmtImportSelector(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2043,7 +2039,7 @@ import MTransformer._
   }
 
   def transformStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
-    val preR: PreResult[Stmt.Import.NamedSelector] = pre.transformStmtImportNamedSelector(o)
+    val preR: PreResult[Stmt.Import.NamedSelector] = pp.preStmtImportNamedSelector(o)
     val r: MOption[Stmt.Import.NamedSelector] = if (preR.continue) {
       val o2: Stmt.Import.NamedSelector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2060,7 +2056,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.NamedSelector = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.NamedSelector] = post.transformStmtImportNamedSelector(o2)
+    val postR: MOption[Stmt.Import.NamedSelector] = pp.postStmtImportNamedSelector(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2071,7 +2067,7 @@ import MTransformer._
   }
 
   def transformLClause(o: LClause): MOption[LClause] = {
-    val preR: PreResult[LClause] = pre.transformLClause(o)
+    val preR: PreResult[LClause] = pp.preLClause(o)
     val r: MOption[LClause] = if (preR.continue) {
       val o2: LClause = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2117,7 +2113,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause = r.getOrElse(o)
-    val postR: MOption[LClause] = post.transformLClause(o2)
+    val postR: MOption[LClause] = pp.postLClause(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2128,7 +2124,7 @@ import MTransformer._
   }
 
   def transformLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
-    val preR: PreResult[LClause.Fact] = pre.transformLClauseFact(o)
+    val preR: PreResult[LClause.Fact] = pp.preLClauseFact(o)
     val r: MOption[LClause.Fact] = if (preR.continue) {
       val o2: LClause.Fact = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2145,7 +2141,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Fact = r.getOrElse(o)
-    val postR: MOption[LClause.Fact] = post.transformLClauseFact(o2)
+    val postR: MOption[LClause.Fact] = pp.postLClauseFact(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2156,7 +2152,7 @@ import MTransformer._
   }
 
   def transformLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
-    val preR: PreResult[LClause.Theorem] = pre.transformLClauseTheorem(o)
+    val preR: PreResult[LClause.Theorem] = pp.preLClauseTheorem(o)
     val r: MOption[LClause.Theorem] = if (preR.continue) {
       val o2: LClause.Theorem = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2173,7 +2169,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Theorem = r.getOrElse(o)
-    val postR: MOption[LClause.Theorem] = post.transformLClauseTheorem(o2)
+    val postR: MOption[LClause.Theorem] = pp.postLClauseTheorem(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2184,7 +2180,7 @@ import MTransformer._
   }
 
   def transformContractExp(o: ContractExp): MOption[ContractExp] = {
-    val preR: PreResult[ContractExp] = pre.transformContractExp(o)
+    val preR: PreResult[ContractExp] = pp.preContractExp(o)
     val r: MOption[ContractExp] = if (preR.continue) {
       val o2: ContractExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2201,7 +2197,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ContractExp = r.getOrElse(o)
-    val postR: MOption[ContractExp] = post.transformContractExp(o2)
+    val postR: MOption[ContractExp] = pp.postContractExp(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2212,7 +2208,7 @@ import MTransformer._
   }
 
   def transformCase(o: Case): MOption[Case] = {
-    val preR: PreResult[Case] = pre.transformCase(o)
+    val preR: PreResult[Case] = pp.preCase(o)
     val r: MOption[Case] = if (preR.continue) {
       val o2: Case = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2230,7 +2226,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Case = r.getOrElse(o)
-    val postR: MOption[Case] = post.transformCase(o2)
+    val postR: MOption[Case] = pp.postCase(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2241,7 +2237,7 @@ import MTransformer._
   }
 
   def transformRange(o: Range): MOption[Range] = {
-    val preR: PreResult[Range] = pre.transformRange(o)
+    val preR: PreResult[Range] = pp.preRange(o)
     val r: MOption[Range] = if (preR.continue) {
       val o2: Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2275,7 +2271,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Range = r.getOrElse(o)
-    val postR: MOption[Range] = post.transformRange(o2)
+    val postR: MOption[Range] = pp.postRange(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2286,7 +2282,7 @@ import MTransformer._
   }
 
   def transformType(o: Type): MOption[Type] = {
-    val preR: PreResult[Type] = pre.transformType(o)
+    val preR: PreResult[Type] = pp.preType(o)
     val r: MOption[Type] = if (preR.continue) {
       val o2: Type = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2323,7 +2319,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Type = r.getOrElse(o)
-    val postR: MOption[Type] = post.transformType(o2)
+    val postR: MOption[Type] = pp.postType(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2334,7 +2330,7 @@ import MTransformer._
   }
 
   def transformPattern(o: Pattern): MOption[Pattern] = {
-    val preR: PreResult[Pattern] = pre.transformPattern(o)
+    val preR: PreResult[Pattern] = pp.prePattern(o)
     val r: MOption[Pattern] = if (preR.continue) {
       val o2: Pattern = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2385,7 +2381,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Pattern = r.getOrElse(o)
-    val postR: MOption[Pattern] = post.transformPattern(o2)
+    val postR: MOption[Pattern] = pp.postPattern(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2396,7 +2392,7 @@ import MTransformer._
   }
 
   def transformExp(o: Exp): MOption[Exp] = {
-    val preR: PreResult[Exp] = pre.transformExp(o)
+    val preR: PreResult[Exp] = pp.preExp(o)
     val r: MOption[Exp] = if (preR.continue) {
       val o2: Exp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2656,7 +2652,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp = r.getOrElse(o)
-    val postR: MOption[Exp] = post.transformExp(o2)
+    val postR: MOption[Exp] = pp.postExp(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2667,7 +2663,7 @@ import MTransformer._
   }
 
   def transformExpLitString(o: Exp.LitString): MOption[Exp.LitString] = {
-    val preR: PreResult[Exp.LitString] = pre.transformExpLitString(o) match {
+    val preR: PreResult[Exp.LitString] = pp.preExpLitString(o) match {
       case PreResult(continue, MSome(r: Exp.LitString)) => PreResult(continue, MSome[Exp.LitString](r))
       case _ => assert(F); PreResult(F, MNone[Exp.LitString]())
     }
@@ -2686,7 +2682,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitString = r.getOrElse(o)
-    val postR: MOption[Exp.LitString] = post.transformExpLitString(o2) match {
+    val postR: MOption[Exp.LitString] = pp.postExpLitString(o2) match {
       case MSome(result: Exp.LitString) => MSome[Exp.LitString](result)
       case _ => assert(F); MNone[Exp.LitString]()
     }
@@ -2700,7 +2696,7 @@ import MTransformer._
   }
 
   def transformNamedArg(o: NamedArg): MOption[NamedArg] = {
-    val preR: PreResult[NamedArg] = pre.transformNamedArg(o)
+    val preR: PreResult[NamedArg] = pp.preNamedArg(o)
     val r: MOption[NamedArg] = if (preR.continue) {
       val o2: NamedArg = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2717,7 +2713,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: NamedArg = r.getOrElse(o)
-    val postR: MOption[NamedArg] = post.transformNamedArg(o2)
+    val postR: MOption[NamedArg] = pp.postNamedArg(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2728,7 +2724,7 @@ import MTransformer._
   }
 
   def transformVarFragment(o: VarFragment): MOption[VarFragment] = {
-    val preR: PreResult[VarFragment] = pre.transformVarFragment(o)
+    val preR: PreResult[VarFragment] = pp.preVarFragment(o)
     val r: MOption[VarFragment] = if (preR.continue) {
       val o2: VarFragment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2745,7 +2741,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: VarFragment = r.getOrElse(o)
-    val postR: MOption[VarFragment] = post.transformVarFragment(o2)
+    val postR: MOption[VarFragment] = pp.postVarFragment(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2756,7 +2752,7 @@ import MTransformer._
   }
 
   def transformDomain(o: Domain): MOption[Domain] = {
-    val preR: PreResult[Domain] = pre.transformDomain(o)
+    val preR: PreResult[Domain] = pp.preDomain(o)
     val r: MOption[Domain] = if (preR.continue) {
       val o2: Domain = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2785,7 +2781,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Domain = r.getOrElse(o)
-    val postR: MOption[Domain] = post.transformDomain(o2)
+    val postR: MOption[Domain] = pp.postDomain(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2796,7 +2792,7 @@ import MTransformer._
   }
 
   def transformId(o: Id): MOption[Id] = {
-    val preR: PreResult[Id] = pre.transformId(o)
+    val preR: PreResult[Id] = pp.preId(o)
     val r: MOption[Id] = if (preR.continue) {
       val o2: Id = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2812,7 +2808,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Id = r.getOrElse(o)
-    val postR: MOption[Id] = post.transformId(o2)
+    val postR: MOption[Id] = pp.postId(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2823,7 +2819,7 @@ import MTransformer._
   }
 
   def transformName(o: Name): MOption[Name] = {
-    val preR: PreResult[Name] = pre.transformName(o)
+    val preR: PreResult[Name] = pp.preName(o)
     val r: MOption[Name] = if (preR.continue) {
       val o2: Name = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2840,7 +2836,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Name = r.getOrElse(o)
-    val postR: MOption[Name] = post.transformName(o2)
+    val postR: MOption[Name] = pp.postName(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2851,7 +2847,7 @@ import MTransformer._
   }
 
   def transformBody(o: Body): MOption[Body] = {
-    val preR: PreResult[Body] = pre.transformBody(o)
+    val preR: PreResult[Body] = pp.preBody(o)
     val r: MOption[Body] = if (preR.continue) {
       val o2: Body = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2867,7 +2863,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Body = r.getOrElse(o)
-    val postR: MOption[Body] = post.transformBody(o2)
+    val postR: MOption[Body] = pp.postBody(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2878,7 +2874,7 @@ import MTransformer._
   }
 
   def transformAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
-    val preR: PreResult[AbstractDatatypeParam] = pre.transformAbstractDatatypeParam(o)
+    val preR: PreResult[AbstractDatatypeParam] = pp.preAbstractDatatypeParam(o)
     val r: MOption[AbstractDatatypeParam] = if (preR.continue) {
       val o2: AbstractDatatypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2895,7 +2891,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: AbstractDatatypeParam = r.getOrElse(o)
-    val postR: MOption[AbstractDatatypeParam] = post.transformAbstractDatatypeParam(o2)
+    val postR: MOption[AbstractDatatypeParam] = pp.postAbstractDatatypeParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2906,7 +2902,7 @@ import MTransformer._
   }
 
   def transformMethodSig(o: MethodSig): MOption[MethodSig] = {
-    val preR: PreResult[MethodSig] = pre.transformMethodSig(o)
+    val preR: PreResult[MethodSig] = pp.preMethodSig(o)
     val r: MOption[MethodSig] = if (preR.continue) {
       val o2: MethodSig = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2924,7 +2920,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: MethodSig = r.getOrElse(o)
-    val postR: MOption[MethodSig] = post.transformMethodSig(o2)
+    val postR: MOption[MethodSig] = pp.postMethodSig(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2935,7 +2931,7 @@ import MTransformer._
   }
 
   def transformParam(o: Param): MOption[Param] = {
-    val preR: PreResult[Param] = pre.transformParam(o)
+    val preR: PreResult[Param] = pp.preParam(o)
     val r: MOption[Param] = if (preR.continue) {
       val o2: Param = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2952,7 +2948,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Param = r.getOrElse(o)
-    val postR: MOption[Param] = post.transformParam(o2)
+    val postR: MOption[Param] = pp.postParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2963,7 +2959,7 @@ import MTransformer._
   }
 
   def transformTypeParam(o: TypeParam): MOption[TypeParam] = {
-    val preR: PreResult[TypeParam] = pre.transformTypeParam(o)
+    val preR: PreResult[TypeParam] = pp.preTypeParam(o)
     val r: MOption[TypeParam] = if (preR.continue) {
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2980,7 +2976,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TypeParam = r.getOrElse(o)
-    val postR: MOption[TypeParam] = post.transformTypeParam(o2)
+    val postR: MOption[TypeParam] = pp.postTypeParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2991,7 +2987,7 @@ import MTransformer._
   }
 
   def transformContract(o: Contract): MOption[Contract] = {
-    val preR: PreResult[Contract] = pre.transformContract(o)
+    val preR: PreResult[Contract] = pp.preContract(o)
     val r: MOption[Contract] = if (preR.continue) {
       val o2: Contract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3011,7 +3007,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Contract = r.getOrElse(o)
-    val postR: MOption[Contract] = post.transformContract(o2)
+    val postR: MOption[Contract] = pp.postContract(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3022,7 +3018,7 @@ import MTransformer._
   }
 
   def transformSubContract(o: SubContract): MOption[SubContract] = {
-    val preR: PreResult[SubContract] = pre.transformSubContract(o)
+    val preR: PreResult[SubContract] = pp.preSubContract(o)
     val r: MOption[SubContract] = if (preR.continue) {
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3040,7 +3036,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: SubContract = r.getOrElse(o)
-    val postR: MOption[SubContract] = post.transformSubContract(o2)
+    val postR: MOption[SubContract] = pp.postSubContract(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3051,7 +3047,7 @@ import MTransformer._
   }
 
   def transformSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
-    val preR: PreResult[SubContractParam] = pre.transformSubContractParam(o)
+    val preR: PreResult[SubContractParam] = pp.preSubContractParam(o)
     val r: MOption[SubContractParam] = if (preR.continue) {
       val o2: SubContractParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3067,7 +3063,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: SubContractParam = r.getOrElse(o)
-    val postR: MOption[SubContractParam] = post.transformSubContractParam(o2)
+    val postR: MOption[SubContractParam] = pp.postSubContractParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3078,7 +3074,7 @@ import MTransformer._
   }
 
   def transformWhereDef(o: WhereDef): MOption[WhereDef] = {
-    val preR: PreResult[WhereDef] = pre.transformWhereDef(o)
+    val preR: PreResult[WhereDef] = pp.preWhereDef(o)
     val r: MOption[WhereDef] = if (preR.continue) {
       val o2: WhereDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3109,7 +3105,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: WhereDef = r.getOrElse(o)
-    val postR: MOption[WhereDef] = post.transformWhereDef(o2)
+    val postR: MOption[WhereDef] = pp.postWhereDef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3120,7 +3116,7 @@ import MTransformer._
   }
 
   def transformSpecDef(o: SpecDef): MOption[SpecDef] = {
-    val preR: PreResult[SpecDef] = pre.transformSpecDef(o)
+    val preR: PreResult[SpecDef] = pp.preSpecDef(o)
     val r: MOption[SpecDef] = if (preR.continue) {
       val o2: SpecDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3139,7 +3135,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: SpecDef = r.getOrElse(o)
-    val postR: MOption[SpecDef] = post.transformSpecDef(o2)
+    val postR: MOption[SpecDef] = pp.postSpecDef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3150,7 +3146,7 @@ import MTransformer._
   }
 
   def transformProofStep(o: ProofStep): MOption[ProofStep] = {
-    val preR: PreResult[ProofStep] = pre.transformProofStep(o)
+    val preR: PreResult[ProofStep] = pp.preProofStep(o)
     val r: MOption[ProofStep] = if (preR.continue) {
       val o2: ProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3180,7 +3176,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ProofStep = r.getOrElse(o)
-    val postR: MOption[ProofStep] = post.transformProofStep(o2)
+    val postR: MOption[ProofStep] = pp.postProofStep(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3191,7 +3187,7 @@ import MTransformer._
   }
 
   def transformExpLitZ(o: Exp.LitZ): MOption[Exp.LitZ] = {
-    val preR: PreResult[Exp.LitZ] = pre.transformExpLitZ(o) match {
+    val preR: PreResult[Exp.LitZ] = pp.preExpLitZ(o) match {
       case PreResult(continue, MSome(r: Exp.LitZ)) => PreResult(continue, MSome[Exp.LitZ](r))
       case _ => assert(F); PreResult(F, MNone[Exp.LitZ]())
     }
@@ -3210,7 +3206,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitZ = r.getOrElse(o)
-    val postR: MOption[Exp.LitZ] = post.transformExpLitZ(o2) match {
+    val postR: MOption[Exp.LitZ] = pp.postExpLitZ(o2) match {
       case MSome(result: Exp.LitZ) => MSome[Exp.LitZ](result)
       case _ => assert(F); MNone[Exp.LitZ]()
     }
@@ -3224,7 +3220,7 @@ import MTransformer._
   }
 
   def transformAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
-    val preR: PreResult[AssumeProofStep] = pre.transformAssumeProofStep(o)
+    val preR: PreResult[AssumeProofStep] = pp.preAssumeProofStep(o)
     val r: MOption[AssumeProofStep] = if (preR.continue) {
       val o2: AssumeProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3260,7 +3256,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: AssumeProofStep = r.getOrElse(o)
-    val postR: MOption[AssumeProofStep] = post.transformAssumeProofStep(o2)
+    val postR: MOption[AssumeProofStep] = pp.postAssumeProofStep(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3271,7 +3267,7 @@ import MTransformer._
   }
 
   def transformJust(o: Just): MOption[Just] = {
-    val preR: PreResult[Just] = pre.transformJust(o)
+    val preR: PreResult[Just] = pp.preJust(o)
     val r: MOption[Just] = if (preR.continue) {
       val o2: Just = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3432,7 +3428,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Just = r.getOrElse(o)
-    val postR: MOption[Just] = post.transformJust(o2)
+    val postR: MOption[Just] = pp.postJust(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3443,7 +3439,7 @@ import MTransformer._
   }
 
   def transformTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
-    val preR: PreResult[TruthTable.Row] = pre.transformTruthTableRow(o)
+    val preR: PreResult[TruthTable.Row] = pp.preTruthTableRow(o)
     val r: MOption[TruthTable.Row] = if (preR.continue) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3460,7 +3456,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TruthTable.Row = r.getOrElse(o)
-    val postR: MOption[TruthTable.Row] = post.transformTruthTableRow(o2)
+    val postR: MOption[TruthTable.Row] = pp.postTruthTableRow(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3471,7 +3467,7 @@ import MTransformer._
   }
 
   def transformExpLitB(o: Exp.LitB): MOption[Exp.LitB] = {
-    val preR: PreResult[Exp.LitB] = pre.transformExpLitB(o) match {
+    val preR: PreResult[Exp.LitB] = pp.preExpLitB(o) match {
       case PreResult(continue, MSome(r: Exp.LitB)) => PreResult(continue, MSome[Exp.LitB](r))
       case _ => assert(F); PreResult(F, MNone[Exp.LitB]())
     }
@@ -3490,7 +3486,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitB = r.getOrElse(o)
-    val postR: MOption[Exp.LitB] = post.transformExpLitB(o2) match {
+    val postR: MOption[Exp.LitB] = pp.postExpLitB(o2) match {
       case MSome(result: Exp.LitB) => MSome[Exp.LitB](result)
       case _ => assert(F); MNone[Exp.LitB]()
     }
@@ -3504,7 +3500,7 @@ import MTransformer._
   }
 
   def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
-    val preR: PreResult[TruthTable.Conclusion] = pre.transformTruthTableConclusion(o)
+    val preR: PreResult[TruthTable.Conclusion] = pp.preTruthTableConclusion(o)
     val r: MOption[TruthTable.Conclusion] = if (preR.continue) {
       val o2: TruthTable.Conclusion = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3542,7 +3538,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TruthTable.Conclusion = r.getOrElse(o)
-    val postR: MOption[TruthTable.Conclusion] = post.transformTruthTableConclusion(o2)
+    val postR: MOption[TruthTable.Conclusion] = pp.postTruthTableConclusion(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3553,13 +3549,13 @@ import MTransformer._
   }
 
   def transformAttr(o: Attr): MOption[Attr] = {
-    val preR: PreResult[Attr] = pre.transformAttr(o)
+    val preR: PreResult[Attr] = pp.preAttr(o)
     val r: MOption[Attr] = if (preR.continue) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
+      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo _)
       if (hasChanged | r0.nonEmpty)
-        MSome(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt)))
+        MSome(o2(posOpt = r0.getOrElse(o2.posOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -3569,7 +3565,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Attr = r.getOrElse(o)
-    val postR: MOption[Attr] = post.transformAttr(o2)
+    val postR: MOption[Attr] = pp.postAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3580,14 +3576,14 @@ import MTransformer._
   }
 
   def transformTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
-    val preR: PreResult[TypedAttr] = pre.transformTypedAttr(o)
+    val preR: PreResult[TypedAttr] = pp.preTypedAttr(o)
     val r: MOption[TypedAttr] = if (preR.continue) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
+      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo _)
       val r1: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType _)
       if (hasChanged | r0.nonEmpty| r1.nonEmpty)
-        MSome(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt), typeOpt = r1.getOrElse(o2.typeOpt)))
+        MSome(o2(posOpt = r0.getOrElse(o2.posOpt), typeOpt = r1.getOrElse(o2.typeOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -3597,7 +3593,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TypedAttr = r.getOrElse(o)
-    val postR: MOption[TypedAttr] = post.transformTypedAttr(o2)
+    val postR: MOption[TypedAttr] = pp.postTypedAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3608,15 +3604,15 @@ import MTransformer._
   }
 
   def transformResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
-    val preR: PreResult[ResolvedAttr] = pre.transformResolvedAttr(o)
+    val preR: PreResult[ResolvedAttr] = pp.preResolvedAttr(o)
     val r: MOption[ResolvedAttr] = if (preR.continue) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posInfoOpt, transformPosInfo _)
+      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo _)
       val r1: MOption[Option[ResolvedInfo]] = transformOption(o2.resOpt, transformResolvedInfo _)
       val r2: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType _)
       if (hasChanged | r0.nonEmpty| r1.nonEmpty| r2.nonEmpty)
-        MSome(o2(posInfoOpt = r0.getOrElse(o2.posInfoOpt), resOpt = r1.getOrElse(o2.resOpt), typeOpt = r2.getOrElse(o2.typeOpt)))
+        MSome(o2(posOpt = r0.getOrElse(o2.posOpt), resOpt = r1.getOrElse(o2.resOpt), typeOpt = r2.getOrElse(o2.typeOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -3626,7 +3622,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedAttr = r.getOrElse(o)
-    val postR: MOption[ResolvedAttr] = post.transformResolvedAttr(o2)
+    val postR: MOption[ResolvedAttr] = pp.postResolvedAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3637,7 +3633,7 @@ import MTransformer._
   }
 
   def transformResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
-    val preR: PreResult[ResolvedInfo] = pre.transformResolvedInfo(o)
+    val preR: PreResult[ResolvedInfo] = pp.preResolvedInfo(o)
     val r: MOption[ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3652,7 +3648,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedInfo = r.getOrElse(o)
-    val postR: MOption[ResolvedInfo] = post.transformResolvedInfo(o2)
+    val postR: MOption[ResolvedInfo] = pp.postResolvedInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3663,7 +3659,7 @@ import MTransformer._
   }
 
   def transformPosInfo(o: PosInfo): MOption[PosInfo] = {
-    val preR: PreResult[PosInfo] = pre.transformPosInfo(o)
+    val preR: PreResult[PosInfo] = pp.prePosInfo(o)
     val r: MOption[PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3678,7 +3674,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: PosInfo = r.getOrElse(o)
-    val postR: MOption[PosInfo] = post.transformPosInfo(o2)
+    val postR: MOption[PosInfo] = pp.postPosInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {

@@ -540,7 +540,8 @@ object Exp {
 
   @datatype class Quant(isForall: B,
                         varFragments: ISZ[VarFragment],
-                        exp: Exp)
+                        exp: Exp,
+                        @hidden attr: Attr)
     extends Exp
 
 }
@@ -803,12 +804,12 @@ object TruthTable {
 
 }
 
-@datatype class Attr(posInfoOpt: Option[PosInfo])
+@datatype class Attr(posOpt: Option[PosInfo])
 
-@datatype class TypedAttr(posInfoOpt: Option[PosInfo],
+@datatype class TypedAttr(posOpt: Option[PosInfo],
                           typeOpt: Option[Type])
 
-@datatype class ResolvedAttr(posInfoOpt: Option[PosInfo],
+@datatype class ResolvedAttr(posOpt: Option[PosInfo],
                              resOpt: Option[ResolvedInfo],
                              typeOpt: Option[Type])
 
@@ -833,6 +834,8 @@ object TruthTable {
   'RichClass
   'Enum
   'TypeAlias
+  'FreshVar
+  'QuantVar
 }
 
 @datatype class PosInfo(fileUriOpt: Option[String],

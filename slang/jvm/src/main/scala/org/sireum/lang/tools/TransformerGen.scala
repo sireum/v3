@@ -96,7 +96,7 @@ class TransformerGen(isImmutable: Boolean,
 
   val globalTypes: Seq[Resolver.TypeInfo] = {
     globalTypeMap.values.elements.sortWith((ti1, ti2) => {
-      ((ti1.posInfoOpt, ti2.posInfoOpt): @unchecked) match {
+      ((ti1.posOpt, ti2.posOpt): @unchecked) match {
         case (SSome(pi1), SSome(pi2)) => pi1.offset < pi2.offset
       }
     })
@@ -134,7 +134,7 @@ class TransformerGen(isImmutable: Boolean,
               case SSome(parent: Resolver.TypeInfo.Sig) =>
                 r = r.addChildren(parent.name, ISZ(ti.name))
               case _ =>
-                reporter.error(t.attr.posInfoOpt, s"Could not find ${typeString(ti.name)}'s super type ${typeString(Util.ids2strings(t.name.ids))}.")
+                reporter.error(t.attr.posOpt, s"Could not find ${typeString(ti.name)}'s super type ${typeString(Util.ids2strings(t.name.ids))}.")
             }
           }
         case _ =>
@@ -224,7 +224,7 @@ class TransformerGen(isImmutable: Boolean,
 
   def genAdt(ti: Resolver.TypeInfo.AbstractDatatype): Unit = {
     if (!ti.ast.isDatatype && isImmutable) {
-      reporter.error(ti.ast.id.attr.posInfoOpt, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
+      reporter.error(ti.ast.id.attr.posOpt, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
       return
     }
     if (ti.ast.isRoot) genRoot(ti.name, isSig = false)
@@ -330,7 +330,7 @@ class TransformerGen(isImmutable: Boolean,
             case "IS" | "MS" =>
               val isImmutable = ts == "IS"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(1)) match {
@@ -351,7 +351,7 @@ class TransformerGen(isImmutable: Boolean,
                  | "MSU8" | "MSU16" | "MSU32" | "MSU64" =>
               val isImmutable = ts.substring(0, 2) == "IS"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posInfoOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(0)) match {
@@ -365,7 +365,7 @@ class TransformerGen(isImmutable: Boolean,
             case "Option" | "MOption" =>
               val isImmutable = ts == "Option"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posInfoOpt, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(0)) match {
@@ -393,7 +393,7 @@ class TransformerGen(isImmutable: Boolean,
                 case _ =>
               }
             case _ =>
-              adtNameOpt(ti, Util.ids2strings(t.name.ids), t.attr.posInfoOpt) match {
+              adtNameOpt(ti, Util.ids2strings(t.name.ids), t.attr.posOpt) match {
                 case Some(name) =>
                   val adTypeString = typeString(name)
                   val adTypeName = typeName(adTypeString)
@@ -411,7 +411,7 @@ class TransformerGen(isImmutable: Boolean,
               }
           }
         case _ =>
-          reporter.error(p.id.attr.posInfoOpt, s"Unsupported type for parameter ${p.id.value}")
+          reporter.error(p.id.attr.posOpt, s"Unsupported type for parameter ${p.id.value}")
       }
     }
     if (isImmutable && i != 0) st.add("i", i - 1)
@@ -419,17 +419,17 @@ class TransformerGen(isImmutable: Boolean,
 
   def adtNameOpt(ti: Resolver.TypeInfo.AbstractDatatype, tipe: Type): Option[Resolver.QName] = {
     tipe match {
-      case tipe: Type.Named => adtNameOpt(ti, Util.ids2strings(tipe.name.ids), tipe.attr.posInfoOpt)
+      case tipe: Type.Named => adtNameOpt(ti, Util.ids2strings(tipe.name.ids), tipe.attr.posOpt)
       case _ => None
     }
   }
 
-  def adtNameOpt(ti: Resolver.TypeInfo.AbstractDatatype, ids: Resolver.QName, posInfoOpt: SOption[PosInfo]): Option[Resolver.QName] = {
+  def adtNameOpt(ti: Resolver.TypeInfo.AbstractDatatype, ids: Resolver.QName, posOpt: SOption[PosInfo]): Option[Resolver.QName] = {
     ti.scope.resolveType(globalTypeMap, ids) match {
       case SSome(ti: Resolver.TypeInfo.AbstractDatatype) => Some(ti.name)
       case SSome(_) => None
       case _ =>
-        reporter.error(posInfoOpt, s"Could not find ${typeString(ids)}.")
+        reporter.error(posOpt, s"Could not find ${typeString(ids)}.")
         None
     }
   }
