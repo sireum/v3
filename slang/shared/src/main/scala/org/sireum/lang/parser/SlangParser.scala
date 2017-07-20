@@ -26,6 +26,7 @@
 
 package org.sireum.lang.parser
 
+import fastparse.CharPredicates
 import org.sireum.lang.{ast => AST}
 import org.sireum.util._
 import org.sireum.{B, ISZ, None, Option, Some, String, _2String, enum}
@@ -1911,17 +1912,12 @@ class SlangParser(text: Predef.String,
     AST.Id(id, attr(pos))
 
   def cid(id: Predef.String, pos: Position): AST.Id = {
-    def isLetter(c: Char): Boolean = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+    def isOpChar(c: Char) = c match {
+      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
+      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
+    }
 
-    def isDigit(c: Char): Boolean = '0' <= c && c <= '9'
-
-    def isLetterOrDigit(c: Char): Boolean = isLetter(c) || isDigit(c) || c == '_'
-
-    if (id.head == '_' && id.tail.forall(isDigit)) {
-      // OK
-    } else if (!(isLetter(id.head) && id.tail.forall(isLetterOrDigit)))
-      errorInSlang(pos, s"'$id' is not a valid identifier form (i.e., [a-z,A-Z][a-z,A-Z,0-9]*)")
-
+    //    if (id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
     cidNoCheck(id, pos)
   }
 
