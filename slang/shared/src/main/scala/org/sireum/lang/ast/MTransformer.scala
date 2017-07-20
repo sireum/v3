@@ -2618,10 +2618,9 @@ import MTransformer._
           else
             MNone()
         case o2: Exp.Super =>
-          val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId _)
-          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged | r0.nonEmpty | r1.nonEmpty)
-            MSome(o2(idOpt = r0.getOrElse(o2.idOpt), attr = r1.getOrElse(o2.attr)))
+          val r0: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged | r0.nonEmpty)
+            MSome(o2(attr = r0.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.Unary =>

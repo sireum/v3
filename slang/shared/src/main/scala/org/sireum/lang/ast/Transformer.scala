@@ -2623,12 +2623,11 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Exp.Super =>
-          val r0: Result[Context, Option[Id]] = transformOption(ctx, o2.idOpt, transformId _)
-          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
-          if (hasChanged | r0.resultOpt.nonEmpty | r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(idOpt = r0.resultOpt.getOrElse(o2.idOpt), attr = r1.resultOpt.getOrElse(o2.attr))))
+          val r0: Result[Context, TypedAttr] = transformTypedAttr(ctx, o2.attr)
+          if (hasChanged | r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r1.ctx, None())
+            Result(r0.ctx, None())
         case o2: Exp.Unary =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
           val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
