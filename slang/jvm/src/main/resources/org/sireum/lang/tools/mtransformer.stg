@@ -142,7 +142,7 @@ rOpt
 
 transformMethodMatchSimple(transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 $transformMethodCaseMember; separator="\n"$
-if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged; separator=" "$$endif$)
   MSome(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
 else
   MNone()
@@ -151,7 +151,7 @@ else
 transformMethodCase(type, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
-  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged; separator=" "$$endif$)
     MSome(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$)
   else
     MNone()

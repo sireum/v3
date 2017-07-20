@@ -145,7 +145,7 @@ rOpt
 
 transformMethodMatchSimple(i, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 $transformMethodCaseMember; separator="\n"$
-if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged; separator=" "$$endif$)
   Result($if(i)$r$i$.ctx$else$ctx$endif$, Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$))
 else
   Result($if(i)$r$i$.ctx$else$ctx$endif$, None())
@@ -154,7 +154,7 @@ else
 transformMethodCase(i, type, transformMethodCaseMember, transformMethodCaseChanged, transformMethodCaseUpdate) ::= <<
 case o2: $type$ =>
   $transformMethodCaseMember; separator="\n"$
-  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged$$endif$)
+  if (hasChanged$if(transformMethodCaseChanged)$ $transformMethodCaseChanged; separator=" "$$endif$)
     Result($if(i)$r$i$.ctx$else$ctx$endif$, Some(o2$if(transformMethodCaseUpdate)$($transformMethodCaseUpdate; separator=", "$)$endif$))
   else
     Result($if(i)$r$i$.ctx$else$ctx$endif$, None())
