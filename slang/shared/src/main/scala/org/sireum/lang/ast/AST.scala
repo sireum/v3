@@ -644,6 +644,8 @@ object Exp {
     'Or
     'Xor
     'Imply
+    'CondAnd
+    'CondOr
     'Append
     'Prepend
     'AppendAll

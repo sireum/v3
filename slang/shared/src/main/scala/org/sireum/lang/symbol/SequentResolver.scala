@@ -35,6 +35,7 @@ import org.sireum.lang.ast._
 import org.sireum.lang.util.Reporter
 
 object SequentResolver {
+
   @datatype class QScope(nameMap: HashMap[String, Id],
                          outerOpt: Option[QScope]) {
     @pure def resolve(name: String): Option[Id] = {
@@ -51,10 +52,12 @@ object SequentResolver {
 
   @record class DeclResolver(var scope: QScope,
                              var freeVarMap: HashMap[String, (Id, Z)],
+                             var hasQuant: B,
                              reporter: Reporter)
     extends MTransformer.PrePost {
 
     override def preExpQuant(o: Quant): MTransformer.PreResult[Exp] = {
+      hasQuant = T
       var newScope = QScope(HashMap.empty, Some(scope))
 
       for (vf <- o.varFragments) {
@@ -82,17 +85,25 @@ object SequentResolver {
       return MNone()
     }
 
-    override def postExpInvoke(o: Exp.Invoke): MOption[Exp] = {
-      val key = o.id.value
-      scope.resolve(key) match {
-        case Some(_) => reporter.error(o.id.attr.posOpt, s"Cannot use a quantified variable as a function.")
+    override def preExpInvoke(o: Exp.Invoke): PreResult[Exp] = {
+      val id = o.id
+      val k = id.value
+      scope.resolve(k) match {
+        case Some(_) => reporter.error(o.attr.posOpt, s"Quantified variable '$k' cannot be used as a function/predicate.")
         case _ =>
-          freeVarMap.get(key) match {
-            case Some((id, _)) => freeVarMap = freeVarMap.put(key, (id, o.args.size))
-            case _ => reporter.internalError(o.attr.posOpt, s"Unexpected unresolved function/predicate application.")
+          freeVarMap.get(k) match {
+            case Some((_, n)) => if (n != o.args.size) {
+              reporter.error(o.attr.posOpt, s"Inconsistent usage of '$k' with different numbers of arguments.")
+            }
+            case _ => freeVarMap = freeVarMap.put(k, (id, o.args.size))
           }
       }
-      return MNone()
+      for (arg <- o.args) {
+        val p = resolveDeclExp(scope, freeVarMap, reporter, arg)
+        hasQuant = hasQuant || p._1
+        freeVarMap = p._2
+      }
+      return PreResult(F, MNone())
     }
 
     override def preExpIdent(o: Exp.Ident): PreResult[Exp] = {
@@ -102,31 +113,41 @@ object SequentResolver {
         case Some(_) =>
         case _ =>
           freeVarMap.get(k) match {
-            case Some(_) =>
-            case _ => freeVarMap = freeVarMap.put(id.value, (id, 0))
+            case Some((_, n)) =>
+              if (n != 0) {
+                reporter.error(o.attr.posOpt, s"Inconsistent usage of '$k' as both a variable and a function/predicate.")
+              }
+            case _ => freeVarMap = freeVarMap.put(k, (id, 0))
           }
       }
       return PreResult(F, MNone())
     }
   }
 
-  def resolveDecl(freeVarMap: HashMap[String, (Id, Z)],
-                  reporter: Reporter,
-                  e: Exp): HashMap[String, (Id, Z)] = {
-    val dr = DeclResolver(QScope(HashMap.empty,  None()), freeVarMap, reporter)
+  def resolveDeclExp(scope: QScope,
+                     freeVarMap: HashMap[String, (Id, Z)],
+                     reporter: Reporter,
+                     e: Exp): (B, HashMap[String, (Id, Z)]) = {
+    val dr = DeclResolver(scope, freeVarMap, F, reporter)
     MTransformer(dr).transformExp(e)
-    return dr.freeVarMap
+    return (dr.hasQuant, dr.freeVarMap)
   }
 
-  def resolve(sequent: Sequent, reporter: Reporter): Unit = {
+  def resolveDecl(sequent: Sequent, reporter: Reporter): B = {
     var freeVarMap = HashMap.empty[String, (Id, Z)]
+    val scope = QScope(HashMap.empty, None())
+    var hasQuant = F
     for (e <- sequent.premises) {
-      freeVarMap = resolveDecl(freeVarMap, reporter, e)
+      val (hq, fvm) = resolveDeclExp(scope, freeVarMap, reporter, e)
+      freeVarMap = fvm
+      hasQuant = hasQuant || hq
     }
     var conclusions = ISZ[Exp]()
     for (e <- sequent.conclusions) {
-      freeVarMap = resolveDecl(freeVarMap, reporter, e)
+      val (hq, fvm) = resolveDeclExp(scope, freeVarMap, reporter, e)
+      freeVarMap = fvm
+      hasQuant = hasQuant || hq
     }
-    // TODO: resolve proof
+    return hasQuant
   }
 }

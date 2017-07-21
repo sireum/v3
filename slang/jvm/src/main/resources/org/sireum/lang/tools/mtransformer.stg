@@ -178,7 +178,7 @@ val r$i$: MOption[MOption[$type$]] = transformOption(o2.$fieldName$, transform$t
 >>
 
 transformMethodCaseChanged(i) ::= <<
-| r$i$.nonEmpty
+|| r$i$.nonEmpty
 >>
 
 transformMethodCaseUpdate(i, fieldName) ::= <<

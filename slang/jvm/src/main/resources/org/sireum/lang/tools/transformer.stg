@@ -177,7 +177,7 @@ val r$i$: Result[Context, Option[$type$]] = transformOption($if(j)$r$j$.ctx$else
 >>
 
 transformMethodCaseChanged(i) ::= <<
-| r$i$.resultOpt.nonEmpty
+|| r$i$.resultOpt.nonEmpty
 >>
 
 transformMethodCaseUpdate(i, fieldName) ::= <<
