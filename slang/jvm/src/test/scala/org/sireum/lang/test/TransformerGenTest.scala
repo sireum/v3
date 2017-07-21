@@ -29,11 +29,9 @@ import java.io.File
 
 import org.sireum.test.SireumSpec
 import Paths._
-import org.sireum.lang.ast.PosInfo
 import org.sireum.lang.tools.TransformerGen
-import org.sireum.lang.util.{AccumulatingReporter, Reporter}
-import org.sireum.util.jvm.FileUtil
-import org.sireum.{ISZ, Option => SOption, Some => SSome, String => SString}
+import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
+import org.sireum.ISZ
 
 class TransformerGenTest extends SireumSpec {
 
@@ -48,7 +46,7 @@ class TransformerGenTest extends SireumSpec {
     reporter.printMessages()
     rOpt match {
       case Some(r) =>
-        val expected = FileUtil.readFile(dest)._1
+        val expected = FileUtil.readFile(dest)
         if (r != expected) {
           //FileUtil.writeFile(dest, r)
           //Console.err.println(r)

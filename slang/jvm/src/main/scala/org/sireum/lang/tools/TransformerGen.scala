@@ -26,16 +26,15 @@
 package org.sireum.lang.tools
 
 import java.io.File
+import java.nio.file.Files
 
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
-import org.sireum.lang.util.Reporter
+import org.sireum.lang.util.{FileUtil, Reporter}
 import org.stringtemplate.v4.{ST, STGroup, STGroupFile}
 import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.math._Z
-import org.sireum.util.{ErrorTag, LocationInfoTag, MessageTag, WarningTag}
-import org.sireum.util.jvm.FileUtil
 
 object TransformerGen {
   val messageKind = "TransformerGen"
@@ -47,7 +46,7 @@ object TransformerGen {
             dest: File,
             nameOpt: Option[String],
             reporter: Reporter): Option[String] = {
-    val srcText = FileUtil.readFile(src)._1
+    val srcText = FileUtil.readFile(src)
     val srcUri = FileUtil.toUri(src)
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
     r.unitOpt match {
@@ -56,7 +55,7 @@ object TransformerGen {
         gdr.resolveProgram(p)
         Some(new TransformerGen(
           isImmutable,
-          licenseOpt.map(FileUtil.readFile(_)._1.trim),
+          licenseOpt.map(f => new String(Files.readAllBytes(f.toPath))),
           Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
           nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"),
           Util.ids2strings(p.packageName.ids),

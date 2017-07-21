@@ -28,7 +28,7 @@ package org.sireum.lang.test
 import Paths._
 
 import org.sireum.test._
-import org.sireum.util.jvm.FileUtil._
+import org.sireum.lang.util.FileUtil._
 
 class ScalaMetaParserJvmTest extends SireumSpec {
 
@@ -39,37 +39,37 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
     "Passing" - {
 
-      smpt.passing(readFile(posetPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(posetPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(setPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(setPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(mapPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(mapPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(hashSetPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(hashSetPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(hashMapPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(hashMapPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(hashSSetPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(hashSSetPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(hashSMapPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(hashSMapPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(optionPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(optionPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(preludePath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(preludePath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangAstPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangAstPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangAstUtilPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangAstUtilPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangTransformerPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangTransformerPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangMTransformerPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangMTransformerPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangGlobalDeclarationResolverPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangGlobalDeclarationResolverPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangResolverPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangResolverPath), addImport = false, isPrelude = true)
 
-      smpt.passing(readFile(slangSequentResolverPath)._1, addImport = false, isPrelude = true)
+      smpt.passing(readFile(slangSequentResolverPath), addImport = false, isPrelude = true)
     }
   }
 }
