@@ -38,6 +38,8 @@ import org.sireum.util.{ErrorTag, LocationInfoTag, MessageTag, WarningTag}
 import org.sireum.util.jvm.FileUtil
 
 object TransformerGen {
+  val messageKind = "TransformerGen"
+
   def apply(allowSireumPackage: Boolean,
             isImmutable: Boolean,
             licenseOpt: Option[File],
@@ -47,15 +49,7 @@ object TransformerGen {
             reporter: Reporter): Option[String] = {
     val srcText = FileUtil.readFile(src)._1
     val srcUri = FileUtil.toUri(src)
-    val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, Some(srcUri), srcText)
-    if (r.tags.nonEmpty) {
-      for (tag <- r.tags) (tag: @unchecked) match {
-        case tag: ErrorTag with LocationInfoTag with MessageTag =>
-          reporter.error(SSome(PosInfo(SSome(srcUri), tag.lineBegin, tag.columnBegin,
-            tag.lineEnd, tag.columnEnd, tag.offset, tag.length)), tag.message)
-      }
-      return None
-    }
+    val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
     r.unitOpt match {
       case SSome(p: TopUnit.Program) =>
         val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
@@ -70,11 +64,13 @@ object TransformerGen {
           gdr.globalTypeMap,
           reporter).gen().render().replaceAllLiterally(System.lineSeparator, "\n").trim)
       case _ =>
-        reporter.error(SNone(), "Expecting program input.")
+        reporter.error(SNone(), "TransformerGen", "Expecting program input.")
         return None
     }
   }
 }
+
+import TransformerGen.messageKind
 
 class TransformerGen(isImmutable: Boolean,
                      licenseOpt: Option[String],
@@ -134,7 +130,7 @@ class TransformerGen(isImmutable: Boolean,
               case SSome(parent: Resolver.TypeInfo.Sig) =>
                 r = r.addChildren(parent.name, ISZ(ti.name))
               case _ =>
-                reporter.error(t.attr.posOpt, s"Could not find ${typeString(ti.name)}'s super type ${typeString(Util.ids2strings(t.name.ids))}.")
+                reporter.error(t.attr.posOpt, messageKind, s"Could not find ${typeString(ti.name)}'s super type ${typeString(Util.ids2strings(t.name.ids))}.")
             }
           }
         case _ =>
@@ -224,7 +220,7 @@ class TransformerGen(isImmutable: Boolean,
 
   def genAdt(ti: Resolver.TypeInfo.AbstractDatatype): Unit = {
     if (!ti.ast.isDatatype && isImmutable) {
-      reporter.error(ti.ast.id.attr.posOpt, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
+      reporter.error(ti.ast.id.attr.posOpt, messageKind, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
       return
     }
     if (ti.ast.isRoot) genRoot(ti.name, isSig = false)
@@ -330,7 +326,7 @@ class TransformerGen(isImmutable: Boolean,
             case "IS" | "MS" =>
               val isImmutable = ts == "IS"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, messageKind, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(1)) match {
@@ -351,7 +347,7 @@ class TransformerGen(isImmutable: Boolean,
                  | "MSU8" | "MSU16" | "MSU32" | "MSU64" =>
               val isImmutable = ts.substring(0, 2) == "IS"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posOpt, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, messageKind, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(0)) match {
@@ -365,7 +361,7 @@ class TransformerGen(isImmutable: Boolean,
             case "Option" | "MOption" =>
               val isImmutable = ts == "Option"
               if (this.isImmutable && !isImmutable) {
-                reporter.error(p.id.attr.posOpt, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
+                reporter.error(p.id.attr.posOpt, messageKind, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
                 return
               }
               adtNameOpt(ti, t.typeArgs(0)) match {
@@ -411,7 +407,7 @@ class TransformerGen(isImmutable: Boolean,
               }
           }
         case _ =>
-          reporter.error(p.id.attr.posOpt, s"Unsupported type for parameter ${p.id.value}")
+          reporter.error(p.id.attr.posOpt, messageKind, s"Unsupported type for parameter ${p.id.value}")
       }
     }
     if (isImmutable && i != 0) st.add("i", i - 1)
@@ -429,7 +425,7 @@ class TransformerGen(isImmutable: Boolean,
       case SSome(ti: Resolver.TypeInfo.AbstractDatatype) => Some(ti.name)
       case SSome(_) => None
       case _ =>
-        reporter.error(posOpt, s"Could not find ${typeString(ids)}.")
+        reporter.error(posOpt, messageKind, s"Could not find ${typeString(ids)}.")
         None
     }
   }

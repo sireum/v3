@@ -225,7 +225,7 @@ lazy val preludeShared = preludeT._1
 lazy val preludeJvm = preludeT._2
 lazy val preludeJs = preludeT._3
 
-lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI, utilPI, testPI)
+lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "fastparse" % "0.4.3",

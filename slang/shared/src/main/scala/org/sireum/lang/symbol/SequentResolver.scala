@@ -62,13 +62,13 @@ object SequentResolver {
 
       for (vf <- o.varFragments) {
         vf.domainOpt match {
-          case Some(domain) => reporter.error(domain.attr.posOpt, s"Predicate logic sequents cannot have quantified variable domains.")
+          case Some(domain) => reporter.error(domain.attr.posOpt, messageKind, s"Predicate logic sequents cannot have quantified variable domains.")
           case _ =>
         }
         for (id <- vf.ids) {
           val key = id.value
           newScope.resolve(key) match {
-            case Some(_) => reporter.error(id.attr.posOpt, s"$key has been previously declared.")
+            case Some(_) => reporter.error(id.attr.posOpt, messageKind, s"$key has been previously declared.")
             case _ => up(newScope.nameMap) = newScope.nameMap.put(key, id)
           }
         }
@@ -80,7 +80,7 @@ object SequentResolver {
     override def postExpQuant(o: Quant): MOption[Exp] = {
       scope.outerOpt match {
         case Some(outer) => scope = outer
-        case _ => reporter.internalError(o.attr.posOpt, s"Unexpected scoping situation when resolving quantification.")
+        case _ => reporter.internalError(o.attr.posOpt, messageKind, s"Unexpected scoping situation when resolving quantification.")
       }
       return MNone()
     }
@@ -89,11 +89,11 @@ object SequentResolver {
       val id = o.id
       val k = id.value
       scope.resolve(k) match {
-        case Some(_) => reporter.error(o.attr.posOpt, s"Quantified variable '$k' cannot be used as a function/predicate.")
+        case Some(_) => reporter.error(o.attr.posOpt, messageKind, s"Quantified variable '$k' cannot be used as a function/predicate.")
         case _ =>
           freeVarMap.get(k) match {
             case Some((_, n)) => if (n != o.args.size) {
-              reporter.error(o.attr.posOpt, s"Inconsistent usage of '$k' with different numbers of arguments.")
+              reporter.error(o.attr.posOpt, messageKind, s"Inconsistent usage of '$k' with different numbers of arguments.")
             }
             case _ => freeVarMap = freeVarMap.put(k, (id, o.args.size))
           }
@@ -115,7 +115,7 @@ object SequentResolver {
           freeVarMap.get(k) match {
             case Some((_, n)) =>
               if (n != 0) {
-                reporter.error(o.attr.posOpt, s"Inconsistent usage of '$k' as both a variable and a function/predicate.")
+                reporter.error(o.attr.posOpt, messageKind, s"Inconsistent usage of '$k' as both a variable and a function/predicate.")
               }
             case _ => freeVarMap = freeVarMap.put(k, (id, 0))
           }

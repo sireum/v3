@@ -28,13 +28,166 @@ package org.sireum.lang.util
 import org.sireum._
 import org.sireum.lang.ast.PosInfo
 
+object Reporter {
+  object Message {
+    @enum object Level {
+      'InternalError
+      'Error
+      'Warning
+      'Info
+    }
+  }
+  @datatype class Message(level: Message.Level.Type, posOpt: Option[PosInfo], kind: String, message: String) {
+    def isError: B = {
+      return level == Message.Level.InternalError || level == Message.Level.Error
+    }
+    def fileUriOpt: Option[String] = {
+      posOpt match {
+        case Some(pos) => return pos.fileUriOpt
+        case _ => None()
+      }
+    }
+  }
+}
+
 @sig trait Reporter {
 
-  def internalError(posOpt: Option[PosInfo], message: String): Unit
+  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit
 
-  def error(posOpt: Option[PosInfo], message: String): Unit
+  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit
 
-  def warn(posOpt: Option[PosInfo], message: String): Unit
+  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit
 
-  def info(posOpt: Option[PosInfo], message: String): Unit
+  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit
+}
+
+import Reporter._
+import Reporter.Message.Level
+
+@record class AccumulatingReporter(var messages: ISZ[Message])
+  extends Reporter {
+
+  def hasInternalError: B = {
+    for (m <- messages) {
+      m.level match {
+        case Level.InternalError => return T
+        case _ =>
+      }
+    }
+    return F
+  }
+
+  def hasError: B = {
+    for (m <- messages) {
+      m.level match {
+        case Level.Error => return T
+        case _ =>
+      }
+    }
+    return F
+  }
+
+  def hasWarning: B = {
+    for (m <- messages) {
+      if (m.level == Level.Warning) {
+        return T
+      }
+    }
+    return F
+  }
+
+  def hasIssue: B = {
+    for (m <- messages) {
+      m.level match {
+        case Level.InternalError => return T
+        case Level.Error => return T
+        case Level.Warning => return T
+        case _ =>
+      }
+    }
+    return F
+  }
+
+  def hasInfo: B = {
+    for (m <- messages) {
+      if (m.level == Level.Info) {
+        return T
+      }
+    }
+    return F
+  }
+
+  def hasMessage: B = {
+    return messages.nonEmpty
+  }
+
+  def internalErrors: ISZ[Message] = {
+    return for (m <- messages if m.level == Level.InternalError) yield m
+  }
+
+  def errors: ISZ[Message] = {
+    return for (m <- messages if m.level == Level.Error) yield m
+  }
+
+  def warnings: ISZ[Message] = {
+    return for (m <- messages if m.level == Level.Warning) yield m
+  }
+
+  def issues: ISZ[Message] = {
+    return for (m <- messages if m.level == Level.InternalError || m.level == Level.Error || m.level == Level.Warning) yield m
+  }
+
+  def infos: ISZ[Message] = {
+    return for (m <- messages if m.level == Level.Info) yield m
+  }
+
+  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    messages = messages :+ Message(Level.InternalError, posOpt, kind, message)
+  }
+
+  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    messages = messages :+ Message(Level.Error, posOpt, kind, message)
+  }
+
+  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    messages = messages :+ Message(Level.Warning, posOpt, kind, message)
+  }
+
+  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    messages = messages :+ Message(Level.Info, posOpt, kind, message)
+  }
+
+  def messagesByFileUri: HashSMap[Option[String], ISZ[Message]] = {
+    var r = HashSMap.empty[Option[String], ISZ[Message]]
+    for (m <- messages) {
+      val key: Option[String] = m.fileUriOpt
+      r.get(key) match {
+        case Some(ms) => r = r.put(key, ms :+ m)
+        case _ => r = r.put(key, ISZ(m))
+      }
+    }
+    return r
+  }
+
+  def printMessages(): Unit = {
+    val map = messagesByFileUri
+    val inclFileUri = map.size <= 1
+    for (kv <- map.entries) {
+      val fileUriOpt = kv._1
+      val ms = kv._2
+      fileUriOpt match {
+        case Some(fileUri) if inclFileUri =>
+          println(s"* $fileUri")
+          for (m <- ms) {
+            val mText: String = m.posOpt match {
+              case Some(pos) => s"  - [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
+              case _ => s"  - ${m.message}"
+            }
+            cprintln(m.isError, mText)
+          }
+        case _ =>
+      }
+    }
+  }
+
 }

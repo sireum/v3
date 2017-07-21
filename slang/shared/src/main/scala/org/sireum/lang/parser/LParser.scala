@@ -27,6 +27,7 @@ package org.sireum.lang.parser
 
 import org.sireum.{B, F, ISZ, T, Z, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.lang.ast.{ContractExp, VarFragment, WhereDef}
+import org.sireum.lang.util.AccumulatingReporter
 
 import scala.collection.immutable.ListSet
 import scala.meta._
@@ -63,7 +64,7 @@ object LParser {
     "⊢" -> "|-"
   )
 
-  def apply[T](text: String)(f: LParser => T): T = {
+  def apply[T](text: String, reporter: AccumulatingReporter)(f: (LParser, AccumulatingReporter) => T): T = {
     val input = Input.String(text)
     val dialect = SlangParser.scalaDialect(isWorksheet = false)
     val slangParser = new SlangParser(
@@ -72,10 +73,11 @@ object LParser {
       allowSireumPackage = false,
       hashSireum = false,
       isDiet = false,
-      fileUriOpt = None,
+      fileUriOpt = org.sireum.None(),
       isWorksheet = false,
-      text = text)
-    f(new LParser(input, dialect, slangParser))
+      text = text,
+      reporter = reporter)
+    f(new LParser(input, dialect, slangParser), reporter)
   }
 }
 
@@ -1152,7 +1154,7 @@ final class LParser(input: Input,
       conclusion(isSequent))
     newLinesOpt()
     accept[EOF]
-    SlangParser.Result(input.text, hashSireum = false, SSome(r), sparser.tags)
+    SlangParser.Result(input.text, hashSireum = false, SSome(r))
   }
 
   def sequentFile(fileUriOpt: SOption[SString]): SlangParser.Result = {
@@ -1160,6 +1162,6 @@ final class LParser(input: Input,
     newLinesOpt()
     val r = sequent()
     accept[EOF]
-    SlangParser.Result(input.text, hashSireum = false, SSome(AST.TopUnit.SequentUnit(fileUriOpt, r)), sparser.tags)
+    SlangParser.Result(input.text, hashSireum = false, SSome(AST.TopUnit.SequentUnit(fileUriOpt, r)))
   }
 }

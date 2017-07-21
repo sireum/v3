@@ -404,6 +404,7 @@ object Resolver {
 
   }
 
+  val messageKind: String = "Slang Resolver"
   val rootPackageInfo: Info.Package = Info.Package(ISZ())
   val builtInPackageName: QName = ISZ()
   val builtInTypeNames: HashMap[QName, TypeInfo] = HashMap.emptyInit[QName, TypeInfo](128).

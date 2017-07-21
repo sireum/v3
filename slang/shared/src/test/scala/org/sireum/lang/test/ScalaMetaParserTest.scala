@@ -26,12 +26,11 @@
 package org.sireum.lang.test
 
 import org.sireum.test._
-import org.sireum.{ISZ, String => SString, Option => SOption, Some => SSome, HashMap => SHashMap}
-import org.sireum.util._
+import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
-import org.sireum.lang.util.Reporter
+import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
 class ScalaMetaParserTest extends SireumSpec {
   {
@@ -267,8 +266,8 @@ class ScalaMetaParserTest extends SireumSpec {
     }
   }
 
-  def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean): SlangParser.Result =
-    SlangParser(isPrelude, isWorksheet, isDiet = false, None, text)
+  def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean, reporter: Reporter): SlangParser.Result =
+    SlangParser(isPrelude, isWorksheet, isDiet = false, SNone(), text, reporter)
 
   def passing(text: String,
               addImport: Boolean = true,
@@ -276,30 +275,15 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
+      val reporter = AccumulatingReporter(ISZ())
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude)
-      var b = r.unitOpt.nonEmpty && r.tags.elements.isEmpty
-      if (!b) report(r)
+        isWorksheet, isPrelude, reporter)
+      var b = r.unitOpt.nonEmpty && !reporter.hasIssue
+      if (!b) report(r, reporter)
       else {
         val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
-          SHashMap.empty[ISZ[SString], Resolver.TypeInfo], new Reporter {
-            def internalError(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
-              b = false
-              posOpt match {
-                case SSome(posInfo) => Console.err.println(s"[${posInfo.beginLine}, ${posInfo.beginColumn}] $message")
-                case _ => Console.err.println(message)
-              }
-              Console.err.flush()
-            }
-
-            def error(posOpt: SOption[AST.PosInfo], message: SString): Unit = {
-              internalError(posOpt, message)
-            }
-
-            def warn(posOpt: SOption[AST.PosInfo], message: SString): Unit = {}
-
-            def info(posOpt: SOption[AST.PosInfo], message: SString): Unit = {}
-          })
+          SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
+        if (reporter.hasIssue) report(r, reporter)
         r.unitOpt.foreach {
           case p: AST.TopUnit.Program => gdr.resolveProgram(p)
           case _ => b = false
@@ -314,13 +298,11 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
+      val reporter = AccumulatingReporter(ISZ())
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude)
-      val b = r.tags.elements.exists {
-        case t: MessageTag => t.message.contains(msg)
-        case _ => false
-      }
-      if (!b) report(r)
+        isWorksheet, isPrelude, reporter)
+      val b = reporter.issues.elements.exists(_.message.value.contains(msg))
+      if (!b) report(r, reporter)
       b
     }
 
@@ -328,10 +310,9 @@ class ScalaMetaParserTest extends SireumSpec {
     if (text.length <= max) text else text.substring(0, max) + " ... " + text.hashCode.toHexString
   }
 
-  def report(r: SlangParser.Result): Unit = {
-    System.err.println(r.text)
-    System.err.println(r.unitOpt)
-    val reporter = new ConsoleTagReporter
-    r.tags.foreach(reporter.report)
+  def report(r: SlangParser.Result, reporter: AccumulatingReporter): Unit = {
+    Console.err.println(r.text)
+    Console.err.println(r.unitOpt)
+    reporter.printMessages()
   }
 }

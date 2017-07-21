@@ -26,8 +26,9 @@
 package org.sireum.lang.test
 
 import org.sireum.lang.ast.TopUnit
-import org.sireum.{None => SNone}
+import org.sireum.{ISZ, None => SNone}
 import org.sireum.lang.parser.{LParser, SlangParser}
+import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 import org.sireum.test.SireumSpec
 
 import scala.meta._
@@ -712,37 +713,34 @@ class LParserTest extends SireumSpec {
 
   def parsePredicate(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input) { p =>
+    parser(title, input) { (p, reporter) =>
       val r = p.sequentFile(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
+      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
     }
 
   def parsePropositional(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input) { p =>
+    parser(title, input) { (p, reporter) =>
       val r = p.sequentFile(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
+      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
     }
 
   def parseTruthTable(title: String, input: String)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    parser(title, input) { p =>
+    parser(title, input) { (p, reporter) =>
       val r = p.truthTable(SNone())
-      check(r) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
+      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
     }
 
-  def check(r: SlangParser.Result): Boolean = {
-    if (r.tags.nonEmpty) {
-      r.tags.foreach(Console.err.println)
-      Console.err.flush()
-    }
-    r.tags.isEmpty
+  def check(r: AccumulatingReporter): Boolean = {
+    if (r.hasIssue) r.printMessages()
+    !r.hasIssue
   }
 
-  def parser[T](title: String, input: String)(f: LParser => Boolean)(
+  def parser[T](title: String, input: String)(f: (LParser, AccumulatingReporter) => Boolean)(
     implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = spec.*(title) {
     val r: Boolean = try {
-      LParser[Boolean](input)(f)
+      LParser[Boolean](input, AccumulatingReporter(ISZ()))(f)
       //println(fparser(parser)
     } catch {
       case e: TokenizeException =>

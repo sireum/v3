@@ -31,9 +31,9 @@ import org.sireum.test.SireumSpec
 import Paths._
 import org.sireum.lang.ast.PosInfo
 import org.sireum.lang.tools.TransformerGen
-import org.sireum.lang.util.Reporter
+import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 import org.sireum.util.jvm.FileUtil
-import org.sireum.{Option => SOption, String => SString, Some => SSome}
+import org.sireum.{ISZ, Option => SOption, Some => SSome, String => SString}
 
 class TransformerGenTest extends SireumSpec {
 
@@ -42,34 +42,10 @@ class TransformerGenTest extends SireumSpec {
   *(gen(slangAstPath, slangTransformerPath, isImmutable = true))
 
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
-    var hasIssue = false
+    val reporter = AccumulatingReporter(ISZ())
     val rOpt = TransformerGen(allowSireumPackage = true,
-      isImmutable, Some(licensePath), src, dest, None,
-      new Reporter {
-        def internalError(posOpt: SOption[PosInfo], message: SString): Unit = {
-          hasIssue = true
-          posOpt match {
-            case SSome(pos) => Console.err.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
-            case _ => Console.err.println(message)
-          }
-          Console.err.flush()
-        }
-
-        def error(posOpt: SOption[PosInfo], message: SString): Unit = {
-          internalError(posOpt, message)
-        }
-
-        def warn(posOpt: SOption[PosInfo], message: SString): Unit = {
-          hasIssue = true
-          posOpt match {
-            case SSome(pos) => Console.out.println(s"[${pos.beginLine}, ${pos.beginColumn}] $message")
-            case _ => Console.out.println(message)
-          }
-          Console.out.flush()
-        }
-
-        def info(posOpt: SOption[PosInfo], message: SString): Unit = {}
-      })
+      isImmutable, Some(licensePath), src, dest, None, reporter)
+    reporter.printMessages()
     rOpt match {
       case Some(r) =>
         val expected = FileUtil.readFile(dest)._1
@@ -78,7 +54,7 @@ class TransformerGenTest extends SireumSpec {
           //Console.err.println(r)
           //Console.err.flush()
           false
-        } else !hasIssue
+        } else !reporter.hasIssue
       case _ => false
     }
   }

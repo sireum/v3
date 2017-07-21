@@ -27,8 +27,8 @@
 package org.sireum.lang.parser
 
 import fastparse.CharPredicates
+import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
-import org.sireum.util._
 import org.sireum.{B, ISZ, None, Option, Some, String, _2String, enum}
 import org.sireum.math.Numbers
 
@@ -53,6 +53,8 @@ object SlangParser {
     'Method
     'Block
   }
+
+  val messageKind = "Slang Parser"
 
   val bvs: Set[Predef.String] = Set("bb", "bl")
 
@@ -98,41 +100,27 @@ object SlangParser {
 
   case class Result(text: Predef.String,
                     hashSireum: Boolean,
-                    unitOpt: Option[AST.TopUnit],
-                    tags: ISZ[Tag])
+                    unitOpt: Option[AST.TopUnit])
 
   def apply(isWorksheet: Boolean,
             isDiet: Boolean,
-            fileUriOpt: scala.Option[FileResourceUri],
-            text: Predef.String): Result =
-    apply(allowSireumPackage = false, isWorksheet, isDiet, fileUriOpt, text)
+            fileUriOpt: Option[String],
+            text: Predef.String,
+            reporter: Reporter): Result =
+    apply(allowSireumPackage = false, isWorksheet, isDiet, fileUriOpt, text, reporter)
 
   def apply(allowSireumPackage: Boolean,
             isWorksheet: Boolean,
             isDiet: Boolean,
-            fileUriOpt: scala.Option[FileResourceUri],
-            text: Predef.String): Result = {
+            fileUriOpt: Option[String],
+            text: Predef.String,
+            reporter: Reporter): Result = {
     val lines = text.trim.lines
     val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
     val hashSireum = line.contains("#Sireum")
     val (dialect, input) = scalaDialect(isWorksheet)(text)
     new SlangParser(text, input, dialect, allowSireumPackage, hashSireum,
-      isWorksheet, isDiet, fileUriOpt).parseTopUnit()
-  }
-
-  def error(fileUriOpt: scala.Option[FileResourceUri],
-            pos: Position,
-            message: Predef.String): Tag = {
-    val posStart = pos.start
-    val posEnd = pos.end
-    LocationInfo(
-      posStart.line + 1,
-      posStart.column + 1,
-      posEnd.line + 1,
-      posEnd.column + 1,
-      posStart.offset,
-      posEnd.offset - posStart.offset).
-      toLocationError(fileUriOpt, "Slang Parser", message)
+      isWorksheet, isDiet, fileUriOpt, reporter).parseTopUnit()
   }
 
   def isDollar(t: Term): Boolean = t match {
@@ -163,50 +151,62 @@ class SlangParser(text: Predef.String,
                   hashSireum: Boolean,
                   isWorksheet: Boolean,
                   isDiet: Boolean,
-                  fileUriOpt: scala.Option[FileResourceUri]) {
-  var tags: ISZ[Tag] = ISZ()
+                  fileUriOpt: Option[String],
+                  reporter: Reporter) {
   var lPointOpt: scala.Option[(Int, Int, Int)] = scala.None
 
   def parseTopUnit(): Result = {
     val parser = new ScalametaParser(input, dialect)
 
     try {
-      if (fileUriOpt.getOrElse("").endsWith(".scala")) {
+      if (fileUriOpt.getOrElse("").value.endsWith(".scala")) {
         if (hashSireum) translateSource(parser.parseSource())
-        else Result(text, hashSireum, None(), tags)
+        else Result(text, hashSireum, None())
       } else {
         val oldIn = parser.in
         parser.in = oldIn.fork
         parser.next()
         parser.newLinesOpt()
         if (parser.isIdentOf("*")) {
-          new LParser(input, dialect, this).truthTable(opt(fileUriOpt.map(_2String)))
+          new LParser(input, dialect, this).truthTable(fileUriOpt)
         } else if (parser.token.is[Token.KwPackage] || parser.token.is[Token.KwImport] || parser.token.is[Token.EOF]) {
           parser.in = oldIn
           translateSource(parser.parseSource())
         } else {
-          new LParser(input, dialect, this).sequentFile(opt(fileUriOpt.map(_2String)))
+          new LParser(input, dialect, this).sequentFile(fileUriOpt)
         }
       }
     } catch {
       case e: ParseException =>
         error(e.pos, e.shortMessage)
-        Result(text, hashSireum, None(), tags)
+        Result(text, hashSireum, None())
       case e: TokenizeException =>
         error(e.pos, e.shortMessage)
-        Result(text, hashSireum, None(), tags)
+        Result(text, hashSireum, None())
     }
+  }
+
+  def posOpt(pos: Position): Option[AST.PosInfo] = {
+    val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
+    Some(AST.PosInfo(
+      fileUriOpt,
+      beginLine = startLine + pos.start.line + 1,
+      beginColumn = startColumn + pos.start.column + 1,
+      endLine = startLine + pos.end.line + 1,
+      endColumn = startColumn + pos.end.column + 1,
+      offset = startOffset + pos.start.offset,
+      length = pos.end.offset - pos.start.offset + 1
+    ))
   }
 
   def error(pos: Position,
             message: Predef.String): Unit = {
     lPointOpt match {
       case scala.Some((startOffset, _, _)) =>
-        tags :+= SlangParser.error(fileUriOpt,
-          Position.Range(input, startOffset + pos.start.offset, startOffset + pos.end.offset),
-          message)
-      case _ =>
-        tags :+= SlangParser.error(fileUriOpt, pos, message)
+        reporter.error(
+          posOpt(Position.Range(input, startOffset + pos.start.offset, startOffset + pos.end.offset)),
+          SlangParser.messageKind, message)
+      case _ => reporter.error(posOpt(pos), SlangParser.messageKind, message)
     }
   }
 
@@ -227,14 +227,12 @@ class SlangParser(text: Predef.String,
       if (shouldParse)
         Result(text, hashSireum,
           Some(AST.TopUnit.Program(
-            opt(fileUriOpt.map(_2String)),
+            fileUriOpt,
             AST.Name(ISZ(), emptyAttr),
-            AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))), tags)
+            AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))))
       else
-        Result(text, hashSireum, None(), tags)
+        Result(text, hashSireum, None())
     }
-
-    val uriOpt = opt(fileUriOpt.map(_2String))
 
     source.stats match {
       case List(q"package $ref { ..$stats }") =>
@@ -244,34 +242,34 @@ class SlangParser(text: Predef.String,
           if (refSyntax == "org.sireum" || refSyntax.startsWith("org.sireum.")) {
             if (allowSireumPackage)
               Result(text, hashSireum,
-                Some(AST.TopUnit.Program(uriOpt, name,
-                  AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))), tags)
+                Some(AST.TopUnit.Program(fileUriOpt, name,
+                  AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))))
             else {
               errorInSlang(ref.pos, s"Cannot define members of the $refSyntax package")
-              Result(text, hashSireum, None(), tags)
+              Result(text, hashSireum, None())
             }
           } else {
             def packageF(rest: List[Stat]) = Result(text, hashSireum,
-              Some(AST.TopUnit.Program(uriOpt, name,
-                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))), tags)
+              Some(AST.TopUnit.Program(fileUriOpt, name,
+                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))))
 
             stats match {
               case q"import org.sireum._" :: rest => packageF(rest)
               case q"import org.sireum.logika._" :: rest => packageF(rest)
               case _ =>
                 errorInSlang(ref.pos, "The first member of packages should be 'import org.sireum._'")
-                Result(text, hashSireum, None(), tags)
+                Result(text, hashSireum, None())
             }
           }
-        } else Result(text, hashSireum, None(), tags)
+        } else Result(text, hashSireum, None())
       case q"import org.sireum._" :: rest => topF(rest)
       case q"import org.sireum.logika._" :: rest => topF(rest)
       case Nil =>
-        Result(text, hashSireum, Some(AST.TopUnit.Program(uriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ()))), tags)
+        Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ()))))
       case stats =>
         if (hashSireum)
           errorInSlang(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum._'")
-        Result(text, hashSireum, None(), tags)
+        Result(text, hashSireum, None())
     }
   }
 
@@ -1927,22 +1925,6 @@ class SlangParser(text: Predef.String,
   def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posOpt = posOpt(pos), typeOpt = None())
 
   def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posOpt = posOpt(pos), resOpt = None(), typeOpt = None())
-
-  def posOpt(pos: Position): Option[AST.PosInfo] = {
-    val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
-    Some(AST.PosInfo(
-      fileUriOpt = fileUriOpt match {
-        case scala.Some(uri) => Some(uri)
-        case _ => None[String]()
-      },
-      beginLine = startLine + pos.start.line + 1,
-      beginColumn = startColumn + pos.start.column + 1,
-      endLine = startLine + pos.end.line + 1,
-      endColumn = startColumn + pos.end.column + 1,
-      offset = startOffset + pos.start.offset,
-      length = pos.end.offset - pos.start.offset + 1
-    ))
-  }
 
   def ref2IS(ref: Term.Ref): ISZ[AST.Id] = {
     def f(t: Term): ISZ[AST.Id] = t match {
