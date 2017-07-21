@@ -55,7 +55,7 @@ object TransformerGen {
         gdr.resolveProgram(p)
         Some(new TransformerGen(
           isImmutable,
-          licenseOpt.map(f => new String(Files.readAllBytes(f.toPath))),
+          licenseOpt.map(f => new String(Files.readAllBytes(f.toPath)).trim),
           Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
           nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"),
           Util.ids2strings(p.packageName.ids),

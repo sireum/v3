@@ -34,6 +34,16 @@ object FileUtil {
 
   def readFile(p: Path): String = new String(Files.readAllBytes(p), StandardCharsets.UTF_8)
 
+  def writeFile(f: File, text: String): Boolean = writeFile(f.toPath, text)
+
+  def writeFile(p: Path, text: String): Boolean =
+    try {
+      Files.write(p, text.getBytes(StandardCharsets.UTF_8))
+      true
+    } catch {
+      case _: Exception => false
+    }
+
   def toUri(f: File): String = toUri(f.toPath)
 
   def toUri(p: Path): String = p.toUri.toASCIIString
