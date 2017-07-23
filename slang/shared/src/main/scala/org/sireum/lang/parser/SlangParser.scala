@@ -1482,7 +1482,8 @@ class SlangParser(text: Predef.String,
     exp match {
       case exp: Lit => translateLit(exp)
       case exp: Term.Interpolate =>
-        if (exp.prefix.value == "s") translateStringInterpolate(exp)
+        val prefix = exp.prefix.value
+        if (prefix == "s" || prefix == "st") translateStringInterpolate(exp)
         else translateLit(exp)
       case q"${expr: Term.Interpolate}[..$tpesnel]" if bvs.contains(expr.prefix.value) &&
         expr.args.size == 1 && (expr.parts match {
@@ -1678,7 +1679,7 @@ class SlangParser(text: Predef.String,
   }
 
   def translateStringInterpolate(s: Term.Interpolate): AST.Exp.StringInterpolate =
-    AST.Exp.StringInterpolate(
+    AST.Exp.StringInterpolate(s.prefix.value,
       ISZ(s.parts.map({
         case Lit.String(value) => AST.Exp.LitString(value, attr(s.pos))
         case _ =>

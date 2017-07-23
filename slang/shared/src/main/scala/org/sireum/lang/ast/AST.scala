@@ -584,7 +584,8 @@ object Exp {
     }
   }
 
-  @datatype class StringInterpolate(lits: ISZ[LitString],
+  @datatype class StringInterpolate(prefix: String,
+                                    lits: ISZ[LitString],
                                     args: ISZ[Exp],
                                     @hidden attr: Attr)
     extends Exp {

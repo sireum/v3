@@ -181,7 +181,8 @@
 <match-assign-exp> ::=  <exp> match { ⸨ <match-case> <exp> ⸩+ }
 
 <exp>              ::=  <lit>
-                     |  <STRING-INTERP>
+                     |  <STRING-INTERP>      // s"..."  or s"""..."""
+                     |  <TEMPLATE-INTERP>    // st"..." or st"""...""" (see syntax-notes.md)
                      |  <name>
                      |  this
                      |  super ⸨ [ <name> ] ⸩?
