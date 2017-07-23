@@ -469,6 +469,7 @@ object Resolver {
     put(ISZ("MSU16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU16")).
     put(ISZ("MSU32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU32")).
     put(ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")).
-    put(ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String"))
+    put(ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String")).
+    put(ISZ("ST"), TypeInfo.BuiltIn(builtInPackageName :+ "ST"))
 
 }

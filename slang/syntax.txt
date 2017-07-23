@@ -182,7 +182,7 @@
 
 <exp>              ::=  <lit>
                      |  <STRING-INTERP>      // s"..."  or s"""..."""
-                     |  <TEMPLATE-INTERP>    // st"..." or st"""...""" (see syntax-notes.md)
+                     |  <ST-INTERP>          // st"..." or st"""...""" (see syntax-notes.md)
                      |  <name>
                      |  this
                      |  super ⸨ [ <name> ] ⸩?
