@@ -376,6 +376,7 @@ object MTransformer {
         case o: Exp.Invoke => return preExpInvoke(o)
         case o: Exp.InvokeNamed => return preExpInvokeNamed(o)
         case o: Exp.If => return preExpIf(o)
+        case o: Exp.Fun => return preExpFun(o)
         case o: Exp.ForYield => return preExpForYield(o)
         case o: Exp.Quant => return preExpQuant(o)
       }
@@ -526,6 +527,10 @@ object MTransformer {
     }
 
     def preExpIf(o: Exp.If): PreResult[Exp] = {
+      return PreResult(T, MNone())
+    }
+
+    def preExpFun(o: Exp.Fun): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
@@ -1145,6 +1150,7 @@ object MTransformer {
         case o: Exp.Invoke => return postExpInvoke(o)
         case o: Exp.InvokeNamed => return postExpInvokeNamed(o)
         case o: Exp.If => return postExpIf(o)
+        case o: Exp.Fun => return postExpFun(o)
         case o: Exp.ForYield => return postExpForYield(o)
         case o: Exp.Quant => return postExpQuant(o)
       }
@@ -1295,6 +1301,10 @@ object MTransformer {
     }
 
     def postExpIf(o: Exp.If): MOption[Exp] = {
+      return MNone()
+    }
+
+    def postExpFun(o: Exp.Fun): MOption[Exp] = {
       return MNone()
     }
 
@@ -2697,10 +2707,18 @@ import MTransformer._
             MSome(o2(cond = r0.getOrElse(o2.cond), thenExp = r1.getOrElse(o2.thenExp), elseExp = r2.getOrElse(o2.elseExp), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
+        case o2: Exp.Fun =>
+          val r0: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam _)
+          val r1: MOption[Exp] = transformExp(o2.exp)
+          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+            MSome(o2(params = r0.getOrElse(o2.params), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))
+          else
+            MNone()
         case o2: Exp.ForYield =>
           val r0: MOption[IS[Z, EnumGen.For]] = transformISZ(o2.enumGens, transformEnumGenFor _)
           val r1: MOption[Exp] = transformExp(o2.exp)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
+          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(enumGens = r0.getOrElse(o2.enumGens), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))
           else

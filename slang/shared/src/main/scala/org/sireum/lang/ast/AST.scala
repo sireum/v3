@@ -737,9 +737,19 @@ object Exp {
     }
   }
 
+  @datatype class Fun(params: ISZ[Param],
+                      exp: Exp,
+                      @hidden attr: TypedAttr)
+    extends Exp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
+
   @datatype class ForYield(enumGens: ISZ[EnumGen.For],
                            exp: Exp,
-                           @hidden attr: Attr)
+                           @hidden attr: TypedAttr)
     extends Exp {
 
     def posOpt: Option[PosInfo] = {

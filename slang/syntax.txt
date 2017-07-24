@@ -194,6 +194,7 @@
                      |  <exp> <args>
                      |  if ( <exp> ) <exp> else <exp>
                      |  for ( <for-enum-gen> ⸨ ; <for-enum-gen> ⸩* ) yield <exp>
+                     |  ( <params> ) => <exp>
                      |  <quant-op> <ID> ⸨ , <ID> ⸩* : <domain> <exp>  // only in the proof context
 
 <quant-op>         ::=  ∀

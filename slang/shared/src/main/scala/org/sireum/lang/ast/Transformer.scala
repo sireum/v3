@@ -380,6 +380,7 @@ object Transformer {
         case o: Exp.Invoke => return preExpInvoke(ctx, o)
         case o: Exp.InvokeNamed => return preExpInvokeNamed(ctx, o)
         case o: Exp.If => return preExpIf(ctx, o)
+        case o: Exp.Fun => return preExpFun(ctx, o)
         case o: Exp.ForYield => return preExpForYield(ctx, o)
         case o: Exp.Quant => return preExpQuant(ctx, o)
       }
@@ -530,6 +531,10 @@ object Transformer {
     }
 
     @pure def preExpIf(ctx: Context, o: Exp.If): PreResult[Context, Exp] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preExpFun(ctx: Context, o: Exp.Fun): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1149,6 +1154,7 @@ object Transformer {
         case o: Exp.Invoke => return postExpInvoke(ctx, o)
         case o: Exp.InvokeNamed => return postExpInvokeNamed(ctx, o)
         case o: Exp.If => return postExpIf(ctx, o)
+        case o: Exp.Fun => return postExpFun(ctx, o)
         case o: Exp.ForYield => return postExpForYield(ctx, o)
         case o: Exp.Quant => return postExpQuant(ctx, o)
       }
@@ -1299,6 +1305,10 @@ object Transformer {
     }
 
     @pure def postExpIf(ctx: Context, o: Exp.If): Result[Context, Exp] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postExpFun(ctx: Context, o: Exp.Fun): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
@@ -2702,10 +2712,18 @@ import Transformer._
             Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenExp = r1.resultOpt.getOrElse(o2.thenExp), elseExp = r2.resultOpt.getOrElse(o2.elseExp), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
             Result(r3.ctx, None())
+        case o2: Exp.Fun =>
+          val r0: Result[Context, IS[Z, Param]] = transformISZ(ctx, o2.params, transformParam _)
+          val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
+          val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(params = r0.resultOpt.getOrElse(o2.params), exp = r1.resultOpt.getOrElse(o2.exp), attr = r2.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r2.ctx, None())
         case o2: Exp.ForYield =>
           val r0: Result[Context, IS[Z, EnumGen.For]] = transformISZ(ctx, o2.enumGens, transformEnumGenFor _)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
             Result(r2.ctx, Some(o2(enumGens = r0.resultOpt.getOrElse(o2.enumGens), exp = r1.resultOpt.getOrElse(o2.exp), attr = r2.resultOpt.getOrElse(o2.attr))))
           else

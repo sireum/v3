@@ -1538,6 +1538,7 @@ class SlangParser(text: Predef.String,
         translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
+      case exp: Term.Function => translateFun(exp)
       case exp: Term.ForYield => translateForYield(exp)
       case _ =>
         errorNotSlang(exp.pos, s"Expression '${syntax(exp)}' is")
@@ -1783,7 +1784,12 @@ class SlangParser(text: Predef.String,
       case _ =>
     }
     if (hasError) rExp
-    else AST.Exp.ForYield(enums, translateExp(exp.body), attr(exp.pos))
+    else AST.Exp.ForYield(enums, translateExp(exp.body), typedAttr(exp.pos))
+  }
+
+  def translateFun(exp: Term.Function): AST.Exp = {
+    val ps = ISZ(exp.params.map(translateParam(isMemoize = false)): _*)
+    AST.Exp.Fun(ps, translateExp(exp.body), typedAttr(exp.pos))
   }
 
   def translateArgs(args: Seq[Term.Arg]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
