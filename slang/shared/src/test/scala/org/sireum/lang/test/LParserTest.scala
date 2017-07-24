@@ -35,7 +35,7 @@ import org.sireum.`macro`.RC
 import scala.meta._
 
 class LParserTest extends SireumRcSpec {
-  lazy val resources: HashSMap[ISZ[SString], SString] = RC.text(_.elements.last.value.endsWith(".slang"))
+  lazy val textResources: HashSMap[ISZ[SString], SString] = RC.text(_.elements.last.value.endsWith(".slang"))
 
   def check(path: ISZ[SString], content: SString): B = {
     path(0).value match {
