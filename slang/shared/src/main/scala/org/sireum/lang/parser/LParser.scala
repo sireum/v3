@@ -1061,8 +1061,9 @@ final class LParser(input: Input,
       }
 
       def blit(): List[AST.Exp.LitB] = {
-        val value = acceptToken[Ident].value
+        val token = acceptToken[Ident]
         val offset = token.pos.start.offset
+        val value = token.value
         (for (j <- 0 until value.length) yield {
           AST.Exp.LitB(value.charAt(j) == 'T',
             sparser.attr(Position.Range(input, offset + j, offset + j + 1)))
