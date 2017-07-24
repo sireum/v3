@@ -8,8 +8,9 @@ The string-template interpolator ``st"``...``"`` (single-line) or
 string-template functionality similar to 
 [StringTemplate](http://stringtemplate.org), except it uses
 Slang as the templating language for template conditionals 
-(if-else expressions) and definitions (as functions), etc.; 
-thus, symbol definitions are compiler checked.
+(if-else expressions) and definitions (as functions), etc.
+Thus, existing Scala tooling (e.g., compiler, IDE, etc.)
+check for template well-formed-ness. 
 
 In essence, they behave similarly to 
 ``s"``...``"`` or ``s"""``...``"""`` with ``.stripMargin``, 
@@ -25,6 +26,9 @@ based on template argument columns.
 Moreover, a sequence of template arguments (with an optional 
 associated argument separator) can be specified.
 
+Below is a simple example to illustrate Slang's string template
+(more sophisticated examples can be found at: 
+https://github.com/sireum/v3/tree/master/slang/shared/src/main/scala/org/sireum/lang/tools/TransformerGen.scala)
 ### Example
 
 ```scala

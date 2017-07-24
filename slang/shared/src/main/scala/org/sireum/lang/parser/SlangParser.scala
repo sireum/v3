@@ -287,6 +287,7 @@ class SlangParser(text: Predef.String,
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
           case mod"@rich" => return translateRich(enclosing, stat)
+          case _ =>
         }
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
@@ -295,6 +296,7 @@ class SlangParser(text: Predef.String,
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
           case mod"@rich" => return translateRich(enclosing, stat)
+          case _ =>
         }
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt

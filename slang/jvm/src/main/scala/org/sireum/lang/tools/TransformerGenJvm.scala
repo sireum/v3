@@ -36,7 +36,7 @@ import org.stringtemplate.v4.{ST, STGroup, STGroupFile}
 import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.math._Z
 
-object TransformerGen {
+object TransformerGenJvm {
   val messageKind = "TransformerGen"
 
   def apply(allowSireumPackage: Boolean,
@@ -53,7 +53,7 @@ object TransformerGen {
       case SSome(p: TopUnit.Program) =>
         val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
         gdr.resolveProgram(p)
-        Some(new TransformerGen(
+        Some(new TransformerGenJvm(
           isImmutable,
           licenseOpt.map(f => new String(Files.readAllBytes(f.toPath)).trim),
           Some(dest.getParentFile.toPath.relativize(src.toPath).toString),
@@ -69,16 +69,16 @@ object TransformerGen {
   }
 }
 
-import TransformerGen.messageKind
+import TransformerGenJvm.messageKind
 
-class TransformerGen(isImmutable: Boolean,
-                     licenseOpt: Option[String],
-                     fileUriOpt: Option[String],
-                     name: String,
-                     packageName: Resolver.QName,
-                     globalNameMap: Resolver.NameMap,
-                     globalTypeMap: Resolver.TypeMap,
-                     reporter: Reporter) {
+class TransformerGenJvm(isImmutable: Boolean,
+                        licenseOpt: Option[String],
+                        fileUriOpt: Option[String],
+                        name: String,
+                        packageName: Resolver.QName,
+                        globalNameMap: Resolver.NameMap,
+                        globalTypeMap: Resolver.TypeMap,
+                        reporter: Reporter) {
 
   val stg = new STGroupFile(
     getClass.getResource(

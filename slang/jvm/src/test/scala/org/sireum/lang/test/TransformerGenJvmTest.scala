@@ -29,11 +29,11 @@ import java.io.File
 
 import org.sireum.test.SireumSpec
 import Paths._
-import org.sireum.lang.tools.TransformerGen
+import org.sireum.lang.tools.TransformerGenJvm
 import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
 import org.sireum.ISZ
 
-class TransformerGenTest extends SireumSpec {
+class TransformerGenJvmTest extends SireumSpec {
 
   *(gen(slangAstPath, slangMTransformerPath, isImmutable = false))
 
@@ -41,7 +41,7 @@ class TransformerGenTest extends SireumSpec {
 
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
     val reporter = AccumulatingReporter(ISZ())
-    val rOpt = TransformerGen(allowSireumPackage = true,
+    val rOpt = TransformerGenJvm(allowSireumPackage = true,
       isImmutable, Some(licensePath), src, dest, None, reporter)
     reporter.printMessages()
     rOpt match {
