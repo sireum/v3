@@ -35,7 +35,7 @@ import org.scalajs.dom.raw._
 import org.sireum.web.ui.{Modal, Notification}
 
 import scalatags.Text.all._
-import org.sireum.web.util._
+import org.sireum.common.JSutil._
 
 import scala.collection.immutable.SortedMap
 import scala.scalajs.js

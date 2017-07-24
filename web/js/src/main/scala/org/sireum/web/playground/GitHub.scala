@@ -32,7 +32,7 @@ import org.sireum.web.ui.Notification
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.scalajs.js
-import org.sireum.web.util._
+import org.sireum.common.JSutil._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Failure

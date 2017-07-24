@@ -35,7 +35,7 @@ import org.sireum.web.playground.{GitHub, Playground}
 import scala.collection.immutable.SortedMap
 import scalatags.Text.all._
 import scalatags.Text.tags2._
-import org.sireum.web.util._
+import org.sireum.common.JSutil._
 
 object Modal {
   val escape = 27

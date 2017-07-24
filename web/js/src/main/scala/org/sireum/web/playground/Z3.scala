@@ -28,7 +28,7 @@ package org.sireum.web.playground
 import org.scalajs.dom
 import org.scalajs.dom.WebSocket
 import org.sireum.web.ui.Modal
-import org.sireum.web.util._
+import org.sireum.common.JSutil._
 
 import scala.scalajs.js.{Date, JSON}
 
