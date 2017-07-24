@@ -157,40 +157,40 @@ object TransformerGen {
         return st"""// #Sireum
                    |// @formatter:off
                    |
-                 |$license
+                   |$license
                    |$fileUri
                    |$packageName
                    |
-                 |import org.sireum._
+                   |import org.sireum._
                    |
-                 |object $name {
+                   |object $name {
                    |
-                 |  @datatype class PreResult[Context, T](ctx: Context,
+                   |  @datatype class PreResult[Context, T](ctx: Context,
                    |                                        continue: B,
                    |                                        resultOpt: Option[T])
                    |
-                 |  @datatype class Result[Context, T](ctx: Context,
+                   |  @datatype class Result[Context, T](ctx: Context,
                    |                                     resultOpt: Option[T])
                    |
-                 |
-                 |
-                 |  @sig trait PrePost[Context] {
                    |
-                 |    ${(preMethods, "\n\n")}
                    |
-                 |    ${(postMethods, "\n\n")}
+                   |  @sig trait PrePost[Context] {
                    |
-                 |  }
+                   |    ${(preMethods, "\n\n")}
                    |
-                 |  ${(transformHelpers, "\n\n")}
+                   |    ${(postMethods, "\n\n")}
                    |
-                 |}
+                   |  }
                    |
-                 |import $name._
+                   |  ${(transformHelpers, "\n\n")}
                    |
-                 |@datatype class $name[Context](pp: PrePost[Context]) {
+                   |}
                    |
-                 |  ${(transformMethods, "\n\n")}
+                   |import $name._
+                   |
+                   |@datatype class $name[Context](pp: PrePost[Context]) {
+                   |
+                   |  ${(transformMethods, "\n\n")}
                    |
                  |}"""
       }
@@ -302,8 +302,8 @@ object TransformerGen {
                                      transformMethodCaseMembers: ISZ[ST],
                                      transformMethodCaseChanges: ISZ[ST],
                                      transformMethodCaseUpdates: ISZ[ST]): ST = {
-        val ctx = if (i < z"0") st"ctx" else st"r$i.ctx"
-        val updates =
+        val ctx: ST = if (i < z"0") st"ctx" else st"r$i.ctx"
+        val updates: ST =
           if (transformMethodCaseUpdates.isEmpty) empty
           else st"(${(transformMethodCaseUpdates, ", ")})"
         return st"""${(transformMethodCaseMembers, "\n")}
@@ -318,8 +318,8 @@ object TransformerGen {
                               transformMethodCaseMembers: ISZ[ST],
                               transformMethodCaseChanges: ISZ[ST],
                               transformMethodCaseUpdates: ISZ[ST]): ST = {
-        val ctx = if (i < z"0") st"ctx" else st"r$i.ctx"
-        val updates =
+        val ctx: ST = if (i < z"0") st"ctx" else st"r$i.ctx"
+        val updates: ST =
           if (transformMethodCaseUpdates.isEmpty) empty
           else st"(${(transformMethodCaseUpdates, ", ")})"
         return st"""case o2: $tpe =>
@@ -335,7 +335,7 @@ object TransformerGen {
                                     typeName: String,
                                     tpe: String,
                                     fieldName: String): ST = {
-        val ctx = if (j < z"0") st"ctx" else st"r$j.ctx"
+        val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, $tpe] = transform$typeName($ctx, o2.$fieldName)"
       }
 
@@ -345,7 +345,7 @@ object TransformerGen {
                                       typeName: String,
                                       tpe: String,
                                       fieldName: String): ST = {
-        val ctx = if (j < z"0") st"ctx" else st"r$j.ctx"
+        val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, IS[$indexType, $tpe]] = transformIS$indexType($ctx, o2.$fieldName, transform$typeName _)"
       }
 
@@ -355,7 +355,7 @@ object TransformerGen {
                                       typeName: String,
                                       tpe: String,
                                       fieldName: String): ST = {
-        val ctx = if (j < z"0") st"ctx" else st"r$j.ctx"
+        val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, MS[$indexType, $tpe]] = transformMS$indexType($ctx, o2.$fieldName, transform$typeName _)"
       }
 
@@ -364,7 +364,7 @@ object TransformerGen {
                                           typeName: String,
                                           tpe: String,
                                           fieldName: String): ST = {
-        val ctx = if (j < z"0") st"ctx" else st"r$j.ctx"
+        val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, Option[$tpe]] = transformOption($ctx, o2.$fieldName, transform$typeName _)"
       }
 
@@ -447,36 +447,36 @@ object TransformerGen {
         return st"""// #Sireum
                    |// @formatter:off
                    |
-                 |$license
+                   |$license
                    |$fileUri
                    |$packageName
                    |
-                 |import org.sireum._
+                   |import org.sireum._
                    |
-                 |object $name {
+                   |object $name {
                    |
-                 |  @record class PreResult[T](continue: B,
+                   |  @record class PreResult[T](continue: B,
                    |                             resultOpt: MOption[T])
                    |
-                 |  @sig trait PrePost {
+                   |  @sig trait PrePost {
                    |
-                 |    ${(preMethods, "\n\n")}
+                   |    ${(preMethods, "\n\n")}
                    |
-                 |    ${(postMethods, "\n\n")}
+                   |    ${(postMethods, "\n\n")}
                    |
-                 |  }
+                   |  }
                    |
-                 |  ${(transformHelpers, "\n\n")}
+                   |  ${(transformHelpers, "\n\n")}
                    |
-                 |}
+                   |}
                    |
-                 |import $name._
+                   |import $name._
                    |
-                 |@record class $name(pp: PrePost) {
+                   |@record class $name(pp: PrePost) {
                    |
-                 |  ${(transformMethods, "\n\n")}
+                   |  ${(transformMethods, "\n\n")}
                    |
-                 |}"""
+                   |}"""
       }
 
       def preMethodRoot(typeName: String,
@@ -587,7 +587,7 @@ object TransformerGen {
                                      transformMethodCaseMembers: ISZ[ST],
                                      transformMethodCaseChanges: ISZ[ST],
                                      transformMethodCaseUpdates: ISZ[ST]): ST = {
-        val updates =
+        val updates: ST =
           if (transformMethodCaseUpdates.isEmpty) empty
           else st"(${(transformMethodCaseUpdates, ", ")})"
         return st"""${(transformMethodCaseMembers, "\n")}
@@ -602,7 +602,7 @@ object TransformerGen {
                               transformMethodCaseMembers: ISZ[ST],
                               transformMethodCaseChanges: ISZ[ST],
                               transformMethodCaseUpdates: ISZ[ST]): ST = {
-        val updates =
+        val updates: ST =
           if (transformMethodCaseUpdates.isEmpty) empty
           else st"(${(transformMethodCaseUpdates, ", ")})"
         return st"""case o2: $tpe =>
