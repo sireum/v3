@@ -87,7 +87,7 @@ import org.sireum.lang.{ast => AST}
         var elements = Set.empty[String]
         for (e <- stmt.elements) {
           if (elements.contains(e.value)) {
-            reporter.error(e.attr.posOpt, messageKind, s"Redeclaration of @enum element ${e.value}.")
+            reporter.error(e.attr.posOpt, resolverKind, s"Redeclaration of @enum element ${e.value}.")
           } else {
             elements = elements.add(e.value)
           }
@@ -101,9 +101,9 @@ import org.sireum.lang.{ast => AST}
           case Some(info) =>
             val posOpt = stmt.attr.posOpt
             if (stmt.isExt | !info.canHaveCompanion) {
-              reporter.error(posOpt, messageKind, s"Cannot declare extension object because the name has already been declared previously.")
+              reporter.error(posOpt, resolverKind, s"Cannot declare extension object because the name has already been declared previously.")
             } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {
-              reporter.error(posOpt, messageKind, s"Cannot declare companion object for a type defined in a different compilation unit.")
+              reporter.error(posOpt, resolverKind, s"Cannot declare companion object for a type defined in a different compilation unit.")
             }
           case _ =>
         }
@@ -157,7 +157,7 @@ import org.sireum.lang.{ast => AST}
         else if (methods.contains(name)) T
         else F
       if (declared) {
-        reporter.error(id.attr.posOpt, messageKind, s"Member $name has been previously declared.")
+        reporter.error(id.attr.posOpt, resolverKind, s"Member $name has been previously declared.")
       }
     }
 
@@ -186,7 +186,7 @@ import org.sireum.lang.{ast => AST}
                   info: Info,
                   posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
-      case Some(_) => reporter.error(posOpt, messageKind, s"Cannot declare $entity because the name has already been declared previously.")
+      case Some(_) => reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
       case _ => globalNameMap = globalNameMap.put(name, info)
     }
   }
@@ -198,15 +198,15 @@ import org.sireum.lang.{ast => AST}
     globalNameMap.get(name) match {
       case Some(objectInfo: Info.Object) if !objectInfo.isExt =>
         if (!info.canHaveCompanion) {
-          reporter.error(posOpt, messageKind, s"Cannot declare $entity because the name has already been declared previously.")
+          reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
         } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {
-          reporter.error(posOpt, messageKind, s"Cannot declare $entity whose object companion is in a different compilation unit.")
+          reporter.error(posOpt, resolverKind, s"Cannot declare $entity whose object companion is in a different compilation unit.")
         }
-      case Some(_) => reporter.error(posOpt, messageKind, s"Cannot declare $entity because the name has already been declared previously.")
+      case Some(_) => reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
       case _ =>
     }
     globalTypeMap.get(name) match {
-      case Some(_) => reporter.error(posOpt, messageKind, s"Cannot declare $entity because the name has already been declared previously.")
+      case Some(_) => reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
       case _ => globalTypeMap = globalTypeMap.put(name, info)
     }
   }
@@ -214,7 +214,7 @@ import org.sireum.lang.{ast => AST}
   def declarePackage(name: QName, posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
       case Some(_: Info.Package) =>
-      case Some(_) => reporter.error(posOpt, messageKind, "Cannot declare package because the name has already been used for a non-package entity.")
+      case Some(_) => reporter.error(posOpt, resolverKind, "Cannot declare package because the name has already been used for a non-package entity.")
       case _ => globalNameMap = globalNameMap.put(name, Info.Package(name))
     }
   }
