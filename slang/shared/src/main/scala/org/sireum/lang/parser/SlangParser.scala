@@ -119,7 +119,7 @@ object SlangParser {
     val i = text.indexOf('\n')
     val sb = new StringBuilder
     if (i >= 0) {
-      for (j <- 0 until i) cs(j) match {
+      for (j <- 0 until i) text(j) match {
         case '\t' | '\r' | ' ' =>
         case c => sb.append(c)
       }
