@@ -148,11 +148,15 @@ object TransformerGen {
           st"""
               |/*
               | $text
-              | */)
+              | */
               |""")
         val fileUri: ST = stOpt(fileUriOpt, (text: String) =>
-          st"\n// This file is auto-generated from $text\n")
-        val packageName: ST = if (packageNames.nonEmpty) st"\npackage ${(packageNames, ".")}\n" else empty
+          st"""
+              |// This file is auto-generated from $text
+              |""")
+        val packageName: ST = if (packageNames.nonEmpty) st"""
+                                                             |package ${(packageNames, ".")}
+                                                             |""" else empty
         return st"""// #Sireum
                    |// @formatter:off
                    |$license$fileUri$packageName
@@ -166,8 +170,6 @@ object TransformerGen {
                    |
                    |  @datatype class Result[Context, T](ctx: Context,
                    |                                     resultOpt: Option[T])
-                   |
-                   |
                    |
                    |  @sig trait PrePost[Context] {
                    |
@@ -206,7 +208,7 @@ object TransformerGen {
 
       @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def pre$typeName(ctx: Context, o: $tpe): PreResult[Context, $superType] = {
-                   |  return PreResult(T, None())
+                   |  return PreResult(ctx, T, None())
                    |}"""
       }
 
@@ -431,11 +433,15 @@ object TransformerGen {
           st"""
               |/*
               | $text
-              | */)
+              | */
               |""")
         val fileUri: ST = stOpt(fileUriOpt, (text: String) =>
-          st"\n// This file is auto-generated from $text\n")
-        val packageName: ST = if (packageNames.nonEmpty) st"\npackage ${(packageNames, ".")}\n" else empty
+          st"""
+              |// This file is auto-generated from $text
+              |""")
+        val packageName: ST = if (packageNames.nonEmpty) st"""
+                                                             |package ${(packageNames, ".")}
+                                                             |""" else empty
         return st"""// #Sireum
                    |// @formatter:off
                    |$license$fileUri$packageName

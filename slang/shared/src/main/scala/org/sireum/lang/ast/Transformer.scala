@@ -1590,6 +1590,7 @@ object Transformer {
     @pure def postPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
       return Result(ctx, None())
     }
+
   }
 
   @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
@@ -1600,7 +1601,7 @@ object Transformer {
       val e: T = s(i)
       val r: Result[Context, T] = f(ctxi, e)
       ctxi = r.ctx
-      changed = changed | r.resultOpt.nonEmpty
+      changed = changed || r.resultOpt.nonEmpty
       s2(i) = r.resultOpt.getOrElse(e)
     }
     if (changed) {
@@ -1626,7 +1627,7 @@ object Transformer {
 
 import Transformer._
 
-@record class Transformer[Context](pp: PrePost[Context]) {
+@datatype class Transformer[Context](pp: PrePost[Context]) {
 
   @pure def transformTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
     val preR: PreResult[Context, TopUnit] = pp.preTopUnit(ctx, o)
@@ -1666,74 +1667,6 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: TopUnit = r.resultOpt.getOrElse(o)
     val postR: Result[Context, TopUnit] = pp.postTopUnit(r.ctx, o2)
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause.Sequent] = {
-    val preR: PreResult[Context, LClause.Sequent] = pp.preLClauseSequent(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: LClause.Sequent)) => PreResult(preCtx, continue, Some[LClause.Sequent](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Sequent]())
-    }
-    val r: Result[Context, LClause.Sequent] = if (preR.continue) {
-      val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, IS[Z, Exp]] = transformISZ(ctx, o2.premises, transformExp _)
-      val r1: Result[Context, IS[Z, Exp]] = transformISZ(r0.ctx, o2.conclusions, transformExp _)
-      val r2: Result[Context, Option[LClause.Proof]] = transformOption(r1.ctx, o2.proofOpt, transformLClauseProof _)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(premises = r0.resultOpt.getOrElse(o2.premises), conclusions = r1.resultOpt.getOrElse(o2.conclusions), proofOpt = r2.resultOpt.getOrElse(o2.proofOpt))))
-      else
-        Result(r2.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: LClause.Sequent = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Sequent] = pp.postLClauseSequent(r.ctx, o2) match {
-      case Result(postCtx, Some(result: LClause.Sequent)) => Result(postCtx, Some[LClause.Sequent](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Sequent]())
-    }
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause.Proof] = {
-    val preR: PreResult[Context, LClause.Proof] = pp.preLClauseProof(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: LClause.Proof)) => PreResult(preCtx, continue, Some[LClause.Proof](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Proof]())
-    }
-    val r: Result[Context, LClause.Proof] = if (preR.continue) {
-      val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, IS[Z, ProofStep]] = transformISZ(ctx, o2.steps, transformProofStep _)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(steps = r0.resultOpt.getOrElse(o2.steps))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: LClause.Proof = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, LClause.Proof] = pp.postLClauseProof(r.ctx, o2) match {
-      case Result(postCtx, Some(result: LClause.Proof)) => Result(postCtx, Some[LClause.Proof](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Proof]())
-    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1980,41 +1913,6 @@ import Transformer._
     }
   }
 
-  @pure def transformTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type.Named] = {
-    val preR: PreResult[Context, Type.Named] = pp.preTypeNamed(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: Type.Named)) => PreResult(preCtx, continue, Some[Type.Named](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Type.Named]())
-    }
-    val r: Result[Context, Type.Named] = if (preR.continue) {
-      val o2: Type.Named = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Name] = transformName(ctx, o2.name)
-      val r1: Result[Context, IS[Z, Type]] = transformISZ(r0.ctx, o2.typeArgs, transformType _)
-      val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name), typeArgs = r1.resultOpt.getOrElse(o2.typeArgs), attr = r2.resultOpt.getOrElse(o2.attr))))
-      else
-        Result(r2.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: Type.Named = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Type.Named] = pp.postTypeNamed(r.ctx, o2) match {
-      case Result(postCtx, Some(result: Type.Named)) => Result(postCtx, Some[Type.Named](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[Type.Named]())
-    }
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
   @pure def transformStmtImportImporter(ctx: Context, o: Stmt.Import.Importer): Result[Context, Stmt.Import.Importer] = {
     val preR: PreResult[Context, Stmt.Import.Importer] = pp.preStmtImportImporter(ctx, o)
     val r: Result[Context, Stmt.Import.Importer] = if (preR.continue) {
@@ -2056,6 +1954,7 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Stmt.Import.WildcardSelector =>
+
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -2406,6 +2305,7 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: Result[Context, Pattern] = o2 match {
         case o2: Pattern.Literal =>
+
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -2430,6 +2330,7 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Pattern.SeqWildcard =>
+
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -2746,39 +2647,6 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Exp] = pp.postExp(r.ctx, o2)
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp.LitString] = {
-    val preR: PreResult[Context, Exp.LitString] = pp.preExpLitString(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: Exp.LitString)) => PreResult(preCtx, continue, Some[Exp.LitString](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitString]())
-    }
-    val r: Result[Context, Exp.LitString] = if (preR.continue) {
-      val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: Exp.LitString = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitString] = pp.postExpLitString(r.ctx, o2) match {
-      case Result(postCtx, Some(result: Exp.LitString)) => Result(postCtx, Some[Exp.LitString](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitString]())
-    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3279,39 +3147,6 @@ import Transformer._
     }
   }
 
-  @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp.LitZ] = {
-    val preR: PreResult[Context, Exp.LitZ] = pp.preExpLitZ(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: Exp.LitZ)) => PreResult(preCtx, continue, Some[Exp.LitZ](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitZ]())
-    }
-    val r: Result[Context, Exp.LitZ] = if (preR.continue) {
-      val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: Exp.LitZ = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitZ] = pp.postExpLitZ(r.ctx, o2) match {
-      case Result(postCtx, Some(result: Exp.LitZ)) => Result(postCtx, Some[Exp.LitZ](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitZ]())
-    }
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
   @pure def transformAssumeProofStep(ctx: Context, o: AssumeProofStep): Result[Context, AssumeProofStep] = {
     val preR: PreResult[Context, AssumeProofStep] = pp.preAssumeProofStep(ctx, o)
     val r: Result[Context, AssumeProofStep] = if (preR.continue) {
@@ -3559,39 +3394,6 @@ import Transformer._
     }
   }
 
-  @pure def transformExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp.LitB] = {
-    val preR: PreResult[Context, Exp.LitB] = pp.preExpLitB(ctx, o) match {
-      case PreResult(preCtx, continue, Some(r: Exp.LitB)) => PreResult(preCtx, continue, Some[Exp.LitB](r))
-      case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitB]())
-    }
-    val r: Result[Context, Exp.LitB] = if (preR.continue) {
-      val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: Exp.LitB = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, Exp.LitB] = pp.postExpLitB(r.ctx, o2) match {
-      case Result(postCtx, Some(result: Exp.LitB)) => Result(postCtx, Some[Exp.LitB](result))
-      case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitB]())
-    }
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
   @pure def transformTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): Result[Context, TruthTable.Conclusion] = {
     val preR: PreResult[Context, TruthTable.Conclusion] = pp.preTruthTableConclusion(ctx, o)
     val r: Result[Context, TruthTable.Conclusion] = if (preR.continue) {
@@ -3730,6 +3532,7 @@ import Transformer._
     val r: Result[Context, ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
+
       if (hasChanged)
         Result(ctx, Some(o2))
       else
@@ -3756,6 +3559,7 @@ import Transformer._
     val r: Result[Context, PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
+
       if (hasChanged)
         Result(ctx, Some(o2))
       else
@@ -3768,6 +3572,208 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: PosInfo = r.resultOpt.getOrElse(o)
     val postR: Result[Context, PosInfo] = pp.postPosInfo(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause.Proof] = {
+    val preR: PreResult[Context, LClause.Proof] = pp.preLClauseProof(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: LClause.Proof)) => PreResult(preCtx, continue, Some[LClause.Proof](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Proof]())
+   }
+    val r: Result[Context, LClause.Proof] = if (preR.continue) {
+      val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, IS[Z, ProofStep]] = transformISZ(ctx, o2.steps, transformProofStep _)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(steps = r0.resultOpt.getOrElse(o2.steps))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: LClause.Proof = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, LClause.Proof] = pp.postLClauseProof(r.ctx, o2) match {
+     case Result(postCtx, Some(result: LClause.Proof)) => Result(postCtx, Some[LClause.Proof](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Proof]())
+   }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause.Sequent] = {
+    val preR: PreResult[Context, LClause.Sequent] = pp.preLClauseSequent(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: LClause.Sequent)) => PreResult(preCtx, continue, Some[LClause.Sequent](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Sequent]())
+   }
+    val r: Result[Context, LClause.Sequent] = if (preR.continue) {
+      val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, IS[Z, Exp]] = transformISZ(ctx, o2.premises, transformExp _)
+      val r1: Result[Context, IS[Z, Exp]] = transformISZ(r0.ctx, o2.conclusions, transformExp _)
+      val r2: Result[Context, Option[LClause.Proof]] = transformOption(r1.ctx, o2.proofOpt, transformLClauseProof _)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+        Result(r2.ctx, Some(o2(premises = r0.resultOpt.getOrElse(o2.premises), conclusions = r1.resultOpt.getOrElse(o2.conclusions), proofOpt = r2.resultOpt.getOrElse(o2.proofOpt))))
+      else
+        Result(r2.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: LClause.Sequent = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, LClause.Sequent] = pp.postLClauseSequent(r.ctx, o2) match {
+     case Result(postCtx, Some(result: LClause.Sequent)) => Result(postCtx, Some[LClause.Sequent](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Sequent]())
+   }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type.Named] = {
+    val preR: PreResult[Context, Type.Named] = pp.preTypeNamed(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: Type.Named)) => PreResult(preCtx, continue, Some[Type.Named](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Type.Named]())
+   }
+    val r: Result[Context, Type.Named] = if (preR.continue) {
+      val o2: Type.Named = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Name] = transformName(ctx, o2.name)
+      val r1: Result[Context, IS[Z, Type]] = transformISZ(r0.ctx, o2.typeArgs, transformType _)
+      val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+        Result(r2.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name), typeArgs = r1.resultOpt.getOrElse(o2.typeArgs), attr = r2.resultOpt.getOrElse(o2.attr))))
+      else
+        Result(r2.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Type.Named = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Type.Named] = pp.postTypeNamed(r.ctx, o2) match {
+     case Result(postCtx, Some(result: Type.Named)) => Result(postCtx, Some[Type.Named](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[Type.Named]())
+   }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp.LitString] = {
+    val preR: PreResult[Context, Exp.LitString] = pp.preExpLitString(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: Exp.LitString)) => PreResult(preCtx, continue, Some[Exp.LitString](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitString]())
+   }
+    val r: Result[Context, Exp.LitString] = if (preR.continue) {
+      val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Exp.LitString = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Exp.LitString] = pp.postExpLitString(r.ctx, o2) match {
+     case Result(postCtx, Some(result: Exp.LitString)) => Result(postCtx, Some[Exp.LitString](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitString]())
+   }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp.LitZ] = {
+    val preR: PreResult[Context, Exp.LitZ] = pp.preExpLitZ(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: Exp.LitZ)) => PreResult(preCtx, continue, Some[Exp.LitZ](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitZ]())
+   }
+    val r: Result[Context, Exp.LitZ] = if (preR.continue) {
+      val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Exp.LitZ = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Exp.LitZ] = pp.postExpLitZ(r.ctx, o2) match {
+     case Result(postCtx, Some(result: Exp.LitZ)) => Result(postCtx, Some[Exp.LitZ](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitZ]())
+   }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp.LitB] = {
+    val preR: PreResult[Context, Exp.LitB] = pp.preExpLitB(ctx, o) match {
+     case PreResult(preCtx, continue, Some(r: Exp.LitB)) => PreResult(preCtx, continue, Some[Exp.LitB](r))
+     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitB]())
+   }
+    val r: Result[Context, Exp.LitB] = if (preR.continue) {
+      val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Exp.LitB = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Exp.LitB] = pp.postExpLitB(r.ctx, o2) match {
+     case Result(postCtx, Some(result: Exp.LitB)) => Result(postCtx, Some[Exp.LitB](result))
+     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitB]())
+   }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

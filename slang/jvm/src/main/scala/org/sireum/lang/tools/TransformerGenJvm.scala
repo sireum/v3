@@ -33,7 +33,7 @@ import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{FileUtil, Reporter}
 import org.stringtemplate.v4.{ST, STGroup, STGroupFile}
-import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString, _2String}
 import org.sireum.math._Z
 
 object TransformerGenJvm {
@@ -53,6 +53,16 @@ object TransformerGenJvm {
       case SSome(p: TopUnit.Program) =>
         val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
         gdr.resolveProgram(p)
+        val lOpt = licenseOpt match {
+          case Some(f) => SSome(_2String(FileUtil.readFile(f).trim))
+          case _ => SNone[SString]()
+        }
+        val fOpt = SSome(_2String(dest.getParentFile.toPath.relativize(src.toPath).toString))
+        val name = _2String(nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"))
+        Some(PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
+          Util.ids2strings(p.packageName.ids), isImmutable, reporter).gen(lOpt, fOpt, name).
+          render.value.replaceAllLiterally(System.lineSeparator, "\n").trim)
+        /*
         Some(new TransformerGenJvm(
           isImmutable,
           licenseOpt.map(f => new String(Files.readAllBytes(f.toPath)).trim),
@@ -62,6 +72,7 @@ object TransformerGenJvm {
           gdr.globalNameMap,
           gdr.globalTypeMap,
           reporter).gen().render().replaceAllLiterally(System.lineSeparator, "\n").trim)
+          */
       case _ =>
         reporter.error(SNone(), "TransformerGen", "Expecting program input.")
         return None

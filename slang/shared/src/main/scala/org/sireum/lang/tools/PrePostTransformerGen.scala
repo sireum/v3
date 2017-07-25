@@ -78,6 +78,7 @@ import TransformerGen._
   var postMethods: ISZ[ST] = ISZ()
   var transformHelpers: ISZ[ST] = ISZ()
   var transformMethods: ISZ[ST] = ISZ()
+  var transformSpecificMethods: ISZ[ST] = ISZ()
 
   def gen(licenseOpt: Option[String],
           fileUriOpt: Option[String],
@@ -89,7 +90,7 @@ import TransformerGen._
       }
     }
     template.main(licenseOpt, fileUriOpt, packageName, name, preMethods, postMethods,
-      transformHelpers, transformMethods)
+      transformHelpers, transformMethods ++ transformSpecificMethods)
   }
 
   def genRoot(name: QName, isSig: B): Unit = {
@@ -214,7 +215,7 @@ import TransformerGen._
           val adTypeString = typeString(name)
           val adTypeName = typeName(name)
           val transformMethodCaseMemberOptionST: ST =
-            if (isImmutable)
+            if (isImmutableOpt)
               template.transformMethodCaseMemberOption(i, i - 1,
                 adTypeName, adTypeString, p.id.value)
             else
@@ -313,7 +314,7 @@ import TransformerGen._
         specificAdded = specificAdded.add(adts)
         val adTypeName = typeName(name)
         val ac = genAdtChild(ti)
-        transformMethods = transformMethods :+
+        transformSpecificMethods = transformSpecificMethods :+
           template.transformMethod(adTypeName, adTypeString,
             template.transformMethodMatchSimple(ac), Some(template.preAdaptDown(adTypeString)),
             Some(template.postAdaptDown(adTypeString)))

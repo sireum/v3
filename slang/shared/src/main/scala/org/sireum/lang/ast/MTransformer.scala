@@ -1595,7 +1595,7 @@ object MTransformer {
     for (i <- s2.indices) {
       val e: T = s(i)
       val r: MOption[T] = f(e)
-      changed = changed | r.nonEmpty
+      changed = changed || r.nonEmpty
       s2(i) = r.getOrElse(e)
     }
     if (changed) {
@@ -1661,74 +1661,6 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: TopUnit = r.getOrElse(o)
     val postR: MOption[TopUnit] = pp.postTopUnit(o2)
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformLClauseSequent(o: LClause.Sequent): MOption[LClause.Sequent] = {
-    val preR: PreResult[LClause.Sequent] = pp.preLClauseSequent(o) match {
-      case PreResult(continue, MSome(r: LClause.Sequent)) => PreResult(continue, MSome[LClause.Sequent](r))
-      case _ => assert(F); PreResult(F, MNone[LClause.Sequent]())
-    }
-    val r: MOption[LClause.Sequent] = if (preR.continue) {
-      val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[IS[Z, Exp]] = transformISZ(o2.premises, transformExp _)
-      val r1: MOption[IS[Z, Exp]] = transformISZ(o2.conclusions, transformExp _)
-      val r2: MOption[Option[LClause.Proof]] = transformOption(o2.proofOpt, transformLClauseProof _)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(premises = r0.getOrElse(o2.premises), conclusions = r1.getOrElse(o2.conclusions), proofOpt = r2.getOrElse(o2.proofOpt)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: LClause.Sequent = r.getOrElse(o)
-    val postR: MOption[LClause.Sequent] = pp.postLClauseSequent(o2) match {
-      case MSome(result: LClause.Sequent) => MSome[LClause.Sequent](result)
-      case _ => assert(F); MNone[LClause.Sequent]()
-    }
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformLClauseProof(o: LClause.Proof): MOption[LClause.Proof] = {
-    val preR: PreResult[LClause.Proof] = pp.preLClauseProof(o) match {
-      case PreResult(continue, MSome(r: LClause.Proof)) => PreResult(continue, MSome[LClause.Proof](r))
-      case _ => assert(F); PreResult(F, MNone[LClause.Proof]())
-    }
-    val r: MOption[LClause.Proof] = if (preR.continue) {
-      val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep _)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(steps = r0.getOrElse(o2.steps)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: LClause.Proof = r.getOrElse(o)
-    val postR: MOption[LClause.Proof] = pp.postLClauseProof(o2) match {
-      case MSome(result: LClause.Proof) => MSome[LClause.Proof](result)
-      case _ => assert(F); MNone[LClause.Proof]()
-    }
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1975,41 +1907,6 @@ import MTransformer._
     }
   }
 
-  def transformTypeNamed(o: Type.Named): MOption[Type.Named] = {
-    val preR: PreResult[Type.Named] = pp.preTypeNamed(o) match {
-      case PreResult(continue, MSome(r: Type.Named)) => PreResult(continue, MSome[Type.Named](r))
-      case _ => assert(F); PreResult(F, MNone[Type.Named]())
-    }
-    val r: MOption[Type.Named] = if (preR.continue) {
-      val o2: Type.Named = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Name] = transformName(o2.name)
-      val r1: MOption[IS[Z, Type]] = transformISZ(o2.typeArgs, transformType _)
-      val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(name = r0.getOrElse(o2.name), typeArgs = r1.getOrElse(o2.typeArgs), attr = r2.getOrElse(o2.attr)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: Type.Named = r.getOrElse(o)
-    val postR: MOption[Type.Named] = pp.postTypeNamed(o2) match {
-      case MSome(result: Type.Named) => MSome[Type.Named](result)
-      case _ => assert(F); MNone[Type.Named]()
-    }
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
   def transformStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
     val preR: PreResult[Stmt.Import.Importer] = pp.preStmtImportImporter(o)
     val r: MOption[Stmt.Import.Importer] = if (preR.continue) {
@@ -2051,6 +1948,7 @@ import MTransformer._
           else
             MNone()
         case o2: Stmt.Import.WildcardSelector =>
+
           if (hasChanged)
             MSome(o2)
           else
@@ -2401,6 +2299,7 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Pattern] = o2 match {
         case o2: Pattern.Literal =>
+
           if (hasChanged)
             MSome(o2)
           else
@@ -2425,6 +2324,7 @@ import MTransformer._
           else
             MNone()
         case o2: Pattern.SeqWildcard =>
+
           if (hasChanged)
             MSome(o2)
           else
@@ -2741,39 +2641,6 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: Exp = r.getOrElse(o)
     val postR: MOption[Exp] = pp.postExp(o2)
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformExpLitString(o: Exp.LitString): MOption[Exp.LitString] = {
-    val preR: PreResult[Exp.LitString] = pp.preExpLitString(o) match {
-      case PreResult(continue, MSome(r: Exp.LitString)) => PreResult(continue, MSome[Exp.LitString](r))
-      case _ => assert(F); PreResult(F, MNone[Exp.LitString]())
-    }
-    val r: MOption[Exp.LitString] = if (preR.continue) {
-      val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Attr] = transformAttr(o2.attr)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(attr = r0.getOrElse(o2.attr)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: Exp.LitString = r.getOrElse(o)
-    val postR: MOption[Exp.LitString] = pp.postExpLitString(o2) match {
-      case MSome(result: Exp.LitString) => MSome[Exp.LitString](result)
-      case _ => assert(F); MNone[Exp.LitString]()
-    }
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3274,39 +3141,6 @@ import MTransformer._
     }
   }
 
-  def transformExpLitZ(o: Exp.LitZ): MOption[Exp.LitZ] = {
-    val preR: PreResult[Exp.LitZ] = pp.preExpLitZ(o) match {
-      case PreResult(continue, MSome(r: Exp.LitZ)) => PreResult(continue, MSome[Exp.LitZ](r))
-      case _ => assert(F); PreResult(F, MNone[Exp.LitZ]())
-    }
-    val r: MOption[Exp.LitZ] = if (preR.continue) {
-      val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Attr] = transformAttr(o2.attr)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(attr = r0.getOrElse(o2.attr)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: Exp.LitZ = r.getOrElse(o)
-    val postR: MOption[Exp.LitZ] = pp.postExpLitZ(o2) match {
-      case MSome(result: Exp.LitZ) => MSome[Exp.LitZ](result)
-      case _ => assert(F); MNone[Exp.LitZ]()
-    }
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
   def transformAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
     val preR: PreResult[AssumeProofStep] = pp.preAssumeProofStep(o)
     val r: MOption[AssumeProofStep] = if (preR.continue) {
@@ -3554,39 +3388,6 @@ import MTransformer._
     }
   }
 
-  def transformExpLitB(o: Exp.LitB): MOption[Exp.LitB] = {
-    val preR: PreResult[Exp.LitB] = pp.preExpLitB(o) match {
-      case PreResult(continue, MSome(r: Exp.LitB)) => PreResult(continue, MSome[Exp.LitB](r))
-      case _ => assert(F); PreResult(F, MNone[Exp.LitB]())
-    }
-    val r: MOption[Exp.LitB] = if (preR.continue) {
-      val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Attr] = transformAttr(o2.attr)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(attr = r0.getOrElse(o2.attr)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: Exp.LitB = r.getOrElse(o)
-    val postR: MOption[Exp.LitB] = pp.postExpLitB(o2) match {
-      case MSome(result: Exp.LitB) => MSome[Exp.LitB](result)
-      case _ => assert(F); MNone[Exp.LitB]()
-    }
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
   def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
     val preR: PreResult[TruthTable.Conclusion] = pp.preTruthTableConclusion(o)
     val r: MOption[TruthTable.Conclusion] = if (preR.continue) {
@@ -3725,6 +3526,7 @@ import MTransformer._
     val r: MOption[ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
+
       if (hasChanged)
         MSome(o2)
       else
@@ -3751,6 +3553,7 @@ import MTransformer._
     val r: MOption[PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
+
       if (hasChanged)
         MSome(o2)
       else
@@ -3763,6 +3566,208 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: PosInfo = r.getOrElse(o)
     val postR: MOption[PosInfo] = pp.postPosInfo(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformLClauseProof(o: LClause.Proof): MOption[LClause.Proof] = {
+    val preR: PreResult[LClause.Proof] = pp.preLClauseProof(o) match {
+     case PreResult(continue, MSome(r: LClause.Proof)) => PreResult(continue, MSome[LClause.Proof](r))
+     case _ => assert(F); PreResult(F, MNone[LClause.Proof]())
+   }
+    val r: MOption[LClause.Proof] = if (preR.continue) {
+      val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep _)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(steps = r0.getOrElse(o2.steps)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: LClause.Proof = r.getOrElse(o)
+    val postR: MOption[LClause.Proof] = pp.postLClauseProof(o2) match {
+     case MSome(result: LClause.Proof) => MSome[LClause.Proof](result)
+     case _ => assert(F); MNone[LClause.Proof]()
+   }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformLClauseSequent(o: LClause.Sequent): MOption[LClause.Sequent] = {
+    val preR: PreResult[LClause.Sequent] = pp.preLClauseSequent(o) match {
+     case PreResult(continue, MSome(r: LClause.Sequent)) => PreResult(continue, MSome[LClause.Sequent](r))
+     case _ => assert(F); PreResult(F, MNone[LClause.Sequent]())
+   }
+    val r: MOption[LClause.Sequent] = if (preR.continue) {
+      val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[IS[Z, Exp]] = transformISZ(o2.premises, transformExp _)
+      val r1: MOption[IS[Z, Exp]] = transformISZ(o2.conclusions, transformExp _)
+      val r2: MOption[Option[LClause.Proof]] = transformOption(o2.proofOpt, transformLClauseProof _)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+        MSome(o2(premises = r0.getOrElse(o2.premises), conclusions = r1.getOrElse(o2.conclusions), proofOpt = r2.getOrElse(o2.proofOpt)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: LClause.Sequent = r.getOrElse(o)
+    val postR: MOption[LClause.Sequent] = pp.postLClauseSequent(o2) match {
+     case MSome(result: LClause.Sequent) => MSome[LClause.Sequent](result)
+     case _ => assert(F); MNone[LClause.Sequent]()
+   }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformTypeNamed(o: Type.Named): MOption[Type.Named] = {
+    val preR: PreResult[Type.Named] = pp.preTypeNamed(o) match {
+     case PreResult(continue, MSome(r: Type.Named)) => PreResult(continue, MSome[Type.Named](r))
+     case _ => assert(F); PreResult(F, MNone[Type.Named]())
+   }
+    val r: MOption[Type.Named] = if (preR.continue) {
+      val o2: Type.Named = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Name] = transformName(o2.name)
+      val r1: MOption[IS[Z, Type]] = transformISZ(o2.typeArgs, transformType _)
+      val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+        MSome(o2(name = r0.getOrElse(o2.name), typeArgs = r1.getOrElse(o2.typeArgs), attr = r2.getOrElse(o2.attr)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Type.Named = r.getOrElse(o)
+    val postR: MOption[Type.Named] = pp.postTypeNamed(o2) match {
+     case MSome(result: Type.Named) => MSome[Type.Named](result)
+     case _ => assert(F); MNone[Type.Named]()
+   }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformExpLitString(o: Exp.LitString): MOption[Exp.LitString] = {
+    val preR: PreResult[Exp.LitString] = pp.preExpLitString(o) match {
+     case PreResult(continue, MSome(r: Exp.LitString)) => PreResult(continue, MSome[Exp.LitString](r))
+     case _ => assert(F); PreResult(F, MNone[Exp.LitString]())
+   }
+    val r: MOption[Exp.LitString] = if (preR.continue) {
+      val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Attr] = transformAttr(o2.attr)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(attr = r0.getOrElse(o2.attr)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Exp.LitString = r.getOrElse(o)
+    val postR: MOption[Exp.LitString] = pp.postExpLitString(o2) match {
+     case MSome(result: Exp.LitString) => MSome[Exp.LitString](result)
+     case _ => assert(F); MNone[Exp.LitString]()
+   }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformExpLitZ(o: Exp.LitZ): MOption[Exp.LitZ] = {
+    val preR: PreResult[Exp.LitZ] = pp.preExpLitZ(o) match {
+     case PreResult(continue, MSome(r: Exp.LitZ)) => PreResult(continue, MSome[Exp.LitZ](r))
+     case _ => assert(F); PreResult(F, MNone[Exp.LitZ]())
+   }
+    val r: MOption[Exp.LitZ] = if (preR.continue) {
+      val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Attr] = transformAttr(o2.attr)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(attr = r0.getOrElse(o2.attr)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Exp.LitZ = r.getOrElse(o)
+    val postR: MOption[Exp.LitZ] = pp.postExpLitZ(o2) match {
+     case MSome(result: Exp.LitZ) => MSome[Exp.LitZ](result)
+     case _ => assert(F); MNone[Exp.LitZ]()
+   }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformExpLitB(o: Exp.LitB): MOption[Exp.LitB] = {
+    val preR: PreResult[Exp.LitB] = pp.preExpLitB(o) match {
+     case PreResult(continue, MSome(r: Exp.LitB)) => PreResult(continue, MSome[Exp.LitB](r))
+     case _ => assert(F); PreResult(F, MNone[Exp.LitB]())
+   }
+    val r: MOption[Exp.LitB] = if (preR.continue) {
+      val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Attr] = transformAttr(o2.attr)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(attr = r0.getOrElse(o2.attr)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Exp.LitB = r.getOrElse(o)
+    val postR: MOption[Exp.LitB] = pp.postExpLitB(o2) match {
+     case MSome(result: Exp.LitB) => MSome[Exp.LitB](result)
+     case _ => assert(F); MNone[Exp.LitB]()
+   }
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
