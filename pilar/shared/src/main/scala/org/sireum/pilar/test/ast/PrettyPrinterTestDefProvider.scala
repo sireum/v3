@@ -57,81 +57,83 @@ object PrettyPrinterTestDefProvider {
 final class PrettyPrinterTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
+  def lines(s: String): Seq[String] = s.lines.toSeq
+
   override def testDefs: ISeq[TestDef] = ivector(
 
     EqualTest("FPModel1",
-      PrettyPrinter(FastParser(FastParserTestDefProvider.model1).get),
-      """
-        |global var z;
-        |
-        |def foo(x) {
-        |
-        |  #L0
-        |    return x;
-        |}
-      """.stripMargin.trim
+      printAndParse(FastParserTestDefProvider.model1),
+      lines("""
+              |global var z;
+              |
+              |def foo(x) {
+              |
+              |  #L0
+              |    return x;
+              |}
+            """.stripMargin.trim)
     )
     ,
     EqualTest("FPModel2",
-      PrettyPrinter(FastParser(FastParserTestDefProvider.model2).get),
-      """
-        |def abs(x) {
-        |
-        |  #L0
-        |    if x < z'0 then L1 else L2;
-        |
-        |  #L1
-        |    return -(x);
-        |
-        |  #L2
-        |    return x;
-        |}
-      """.stripMargin.trim)
+      printAndParse(FastParserTestDefProvider.model2),
+      lines("""
+              |def abs(x) {
+              |
+              |  #L0
+              |    if x < z'0 then L1 else L2;
+              |
+              |  #L1
+              |    return -(x);
+              |
+              |  #L2
+              |    return x;
+              |}
+            """.stripMargin.trim))
     ,
     EqualTest("FPModel3",
-      PrettyPrinter(FastParser(FastParserTestDefProvider.model3).get),
-      """
-        |def min(x, y) {
-        |
-        |  #L0
-        |    if x <= y then L1 else L2;
-        |
-        |  #L1
-        |    return x;
-        |
-        |  #L2
-        |    return y;
-        |}
-      """.stripMargin.trim)
+      printAndParse(FastParserTestDefProvider.model3),
+      lines("""
+              |def min(x, y) {
+              |
+              |  #L0
+              |    if x <= y then L1 else L2;
+              |
+              |  #L1
+              |    return x;
+              |
+              |  #L2
+              |    return y;
+              |}
+            """.stripMargin.trim))
     ,
     EqualTest("Model1",
-      PrettyPrinter(FastParser(model1).get),
-      """
-        |def switchTest(x) {
-        |  var
-        |    y;
-        |
-        |  #L1
-        |    y := x + z'1
-        |        @bar;
-        |    switch y
-        |      case z'0: L2
-        |      case z'1: L3
-        |      default: L4
-        |        @foo;
-        |
-        |  #L2
-        |    return z'10;
-        |
-        |  #L3
-        |    return z'9;
-        |
-        |  #L4
-        |    return z'0;
-        |}
-      """.stripMargin.trim)
+      printAndParse(model1),
+      lines("""
+              |def switchTest(x) {
+              |  var
+              |    y;
+              |
+              |  #L1
+              |    y := x + z'1
+              |        @bar;
+              |    switch y
+              |      case z'0: L2
+              |      case z'1: L3
+              |      default: L4
+              |        @foo;
+              |
+              |  #L2
+              |    return z'10;
+              |
+              |  #L3
+              |    return z'9;
+              |
+              |  #L4
+              |    return z'0;
+              |}
+            """.stripMargin.trim))
   )
 
-  def printAndParse(model: String) =
-    PrettyPrinter(FastParser(model).get)
+  def printAndParse(model: String): Seq[String] =
+    lines(PrettyPrinter(FastParser(model).get))
 }
