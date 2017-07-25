@@ -47,13 +47,11 @@ class TransformerGenJvmTest extends SireumSpec {
     reporter.printMessages()
     rOpt match {
       case Some(r) =>
-        val expected = FileUtil.readFile(dest).replaceAllLiterally("\r", "")
-        val result = r.replaceAllLiterally("\r", "")
+        val expected = FileUtil.readFile(dest)
+        val result = r
         if (result != expected) {
-          import scala.collection.JavaConverters._
-          for (d <- new DiffMatchPatch().diff_main(expected, result).asScala) {
-            Console.err.println(d)
-          }
+          val dmp = new DiffMatchPatch()
+          Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
           Console.err.flush()
           //FileUtil.writeFile(dest, r)
           //Console.err.println(r)
