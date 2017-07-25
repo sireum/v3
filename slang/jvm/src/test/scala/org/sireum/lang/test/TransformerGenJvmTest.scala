@@ -29,6 +29,7 @@ import java.io.File
 
 import org.sireum.test.SireumSpec
 import Paths._
+import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.lang.tools.TransformerGenJvm
 import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
 import org.sireum.ISZ
@@ -48,7 +49,12 @@ class TransformerGenJvmTest extends SireumSpec {
       case Some(r) =>
         val expected = FileUtil.readFile(dest)
         if (r != expected) {
-          //FileUtil.writeFile(dest, r)
+          import scala.collection.JavaConverters._
+          for (d <- new DiffMatchPatch().diff_main(expected, r).asScala) {
+            Console.err.println(d)
+          }
+          Console.err.flush()
+          FileUtil.writeFile(dest, r)
           //Console.err.println(r)
           //Console.err.flush()
           false
