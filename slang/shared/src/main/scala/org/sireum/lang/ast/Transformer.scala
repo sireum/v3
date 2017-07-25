@@ -1954,7 +1954,6 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Stmt.Import.WildcardSelector =>
-
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -2305,7 +2304,6 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: Result[Context, Pattern] = o2 match {
         case o2: Pattern.Literal =>
-
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -2330,7 +2328,6 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Pattern.SeqWildcard =>
-
           if (hasChanged)
             Result(ctx, Some(o2))
           else
@@ -3532,7 +3529,6 @@ import Transformer._
     val r: Result[Context, ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-
       if (hasChanged)
         Result(ctx, Some(o2))
       else
@@ -3559,7 +3555,6 @@ import Transformer._
     val r: Result[Context, PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-
       if (hasChanged)
         Result(ctx, Some(o2))
       else

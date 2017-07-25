@@ -1948,7 +1948,6 @@ import MTransformer._
           else
             MNone()
         case o2: Stmt.Import.WildcardSelector =>
-
           if (hasChanged)
             MSome(o2)
           else
@@ -2299,7 +2298,6 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Pattern] = o2 match {
         case o2: Pattern.Literal =>
-
           if (hasChanged)
             MSome(o2)
           else
@@ -2324,7 +2322,6 @@ import MTransformer._
           else
             MNone()
         case o2: Pattern.SeqWildcard =>
-
           if (hasChanged)
             MSome(o2)
           else
@@ -3526,7 +3523,6 @@ import MTransformer._
     val r: MOption[ResolvedInfo] = if (preR.continue) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-
       if (hasChanged)
         MSome(o2)
       else
@@ -3553,7 +3549,6 @@ import MTransformer._
     val r: MOption[PosInfo] = if (preR.continue) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-
       if (hasChanged)
         MSome(o2)
       else

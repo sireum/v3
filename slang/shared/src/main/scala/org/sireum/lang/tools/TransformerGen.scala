@@ -144,22 +144,23 @@ object TransformerGen {
                      postMethods: ISZ[ST],
                      transformHelpers: ISZ[ST],
                      transformMethods: ISZ[ST]): ST = {
-        val license: ST = stOpt(licenseOpt, (text: String) =>
-          st"""
-              |/*
+        val license: Option[ST] = licenseOpt.map((text: String) =>
+          st"""/*
               | $text
               | */
               |""")
-        val fileUri: ST = stOpt(fileUriOpt, (text: String) =>
-          st"""
-              |// This file is auto-generated from $text
+        val fileUri: Option[ST] = fileUriOpt.map((text: String) =>
+          st"""// This file is auto-generated from $text
               |""")
-        val packageName: ST = if (packageNames.nonEmpty) st"""
-                                                             |package ${(packageNames, ".")}
-                                                             |""" else empty
+        val packageName: Option[ST] =
+          if (packageNames.nonEmpty) Some(st"""package ${(packageNames, ".")}
+                                         |""") else None[ST]()
         return st"""// #Sireum
                    |// @formatter:off
-                   |$license$fileUri$packageName
+                   |
+                   |$license
+                   |$fileUri
+                   |$packageName
                    |import org.sireum._
                    |
                    |object $name {
@@ -429,22 +430,23 @@ object TransformerGen {
                      postMethods: ISZ[ST],
                      transformHelpers: ISZ[ST],
                      transformMethods: ISZ[ST]): ST = {
-        val license: ST = stOpt(licenseOpt, (text: String) =>
-          st"""
-              |/*
+        val license: Option[ST] = licenseOpt.map((text: String) =>
+          st"""/*
               | $text
               | */
               |""")
-        val fileUri: ST = stOpt(fileUriOpt, (text: String) =>
-          st"""
-              |// This file is auto-generated from $text
+        val fileUri: Option[ST] = fileUriOpt.map((text: String) =>
+          st"""// This file is auto-generated from $text
               |""")
-        val packageName: ST = if (packageNames.nonEmpty) st"""
-                                                             |package ${(packageNames, ".")}
-                                                             |""" else empty
+        val packageName: Option[ST] =
+          if (packageNames.nonEmpty) Some(st"""package ${(packageNames, ".")}
+                                              |""") else None[ST]()
         return st"""// #Sireum
                    |// @formatter:off
-                   |$license$fileUri$packageName
+                   |
+                   |$license
+                   |$fileUri
+                   |$packageName
                    |import org.sireum._
                    |
                    |object $name {
