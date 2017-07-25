@@ -60,7 +60,7 @@ object TransformerGenJvm {
         val name = _2String(nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"))
         Some(PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
           Util.ids2strings(p.packageName.ids), isImmutable, reporter).gen(lOpt, fOpt, name).
-          render.value.replaceAllLiterally("\r", "").trim)
+          render.value)
       case _ =>
         reporter.error(SNone(), "TransformerGen", "Expecting program input.")
         return None
