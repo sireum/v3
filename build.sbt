@@ -241,7 +241,25 @@ lazy val slangShared = slangT._1
 lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
 
-lazy val webPI = new ProjectInfo("web", isCross = true, runtimePI, preludePI, utilPI)
+lazy val commonPI = new ProjectInfo("common", isCross = true, utilPI)
+lazy val commonT = toSbtCrossProject(commonPI)
+lazy val commonShared = commonT._1
+lazy val commonJvm = commonT._2
+lazy val commonJs = commonT._3.settings(
+  crossTarget in (Compile, fastOptJS) := (classDirectory in Compile).value,
+  crossTarget in (Compile, packageJSDependencies) := (classDirectory in Compile).value,
+  crossTarget in (Compile, fullOptJS) := (classDirectory in Compile).value / "min",
+  crossTarget in (Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
+  skip in packageJSDependencies := false,
+  jsDependencies += RuntimeDOM,
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
+    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+  )
+)
+
+lazy val webPI = new ProjectInfo("web", isCross = true, runtimePI, preludePI, utilPI, commonPI)
 lazy val webT = toSbtCrossProject(webPI, Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
@@ -275,11 +293,26 @@ lazy val java = toSbtJvmProject(javaPI)
 lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI)
 lazy val cli = toSbtJvmProject(cliPI)
 
-lazy val awasPI = new ProjectInfo("awas", isCross = false, utilPI, testPI)
-lazy val awas = toSbtJvmProject(awasPI).settings(
-  parallelExecution in Test := false
-)
+lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI)
+lazy val awasT = toSbtCrossProject(awasPI, Seq(parallelExecution in Test := false))
 
+lazy val awasShared = awasT._1
+lazy val awasJvm = awasT._2.settings(libraryDependencies ++= Seq(
+  "com.lihaoyi" %%% "scalatags" % "0.6.5"
+))
+lazy val awasJs = awasT._3.settings(
+  crossTarget in(Compile, fastOptJS) := (classDirectory in Compile).value,
+  crossTarget in(Compile, packageJSDependencies) := (classDirectory in Compile).value,
+  crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
+  crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
+  skip in packageJSDependencies := false,
+  jsDependencies += RuntimeDOM,
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
+    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+  )
+)
 // Js Projects
 
 
@@ -287,12 +320,12 @@ lazy val awas = toSbtJvmProject(awasPI).settings(
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awas
+  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awasJvm
 )
 
 lazy val subProjectsJs = Seq(
   utilJs, testJs, pilarJs,
-  runtimeJs, preludeJs, logikaJs, slangJs
+  runtimeJs, preludeJs, logikaJs, slangJs, commonJs, awasJs
 )
 
 lazy val subProjectJvmReferences =

@@ -34,7 +34,7 @@ import org.sireum.web.playground.Playground.editor
 import org.sireum.web.ui.Notification
 
 import scala.collection.immutable.SortedMap
-import org.sireum.web.util._
+import org.sireum.common.JSutil._
 
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
