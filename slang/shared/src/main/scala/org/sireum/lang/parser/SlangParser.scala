@@ -113,11 +113,19 @@ object SlangParser {
             isWorksheet: Boolean,
             isDiet: Boolean,
             fileUriOpt: Option[String],
-            text: Predef.String,
+            txt: Predef.String,
             reporter: Reporter): Result = {
-    val lines = text.trim.lines
-    val line = if (lines.hasNext) lines.next.filterNot(_.isWhitespace) else ""
-    val hashSireum = line.contains("#Sireum")
+    val text = txt.replaceAllLiterally("\r\n", "\n") // WORKAROUND: scalameta crlf issues
+    val i = text.indexOf('\n')
+    val sb = new StringBuilder
+    if (i >= 0) {
+      for (j <- 0 until i) cs(j) match {
+        case '\t' | '\r' | ' ' =>
+        case c => sb.append(c)
+      }
+    }
+    val firstLine = sb.toString
+    val hashSireum = firstLine.contains("#Sireum")
     val (dialect, input) = scalaDialect(isWorksheet)(text)
     new SlangParser(text, input, dialect, allowSireumPackage, hashSireum,
       isWorksheet, isDiet, fileUriOpt, reporter).parseTopUnit()

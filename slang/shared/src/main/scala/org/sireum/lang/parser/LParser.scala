@@ -65,7 +65,7 @@ object LParser {
   )
 
   def apply[T](text: String, reporter: AccumulatingReporter)(f: (LParser, AccumulatingReporter) => T): T = {
-    val input = Input.String(text)
+    val input = Input.String(text.replaceAllLiterally("\r\n", "\n"))  // WORKAROUND: scalameta crlf issues
     val dialect = SlangParser.scalaDialect(isWorksheet = false)
     val slangParser = new SlangParser(
       input = input,
