@@ -27,8 +27,286 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.lang.{ast => AST}
+import org.sireum.lang.symbol.Resolver._
+import org.sireum.lang.util.Reporter
+
+@record class TransformerGen(globalNameMap: NameMap,
+                             globalTypeMap: TypeMap,
+                             packageName: QName,
+                             isImmutable: B,
+                             reporter: Reporter) {
+
+  val globalTypes: ISZ[TypeInfo] = SI.sortWith(globalTypeMap.values, ltTypeInfo _)
+
+  val poset: Poset[QName] = {
+    var r = Poset.empty[QName]
+
+    for (ti <- globalTypes) {
+      ti match {
+        case ti: TypeInfo.AbstractDatatype if ti.ast.isRoot =>
+          r = r.addNode(ti.name)
+        case ti: TypeInfo.Sig =>
+          r = r.addNode(ti.name)
+        case _ =>
+      }
+    }
+    for (ti <- globalTypes) {
+      ti match {
+        case ti: TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
+          for (t <- ti.ast.parents) {
+            ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(t.name.ids)) match {
+              case Some(parent: TypeInfo.AbstractDatatype) =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(parent: TypeInfo.Sig) =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
+              case _ =>
+                reporter.error(t.attr.posOpt,
+                  TransformerGen.messageKind,
+                  s"Could not find ${typeString(ti.name)}'s super type ${typeString(AST.Util.ids2strings(t.name.ids))}.")
+            }
+          }
+        case _ =>
+      }
+    }
+    r
+  }
+
+  val template: TransformerGen.Template =
+    if (isImmutable) TransformerGen.Template.Transformer()
+    else TransformerGen.Template.MTransformer()
+  var optionAdded: B = F
+  var moptionAdded: B = F
+  var collAdded: HashSet[String] = HashSet.empty[String]
+  var specificAdded: HashSet[String] = HashSet.empty[String]
+  var helpers: ISZ[ST] = ISZ()
+
+  def genAdtChild(ti: TypeInfo.AbstractDatatype): Z = {
+    var methodCaseChanges = ISZ[ST]()
+    var methodCaseUpdates = ISZ[ST]()
+    var methodCaseMembers = ISZ[ST]()
+
+    def addChangedUpdate(i: Z, fieldName: String): Unit = {
+      methodCaseChanges = methodCaseChanges :+ template.transformMethodCaseChanged(i)
+      methodCaseUpdates = methodCaseUpdates :+ template.transformMethodCaseUpdate(i, fieldName)
+    }
+
+    def transformMethodCaseMemberS(isImmutableCollection: B,
+                                   i: Z,
+                                   indexType: ST,
+                                   name: QName,
+                                   fieldName: String): Unit = {
+      val adTypeString = typeString(name)
+      val adTypeName = typeName(name)
+      val transformMethodCaseMemberSST: ST =
+        if (isImmutableCollection)
+          template.transformMethodCaseMemberIS(i, i - 1, indexType,
+            adTypeName, adTypeString, fieldName)
+        else
+          template.transformMethodCaseMemberMS(i, i - 1, indexType,
+            adTypeName, adTypeString, fieldName)
+      methodCaseMembers = methodCaseMembers :+ transformMethodCaseMemberSST
+      addChangedUpdate(i, fieldName)
+
+      val coll = s"${if (isImmutableCollection) "IS" else "MS"}$indexType"
+      if (!collAdded.contains(coll)) {
+        collAdded = collAdded.add(coll)
+        helpers = helpers :+
+          (if (isImmutableCollection) template.transformIS(indexType)
+          else template.transformMS(indexType))
+      }
+      transformSpecific(name)
+    }
+
+    var i = z"0"
+
+    def genS(isImmutableCollection: B,
+             indexType: ST,
+             elementType: AST.Type,
+             p: AST.AbstractDatatypeParam): Unit = {
+      if (isImmutable && !isImmutableCollection) {
+        reporter.error(p.id.attr.posOpt, TransformerGen.messageKind, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+        return
+      }
+      adtNameOpt(ti, elementType) match {
+        case Some(name) =>
+          transformMethodCaseMemberS(isImmutableCollection, i, indexType, name, p.id.value)
+          i = i + z"1"
+        case _ =>
+      }
+    }
+
+    def genS2(isImmutableCollection: B,
+              indexType: AST.Type,
+              elementType: AST.Type,
+              p: AST.AbstractDatatypeParam): Unit = {
+      genS(isImmutableCollection, typeString(indexType), elementType, p)
+    }
+
+    def genOpt(isImmutableOpt: B, t: AST.Type, p: AST.AbstractDatatypeParam): Unit = {
+      if (isImmutable && !isImmutableOpt) {
+        reporter.error(p.id.attr.posOpt, TransformerGen.messageKind, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
+        return
+      }
+      adtNameOpt(ti, t) match {
+        case Some(name) =>
+          val adTypeString = typeString(name)
+          val adTypeName = typeName(name)
+          val transformMethodCaseMemberOptionST: ST =
+            if (isImmutable)
+              template.transformMethodCaseMemberOption(i, i - 1,
+                adTypeName, adTypeString, p.id.value)
+            else
+              template.transformMethodCaseMemberMOption(i,
+                adTypeName, adTypeString, p.id.value)
+          methodCaseMembers = methodCaseMembers :+ transformMethodCaseMemberOptionST
+          addChangedUpdate(i, p.id.value)
+          if (isImmutableOpt && !optionAdded) {
+            optionAdded = T
+            helpers = helpers :+ template.transformOption
+          } else if (!isImmutableOpt && !moptionAdded) {
+            moptionAdded = T
+            helpers = helpers :+ template.transformMOption
+          }
+          transformSpecific(name)
+          i = i + 1
+        case _ =>
+      }
+    }
+
+    for (p <- ti.ast.params) {
+      val fieldName = p.id.value
+      p.tipe match {
+        case t: AST.Type.Named =>
+          val ts = typeString(t)
+          val tids = t.name.ids
+          tids(tids.size - 1).value match {
+            case "IS" => genS(T, typeString(t.typeArgs(0)), t.typeArgs(1), p)
+            case "MS" => genS(F, typeString(t.typeArgs(0)), t.typeArgs(1), p)
+            case "ISZ" => genS(T, st"Z", t.typeArgs(0), p)
+            case "ISZ8" => genS(T, st"Z8", t.typeArgs(0), p)
+            case "ISZ16" => genS(T, st"Z16", t.typeArgs(0), p)
+            case "ISZ32" => genS(T, st"Z32", t.typeArgs(0), p)
+            case "ISZ64" => genS(T, st"Z64", t.typeArgs(0), p)
+            case "ISN" => genS(T, st"N", t.typeArgs(0), p)
+            case "ISN8" => genS(T, st"N8", t.typeArgs(0), p)
+            case "ISN16" => genS(T, st"N16", t.typeArgs(0), p)
+            case "ISN32" => genS(T, st"N32", t.typeArgs(0), p)
+            case "ISN64" => genS(T, st"N64", t.typeArgs(0), p)
+            case "ISS8" => genS(T, st"S8", t.typeArgs(0), p)
+            case "ISS16" => genS(T, st"S16", t.typeArgs(0), p)
+            case "ISS32" => genS(T, st"S32", t.typeArgs(0), p)
+            case "ISS64" => genS(T, st"S64", t.typeArgs(0), p)
+            case "ISU8" => genS(T, st"U8", t.typeArgs(0), p)
+            case "ISU16" => genS(T, st"U16", t.typeArgs(0), p)
+            case "ISU32" => genS(T, st"U32", t.typeArgs(0), p)
+            case "ISU64" => genS(T, st"U64", t.typeArgs(0), p)
+            case "MSZ" => genS(F, st"Z", t.typeArgs(0), p)
+            case "MSZ8" => genS(F, st"Z8", t.typeArgs(0), p)
+            case "MSZ16" => genS(F, st"Z16", t.typeArgs(0), p)
+            case "MSZ32" => genS(F, st"Z32", t.typeArgs(0), p)
+            case "MSZ64" => genS(F, st"Z64", t.typeArgs(0), p)
+            case "MSN" => genS(F, st"N", t.typeArgs(0), p)
+            case "MSN8" => genS(F, st"N8", t.typeArgs(0), p)
+            case "MSN16" => genS(F, st"N16", t.typeArgs(0), p)
+            case "MSN32" => genS(F, st"N32", t.typeArgs(0), p)
+            case "MSN64" => genS(F, st"N64", t.typeArgs(0), p)
+            case "MSS8" => genS(F, st"S8", t.typeArgs(0), p)
+            case "MSS16" => genS(F, st"S16", t.typeArgs(0), p)
+            case "MSS32" => genS(F, st"S32", t.typeArgs(0), p)
+            case "MSS64" => genS(F, st"S64", t.typeArgs(0), p)
+            case "MSU8" => genS(F, st"MSU8", t.typeArgs(0), p)
+            case "MSU16" => genS(F, st"MSU16", t.typeArgs(0), p)
+            case "MSU32" => genS(F, st"MSU32", t.typeArgs(0), p)
+            case "MSU64" => genS(F, st"MSU64", t.typeArgs(0), p)
+            case "Option" => genOpt(T, t.typeArgs(0), p)
+            case "MOption" => genOpt(F, t.typeArgs(0), p)
+            case _ =>
+              adtNameOpt(ti, AST.Util.ids2strings(t.name.ids), t.attr.posOpt) match {
+                case Some(name) =>
+                  val adTypeString = typeString(name)
+                  val adTypeName = typeName(name)
+                  val transformMethodCaseMemberST =
+                    template.transformMethodCaseMember(i, i - 1,
+                      adTypeName, adTypeString, p.id.value)
+                  methodCaseMembers = methodCaseMembers :+ transformMethodCaseMemberST
+                  addChangedUpdate(i, fieldName)
+                  transformSpecific(name)
+                  i = i + 1
+                case _ =>
+              }
+          }
+        case _ =>
+          reporter.error(p.id.attr.posOpt, messageKind, s"Unsupported type for parameter ${p.id.value}")
+      }
+    }
+    return i - 1
+  }
+
+  def transformSpecific(name: QName): Unit = {
+    ???
+  }
+
+  def adtNameOpt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): Option[QName] = {
+    tipe match {
+      case tipe: AST.Type.Named => adtNameOpt(ti, AST.Util.ids2strings(tipe.name.ids), tipe.attr.posOpt)
+      case _ => None()
+    }
+  }
+
+  def adtNameOpt(ti: TypeInfo.AbstractDatatype, ids: QName, posOpt: Option[AST.PosInfo]): Option[QName] = {
+    ti.scope.resolveType(globalTypeMap, ids) match {
+      case Some(ti: TypeInfo.AbstractDatatype) => Some(ti.name)
+      case Some(_) => None()
+      case _ =>
+        reporter.error(posOpt, TransformerGen.messageKind, s"Could not find ${typeString(ids)}.")
+        None()
+    }
+  }
+
+  @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
+    (ti1.posOpt, ti2.posOpt) match {
+      case (Some(pos1), Some(pos2)) => return pos1.offset < pos2.offset
+      case _ => return F
+    }
+  }
+
+  @pure def relQName(ids: QName): QName = {
+    val sz = packageName.size
+    if (ids.size <= sz) {
+      return ids
+    }
+    var i = z"0"
+    while (i < packageName.size) {
+      if (ids(i) != packageName(i)) {
+        return ids
+      }
+      i = i + 1
+    }
+    return SI.drop(ids, sz)
+  }
+
+  @pure def typeString(t: AST.Type): ST = {
+    t match {
+      case t: AST.Type.Named => return typeString(relQName(AST.Util.ids2strings(t.name.ids)))
+      case _ =>
+        reporter.internalError(t.posOpt, TransformerGen.messageKind, s"Unexpected type $t.")
+        return TransformerGen.Template.empty
+    }
+  }
+
+  def typeString(ids: QName): ST = {
+    return st"${(relQName(ids), ".")}"
+  }
+
+  def typeName(ids: QName): ST = {
+    return st"${relQName(ids)}"
+  }
+}
 
 object TransformerGen {
+
+  val messageKind: String = "TransformerGen"
 
   @sig trait Template {
     def main(licenseOpt: Option[String],
@@ -40,35 +318,35 @@ object TransformerGen {
              transformHelper: ISZ[ST],
              transformMethod: ISZ[ST]): ST
 
-    def preMethodRoot(typeName: String,
-                      tpe: String,
+    def preMethodRoot(typeName: ST,
+                      tpe: ST,
                       preMethodRootCases: ISZ[ST]): ST
 
-    def preMethodRootCase(typeName: String, tpe: String): ST
+    def preMethodRootCase(typeName: ST, tpe: ST): ST
 
-    def preMethod(typeName: String, tpe: String, superType: String): ST
+    def preMethod(typeName: ST, tpe: ST, superType: ST): ST
 
-    def postMethodRoot(typeName: String, tpe: String, postMethodRootCases: ISZ[ST]): ST
+    def postMethodRoot(typeName: ST, tpe: ST, postMethodRootCases: ISZ[ST]): ST
 
-    def postMethodRootCase(typeName: String, tpe: String): ST
+    def postMethodRootCase(typeName: ST, tpe: ST): ST
 
-    def postMethod(typeName: String, tpe: String, superType: String): ST
+    def postMethod(typeName: ST, tpe: ST, superType: ST): ST
 
-    def transformMethod(typeName: String,
-                        tpe: String,
+    def transformMethod(typeName: ST,
+                        tpe: ST,
                         transformMethodMatch: ST,
                         preAdapt: Option[ST],
                         postAdap: Option[ST]): ST
 
-    def preAdaptDown(tpe: String): ST
+    def preAdaptDown(tpe: ST): ST
 
-    def preAdaptUp(tpe: String): ST
+    def preAdaptUp(tpe: ST): ST
 
-    def postAdaptDown(tpe: String): ST
+    def postAdaptDown(tpe: ST): ST
 
-    def postAdaptUp(tpe: String): ST
+    def postAdaptUp(tpe: ST): ST
 
-    def transformMethodMatch(tpe: String,
+    def transformMethodMatch(tpe: ST,
                              transformMethodCases: ISZ[ST]): ST
 
     def transformMethodMatchSimple(i: Z,
@@ -77,40 +355,41 @@ object TransformerGen {
                                    transformMethodCaseUpdates: ISZ[ST]): ST
 
     def transformMethodCase(i: Z,
-                            tpe: String,
+                            tpe: ST,
                             transformMethodCaseMembers: ISZ[ST],
                             transformMethodCaseChanges: ISZ[ST],
                             transformMethodCaseUpdates: ISZ[ST]): ST
 
     def transformMethodCaseMember(i: Z,
                                   j: Z,
-                                  typeName: String,
-                                  tpe: String,
+                                  typeName: ST,
+                                  tpe: ST,
                                   fieldName: String): ST
 
     def transformMethodCaseMemberIS(i: Z,
                                     j: Z,
-                                    indexType: String,
-                                    typeName: String,
-                                    tpe: String,
+                                    indexType: ST,
+                                    typeName: ST,
+                                    tpe: ST,
                                     fieldName: String): ST
 
     def transformMethodCaseMemberMS(i: Z,
                                     j: Z,
-                                    indexType: String,
-                                    typeName: String,
-                                    tpe: String,
+                                    indexType: ST,
+                                    typeName: ST,
+                                    tpe: ST,
                                     fieldName: String): ST
 
     def transformMethodCaseMemberOption(i: Z,
                                         j: Z,
-                                        typeName: String,
-                                        tpe: String,
+                                        typeName: ST,
+                                        tpe: ST,
                                         fieldName: String): ST
 
     def transformMethodCaseMemberMOption(i: Z,
-                                         typeName: Z,
-                                         tpe: String, fieldName: String): ST
+                                         typeName: ST,
+                                         tpe: ST,
+                                         fieldName: String): ST
 
     def transformMethodCaseChanged(i: Z): ST
 
@@ -120,9 +399,9 @@ object TransformerGen {
 
     def transformMOption(): ST
 
-    def transformIS(indexType: String): ST
+    def transformIS(indexType: ST): ST
 
-    def transformMS(indexType: String): ST
+    def transformMS(indexType: ST): ST
   }
 
   object Template {
@@ -136,7 +415,11 @@ object TransformerGen {
       return opt(tOpt.map(f))
     }
 
-    @sig trait TransformerTemplateSig extends Template {
+    @datatype class Transformer extends TransformerSig
+
+    @datatype class MTransformer extends MTransformerSig
+
+    @sig trait TransformerSig extends Template {
       def main(licenseOpt: Option[String],
                fileUriOpt: Option[String],
                packageNameOpt: Option[String],
@@ -195,8 +478,8 @@ object TransformerGen {
                  |}"""
       }
 
-      def preMethodRoot(typeName: String,
-                        tpe: String,
+      def preMethodRoot(typeName: ST,
+                        tpe: ST,
                         preMethodRootCases: ISZ[ST]): ST = {
         return st"""@pure def pre$typeName(ctx: Context, o: $tpe): PreResult[Context, $tpe] = {
                    |  o match {
@@ -205,17 +488,17 @@ object TransformerGen {
                    |}"""
       }
 
-      def preMethodRootCase(typeName: String, tpe: String): ST = {
+      def preMethodRootCase(typeName: ST, tpe: ST): ST = {
         return st"case o: $tpe => return pre$typeName(ctx, o)"
       }
 
-      def preMethod(typeName: String, tpe: String, superType: String): ST = {
+      def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def pre$typeName(ctx: Context, o: $tpe): PreResult[Context, $superType] = {
                    |  return PreResult(T, None())
                    |}"""
       }
 
-      def postMethodRoot(typeName: String, tpe: String, postMethodRootCases: ISZ[ST]): ST = {
+      def postMethodRoot(typeName: ST, tpe: ST, postMethodRootCases: ISZ[ST]): ST = {
         return st"""@pure def post$typeName(ctx: Context, o: $tpe): Result[Context, $tpe] = {
                    |  o match {
                    |    ${(postMethodRootCases, "\n")}
@@ -223,18 +506,18 @@ object TransformerGen {
                    |}"""
       }
 
-      def postMethodRootCase(typeName: String, tpe: String): ST = {
+      def postMethodRootCase(typeName: ST, tpe: ST): ST = {
         return st"case o: $tpe => return post$typeName(ctx, o)"
       }
 
-      def postMethod(typeName: String, tpe: String, superType: String): ST = {
+      def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def post$typeName(ctx: Context, o: $tpe): Result[Context, $superType] = {
                    |  return Result(ctx, None())
                    |}"""
       }
 
-      def transformMethod(typeName: String,
-                          tpe: String,
+      def transformMethod(typeName: ST,
+                          tpe: ST,
                           transformMethodMatch: ST,
                           preAdaptOpt: Option[ST],
                           postAdaptOpt: Option[ST]): ST = {
@@ -262,35 +545,35 @@ object TransformerGen {
                    |}"""
       }
 
-      def preAdaptDown(tpe: String): ST = {
+      def preAdaptDown(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(preCtx, continue, Some(r: $tpe)) => PreResult(preCtx, continue, Some[$tpe](r))
                    |   case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[$tpe]())
                    | }"""
       }
 
-      def preAdaptUp(tpe: String): ST = {
+      def preAdaptUp(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(preCtx, continue, Some(r)) => PreResult(preCtx, continue, Some[$tpe](r))
                    |   case PreResult(preCtx, continue, _) => PreResult(preCtx, continue, None[$tpe]())
                    | }"""
       }
 
-      def postAdaptDown(tpe: String): ST = {
+      def postAdaptDown(tpe: ST): ST = {
         return st""" match {
                    |   case Result(postCtx, Some(result: $tpe)) => Result(postCtx, Some[$tpe](result))
                    |   case Result(postCtx, _) => assert(F); Result(postCtx, None[$tpe]())
                    | }"""
       }
 
-      def postAdaptUp(tpe: String): ST = {
+      def postAdaptUp(tpe: ST): ST = {
         return st""" match {
                    |   case Result(postCtx, Some(r)) => Result(postCtx, Some[$tpe](r))
                    |   case Result(postCtx, _) => Result(postCtx, None[$tpe]())
                    | }"""
       }
 
-      def transformMethodMatch(tpe: String,
+      def transformMethodMatch(tpe: ST,
                                transformMethodCases: ISZ[ST]): ST = {
         return st"""val rOpt: Result[Context, $tpe] = o2 match {
                    |  ${(transformMethodCases, "\n")}
@@ -314,7 +597,7 @@ object TransformerGen {
       }
 
       def transformMethodCase(i: Z,
-                              tpe: String,
+                              tpe: ST,
                               transformMethodCaseMembers: ISZ[ST],
                               transformMethodCaseChanges: ISZ[ST],
                               transformMethodCaseUpdates: ISZ[ST]): ST = {
@@ -332,8 +615,8 @@ object TransformerGen {
 
       def transformMethodCaseMember(i: Z,
                                     j: Z,
-                                    typeName: String,
-                                    tpe: String,
+                                    typeName: ST,
+                                    tpe: ST,
                                     fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, $tpe] = transform$typeName($ctx, o2.$fieldName)"
@@ -341,9 +624,9 @@ object TransformerGen {
 
       def transformMethodCaseMemberIS(i: Z,
                                       j: Z,
-                                      indexType: String,
-                                      typeName: String,
-                                      tpe: String,
+                                      indexType: ST,
+                                      typeName: ST,
+                                      tpe: ST,
                                       fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, IS[$indexType, $tpe]] = transformIS$indexType($ctx, o2.$fieldName, transform$typeName _)"
@@ -351,9 +634,9 @@ object TransformerGen {
 
       def transformMethodCaseMemberMS(i: Z,
                                       j: Z,
-                                      indexType: String,
-                                      typeName: String,
-                                      tpe: String,
+                                      indexType: ST,
+                                      typeName: ST,
+                                      tpe: ST,
                                       fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, MS[$indexType, $tpe]] = transformMS$indexType($ctx, o2.$fieldName, transform$typeName _)"
@@ -361,16 +644,17 @@ object TransformerGen {
 
       def transformMethodCaseMemberOption(i: Z,
                                           j: Z,
-                                          typeName: String,
-                                          tpe: String,
+                                          typeName: ST,
+                                          tpe: ST,
                                           fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
         return st"val r$i: Result[Context, Option[$tpe]] = transformOption($ctx, o2.$fieldName, transform$typeName _)"
       }
 
       def transformMethodCaseMemberMOption(i: Z,
-                                           typeName: Z,
-                                           tpe: String, fieldName: String): ST = {
+                                           typeName: ST,
+                                           tpe: ST,
+                                           fieldName: String): ST = {
         return empty
       }
 
@@ -400,7 +684,7 @@ object TransformerGen {
         return empty
       }
 
-      def transformIS(indexType: String): ST = {
+      def transformIS(indexType: ST): ST = {
         return st"""@pure def transformIS$indexType[Context, T](ctx: Context, s: IS[$indexType, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[$indexType, T]] = {
                    |  val s2: MS[$indexType, T] = SI.toMS(s)
                    |  var changed: B = F
@@ -420,13 +704,13 @@ object TransformerGen {
                    |}"""
       }
 
-      def transformMS(indexType: String): ST = {
+      def transformMS(indexType: ST): ST = {
         return empty
       }
 
     }
 
-    @sig trait MTransformerTemplateSig extends Template {
+    @sig trait MTransformerSig extends Template {
       def main(licenseOpt: Option[String],
                fileUriOpt: Option[String],
                packageNameOpt: Option[String],
@@ -479,8 +763,8 @@ object TransformerGen {
                    |}"""
       }
 
-      def preMethodRoot(typeName: String,
-                        tpe: String,
+      def preMethodRoot(typeName: ST,
+                        tpe: ST,
                         preMethodRootCases: ISZ[ST]): ST = {
         return st"""def pre$typeName(o: $tpe): PreResult[$tpe] = {
                    |  o match {
@@ -489,17 +773,17 @@ object TransformerGen {
                    |}"""
       }
 
-      def preMethodRootCase(typeName: String, tpe: String): ST = {
+      def preMethodRootCase(typeName: ST, tpe: ST): ST = {
         return st"case o: $tpe => return pre$typeName(o)"
       }
 
-      def preMethod(typeName: String, tpe: String, superType: String): ST = {
+      def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""def pre$typeName(o: $tpe): PreResult[$superType] = {
                    |  return PreResult(T, MNone())
                    |}"""
       }
 
-      def postMethodRoot(typeName: String, tpe: String, postMethodRootCases: ISZ[ST]): ST = {
+      def postMethodRoot(typeName: ST, tpe: ST, postMethodRootCases: ISZ[ST]): ST = {
         return st"""def post$typeName(o: $tpe): MOption[$tpe] = {
                    |  o match {
                    |    ${(postMethodRootCases, "\n")}
@@ -507,18 +791,18 @@ object TransformerGen {
                    |}"""
       }
 
-      def postMethodRootCase(typeName: String, tpe: String): ST = {
+      def postMethodRootCase(typeName: ST, tpe: ST): ST = {
         return st"case o: $tpe => return post$typeName(o)"
       }
 
-      def postMethod(typeName: String, tpe: String, superType: String): ST = {
+      def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""def post$typeName(o: $tpe): MOption[$superType] = {
                    |  return MNone()
                    |}"""
       }
 
-      def transformMethod(typeName: String,
-                          tpe: String,
+      def transformMethod(typeName: ST,
+                          tpe: ST,
                           transformMethodMatch: ST,
                           preAdaptOpt: Option[ST],
                           postAdaptOpt: Option[ST]): ST = {
@@ -546,35 +830,35 @@ object TransformerGen {
                    |}"""
       }
 
-      def preAdaptDown(tpe: String): ST = {
+      def preAdaptDown(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(continue, MSome(r: $tpe)) => PreResult(continue, MSome[$tpe](r))
                    |   case _ => assert(F); PreResult(F, MNone[$tpe]())
                    | }"""
       }
 
-      def preAdaptUp(tpe: String): ST = {
+      def preAdaptUp(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(continue, MSome(r)) => PreResult(continue, MSome[$tpe](r))
                    |   case PreResult(continue, _) => PreResult(continue, MNone[$tpe]())
                    | }"""
       }
 
-      def postAdaptDown(tpe: String): ST = {
+      def postAdaptDown(tpe: ST): ST = {
         return st""" match {
                    |   case MSome(result: $tpe) => MSome[$tpe](result)
                    |   case _ => assert(F); MNone[$tpe]()
                    | }"""
       }
 
-      def postAdaptUp(tpe: String): ST = {
+      def postAdaptUp(tpe: ST): ST = {
         return st""" match {
                    |   case MSome(r) => MSome[$tpe](r)
                    |   case _ => MNone[$tpe]()
                    | }"""
       }
 
-      def transformMethodMatch(tpe: String,
+      def transformMethodMatch(tpe: ST,
                                transformMethodCases: ISZ[ST]): ST = {
         return st"""val rOpt: MOption[$tpe] = o2 match {
                    |  ${(transformMethodCases, "\n")}
@@ -598,7 +882,7 @@ object TransformerGen {
       }
 
       def transformMethodCase(i: Z,
-                              tpe: String,
+                              tpe: ST,
                               transformMethodCaseMembers: ISZ[ST],
                               transformMethodCaseChanges: ISZ[ST],
                               transformMethodCaseUpdates: ISZ[ST]): ST = {
@@ -615,41 +899,42 @@ object TransformerGen {
 
       def transformMethodCaseMember(i: Z,
                                     j: Z,
-                                    typeName: String,
-                                    tpe: String,
+                                    typeName: ST,
+                                    tpe: ST,
                                     fieldName: String): ST = {
         return st"val r$i: MOption[$tpe] = transform$typeName(o2.$fieldName)"
       }
 
       def transformMethodCaseMemberIS(i: Z,
                                       j: Z,
-                                      indexType: String,
-                                      typeName: String,
-                                      tpe: String,
+                                      indexType: ST,
+                                      typeName: ST,
+                                      tpe: ST,
                                       fieldName: String): ST = {
         return st"val r$i: MOption[IS[$indexType, $tpe]] = transformIS$indexType(o2.$fieldName, transform$typeName _)"
       }
 
       def transformMethodCaseMemberMS(i: Z,
                                       j: Z,
-                                      indexType: String,
-                                      typeName: String,
-                                      tpe: String,
+                                      indexType: ST,
+                                      typeName: ST,
+                                      tpe: ST,
                                       fieldName: String): ST = {
         return st"val r$i: MOption[MS[$indexType, $tpe]] = transformMS$indexType(o2.$fieldName, transform$typeName _)"
       }
 
       def transformMethodCaseMemberOption(i: Z,
                                           j: Z,
-                                          typeName: String,
-                                          tpe: String,
+                                          typeName: ST,
+                                          tpe: ST,
                                           fieldName: String): ST = {
         return st"val r$i: MOption[Option[$tpe]] = transformOption(o2.$fieldName, transform$typeName _)"
       }
 
       def transformMethodCaseMemberMOption(i: Z,
-                                           typeName: Z,
-                                           tpe: String, fieldName: String): ST = {
+                                           typeName: ST,
+                                           tpe: ST,
+                                           fieldName: String): ST = {
         return st"val r$i: MOption[MOption[$tpe]] = transformOption(o2.$fieldName, transform$typeName _)"
       }
 
@@ -689,7 +974,7 @@ object TransformerGen {
                    |}"""
       }
 
-      def transformIS(indexType: String): ST = {
+      def transformIS(indexType: ST): ST = {
         return st"""def transformIS$indexType[T](s: IS[$indexType, T], f: T => MOption[T]): MOption[IS[$indexType, T]] = {
                    |  val s2: MS[$indexType, T] = SI.toMS(s)
                    |  var changed: B = F
@@ -707,7 +992,7 @@ object TransformerGen {
                    |}"""
       }
 
-      def transformMS(indexType: String): ST = {
+      def transformMS(indexType: ST): ST = {
         return st"""def transformIS$indexType[T](s: IS[$indexType, T], f: T => MOption[T]): MOption[IS[$indexType, T]] = {
                    |  var s2: MS[$indexType, T] = MS[Z, T]()
                    |  var changed: B = F

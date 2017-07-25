@@ -303,23 +303,40 @@ object EnumGen {
 }
 
 
-@datatype trait Type
+@datatype trait Type {
+  def posOpt: Option[PosInfo]
+}
 
 object Type {
 
   @datatype class Named(name: Name,
                         typeArgs: ISZ[Type],
                         attr: TypedAttr)
-    extends Type
+    extends Type {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Fun(args: ISZ[Type],
                       ret: Type,
                       attr: TypedAttr)
-    extends Type
+    extends Type {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
   @datatype class Tuple(args: ISZ[Type],
                         attr: TypedAttr)
-    extends Type
+    extends Type {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+  }
 
 }
 
