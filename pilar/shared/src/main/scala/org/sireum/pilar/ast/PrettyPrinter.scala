@@ -369,7 +369,7 @@ final class PrettyPrinter(sb: StringBuilder) {
 
   @inline
   private def println(): Unit = {
-    sb.append('\n')
+    sb.append(System.lineSeparator)
   }
 
   @inline

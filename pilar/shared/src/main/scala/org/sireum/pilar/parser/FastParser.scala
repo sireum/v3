@@ -29,14 +29,14 @@ import org.sireum.pilar.ast._
 import org.sireum.pilar.parser.FastParser._
 import org.sireum.util._
 
-final class FastParser(input: String,
+final class FastParser(in: String,
                        reporter: Reporter,
                        private val createLocInfo: Boolean,
                        private val max: Natural = 0,
                        private var line: PosInteger = 1,
                        private var column: PosInteger = 1,
                        private var offset: Natural = 0) {
-
+  private val input: String = in.replaceAllLiterally("\r\n", "\n")
   private val _max = if (max <= 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
