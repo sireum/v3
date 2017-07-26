@@ -52,6 +52,8 @@ object Reporter {
 
 @sig trait Reporter {
 
+  def hasIssue: B 
+
   def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit
 
   def error(posOpt: Option[PosInfo], kind: String, message: String): Unit

@@ -133,7 +133,7 @@ object SequentResolver {
     return (dr.hasQuant, dr.freeVarMap)
   }
 
-  def resolveDecl(sequent: Sequent, reporter: Reporter): B = {
+  def resolveDecl(sequent: Sequent, reporter: Reporter): (B, HashMap[String, (Id, Z)]) = {
     var freeVarMap = HashMap.empty[String, (Id, Z)]
     val scope = QScope(HashMap.empty, None())
     var hasQuant = F
@@ -148,6 +148,6 @@ object SequentResolver {
       freeVarMap = fvm
       hasQuant = hasQuant || hq
     }
-    return hasQuant
+    return (hasQuant, freeVarMap)
   }
 }

@@ -227,7 +227,7 @@ lazy val preludeJs = preludeT._3
 
 lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
-  scalacOptions ++= Seq("-Yrangepos"),
+  //scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "fastparse" % "0.4.3",
     "org.scalameta" %% "scalameta" % metaVersion,

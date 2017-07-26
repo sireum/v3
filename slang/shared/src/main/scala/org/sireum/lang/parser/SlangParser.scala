@@ -194,9 +194,9 @@ class SlangParser(text: Predef.String,
     }
   }
 
-  def posOpt(pos: Position): Option[AST.PosInfo] = {
+  def posInfo(pos: Position): AST.PosInfo = {
     val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
-    Some(AST.PosInfo(
+    AST.PosInfo(
       fileUriOpt,
       beginLine = startLine + pos.start.line + 1,
       beginColumn = startColumn + pos.start.column + 1,
@@ -204,8 +204,10 @@ class SlangParser(text: Predef.String,
       endColumn = startColumn + pos.end.column + 1,
       offset = startOffset + pos.start.offset,
       length = pos.end.offset - pos.start.offset + 1
-    ))
+    )
   }
+
+  def posOpt(pos: Position): Option[AST.PosInfo] = Some(posInfo(pos))
 
   def error(pos: Position,
             message: Predef.String): Unit = {
@@ -507,6 +509,7 @@ class SlangParser(text: Predef.String,
 
     def check(stmt: Any): Unit = stmt match {
       case AST.Stmt.Expr(_: AST.Exp.If) => hasError = true
+      case AST.Stmt.Expr(_: AST.Exp.ForYield) => hasError = true
       case AST.Stmt.Expr(_) =>
       case _ => hasError = true
     }

@@ -45,9 +45,9 @@ object TopUnit {
 
 
   @datatype class TruthTableUnit(fileUriOpt: Option[String],
-                                 stars: ISZ[Z],
+                                 stars: ISZ[PosInfo],
                                  vars: ISZ[Id],
-                                 sepColumn: Z,
+                                 separator: PosInfo,
                                  isSequent: B,
                                  sequent: LClause.Sequent,
                                  rows: ISZ[TruthTable.Row],
@@ -1032,7 +1032,7 @@ object Just {
 object TruthTable {
 
   @datatype class Row(assignment: ISZ[Exp.LitB],
-                      column: Z,
+                      separator: PosInfo,
                       values: ISZ[Exp.LitB])
 
   @datatype trait Conclusion {

@@ -1090,7 +1090,7 @@ final class LParser(input: Input,
     }
 
     var vars = List[AST.Id]()
-    var sep: Point = Point.None
+    var sep: AST.PosInfo = null
     var formula: AST.LClause.Sequent = null
     var isSequent: B = F
 
@@ -1099,7 +1099,7 @@ final class LParser(input: Input,
         vars ::= id(acceptToken[Ident])
       }
       vars = vars.reverse
-      sep = token.pos.start
+      sep = sparser.posInfo(token.pos)
       acceptIdent("|")
       val i = findTokenPos(isSequentToken, t => !isHLine(t))
       formula =
@@ -1111,16 +1111,16 @@ final class LParser(input: Input,
       newLinesOpt()
     }
 
-    var stars = List[Z]()
+    var stars = List[AST.PosInfo]()
 
     def start(): Unit = {
       if (isIdentOf("*")) {
-        stars ::= _Z(token.pos.start.column)
+        stars ::= sparser.posInfo(token.pos)
         next()
       } else reporter.syntaxError(s"* expected but ${TokensHelper.name(token)} found", at = token)
 
       while (isIdentOf("*")) {
-        stars ::= token.pos.start.column
+        stars ::= sparser.posInfo(token.pos)
         next()
       }
       newLinesOpt()
@@ -1131,8 +1131,8 @@ final class LParser(input: Input,
 
     def row(): Unit = {
       val assignment = if (!isIdentOf("|")) blits() else List()
-      acceptIdent("|")
-      rows ::= AST.TruthTable.Row(isz(assignment), _Z(token.pos.start.column), isz(blits()))
+      val t = acceptIdent("|")
+      rows ::= AST.TruthTable.Row(isz(assignment), sparser.posInfo(t.pos), isz(blits()))
       newLinesOpt()
     }
 
@@ -1148,7 +1148,7 @@ final class LParser(input: Input,
       fileUriOpt,
       isz(stars),
       isz(vars),
-      _Z(sep.column),
+      sep,
       isSequent,
       formula,
       isz(rows.reverse),
