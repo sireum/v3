@@ -1649,14 +1649,16 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: TopUnit.TruthTableUnit =>
-          val r0: Result[Context, IS[Z, Id]] = transformISZ(ctx, o2.vars, transformId _)
-          val r1: Result[Context, LClause.Sequent] = transformLClauseSequent(r0.ctx, o2.sequent)
-          val r2: Result[Context, IS[Z, TruthTable.Row]] = transformISZ(r1.ctx, o2.rows, transformTruthTableRow _)
-          val r3: Result[Context, Option[TruthTable.Conclusion]] = transformOption(r2.ctx, o2.conclusionOpt, transformTruthTableConclusion _)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
-            Result(r3.ctx, Some(o2(vars = r0.resultOpt.getOrElse(o2.vars), sequent = r1.resultOpt.getOrElse(o2.sequent), rows = r2.resultOpt.getOrElse(o2.rows), conclusionOpt = r3.resultOpt.getOrElse(o2.conclusionOpt))))
+          val r0: Result[Context, IS[Z, PosInfo]] = transformISZ(ctx, o2.stars, transformPosInfo _)
+          val r1: Result[Context, IS[Z, Id]] = transformISZ(r0.ctx, o2.vars, transformId _)
+          val r2: Result[Context, PosInfo] = transformPosInfo(r1.ctx, o2.separator)
+          val r3: Result[Context, LClause.Sequent] = transformLClauseSequent(r2.ctx, o2.sequent)
+          val r4: Result[Context, IS[Z, TruthTable.Row]] = transformISZ(r3.ctx, o2.rows, transformTruthTableRow _)
+          val r5: Result[Context, Option[TruthTable.Conclusion]] = transformOption(r4.ctx, o2.conclusionOpt, transformTruthTableConclusion _)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty || r5.resultOpt.nonEmpty)
+            Result(r5.ctx, Some(o2(stars = r0.resultOpt.getOrElse(o2.stars), vars = r1.resultOpt.getOrElse(o2.vars), separator = r2.resultOpt.getOrElse(o2.separator), sequent = r3.resultOpt.getOrElse(o2.sequent), rows = r4.resultOpt.getOrElse(o2.rows), conclusionOpt = r5.resultOpt.getOrElse(o2.conclusionOpt))))
           else
-            Result(r3.ctx, None())
+            Result(r5.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -3369,11 +3371,12 @@ import Transformer._
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, IS[Z, Exp.LitB]] = transformISZ(ctx, o2.assignment, transformExpLitB _)
-      val r1: Result[Context, IS[Z, Exp.LitB]] = transformISZ(r0.ctx, o2.values, transformExpLitB _)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(assignment = r0.resultOpt.getOrElse(o2.assignment), values = r1.resultOpt.getOrElse(o2.values))))
+      val r1: Result[Context, PosInfo] = transformPosInfo(r0.ctx, o2.separator)
+      val r2: Result[Context, IS[Z, Exp.LitB]] = transformISZ(r1.ctx, o2.values, transformExpLitB _)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+        Result(r2.ctx, Some(o2(assignment = r0.resultOpt.getOrElse(o2.assignment), separator = r1.resultOpt.getOrElse(o2.separator), values = r2.resultOpt.getOrElse(o2.values))))
       else
-        Result(r1.ctx, None())
+        Result(r2.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {

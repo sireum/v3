@@ -1643,12 +1643,14 @@ import MTransformer._
           else
             MNone()
         case o2: TopUnit.TruthTableUnit =>
-          val r0: MOption[IS[Z, Id]] = transformISZ(o2.vars, transformId _)
-          val r1: MOption[LClause.Sequent] = transformLClauseSequent(o2.sequent)
-          val r2: MOption[IS[Z, TruthTable.Row]] = transformISZ(o2.rows, transformTruthTableRow _)
-          val r3: MOption[Option[TruthTable.Conclusion]] = transformOption(o2.conclusionOpt, transformTruthTableConclusion _)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
-            MSome(o2(vars = r0.getOrElse(o2.vars), sequent = r1.getOrElse(o2.sequent), rows = r2.getOrElse(o2.rows), conclusionOpt = r3.getOrElse(o2.conclusionOpt)))
+          val r0: MOption[IS[Z, PosInfo]] = transformISZ(o2.stars, transformPosInfo _)
+          val r1: MOption[IS[Z, Id]] = transformISZ(o2.vars, transformId _)
+          val r2: MOption[PosInfo] = transformPosInfo(o2.separator)
+          val r3: MOption[LClause.Sequent] = transformLClauseSequent(o2.sequent)
+          val r4: MOption[IS[Z, TruthTable.Row]] = transformISZ(o2.rows, transformTruthTableRow _)
+          val r5: MOption[Option[TruthTable.Conclusion]] = transformOption(o2.conclusionOpt, transformTruthTableConclusion _)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty || r5.nonEmpty)
+            MSome(o2(stars = r0.getOrElse(o2.stars), vars = r1.getOrElse(o2.vars), separator = r2.getOrElse(o2.separator), sequent = r3.getOrElse(o2.sequent), rows = r4.getOrElse(o2.rows), conclusionOpt = r5.getOrElse(o2.conclusionOpt)))
           else
             MNone()
       }
@@ -3363,9 +3365,10 @@ import MTransformer._
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.assignment, transformExpLitB _)
-      val r1: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB _)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-        MSome(o2(assignment = r0.getOrElse(o2.assignment), values = r1.getOrElse(o2.values)))
+      val r1: MOption[PosInfo] = transformPosInfo(o2.separator)
+      val r2: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB _)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+        MSome(o2(assignment = r0.getOrElse(o2.assignment), separator = r1.getOrElse(o2.separator), values = r2.getOrElse(o2.values)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {

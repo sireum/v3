@@ -141,7 +141,8 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt
 
-  @datatype class Sig(id: Id,
+  @datatype class Sig(isImmutable: B,
+                      id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type.Named],
                       selfTypeOpt: Option[Type],

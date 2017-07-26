@@ -50,9 +50,9 @@ object Reporter {
   }
 }
 
-@sig trait Reporter {
+@msig trait Reporter {
 
-  def hasIssue: B 
+  def hasIssue: B
 
   def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit
 

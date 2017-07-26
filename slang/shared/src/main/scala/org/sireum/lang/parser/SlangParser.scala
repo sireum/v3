@@ -293,7 +293,8 @@ class SlangParser(text: Predef.String,
       case stat: Defn.Object => translateObject(enclosing, stat)
       case stat: Defn.Trait =>
         for (mod <- stat.mods) mod match {
-          case mod"@sig" => return translateSig(enclosing, stat)
+          case mod"@sig" => return translateSig(enclosing, isImmutable = true, stat)
+          case mod"@msig" => return translateSig(enclosing, isImmutable = false, stat)
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
           case mod"@rich" => return translateRich(enclosing, stat)
@@ -733,7 +734,9 @@ class SlangParser(text: Predef.String,
     } else AST.Stmt.Object(hasExt, cid(name), ISZ(), ISZ(), attr(stat.pos))
   }
 
-  def translateSig(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
+  def translateSig(enclosing: Enclosing.Type,
+                   isImmutable: Boolean,
+                   stat: Defn.Trait): AST.Stmt = {
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
       case _ =>
@@ -766,7 +769,7 @@ class SlangParser(text: Predef.String,
       case _ =>
         error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @sig traits.")
     }
-    AST.Stmt.Sig(cid(tname),
+    AST.Stmt.Sig(isImmutable, cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
       opt(atpeopt.map(translateTypeArg)),
