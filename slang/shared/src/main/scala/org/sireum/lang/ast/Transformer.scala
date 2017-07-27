@@ -772,6 +772,10 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preTruthTableAssignment(ctx: Context, o: TruthTable.Assignment): PreResult[Context, TruthTable.Assignment] = {
+      return PreResult(ctx, T, None())
+    }
+
     @pure def preTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): PreResult[Context, TruthTable.Conclusion] = {
       o match {
         case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(ctx, o)
@@ -1543,6 +1547,10 @@ object Transformer {
     }
 
     @pure def postTruthTableRow(ctx: Context, o: TruthTable.Row): Result[Context, TruthTable.Row] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTruthTableAssignment(ctx: Context, o: TruthTable.Assignment): Result[Context, TruthTable.Assignment] = {
       return Result(ctx, None())
     }
 
@@ -3370,9 +3378,9 @@ import Transformer._
     val r: Result[Context, TruthTable.Row] = if (preR.continue) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, IS[Z, Exp.LitB]] = transformISZ(ctx, o2.assignment, transformExpLitB _)
+      val r0: Result[Context, TruthTable.Assignment] = transformTruthTableAssignment(ctx, o2.assignment)
       val r1: Result[Context, PosInfo] = transformPosInfo(r0.ctx, o2.separator)
-      val r2: Result[Context, IS[Z, Exp.LitB]] = transformISZ(r1.ctx, o2.values, transformExpLitB _)
+      val r2: Result[Context, TruthTable.Assignment] = transformTruthTableAssignment(r1.ctx, o2.values)
       if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
         Result(r2.ctx, Some(o2(assignment = r0.resultOpt.getOrElse(o2.assignment), separator = r1.resultOpt.getOrElse(o2.separator), values = r2.resultOpt.getOrElse(o2.values))))
       else
@@ -3394,6 +3402,34 @@ import Transformer._
     }
   }
 
+  @pure def transformTruthTableAssignment(ctx: Context, o: TruthTable.Assignment): Result[Context, TruthTable.Assignment] = {
+    val preR: PreResult[Context, TruthTable.Assignment] = pp.preTruthTableAssignment(ctx, o)
+    val r: Result[Context, TruthTable.Assignment] = if (preR.continue) {
+      val o2: TruthTable.Assignment = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, IS[Z, Exp.LitB]] = transformISZ(ctx, o2.values, transformExpLitB _)
+      val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+        Result(r1.ctx, Some(o2(values = r0.resultOpt.getOrElse(o2.values), attr = r1.resultOpt.getOrElse(o2.attr))))
+      else
+        Result(r1.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: TruthTable.Assignment = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, TruthTable.Assignment] = pp.postTruthTableAssignment(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
   @pure def transformTruthTableConclusion(ctx: Context, o: TruthTable.Conclusion): Result[Context, TruthTable.Conclusion] = {
     val preR: PreResult[Context, TruthTable.Conclusion] = pp.preTruthTableConclusion(ctx, o)
     val r: Result[Context, TruthTable.Conclusion] = if (preR.continue) {
@@ -3401,11 +3437,12 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: Result[Context, TruthTable.Conclusion] = o2 match {
         case o2: TruthTable.Conclusion.Validity =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          val r0: Result[Context, IS[Z, TruthTable.Assignment]] = transformISZ(ctx, o2.assignments, transformTruthTableAssignment _)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(assignments = r0.resultOpt.getOrElse(o2.assignments), attr = r1.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r0.ctx, None())
+            Result(r1.ctx, None())
         case o2: TruthTable.Conclusion.Tautology =>
           val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty)
@@ -3419,11 +3456,13 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: TruthTable.Conclusion.Contingent =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          val r0: Result[Context, IS[Z, TruthTable.Assignment]] = transformISZ(ctx, o2.trueAssignments, transformTruthTableAssignment _)
+          val r1: Result[Context, IS[Z, TruthTable.Assignment]] = transformISZ(r0.ctx, o2.falseAssignments, transformTruthTableAssignment _)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(trueAssignments = r0.resultOpt.getOrElse(o2.trueAssignments), falseAssignments = r1.resultOpt.getOrElse(o2.falseAssignments), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r0.ctx, None())
+            Result(r2.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {

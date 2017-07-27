@@ -49,6 +49,7 @@ object TruthTableVerifier {
         }
         r
       }
+
       def checkExp(e: AST.Exp): Unit = {
         var hasError = F
         e match {
@@ -97,7 +98,7 @@ object TruthTableVerifier {
       }
     }
 
-    def checkRowAssignments(): Unit = {
+    def checkRowAssignments(): B = {
       @pure def allAssignments(i: Z,
                                keys: ISZ[String],
                                ss: ISZ[ISZ[B]]): ISZ[ISZ[B]] = {
@@ -111,24 +112,21 @@ object TruthTableVerifier {
       val assignments = Set.empty.addAll(allAssignments(0, vars, ISZ(ISZ())))
       var currentAssignments = assignments
       for (row <- tt.rows) {
-        val ra: ISZ[AST.Exp.LitB] = row.assignment
+        val ra: ISZ[AST.Exp.LitB] = row.assignment.values
         if (ra.size != vars.size) {
-          reporter.error(AST.Util.posOptRange(ra(0).attr.posOpt,
-            ra(ra.size - 1).attr.posOpt), kind, "Invalid number of truth assignment values.")
+          reporter.error(row.assignment.attr.posOpt, kind, "Invalid number of truth assignment values.")
         }
         if (tt.separator.beginColumn != row.separator.beginColumn) {
           reporter.error(Some(row.separator), kind, "Invalid separator position.")
         }
         val rowAssignment = for (b <- ra) yield b.value
         if (!assignments.contains(rowAssignment)) {
-          reporter.error(AST.Util.posOptRange(ra(0).attr.posOpt,
-            ra(ra.size - 1).attr.posOpt), kind, s"Invalid truth assignment $rowAssignment.")
+          reporter.error(row.assignment.attr.posOpt, kind, s"Invalid truth assignment $rowAssignment.")
         } else {
           if (currentAssignments.contains(rowAssignment)) {
             currentAssignments = currentAssignments.remove(rowAssignment)
           } else {
-            reporter.error(AST.Util.posOptRange(ra(0).attr.posOpt,
-              ra(ra.size - 1).attr.posOpt), kind,
+            reporter.error(row.assignment.attr.posOpt, kind,
               s"Duplicated truth assignment $rowAssignment.")
           }
         }
@@ -136,9 +134,10 @@ object TruthTableVerifier {
       if (currentAssignments.nonEmpty) {
         reporter.error(None(), kind, "There are still missing truth assignments.")
       }
+      return currentAssignments.isEmpty
     }
 
-    def checkAssignments(): Unit = {
+    def checkAssignments(): (ISZ[ISZ[B]], ISZ[ISZ[B]]) = {
       def buildStore(assignment: ISZ[AST.Exp.LitB]): HashMap[String, B] = {
         val vars: ISZ[AST.Id] = tt.vars
         val size = vars.size
@@ -154,47 +153,158 @@ object TruthTableVerifier {
         return store
       }
 
-      for (row <- tt.rows) {
-        val ra: ISZ[AST.Exp.LitB] = row.assignment
-        val store = buildStore(ra)
-        var resultMap = HashMap.empty[Z, B]
+      var tas: ISZ[ISZ[B]] = ISZ()
+      var fas: ISZ[ISZ[B]] = ISZ()
 
-        def evalExp(e: AST.Exp): Option[B] = {
-          def putResult(vOpt: Option[B]): Unit = {
-            vOpt match {
-              case Some(v) => resultMap = resultMap.put(AST.Util.beginColumn(e.posOpt), v)
-              case _ =>
-            }
+      for (row <- tt.rows) {
+        val ra: ISZ[AST.Exp.LitB] = row.assignment.values
+        val store = buildStore(ra)
+        var resultMap = HashMap.empty[Z, (B, B)]
+
+        def evalExp(e: AST.Exp): B = {
+          def putResult(v: B, opt: B): Unit = {
+            resultMap = resultMap.put(AST.Util.beginColumn(e.posOpt), (v, opt))
           }
+
           e match {
             case e: AST.Exp.Ident =>
-              val r = store.get(e.id.value)
-              putResult(r)
+              val r = store.get(e.id.value).getOrElse(F)
+              putResult(r, T)
               return r
             case e: AST.Exp.Binary =>
-              val r: Option[B] = e.op match {
-                case AST.Exp.BinaryOp.And =>
-                  for (v1 <- evalExp(e.left); v2 <- evalExp(e.right)) yield v1 & v2
-                case AST.Exp.BinaryOp.Or =>
-                  for (v1 <- evalExp(e.left); v2 <- evalExp(e.right)) yield v1 | v2
-                case AST.Exp.BinaryOp.Imply =>
-                  for (v1 <- evalExp(e.left); v2 <- evalExp(e.right)) yield !v1 | v2
-                case _ => None()
+              val r: B = e.op match {
+                case AST.Exp.BinaryOp.And => evalExp(e.left) & evalExp(e.right)
+                case AST.Exp.BinaryOp.Or => evalExp(e.left) | evalExp(e.right)
+                case AST.Exp.BinaryOp.Imply => !evalExp(e.left) | evalExp(e.right)
+                case _ => F
               }
-              putResult(r)
+              putResult(r, F)
               return r
             case e: AST.Exp.Unary =>
-              if (e.op == AST.Exp.UnaryOp.Not || e.op == AST.Exp.UnaryOp.Complement) {
-                val r: Option[B] = for (v <- evalExp(e.exp)) yield !v
-                putResult(r)
-                return r
-              } else {
-                return None()
-              }
-            case _ => return None()
+              val r: B =
+                if (e.op == AST.Exp.UnaryOp.Not || e.op == AST.Exp.UnaryOp.Complement) !evalExp(e.exp)
+                else F
+              putResult(r, F)
+              return r
+            case _ => return F
           }
         }
 
+        var p = T
+        for (e <- tt.sequent.premises) {
+          p = p & evalExp(e)
+        }
+        var c = T
+        for (e <- tt.sequent.conclusions) {
+          c = c & evalExp(e)
+        }
+        var rowValues = ISZ[B]()
+        var hasError = F
+        for (b <- row.values.values) {
+          val column = AST.Util.beginColumn(b.posOpt)
+          resultMap.get(column) match {
+            case Some(p@(v, _)) =>
+              if (v != b.value) {
+                hasError = T
+              } else {
+                rowValues = rowValues :+ v
+              }
+              resultMap.remove(column, p)
+            case _ => reporter.error(b.posOpt, kind, "Invalid truth value position.")
+          }
+        }
+        if (hasError) {
+          reporter.error(row.values.attr.posOpt, kind, s"Some truth values are incorrect.")
+        }
+        var missing = F
+        for (p <- resultMap.values if !p._2) {
+          missing = T
+        }
+        if (missing) {
+          reporter.error(row.values.attr.posOpt, kind, s"There are still some missing truth assignments.")
+        }
+        if ((tt.isSequent && p) || !tt.isSequent) {
+          if (c) {
+            tas = tas :+ rowValues
+          } else {
+            fas = fas :+ rowValues
+          }
+        }
+      }
+      return (tas, fas)
+    }
+
+    def checkConclusion(tas: ISZ[ISZ[B]], fas: ISZ[ISZ[B]]): Unit = {
+      tt.conclusionOpt match {
+        case Some(conclusion) =>
+          if (tt.isSequent) {
+            conclusion match {
+              case conclusion: AST.TruthTable.Conclusion.Validity =>
+                var set: Set[ISZ[B]] =
+                  if (conclusion.isValid) {
+                    if (fas.nonEmpty) {
+                      reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
+                    }
+                    Set.empty.addAll(tas)
+                  } else {
+                    if (fas.isEmpty) {
+                      reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
+                    }
+                    Set.empty.addAll(fas)
+                  }
+                for (a <- conclusion.assignments) {
+                  val ra = a.values
+                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  if (!set.contains(w)) {
+                    reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
+                  } else {
+                    set = set.remove(w)
+                  }
+                }
+                if (set.nonEmpty) {
+                  reporter.error(conclusion.attr.posOpt, kind, "There are still some missing witnesses.")
+                }
+              case _ =>
+            }
+          } else {
+            conclusion match {
+              case conclusion: AST.TruthTable.Conclusion.Tautology if fas.nonEmpty =>
+                reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
+              case conclusion: AST.TruthTable.Conclusion.Contingent =>
+                var taSet = Set.empty.addAll(tas)
+                var faSet = Set.empty.addAll(fas)
+                for (a <- conclusion.trueAssignments) {
+                  val ra = a.values
+                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  if (!taSet.contains(w)) {
+                    reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
+                  } else {
+                    taSet = taSet.remove(w)
+                  }
+                }
+                for (a <- conclusion.falseAssignments) {
+                  val ra = a.values
+                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  if (!faSet.contains(w)) {
+                    reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
+                  } else {
+                    faSet = faSet.remove(w)
+                  }
+                }
+                if (taSet.nonEmpty || faSet.nonEmpty) {
+                  reporter.error(conclusion.attr.posOpt, kind, "There are still some missing witnesses.")
+                }
+              case conclusion: AST.TruthTable.Conclusion.Contradictory if tas.nonEmpty =>
+                reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
+              case _ =>
+            }
+          }
+        case _ =>
+          if (tt.isSequent) {
+            reporter.error(None(), kind, "Missing 'Valid' or 'Invalid' summary.")
+          } else {
+            reporter.error(None(), kind, "Missing 'Tautology', 'Contingent', or 'Contradictory' summary.")
+          }
       }
     }
 
@@ -204,13 +314,17 @@ object TruthTableVerifier {
       return
     }
 
-    checkRowAssignments()
+    val all = checkRowAssignments()
 
     if (reporter.hasIssue) {
       return
     }
 
-    checkAssignments()
+    val (tas, fas) = checkAssignments()
+
+    if (all && !reporter.hasIssue) {
+      checkConclusion(tas, fas)
+    }
 
     return
   }

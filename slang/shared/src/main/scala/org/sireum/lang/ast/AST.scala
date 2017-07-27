@@ -1032,9 +1032,12 @@ object Just {
 
 object TruthTable {
 
-  @datatype class Row(assignment: ISZ[Exp.LitB],
+  @datatype class Row(assignment: Assignment,
                       separator: PosInfo,
-                      values: ISZ[Exp.LitB])
+                      values: Assignment)
+
+  @datatype class Assignment(values: ISZ[Exp.LitB],
+                             @hidden attr: Attr)
 
   @datatype trait Conclusion {
     def attr: Attr
@@ -1043,7 +1046,7 @@ object TruthTable {
   object Conclusion {
 
     @datatype class Validity(isValid: B,
-                             assignments: ISZ[ISZ[Exp.LitB]],
+                             assignments: ISZ[Assignment],
                              @hidden attr: Attr)
       extends Conclusion
 
@@ -1051,8 +1054,8 @@ object TruthTable {
 
     @datatype class Contradictory(@hidden attr: Attr) extends Conclusion
 
-    @datatype class Contingent(trueAssignments: ISZ[ISZ[Exp.LitB]],
-                               falseAssignments: ISZ[ISZ[Exp.LitB]],
+    @datatype class Contingent(trueAssignments: ISZ[Assignment],
+                               falseAssignments: ISZ[Assignment],
                                @hidden attr: Attr)
       extends Conclusion
 

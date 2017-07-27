@@ -994,7 +994,7 @@ final class LParser(input: Input,
    */
   def truthTable(fileUriOpt: SOption[SString]): SlangParser.Result = {
     def conclusion(isSequent: Boolean): SOption[AST.TruthTable.Conclusion] = {
-      def assignment(): List[AST.Exp.LitB] = {
+      def assignment(): AST.TruthTable.Assignment = {
         newLinesOpt()
         accept[LeftBracket]
         val r = blits()
@@ -1013,10 +1013,10 @@ final class LParser(input: Input,
           case "Valid" | "Invalid" =>
             next()
             val isValid = if (text == "Valid") T else F
-            var assignments = List[ISZ[AST.Exp.LitB]](isz(assignment()))
+            var assignments = List[AST.TruthTable.Assignment](assignment())
             newLinesOpt()
             while (tokenCurrOrAfterNl(token.is[LeftBracket])) {
-              assignments ::= isz(assignment())
+              assignments ::= assignment()
             }
             AST.TruthTable.Conclusion.Validity(isValid, isz(assignments.reverse), attr)
           case _ => reporter.syntaxError(s"Either Valid or Invalid expected but found $text", at = token)
@@ -1036,17 +1036,17 @@ final class LParser(input: Input,
             if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
-            var truthAssignments = List(isz(assignment()))
+            var truthAssignments = List(assignment())
             while (tokenCurrOrAfterNl(token.is[LeftBracket]))
-              truthAssignments ::= isz(assignment())
+              truthAssignments ::= assignment()
             newLinesOpt()
             if (isIdentOf("-")) next()
             if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
             next()
             accept[Colon]
-            var falseAssignments = List(isz(assignment()))
+            var falseAssignments = List(assignment())
             while (tokenCurrOrAfterNl(token.is[LeftBracket]))
-              falseAssignments ::= isz(assignment())
+              falseAssignments ::= assignment()
             AST.TruthTable.Conclusion.Contingent(isz(truthAssignments.reverse), isz(falseAssignments.reverse), attr)
           case _ => reporter.syntaxError(s"Either Tautology, Contradictory, or Contingent expected but found $text", at = token)
         }
@@ -1054,7 +1054,7 @@ final class LParser(input: Input,
       SSome(r)
     }
 
-    def blits(): List[AST.Exp.LitB] = {
+    def blits(): AST.TruthTable.Assignment = {
       def isBlit: Boolean = token match {
         case Ident(value) => value.forall(c => c == 'T' || c == 'F')
         case _ => false
@@ -1075,7 +1075,7 @@ final class LParser(input: Input,
       while (isBlit) {
         r ++= blit()
       }
-      r
+      AST.TruthTable.Assignment(isz(r), AST.Attr(AST.Util.posOptRange(r.head.posOpt, r.last.posOpt)))
     }
 
     def isHLine(t: Token): Boolean = token match {
@@ -1130,9 +1130,9 @@ final class LParser(input: Input,
     var rows = List[AST.TruthTable.Row]()
 
     def row(): Unit = {
-      val assignment = if (!isIdentOf("|")) blits() else List()
+      val assignment = if (!isIdentOf("|")) blits() else AST.TruthTable.Assignment(ISZ(), AST.Attr(SNone()))
       val t = acceptIdent("|")
-      rows ::= AST.TruthTable.Row(isz(assignment), sparser.posInfo(t.pos), isz(blits()))
+      rows ::= AST.TruthTable.Row(assignment, sparser.posInfo(t.pos), blits())
       newLinesOpt()
     }
 

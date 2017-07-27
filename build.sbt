@@ -42,7 +42,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.0.0-13"
+val sireumScalacVersion = "3.0.0-14"
 
 val silencerVersion = "0.5"
 
@@ -227,7 +227,7 @@ lazy val preludeJs = preludeT._3
 
 lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
-  //scalacOptions ++= Seq("-Yrangepos"),
+  scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "fastparse" % "0.4.3",
     "org.scalameta" %% "scalameta" % metaVersion,

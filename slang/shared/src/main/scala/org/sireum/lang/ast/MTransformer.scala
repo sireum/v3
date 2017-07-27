@@ -768,6 +768,10 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preTruthTableAssignment(o: TruthTable.Assignment): PreResult[TruthTable.Assignment] = {
+      return PreResult(T, MNone())
+    }
+
     def preTruthTableConclusion(o: TruthTable.Conclusion): PreResult[TruthTable.Conclusion] = {
       o match {
         case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(o)
@@ -1539,6 +1543,10 @@ object MTransformer {
     }
 
     def postTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
+      return MNone()
+    }
+
+    def postTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
       return MNone()
     }
 
@@ -3364,9 +3372,9 @@ import MTransformer._
     val r: MOption[TruthTable.Row] = if (preR.continue) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.assignment, transformExpLitB _)
+      val r0: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.assignment)
       val r1: MOption[PosInfo] = transformPosInfo(o2.separator)
-      val r2: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB _)
+      val r2: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.values)
       if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
         MSome(o2(assignment = r0.getOrElse(o2.assignment), separator = r1.getOrElse(o2.separator), values = r2.getOrElse(o2.values)))
       else
@@ -3388,6 +3396,34 @@ import MTransformer._
     }
   }
 
+  def transformTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
+    val preR: PreResult[TruthTable.Assignment] = pp.preTruthTableAssignment(o)
+    val r: MOption[TruthTable.Assignment] = if (preR.continue) {
+      val o2: TruthTable.Assignment = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB _)
+      val r1: MOption[Attr] = transformAttr(o2.attr)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(values = r0.getOrElse(o2.values), attr = r1.getOrElse(o2.attr)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: TruthTable.Assignment = r.getOrElse(o)
+    val postR: MOption[TruthTable.Assignment] = pp.postTruthTableAssignment(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
   def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
     val preR: PreResult[TruthTable.Conclusion] = pp.preTruthTableConclusion(o)
     val r: MOption[TruthTable.Conclusion] = if (preR.continue) {
@@ -3395,9 +3431,10 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[TruthTable.Conclusion] = o2 match {
         case o2: TruthTable.Conclusion.Validity =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
+          val r0: MOption[IS[Z, TruthTable.Assignment]] = transformISZ(o2.assignments, transformTruthTableAssignment _)
+          val r1: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(assignments = r0.getOrElse(o2.assignments), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: TruthTable.Conclusion.Tautology =>
@@ -3413,9 +3450,11 @@ import MTransformer._
           else
             MNone()
         case o2: TruthTable.Conclusion.Contingent =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
+          val r0: MOption[IS[Z, TruthTable.Assignment]] = transformISZ(o2.trueAssignments, transformTruthTableAssignment _)
+          val r1: MOption[IS[Z, TruthTable.Assignment]] = transformISZ(o2.falseAssignments, transformTruthTableAssignment _)
+          val r2: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+            MSome(o2(trueAssignments = r0.getOrElse(o2.trueAssignments), falseAssignments = r1.getOrElse(o2.falseAssignments), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
       }
