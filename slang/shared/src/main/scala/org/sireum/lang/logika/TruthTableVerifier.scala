@@ -31,8 +31,9 @@ import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
 object TruthTableVerifier {
+  type Assignment = ISZ[B]
   val kind: String = "Truth Table Verifier"
-  val vs: ISZ[B] = ISZ(T, F)
+  val vs: Assignment = ISZ(T, F)
 
   def verify(tt: AST.TopUnit.TruthTableUnit, reporter: Reporter): Unit = {
 
@@ -101,7 +102,7 @@ object TruthTableVerifier {
     def checkRowAssignments(): B = {
       @pure def allAssignments(i: Z,
                                keys: ISZ[String],
-                               ss: ISZ[ISZ[B]]): ISZ[ISZ[B]] = {
+                               ss: ISZ[Assignment]): ISZ[Assignment] = {
         if (i >= keys.size) {
           return ss
         }
@@ -119,7 +120,7 @@ object TruthTableVerifier {
         if (tt.separator.beginColumn != row.separator.beginColumn) {
           reporter.error(Some(row.separator), kind, "Invalid separator position.")
         }
-        val rowAssignment = for (b <- ra) yield b.value
+        val rowAssignment: Assignment = for (b <- ra) yield b.value
         if (!assignments.contains(rowAssignment)) {
           reporter.error(row.assignment.attr.posOpt, kind, s"Invalid truth assignment $rowAssignment.")
         } else {
@@ -137,7 +138,7 @@ object TruthTableVerifier {
       return currentAssignments.isEmpty
     }
 
-    def checkAssignments(): (ISZ[ISZ[B]], ISZ[ISZ[B]]) = {
+    def checkAssignments(): (ISZ[Assignment], ISZ[Assignment]) = {
       def buildStore(assignment: ISZ[AST.Exp.LitB]): HashMap[String, B] = {
         val vars: ISZ[AST.Id] = tt.vars
         val size = vars.size
@@ -153,8 +154,8 @@ object TruthTableVerifier {
         return store
       }
 
-      var tas: ISZ[ISZ[B]] = ISZ()
-      var fas: ISZ[ISZ[B]] = ISZ()
+      var tas: ISZ[Assignment] = ISZ()
+      var fas: ISZ[Assignment] = ISZ()
 
       for (row <- tt.rows) {
         val ra: ISZ[AST.Exp.LitB] = row.assignment.values
@@ -198,7 +199,7 @@ object TruthTableVerifier {
         for (e <- tt.sequent.conclusions) {
           c = c & evalExp(e)
         }
-        var rowValues = ISZ[B]()
+        var rowValues: Assignment = ISZ[B]()
         var hasError = F
         for (b <- row.values.values) {
           val column = AST.Util.beginColumn(b.posOpt)
@@ -234,13 +235,13 @@ object TruthTableVerifier {
       return (tas, fas)
     }
 
-    def checkConclusion(tas: ISZ[ISZ[B]], fas: ISZ[ISZ[B]]): Unit = {
+    def checkConclusion(tas: ISZ[Assignment], fas: ISZ[Assignment]): Unit = {
       tt.conclusionOpt match {
         case Some(conclusion) =>
           if (tt.isSequent) {
             conclusion match {
               case conclusion: AST.TruthTable.Conclusion.Validity =>
-                var set: Set[ISZ[B]] =
+                var set: Set[Assignment] =
                   if (conclusion.isValid) {
                     if (fas.nonEmpty) {
                       reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
@@ -254,7 +255,7 @@ object TruthTableVerifier {
                   }
                 for (a <- conclusion.assignments) {
                   val ra = a.values
-                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  val w: Assignment = for (b <- ra) yield b.value
                   if (!set.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
                   } else {
@@ -275,7 +276,7 @@ object TruthTableVerifier {
                 var faSet = Set.empty.addAll(fas)
                 for (a <- conclusion.trueAssignments) {
                   val ra = a.values
-                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  val w: Assignment = for (b <- ra) yield b.value
                   if (!taSet.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
                   } else {
@@ -284,7 +285,7 @@ object TruthTableVerifier {
                 }
                 for (a <- conclusion.falseAssignments) {
                   val ra = a.values
-                  val w: ISZ[B] = for (b <- ra) yield b.value
+                  val w: Assignment = for (b <- ra) yield b.value
                   if (!faSet.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
                   } else {

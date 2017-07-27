@@ -293,8 +293,7 @@ class SlangParser(text: Predef.String,
       case stat: Defn.Object => translateObject(enclosing, stat)
       case stat: Defn.Trait =>
         for (mod <- stat.mods) mod match {
-          case mod"@sig" => return translateSig(enclosing, isImmutable = true, stat)
-          case mod"@msig" => return translateSig(enclosing, isImmutable = false, stat)
+          case mod"@sig" | mod"@msig" => return translateSig(enclosing, stat)
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
           case mod"@rich" => return translateRich(enclosing, stat)
@@ -735,7 +734,6 @@ class SlangParser(text: Predef.String,
   }
 
   def translateSig(enclosing: Enclosing.Type,
-                   isImmutable: Boolean,
                    stat: Defn.Trait): AST.Stmt = {
     enclosing match {
       case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
@@ -754,6 +752,7 @@ class SlangParser(text: Predef.String,
     }
 
     var hasSig = false
+    var hasMSig = false
     var hasSealed = false
     for (mod <- mods) mod match {
       case mod"@sig" =>
@@ -761,15 +760,21 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant '@sig'.")
         }
         hasSig = true
+      case mod"@msig" =>
+        if (hasSig) {
+          error(mod.pos, "Redundant '@msig'.")
+        }
+        hasMSig = true
       case mod"sealed" =>
         if (hasSealed) {
           error(mod.pos, "Redundant 'sealed'.")
         }
         hasSealed = true
       case _ =>
-        error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @sig traits.")
+        if (hasSig) error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @sig traits.")
+        else error(mod.pos, "Only the 'sealed' modifier is allowed for Slang @msig traits.")
     }
-    AST.Stmt.Sig(isImmutable, cid(tname),
+    AST.Stmt.Sig(hasSig, cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
       opt(atpeopt.map(translateTypeArg)),
