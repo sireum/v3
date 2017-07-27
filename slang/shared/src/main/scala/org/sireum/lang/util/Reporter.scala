@@ -178,16 +178,28 @@ import Reporter.Message.Level
       val fileUriOpt = kv._1
       val ms = kv._2
       fileUriOpt match {
-        case Some(fileUri) if inclFileUri =>
-          println(s"* $fileUri")
+        case Some(fileUri) =>
+          if (inclFileUri) {
+            println(s"* $fileUri")
+          }
           for (m <- ms) {
+            if (inclFileUri) {
+              cprint(m.isError, "  ")
+            }
             val mText: String = m.posOpt match {
-              case Some(pos) => s"  - [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
-              case _ => s"  - ${m.message}"
+              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
+              case _ => s"- ${m.message}"
             }
             cprintln(m.isError, mText)
           }
         case _ =>
+          for (m <- ms) {
+            val mText: String = m.posOpt match {
+              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
+              case _ => s"- ${m.message}"
+            }
+            cprintln(m.isError, mText)
+          }
       }
     }
   }

@@ -210,7 +210,7 @@ object TruthTableVerifier {
               } else {
                 rowValues = rowValues :+ v
               }
-              resultMap.remove(column, p)
+              resultMap = resultMap.remove(column, p)
             case _ => reporter.error(b.posOpt, kind, "Invalid truth value position.")
           }
         }
@@ -222,13 +222,15 @@ object TruthTableVerifier {
           missing = T
         }
         if (missing) {
-          reporter.error(row.values.attr.posOpt, kind, s"There are still some missing truth assignments.")
+          println(resultMap)
+          reporter.error(row.values.attr.posOpt, kind, s"There are still some missing truth values.")
         }
         if ((tt.isSequent && p) || !tt.isSequent) {
+          val rowAssignment: ISZ[B] = for (b <- ra) yield b.value
           if (c) {
-            tas = tas :+ rowValues
+            tas = tas :+ rowAssignment
           } else {
-            fas = fas :+ rowValues
+            fas = fas :+ rowAssignment
           }
         }
       }

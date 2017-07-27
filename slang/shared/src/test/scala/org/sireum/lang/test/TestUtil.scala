@@ -25,50 +25,15 @@
 
 package org.sireum.lang.test
 
-import org.sireum.lang.ast.TopUnit
-import org.sireum.{B, T, HashSMap, ISZ, None => SNone, String => SString}
+import org.sireum.ISZ
 import org.sireum.lang.parser.LParser
 import org.sireum.lang.util.AccumulatingReporter
-import org.sireum.test.{SireumRcSpec, SireumSpec}
-import org.sireum.`macro`.RC
 
-import scala.meta._
+import scala.meta.{ParseException, TokenizeException}
 
-class LParserTest extends SireumRcSpec {
-  lazy val textResources: HashSMap[ISZ[SString], SString] = RC.text(_.elements.last.value.endsWith(".slang"))
+object TestUtil {
 
-  def check(path: ISZ[SString], content: SString): B = {
-    path(0).value match {
-      case "truthtable" => parseTruthTable(content.value)
-      case "propositional" => parsePropositional(content.value)
-      case "predicate" => parsePredicate(content.value)
-    }
-  }
-
-  def parsePredicate(input: String): Boolean =
-    parser(input) { (p, reporter) =>
-      val r = p.sequentFile(SNone())
-      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
-    }
-
-  def parsePropositional(input: String): Boolean =
-    parser(input) { (p, reporter) =>
-      val r = p.sequentFile(SNone())
-      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.SequentUnit])
-    }
-
-  def parseTruthTable(input: String): Boolean =
-    parser(input) { (p, reporter) =>
-      val r = p.truthTable(SNone())
-      check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
-    }
-
-  def check(r: AccumulatingReporter): Boolean = {
-    if (r.hasIssue) r.printMessages()
-    !r.hasIssue
-  }
-
-  def parser[T](input: String)(f: (LParser, AccumulatingReporter) => Boolean): Boolean = {
+  def lparser[T](input: String)(f: (LParser, AccumulatingReporter) => Boolean): Boolean = {
     val r: Boolean = try {
       LParser[Boolean](input, AccumulatingReporter(ISZ()))(f)
       //println(fparser(parser)
@@ -83,5 +48,10 @@ class LParserTest extends SireumRcSpec {
         false
     }
     r
+  }
+
+  def check(r: AccumulatingReporter): Boolean = {
+    if (r.hasIssue) r.printMessages()
+    !r.hasIssue
   }
 }

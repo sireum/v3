@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.test
+package org.sireum.lang
 
 import org.sireum.test._
 import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
