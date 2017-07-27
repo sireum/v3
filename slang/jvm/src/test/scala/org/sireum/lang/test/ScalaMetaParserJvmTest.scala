@@ -26,7 +26,7 @@
 package org.sireum.lang.test
 
 import Paths._
-
+import org.sireum.lang.ScalaMetaParserTest
 import org.sireum.test._
 import org.sireum.lang.util.FileUtil._
 
