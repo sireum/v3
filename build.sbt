@@ -32,11 +32,11 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-val scalaVer = "2.12.2"
+val scalaVer = "2.12.3"
 
 val metaVersion = "1.8.0"
 
-val paradiseVersion = "3.0.0-M9"
+val paradiseVersion = "3.0.0-M10"
 
 val scalaTestVersion = "3.0.1"
 
@@ -45,6 +45,14 @@ val sireumVersion = "3"
 val sireumScalacVersion = "3.0.0-14"
 
 val silencerVersion = "0.5"
+
+val fastParseVersion = "0.4.3"
+
+val scalaJsDomVersion = "0.9.3"
+
+val scalaJsJQueryVersion = "0.9.2"
+
+val scalaTagsVersion = "0.6.5"
 
 val BUILD_FILENAME = "BUILD"
 
@@ -229,7 +237,7 @@ lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "fastparse" % "0.4.3",
+    "com.lihaoyi" %%% "fastparse" % fastParseVersion,
     "org.scalameta" %% "scalameta" % metaVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
   ),
@@ -253,9 +261,9 @@ lazy val commonJs = commonT._3.settings(
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
-    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+    "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
+    "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
+    "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
   )
 )
 
@@ -279,9 +287,9 @@ lazy val webJs = webT._3.settings(
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.2",
-    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+    "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
+    "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
+    "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
   )
 )
 
@@ -298,7 +306,7 @@ lazy val awasT = toSbtCrossProject(awasPI, Seq(parallelExecution in Test := fals
 
 lazy val awasShared = awasT._1
 lazy val awasJvm = awasT._2.settings(libraryDependencies ++= Seq(
-  "com.lihaoyi" %%% "scalatags" % "0.6.5"
+  "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
 ))
 lazy val awasJs = awasT._3.settings(
   crossTarget in(Compile, fastOptJS) := (classDirectory in Compile).value,
@@ -308,9 +316,9 @@ lazy val awasJs = awasT._3.settings(
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
-    "com.lihaoyi" %%% "scalatags" % "0.6.5"
+    "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
+    "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
+    "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
   )
 )
 // Js Projects

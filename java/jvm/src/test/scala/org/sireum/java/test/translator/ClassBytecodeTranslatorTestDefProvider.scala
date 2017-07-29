@@ -35,15 +35,14 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
   override def testDefs: ISeq[TestDef] = ivector(
-    ConditionTest("ClassBytecodeTranslator", {
-      val r = translate(classOf[ClassBytecodeTranslator])
-      r == "e5db00c9681baa9ae4a5b98026978819" || r == "51d0b75974b870f3a875caa6382afd78"
-    })
+    EqualTest("ClassBytecodeTranslator",
+      translate(classOf[ClassBytecodeTranslator]),
+      "1ae8ccc1f9ba6d1abed066b8523595b3")
   )
 
   private def translate(c: Class[_]): String = {
     val s = c.getResourceAsStream(c.getSimpleName + ".class")
-    val pilar = PrettyPrinter(ClassBytecodeTranslator(new org.objectweb.asm.ClassReader(s)))
+    val pilar = PrettyPrinter(ClassBytecodeTranslator(new org.objectweb.asm.ClassReader(s))).lines.mkString("\n")
     s.close()
     //println(pilar)
     StringUtil.md5(pilar)

@@ -28,9 +28,9 @@ for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
 ZULU_VERSION=8.21.0.1-jdk8.0.131
-SCALA_VERSION=2.12.2
-SBT_VERSION=0.13.13
-NODE_VERSION=8.1.4
+SCALA_VERSION=2.12.3
+SBT_VERSION=0.13.16
+NODE_VERSION=8.2.1
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
@@ -165,7 +165,7 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   fi
 fi
 cd ${REPO}/platform
-SBT_DROP_URL=https://dl.bintray.com/sbt/native-packages/sbt/${SBT_VERSION}/sbt-${SBT_VERSION}.zip
+SBT_DROP_URL=https://cocl.us/sbt${SBT_VERSION//./}zip
 SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
@@ -188,7 +188,6 @@ if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   rm -fR sbt
   unzip -oq ${SBT_DROP}
   rm ${SBT_DROP}
-  mv sbt-launcher-packaging-${SBT_VERSION} sbt
   if [ -d "sbt/bin" ]; then
     echo "${SBT_VERSION}" > sbt/VER
   else
