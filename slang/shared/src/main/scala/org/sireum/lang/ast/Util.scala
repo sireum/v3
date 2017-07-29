@@ -76,7 +76,7 @@ object Util {
     posOpt1 match {
       case Some(pos1) => posOpt2 match {
         case Some(pos2) => Some(PosInfo(pos1.fileUriOpt, pos1.beginLine, pos1.beginColumn,
-          pos2.endLine, pos2.endColumn, pos1.offset, pos2.offset + pos2.length - pos1.offset - 1))
+          pos2.endLine, pos2.endColumn, pos1.offset, pos2.offset + pos2.length - pos1.offset))
         case _ => return posOpt1
       }
       case _ => return posOpt2

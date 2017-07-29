@@ -197,13 +197,13 @@ class SlangParser(text: Predef.String,
   def posInfo(pos: Position): AST.PosInfo = {
     val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
     AST.PosInfo(
-      fileUriOpt,
+      fileUriOpt = fileUriOpt,
       beginLine = startLine + pos.start.line + 1,
       beginColumn = startColumn + pos.start.column + 1,
       endLine = startLine + pos.end.line + 1,
       endColumn = startColumn + pos.end.column + 1,
       offset = startOffset + pos.start.offset,
-      length = pos.end.offset - pos.start.offset + 1
+      length = pos.end.offset - pos.start.offset
     )
   }
 
