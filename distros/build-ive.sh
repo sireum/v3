@@ -22,9 +22,6 @@ if [ -z $SIREUM_DISTRO_BUILD_DIR ]; then
   if [ ! -d $SCRIPT_DIR/idea ]; then
     mv $SCRIPT_DIR/sireum-v3/distros/idea $SCRIPT_DIR/
   fi
-  if [ ! -d $SCRIPT_DIR/resource_hacker ]; then
-    mv $SCRIPT_DIR/sireum-v3/resources/distro/resource_hacker $SCRIPT_DIR/
-  fi
 fi
 if [ ! -e $SCRIPT_DIR/idea.exe ] || [ ! -e $SCRIPT_DIR/idea64.exe ]; then
   cp $SCRIPT_DIR/sireum-v3/distros/idea.exe $SCRIPT_DIR/sireum-v3/distros/idea64.exe $SCRIPT_DIR/
