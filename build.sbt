@@ -213,8 +213,7 @@ lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
 lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.spire-math" %%% "spire" % "0.13.0",
-    "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4"),
+    "org.spire-math" %%% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 lazy val runtimeShared = runtimeT._1
 lazy val runtimeJvm = runtimeT._2
@@ -224,6 +223,7 @@ lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimeP
 lazy val preludeT = toSbtCrossProject(preludePI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
+    "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
