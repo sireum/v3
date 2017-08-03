@@ -213,7 +213,8 @@ lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
 lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.spire-math" %%% "spire" % "0.13.0"),
+    "org.spire-math" %%% "spire" % "0.13.0",
+    "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 lazy val runtimeShared = runtimeT._1
 lazy val runtimeJvm = runtimeT._2
