@@ -49,6 +49,18 @@ object JSON {
       ???
     }
 
+    @pure def printPurity(o: Purity.Type): ST = {
+      val value: String = o match {
+        case Purity.Impure => "Impure"
+        case Purity.Pure => "Pure"
+        case Purity.Memoize => "Memoize"
+      }
+      return printObject(ISZ(
+        ("type", printString("Purity")),
+        ("value", printString(value))
+      ))
+    }
+
     @pure def printTopUnitSequentUnit(o: TopUnit.SequentUnit): ST = {
       return printObject(ISZ(
         ("type", printString("TopUnit.SequentUnit")),
@@ -84,6 +96,24 @@ object JSON {
 
   @record class Parser(input: String) {
     val parser: Json.Parser = Json.Parser.create(input)
+
+    def parsePurity(): Purity.Type = {
+      val r = parsePurityT(F)
+      return r
+    }
+
+    def parsePurityT(typeParsed: B): Purity.Type = {
+      if (!typeParsed) {
+        parser.parseObjectType("Purity")
+      }
+      parser.parseObjectKey("value")
+      val s = parser.parseString()
+      s match {
+        case "Impure" => return Purity.Impure
+        case "Pure" => return Purity.Pure
+        case "Memoize" => return Purity.Memoize
+      }
+    }
 
     def parseTopUnit(): TopUnit = {
       val t = parser.parseObjectTypes(ISZ("TopUnit.TruthTableUnit", "TopUnit.SequentUnit", "TopUnit.Program"))
