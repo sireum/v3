@@ -51,7 +51,7 @@ class JsonGenJvmTest extends SireumSpec {
           val dmp = new DiffMatchPatch()
           Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
           Console.err.flush()
-          //FileUtil.writeFile(dest, r)
+          FileUtil.writeFile(dest, r)
           //Console.err.println(r)
           //Console.err.flush()
           false

@@ -45,16 +45,18 @@ object JSON {
       }
     }
 
-    @pure def printTopUnitProgram(o: TopUnit.Program): ST = {
-      return printObject(ISZ(
-        ("fileUriOpt", printOption(o.fileUriOpt, printString)),
-        ("packageName", printName(o.packageName)),
-        ("body", printBody(o.body))
-      ))
-    }
+     @pure def printTopUnitProgram(o: TopUnit.Program): ST = {
+       return printObject(ISZ(
+         ("type", st""""TopUnit.Program""""),
+         ("fileUriOpt", printOption(o.fileUriOpt, printString)),
+         ("packageName", printName(o.packageName)),
+         ("body", printBody(o.body))
+       ))
+     }
 
     @pure def printTopUnitSequentUnit(o: TopUnit.SequentUnit): ST = {
       return printObject(ISZ(
+        ("type", st""""TopUnit.SequentUnit""""),
         ("fileUriOpt", printOption(o.fileUriOpt, printString)),
         ("sequent", printLClauseSequent(o.sequent))
       ))
@@ -62,6 +64,7 @@ object JSON {
 
     @pure def printTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): ST = {
       return printObject(ISZ(
+        ("type", st""""TopUnit.TruthTableUnit""""),
         ("fileUriOpt", printOption(o.fileUriOpt, printString)),
         ("stars", printISZ(F, o.stars, printPosInfo)),
         ("vars", printISZ(F, o.vars, printId)),
@@ -126,6 +129,7 @@ object JSON {
 
     @pure def printStmtImport(o: Stmt.Import): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Import""""),
         ("importers", printISZ(F, o.importers, printStmtImportImporter)),
         ("attr", printAttr(o.attr))
       ))
@@ -133,6 +137,7 @@ object JSON {
 
     @pure def printStmtImportImporter(o: Stmt.Import.Importer): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Import.Importer""""),
         ("name", printName(o.name)),
         ("selectorOpt", printOption(o.selectorOpt, printStmtImportSelector))
       ))
@@ -147,17 +152,20 @@ object JSON {
 
     @pure def printStmtImportMultiSelector(o: Stmt.Import.MultiSelector): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Import.MultiSelector""""),
         ("selectors", printISZ(F, o.selectors, printStmtImportNamedSelector))
       ))
     }
 
     @pure def printStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Import.WildcardSelector""""),
       ))
     }
 
     @pure def printStmtImportNamedSelector(o: Stmt.Import.NamedSelector): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Import.NamedSelector""""),
         ("from", printId(o.from)),
         ("to", printId(o.to))
       ))
@@ -165,6 +173,7 @@ object JSON {
 
     @pure def printStmtVar(o: Stmt.Var): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Var""""),
         ("isVal", printB(o.isVal)),
         ("id", printId(o.id)),
         ("tipeOpt", printOption(o.tipeOpt, printType)),
@@ -175,6 +184,7 @@ object JSON {
 
     @pure def printStmtVarPattern(o: Stmt.VarPattern): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.VarPattern""""),
         ("isVal", printB(o.isVal)),
         ("pattern", printPattern(o.pattern)),
         ("tipeOpt", printOption(o.tipeOpt, printType)),
@@ -185,6 +195,7 @@ object JSON {
 
     @pure def printStmtSpecVar(o: Stmt.SpecVar): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.SpecVar""""),
         ("isVal", printB(o.isVal)),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe)),
@@ -194,6 +205,7 @@ object JSON {
 
     @pure def printStmtMethod(o: Stmt.Method): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Method""""),
         ("purity", printPurity(o.purity)),
         ("hasOverride", printB(o.hasOverride)),
         ("sig", printMethodSig(o.sig)),
@@ -205,6 +217,7 @@ object JSON {
 
     @pure def printStmtExtMethod(o: Stmt.ExtMethod): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.ExtMethod""""),
         ("isPure", printB(o.isPure)),
         ("sig", printMethodSig(o.sig)),
         ("contract", printContract(o.contract)),
@@ -214,6 +227,7 @@ object JSON {
 
     @pure def printStmtSpecMethod(o: Stmt.SpecMethod): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.SpecMethod""""),
         ("sig", printMethodSig(o.sig)),
         ("defs", printISZ(F, o.defs, printSpecDef)),
         ("where", printISZ(F, o.where, printWhereDef)),
@@ -223,6 +237,7 @@ object JSON {
 
     @pure def printStmtEnum(o: Stmt.Enum): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Enum""""),
         ("id", printId(o.id)),
         ("elements", printISZ(F, o.elements, printId)),
         ("attr", printAttr(o.attr))
@@ -231,6 +246,7 @@ object JSON {
 
     @pure def printStmtObject(o: Stmt.Object): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Object""""),
         ("isExt", printB(o.isExt)),
         ("id", printId(o.id)),
         ("parents", printISZ(F, o.parents, printType)),
@@ -241,6 +257,7 @@ object JSON {
 
     @pure def printStmtSig(o: Stmt.Sig): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Sig""""),
         ("isImmutable", printB(o.isImmutable)),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
@@ -253,6 +270,7 @@ object JSON {
 
     @pure def printStmtAbstractDatatype(o: Stmt.AbstractDatatype): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.AbstractDatatype""""),
         ("isRoot", printB(o.isRoot)),
         ("isDatatype", printB(o.isDatatype)),
         ("id", printId(o.id)),
@@ -266,6 +284,7 @@ object JSON {
 
     @pure def printStmtRich(o: Stmt.Rich): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Rich""""),
         ("isRoot", printB(o.isRoot)),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
@@ -278,6 +297,7 @@ object JSON {
 
     @pure def printStmtTypeAlias(o: Stmt.TypeAlias): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.TypeAlias""""),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("tipe", printType(o.tipe)),
@@ -287,6 +307,7 @@ object JSON {
 
     @pure def printStmtAssign(o: Stmt.Assign): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Assign""""),
         ("lhs", printExp(o.lhs)),
         ("rhs", printAssignExp(o.rhs)),
         ("attr", printAttr(o.attr))
@@ -295,6 +316,7 @@ object JSON {
 
     @pure def printStmtAssignUp(o: Stmt.AssignUp): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.AssignUp""""),
         ("lhs", printExp(o.lhs)),
         ("rhs", printAssignExp(o.rhs)),
         ("attr", printAttr(o.attr))
@@ -303,6 +325,7 @@ object JSON {
 
     @pure def printStmtAssignPattern(o: Stmt.AssignPattern): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.AssignPattern""""),
         ("lhs", printPattern(o.lhs)),
         ("rhs", printAssignExp(o.rhs)),
         ("attr", printAttr(o.attr))
@@ -311,6 +334,7 @@ object JSON {
 
     @pure def printStmtBlock(o: Stmt.Block): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Block""""),
         ("body", printBody(o.body)),
         ("attr", printAttr(o.attr))
       ))
@@ -318,6 +342,7 @@ object JSON {
 
     @pure def printStmtIf(o: Stmt.If): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.If""""),
         ("cond", printExp(o.cond)),
         ("thenbody", printBody(o.thenbody)),
         ("elsebody", printBody(o.elsebody)),
@@ -327,6 +352,7 @@ object JSON {
 
     @pure def printStmtMatch(o: Stmt.Match): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Match""""),
         ("cond", printExp(o.cond)),
         ("cases", printISZ(F, o.cases, printCase)),
         ("attr", printAttr(o.attr))
@@ -335,6 +361,7 @@ object JSON {
 
     @pure def printStmtWhile(o: Stmt.While): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.While""""),
         ("cond", printExp(o.cond)),
         ("invariants", printISZ(F, o.invariants, printContractExp)),
         ("modifies", printISZ(F, o.modifies, printExp)),
@@ -345,6 +372,7 @@ object JSON {
 
     @pure def printStmtDoWhile(o: Stmt.DoWhile): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.DoWhile""""),
         ("cond", printExp(o.cond)),
         ("invariants", printISZ(F, o.invariants, printContractExp)),
         ("modifies", printISZ(F, o.modifies, printExp)),
@@ -355,6 +383,7 @@ object JSON {
 
     @pure def printStmtFor(o: Stmt.For): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.For""""),
         ("enumGen", printEnumGenFor(o.enumGen)),
         ("invariants", printISZ(F, o.invariants, printContractExp)),
         ("modifies", printISZ(F, o.modifies, printExp)),
@@ -365,6 +394,7 @@ object JSON {
 
     @pure def printStmtReturn(o: Stmt.Return): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Return""""),
         ("expOpt", printOption(o.expOpt, printExp)),
         ("attr", printAttr(o.attr))
       ))
@@ -372,6 +402,7 @@ object JSON {
 
     @pure def printStmtLStmt(o: Stmt.LStmt): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.LStmt""""),
         ("clause", printLClause(o.clause)),
         ("attr", printAttr(o.attr))
       ))
@@ -379,6 +410,7 @@ object JSON {
 
     @pure def printStmtExpr(o: Stmt.Expr): ST = {
       return printObject(ISZ(
+        ("type", st""""Stmt.Expr""""),
         ("exp", printExp(o.exp)),
         ("attr", printAttr(o.attr))
       ))
@@ -396,18 +428,21 @@ object JSON {
 
     @pure def printLClauseInvariants(o: LClause.Invariants): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Invariants""""),
         ("value", printISZ(F, o.value, printContractExp))
       ))
     }
 
     @pure def printLClauseFacts(o: LClause.Facts): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Facts""""),
         ("value", printISZ(F, o.value, printLClauseFact))
       ))
     }
 
     @pure def printLClauseFact(o: LClause.Fact): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Fact""""),
         ("id", printId(o.id)),
         ("exp", printExp(o.exp))
       ))
@@ -415,12 +450,14 @@ object JSON {
 
     @pure def printLClauseTheorems(o: LClause.Theorems): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Theorems""""),
         ("value", printISZ(F, o.value, printLClauseTheorem))
       ))
     }
 
     @pure def printLClauseTheorem(o: LClause.Theorem): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Theorem""""),
         ("id", printId(o.id)),
         ("sequent", printLClauseSequent(o.sequent))
       ))
@@ -428,6 +465,7 @@ object JSON {
 
     @pure def printLClauseSequent(o: LClause.Sequent): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Sequent""""),
         ("premises", printISZ(F, o.premises, printExp)),
         ("conclusions", printISZ(F, o.conclusions, printExp)),
         ("proofOpt", printOption(o.proofOpt, printLClauseProof))
@@ -436,12 +474,14 @@ object JSON {
 
     @pure def printLClauseProof(o: LClause.Proof): ST = {
       return printObject(ISZ(
+        ("type", st""""LClause.Proof""""),
         ("steps", printISZ(F, o.steps, printProofStep))
       ))
     }
 
     @pure def printContractExp(o: ContractExp): ST = {
       return printObject(ISZ(
+        ("type", st""""ContractExp""""),
         ("idOpt", printOption(o.idOpt, printId)),
         ("exp", printExp(o.exp))
       ))
@@ -449,6 +489,7 @@ object JSON {
 
     @pure def printCase(o: Case): ST = {
       return printObject(ISZ(
+        ("type", st""""Case""""),
         ("pattern", printPattern(o.pattern)),
         ("condOpt", printOption(o.condOpt, printExp)),
         ("body", printBody(o.body))
@@ -465,6 +506,7 @@ object JSON {
 
     @pure def printEnumGenRangeExpr(o: EnumGen.Range.Expr): ST = {
       return printObject(ISZ(
+        ("type", st""""EnumGen.Range.Expr""""),
         ("isReverse", printB(o.isReverse)),
         ("exp", printExp(o.exp))
       ))
@@ -472,6 +514,7 @@ object JSON {
 
     @pure def printEnumGenRangeIndices(o: EnumGen.Range.Indices): ST = {
       return printObject(ISZ(
+        ("type", st""""EnumGen.Range.Indices""""),
         ("isReverse", printB(o.isReverse)),
         ("exp", printExp(o.exp))
       ))
@@ -479,6 +522,7 @@ object JSON {
 
     @pure def printEnumGenRangeStep(o: EnumGen.Range.Step): ST = {
       return printObject(ISZ(
+        ("type", st""""EnumGen.Range.Step""""),
         ("isInclusive", printB(o.isInclusive)),
         ("start", printExp(o.start)),
         ("end", printExp(o.end)),
@@ -488,6 +532,7 @@ object JSON {
 
     @pure def printEnumGenFor(o: EnumGen.For): ST = {
       return printObject(ISZ(
+        ("type", st""""EnumGen.For""""),
         ("id", printId(o.id)),
         ("range", printEnumGenRange(o.range)),
         ("condOpt", printOption(o.condOpt, printExp))
@@ -504,6 +549,7 @@ object JSON {
 
     @pure def printTypeNamed(o: Type.Named): ST = {
       return printObject(ISZ(
+        ("type", st""""Type.Named""""),
         ("name", printName(o.name)),
         ("typeArgs", printISZ(F, o.typeArgs, printType)),
         ("attr", printTypedAttr(o.attr))
@@ -512,6 +558,7 @@ object JSON {
 
     @pure def printTypeFun(o: Type.Fun): ST = {
       return printObject(ISZ(
+        ("type", st""""Type.Fun""""),
         ("args", printISZ(F, o.args, printType)),
         ("ret", printType(o.ret)),
         ("attr", printTypedAttr(o.attr))
@@ -520,6 +567,7 @@ object JSON {
 
     @pure def printTypeTuple(o: Type.Tuple): ST = {
       return printObject(ISZ(
+        ("type", st""""Type.Tuple""""),
         ("args", printISZ(F, o.args, printType)),
         ("attr", printTypedAttr(o.attr))
       ))
@@ -538,18 +586,21 @@ object JSON {
 
     @pure def printPatternLiteral(o: Pattern.Literal): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.Literal""""),
         ("lit", printLit(o.lit))
       ))
     }
 
     @pure def printPatternRef(o: Pattern.Ref): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.Ref""""),
         ("name", printName(o.name))
       ))
     }
 
     @pure def printPatternVariable(o: Pattern.Variable): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.Variable""""),
         ("id", printId(o.id)),
         ("typeOpt", printOption(o.typeOpt, printType))
       ))
@@ -557,17 +608,20 @@ object JSON {
 
     @pure def printPatternWildcard(o: Pattern.Wildcard): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.Wildcard""""),
         ("typeOpt", printOption(o.typeOpt, printType))
       ))
     }
 
     @pure def printPatternSeqWildcard(o: Pattern.SeqWildcard): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.SeqWildcard""""),
       ))
     }
 
     @pure def printPatternStructure(o: Pattern.Structure): ST = {
       return printObject(ISZ(
+        ("type", st""""Pattern.Structure""""),
         ("idOpt", printOption(o.idOpt, printId)),
         ("nameOpt", printOption(o.nameOpt, printName)),
         ("patterns", printISZ(F, o.patterns, printPattern))
@@ -651,6 +705,7 @@ object JSON {
 
     @pure def printExpLitB(o: Exp.LitB): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitB""""),
         ("value", printB(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -658,6 +713,7 @@ object JSON {
 
     @pure def printExpLitC(o: Exp.LitC): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitC""""),
         ("value", printC(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -665,6 +721,7 @@ object JSON {
 
     @pure def printExpLitZ(o: Exp.LitZ): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitZ""""),
         ("value", printZ(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -672,6 +729,7 @@ object JSON {
 
     @pure def printExpLitZ8(o: Exp.LitZ8): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitZ8""""),
         ("value", printZ8(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -679,6 +737,7 @@ object JSON {
 
     @pure def printExpLitZ16(o: Exp.LitZ16): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitZ16""""),
         ("value", printZ16(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -686,6 +745,7 @@ object JSON {
 
     @pure def printExpLitZ32(o: Exp.LitZ32): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitZ32""""),
         ("value", printZ32(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -693,6 +753,7 @@ object JSON {
 
     @pure def printExpLitZ64(o: Exp.LitZ64): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitZ64""""),
         ("value", printZ64(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -700,6 +761,7 @@ object JSON {
 
     @pure def printExpLitN(o: Exp.LitN): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitN""""),
         ("value", printN(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -707,6 +769,7 @@ object JSON {
 
     @pure def printExpLitN8(o: Exp.LitN8): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitN8""""),
         ("value", printN8(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -714,6 +777,7 @@ object JSON {
 
     @pure def printExpLitN16(o: Exp.LitN16): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitN16""""),
         ("value", printN16(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -721,6 +785,7 @@ object JSON {
 
     @pure def printExpLitN32(o: Exp.LitN32): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitN32""""),
         ("value", printN32(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -728,6 +793,7 @@ object JSON {
 
     @pure def printExpLitN64(o: Exp.LitN64): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitN64""""),
         ("value", printN64(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -735,6 +801,7 @@ object JSON {
 
     @pure def printExpLitS8(o: Exp.LitS8): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitS8""""),
         ("value", printS8(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -742,6 +809,7 @@ object JSON {
 
     @pure def printExpLitS16(o: Exp.LitS16): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitS16""""),
         ("value", printS16(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -749,6 +817,7 @@ object JSON {
 
     @pure def printExpLitS32(o: Exp.LitS32): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitS32""""),
         ("value", printS32(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -756,6 +825,7 @@ object JSON {
 
     @pure def printExpLitS64(o: Exp.LitS64): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitS64""""),
         ("value", printS64(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -763,6 +833,7 @@ object JSON {
 
     @pure def printExpLitU8(o: Exp.LitU8): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitU8""""),
         ("value", printU8(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -770,6 +841,7 @@ object JSON {
 
     @pure def printExpLitU16(o: Exp.LitU16): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitU16""""),
         ("value", printU16(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -777,6 +849,7 @@ object JSON {
 
     @pure def printExpLitU32(o: Exp.LitU32): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitU32""""),
         ("value", printU32(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -784,6 +857,7 @@ object JSON {
 
     @pure def printExpLitU64(o: Exp.LitU64): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitU64""""),
         ("value", printU64(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -791,6 +865,7 @@ object JSON {
 
     @pure def printExpLitF32(o: Exp.LitF32): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitF32""""),
         ("value", printF32(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -798,6 +873,7 @@ object JSON {
 
     @pure def printExpLitF64(o: Exp.LitF64): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitF64""""),
         ("value", printF64(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -805,6 +881,7 @@ object JSON {
 
     @pure def printExpLitR(o: Exp.LitR): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitR""""),
         ("value", printR(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -812,6 +889,7 @@ object JSON {
 
     @pure def printExpLitBv(o: Exp.LitBv): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitBv""""),
         ("value", printISZ(T, o.value, printB)),
         ("tipe", printType(o.tipe)),
         ("attr", printAttr(o.attr))
@@ -820,6 +898,7 @@ object JSON {
 
     @pure def printExpLitString(o: Exp.LitString): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.LitString""""),
         ("value", printString(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -827,6 +906,7 @@ object JSON {
 
     @pure def printExpStringInterpolate(o: Exp.StringInterpolate): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.StringInterpolate""""),
         ("prefix", printString(o.prefix)),
         ("lits", printISZ(F, o.lits, printExpLitString)),
         ("args", printISZ(F, o.args, printExp)),
@@ -836,12 +916,14 @@ object JSON {
 
     @pure def printExpThis(o: Exp.This): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.This""""),
         ("attr", printTypedAttr(o.attr))
       ))
     }
 
     @pure def printExpSuper(o: Exp.Super): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Super""""),
         ("attr", printTypedAttr(o.attr))
       ))
     }
@@ -861,6 +943,7 @@ object JSON {
 
     @pure def printExpUnary(o: Exp.Unary): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Unary""""),
         ("op", printExpUnaryOp(o.op)),
         ("exp", printExp(o.exp)),
         ("attr", printTypedAttr(o.attr))
@@ -902,6 +985,7 @@ object JSON {
 
     @pure def printExpBinary(o: Exp.Binary): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Binary""""),
         ("left", printExp(o.left)),
         ("op", printExpBinaryOp(o.op)),
         ("right", printExp(o.right)),
@@ -911,6 +995,7 @@ object JSON {
 
     @pure def printExpIdent(o: Exp.Ident): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Ident""""),
         ("id", printId(o.id)),
         ("attr", printResolvedAttr(o.attr))
       ))
@@ -918,6 +1003,7 @@ object JSON {
 
     @pure def printExpEta(o: Exp.Eta): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Eta""""),
         ("exp", printExp(o.exp)),
         ("attr", printResolvedAttr(o.attr))
       ))
@@ -925,6 +1011,7 @@ object JSON {
 
     @pure def printExpTuple(o: Exp.Tuple): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Tuple""""),
         ("args", printISZ(F, o.args, printExp)),
         ("attr", printTypedAttr(o.attr))
       ))
@@ -932,6 +1019,7 @@ object JSON {
 
     @pure def printExpSelect(o: Exp.Select): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Select""""),
         ("receiverOpt", printOption(o.receiverOpt, printExp)),
         ("id", printId(o.id)),
         ("targs", printISZ(F, o.targs, printType)),
@@ -941,6 +1029,7 @@ object JSON {
 
     @pure def printExpInvoke(o: Exp.Invoke): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Invoke""""),
         ("receiverOpt", printOption(o.receiverOpt, printExp)),
         ("id", printId(o.id)),
         ("targs", printISZ(F, o.targs, printType)),
@@ -951,6 +1040,7 @@ object JSON {
 
     @pure def printExpInvokeNamed(o: Exp.InvokeNamed): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.InvokeNamed""""),
         ("receiverOpt", printOption(o.receiverOpt, printExp)),
         ("id", printId(o.id)),
         ("targs", printISZ(F, o.targs, printType)),
@@ -961,6 +1051,7 @@ object JSON {
 
     @pure def printExpIf(o: Exp.If): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.If""""),
         ("cond", printExp(o.cond)),
         ("thenExp", printExp(o.thenExp)),
         ("elseExp", printExp(o.elseExp)),
@@ -970,6 +1061,7 @@ object JSON {
 
     @pure def printExpFun(o: Exp.Fun): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Fun""""),
         ("params", printISZ(F, o.params, printParam)),
         ("exp", printExp(o.exp)),
         ("attr", printTypedAttr(o.attr))
@@ -978,6 +1070,7 @@ object JSON {
 
     @pure def printExpForYield(o: Exp.ForYield): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.ForYield""""),
         ("enumGens", printISZ(F, o.enumGens, printEnumGenFor)),
         ("exp", printExp(o.exp)),
         ("attr", printTypedAttr(o.attr))
@@ -986,6 +1079,7 @@ object JSON {
 
     @pure def printExpQuant(o: Exp.Quant): ST = {
       return printObject(ISZ(
+        ("type", st""""Exp.Quant""""),
         ("isForall", printB(o.isForall)),
         ("varFragments", printISZ(F, o.varFragments, printVarFragment)),
         ("exp", printExp(o.exp)),
@@ -995,6 +1089,7 @@ object JSON {
 
     @pure def printNamedArg(o: NamedArg): ST = {
       return printObject(ISZ(
+        ("type", st""""NamedArg""""),
         ("id", printId(o.id)),
         ("arg", printExp(o.arg))
       ))
@@ -1002,6 +1097,7 @@ object JSON {
 
     @pure def printVarFragment(o: VarFragment): ST = {
       return printObject(ISZ(
+        ("type", st""""VarFragment""""),
         ("ids", printISZ(F, o.ids, printId)),
         ("domainOpt", printOption(o.domainOpt, printDomain))
       ))
@@ -1016,6 +1112,7 @@ object JSON {
 
     @pure def printDomainType(o: Domain.Type): ST = {
       return printObject(ISZ(
+        ("type", st""""Domain.Type""""),
         ("tipe", printType(o.tipe)),
         ("attr", printTypedAttr(o.attr))
       ))
@@ -1023,6 +1120,7 @@ object JSON {
 
     @pure def printDomainRange(o: Domain.Range): ST = {
       return printObject(ISZ(
+        ("type", st""""Domain.Range""""),
         ("lo", printExp(o.lo)),
         ("loExact", printB(o.loExact)),
         ("hi", printExp(o.hi)),
@@ -1033,6 +1131,7 @@ object JSON {
 
     @pure def printId(o: Id): ST = {
       return printObject(ISZ(
+        ("type", st""""Id""""),
         ("value", printString(o.value)),
         ("attr", printAttr(o.attr))
       ))
@@ -1040,6 +1139,7 @@ object JSON {
 
     @pure def printName(o: Name): ST = {
       return printObject(ISZ(
+        ("type", st""""Name""""),
         ("ids", printISZ(F, o.ids, printId)),
         ("attr", printAttr(o.attr))
       ))
@@ -1047,12 +1147,14 @@ object JSON {
 
     @pure def printBody(o: Body): ST = {
       return printObject(ISZ(
+        ("type", st""""Body""""),
         ("stmts", printISZ(F, o.stmts, printStmt))
       ))
     }
 
     @pure def printAbstractDatatypeParam(o: AbstractDatatypeParam): ST = {
       return printObject(ISZ(
+        ("type", st""""AbstractDatatypeParam""""),
         ("isHidden", printB(o.isHidden)),
         ("isPure", printB(o.isPure)),
         ("id", printId(o.id)),
@@ -1062,6 +1164,7 @@ object JSON {
 
     @pure def printMethodSig(o: MethodSig): ST = {
       return printObject(ISZ(
+        ("type", st""""MethodSig""""),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("hasParams", printB(o.hasParams)),
@@ -1084,6 +1187,7 @@ object JSON {
 
     @pure def printParam(o: Param): ST = {
       return printObject(ISZ(
+        ("type", st""""Param""""),
         ("mod", printParamMod(o.mod)),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe))
@@ -1092,6 +1196,7 @@ object JSON {
 
     @pure def printTypeParam(o: TypeParam): ST = {
       return printObject(ISZ(
+        ("type", st""""TypeParam""""),
         ("id", printId(o.id)),
         ("superTypeOpt", printOption(o.superTypeOpt, printType))
       ))
@@ -1099,6 +1204,7 @@ object JSON {
 
     @pure def printContract(o: Contract): ST = {
       return printObject(ISZ(
+        ("type", st""""Contract""""),
         ("reads", printISZ(F, o.reads, printExp)),
         ("requires", printISZ(F, o.requires, printContractExp)),
         ("modifies", printISZ(F, o.modifies, printExp)),
@@ -1109,6 +1215,7 @@ object JSON {
 
     @pure def printSubContract(o: SubContract): ST = {
       return printObject(ISZ(
+        ("type", st""""SubContract""""),
         ("id", printId(o.id)),
         ("params", printISZ(F, o.params, printSubContractParam)),
         ("contract", printContract(o.contract))
@@ -1117,6 +1224,7 @@ object JSON {
 
     @pure def printSubContractParam(o: SubContractParam): ST = {
       return printObject(ISZ(
+        ("type", st""""SubContractParam""""),
         ("isPure", printB(o.isPure)),
         ("id", printId(o.id))
       ))
@@ -1131,6 +1239,7 @@ object JSON {
 
     @pure def printWhereDefVal(o: WhereDef.Val): ST = {
       return printObject(ISZ(
+        ("type", st""""WhereDef.Val""""),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe)),
         ("exp", printExp(o.exp))
@@ -1139,6 +1248,7 @@ object JSON {
 
     @pure def printWhereDefDef(o: WhereDef.Def): ST = {
       return printObject(ISZ(
+        ("type", st""""WhereDef.Def""""),
         ("id", printId(o.id)),
         ("params", printISZ(F, o.params, printParam)),
         ("rTipe", printType(o.rTipe)),
@@ -1148,6 +1258,7 @@ object JSON {
 
     @pure def printSpecDef(o: SpecDef): ST = {
       return printObject(ISZ(
+        ("type", st""""SpecDef""""),
         ("idOpt", printOption(o.idOpt, printId)),
         ("exp", printExp(o.exp)),
         ("isOtherwise", printB(o.isOtherwise)),
@@ -1165,6 +1276,7 @@ object JSON {
 
     @pure def printProofStepBasic(o: ProofStep.Basic): ST = {
       return printObject(ISZ(
+        ("type", st""""ProofStep.Basic""""),
         ("step", printExpLitZ(o.step)),
         ("exp", printExp(o.exp)),
         ("just", printJust(o.just))
@@ -1173,6 +1285,7 @@ object JSON {
 
     @pure def printProofStepSubProof(o: ProofStep.SubProof): ST = {
       return printObject(ISZ(
+        ("type", st""""ProofStep.SubProof""""),
         ("step", printExpLitZ(o.step)),
         ("assumeStep", printAssumeProofStep(o.assumeStep)),
         ("steps", printISZ(F, o.steps, printProofStep))
@@ -1189,6 +1302,7 @@ object JSON {
 
     @pure def printAssumeProofStepRegular(o: AssumeProofStep.Regular): ST = {
       return printObject(ISZ(
+        ("type", st""""AssumeProofStep.Regular""""),
         ("step", printExpLitZ(o.step)),
         ("exp", printExp(o.exp))
       ))
@@ -1196,6 +1310,7 @@ object JSON {
 
     @pure def printAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): ST = {
       return printObject(ISZ(
+        ("type", st""""AssumeProofStep.ForallIntroAps""""),
         ("step", printExpLitZ(o.step)),
         ("varFragments", printISZ(F, o.varFragments, printVarFragment))
       ))
@@ -1203,6 +1318,7 @@ object JSON {
 
     @pure def printAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): ST = {
       return printObject(ISZ(
+        ("type", st""""AssumeProofStep.ExistsElimAps""""),
         ("step", printExpLitZ(o.step)),
         ("varFragments", printISZ(F, o.varFragments, printVarFragment)),
         ("exp", printExp(o.exp))
@@ -1236,12 +1352,14 @@ object JSON {
 
     @pure def printJustPremise(o: Just.Premise): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Premise""""),
         ("attr", printAttr(o.attr))
       ))
     }
 
     @pure def printJustAndIntro(o: Just.AndIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.AndIntro""""),
         ("steps", printISZ(F, o.steps, printExpLitZ)),
         ("attr", printAttr(o.attr))
       ))
@@ -1249,6 +1367,7 @@ object JSON {
 
     @pure def printJustAndElim(o: Just.AndElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.AndElim""""),
         ("is1", printB(o.is1)),
         ("andStep", printExpLitZ(o.andStep)),
         ("attr", printAttr(o.attr))
@@ -1257,6 +1376,7 @@ object JSON {
 
     @pure def printJustOrIntro(o: Just.OrIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.OrIntro""""),
         ("is1", printB(o.is1)),
         ("step", printExpLitZ(o.step)),
         ("attr", printAttr(o.attr))
@@ -1265,6 +1385,7 @@ object JSON {
 
     @pure def printJustOrElim(o: Just.OrElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.OrElim""""),
         ("orStep", printExpLitZ(o.orStep)),
         ("subProofSteps", printISZ(F, o.subProofSteps, printExpLitZ)),
         ("attr", printAttr(o.attr))
@@ -1273,6 +1394,7 @@ object JSON {
 
     @pure def printJustImplyIntro(o: Just.ImplyIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ImplyIntro""""),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
       ))
@@ -1280,6 +1402,7 @@ object JSON {
 
     @pure def printJustImplyElim(o: Just.ImplyElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ImplyElim""""),
         ("implyStep", printExpLitZ(o.implyStep)),
         ("steps", printISZ(F, o.steps, printExpLitZ)),
         ("attr", printAttr(o.attr))
@@ -1288,6 +1411,7 @@ object JSON {
 
     @pure def printJustNegIntro(o: Just.NegIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.NegIntro""""),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
       ))
@@ -1295,6 +1419,7 @@ object JSON {
 
     @pure def printJustNegElim(o: Just.NegElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.NegElim""""),
         ("step", printExpLitZ(o.step)),
         ("negStep", printExpLitZ(o.negStep)),
         ("attr", printAttr(o.attr))
@@ -1303,6 +1428,7 @@ object JSON {
 
     @pure def printJustBottomElim(o: Just.BottomElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.BottomElim""""),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
       ))
@@ -1310,6 +1436,7 @@ object JSON {
 
     @pure def printJustPbc(o: Just.Pbc): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Pbc""""),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
       ))
@@ -1317,6 +1444,7 @@ object JSON {
 
     @pure def printJustForallIntro(o: Just.ForallIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ForallIntro""""),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
       ))
@@ -1324,6 +1452,7 @@ object JSON {
 
     @pure def printJustForallElim(o: Just.ForallElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ForallElim""""),
         ("forallStep", printExpLitZ(o.forallStep)),
         ("args", printISZ(F, o.args, printExp)),
         ("attr", printAttr(o.attr))
@@ -1332,6 +1461,7 @@ object JSON {
 
     @pure def printJustExistsIntro(o: Just.ExistsIntro): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ExistsIntro""""),
         ("existsStep", printExpLitZ(o.existsStep)),
         ("args", printISZ(F, o.args, printExp)),
         ("attr", printAttr(o.attr))
@@ -1340,6 +1470,7 @@ object JSON {
 
     @pure def printJustExistsElim(o: Just.ExistsElim): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.ExistsElim""""),
         ("existsStep", printExpLitZ(o.existsStep)),
         ("subProofStep", printExpLitZ(o.subProofStep)),
         ("attr", printAttr(o.attr))
@@ -1348,6 +1479,7 @@ object JSON {
 
     @pure def printJustFact(o: Just.Fact): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Fact""""),
         ("name", printName(o.name)),
         ("attr", printAttr(o.attr))
       ))
@@ -1355,6 +1487,7 @@ object JSON {
 
     @pure def printJustInvariant(o: Just.Invariant): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Invariant""""),
         ("nameOpt", printOption(o.nameOpt, printName)),
         ("attr", printAttr(o.attr))
       ))
@@ -1362,6 +1495,7 @@ object JSON {
 
     @pure def printJustSubst(o: Just.Subst): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Subst""""),
         ("isRight", printB(o.isRight)),
         ("eqStep", printExpLitZ(o.eqStep)),
         ("step", printExpLitZ(o.step)),
@@ -1371,6 +1505,7 @@ object JSON {
 
     @pure def printJustAuto(o: Just.Auto): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Auto""""),
         ("isAlgebra", printB(o.isAlgebra)),
         ("steps", printISZ(F, o.steps, printExpLitZ)),
         ("attr", printAttr(o.attr))
@@ -1379,6 +1514,7 @@ object JSON {
 
     @pure def printJustCoq(o: Just.Coq): ST = {
       return printObject(ISZ(
+        ("type", st""""Just.Coq""""),
         ("path", printExpLitString(o.path)),
         ("steps", printISZ(F, o.steps, printExpLitZ)),
         ("attr", printAttr(o.attr))
@@ -1387,6 +1523,7 @@ object JSON {
 
     @pure def printTruthTableRow(o: TruthTable.Row): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Row""""),
         ("assignment", printTruthTableAssignment(o.assignment)),
         ("separator", printPosInfo(o.separator)),
         ("values", printTruthTableAssignment(o.values))
@@ -1395,6 +1532,7 @@ object JSON {
 
     @pure def printTruthTableAssignment(o: TruthTable.Assignment): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Assignment""""),
         ("values", printISZ(F, o.values, printExpLitB)),
         ("attr", printAttr(o.attr))
       ))
@@ -1411,6 +1549,7 @@ object JSON {
 
     @pure def printTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Conclusion.Validity""""),
         ("isValid", printB(o.isValid)),
         ("assignments", printISZ(F, o.assignments, printTruthTableAssignment)),
         ("attr", printAttr(o.attr))
@@ -1419,18 +1558,21 @@ object JSON {
 
     @pure def printTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Conclusion.Tautology""""),
         ("attr", printAttr(o.attr))
       ))
     }
 
     @pure def printTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Conclusion.Contradictory""""),
         ("attr", printAttr(o.attr))
       ))
     }
 
     @pure def printTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): ST = {
       return printObject(ISZ(
+        ("type", st""""TruthTable.Conclusion.Contingent""""),
         ("trueAssignments", printISZ(F, o.trueAssignments, printTruthTableAssignment)),
         ("falseAssignments", printISZ(F, o.falseAssignments, printTruthTableAssignment)),
         ("attr", printAttr(o.attr))
@@ -1439,12 +1581,14 @@ object JSON {
 
     @pure def printAttr(o: Attr): ST = {
       return printObject(ISZ(
+        ("type", st""""Attr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo))
       ))
     }
 
     @pure def printTypedAttr(o: TypedAttr): ST = {
       return printObject(ISZ(
+        ("type", st""""TypedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
         ("typeOpt", printOption(o.typeOpt, printType))
       ))
@@ -1452,6 +1596,7 @@ object JSON {
 
     @pure def printResolvedAttr(o: ResolvedAttr): ST = {
       return printObject(ISZ(
+        ("type", st""""ResolvedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
         ("resOpt", printOption(o.resOpt, printResolvedInfo)),
         ("typeOpt", printOption(o.typeOpt, printType))
@@ -1460,6 +1605,7 @@ object JSON {
 
     @pure def printResolvedInfo(o: ResolvedInfo): ST = {
       return printObject(ISZ(
+        ("type", st""""ResolvedInfo""""),
         ("kind", printSymbolKind(o.kind)),
         ("ids", printISZ(T, o.ids, printString)),
         ("externFileUriOpt", printOption(o.externFileUriOpt, printString))
@@ -1495,6 +1641,7 @@ object JSON {
 
     @pure def printPosInfo(o: PosInfo): ST = {
       return printObject(ISZ(
+        ("type", st""""PosInfo""""),
         ("fileUriOpt", printOption(o.fileUriOpt, printString)),
         ("beginLine", printZ(o.beginLine)),
         ("beginColumn", printZ(o.beginColumn)),
@@ -1511,34 +1658,35 @@ object JSON {
     val parser: Json.Parser = Json.Parser.create(input)
 
     def parseTopUnit(): TopUnit = {
-      val t = parser.parseObjectTypes(ISZ("TopUnitProgram", "TopUnitSequentUnit", "TopUnitTruthTableUnit"))
+      val t = parser.parseObjectTypes(ISZ("TopUnit.Program", "TopUnit.SequentUnit", "TopUnit.TruthTableUnit"))
       t match {
         case "TopUnit.Program" => val r = parseTopUnitProgramT(T); return r
         case "TopUnit.SequentUnit" => val r = parseTopUnitSequentUnitT(T); return r
         case "TopUnit.TruthTableUnit" => val r = parseTopUnitTruthTableUnitT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
-    def parseTopUnitProgram(): TopUnit.Program = {
-      val r = parseTopUnitProgramT(F)
-      return r
-    }
+     def parseTopUnitProgram(): TopUnit.Program = {
+       val r = parseTopUnitProgramT(F)
+       return r
+     }
 
-    def parseTopUnitProgramT(typeParsed: B): TopUnit.Program = {
-      if (!typeParsed) {
-        parser.parseObjectType("TopUnit.Program")
-      }
-      parser.parseObjectKey("fileUriOpt")
-      val fileUriOpt = parser.parseOption(parser.parseString _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("packageName")
-      val packageName = parseName()
-      parser.parseObjectNext()
-      parser.parseObjectKey("body")
-      val body = parseBody()
-      parser.parseObjectNext()
-      return TopUnit.Program(fileUriOpt, packageName, body)
-    }
+     def parseTopUnitProgramT(typeParsed: B): TopUnit.Program = {
+       if (!typeParsed) {
+         parser.parseObjectType("TopUnit.Program")
+       }
+       parser.parseObjectKey("fileUriOpt")
+       val fileUriOpt = parser.parseOption(parser.parseString _)
+       parser.parseObjectNext()
+                               parser.parseObjectKey("packageName")
+                               val packageName = parseName()
+                               parser.parseObjectNext()
+       parser.parseObjectKey("body")
+       val body = parseBody()
+       parser.parseObjectNext()
+       return TopUnit.Program(fileUriOpt, packageName, body)
+     }
 
     def parseTopUnitSequentUnit(): TopUnit.SequentUnit = {
       val r = parseTopUnitSequentUnitT(F)
@@ -1552,9 +1700,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-      parser.parseObjectKey("sequent")
-      val sequent = parseLClauseSequent()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("sequent")
+                              val sequent = parseLClauseSequent()
+                              parser.parseObjectNext()
       return TopUnit.SequentUnit(fileUriOpt, sequent)
     }
 
@@ -1570,9 +1718,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-      parser.parseObjectKey("stars")
-      val stars = parser.parseISZ(parsePosInfo _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("stars")
+                              val stars = parser.parseISZ(parsePosInfo _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("vars")
       val vars = parser.parseISZ(parseId _)
       parser.parseObjectNext()
@@ -1595,7 +1743,7 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("StmtImport", "StmtVar", "StmtVarPattern", "StmtSpecVar", "StmtMethod", "StmtExtMethod", "StmtSpecMethod", "StmtEnum", "StmtObject", "StmtSig", "StmtAbstractDatatype", "StmtRich", "StmtTypeAlias", "StmtAssign", "StmtAssignUp", "StmtAssignPattern", "StmtBlock", "StmtIf", "StmtMatch", "StmtWhile", "StmtDoWhile", "StmtFor", "StmtReturn", "StmtLStmt", "StmtExpr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
       t match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
@@ -1622,16 +1770,18 @@ object JSON {
         case "Stmt.Return" => val r = parseStmtReturnT(T); return r
         case "Stmt.LStmt" => val r = parseStmtLStmtT(T); return r
         case "Stmt.Expr" => val r = parseStmtExprT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
     def parseAssignExp(): AssignExp = {
-      val t = parser.parseObjectTypes(ISZ("StmtBlock", "StmtIf", "StmtMatch", "StmtExpr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.Expr"))
       t match {
         case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.Match" => val r = parseStmtMatchT(T); return r
         case "Stmt.Expr" => val r = parseStmtExprT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -1646,10 +1796,12 @@ object JSON {
       }
       parser.parseObjectKey("value")
       val s = parser.parseString()
+      parser.parseObjectNext()
       s match {
         case "Impure" => return Purity.Impure
         case "Pure" => return Purity.Pure
         case "Memoize" => return Purity.Memoize
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -1665,9 +1817,9 @@ object JSON {
       parser.parseObjectKey("importers")
       val importers = parser.parseISZ(parseStmtImportImporter _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Stmt.Import(importers, attr)
     }
 
@@ -1683,17 +1835,18 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-      parser.parseObjectKey("selectorOpt")
-      val selectorOpt = parser.parseOption(parseStmtImportSelector _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("selectorOpt")
+                              val selectorOpt = parser.parseOption(parseStmtImportSelector _)
+                              parser.parseObjectNext()
       return Stmt.Import.Importer(name, selectorOpt)
     }
 
     def parseStmtImportSelector(): Stmt.Import.Selector = {
-      val t = parser.parseObjectTypes(ISZ("StmtImportMultiSelector", "StmtImportWildcardSelector"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import.MultiSelector", "Stmt.Import.WildcardSelector"))
       t match {
         case "Stmt.Import.MultiSelector" => val r = parseStmtImportMultiSelectorT(T); return r
         case "Stmt.Import.WildcardSelector" => val r = parseStmtImportWildcardSelectorT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -1736,9 +1889,9 @@ object JSON {
       parser.parseObjectKey("from")
       val from = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("to")
-      val to = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("to")
+                              val to = parseId()
+                              parser.parseObjectNext()
       return Stmt.Import.NamedSelector(from, to)
     }
 
@@ -1754,9 +1907,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("tipeOpt")
       val tipeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -1781,9 +1934,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("pattern")
-      val pattern = parsePattern()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("pattern")
+                              val pattern = parsePattern()
+                              parser.parseObjectNext()
       parser.parseObjectKey("tipeOpt")
       val tipeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -1808,9 +1961,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -1832,9 +1985,9 @@ object JSON {
       parser.parseObjectKey("purity")
       val purity = parsePurity()
       parser.parseObjectNext()
-      parser.parseObjectKey("hasOverride")
-      val hasOverride = parser.parseB()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("hasOverride")
+                              val hasOverride = parser.parseB()
+                              parser.parseObjectNext()
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
@@ -1862,9 +2015,9 @@ object JSON {
       parser.parseObjectKey("isPure")
       val isPure = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("sig")
-      val sig = parseMethodSig()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("sig")
+                              val sig = parseMethodSig()
+                              parser.parseObjectNext()
       parser.parseObjectKey("contract")
       val contract = parseContract()
       parser.parseObjectNext()
@@ -1886,9 +2039,9 @@ object JSON {
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
-      parser.parseObjectKey("defs")
-      val defs = parser.parseISZ(parseSpecDef _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("defs")
+                              val defs = parser.parseISZ(parseSpecDef _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("where")
       val where = parser.parseISZ(parseWhereDef _)
       parser.parseObjectNext()
@@ -1910,9 +2063,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("elements")
-      val elements = parser.parseISZ(parseId _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("elements")
+                              val elements = parser.parseISZ(parseId _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -1931,9 +2084,9 @@ object JSON {
       parser.parseObjectKey("isExt")
       val isExt = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("parents")
       val parents = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -1958,9 +2111,9 @@ object JSON {
       parser.parseObjectKey("isImmutable")
       val isImmutable = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parseTypeParam _)
       parser.parseObjectNext()
@@ -1991,9 +2144,9 @@ object JSON {
       parser.parseObjectKey("isRoot")
       val isRoot = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("isDatatype")
-      val isDatatype = parser.parseB()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("isDatatype")
+                              val isDatatype = parser.parseB()
+                              parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -2027,9 +2180,9 @@ object JSON {
       parser.parseObjectKey("isRoot")
       val isRoot = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parseTypeParam _)
       parser.parseObjectNext()
@@ -2060,9 +2213,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("typeParams")
-      val typeParams = parser.parseISZ(parseTypeParam _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("typeParams")
+                              val typeParams = parser.parseISZ(parseTypeParam _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -2084,9 +2237,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("rhs")
-      val rhs = parseAssignExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("rhs")
+                              val rhs = parseAssignExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2105,9 +2258,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("rhs")
-      val rhs = parseAssignExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("rhs")
+                              val rhs = parseAssignExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2126,9 +2279,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parsePattern()
       parser.parseObjectNext()
-      parser.parseObjectKey("rhs")
-      val rhs = parseAssignExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("rhs")
+                              val rhs = parseAssignExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2147,9 +2300,9 @@ object JSON {
       parser.parseObjectKey("body")
       val body = parseBody()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Stmt.Block(body, attr)
     }
 
@@ -2165,9 +2318,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("thenbody")
-      val thenbody = parseBody()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("thenbody")
+                              val thenbody = parseBody()
+                              parser.parseObjectNext()
       parser.parseObjectKey("elsebody")
       val elsebody = parseBody()
       parser.parseObjectNext()
@@ -2189,9 +2342,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("cases")
-      val cases = parser.parseISZ(parseCase _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("cases")
+                              val cases = parser.parseISZ(parseCase _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2210,9 +2363,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("invariants")
-      val invariants = parser.parseISZ(parseContractExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("invariants")
+                              val invariants = parser.parseISZ(parseContractExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2237,9 +2390,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("invariants")
-      val invariants = parser.parseISZ(parseContractExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("invariants")
+                              val invariants = parser.parseISZ(parseContractExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2264,9 +2417,9 @@ object JSON {
       parser.parseObjectKey("enumGen")
       val enumGen = parseEnumGenFor()
       parser.parseObjectNext()
-      parser.parseObjectKey("invariants")
-      val invariants = parser.parseISZ(parseContractExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("invariants")
+                              val invariants = parser.parseISZ(parseContractExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2291,9 +2444,9 @@ object JSON {
       parser.parseObjectKey("expOpt")
       val expOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Stmt.Return(expOpt, attr)
     }
 
@@ -2309,9 +2462,9 @@ object JSON {
       parser.parseObjectKey("clause")
       val clause = parseLClause()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Stmt.LStmt(clause, attr)
     }
 
@@ -2327,20 +2480,21 @@ object JSON {
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Stmt.Expr(exp, attr)
     }
 
     def parseLClause(): LClause = {
-      val t = parser.parseObjectTypes(ISZ("LClauseInvariants", "LClauseFacts", "LClauseTheorems", "LClauseSequent", "LClauseProof"))
+      val t = parser.parseObjectTypes(ISZ("LClause.Invariants", "LClause.Facts", "LClause.Theorems", "LClause.Sequent", "LClause.Proof"))
       t match {
         case "LClause.Invariants" => val r = parseLClauseInvariantsT(T); return r
         case "LClause.Facts" => val r = parseLClauseFactsT(T); return r
         case "LClause.Theorems" => val r = parseLClauseTheoremsT(T); return r
         case "LClause.Sequent" => val r = parseLClauseSequentT(T); return r
         case "LClause.Proof" => val r = parseLClauseProofT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -2386,9 +2540,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       return LClause.Fact(id, exp)
     }
 
@@ -2419,9 +2573,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("sequent")
-      val sequent = parseLClauseSequent()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("sequent")
+                              val sequent = parseLClauseSequent()
+                              parser.parseObjectNext()
       return LClause.Theorem(id, sequent)
     }
 
@@ -2437,9 +2591,9 @@ object JSON {
       parser.parseObjectKey("premises")
       val premises = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("conclusions")
-      val conclusions = parser.parseISZ(parseExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("conclusions")
+                              val conclusions = parser.parseISZ(parseExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("proofOpt")
       val proofOpt = parser.parseOption(parseLClauseProof _)
       parser.parseObjectNext()
@@ -2473,9 +2627,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       return ContractExp(idOpt, exp)
     }
 
@@ -2491,9 +2645,9 @@ object JSON {
       parser.parseObjectKey("pattern")
       val pattern = parsePattern()
       parser.parseObjectNext()
-      parser.parseObjectKey("condOpt")
-      val condOpt = parser.parseOption(parseExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("condOpt")
+                              val condOpt = parser.parseOption(parseExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("body")
       val body = parseBody()
       parser.parseObjectNext()
@@ -2501,11 +2655,12 @@ object JSON {
     }
 
     def parseEnumGenRange(): EnumGen.Range = {
-      val t = parser.parseObjectTypes(ISZ("EnumGenRangeExpr", "EnumGenRangeIndices", "EnumGenRangeStep"))
+      val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Expr", "EnumGen.Range.Indices", "EnumGen.Range.Step"))
       t match {
         case "EnumGen.Range.Expr" => val r = parseEnumGenRangeExprT(T); return r
         case "EnumGen.Range.Indices" => val r = parseEnumGenRangeIndicesT(T); return r
         case "EnumGen.Range.Step" => val r = parseEnumGenRangeStepT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -2521,9 +2676,9 @@ object JSON {
       parser.parseObjectKey("isReverse")
       val isReverse = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       return EnumGen.Range.Expr(isReverse, exp)
     }
 
@@ -2539,9 +2694,9 @@ object JSON {
       parser.parseObjectKey("isReverse")
       val isReverse = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       return EnumGen.Range.Indices(isReverse, exp)
     }
 
@@ -2557,9 +2712,9 @@ object JSON {
       parser.parseObjectKey("isInclusive")
       val isInclusive = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("start")
-      val start = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("start")
+                              val start = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("end")
       val end = parseExp()
       parser.parseObjectNext()
@@ -2581,9 +2736,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("range")
-      val range = parseEnumGenRange()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("range")
+                              val range = parseEnumGenRange()
+                              parser.parseObjectNext()
       parser.parseObjectKey("condOpt")
       val condOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
@@ -2591,11 +2746,12 @@ object JSON {
     }
 
     def parseType(): Type = {
-      val t = parser.parseObjectTypes(ISZ("TypeNamed", "TypeFun", "TypeTuple"))
+      val t = parser.parseObjectTypes(ISZ("Type.Named", "Type.Fun", "Type.Tuple"))
       t match {
         case "Type.Named" => val r = parseTypeNamedT(T); return r
         case "Type.Fun" => val r = parseTypeFunT(T); return r
         case "Type.Tuple" => val r = parseTypeTupleT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -2611,9 +2767,9 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-      parser.parseObjectKey("typeArgs")
-      val typeArgs = parser.parseISZ(parseType _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("typeArgs")
+                              val typeArgs = parser.parseISZ(parseType _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -2632,9 +2788,9 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseType _)
       parser.parseObjectNext()
-      parser.parseObjectKey("ret")
-      val ret = parseType()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("ret")
+                              val ret = parseType()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -2653,14 +2809,14 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseType _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseTypedAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseTypedAttr()
+                              parser.parseObjectNext()
       return Type.Tuple(args, attr)
     }
 
     def parsePattern(): Pattern = {
-      val t = parser.parseObjectTypes(ISZ("PatternLiteral", "PatternRef", "PatternVariable", "PatternWildcard", "PatternSeqWildcard", "PatternStructure"))
+      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
       t match {
         case "Pattern.Literal" => val r = parsePatternLiteralT(T); return r
         case "Pattern.Ref" => val r = parsePatternRefT(T); return r
@@ -2668,6 +2824,7 @@ object JSON {
         case "Pattern.Wildcard" => val r = parsePatternWildcardT(T); return r
         case "Pattern.SeqWildcard" => val r = parsePatternSeqWildcardT(T); return r
         case "Pattern.Structure" => val r = parsePatternStructureT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -2713,9 +2870,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("typeOpt")
+                              val typeOpt = parser.parseOption(parseType _)
+                              parser.parseObjectNext()
       return Pattern.Variable(id, typeOpt)
     }
 
@@ -2758,9 +2915,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-      parser.parseObjectKey("nameOpt")
-      val nameOpt = parser.parseOption(parseName _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("nameOpt")
+                              val nameOpt = parser.parseOption(parseName _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("patterns")
       val patterns = parser.parseISZ(parsePattern _)
       parser.parseObjectNext()
@@ -2768,7 +2925,7 @@ object JSON {
     }
 
     def parseExp(): Exp = {
-      val t = parser.parseObjectTypes(ISZ("ExpLitB", "ExpLitC", "ExpLitZ", "ExpLitZ8", "ExpLitZ16", "ExpLitZ32", "ExpLitZ64", "ExpLitN", "ExpLitN8", "ExpLitN16", "ExpLitN32", "ExpLitN64", "ExpLitS8", "ExpLitS16", "ExpLitS32", "ExpLitS64", "ExpLitU8", "ExpLitU16", "ExpLitU32", "ExpLitU64", "ExpLitF32", "ExpLitF64", "ExpLitR", "ExpLitBv", "ExpLitString", "ExpStringInterpolate", "ExpThis", "ExpSuper", "ExpUnary", "ExpBinary", "ExpIdent", "ExpEta", "ExpTuple", "ExpSelect", "ExpInvoke", "ExpInvokeNamed", "ExpIf", "ExpFun", "ExpForYield", "ExpQuant"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitZ8", "Exp.LitZ16", "Exp.LitZ32", "Exp.LitZ64", "Exp.LitN", "Exp.LitN8", "Exp.LitN16", "Exp.LitN32", "Exp.LitN64", "Exp.LitS8", "Exp.LitS16", "Exp.LitS32", "Exp.LitS64", "Exp.LitU8", "Exp.LitU16", "Exp.LitU32", "Exp.LitU64", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
       t match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
@@ -2810,11 +2967,12 @@ object JSON {
         case "Exp.Fun" => val r = parseExpFunT(T); return r
         case "Exp.ForYield" => val r = parseExpForYieldT(T); return r
         case "Exp.Quant" => val r = parseExpQuantT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
     def parseLit(): Lit = {
-      val t = parser.parseObjectTypes(ISZ("ExpLitB", "ExpLitC", "ExpLitZ", "ExpLitZ8", "ExpLitZ16", "ExpLitZ32", "ExpLitZ64", "ExpLitN", "ExpLitN8", "ExpLitN16", "ExpLitN32", "ExpLitN64", "ExpLitS8", "ExpLitS16", "ExpLitS32", "ExpLitS64", "ExpLitU8", "ExpLitU16", "ExpLitU32", "ExpLitU64", "ExpLitF32", "ExpLitF64", "ExpLitR", "ExpLitBv", "ExpLitString"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitZ8", "Exp.LitZ16", "Exp.LitZ32", "Exp.LitZ64", "Exp.LitN", "Exp.LitN8", "Exp.LitN16", "Exp.LitN32", "Exp.LitN64", "Exp.LitS8", "Exp.LitS16", "Exp.LitS32", "Exp.LitS64", "Exp.LitU8", "Exp.LitU16", "Exp.LitU32", "Exp.LitU64", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
       t match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
@@ -2841,6 +2999,7 @@ object JSON {
         case "Exp.LitR" => val r = parseExpLitRT(T); return r
         case "Exp.LitBv" => val r = parseExpLitBvT(T); return r
         case "Exp.LitString" => val r = parseExpLitStringT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -2856,9 +3015,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitB(value, attr)
     }
 
@@ -2874,9 +3033,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseC()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitC(value, attr)
     }
 
@@ -2892,9 +3051,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitZ(value, attr)
     }
 
@@ -2910,9 +3069,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ8()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitZ8(value, attr)
     }
 
@@ -2928,9 +3087,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ16()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitZ16(value, attr)
     }
 
@@ -2946,9 +3105,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ32()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitZ32(value, attr)
     }
 
@@ -2964,9 +3123,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ64()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitZ64(value, attr)
     }
 
@@ -2982,9 +3141,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitN(value, attr)
     }
 
@@ -3000,9 +3159,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN8()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitN8(value, attr)
     }
 
@@ -3018,9 +3177,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN16()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitN16(value, attr)
     }
 
@@ -3036,9 +3195,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN32()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitN32(value, attr)
     }
 
@@ -3054,9 +3213,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN64()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitN64(value, attr)
     }
 
@@ -3072,9 +3231,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS8()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitS8(value, attr)
     }
 
@@ -3090,9 +3249,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS16()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitS16(value, attr)
     }
 
@@ -3108,9 +3267,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS32()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitS32(value, attr)
     }
 
@@ -3126,9 +3285,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS64()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitS64(value, attr)
     }
 
@@ -3144,9 +3303,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU8()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitU8(value, attr)
     }
 
@@ -3162,9 +3321,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU16()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitU16(value, attr)
     }
 
@@ -3180,9 +3339,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU32()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitU32(value, attr)
     }
 
@@ -3198,9 +3357,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU64()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitU64(value, attr)
     }
 
@@ -3216,9 +3375,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseF32()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitF32(value, attr)
     }
 
@@ -3234,9 +3393,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseF64()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitF64(value, attr)
     }
 
@@ -3252,9 +3411,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseR()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitR(value, attr)
     }
 
@@ -3270,9 +3429,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseISZ(parser.parseB _)
       parser.parseObjectNext()
-      parser.parseObjectKey("tipe")
-      val tipe = parseType()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("tipe")
+                              val tipe = parseType()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -3291,9 +3450,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseString()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Exp.LitString(value, attr)
     }
 
@@ -3309,9 +3468,9 @@ object JSON {
       parser.parseObjectKey("prefix")
       val prefix = parser.parseString()
       parser.parseObjectNext()
-      parser.parseObjectKey("lits")
-      val lits = parser.parseISZ(parseExpLitString _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("lits")
+                              val lits = parser.parseISZ(parseExpLitString _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -3362,11 +3521,13 @@ object JSON {
       }
       parser.parseObjectKey("value")
       val s = parser.parseString()
+      parser.parseObjectNext()
       s match {
         case "Not" => return Exp.UnaryOp.Not
         case "Plus" => return Exp.UnaryOp.Plus
         case "Minus" => return Exp.UnaryOp.Minus
         case "Complement" => return Exp.UnaryOp.Complement
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -3382,9 +3543,9 @@ object JSON {
       parser.parseObjectKey("op")
       val op = parseExpUnaryOp()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3402,6 +3563,7 @@ object JSON {
       }
       parser.parseObjectKey("value")
       val s = parser.parseString()
+      parser.parseObjectNext()
       s match {
         case "Add" => return Exp.BinaryOp.Add
         case "Sub" => return Exp.BinaryOp.Sub
@@ -3427,6 +3589,7 @@ object JSON {
         case "Prepend" => return Exp.BinaryOp.Prepend
         case "AppendAll" => return Exp.BinaryOp.AppendAll
         case "RemoveAll" => return Exp.BinaryOp.RemoveAll
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -3442,9 +3605,9 @@ object JSON {
       parser.parseObjectKey("left")
       val left = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("op")
-      val op = parseExpBinaryOp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("op")
+                              val op = parseExpBinaryOp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("right")
       val right = parseExp()
       parser.parseObjectNext()
@@ -3466,9 +3629,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseResolvedAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseResolvedAttr()
+                              parser.parseObjectNext()
       return Exp.Ident(id, attr)
     }
 
@@ -3484,9 +3647,9 @@ object JSON {
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseResolvedAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseResolvedAttr()
+                              parser.parseObjectNext()
       return Exp.Eta(exp, attr)
     }
 
@@ -3502,9 +3665,9 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseTypedAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseTypedAttr()
+                              parser.parseObjectNext()
       return Exp.Tuple(args, attr)
     }
 
@@ -3520,9 +3683,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3544,9 +3707,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3571,9 +3734,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3598,9 +3761,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("thenExp")
-      val thenExp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("thenExp")
+                              val thenExp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("elseExp")
       val elseExp = parseExp()
       parser.parseObjectNext()
@@ -3622,9 +3785,9 @@ object JSON {
       parser.parseObjectKey("params")
       val params = parser.parseISZ(parseParam _)
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3643,9 +3806,9 @@ object JSON {
       parser.parseObjectKey("enumGens")
       val enumGens = parser.parseISZ(parseEnumGenFor _)
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3664,9 +3827,9 @@ object JSON {
       parser.parseObjectKey("isForall")
       val isForall = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("varFragments")
-      val varFragments = parser.parseISZ(parseVarFragment _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("varFragments")
+                              val varFragments = parser.parseISZ(parseVarFragment _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -3688,9 +3851,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("arg")
-      val arg = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("arg")
+                              val arg = parseExp()
+                              parser.parseObjectNext()
       return NamedArg(id, arg)
     }
 
@@ -3706,17 +3869,18 @@ object JSON {
       parser.parseObjectKey("ids")
       val ids = parser.parseISZ(parseId _)
       parser.parseObjectNext()
-      parser.parseObjectKey("domainOpt")
-      val domainOpt = parser.parseOption(parseDomain _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("domainOpt")
+                              val domainOpt = parser.parseOption(parseDomain _)
+                              parser.parseObjectNext()
       return VarFragment(ids, domainOpt)
     }
 
     def parseDomain(): Domain = {
-      val t = parser.parseObjectTypes(ISZ("DomainType", "DomainRange"))
+      val t = parser.parseObjectTypes(ISZ("Domain.Type", "Domain.Range"))
       t match {
         case "Domain.Type" => val r = parseDomainTypeT(T); return r
         case "Domain.Range" => val r = parseDomainRangeT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -3732,9 +3896,9 @@ object JSON {
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseTypedAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseTypedAttr()
+                              parser.parseObjectNext()
       return Domain.Type(tipe, attr)
     }
 
@@ -3750,9 +3914,9 @@ object JSON {
       parser.parseObjectKey("lo")
       val lo = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("loExact")
-      val loExact = parser.parseB()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("loExact")
+                              val loExact = parser.parseB()
+                              parser.parseObjectNext()
       parser.parseObjectKey("hi")
       val hi = parseExp()
       parser.parseObjectNext()
@@ -3777,9 +3941,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseString()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Id(value, attr)
     }
 
@@ -3795,9 +3959,9 @@ object JSON {
       parser.parseObjectKey("ids")
       val ids = parser.parseISZ(parseId _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Name(ids, attr)
     }
 
@@ -3828,9 +3992,9 @@ object JSON {
       parser.parseObjectKey("isHidden")
       val isHidden = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("isPure")
-      val isPure = parser.parseB()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("isPure")
+                              val isPure = parser.parseB()
+                              parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -3852,9 +4016,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("typeParams")
-      val typeParams = parser.parseISZ(parseTypeParam _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("typeParams")
+                              val typeParams = parser.parseISZ(parseTypeParam _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("hasParams")
       val hasParams = parser.parseB()
       parser.parseObjectNext()
@@ -3878,10 +4042,12 @@ object JSON {
       }
       parser.parseObjectKey("value")
       val s = parser.parseString()
+      parser.parseObjectNext()
       s match {
         case "NoMod" => return ParamMod.NoMod
         case "Pure" => return ParamMod.Pure
         case "Hidden" => return ParamMod.Hidden
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -3897,9 +4063,9 @@ object JSON {
       parser.parseObjectKey("mod")
       val mod = parseParamMod()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -3918,9 +4084,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("superTypeOpt")
-      val superTypeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("superTypeOpt")
+                              val superTypeOpt = parser.parseOption(parseType _)
+                              parser.parseObjectNext()
       return TypeParam(id, superTypeOpt)
     }
 
@@ -3936,9 +4102,9 @@ object JSON {
       parser.parseObjectKey("reads")
       val reads = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-      parser.parseObjectKey("requires")
-      val requires = parser.parseISZ(parseContractExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("requires")
+                              val requires = parser.parseISZ(parseContractExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -3963,9 +4129,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseSubContractParam _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("params")
+                              val params = parser.parseISZ(parseSubContractParam _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("contract")
       val contract = parseContract()
       parser.parseObjectNext()
@@ -3984,17 +4150,18 @@ object JSON {
       parser.parseObjectKey("isPure")
       val isPure = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("id")
+                              val id = parseId()
+                              parser.parseObjectNext()
       return SubContractParam(isPure, id)
     }
 
     def parseWhereDef(): WhereDef = {
-      val t = parser.parseObjectTypes(ISZ("WhereDefVal", "WhereDefDef"))
+      val t = parser.parseObjectTypes(ISZ("WhereDef.Val", "WhereDef.Def"))
       t match {
         case "WhereDef.Val" => val r = parseWhereDefValT(T); return r
         case "WhereDef.Def" => val r = parseWhereDefDefT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4010,9 +4177,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("tipe")
-      val tipe = parseType()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("tipe")
+                              val tipe = parseType()
+                              parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -4031,9 +4198,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseParam _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("params")
+                              val params = parser.parseISZ(parseParam _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("rTipe")
       val rTipe = parseType()
       parser.parseObjectNext()
@@ -4055,9 +4222,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("isOtherwise")
       val isOtherwise = parser.parseB()
       parser.parseObjectNext()
@@ -4071,10 +4238,11 @@ object JSON {
     }
 
     def parseProofStep(): ProofStep = {
-      val t = parser.parseObjectTypes(ISZ("ProofStepBasic", "ProofStepSubProof"))
+      val t = parser.parseObjectTypes(ISZ("ProofStep.Basic", "ProofStep.SubProof"))
       t match {
         case "ProofStep.Basic" => val r = parseProofStepBasicT(T); return r
         case "ProofStep.SubProof" => val r = parseProofStepSubProofT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4090,9 +4258,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       parser.parseObjectKey("just")
       val just = parseJust()
       parser.parseObjectNext()
@@ -4111,9 +4279,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("assumeStep")
-      val assumeStep = parseAssumeProofStep()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("assumeStep")
+                              val assumeStep = parseAssumeProofStep()
+                              parser.parseObjectNext()
       parser.parseObjectKey("steps")
       val steps = parser.parseISZ(parseProofStep _)
       parser.parseObjectNext()
@@ -4121,11 +4289,12 @@ object JSON {
     }
 
     def parseAssumeProofStep(): AssumeProofStep = {
-      val t = parser.parseObjectTypes(ISZ("AssumeProofStepRegular", "AssumeProofStepForallIntroAps", "AssumeProofStepExistsElimAps"))
+      val t = parser.parseObjectTypes(ISZ("AssumeProofStep.Regular", "AssumeProofStep.ForallIntroAps", "AssumeProofStep.ExistsElimAps"))
       t match {
         case "AssumeProofStep.Regular" => val r = parseAssumeProofStepRegularT(T); return r
         case "AssumeProofStep.ForallIntroAps" => val r = parseAssumeProofStepForallIntroApsT(T); return r
         case "AssumeProofStep.ExistsElimAps" => val r = parseAssumeProofStepExistsElimApsT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4141,9 +4310,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("exp")
+                              val exp = parseExp()
+                              parser.parseObjectNext()
       return AssumeProofStep.Regular(step, exp)
     }
 
@@ -4159,9 +4328,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("varFragments")
-      val varFragments = parser.parseISZ(parseVarFragment _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("varFragments")
+                              val varFragments = parser.parseISZ(parseVarFragment _)
+                              parser.parseObjectNext()
       return AssumeProofStep.ForallIntroAps(step, varFragments)
     }
 
@@ -4177,9 +4346,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("varFragments")
-      val varFragments = parser.parseISZ(parseVarFragment _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("varFragments")
+                              val varFragments = parser.parseISZ(parseVarFragment _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -4187,7 +4356,7 @@ object JSON {
     }
 
     def parseJust(): Just = {
-      val t = parser.parseObjectTypes(ISZ("JustPremise", "JustAndIntro", "JustAndElim", "JustOrIntro", "JustOrElim", "JustImplyIntro", "JustImplyElim", "JustNegIntro", "JustNegElim", "JustBottomElim", "JustPbc", "JustForallIntro", "JustForallElim", "JustExistsIntro", "JustExistsElim", "JustFact", "JustInvariant", "JustSubst", "JustAuto", "JustCoq"))
+      val t = parser.parseObjectTypes(ISZ("Just.Premise", "Just.AndIntro", "Just.AndElim", "Just.OrIntro", "Just.OrElim", "Just.ImplyIntro", "Just.ImplyElim", "Just.NegIntro", "Just.NegElim", "Just.BottomElim", "Just.Pbc", "Just.ForallIntro", "Just.ForallElim", "Just.ExistsIntro", "Just.ExistsElim", "Just.Fact", "Just.Invariant", "Just.Subst", "Just.Auto", "Just.Coq"))
       t match {
         case "Just.Premise" => val r = parseJustPremiseT(T); return r
         case "Just.AndIntro" => val r = parseJustAndIntroT(T); return r
@@ -4209,6 +4378,7 @@ object JSON {
         case "Just.Subst" => val r = parseJustSubstT(T); return r
         case "Just.Auto" => val r = parseJustAutoT(T); return r
         case "Just.Coq" => val r = parseJustCoqT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4239,9 +4409,9 @@ object JSON {
       parser.parseObjectKey("steps")
       val steps = parser.parseISZ(parseExpLitZ _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.AndIntro(steps, attr)
     }
 
@@ -4257,9 +4427,9 @@ object JSON {
       parser.parseObjectKey("is1")
       val is1 = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("andStep")
-      val andStep = parseExpLitZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("andStep")
+                              val andStep = parseExpLitZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4278,9 +4448,9 @@ object JSON {
       parser.parseObjectKey("is1")
       val is1 = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("step")
-      val step = parseExpLitZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("step")
+                              val step = parseExpLitZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4299,9 +4469,9 @@ object JSON {
       parser.parseObjectKey("orStep")
       val orStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("subProofSteps")
-      val subProofSteps = parser.parseISZ(parseExpLitZ _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("subProofSteps")
+                              val subProofSteps = parser.parseISZ(parseExpLitZ _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4320,9 +4490,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.ImplyIntro(subProofStep, attr)
     }
 
@@ -4338,9 +4508,9 @@ object JSON {
       parser.parseObjectKey("implyStep")
       val implyStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("steps")
-      val steps = parser.parseISZ(parseExpLitZ _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("steps")
+                              val steps = parser.parseISZ(parseExpLitZ _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4359,9 +4529,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.NegIntro(subProofStep, attr)
     }
 
@@ -4377,9 +4547,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("negStep")
-      val negStep = parseExpLitZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("negStep")
+                              val negStep = parseExpLitZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4398,9 +4568,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.BottomElim(subProofStep, attr)
     }
 
@@ -4416,9 +4586,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.Pbc(subProofStep, attr)
     }
 
@@ -4434,9 +4604,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.ForallIntro(subProofStep, attr)
     }
 
@@ -4452,9 +4622,9 @@ object JSON {
       parser.parseObjectKey("forallStep")
       val forallStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("args")
-      val args = parser.parseISZ(parseExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("args")
+                              val args = parser.parseISZ(parseExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4473,9 +4643,9 @@ object JSON {
       parser.parseObjectKey("existsStep")
       val existsStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("args")
-      val args = parser.parseISZ(parseExp _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("args")
+                              val args = parser.parseISZ(parseExp _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4494,9 +4664,9 @@ object JSON {
       parser.parseObjectKey("existsStep")
       val existsStep = parseExpLitZ()
       parser.parseObjectNext()
-      parser.parseObjectKey("subProofStep")
-      val subProofStep = parseExpLitZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("subProofStep")
+                              val subProofStep = parseExpLitZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4515,9 +4685,9 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.Fact(name, attr)
     }
 
@@ -4533,9 +4703,9 @@ object JSON {
       parser.parseObjectKey("nameOpt")
       val nameOpt = parser.parseOption(parseName _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return Just.Invariant(nameOpt, attr)
     }
 
@@ -4551,9 +4721,9 @@ object JSON {
       parser.parseObjectKey("isRight")
       val isRight = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("eqStep")
-      val eqStep = parseExpLitZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("eqStep")
+                              val eqStep = parseExpLitZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
@@ -4575,9 +4745,9 @@ object JSON {
       parser.parseObjectKey("isAlgebra")
       val isAlgebra = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("steps")
-      val steps = parser.parseISZ(parseExpLitZ _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("steps")
+                              val steps = parser.parseISZ(parseExpLitZ _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4596,9 +4766,9 @@ object JSON {
       parser.parseObjectKey("path")
       val path = parseExpLitString()
       parser.parseObjectNext()
-      parser.parseObjectKey("steps")
-      val steps = parser.parseISZ(parseExpLitZ _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("steps")
+                              val steps = parser.parseISZ(parseExpLitZ _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4617,9 +4787,9 @@ object JSON {
       parser.parseObjectKey("assignment")
       val assignment = parseTruthTableAssignment()
       parser.parseObjectNext()
-      parser.parseObjectKey("separator")
-      val separator = parsePosInfo()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("separator")
+                              val separator = parsePosInfo()
+                              parser.parseObjectNext()
       parser.parseObjectKey("values")
       val values = parseTruthTableAssignment()
       parser.parseObjectNext()
@@ -4638,19 +4808,20 @@ object JSON {
       parser.parseObjectKey("values")
       val values = parser.parseISZ(parseExpLitB _)
       parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("attr")
+                              val attr = parseAttr()
+                              parser.parseObjectNext()
       return TruthTable.Assignment(values, attr)
     }
 
     def parseTruthTableConclusion(): TruthTable.Conclusion = {
-      val t = parser.parseObjectTypes(ISZ("TruthTableConclusionValidity", "TruthTableConclusionTautology", "TruthTableConclusionContradictory", "TruthTableConclusionContingent"))
+      val t = parser.parseObjectTypes(ISZ("TruthTable.Conclusion.Validity", "TruthTable.Conclusion.Tautology", "TruthTable.Conclusion.Contradictory", "TruthTable.Conclusion.Contingent"))
       t match {
         case "TruthTable.Conclusion.Validity" => val r = parseTruthTableConclusionValidityT(T); return r
         case "TruthTable.Conclusion.Tautology" => val r = parseTruthTableConclusionTautologyT(T); return r
         case "TruthTable.Conclusion.Contradictory" => val r = parseTruthTableConclusionContradictoryT(T); return r
         case "TruthTable.Conclusion.Contingent" => val r = parseTruthTableConclusionContingentT(T); return r
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4666,9 +4837,9 @@ object JSON {
       parser.parseObjectKey("isValid")
       val isValid = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("assignments")
-      val assignments = parser.parseISZ(parseTruthTableAssignment _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("assignments")
+                              val assignments = parser.parseISZ(parseTruthTableAssignment _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4717,9 +4888,9 @@ object JSON {
       parser.parseObjectKey("trueAssignments")
       val trueAssignments = parser.parseISZ(parseTruthTableAssignment _)
       parser.parseObjectNext()
-      parser.parseObjectKey("falseAssignments")
-      val falseAssignments = parser.parseISZ(parseTruthTableAssignment _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("falseAssignments")
+                              val falseAssignments = parser.parseISZ(parseTruthTableAssignment _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4753,9 +4924,9 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("typeOpt")
+                              val typeOpt = parser.parseOption(parseType _)
+                              parser.parseObjectNext()
       return TypedAttr(posOpt, typeOpt)
     }
 
@@ -4771,9 +4942,9 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("resOpt")
-      val resOpt = parser.parseOption(parseResolvedInfo _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("resOpt")
+                              val resOpt = parser.parseOption(parseResolvedInfo _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("typeOpt")
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -4792,9 +4963,9 @@ object JSON {
       parser.parseObjectKey("kind")
       val kind = parseSymbolKind()
       parser.parseObjectNext()
-      parser.parseObjectKey("ids")
-      val ids = parser.parseISZ(parser.parseString _)
-      parser.parseObjectNext()
+                              parser.parseObjectKey("ids")
+                              val ids = parser.parseISZ(parser.parseString _)
+                              parser.parseObjectNext()
       parser.parseObjectKey("externFileUriOpt")
       val externFileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
@@ -4812,6 +4983,7 @@ object JSON {
       }
       parser.parseObjectKey("value")
       val s = parser.parseString()
+      parser.parseObjectNext()
       s match {
         case "Package" => return SymbolKind.Package
         case "Val" => return SymbolKind.Val
@@ -4831,6 +5003,7 @@ object JSON {
         case "TypeAlias" => return SymbolKind.TypeAlias
         case "FreshVar" => return SymbolKind.FreshVar
         case "QuantVar" => return SymbolKind.QuantVar
+        case _ => halt(parser.errorMessage)
       }
     }
 
@@ -4846,9 +5019,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-      parser.parseObjectKey("beginLine")
-      val beginLine = parser.parseZ()
-      parser.parseObjectNext()
+                              parser.parseObjectKey("beginLine")
+                              val beginLine = parser.parseZ()
+                              parser.parseObjectNext()
       parser.parseObjectKey("beginColumn")
       val beginColumn = parser.parseZ()
       parser.parseObjectNext()
@@ -4878,35 +5051,31 @@ object JSON {
 
   }
 
-  def to[T](s: String, f: Parser => T): Either[T, Json.ErrorMsg] = {
+  def to[T](s: String, f: Parser => T): T = {
     val parser = Parser(s)
     val r = f(parser)
     parser.eof()
-    val eOpt = parser.errorOpt
-    eOpt match {
-      case Some(e) => return Either(None(), Some(e))
-      case _ => return Either(Some(r), None())
-    }
+    return r
   }
 
   def fromTopUnit(o: TopUnit): String = {
     return Printer.printTopUnit(o).render
   }
 
-  def toTopUnit(s: String): Either[TopUnit, Json.ErrorMsg] = {
-    def fTopUnit(parser: Parser): TopUnit = {
-      var r = parser.parseTopUnit()
-      return r
-    }
-    val r = to(s, fTopUnit)
-    return r
-  }
+   def toTopUnit(s: String): TopUnit = {
+     def fTopUnit(parser: Parser): TopUnit = {
+       var r = parser.parseTopUnit()
+       return r
+     }
+     val r = to(s, fTopUnit)
+     return r
+   }
 
   def fromTopUnitProgram(o: TopUnit.Program): String = {
     return Printer.printTopUnitProgram(o).render
   }
 
-  def toTopUnitProgram(s: String): Either[TopUnit.Program, Json.ErrorMsg] = {
+  def toTopUnitProgram(s: String): TopUnit.Program = {
     def fTopUnitProgram(parser: Parser): TopUnit.Program = {
       var r = parser.parseTopUnitProgram()
       return r
@@ -4919,7 +5088,7 @@ object JSON {
     return Printer.printTopUnitSequentUnit(o).render
   }
 
-  def toTopUnitSequentUnit(s: String): Either[TopUnit.SequentUnit, Json.ErrorMsg] = {
+  def toTopUnitSequentUnit(s: String): TopUnit.SequentUnit = {
     def fTopUnitSequentUnit(parser: Parser): TopUnit.SequentUnit = {
       var r = parser.parseTopUnitSequentUnit()
       return r
@@ -4932,7 +5101,7 @@ object JSON {
     return Printer.printTopUnitTruthTableUnit(o).render
   }
 
-  def toTopUnitTruthTableUnit(s: String): Either[TopUnit.TruthTableUnit, Json.ErrorMsg] = {
+  def toTopUnitTruthTableUnit(s: String): TopUnit.TruthTableUnit = {
     def fTopUnitTruthTableUnit(parser: Parser): TopUnit.TruthTableUnit = {
       var r = parser.parseTopUnitTruthTableUnit()
       return r
@@ -4945,7 +5114,7 @@ object JSON {
     return Printer.printStmt(o).render
   }
 
-  def toStmt(s: String): Either[Stmt, Json.ErrorMsg] = {
+  def toStmt(s: String): Stmt = {
     def fStmt(parser: Parser): Stmt = {
       var r = parser.parseStmt()
       return r
@@ -4958,7 +5127,7 @@ object JSON {
     return Printer.printAssignExp(o).render
   }
 
-  def toAssignExp(s: String): Either[AssignExp, Json.ErrorMsg] = {
+  def toAssignExp(s: String): AssignExp = {
     def fAssignExp(parser: Parser): AssignExp = {
       var r = parser.parseAssignExp()
       return r
@@ -4971,7 +5140,7 @@ object JSON {
     return Printer.printStmtImport(o).render
   }
 
-  def toStmtImport(s: String): Either[Stmt.Import, Json.ErrorMsg] = {
+  def toStmtImport(s: String): Stmt.Import = {
     def fStmtImport(parser: Parser): Stmt.Import = {
       var r = parser.parseStmtImport()
       return r
@@ -4984,7 +5153,7 @@ object JSON {
     return Printer.printStmtImportImporter(o).render
   }
 
-  def toStmtImportImporter(s: String): Either[Stmt.Import.Importer, Json.ErrorMsg] = {
+  def toStmtImportImporter(s: String): Stmt.Import.Importer = {
     def fStmtImportImporter(parser: Parser): Stmt.Import.Importer = {
       var r = parser.parseStmtImportImporter()
       return r
@@ -4997,7 +5166,7 @@ object JSON {
     return Printer.printStmtImportSelector(o).render
   }
 
-  def toStmtImportSelector(s: String): Either[Stmt.Import.Selector, Json.ErrorMsg] = {
+  def toStmtImportSelector(s: String): Stmt.Import.Selector = {
     def fStmtImportSelector(parser: Parser): Stmt.Import.Selector = {
       var r = parser.parseStmtImportSelector()
       return r
@@ -5010,7 +5179,7 @@ object JSON {
     return Printer.printStmtImportMultiSelector(o).render
   }
 
-  def toStmtImportMultiSelector(s: String): Either[Stmt.Import.MultiSelector, Json.ErrorMsg] = {
+  def toStmtImportMultiSelector(s: String): Stmt.Import.MultiSelector = {
     def fStmtImportMultiSelector(parser: Parser): Stmt.Import.MultiSelector = {
       var r = parser.parseStmtImportMultiSelector()
       return r
@@ -5023,7 +5192,7 @@ object JSON {
     return Printer.printStmtImportWildcardSelector(o).render
   }
 
-  def toStmtImportWildcardSelector(s: String): Either[Stmt.Import.WildcardSelector, Json.ErrorMsg] = {
+  def toStmtImportWildcardSelector(s: String): Stmt.Import.WildcardSelector = {
     def fStmtImportWildcardSelector(parser: Parser): Stmt.Import.WildcardSelector = {
       var r = parser.parseStmtImportWildcardSelector()
       return r
@@ -5036,7 +5205,7 @@ object JSON {
     return Printer.printStmtImportNamedSelector(o).render
   }
 
-  def toStmtImportNamedSelector(s: String): Either[Stmt.Import.NamedSelector, Json.ErrorMsg] = {
+  def toStmtImportNamedSelector(s: String): Stmt.Import.NamedSelector = {
     def fStmtImportNamedSelector(parser: Parser): Stmt.Import.NamedSelector = {
       var r = parser.parseStmtImportNamedSelector()
       return r
@@ -5049,7 +5218,7 @@ object JSON {
     return Printer.printStmtVar(o).render
   }
 
-  def toStmtVar(s: String): Either[Stmt.Var, Json.ErrorMsg] = {
+  def toStmtVar(s: String): Stmt.Var = {
     def fStmtVar(parser: Parser): Stmt.Var = {
       var r = parser.parseStmtVar()
       return r
@@ -5062,7 +5231,7 @@ object JSON {
     return Printer.printStmtVarPattern(o).render
   }
 
-  def toStmtVarPattern(s: String): Either[Stmt.VarPattern, Json.ErrorMsg] = {
+  def toStmtVarPattern(s: String): Stmt.VarPattern = {
     def fStmtVarPattern(parser: Parser): Stmt.VarPattern = {
       var r = parser.parseStmtVarPattern()
       return r
@@ -5075,7 +5244,7 @@ object JSON {
     return Printer.printStmtSpecVar(o).render
   }
 
-  def toStmtSpecVar(s: String): Either[Stmt.SpecVar, Json.ErrorMsg] = {
+  def toStmtSpecVar(s: String): Stmt.SpecVar = {
     def fStmtSpecVar(parser: Parser): Stmt.SpecVar = {
       var r = parser.parseStmtSpecVar()
       return r
@@ -5088,7 +5257,7 @@ object JSON {
     return Printer.printStmtMethod(o).render
   }
 
-  def toStmtMethod(s: String): Either[Stmt.Method, Json.ErrorMsg] = {
+  def toStmtMethod(s: String): Stmt.Method = {
     def fStmtMethod(parser: Parser): Stmt.Method = {
       var r = parser.parseStmtMethod()
       return r
@@ -5101,7 +5270,7 @@ object JSON {
     return Printer.printStmtExtMethod(o).render
   }
 
-  def toStmtExtMethod(s: String): Either[Stmt.ExtMethod, Json.ErrorMsg] = {
+  def toStmtExtMethod(s: String): Stmt.ExtMethod = {
     def fStmtExtMethod(parser: Parser): Stmt.ExtMethod = {
       var r = parser.parseStmtExtMethod()
       return r
@@ -5114,7 +5283,7 @@ object JSON {
     return Printer.printStmtSpecMethod(o).render
   }
 
-  def toStmtSpecMethod(s: String): Either[Stmt.SpecMethod, Json.ErrorMsg] = {
+  def toStmtSpecMethod(s: String): Stmt.SpecMethod = {
     def fStmtSpecMethod(parser: Parser): Stmt.SpecMethod = {
       var r = parser.parseStmtSpecMethod()
       return r
@@ -5127,7 +5296,7 @@ object JSON {
     return Printer.printStmtEnum(o).render
   }
 
-  def toStmtEnum(s: String): Either[Stmt.Enum, Json.ErrorMsg] = {
+  def toStmtEnum(s: String): Stmt.Enum = {
     def fStmtEnum(parser: Parser): Stmt.Enum = {
       var r = parser.parseStmtEnum()
       return r
@@ -5140,7 +5309,7 @@ object JSON {
     return Printer.printStmtObject(o).render
   }
 
-  def toStmtObject(s: String): Either[Stmt.Object, Json.ErrorMsg] = {
+  def toStmtObject(s: String): Stmt.Object = {
     def fStmtObject(parser: Parser): Stmt.Object = {
       var r = parser.parseStmtObject()
       return r
@@ -5153,7 +5322,7 @@ object JSON {
     return Printer.printStmtSig(o).render
   }
 
-  def toStmtSig(s: String): Either[Stmt.Sig, Json.ErrorMsg] = {
+  def toStmtSig(s: String): Stmt.Sig = {
     def fStmtSig(parser: Parser): Stmt.Sig = {
       var r = parser.parseStmtSig()
       return r
@@ -5166,7 +5335,7 @@ object JSON {
     return Printer.printStmtAbstractDatatype(o).render
   }
 
-  def toStmtAbstractDatatype(s: String): Either[Stmt.AbstractDatatype, Json.ErrorMsg] = {
+  def toStmtAbstractDatatype(s: String): Stmt.AbstractDatatype = {
     def fStmtAbstractDatatype(parser: Parser): Stmt.AbstractDatatype = {
       var r = parser.parseStmtAbstractDatatype()
       return r
@@ -5179,7 +5348,7 @@ object JSON {
     return Printer.printStmtRich(o).render
   }
 
-  def toStmtRich(s: String): Either[Stmt.Rich, Json.ErrorMsg] = {
+  def toStmtRich(s: String): Stmt.Rich = {
     def fStmtRich(parser: Parser): Stmt.Rich = {
       var r = parser.parseStmtRich()
       return r
@@ -5192,7 +5361,7 @@ object JSON {
     return Printer.printStmtTypeAlias(o).render
   }
 
-  def toStmtTypeAlias(s: String): Either[Stmt.TypeAlias, Json.ErrorMsg] = {
+  def toStmtTypeAlias(s: String): Stmt.TypeAlias = {
     def fStmtTypeAlias(parser: Parser): Stmt.TypeAlias = {
       var r = parser.parseStmtTypeAlias()
       return r
@@ -5205,7 +5374,7 @@ object JSON {
     return Printer.printStmtAssign(o).render
   }
 
-  def toStmtAssign(s: String): Either[Stmt.Assign, Json.ErrorMsg] = {
+  def toStmtAssign(s: String): Stmt.Assign = {
     def fStmtAssign(parser: Parser): Stmt.Assign = {
       var r = parser.parseStmtAssign()
       return r
@@ -5218,7 +5387,7 @@ object JSON {
     return Printer.printStmtAssignUp(o).render
   }
 
-  def toStmtAssignUp(s: String): Either[Stmt.AssignUp, Json.ErrorMsg] = {
+  def toStmtAssignUp(s: String): Stmt.AssignUp = {
     def fStmtAssignUp(parser: Parser): Stmt.AssignUp = {
       var r = parser.parseStmtAssignUp()
       return r
@@ -5231,7 +5400,7 @@ object JSON {
     return Printer.printStmtAssignPattern(o).render
   }
 
-  def toStmtAssignPattern(s: String): Either[Stmt.AssignPattern, Json.ErrorMsg] = {
+  def toStmtAssignPattern(s: String): Stmt.AssignPattern = {
     def fStmtAssignPattern(parser: Parser): Stmt.AssignPattern = {
       var r = parser.parseStmtAssignPattern()
       return r
@@ -5244,7 +5413,7 @@ object JSON {
     return Printer.printStmtBlock(o).render
   }
 
-  def toStmtBlock(s: String): Either[Stmt.Block, Json.ErrorMsg] = {
+  def toStmtBlock(s: String): Stmt.Block = {
     def fStmtBlock(parser: Parser): Stmt.Block = {
       var r = parser.parseStmtBlock()
       return r
@@ -5257,7 +5426,7 @@ object JSON {
     return Printer.printStmtIf(o).render
   }
 
-  def toStmtIf(s: String): Either[Stmt.If, Json.ErrorMsg] = {
+  def toStmtIf(s: String): Stmt.If = {
     def fStmtIf(parser: Parser): Stmt.If = {
       var r = parser.parseStmtIf()
       return r
@@ -5270,7 +5439,7 @@ object JSON {
     return Printer.printStmtMatch(o).render
   }
 
-  def toStmtMatch(s: String): Either[Stmt.Match, Json.ErrorMsg] = {
+  def toStmtMatch(s: String): Stmt.Match = {
     def fStmtMatch(parser: Parser): Stmt.Match = {
       var r = parser.parseStmtMatch()
       return r
@@ -5283,7 +5452,7 @@ object JSON {
     return Printer.printStmtWhile(o).render
   }
 
-  def toStmtWhile(s: String): Either[Stmt.While, Json.ErrorMsg] = {
+  def toStmtWhile(s: String): Stmt.While = {
     def fStmtWhile(parser: Parser): Stmt.While = {
       var r = parser.parseStmtWhile()
       return r
@@ -5296,7 +5465,7 @@ object JSON {
     return Printer.printStmtDoWhile(o).render
   }
 
-  def toStmtDoWhile(s: String): Either[Stmt.DoWhile, Json.ErrorMsg] = {
+  def toStmtDoWhile(s: String): Stmt.DoWhile = {
     def fStmtDoWhile(parser: Parser): Stmt.DoWhile = {
       var r = parser.parseStmtDoWhile()
       return r
@@ -5309,7 +5478,7 @@ object JSON {
     return Printer.printStmtFor(o).render
   }
 
-  def toStmtFor(s: String): Either[Stmt.For, Json.ErrorMsg] = {
+  def toStmtFor(s: String): Stmt.For = {
     def fStmtFor(parser: Parser): Stmt.For = {
       var r = parser.parseStmtFor()
       return r
@@ -5322,7 +5491,7 @@ object JSON {
     return Printer.printStmtReturn(o).render
   }
 
-  def toStmtReturn(s: String): Either[Stmt.Return, Json.ErrorMsg] = {
+  def toStmtReturn(s: String): Stmt.Return = {
     def fStmtReturn(parser: Parser): Stmt.Return = {
       var r = parser.parseStmtReturn()
       return r
@@ -5335,7 +5504,7 @@ object JSON {
     return Printer.printStmtLStmt(o).render
   }
 
-  def toStmtLStmt(s: String): Either[Stmt.LStmt, Json.ErrorMsg] = {
+  def toStmtLStmt(s: String): Stmt.LStmt = {
     def fStmtLStmt(parser: Parser): Stmt.LStmt = {
       var r = parser.parseStmtLStmt()
       return r
@@ -5348,7 +5517,7 @@ object JSON {
     return Printer.printStmtExpr(o).render
   }
 
-  def toStmtExpr(s: String): Either[Stmt.Expr, Json.ErrorMsg] = {
+  def toStmtExpr(s: String): Stmt.Expr = {
     def fStmtExpr(parser: Parser): Stmt.Expr = {
       var r = parser.parseStmtExpr()
       return r
@@ -5361,7 +5530,7 @@ object JSON {
     return Printer.printLClause(o).render
   }
 
-  def toLClause(s: String): Either[LClause, Json.ErrorMsg] = {
+  def toLClause(s: String): LClause = {
     def fLClause(parser: Parser): LClause = {
       var r = parser.parseLClause()
       return r
@@ -5374,7 +5543,7 @@ object JSON {
     return Printer.printLClauseInvariants(o).render
   }
 
-  def toLClauseInvariants(s: String): Either[LClause.Invariants, Json.ErrorMsg] = {
+  def toLClauseInvariants(s: String): LClause.Invariants = {
     def fLClauseInvariants(parser: Parser): LClause.Invariants = {
       var r = parser.parseLClauseInvariants()
       return r
@@ -5387,7 +5556,7 @@ object JSON {
     return Printer.printLClauseFacts(o).render
   }
 
-  def toLClauseFacts(s: String): Either[LClause.Facts, Json.ErrorMsg] = {
+  def toLClauseFacts(s: String): LClause.Facts = {
     def fLClauseFacts(parser: Parser): LClause.Facts = {
       var r = parser.parseLClauseFacts()
       return r
@@ -5400,7 +5569,7 @@ object JSON {
     return Printer.printLClauseFact(o).render
   }
 
-  def toLClauseFact(s: String): Either[LClause.Fact, Json.ErrorMsg] = {
+  def toLClauseFact(s: String): LClause.Fact = {
     def fLClauseFact(parser: Parser): LClause.Fact = {
       var r = parser.parseLClauseFact()
       return r
@@ -5413,7 +5582,7 @@ object JSON {
     return Printer.printLClauseTheorems(o).render
   }
 
-  def toLClauseTheorems(s: String): Either[LClause.Theorems, Json.ErrorMsg] = {
+  def toLClauseTheorems(s: String): LClause.Theorems = {
     def fLClauseTheorems(parser: Parser): LClause.Theorems = {
       var r = parser.parseLClauseTheorems()
       return r
@@ -5426,7 +5595,7 @@ object JSON {
     return Printer.printLClauseTheorem(o).render
   }
 
-  def toLClauseTheorem(s: String): Either[LClause.Theorem, Json.ErrorMsg] = {
+  def toLClauseTheorem(s: String): LClause.Theorem = {
     def fLClauseTheorem(parser: Parser): LClause.Theorem = {
       var r = parser.parseLClauseTheorem()
       return r
@@ -5439,7 +5608,7 @@ object JSON {
     return Printer.printLClauseSequent(o).render
   }
 
-  def toLClauseSequent(s: String): Either[LClause.Sequent, Json.ErrorMsg] = {
+  def toLClauseSequent(s: String): LClause.Sequent = {
     def fLClauseSequent(parser: Parser): LClause.Sequent = {
       var r = parser.parseLClauseSequent()
       return r
@@ -5452,7 +5621,7 @@ object JSON {
     return Printer.printLClauseProof(o).render
   }
 
-  def toLClauseProof(s: String): Either[LClause.Proof, Json.ErrorMsg] = {
+  def toLClauseProof(s: String): LClause.Proof = {
     def fLClauseProof(parser: Parser): LClause.Proof = {
       var r = parser.parseLClauseProof()
       return r
@@ -5465,7 +5634,7 @@ object JSON {
     return Printer.printContractExp(o).render
   }
 
-  def toContractExp(s: String): Either[ContractExp, Json.ErrorMsg] = {
+  def toContractExp(s: String): ContractExp = {
     def fContractExp(parser: Parser): ContractExp = {
       var r = parser.parseContractExp()
       return r
@@ -5478,7 +5647,7 @@ object JSON {
     return Printer.printCase(o).render
   }
 
-  def toCase(s: String): Either[Case, Json.ErrorMsg] = {
+  def toCase(s: String): Case = {
     def fCase(parser: Parser): Case = {
       var r = parser.parseCase()
       return r
@@ -5491,7 +5660,7 @@ object JSON {
     return Printer.printEnumGenRange(o).render
   }
 
-  def toEnumGenRange(s: String): Either[EnumGen.Range, Json.ErrorMsg] = {
+  def toEnumGenRange(s: String): EnumGen.Range = {
     def fEnumGenRange(parser: Parser): EnumGen.Range = {
       var r = parser.parseEnumGenRange()
       return r
@@ -5504,7 +5673,7 @@ object JSON {
     return Printer.printEnumGenRangeExpr(o).render
   }
 
-  def toEnumGenRangeExpr(s: String): Either[EnumGen.Range.Expr, Json.ErrorMsg] = {
+  def toEnumGenRangeExpr(s: String): EnumGen.Range.Expr = {
     def fEnumGenRangeExpr(parser: Parser): EnumGen.Range.Expr = {
       var r = parser.parseEnumGenRangeExpr()
       return r
@@ -5517,7 +5686,7 @@ object JSON {
     return Printer.printEnumGenRangeIndices(o).render
   }
 
-  def toEnumGenRangeIndices(s: String): Either[EnumGen.Range.Indices, Json.ErrorMsg] = {
+  def toEnumGenRangeIndices(s: String): EnumGen.Range.Indices = {
     def fEnumGenRangeIndices(parser: Parser): EnumGen.Range.Indices = {
       var r = parser.parseEnumGenRangeIndices()
       return r
@@ -5530,7 +5699,7 @@ object JSON {
     return Printer.printEnumGenRangeStep(o).render
   }
 
-  def toEnumGenRangeStep(s: String): Either[EnumGen.Range.Step, Json.ErrorMsg] = {
+  def toEnumGenRangeStep(s: String): EnumGen.Range.Step = {
     def fEnumGenRangeStep(parser: Parser): EnumGen.Range.Step = {
       var r = parser.parseEnumGenRangeStep()
       return r
@@ -5543,7 +5712,7 @@ object JSON {
     return Printer.printEnumGenFor(o).render
   }
 
-  def toEnumGenFor(s: String): Either[EnumGen.For, Json.ErrorMsg] = {
+  def toEnumGenFor(s: String): EnumGen.For = {
     def fEnumGenFor(parser: Parser): EnumGen.For = {
       var r = parser.parseEnumGenFor()
       return r
@@ -5556,7 +5725,7 @@ object JSON {
     return Printer.printType(o).render
   }
 
-  def toType(s: String): Either[Type, Json.ErrorMsg] = {
+  def toType(s: String): Type = {
     def fType(parser: Parser): Type = {
       var r = parser.parseType()
       return r
@@ -5569,7 +5738,7 @@ object JSON {
     return Printer.printTypeNamed(o).render
   }
 
-  def toTypeNamed(s: String): Either[Type.Named, Json.ErrorMsg] = {
+  def toTypeNamed(s: String): Type.Named = {
     def fTypeNamed(parser: Parser): Type.Named = {
       var r = parser.parseTypeNamed()
       return r
@@ -5582,7 +5751,7 @@ object JSON {
     return Printer.printTypeFun(o).render
   }
 
-  def toTypeFun(s: String): Either[Type.Fun, Json.ErrorMsg] = {
+  def toTypeFun(s: String): Type.Fun = {
     def fTypeFun(parser: Parser): Type.Fun = {
       var r = parser.parseTypeFun()
       return r
@@ -5595,7 +5764,7 @@ object JSON {
     return Printer.printTypeTuple(o).render
   }
 
-  def toTypeTuple(s: String): Either[Type.Tuple, Json.ErrorMsg] = {
+  def toTypeTuple(s: String): Type.Tuple = {
     def fTypeTuple(parser: Parser): Type.Tuple = {
       var r = parser.parseTypeTuple()
       return r
@@ -5608,7 +5777,7 @@ object JSON {
     return Printer.printPattern(o).render
   }
 
-  def toPattern(s: String): Either[Pattern, Json.ErrorMsg] = {
+  def toPattern(s: String): Pattern = {
     def fPattern(parser: Parser): Pattern = {
       var r = parser.parsePattern()
       return r
@@ -5621,7 +5790,7 @@ object JSON {
     return Printer.printPatternLiteral(o).render
   }
 
-  def toPatternLiteral(s: String): Either[Pattern.Literal, Json.ErrorMsg] = {
+  def toPatternLiteral(s: String): Pattern.Literal = {
     def fPatternLiteral(parser: Parser): Pattern.Literal = {
       var r = parser.parsePatternLiteral()
       return r
@@ -5634,7 +5803,7 @@ object JSON {
     return Printer.printPatternRef(o).render
   }
 
-  def toPatternRef(s: String): Either[Pattern.Ref, Json.ErrorMsg] = {
+  def toPatternRef(s: String): Pattern.Ref = {
     def fPatternRef(parser: Parser): Pattern.Ref = {
       var r = parser.parsePatternRef()
       return r
@@ -5647,7 +5816,7 @@ object JSON {
     return Printer.printPatternVariable(o).render
   }
 
-  def toPatternVariable(s: String): Either[Pattern.Variable, Json.ErrorMsg] = {
+  def toPatternVariable(s: String): Pattern.Variable = {
     def fPatternVariable(parser: Parser): Pattern.Variable = {
       var r = parser.parsePatternVariable()
       return r
@@ -5660,7 +5829,7 @@ object JSON {
     return Printer.printPatternWildcard(o).render
   }
 
-  def toPatternWildcard(s: String): Either[Pattern.Wildcard, Json.ErrorMsg] = {
+  def toPatternWildcard(s: String): Pattern.Wildcard = {
     def fPatternWildcard(parser: Parser): Pattern.Wildcard = {
       var r = parser.parsePatternWildcard()
       return r
@@ -5673,7 +5842,7 @@ object JSON {
     return Printer.printPatternSeqWildcard(o).render
   }
 
-  def toPatternSeqWildcard(s: String): Either[Pattern.SeqWildcard, Json.ErrorMsg] = {
+  def toPatternSeqWildcard(s: String): Pattern.SeqWildcard = {
     def fPatternSeqWildcard(parser: Parser): Pattern.SeqWildcard = {
       var r = parser.parsePatternSeqWildcard()
       return r
@@ -5686,7 +5855,7 @@ object JSON {
     return Printer.printPatternStructure(o).render
   }
 
-  def toPatternStructure(s: String): Either[Pattern.Structure, Json.ErrorMsg] = {
+  def toPatternStructure(s: String): Pattern.Structure = {
     def fPatternStructure(parser: Parser): Pattern.Structure = {
       var r = parser.parsePatternStructure()
       return r
@@ -5699,7 +5868,7 @@ object JSON {
     return Printer.printExp(o).render
   }
 
-  def toExp(s: String): Either[Exp, Json.ErrorMsg] = {
+  def toExp(s: String): Exp = {
     def fExp(parser: Parser): Exp = {
       var r = parser.parseExp()
       return r
@@ -5712,7 +5881,7 @@ object JSON {
     return Printer.printLit(o).render
   }
 
-  def toLit(s: String): Either[Lit, Json.ErrorMsg] = {
+  def toLit(s: String): Lit = {
     def fLit(parser: Parser): Lit = {
       var r = parser.parseLit()
       return r
@@ -5725,7 +5894,7 @@ object JSON {
     return Printer.printExpLitB(o).render
   }
 
-  def toExpLitB(s: String): Either[Exp.LitB, Json.ErrorMsg] = {
+  def toExpLitB(s: String): Exp.LitB = {
     def fExpLitB(parser: Parser): Exp.LitB = {
       var r = parser.parseExpLitB()
       return r
@@ -5738,7 +5907,7 @@ object JSON {
     return Printer.printExpLitC(o).render
   }
 
-  def toExpLitC(s: String): Either[Exp.LitC, Json.ErrorMsg] = {
+  def toExpLitC(s: String): Exp.LitC = {
     def fExpLitC(parser: Parser): Exp.LitC = {
       var r = parser.parseExpLitC()
       return r
@@ -5751,7 +5920,7 @@ object JSON {
     return Printer.printExpLitZ(o).render
   }
 
-  def toExpLitZ(s: String): Either[Exp.LitZ, Json.ErrorMsg] = {
+  def toExpLitZ(s: String): Exp.LitZ = {
     def fExpLitZ(parser: Parser): Exp.LitZ = {
       var r = parser.parseExpLitZ()
       return r
@@ -5764,7 +5933,7 @@ object JSON {
     return Printer.printExpLitZ8(o).render
   }
 
-  def toExpLitZ8(s: String): Either[Exp.LitZ8, Json.ErrorMsg] = {
+  def toExpLitZ8(s: String): Exp.LitZ8 = {
     def fExpLitZ8(parser: Parser): Exp.LitZ8 = {
       var r = parser.parseExpLitZ8()
       return r
@@ -5777,7 +5946,7 @@ object JSON {
     return Printer.printExpLitZ16(o).render
   }
 
-  def toExpLitZ16(s: String): Either[Exp.LitZ16, Json.ErrorMsg] = {
+  def toExpLitZ16(s: String): Exp.LitZ16 = {
     def fExpLitZ16(parser: Parser): Exp.LitZ16 = {
       var r = parser.parseExpLitZ16()
       return r
@@ -5790,7 +5959,7 @@ object JSON {
     return Printer.printExpLitZ32(o).render
   }
 
-  def toExpLitZ32(s: String): Either[Exp.LitZ32, Json.ErrorMsg] = {
+  def toExpLitZ32(s: String): Exp.LitZ32 = {
     def fExpLitZ32(parser: Parser): Exp.LitZ32 = {
       var r = parser.parseExpLitZ32()
       return r
@@ -5803,7 +5972,7 @@ object JSON {
     return Printer.printExpLitZ64(o).render
   }
 
-  def toExpLitZ64(s: String): Either[Exp.LitZ64, Json.ErrorMsg] = {
+  def toExpLitZ64(s: String): Exp.LitZ64 = {
     def fExpLitZ64(parser: Parser): Exp.LitZ64 = {
       var r = parser.parseExpLitZ64()
       return r
@@ -5816,7 +5985,7 @@ object JSON {
     return Printer.printExpLitN(o).render
   }
 
-  def toExpLitN(s: String): Either[Exp.LitN, Json.ErrorMsg] = {
+  def toExpLitN(s: String): Exp.LitN = {
     def fExpLitN(parser: Parser): Exp.LitN = {
       var r = parser.parseExpLitN()
       return r
@@ -5829,7 +5998,7 @@ object JSON {
     return Printer.printExpLitN8(o).render
   }
 
-  def toExpLitN8(s: String): Either[Exp.LitN8, Json.ErrorMsg] = {
+  def toExpLitN8(s: String): Exp.LitN8 = {
     def fExpLitN8(parser: Parser): Exp.LitN8 = {
       var r = parser.parseExpLitN8()
       return r
@@ -5842,7 +6011,7 @@ object JSON {
     return Printer.printExpLitN16(o).render
   }
 
-  def toExpLitN16(s: String): Either[Exp.LitN16, Json.ErrorMsg] = {
+  def toExpLitN16(s: String): Exp.LitN16 = {
     def fExpLitN16(parser: Parser): Exp.LitN16 = {
       var r = parser.parseExpLitN16()
       return r
@@ -5855,7 +6024,7 @@ object JSON {
     return Printer.printExpLitN32(o).render
   }
 
-  def toExpLitN32(s: String): Either[Exp.LitN32, Json.ErrorMsg] = {
+  def toExpLitN32(s: String): Exp.LitN32 = {
     def fExpLitN32(parser: Parser): Exp.LitN32 = {
       var r = parser.parseExpLitN32()
       return r
@@ -5868,7 +6037,7 @@ object JSON {
     return Printer.printExpLitN64(o).render
   }
 
-  def toExpLitN64(s: String): Either[Exp.LitN64, Json.ErrorMsg] = {
+  def toExpLitN64(s: String): Exp.LitN64 = {
     def fExpLitN64(parser: Parser): Exp.LitN64 = {
       var r = parser.parseExpLitN64()
       return r
@@ -5881,7 +6050,7 @@ object JSON {
     return Printer.printExpLitS8(o).render
   }
 
-  def toExpLitS8(s: String): Either[Exp.LitS8, Json.ErrorMsg] = {
+  def toExpLitS8(s: String): Exp.LitS8 = {
     def fExpLitS8(parser: Parser): Exp.LitS8 = {
       var r = parser.parseExpLitS8()
       return r
@@ -5894,7 +6063,7 @@ object JSON {
     return Printer.printExpLitS16(o).render
   }
 
-  def toExpLitS16(s: String): Either[Exp.LitS16, Json.ErrorMsg] = {
+  def toExpLitS16(s: String): Exp.LitS16 = {
     def fExpLitS16(parser: Parser): Exp.LitS16 = {
       var r = parser.parseExpLitS16()
       return r
@@ -5907,7 +6076,7 @@ object JSON {
     return Printer.printExpLitS32(o).render
   }
 
-  def toExpLitS32(s: String): Either[Exp.LitS32, Json.ErrorMsg] = {
+  def toExpLitS32(s: String): Exp.LitS32 = {
     def fExpLitS32(parser: Parser): Exp.LitS32 = {
       var r = parser.parseExpLitS32()
       return r
@@ -5920,7 +6089,7 @@ object JSON {
     return Printer.printExpLitS64(o).render
   }
 
-  def toExpLitS64(s: String): Either[Exp.LitS64, Json.ErrorMsg] = {
+  def toExpLitS64(s: String): Exp.LitS64 = {
     def fExpLitS64(parser: Parser): Exp.LitS64 = {
       var r = parser.parseExpLitS64()
       return r
@@ -5933,7 +6102,7 @@ object JSON {
     return Printer.printExpLitU8(o).render
   }
 
-  def toExpLitU8(s: String): Either[Exp.LitU8, Json.ErrorMsg] = {
+  def toExpLitU8(s: String): Exp.LitU8 = {
     def fExpLitU8(parser: Parser): Exp.LitU8 = {
       var r = parser.parseExpLitU8()
       return r
@@ -5946,7 +6115,7 @@ object JSON {
     return Printer.printExpLitU16(o).render
   }
 
-  def toExpLitU16(s: String): Either[Exp.LitU16, Json.ErrorMsg] = {
+  def toExpLitU16(s: String): Exp.LitU16 = {
     def fExpLitU16(parser: Parser): Exp.LitU16 = {
       var r = parser.parseExpLitU16()
       return r
@@ -5959,7 +6128,7 @@ object JSON {
     return Printer.printExpLitU32(o).render
   }
 
-  def toExpLitU32(s: String): Either[Exp.LitU32, Json.ErrorMsg] = {
+  def toExpLitU32(s: String): Exp.LitU32 = {
     def fExpLitU32(parser: Parser): Exp.LitU32 = {
       var r = parser.parseExpLitU32()
       return r
@@ -5972,7 +6141,7 @@ object JSON {
     return Printer.printExpLitU64(o).render
   }
 
-  def toExpLitU64(s: String): Either[Exp.LitU64, Json.ErrorMsg] = {
+  def toExpLitU64(s: String): Exp.LitU64 = {
     def fExpLitU64(parser: Parser): Exp.LitU64 = {
       var r = parser.parseExpLitU64()
       return r
@@ -5985,7 +6154,7 @@ object JSON {
     return Printer.printExpLitF32(o).render
   }
 
-  def toExpLitF32(s: String): Either[Exp.LitF32, Json.ErrorMsg] = {
+  def toExpLitF32(s: String): Exp.LitF32 = {
     def fExpLitF32(parser: Parser): Exp.LitF32 = {
       var r = parser.parseExpLitF32()
       return r
@@ -5998,7 +6167,7 @@ object JSON {
     return Printer.printExpLitF64(o).render
   }
 
-  def toExpLitF64(s: String): Either[Exp.LitF64, Json.ErrorMsg] = {
+  def toExpLitF64(s: String): Exp.LitF64 = {
     def fExpLitF64(parser: Parser): Exp.LitF64 = {
       var r = parser.parseExpLitF64()
       return r
@@ -6011,7 +6180,7 @@ object JSON {
     return Printer.printExpLitR(o).render
   }
 
-  def toExpLitR(s: String): Either[Exp.LitR, Json.ErrorMsg] = {
+  def toExpLitR(s: String): Exp.LitR = {
     def fExpLitR(parser: Parser): Exp.LitR = {
       var r = parser.parseExpLitR()
       return r
@@ -6024,7 +6193,7 @@ object JSON {
     return Printer.printExpLitBv(o).render
   }
 
-  def toExpLitBv(s: String): Either[Exp.LitBv, Json.ErrorMsg] = {
+  def toExpLitBv(s: String): Exp.LitBv = {
     def fExpLitBv(parser: Parser): Exp.LitBv = {
       var r = parser.parseExpLitBv()
       return r
@@ -6037,7 +6206,7 @@ object JSON {
     return Printer.printExpLitString(o).render
   }
 
-  def toExpLitString(s: String): Either[Exp.LitString, Json.ErrorMsg] = {
+  def toExpLitString(s: String): Exp.LitString = {
     def fExpLitString(parser: Parser): Exp.LitString = {
       var r = parser.parseExpLitString()
       return r
@@ -6050,7 +6219,7 @@ object JSON {
     return Printer.printExpStringInterpolate(o).render
   }
 
-  def toExpStringInterpolate(s: String): Either[Exp.StringInterpolate, Json.ErrorMsg] = {
+  def toExpStringInterpolate(s: String): Exp.StringInterpolate = {
     def fExpStringInterpolate(parser: Parser): Exp.StringInterpolate = {
       var r = parser.parseExpStringInterpolate()
       return r
@@ -6063,7 +6232,7 @@ object JSON {
     return Printer.printExpThis(o).render
   }
 
-  def toExpThis(s: String): Either[Exp.This, Json.ErrorMsg] = {
+  def toExpThis(s: String): Exp.This = {
     def fExpThis(parser: Parser): Exp.This = {
       var r = parser.parseExpThis()
       return r
@@ -6076,7 +6245,7 @@ object JSON {
     return Printer.printExpSuper(o).render
   }
 
-  def toExpSuper(s: String): Either[Exp.Super, Json.ErrorMsg] = {
+  def toExpSuper(s: String): Exp.Super = {
     def fExpSuper(parser: Parser): Exp.Super = {
       var r = parser.parseExpSuper()
       return r
@@ -6089,7 +6258,7 @@ object JSON {
     return Printer.printExpUnary(o).render
   }
 
-  def toExpUnary(s: String): Either[Exp.Unary, Json.ErrorMsg] = {
+  def toExpUnary(s: String): Exp.Unary = {
     def fExpUnary(parser: Parser): Exp.Unary = {
       var r = parser.parseExpUnary()
       return r
@@ -6102,7 +6271,7 @@ object JSON {
     return Printer.printExpBinary(o).render
   }
 
-  def toExpBinary(s: String): Either[Exp.Binary, Json.ErrorMsg] = {
+  def toExpBinary(s: String): Exp.Binary = {
     def fExpBinary(parser: Parser): Exp.Binary = {
       var r = parser.parseExpBinary()
       return r
@@ -6115,7 +6284,7 @@ object JSON {
     return Printer.printExpIdent(o).render
   }
 
-  def toExpIdent(s: String): Either[Exp.Ident, Json.ErrorMsg] = {
+  def toExpIdent(s: String): Exp.Ident = {
     def fExpIdent(parser: Parser): Exp.Ident = {
       var r = parser.parseExpIdent()
       return r
@@ -6128,7 +6297,7 @@ object JSON {
     return Printer.printExpEta(o).render
   }
 
-  def toExpEta(s: String): Either[Exp.Eta, Json.ErrorMsg] = {
+  def toExpEta(s: String): Exp.Eta = {
     def fExpEta(parser: Parser): Exp.Eta = {
       var r = parser.parseExpEta()
       return r
@@ -6141,7 +6310,7 @@ object JSON {
     return Printer.printExpTuple(o).render
   }
 
-  def toExpTuple(s: String): Either[Exp.Tuple, Json.ErrorMsg] = {
+  def toExpTuple(s: String): Exp.Tuple = {
     def fExpTuple(parser: Parser): Exp.Tuple = {
       var r = parser.parseExpTuple()
       return r
@@ -6154,7 +6323,7 @@ object JSON {
     return Printer.printExpSelect(o).render
   }
 
-  def toExpSelect(s: String): Either[Exp.Select, Json.ErrorMsg] = {
+  def toExpSelect(s: String): Exp.Select = {
     def fExpSelect(parser: Parser): Exp.Select = {
       var r = parser.parseExpSelect()
       return r
@@ -6167,7 +6336,7 @@ object JSON {
     return Printer.printExpInvoke(o).render
   }
 
-  def toExpInvoke(s: String): Either[Exp.Invoke, Json.ErrorMsg] = {
+  def toExpInvoke(s: String): Exp.Invoke = {
     def fExpInvoke(parser: Parser): Exp.Invoke = {
       var r = parser.parseExpInvoke()
       return r
@@ -6180,7 +6349,7 @@ object JSON {
     return Printer.printExpInvokeNamed(o).render
   }
 
-  def toExpInvokeNamed(s: String): Either[Exp.InvokeNamed, Json.ErrorMsg] = {
+  def toExpInvokeNamed(s: String): Exp.InvokeNamed = {
     def fExpInvokeNamed(parser: Parser): Exp.InvokeNamed = {
       var r = parser.parseExpInvokeNamed()
       return r
@@ -6193,7 +6362,7 @@ object JSON {
     return Printer.printExpIf(o).render
   }
 
-  def toExpIf(s: String): Either[Exp.If, Json.ErrorMsg] = {
+  def toExpIf(s: String): Exp.If = {
     def fExpIf(parser: Parser): Exp.If = {
       var r = parser.parseExpIf()
       return r
@@ -6206,7 +6375,7 @@ object JSON {
     return Printer.printExpFun(o).render
   }
 
-  def toExpFun(s: String): Either[Exp.Fun, Json.ErrorMsg] = {
+  def toExpFun(s: String): Exp.Fun = {
     def fExpFun(parser: Parser): Exp.Fun = {
       var r = parser.parseExpFun()
       return r
@@ -6219,7 +6388,7 @@ object JSON {
     return Printer.printExpForYield(o).render
   }
 
-  def toExpForYield(s: String): Either[Exp.ForYield, Json.ErrorMsg] = {
+  def toExpForYield(s: String): Exp.ForYield = {
     def fExpForYield(parser: Parser): Exp.ForYield = {
       var r = parser.parseExpForYield()
       return r
@@ -6232,7 +6401,7 @@ object JSON {
     return Printer.printExpQuant(o).render
   }
 
-  def toExpQuant(s: String): Either[Exp.Quant, Json.ErrorMsg] = {
+  def toExpQuant(s: String): Exp.Quant = {
     def fExpQuant(parser: Parser): Exp.Quant = {
       var r = parser.parseExpQuant()
       return r
@@ -6245,7 +6414,7 @@ object JSON {
     return Printer.printNamedArg(o).render
   }
 
-  def toNamedArg(s: String): Either[NamedArg, Json.ErrorMsg] = {
+  def toNamedArg(s: String): NamedArg = {
     def fNamedArg(parser: Parser): NamedArg = {
       var r = parser.parseNamedArg()
       return r
@@ -6258,7 +6427,7 @@ object JSON {
     return Printer.printVarFragment(o).render
   }
 
-  def toVarFragment(s: String): Either[VarFragment, Json.ErrorMsg] = {
+  def toVarFragment(s: String): VarFragment = {
     def fVarFragment(parser: Parser): VarFragment = {
       var r = parser.parseVarFragment()
       return r
@@ -6271,7 +6440,7 @@ object JSON {
     return Printer.printDomain(o).render
   }
 
-  def toDomain(s: String): Either[Domain, Json.ErrorMsg] = {
+  def toDomain(s: String): Domain = {
     def fDomain(parser: Parser): Domain = {
       var r = parser.parseDomain()
       return r
@@ -6284,7 +6453,7 @@ object JSON {
     return Printer.printDomainType(o).render
   }
 
-  def toDomainType(s: String): Either[Domain.Type, Json.ErrorMsg] = {
+  def toDomainType(s: String): Domain.Type = {
     def fDomainType(parser: Parser): Domain.Type = {
       var r = parser.parseDomainType()
       return r
@@ -6297,7 +6466,7 @@ object JSON {
     return Printer.printDomainRange(o).render
   }
 
-  def toDomainRange(s: String): Either[Domain.Range, Json.ErrorMsg] = {
+  def toDomainRange(s: String): Domain.Range = {
     def fDomainRange(parser: Parser): Domain.Range = {
       var r = parser.parseDomainRange()
       return r
@@ -6310,7 +6479,7 @@ object JSON {
     return Printer.printId(o).render
   }
 
-  def toId(s: String): Either[Id, Json.ErrorMsg] = {
+  def toId(s: String): Id = {
     def fId(parser: Parser): Id = {
       var r = parser.parseId()
       return r
@@ -6323,7 +6492,7 @@ object JSON {
     return Printer.printName(o).render
   }
 
-  def toName(s: String): Either[Name, Json.ErrorMsg] = {
+  def toName(s: String): Name = {
     def fName(parser: Parser): Name = {
       var r = parser.parseName()
       return r
@@ -6336,7 +6505,7 @@ object JSON {
     return Printer.printBody(o).render
   }
 
-  def toBody(s: String): Either[Body, Json.ErrorMsg] = {
+  def toBody(s: String): Body = {
     def fBody(parser: Parser): Body = {
       var r = parser.parseBody()
       return r
@@ -6349,7 +6518,7 @@ object JSON {
     return Printer.printAbstractDatatypeParam(o).render
   }
 
-  def toAbstractDatatypeParam(s: String): Either[AbstractDatatypeParam, Json.ErrorMsg] = {
+  def toAbstractDatatypeParam(s: String): AbstractDatatypeParam = {
     def fAbstractDatatypeParam(parser: Parser): AbstractDatatypeParam = {
       var r = parser.parseAbstractDatatypeParam()
       return r
@@ -6362,7 +6531,7 @@ object JSON {
     return Printer.printMethodSig(o).render
   }
 
-  def toMethodSig(s: String): Either[MethodSig, Json.ErrorMsg] = {
+  def toMethodSig(s: String): MethodSig = {
     def fMethodSig(parser: Parser): MethodSig = {
       var r = parser.parseMethodSig()
       return r
@@ -6375,7 +6544,7 @@ object JSON {
     return Printer.printParam(o).render
   }
 
-  def toParam(s: String): Either[Param, Json.ErrorMsg] = {
+  def toParam(s: String): Param = {
     def fParam(parser: Parser): Param = {
       var r = parser.parseParam()
       return r
@@ -6388,7 +6557,7 @@ object JSON {
     return Printer.printTypeParam(o).render
   }
 
-  def toTypeParam(s: String): Either[TypeParam, Json.ErrorMsg] = {
+  def toTypeParam(s: String): TypeParam = {
     def fTypeParam(parser: Parser): TypeParam = {
       var r = parser.parseTypeParam()
       return r
@@ -6401,7 +6570,7 @@ object JSON {
     return Printer.printContract(o).render
   }
 
-  def toContract(s: String): Either[Contract, Json.ErrorMsg] = {
+  def toContract(s: String): Contract = {
     def fContract(parser: Parser): Contract = {
       var r = parser.parseContract()
       return r
@@ -6414,7 +6583,7 @@ object JSON {
     return Printer.printSubContract(o).render
   }
 
-  def toSubContract(s: String): Either[SubContract, Json.ErrorMsg] = {
+  def toSubContract(s: String): SubContract = {
     def fSubContract(parser: Parser): SubContract = {
       var r = parser.parseSubContract()
       return r
@@ -6427,7 +6596,7 @@ object JSON {
     return Printer.printSubContractParam(o).render
   }
 
-  def toSubContractParam(s: String): Either[SubContractParam, Json.ErrorMsg] = {
+  def toSubContractParam(s: String): SubContractParam = {
     def fSubContractParam(parser: Parser): SubContractParam = {
       var r = parser.parseSubContractParam()
       return r
@@ -6440,7 +6609,7 @@ object JSON {
     return Printer.printWhereDef(o).render
   }
 
-  def toWhereDef(s: String): Either[WhereDef, Json.ErrorMsg] = {
+  def toWhereDef(s: String): WhereDef = {
     def fWhereDef(parser: Parser): WhereDef = {
       var r = parser.parseWhereDef()
       return r
@@ -6453,7 +6622,7 @@ object JSON {
     return Printer.printWhereDefVal(o).render
   }
 
-  def toWhereDefVal(s: String): Either[WhereDef.Val, Json.ErrorMsg] = {
+  def toWhereDefVal(s: String): WhereDef.Val = {
     def fWhereDefVal(parser: Parser): WhereDef.Val = {
       var r = parser.parseWhereDefVal()
       return r
@@ -6466,7 +6635,7 @@ object JSON {
     return Printer.printWhereDefDef(o).render
   }
 
-  def toWhereDefDef(s: String): Either[WhereDef.Def, Json.ErrorMsg] = {
+  def toWhereDefDef(s: String): WhereDef.Def = {
     def fWhereDefDef(parser: Parser): WhereDef.Def = {
       var r = parser.parseWhereDefDef()
       return r
@@ -6479,7 +6648,7 @@ object JSON {
     return Printer.printSpecDef(o).render
   }
 
-  def toSpecDef(s: String): Either[SpecDef, Json.ErrorMsg] = {
+  def toSpecDef(s: String): SpecDef = {
     def fSpecDef(parser: Parser): SpecDef = {
       var r = parser.parseSpecDef()
       return r
@@ -6492,7 +6661,7 @@ object JSON {
     return Printer.printProofStep(o).render
   }
 
-  def toProofStep(s: String): Either[ProofStep, Json.ErrorMsg] = {
+  def toProofStep(s: String): ProofStep = {
     def fProofStep(parser: Parser): ProofStep = {
       var r = parser.parseProofStep()
       return r
@@ -6505,7 +6674,7 @@ object JSON {
     return Printer.printProofStepBasic(o).render
   }
 
-  def toProofStepBasic(s: String): Either[ProofStep.Basic, Json.ErrorMsg] = {
+  def toProofStepBasic(s: String): ProofStep.Basic = {
     def fProofStepBasic(parser: Parser): ProofStep.Basic = {
       var r = parser.parseProofStepBasic()
       return r
@@ -6518,7 +6687,7 @@ object JSON {
     return Printer.printProofStepSubProof(o).render
   }
 
-  def toProofStepSubProof(s: String): Either[ProofStep.SubProof, Json.ErrorMsg] = {
+  def toProofStepSubProof(s: String): ProofStep.SubProof = {
     def fProofStepSubProof(parser: Parser): ProofStep.SubProof = {
       var r = parser.parseProofStepSubProof()
       return r
@@ -6531,7 +6700,7 @@ object JSON {
     return Printer.printAssumeProofStep(o).render
   }
 
-  def toAssumeProofStep(s: String): Either[AssumeProofStep, Json.ErrorMsg] = {
+  def toAssumeProofStep(s: String): AssumeProofStep = {
     def fAssumeProofStep(parser: Parser): AssumeProofStep = {
       var r = parser.parseAssumeProofStep()
       return r
@@ -6544,7 +6713,7 @@ object JSON {
     return Printer.printAssumeProofStepRegular(o).render
   }
 
-  def toAssumeProofStepRegular(s: String): Either[AssumeProofStep.Regular, Json.ErrorMsg] = {
+  def toAssumeProofStepRegular(s: String): AssumeProofStep.Regular = {
     def fAssumeProofStepRegular(parser: Parser): AssumeProofStep.Regular = {
       var r = parser.parseAssumeProofStepRegular()
       return r
@@ -6557,7 +6726,7 @@ object JSON {
     return Printer.printAssumeProofStepForallIntroAps(o).render
   }
 
-  def toAssumeProofStepForallIntroAps(s: String): Either[AssumeProofStep.ForallIntroAps, Json.ErrorMsg] = {
+  def toAssumeProofStepForallIntroAps(s: String): AssumeProofStep.ForallIntroAps = {
     def fAssumeProofStepForallIntroAps(parser: Parser): AssumeProofStep.ForallIntroAps = {
       var r = parser.parseAssumeProofStepForallIntroAps()
       return r
@@ -6570,7 +6739,7 @@ object JSON {
     return Printer.printAssumeProofStepExistsElimAps(o).render
   }
 
-  def toAssumeProofStepExistsElimAps(s: String): Either[AssumeProofStep.ExistsElimAps, Json.ErrorMsg] = {
+  def toAssumeProofStepExistsElimAps(s: String): AssumeProofStep.ExistsElimAps = {
     def fAssumeProofStepExistsElimAps(parser: Parser): AssumeProofStep.ExistsElimAps = {
       var r = parser.parseAssumeProofStepExistsElimAps()
       return r
@@ -6583,7 +6752,7 @@ object JSON {
     return Printer.printJust(o).render
   }
 
-  def toJust(s: String): Either[Just, Json.ErrorMsg] = {
+  def toJust(s: String): Just = {
     def fJust(parser: Parser): Just = {
       var r = parser.parseJust()
       return r
@@ -6596,7 +6765,7 @@ object JSON {
     return Printer.printJustPremise(o).render
   }
 
-  def toJustPremise(s: String): Either[Just.Premise, Json.ErrorMsg] = {
+  def toJustPremise(s: String): Just.Premise = {
     def fJustPremise(parser: Parser): Just.Premise = {
       var r = parser.parseJustPremise()
       return r
@@ -6609,7 +6778,7 @@ object JSON {
     return Printer.printJustAndIntro(o).render
   }
 
-  def toJustAndIntro(s: String): Either[Just.AndIntro, Json.ErrorMsg] = {
+  def toJustAndIntro(s: String): Just.AndIntro = {
     def fJustAndIntro(parser: Parser): Just.AndIntro = {
       var r = parser.parseJustAndIntro()
       return r
@@ -6622,7 +6791,7 @@ object JSON {
     return Printer.printJustAndElim(o).render
   }
 
-  def toJustAndElim(s: String): Either[Just.AndElim, Json.ErrorMsg] = {
+  def toJustAndElim(s: String): Just.AndElim = {
     def fJustAndElim(parser: Parser): Just.AndElim = {
       var r = parser.parseJustAndElim()
       return r
@@ -6635,7 +6804,7 @@ object JSON {
     return Printer.printJustOrIntro(o).render
   }
 
-  def toJustOrIntro(s: String): Either[Just.OrIntro, Json.ErrorMsg] = {
+  def toJustOrIntro(s: String): Just.OrIntro = {
     def fJustOrIntro(parser: Parser): Just.OrIntro = {
       var r = parser.parseJustOrIntro()
       return r
@@ -6648,7 +6817,7 @@ object JSON {
     return Printer.printJustOrElim(o).render
   }
 
-  def toJustOrElim(s: String): Either[Just.OrElim, Json.ErrorMsg] = {
+  def toJustOrElim(s: String): Just.OrElim = {
     def fJustOrElim(parser: Parser): Just.OrElim = {
       var r = parser.parseJustOrElim()
       return r
@@ -6661,7 +6830,7 @@ object JSON {
     return Printer.printJustImplyIntro(o).render
   }
 
-  def toJustImplyIntro(s: String): Either[Just.ImplyIntro, Json.ErrorMsg] = {
+  def toJustImplyIntro(s: String): Just.ImplyIntro = {
     def fJustImplyIntro(parser: Parser): Just.ImplyIntro = {
       var r = parser.parseJustImplyIntro()
       return r
@@ -6674,7 +6843,7 @@ object JSON {
     return Printer.printJustImplyElim(o).render
   }
 
-  def toJustImplyElim(s: String): Either[Just.ImplyElim, Json.ErrorMsg] = {
+  def toJustImplyElim(s: String): Just.ImplyElim = {
     def fJustImplyElim(parser: Parser): Just.ImplyElim = {
       var r = parser.parseJustImplyElim()
       return r
@@ -6687,7 +6856,7 @@ object JSON {
     return Printer.printJustNegIntro(o).render
   }
 
-  def toJustNegIntro(s: String): Either[Just.NegIntro, Json.ErrorMsg] = {
+  def toJustNegIntro(s: String): Just.NegIntro = {
     def fJustNegIntro(parser: Parser): Just.NegIntro = {
       var r = parser.parseJustNegIntro()
       return r
@@ -6700,7 +6869,7 @@ object JSON {
     return Printer.printJustNegElim(o).render
   }
 
-  def toJustNegElim(s: String): Either[Just.NegElim, Json.ErrorMsg] = {
+  def toJustNegElim(s: String): Just.NegElim = {
     def fJustNegElim(parser: Parser): Just.NegElim = {
       var r = parser.parseJustNegElim()
       return r
@@ -6713,7 +6882,7 @@ object JSON {
     return Printer.printJustBottomElim(o).render
   }
 
-  def toJustBottomElim(s: String): Either[Just.BottomElim, Json.ErrorMsg] = {
+  def toJustBottomElim(s: String): Just.BottomElim = {
     def fJustBottomElim(parser: Parser): Just.BottomElim = {
       var r = parser.parseJustBottomElim()
       return r
@@ -6726,7 +6895,7 @@ object JSON {
     return Printer.printJustPbc(o).render
   }
 
-  def toJustPbc(s: String): Either[Just.Pbc, Json.ErrorMsg] = {
+  def toJustPbc(s: String): Just.Pbc = {
     def fJustPbc(parser: Parser): Just.Pbc = {
       var r = parser.parseJustPbc()
       return r
@@ -6739,7 +6908,7 @@ object JSON {
     return Printer.printJustForallIntro(o).render
   }
 
-  def toJustForallIntro(s: String): Either[Just.ForallIntro, Json.ErrorMsg] = {
+  def toJustForallIntro(s: String): Just.ForallIntro = {
     def fJustForallIntro(parser: Parser): Just.ForallIntro = {
       var r = parser.parseJustForallIntro()
       return r
@@ -6752,7 +6921,7 @@ object JSON {
     return Printer.printJustForallElim(o).render
   }
 
-  def toJustForallElim(s: String): Either[Just.ForallElim, Json.ErrorMsg] = {
+  def toJustForallElim(s: String): Just.ForallElim = {
     def fJustForallElim(parser: Parser): Just.ForallElim = {
       var r = parser.parseJustForallElim()
       return r
@@ -6765,7 +6934,7 @@ object JSON {
     return Printer.printJustExistsIntro(o).render
   }
 
-  def toJustExistsIntro(s: String): Either[Just.ExistsIntro, Json.ErrorMsg] = {
+  def toJustExistsIntro(s: String): Just.ExistsIntro = {
     def fJustExistsIntro(parser: Parser): Just.ExistsIntro = {
       var r = parser.parseJustExistsIntro()
       return r
@@ -6778,7 +6947,7 @@ object JSON {
     return Printer.printJustExistsElim(o).render
   }
 
-  def toJustExistsElim(s: String): Either[Just.ExistsElim, Json.ErrorMsg] = {
+  def toJustExistsElim(s: String): Just.ExistsElim = {
     def fJustExistsElim(parser: Parser): Just.ExistsElim = {
       var r = parser.parseJustExistsElim()
       return r
@@ -6791,7 +6960,7 @@ object JSON {
     return Printer.printJustFact(o).render
   }
 
-  def toJustFact(s: String): Either[Just.Fact, Json.ErrorMsg] = {
+  def toJustFact(s: String): Just.Fact = {
     def fJustFact(parser: Parser): Just.Fact = {
       var r = parser.parseJustFact()
       return r
@@ -6804,7 +6973,7 @@ object JSON {
     return Printer.printJustInvariant(o).render
   }
 
-  def toJustInvariant(s: String): Either[Just.Invariant, Json.ErrorMsg] = {
+  def toJustInvariant(s: String): Just.Invariant = {
     def fJustInvariant(parser: Parser): Just.Invariant = {
       var r = parser.parseJustInvariant()
       return r
@@ -6817,7 +6986,7 @@ object JSON {
     return Printer.printJustSubst(o).render
   }
 
-  def toJustSubst(s: String): Either[Just.Subst, Json.ErrorMsg] = {
+  def toJustSubst(s: String): Just.Subst = {
     def fJustSubst(parser: Parser): Just.Subst = {
       var r = parser.parseJustSubst()
       return r
@@ -6830,7 +6999,7 @@ object JSON {
     return Printer.printJustAuto(o).render
   }
 
-  def toJustAuto(s: String): Either[Just.Auto, Json.ErrorMsg] = {
+  def toJustAuto(s: String): Just.Auto = {
     def fJustAuto(parser: Parser): Just.Auto = {
       var r = parser.parseJustAuto()
       return r
@@ -6843,7 +7012,7 @@ object JSON {
     return Printer.printJustCoq(o).render
   }
 
-  def toJustCoq(s: String): Either[Just.Coq, Json.ErrorMsg] = {
+  def toJustCoq(s: String): Just.Coq = {
     def fJustCoq(parser: Parser): Just.Coq = {
       var r = parser.parseJustCoq()
       return r
@@ -6856,7 +7025,7 @@ object JSON {
     return Printer.printTruthTableRow(o).render
   }
 
-  def toTruthTableRow(s: String): Either[TruthTable.Row, Json.ErrorMsg] = {
+  def toTruthTableRow(s: String): TruthTable.Row = {
     def fTruthTableRow(parser: Parser): TruthTable.Row = {
       var r = parser.parseTruthTableRow()
       return r
@@ -6869,7 +7038,7 @@ object JSON {
     return Printer.printTruthTableAssignment(o).render
   }
 
-  def toTruthTableAssignment(s: String): Either[TruthTable.Assignment, Json.ErrorMsg] = {
+  def toTruthTableAssignment(s: String): TruthTable.Assignment = {
     def fTruthTableAssignment(parser: Parser): TruthTable.Assignment = {
       var r = parser.parseTruthTableAssignment()
       return r
@@ -6882,7 +7051,7 @@ object JSON {
     return Printer.printTruthTableConclusion(o).render
   }
 
-  def toTruthTableConclusion(s: String): Either[TruthTable.Conclusion, Json.ErrorMsg] = {
+  def toTruthTableConclusion(s: String): TruthTable.Conclusion = {
     def fTruthTableConclusion(parser: Parser): TruthTable.Conclusion = {
       var r = parser.parseTruthTableConclusion()
       return r
@@ -6895,7 +7064,7 @@ object JSON {
     return Printer.printTruthTableConclusionValidity(o).render
   }
 
-  def toTruthTableConclusionValidity(s: String): Either[TruthTable.Conclusion.Validity, Json.ErrorMsg] = {
+  def toTruthTableConclusionValidity(s: String): TruthTable.Conclusion.Validity = {
     def fTruthTableConclusionValidity(parser: Parser): TruthTable.Conclusion.Validity = {
       var r = parser.parseTruthTableConclusionValidity()
       return r
@@ -6908,7 +7077,7 @@ object JSON {
     return Printer.printTruthTableConclusionTautology(o).render
   }
 
-  def toTruthTableConclusionTautology(s: String): Either[TruthTable.Conclusion.Tautology, Json.ErrorMsg] = {
+  def toTruthTableConclusionTautology(s: String): TruthTable.Conclusion.Tautology = {
     def fTruthTableConclusionTautology(parser: Parser): TruthTable.Conclusion.Tautology = {
       var r = parser.parseTruthTableConclusionTautology()
       return r
@@ -6921,7 +7090,7 @@ object JSON {
     return Printer.printTruthTableConclusionContradictory(o).render
   }
 
-  def toTruthTableConclusionContradictory(s: String): Either[TruthTable.Conclusion.Contradictory, Json.ErrorMsg] = {
+  def toTruthTableConclusionContradictory(s: String): TruthTable.Conclusion.Contradictory = {
     def fTruthTableConclusionContradictory(parser: Parser): TruthTable.Conclusion.Contradictory = {
       var r = parser.parseTruthTableConclusionContradictory()
       return r
@@ -6934,7 +7103,7 @@ object JSON {
     return Printer.printTruthTableConclusionContingent(o).render
   }
 
-  def toTruthTableConclusionContingent(s: String): Either[TruthTable.Conclusion.Contingent, Json.ErrorMsg] = {
+  def toTruthTableConclusionContingent(s: String): TruthTable.Conclusion.Contingent = {
     def fTruthTableConclusionContingent(parser: Parser): TruthTable.Conclusion.Contingent = {
       var r = parser.parseTruthTableConclusionContingent()
       return r
@@ -6947,7 +7116,7 @@ object JSON {
     return Printer.printAttr(o).render
   }
 
-  def toAttr(s: String): Either[Attr, Json.ErrorMsg] = {
+  def toAttr(s: String): Attr = {
     def fAttr(parser: Parser): Attr = {
       var r = parser.parseAttr()
       return r
@@ -6960,7 +7129,7 @@ object JSON {
     return Printer.printTypedAttr(o).render
   }
 
-  def toTypedAttr(s: String): Either[TypedAttr, Json.ErrorMsg] = {
+  def toTypedAttr(s: String): TypedAttr = {
     def fTypedAttr(parser: Parser): TypedAttr = {
       var r = parser.parseTypedAttr()
       return r
@@ -6973,7 +7142,7 @@ object JSON {
     return Printer.printResolvedAttr(o).render
   }
 
-  def toResolvedAttr(s: String): Either[ResolvedAttr, Json.ErrorMsg] = {
+  def toResolvedAttr(s: String): ResolvedAttr = {
     def fResolvedAttr(parser: Parser): ResolvedAttr = {
       var r = parser.parseResolvedAttr()
       return r
@@ -6986,7 +7155,7 @@ object JSON {
     return Printer.printResolvedInfo(o).render
   }
 
-  def toResolvedInfo(s: String): Either[ResolvedInfo, Json.ErrorMsg] = {
+  def toResolvedInfo(s: String): ResolvedInfo = {
     def fResolvedInfo(parser: Parser): ResolvedInfo = {
       var r = parser.parseResolvedInfo()
       return r
@@ -6999,7 +7168,7 @@ object JSON {
     return Printer.printPosInfo(o).render
   }
 
-  def toPosInfo(s: String): Either[PosInfo, Json.ErrorMsg] = {
+  def toPosInfo(s: String): PosInfo = {
     def fPosInfo(parser: Parser): PosInfo = {
       var r = parser.parsePosInfo()
       return r

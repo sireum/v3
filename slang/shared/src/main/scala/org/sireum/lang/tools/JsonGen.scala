@@ -86,15 +86,11 @@ object JsonGen {
                  |
                  |  }
                  |
-                 |  def to[T](s: String, f: Parser => T): Either[T, Json.ErrorMsg] = {
+                 |  def to[T](s: String, f: Parser => T): T = {
                  |    val parser = Parser(s)
                  |    val r = f(parser)
                  |    parser.eof()
-                 |    val eOpt = parser.errorOpt
-                 |    eOpt match {
-                 |      case Some(e) => return Either(None(), Some(e))
-                 |      case _ => return Either(Some(r), None())
-                 |    }
+                 |    return r
                  |  }
                  |
                  |  ${(fromsTos, "\n\n")}
@@ -109,7 +105,7 @@ object JsonGen {
     }
 
     @pure def to(name: ST, tpe: ST): ST = {
-      return st"""def to$name(s: String): Either[$tpe, Json.ErrorMsg] = {
+      return st"""def to$name(s: String): $tpe = {
                  |  def f$name(parser: Parser): $tpe = {
                  |    var r = parser.parse$name()
                  |    return r
@@ -132,8 +128,10 @@ object JsonGen {
     }
 
     @pure def printObject(name: ST, tpe: ST, printFields: ISZ[ST]): ST = {
+      val fqs = "\"\"\"\""
       return st"""@pure def print$name(o: $tpe): ST = {
                  |  return printObject(ISZ(
+                 |    ("type", st$fqs$tpe$fqs),
                  |    ${(printFields, ",\n")}
                  |  ))
                  |}"""
@@ -194,6 +192,7 @@ object JsonGen {
                  |  val t = parser.parseObjectTypes(ISZ("${(childrenTpes, "\", \"")}"))
                  |  t match {
                  |    ${(parseRootCases, "\n")}
+                 |    case _ => halt(parser.errorMessage)
                  |  }
                  |}"""
     }
@@ -244,8 +243,10 @@ object JsonGen {
                  |  }
                  |  parser.parseObjectKey("value")
                  |  val s = parser.parseString()
+                 |  parser.parseObjectNext()
                  |  s match {
                  |    ${(parseEnumCases, "\n")}
+                 |    case _ => halt(parser.errorMessage)
                  |  }
                  |}"""
     }
@@ -350,20 +351,20 @@ object JsonGen {
       val rootTypeName = typeName(packageName, name)
       var rootPrintCases = ISZ[ST]()
       var rootParseCases = ISZ[ST]()
-      var childrenTypeNames = ISZ[ST]()
+      var childrenTypeStrings = ISZ[ST]()
       for (childIds <- poset.descendantsOf(name).elements) {
         globalTypeMap.get(childIds) match {
           case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
             val childTypeString = typeString(packageName, childIds)
             val childTypeName = typeName(packageName, childIds)
-            childrenTypeNames = childrenTypeNames :+ childTypeName
+            childrenTypeStrings = childrenTypeStrings :+ childTypeString
             rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
             rootParseCases = rootParseCases :+ Template.parseRootCase(childTypeName, childTypeString)
           case _ =>
         }
       }
       printers = printers :+ Template.printRoot(rootTypeName, rootTypeString, rootPrintCases)
-      parsers = parsers :+ Template.parseRoot(rootTypeName, rootTypeString, childrenTypeNames, rootParseCases)
+      parsers = parsers :+ Template.parseRoot(rootTypeName, rootTypeString, childrenTypeStrings, rootParseCases)
       fromsTos = fromsTos :+ Template.from(rootTypeName, rootTypeString) :+ Template.to(rootTypeName, rootTypeString)
     }
 

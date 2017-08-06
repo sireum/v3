@@ -25,6 +25,8 @@
 
 package org.sireum.lang.test
 
+import java.io.File
+
 import Paths._
 import org.sireum.lang.ScalaMetaParserTest
 import org.sireum.test._
@@ -39,37 +41,41 @@ class ScalaMetaParserJvmTest extends SireumSpec {
 
     "Passing" - {
 
-      smpt.passing(readFile(posetPath), addImport = false, isPrelude = true)
+      passing(posetPath)
 
-      smpt.passing(readFile(setPath), addImport = false, isPrelude = true)
+      passing(setPath)
 
-      smpt.passing(readFile(mapPath), addImport = false, isPrelude = true)
+      passing(mapPath)
 
-      smpt.passing(readFile(hashSetPath), addImport = false, isPrelude = true)
+      passing(hashSetPath)
 
-      smpt.passing(readFile(hashMapPath), addImport = false, isPrelude = true)
+      passing(hashMapPath)
 
-      smpt.passing(readFile(hashSSetPath), addImport = false, isPrelude = true)
+      passing(hashSSetPath)
 
-      smpt.passing(readFile(hashSMapPath), addImport = false, isPrelude = true)
+      passing(hashSMapPath)
 
-      smpt.passing(readFile(optionPath), addImport = false, isPrelude = true)
+      passing(optionPath)
 
-      smpt.passing(readFile(preludePath), addImport = false, isPrelude = true)
+      passing(preludePath)
 
-      smpt.passing(readFile(slangAstPath), addImport = false, isPrelude = true)
+      passing(slangAstPath)
 
-      smpt.passing(readFile(slangAstUtilPath), addImport = false, isPrelude = true)
+      passing(slangAstUtilPath)
 
-      smpt.passing(readFile(slangTransformerPath), addImport = false, isPrelude = true)
+      passing(slangTransformerPath)
 
-      smpt.passing(readFile(slangMTransformerPath), addImport = false, isPrelude = true)
+      passing(slangMTransformerPath)
 
-      smpt.passing(readFile(slangGlobalDeclarationResolverPath), addImport = false, isPrelude = true)
+      passing(slangGlobalDeclarationResolverPath)
 
-      smpt.passing(readFile(slangResolverPath), addImport = false, isPrelude = true)
+      passing(slangResolverPath)
 
-      smpt.passing(readFile(slangSequentResolverPath), addImport = false, isPrelude = true)
+      passing(slangSequentResolverPath)
     }
+  }
+
+  def passing(file: File)(implicit spec: SireumSpec): Unit = {
+    smpt.passing(readFile(file), addImport = false, isPrelude = true, checkJson = false)
   }
 }
