@@ -2876,11 +2876,12 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Id] = transformId(ctx, o2.id)
       val r1: Result[Context, IS[Z, TypeParam]] = transformISZ(r0.ctx, o2.typeParams, transformTypeParam)
-      val r2: Result[Context, Type] = transformType(r1.ctx, o2.returnType)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeParams = r1.resultOpt.getOrElse(o2.typeParams), returnType = r2.resultOpt.getOrElse(o2.returnType))))
+      val r2: Result[Context, IS[Z, Param]] = transformISZ(r1.ctx, o2.params, transformParam)
+      val r3: Result[Context, Type] = transformType(r2.ctx, o2.returnType)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+        Result(r3.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeParams = r1.resultOpt.getOrElse(o2.typeParams), params = r2.resultOpt.getOrElse(o2.params), returnType = r3.resultOpt.getOrElse(o2.returnType))))
       else
-        Result(r2.ctx, None())
+        Result(r3.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {

@@ -2870,9 +2870,10 @@ import MTransformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
       val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
-      val r2: MOption[Type] = transformType(o2.returnType)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), returnType = r2.getOrElse(o2.returnType)))
+      val r2: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam)
+      val r3: MOption[Type] = transformType(o2.returnType)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+        MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), params = r2.getOrElse(o2.params), returnType = r3.getOrElse(o2.returnType)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
