@@ -70,7 +70,7 @@ object JsonGen {
                  |
                  |  }
                  |
-                 |  @record Parser(input: String) {
+                 |  @record class Parser(input: String) {
                  |    val parser: Json.Parser = Json.Parser.create(input)
                  |
                  |    ${(parsers, "\n\n")}
@@ -103,7 +103,7 @@ object JsonGen {
     }
 
     @pure def from(name: ST, tpe: ST): ST = {
-      return st"""def from$name(o: $tpe) = {
+      return st"""def from$name(o: $tpe): String = {
                  |  return Printer.print$name(o).render
                  |}"""
     }
@@ -203,7 +203,7 @@ object JsonGen {
     }
 
     @pure def parseObject(name: ST, tpe: ST,
-                          parseFields: ISZ[ST], fieldNames: ISZ[ST]): ST = {
+                          parseFields: ISZ[ST], fieldNames: ISZ[String]): ST = {
       return st"""def parse$name(): $tpe = {
                  |  val r = parse${name}T(F)
                  |  return r
@@ -303,7 +303,7 @@ object JsonGen {
           case _ =>
         }
       }
-      return Template.main(licenseOpt, fileUriOpt, packageName, name, parsers, printers, fromsTos)
+      return Template.main(licenseOpt, fileUriOpt, packageName, name, printers, parsers, fromsTos)
     }
 
     def genEnum(ti: TypeInfo.Enum): Unit = {
@@ -357,6 +357,8 @@ object JsonGen {
             case _ => reporter.error(param.id.attr.posOpt, jsonGenKind, s"Only named types are supported for @datatype/@record fields.")
           }
         }
+        printers = printers :+ Template.printObject(adTypeName, adTypeString, printFields)
+        parsers = parsers :+ Template.parseObject(adTypeName, adTypeString, parseFields, fieldNames)
         fromsTos = fromsTos :+ Template.from(adTypeName, adTypeString) :+ Template.to(adTypeName, adTypeString)
       }
     }
@@ -458,7 +460,7 @@ object JsonGen {
     }
 
     def either(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST), (B, ST))] = {
-      if (tipe.name.ids.size != 1 && tipe.typeArgs.size != 2) {
+      if (!(tipe.name.ids.size == 1 && tipe.typeArgs.size == 2)) {
         return None()
       }
       val name = tipe.name.ids(0).value
@@ -475,7 +477,7 @@ object JsonGen {
     }
 
     def opt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST))] = {
-      if (tipe.name.ids.size != 1 && tipe.typeArgs.size != 1) {
+      if (!(tipe.name.ids.size == 1 && tipe.typeArgs.size == 1)) {
         return None()
       }
       val name = tipe.name.ids(0).value
@@ -490,14 +492,15 @@ object JsonGen {
     }
 
     def s(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, String, (B, ST))] = {
-      if (tipe.name.ids.size != 1 && !(tipe.typeArgs.size == 1 || tipe.typeArgs.size == 2)) {
+      if (!(tipe.name.ids.size == 1 && (tipe.typeArgs.size == 1 || tipe.typeArgs.size == 2))) {
         return None()
       }
       val name = tipe.name.ids(0).value
       if (name == "IS" || name == "MS") {
         val isImmutable = name == "IS"
-        val btn = basicOrTypeName(ti, tipe.typeArgs(1))
-        (basic(tipe.typeArgs(0)), basic(tipe.typeArgs(1))) match {
+        val et = tipe.typeArgs(1)
+        val btn = basicOrTypeName(ti, et)
+        (basic(tipe.typeArgs(0)), basic(et)) match {
           case (Some(it), Some(_)) => return Some((isImmutable, it, btn))
           case (Some(it), _) => return Some((isImmutable, it, btn))
           case _ => return None()
@@ -541,6 +544,7 @@ object JsonGen {
         case "MSU16" => return Some((F, "U16", btn))
         case "MSU32" => return Some((F, "U32", btn))
         case "MSU64" => return Some((F, "U64", btn))
+        case _ => return None()
       }
     }
 
