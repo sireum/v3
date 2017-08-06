@@ -82,9 +82,7 @@ lazy val sireumSettings = Seq(
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
   parallelExecution in Global := isParallelBuild,
-  libraryDependencies += "com.github.ghik" %% "silencer-lib" % silencerVersion,
-  resolvers += Resolver.sonatypeRepo("public"),
-  addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
+  resolvers += Resolver.sonatypeRepo("public")
 )
 
 lazy val sireumSharedSettings = sireumSettings ++ Seq(
@@ -211,6 +209,7 @@ lazy val logikaJs = logikaT._3
 
 lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
 lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
+  testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.spire-math" %%% "spire" % "0.13.0"),
@@ -225,9 +224,11 @@ lazy val preludeT = toSbtCrossProject(preludePI, Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    "com.github.ghik" %% "silencer-lib" % silencerVersion
   ),
   unmanagedResourceDirectories in Compile += file("runtime/prelude/shared/src/main/scala"),
+  addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 lazy val preludeShared = preludeT._1

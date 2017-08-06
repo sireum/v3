@@ -255,31 +255,31 @@ object JsonGen {
     }
 
     @pure def parseIS(indexType: String, parseValue: ST): ST = {
-      return st"parser.parseIS$indexType($parseValue)"
+      return st"parser.parseIS$indexType($parseValue _)"
     }
 
     @pure def parseMS(indexType: String, parseValue: ST): ST = {
-      return st"parser.parseMS$indexType($parseValue)"
+      return st"parser.parseMS$indexType($parseValue _)"
     }
 
     @pure def parseOption(parseValue: ST): ST = {
-      return st"parser.parseOption($parseValue)"
+      return st"parser.parseOption($parseValue _)"
     }
 
     @pure def parseMOption(parseValue: ST): ST = {
-      return st"parser.parseMOption($parseValue)"
+      return st"parser.parseMOption($parseValue _)"
     }
 
     @pure def parseEither(parseValue0: ST, parseValue1: ST): ST = {
-      return st"parser.parseEither($parseValue0, $parseValue1)"
+      return st"parser.parseEither($parseValue0 _, $parseValue1 _)"
     }
 
     @pure def parseMEither(parseValue0: ST, parseValue1: ST): ST = {
-      return st"parser.parseMEither($parseValue0, $parseValue1)"
+      return st"parser.parseMEither($parseValue0 _, $parseValue1 _)"
     }
   }
 
-  val jsonGenKind = "JsonGen"
+  val jsonGenKind: String = "JsonGen"
 
   @record class Gen(globalNameMap: NameMap,
                     globalTypeMap: TypeMap,
@@ -299,6 +299,7 @@ object JsonGen {
       for (ti <- globalTypes) {
         ti match {
           case ti: TypeInfo.AbstractDatatype => genAdt(ti)
+          case ti: TypeInfo.Sig => genRoot(ti.name)
           case ti: TypeInfo.Enum => genEnum(ti)
           case _ =>
         }
@@ -321,26 +322,7 @@ object JsonGen {
 
     def genAdt(ti: TypeInfo.AbstractDatatype): Unit = {
       if (ti.ast.isRoot) {
-        val name = ti.name
-        val rootTypeString = typeString(packageName, name)
-        val rootTypeName = typeName(packageName, name)
-        var rootPrintCases = ISZ[ST]()
-        var rootParseCases = ISZ[ST]()
-        var childrenTypeNames = ISZ[ST]()
-        for (childIds <- poset.descendantsOf(name).elements) {
-          globalTypeMap.get(childIds) match {
-            case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
-              val childTypeString = typeString(packageName, childIds)
-              val childTypeName = typeName(packageName, childIds)
-              childrenTypeNames = childrenTypeNames :+ childTypeName
-              rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
-              rootParseCases = rootParseCases :+ Template.parseRootCase(childTypeName, childTypeString)
-            case _ =>
-          }
-        }
-        printers = printers :+ Template.printRoot(rootTypeName, rootTypeString, rootPrintCases)
-        parsers = parsers :+ Template.parseRoot(rootTypeName, rootTypeString, childrenTypeNames, rootParseCases)
-        fromsTos = fromsTos :+ Template.from(rootTypeName, rootTypeString) :+ Template.to(rootTypeName, rootTypeString)
+        genRoot(ti.name)
       } else {
         val adTypeString = typeString(packageName, ti.name)
         val adTypeName = typeName(packageName, ti.name)
@@ -361,6 +343,28 @@ object JsonGen {
         parsers = parsers :+ Template.parseObject(adTypeName, adTypeString, parseFields, fieldNames)
         fromsTos = fromsTos :+ Template.from(adTypeName, adTypeString) :+ Template.to(adTypeName, adTypeString)
       }
+    }
+
+    def genRoot(name: QName): Unit = {
+      val rootTypeString = typeString(packageName, name)
+      val rootTypeName = typeName(packageName, name)
+      var rootPrintCases = ISZ[ST]()
+      var rootParseCases = ISZ[ST]()
+      var childrenTypeNames = ISZ[ST]()
+      for (childIds <- poset.descendantsOf(name).elements) {
+        globalTypeMap.get(childIds) match {
+          case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
+            val childTypeString = typeString(packageName, childIds)
+            val childTypeName = typeName(packageName, childIds)
+            childrenTypeNames = childrenTypeNames :+ childTypeName
+            rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
+            rootParseCases = rootParseCases :+ Template.parseRootCase(childTypeName, childTypeString)
+          case _ =>
+        }
+      }
+      printers = printers :+ Template.printRoot(rootTypeName, rootTypeString, rootPrintCases)
+      parsers = parsers :+ Template.parseRoot(rootTypeName, rootTypeString, childrenTypeNames, rootParseCases)
+      fromsTos = fromsTos :+ Template.from(rootTypeName, rootTypeString) :+ Template.to(rootTypeName, rootTypeString)
     }
 
     def printField(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {

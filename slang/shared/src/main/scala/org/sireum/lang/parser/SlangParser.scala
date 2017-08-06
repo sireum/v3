@@ -632,7 +632,7 @@ class SlangParser(text: Predef.String,
     }
     val purity = if (isMemoize) AST.Purity.Memoize else if (isPure) AST.Purity.Pure else AST.Purity.Impure
     val (hasParams, params) = paramss.headOption match {
-      case scala.Some(ps) => (true, ISZ[AST.Param](ps.map(translateParam(isMemoize = false)): _*))
+      case scala.Some(ps) => (true, ISZ[AST.Param](ps.map(translateParam(isMemoize)): _*))
       case _ => (false, ISZ[AST.Param]())
     }
     val sig = AST.MethodSig(
