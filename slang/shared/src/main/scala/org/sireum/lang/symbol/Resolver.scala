@@ -27,6 +27,7 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
 object Resolver {
@@ -471,5 +472,77 @@ object Resolver {
     put(ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")).
     put(ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String")).
     put(ISZ("ST"), TypeInfo.BuiltIn(builtInPackageName :+ "ST"))
+
+  @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
+    (ti1.posOpt, ti2.posOpt) match {
+      case (Some(pos1), Some(pos2)) => return pos1.offset < pos2.offset
+      case _ => return F
+    }
+  }
+
+  @pure def sortedGlobalTypes(globalTypeMap: TypeMap): ISZ[TypeInfo] = {
+    return SI.sortWith(globalTypeMap.values, ltTypeInfo)
+  }
+
+  @pure def typePoset(globalTypeMap: TypeMap,
+                      globalTypes: ISZ[TypeInfo],
+                      reporter: Reporter): Poset[QName] = {
+    var r = Poset.empty[QName]
+
+    for (ti <- globalTypes) {
+      ti match {
+        case ti: TypeInfo.AbstractDatatype if ti.ast.isRoot => r = r.addNode(ti.name)
+        case ti: TypeInfo.Sig => r = r.addNode(ti.name)
+        case _ =>
+      }
+    }
+    for (ti <- globalTypes) {
+      ti match {
+        case ti: TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
+          for (t <- ti.ast.parents) {
+            ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(t.name.ids)) match {
+              case Some(parent: TypeInfo.AbstractDatatype) => r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(parent: TypeInfo.Sig) => r = r.addChildren(parent.name, ISZ(ti.name))
+              case _ => reporter.error(t.attr.posOpt, resolverKind,
+                st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
+            }
+          }
+        case _ =>
+      }
+    }
+    return r
+  }
+
+  @pure def relQName(name: QName, ids: QName): QName = {
+    val sz = name.size
+    if (ids.size <= sz) {
+      return ids
+    }
+    var i = z"0"
+    while (i < name.size) {
+      if (ids(i) != name(i)) {
+        return ids
+      }
+      i = i + 1
+    }
+    return SI.drop(ids, sz)
+  }
+
+  def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {
+    t match {
+      case t: AST.Type.Named => return typeString(name, relQName(name, AST.Util.ids2strings(t.name.ids)))
+      case _ =>
+        reporter.internalError(t.posOpt, resolverKind, s"Unexpected type $t.")
+        return st""
+    }
+  }
+
+  @pure def typeString(name: QName, ids: QName): ST = {
+    return st"${(relQName(name, ids), ".")}"
+  }
+
+  @pure def typeName(name: QName, ids: QName): ST = {
+    return st"${relQName(name, ids)}"
+  }
 
 }

@@ -27,21 +27,38 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.lang.{ast => AST}
+import org.sireum.lang.symbol.Resolver._
+import org.sireum.lang.util._
 
 object JsonGen {
 
   object Template {
 
-    def stMain(licenseOpt: Option[String],
-               packageNames: ISZ[String],
-               name: Option[String],
-               printers: ISZ[ST],
-               parsers: ISZ[ST],
-               fromsTos: ISZ[ST]): ST = {
+    @pure def main(licenseOpt: Option[String],
+                   fileUriOpt: Option[String],
+                   packageNames: ISZ[String],
+                   name: Option[String],
+                   printers: ISZ[ST],
+                   parsers: ISZ[ST],
+                   fromsTos: ISZ[ST]): ST = {
+      val license: Option[ST] = licenseOpt.map((text: String) =>
+        st"""/*
+            | $text
+            | */
+            |""")
+      val fileUri: Option[ST] = fileUriOpt.map((text: String) =>
+        st"""// This file is auto-generated from $text
+            |""")
+      val packageName: Option[ST] =
+        if (packageNames.nonEmpty) Some( st"""package ${(packageNames, ".")}
+                                             |""") else None[ST]()
       return st"""// #Sireum
-                 |$licenseOpt
-                 |${(packageNames, ".")}
+                 |// @formatter:off
                  |
+                 |$license
+                 |$fileUri
+                 |$packageName
                  |import org.sireum._
                  |import org.sireum.Json.Printer._
                  |
@@ -85,13 +102,13 @@ object JsonGen {
                  |}"""
     }
 
-    def stFrom(name: ST, tpe: ST): ST = {
+    @pure def from(name: ST, tpe: ST): ST = {
       return st"""def from$name(o: $tpe) = {
                  |  return Printer.print$name(o).render
                  |}"""
     }
 
-    def stTo(name: ST, tpe: ST): ST = {
+    @pure def to(name: ST, tpe: ST): ST = {
       return st"""def to$name(s: String): Either[$tpe, Json.ErrorMsg] = {
                  |  def f$name(parser: Parser): $tpe = {
                  |    var r = parser.parse$name()
@@ -102,35 +119,35 @@ object JsonGen {
                  |}"""
     }
 
-    def stPrintRoot(name: ST, tpe: ST, rootCases: ISZ[ST]): ST = {
+    @pure def printRoot(name: ST, tpe: ST, printRootCases: ISZ[ST]): ST = {
       return st"""@pure def print$name(o: $tpe): ST = {
                  |  o match {
-                 |    ${(rootCases, "\n")}
+                 |    ${(printRootCases, "\n")}
                  |  }
                  |}"""
     }
 
-    def stPrintRootCase(name: ST, tpe: ST): ST = {
+    @pure def printRootCase(name: ST, tpe: ST): ST = {
       return st"case o: $tpe => return print$name(o)"
     }
 
-    def stPrint(name: ST, tpe: ST, fields: ISZ[ST]): ST = {
+    @pure def printObject(name: ST, tpe: ST, printFields: ISZ[ST]): ST = {
       return st"""@pure def print$name(o: $tpe): ST = {
                  |  return printObject(ISZ(
-                 |    ${(fields, ",\n")}
+                 |    ${(printFields, ",\n")}
                  |  ))
                  |}"""
     }
 
-    def stPrintField(fieldName: String, fieldValue: ST): ST = {
+    @pure def printField(fieldName: String, fieldValue: ST): ST = {
       return st"""("$fieldName", $fieldValue)"""
     }
 
-    def stPrintValue(name: ST, fieldName: String): ST = {
+    @pure def printValue(name: ST, fieldName: String): ST = {
       return st"print$name(o.$fieldName)"
     }
 
-    def stPrintEnum(name: ST, tpe: ST, printEnumCases: ISZ[ST]): ST = {
+    @pure def printEnum(name: ST, tpe: ST, printEnumCases: ISZ[ST]): ST = {
       return st"""@pure def print$name(o: $tpe.Type): ST = {
                  |  val value: String = o match {
                  |    ${(printEnumCases, "\n")}
@@ -142,51 +159,51 @@ object JsonGen {
                  |}"""
     }
 
-    def stPrintEnumCase(elementName: ST, tpe: ST): ST = {
+    @pure def printEnumCase(elementName: String, tpe: ST): ST = {
       return st"""case $tpe.$elementName => "$elementName""""
     }
 
-    def stPrintIS(isSimple: B, name: ST,
-                  fieldName: String, indexType: String): ST = {
+    @pure def printIS(isSimple: B, name: ST,
+                      fieldName: String, indexType: String): ST = {
       return st"printIS$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
     }
 
-    def stPrintMS(isSimple: B, name: ST,
-                  fieldName: String, indexType: String): ST = {
+    @pure def printMS(isSimple: B, name: ST,
+                      fieldName: String, indexType: String): ST = {
       return st"printMS$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
     }
 
-    def stPrintOption(name: ST, fieldName: String): ST = {
+    @pure def printOption(name: ST, fieldName: String): ST = {
       return st"printOption(o.$fieldName, print$name)"
     }
 
-    def stPrintMOption(name: ST, fieldName: String): ST = {
+    @pure def printMOption(name: ST, fieldName: String): ST = {
       return st"printMOption(o.$fieldName, print$name)"
     }
 
-    def stPrintEither(name0: ST, name1: ST, fieldName: String): ST = {
+    @pure def printEither(name0: ST, name1: ST, fieldName: String): ST = {
       return st"printEither(o.$fieldName, print$name0, print$name1)"
     }
 
-    def stPrintMEither(name0: ST, name1: ST, fieldName: String): ST = {
+    @pure def printMEither(name0: ST, name1: ST, fieldName: String): ST = {
       return st"printMEither(o.$fieldName, print$name0, print$name1)"
     }
 
-    def stParseRoot(name: ST, tpe: ST, children: ISZ[ST], rootCases: ISZ[ST]): ST = {
+    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
       return st"""def parse$name(): $tpe = {
-                 |  val t = parser.parseObjectTypes(ISZ(${(children, ", ")}))
+                 |  val t = parser.parseObjectTypes(ISZ("${(childrenTpes, "\", \"")}"))
                  |  t match {
-                 |    ${(rootCases, "\n")}
+                 |    ${(parseRootCases, "\n")}
                  |  }
                  |}"""
     }
 
-    def stParseRootCase(name: ST, tpe: ST): ST = {
+    @pure def parseRootCase(name: ST, tpe: ST): ST = {
       return st"""case "$tpe" => val r = parse${name}T(T); return r"""
     }
 
-    def stParse(name: ST, tpe: ST,
-                parseFields: ISZ[ST], fieldNames: ISZ[ST]): ST = {
+    @pure def parseObject(name: ST, tpe: ST,
+                          parseFields: ISZ[ST], fieldNames: ISZ[ST]): ST = {
       return st"""def parse$name(): $tpe = {
                  |  val r = parse${name}T(F)
                  |  return r
@@ -201,21 +218,21 @@ object JsonGen {
                  |}"""
     }
 
-    def stParseField(fieldName: String, parseValue: ST): ST = {
+    @pure def parseField(fieldName: String, parseValue: ST): ST = {
       return st"""parser.parseObjectKey("$fieldName")
                  |val $fieldName = $parseValue
                  |parser.parseObjectNext()"""
     }
 
-    def stParseBuiltInValue(name: ST): ST = {
-      return st"parser.parse$name()"
+    @pure def parseBuiltIn(suffixes: ISZ[ST]): ST = {
+      return st"parser.parse$suffixes"
     }
 
-    def stParseValue(name: ST): ST = {
-      return st"parse$name()"
+    @pure def parseValue(suffixes: ISZ[ST]): ST = {
+      return st"parse$suffixes"
     }
 
-    def stParseEnum(name: ST, tpe: ST, parseEnumCases: ISZ[ST]): ST = {
+    @pure def parseEnum(name: ST, tpe: ST, parseEnumCases: ISZ[ST]): ST = {
       return st"""def parse$name(): $tpe.Type = {
                  |  val r = parse${name}T(F)
                  |  return r
@@ -233,34 +250,360 @@ object JsonGen {
                  |}"""
     }
 
-    def stParseEnumCase(elementName: String, tpe: ST): ST = {
+    @pure def parseEnumCase(elementName: String, tpe: ST): ST = {
       return st"""case "$elementName" => return $tpe.$elementName"""
     }
 
-    def stParseIS(indexType: String, parseValue: ST): ST = {
+    @pure def parseIS(indexType: String, parseValue: ST): ST = {
       return st"parser.parseIS$indexType($parseValue)"
     }
 
-    def stParseMS(indexType: String, parseValue: ST): ST = {
+    @pure def parseMS(indexType: String, parseValue: ST): ST = {
       return st"parser.parseMS$indexType($parseValue)"
     }
 
-    def stParseOption(parseValue: ST): ST = {
+    @pure def parseOption(parseValue: ST): ST = {
       return st"parser.parseOption($parseValue)"
     }
 
-    def stParseMOption(parseValue: ST): ST = {
+    @pure def parseMOption(parseValue: ST): ST = {
       return st"parser.parseMOption($parseValue)"
     }
 
-    def stParseEither(parseValue0: ST, parseValue1: ST): ST = {
+    @pure def parseEither(parseValue0: ST, parseValue1: ST): ST = {
       return st"parser.parseEither($parseValue0, $parseValue1)"
     }
 
-    def stParseMEither(parseValue0: ST, parseValue1: ST): ST = {
+    @pure def parseMEither(parseValue0: ST, parseValue1: ST): ST = {
       return st"parser.parseMEither($parseValue0, $parseValue1)"
     }
+  }
 
+  val jsonGenKind = "JsonGen"
+
+  @record class Gen(globalNameMap: NameMap,
+                    globalTypeMap: TypeMap,
+                    packageName: QName,
+                    reporter: Reporter) {
+
+    val globalTypes: ISZ[TypeInfo] = sortedGlobalTypes(globalTypeMap)
+    val poset: Poset[QName] = typePoset(globalTypeMap, globalTypes, reporter)
+
+    var parsers: ISZ[ST] = ISZ()
+    var printers: ISZ[ST] = ISZ()
+    var fromsTos: ISZ[ST] = ISZ()
+
+    def gen(licenseOpt: Option[String],
+            fileUriOpt: Option[String],
+            name: Option[String]): ST = {
+      for (ti <- globalTypes) {
+        ti match {
+          case ti: TypeInfo.AbstractDatatype => genAdt(ti)
+          case ti: TypeInfo.Enum => genEnum(ti)
+          case _ =>
+        }
+      }
+      return Template.main(licenseOpt, fileUriOpt, packageName, name, parsers, printers, fromsTos)
+    }
+
+    def genEnum(ti: TypeInfo.Enum): Unit = {
+      val enumTypeString = typeString(packageName, ti.name)
+      val enumTypeName = typeName(packageName, ti.name)
+      printers = printers :+
+        Template.printEnum(enumTypeName, enumTypeString,
+          for (e <- ti.elements.elements)
+            yield Template.printEnumCase(e, enumTypeString))
+      parsers = parsers :+
+        Template.parseEnum(enumTypeName, enumTypeString,
+          for (e <- ti.elements.elements)
+            yield Template.parseEnumCase(e, enumTypeString))
+    }
+
+    def genAdt(ti: TypeInfo.AbstractDatatype): Unit = {
+      if (ti.ast.isRoot) {
+        val name = ti.name
+        val rootTypeString = typeString(packageName, name)
+        val rootTypeName = typeName(packageName, name)
+        var rootPrintCases = ISZ[ST]()
+        var rootParseCases = ISZ[ST]()
+        var childrenTypeNames = ISZ[ST]()
+        for (childIds <- poset.descendantsOf(name).elements) {
+          globalTypeMap.get(childIds) match {
+            case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
+              val childTypeString = typeString(packageName, childIds)
+              val childTypeName = typeName(packageName, childIds)
+              childrenTypeNames = childrenTypeNames :+ childTypeName
+              rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
+              rootParseCases = rootParseCases :+ Template.parseRootCase(childTypeName, childTypeString)
+            case _ =>
+          }
+        }
+        printers = printers :+ Template.printRoot(rootTypeName, rootTypeString, rootPrintCases)
+        parsers = parsers :+ Template.parseRoot(rootTypeName, rootTypeString, childrenTypeNames, rootParseCases)
+        fromsTos = fromsTos :+ Template.from(rootTypeName, rootTypeString) :+ Template.to(rootTypeName, rootTypeString)
+      } else {
+        val adTypeString = typeString(packageName, ti.name)
+        val adTypeName = typeName(packageName, ti.name)
+        var fieldNames = ISZ[String]()
+        var printFields = ISZ[ST]()
+        var parseFields = ISZ[ST]()
+        for (param <- ti.ast.params) {
+          param.tipe match {
+            case tipe: AST.Type.Named =>
+              val fieldName = param.id.value
+              fieldNames = fieldNames :+ fieldName
+              printFields = printFields :+ printField(ti, fieldName, tipe)
+              parseFields = parseFields :+ parseField(ti, fieldName, tipe)
+            case _ => reporter.error(param.id.attr.posOpt, jsonGenKind, s"Only named types are supported for @datatype/@record fields.")
+          }
+        }
+        fromsTos = fromsTos :+ Template.from(adTypeName, adTypeString) :+ Template.to(adTypeName, adTypeString)
+      }
+    }
+
+    def printField(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {
+      val v = printValue(ti, fieldName, tipe)
+      return Template.printField(fieldName, v)
+    }
+
+    def printValue(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {
+      val sOpt = s(ti, tipe)
+      sOpt match {
+        case Some((isImmutable, indexType, (isSimple, elementName))) =>
+          if (isImmutable) {
+            return Template.printIS(isSimple, elementName, fieldName, indexType)
+          } else {
+            return Template.printMS(isSimple, elementName, fieldName, indexType)
+          }
+        case _ =>
+      }
+      val optOpt = opt(ti, tipe)
+      optOpt match {
+        case Some((isImmutable, (_, elementName))) =>
+          if (isImmutable) {
+            return Template.printOption(elementName, fieldName)
+          } else {
+            return Template.printMOption(elementName, fieldName)
+          }
+        case _ =>
+      }
+      val eitherOpt = either(ti, tipe)
+      eitherOpt match {
+        case Some((isImmutable, (_, e0), (_, e1))) =>
+          if (isImmutable) {
+            return Template.printEither(e0, e1, fieldName)
+          } else {
+            return Template.printMEither(e0, e1, fieldName)
+          }
+        case _ =>
+      }
+      val p = basicOrTypeName(ti, tipe)
+      Template.printValue(p._2, fieldName)
+    }
+
+    def parseField(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {
+      val v = parseValue(ti, tipe)
+      return Template.parseField(fieldName, v)
+    }
+
+    def parseValue(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): ST = {
+      val sOpt = s(ti, tipe)
+      sOpt match {
+        case Some((isImmutable, indexType, (isSimple, elementName))) =>
+          val pe: ST =
+            if (isSimple) Template.parseBuiltIn(ISZ(elementName))
+            else Template.parseValue(ISZ(elementName))
+          if (isImmutable) {
+            return Template.parseIS(indexType, pe)
+          } else {
+            return Template.parseMS(indexType, pe)
+          }
+        case _ =>
+      }
+      val optOpt = opt(ti, tipe)
+      optOpt match {
+        case Some((isImmutable, (isSimple, elementName))) =>
+          val pe: ST =
+            if (isSimple) Template.parseBuiltIn(ISZ(elementName))
+            else Template.parseValue(ISZ(elementName))
+          if (isImmutable) {
+            return Template.parseOption(pe)
+          } else {
+            return Template.parseMOption(pe)
+          }
+        case _ =>
+      }
+      val eitherOpt = either(ti, tipe)
+      eitherOpt match {
+        case Some((isImmutable, (isSimple0, e0), (isSimple1, e1))) =>
+          val pe0: ST =
+            if (isSimple0) Template.parseBuiltIn(ISZ(e0))
+            else Template.parseValue(ISZ(e0))
+          val pe1: ST =
+            if (isSimple1) Template.parseBuiltIn(ISZ(e1))
+            else Template.parseValue(ISZ(e1))
+          if (isImmutable) {
+            return Template.parseEither(pe0, pe1)
+          } else {
+            return Template.parseMEither(pe0, pe1)
+          }
+        case _ =>
+      }
+      val p = basicOrTypeName(ti, tipe)
+      if (p._1) {
+        return Template.parseBuiltIn(ISZ(p._2, st"()"))
+      } else {
+        return Template.parseValue(ISZ(p._2, st"()"))
+      }
+    }
+
+    def either(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST), (B, ST))] = {
+      if (tipe.name.ids.size != 1 && tipe.typeArgs.size != 2) {
+        return None()
+      }
+      val name = tipe.name.ids(0).value
+      name match {
+        case "Either" =>
+          val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
+          val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
+          return Some((T, btn0, btn1))
+        case "MEither" =>
+          val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
+          val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
+          return Some((T, btn0, btn1))
+      }
+    }
+
+    def opt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST))] = {
+      if (tipe.name.ids.size != 1 && tipe.typeArgs.size != 1) {
+        return None()
+      }
+      val name = tipe.name.ids(0).value
+      name match {
+        case "Option" =>
+          val btn = basicOrTypeName(ti, tipe.typeArgs(0))
+          return Some((T, btn))
+        case "MOption" =>
+          val btn = basicOrTypeName(ti, tipe.typeArgs(0))
+          return Some((F, btn))
+      }
+    }
+
+    def s(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, String, (B, ST))] = {
+      if (tipe.name.ids.size != 1 && !(tipe.typeArgs.size == 1 || tipe.typeArgs.size == 2)) {
+        return None()
+      }
+      val name = tipe.name.ids(0).value
+      if (name == "IS" || name == "MS") {
+        val isImmutable = name == "IS"
+        val btn = basicOrTypeName(ti, tipe.typeArgs(1))
+        (basic(tipe.typeArgs(0)), basic(tipe.typeArgs(1))) match {
+          case (Some(it), Some(_)) => return Some((isImmutable, it, btn))
+          case (Some(it), _) => return Some((isImmutable, it, btn))
+          case _ => return None()
+        }
+      }
+      val btn = basicOrTypeName(ti, tipe.typeArgs(0))
+      name match {
+        case "ISZ" => return Some((T, "Z", btn))
+        case "ISZ8" => return Some((T, "Z8", btn))
+        case "ISZ16" => return Some((T, "Z16", btn))
+        case "ISZ32" => return Some((T, "Z32", btn))
+        case "ISZ64" => return Some((T, "Z64", btn))
+        case "ISN" => return Some((T, "N", btn))
+        case "ISN8" => return Some((T, "N8", btn))
+        case "ISN16" => return Some((T, "N16", btn))
+        case "ISN32" => return Some((T, "N32", btn))
+        case "ISN64" => return Some((T, "N64", btn))
+        case "ISS8" => return Some((T, "S8", btn))
+        case "ISS16" => return Some((T, "S16", btn))
+        case "ISS32" => return Some((T, "S32", btn))
+        case "ISS64" => return Some((T, "S64", btn))
+        case "ISU8" => return Some((T, "U8", btn))
+        case "ISU16" => return Some((T, "U16", btn))
+        case "ISU32" => return Some((T, "U32", btn))
+        case "ISU64" => return Some((T, "U64", btn))
+        case "MSZ" => return Some((F, "Z", btn))
+        case "MSZ8" => return Some((F, "Z8", btn))
+        case "MSZ16" => return Some((F, "Z16", btn))
+        case "MSZ32" => return Some((F, "Z32", btn))
+        case "MSZ64" => return Some((F, "Z64", btn))
+        case "MSN" => return Some((F, "N", btn))
+        case "MSN8" => return Some((F, "N8", btn))
+        case "MSN16" => return Some((F, "N16", btn))
+        case "MSN32" => return Some((F, "N32", btn))
+        case "MSN64" => return Some((F, "N64", btn))
+        case "MSS8" => return Some((F, "S8", btn))
+        case "MSS16" => return Some((F, "S16", btn))
+        case "MSS32" => return Some((F, "S32", btn))
+        case "MSS64" => return Some((F, "S64", btn))
+        case "MSU8" => return Some((F, "U8", btn))
+        case "MSU16" => return Some((F, "U16", btn))
+        case "MSU32" => return Some((F, "U32", btn))
+        case "MSU64" => return Some((F, "U64", btn))
+      }
+    }
+
+    def basicOrTypeName(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): (B, ST) = {
+      basic(tipe) match {
+        case Some(typeName) => return (T, st"$typeName")
+        case _ => tipe match {
+          case tipe: AST.Type.Named =>
+            ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(tipe.name.ids)) match {
+              case Some(ti2) => return (F, typeName(packageName, ti2.name))
+              case _ =>
+                reporter.error(tipe.posOpt, jsonGenKind,
+                  st"Could not find ${(AST.Util.ids2strings(tipe.name.ids), ".")}.".render)
+                return (F, st"")
+            }
+          case _ =>
+            reporter.error(tipe.posOpt, jsonGenKind, s"Only named types are supported for @datatype/@record fields.")
+            return (F, st"")
+        }
+
+      }
+    }
+
+    @pure def basic(tipe: AST.Type): Option[String] = {
+      tipe match {
+        case tipe: AST.Type.Named =>
+          if (tipe.typeArgs.nonEmpty || tipe.name.ids.size != 1) {
+            return None()
+          }
+          val r = tipe.name.ids(0).value
+          r match {
+            case "B" =>
+            case "C" =>
+            case "Z" =>
+            case "Z8" =>
+            case "Z16" =>
+            case "Z32" =>
+            case "Z64" =>
+            case "N" =>
+            case "N8" =>
+            case "N16" =>
+            case "N32" =>
+            case "N64" =>
+            case "S8" =>
+            case "S16" =>
+            case "S32" =>
+            case "S64" =>
+            case "U8" =>
+            case "U16" =>
+            case "U32" =>
+            case "U64" =>
+            case "F32" =>
+            case "F64" =>
+            case "R" =>
+            case "String" =>
+            case _ => return None()
+          }
+          return Some(r)
+        case _ => None()
+      }
+    }
   }
 
 }
+
+
