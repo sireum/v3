@@ -288,7 +288,7 @@ class ScalaMetaParserTest extends SireumSpec {
         r.unitOpt.foreach {
           case p: AST.TopUnit.Program =>
             if (checkJson) {
-              val json = AST.JSON.fromTopUnit(p)
+              val json = AST.JSON.fromTopUnit(p, true)
               //println(json)
               assert(AST.JSON.toTopUnit(json) == p)
             }

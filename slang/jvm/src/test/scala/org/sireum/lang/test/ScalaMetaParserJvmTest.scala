@@ -75,7 +75,7 @@ class ScalaMetaParserJvmTest extends SireumSpec {
     }
   }
 
-  def passing(file: File)(implicit spec: SireumSpec): Unit = {
+  def passing(file: File)(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = {
     smpt.passing(readFile(file), addImport = false, isPrelude = true, checkJson = false)
   }
 }

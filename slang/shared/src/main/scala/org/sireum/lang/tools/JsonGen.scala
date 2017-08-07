@@ -99,8 +99,13 @@ object JsonGen {
     }
 
     @pure def from(name: ST, tpe: ST): ST = {
-      return st"""def from$name(o: $tpe): String = {
-                 |  return Printer.print$name(o).render
+      return st"""def from$name(o: $tpe, isCompact: B): String = {
+                 |  val st = Printer.print$name(o)
+                 |  if (isCompact) {
+                 |    return st.renderCompact
+                 |  } else {
+                 |    return st.render
+                 |  }
                  |}"""
     }
 
@@ -131,8 +136,7 @@ object JsonGen {
       val fqs = "\"\"\"\""
       return st"""@pure def print$name(o: $tpe): ST = {
                  |  return printObject(ISZ(
-                 |    ("type", st$fqs$tpe$fqs),
-                 |    ${(printFields, ",\n")}
+                 |    ${(printField("type", st"st$fqs$tpe$fqs") +: printFields, ",\n")}
                  |  ))
                  |}"""
     }

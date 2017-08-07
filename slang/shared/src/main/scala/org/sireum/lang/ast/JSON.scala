@@ -45,14 +45,14 @@ object JSON {
       }
     }
 
-     @pure def printTopUnitProgram(o: TopUnit.Program): ST = {
-       return printObject(ISZ(
-         ("type", st""""TopUnit.Program""""),
-         ("fileUriOpt", printOption(o.fileUriOpt, printString)),
-         ("packageName", printName(o.packageName)),
-         ("body", printBody(o.body))
-       ))
-     }
+    @pure def printTopUnitProgram(o: TopUnit.Program): ST = {
+      return printObject(ISZ(
+        ("type", st""""TopUnit.Program""""),
+        ("fileUriOpt", printOption(o.fileUriOpt, printString)),
+        ("packageName", printName(o.packageName)),
+        ("body", printBody(o.body))
+      ))
+    }
 
     @pure def printTopUnitSequentUnit(o: TopUnit.SequentUnit): ST = {
       return printObject(ISZ(
@@ -159,7 +159,7 @@ object JSON {
 
     @pure def printStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): ST = {
       return printObject(ISZ(
-        ("type", st""""Stmt.Import.WildcardSelector""""),
+        ("type", st""""Stmt.Import.WildcardSelector"""")
       ))
     }
 
@@ -615,7 +615,7 @@ object JSON {
 
     @pure def printPatternSeqWildcard(o: Pattern.SeqWildcard): ST = {
       return printObject(ISZ(
-        ("type", st""""Pattern.SeqWildcard""""),
+        ("type", st""""Pattern.SeqWildcard"""")
       ))
     }
 
@@ -1667,26 +1667,26 @@ object JSON {
       }
     }
 
-     def parseTopUnitProgram(): TopUnit.Program = {
-       val r = parseTopUnitProgramT(F)
-       return r
-     }
+    def parseTopUnitProgram(): TopUnit.Program = {
+      val r = parseTopUnitProgramT(F)
+      return r
+    }
 
-     def parseTopUnitProgramT(typeParsed: B): TopUnit.Program = {
-       if (!typeParsed) {
-         parser.parseObjectType("TopUnit.Program")
-       }
-       parser.parseObjectKey("fileUriOpt")
-       val fileUriOpt = parser.parseOption(parser.parseString _)
-       parser.parseObjectNext()
-                               parser.parseObjectKey("packageName")
-                               val packageName = parseName()
-                               parser.parseObjectNext()
-       parser.parseObjectKey("body")
-       val body = parseBody()
-       parser.parseObjectNext()
-       return TopUnit.Program(fileUriOpt, packageName, body)
-     }
+    def parseTopUnitProgramT(typeParsed: B): TopUnit.Program = {
+      if (!typeParsed) {
+        parser.parseObjectType("TopUnit.Program")
+      }
+      parser.parseObjectKey("fileUriOpt")
+      val fileUriOpt = parser.parseOption(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("packageName")
+      val packageName = parseName()
+      parser.parseObjectNext()
+      parser.parseObjectKey("body")
+      val body = parseBody()
+      parser.parseObjectNext()
+      return TopUnit.Program(fileUriOpt, packageName, body)
+    }
 
     def parseTopUnitSequentUnit(): TopUnit.SequentUnit = {
       val r = parseTopUnitSequentUnitT(F)
@@ -1700,9 +1700,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("sequent")
-                              val sequent = parseLClauseSequent()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("sequent")
+      val sequent = parseLClauseSequent()
+      parser.parseObjectNext()
       return TopUnit.SequentUnit(fileUriOpt, sequent)
     }
 
@@ -1718,9 +1718,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("stars")
-                              val stars = parser.parseISZ(parsePosInfo _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("stars")
+      val stars = parser.parseISZ(parsePosInfo _)
+      parser.parseObjectNext()
       parser.parseObjectKey("vars")
       val vars = parser.parseISZ(parseId _)
       parser.parseObjectNext()
@@ -1817,9 +1817,9 @@ object JSON {
       parser.parseObjectKey("importers")
       val importers = parser.parseISZ(parseStmtImportImporter _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Stmt.Import(importers, attr)
     }
 
@@ -1835,9 +1835,9 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-                              parser.parseObjectKey("selectorOpt")
-                              val selectorOpt = parser.parseOption(parseStmtImportSelector _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("selectorOpt")
+      val selectorOpt = parser.parseOption(parseStmtImportSelector _)
+      parser.parseObjectNext()
       return Stmt.Import.Importer(name, selectorOpt)
     }
 
@@ -1889,9 +1889,9 @@ object JSON {
       parser.parseObjectKey("from")
       val from = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("to")
-                              val to = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("to")
+      val to = parseId()
+      parser.parseObjectNext()
       return Stmt.Import.NamedSelector(from, to)
     }
 
@@ -1907,9 +1907,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("tipeOpt")
       val tipeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -1934,9 +1934,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("pattern")
-                              val pattern = parsePattern()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("pattern")
+      val pattern = parsePattern()
+      parser.parseObjectNext()
       parser.parseObjectKey("tipeOpt")
       val tipeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -1961,9 +1961,9 @@ object JSON {
       parser.parseObjectKey("isVal")
       val isVal = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -1985,9 +1985,9 @@ object JSON {
       parser.parseObjectKey("purity")
       val purity = parsePurity()
       parser.parseObjectNext()
-                              parser.parseObjectKey("hasOverride")
-                              val hasOverride = parser.parseB()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("hasOverride")
+      val hasOverride = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
@@ -2015,9 +2015,9 @@ object JSON {
       parser.parseObjectKey("isPure")
       val isPure = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("sig")
-                              val sig = parseMethodSig()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("sig")
+      val sig = parseMethodSig()
+      parser.parseObjectNext()
       parser.parseObjectKey("contract")
       val contract = parseContract()
       parser.parseObjectNext()
@@ -2039,9 +2039,9 @@ object JSON {
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
-                              parser.parseObjectKey("defs")
-                              val defs = parser.parseISZ(parseSpecDef _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("defs")
+      val defs = parser.parseISZ(parseSpecDef _)
+      parser.parseObjectNext()
       parser.parseObjectKey("where")
       val where = parser.parseISZ(parseWhereDef _)
       parser.parseObjectNext()
@@ -2063,9 +2063,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("elements")
-                              val elements = parser.parseISZ(parseId _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("elements")
+      val elements = parser.parseISZ(parseId _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2084,9 +2084,9 @@ object JSON {
       parser.parseObjectKey("isExt")
       val isExt = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("parents")
       val parents = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -2111,9 +2111,9 @@ object JSON {
       parser.parseObjectKey("isImmutable")
       val isImmutable = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parseTypeParam _)
       parser.parseObjectNext()
@@ -2144,9 +2144,9 @@ object JSON {
       parser.parseObjectKey("isRoot")
       val isRoot = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("isDatatype")
-                              val isDatatype = parser.parseB()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("isDatatype")
+      val isDatatype = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -2180,9 +2180,9 @@ object JSON {
       parser.parseObjectKey("isRoot")
       val isRoot = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parseTypeParam _)
       parser.parseObjectNext()
@@ -2213,9 +2213,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("typeParams")
-                              val typeParams = parser.parseISZ(parseTypeParam _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("typeParams")
+      val typeParams = parser.parseISZ(parseTypeParam _)
+      parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -2237,9 +2237,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("rhs")
-                              val rhs = parseAssignExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("rhs")
+      val rhs = parseAssignExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2258,9 +2258,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("rhs")
-                              val rhs = parseAssignExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("rhs")
+      val rhs = parseAssignExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2279,9 +2279,9 @@ object JSON {
       parser.parseObjectKey("lhs")
       val lhs = parsePattern()
       parser.parseObjectNext()
-                              parser.parseObjectKey("rhs")
-                              val rhs = parseAssignExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("rhs")
+      val rhs = parseAssignExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2300,9 +2300,9 @@ object JSON {
       parser.parseObjectKey("body")
       val body = parseBody()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Stmt.Block(body, attr)
     }
 
@@ -2318,9 +2318,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("thenbody")
-                              val thenbody = parseBody()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("thenbody")
+      val thenbody = parseBody()
+      parser.parseObjectNext()
       parser.parseObjectKey("elsebody")
       val elsebody = parseBody()
       parser.parseObjectNext()
@@ -2342,9 +2342,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("cases")
-                              val cases = parser.parseISZ(parseCase _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("cases")
+      val cases = parser.parseISZ(parseCase _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -2363,9 +2363,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("invariants")
-                              val invariants = parser.parseISZ(parseContractExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("invariants")
+      val invariants = parser.parseISZ(parseContractExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2390,9 +2390,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("invariants")
-                              val invariants = parser.parseISZ(parseContractExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("invariants")
+      val invariants = parser.parseISZ(parseContractExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2417,9 +2417,9 @@ object JSON {
       parser.parseObjectKey("enumGen")
       val enumGen = parseEnumGenFor()
       parser.parseObjectNext()
-                              parser.parseObjectKey("invariants")
-                              val invariants = parser.parseISZ(parseContractExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("invariants")
+      val invariants = parser.parseISZ(parseContractExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -2444,9 +2444,9 @@ object JSON {
       parser.parseObjectKey("expOpt")
       val expOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Stmt.Return(expOpt, attr)
     }
 
@@ -2462,9 +2462,9 @@ object JSON {
       parser.parseObjectKey("clause")
       val clause = parseLClause()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Stmt.LStmt(clause, attr)
     }
 
@@ -2480,9 +2480,9 @@ object JSON {
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Stmt.Expr(exp, attr)
     }
 
@@ -2540,9 +2540,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       return LClause.Fact(id, exp)
     }
 
@@ -2573,9 +2573,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("sequent")
-                              val sequent = parseLClauseSequent()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("sequent")
+      val sequent = parseLClauseSequent()
+      parser.parseObjectNext()
       return LClause.Theorem(id, sequent)
     }
 
@@ -2591,9 +2591,9 @@ object JSON {
       parser.parseObjectKey("premises")
       val premises = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("conclusions")
-                              val conclusions = parser.parseISZ(parseExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("conclusions")
+      val conclusions = parser.parseISZ(parseExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("proofOpt")
       val proofOpt = parser.parseOption(parseLClauseProof _)
       parser.parseObjectNext()
@@ -2627,9 +2627,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       return ContractExp(idOpt, exp)
     }
 
@@ -2645,9 +2645,9 @@ object JSON {
       parser.parseObjectKey("pattern")
       val pattern = parsePattern()
       parser.parseObjectNext()
-                              parser.parseObjectKey("condOpt")
-                              val condOpt = parser.parseOption(parseExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("condOpt")
+      val condOpt = parser.parseOption(parseExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("body")
       val body = parseBody()
       parser.parseObjectNext()
@@ -2676,9 +2676,9 @@ object JSON {
       parser.parseObjectKey("isReverse")
       val isReverse = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       return EnumGen.Range.Expr(isReverse, exp)
     }
 
@@ -2694,9 +2694,9 @@ object JSON {
       parser.parseObjectKey("isReverse")
       val isReverse = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       return EnumGen.Range.Indices(isReverse, exp)
     }
 
@@ -2712,9 +2712,9 @@ object JSON {
       parser.parseObjectKey("isInclusive")
       val isInclusive = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("start")
-                              val start = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("start")
+      val start = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("end")
       val end = parseExp()
       parser.parseObjectNext()
@@ -2736,9 +2736,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("range")
-                              val range = parseEnumGenRange()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("range")
+      val range = parseEnumGenRange()
+      parser.parseObjectNext()
       parser.parseObjectKey("condOpt")
       val condOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
@@ -2767,9 +2767,9 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-                              parser.parseObjectKey("typeArgs")
-                              val typeArgs = parser.parseISZ(parseType _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("typeArgs")
+      val typeArgs = parser.parseISZ(parseType _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -2788,9 +2788,9 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseType _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("ret")
-                              val ret = parseType()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("ret")
+      val ret = parseType()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -2809,9 +2809,9 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseType _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseTypedAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseTypedAttr()
+      parser.parseObjectNext()
       return Type.Tuple(args, attr)
     }
 
@@ -2870,9 +2870,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("typeOpt")
-                              val typeOpt = parser.parseOption(parseType _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("typeOpt")
+      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectNext()
       return Pattern.Variable(id, typeOpt)
     }
 
@@ -2915,9 +2915,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("nameOpt")
-                              val nameOpt = parser.parseOption(parseName _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("nameOpt")
+      val nameOpt = parser.parseOption(parseName _)
+      parser.parseObjectNext()
       parser.parseObjectKey("patterns")
       val patterns = parser.parseISZ(parsePattern _)
       parser.parseObjectNext()
@@ -3015,9 +3015,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitB(value, attr)
     }
 
@@ -3033,9 +3033,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseC()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitC(value, attr)
     }
 
@@ -3051,9 +3051,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitZ(value, attr)
     }
 
@@ -3069,9 +3069,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ8()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitZ8(value, attr)
     }
 
@@ -3087,9 +3087,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ16()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitZ16(value, attr)
     }
 
@@ -3105,9 +3105,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ32()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitZ32(value, attr)
     }
 
@@ -3123,9 +3123,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseZ64()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitZ64(value, attr)
     }
 
@@ -3141,9 +3141,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitN(value, attr)
     }
 
@@ -3159,9 +3159,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN8()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitN8(value, attr)
     }
 
@@ -3177,9 +3177,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN16()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitN16(value, attr)
     }
 
@@ -3195,9 +3195,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN32()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitN32(value, attr)
     }
 
@@ -3213,9 +3213,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseN64()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitN64(value, attr)
     }
 
@@ -3231,9 +3231,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS8()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitS8(value, attr)
     }
 
@@ -3249,9 +3249,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS16()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitS16(value, attr)
     }
 
@@ -3267,9 +3267,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS32()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitS32(value, attr)
     }
 
@@ -3285,9 +3285,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseS64()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitS64(value, attr)
     }
 
@@ -3303,9 +3303,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU8()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitU8(value, attr)
     }
 
@@ -3321,9 +3321,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU16()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitU16(value, attr)
     }
 
@@ -3339,9 +3339,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU32()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitU32(value, attr)
     }
 
@@ -3357,9 +3357,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseU64()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitU64(value, attr)
     }
 
@@ -3375,9 +3375,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseF32()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitF32(value, attr)
     }
 
@@ -3393,9 +3393,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseF64()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitF64(value, attr)
     }
 
@@ -3411,9 +3411,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseR()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitR(value, attr)
     }
 
@@ -3429,9 +3429,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseISZ(parser.parseB _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("tipe")
-                              val tipe = parseType()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("tipe")
+      val tipe = parseType()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -3450,9 +3450,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseString()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Exp.LitString(value, attr)
     }
 
@@ -3468,9 +3468,9 @@ object JSON {
       parser.parseObjectKey("prefix")
       val prefix = parser.parseString()
       parser.parseObjectNext()
-                              parser.parseObjectKey("lits")
-                              val lits = parser.parseISZ(parseExpLitString _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("lits")
+      val lits = parser.parseISZ(parseExpLitString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -3543,9 +3543,9 @@ object JSON {
       parser.parseObjectKey("op")
       val op = parseExpUnaryOp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3605,9 +3605,9 @@ object JSON {
       parser.parseObjectKey("left")
       val left = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("op")
-                              val op = parseExpBinaryOp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("op")
+      val op = parseExpBinaryOp()
+      parser.parseObjectNext()
       parser.parseObjectKey("right")
       val right = parseExp()
       parser.parseObjectNext()
@@ -3629,9 +3629,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseResolvedAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseResolvedAttr()
+      parser.parseObjectNext()
       return Exp.Ident(id, attr)
     }
 
@@ -3647,9 +3647,9 @@ object JSON {
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseResolvedAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseResolvedAttr()
+      parser.parseObjectNext()
       return Exp.Eta(exp, attr)
     }
 
@@ -3665,9 +3665,9 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseTypedAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseTypedAttr()
+      parser.parseObjectNext()
       return Exp.Tuple(args, attr)
     }
 
@@ -3683,9 +3683,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3707,9 +3707,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3734,9 +3734,9 @@ object JSON {
       parser.parseObjectKey("receiverOpt")
       val receiverOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("targs")
       val targs = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -3761,9 +3761,9 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("thenExp")
-                              val thenExp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("thenExp")
+      val thenExp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("elseExp")
       val elseExp = parseExp()
       parser.parseObjectNext()
@@ -3785,9 +3785,9 @@ object JSON {
       parser.parseObjectKey("params")
       val params = parser.parseISZ(parseParam _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3806,9 +3806,9 @@ object JSON {
       parser.parseObjectKey("enumGens")
       val enumGens = parser.parseISZ(parseEnumGenFor _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
@@ -3827,9 +3827,9 @@ object JSON {
       parser.parseObjectKey("isForall")
       val isForall = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("varFragments")
-                              val varFragments = parser.parseISZ(parseVarFragment _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("varFragments")
+      val varFragments = parser.parseISZ(parseVarFragment _)
+      parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -3851,9 +3851,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("arg")
-                              val arg = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("arg")
+      val arg = parseExp()
+      parser.parseObjectNext()
       return NamedArg(id, arg)
     }
 
@@ -3869,9 +3869,9 @@ object JSON {
       parser.parseObjectKey("ids")
       val ids = parser.parseISZ(parseId _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("domainOpt")
-                              val domainOpt = parser.parseOption(parseDomain _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("domainOpt")
+      val domainOpt = parser.parseOption(parseDomain _)
+      parser.parseObjectNext()
       return VarFragment(ids, domainOpt)
     }
 
@@ -3896,9 +3896,9 @@ object JSON {
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseTypedAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseTypedAttr()
+      parser.parseObjectNext()
       return Domain.Type(tipe, attr)
     }
 
@@ -3914,9 +3914,9 @@ object JSON {
       parser.parseObjectKey("lo")
       val lo = parseExp()
       parser.parseObjectNext()
-                              parser.parseObjectKey("loExact")
-                              val loExact = parser.parseB()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("loExact")
+      val loExact = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("hi")
       val hi = parseExp()
       parser.parseObjectNext()
@@ -3941,9 +3941,9 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseString()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Id(value, attr)
     }
 
@@ -3959,9 +3959,9 @@ object JSON {
       parser.parseObjectKey("ids")
       val ids = parser.parseISZ(parseId _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Name(ids, attr)
     }
 
@@ -3992,9 +3992,9 @@ object JSON {
       parser.parseObjectKey("isHidden")
       val isHidden = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("isPure")
-                              val isPure = parser.parseB()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("isPure")
+      val isPure = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -4016,9 +4016,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("typeParams")
-                              val typeParams = parser.parseISZ(parseTypeParam _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("typeParams")
+      val typeParams = parser.parseISZ(parseTypeParam _)
+      parser.parseObjectNext()
       parser.parseObjectKey("hasParams")
       val hasParams = parser.parseB()
       parser.parseObjectNext()
@@ -4063,9 +4063,9 @@ object JSON {
       parser.parseObjectKey("mod")
       val mod = parseParamMod()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
@@ -4084,9 +4084,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("superTypeOpt")
-                              val superTypeOpt = parser.parseOption(parseType _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("superTypeOpt")
+      val superTypeOpt = parser.parseOption(parseType _)
+      parser.parseObjectNext()
       return TypeParam(id, superTypeOpt)
     }
 
@@ -4102,9 +4102,9 @@ object JSON {
       parser.parseObjectKey("reads")
       val reads = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("requires")
-                              val requires = parser.parseISZ(parseContractExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("requires")
+      val requires = parser.parseISZ(parseContractExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("modifies")
       val modifies = parser.parseISZ(parseExp _)
       parser.parseObjectNext()
@@ -4129,9 +4129,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("params")
-                              val params = parser.parseISZ(parseSubContractParam _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("params")
+      val params = parser.parseISZ(parseSubContractParam _)
+      parser.parseObjectNext()
       parser.parseObjectKey("contract")
       val contract = parseContract()
       parser.parseObjectNext()
@@ -4150,9 +4150,9 @@ object JSON {
       parser.parseObjectKey("isPure")
       val isPure = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("id")
-                              val id = parseId()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
       return SubContractParam(isPure, id)
     }
 
@@ -4177,9 +4177,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("tipe")
-                              val tipe = parseType()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("tipe")
+      val tipe = parseType()
+      parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -4198,9 +4198,9 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-                              parser.parseObjectKey("params")
-                              val params = parser.parseISZ(parseParam _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("params")
+      val params = parser.parseISZ(parseParam _)
+      parser.parseObjectNext()
       parser.parseObjectKey("rTipe")
       val rTipe = parseType()
       parser.parseObjectNext()
@@ -4222,9 +4222,9 @@ object JSON {
       parser.parseObjectKey("idOpt")
       val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("isOtherwise")
       val isOtherwise = parser.parseB()
       parser.parseObjectNext()
@@ -4258,9 +4258,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       parser.parseObjectKey("just")
       val just = parseJust()
       parser.parseObjectNext()
@@ -4279,9 +4279,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("assumeStep")
-                              val assumeStep = parseAssumeProofStep()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("assumeStep")
+      val assumeStep = parseAssumeProofStep()
+      parser.parseObjectNext()
       parser.parseObjectKey("steps")
       val steps = parser.parseISZ(parseProofStep _)
       parser.parseObjectNext()
@@ -4310,9 +4310,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("exp")
-                              val exp = parseExp()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
+      parser.parseObjectNext()
       return AssumeProofStep.Regular(step, exp)
     }
 
@@ -4328,9 +4328,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("varFragments")
-                              val varFragments = parser.parseISZ(parseVarFragment _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("varFragments")
+      val varFragments = parser.parseISZ(parseVarFragment _)
+      parser.parseObjectNext()
       return AssumeProofStep.ForallIntroAps(step, varFragments)
     }
 
@@ -4346,9 +4346,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("varFragments")
-                              val varFragments = parser.parseISZ(parseVarFragment _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("varFragments")
+      val varFragments = parser.parseISZ(parseVarFragment _)
+      parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
@@ -4409,9 +4409,9 @@ object JSON {
       parser.parseObjectKey("steps")
       val steps = parser.parseISZ(parseExpLitZ _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.AndIntro(steps, attr)
     }
 
@@ -4427,9 +4427,9 @@ object JSON {
       parser.parseObjectKey("is1")
       val is1 = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("andStep")
-                              val andStep = parseExpLitZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("andStep")
+      val andStep = parseExpLitZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4448,9 +4448,9 @@ object JSON {
       parser.parseObjectKey("is1")
       val is1 = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("step")
-                              val step = parseExpLitZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("step")
+      val step = parseExpLitZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4469,9 +4469,9 @@ object JSON {
       parser.parseObjectKey("orStep")
       val orStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("subProofSteps")
-                              val subProofSteps = parser.parseISZ(parseExpLitZ _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("subProofSteps")
+      val subProofSteps = parser.parseISZ(parseExpLitZ _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4490,9 +4490,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.ImplyIntro(subProofStep, attr)
     }
 
@@ -4508,9 +4508,9 @@ object JSON {
       parser.parseObjectKey("implyStep")
       val implyStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("steps")
-                              val steps = parser.parseISZ(parseExpLitZ _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("steps")
+      val steps = parser.parseISZ(parseExpLitZ _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4529,9 +4529,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.NegIntro(subProofStep, attr)
     }
 
@@ -4547,9 +4547,9 @@ object JSON {
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("negStep")
-                              val negStep = parseExpLitZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("negStep")
+      val negStep = parseExpLitZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4568,9 +4568,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.BottomElim(subProofStep, attr)
     }
 
@@ -4586,9 +4586,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.Pbc(subProofStep, attr)
     }
 
@@ -4604,9 +4604,9 @@ object JSON {
       parser.parseObjectKey("subProofStep")
       val subProofStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.ForallIntro(subProofStep, attr)
     }
 
@@ -4622,9 +4622,9 @@ object JSON {
       parser.parseObjectKey("forallStep")
       val forallStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("args")
-                              val args = parser.parseISZ(parseExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4643,9 +4643,9 @@ object JSON {
       parser.parseObjectKey("existsStep")
       val existsStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("args")
-                              val args = parser.parseISZ(parseExp _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseExp _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4664,9 +4664,9 @@ object JSON {
       parser.parseObjectKey("existsStep")
       val existsStep = parseExpLitZ()
       parser.parseObjectNext()
-                              parser.parseObjectKey("subProofStep")
-                              val subProofStep = parseExpLitZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("subProofStep")
+      val subProofStep = parseExpLitZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4685,9 +4685,9 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.Fact(name, attr)
     }
 
@@ -4703,9 +4703,9 @@ object JSON {
       parser.parseObjectKey("nameOpt")
       val nameOpt = parser.parseOption(parseName _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return Just.Invariant(nameOpt, attr)
     }
 
@@ -4721,9 +4721,9 @@ object JSON {
       parser.parseObjectKey("isRight")
       val isRight = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("eqStep")
-                              val eqStep = parseExpLitZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("eqStep")
+      val eqStep = parseExpLitZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("step")
       val step = parseExpLitZ()
       parser.parseObjectNext()
@@ -4745,9 +4745,9 @@ object JSON {
       parser.parseObjectKey("isAlgebra")
       val isAlgebra = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("steps")
-                              val steps = parser.parseISZ(parseExpLitZ _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("steps")
+      val steps = parser.parseISZ(parseExpLitZ _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4766,9 +4766,9 @@ object JSON {
       parser.parseObjectKey("path")
       val path = parseExpLitString()
       parser.parseObjectNext()
-                              parser.parseObjectKey("steps")
-                              val steps = parser.parseISZ(parseExpLitZ _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("steps")
+      val steps = parser.parseISZ(parseExpLitZ _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4787,9 +4787,9 @@ object JSON {
       parser.parseObjectKey("assignment")
       val assignment = parseTruthTableAssignment()
       parser.parseObjectNext()
-                              parser.parseObjectKey("separator")
-                              val separator = parsePosInfo()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("separator")
+      val separator = parsePosInfo()
+      parser.parseObjectNext()
       parser.parseObjectKey("values")
       val values = parseTruthTableAssignment()
       parser.parseObjectNext()
@@ -4808,9 +4808,9 @@ object JSON {
       parser.parseObjectKey("values")
       val values = parser.parseISZ(parseExpLitB _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("attr")
-                              val attr = parseAttr()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
       return TruthTable.Assignment(values, attr)
     }
 
@@ -4837,9 +4837,9 @@ object JSON {
       parser.parseObjectKey("isValid")
       val isValid = parser.parseB()
       parser.parseObjectNext()
-                              parser.parseObjectKey("assignments")
-                              val assignments = parser.parseISZ(parseTruthTableAssignment _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("assignments")
+      val assignments = parser.parseISZ(parseTruthTableAssignment _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4888,9 +4888,9 @@ object JSON {
       parser.parseObjectKey("trueAssignments")
       val trueAssignments = parser.parseISZ(parseTruthTableAssignment _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("falseAssignments")
-                              val falseAssignments = parser.parseISZ(parseTruthTableAssignment _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("falseAssignments")
+      val falseAssignments = parser.parseISZ(parseTruthTableAssignment _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
@@ -4924,9 +4924,9 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("typeOpt")
-                              val typeOpt = parser.parseOption(parseType _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("typeOpt")
+      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectNext()
       return TypedAttr(posOpt, typeOpt)
     }
 
@@ -4942,9 +4942,9 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("resOpt")
-                              val resOpt = parser.parseOption(parseResolvedInfo _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("resOpt")
+      val resOpt = parser.parseOption(parseResolvedInfo _)
+      parser.parseObjectNext()
       parser.parseObjectKey("typeOpt")
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
@@ -4963,9 +4963,9 @@ object JSON {
       parser.parseObjectKey("kind")
       val kind = parseSymbolKind()
       parser.parseObjectNext()
-                              parser.parseObjectKey("ids")
-                              val ids = parser.parseISZ(parser.parseString _)
-                              parser.parseObjectNext()
+      parser.parseObjectKey("ids")
+      val ids = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("externFileUriOpt")
       val externFileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
@@ -5019,9 +5019,9 @@ object JSON {
       parser.parseObjectKey("fileUriOpt")
       val fileUriOpt = parser.parseOption(parser.parseString _)
       parser.parseObjectNext()
-                              parser.parseObjectKey("beginLine")
-                              val beginLine = parser.parseZ()
-                              parser.parseObjectNext()
+      parser.parseObjectKey("beginLine")
+      val beginLine = parser.parseZ()
+      parser.parseObjectNext()
       parser.parseObjectKey("beginColumn")
       val beginColumn = parser.parseZ()
       parser.parseObjectNext()
@@ -5058,21 +5058,31 @@ object JSON {
     return r
   }
 
-  def fromTopUnit(o: TopUnit): String = {
-    return Printer.printTopUnit(o).render
+  def fromTopUnit(o: TopUnit, isCompact: B): String = {
+    val st = Printer.printTopUnit(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
-   def toTopUnit(s: String): TopUnit = {
-     def fTopUnit(parser: Parser): TopUnit = {
-       var r = parser.parseTopUnit()
-       return r
-     }
-     val r = to(s, fTopUnit)
-     return r
-   }
+  def toTopUnit(s: String): TopUnit = {
+    def fTopUnit(parser: Parser): TopUnit = {
+      var r = parser.parseTopUnit()
+      return r
+    }
+    val r = to(s, fTopUnit)
+    return r
+  }
 
-  def fromTopUnitProgram(o: TopUnit.Program): String = {
-    return Printer.printTopUnitProgram(o).render
+  def fromTopUnitProgram(o: TopUnit.Program, isCompact: B): String = {
+    val st = Printer.printTopUnitProgram(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTopUnitProgram(s: String): TopUnit.Program = {
@@ -5084,8 +5094,13 @@ object JSON {
     return r
   }
 
-  def fromTopUnitSequentUnit(o: TopUnit.SequentUnit): String = {
-    return Printer.printTopUnitSequentUnit(o).render
+  def fromTopUnitSequentUnit(o: TopUnit.SequentUnit, isCompact: B): String = {
+    val st = Printer.printTopUnitSequentUnit(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTopUnitSequentUnit(s: String): TopUnit.SequentUnit = {
@@ -5097,8 +5112,13 @@ object JSON {
     return r
   }
 
-  def fromTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): String = {
-    return Printer.printTopUnitTruthTableUnit(o).render
+  def fromTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit, isCompact: B): String = {
+    val st = Printer.printTopUnitTruthTableUnit(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTopUnitTruthTableUnit(s: String): TopUnit.TruthTableUnit = {
@@ -5110,8 +5130,13 @@ object JSON {
     return r
   }
 
-  def fromStmt(o: Stmt): String = {
-    return Printer.printStmt(o).render
+  def fromStmt(o: Stmt, isCompact: B): String = {
+    val st = Printer.printStmt(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmt(s: String): Stmt = {
@@ -5123,8 +5148,13 @@ object JSON {
     return r
   }
 
-  def fromAssignExp(o: AssignExp): String = {
-    return Printer.printAssignExp(o).render
+  def fromAssignExp(o: AssignExp, isCompact: B): String = {
+    val st = Printer.printAssignExp(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAssignExp(s: String): AssignExp = {
@@ -5136,8 +5166,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImport(o: Stmt.Import): String = {
-    return Printer.printStmtImport(o).render
+  def fromStmtImport(o: Stmt.Import, isCompact: B): String = {
+    val st = Printer.printStmtImport(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImport(s: String): Stmt.Import = {
@@ -5149,8 +5184,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImportImporter(o: Stmt.Import.Importer): String = {
-    return Printer.printStmtImportImporter(o).render
+  def fromStmtImportImporter(o: Stmt.Import.Importer, isCompact: B): String = {
+    val st = Printer.printStmtImportImporter(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImportImporter(s: String): Stmt.Import.Importer = {
@@ -5162,8 +5202,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImportSelector(o: Stmt.Import.Selector): String = {
-    return Printer.printStmtImportSelector(o).render
+  def fromStmtImportSelector(o: Stmt.Import.Selector, isCompact: B): String = {
+    val st = Printer.printStmtImportSelector(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImportSelector(s: String): Stmt.Import.Selector = {
@@ -5175,8 +5220,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImportMultiSelector(o: Stmt.Import.MultiSelector): String = {
-    return Printer.printStmtImportMultiSelector(o).render
+  def fromStmtImportMultiSelector(o: Stmt.Import.MultiSelector, isCompact: B): String = {
+    val st = Printer.printStmtImportMultiSelector(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImportMultiSelector(s: String): Stmt.Import.MultiSelector = {
@@ -5188,8 +5238,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): String = {
-    return Printer.printStmtImportWildcardSelector(o).render
+  def fromStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector, isCompact: B): String = {
+    val st = Printer.printStmtImportWildcardSelector(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImportWildcardSelector(s: String): Stmt.Import.WildcardSelector = {
@@ -5201,8 +5256,13 @@ object JSON {
     return r
   }
 
-  def fromStmtImportNamedSelector(o: Stmt.Import.NamedSelector): String = {
-    return Printer.printStmtImportNamedSelector(o).render
+  def fromStmtImportNamedSelector(o: Stmt.Import.NamedSelector, isCompact: B): String = {
+    val st = Printer.printStmtImportNamedSelector(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtImportNamedSelector(s: String): Stmt.Import.NamedSelector = {
@@ -5214,8 +5274,13 @@ object JSON {
     return r
   }
 
-  def fromStmtVar(o: Stmt.Var): String = {
-    return Printer.printStmtVar(o).render
+  def fromStmtVar(o: Stmt.Var, isCompact: B): String = {
+    val st = Printer.printStmtVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtVar(s: String): Stmt.Var = {
@@ -5227,8 +5292,13 @@ object JSON {
     return r
   }
 
-  def fromStmtVarPattern(o: Stmt.VarPattern): String = {
-    return Printer.printStmtVarPattern(o).render
+  def fromStmtVarPattern(o: Stmt.VarPattern, isCompact: B): String = {
+    val st = Printer.printStmtVarPattern(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtVarPattern(s: String): Stmt.VarPattern = {
@@ -5240,8 +5310,13 @@ object JSON {
     return r
   }
 
-  def fromStmtSpecVar(o: Stmt.SpecVar): String = {
-    return Printer.printStmtSpecVar(o).render
+  def fromStmtSpecVar(o: Stmt.SpecVar, isCompact: B): String = {
+    val st = Printer.printStmtSpecVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtSpecVar(s: String): Stmt.SpecVar = {
@@ -5253,8 +5328,13 @@ object JSON {
     return r
   }
 
-  def fromStmtMethod(o: Stmt.Method): String = {
-    return Printer.printStmtMethod(o).render
+  def fromStmtMethod(o: Stmt.Method, isCompact: B): String = {
+    val st = Printer.printStmtMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtMethod(s: String): Stmt.Method = {
@@ -5266,8 +5346,13 @@ object JSON {
     return r
   }
 
-  def fromStmtExtMethod(o: Stmt.ExtMethod): String = {
-    return Printer.printStmtExtMethod(o).render
+  def fromStmtExtMethod(o: Stmt.ExtMethod, isCompact: B): String = {
+    val st = Printer.printStmtExtMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtExtMethod(s: String): Stmt.ExtMethod = {
@@ -5279,8 +5364,13 @@ object JSON {
     return r
   }
 
-  def fromStmtSpecMethod(o: Stmt.SpecMethod): String = {
-    return Printer.printStmtSpecMethod(o).render
+  def fromStmtSpecMethod(o: Stmt.SpecMethod, isCompact: B): String = {
+    val st = Printer.printStmtSpecMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtSpecMethod(s: String): Stmt.SpecMethod = {
@@ -5292,8 +5382,13 @@ object JSON {
     return r
   }
 
-  def fromStmtEnum(o: Stmt.Enum): String = {
-    return Printer.printStmtEnum(o).render
+  def fromStmtEnum(o: Stmt.Enum, isCompact: B): String = {
+    val st = Printer.printStmtEnum(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtEnum(s: String): Stmt.Enum = {
@@ -5305,8 +5400,13 @@ object JSON {
     return r
   }
 
-  def fromStmtObject(o: Stmt.Object): String = {
-    return Printer.printStmtObject(o).render
+  def fromStmtObject(o: Stmt.Object, isCompact: B): String = {
+    val st = Printer.printStmtObject(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtObject(s: String): Stmt.Object = {
@@ -5318,8 +5418,13 @@ object JSON {
     return r
   }
 
-  def fromStmtSig(o: Stmt.Sig): String = {
-    return Printer.printStmtSig(o).render
+  def fromStmtSig(o: Stmt.Sig, isCompact: B): String = {
+    val st = Printer.printStmtSig(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtSig(s: String): Stmt.Sig = {
@@ -5331,8 +5436,13 @@ object JSON {
     return r
   }
 
-  def fromStmtAbstractDatatype(o: Stmt.AbstractDatatype): String = {
-    return Printer.printStmtAbstractDatatype(o).render
+  def fromStmtAbstractDatatype(o: Stmt.AbstractDatatype, isCompact: B): String = {
+    val st = Printer.printStmtAbstractDatatype(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtAbstractDatatype(s: String): Stmt.AbstractDatatype = {
@@ -5344,8 +5454,13 @@ object JSON {
     return r
   }
 
-  def fromStmtRich(o: Stmt.Rich): String = {
-    return Printer.printStmtRich(o).render
+  def fromStmtRich(o: Stmt.Rich, isCompact: B): String = {
+    val st = Printer.printStmtRich(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtRich(s: String): Stmt.Rich = {
@@ -5357,8 +5472,13 @@ object JSON {
     return r
   }
 
-  def fromStmtTypeAlias(o: Stmt.TypeAlias): String = {
-    return Printer.printStmtTypeAlias(o).render
+  def fromStmtTypeAlias(o: Stmt.TypeAlias, isCompact: B): String = {
+    val st = Printer.printStmtTypeAlias(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtTypeAlias(s: String): Stmt.TypeAlias = {
@@ -5370,8 +5490,13 @@ object JSON {
     return r
   }
 
-  def fromStmtAssign(o: Stmt.Assign): String = {
-    return Printer.printStmtAssign(o).render
+  def fromStmtAssign(o: Stmt.Assign, isCompact: B): String = {
+    val st = Printer.printStmtAssign(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtAssign(s: String): Stmt.Assign = {
@@ -5383,8 +5508,13 @@ object JSON {
     return r
   }
 
-  def fromStmtAssignUp(o: Stmt.AssignUp): String = {
-    return Printer.printStmtAssignUp(o).render
+  def fromStmtAssignUp(o: Stmt.AssignUp, isCompact: B): String = {
+    val st = Printer.printStmtAssignUp(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtAssignUp(s: String): Stmt.AssignUp = {
@@ -5396,8 +5526,13 @@ object JSON {
     return r
   }
 
-  def fromStmtAssignPattern(o: Stmt.AssignPattern): String = {
-    return Printer.printStmtAssignPattern(o).render
+  def fromStmtAssignPattern(o: Stmt.AssignPattern, isCompact: B): String = {
+    val st = Printer.printStmtAssignPattern(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtAssignPattern(s: String): Stmt.AssignPattern = {
@@ -5409,8 +5544,13 @@ object JSON {
     return r
   }
 
-  def fromStmtBlock(o: Stmt.Block): String = {
-    return Printer.printStmtBlock(o).render
+  def fromStmtBlock(o: Stmt.Block, isCompact: B): String = {
+    val st = Printer.printStmtBlock(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtBlock(s: String): Stmt.Block = {
@@ -5422,8 +5562,13 @@ object JSON {
     return r
   }
 
-  def fromStmtIf(o: Stmt.If): String = {
-    return Printer.printStmtIf(o).render
+  def fromStmtIf(o: Stmt.If, isCompact: B): String = {
+    val st = Printer.printStmtIf(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtIf(s: String): Stmt.If = {
@@ -5435,8 +5580,13 @@ object JSON {
     return r
   }
 
-  def fromStmtMatch(o: Stmt.Match): String = {
-    return Printer.printStmtMatch(o).render
+  def fromStmtMatch(o: Stmt.Match, isCompact: B): String = {
+    val st = Printer.printStmtMatch(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtMatch(s: String): Stmt.Match = {
@@ -5448,8 +5598,13 @@ object JSON {
     return r
   }
 
-  def fromStmtWhile(o: Stmt.While): String = {
-    return Printer.printStmtWhile(o).render
+  def fromStmtWhile(o: Stmt.While, isCompact: B): String = {
+    val st = Printer.printStmtWhile(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtWhile(s: String): Stmt.While = {
@@ -5461,8 +5616,13 @@ object JSON {
     return r
   }
 
-  def fromStmtDoWhile(o: Stmt.DoWhile): String = {
-    return Printer.printStmtDoWhile(o).render
+  def fromStmtDoWhile(o: Stmt.DoWhile, isCompact: B): String = {
+    val st = Printer.printStmtDoWhile(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtDoWhile(s: String): Stmt.DoWhile = {
@@ -5474,8 +5634,13 @@ object JSON {
     return r
   }
 
-  def fromStmtFor(o: Stmt.For): String = {
-    return Printer.printStmtFor(o).render
+  def fromStmtFor(o: Stmt.For, isCompact: B): String = {
+    val st = Printer.printStmtFor(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtFor(s: String): Stmt.For = {
@@ -5487,8 +5652,13 @@ object JSON {
     return r
   }
 
-  def fromStmtReturn(o: Stmt.Return): String = {
-    return Printer.printStmtReturn(o).render
+  def fromStmtReturn(o: Stmt.Return, isCompact: B): String = {
+    val st = Printer.printStmtReturn(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtReturn(s: String): Stmt.Return = {
@@ -5500,8 +5670,13 @@ object JSON {
     return r
   }
 
-  def fromStmtLStmt(o: Stmt.LStmt): String = {
-    return Printer.printStmtLStmt(o).render
+  def fromStmtLStmt(o: Stmt.LStmt, isCompact: B): String = {
+    val st = Printer.printStmtLStmt(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtLStmt(s: String): Stmt.LStmt = {
@@ -5513,8 +5688,13 @@ object JSON {
     return r
   }
 
-  def fromStmtExpr(o: Stmt.Expr): String = {
-    return Printer.printStmtExpr(o).render
+  def fromStmtExpr(o: Stmt.Expr, isCompact: B): String = {
+    val st = Printer.printStmtExpr(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toStmtExpr(s: String): Stmt.Expr = {
@@ -5526,8 +5706,13 @@ object JSON {
     return r
   }
 
-  def fromLClause(o: LClause): String = {
-    return Printer.printLClause(o).render
+  def fromLClause(o: LClause, isCompact: B): String = {
+    val st = Printer.printLClause(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClause(s: String): LClause = {
@@ -5539,8 +5724,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseInvariants(o: LClause.Invariants): String = {
-    return Printer.printLClauseInvariants(o).render
+  def fromLClauseInvariants(o: LClause.Invariants, isCompact: B): String = {
+    val st = Printer.printLClauseInvariants(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseInvariants(s: String): LClause.Invariants = {
@@ -5552,8 +5742,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseFacts(o: LClause.Facts): String = {
-    return Printer.printLClauseFacts(o).render
+  def fromLClauseFacts(o: LClause.Facts, isCompact: B): String = {
+    val st = Printer.printLClauseFacts(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseFacts(s: String): LClause.Facts = {
@@ -5565,8 +5760,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseFact(o: LClause.Fact): String = {
-    return Printer.printLClauseFact(o).render
+  def fromLClauseFact(o: LClause.Fact, isCompact: B): String = {
+    val st = Printer.printLClauseFact(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseFact(s: String): LClause.Fact = {
@@ -5578,8 +5778,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseTheorems(o: LClause.Theorems): String = {
-    return Printer.printLClauseTheorems(o).render
+  def fromLClauseTheorems(o: LClause.Theorems, isCompact: B): String = {
+    val st = Printer.printLClauseTheorems(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseTheorems(s: String): LClause.Theorems = {
@@ -5591,8 +5796,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseTheorem(o: LClause.Theorem): String = {
-    return Printer.printLClauseTheorem(o).render
+  def fromLClauseTheorem(o: LClause.Theorem, isCompact: B): String = {
+    val st = Printer.printLClauseTheorem(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseTheorem(s: String): LClause.Theorem = {
@@ -5604,8 +5814,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseSequent(o: LClause.Sequent): String = {
-    return Printer.printLClauseSequent(o).render
+  def fromLClauseSequent(o: LClause.Sequent, isCompact: B): String = {
+    val st = Printer.printLClauseSequent(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseSequent(s: String): LClause.Sequent = {
@@ -5617,8 +5832,13 @@ object JSON {
     return r
   }
 
-  def fromLClauseProof(o: LClause.Proof): String = {
-    return Printer.printLClauseProof(o).render
+  def fromLClauseProof(o: LClause.Proof, isCompact: B): String = {
+    val st = Printer.printLClauseProof(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLClauseProof(s: String): LClause.Proof = {
@@ -5630,8 +5850,13 @@ object JSON {
     return r
   }
 
-  def fromContractExp(o: ContractExp): String = {
-    return Printer.printContractExp(o).render
+  def fromContractExp(o: ContractExp, isCompact: B): String = {
+    val st = Printer.printContractExp(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toContractExp(s: String): ContractExp = {
@@ -5643,8 +5868,13 @@ object JSON {
     return r
   }
 
-  def fromCase(o: Case): String = {
-    return Printer.printCase(o).render
+  def fromCase(o: Case, isCompact: B): String = {
+    val st = Printer.printCase(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toCase(s: String): Case = {
@@ -5656,8 +5886,13 @@ object JSON {
     return r
   }
 
-  def fromEnumGenRange(o: EnumGen.Range): String = {
-    return Printer.printEnumGenRange(o).render
+  def fromEnumGenRange(o: EnumGen.Range, isCompact: B): String = {
+    val st = Printer.printEnumGenRange(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toEnumGenRange(s: String): EnumGen.Range = {
@@ -5669,8 +5904,13 @@ object JSON {
     return r
   }
 
-  def fromEnumGenRangeExpr(o: EnumGen.Range.Expr): String = {
-    return Printer.printEnumGenRangeExpr(o).render
+  def fromEnumGenRangeExpr(o: EnumGen.Range.Expr, isCompact: B): String = {
+    val st = Printer.printEnumGenRangeExpr(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toEnumGenRangeExpr(s: String): EnumGen.Range.Expr = {
@@ -5682,8 +5922,13 @@ object JSON {
     return r
   }
 
-  def fromEnumGenRangeIndices(o: EnumGen.Range.Indices): String = {
-    return Printer.printEnumGenRangeIndices(o).render
+  def fromEnumGenRangeIndices(o: EnumGen.Range.Indices, isCompact: B): String = {
+    val st = Printer.printEnumGenRangeIndices(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toEnumGenRangeIndices(s: String): EnumGen.Range.Indices = {
@@ -5695,8 +5940,13 @@ object JSON {
     return r
   }
 
-  def fromEnumGenRangeStep(o: EnumGen.Range.Step): String = {
-    return Printer.printEnumGenRangeStep(o).render
+  def fromEnumGenRangeStep(o: EnumGen.Range.Step, isCompact: B): String = {
+    val st = Printer.printEnumGenRangeStep(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toEnumGenRangeStep(s: String): EnumGen.Range.Step = {
@@ -5708,8 +5958,13 @@ object JSON {
     return r
   }
 
-  def fromEnumGenFor(o: EnumGen.For): String = {
-    return Printer.printEnumGenFor(o).render
+  def fromEnumGenFor(o: EnumGen.For, isCompact: B): String = {
+    val st = Printer.printEnumGenFor(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toEnumGenFor(s: String): EnumGen.For = {
@@ -5721,8 +5976,13 @@ object JSON {
     return r
   }
 
-  def fromType(o: Type): String = {
-    return Printer.printType(o).render
+  def fromType(o: Type, isCompact: B): String = {
+    val st = Printer.printType(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toType(s: String): Type = {
@@ -5734,8 +5994,13 @@ object JSON {
     return r
   }
 
-  def fromTypeNamed(o: Type.Named): String = {
-    return Printer.printTypeNamed(o).render
+  def fromTypeNamed(o: Type.Named, isCompact: B): String = {
+    val st = Printer.printTypeNamed(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTypeNamed(s: String): Type.Named = {
@@ -5747,8 +6012,13 @@ object JSON {
     return r
   }
 
-  def fromTypeFun(o: Type.Fun): String = {
-    return Printer.printTypeFun(o).render
+  def fromTypeFun(o: Type.Fun, isCompact: B): String = {
+    val st = Printer.printTypeFun(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTypeFun(s: String): Type.Fun = {
@@ -5760,8 +6030,13 @@ object JSON {
     return r
   }
 
-  def fromTypeTuple(o: Type.Tuple): String = {
-    return Printer.printTypeTuple(o).render
+  def fromTypeTuple(o: Type.Tuple, isCompact: B): String = {
+    val st = Printer.printTypeTuple(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTypeTuple(s: String): Type.Tuple = {
@@ -5773,8 +6048,13 @@ object JSON {
     return r
   }
 
-  def fromPattern(o: Pattern): String = {
-    return Printer.printPattern(o).render
+  def fromPattern(o: Pattern, isCompact: B): String = {
+    val st = Printer.printPattern(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPattern(s: String): Pattern = {
@@ -5786,8 +6066,13 @@ object JSON {
     return r
   }
 
-  def fromPatternLiteral(o: Pattern.Literal): String = {
-    return Printer.printPatternLiteral(o).render
+  def fromPatternLiteral(o: Pattern.Literal, isCompact: B): String = {
+    val st = Printer.printPatternLiteral(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternLiteral(s: String): Pattern.Literal = {
@@ -5799,8 +6084,13 @@ object JSON {
     return r
   }
 
-  def fromPatternRef(o: Pattern.Ref): String = {
-    return Printer.printPatternRef(o).render
+  def fromPatternRef(o: Pattern.Ref, isCompact: B): String = {
+    val st = Printer.printPatternRef(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternRef(s: String): Pattern.Ref = {
@@ -5812,8 +6102,13 @@ object JSON {
     return r
   }
 
-  def fromPatternVariable(o: Pattern.Variable): String = {
-    return Printer.printPatternVariable(o).render
+  def fromPatternVariable(o: Pattern.Variable, isCompact: B): String = {
+    val st = Printer.printPatternVariable(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternVariable(s: String): Pattern.Variable = {
@@ -5825,8 +6120,13 @@ object JSON {
     return r
   }
 
-  def fromPatternWildcard(o: Pattern.Wildcard): String = {
-    return Printer.printPatternWildcard(o).render
+  def fromPatternWildcard(o: Pattern.Wildcard, isCompact: B): String = {
+    val st = Printer.printPatternWildcard(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternWildcard(s: String): Pattern.Wildcard = {
@@ -5838,8 +6138,13 @@ object JSON {
     return r
   }
 
-  def fromPatternSeqWildcard(o: Pattern.SeqWildcard): String = {
-    return Printer.printPatternSeqWildcard(o).render
+  def fromPatternSeqWildcard(o: Pattern.SeqWildcard, isCompact: B): String = {
+    val st = Printer.printPatternSeqWildcard(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternSeqWildcard(s: String): Pattern.SeqWildcard = {
@@ -5851,8 +6156,13 @@ object JSON {
     return r
   }
 
-  def fromPatternStructure(o: Pattern.Structure): String = {
-    return Printer.printPatternStructure(o).render
+  def fromPatternStructure(o: Pattern.Structure, isCompact: B): String = {
+    val st = Printer.printPatternStructure(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPatternStructure(s: String): Pattern.Structure = {
@@ -5864,8 +6174,13 @@ object JSON {
     return r
   }
 
-  def fromExp(o: Exp): String = {
-    return Printer.printExp(o).render
+  def fromExp(o: Exp, isCompact: B): String = {
+    val st = Printer.printExp(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExp(s: String): Exp = {
@@ -5877,8 +6192,13 @@ object JSON {
     return r
   }
 
-  def fromLit(o: Lit): String = {
-    return Printer.printLit(o).render
+  def fromLit(o: Lit, isCompact: B): String = {
+    val st = Printer.printLit(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toLit(s: String): Lit = {
@@ -5890,8 +6210,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitB(o: Exp.LitB): String = {
-    return Printer.printExpLitB(o).render
+  def fromExpLitB(o: Exp.LitB, isCompact: B): String = {
+    val st = Printer.printExpLitB(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitB(s: String): Exp.LitB = {
@@ -5903,8 +6228,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitC(o: Exp.LitC): String = {
-    return Printer.printExpLitC(o).render
+  def fromExpLitC(o: Exp.LitC, isCompact: B): String = {
+    val st = Printer.printExpLitC(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitC(s: String): Exp.LitC = {
@@ -5916,8 +6246,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitZ(o: Exp.LitZ): String = {
-    return Printer.printExpLitZ(o).render
+  def fromExpLitZ(o: Exp.LitZ, isCompact: B): String = {
+    val st = Printer.printExpLitZ(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitZ(s: String): Exp.LitZ = {
@@ -5929,8 +6264,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitZ8(o: Exp.LitZ8): String = {
-    return Printer.printExpLitZ8(o).render
+  def fromExpLitZ8(o: Exp.LitZ8, isCompact: B): String = {
+    val st = Printer.printExpLitZ8(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitZ8(s: String): Exp.LitZ8 = {
@@ -5942,8 +6282,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitZ16(o: Exp.LitZ16): String = {
-    return Printer.printExpLitZ16(o).render
+  def fromExpLitZ16(o: Exp.LitZ16, isCompact: B): String = {
+    val st = Printer.printExpLitZ16(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitZ16(s: String): Exp.LitZ16 = {
@@ -5955,8 +6300,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitZ32(o: Exp.LitZ32): String = {
-    return Printer.printExpLitZ32(o).render
+  def fromExpLitZ32(o: Exp.LitZ32, isCompact: B): String = {
+    val st = Printer.printExpLitZ32(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitZ32(s: String): Exp.LitZ32 = {
@@ -5968,8 +6318,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitZ64(o: Exp.LitZ64): String = {
-    return Printer.printExpLitZ64(o).render
+  def fromExpLitZ64(o: Exp.LitZ64, isCompact: B): String = {
+    val st = Printer.printExpLitZ64(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitZ64(s: String): Exp.LitZ64 = {
@@ -5981,8 +6336,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitN(o: Exp.LitN): String = {
-    return Printer.printExpLitN(o).render
+  def fromExpLitN(o: Exp.LitN, isCompact: B): String = {
+    val st = Printer.printExpLitN(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitN(s: String): Exp.LitN = {
@@ -5994,8 +6354,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitN8(o: Exp.LitN8): String = {
-    return Printer.printExpLitN8(o).render
+  def fromExpLitN8(o: Exp.LitN8, isCompact: B): String = {
+    val st = Printer.printExpLitN8(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitN8(s: String): Exp.LitN8 = {
@@ -6007,8 +6372,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitN16(o: Exp.LitN16): String = {
-    return Printer.printExpLitN16(o).render
+  def fromExpLitN16(o: Exp.LitN16, isCompact: B): String = {
+    val st = Printer.printExpLitN16(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitN16(s: String): Exp.LitN16 = {
@@ -6020,8 +6390,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitN32(o: Exp.LitN32): String = {
-    return Printer.printExpLitN32(o).render
+  def fromExpLitN32(o: Exp.LitN32, isCompact: B): String = {
+    val st = Printer.printExpLitN32(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitN32(s: String): Exp.LitN32 = {
@@ -6033,8 +6408,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitN64(o: Exp.LitN64): String = {
-    return Printer.printExpLitN64(o).render
+  def fromExpLitN64(o: Exp.LitN64, isCompact: B): String = {
+    val st = Printer.printExpLitN64(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitN64(s: String): Exp.LitN64 = {
@@ -6046,8 +6426,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitS8(o: Exp.LitS8): String = {
-    return Printer.printExpLitS8(o).render
+  def fromExpLitS8(o: Exp.LitS8, isCompact: B): String = {
+    val st = Printer.printExpLitS8(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitS8(s: String): Exp.LitS8 = {
@@ -6059,8 +6444,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitS16(o: Exp.LitS16): String = {
-    return Printer.printExpLitS16(o).render
+  def fromExpLitS16(o: Exp.LitS16, isCompact: B): String = {
+    val st = Printer.printExpLitS16(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitS16(s: String): Exp.LitS16 = {
@@ -6072,8 +6462,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitS32(o: Exp.LitS32): String = {
-    return Printer.printExpLitS32(o).render
+  def fromExpLitS32(o: Exp.LitS32, isCompact: B): String = {
+    val st = Printer.printExpLitS32(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitS32(s: String): Exp.LitS32 = {
@@ -6085,8 +6480,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitS64(o: Exp.LitS64): String = {
-    return Printer.printExpLitS64(o).render
+  def fromExpLitS64(o: Exp.LitS64, isCompact: B): String = {
+    val st = Printer.printExpLitS64(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitS64(s: String): Exp.LitS64 = {
@@ -6098,8 +6498,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitU8(o: Exp.LitU8): String = {
-    return Printer.printExpLitU8(o).render
+  def fromExpLitU8(o: Exp.LitU8, isCompact: B): String = {
+    val st = Printer.printExpLitU8(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitU8(s: String): Exp.LitU8 = {
@@ -6111,8 +6516,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitU16(o: Exp.LitU16): String = {
-    return Printer.printExpLitU16(o).render
+  def fromExpLitU16(o: Exp.LitU16, isCompact: B): String = {
+    val st = Printer.printExpLitU16(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitU16(s: String): Exp.LitU16 = {
@@ -6124,8 +6534,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitU32(o: Exp.LitU32): String = {
-    return Printer.printExpLitU32(o).render
+  def fromExpLitU32(o: Exp.LitU32, isCompact: B): String = {
+    val st = Printer.printExpLitU32(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitU32(s: String): Exp.LitU32 = {
@@ -6137,8 +6552,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitU64(o: Exp.LitU64): String = {
-    return Printer.printExpLitU64(o).render
+  def fromExpLitU64(o: Exp.LitU64, isCompact: B): String = {
+    val st = Printer.printExpLitU64(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitU64(s: String): Exp.LitU64 = {
@@ -6150,8 +6570,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitF32(o: Exp.LitF32): String = {
-    return Printer.printExpLitF32(o).render
+  def fromExpLitF32(o: Exp.LitF32, isCompact: B): String = {
+    val st = Printer.printExpLitF32(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitF32(s: String): Exp.LitF32 = {
@@ -6163,8 +6588,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitF64(o: Exp.LitF64): String = {
-    return Printer.printExpLitF64(o).render
+  def fromExpLitF64(o: Exp.LitF64, isCompact: B): String = {
+    val st = Printer.printExpLitF64(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitF64(s: String): Exp.LitF64 = {
@@ -6176,8 +6606,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitR(o: Exp.LitR): String = {
-    return Printer.printExpLitR(o).render
+  def fromExpLitR(o: Exp.LitR, isCompact: B): String = {
+    val st = Printer.printExpLitR(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitR(s: String): Exp.LitR = {
@@ -6189,8 +6624,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitBv(o: Exp.LitBv): String = {
-    return Printer.printExpLitBv(o).render
+  def fromExpLitBv(o: Exp.LitBv, isCompact: B): String = {
+    val st = Printer.printExpLitBv(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitBv(s: String): Exp.LitBv = {
@@ -6202,8 +6642,13 @@ object JSON {
     return r
   }
 
-  def fromExpLitString(o: Exp.LitString): String = {
-    return Printer.printExpLitString(o).render
+  def fromExpLitString(o: Exp.LitString, isCompact: B): String = {
+    val st = Printer.printExpLitString(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpLitString(s: String): Exp.LitString = {
@@ -6215,8 +6660,13 @@ object JSON {
     return r
   }
 
-  def fromExpStringInterpolate(o: Exp.StringInterpolate): String = {
-    return Printer.printExpStringInterpolate(o).render
+  def fromExpStringInterpolate(o: Exp.StringInterpolate, isCompact: B): String = {
+    val st = Printer.printExpStringInterpolate(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpStringInterpolate(s: String): Exp.StringInterpolate = {
@@ -6228,8 +6678,13 @@ object JSON {
     return r
   }
 
-  def fromExpThis(o: Exp.This): String = {
-    return Printer.printExpThis(o).render
+  def fromExpThis(o: Exp.This, isCompact: B): String = {
+    val st = Printer.printExpThis(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpThis(s: String): Exp.This = {
@@ -6241,8 +6696,13 @@ object JSON {
     return r
   }
 
-  def fromExpSuper(o: Exp.Super): String = {
-    return Printer.printExpSuper(o).render
+  def fromExpSuper(o: Exp.Super, isCompact: B): String = {
+    val st = Printer.printExpSuper(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpSuper(s: String): Exp.Super = {
@@ -6254,8 +6714,13 @@ object JSON {
     return r
   }
 
-  def fromExpUnary(o: Exp.Unary): String = {
-    return Printer.printExpUnary(o).render
+  def fromExpUnary(o: Exp.Unary, isCompact: B): String = {
+    val st = Printer.printExpUnary(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpUnary(s: String): Exp.Unary = {
@@ -6267,8 +6732,13 @@ object JSON {
     return r
   }
 
-  def fromExpBinary(o: Exp.Binary): String = {
-    return Printer.printExpBinary(o).render
+  def fromExpBinary(o: Exp.Binary, isCompact: B): String = {
+    val st = Printer.printExpBinary(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpBinary(s: String): Exp.Binary = {
@@ -6280,8 +6750,13 @@ object JSON {
     return r
   }
 
-  def fromExpIdent(o: Exp.Ident): String = {
-    return Printer.printExpIdent(o).render
+  def fromExpIdent(o: Exp.Ident, isCompact: B): String = {
+    val st = Printer.printExpIdent(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpIdent(s: String): Exp.Ident = {
@@ -6293,8 +6768,13 @@ object JSON {
     return r
   }
 
-  def fromExpEta(o: Exp.Eta): String = {
-    return Printer.printExpEta(o).render
+  def fromExpEta(o: Exp.Eta, isCompact: B): String = {
+    val st = Printer.printExpEta(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpEta(s: String): Exp.Eta = {
@@ -6306,8 +6786,13 @@ object JSON {
     return r
   }
 
-  def fromExpTuple(o: Exp.Tuple): String = {
-    return Printer.printExpTuple(o).render
+  def fromExpTuple(o: Exp.Tuple, isCompact: B): String = {
+    val st = Printer.printExpTuple(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpTuple(s: String): Exp.Tuple = {
@@ -6319,8 +6804,13 @@ object JSON {
     return r
   }
 
-  def fromExpSelect(o: Exp.Select): String = {
-    return Printer.printExpSelect(o).render
+  def fromExpSelect(o: Exp.Select, isCompact: B): String = {
+    val st = Printer.printExpSelect(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpSelect(s: String): Exp.Select = {
@@ -6332,8 +6822,13 @@ object JSON {
     return r
   }
 
-  def fromExpInvoke(o: Exp.Invoke): String = {
-    return Printer.printExpInvoke(o).render
+  def fromExpInvoke(o: Exp.Invoke, isCompact: B): String = {
+    val st = Printer.printExpInvoke(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpInvoke(s: String): Exp.Invoke = {
@@ -6345,8 +6840,13 @@ object JSON {
     return r
   }
 
-  def fromExpInvokeNamed(o: Exp.InvokeNamed): String = {
-    return Printer.printExpInvokeNamed(o).render
+  def fromExpInvokeNamed(o: Exp.InvokeNamed, isCompact: B): String = {
+    val st = Printer.printExpInvokeNamed(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpInvokeNamed(s: String): Exp.InvokeNamed = {
@@ -6358,8 +6858,13 @@ object JSON {
     return r
   }
 
-  def fromExpIf(o: Exp.If): String = {
-    return Printer.printExpIf(o).render
+  def fromExpIf(o: Exp.If, isCompact: B): String = {
+    val st = Printer.printExpIf(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpIf(s: String): Exp.If = {
@@ -6371,8 +6876,13 @@ object JSON {
     return r
   }
 
-  def fromExpFun(o: Exp.Fun): String = {
-    return Printer.printExpFun(o).render
+  def fromExpFun(o: Exp.Fun, isCompact: B): String = {
+    val st = Printer.printExpFun(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpFun(s: String): Exp.Fun = {
@@ -6384,8 +6894,13 @@ object JSON {
     return r
   }
 
-  def fromExpForYield(o: Exp.ForYield): String = {
-    return Printer.printExpForYield(o).render
+  def fromExpForYield(o: Exp.ForYield, isCompact: B): String = {
+    val st = Printer.printExpForYield(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpForYield(s: String): Exp.ForYield = {
@@ -6397,8 +6912,13 @@ object JSON {
     return r
   }
 
-  def fromExpQuant(o: Exp.Quant): String = {
-    return Printer.printExpQuant(o).render
+  def fromExpQuant(o: Exp.Quant, isCompact: B): String = {
+    val st = Printer.printExpQuant(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toExpQuant(s: String): Exp.Quant = {
@@ -6410,8 +6930,13 @@ object JSON {
     return r
   }
 
-  def fromNamedArg(o: NamedArg): String = {
-    return Printer.printNamedArg(o).render
+  def fromNamedArg(o: NamedArg, isCompact: B): String = {
+    val st = Printer.printNamedArg(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toNamedArg(s: String): NamedArg = {
@@ -6423,8 +6948,13 @@ object JSON {
     return r
   }
 
-  def fromVarFragment(o: VarFragment): String = {
-    return Printer.printVarFragment(o).render
+  def fromVarFragment(o: VarFragment, isCompact: B): String = {
+    val st = Printer.printVarFragment(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toVarFragment(s: String): VarFragment = {
@@ -6436,8 +6966,13 @@ object JSON {
     return r
   }
 
-  def fromDomain(o: Domain): String = {
-    return Printer.printDomain(o).render
+  def fromDomain(o: Domain, isCompact: B): String = {
+    val st = Printer.printDomain(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toDomain(s: String): Domain = {
@@ -6449,8 +6984,13 @@ object JSON {
     return r
   }
 
-  def fromDomainType(o: Domain.Type): String = {
-    return Printer.printDomainType(o).render
+  def fromDomainType(o: Domain.Type, isCompact: B): String = {
+    val st = Printer.printDomainType(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toDomainType(s: String): Domain.Type = {
@@ -6462,8 +7002,13 @@ object JSON {
     return r
   }
 
-  def fromDomainRange(o: Domain.Range): String = {
-    return Printer.printDomainRange(o).render
+  def fromDomainRange(o: Domain.Range, isCompact: B): String = {
+    val st = Printer.printDomainRange(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toDomainRange(s: String): Domain.Range = {
@@ -6475,8 +7020,13 @@ object JSON {
     return r
   }
 
-  def fromId(o: Id): String = {
-    return Printer.printId(o).render
+  def fromId(o: Id, isCompact: B): String = {
+    val st = Printer.printId(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toId(s: String): Id = {
@@ -6488,8 +7038,13 @@ object JSON {
     return r
   }
 
-  def fromName(o: Name): String = {
-    return Printer.printName(o).render
+  def fromName(o: Name, isCompact: B): String = {
+    val st = Printer.printName(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toName(s: String): Name = {
@@ -6501,8 +7056,13 @@ object JSON {
     return r
   }
 
-  def fromBody(o: Body): String = {
-    return Printer.printBody(o).render
+  def fromBody(o: Body, isCompact: B): String = {
+    val st = Printer.printBody(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toBody(s: String): Body = {
@@ -6514,8 +7074,13 @@ object JSON {
     return r
   }
 
-  def fromAbstractDatatypeParam(o: AbstractDatatypeParam): String = {
-    return Printer.printAbstractDatatypeParam(o).render
+  def fromAbstractDatatypeParam(o: AbstractDatatypeParam, isCompact: B): String = {
+    val st = Printer.printAbstractDatatypeParam(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAbstractDatatypeParam(s: String): AbstractDatatypeParam = {
@@ -6527,8 +7092,13 @@ object JSON {
     return r
   }
 
-  def fromMethodSig(o: MethodSig): String = {
-    return Printer.printMethodSig(o).render
+  def fromMethodSig(o: MethodSig, isCompact: B): String = {
+    val st = Printer.printMethodSig(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toMethodSig(s: String): MethodSig = {
@@ -6540,8 +7110,13 @@ object JSON {
     return r
   }
 
-  def fromParam(o: Param): String = {
-    return Printer.printParam(o).render
+  def fromParam(o: Param, isCompact: B): String = {
+    val st = Printer.printParam(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toParam(s: String): Param = {
@@ -6553,8 +7128,13 @@ object JSON {
     return r
   }
 
-  def fromTypeParam(o: TypeParam): String = {
-    return Printer.printTypeParam(o).render
+  def fromTypeParam(o: TypeParam, isCompact: B): String = {
+    val st = Printer.printTypeParam(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTypeParam(s: String): TypeParam = {
@@ -6566,8 +7146,13 @@ object JSON {
     return r
   }
 
-  def fromContract(o: Contract): String = {
-    return Printer.printContract(o).render
+  def fromContract(o: Contract, isCompact: B): String = {
+    val st = Printer.printContract(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toContract(s: String): Contract = {
@@ -6579,8 +7164,13 @@ object JSON {
     return r
   }
 
-  def fromSubContract(o: SubContract): String = {
-    return Printer.printSubContract(o).render
+  def fromSubContract(o: SubContract, isCompact: B): String = {
+    val st = Printer.printSubContract(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toSubContract(s: String): SubContract = {
@@ -6592,8 +7182,13 @@ object JSON {
     return r
   }
 
-  def fromSubContractParam(o: SubContractParam): String = {
-    return Printer.printSubContractParam(o).render
+  def fromSubContractParam(o: SubContractParam, isCompact: B): String = {
+    val st = Printer.printSubContractParam(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toSubContractParam(s: String): SubContractParam = {
@@ -6605,8 +7200,13 @@ object JSON {
     return r
   }
 
-  def fromWhereDef(o: WhereDef): String = {
-    return Printer.printWhereDef(o).render
+  def fromWhereDef(o: WhereDef, isCompact: B): String = {
+    val st = Printer.printWhereDef(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toWhereDef(s: String): WhereDef = {
@@ -6618,8 +7218,13 @@ object JSON {
     return r
   }
 
-  def fromWhereDefVal(o: WhereDef.Val): String = {
-    return Printer.printWhereDefVal(o).render
+  def fromWhereDefVal(o: WhereDef.Val, isCompact: B): String = {
+    val st = Printer.printWhereDefVal(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toWhereDefVal(s: String): WhereDef.Val = {
@@ -6631,8 +7236,13 @@ object JSON {
     return r
   }
 
-  def fromWhereDefDef(o: WhereDef.Def): String = {
-    return Printer.printWhereDefDef(o).render
+  def fromWhereDefDef(o: WhereDef.Def, isCompact: B): String = {
+    val st = Printer.printWhereDefDef(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toWhereDefDef(s: String): WhereDef.Def = {
@@ -6644,8 +7254,13 @@ object JSON {
     return r
   }
 
-  def fromSpecDef(o: SpecDef): String = {
-    return Printer.printSpecDef(o).render
+  def fromSpecDef(o: SpecDef, isCompact: B): String = {
+    val st = Printer.printSpecDef(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toSpecDef(s: String): SpecDef = {
@@ -6657,8 +7272,13 @@ object JSON {
     return r
   }
 
-  def fromProofStep(o: ProofStep): String = {
-    return Printer.printProofStep(o).render
+  def fromProofStep(o: ProofStep, isCompact: B): String = {
+    val st = Printer.printProofStep(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toProofStep(s: String): ProofStep = {
@@ -6670,8 +7290,13 @@ object JSON {
     return r
   }
 
-  def fromProofStepBasic(o: ProofStep.Basic): String = {
-    return Printer.printProofStepBasic(o).render
+  def fromProofStepBasic(o: ProofStep.Basic, isCompact: B): String = {
+    val st = Printer.printProofStepBasic(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toProofStepBasic(s: String): ProofStep.Basic = {
@@ -6683,8 +7308,13 @@ object JSON {
     return r
   }
 
-  def fromProofStepSubProof(o: ProofStep.SubProof): String = {
-    return Printer.printProofStepSubProof(o).render
+  def fromProofStepSubProof(o: ProofStep.SubProof, isCompact: B): String = {
+    val st = Printer.printProofStepSubProof(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toProofStepSubProof(s: String): ProofStep.SubProof = {
@@ -6696,8 +7326,13 @@ object JSON {
     return r
   }
 
-  def fromAssumeProofStep(o: AssumeProofStep): String = {
-    return Printer.printAssumeProofStep(o).render
+  def fromAssumeProofStep(o: AssumeProofStep, isCompact: B): String = {
+    val st = Printer.printAssumeProofStep(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAssumeProofStep(s: String): AssumeProofStep = {
@@ -6709,8 +7344,13 @@ object JSON {
     return r
   }
 
-  def fromAssumeProofStepRegular(o: AssumeProofStep.Regular): String = {
-    return Printer.printAssumeProofStepRegular(o).render
+  def fromAssumeProofStepRegular(o: AssumeProofStep.Regular, isCompact: B): String = {
+    val st = Printer.printAssumeProofStepRegular(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAssumeProofStepRegular(s: String): AssumeProofStep.Regular = {
@@ -6722,8 +7362,13 @@ object JSON {
     return r
   }
 
-  def fromAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): String = {
-    return Printer.printAssumeProofStepForallIntroAps(o).render
+  def fromAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps, isCompact: B): String = {
+    val st = Printer.printAssumeProofStepForallIntroAps(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAssumeProofStepForallIntroAps(s: String): AssumeProofStep.ForallIntroAps = {
@@ -6735,8 +7380,13 @@ object JSON {
     return r
   }
 
-  def fromAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): String = {
-    return Printer.printAssumeProofStepExistsElimAps(o).render
+  def fromAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps, isCompact: B): String = {
+    val st = Printer.printAssumeProofStepExistsElimAps(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAssumeProofStepExistsElimAps(s: String): AssumeProofStep.ExistsElimAps = {
@@ -6748,8 +7398,13 @@ object JSON {
     return r
   }
 
-  def fromJust(o: Just): String = {
-    return Printer.printJust(o).render
+  def fromJust(o: Just, isCompact: B): String = {
+    val st = Printer.printJust(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJust(s: String): Just = {
@@ -6761,8 +7416,13 @@ object JSON {
     return r
   }
 
-  def fromJustPremise(o: Just.Premise): String = {
-    return Printer.printJustPremise(o).render
+  def fromJustPremise(o: Just.Premise, isCompact: B): String = {
+    val st = Printer.printJustPremise(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustPremise(s: String): Just.Premise = {
@@ -6774,8 +7434,13 @@ object JSON {
     return r
   }
 
-  def fromJustAndIntro(o: Just.AndIntro): String = {
-    return Printer.printJustAndIntro(o).render
+  def fromJustAndIntro(o: Just.AndIntro, isCompact: B): String = {
+    val st = Printer.printJustAndIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustAndIntro(s: String): Just.AndIntro = {
@@ -6787,8 +7452,13 @@ object JSON {
     return r
   }
 
-  def fromJustAndElim(o: Just.AndElim): String = {
-    return Printer.printJustAndElim(o).render
+  def fromJustAndElim(o: Just.AndElim, isCompact: B): String = {
+    val st = Printer.printJustAndElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustAndElim(s: String): Just.AndElim = {
@@ -6800,8 +7470,13 @@ object JSON {
     return r
   }
 
-  def fromJustOrIntro(o: Just.OrIntro): String = {
-    return Printer.printJustOrIntro(o).render
+  def fromJustOrIntro(o: Just.OrIntro, isCompact: B): String = {
+    val st = Printer.printJustOrIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustOrIntro(s: String): Just.OrIntro = {
@@ -6813,8 +7488,13 @@ object JSON {
     return r
   }
 
-  def fromJustOrElim(o: Just.OrElim): String = {
-    return Printer.printJustOrElim(o).render
+  def fromJustOrElim(o: Just.OrElim, isCompact: B): String = {
+    val st = Printer.printJustOrElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustOrElim(s: String): Just.OrElim = {
@@ -6826,8 +7506,13 @@ object JSON {
     return r
   }
 
-  def fromJustImplyIntro(o: Just.ImplyIntro): String = {
-    return Printer.printJustImplyIntro(o).render
+  def fromJustImplyIntro(o: Just.ImplyIntro, isCompact: B): String = {
+    val st = Printer.printJustImplyIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustImplyIntro(s: String): Just.ImplyIntro = {
@@ -6839,8 +7524,13 @@ object JSON {
     return r
   }
 
-  def fromJustImplyElim(o: Just.ImplyElim): String = {
-    return Printer.printJustImplyElim(o).render
+  def fromJustImplyElim(o: Just.ImplyElim, isCompact: B): String = {
+    val st = Printer.printJustImplyElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustImplyElim(s: String): Just.ImplyElim = {
@@ -6852,8 +7542,13 @@ object JSON {
     return r
   }
 
-  def fromJustNegIntro(o: Just.NegIntro): String = {
-    return Printer.printJustNegIntro(o).render
+  def fromJustNegIntro(o: Just.NegIntro, isCompact: B): String = {
+    val st = Printer.printJustNegIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustNegIntro(s: String): Just.NegIntro = {
@@ -6865,8 +7560,13 @@ object JSON {
     return r
   }
 
-  def fromJustNegElim(o: Just.NegElim): String = {
-    return Printer.printJustNegElim(o).render
+  def fromJustNegElim(o: Just.NegElim, isCompact: B): String = {
+    val st = Printer.printJustNegElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustNegElim(s: String): Just.NegElim = {
@@ -6878,8 +7578,13 @@ object JSON {
     return r
   }
 
-  def fromJustBottomElim(o: Just.BottomElim): String = {
-    return Printer.printJustBottomElim(o).render
+  def fromJustBottomElim(o: Just.BottomElim, isCompact: B): String = {
+    val st = Printer.printJustBottomElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustBottomElim(s: String): Just.BottomElim = {
@@ -6891,8 +7596,13 @@ object JSON {
     return r
   }
 
-  def fromJustPbc(o: Just.Pbc): String = {
-    return Printer.printJustPbc(o).render
+  def fromJustPbc(o: Just.Pbc, isCompact: B): String = {
+    val st = Printer.printJustPbc(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustPbc(s: String): Just.Pbc = {
@@ -6904,8 +7614,13 @@ object JSON {
     return r
   }
 
-  def fromJustForallIntro(o: Just.ForallIntro): String = {
-    return Printer.printJustForallIntro(o).render
+  def fromJustForallIntro(o: Just.ForallIntro, isCompact: B): String = {
+    val st = Printer.printJustForallIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustForallIntro(s: String): Just.ForallIntro = {
@@ -6917,8 +7632,13 @@ object JSON {
     return r
   }
 
-  def fromJustForallElim(o: Just.ForallElim): String = {
-    return Printer.printJustForallElim(o).render
+  def fromJustForallElim(o: Just.ForallElim, isCompact: B): String = {
+    val st = Printer.printJustForallElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustForallElim(s: String): Just.ForallElim = {
@@ -6930,8 +7650,13 @@ object JSON {
     return r
   }
 
-  def fromJustExistsIntro(o: Just.ExistsIntro): String = {
-    return Printer.printJustExistsIntro(o).render
+  def fromJustExistsIntro(o: Just.ExistsIntro, isCompact: B): String = {
+    val st = Printer.printJustExistsIntro(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustExistsIntro(s: String): Just.ExistsIntro = {
@@ -6943,8 +7668,13 @@ object JSON {
     return r
   }
 
-  def fromJustExistsElim(o: Just.ExistsElim): String = {
-    return Printer.printJustExistsElim(o).render
+  def fromJustExistsElim(o: Just.ExistsElim, isCompact: B): String = {
+    val st = Printer.printJustExistsElim(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustExistsElim(s: String): Just.ExistsElim = {
@@ -6956,8 +7686,13 @@ object JSON {
     return r
   }
 
-  def fromJustFact(o: Just.Fact): String = {
-    return Printer.printJustFact(o).render
+  def fromJustFact(o: Just.Fact, isCompact: B): String = {
+    val st = Printer.printJustFact(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustFact(s: String): Just.Fact = {
@@ -6969,8 +7704,13 @@ object JSON {
     return r
   }
 
-  def fromJustInvariant(o: Just.Invariant): String = {
-    return Printer.printJustInvariant(o).render
+  def fromJustInvariant(o: Just.Invariant, isCompact: B): String = {
+    val st = Printer.printJustInvariant(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustInvariant(s: String): Just.Invariant = {
@@ -6982,8 +7722,13 @@ object JSON {
     return r
   }
 
-  def fromJustSubst(o: Just.Subst): String = {
-    return Printer.printJustSubst(o).render
+  def fromJustSubst(o: Just.Subst, isCompact: B): String = {
+    val st = Printer.printJustSubst(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustSubst(s: String): Just.Subst = {
@@ -6995,8 +7740,13 @@ object JSON {
     return r
   }
 
-  def fromJustAuto(o: Just.Auto): String = {
-    return Printer.printJustAuto(o).render
+  def fromJustAuto(o: Just.Auto, isCompact: B): String = {
+    val st = Printer.printJustAuto(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustAuto(s: String): Just.Auto = {
@@ -7008,8 +7758,13 @@ object JSON {
     return r
   }
 
-  def fromJustCoq(o: Just.Coq): String = {
-    return Printer.printJustCoq(o).render
+  def fromJustCoq(o: Just.Coq, isCompact: B): String = {
+    val st = Printer.printJustCoq(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toJustCoq(s: String): Just.Coq = {
@@ -7021,8 +7776,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableRow(o: TruthTable.Row): String = {
-    return Printer.printTruthTableRow(o).render
+  def fromTruthTableRow(o: TruthTable.Row, isCompact: B): String = {
+    val st = Printer.printTruthTableRow(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableRow(s: String): TruthTable.Row = {
@@ -7034,8 +7794,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableAssignment(o: TruthTable.Assignment): String = {
-    return Printer.printTruthTableAssignment(o).render
+  def fromTruthTableAssignment(o: TruthTable.Assignment, isCompact: B): String = {
+    val st = Printer.printTruthTableAssignment(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableAssignment(s: String): TruthTable.Assignment = {
@@ -7047,8 +7812,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableConclusion(o: TruthTable.Conclusion): String = {
-    return Printer.printTruthTableConclusion(o).render
+  def fromTruthTableConclusion(o: TruthTable.Conclusion, isCompact: B): String = {
+    val st = Printer.printTruthTableConclusion(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableConclusion(s: String): TruthTable.Conclusion = {
@@ -7060,8 +7830,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): String = {
-    return Printer.printTruthTableConclusionValidity(o).render
+  def fromTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity, isCompact: B): String = {
+    val st = Printer.printTruthTableConclusionValidity(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableConclusionValidity(s: String): TruthTable.Conclusion.Validity = {
@@ -7073,8 +7848,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): String = {
-    return Printer.printTruthTableConclusionTautology(o).render
+  def fromTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology, isCompact: B): String = {
+    val st = Printer.printTruthTableConclusionTautology(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableConclusionTautology(s: String): TruthTable.Conclusion.Tautology = {
@@ -7086,8 +7866,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): String = {
-    return Printer.printTruthTableConclusionContradictory(o).render
+  def fromTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory, isCompact: B): String = {
+    val st = Printer.printTruthTableConclusionContradictory(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableConclusionContradictory(s: String): TruthTable.Conclusion.Contradictory = {
@@ -7099,8 +7884,13 @@ object JSON {
     return r
   }
 
-  def fromTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): String = {
-    return Printer.printTruthTableConclusionContingent(o).render
+  def fromTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent, isCompact: B): String = {
+    val st = Printer.printTruthTableConclusionContingent(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTruthTableConclusionContingent(s: String): TruthTable.Conclusion.Contingent = {
@@ -7112,8 +7902,13 @@ object JSON {
     return r
   }
 
-  def fromAttr(o: Attr): String = {
-    return Printer.printAttr(o).render
+  def fromAttr(o: Attr, isCompact: B): String = {
+    val st = Printer.printAttr(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toAttr(s: String): Attr = {
@@ -7125,8 +7920,13 @@ object JSON {
     return r
   }
 
-  def fromTypedAttr(o: TypedAttr): String = {
-    return Printer.printTypedAttr(o).render
+  def fromTypedAttr(o: TypedAttr, isCompact: B): String = {
+    val st = Printer.printTypedAttr(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toTypedAttr(s: String): TypedAttr = {
@@ -7138,8 +7938,13 @@ object JSON {
     return r
   }
 
-  def fromResolvedAttr(o: ResolvedAttr): String = {
-    return Printer.printResolvedAttr(o).render
+  def fromResolvedAttr(o: ResolvedAttr, isCompact: B): String = {
+    val st = Printer.printResolvedAttr(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toResolvedAttr(s: String): ResolvedAttr = {
@@ -7151,8 +7956,13 @@ object JSON {
     return r
   }
 
-  def fromResolvedInfo(o: ResolvedInfo): String = {
-    return Printer.printResolvedInfo(o).render
+  def fromResolvedInfo(o: ResolvedInfo, isCompact: B): String = {
+    val st = Printer.printResolvedInfo(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toResolvedInfo(s: String): ResolvedInfo = {
@@ -7164,8 +7974,13 @@ object JSON {
     return r
   }
 
-  def fromPosInfo(o: PosInfo): String = {
-    return Printer.printPosInfo(o).render
+  def fromPosInfo(o: PosInfo, isCompact: B): String = {
+    val st = Printer.printPosInfo(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
   }
 
   def toPosInfo(s: String): PosInfo = {
