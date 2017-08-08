@@ -248,7 +248,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
         failing("@ext @ext object Foo", "Redundant @ext")
 
-        failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
+        failing("@ext object Foo { def f: Z = 4 }", "extension method expression")
 
       }
 
