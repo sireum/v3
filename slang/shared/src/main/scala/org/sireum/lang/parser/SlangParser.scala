@@ -641,6 +641,27 @@ class SlangParser(text: Predef.String,
       hasParams,
       params,
       tpeopt.map(translateType).getOrElse(unitType))
+
+    def body(): AST.Stmt.Method = {
+      exp match {
+        case exp: Term.Block =>
+          val (mc, bodyOpt) = exp.stats.headOption match {
+            case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
+              (parseContract(l),
+                if (isDiet) None[AST.Body]()
+                else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
+            case _ =>
+              (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
+                if (isDiet) None[AST.Body]()
+                else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
+          }
+          AST.Stmt.Method(purity, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
+        case _ =>
+          errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
+          AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+      }
+    }
+
     if (isSpec)
       exp match {
         case q"$$" =>
@@ -653,9 +674,11 @@ class SlangParser(text: Predef.String,
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
       }
-    else if (enclosing == Enclosing.ExtObject) {
+    else if (enclosing == Enclosing.ExtObject || enclosing == Enclosing.RichClass) {
       if (hasOverride)
         errorInSlang(exp.pos, s"Extension methods cannot have an override modifier")
+      if (isMemoize)
+        errorInSlang(exp.pos, s"Extension methods cannot have a @memoize modifier")
       exp match {
         case q"$$" =>
           AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
@@ -663,28 +686,14 @@ class SlangParser(text: Predef.String,
         case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseContract(exp), attr(tree.pos))
         case _ =>
-          hasError = true
-          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang @ext object method expression.")
-          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
-            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+          if (enclosing == Enclosing.RichClass) body() else {
+            hasError = true
+            error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang extension method expression.")
+            AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
+              ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+          }
       }
-    } else exp match {
-      case exp: Term.Block =>
-        val (mc, bodyOpt) = exp.stats.headOption match {
-          case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
-            (parseContract(l),
-              if (isDiet) None[AST.Body]()
-              else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
-          case _ =>
-            (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
-              if (isDiet) None[AST.Body]()
-              else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
-        }
-        AST.Stmt.Method(purity, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
-      case _ =>
-        errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
-    }
+    } else body()
   }
 
   def translateObject(enclosing: Enclosing.Type, stat: Defn.Object): AST.Stmt = {
@@ -941,7 +950,7 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*),
+      ISZ(stats.map(translateStat(Enclosing.RichTrait)): _*),
       attr(stat.pos))
   }
 
@@ -972,7 +981,7 @@ class SlangParser(text: Predef.String,
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(paramss.flatMap(_.map(translateParam(isMemoize = false))): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*),
+      ISZ(stats.map(translateStat(Enclosing.RichClass)): _*),
       attr(stat.pos))
   }
 
