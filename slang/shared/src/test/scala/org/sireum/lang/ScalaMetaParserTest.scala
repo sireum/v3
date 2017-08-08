@@ -272,7 +272,8 @@ class ScalaMetaParserTest extends SireumSpec {
   def passing(text: String,
               addImport: Boolean = true,
               isWorksheet: Boolean = false,
-              isPrelude: Boolean = false)(
+              isPrelude: Boolean = false,
+              checkJson: Boolean = true)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
       val reporter = AccumulatingReporter(ISZ())
@@ -285,7 +286,13 @@ class ScalaMetaParserTest extends SireumSpec {
           SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
         if (reporter.hasIssue) report(r, reporter)
         r.unitOpt.foreach {
-          case p: AST.TopUnit.Program => gdr.resolveProgram(p)
+          case p: AST.TopUnit.Program =>
+            if (checkJson) {
+              val json = AST.JSON.fromTopUnit(p, true)
+              //println(json)
+              assert(AST.JSON.toTopUnit(json) == p)
+            }
+            gdr.resolveProgram(p)
           case _ => b = false
         }
       }

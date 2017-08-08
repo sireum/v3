@@ -552,10 +552,15 @@ class SlangParser(text: Predef.String,
         hasError = true
         errorInSlang(mod.pos, s"Only the @pure and/or override method modifiers are allowed for method declarations")
     }
+    val (hasParams, params) = paramss.headOption match {
+      case scala.Some(ps) => (true, ISZ[AST.Param](ps.map(translateParam(isMemoize = false)): _*))
+      case _ => (false, ISZ[AST.Param]())
+    }
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam(isMemoize = false)): _*))),
+      hasParams,
+      params,
       translateType(tpe))
     val purity = if (isPure) AST.Purity.Pure else AST.Purity.Impure
     AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(stat.pos))
@@ -626,10 +631,15 @@ class SlangParser(text: Predef.String,
       errorInSlang(mods.head.pos, s"@memoize methods cannot have an override modifier")
     }
     val purity = if (isMemoize) AST.Purity.Memoize else if (isPure) AST.Purity.Pure else AST.Purity.Impure
+    val (hasParams, params) = paramss.headOption match {
+      case scala.Some(ps) => (true, ISZ[AST.Param](ps.map(translateParam(isMemoize)): _*))
+      case _ => (false, ISZ[AST.Param]())
+    }
     val sig = AST.MethodSig(
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
-      opt(paramss.headOption.map(ps => ISZ(ps.map(translateParam(isMemoize)): _*))),
+      hasParams,
+      params,
       tpeopt.map(translateType).getOrElse(unitType))
     if (isSpec)
       exp match {

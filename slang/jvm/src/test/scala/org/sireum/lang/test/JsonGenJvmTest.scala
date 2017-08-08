@@ -27,55 +27,36 @@ package org.sireum.lang.test
 
 import java.io.File
 
-import Paths._
-import org.sireum.lang.ScalaMetaParserTest
-import org.sireum.test._
-import org.sireum.lang.util.FileUtil._
+import com.sksamuel.diffpatch.DiffMatchPatch
+import org.sireum.{ISZ, None => SNone}
+import org.sireum.lang.test.Paths._
+import org.sireum.lang.tools.JsonGenJvm
+import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
+import org.sireum.test.SireumSpec
 
-class ScalaMetaParserJvmTest extends SireumSpec {
+class JsonGenJvmTest extends SireumSpec {
 
-  val smpt = new ScalaMetaParserTest
+  *(gen(slangAstPath, slangJSONPath))
 
-  {
-    implicit val _spec: SireumSpec = this
-
-    "Passing" - {
-
-      passing(posetPath)
-
-      passing(setPath)
-
-      passing(mapPath)
-
-      passing(hashSetPath)
-
-      passing(hashMapPath)
-
-      passing(hashSSetPath)
-
-      passing(hashSMapPath)
-
-      passing(optionPath)
-
-      passing(preludePath)
-
-      passing(slangAstPath)
-
-      passing(slangAstUtilPath)
-
-      passing(slangTransformerPath)
-
-      passing(slangMTransformerPath)
-
-      passing(slangGlobalDeclarationResolverPath)
-
-      passing(slangResolverPath)
-
-      passing(slangSequentResolverPath)
+  def gen(src: File, dest: File): Boolean = {
+    val reporter = AccumulatingReporter(ISZ())
+    val rOpt = JsonGenJvm(allowSireumPackage = true,
+      Some(licensePath), src, dest, SNone(), reporter)
+    reporter.printMessages()
+    rOpt match {
+      case Some(r) =>
+        val expected = FileUtil.readFile(dest)
+        val result = r
+        if (result != expected) {
+          val dmp = new DiffMatchPatch()
+          Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
+          Console.err.flush()
+          //FileUtil.writeFile(dest, r)
+          //Console.err.println(r)
+          //Console.err.flush()
+          false
+        } else !reporter.hasIssue
+      case _ => false
     }
-  }
-
-  def passing(file: File)(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = {
-    smpt.passing(readFile(file), addImport = false, isPrelude = true, checkJson = false)
   }
 }

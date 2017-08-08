@@ -49,6 +49,7 @@ object Paths {
   val slangAstUtilPath = new File(slangPackagePath, "ast/Util.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
   val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
+  val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
   val slangGlobalDeclarationResolverPath = new File(slangPackagePath, "symbol/GlobalDeclarationResolver.scala")
   val slangResolverPath = new File(slangPackagePath, "symbol/Resolver.scala")
   val slangSequentResolverPath = new File(slangPackagePath, "symbol/SequentResolver.scala")

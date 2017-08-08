@@ -842,7 +842,8 @@ object Domain {
 
 @datatype class MethodSig(id: Id,
                           typeParams: ISZ[TypeParam],
-                          paramsOpt: Option[ISZ[Param]],
+                          hasParams: B,
+                          params: ISZ[Param],
                           returnType: Type)
 
 @enum object ParamMod {

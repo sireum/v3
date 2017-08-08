@@ -340,7 +340,7 @@ object TransformerGen {
                                             tpe: ST,
                                             fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
-        return st"val r$i: Result[Context, IS[$indexType, $tpe]] = transformIS$indexType($ctx, o2.$fieldName, transform$typeName _)"
+        return st"val r$i: Result[Context, IS[$indexType, $tpe]] = transformIS$indexType($ctx, o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberMS(i: Z,
@@ -350,7 +350,7 @@ object TransformerGen {
                                             tpe: ST,
                                             fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
-        return st"val r$i: Result[Context, MS[$indexType, $tpe]] = transformMS$indexType($ctx, o2.$fieldName, transform$typeName _)"
+        return st"val r$i: Result[Context, MS[$indexType, $tpe]] = transformMS$indexType($ctx, o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberOption(i: Z,
@@ -359,7 +359,7 @@ object TransformerGen {
                                                 tpe: ST,
                                                 fieldName: String): ST = {
         val ctx: ST = if (j < z"0") st"ctx" else st"r$j.ctx"
-        return st"val r$i: Result[Context, Option[$tpe]] = transformOption($ctx, o2.$fieldName, transform$typeName _)"
+        return st"val r$i: Result[Context, Option[$tpe]] = transformOption($ctx, o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberMOption(i: Z,
@@ -617,7 +617,7 @@ object TransformerGen {
                                             typeName: ST,
                                             tpe: ST,
                                             fieldName: String): ST = {
-        return st"val r$i: MOption[IS[$indexType, $tpe]] = transformIS$indexType(o2.$fieldName, transform$typeName _)"
+        return st"val r$i: MOption[IS[$indexType, $tpe]] = transformIS$indexType(o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberMS(i: Z,
@@ -626,7 +626,7 @@ object TransformerGen {
                                             typeName: ST,
                                             tpe: ST,
                                             fieldName: String): ST = {
-        return st"val r$i: MOption[MS[$indexType, $tpe]] = transformMS$indexType(o2.$fieldName, transform$typeName _)"
+        return st"val r$i: MOption[MS[$indexType, $tpe]] = transformMS$indexType(o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberOption(i: Z,
@@ -634,14 +634,14 @@ object TransformerGen {
                                                 typeName: ST,
                                                 tpe: ST,
                                                 fieldName: String): ST = {
-        return st"val r$i: MOption[Option[$tpe]] = transformOption(o2.$fieldName, transform$typeName _)"
+        return st"val r$i: MOption[Option[$tpe]] = transformOption(o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseMemberMOption(i: Z,
                                                  typeName: ST,
                                                  tpe: ST,
                                                  fieldName: String): ST = {
-        return st"val r$i: MOption[MOption[$tpe]] = transformOption(o2.$fieldName, transform$typeName _)"
+        return st"val r$i: MOption[MOption[$tpe]] = transformOption(o2.$fieldName, transform$typeName)"
       }
 
       @pure def transformMethodCaseChanged(i: Z): ST = {
