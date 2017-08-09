@@ -27,7 +27,7 @@ COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=8.21.0.1-jdk8.0.131
+ZULU_VERSION=8.23.0.3-jdk8.0.144
 SCALA_VERSION=2.12.3
 SBT_VERSION=0.13.16
 NODE_VERSION=8.2.1
