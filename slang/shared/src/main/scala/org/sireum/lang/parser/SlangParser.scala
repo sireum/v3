@@ -1969,12 +1969,12 @@ class SlangParser(text: Predef.String,
     AST.Id(id, attr(pos))
 
   def cid(id: Predef.String, pos: Position): AST.Id = {
-    def isOpChar(c: Char) = c match {
-      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
-      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
-    }
-
-    if (!id.forall(isOpChar) && id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
+    //    def isOpChar(c: Char) = c match {
+    //      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
+    //      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
+    //    }
+    //
+    //    if (!id.forall(isOpChar) && id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
 
     cidNoCheck(id, pos)
   }
