@@ -74,6 +74,8 @@ class ScalaMetaParserTest extends SireumSpec {
 
         passing("@pure def f(x: Z): Z = {}", isWorksheet = true)
 
+        passing("def f(x: => Z): Z = {}", isWorksheet = true)
+
       }
 
       "Object" - {
@@ -221,8 +223,6 @@ class ScalaMetaParserTest extends SireumSpec {
           val paramTypeForms = "parameter should have the form"
 
           failing("def f(x: Z = 5): Z = {}", paramTypeForms, isWorksheet = true)
-
-          failing("def f(x: => Z): Z = {}", "By name types", isWorksheet = true)
 
           failing("def f(x: Z*): Z = {}", "Repeated types", isWorksheet = true)
         }
