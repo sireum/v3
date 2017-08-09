@@ -643,6 +643,10 @@ class SlangParser(text: Predef.String,
       tpeopt.map(translateType).getOrElse(unitType))
 
     def body(): AST.Stmt.Method = {
+      def err(): AST.Stmt.Method = {
+        errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
+        AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+      }
       exp match {
         case exp: Term.Block =>
           val (mc, bodyOpt) = exp.stats.headOption match {
@@ -656,9 +660,16 @@ class SlangParser(text: Predef.String,
                 else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
           }
           AST.Stmt.Method(purity, hasOverride, sig, mc, bodyOpt, attr(tree.pos))
-        case _ =>
-          errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-          AST.Stmt.Method(purity, hasOverride, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
+        case l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+          enclosing match {
+            case Enclosing.Sig | Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.RichTrait =>
+              if (isMemoize) {
+                errorInSlang(exp.pos, "Only the @pure and/or override method modifiers are allowed for method declarations")
+              }
+              AST.Stmt.Method(purity, hasOverride, sig, parseContract(l), None(), attr(tree.pos))
+            case _ => err()
+          }
+        case _ => err()
       }
     }
 
@@ -1963,7 +1974,8 @@ class SlangParser(text: Predef.String,
       case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
     }
 
-    //    if (id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
+    if (!id.forall(isOpChar) && id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
+
     cidNoCheck(id, pos)
   }
 

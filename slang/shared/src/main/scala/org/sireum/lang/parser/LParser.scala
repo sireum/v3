@@ -493,7 +493,7 @@ final class LParser(input: Input,
     newLinesOpt()
     var sds = List(specDef())
     newLinesOpt()
-    while (token.isNot[EOF]) {
+    while (token.isNot[EOF] && !isIdentOf("where")) {
       sds ::= specDef()
       newLinesOpt()
     }
@@ -571,7 +571,7 @@ final class LParser(input: Input,
     next()
     newLinesOpt()
     var r = List(whereDef())
-    while (tokenCurrOrAfterNl(token.is[Token.Equals])) {
+    while (tokenCurrOrAfterNl(token.is[Token.KwVal] || token.is[Token.KwDef])) {
       newLinesOpt()
       r ::= whereDef()
     }
