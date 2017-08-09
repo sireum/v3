@@ -72,7 +72,7 @@
 <record-decl>      ::=  @record trait <ID> <type-params>? <extends>? { <stmt>* }
                      |  @record class <ID> <type-params>? <record-params>? <extends>? { <stmt>* }
 
-<rich-decl>        ::=  @rich trait <ID> <type-params> <extends>? { <stmt>* }
+<rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
                      |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
 
 <type-decl>        ::=  type <ID> <type-params>? = <type>

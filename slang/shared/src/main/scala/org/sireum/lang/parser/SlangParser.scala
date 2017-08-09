@@ -166,13 +166,15 @@ class SlangParser(text: Predef.String,
   var lPointOpt: scala.Option[(Int, Int, Int)] = scala.None
 
   def parseTopUnit(): Result = {
-    val parser = new ScalametaParser(input, dialect)
-
     try {
       if (fileUriOpt.getOrElse("").value.endsWith(".scala")) {
-        if (hashSireum) translateSource(parser.parseSource())
+        if (hashSireum) {
+          val parser = new ScalametaParser(input, dialect)
+          translateSource(parser.parseSource())
+        }
         else Result(text, hashSireum, None())
       } else {
+        val parser = new ScalametaParser(input, dialect)
         val oldIn = parser.in
         parser.in = oldIn.fork
         parser.next()
