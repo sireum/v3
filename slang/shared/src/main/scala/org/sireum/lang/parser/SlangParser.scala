@@ -66,6 +66,8 @@ object SlangParser {
     "¬" -> AST.Exp.UnaryOp.Not
   )
 
+  val scalaUnops: Set[Predef.String] = Set("unary_!", "unary_+", "unary_!", "unary_-", "unary_~")
+
   val binops: Map[Predef.String, AST.Exp.BinaryOp.Type] = Map(
     "+" -> AST.Exp.BinaryOp.Add,
     "-" -> AST.Exp.BinaryOp.Sub,
@@ -807,7 +809,7 @@ class SlangParser(text: Predef.String,
     AST.Stmt.Sig(hasSig, cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
-      opt(atpeopt.map(translateTypeArg)),
+      opt(atpeopt.map(translateTypeArg(allowByName = false))),
       ISZ(stats.map(translateStat(Enclosing.Sig)): _*),
       attr(stat.pos))
   }
@@ -1025,7 +1027,7 @@ class SlangParser(text: Predef.String,
       case t"$ref.$tname" =>
         AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
       case t"(..$atpes) => $tpe" =>
-        AST.Type.Fun(ISZ(atpes.map(translateTypeArg): _*), translateType(tpe), typedAttr(t.pos))
+        AST.Type.Fun(ISZ(atpes.map(translateTypeArg(allowByName = false)): _*), translateType(tpe), typedAttr(t.pos))
       case _ =>
         errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
         unitType
@@ -1050,15 +1052,19 @@ class SlangParser(text: Predef.String,
       unitType
   }
 
-  def translateTypeArg(ta: Type.Arg): AST.Type = ta match {
+  def translateTypeArg(allowByName: Boolean)(ta: Type.Arg): AST.Type = ta match {
     case targ"${tpe: Type}" =>
       translateType(tpe)
     case _: Type.Arg.Repeated =>
       errorNotSlang(ta.pos, "Repeated types '〈type〉*' are")
       unitType
-    case _: Type.Arg.ByName =>
-      errorNotSlang(ta.pos, "By name types '=> 〈type〉' are")
-      unitType
+    case ta: Type.Arg.ByName =>
+      if (allowByName) {
+        AST.Type.Fun(ISZ(), translateType(ta.tpe), typedAttr(ta.pos))
+      } else {
+        errorInSlang(ta.pos, "By name types '=> 〈type〉' are only allowed on (non-@memoize) method parameters")
+        unitType
+      }
   }
 
   def translateAssignExp(exp: Term): AST.Stmt with AST.AssignExp = exp match {
@@ -1177,7 +1183,7 @@ class SlangParser(text: Predef.String,
       errorInSlang(tp.pos, s"The parameter should have the form '$mod〈ID〉:〈type〉'")
     }
     val mod = if (hasPure) AST.ParamMod.Pure else if (hasHidden) AST.ParamMod.Hidden else AST.ParamMod.NoMod
-    atpeopt.map(ta => AST.Param(mod, cid(paramname), translateTypeArg(ta))).
+    atpeopt.map(ta => AST.Param(mod, cid(paramname), translateTypeArg(!isMemoize)(ta))).
       getOrElse(AST.Param(mod, cid(paramname), unitType))
   }
 
@@ -1245,7 +1251,7 @@ class SlangParser(text: Predef.String,
       errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden$pure〈ID〉:〈type〉'")
     }
     if (hasError) AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), unitType)
-    else AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), translateTypeArg(atpeopt.get))
+    else AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), translateTypeArg(allowByName = false)(atpeopt.get))
   }
 
   def stmtCheck(enclosing: Enclosing.Type, stat: Term, kind: Predef.String): Boolean = enclosing match {
@@ -1969,12 +1975,13 @@ class SlangParser(text: Predef.String,
     AST.Id(id, attr(pos))
 
   def cid(id: Predef.String, pos: Position): AST.Id = {
-    //    def isOpChar(c: Char) = c match {
-    //      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
-    //      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
-    //    }
-    //
-    //    if (!id.forall(isOpChar) && id.exists(isOpChar)) errorInSlang(pos, s"'$id' is not a valid identifier form")
+    def isOpChar(c: Char) = c match {
+      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
+      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
+    }
+
+    if (input.chars(pos.start.offset) != '`' && !id.forall(isOpChar) && id.exists(isOpChar) && !scalaUnops.contains(id))
+      errorInSlang(pos, s"'$id' is not a valid identifier form")
 
     cidNoCheck(id, pos)
   }

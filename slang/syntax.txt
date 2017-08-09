@@ -109,10 +109,13 @@
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 
-<param>            ::=  ⸨ <param-mod> ⸩? <ID> : <type>
+<param>            ::=  ⸨ <param-mod> ⸩? <ID> : <param-type>
 
-<param-mod>        ::= @pure
-                     | @hidden // only for @memoize def
+<param-mod>        ::=  @pure
+                     |  @hidden // only for @memoize def
+
+<param-type>       ::=  <type>
+                     |  => <type>
 
 <def-body>         ::=  {
                           <ldef-contract>?
