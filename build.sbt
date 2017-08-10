@@ -42,7 +42,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.0.0-14"
+val sireumScalacVersion = "3.1"
 
 val silencerVersion = "0.5"
 
