@@ -220,6 +220,7 @@ lazy val runtimeJs = runtimeT._3
 
 lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimePI)
 lazy val preludeT = toSbtCrossProject(preludePI, Seq(
+  scalacOptions ++= Seq("-Yrangepos"),
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
