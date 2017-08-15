@@ -130,25 +130,25 @@ val depOpt = Some("test->test;compile->compile;test->compile")
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(
     id = pi.id,
-    settings = settings,
     base = pi.baseDir / "jvm").
+    settings(Seq(name := pi.name) ++ settings: _*).
     dependsOn(pi.dependencies.flatMap { p =>
       if (p.isCross)
         Seq(ClasspathDependency(LocalProject(p.id), depOpt),
           ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
       else Seq(ClasspathDependency(LocalProject(p.id), depOpt))
     }: _*).
-    settings(name := pi.name).disablePlugins(AssemblyPlugin)
+    settings().disablePlugins(AssemblyPlugin)
 
 def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector()): (Project, Project, Project) = {
   val shared = Project(
     id = pi.id,
-    settings = sireumSharedSettings ++ settings,
     base = pi.baseDir / "shared").
+    settings(Seq(name := pi.name) ++ sireumSharedSettings ++ settings: _*).
     dependsOn(pi.dependencies.map { p =>
       ClasspathDependency(LocalProject(p.id), depOpt)
     }: _*).
-    settings(name := pi.name).disablePlugins(AssemblyPlugin)
+    disablePlugins(AssemblyPlugin)
   val cp = CrossProject(
     jvmId = pi.id + "-jvm",
     jsId = pi.id + "-js",
@@ -257,10 +257,10 @@ lazy val commonT = toSbtCrossProject(commonPI)
 lazy val commonShared = commonT._1
 lazy val commonJvm = commonT._2
 lazy val commonJs = commonT._3.settings(
-  crossTarget in (Compile, fastOptJS) := (classDirectory in Compile).value,
-  crossTarget in (Compile, packageJSDependencies) := (classDirectory in Compile).value,
-  crossTarget in (Compile, fullOptJS) := (classDirectory in Compile).value / "min",
-  crossTarget in (Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
+  crossTarget in(Compile, fastOptJS) := (classDirectory in Compile).value,
+  crossTarget in(Compile, packageJSDependencies) := (classDirectory in Compile).value,
+  crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
+  crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
@@ -283,10 +283,10 @@ lazy val webT = toSbtCrossProject(webPI, Seq(
 lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(
-  crossTarget in (Compile, fastOptJS) := (classDirectory in Compile).value,
-  crossTarget in (Compile, packageJSDependencies) := (classDirectory in Compile).value,
-  crossTarget in (Compile, fullOptJS) := (classDirectory in Compile).value / "min",
-  crossTarget in (Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
+  crossTarget in(Compile, fastOptJS) := (classDirectory in Compile).value,
+  crossTarget in(Compile, packageJSDependencies) := (classDirectory in Compile).value,
+  crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
+  crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
   jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
@@ -351,7 +351,8 @@ lazy val subProjectJsReferences =
 lazy val sireumJvm =
   Project(
     id = "sireum-jvm",
-    settings = sireumJvmSettings ++ assemblySettings ++
+    base = file("jvm")).
+    settings(sireumJvmSettings ++ assemblySettings ++
       Seq(
         name := "Sireum.jvm",
         libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
@@ -378,25 +379,25 @@ lazy val sireumJvm =
             val oldStrategy = (assemblyMergeStrategy in assembly).value
             oldStrategy(x)
         }
-      ),
-    base = file("jvm")).
+      ): _*).
     aggregate(subProjectJvmReferences: _*).
     dependsOn(subProjectJvmClasspathDeps: _*)
 
 lazy val sireumJs =
   Project(
     id = "sireum-js",
-    settings = sireumSharedSettings ++
-      Seq(
-        name := "Sireum.js"),
     base = file("js")).
+    settings(sireumSharedSettings ++
+      Seq(
+        name := "Sireum.js"): _*).
     aggregate(subProjectJsReferences: _*).
     disablePlugins(AssemblyPlugin)
 
 
 lazy val sireum = Project(
   id = "sireum",
-  settings = sireumSharedSettings ++ Seq(
+  base = file(".")).
+  settings(sireumSharedSettings ++ Seq(
     name := "Sireum",
     distros := {
       Distros.build()
@@ -421,6 +422,5 @@ lazy val sireum = Project(
     },
     publish := {},
     publishLocal := {}
-  ),
-  base = file(".")
-).aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
+  ): _*).
+  aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
