@@ -29,7 +29,7 @@ for COMMAND in ${COMMANDS}; do
 done
 ZULU_VERSION=8.23.0.3-jdk8.0.144
 SCALA_VERSION=2.12.3
-SBT_VERSION=0.13.16
+SBT_VERSION=1.0.0
 NODE_VERSION=8.2.1
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
@@ -165,7 +165,7 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   fi
 fi
 cd ${REPO}/platform
-SBT_DROP_URL=https://cocl.us/sbt${SBT_VERSION//./}zip
+SBT_DROP_URL=https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.zip
 SBT_DROP="${SBT_DROP_URL##*/}"
 grep -q ${SBT_VERSION} sbt/VER &> /dev/null && SBT_UPDATE=false || SBT_UPDATE=true
 if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
