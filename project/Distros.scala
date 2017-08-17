@@ -71,8 +71,8 @@ object Distros {
     "compare" -> 24991,
     "latex" -> 18476,
     "python" -> 37674,
-    "rst" -> 14700,
-    "ignore" -> 32828
+    "rst" -> 14700
+    //"ignore" -> 32828 https://github.com/hsz/idea-gitignore/issues/408
   )
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
