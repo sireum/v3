@@ -74,6 +74,8 @@ class ScalaMetaParserTest extends SireumSpec {
 
         passing("@pure def f(x: Z): Z = {}", isWorksheet = true)
 
+        passing("def f(x: => Z): Z = {}", isWorksheet = true)
+
       }
 
       "Object" - {
@@ -222,8 +224,6 @@ class ScalaMetaParserTest extends SireumSpec {
 
           failing("def f(x: Z = 5): Z = {}", paramTypeForms, isWorksheet = true)
 
-          failing("def f(x: => Z): Z = {}", "By name types", isWorksheet = true)
-
           failing("def f(x: Z*): Z = {}", "Repeated types", isWorksheet = true)
         }
       }
@@ -248,7 +248,7 @@ class ScalaMetaParserTest extends SireumSpec {
 
         failing("@ext @ext object Foo", "Redundant @ext")
 
-        failing("@ext object Foo { def f: Z = 4 }", "@ext object method expression")
+        failing("@ext object Foo { def f: Z = 4 }", "extension method expression")
 
       }
 

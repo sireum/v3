@@ -59,7 +59,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
   Execute the following in a bash terminal:
   
   ```bash
-  curl -JLo sireum-v3-ive-mac64.dmg http://bit.ly/sv3ivem && open sireum-v3-ive-mac64.dmg 
+  (sim=sireum-v3-ive-mac64.dmg && rm -f $sim && curl -JLo $sim http://bit.ly/sv3ivem && open $sim) 
   ```
   
   Minisign: http://bit.ly/sv3ivems
@@ -84,7 +84,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
   Development Build:
 
   ```bash
-  curl -JLo sireum-v3-dev-ive-mac64.dmg http://bit.ly/sv3divem && open sireum-v3-dev-ive-mac64.dmg 
+  (sdim=sireum-v3-dev-ive-mac64.dmg && rm -f $sdim && curl -JLo $sdim http://bit.ly/sv3divem && open $sdim) 
   ```
   
   Minisign: http://bit.ly/sv3divems
@@ -383,7 +383,7 @@ for Sireum project members.
 
    * `Max Heap Size`: `4096`
    
-   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m -XX:+CMSClassUnloadingEnabled -Dorg.sireum.home=<SIREUM_HOME>`
+   * `VM Parameters`: `-XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m -Dorg.sireum.home=<SIREUM_HOME>`
 
 5. In the "SBT Project Data To Import" dialog,
 
