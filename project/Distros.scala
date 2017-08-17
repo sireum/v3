@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.1"
+  val ideaVer = "2017.2.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -59,18 +59,18 @@ object Distros {
   )
 
   lazy val pluginUpdateIdMap = Map(
-    "sireum" -> (if (isDev) 0 else 37398),
+    "sireum" -> (if (isDev) 0 else 0 /* 37398 */),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 37448 else 36992),
+    "scala" -> (if (isDev) 37646 else 37646),
     "markdown" -> 34393,
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 18619,
-    "bash" -> 36870,
+    "bash" -> 37247,
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 37356,
+    "python" -> 37674,
     "rst" -> 14700,
     "ignore" -> 32828
   )
