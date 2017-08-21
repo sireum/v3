@@ -275,7 +275,7 @@ private final class Eval(store: Store) {
         }
       case _: RandomInt => None
       case _: ReadInt => None
-      case e: IntLit => Some(int2v(e.tpeOpt, _Z(e.normalize)))
+      case e: IntLit => Some(int2v(e.tpeOpt, Z(e.normalize)))
       case e: FloatLit =>
         Some(e.primitiveValue match {
           case Left(v) => Value(tipe.F32, v)
@@ -284,10 +284,10 @@ private final class Eval(store: Store) {
       case e: RealLit => Some(Value(tipe.R, org.sireum.R.String(e.value)))
       case e: IntMin =>
         if (e.bitWidth == 0) None
-        else Some(int2v(Some(e.integralType), _Z(e.value)))
+        else Some(int2v(Some(e.integralType), Z(e.value)))
       case e: IntMax =>
         if (e.bitWidth == 0) None
-        else Some(int2v(Some(e.integralType), _Z(e.value)))
+        else Some(int2v(Some(e.integralType), Z(e.value)))
       case _: Random => None
       case e: Mul =>
         for (Value(t, v1) <- eval(e.left);

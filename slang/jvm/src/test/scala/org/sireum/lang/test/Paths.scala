@@ -32,7 +32,7 @@ object Paths {
 
   val licensePath = new File(rootDir, "license.txt")
 
-  val preludePackagePath = new File(rootDir, "runtime/prelude/shared/src/main/scala/org/sireum/")
+  val preludePackagePath = new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/")
   val slangPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang")
 
   val preludePath = new File(preludePackagePath, "prelude.scala")

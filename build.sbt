@@ -42,9 +42,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.1.1"
-
-val silencerVersion = "0.5"
+val sireumScalacVersion = "3.1.2"
 
 val fastParseVersion = "0.4.3"
 
@@ -204,39 +202,36 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(runtimeJvm, preludeJvm)
+).dependsOn(macrosJvm, libraryJvm)
 lazy val logikaJs = logikaT._3
 
-lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
-lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
+lazy val macrosPI = new ProjectInfo("runtime/macros", isCross = true)
+lazy val macrosT = toSbtCrossProject(macrosPI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.spire-math" %%% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
-lazy val runtimeShared = runtimeT._1
-lazy val runtimeJvm = runtimeT._2
-lazy val runtimeJs = runtimeT._3
+lazy val macrosShared = macrosT._1
+lazy val macrosJvm = macrosT._2
+lazy val macrosJs = macrosT._3
 
-lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimePI)
-lazy val preludeT = toSbtCrossProject(preludePI, Seq(
+lazy val libraryPI = new ProjectInfo("runtime/library", isCross = true, macrosPI)
+lazy val libraryT = toSbtCrossProject(libraryPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-    "com.github.ghik" %% "silencer-lib" % silencerVersion
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
-  unmanagedResourceDirectories in Compile += file("runtime/prelude/shared/src/main/scala"),
-  addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
-lazy val preludeShared = preludeT._1
-lazy val preludeJvm = preludeT._2
-lazy val preludeJs = preludeT._3
+lazy val libraryShared = libraryT._1
+lazy val libraryJvm = libraryT._2
+lazy val libraryJs = libraryT._3
 
-lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI)
+lazy val slangPI = new ProjectInfo("slang", isCross = true, macrosPI, libraryPI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
@@ -270,7 +265,7 @@ lazy val commonJs = commonT._3.settings(
   )
 )
 
-lazy val webPI = new ProjectInfo("web", isCross = true, runtimePI, preludePI, utilPI, commonPI)
+lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
 lazy val webT = toSbtCrossProject(webPI, Seq(
   libraryDependencies ++= Seq(
     "org.scalameta" %% "scalameta" % metaVersion,
@@ -331,12 +326,12 @@ lazy val awasJs = awasT._3.settings(
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awasJvm
+  macrosJvm, libraryJvm, logikaJvm, slangJvm, java, cli, awasJvm
 )
 
 lazy val subProjectsJs = Seq(
   utilJs, testJs, pilarJs,
-  runtimeJs, preludeJs, logikaJs, slangJs, commonJs, awasJs
+  macrosJs, libraryJs, logikaJs, slangJs, commonJs, awasJs
 )
 
 lazy val subProjectJvmReferences =
