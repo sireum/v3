@@ -35,7 +35,7 @@ object Util {
     for (i <- ids.indices) {
       r(i) = ids(i).value
     }
-    return SM.toIS(r)
+    return r.toIS
   }
 
   @pure def fileUriOptEq(posOpt1: Option[PosInfo], posOpt2: Option[PosInfo]): B = {

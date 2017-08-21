@@ -37,7 +37,6 @@ import scala.meta.internal.tokens.TokenInfo
 import scala.meta.tokens.TokensHelper
 import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBrace, RightBracket, RightParen}
 import org.sireum.lang.{ast => AST}
-import org.sireum.math._Z
 
 object LParser {
 
@@ -253,7 +252,7 @@ final class LParser(input: Input,
 
   def acceptInt: AST.Exp.LitZ = {
     val t = acceptToken[Token.Constant.Int]
-    AST.Exp.LitZ(_Z(t.value.toInt), sparser.attr(t.pos))
+    AST.Exp.LitZ(Z(t.value.toInt), sparser.attr(t.pos))
   }
 
   override def isInfixOp(): Boolean = token match {

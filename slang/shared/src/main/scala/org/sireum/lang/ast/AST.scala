@@ -686,7 +686,7 @@ object Exp {
                         @hidden attr: ResolvedAttr)
     extends Exp {
 
-    @pure override def hash: Z = {
+    @pure def hash: Z = {
       attr.resOpt match {
         case Some(res) => return res.hash
         case _ => return id.hash
@@ -695,8 +695,8 @@ object Exp {
 
     @pure def isEqual(other: Ident): B = {
       (attr.resOpt, other.attr.resOpt) match {
-        case (Some(res), Some(otherRes)) => return res.isEqual(otherRes)
-        case _ => return id.isEqual(other.id)
+        case (Some(res), Some(otherRes)) => return res == otherRes
+        case _ => return id == other.id
       }
     }
 

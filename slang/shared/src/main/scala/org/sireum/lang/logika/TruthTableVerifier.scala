@@ -280,7 +280,7 @@ object TruthTableVerifier {
                   val ra = a.values
                   val w: Assignment = for (b <- ra) yield b.value
                   if (!taSet.contains(w)) {
-                    reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
+                    reporter.error(a.attr.posOpt, kind, s"Incorrect summary witness.")
                   } else {
                     taSet = taSet.remove(w)
                   }
@@ -289,7 +289,7 @@ object TruthTableVerifier {
                   val ra = a.values
                   val w: Assignment = for (b <- ra) yield b.value
                   if (!faSet.contains(w)) {
-                    reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
+                    reporter.error(a.attr.posOpt, kind, s"Incorrect summary witness.")
                   } else {
                     faSet = faSet.remove(w)
                   }

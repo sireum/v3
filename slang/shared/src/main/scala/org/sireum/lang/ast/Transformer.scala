@@ -1602,7 +1602,7 @@ object Transformer {
   }
 
   @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
-    val s2: MS[Z, T] = SI.toMS(s)
+    val s2: MS[Z, T] = s.toMS
     var changed: B = F
     var ctxi = ctx
     for (i <- s2.indices) {
@@ -1613,7 +1613,7 @@ object Transformer {
       s2(i) = r.resultOpt.getOrElse(e)
     }
     if (changed) {
-      return Result(ctxi, Some(SM.toIS(s2)))
+      return Result(ctxi, Some(s2.toIS))
     } else {
       return Result(ctxi, None())
     }

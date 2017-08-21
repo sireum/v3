@@ -27,6 +27,8 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.ops._
+import org.sireum.ops.ISZOps._
 import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
@@ -101,13 +103,17 @@ object Resolver {
 
       @pure def resolveImported(globalNameMap: NameMap,
                                 name: QName): Option[Info] = {
-        for (impor <- imports.reverse) {
-          for (importer <- impor.importers.reverse) {
+        for (i <- imports.indices.reverse) {
+          val impor = imports(i)
+          val importers = impor.importers
+          for (j <- importers.indices.reverse) {
+            val importer = importers(j)
             val contextName = AST.Util.ids2strings(importer.name.ids)
             importer.selectorOpt match {
               case Some(selector: AST.Stmt.Import.MultiSelector) =>
                 val nss = selector.selectors
-                for (ns <- nss.reverse) {
+                for (k <- nss.indices.reverse) {
+                  val ns = nss(k)
                   if (name == ISZ(ns.to.value)) {
                     val n = contextName :+ ns.from.value
                     val rOpt = globalNameMap.get(packageName ++ n)
@@ -154,13 +160,17 @@ object Resolver {
 
       @pure def resolveImportedType(globalTypeMap: TypeMap,
                                     name: QName): Option[TypeInfo] = {
-        for (impor <- imports.reverse) {
-          for (importer <- impor.importers.reverse) {
+        for (i <- imports.indices.reverse) {
+          val impor = imports(i)
+          val importers = impor.importers
+          for (j <- importers.indices.reverse) {
+            val importer = importers(j)
             val contextName = AST.Util.ids2strings(importer.name.ids)
             importer.selectorOpt match {
               case Some(selector: AST.Stmt.Import.MultiSelector) =>
                 val nss = selector.selectors
-                for (ns <- nss.reverse) {
+                for (k <- nss.indices.reverse) {
+                  val ns = nss(k)
                   if (name == ISZ(ns.to.value)) {
                     val n = contextName :+ ns.from.value
                     val rOpt = globalTypeMap.get(packageName ++ n)
@@ -213,7 +223,7 @@ object Resolver {
           if (enclosedOpt.nonEmpty) {
             return enclosedOpt
           }
-          en = SI.dropRight(en, 1)
+          en = ISOps(en).dropRight(1)
         }
 
         val importedOpt = resolveImported(globalNameMap, name)
@@ -242,7 +252,7 @@ object Resolver {
           if (enclosedTypeOpt.nonEmpty) {
             return enclosedTypeOpt
           }
-          en = SI.dropRight(en, 1)
+          en = ISOps(en).dropRight(1)
         }
 
         val importedTypeOpt = resolveImportedType(globalTypeMap, name)
@@ -481,7 +491,7 @@ object Resolver {
   }
 
   @pure def sortedGlobalTypes(globalTypeMap: TypeMap): ISZ[TypeInfo] = {
-    return SI.sortWith(globalTypeMap.values, ltTypeInfo)
+    return ISOps(globalTypeMap.values).sortWith(ltTypeInfo)
   }
 
   @pure def typePoset(globalTypeMap: TypeMap,
@@ -525,7 +535,7 @@ object Resolver {
       }
       i = i + 1
     }
-    return SI.drop(ids, sz)
+    return ISOps(ids).drop(sz)
   }
 
   def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {

@@ -27,6 +27,8 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.ops._
+import org.sireum.ops.ISZOps._
 import Resolver._
 import org.sireum.lang.util.{Reporter}
 import org.sireum.lang.{ast => AST}
@@ -55,7 +57,7 @@ import org.sireum.lang.{ast => AST}
   @memoize def scope(packageName: QName,
                      imports: ISZ[AST.Stmt.Import],
                      name: QName): Scope.Global = {
-    return Scope.Global(packageName, imports, SI.dropRight(name, 1))
+    return Scope.Global(packageName, imports, ISOps(name).dropRight(1))
   }
 
   def resolveGlobalStmt(stmt: AST.Stmt): Unit = {

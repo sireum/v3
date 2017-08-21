@@ -397,7 +397,7 @@ object TransformerGen {
 
       @pure def transformIS(indexType: ST): ST = {
         return st"""@pure def transformIS$indexType[Context, T](ctx: Context, s: IS[$indexType, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[$indexType, T]] = {
-                   |  val s2: MS[$indexType, T] = SI.toMS(s)
+                   |  val s2: MS[$indexType, T] = s.toMS
                    |  var changed: B = F
                    |  var ctxi = ctx
                    |  for (i <- s2.indices) {
@@ -408,7 +408,7 @@ object TransformerGen {
                    |    s2(i) = r.resultOpt.getOrElse(e)
                    |  }
                    |  if (changed) {
-                   |    return Result(ctxi, Some(SM.toIS(s2)))
+                   |    return Result(ctxi, Some(s2.toIS))
                    |  } else {
                    |    return Result(ctxi, None())
                    |  }
@@ -682,7 +682,7 @@ object TransformerGen {
 
       @pure def transformIS(indexType: ST): ST = {
         return st"""def transformIS$indexType[T](s: IS[$indexType, T], f: T => MOption[T]): MOption[IS[$indexType, T]] = {
-                   |  val s2: MS[$indexType, T] = SI.toMS(s)
+                   |  val s2: MS[$indexType, T] = s.toMS
                    |  var changed: B = F
                    |  for (i <- s2.indices) {
                    |    val e: T = s(i)
@@ -691,7 +691,7 @@ object TransformerGen {
                    |    s2(i) = r.getOrElse(e)
                    |  }
                    |  if (changed) {
-                   |    return MSome(SM.toIS(s2))
+                   |    return MSome(s2.toIS)
                    |  } else {
                    |    return MNone()
                    |  }

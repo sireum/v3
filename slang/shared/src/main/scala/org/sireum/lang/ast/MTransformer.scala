@@ -1598,7 +1598,7 @@ object MTransformer {
   }
 
   def transformISZ[T](s: IS[Z, T], f: T => MOption[T]): MOption[IS[Z, T]] = {
-    val s2: MS[Z, T] = SI.toMS(s)
+    val s2: MS[Z, T] = s.toMS
     var changed: B = F
     for (i <- s2.indices) {
       val e: T = s(i)
@@ -1607,7 +1607,7 @@ object MTransformer {
       s2(i) = r.getOrElse(e)
     }
     if (changed) {
-      return MSome(SM.toIS(s2))
+      return MSome(s2.toIS)
     } else {
       return MNone()
     }
