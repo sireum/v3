@@ -111,6 +111,7 @@ object Stmt {
 
   @datatype class Method(purity: Purity.Type,
                          hasOverride: B,
+                         isHelper: B,
                          sig: MethodSig,
                          contract: Contract,
                          bodyOpt: Option[Body],
@@ -134,6 +135,23 @@ object Stmt {
                        @hidden attr: Attr)
     extends Stmt
 
+  @datatype class SubZ(id: Id,
+                       isSigned: B,
+                       isBitVector: B,
+                       isWrapped: B,
+                       hasMin: B,
+                       hasMax: B,
+                       bitWidth: Z,
+                       min: Z,
+                       max: Z,
+                       index: Z,
+                       @hidden attr: Attr)
+    extends Stmt {
+    def isZeroIndex: B = {
+      return index == 0
+    }
+  }
+
   @datatype class Object(isExt: B,
                          id: Id,
                          parents: ISZ[Type],
@@ -142,6 +160,7 @@ object Stmt {
     extends Stmt
 
   @datatype class Sig(isImmutable: B,
+                      isExt: B,
                       id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type.Named],

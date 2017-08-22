@@ -86,6 +86,7 @@ object JSON {
         case o: Stmt.ExtMethod => return printStmtExtMethod(o)
         case o: Stmt.SpecMethod => return printStmtSpecMethod(o)
         case o: Stmt.Enum => return printStmtEnum(o)
+        case o: Stmt.SubZ => return printStmtSubZ(o)
         case o: Stmt.Object => return printStmtObject(o)
         case o: Stmt.Sig => return printStmtSig(o)
         case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
@@ -208,6 +209,7 @@ object JSON {
         ("type", st""""Stmt.Method""""),
         ("purity", printPurity(o.purity)),
         ("hasOverride", printB(o.hasOverride)),
+        ("isHelper", printB(o.isHelper)),
         ("sig", printMethodSig(o.sig)),
         ("contract", printContract(o.contract)),
         ("bodyOpt", printOption(o.bodyOpt, printBody)),
@@ -244,6 +246,23 @@ object JSON {
       ))
     }
 
+    @pure def printStmtSubZ(o: Stmt.SubZ): ST = {
+      return printObject(ISZ(
+        ("type", st""""Stmt.SubZ""""),
+        ("id", printId(o.id)),
+        ("isSigned", printB(o.isSigned)),
+        ("isBitVector", printB(o.isBitVector)),
+        ("isWrapped", printB(o.isWrapped)),
+        ("hasMin", printB(o.hasMin)),
+        ("hasMax", printB(o.hasMax)),
+        ("bitWidth", printZ(o.bitWidth)),
+        ("min", printZ(o.min)),
+        ("max", printZ(o.max)),
+        ("index", printZ(o.index)),
+        ("attr", printAttr(o.attr))
+      ))
+    }
+
     @pure def printStmtObject(o: Stmt.Object): ST = {
       return printObject(ISZ(
         ("type", st""""Stmt.Object""""),
@@ -259,6 +278,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.Sig""""),
         ("isImmutable", printB(o.isImmutable)),
+        ("isExt", printB(o.isExt)),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("parents", printISZ(F, o.parents, printTypeNamed)),
@@ -1743,7 +1763,7 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
       t match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
@@ -1753,6 +1773,7 @@ object JSON {
         case "Stmt.ExtMethod" => val r = parseStmtExtMethodT(T); return r
         case "Stmt.SpecMethod" => val r = parseStmtSpecMethodT(T); return r
         case "Stmt.Enum" => val r = parseStmtEnumT(T); return r
+        case "Stmt.SubZ" => val r = parseStmtSubZT(T); return r
         case "Stmt.Object" => val r = parseStmtObjectT(T); return r
         case "Stmt.Sig" => val r = parseStmtSigT(T); return r
         case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
@@ -1988,6 +2009,9 @@ object JSON {
       parser.parseObjectKey("hasOverride")
       val hasOverride = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isHelper")
+      val isHelper = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
@@ -2000,7 +2024,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Method(purity, hasOverride, sig, contract, bodyOpt, attr)
+      return Stmt.Method(purity, hasOverride, isHelper, sig, contract, bodyOpt, attr)
     }
 
     def parseStmtExtMethod(): Stmt.ExtMethod = {
@@ -2072,6 +2096,51 @@ object JSON {
       return Stmt.Enum(id, elements, attr)
     }
 
+    def parseStmtSubZ(): Stmt.SubZ = {
+      val r = parseStmtSubZT(F)
+      return r
+    }
+
+    def parseStmtSubZT(typeParsed: B): Stmt.SubZ = {
+      if (!typeParsed) {
+        parser.parseObjectType("Stmt.SubZ")
+      }
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isSigned")
+      val isSigned = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isBitVector")
+      val isBitVector = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isWrapped")
+      val isWrapped = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("hasMin")
+      val hasMin = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("hasMax")
+      val hasMax = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("bitWidth")
+      val bitWidth = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("min")
+      val min = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("max")
+      val max = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("index")
+      val index = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return Stmt.SubZ(id, isSigned, isBitVector, isWrapped, hasMin, hasMax, bitWidth, min, max, index, attr)
+    }
+
     def parseStmtObject(): Stmt.Object = {
       val r = parseStmtObjectT(F)
       return r
@@ -2111,6 +2180,9 @@ object JSON {
       parser.parseObjectKey("isImmutable")
       val isImmutable = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isExt")
+      val isExt = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -2129,7 +2201,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Sig(isImmutable, id, typeParams, parents, selfTypeOpt, stmts, attr)
+      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, selfTypeOpt, stmts, attr)
     }
 
     def parseStmtAbstractDatatype(): Stmt.AbstractDatatype = {
@@ -5397,6 +5469,24 @@ object JSON {
       return r
     }
     val r = to(s, fStmtEnum)
+    return r
+  }
+
+  def fromStmtSubZ(o: Stmt.SubZ, isCompact: B): String = {
+    val st = Printer.printStmtSubZ(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toStmtSubZ(s: String): Stmt.SubZ = {
+    def fStmtSubZ(parser: Parser): Stmt.SubZ = {
+      var r = parser.parseStmtSubZ()
+      return r
+    }
+    val r = to(s, fStmtSubZ)
     return r
   }
 

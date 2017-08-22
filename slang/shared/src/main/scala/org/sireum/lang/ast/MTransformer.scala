@@ -69,6 +69,7 @@ object MTransformer {
         case o: Stmt.ExtMethod => return preStmtExtMethod(o)
         case o: Stmt.SpecMethod => return preStmtSpecMethod(o)
         case o: Stmt.Enum => return preStmtEnum(o)
+        case o: Stmt.SubZ => return preStmtSubZ(o)
         case o: Stmt.Object => return preStmtObject(o)
         case o: Stmt.Sig => return preStmtSig(o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
@@ -141,6 +142,10 @@ object MTransformer {
     }
 
     def preStmtEnum(o: Stmt.Enum): PreResult[Stmt] = {
+      return PreResult(T, MNone())
+    }
+
+    def preStmtSubZ(o: Stmt.SubZ): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
@@ -847,6 +852,7 @@ object MTransformer {
         case o: Stmt.ExtMethod => return postStmtExtMethod(o)
         case o: Stmt.SpecMethod => return postStmtSpecMethod(o)
         case o: Stmt.Enum => return postStmtEnum(o)
+        case o: Stmt.SubZ => return postStmtSubZ(o)
         case o: Stmt.Object => return postStmtObject(o)
         case o: Stmt.Sig => return postStmtSig(o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
@@ -919,6 +925,10 @@ object MTransformer {
     }
 
     def postStmtEnum(o: Stmt.Enum): MOption[Stmt] = {
+      return MNone()
+    }
+
+    def postStmtSubZ(o: Stmt.SubZ): MOption[Stmt] = {
       return MNone()
     }
 
@@ -1749,6 +1759,13 @@ import MTransformer._
           val r2: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(id = r0.getOrElse(o2.id), elements = r1.getOrElse(o2.elements), attr = r2.getOrElse(o2.attr)))
+          else
+            MNone()
+        case o2: Stmt.SubZ =>
+          val r0: MOption[Id] = transformId(o2.id)
+          val r1: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(id = r0.getOrElse(o2.id), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Object =>

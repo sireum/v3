@@ -73,6 +73,7 @@ object Transformer {
         case o: Stmt.ExtMethod => return preStmtExtMethod(ctx, o)
         case o: Stmt.SpecMethod => return preStmtSpecMethod(ctx, o)
         case o: Stmt.Enum => return preStmtEnum(ctx, o)
+        case o: Stmt.SubZ => return preStmtSubZ(ctx, o)
         case o: Stmt.Object => return preStmtObject(ctx, o)
         case o: Stmt.Sig => return preStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(ctx, o)
@@ -145,6 +146,10 @@ object Transformer {
     }
 
     @pure def preStmtEnum(ctx: Context, o: Stmt.Enum): PreResult[Context, Stmt] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preStmtSubZ(ctx: Context, o: Stmt.SubZ): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
@@ -851,6 +856,7 @@ object Transformer {
         case o: Stmt.ExtMethod => return postStmtExtMethod(ctx, o)
         case o: Stmt.SpecMethod => return postStmtSpecMethod(ctx, o)
         case o: Stmt.Enum => return postStmtEnum(ctx, o)
+        case o: Stmt.SubZ => return postStmtSubZ(ctx, o)
         case o: Stmt.Object => return postStmtObject(ctx, o)
         case o: Stmt.Sig => return postStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(ctx, o)
@@ -923,6 +929,10 @@ object Transformer {
     }
 
     @pure def postStmtEnum(ctx: Context, o: Stmt.Enum): Result[Context, Stmt] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postStmtSubZ(ctx: Context, o: Stmt.SubZ): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
@@ -1757,6 +1767,13 @@ import Transformer._
             Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), elements = r1.resultOpt.getOrElse(o2.elements), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
             Result(r2.ctx, None())
+        case o2: Stmt.SubZ =>
+          val r0: Result[Context, Id] = transformId(ctx, o2.id)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
         case o2: Stmt.Object =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, IS[Z, Type]] = transformISZ(r0.ctx, o2.parents, transformType)
