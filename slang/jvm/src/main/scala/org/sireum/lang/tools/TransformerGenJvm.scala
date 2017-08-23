@@ -49,17 +49,13 @@ object TransformerGenJvm {
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
     r.unitOpt match {
       case SSome(p: TopUnit.Program) =>
-        val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
-        gdr.resolveProgram(p)
         val lOpt = licenseOpt match {
           case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
-        val name = SString(nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer"))
-        Some(PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
-          Util.ids2strings(p.packageName.ids), isImmutable, reporter).gen(lOpt, fOpt, name).
-          render.value)
+        Some(PrePostTransformerGen.gen(isImmutable, lOpt, fOpt,
+          nameOpt.map(n => SSome(SString(n))).getOrElse(SNone[SString]()), p, reporter).render.value)
       case _ =>
         reporter.error(SNone(), "TransformerGen", "Expecting program input.")
         return None

@@ -27,12 +27,29 @@
 package org.sireum.lang.tools
 
 import org.sireum._
-
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util.Reporter
-
 import TransformerGen._
+import org.sireum.lang.symbol.GlobalDeclarationResolver
+
+object PrePostTransformerGen {
+
+  def gen(isImmutable: B,
+          licenseOpt: Option[String],
+          fileOpt: Option[String],
+          nameOpt: Option[String],
+          p: AST.TopUnit.Program,
+          reporter: Reporter): ST = {
+
+    val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, reporter)
+    gdr.resolveProgram(p)
+    val name = nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer")
+    PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
+      AST.Util.ids2strings(p.packageName.ids), isImmutable, reporter).gen(licenseOpt, fileOpt, name)
+
+  }
+}
 
 @record class PrePostTransformerGen(globalNameMap: NameMap,
                                     globalTypeMap: TypeMap,
@@ -286,11 +303,23 @@ import TransformerGen._
   }
 
   def adtNameOpt(ti: TypeInfo.AbstractDatatype, ids: QName, posOpt: Option[AST.PosInfo]): Option[QName] = {
+    if (ids.size == 1) {
+      ids(0) match {
+        case "B" => return None[QName]()
+        case "C" => return None[QName]()
+        case "Z" => return None[QName]()
+        case "F32" => return None[QName]()
+        case "F64" => return None[QName]()
+        case "R" => return None[QName]()
+        case "String" => return None[QName]()
+        case _ =>
+      }
+    }
     ti.scope.resolveType(globalTypeMap, ids) match {
       case Some(ti: TypeInfo.AbstractDatatype) => Some(ti.name)
       case Some(_) => None()
       case _ =>
-        reporter.error(posOpt, transformerGenKind, s"Could not find ${typeString(packageName, ids)}.")
+        reporter.error(posOpt, transformerGenKind, s"Could not find ${typeString(packageName, ids).render}.")
         None()
     }
   }
