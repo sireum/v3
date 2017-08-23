@@ -84,6 +84,9 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.sig.id.value
         declareName("specification method", name,
           Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+      case stmt: AST.Stmt.SubZ =>
+        val name = currentName :+ stmt.id.value
+        declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(name, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Set.empty[String]

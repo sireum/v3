@@ -319,14 +319,14 @@ object Resolver {
 
   object TypeInfo {
 
-    @datatype class BuiltIn(name: QName)
-      extends TypeInfo {
+    @datatype class SubZ(name: QName,
+                         ast: AST.Stmt.SubZ) extends TypeInfo {
       def canHaveCompanion: B = {
         return F
       }
 
       def posOpt: Option[AST.PosInfo] = {
-        return None()
+        return ast.attr.posOpt
       }
     }
 
