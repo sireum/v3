@@ -25,10 +25,10 @@
 
 package org.sireum.lang
 
-import org.sireum.$internal.RC
+import org.sireum.$internal.{RC, Trie}
 
 object $SlangFiles {
-  lazy val slangSlangFiles: scala.collection.Map[scala.Seq[Predef.String], Predef.String] = RC.text { (p, f) =>
+  def map: scala.collection.Map[scala.Seq[Predef.String], Predef.String] = RC.text { (p, f) =>
     if (p.last.endsWith(".scala")) {
       val r = java.nio.file.Files.newBufferedReader(f.toPath, java.nio.charset.StandardCharsets.UTF_8)
       val line: Predef.String = r.readLine
@@ -36,4 +36,6 @@ object $SlangFiles {
       line != null && line.replaceAllLiterally(" ", "").contains("#Sireum")
     } else false
   }
+
+  def trie: Trie.Node[Predef.String, Predef.String] = RC.toTrie(map)
 }

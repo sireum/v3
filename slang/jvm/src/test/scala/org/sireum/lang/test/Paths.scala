@@ -32,26 +32,10 @@ object Paths {
 
   val licensePath = new File(rootDir, "license.txt")
 
-  val libraryPackagePath = new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/")
   val slangPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang")
 
-  val preludePath = new File(libraryPackagePath, "prelude.scala")
-
-  val posetPath = new File(libraryPackagePath, "Poset.scala")
-  val setPath = new File(libraryPackagePath, "Set.scala")
-  val mapPath = new File(libraryPackagePath, "Map.scala")
-  val hashSetPath = new File(libraryPackagePath, "HashSet.scala")
-  val hashMapPath = new File(libraryPackagePath, "HashMap.scala")
-  val hashSSetPath = new File(libraryPackagePath, "HashSSet.scala")
-  val hashSMapPath = new File(libraryPackagePath, "HashSMap.scala")
-  val optionPath = new File(libraryPackagePath, "Option.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
-  val slangAstUtilPath = new File(slangPackagePath, "ast/Util.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
   val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
   val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
-  val slangGlobalDeclarationResolverPath = new File(slangPackagePath, "symbol/GlobalDeclarationResolver.scala")
-  val slangResolverPath = new File(slangPackagePath, "symbol/Resolver.scala")
-  val slangSequentResolverPath = new File(slangPackagePath, "symbol/SequentResolver.scala")
-  val slangReporterPath = new File(slangPackagePath, "util/Reporter.scala")
 }

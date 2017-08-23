@@ -1146,8 +1146,7 @@ class SlangParser(text: Predef.String,
         else errorInSlang(stat.pos, "@rich class declarations can only appear at package-level or inside objects")
     }
     val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty ||
-      ctorcalls.size > 1 || hasSelfType(param)) {
+    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty || hasSelfType(param)) {
       error(tname.pos, "Slang @rich classes have to be of the form '@rich class〈ID〉... (...) ... { ... }'.")
     }
     var hasRich = false

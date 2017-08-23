@@ -25,8 +25,9 @@
 
 package org.sireum.lang
 
+import org.sireum.$internal.Trie
 import org.sireum.test._
-import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
@@ -130,6 +131,14 @@ class ScalaMetaParserTest extends SireumSpec {
 
           passing("@ext object Foo { def f: Z = l\"\"\"reads g\nmodifies g\"\"\" }")
         }
+      }
+
+      "Library" - {
+        passingRc(org.sireum.$SlangFiles.trie)
+      }
+
+      "Slang" - {
+        passingRc(org.sireum.lang.$SlangFiles.trie)
       }
     }
 
@@ -266,8 +275,23 @@ class ScalaMetaParserTest extends SireumSpec {
     }
   }
 
+
   def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean, reporter: Reporter): SlangParser.Result =
     SlangParser(isPrelude, isWorksheet, isDiet = false, SNone(), text, reporter)
+
+  def passingRc(n: Trie.Node[String, String])(implicit pos: org.scalactic.source.Position): Unit = n match {
+    case n: Trie.InNode[String, String] =>
+      for ((childKey, child) <- n.children) child match {
+        case child: Trie.InNode[String, String] =>
+          childKey - {
+            passingRc(child)
+          }
+        case child: Trie.Leaf[String, String] =>
+          registerTest(childKey, ts: _*)(assert(
+            passingCheck(child.data, addImport = false, isPrelude = true, checkJson = false)))(pos)
+      }
+    case _ =>
+  }
 
   def passingCheck(text: String,
                    addImport: Boolean = true,
