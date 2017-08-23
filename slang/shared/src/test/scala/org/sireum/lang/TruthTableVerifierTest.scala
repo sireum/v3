@@ -25,24 +25,22 @@
 
 package org.sireum.lang
 
-import org.sireum.`macro`.RC
+import org.sireum.$internal.RC
 import org.sireum.lang.ast.TopUnit
 import org.sireum.lang.logika.TruthTableVerifier
 import org.sireum.lang.parser.LParser
 import org.sireum.lang.test.TestUtil
 import org.sireum.lang.util.AccumulatingReporter
-import org.sireum.{B, HashSMap, ISZ, None => SNone, Some => SSome, String => SString}
+import org.sireum.{ISZ, None => SNone, Some => SSome}
 import org.sireum.test.SireumRcSpec
 
 class TruthTableVerifierTest extends SireumRcSpec {
-  lazy val textResources: HashSMap[ISZ[SString], SString] = RC.text {
-    p =>
-      val ps = p.elements
-      ps.head.value == "truthtable" && ps.last.value.endsWith(".slang")
+  lazy val textResources: scala.collection.Map[scala.Seq[Predef.String], Predef.String] = RC.text {
+    (p, _) => p.head == "truthtable" && p.last.endsWith(".slang")
   }
 
-  def check(path: ISZ[SString], content: SString): B = {
-    LParser[Boolean](content.value, AccumulatingReporter(ISZ())) { (p, reporter) =>
+  def check(path: scala.Seq[Predef.String], content: Predef.String): Boolean = {
+    LParser[Boolean](content, AccumulatingReporter(ISZ())) { (p, reporter) =>
       val r = p.truthTable(SNone())
       val status = TestUtil.check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
       if (!status) {

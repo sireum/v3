@@ -269,35 +269,41 @@ class ScalaMetaParserTest extends SireumSpec {
   def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean, reporter: Reporter): SlangParser.Result =
     SlangParser(isPrelude, isWorksheet, isDiet = false, SNone(), text, reporter)
 
+  def passingCheck(text: String,
+                   addImport: Boolean = true,
+                   isWorksheet: Boolean = false,
+                   isPrelude: Boolean = false,
+                   checkJson: Boolean = true): Boolean = {
+    val reporter = AccumulatingReporter(ISZ())
+    val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+      isWorksheet, isPrelude, reporter)
+    var b = r.unitOpt.nonEmpty && !reporter.hasIssue
+    if (!b) report(r, reporter)
+    else {
+      val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
+        SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
+      if (reporter.hasIssue) report(r, reporter)
+      r.unitOpt.foreach {
+        case p: AST.TopUnit.Program =>
+          if (checkJson) {
+            val json = AST.JSON.fromTopUnit(p, true)
+            //println(json)
+            assert(AST.JSON.toTopUnit(json) == p)
+          }
+          gdr.resolveProgram(p)
+        case _ => b = false
+      }
+    }
+    b
+  }
+
   def passing(text: String,
               addImport: Boolean = true,
               isWorksheet: Boolean = false,
               isPrelude: Boolean = false,
               checkJson: Boolean = true)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    spec.*(sub(text)) {
-      val reporter = AccumulatingReporter(ISZ())
-      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude, reporter)
-      var b = r.unitOpt.nonEmpty && !reporter.hasIssue
-      if (!b) report(r, reporter)
-      else {
-        val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
-          SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
-        if (reporter.hasIssue) report(r, reporter)
-        r.unitOpt.foreach {
-          case p: AST.TopUnit.Program =>
-            if (checkJson) {
-              val json = AST.JSON.fromTopUnit(p, true)
-              //println(json)
-              assert(AST.JSON.toTopUnit(json) == p)
-            }
-            gdr.resolveProgram(p)
-          case _ => b = false
-        }
-      }
-      b
-    }
+    spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
 
   def failing(text: String, msg: String,
               addImport: Boolean = true,
