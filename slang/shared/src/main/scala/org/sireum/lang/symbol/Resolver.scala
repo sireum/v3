@@ -236,11 +236,6 @@ object Resolver {
 
       @memoize def resolveTypeMemoized(@hidden globalTypeMap: TypeMap,
                                        name: QName): Option[TypeInfo] = {
-        val builtInTypeOpt = builtInTypeNames.get(name)
-        if (builtInTypeOpt.nonEmpty) {
-          return builtInTypeOpt
-        }
-
         val globalTypeOpt = globalTypeMap.get(name)
         if (globalTypeOpt.nonEmpty) {
           return globalTypeOpt
@@ -417,71 +412,6 @@ object Resolver {
 
   val resolverKind: String = "Slang Resolver"
   val rootPackageInfo: Info.Package = Info.Package(ISZ())
-  val builtInPackageName: QName = ISZ()
-  val builtInTypeNames: HashMap[QName, TypeInfo] = HashMap.emptyInit[QName, TypeInfo](128).
-    put(ISZ("B"), TypeInfo.BuiltIn(builtInPackageName :+ "B")).
-    put(ISZ("C"), TypeInfo.BuiltIn(builtInPackageName :+ "C")).
-    put(ISZ("Z"), TypeInfo.BuiltIn(builtInPackageName :+ "Z")).
-    put(ISZ("Z8"), TypeInfo.BuiltIn(builtInPackageName :+ "Z8")).
-    put(ISZ("Z16"), TypeInfo.BuiltIn(builtInPackageName :+ "Z16")).
-    put(ISZ("Z32"), TypeInfo.BuiltIn(builtInPackageName :+ "Z32")).
-    put(ISZ("Z64"), TypeInfo.BuiltIn(builtInPackageName :+ "Z64")).
-    put(ISZ("N"), TypeInfo.BuiltIn(builtInPackageName :+ "N")).
-    put(ISZ("N8"), TypeInfo.BuiltIn(builtInPackageName :+ "N8")).
-    put(ISZ("N16"), TypeInfo.BuiltIn(builtInPackageName :+ "N16")).
-    put(ISZ("N32"), TypeInfo.BuiltIn(builtInPackageName :+ "N32")).
-    put(ISZ("N64"), TypeInfo.BuiltIn(builtInPackageName :+ "N64")).
-    put(ISZ("S8"), TypeInfo.BuiltIn(builtInPackageName :+ "S8")).
-    put(ISZ("S16"), TypeInfo.BuiltIn(builtInPackageName :+ "S16")).
-    put(ISZ("S32"), TypeInfo.BuiltIn(builtInPackageName :+ "S32")).
-    put(ISZ("S64"), TypeInfo.BuiltIn(builtInPackageName :+ "S64")).
-    put(ISZ("U8"), TypeInfo.BuiltIn(builtInPackageName :+ "U8")).
-    put(ISZ("U16"), TypeInfo.BuiltIn(builtInPackageName :+ "U16")).
-    put(ISZ("U32"), TypeInfo.BuiltIn(builtInPackageName :+ "U32")).
-    put(ISZ("U64"), TypeInfo.BuiltIn(builtInPackageName :+ "U64")).
-    put(ISZ("F32"), TypeInfo.BuiltIn(builtInPackageName :+ "F32")).
-    put(ISZ("F64"), TypeInfo.BuiltIn(builtInPackageName :+ "F64")).
-    put(ISZ("R"), TypeInfo.BuiltIn(builtInPackageName :+ "R")).
-    put(ISZ("IS"), TypeInfo.BuiltIn(builtInPackageName :+ "IS")).
-    put(ISZ("MS"), TypeInfo.BuiltIn(builtInPackageName :+ "MS")).
-    put(ISZ("ISZ"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ")).
-    put(ISZ("ISZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ8")).
-    put(ISZ("ISZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ16")).
-    put(ISZ("ISZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ32")).
-    put(ISZ("ISZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISZ64")).
-    put(ISZ("ISN"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN")).
-    put(ISZ("ISN8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN8")).
-    put(ISZ("ISN16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN16")).
-    put(ISZ("ISN32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN32")).
-    put(ISZ("ISN64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISN64")).
-    put(ISZ("ISS8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS8")).
-    put(ISZ("ISS16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS16")).
-    put(ISZ("ISS32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS32")).
-    put(ISZ("ISS64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISS64")).
-    put(ISZ("ISU8"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU8")).
-    put(ISZ("ISU16"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU16")).
-    put(ISZ("ISU32"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU32")).
-    put(ISZ("ISU64"), TypeInfo.BuiltIn(builtInPackageName :+ "ISU64")).
-    put(ISZ("MSZ"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ")).
-    put(ISZ("MSZ8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ8")).
-    put(ISZ("MSZ16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ16")).
-    put(ISZ("MSZ32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ32")).
-    put(ISZ("MSZ64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSZ64")).
-    put(ISZ("MSN"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN")).
-    put(ISZ("MSN8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN8")).
-    put(ISZ("MSN16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN16")).
-    put(ISZ("MSN32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN32")).
-    put(ISZ("MSN64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSN64")).
-    put(ISZ("MSS8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS8")).
-    put(ISZ("MSS16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS16")).
-    put(ISZ("MSS32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS32")).
-    put(ISZ("MSS64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSS64")).
-    put(ISZ("MSU8"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU8")).
-    put(ISZ("MSU16"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU16")).
-    put(ISZ("MSU32"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU32")).
-    put(ISZ("MSU64"), TypeInfo.BuiltIn(builtInPackageName :+ "MSU64")).
-    put(ISZ("String"), TypeInfo.BuiltIn(builtInPackageName :+ "String")).
-    put(ISZ("ST"), TypeInfo.BuiltIn(builtInPackageName :+ "ST"))
 
   @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
     (ti1.posOpt, ti2.posOpt) match {

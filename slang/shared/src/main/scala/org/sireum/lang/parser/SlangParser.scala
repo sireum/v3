@@ -1708,15 +1708,15 @@ class SlangParser(text: Predef.String,
 
     exp match {
       case exp: Lit => translateLit(exp)
-      case exp: Term.Interpolate =>
-        val prefix = exp.prefix.value
-        if (prefix == "s" || prefix == "st") translateStringInterpolate(exp)
-        else translateLit(exp)
       case q"${expr: Term.Interpolate}[..$tpesnel]" if bvs.contains(expr.prefix.value) &&
         expr.args.size == 1 && (expr.parts match {
         case List(Lit.String(_)) => true
         case _ => false
       }) => translateLitBv(isBigEndian = expr.prefix.value == "bb", expr, tpesnel.head)
+      case exp: Term.Interpolate =>
+        val prefix = exp.prefix.value
+        if (prefix == "z" || prefix == "r") translateLit(exp)
+        else translateStringInterpolate(exp)
       case exp: Term.Name =>
         if (exp.value.forall(c => c == '¬' || c == '~' || c == '!')) {
           val l = exp.value.toList.reverse
@@ -1821,25 +1821,6 @@ class SlangParser(text: Predef.String,
     try {
       val r = lit.prefix.value match {
         case "z" => AST.Exp.LitZ(Z.String(value), attr(lit.pos))
-        case "z8" => AST.Exp.LitZ8(org.sireum.Z8.String(value), attr(lit.pos))
-        case "z16" => AST.Exp.LitZ16(org.sireum.Z16.String(value), attr(lit.pos))
-        case "z32" => AST.Exp.LitZ32(org.sireum.Z32.String(value), attr(lit.pos))
-        case "z64" => AST.Exp.LitZ64(org.sireum.Z64.String(value), attr(lit.pos))
-        case "n" => AST.Exp.LitN(org.sireum.N.String(value), attr(lit.pos))
-        case "n8" => AST.Exp.LitN8(org.sireum.N8.String(value), attr(lit.pos))
-        case "n16" => AST.Exp.LitN16(org.sireum.N16.String(value), attr(lit.pos))
-        case "n32" => AST.Exp.LitN32(org.sireum.N32.String(value), attr(lit.pos))
-        case "n64" => AST.Exp.LitN64(org.sireum.N64.String(value), attr(lit.pos))
-        case "s8" => AST.Exp.LitS8(org.sireum.S8.String(value), attr(lit.pos))
-        case "s16" => AST.Exp.LitS16(org.sireum.S16.String(value), attr(lit.pos))
-        case "s32" => AST.Exp.LitS32(org.sireum.S32.String(value), attr(lit.pos))
-        case "s64" => AST.Exp.LitS64(org.sireum.S64.String(value), attr(lit.pos))
-        case "u8" => AST.Exp.LitU8(org.sireum.U8.String(value), attr(lit.pos))
-        case "u16" => AST.Exp.LitU16(org.sireum.U16.String(value), attr(lit.pos))
-        case "u32" => AST.Exp.LitU32(org.sireum.U32.String(value), attr(lit.pos))
-        case "u64" => AST.Exp.LitU64(org.sireum.U64.String(value), attr(lit.pos))
-        case "f32" => AST.Exp.LitF32(org.sireum.F32.String(value), attr(lit.pos))
-        case "f64" => AST.Exp.LitF64(org.sireum.F64.String(value), attr(lit.pos))
         case "r" => AST.Exp.LitR(org.sireum.R.String(value), attr(lit.pos))
       }
       return r

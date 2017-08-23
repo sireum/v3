@@ -347,23 +347,6 @@ object MTransformer {
         case o: Exp.LitB => return preExpLitB(o)
         case o: Exp.LitC => return preExpLitC(o)
         case o: Exp.LitZ => return preExpLitZ(o)
-        case o: Exp.LitZ8 => return preExpLitZ8(o)
-        case o: Exp.LitZ16 => return preExpLitZ16(o)
-        case o: Exp.LitZ32 => return preExpLitZ32(o)
-        case o: Exp.LitZ64 => return preExpLitZ64(o)
-        case o: Exp.LitN => return preExpLitN(o)
-        case o: Exp.LitN8 => return preExpLitN8(o)
-        case o: Exp.LitN16 => return preExpLitN16(o)
-        case o: Exp.LitN32 => return preExpLitN32(o)
-        case o: Exp.LitN64 => return preExpLitN64(o)
-        case o: Exp.LitS8 => return preExpLitS8(o)
-        case o: Exp.LitS16 => return preExpLitS16(o)
-        case o: Exp.LitS32 => return preExpLitS32(o)
-        case o: Exp.LitS64 => return preExpLitS64(o)
-        case o: Exp.LitU8 => return preExpLitU8(o)
-        case o: Exp.LitU16 => return preExpLitU16(o)
-        case o: Exp.LitU32 => return preExpLitU32(o)
-        case o: Exp.LitU64 => return preExpLitU64(o)
         case o: Exp.LitF32 => return preExpLitF32(o)
         case o: Exp.LitF64 => return preExpLitF64(o)
         case o: Exp.LitR => return preExpLitR(o)
@@ -396,74 +379,6 @@ object MTransformer {
     }
 
     def preExpLitZ(o: Exp.LitZ): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitZ8(o: Exp.LitZ8): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitZ16(o: Exp.LitZ16): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitZ32(o: Exp.LitZ32): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitZ64(o: Exp.LitZ64): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitN(o: Exp.LitN): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitN8(o: Exp.LitN8): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitN16(o: Exp.LitN16): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitN32(o: Exp.LitN32): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitN64(o: Exp.LitN64): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitS8(o: Exp.LitS8): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitS16(o: Exp.LitS16): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitS32(o: Exp.LitS32): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitS64(o: Exp.LitS64): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitU8(o: Exp.LitU8): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitU16(o: Exp.LitU16): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitU32(o: Exp.LitU32): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitU64(o: Exp.LitU64): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
@@ -1130,23 +1045,6 @@ object MTransformer {
         case o: Exp.LitB => return postExpLitB(o)
         case o: Exp.LitC => return postExpLitC(o)
         case o: Exp.LitZ => return postExpLitZ(o)
-        case o: Exp.LitZ8 => return postExpLitZ8(o)
-        case o: Exp.LitZ16 => return postExpLitZ16(o)
-        case o: Exp.LitZ32 => return postExpLitZ32(o)
-        case o: Exp.LitZ64 => return postExpLitZ64(o)
-        case o: Exp.LitN => return postExpLitN(o)
-        case o: Exp.LitN8 => return postExpLitN8(o)
-        case o: Exp.LitN16 => return postExpLitN16(o)
-        case o: Exp.LitN32 => return postExpLitN32(o)
-        case o: Exp.LitN64 => return postExpLitN64(o)
-        case o: Exp.LitS8 => return postExpLitS8(o)
-        case o: Exp.LitS16 => return postExpLitS16(o)
-        case o: Exp.LitS32 => return postExpLitS32(o)
-        case o: Exp.LitS64 => return postExpLitS64(o)
-        case o: Exp.LitU8 => return postExpLitU8(o)
-        case o: Exp.LitU16 => return postExpLitU16(o)
-        case o: Exp.LitU32 => return postExpLitU32(o)
-        case o: Exp.LitU64 => return postExpLitU64(o)
         case o: Exp.LitF32 => return postExpLitF32(o)
         case o: Exp.LitF64 => return postExpLitF64(o)
         case o: Exp.LitR => return postExpLitR(o)
@@ -1179,74 +1077,6 @@ object MTransformer {
     }
 
     def postExpLitZ(o: Exp.LitZ): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitZ8(o: Exp.LitZ8): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitZ16(o: Exp.LitZ16): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitZ32(o: Exp.LitZ32): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitZ64(o: Exp.LitZ64): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitN(o: Exp.LitN): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitN8(o: Exp.LitN8): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitN16(o: Exp.LitN16): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitN32(o: Exp.LitN32): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitN64(o: Exp.LitN64): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitS8(o: Exp.LitS8): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitS16(o: Exp.LitS16): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitS32(o: Exp.LitS32): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitS64(o: Exp.LitS64): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitU8(o: Exp.LitU8): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitU16(o: Exp.LitU16): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitU32(o: Exp.LitU32): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitU64(o: Exp.LitU64): MOption[Exp] = {
       return MNone()
     }
 
@@ -2399,108 +2229,6 @@ import MTransformer._
           else
             MNone()
         case o2: Exp.LitZ =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitZ8 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitZ16 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitZ32 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitZ64 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitN =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitN8 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitN16 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitN32 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitN64 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitS8 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitS16 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitS32 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitS64 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitU8 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitU16 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitU32 =>
-          val r0: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitU64 =>
           val r0: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty)
             MSome(o2(attr = r0.getOrElse(o2.attr)))
