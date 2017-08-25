@@ -67,6 +67,10 @@ import Reporter._
 import Reporter.Message.Level
 
 object AccumulatingReporter {
+  @pure def create: AccumulatingReporter = {
+    return AccumulatingReporter(ISZ[Message]())
+  }
+
   @pure def combine(r1: AccumulatingReporter, r2: AccumulatingReporter): AccumulatingReporter = {
     return AccumulatingReporter(r1.messages ++ r2.messages)
   }
@@ -179,7 +183,7 @@ object AccumulatingReporter {
 
   def printMessages(): Unit = {
     val map = messagesByFileUri
-    val inclFileUri = map.size <= 1
+    val inclFileUri = map.size > 1
     for (kv <- map.entries) {
       val fileUriOpt = kv._1
       val ms = kv._2
