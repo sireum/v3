@@ -195,6 +195,9 @@ class SlangParser(text: Predef.String,
       case e: TokenizeException =>
         error(e.pos, e.shortMessage)
         Result(text, hashSireum, None())
+      case e: Throwable =>
+        reporter.error(None(), messageKind, s"Parsing error: ${e.getMessage}.")
+        Result(text, hashSireum, None())
     }
   }
 
