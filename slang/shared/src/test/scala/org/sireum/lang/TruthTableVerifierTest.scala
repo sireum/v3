@@ -40,7 +40,7 @@ class TruthTableVerifierTest extends SireumRcSpec {
   }
 
   def check(path: scala.Seq[Predef.String], content: Predef.String): Boolean = {
-    LParser[Boolean](content, AccumulatingReporter(ISZ())) { (p, reporter) =>
+    LParser[Boolean](content, AccumulatingReporter.create) { (p, reporter) =>
       val r = p.truthTable(SNone())
       val status = TestUtil.check(reporter) && r.unitOpt.exists(_.isInstanceOf[TopUnit.TruthTableUnit])
       if (!status) {

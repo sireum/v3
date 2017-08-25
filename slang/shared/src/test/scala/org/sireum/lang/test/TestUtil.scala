@@ -35,7 +35,7 @@ object TestUtil {
 
   def lparser[T](input: String)(f: (LParser, AccumulatingReporter) => Boolean): Boolean = {
     val r: Boolean = try {
-      LParser[Boolean](input, AccumulatingReporter(ISZ()))(f)
+      LParser[Boolean](input, AccumulatingReporter.create)(f)
       //println(fparser(parser)
     } catch {
       case e: TokenizeException =>

@@ -36,7 +36,7 @@ import scala.util._
 object Parser_Ext {
 
   def parseStmt[T <: AST.Stmt](text: String): T = {
-    val reporter = AccumulatingReporter(ISZ())
+    val reporter = AccumulatingReporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
     val stat = Try(metap.parseStat) match {
@@ -52,7 +52,7 @@ object Parser_Ext {
   }
 
   def parseExp[T <: AST.Exp](text: String): T = {
-    val reporter = AccumulatingReporter(ISZ())
+    val reporter = AccumulatingReporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
     val term = Try(metap.parseTerm) match {
