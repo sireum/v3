@@ -298,7 +298,7 @@ class ScalaMetaParserTest extends SireumSpec {
                    isWorksheet: Boolean = false,
                    isPrelude: Boolean = false,
                    checkJson: Boolean = true): Boolean = {
-    val reporter = AccumulatingReporter(ISZ())
+    val reporter = AccumulatingReporter.create
     val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
       isWorksheet, isPrelude, reporter)
     var b = r.unitOpt.nonEmpty && !reporter.hasIssue
@@ -309,12 +309,13 @@ class ScalaMetaParserTest extends SireumSpec {
       if (reporter.hasIssue) report(r, reporter)
       r.unitOpt.foreach {
         case p: AST.TopUnit.Program =>
+          gdr.resolveProgram(p)
+          if (reporter.hasIssue) report(r, reporter)
           if (checkJson) {
             val json = AST.JSON.fromTopUnit(p, true)
             //println(json)
             assert(AST.JSON.toTopUnit(json) == p)
           }
-          gdr.resolveProgram(p)
         case _ => b = false
       }
     }
@@ -335,7 +336,7 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
-      val reporter = AccumulatingReporter(ISZ())
+      val reporter = AccumulatingReporter.create
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude, reporter)
       val b = reporter.issues.elements.exists(_.message.value.contains(msg))
