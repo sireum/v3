@@ -67,26 +67,14 @@ object Parser_Ext {
     exp.asInstanceOf[T]
   }
 
-  def err(s: Predef.String = "Can only be used for non-erroneous Slang statement."): Nothing = halt(s)
-}
-
-object ParallelParser_Ext {
-
-  def parseTopUnit[T <: AST.TopUnit](allowSireum: B,
+  def parseTopUnit[T <: AST.TopUnit](text: String,
+                                     allowSireum: B,
                                      isWorksheet: B,
                                      isDiet: B,
-                                     sources: ISZ[(Option[String], String)],
-                                     reporter: Reporter): ISZ[(Option[String], T)] = {
-    val es = $internal.Macro.par[(Option[String], String)](sources.elements)
-    val r = new SyncReporter(reporter)
-    ISZ(es.flatMap { p =>
-      val res = SlangParser(allowSireum, isWorksheet, isDiet, p._1, p._2.value, r)
-      res.unitOpt match {
-        case Some(x) => scala.Some((p._1, x.asInstanceOf[T]))
-        case _ => scala.None
-      }
-    }.toArray: _*)
-  }
+                                     fileUriOpt: Option[String],
+                                     reporter: Reporter): Option[T] =
+    SlangParser(allowSireum, isWorksheet, isDiet, fileUriOpt,
+      text.value, reporter).unitOpt.map(_.asInstanceOf[T])
 
+  def err(s: Predef.String = "Can only be used for non-erroneous Slang statement."): Nothing = halt(s)
 }
-

@@ -32,16 +32,13 @@ import org.sireum.lang.{ast => AST}
 
 @rich class Parser(text: String) {
 
-  def parseStmt[T <: AST.Stmt]: T = $
+  @pure def parseStmt[T <: AST.Stmt]: T = $
 
-  def parseExp[T <: AST.Exp]: T = $
-}
+  @pure def parseExp[T <: AST.Exp]: T = $
 
-@rich class ParallelParser(allowSireum: B,
-                           isWorksheet: B,
-                           isDiet: B,
-                           sources: ISZ[(Option[String], String)]) {
-
-  def parseTopUnit[T <: AST.TopUnit](reporter: Reporter): ISZ[(Option[String], T)] = $
-
+  def parseTopUnit[T <: AST.TopUnit](allowSireum: B,
+                                     isWorksheet: B,
+                                     isDiet: B,
+                                     fileUriOpt: Option[String],
+                                     reporter: Reporter): Option[T] = $
 }

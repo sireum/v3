@@ -66,6 +66,12 @@ object Reporter {
 import Reporter._
 import Reporter.Message.Level
 
+object AccumulatingReporter {
+  @pure def combine(r1: AccumulatingReporter, r2: AccumulatingReporter): AccumulatingReporter = {
+    return AccumulatingReporter(r1.messages ++ r2.messages)
+  }
+}
+
 @record class AccumulatingReporter(var messages: ISZ[Message])
   extends Reporter {
 
