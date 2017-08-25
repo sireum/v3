@@ -313,7 +313,7 @@ object JsonGen {
     }
 
     def genEnum(ti: TypeInfo.Enum): Unit = {
-      val enumTypeString = typeString(packageName, ti.name)
+      val enumTypeString = typeNameString(packageName, ti.name)
       val enumTypeName = typeName(packageName, ti.name)
       printers = printers :+
         Template.printEnum(enumTypeName, enumTypeString,
@@ -329,7 +329,7 @@ object JsonGen {
       if (ti.ast.isRoot) {
         genRoot(ti.name)
       } else {
-        val adTypeString = typeString(packageName, ti.name)
+        val adTypeString = typeNameString(packageName, ti.name)
         val adTypeName = typeName(packageName, ti.name)
         var fieldNames = ISZ[String]()
         var printFields = ISZ[ST]()
@@ -351,7 +351,7 @@ object JsonGen {
     }
 
     def genRoot(name: QName): Unit = {
-      val rootTypeString = typeString(packageName, name)
+      val rootTypeString = typeNameString(packageName, name)
       val rootTypeName = typeName(packageName, name)
       var rootPrintCases = ISZ[ST]()
       var rootParseCases = ISZ[ST]()
@@ -359,7 +359,7 @@ object JsonGen {
       for (childIds <- poset.descendantsOf(name).elements) {
         globalTypeMap.get(childIds) match {
           case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
-            val childTypeString = typeString(packageName, childIds)
+            val childTypeString = typeNameString(packageName, childIds)
             val childTypeName = typeName(packageName, childIds)
             childrenTypeStrings = childrenTypeStrings :+ childTypeString
             rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
