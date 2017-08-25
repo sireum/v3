@@ -27,9 +27,10 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.lang.parser.Parser
 import org.sireum.ops._
 import org.sireum.ops.ISZOps._
-import org.sireum.lang.util.Reporter
+import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 import org.sireum.lang.{ast => AST}
 
 object Resolver {
@@ -263,48 +264,84 @@ object Resolver {
 
   @datatype trait Info {
     def name: QName
+
+    def posOpt: Option[AST.PosInfo]
   }
 
   object Info {
 
-    @datatype class Package(name: QName) extends Info
+    @datatype class Package(name: QName) extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return None[AST.PosInfo]()
+      }
+    }
 
     @datatype class Var(name: QName,
                         scope: Scope.Global,
-                        ast: AST.Stmt.Var) extends Info
+                        ast: AST.Stmt.Var) extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class SpecVar(name: QName,
                             scope: Scope.Global,
-                            ast: AST.Stmt.SpecVar) extends Info
+                            ast: AST.Stmt.SpecVar) extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class Method(name: QName,
                            scope: Scope.Global,
-                           ast: AST.Stmt.Method) extends Info
+                           ast: AST.Stmt.Method) extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class SpecMethod(name: QName,
                                scope: Scope.Global,
-                               ast: AST.Stmt.SpecMethod) extends Info
+                               ast: AST.Stmt.SpecMethod) extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class Object(name: QName,
-                           isExt: B)
+                           isExt: B,
+                           posOpt: Option[AST.PosInfo])
       extends Info
 
     @datatype class ExtMethod(name: QName,
                               scope: Scope.Global,
                               ast: AST.Stmt.ExtMethod)
-      extends Info
+      extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class Enum(name: QName,
-                         elements: Set[String])
+                         elements: Set[String],
+                         posOpt: Option[AST.PosInfo])
       extends Info
 
     @datatype class FreshVar(name: QName,
                              ast: AST.Id)
-      extends Info
+      extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class QuantVar(name: QName,
-                             id: AST.Id)
-      extends Info
+                             ast: AST.Id)
+      extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
   }
 
@@ -470,19 +507,129 @@ object Resolver {
 
   def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {
     t match {
-      case t: AST.Type.Named => return typeString(name, relQName(name, AST.Util.ids2strings(t.name.ids)))
+      case t: AST.Type.Named => return typeNameString(name, relQName(name, AST.Util.ids2strings(t.name.ids)))
       case _ =>
         reporter.internalError(t.posOpt, resolverKind, s"Unexpected type $t.")
         return st""
     }
   }
 
-  @pure def typeString(name: QName, ids: QName): ST = {
+  @pure def typeNameString(name: QName, ids: QName): ST = {
     return st"${(relQName(name, ids), ".")}"
   }
 
   @pure def typeName(name: QName, ids: QName): ST = {
     return st"${relQName(name, ids)}"
+  }
+
+  @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
+    val sireumName = ISZ("org", "sireum")
+    val iszName = sireumName :+ "ISZ"
+
+    if (typeMap.contains(iszName)) {
+      return (nameMap, typeMap)
+    }
+
+    val emptyAttr = AST.Attr(None[AST.PosInfo]())
+    val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
+      AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Type]()))
+
+    val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
+
+    val scope = Scope.Global(sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
+
+    var tm = typeMap.put(iszName, TypeInfo.TypeAlias(iszName, scope,
+      Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
+
+    val mszName = sireumName :+ "MSZ"
+
+    tm = tm.put(mszName, TypeInfo.TypeAlias(mszName, scope,
+      Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
+
+    val tName = sireumName :+ "T"
+    var nm = nameMap.put(tName, Info.Var(tName, scope,
+      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp))))
+
+    val fName = sireumName :+ "F"
+    nm = nm.put(fName, Info.Var(fName, scope,
+      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp))))
+
+    return (nm, tm)
+
+  }
+
+  def parseProgramAndGloballyResolve(sources: ISZ[(Option[String], String)],
+                                     nameMap: NameMap,
+                                     typeMap: TypeMap): (AccumulatingReporter, NameMap, TypeMap) = {
+    def parseGloballyResolve(p: (Option[String], String)): (AccumulatingReporter, NameMap, TypeMap) = {
+      val reporter = AccumulatingReporter.create
+      val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
+      val nameMap = HashMap.empty[QName, Info]
+      val typeMap = HashMap.empty[QName, TypeInfo]
+      r match {
+        case Some(program) =>
+          val gdr = GlobalDeclarationResolver(nameMap, typeMap, reporter)
+          gdr.resolveProgram(program)
+          return (reporter, gdr.globalNameMap, gdr.globalTypeMap)
+        case _ => return (reporter, nameMap, typeMap)
+      }
+    }
+
+    @pure def combine(r: (AccumulatingReporter, NameMap, TypeMap),
+                      u: (AccumulatingReporter, NameMap, TypeMap)): (AccumulatingReporter, NameMap, TypeMap) = {
+      var rNameMap = r._2
+      var rTypeMap = r._3
+      val uNameMap = u._2
+      val uTypeMap = u._3
+      val reporter = AccumulatingReporter.combine(r._1, u._1)
+      for (p <- uNameMap.entries) {
+        val name = p._1
+        val uInfo = p._2
+        rNameMap.get(name) match {
+          case Some(rInfo) =>
+            (rInfo, uInfo) match {
+              case (rInfo: Info.Package, uInfo: Info.Package) =>
+              case _ =>
+                rInfo.posOpt match {
+                  case Some(pos) =>
+                    val file: String = pos.fileUriOpt match {
+                      case Some(fileUri) => s" in $fileUri"
+                      case _ => ""
+                    }
+                    reporter.error(uInfo.posOpt, resolverKind,
+                      st"Name '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render)
+                  case _ =>
+                }
+            }
+          case _ => rNameMap = rNameMap.put(name, uInfo)
+        }
+      }
+      for (p <- uTypeMap.entries) {
+        val name = p._1
+        val uInfo = p._2
+        rTypeMap.get(name) match {
+          case Some(rInfo) =>
+            rInfo.posOpt match {
+              case Some(pos) =>
+                val file: String = pos.fileUriOpt match {
+                  case Some(fileUri) => s" in $fileUri"
+                  case _ => ""
+                }
+                reporter.error(uInfo.posOpt, resolverKind,
+                  st"Type named '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render)
+              case _ =>
+            }
+          case _ => rTypeMap = rTypeMap.put(name, uInfo)
+        }
+      }
+      return (reporter, rNameMap, rTypeMap)
+    }
+
+    var t = SOps(sources).
+      mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
+      parseGloballyResolve _, combine _, (AccumulatingReporter.create, nameMap, typeMap))
+    val p = addBuiltIns(t._2, t._3)
+    return (t._1, p._1, p._2)
   }
 
 }

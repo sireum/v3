@@ -97,7 +97,7 @@ import org.sireum.lang.{ast => AST}
             elements = elements.add(e.value)
           }
         }
-        declareName("enumeration", name, Info.Enum(name, elements), stmt.attr.posOpt)
+        declareName("enumeration", name, Info.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
         declareType("enumeration", name :+ "Type", TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
@@ -114,7 +114,7 @@ import org.sireum.lang.{ast => AST}
         }
 
         declareName(if (stmt.isExt) "extension object" else "object", name,
-          Info.Object(name, stmt.isExt), stmt.attr.posOpt)
+          Info.Object(name, stmt.isExt, stmt.attr.posOpt), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
