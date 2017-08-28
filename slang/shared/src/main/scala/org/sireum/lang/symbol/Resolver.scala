@@ -440,6 +440,23 @@ object Resolver {
       }
     }
 
+    @datatype class TypeVar(id: String,
+                            ast: AST.TypeParam)
+      extends TypeInfo {
+
+      def name: QName = {
+        return ISZ(id)
+      }
+
+      def canHaveCompanion: B = {
+        return F
+      }
+
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.id.attr.posOpt
+      }
+    }
+
     @datatype class Members(specVars: HashMap[String, AST.Stmt.SpecVar],
                             vars: HashMap[String, AST.Stmt.Var],
                             specMethods: HashMap[String, AST.Stmt.SpecMethod],
@@ -514,6 +531,21 @@ object Resolver {
     }
   }
 
+  def typeParamsScope(tps: ISZ[AST.TypeParam],
+                      scope: Scope,
+                      reporter: Reporter): Scope = {
+    var typeMap = HashMap.empty[String, TypeInfo]
+    for (tp <- tps) {
+      val id = tp.id.value
+      if (typeMap.contains(id)) {
+        reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter '$id'.")
+      } else {
+        typeMap = typeMap.put(id, TypeInfo.TypeVar(id, tp))
+      }
+    }
+    return Scope.Local(HashMap.empty, typeMap, Some(scope))
+  }
+
   @pure def typeNameString(name: QName, ids: QName): ST = {
     return st"${(relQName(name, ids), ".")}"
   }
@@ -532,7 +564,7 @@ object Resolver {
 
     val emptyAttr = AST.Attr(None[AST.PosInfo]())
     val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
-      AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Type]()))
+      AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
     val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
 

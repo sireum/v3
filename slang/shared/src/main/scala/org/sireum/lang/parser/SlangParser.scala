@@ -144,8 +144,8 @@ object SlangParser {
   }
 
   private[SlangParser] lazy val emptyAttr = AST.Attr(posOpt = None())
-  private[SlangParser] lazy val emptyTypedAttr = AST.TypedAttr(posOpt = None(), typeOpt = None())
-  private[SlangParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posOpt = None(), resOpt = None(), typeOpt = None())
+  private[SlangParser] lazy val emptyTypedAttr = AST.TypedAttr(posOpt = None(), typedOpt = None())
+  private[SlangParser] lazy val emptyResolvedAttr = AST.ResolvedAttr(posOpt = None(), resOpt = None(), typedOpt = None())
 
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
@@ -2142,9 +2142,9 @@ class SlangParser(text: Predef.String,
 
   def attr(pos: Position): AST.Attr = AST.Attr(posOpt = posOpt(pos))
 
-  def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posOpt = posOpt(pos), typeOpt = None())
+  def typedAttr(pos: Position): AST.TypedAttr = AST.TypedAttr(posOpt = posOpt(pos), typedOpt = None())
 
-  def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posOpt = posOpt(pos), resOpt = None(), typeOpt = None())
+  def resolvedAttr(pos: Position): AST.ResolvedAttr = AST.ResolvedAttr(posOpt = posOpt(pos), resOpt = None(), typedOpt = None())
 
   def ref2IS(ref: Term.Ref): ISZ[AST.Id] = {
     def f(t: Term): ISZ[AST.Id] = t match {

@@ -930,14 +930,35 @@ object TruthTable {
 
 }
 
+@datatype trait Typed {
+  def posOpt: Option[PosInfo]
+}
+
+object Typed {
+
+  @datatype class Name(ids: ISZ[String],
+                       @hidden args: ISZ[Typed],
+                       @hidden posOpt: Option[PosInfo])
+    extends Typed
+
+  @datatype class Tuple(args: ISZ[Typed],
+                        @hidden posOpt: Option[PosInfo])
+    extends Typed
+
+  @datatype class Fun(args: ISZ[Typed],
+                      ret: Typed,
+                      @hidden posOpt: Option[PosInfo])
+    extends Typed
+}
+
 @datatype class Attr(posOpt: Option[PosInfo])
 
 @datatype class TypedAttr(posOpt: Option[PosInfo],
-                          typeOpt: Option[Type])
+                          typedOpt: Option[Typed])
 
 @datatype class ResolvedAttr(posOpt: Option[PosInfo],
                              resOpt: Option[ResolvedInfo],
-                             typeOpt: Option[Type])
+                             typedOpt: Option[Typed])
 
 @datatype class ResolvedInfo(kind: SymbolKind.Type,
                              ids: ISZ[String],

@@ -78,41 +78,41 @@ object JSON {
 
     @pure def printStmt(o: Stmt): ST = {
       o match {
-        case o: Stmt.Import => return printStmtImport(o)
-        case o: Stmt.Var => return printStmtVar(o)
-        case o: Stmt.VarPattern => return printStmtVarPattern(o)
-        case o: Stmt.SpecVar => return printStmtSpecVar(o)
-        case o: Stmt.Method => return printStmtMethod(o)
-        case o: Stmt.ExtMethod => return printStmtExtMethod(o)
-        case o: Stmt.SpecMethod => return printStmtSpecMethod(o)
-        case o: Stmt.Enum => return printStmtEnum(o)
-        case o: Stmt.SubZ => return printStmtSubZ(o)
-        case o: Stmt.Object => return printStmtObject(o)
-        case o: Stmt.Sig => return printStmtSig(o)
-        case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return printStmtRich(o)
+        case o: Stmt.Expr => return printStmtExpr(o)
         case o: Stmt.TypeAlias => return printStmtTypeAlias(o)
         case o: Stmt.Assign => return printStmtAssign(o)
-        case o: Stmt.AssignUp => return printStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return printStmtAssignPattern(o)
-        case o: Stmt.Block => return printStmtBlock(o)
-        case o: Stmt.If => return printStmtIf(o)
         case o: Stmt.Match => return printStmtMatch(o)
-        case o: Stmt.While => return printStmtWhile(o)
-        case o: Stmt.DoWhile => return printStmtDoWhile(o)
-        case o: Stmt.For => return printStmtFor(o)
+        case o: Stmt.Block => return printStmtBlock(o)
         case o: Stmt.Return => return printStmtReturn(o)
+        case o: Stmt.While => return printStmtWhile(o)
+        case o: Stmt.Rich => return printStmtRich(o)
+        case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
+        case o: Stmt.SpecVar => return printStmtSpecVar(o)
+        case o: Stmt.AssignPattern => return printStmtAssignPattern(o)
+        case o: Stmt.Enum => return printStmtEnum(o)
+        case o: Stmt.Var => return printStmtVar(o)
+        case o: Stmt.Object => return printStmtObject(o)
+        case o: Stmt.AssignUp => return printStmtAssignUp(o)
+        case o: Stmt.Import => return printStmtImport(o)
+        case o: Stmt.SpecMethod => return printStmtSpecMethod(o)
+        case o: Stmt.DoWhile => return printStmtDoWhile(o)
+        case o: Stmt.ExtMethod => return printStmtExtMethod(o)
+        case o: Stmt.Sig => return printStmtSig(o)
+        case o: Stmt.For => return printStmtFor(o)
+        case o: Stmt.VarPattern => return printStmtVarPattern(o)
+        case o: Stmt.Method => return printStmtMethod(o)
+        case o: Stmt.SubZ => return printStmtSubZ(o)
+        case o: Stmt.If => return printStmtIf(o)
         case o: Stmt.LStmt => return printStmtLStmt(o)
-        case o: Stmt.Expr => return printStmtExpr(o)
       }
     }
 
     @pure def printAssignExp(o: AssignExp): ST = {
       o match {
+        case o: Stmt.Expr => return printStmtExpr(o)
+        case o: Stmt.Match => return printStmtMatch(o)
         case o: Stmt.Block => return printStmtBlock(o)
         case o: Stmt.If => return printStmtIf(o)
-        case o: Stmt.Match => return printStmtMatch(o)
-        case o: Stmt.Expr => return printStmtExpr(o)
       }
     }
 
@@ -438,11 +438,11 @@ object JSON {
 
     @pure def printLClause(o: LClause): ST = {
       o match {
-        case o: LClause.Invariants => return printLClauseInvariants(o)
-        case o: LClause.Facts => return printLClauseFacts(o)
+        case o: LClause.Proof => return printLClauseProof(o)
         case o: LClause.Theorems => return printLClauseTheorems(o)
         case o: LClause.Sequent => return printLClauseSequent(o)
-        case o: LClause.Proof => return printLClauseProof(o)
+        case o: LClause.Invariants => return printLClauseInvariants(o)
+        case o: LClause.Facts => return printLClauseFacts(o)
       }
     }
 
@@ -518,8 +518,8 @@ object JSON {
 
     @pure def printEnumGenRange(o: EnumGen.Range): ST = {
       o match {
-        case o: EnumGen.Range.Expr => return printEnumGenRangeExpr(o)
         case o: EnumGen.Range.Indices => return printEnumGenRangeIndices(o)
+        case o: EnumGen.Range.Expr => return printEnumGenRangeExpr(o)
         case o: EnumGen.Range.Step => return printEnumGenRangeStep(o)
       }
     }
@@ -561,9 +561,9 @@ object JSON {
 
     @pure def printType(o: Type): ST = {
       o match {
+        case o: Type.Tuple => return printTypeTuple(o)
         case o: Type.Named => return printTypeNamed(o)
         case o: Type.Fun => return printTypeFun(o)
-        case o: Type.Tuple => return printTypeTuple(o)
       }
     }
 
@@ -596,11 +596,11 @@ object JSON {
     @pure def printPattern(o: Pattern): ST = {
       o match {
         case o: Pattern.Literal => return printPatternLiteral(o)
-        case o: Pattern.Ref => return printPatternRef(o)
-        case o: Pattern.Variable => return printPatternVariable(o)
         case o: Pattern.Wildcard => return printPatternWildcard(o)
         case o: Pattern.SeqWildcard => return printPatternSeqWildcard(o)
         case o: Pattern.Structure => return printPatternStructure(o)
+        case o: Pattern.Ref => return printPatternRef(o)
+        case o: Pattern.Variable => return printPatternVariable(o)
       }
     }
 
@@ -650,42 +650,42 @@ object JSON {
 
     @pure def printExp(o: Exp): ST = {
       o match {
-        case o: Exp.LitB => return printExpLitB(o)
         case o: Exp.LitC => return printExpLitC(o)
-        case o: Exp.LitZ => return printExpLitZ(o)
-        case o: Exp.LitF32 => return printExpLitF32(o)
-        case o: Exp.LitF64 => return printExpLitF64(o)
-        case o: Exp.LitR => return printExpLitR(o)
+        case o: Exp.LitB => return printExpLitB(o)
+        case o: Exp.Fun => return printExpFun(o)
         case o: Exp.LitBv => return printExpLitBv(o)
+        case o: Exp.Eta => return printExpEta(o)
+        case o: Exp.Ident => return printExpIdent(o)
+        case o: Exp.LitF64 => return printExpLitF64(o)
+        case o: Exp.ForYield => return printExpForYield(o)
+        case o: Exp.Select => return printExpSelect(o)
+        case o: Exp.LitF32 => return printExpLitF32(o)
+        case o: Exp.If => return printExpIf(o)
         case o: Exp.LitString => return printExpLitString(o)
+        case o: Exp.Binary => return printExpBinary(o)
+        case o: Exp.Super => return printExpSuper(o)
+        case o: Exp.InvokeNamed => return printExpInvokeNamed(o)
+        case o: Exp.Tuple => return printExpTuple(o)
+        case o: Exp.LitZ => return printExpLitZ(o)
         case o: Exp.StringInterpolate => return printExpStringInterpolate(o)
         case o: Exp.This => return printExpThis(o)
-        case o: Exp.Super => return printExpSuper(o)
-        case o: Exp.Unary => return printExpUnary(o)
-        case o: Exp.Binary => return printExpBinary(o)
-        case o: Exp.Ident => return printExpIdent(o)
-        case o: Exp.Eta => return printExpEta(o)
-        case o: Exp.Tuple => return printExpTuple(o)
-        case o: Exp.Select => return printExpSelect(o)
-        case o: Exp.Invoke => return printExpInvoke(o)
-        case o: Exp.InvokeNamed => return printExpInvokeNamed(o)
-        case o: Exp.If => return printExpIf(o)
-        case o: Exp.Fun => return printExpFun(o)
-        case o: Exp.ForYield => return printExpForYield(o)
+        case o: Exp.LitR => return printExpLitR(o)
         case o: Exp.Quant => return printExpQuant(o)
+        case o: Exp.Unary => return printExpUnary(o)
+        case o: Exp.Invoke => return printExpInvoke(o)
       }
     }
 
     @pure def printLit(o: Lit): ST = {
       o match {
-        case o: Exp.LitB => return printExpLitB(o)
         case o: Exp.LitC => return printExpLitC(o)
-        case o: Exp.LitZ => return printExpLitZ(o)
-        case o: Exp.LitF32 => return printExpLitF32(o)
-        case o: Exp.LitF64 => return printExpLitF64(o)
-        case o: Exp.LitR => return printExpLitR(o)
+        case o: Exp.LitB => return printExpLitB(o)
         case o: Exp.LitBv => return printExpLitBv(o)
+        case o: Exp.LitF64 => return printExpLitF64(o)
+        case o: Exp.LitF32 => return printExpLitF32(o)
         case o: Exp.LitString => return printExpLitString(o)
+        case o: Exp.LitZ => return printExpLitZ(o)
+        case o: Exp.LitR => return printExpLitR(o)
       }
     }
 
@@ -1144,9 +1144,9 @@ object JSON {
 
     @pure def printAssumeProofStep(o: AssumeProofStep): ST = {
       o match {
-        case o: AssumeProofStep.Regular => return printAssumeProofStepRegular(o)
-        case o: AssumeProofStep.ForallIntroAps => return printAssumeProofStepForallIntroAps(o)
         case o: AssumeProofStep.ExistsElimAps => return printAssumeProofStepExistsElimAps(o)
+        case o: AssumeProofStep.ForallIntroAps => return printAssumeProofStepForallIntroAps(o)
+        case o: AssumeProofStep.Regular => return printAssumeProofStepRegular(o)
       }
     }
 
@@ -1177,25 +1177,25 @@ object JSON {
 
     @pure def printJust(o: Just): ST = {
       o match {
-        case o: Just.Premise => return printJustPremise(o)
-        case o: Just.AndIntro => return printJustAndIntro(o)
-        case o: Just.AndElim => return printJustAndElim(o)
-        case o: Just.OrIntro => return printJustOrIntro(o)
         case o: Just.OrElim => return printJustOrElim(o)
-        case o: Just.ImplyIntro => return printJustImplyIntro(o)
         case o: Just.ImplyElim => return printJustImplyElim(o)
         case o: Just.NegIntro => return printJustNegIntro(o)
-        case o: Just.NegElim => return printJustNegElim(o)
-        case o: Just.BottomElim => return printJustBottomElim(o)
-        case o: Just.Pbc => return printJustPbc(o)
-        case o: Just.ForallIntro => return printJustForallIntro(o)
-        case o: Just.ForallElim => return printJustForallElim(o)
-        case o: Just.ExistsIntro => return printJustExistsIntro(o)
         case o: Just.ExistsElim => return printJustExistsElim(o)
-        case o: Just.Fact => return printJustFact(o)
+        case o: Just.Pbc => return printJustPbc(o)
+        case o: Just.Auto => return printJustAuto(o)
         case o: Just.Invariant => return printJustInvariant(o)
         case o: Just.Subst => return printJustSubst(o)
-        case o: Just.Auto => return printJustAuto(o)
+        case o: Just.AndIntro => return printJustAndIntro(o)
+        case o: Just.Fact => return printJustFact(o)
+        case o: Just.ForallElim => return printJustForallElim(o)
+        case o: Just.ForallIntro => return printJustForallIntro(o)
+        case o: Just.AndElim => return printJustAndElim(o)
+        case o: Just.NegElim => return printJustNegElim(o)
+        case o: Just.ImplyIntro => return printJustImplyIntro(o)
+        case o: Just.Premise => return printJustPremise(o)
+        case o: Just.BottomElim => return printJustBottomElim(o)
+        case o: Just.OrIntro => return printJustOrIntro(o)
+        case o: Just.ExistsIntro => return printJustExistsIntro(o)
         case o: Just.Coq => return printJustCoq(o)
       }
     }
@@ -1391,9 +1391,9 @@ object JSON {
     @pure def printTruthTableConclusion(o: TruthTable.Conclusion): ST = {
       o match {
         case o: TruthTable.Conclusion.Validity => return printTruthTableConclusionValidity(o)
-        case o: TruthTable.Conclusion.Tautology => return printTruthTableConclusionTautology(o)
         case o: TruthTable.Conclusion.Contradictory => return printTruthTableConclusionContradictory(o)
         case o: TruthTable.Conclusion.Contingent => return printTruthTableConclusionContingent(o)
+        case o: TruthTable.Conclusion.Tautology => return printTruthTableConclusionTautology(o)
       }
     }
 
@@ -1429,6 +1429,40 @@ object JSON {
       ))
     }
 
+    @pure def printTyped(o: Typed): ST = {
+      o match {
+        case o: Typed.Name => return printTypedName(o)
+        case o: Typed.Tuple => return printTypedTuple(o)
+        case o: Typed.Fun => return printTypedFun(o)
+      }
+    }
+
+    @pure def printTypedName(o: Typed.Name): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Name""""),
+        ("ids", printISZ(T, o.ids, printString)),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
+    @pure def printTypedTuple(o: Typed.Tuple): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Tuple""""),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
+    @pure def printTypedFun(o: Typed.Fun): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Fun""""),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("ret", printTyped(o.ret)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
     @pure def printAttr(o: Attr): ST = {
       return printObject(ISZ(
         ("type", st""""Attr""""),
@@ -1440,7 +1474,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""TypedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typedOpt", printOption(o.typedOpt, printTyped))
       ))
     }
 
@@ -1449,7 +1483,7 @@ object JSON {
         ("type", st""""ResolvedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
         ("resOpt", printOption(o.resOpt, printResolvedInfo)),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typedOpt", printOption(o.typedOpt, printTyped))
       ))
     }
 
@@ -1593,45 +1627,45 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Expr", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.Match", "Stmt.Block", "Stmt.Return", "Stmt.While", "Stmt.Rich", "Stmt.AbstractDatatype", "Stmt.SpecVar", "Stmt.AssignPattern", "Stmt.Enum", "Stmt.Var", "Stmt.Object", "Stmt.AssignUp", "Stmt.Import", "Stmt.SpecMethod", "Stmt.DoWhile", "Stmt.ExtMethod", "Stmt.Sig", "Stmt.For", "Stmt.VarPattern", "Stmt.Method", "Stmt.SubZ", "Stmt.If", "Stmt.LStmt"))
       t match {
-        case "Stmt.Import" => val r = parseStmtImportT(T); return r
-        case "Stmt.Var" => val r = parseStmtVarT(T); return r
-        case "Stmt.VarPattern" => val r = parseStmtVarPatternT(T); return r
-        case "Stmt.SpecVar" => val r = parseStmtSpecVarT(T); return r
-        case "Stmt.Method" => val r = parseStmtMethodT(T); return r
-        case "Stmt.ExtMethod" => val r = parseStmtExtMethodT(T); return r
-        case "Stmt.SpecMethod" => val r = parseStmtSpecMethodT(T); return r
-        case "Stmt.Enum" => val r = parseStmtEnumT(T); return r
-        case "Stmt.SubZ" => val r = parseStmtSubZT(T); return r
-        case "Stmt.Object" => val r = parseStmtObjectT(T); return r
-        case "Stmt.Sig" => val r = parseStmtSigT(T); return r
-        case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
-        case "Stmt.Rich" => val r = parseStmtRichT(T); return r
+        case "Stmt.Expr" => val r = parseStmtExprT(T); return r
         case "Stmt.TypeAlias" => val r = parseStmtTypeAliasT(T); return r
         case "Stmt.Assign" => val r = parseStmtAssignT(T); return r
-        case "Stmt.AssignUp" => val r = parseStmtAssignUpT(T); return r
-        case "Stmt.AssignPattern" => val r = parseStmtAssignPatternT(T); return r
-        case "Stmt.Block" => val r = parseStmtBlockT(T); return r
-        case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.Match" => val r = parseStmtMatchT(T); return r
-        case "Stmt.While" => val r = parseStmtWhileT(T); return r
-        case "Stmt.DoWhile" => val r = parseStmtDoWhileT(T); return r
-        case "Stmt.For" => val r = parseStmtForT(T); return r
+        case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.Return" => val r = parseStmtReturnT(T); return r
+        case "Stmt.While" => val r = parseStmtWhileT(T); return r
+        case "Stmt.Rich" => val r = parseStmtRichT(T); return r
+        case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
+        case "Stmt.SpecVar" => val r = parseStmtSpecVarT(T); return r
+        case "Stmt.AssignPattern" => val r = parseStmtAssignPatternT(T); return r
+        case "Stmt.Enum" => val r = parseStmtEnumT(T); return r
+        case "Stmt.Var" => val r = parseStmtVarT(T); return r
+        case "Stmt.Object" => val r = parseStmtObjectT(T); return r
+        case "Stmt.AssignUp" => val r = parseStmtAssignUpT(T); return r
+        case "Stmt.Import" => val r = parseStmtImportT(T); return r
+        case "Stmt.SpecMethod" => val r = parseStmtSpecMethodT(T); return r
+        case "Stmt.DoWhile" => val r = parseStmtDoWhileT(T); return r
+        case "Stmt.ExtMethod" => val r = parseStmtExtMethodT(T); return r
+        case "Stmt.Sig" => val r = parseStmtSigT(T); return r
+        case "Stmt.For" => val r = parseStmtForT(T); return r
+        case "Stmt.VarPattern" => val r = parseStmtVarPatternT(T); return r
+        case "Stmt.Method" => val r = parseStmtMethodT(T); return r
+        case "Stmt.SubZ" => val r = parseStmtSubZT(T); return r
+        case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.LStmt" => val r = parseStmtLStmtT(T); return r
-        case "Stmt.Expr" => val r = parseStmtExprT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
 
     def parseAssignExp(): AssignExp = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Expr", "Stmt.Match", "Stmt.Block", "Stmt.If"))
       t match {
+        case "Stmt.Expr" => val r = parseStmtExprT(T); return r
+        case "Stmt.Match" => val r = parseStmtMatchT(T); return r
         case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.If" => val r = parseStmtIfT(T); return r
-        case "Stmt.Match" => val r = parseStmtMatchT(T); return r
-        case "Stmt.Expr" => val r = parseStmtExprT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -2389,13 +2423,13 @@ object JSON {
     }
 
     def parseLClause(): LClause = {
-      val t = parser.parseObjectTypes(ISZ("LClause.Invariants", "LClause.Facts", "LClause.Theorems", "LClause.Sequent", "LClause.Proof"))
+      val t = parser.parseObjectTypes(ISZ("LClause.Proof", "LClause.Theorems", "LClause.Sequent", "LClause.Invariants", "LClause.Facts"))
       t match {
-        case "LClause.Invariants" => val r = parseLClauseInvariantsT(T); return r
-        case "LClause.Facts" => val r = parseLClauseFactsT(T); return r
+        case "LClause.Proof" => val r = parseLClauseProofT(T); return r
         case "LClause.Theorems" => val r = parseLClauseTheoremsT(T); return r
         case "LClause.Sequent" => val r = parseLClauseSequentT(T); return r
-        case "LClause.Proof" => val r = parseLClauseProofT(T); return r
+        case "LClause.Invariants" => val r = parseLClauseInvariantsT(T); return r
+        case "LClause.Facts" => val r = parseLClauseFactsT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -2557,10 +2591,10 @@ object JSON {
     }
 
     def parseEnumGenRange(): EnumGen.Range = {
-      val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Expr", "EnumGen.Range.Indices", "EnumGen.Range.Step"))
+      val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Indices", "EnumGen.Range.Expr", "EnumGen.Range.Step"))
       t match {
-        case "EnumGen.Range.Expr" => val r = parseEnumGenRangeExprT(T); return r
         case "EnumGen.Range.Indices" => val r = parseEnumGenRangeIndicesT(T); return r
+        case "EnumGen.Range.Expr" => val r = parseEnumGenRangeExprT(T); return r
         case "EnumGen.Range.Step" => val r = parseEnumGenRangeStepT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -2648,11 +2682,11 @@ object JSON {
     }
 
     def parseType(): Type = {
-      val t = parser.parseObjectTypes(ISZ("Type.Named", "Type.Fun", "Type.Tuple"))
+      val t = parser.parseObjectTypes(ISZ("Type.Tuple", "Type.Named", "Type.Fun"))
       t match {
+        case "Type.Tuple" => val r = parseTypeTupleT(T); return r
         case "Type.Named" => val r = parseTypeNamedT(T); return r
         case "Type.Fun" => val r = parseTypeFunT(T); return r
-        case "Type.Tuple" => val r = parseTypeTupleT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -2718,14 +2752,14 @@ object JSON {
     }
 
     def parsePattern(): Pattern = {
-      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
+      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure", "Pattern.Ref", "Pattern.Variable"))
       t match {
         case "Pattern.Literal" => val r = parsePatternLiteralT(T); return r
-        case "Pattern.Ref" => val r = parsePatternRefT(T); return r
-        case "Pattern.Variable" => val r = parsePatternVariableT(T); return r
         case "Pattern.Wildcard" => val r = parsePatternWildcardT(T); return r
         case "Pattern.SeqWildcard" => val r = parsePatternSeqWildcardT(T); return r
         case "Pattern.Structure" => val r = parsePatternStructureT(T); return r
+        case "Pattern.Ref" => val r = parsePatternRefT(T); return r
+        case "Pattern.Variable" => val r = parsePatternVariableT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -2827,46 +2861,46 @@ object JSON {
     }
 
     def parseExp(): Exp = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitC", "Exp.LitB", "Exp.Fun", "Exp.LitBv", "Exp.Eta", "Exp.Ident", "Exp.LitF64", "Exp.ForYield", "Exp.Select", "Exp.LitF32", "Exp.If", "Exp.LitString", "Exp.Binary", "Exp.Super", "Exp.InvokeNamed", "Exp.Tuple", "Exp.LitZ", "Exp.StringInterpolate", "Exp.This", "Exp.LitR", "Exp.Quant", "Exp.Unary", "Exp.Invoke"))
       t match {
-        case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
-        case "Exp.LitZ" => val r = parseExpLitZT(T); return r
-        case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
-        case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
-        case "Exp.LitR" => val r = parseExpLitRT(T); return r
+        case "Exp.LitB" => val r = parseExpLitBT(T); return r
+        case "Exp.Fun" => val r = parseExpFunT(T); return r
         case "Exp.LitBv" => val r = parseExpLitBvT(T); return r
+        case "Exp.Eta" => val r = parseExpEtaT(T); return r
+        case "Exp.Ident" => val r = parseExpIdentT(T); return r
+        case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
+        case "Exp.ForYield" => val r = parseExpForYieldT(T); return r
+        case "Exp.Select" => val r = parseExpSelectT(T); return r
+        case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
+        case "Exp.If" => val r = parseExpIfT(T); return r
         case "Exp.LitString" => val r = parseExpLitStringT(T); return r
+        case "Exp.Binary" => val r = parseExpBinaryT(T); return r
+        case "Exp.Super" => val r = parseExpSuperT(T); return r
+        case "Exp.InvokeNamed" => val r = parseExpInvokeNamedT(T); return r
+        case "Exp.Tuple" => val r = parseExpTupleT(T); return r
+        case "Exp.LitZ" => val r = parseExpLitZT(T); return r
         case "Exp.StringInterpolate" => val r = parseExpStringInterpolateT(T); return r
         case "Exp.This" => val r = parseExpThisT(T); return r
-        case "Exp.Super" => val r = parseExpSuperT(T); return r
-        case "Exp.Unary" => val r = parseExpUnaryT(T); return r
-        case "Exp.Binary" => val r = parseExpBinaryT(T); return r
-        case "Exp.Ident" => val r = parseExpIdentT(T); return r
-        case "Exp.Eta" => val r = parseExpEtaT(T); return r
-        case "Exp.Tuple" => val r = parseExpTupleT(T); return r
-        case "Exp.Select" => val r = parseExpSelectT(T); return r
-        case "Exp.Invoke" => val r = parseExpInvokeT(T); return r
-        case "Exp.InvokeNamed" => val r = parseExpInvokeNamedT(T); return r
-        case "Exp.If" => val r = parseExpIfT(T); return r
-        case "Exp.Fun" => val r = parseExpFunT(T); return r
-        case "Exp.ForYield" => val r = parseExpForYieldT(T); return r
+        case "Exp.LitR" => val r = parseExpLitRT(T); return r
         case "Exp.Quant" => val r = parseExpQuantT(T); return r
+        case "Exp.Unary" => val r = parseExpUnaryT(T); return r
+        case "Exp.Invoke" => val r = parseExpInvokeT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
 
     def parseLit(): Lit = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitC", "Exp.LitB", "Exp.LitBv", "Exp.LitF64", "Exp.LitF32", "Exp.LitString", "Exp.LitZ", "Exp.LitR"))
       t match {
-        case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
-        case "Exp.LitZ" => val r = parseExpLitZT(T); return r
-        case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
-        case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
-        case "Exp.LitR" => val r = parseExpLitRT(T); return r
+        case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitBv" => val r = parseExpLitBvT(T); return r
+        case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
+        case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
         case "Exp.LitString" => val r = parseExpLitStringT(T); return r
+        case "Exp.LitZ" => val r = parseExpLitZT(T); return r
+        case "Exp.LitR" => val r = parseExpLitRT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -3851,11 +3885,11 @@ object JSON {
     }
 
     def parseAssumeProofStep(): AssumeProofStep = {
-      val t = parser.parseObjectTypes(ISZ("AssumeProofStep.Regular", "AssumeProofStep.ForallIntroAps", "AssumeProofStep.ExistsElimAps"))
+      val t = parser.parseObjectTypes(ISZ("AssumeProofStep.ExistsElimAps", "AssumeProofStep.ForallIntroAps", "AssumeProofStep.Regular"))
       t match {
-        case "AssumeProofStep.Regular" => val r = parseAssumeProofStepRegularT(T); return r
-        case "AssumeProofStep.ForallIntroAps" => val r = parseAssumeProofStepForallIntroApsT(T); return r
         case "AssumeProofStep.ExistsElimAps" => val r = parseAssumeProofStepExistsElimApsT(T); return r
+        case "AssumeProofStep.ForallIntroAps" => val r = parseAssumeProofStepForallIntroApsT(T); return r
+        case "AssumeProofStep.Regular" => val r = parseAssumeProofStepRegularT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -3918,27 +3952,27 @@ object JSON {
     }
 
     def parseJust(): Just = {
-      val t = parser.parseObjectTypes(ISZ("Just.Premise", "Just.AndIntro", "Just.AndElim", "Just.OrIntro", "Just.OrElim", "Just.ImplyIntro", "Just.ImplyElim", "Just.NegIntro", "Just.NegElim", "Just.BottomElim", "Just.Pbc", "Just.ForallIntro", "Just.ForallElim", "Just.ExistsIntro", "Just.ExistsElim", "Just.Fact", "Just.Invariant", "Just.Subst", "Just.Auto", "Just.Coq"))
+      val t = parser.parseObjectTypes(ISZ("Just.OrElim", "Just.ImplyElim", "Just.NegIntro", "Just.ExistsElim", "Just.Pbc", "Just.Auto", "Just.Invariant", "Just.Subst", "Just.AndIntro", "Just.Fact", "Just.ForallElim", "Just.ForallIntro", "Just.AndElim", "Just.NegElim", "Just.ImplyIntro", "Just.Premise", "Just.BottomElim", "Just.OrIntro", "Just.ExistsIntro", "Just.Coq"))
       t match {
-        case "Just.Premise" => val r = parseJustPremiseT(T); return r
-        case "Just.AndIntro" => val r = parseJustAndIntroT(T); return r
-        case "Just.AndElim" => val r = parseJustAndElimT(T); return r
-        case "Just.OrIntro" => val r = parseJustOrIntroT(T); return r
         case "Just.OrElim" => val r = parseJustOrElimT(T); return r
-        case "Just.ImplyIntro" => val r = parseJustImplyIntroT(T); return r
         case "Just.ImplyElim" => val r = parseJustImplyElimT(T); return r
         case "Just.NegIntro" => val r = parseJustNegIntroT(T); return r
-        case "Just.NegElim" => val r = parseJustNegElimT(T); return r
-        case "Just.BottomElim" => val r = parseJustBottomElimT(T); return r
-        case "Just.Pbc" => val r = parseJustPbcT(T); return r
-        case "Just.ForallIntro" => val r = parseJustForallIntroT(T); return r
-        case "Just.ForallElim" => val r = parseJustForallElimT(T); return r
-        case "Just.ExistsIntro" => val r = parseJustExistsIntroT(T); return r
         case "Just.ExistsElim" => val r = parseJustExistsElimT(T); return r
-        case "Just.Fact" => val r = parseJustFactT(T); return r
+        case "Just.Pbc" => val r = parseJustPbcT(T); return r
+        case "Just.Auto" => val r = parseJustAutoT(T); return r
         case "Just.Invariant" => val r = parseJustInvariantT(T); return r
         case "Just.Subst" => val r = parseJustSubstT(T); return r
-        case "Just.Auto" => val r = parseJustAutoT(T); return r
+        case "Just.AndIntro" => val r = parseJustAndIntroT(T); return r
+        case "Just.Fact" => val r = parseJustFactT(T); return r
+        case "Just.ForallElim" => val r = parseJustForallElimT(T); return r
+        case "Just.ForallIntro" => val r = parseJustForallIntroT(T); return r
+        case "Just.AndElim" => val r = parseJustAndElimT(T); return r
+        case "Just.NegElim" => val r = parseJustNegElimT(T); return r
+        case "Just.ImplyIntro" => val r = parseJustImplyIntroT(T); return r
+        case "Just.Premise" => val r = parseJustPremiseT(T); return r
+        case "Just.BottomElim" => val r = parseJustBottomElimT(T); return r
+        case "Just.OrIntro" => val r = parseJustOrIntroT(T); return r
+        case "Just.ExistsIntro" => val r = parseJustExistsIntroT(T); return r
         case "Just.Coq" => val r = parseJustCoqT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -4377,12 +4411,12 @@ object JSON {
     }
 
     def parseTruthTableConclusion(): TruthTable.Conclusion = {
-      val t = parser.parseObjectTypes(ISZ("TruthTable.Conclusion.Validity", "TruthTable.Conclusion.Tautology", "TruthTable.Conclusion.Contradictory", "TruthTable.Conclusion.Contingent"))
+      val t = parser.parseObjectTypes(ISZ("TruthTable.Conclusion.Validity", "TruthTable.Conclusion.Contradictory", "TruthTable.Conclusion.Contingent", "TruthTable.Conclusion.Tautology"))
       t match {
         case "TruthTable.Conclusion.Validity" => val r = parseTruthTableConclusionValidityT(T); return r
-        case "TruthTable.Conclusion.Tautology" => val r = parseTruthTableConclusionTautologyT(T); return r
         case "TruthTable.Conclusion.Contradictory" => val r = parseTruthTableConclusionContradictoryT(T); return r
         case "TruthTable.Conclusion.Contingent" => val r = parseTruthTableConclusionContingentT(T); return r
+        case "TruthTable.Conclusion.Tautology" => val r = parseTruthTableConclusionTautologyT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -4459,6 +4493,76 @@ object JSON {
       return TruthTable.Conclusion.Contingent(trueAssignments, falseAssignments, attr)
     }
 
+    def parseTyped(): Typed = {
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun"))
+      t match {
+        case "Typed.Name" => val r = parseTypedNameT(T); return r
+        case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
+        case "Typed.Fun" => val r = parseTypedFunT(T); return r
+        case _ => halt(parser.errorMessage)
+      }
+    }
+
+    def parseTypedName(): Typed.Name = {
+      val r = parseTypedNameT(F)
+      return r
+    }
+
+    def parseTypedNameT(typeParsed: B): Typed.Name = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Name")
+      }
+      parser.parseObjectKey("ids")
+      val ids = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Name(ids, args, posOpt)
+    }
+
+    def parseTypedTuple(): Typed.Tuple = {
+      val r = parseTypedTupleT(F)
+      return r
+    }
+
+    def parseTypedTupleT(typeParsed: B): Typed.Tuple = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Tuple")
+      }
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Tuple(args, posOpt)
+    }
+
+    def parseTypedFun(): Typed.Fun = {
+      val r = parseTypedFunT(F)
+      return r
+    }
+
+    def parseTypedFunT(typeParsed: B): Typed.Fun = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Fun")
+      }
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("ret")
+      val ret = parseTyped()
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Fun(args, ret, posOpt)
+    }
+
     def parseAttr(): Attr = {
       val r = parseAttrT(F)
       return r
@@ -4486,10 +4590,10 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectKey("typedOpt")
+      val typedOpt = parser.parseOption(parseTyped _)
       parser.parseObjectNext()
-      return TypedAttr(posOpt, typeOpt)
+      return TypedAttr(posOpt, typedOpt)
     }
 
     def parseResolvedAttr(): ResolvedAttr = {
@@ -4507,10 +4611,10 @@ object JSON {
       parser.parseObjectKey("resOpt")
       val resOpt = parser.parseOption(parseResolvedInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectKey("typedOpt")
+      val typedOpt = parser.parseOption(parseTyped _)
       parser.parseObjectNext()
-      return ResolvedAttr(posOpt, resOpt, typeOpt)
+      return ResolvedAttr(posOpt, resOpt, typedOpt)
     }
 
     def parseResolvedInfo(): ResolvedInfo = {
@@ -7173,6 +7277,78 @@ object JSON {
       return r
     }
     val r = to(s, fTruthTableConclusionContingent)
+    return r
+  }
+
+  def fromTyped(o: Typed, isCompact: B): String = {
+    val st = Printer.printTyped(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTyped(s: String): Typed = {
+    def fTyped(parser: Parser): Typed = {
+      var r = parser.parseTyped()
+      return r
+    }
+    val r = to(s, fTyped)
+    return r
+  }
+
+  def fromTypedName(o: Typed.Name, isCompact: B): String = {
+    val st = Printer.printTypedName(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedName(s: String): Typed.Name = {
+    def fTypedName(parser: Parser): Typed.Name = {
+      var r = parser.parseTypedName()
+      return r
+    }
+    val r = to(s, fTypedName)
+    return r
+  }
+
+  def fromTypedTuple(o: Typed.Tuple, isCompact: B): String = {
+    val st = Printer.printTypedTuple(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedTuple(s: String): Typed.Tuple = {
+    def fTypedTuple(parser: Parser): Typed.Tuple = {
+      var r = parser.parseTypedTuple()
+      return r
+    }
+    val r = to(s, fTypedTuple)
+    return r
+  }
+
+  def fromTypedFun(o: Typed.Fun, isCompact: B): String = {
+    val st = Printer.printTypedFun(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedFun(s: String): Typed.Fun = {
+    def fTypedFun(parser: Parser): Typed.Fun = {
+      var r = parser.parseTypedFun()
+      return r
+    }
+    val r = to(s, fTypedFun)
     return r
   }
 
