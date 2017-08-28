@@ -27,6 +27,8 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.ops._
+import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
@@ -356,9 +358,21 @@ object JsonGen {
       var rootPrintCases = ISZ[ST]()
       var rootParseCases = ISZ[ST]()
       var childrenTypeStrings = ISZ[ST]()
-      for (childIds <- poset.descendantsOf(name).elements) {
-        globalTypeMap.get(childIds) match {
-          case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
+      val descendants = poset.descendantsOf(name).elements
+      val sortedDescendants: ISZ[TypeInfo] = {
+        var r = ISZ[TypeInfo]()
+        for (d <- descendants) {
+          globalTypeMap.get(d) match {
+            case Some(info) => r = r :+ info
+            case _ =>
+          }
+        }
+        ISOps(r).sortWith(ltTypeInfo)
+      }
+      for (child <- sortedDescendants) {
+        child match {
+          case childTI: TypeInfo.AbstractDatatype if !childTI.ast.isRoot =>
+            val childIds = childTI.name
             val childTypeString = typeNameString(packageName, childIds)
             val childTypeName = typeName(packageName, childIds)
             childrenTypeStrings = childrenTypeStrings :+ childTypeString
