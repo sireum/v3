@@ -95,6 +95,14 @@ object TypeHierarchy {
           AST.Typed.Fun(ts, rt, t.posOpt)
       }
     }
+    def resolveTypeNameds(scope: Scope, ts: ISZ[AST.Type.Named]): ISZ[AST.Typed] = {
+      var r = ISZ[AST.Typed]()
+      for (t <- ts) {
+        val typed = resolveType(scope, t)
+        r = r :+ typed
+      }
+      return r
+    }
     val zName = ISZ("org", "sireum", "Z")
     var r = Poset.empty[AST.Typed]
     if (!typeMap.contains(zName)) {
@@ -109,22 +117,15 @@ object TypeHierarchy {
         case _: TypeInfo.Enum => r = r.addNode(typed)
         case info: TypeInfo.Sig =>
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents: ISZ[AST.Typed] = {
-            var ps = ISZ[AST.Typed]()
-            for (t <- info.ast.parents) {
-              val td = resolveType(scope, t)
-              ps = ps :+ td
-            }
-            ps
-          }
+          val parents = resolveTypeNameds(scope, info.ast.parents)
           r = r.addParents(typed, parents)
         case info: TypeInfo.AbstractDatatype =>
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents: ISZ[AST.Typed] = for (t <- info.ast.parents) yield resolveType(scope, t)
+          val parents = resolveTypeNameds(scope, info.ast.parents)
           r = r.addParents(typed, parents)
         case info: TypeInfo.Rich =>
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents: ISZ[AST.Typed] = for (t <- info.ast.parents) yield resolveType(scope, t)
+          val parents: ISZ[AST.Typed] = resolveTypeNameds(scope, info.ast.parents)
           r = r.addParents(typed, parents)
         case info: TypeInfo.TypeAlias =>
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
