@@ -55,7 +55,7 @@ object TypeHierarchy {
     }
   }
 
-  def build(typeMap: TypeMap, reporter: Reporter): Poset[AST.Typed] = {
+  def build(typeMap: TypeMap, init: Poset[AST.Typed], reporter: Reporter): Poset[AST.Typed] = {
     def resolveType(scope: Scope, t: AST.Type): AST.Typed = {
       t match {
         case t: AST.Type.Named =>
@@ -104,7 +104,7 @@ object TypeHierarchy {
       return r
     }
     val zName = ISZ("org", "sireum", "Z")
-    var r = Poset.empty[AST.Typed]
+    var r = init
     if (!typeMap.contains(zName)) {
       reporter.error(None(), resolverKind, "Could not find Z type.")
       return r
