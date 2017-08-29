@@ -33,7 +33,7 @@ import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
-class ScalaMetaParserTest extends SireumSpec {
+class SlangFrontEndTest extends SireumSpec {
   {
 
     implicit val _spec: SireumSpec = this
@@ -134,11 +134,15 @@ class ScalaMetaParserTest extends SireumSpec {
       }
 
       "Library" - {
+
         passingRc(org.sireum.$SlangFiles.trie)
+
       }
 
       "Slang" - {
+
         passingRc(org.sireum.lang.$SlangFiles.trie)
+
       }
     }
 
@@ -310,7 +314,10 @@ class ScalaMetaParserTest extends SireumSpec {
       r.unitOpt.foreach {
         case p: AST.TopUnit.Program =>
           gdr.resolveProgram(p)
-          if (reporter.hasIssue) report(r, reporter)
+          if (reporter.hasIssue) {
+            report(r, reporter)
+            b = false
+          }
           if (checkJson) {
             val json = AST.JSON.fromTopUnit(p, true)
             //println(json)
