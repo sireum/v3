@@ -219,7 +219,7 @@ object Resolver {
         }
 
         var en = enclosingName
-        while (en != packageName) {
+        while (en.size >= packageName.size && en != packageName) {
           val enclosedOpt = globalNameMap.get(en ++ name)
           if (enclosedOpt.nonEmpty) {
             return enclosedOpt
@@ -243,7 +243,7 @@ object Resolver {
         }
 
         var en = enclosingName
-        while (en != packageName) {
+        while (en.size >= packageName.size && en != packageName) {
           val enclosedTypeOpt = globalTypeMap.get(en ++ name)
           if (enclosedTypeOpt.nonEmpty) {
             return enclosedTypeOpt
