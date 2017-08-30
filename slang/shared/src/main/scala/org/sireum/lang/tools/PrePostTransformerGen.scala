@@ -78,6 +78,7 @@ object PrePostTransformerGen {
     for (ti <- globalTypes) {
       ti match {
         case ti: TypeInfo.AbstractDatatype => genAdt(ti)
+        case ti: TypeInfo.Sig => genRoot(ti.name, T)
         case _ =>
       }
     }
@@ -102,14 +103,17 @@ object PrePostTransformerGen {
       }
       ISOps(r).sortWith(ltTypeInfo)
     }
+    val p: (Option[ST], Option[ST]) =
+      if (isSig) (Some(template.preAdapt(rootTypeString)), Some(template.postAdapt(rootTypeString)))
+      else (None[ST](), None[ST]())
     for (child <- sortedDescendants) {
       child match {
         case childTI: TypeInfo.AbstractDatatype if !childTI.ast.isRoot =>
           val childIds = childTI.name
           val childTypeString = typeNameString(packageName, childIds)
           val childTypeName = typeName(packageName, childIds)
-          preMethodCases = preMethodCases :+ template.preMethodRootCase(childTypeName, childTypeString)
-          postMethodCases = postMethodCases :+ template.postMethodRootCase(childTypeName, childTypeString)
+          preMethodCases = preMethodCases :+ template.preMethodRootCase(childTypeName, childTypeString, rootTypeString, p._1)
+          postMethodCases = postMethodCases :+ template.postMethodRootCase(childTypeName, childTypeString, rootTypeString, p._2)
           val ac = genAdtChild(childTI)
           methodCases = methodCases :+ template.transformMethodCase(childTypeString, ac)
         case _ =>
@@ -118,14 +122,8 @@ object PrePostTransformerGen {
     val transformMethodMatchST = template.transformMethodMatch(rootTypeString, methodCases)
     preMethods = preMethods :+ template.preMethodRoot(rootTypeName, rootTypeString, preMethodCases)
     postMethods = postMethods :+ template.postMethodRoot(rootTypeName, rootTypeString, postMethodCases)
-    transformMethods = transformMethods :+ (
-      if (isSig)
-        template.transformMethod(rootTypeName, rootTypeString,
-          transformMethodMatchST, Some(template.preAdaptUp(rootTypeString)),
-          Some(template.postAdaptUp(rootTypeString)))
-      else
-        template.transformMethod(rootTypeName, rootTypeString,
-          transformMethodMatchST, None(), None()))
+    transformMethods = transformMethods :+
+      template.transformMethod(rootTypeName, rootTypeString, transformMethodMatchST, None(), None())
   }
 
   def genAdt(ti: TypeInfo.AbstractDatatype): Unit = {
@@ -290,9 +288,8 @@ object PrePostTransformerGen {
         val ac = genAdtChild(ti)
         transformSpecificMethods = transformSpecificMethods :+
           template.transformMethod(adTypeName, adTypeString,
-            template.transformMethodMatchSimple(ac), Some(template.preAdaptDown(adTypeString)),
-            Some(template.postAdaptDown(adTypeString)))
-      case Some(_: TypeInfo.Sig) => genRoot(name, T)
+            template.transformMethodMatchSimple(ac), Some(template.preAdapt(adTypeString)),
+            Some(template.postAdapt(adTypeString)))
       case _ =>
     }
   }
@@ -331,6 +328,7 @@ object PrePostTransformerGen {
     }
     ti.scope.resolveType(globalTypeMap, ids) match {
       case Some(ti: TypeInfo.AbstractDatatype) => Some(ti.name)
+      case Some(ti: TypeInfo.Sig) => Some(ti.name)
       case Some(_) => None()
       case _ =>
         reporter.error(posOpt, transformerGenKind, s"Could not find ${typeNameString(packageName, ids).render}.")
