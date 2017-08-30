@@ -439,7 +439,7 @@ class SlangParser(text: Predef.String,
           case _ => error(pattern.pos, s"Unallowable val pattern: '${pattern.syntax}'")
         }
         AST.Stmt.VarPattern(isVal = true, pat,
-          None(), if (isDiet) None() else Some(translateAssignExp(expr)), attr(stat.pos))
+          translateAssignExp(expr), attr(stat.pos))
     }
   }
 
@@ -506,13 +506,15 @@ class SlangParser(text: Predef.String,
         }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Var pattern cannot be explicitly typed")
+        if (expropt.isEmpty)
+          errorInSlang(pattern.pos, "Var pattern has to be initialized")
         val pat = translatePattern(pattern)
         pat match {
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
         AST.Stmt.VarPattern(isVal = false, pat,
-          None(), if (isDiet) None() else opt(expropt.map(translateAssignExp)), attr(stat.pos))
+          expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos))), attr(stat.pos))
     }
   }
 
@@ -677,6 +679,7 @@ class SlangParser(text: Predef.String,
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
         AST.Stmt.Method(purity, hasOverride, isHelper, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), None(), attr(tree.pos))
       }
+
       exp match {
         case exp: Term.Block =>
           val (mc, bodyOpt) = exp.stats.headOption match {
@@ -746,6 +749,7 @@ class SlangParser(text: Predef.String,
         case _ => error(exp.pos, s"Invalid Slang Z literal '$s'"); 0
       }
     }
+
     exp match {
       case Lit.Int(n) => n
       case Lit.Long(n) => n

@@ -98,8 +98,7 @@ object Stmt {
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
-                             tipeOpt: Option[Type],
-                             initOpt: Option[AssignExp],
+                             init: AssignExp,
                              @hidden attr: Attr)
     extends Stmt
 
