@@ -15,4 +15,4 @@ install:
 
 script:
   - bin/sbt-launch.sh clean test:compile test:fastOptJS
-  - bin/sbt-launch.sh --error test
+  - travis_wait 60 bin/sbt-launch.sh --error test
