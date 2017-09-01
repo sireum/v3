@@ -27,6 +27,8 @@ package org.sireum.lang.util
 
 import org.sireum._
 import org.sireum.lang.ast.PosInfo
+import org.sireum.lang.util.Reporter.Message
+import org.sireum.lang.util.Reporter.Message.Level
 
 object Reporter {
   object Message {
@@ -54,16 +56,32 @@ object Reporter {
 
   def hasIssue: B
 
-  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit
+  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.InternalError, posOpt, kind, message))
+  }
 
-  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit
+  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.InternalError, posOpt, kind, message))
+  }
 
-  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit
+  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.InternalError, posOpt, kind, message))
+  }
 
-  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit
+  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.InternalError, posOpt, kind, message))
+  }
+
+  def reports(ms: ISZ[Reporter.Message]): Unit = {
+    for (m <- ms) {
+      report(m)
+    }
+  }
+
+  def report(m: Reporter.Message): Unit
 }
 
-import Reporter._
+import Reporter.Message
 import Reporter.Message.Level
 
 object AccumulatingReporter {
@@ -153,20 +171,8 @@ object AccumulatingReporter {
     return for (m <- messages if m.level == Level.Info) yield m
   }
 
-  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    messages = messages :+ Message(Level.InternalError, posOpt, kind, message)
-  }
-
-  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    messages = messages :+ Message(Level.Error, posOpt, kind, message)
-  }
-
-  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    messages = messages :+ Message(Level.Warning, posOpt, kind, message)
-  }
-
-  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    messages = messages :+ Message(Level.Info, posOpt, kind, message)
+  def report(m: Message): Unit = {
+    messages = messages :+ m
   }
 
   def messagesByFileUri: HashSMap[Option[String], ISZ[Message]] = {
