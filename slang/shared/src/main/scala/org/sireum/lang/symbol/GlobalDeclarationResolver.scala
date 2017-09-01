@@ -114,7 +114,7 @@ import org.sireum.lang.{ast => AST}
         }
 
         declareName(if (stmt.isExt) "extension object" else "object", name,
-          Info.Object(name, stmt.isExt, stmt.attr.posOpt), stmt.attr.posOpt)
+          Info.Object(name, stmt), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
@@ -201,7 +201,7 @@ import org.sireum.lang.{ast => AST}
                   info: TypeInfo,
                   posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
-      case Some(objectInfo: Info.Object) if !objectInfo.isExt =>
+      case Some(objectInfo: Info.Object) if !objectInfo.ast.isExt =>
         if (!info.canHaveCompanion) {
           reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
         } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {

@@ -309,9 +309,12 @@ object Resolver {
     }
 
     @datatype class Object(name: QName,
-                           isExt: B,
-                           posOpt: Option[AST.PosInfo])
-      extends Info
+                           ast: AST.Stmt.Object)
+      extends Info {
+      def posOpt: Option[AST.PosInfo] = {
+        return ast.attr.posOpt
+      }
+    }
 
     @datatype class ExtMethod(name: QName,
                               scope: Scope.Global,
