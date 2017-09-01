@@ -32,6 +32,8 @@ import org.sireum.lang.util._
 import org.sireum.lang.{ast => AST}
 
 object TypeHierarchy {
+  type Type = Poset[AST.Typed]
+
   @pure def typedInfo(info: TypeInfo): AST.Typed = {
     @pure def typedParam(tp: AST.TypeParam): AST.Typed = {
       return AST.Typed.Name(ISZ(tp.id.value), ISZ(), tp.id.attr.posOpt)
@@ -55,7 +57,7 @@ object TypeHierarchy {
     }
   }
 
-  def build(typeMap: TypeMap, init: Poset[AST.Typed], reporter: Reporter): Poset[AST.Typed] = {
+  def build(typeMap: TypeMap, init: Type, reporter: Reporter): Type = {
     def resolveType(scope: Scope, t: AST.Type): AST.Typed = {
       t match {
         case t: AST.Type.Named =>
