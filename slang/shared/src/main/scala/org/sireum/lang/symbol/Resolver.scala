@@ -113,10 +113,11 @@ object Resolver {
             importer.selectorOpt match {
               case Some(selector: AST.Stmt.Import.MultiSelector) =>
                 val nss = selector.selectors
+                val name0 = name(0)
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
-                  if (name == ISZ(ns.to.value)) {
-                    val n = contextName :+ ns.from.value
+                  if (name0 == ns.to.value) {
+                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
                     val rOpt = globalNameMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -138,12 +139,15 @@ object Resolver {
                   return rGlobalOpt
                 }
               case None() =>
-                if (ISZ(contextName(contextName.size - 1)) == name) {
-                  val rOpt = globalNameMap.get(packageName ++ contextName)
+                val name0 = name(0)
+                val contextLast = contextName(contextName.size - 1)
+                if (contextLast == name0) {
+                  val n = contextName ++ ISOps(name).drop(1)
+                  val rOpt = globalNameMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
                   }
-                  val rGlobalOpt = globalNameMap.get(contextName)
+                  val rGlobalOpt = globalNameMap.get(n)
                   if (rGlobalOpt.nonEmpty) {
                     return rGlobalOpt
                   }
@@ -170,10 +174,11 @@ object Resolver {
             importer.selectorOpt match {
               case Some(selector: AST.Stmt.Import.MultiSelector) =>
                 val nss = selector.selectors
+                val name0 = name(0)
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
-                  if (name == ISZ(ns.to.value)) {
-                    val n = contextName :+ ns.from.value
+                  if (name0 == ns.to.value) {
+                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
                     val rOpt = globalTypeMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -195,12 +200,15 @@ object Resolver {
                   return rGlobalOpt
                 }
               case None() =>
-                if (ISZ(contextName(contextName.size - 1)) == name) {
-                  val rOpt = globalTypeMap.get(packageName ++ contextName)
+                val name0 = name(0)
+                val contextLast = contextName(contextName.size - 1)
+                if (contextLast == name0) {
+                  val n = contextName ++ ISOps(name).drop(1)
+                  val rOpt = globalTypeMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
                   }
-                  val rGlobalOpt = globalTypeMap.get(contextName)
+                  val rGlobalOpt = globalTypeMap.get(n)
                   if (rGlobalOpt.nonEmpty) {
                     return rGlobalOpt
                   }
