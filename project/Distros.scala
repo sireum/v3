@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.2"
+  val ideaVer = "2017.1.3"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -70,7 +70,7 @@ object Distros {
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 37674,
+    "python" -> 38279,
     "rst" -> 14700
     //"ignore" -> 32828 https://github.com/hsz/idea-gitignore/issues/408
   )
