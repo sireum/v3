@@ -41,26 +41,27 @@ import TypeChecker._
 
 @datatype class TypeChecker(globalNameMap: NameMap,
                             globalTypeMap: TypeMap,
-                            typeHierarchy: TypeHierarchy.Type) {
+                            typeHierarchy: TypeHierarchy.Type,
+                            checkers: ISZ[TypeChecker]) {
 
   @memoize def applyType(isSpec: B,
                          fqName: QName,
                          typeArgs: Map[String, AST.Typed],
                          argTypes: ISZ[AST.Typed]): (AST.Typed, ISZ[Reporter.Message]) = {
-    ???
+    halt("TODO")
   }
 
   @memoize def applyTypeNamed(isSpec: B,
                               fqName: QName,
                               typeArgs: Map[String, AST.Typed],
                               argTypes: Map[String, AST.Typed]): (AST.Typed, ISZ[Reporter.Message]) = {
-    ???
+    halt("TODO")
   }
 
   @memoize def typeOfGlobalName(isSpec: B,
                                 fqName: QName,
                                 typeArgs: Map[String, AST.Typed]): (TypeFactory, ISZ[Reporter.Message]) = {
-    ???
+    halt("TODO")
   }
 
   @memoize def memberType(isSpec: B,
@@ -68,54 +69,69 @@ import TypeChecker._
                           typeArgs: Map[String, AST.Typed],
                           member: String,
                           memberTypeArgs: Map[String, AST.Typed]): (TypeFactory, ISZ[Reporter.Message]) = {
-    ???
+    halt("TODO")
   }
 
   def check(reporter: Reporter): Unit = {
-    var varInfos = ISZ[Either[Info, TypeInfo]]()
-    var methodInfos = ISZ[Either[Info, TypeInfo]]()
-    var specExtMethodInfos = ISZ[Either[Info, TypeInfo]]()
+    // WORKAROUND: has to use B => AccumulatingReporter instead of () => AccumulatingReporter
+    // due to issues in scalameta macro expansion
+    var objectInfos = ISZ[B => AccumulatingReporter]()
     for (info <- globalNameMap.values) {
       info match {
-        case _: Info.Var => varInfos = varInfos :+ Either(Some(info), None[TypeInfo]())
-        case _: Info.SpecVar => varInfos = varInfos :+ Either(Some(info), None[TypeInfo]())
-        case _: Info.Method => methodInfos = methodInfos :+ Either(Some(info), None[TypeInfo]())
-        case _: Info.SpecMethod => specExtMethodInfos = specExtMethodInfos :+ Either(Some(info), None[TypeInfo]())
-        case _: Info.ExtMethod => specExtMethodInfos = specExtMethodInfos :+ Either(Some(info), None[TypeInfo]())
+        case info: Info.Object => objectInfos = objectInfos :+ ((_: B) => checkObject(info))
         case _ =>
       }
     }
-    var sigInfos = ISZ[Either[Info, TypeInfo]]()
-    var adtRootInfos = ISZ[Either[Info, TypeInfo]]()
-    var richRootInfos = ISZ[Either[Info, TypeInfo]]()
-    var adtInfos = ISZ[Either[Info, TypeInfo]]()
-    var richInfos = ISZ[Either[Info, TypeInfo]]()
+    var sigInfos = ISZ[B => AccumulatingReporter]()
+    var adtRootInfos = ISZ[B => AccumulatingReporter]()
+    var richRootInfos = ISZ[B => AccumulatingReporter]()
+    var adtInfos = ISZ[B => AccumulatingReporter]()
+    var richInfos = ISZ[B => AccumulatingReporter]()
     for (info <- globalTypeMap.values) {
       info match {
-        case _: TypeInfo.Sig => sigInfos = sigInfos :+ Either(None[Info](), Some(info))
+        case info: TypeInfo.Sig =>
+          sigInfos = sigInfos :+ ((_: B) => checkSig(info))
         case info: TypeInfo.AbstractDatatype =>
           if (info.ast.isRoot) {
-            adtRootInfos = adtRootInfos :+ Either(None[Info](), Some(info))
+            adtRootInfos = adtRootInfos :+ ((_: B) => checkAdt(info))
           } else {
-            adtInfos = adtInfos :+ Either(None[Info](), Some(info))
+            adtInfos = adtInfos :+ ((_: B) => checkAdt(info))
           }
         case info: TypeInfo.Rich =>
           if (info.ast.isRoot) {
-            richRootInfos = richRootInfos :+ Either(None[Info](), Some(info))
+            richRootInfos = richRootInfos :+ ((_: B) => checkRich(info))
           } else {
-            richInfos = richInfos :+ Either(None[Info](), Some(info))
+            richInfos = richInfos :+ ((_: B) => checkRich(info))
           }
         case _ =>
       }
     }
-    val infos = sigInfos ++ adtRootInfos ++ richRootInfos ++ adtInfos ++ richInfos ++
-      varInfos ++ specExtMethodInfos ++ methodInfos
-    val r = ISOps(infos).parMapFoldLeft(checkInfo, AccumulatingReporter.combine, AccumulatingReporter.create)
+    val fs = sigInfos ++ adtRootInfos ++ richRootInfos ++ adtInfos ++ richInfos
+    val r = ISOps(fs).parMapFoldLeft(
+      (f: B => AccumulatingReporter) => f(T),
+      AccumulatingReporter.combine,
+      AccumulatingReporter.create)
     reporter.reports(r.messages)
   }
 
-  @pure def checkInfo(info: Either[Info, TypeInfo]): AccumulatingReporter = {
-    ???
+  @pure def checkObject(ast: Info.Object): AccumulatingReporter = {
+    halt("TODO")
+  }
+
+  @pure def checkSig(info: TypeInfo.Sig): AccumulatingReporter = {
+    halt("TODO")
+  }
+
+  @pure def checkAdt(info: TypeInfo.AbstractDatatype): AccumulatingReporter = {
+    halt("TODO")
+  }
+
+  @pure def checkRich(info: TypeInfo.Rich): AccumulatingReporter = {
+    halt("TODO")
+  }
+
+  @pure def checkScript(program: AST.TopUnit.Program): AccumulatingReporter = {
+    halt("TODO")
   }
 
 }
