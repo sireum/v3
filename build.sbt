@@ -44,7 +44,7 @@ val sireumVersion = "3"
 
 val sireumScalacVersion = "3.1.2"
 
-val fastParseVersion = "0.4.3"
+val fastParseVersion = "0.4.4"
 
 val scalaJsDomVersion = "0.9.3"
 
@@ -67,7 +67,6 @@ traceLevel in iveDistros := -1
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
-  incOptions := incOptions.value.withNameHashing(true),
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalaVersion := scalaVer,
   retrieveManaged := true,
@@ -102,7 +101,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.ow2.asm" % "asm-util" % "5.2",
     "org.jgrapht" % "jgrapht-core" % "1.0.1",
     "org.jgrapht" % "jgrapht-ext" % "1.0.1",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.0",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.2",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),
@@ -115,7 +114,6 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   parallelExecution in Test := false,
   relativeSourceMaps := true,
   scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
-  jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "com.lihaoyi" %%% "utest" % "0.4.8"
@@ -257,7 +255,6 @@ lazy val commonJs = commonT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
@@ -283,7 +280,6 @@ lazy val webJs = webT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
@@ -312,7 +308,6 @@ lazy val awasJs = awasT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
