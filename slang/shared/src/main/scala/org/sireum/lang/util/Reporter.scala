@@ -61,15 +61,15 @@ object Reporter {
   }
 
   def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.InternalError, posOpt, kind, message))
+    report(Message(Level.Error, posOpt, kind, message))
   }
 
   def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.InternalError, posOpt, kind, message))
+    report(Message(Level.Warning, posOpt, kind, message))
   }
 
   def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.InternalError, posOpt, kind, message))
+    report(Message(Level.Info, posOpt, kind, message))
   }
 
   def reports(ms: ISZ[Reporter.Message]): Unit = {
