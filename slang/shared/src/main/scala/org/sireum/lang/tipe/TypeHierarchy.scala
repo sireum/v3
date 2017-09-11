@@ -34,14 +34,14 @@ import org.sireum.lang.{ast => AST}
 object TypeHierarchy {
   @datatype class Type(poset: Poset[AST.Typed.Name],
                        aliases: HashMap[AST.Typed.Name, AST.Typed]) {
-    val rootTypes: ISZ[AST.Typed.Name] = {
+    def rootTypes: ISZ[AST.Typed.Name] = {
       var r = ISZ[AST.Typed.Name]()
       for (ps <- poset.parents.entries) {
         if (ps._2.isEmpty) {
           r = r :+ ps._1
         }
       }
-      r
+      return r
     }
 
     def checkCyclic(reporter: Reporter): Unit = {
