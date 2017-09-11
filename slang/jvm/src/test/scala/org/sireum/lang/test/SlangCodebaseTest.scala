@@ -47,7 +47,7 @@ class SlangCodebaseTest extends SireumSpec {
       true
     }
     report()
-    TypeHierarchy.build(typeMap, Poset.empty, reporter)
+    TypeHierarchy.build(typeMap, TypeHierarchy.Type(Poset.empty, HashMap.empty), reporter)
     report()
   }
 
