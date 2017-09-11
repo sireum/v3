@@ -32,9 +32,52 @@ import org.sireum.lang.util._
 import org.sireum.lang.{ast => AST}
 
 object TypeHierarchy {
-  type Type = Poset[AST.Typed]
+  @datatype class Type(poset: Poset[AST.Typed.Name],
+                       aliases: HashMap[AST.Typed.Name, AST.Typed]) {
+    val rootTypes: ISZ[AST.Typed.Name] = {
+      var r = ISZ[AST.Typed.Name]()
+      for (ps <- poset.parents.entries) {
+        if (ps._2.isEmpty) {
+          r = r :+ ps._1
+        }
+      }
+      r
+    }
 
-  @pure def typedInfo(info: TypeInfo): AST.Typed = {
+    def checkCyclic(reporter: Reporter): Unit = {
+      def dealias(t: AST.Typed.Name): Option[AST.Typed.Name] = {
+        aliases.get(t) match {
+          case Some(t2: AST.Typed.Name) => return dealias(t2)
+          case Some(t2) =>
+            reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
+            return None()
+          case _ => return Some(t)
+        }
+      }
+      var workList = rootTypes
+      var temp = ISZ[AST.Typed.Name]()
+      var seen = HashSet.empty[AST.Typed.Name]()
+      while (workList.nonEmpty) {
+        for (t <- workList) {
+          if (seen.contains(t)) {
+            reporter.error(None(), resolverKind, st"Cyclic type hierarchy from ${(t.ids, ".")}.".render)
+          } else {
+            seen = seen.add(t)
+            for (child <- poset.childrenOf(t).elements) {
+              val dchild = dealias(child)
+              dchild match {
+                case Some(childT) => temp = temp :+ childT
+                case _ =>
+              }
+            }
+          }
+        }
+        workList = temp
+      }
+    }
+  }
+
+  @pure def typedInfo(info: TypeInfo): AST.Typed.Name = {
     @pure def typedParam(tp: AST.TypeParam): AST.Typed = {
       return AST.Typed.Name(ISZ(tp.id.value), ISZ(), tp.id.attr.posOpt)
     }
@@ -97,45 +140,81 @@ object TypeHierarchy {
           AST.Typed.Fun(ts, rt, t.posOpt)
       }
     }
-    def resolveTypeNameds(scope: Scope, ts: ISZ[AST.Type.Named]): ISZ[AST.Typed] = {
-      var r = ISZ[AST.Typed]()
+    def resolveTypeNameds(posOpt: Option[AST.PosInfo],
+                          scope: Scope,
+                          ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
+      var r = ISZ[AST.Typed.Name]()
       for (t <- ts) {
         val typed = resolveType(scope, t)
-        r = r :+ typed
+        typed match {
+          case typed: AST.Typed.Name => r = r :+ typed
+          case _ => reporter.error(posOpt, resolverKind, "Expected a named type.")
+        }
       }
       return r
     }
     val zName = ISZ("org", "sireum", "Z")
     var r = init
+    def resolveAlias(info: TypeInfo.TypeAlias, seen: HashSet[QName]): AST.Typed = {
+      if (seen.contains(info.name)) {
+        reporter.error(info.posOpt, resolverKind, st"Type alias ${(info.name, ".")} is cyclic.".render)
+        return AST.Typed.Name(info.name, ISZ(), info.posOpt)
+      }
+      val typed = typedInfo(info)
+      r.aliases.get(typed) match {
+        case Some(rt) => return rt
+        case _ =>
+      }
+      val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
+      val t = resolveType(scope, info.ast.tipe)
+      t match {
+        case t: AST.Typed.Name =>
+          typeMap.get(t.ids) match {
+            case Some(ti: TypeInfo.TypeAlias) => resolveAlias(ti, seen.add(info.name))
+            case _ =>
+          }
+        case _ =>
+      }
+      up(r.aliases) = r.aliases.put(typed, t)
+      return t
+    }
     if (!typeMap.contains(zName)) {
       reporter.error(None(), resolverKind, "Could not find Z type.")
       return r
     }
-    val zTyped: AST.Typed = typedInfo(typeMap.get(zName).get)
+    val zTyped = typedInfo(typeMap.get(zName).get)
     for (info <- typeMap.values) {
-      val typed = typedInfo(info)
       info match {
-        case _: TypeInfo.SubZ => r = r.addParents(typed, ISZ(zTyped))
-        case _: TypeInfo.Enum => r = r.addNode(typed)
+        case _: TypeInfo.SubZ =>
+          val typed = typedInfo(info)
+          up(r.poset) = r.poset.addParents(typed, ISZ(zTyped))
+        case _: TypeInfo.Enum =>
+          val typed = typedInfo(info)
+          up(r.poset) = r.poset.addNode(typed)
         case info: TypeInfo.Sig =>
+          val typed = typedInfo(info)
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = resolveTypeNameds(scope, info.ast.parents)
-          r = r.addParents(typed, parents)
+          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
+          up(r.poset) = r.poset.addParents(typed, parents)
         case info: TypeInfo.AbstractDatatype =>
+          val typed = typedInfo(info)
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = resolveTypeNameds(scope, info.ast.parents)
-          r = r.addParents(typed, parents)
+          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
+          up(r.poset) = r.poset.addParents(typed, parents)
         case info: TypeInfo.Rich =>
+          val typed = typedInfo(info)
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents: ISZ[AST.Typed] = resolveTypeNameds(scope, info.ast.parents)
-          r = r.addParents(typed, parents)
+          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
+          up(r.poset) = r.poset.addParents(typed, parents)
         case info: TypeInfo.TypeAlias =>
-          val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = ISZ(resolveType(scope, info.ast.tipe))
-          r = r.addParents(typed, parents)
+          resolveAlias(info, HashSet.empty)
         case _: TypeInfo.TypeVar => halt("Infeasible")
       }
     }
+    if (reporter.hasIssue) {
+      return r
+    }
+    r.checkCyclic(reporter)
     return r
   }
 }
