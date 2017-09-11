@@ -34,7 +34,7 @@ import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
 
 object TypeChecker {
-  type TypeFactory = Map[String, AST.Typed] => AST.Typed
+  type FunType = Map[String, AST.Typed] => AST.Typed
 }
 
 import TypeChecker._
@@ -60,7 +60,7 @@ import TypeChecker._
 
   @memoize def typeOfGlobalName(isSpec: B,
                                 fqName: QName,
-                                typeArgs: Map[String, AST.Typed]): (TypeFactory, ISZ[Reporter.Message]) = {
+                                typeArgs: Map[String, AST.Typed]): (FunType, ISZ[Reporter.Message]) = {
     halt("TODO")
   }
 
@@ -68,50 +68,74 @@ import TypeChecker._
                           fqName: QName,
                           typeArgs: Map[String, AST.Typed],
                           member: String,
-                          memberTypeArgs: Map[String, AST.Typed]): (TypeFactory, ISZ[Reporter.Message]) = {
+                          memberTypeArgs: Map[String, AST.Typed]): (FunType, ISZ[Reporter.Message]) = {
     halt("TODO")
+  }
+
+  def rootTypes(): ISZ[QName] = {
+    var r = ISZ[QName]()
+    for (p <- typeHierarchy.poset.parents.entries) {
+      if (p._2.isEmpty) {
+        r = r :+ p._1.ids
+      }
+    }
+    return r
   }
 
   def check(reporter: Reporter): Unit = {
     // WORKAROUND: has to use B => AccumulatingReporter instead of () => AccumulatingReporter
     // due to issues in scalameta macro expansion
-    var objectInfos = ISZ[B => AccumulatingReporter]()
-    for (info <- globalNameMap.values) {
-      info match {
-        case info: Info.Object => objectInfos = objectInfos :+ ((_: B) => checkObject(info))
-        case _ =>
-      }
-    }
-    var sigInfos = ISZ[B => AccumulatingReporter]()
-    var adtRootInfos = ISZ[B => AccumulatingReporter]()
-    var richRootInfos = ISZ[B => AccumulatingReporter]()
-    var adtInfos = ISZ[B => AccumulatingReporter]()
-    var richInfos = ISZ[B => AccumulatingReporter]()
+    var typeInfos = ISZ[B => AccumulatingReporter]()
     for (info <- globalTypeMap.values) {
       info match {
         case info: TypeInfo.Sig =>
-          sigInfos = sigInfos :+ ((_: B) => checkSig(info))
+          typeInfos = typeInfos :+ ((_: B) => checkSig(info))
         case info: TypeInfo.AbstractDatatype =>
-          if (info.ast.isRoot) {
-            adtRootInfos = adtRootInfos :+ ((_: B) => checkAdt(info))
-          } else {
-            adtInfos = adtInfos :+ ((_: B) => checkAdt(info))
-          }
+          typeInfos = typeInfos :+ ((_: B) => checkAdt(info))
         case info: TypeInfo.Rich =>
-          if (info.ast.isRoot) {
-            richRootInfos = richRootInfos :+ ((_: B) => checkRich(info))
-          } else {
-            richInfos = richInfos :+ ((_: B) => checkRich(info))
-          }
+          typeInfos = typeInfos :+ ((_: B) => checkRich(info))
         case _ =>
       }
     }
-    val fs = sigInfos ++ adtRootInfos ++ richRootInfos ++ adtInfos ++ richInfos
-    val r = ISOps(fs).parMapFoldLeft(
-      (f: B => AccumulatingReporter) => f(T),
-      AccumulatingReporter.combine,
-      AccumulatingReporter.create)
+    var objectInfos = ISZ[B => AccumulatingReporter]()
+    for (info <- globalNameMap.values) {
+      info match {
+        case info: Info.Object =>
+          objectInfos = objectInfos :+ ((_: B) => checkObject(info))
+        case _ =>
+      }
+    }
+    val r = ISOps(typeInfos ++ objectInfos).
+      parMapFoldLeft(
+        (f: B => AccumulatingReporter) => f(T),
+        AccumulatingReporter.combine,
+        AccumulatingReporter.create)
     reporter.reports(r.messages)
+  }
+
+  @memoize def checkVarType(typeParams: ISZ[AST.TypeParam],
+                            info: Info.Var): (FunType, ISZ[Reporter.Message]) = {
+    halt("TODO")
+  }
+
+  @memoize def checkSpecVarType(typeParams: ISZ[AST.TypeParam],
+                                info: Info.SpecVar): (FunType, ISZ[Reporter.Message]) = {
+    halt("TODO")
+  }
+
+  @memoize def checkSpecMethodType(typeParams: ISZ[AST.TypeParam],
+                                   info: Info.SpecMethod): (FunType, ISZ[Reporter.Message]) = {
+    halt("TODO")
+  }
+
+  @memoize def checkExtMethodType(typeParams: ISZ[AST.TypeParam],
+                                  info: Info.ExtMethod): (FunType, ISZ[Reporter.Message]) = {
+    halt("TODO")
+  }
+
+  @memoize def checkMethodType(typeParams: ISZ[AST.TypeParam],
+                               info: Info.Method): (FunType, ISZ[Reporter.Message]) = {
+    halt("TODO")
   }
 
   @pure def checkObject(ast: Info.Object): AccumulatingReporter = {
