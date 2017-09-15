@@ -634,25 +634,29 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
       relevantPremises.sortWith((e1, e2) => m(e1)._2 > m(e2)._2)
     } else premises.toVector
 
+  def addPremise(pcOpt: Option[T], exp: ast.Exp): Option[T] =
+    pcOpt.map(pc => pc.make(premises = pc.premises + exp))
+
   def check(proofGroup: ast.ProofGroup): Option[T] = {
     var addedVars = isetEmpty[String]
     var addedSteps = isetEmpty[Natural]
+    val oldPremises = premises
     var pcOpt: Option[T] =
       proofGroup match {
         // if proofGroup is a SubProof
         case p: ast.SubProof =>
           // consider the type of the first step in the subproof (the assume step)
           val popt = p.assumeStep match {
-            case _: ast.PlainAssumeStep =>
+            case step: ast.PlainAssumeStep =>
               addedSteps += p.assumeStep.num.value
-              addProvedStep(p.assumeStep)
+              addPremise(addProvedStep(p.assumeStep), step.exp)
             case ast.ForAllAssumeStep(num, id, _) =>
               addedVars += id.value
               addVar(id, num.value)
-            case ast.ExistsAssumeStep(num, id, _, _) =>
+            case ast.ExistsAssumeStep(num, id, _, exp) =>
               addedVars += id.value
               addedSteps += p.assumeStep.num.value
-              addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep))
+              addPremise(addVar(id, num.value).flatMap(_.addProvedStep(p.assumeStep)), exp)
           }
           popt.flatMap(_.addProvedStep(p))
         case _ => Some(this.asInstanceOf[T])
@@ -660,12 +664,13 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
     for (step <- proofGroup.steps if pcOpt.isDefined) {
       addedSteps += step.num.value
       step match {
-        case p: ast.RegularStep => pcOpt = pcOpt.flatMap(_.check(p))
+        case p: ast.RegularStep => pcOpt = addPremise(pcOpt.flatMap(_.check(p)), p.exp)
         case p: ast.SubProof => pcOpt = pcOpt.get.check(p)
         case _: ast.ForAllAssumeStep => assert(assertion = false, "Unexpected situation.")
       }
     }
     pcOpt.map(pc => pc.make(
+      premises = oldPremises,
       vars = pc.vars -- addedVars,
       provedSteps = pc.provedSteps -- addedSteps))
   }
