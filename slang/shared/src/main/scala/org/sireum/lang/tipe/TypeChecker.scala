@@ -34,7 +34,43 @@ import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
 
 object TypeChecker {
-  type FunType = Map[String, AST.Typed] => AST.Typed
+  val typeCheckerKind: String = "Type Checker"
+  val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
+
+  @datatype class TypeConstructor(parameters: ISZ[(String, AST.Typed)],
+                                  tipe: AST.Typed) {
+    def construct(args: Map[String, AST.Typed],
+                  globalTypeMap: TypeMap,
+                  posOpt: Option[AST.PosInfo]): (AST.Typed, AccumulatingReporter) = {
+      val reporter = AccumulatingReporter.create
+      var m = Map.empty[String, AST.Typed]
+      var hasError = F
+      for (p <- parameters) {
+        val pName = p._1
+        val pType = substType(m, p._2)
+        args.get(pName) match {
+          case Some(argType) =>
+            if (!isSubType(globalTypeMap, argType, pType)) {
+              reporter.error(posOpt, typeCheckerKind, s"Type '${AST.Util.typedString(argType).render}' is not a subtype of '${AST.Util.typedString(pType)}'.")
+              hasError = T
+            }
+            m = m.put(pName, argType)
+          case _ =>
+            reporter.error(posOpt, typeCheckerKind, s"Could not find argument for type parameter '$pName'.")
+            hasError = T
+        }
+      }
+      return (if (hasError) errType else substType(m, tipe), reporter)
+    }
+  }
+
+  @pure def substType(m: Map[String, AST.Typed], t: AST.Typed): AST.Typed = {
+    halt("TODO")
+  }
+
+  @pure def isSubType(globalTypeMap: TypeMap, t1: AST.Typed, t2: AST.Typed): B = {
+    halt("TODO")
+  }
 }
 
 import TypeChecker._
@@ -47,20 +83,20 @@ import TypeChecker._
   @memoize def applyType(isSpec: B,
                          fqName: QName,
                          typeArgs: Map[String, AST.Typed],
-                         argTypes: ISZ[AST.Typed]): (AST.Typed, ISZ[Reporter.Message]) = {
+                         argTypes: ISZ[AST.Typed]): (AST.Typed, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def applyTypeNamed(isSpec: B,
                               fqName: QName,
                               typeArgs: Map[String, AST.Typed],
-                              argTypes: Map[String, AST.Typed]): (AST.Typed, ISZ[Reporter.Message]) = {
+                              argTypes: Map[String, AST.Typed]): (AST.Typed, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def typeOfGlobalName(isSpec: B,
                                 fqName: QName,
-                                typeArgs: Map[String, AST.Typed]): (FunType, ISZ[Reporter.Message]) = {
+                                typeArgs: Map[String, AST.Typed]): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
@@ -68,7 +104,7 @@ import TypeChecker._
                           fqName: QName,
                           typeArgs: Map[String, AST.Typed],
                           member: String,
-                          memberTypeArgs: Map[String, AST.Typed]): (FunType, ISZ[Reporter.Message]) = {
+                          memberTypeArgs: Map[String, AST.Typed]): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
@@ -114,27 +150,27 @@ import TypeChecker._
   }
 
   @memoize def checkVarType(typeParams: ISZ[AST.TypeParam],
-                            info: Info.Var): (FunType, ISZ[Reporter.Message]) = {
+                            info: Info.Var): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def checkSpecVarType(typeParams: ISZ[AST.TypeParam],
-                                info: Info.SpecVar): (FunType, ISZ[Reporter.Message]) = {
+                                info: Info.SpecVar): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def checkSpecMethodType(typeParams: ISZ[AST.TypeParam],
-                                   info: Info.SpecMethod): (FunType, ISZ[Reporter.Message]) = {
+                                   info: Info.SpecMethod): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def checkExtMethodType(typeParams: ISZ[AST.TypeParam],
-                                  info: Info.ExtMethod): (FunType, ISZ[Reporter.Message]) = {
+                                  info: Info.ExtMethod): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
   @memoize def checkMethodType(typeParams: ISZ[AST.TypeParam],
-                               info: Info.Method): (FunType, ISZ[Reporter.Message]) = {
+                               info: Info.Method): (TypeConstructor, AccumulatingReporter) = {
     halt("TODO")
   }
 
