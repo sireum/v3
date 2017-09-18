@@ -27,6 +27,7 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.lang.symbol.Resolver
 import org.sireum.ops._
 import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
@@ -65,11 +66,117 @@ object TypeChecker {
   }
 
   @pure def substType(m: Map[String, AST.Typed], t: AST.Typed): AST.Typed = {
-    halt("TODO")
+    t match {
+      case t: AST.Typed.Name =>
+        if (t.ids.size == 1 && t.args.isEmpty) {
+          m.get(t.ids(0)) match {
+            case Some(t2) => return t2
+            case _ =>
+          }
+        }
+        return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)))
+      case t: AST.Typed.Tuple => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)))
+      case t: AST.Typed.Fun => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)), ret = substType(m, t.ret))
+    }
+  }
+
+  @pure def dealias(globalTypeMap: TypeMap, typed: AST.Typed): AST.Typed = {
+    @pure def dealiasOpt(t: AST.Typed): Option[AST.Typed] = {
+      t match {
+        case t: AST.Typed.Name =>
+          globalTypeMap.get(t.ids) match {
+            case Some(ti: Resolver.TypeInfo.TypeAlias) =>
+              halt("TODO")
+            case _ =>
+              var newArgs = ISZ[AST.Typed]()
+              for (arg <- t.args) {
+                dealiasOpt(arg) match {
+                  case Some(newArg) => newArgs = newArgs :+ newArg
+                  case _ => return None()
+                }
+              }
+              return Some(t(args = newArgs))
+          }
+        case t: AST.Typed.Tuple =>
+          var newArgs = ISZ[AST.Typed]()
+          for (arg <- t.args) {
+            dealiasOpt(arg) match {
+              case Some(newArg) => newArgs = newArgs :+ newArg
+              case _ => return None()
+            }
+          }
+          return Some(t(args = newArgs))
+        case t: AST.Typed.Fun =>
+          dealiasOpt(t.ret) match {
+            case Some(newRet) =>
+              var newArgs = ISZ[AST.Typed]()
+              for (arg <- t.args) {
+                dealiasOpt(arg) match {
+                  case Some(newArg) => newArgs = newArgs :+ newArg
+                  case _ => return None()
+                }
+              }
+              return Some(t(args = newArgs, ret = newRet))
+            case _ => return None()
+          }
+      }
+    }
+    return dealiasOpt(typed).getOrElse(typed)
+  }
+
+  @pure def isEqType(globalTypeMap: TypeMap, t1: AST.Typed, t2: AST.Typed): B = {
+    (t1, t2) match {
+      case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (t1.ids != t2.ids) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case (t1: AST.Typed.Tuple, t2: AST.Typed.Tuple) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (!isEqType(globalTypeMap, t1.ret, t2.ret)) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case _ => return F
+    }
   }
 
   @pure def isSubType(globalTypeMap: TypeMap, t1: AST.Typed, t2: AST.Typed): B = {
-    halt("TODO")
+    val dt1 = dealias(globalTypeMap, t1)
+    val dt2 = dealias(globalTypeMap, t2)
+    if (isEqType(globalTypeMap, dt1, dt2)) {
+      return T
+    }
+    (dt1, dt2) match {
+      case (dt1: AST.Typed.Name, dt2: AST.Typed.Name) =>
+        halt("TODO")
+      case _ => return F
+    }
   }
 }
 
