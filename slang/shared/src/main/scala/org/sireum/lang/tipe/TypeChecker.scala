@@ -85,10 +85,15 @@ import TypeChecker._
 
 @datatype class TypeChecker(globalNameMap: NameMap,
                             globalTypeMap: TypeMap,
-                            typeHierarchy: Poset[AST.Typed.Name],
-                            checkers: ISZ[TypeChecker]) {
+                            typeHierarchy: Poset[AST.Typed.Name]) {
 
-  def typeCheck(scope: Scope, t: AST.Type, reporter: AccumulatingReporter): Option[AST.Typed] = {
+  def typeCheck(scope: Scope,
+                t: AST.Type,
+                reporter: Reporter): Option[AST.Typed] = {
+    t.typedOpt match {
+      case Some(typed) => return Some(typed)
+      case _ =>
+    }
     t match {
       case t: AST.Type.Named =>
         var argTypes = ISZ[AST.Typed]()
@@ -156,12 +161,12 @@ import TypeChecker._
     var scope = Scope.Local(nameMap, typeMap, Some(tiScope))
     for (tp <- ti.ast.typeParams if !reporter.hasIssue) {
       val name = tp.id.value
+      typeMap = typeMap.put(name, TypeInfo.TypeVar(tp.id.value, tp))
       tp.superTypeOpt match {
         case Some(t) =>
           halt("TODO")
         case _ =>
       }
-      typeMap = typeMap.put(name, TypeInfo.TypeVar(tp.id.value, tp))
       scope = Scope.Local(nameMap, typeMap, Some(tiScope))
     }
     halt("TODO")
