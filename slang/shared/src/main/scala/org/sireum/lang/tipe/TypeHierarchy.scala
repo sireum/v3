@@ -48,7 +48,7 @@ object TypeHierarchy {
       def dealias(t: AST.Typed.Name): Option[AST.Typed.Name] = {
         aliases.get(t) match {
           case Some(t2: AST.Typed.Name) => return dealias(t2)
-          case Some(t2) =>
+          case Some(_) =>
             reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
             return None()
           case _ => return Some(t)
