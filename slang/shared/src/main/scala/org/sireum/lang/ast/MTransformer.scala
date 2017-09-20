@@ -3011,9 +3011,8 @@ import MTransformer._
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
-      val r1: MOption[Option[Type]] = transformOption(o2.superTypeOpt, transformType)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-        MSome(o2(id = r0.getOrElse(o2.id), superTypeOpt = r1.getOrElse(o2.superTypeOpt)))
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(id = r0.getOrElse(o2.id)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {

@@ -734,8 +734,7 @@ object Domain {
                       id: Id,
                       tipe: Type)
 
-@datatype class TypeParam(id: Id,
-                          superTypeOpt: Option[Type])
+@datatype class TypeParam(id: Id)
 
 @datatype class Contract(reads: ISZ[Exp],
                          requires: ISZ[ContractExp],

@@ -115,8 +115,6 @@ class SlangFrontEndTest extends SireumSpec {
 
         passing("def f[T](x: Z): Z = {}", isWorksheet = true)
 
-        passing("def f[A, B <: A](x: A, y: Z): B = {}", isWorksheet = true)
-
       }
 
       "Ext Object" - {
@@ -268,6 +266,8 @@ class SlangFrontEndTest extends SireumSpec {
       "Type Param" - {
 
         val typeParamForms = "type parameters of the forms"
+
+        failing("def f[A, B <: A](x: A, y: Z): B = {}", typeParamForms, isWorksheet = true)
 
         failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 

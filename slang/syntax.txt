@@ -114,7 +114,7 @@
 
 <type-params>      ::=  [ <type-param> ⸨ , <type-param> ⸩* ]
 
-<type-param>       ::=  <ID> ⸨ <: type ⸩?
+<type-param>       ::=  <ID>
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 

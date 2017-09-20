@@ -1046,8 +1046,7 @@ object JSON {
     @pure def printTypeParam(o: TypeParam): ST = {
       return printObject(ISZ(
         ("type", st""""TypeParam""""),
-        ("id", printId(o.id)),
-        ("superTypeOpt", printOption(o.superTypeOpt, printType))
+        ("id", printId(o.id))
       ))
     }
 
@@ -3676,10 +3675,7 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("superTypeOpt")
-      val superTypeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
-      return TypeParam(id, superTypeOpt)
+      return TypeParam(id)
     }
 
     def parseContract(): Contract = {

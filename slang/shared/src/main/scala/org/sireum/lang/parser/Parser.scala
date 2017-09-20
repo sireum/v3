@@ -32,13 +32,13 @@ import org.sireum.lang.{ast => AST}
 
 @rich class Parser(text: String) {
 
-  @pure def parseStmt[T <: AST.Stmt]: T = $
+  @pure def parseStmt[T]: T = $
 
-  @pure def parseExp[T <: AST.Exp]: T = $
+  @pure def parseExp[T]: T = $
 
-  def parseTopUnit[T <: AST.TopUnit](allowSireum: B,
-                                     isWorksheet: B,
-                                     isDiet: B,
-                                     fileUriOpt: Option[String],
-                                     reporter: Reporter): Option[T] = $
+  def parseTopUnit[T](allowSireum: B,
+                      isWorksheet: B,
+                      isDiet: B,
+                      fileUriOpt: Option[String],
+                      reporter: Reporter): Option[T] = $
 }

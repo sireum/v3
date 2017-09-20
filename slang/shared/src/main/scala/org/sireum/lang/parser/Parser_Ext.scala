@@ -35,7 +35,7 @@ import scala.util._
 
 object Parser_Ext {
 
-  def parseStmt[T <: AST.Stmt](text: String): T = {
+  def parseStmt[T](text: String): T = {
     val reporter = AccumulatingReporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
@@ -51,7 +51,7 @@ object Parser_Ext {
     stmt.asInstanceOf[T]
   }
 
-  def parseExp[T <: AST.Exp](text: String): T = {
+  def parseExp[T](text: String): T = {
     val reporter = AccumulatingReporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
@@ -67,12 +67,12 @@ object Parser_Ext {
     exp.asInstanceOf[T]
   }
 
-  def parseTopUnit[T <: AST.TopUnit](text: String,
-                                     allowSireum: B,
-                                     isWorksheet: B,
-                                     isDiet: B,
-                                     fileUriOpt: Option[String],
-                                     reporter: Reporter): Option[T] =
+  def parseTopUnit[T](text: String,
+                      allowSireum: B,
+                      isWorksheet: B,
+                      isDiet: B,
+                      fileUriOpt: Option[String],
+                      reporter: Reporter): Option[T] =
     SlangParser(allowSireum, isWorksheet, isDiet, fileUriOpt,
       text.value, reporter).unitOpt.map(_.asInstanceOf[T])
 

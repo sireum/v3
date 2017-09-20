@@ -1330,9 +1330,9 @@ class SlangParser(text: Predef.String,
 
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
     case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
-      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
-        errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' or '〈ID〉<:〈type〉' are")
-      AST.TypeParam(cid(tparamname), opt(tpeopt.map(translateType)))
+      if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
+        errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' is")
+      AST.TypeParam(cid(tparamname))
   }
 
   def translateParam(isMemoize: Boolean)(tp: Term.Param): AST.Param = {

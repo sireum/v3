@@ -3017,11 +3017,10 @@ import Transformer._
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Id] = transformId(ctx, o2.id)
-      val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.superTypeOpt, transformType)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), superTypeOpt = r1.resultOpt.getOrElse(o2.superTypeOpt))))
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id))))
       else
-        Result(r1.ctx, None())
+        Result(r0.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {

@@ -162,11 +162,6 @@ import TypeChecker._
     for (tp <- ti.ast.typeParams if !reporter.hasIssue) {
       val name = tp.id.value
       typeMap = typeMap.put(name, TypeInfo.TypeVar(tp.id.value, tp))
-      tp.superTypeOpt match {
-        case Some(t) =>
-          halt("TODO")
-        case _ =>
-      }
       scope = Scope.Local(nameMap, typeMap, Some(tiScope))
     }
     halt("TODO")
