@@ -675,4 +675,21 @@ object Resolver {
     return (t._1, p._1, p._2)
   }
 
+  def typeParamName(typeParam: AST.TypeParam): String = {
+    return s"`${typeParam.id.value}"
+  }
+
+  def typeParamMap(typeParams: ISZ[AST.TypeParam],
+                   reporter: Reporter): HashMap[String, TypeInfo] = {
+    var r = HashMap.empty[String, TypeInfo]
+    for (tp <- typeParams) {
+      val name = typeParamName(tp)
+      if (r.contains(name)) {
+        reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter ${tp.id.value}.")
+      }
+      r = r.put(tp.id.value, TypeInfo.TypeVar(name, tp))
+    }
+    return r
+  }
+
 }
