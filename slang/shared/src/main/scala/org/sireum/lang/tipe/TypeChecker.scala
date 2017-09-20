@@ -41,9 +41,9 @@ object TypeChecker {
   @datatype class TypeConstructor(parameters: ISZ[(String, AST.Typed)],
                                   tipe: AST.Typed) {
     def construct(args: Map[String, AST.Typed],
-                  globalTypeMap: TypeMap,
-                  posOpt: Option[AST.PosInfo]): (AST.Typed, AccumulatingReporter) = {
-      val reporter = AccumulatingReporter.create
+                  typeChecker: TypeChecker,
+                  posOpt: Option[AST.PosInfo],
+                  reporter: Reporter): Option[AST.Typed] = {
       var m = Map.empty[String, AST.Typed]
       var hasError = F
       for (p <- parameters) {
@@ -51,7 +51,7 @@ object TypeChecker {
         val pType = substType(m, p._2)
         args.get(pName) match {
           case Some(argType) =>
-            if (!isSubType(globalTypeMap, argType, pType)) {
+            if (!typeChecker.isSubType(argType, pType, reporter)) {
               reporter.error(posOpt, typeCheckerKind, s"Type '${AST.Util.typedString(argType).render}' is not a subtype of '${AST.Util.typedString(pType)}'.")
               hasError = T
             }
@@ -61,7 +61,7 @@ object TypeChecker {
             hasError = T
         }
       }
-      return (if (hasError) errType else substType(m, tipe), reporter)
+      return if (hasError) None[AST.Typed]() else Some(substType(m, tipe))
     }
   }
 
@@ -79,9 +79,96 @@ object TypeChecker {
       case t: AST.Typed.Fun => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)), ret = substType(m, t.ret))
     }
   }
+}
 
-  @pure def dealias(globalTypeMap: TypeMap, typed: AST.Typed): AST.Typed = {
-    @pure def dealiasOpt(t: AST.Typed): Option[AST.Typed] = {
+import TypeChecker._
+
+@datatype class TypeChecker(globalNameMap: NameMap,
+                            globalTypeMap: TypeMap,
+                            typeHierarchy: Poset[AST.Typed.Name],
+                            checkers: ISZ[TypeChecker]) {
+
+  def typeCheck(scope: Scope, t: AST.Type, reporter: AccumulatingReporter): Option[AST.Typed] = {
+    t match {
+      case t: AST.Type.Named =>
+        var argTypes = ISZ[AST.Typed]()
+        var hasError = F
+        for (arg <- t.typeArgs) {
+          val targOpt = typeCheck(scope, arg, reporter)
+          targOpt match {
+            case Some(targ) => argTypes = argTypes :+ targ
+            case _ => hasError = T
+          }
+        }
+        if (hasError) {
+          return None[AST.Typed]()
+        }
+        val name = AST.Util.ids2strings(t.name.ids)
+        scope.resolveType(globalTypeMap, name) match {
+          case Some(ti: Resolver.TypeInfo.SubZ) =>
+          case Some(ti: Resolver.TypeInfo.Enum) =>
+          case Some(ti: Resolver.TypeInfo.Sig) =>
+          case Some(ti: Resolver.TypeInfo.AbstractDatatype) =>
+          case Some(ti: Resolver.TypeInfo.Rich) =>
+          case Some(ti: Resolver.TypeInfo.TypeAlias) =>
+          case Some(ti: Resolver.TypeInfo.TypeVar) =>
+        }
+        halt("TODO")
+      case t: AST.Type.Tuple =>
+        var esTypes = ISZ[AST.Typed]()
+        var hasError = F
+        for (arg <- t.args) {
+          val targOpt = typeCheck(scope, arg, reporter)
+          targOpt match {
+            case Some(targ) => esTypes = esTypes :+ targ
+            case _ => hasError = T
+          }
+        }
+        if (hasError) {
+          return None[AST.Typed]()
+        } else {
+          return Some(AST.Typed.Tuple(esTypes, t.posOpt))
+        }
+      case t: AST.Type.Fun =>
+        var paramTypes = ISZ[AST.Typed]()
+        var hasError = F
+        for (arg <- t.args) {
+          val targOpt = typeCheck(scope, arg, reporter)
+          targOpt match {
+            case Some(targ) => paramTypes = paramTypes :+ targ
+            case _ => hasError = T
+          }
+        }
+        val trOpt = typeCheck(scope, t.ret, reporter)
+        trOpt match {
+          case Some(tr) if !hasError => return Some(AST.Typed.Fun(paramTypes, tr, t.posOpt))
+          case _ => return None[AST.Typed]()
+        }
+    }
+  }
+
+  def applyTypeAlias(typed: AST.Typed.Name,
+                     ti: Resolver.TypeInfo.TypeAlias,
+                     reporter: Reporter): Option[AST.Typed] = {
+    val tiScope = ti.scope
+    val nameMap = HashMap.empty[String, Resolver.Info]
+    var typeMap = HashMap.empty[String, Resolver.TypeInfo]
+    var scope = Scope.Local(nameMap, typeMap, Some(tiScope))
+    for (tp <- ti.ast.typeParams if !reporter.hasIssue) {
+      val name = tp.id.value
+      tp.superTypeOpt match {
+        case Some(t) =>
+          halt("TODO")
+        case _ =>
+      }
+      typeMap = typeMap.put(name, TypeInfo.TypeVar(tp.id.value, tp))
+      scope = Scope.Local(nameMap, typeMap, Some(tiScope))
+    }
+    halt("TODO")
+  }
+
+  def dealias(typed: AST.Typed, reporter: Reporter): AST.Typed = {
+    def dealiasOpt(t: AST.Typed): Option[AST.Typed] = {
       t match {
         case t: AST.Typed.Name =>
           globalTypeMap.get(t.ids) match {
@@ -90,7 +177,8 @@ object TypeChecker {
             case _ =>
               var newArgs = ISZ[AST.Typed]()
               for (arg <- t.args) {
-                dealiasOpt(arg) match {
+                val newArgOpt = dealiasOpt(arg)
+                newArgOpt match {
                   case Some(newArg) => newArgs = newArgs :+ newArg
                   case _ => return None()
                 }
@@ -100,7 +188,8 @@ object TypeChecker {
         case t: AST.Typed.Tuple =>
           var newArgs = ISZ[AST.Typed]()
           for (arg <- t.args) {
-            dealiasOpt(arg) match {
+            val newArgOpt = dealiasOpt(arg)
+            newArgOpt match {
               case Some(newArg) => newArgs = newArgs :+ newArg
               case _ => return None()
             }
@@ -111,7 +200,8 @@ object TypeChecker {
             case Some(newRet) =>
               var newArgs = ISZ[AST.Typed]()
               for (arg <- t.args) {
-                dealiasOpt(arg) match {
+                val newArgOpt = dealiasOpt(arg)
+                 newArgOpt match {
                   case Some(newArg) => newArgs = newArgs :+ newArg
                   case _ => return None()
                 }
@@ -121,10 +211,12 @@ object TypeChecker {
           }
       }
     }
-    return dealiasOpt(typed).getOrElse(typed)
+
+    val rOpt = dealiasOpt(typed)
+    return rOpt.getOrElse(typed)
   }
 
-  @pure def isEqType(globalTypeMap: TypeMap, t1: AST.Typed, t2: AST.Typed): B = {
+  @pure def isEqType(t1: AST.Typed, t2: AST.Typed): B = {
     (t1, t2) match {
       case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
         if (t1.args.size != t2.args.size) {
@@ -134,7 +226,7 @@ object TypeChecker {
           return F
         }
         for (i <- 0 until t1.args.size) {
-          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
         }
@@ -144,7 +236,7 @@ object TypeChecker {
           return F
         }
         for (i <- 0 until t1.args.size) {
-          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
         }
@@ -153,11 +245,11 @@ object TypeChecker {
         if (t1.args.size != t2.args.size) {
           return F
         }
-        if (!isEqType(globalTypeMap, t1.ret, t2.ret)) {
+        if (!isEqType(t1.ret, t2.ret)) {
           return F
         }
         for (i <- 0 until t1.args.size) {
-          if (!isEqType(globalTypeMap, t1.args(i), t2.args(i))) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
         }
@@ -166,10 +258,10 @@ object TypeChecker {
     }
   }
 
-  @pure def isSubType(globalTypeMap: TypeMap, t1: AST.Typed, t2: AST.Typed): B = {
-    val dt1 = dealias(globalTypeMap, t1)
-    val dt2 = dealias(globalTypeMap, t2)
-    if (isEqType(globalTypeMap, dt1, dt2)) {
+  @pure def isSubType(t1: AST.Typed, t2: AST.Typed, reporter: Reporter): B = {
+    val dt1 = dealias(t1, reporter)
+    val dt2 = dealias(t2, reporter)
+    if (isEqType(dt1, dt2)) {
       return T
     }
     (dt1, dt2) match {
@@ -178,14 +270,6 @@ object TypeChecker {
       case _ => return F
     }
   }
-}
-
-import TypeChecker._
-
-@datatype class TypeChecker(globalNameMap: NameMap,
-                            globalTypeMap: TypeMap,
-                            typeHierarchy: TypeHierarchy.Type,
-                            checkers: ISZ[TypeChecker]) {
 
   @memoize def applyType(isSpec: B,
                          fqName: QName,
@@ -217,7 +301,7 @@ import TypeChecker._
 
   def rootTypes(): ISZ[QName] = {
     var r = ISZ[QName]()
-    for (p <- typeHierarchy.poset.parents.entries) {
+    for (p <- typeHierarchy.parents.entries) {
       if (p._2.isEmpty) {
         r = r :+ p._1.ids
       }
