@@ -27,7 +27,6 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
-import org.sireum.lang.symbol.Resolver
 import org.sireum.ops._
 import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
@@ -44,7 +43,7 @@ object TypeChecker {
                   typeChecker: TypeChecker,
                   posOpt: Option[AST.PosInfo],
                   reporter: Reporter): Option[AST.Typed] = {
-      var m = Map.empty[String, AST.Typed]
+      var m = HashMap.empty[String, AST.Typed]
       var hasError = F
       for (p <- parameters) {
         val pName = p._1
@@ -65,7 +64,7 @@ object TypeChecker {
     }
   }
 
-  @pure def substType(m: Map[String, AST.Typed], t: AST.Typed): AST.Typed = {
+  @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
     t match {
       case t: AST.Typed.Name =>
         if (t.ids.size == 1 && t.args.isEmpty) {
@@ -110,15 +109,45 @@ import TypeChecker._
         }
         val name = AST.Util.ids2strings(t.name.ids)
         scope.resolveType(globalTypeMap, name) match {
-          case Some(ti: Resolver.TypeInfo.SubZ) =>
-          case Some(ti: Resolver.TypeInfo.Enum) =>
-          case Some(ti: Resolver.TypeInfo.Sig) =>
-          case Some(ti: Resolver.TypeInfo.AbstractDatatype) =>
-          case Some(ti: Resolver.TypeInfo.Rich) =>
-          case Some(ti: Resolver.TypeInfo.TypeAlias) =>
-          case Some(ti: Resolver.TypeInfo.TypeVar) =>
+          case Some(ti: TypeInfo.TypeAlias) =>
+            val tparamSize = ti.ast.typeParams.size
+            if (argTypes.size != tparamSize) {
+              reporter.error(t.posOpt, typeCheckerKind,
+                st"Type alias ${(name, ".")} requires $tparamSize type arguments but ${argTypes.size} supplied.".render)
+              return None()
+            }
+            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+          case Some(ti: TypeInfo.TypeVar) =>
+            if (argTypes.nonEmpty) {
+              reporter.error(t.posOpt, typeCheckerKind,
+                s"Type variable ${name(0)} does not accept type arguments.")
+              return None()
+            }
+            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+          case Some(ti) =>
+            val p: (String, Z) = ti match {
+              case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0)
+              case _: TypeInfo.Enum => ("@enum", 0)
+              case ti: TypeInfo.Sig => (if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig", ti.ast.typeParams.size)
+              case ti: TypeInfo.AbstractDatatype => (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size)
+              case ti: TypeInfo.Rich => ("@rich", ti.ast.typeParams.size)
+              case _ => halt("Infeasible")
+            }
+            if (argTypes.size != p._2) {
+              if (p._2 == 0) {
+                reporter.error(t.posOpt, typeCheckerKind,
+                  st"Slang ${p._1} ${(name, ".")} does not accept type arguments.".render)
+              } else {
+                reporter.error(t.posOpt, typeCheckerKind,
+                  st"Slang ${p._1} ${(name, ".")} requires ${p._2} type arguments but ${argTypes.size} is supplied.".render)
+              }
+              return None()
+            }
+            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+          case _ =>
+            reporter.error(t.posOpt, typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
+            return None()
         }
-        halt("TODO")
       case t: AST.Type.Tuple =>
         var esTypes = ISZ[AST.Typed]()
         var hasError = F
@@ -153,62 +182,86 @@ import TypeChecker._
   }
 
   def applyTypeAlias(typed: AST.Typed.Name,
-                     ti: Resolver.TypeInfo.TypeAlias,
+                     ti: TypeInfo.TypeAlias,
+                     posOpt: Option[AST.PosInfo],
                      reporter: Reporter): Option[AST.Typed] = {
     val tiScope = ti.scope
-    val nameMap = HashMap.empty[String, Resolver.Info]
-    var typeMap = HashMap.empty[String, Resolver.TypeInfo]
-    var scope = Scope.Local(nameMap, typeMap, Some(tiScope))
-    for (tp <- ti.ast.typeParams if !reporter.hasIssue) {
-      val name = tp.id.value
-      typeMap = typeMap.put(name, TypeInfo.TypeVar(tp.id.value, tp))
-      scope = Scope.Local(nameMap, typeMap, Some(tiScope))
+    val tm = typeParamMap(ti.ast.typeParams, reporter)
+    val scope = Scope.Local(HashMap.empty[String, Info], tm, Some(tiScope))
+    val tOpt = typeCheck(scope, ti.ast.tipe, reporter)
+    if (ti.ast.typeParams.size != typed.args.size) {
+      reporter.error(posOpt, typeCheckerKind, st"Type alias ${(ti.name, ".")} requires ${ti.ast.typeParams.size} type arguments, but ${typed.args.size} is supplied".render)
+      return None()
     }
-    halt("TODO")
+    var substMap = HashMap.empty[String, AST.Typed]
+    for (i <- 0 until typed.args.size) {
+      substMap = substMap.put(typeParamName(ti.ast.typeParams(i)), typed.args(i))
+    }
+    tOpt match {
+      case Some(t) => return Some(substType(substMap, t))
+      case _ => return tOpt
+    }
   }
 
-  def dealias(typed: AST.Typed, reporter: Reporter): AST.Typed = {
+  def dealias(typed: AST.Typed, posOpt: Option[AST.PosInfo], reporter: Reporter): AST.Typed = {
     def dealiasOpt(t: AST.Typed): Option[AST.Typed] = {
       t match {
         case t: AST.Typed.Name =>
-          globalTypeMap.get(t.ids) match {
-            case Some(ti: Resolver.TypeInfo.TypeAlias) =>
-              halt("TODO")
-            case _ =>
-              var newArgs = ISZ[AST.Typed]()
-              for (arg <- t.args) {
-                val newArgOpt = dealiasOpt(arg)
-                newArgOpt match {
-                  case Some(newArg) => newArgs = newArgs :+ newArg
-                  case _ => return None()
-                }
-              }
-              return Some(t(args = newArgs))
-          }
-        case t: AST.Typed.Tuple =>
           var newArgs = ISZ[AST.Typed]()
+          var changed = F
           for (arg <- t.args) {
             val newArgOpt = dealiasOpt(arg)
             newArgOpt match {
-              case Some(newArg) => newArgs = newArgs :+ newArg
-              case _ => return None()
+              case Some(newArg) =>
+                newArgs = newArgs :+ newArg
+                changed = T
+              case _ => newArgs = newArgs :+ arg
             }
           }
-          return Some(t(args = newArgs))
-        case t: AST.Typed.Fun =>
-          dealiasOpt(t.ret) match {
-            case Some(newRet) =>
-              var newArgs = ISZ[AST.Typed]()
-              for (arg <- t.args) {
-                val newArgOpt = dealiasOpt(arg)
-                 newArgOpt match {
-                  case Some(newArg) => newArgs = newArgs :+ newArg
-                  case _ => return None()
-                }
+          val typed2: AST.Typed.Name = if (changed) t(args = newArgs) else t
+          globalTypeMap.get(t.ids) match {
+            case Some(ti: TypeInfo.TypeAlias) =>
+              val rOpt = applyTypeAlias(typed2, ti, posOpt, reporter)
+              rOpt match {
+                case Some(r) =>
+                  val r2 = dealias(r, posOpt, reporter)
+                  return Some(r2)
+                case _ => return None()
               }
-              return Some(t(args = newArgs, ret = newRet))
-            case _ => return None()
+            case _ =>
+              return if (changed) Some(typed2) else None()
           }
+        case t: AST.Typed.Tuple =>
+          var newArgs = ISZ[AST.Typed]()
+          var changed = F
+          for (arg <- t.args) {
+            val newArgOpt = dealiasOpt(arg)
+            newArgOpt match {
+              case Some(newArg) =>
+                newArgs = newArgs :+ newArg
+                changed = T
+              case _ =>
+                newArgs = newArgs :+ arg
+            }
+          }
+          return if (changed) Some(t(args = newArgs)) else None()
+        case t: AST.Typed.Fun =>
+          var newArgs = ISZ[AST.Typed]()
+          var changed = F
+          for (arg <- t.args) {
+            val newArgOpt = dealiasOpt(arg)
+            newArgOpt match {
+              case Some(newArg) =>
+                newArgs = newArgs :+ newArg
+                changed = T
+              case _ =>
+                newArgs = newArgs :+ arg
+            }
+          }
+          val newRetOpt = dealiasOpt(t.ret)
+          val newRet = newRetOpt.getOrElse(t.ret)
+          changed = changed || newRetOpt.nonEmpty
+          return if (changed) Some(t(args = newArgs, ret = newRet)) else None()
       }
     }
 
@@ -259,15 +312,23 @@ import TypeChecker._
   }
 
   @pure def isSubType(t1: AST.Typed, t2: AST.Typed, reporter: Reporter): B = {
-    val dt1 = dealias(t1, reporter)
-    val dt2 = dealias(t2, reporter)
-    if (isEqType(dt1, dt2)) {
-      return T
-    }
+    val dt1 = dealias(t1, t1.posOpt, reporter)
+    val dt2 = dealias(t2, t1.posOpt, reporter)
     (dt1, dt2) match {
       case (dt1: AST.Typed.Name, dt2: AST.Typed.Name) =>
-        halt("TODO")
-      case _ => return F
+        if (dt1.args.size != dt2.args.size) {
+          return F
+        }
+        for (i <- 0 until dt1.args.size) {
+          if (!isEqType(dt1.args(i), dt2.args(i))) {
+            return F
+          }
+        }
+        if (dt1.ids == dt2.ids) {
+          return T
+        }
+        return typeHierarchy.ancestorsOf(dt1).contains(dt2)
+      case _ => return isEqType(dt1, dt2)
     }
   }
 
