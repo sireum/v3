@@ -324,6 +324,7 @@ object EnumGen {
 
 @datatype trait Type {
   def posOpt: Option[PosInfo]
+  def typedOpt: Option[Typed]
 }
 
 object Type {
@@ -336,6 +337,10 @@ object Type {
     def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Fun(args: ISZ[Type],
@@ -346,6 +351,10 @@ object Type {
     def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Tuple(args: ISZ[Type],
@@ -354,6 +363,10 @@ object Type {
 
     def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
