@@ -342,7 +342,7 @@ import TypeChecker._
     halt("TODO")
   }
 
-  def rootTypes(): ISZ[QName] = {
+  @pure def rootTypes(): ISZ[QName] = {
     var r = ISZ[QName]()
     for (p <- typeHierarchy.parents.entries) {
       if (p._2.isEmpty) {
@@ -352,35 +352,57 @@ import TypeChecker._
     return r
   }
 
-  def check(reporter: Reporter): Unit = {
-    // WORKAROUND: has to use B => AccumulatingReporter instead of () => AccumulatingReporter
+  def checkOutline(reporter: Reporter): TypeChecker = {
+    def combine(r: (TypeChecker, AccumulatingReporter),
+                f: TypeChecker => (TypeChecker, AccumulatingReporter)): (TypeChecker, AccumulatingReporter) = {
+      val p = f(r._1)
+      return (p._1, AccumulatingReporter.combine(r._2, p._2))
+    }
+    // WORKAROUND: has to use B => TypeChecker => AccumulatingReporter instead of () => TypeChecker => AccumulatingReporter
     // due to issues in scalameta macro expansion
-    var typeInfos = ISZ[B => AccumulatingReporter]()
-    for (info <- globalTypeMap.values) {
+    var workList = rootTypes()
+    var tc = this
+    while (workList.nonEmpty) {
+      var l = ISZ[QName]()
+      var jobs = ISZ[B => TypeChecker => (TypeChecker, AccumulatingReporter)]()
+      for (name <- workList) {
+        val ti = tc.globalTypeMap.get(name).get
+        ti match {
+          case ti: TypeInfo.Sig =>
+            jobs = jobs :+ ((_: B) => tc.checkSigOutline(ti))
+          case ti: TypeInfo.AbstractDatatype =>
+            jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
+          case ti: TypeInfo.Rich =>
+            jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
+          case _ =>
+        }
+        for (n <- typeHierarchy.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements) {
+          l = l :+ n.ids
+        }
+      }
+      val r = ISOps(jobs).
+        parMapFoldLeft(
+          (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
+          combine _,
+          (this, AccumulatingReporter.create))
+      reporter.reports(r._2.messages)
+      tc = r._1
+      workList = l
+    }
+    var jobs = ISZ[B => TypeChecker => (TypeChecker, AccumulatingReporter)]()
+    for (info <- tc.globalNameMap.values) {
       info match {
-        case info: TypeInfo.Sig =>
-          typeInfos = typeInfos :+ ((_: B) => checkSig(info))
-        case info: TypeInfo.AbstractDatatype =>
-          typeInfos = typeInfos :+ ((_: B) => checkAdt(info))
-        case info: TypeInfo.Rich =>
-          typeInfos = typeInfos :+ ((_: B) => checkRich(info))
+        case info: Info.Object => jobs = jobs :+ ((_: B) => tc.checkObjectOutline(info))
         case _ =>
       }
     }
-    var objectInfos = ISZ[B => AccumulatingReporter]()
-    for (info <- globalNameMap.values) {
-      info match {
-        case info: Info.Object =>
-          objectInfos = objectInfos :+ ((_: B) => checkObject(info))
-        case _ =>
-      }
-    }
-    val r = ISOps(typeInfos ++ objectInfos).
+    val r = ISOps(jobs).
       parMapFoldLeft(
-        (f: B => AccumulatingReporter) => f(T),
-        AccumulatingReporter.combine,
-        AccumulatingReporter.create)
-    reporter.reports(r.messages)
+        (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
+        combine _,
+        (this, AccumulatingReporter.create))
+    reporter.reports(r._2.messages)
+    return r._1
   }
 
   def checkVarType(typeParams: ISZ[AST.TypeParam],
@@ -478,23 +500,23 @@ import TypeChecker._
     return r
   }
 
-  @pure def checkObject(ast: Info.Object): AccumulatingReporter = {
+  @pure def checkObjectOutline(ast: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
-  @pure def checkSig(info: TypeInfo.Sig): AccumulatingReporter = {
+  @pure def checkSigOutline(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
-  @pure def checkAdt(info: TypeInfo.AbstractDatatype): AccumulatingReporter = {
+  @pure def checkAdtOutline(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
-  @pure def checkRich(info: TypeInfo.Rich): AccumulatingReporter = {
+  @pure def checkRichOutline(info: TypeInfo.Rich): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
-  @pure def checkScript(program: AST.TopUnit.Program): AccumulatingReporter = {
+  @pure def checkScript(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
