@@ -79,7 +79,7 @@ import TypeChecker._
                 t: AST.Type,
                 reporter: Reporter): Option[AST.Typed] = {
     t.typedOpt match {
-      case Some(typed) => return Some(typed)
+      case Some(typed) => return t.typedOpt
       case _ =>
     }
     t match {
@@ -174,9 +174,8 @@ import TypeChecker._
                      ti: TypeInfo.TypeAlias,
                      posOpt: Option[AST.PosInfo],
                      reporter: Reporter): Option[AST.Typed] = {
-    val tiScope = ti.scope
     val tm = typeParamMap(ti.ast.typeParams, reporter)
-    val scope = Scope.Local(HashMap.empty[String, Info], tm, Some(tiScope))
+    val scope = localTypeScope(tm.map, ti.scope)
     val tOpt = typeCheck(scope, ti.ast.tipe, reporter)
     if (ti.ast.typeParams.size != typed.args.size) {
       reporter.error(posOpt, typeCheckerKind, st"Type alias ${(ti.name, ".")} requires ${ti.ast.typeParams.size} type arguments, but ${typed.args.size} is supplied".render)
@@ -300,24 +299,22 @@ import TypeChecker._
     }
   }
 
-  @pure def isSubType(t1: AST.Typed, t2: AST.Typed, reporter: Reporter): B = {
-    val dt1 = dealias(t1, t1.posOpt, reporter)
-    val dt2 = dealias(t2, t1.posOpt, reporter)
-    (dt1, dt2) match {
-      case (dt1: AST.Typed.Name, dt2: AST.Typed.Name) =>
-        if (dt1.args.size != dt2.args.size) {
+  @pure def isSubType(t1: AST.Typed, t2: AST.Typed): B = {
+    (t1, t2) match {
+      case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
+        if (t1.args.size != t2.args.size) {
           return F
         }
-        for (i <- 0 until dt1.args.size) {
-          if (!isEqType(dt1.args(i), dt2.args(i))) {
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
         }
-        if (dt1.ids == dt2.ids) {
+        if (t1.ids == t2.ids) {
           return T
         }
-        return typeHierarchy.ancestorsOf(dt1).contains(dt2)
-      case _ => return isEqType(dt1, dt2)
+        return typeHierarchy.ancestorsOf(t1).contains(t2)
+      case _ => return isEqType(t1, t2)
     }
   }
 
@@ -391,28 +388,81 @@ import TypeChecker._
   }
 
   @memoize def checkVarType(typeParams: ISZ[AST.TypeParam],
-                            info: Info.Var): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
+                            name: QName,
+                            @hidden info: Info.Var): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    val reporter = AccumulatingReporter.create
+    info.ast.tipeOpt match {
+      case Some(t) =>
+        val tm = typeParamMap(typeParams, reporter)
+        val scope = localTypeScope(tm.map, info.scope)
+        val typedOpt = typeCheck(scope, t, reporter)
+        typedOpt match {
+          case Some(typed) => return (Some(TypeConstructor(tm.keys.elements, typed)), reporter.messages)
+          case _ =>
+        }
+      case _ =>
+    }
+    return (None(), reporter.messages)
   }
 
   @memoize def checkSpecVarType(typeParams: ISZ[AST.TypeParam],
-                                info: Info.SpecVar): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
+                                name: QName,
+                                @hidden info: Info.SpecVar): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    val reporter = AccumulatingReporter.create
+    val t = info.ast.tipe
+    val tm = typeParamMap(typeParams, reporter)
+    val scope = localTypeScope(tm.map, info.scope)
+    val typedOpt = typeCheck(scope, t, reporter)
+    typedOpt match {
+      case Some(typed) =>
+        return (Some(TypeConstructor(tm.keys.elements, typed)), reporter.messages)
+      case _ =>
+    }
+    return (None(), reporter.messages)
   }
 
-  @memoize def checkSpecMethodType(typeParams: ISZ[AST.TypeParam],
-                                   info: Info.SpecMethod): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
+  @memoize def checkMethodSigType(typeParams: ISZ[AST.TypeParam],
+                                  name: QName,
+                                  @hidden sigScope: Scope,
+                                  @hidden sig: AST.MethodSig): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    val reporter = AccumulatingReporter.create
+    var tm = typeParamMap(typeParams, reporter)
+    tm = typeParamMapInit(sig.typeParams, tm, reporter)
+    val scope = localTypeScope(tm.map, sigScope)
+    val retOpt = typeCheck(scope, sig.returnType, reporter)
+    var hasError = retOpt.isEmpty
+    var paramTypes = ISZ[AST.Typed]()
+    for (p <- sig.params) {
+      val tOpt = typeCheck(scope, p.tipe, reporter)
+      tOpt match {
+        case Some(t) => paramTypes = paramTypes :+ t
+        case _ => hasError = T
+      }
+    }
+    if (hasError) {
+      return (None(), reporter.messages)
+    }
+    return (Some(TypeConstructor(tm.keys.elements,
+      AST.Typed.Fun(paramTypes, retOpt.get, sig.id.attr.posOpt))),
+      reporter.messages)
   }
 
-  @memoize def checkExtMethodType(typeParams: ISZ[AST.TypeParam],
-                                  info: Info.ExtMethod): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
+  @pure def checkSpecMethodType(typeParams: ISZ[AST.TypeParam],
+                                name: QName,
+                                info: Info.SpecMethod): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    return checkMethodSigType(typeParams, name, info.scope, info.ast.sig)
   }
 
-  @memoize def checkMethodType(typeParams: ISZ[AST.TypeParam],
-                               info: Info.Method): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
+  @pure def checkExtMethodType(typeParams: ISZ[AST.TypeParam],
+                               name: QName,
+                               info: Info.ExtMethod): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    return checkMethodSigType(typeParams, name, info.scope, info.ast.sig)
+  }
+
+  @pure def checkMethodType(typeParams: ISZ[AST.TypeParam],
+                            name: QName,
+                            info: Info.Method): (Option[TypeConstructor], ISZ[Reporter.Message]) = {
+    return checkMethodSigType(typeParams, name, info.scope, info.ast.sig)
   }
 
   @pure def checkObject(ast: Info.Object): AccumulatingReporter = {
