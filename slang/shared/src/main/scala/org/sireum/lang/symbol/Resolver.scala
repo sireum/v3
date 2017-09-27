@@ -675,13 +675,20 @@ object Resolver {
     return (t._1, p._1, p._2)
   }
 
-  def typeParamName(typeParam: AST.TypeParam): String = {
+  @pure def typeParamName(typeParam: AST.TypeParam): String = {
     return s"`${typeParam.id.value}"
   }
 
   def typeParamMap(typeParams: ISZ[AST.TypeParam],
-                   reporter: Reporter): HashMap[String, TypeInfo] = {
-    var r = HashMap.empty[String, TypeInfo]
+                   reporter: Reporter): HashSMap[String, TypeInfo] = {
+    val r = typeParamMapInit(typeParams, HashSMap.empty[String, TypeInfo], reporter)
+    return r
+  }
+
+  def typeParamMapInit(typeParams: ISZ[AST.TypeParam],
+                       init: HashSMap[String, TypeInfo],
+                       reporter: Reporter): HashSMap[String, TypeInfo] = {
+    var r = init
     for (tp <- typeParams) {
       val name = typeParamName(tp)
       if (r.contains(name)) {
@@ -690,6 +697,10 @@ object Resolver {
       r = r.put(tp.id.value, TypeInfo.TypeVar(name, tp))
     }
     return r
+  }
+
+  @pure def localTypeScope(typeMap: HashMap[String, TypeInfo], outer: Scope): Scope = {
+    return Scope.Local(HashMap.empty[String, Info], typeMap, Some(outer))
   }
 
 }
