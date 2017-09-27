@@ -323,8 +323,9 @@ object EnumGen {
 
 
 @datatype trait Type {
-  def posOpt: Option[PosInfo]
-  def typedOpt: Option[Typed]
+  @pure def posOpt: Option[PosInfo]
+  @pure def typedOpt: Option[Typed]
+  @pure def typed(t: Typed): Type
 }
 
 object Type {
@@ -334,12 +335,16 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    def typedOpt: Option[Typed] = {
+    @pure def typedOpt: Option[Typed] = {
       return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Named = {
+      return this(name, typeArgs, attr(typedOpt = Some(t)))
     }
   }
 
@@ -348,12 +353,16 @@ object Type {
                       attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    def typedOpt: Option[Typed] = {
+    @pure def typedOpt: Option[Typed] = {
       return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Fun = {
+      return this(args, ret, attr(typedOpt = Some(t)))
     }
   }
 
@@ -361,12 +370,16 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    def typedOpt: Option[Typed] = {
+    @pure def typedOpt: Option[Typed] = {
       return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Tuple = {
+      return this(args, attr(typedOpt = Some(t)))
     }
   }
 
