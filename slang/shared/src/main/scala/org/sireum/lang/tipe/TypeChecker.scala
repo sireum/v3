@@ -37,30 +37,19 @@ object TypeChecker {
   val typeCheckerKind: String = "Type Checker"
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
 
-  @datatype class TypeConstructor(parameters: ISZ[(String, AST.Typed)],
+  @datatype class TypeConstructor(parameters: ISZ[String],
                                   tipe: AST.Typed) {
-    def construct(args: Map[String, AST.Typed],
-                  typeChecker: TypeChecker,
-                  posOpt: Option[AST.PosInfo],
-                  reporter: Reporter): Option[AST.Typed] = {
+    def construct(args: Map[String, AST.Typed]): AST.Typed = {
       var m = HashMap.empty[String, AST.Typed]
-      var hasError = F
       for (p <- parameters) {
-        val pName = p._1
-        val pType = substType(m, p._2)
-        args.get(pName) match {
+        args.get(p) match {
           case Some(argType) =>
-            if (!typeChecker.isSubType(argType, pType, reporter)) {
-              reporter.error(posOpt, typeCheckerKind, s"Type '${AST.Util.typedString(argType).render}' is not a subtype of '${AST.Util.typedString(pType)}'.")
-              hasError = T
-            }
-            m = m.put(pName, argType)
+            m = m.put(p, argType)
           case _ =>
-            reporter.error(posOpt, typeCheckerKind, s"Could not find argument for type parameter '$pName'.")
-            hasError = T
+            halt(s"Could not find argument for type parameter '$p'.")
         }
       }
-      return if (hasError) None[AST.Typed]() else Some(substType(m, tipe))
+      return substType(m, tipe)
     }
   }
 
