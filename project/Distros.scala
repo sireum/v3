@@ -251,7 +251,7 @@ object Distros {
         %%("hdiutil", "eject", root / 'Volumes / "IntelliJ IDEA CE")
         println("done!")
         extractPlugins(tempDir / "Sireum.app" / 'Contents / 'plugins)
-        //patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
+        patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
         patchVMOptions(platform, tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
         patchImages(tempDir / "Sireum.app" / 'Contents)
         patchIcon(platform, tempDir / "Sireum.app" / 'Contents)
