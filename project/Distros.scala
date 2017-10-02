@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.4"
+  val ideaVer = "2017.2.5"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -71,8 +71,8 @@ object Distros {
     "compare" -> 24991,
     "latex" -> 18476,
     "python" -> 38279,
-    "rst" -> 14700
-    //"ignore" -> 32828 https://github.com/hsz/idea-gitignore/issues/408
+    "rst" -> 14700,
+    "ignore" -> 38743
   )
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
