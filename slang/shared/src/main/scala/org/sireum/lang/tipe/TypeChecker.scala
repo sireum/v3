@@ -369,10 +369,13 @@ import TypeChecker._
         val ti = tc.globalTypeMap.get(name).get
         ti match {
           case ti: TypeInfo.Sig =>
+            halt("TODO: Check parents have been outlined first")
             jobs = jobs :+ ((_: B) => tc.checkSigOutline(ti))
           case ti: TypeInfo.AbstractDatatype =>
+            halt("TODO: Check parents have been outlined first")
             jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
           case ti: TypeInfo.Rich =>
+            halt("TODO: Check parents have been outlined first")
             jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
           case _ =>
         }
@@ -505,14 +508,64 @@ import TypeChecker._
   }
 
   @pure def checkSigOutline(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+    val reporter = AccumulatingReporter.create
+    var tm = typeParamMap(info.ast.typeParams, reporter)
+    val scope = localTypeScope(tm.map, info.scope)
+    var members = checkMembersOutline(
+      TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
+    members = inheritMembersOutline(info.ast.parents, scope, members, reporter)
     halt("TODO")
   }
 
   @pure def checkAdtOutline(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+    val reporter = AccumulatingReporter.create
+    var tm = typeParamMap(info.ast.typeParams, reporter)
+    val scope = localTypeScope(tm.map, info.scope)
+    var members = checkMembersOutline(
+      TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
+    members = inheritMembersOutline(info.ast.parents, scope, members, reporter)
     halt("TODO")
   }
 
   @pure def checkRichOutline(info: TypeInfo.Rich): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+    val reporter = AccumulatingReporter.create
+    var tm = typeParamMap(info.ast.typeParams, reporter)
+    val scope = localTypeScope(tm.map, info.scope)
+    var members = checkMembersOutline(
+      TypeInfo.Members(HashMap.empty, HashMap.empty, HashMap.empty, info.methods), scope, reporter)
+    members = inheritMembersOutline(info.ast.parents, scope, members, reporter)
+    halt("TODO")
+  }
+
+  def checkMembersOutline(info: TypeInfo.Members, scope: Scope, reporter: Reporter): TypeInfo.Members = {
+    halt("TODO")
+  }
+
+  def inheritMembersOutline(parents: ISZ[AST.Type.Named], scope: Scope,
+                            info: TypeInfo.Members, reporter: Reporter): TypeInfo.Members = {
+    var specVars = info.specVars
+    var vars = info.vars
+    var specMethods = info.specMethods
+    var methods = info.methods
+    var parentImplMethods = HashSet.empty[String]
+    for (parent <- parents) {
+      val tOpt = typeCheck(scope, parent, reporter)
+      tOpt match {
+        case Some(t: AST.Typed.Name) =>
+          val dt = dealias(t, parent.attr.posOpt, reporter)
+          dt match {
+            case dt: AST.Typed.Name =>
+              globalTypeMap.get(dt.ids) match {
+                case Some(ti: TypeInfo.Sig) =>
+                case Some(ti: TypeInfo.AbstractDatatype) =>
+                case Some(ti: TypeInfo.Rich) =>
+                case _ => halt("TODO")
+              }
+            case _ => halt("TODO")
+          }
+        case _ => halt("TODO")
+      }
+    }
     halt("TODO")
   }
 
