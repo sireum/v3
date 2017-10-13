@@ -389,9 +389,9 @@ object Resolver {
 
     @datatype class Sig(name: QName,
                         outlined: B,
-                        specVars: HashMap[String, AST.Stmt.SpecVar],
-                        specMethods: HashMap[String, AST.Stmt.SpecMethod],
-                        methods: HashMap[String, AST.Stmt.Method],
+                        specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
+                        specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
+                        methods: HashMap[String, (QName, AST.Stmt.Method)],
                         scope: Scope.Global,
                         ast: AST.Stmt.Sig)
       extends TypeInfo {
@@ -407,10 +407,10 @@ object Resolver {
 
     @datatype class AbstractDatatype(name: QName,
                                      outlined: B,
-                                     specVars: HashMap[String, AST.Stmt.SpecVar],
-                                     vars: HashMap[String, AST.Stmt.Var],
-                                     specMethods: HashMap[String, AST.Stmt.SpecMethod],
-                                     methods: HashMap[String, AST.Stmt.Method],
+                                     specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
+                                     vars: HashMap[String, (QName, AST.Stmt.Var)],
+                                     specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
+                                     methods: HashMap[String, (QName, AST.Stmt.Method)],
                                      scope: Scope.Global,
                                      ast: AST.Stmt.AbstractDatatype)
       extends TypeInfo {
@@ -426,7 +426,8 @@ object Resolver {
 
     @datatype class Rich(name: QName,
                          outlined: B,
-                         methods: HashMap[String, AST.Stmt.Method],
+                         specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
+                         methods: HashMap[String, (QName, AST.Stmt.Method)],
                          scope: Scope.Global,
                          ast: AST.Stmt.Rich)
       extends TypeInfo {
@@ -471,10 +472,10 @@ object Resolver {
       }
     }
 
-    @datatype class Members(specVars: HashMap[String, AST.Stmt.SpecVar],
-                            vars: HashMap[String, AST.Stmt.Var],
-                            specMethods: HashMap[String, AST.Stmt.SpecMethod],
-                            methods: HashMap[String, AST.Stmt.Method])
+    @datatype class Members(specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
+                            vars: HashMap[String, (QName, AST.Stmt.Var)],
+                            specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
+                            methods: HashMap[String, (QName, AST.Stmt.Method)])
 
   }
 

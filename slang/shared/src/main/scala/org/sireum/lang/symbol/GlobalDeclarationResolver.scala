@@ -123,21 +123,21 @@ import org.sireum.lang.{ast => AST}
         currentName = oldName
       case stmt: AST.Stmt.Sig =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
+        val members = resolveMembers(name, stmt.stmts)
         assert(members.vars.isEmpty)
         declareType("sig", name, TypeInfo.Sig(name, F, members.specVars,
           members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
+        val members = resolveMembers(name, stmt.stmts)
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
           TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
             members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Rich =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
-        assert(members.specVars.isEmpty & members.vars.isEmpty & members.specMethods.isEmpty)
-        declareType("rich", name, TypeInfo.Rich(name, F, members.methods,
+        val members = resolveMembers(name, stmt.stmts)
+        assert(members.specVars.isEmpty & members.vars.isEmpty)
+        declareType("rich", name, TypeInfo.Rich(name, F, members.specMethods, members.methods,
           scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
@@ -147,11 +147,11 @@ import org.sireum.lang.{ast => AST}
     }
   }
 
-  def resolveMembers(stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
-    var specVars = HashMap.empty[String, AST.Stmt.SpecVar]
-    var vars = HashMap.empty[String, AST.Stmt.Var]
-    var specMethods = HashMap.empty[String, AST.Stmt.SpecMethod]
-    var methods = HashMap.empty[String, AST.Stmt.Method]
+  def resolveMembers(owner: QName, stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
+    var specVars = HashMap.empty[String, (QName, AST.Stmt.SpecVar)]
+    var vars = HashMap.empty[String, (QName, AST.Stmt.Var)]
+    var specMethods = HashMap.empty[String, (QName, AST.Stmt.SpecMethod)]
+    var methods = HashMap.empty[String, (QName, AST.Stmt.Method)]
 
     @pure def checkId(id: AST.Id): Unit = {
       val name = id.value
@@ -170,16 +170,16 @@ import org.sireum.lang.{ast => AST}
       stmt match {
         case stmt: AST.Stmt.Var =>
           checkId(stmt.id)
-          vars = vars.put(stmt.id.value, stmt)
+          vars = vars.put(stmt.id.value, (owner, stmt))
         case stmt: AST.Stmt.SpecVar =>
           checkId(stmt.id)
-          specVars = specVars.put(stmt.id.value, stmt)
+          specVars = specVars.put(stmt.id.value, (owner, stmt))
         case stmt: AST.Stmt.Method =>
           checkId(stmt.sig.id)
-          methods = methods.put(stmt.sig.id.value, stmt)
+          methods = methods.put(stmt.sig.id.value, (owner, stmt))
         case stmt: AST.Stmt.SpecMethod =>
           checkId(stmt.sig.id)
-          specMethods = specMethods.put(stmt.sig.id.value, stmt)
+          specMethods = specMethods.put(stmt.sig.id.value, (owner, stmt))
         case _ =>
       }
     }
