@@ -73,7 +73,7 @@ import TypeChecker._
 
 @datatype class TypeChecker(globalNameMap: NameMap,
                             globalTypeMap: TypeMap,
-                            typeHierarchy: Poset[AST.Typed.Name]) {
+                            typeHierarchy: TypeHierarchy.Type) {
 
   def typeCheck(scope: Scope,
                 t: AST.Type,
@@ -309,7 +309,7 @@ import TypeChecker._
         if (t1.ids == t2.ids) {
           return T
         }
-        return typeHierarchy.ancestorsOf(t1).contains(t2)
+        return typeHierarchy.poset.ancestorsOf(t1).contains(t2)
       case _ => return isEqType(t1, t2)
     }
   }
@@ -344,7 +344,7 @@ import TypeChecker._
 
   @pure def rootTypes(): ISZ[QName] = {
     var r = ISZ[QName]()
-    for (p <- typeHierarchy.parents.entries) {
+    for (p <- typeHierarchy.poset.parents.entries) {
       if (p._2.isEmpty) {
         r = r :+ p._1.ids
       }
@@ -358,6 +358,27 @@ import TypeChecker._
       val p = f(r._1)
       return (p._1, AccumulatingReporter.combine(r._2, p._2))
     }
+    def parentsOutlined(name: QName): B = {
+      def isOutlined(name: QName): B = {
+        globalTypeMap.get(name).get match {
+          case ti: TypeInfo.Sig => return ti.outlined
+          case ti: TypeInfo.AbstractDatatype => return ti.outlined
+          case ti: TypeInfo.Rich => return ti.outlined
+          case _ => return T
+        }
+      }
+      var r = T
+      for (p <- typeHierarchy.poset.parentsOf(AST.Typed.Name(name, ISZ(), None())).elements if r) {
+        globalTypeMap.get(p.ids).get match {
+          case ti: TypeInfo.TypeAlias =>
+            val t = typeHierarchy.dealias(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
+            r = isOutlined(t.ids)
+          case ti =>
+            r = isOutlined(ti.name)
+        }
+      }
+      return r
+    }
     // WORKAROUND: has to use B => TypeChecker => AccumulatingReporter instead of () => TypeChecker => AccumulatingReporter
     // due to issues in scalameta macro expansion
     var workList = rootTypes()
@@ -368,18 +389,24 @@ import TypeChecker._
       for (name <- workList) {
         val ti = tc.globalTypeMap.get(name).get
         ti match {
-          case ti: TypeInfo.Sig =>
-            halt("TODO: Check parents have been outlined first")
-            jobs = jobs :+ ((_: B) => tc.checkSigOutline(ti))
-          case ti: TypeInfo.AbstractDatatype =>
-            halt("TODO: Check parents have been outlined first")
-            jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
-          case ti: TypeInfo.Rich =>
-            halt("TODO: Check parents have been outlined first")
-            jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
+          case ti: TypeInfo.Sig if !ti.outlined =>
+            val po = parentsOutlined(ti.name)
+            if (po) {
+              jobs = jobs :+ ((_: B) => tc.checkSigOutline(ti))
+            }
+          case ti: TypeInfo.AbstractDatatype if !ti.outlined =>
+            val po = parentsOutlined(ti.name)
+            if (po) {
+              jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
+            }
+          case ti: TypeInfo.Rich if !ti.outlined =>
+            val po = parentsOutlined(ti.name)
+            if (po) {
+              jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
+            }
           case _ =>
         }
-        for (n <- typeHierarchy.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements) {
+        for (n <- typeHierarchy.poset.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements) {
           l = l :+ n.ids
         }
       }
@@ -559,11 +586,11 @@ import TypeChecker._
                 case Some(ti: TypeInfo.Sig) =>
                 case Some(ti: TypeInfo.AbstractDatatype) =>
                 case Some(ti: TypeInfo.Rich) =>
-                case _ => halt("TODO")
+                case _ =>
               }
-            case _ => halt("TODO")
+            case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich.")
           }
-        case _ => halt("TODO")
+        case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
       }
     }
     halt("TODO")
