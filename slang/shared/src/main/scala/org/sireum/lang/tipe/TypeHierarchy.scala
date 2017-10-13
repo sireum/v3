@@ -44,16 +44,19 @@ object TypeHierarchy {
       return r
     }
 
-    def checkCyclic(reporter: Reporter): Unit = {
-      def dealias(t: AST.Typed.Name): Option[AST.Typed.Name] = {
-        aliases.get(t) match {
-          case Some(t2: AST.Typed.Name) => return dealias(t2)
-          case Some(_) =>
-            reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
-            return None()
-          case _ => return Some(t)
-        }
+    def dealias(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
+      aliases.get(t) match {
+        case Some(t2: AST.Typed.Name) =>
+          val r = dealias(t2, reporter)
+          return r
+        case Some(_) =>
+          reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
+          return None()
+        case _ => return Some(t)
       }
+    }
+
+    def checkCyclic(reporter: Reporter): Unit = {
       var workList = rootTypes
       var temp = ISZ[AST.Typed.Name]()
       var seen = HashSet.empty[AST.Typed.Name]()
@@ -64,7 +67,7 @@ object TypeHierarchy {
           } else {
             seen = seen.add(t)
             for (child <- poset.childrenOf(t).elements) {
-              val dchild = dealias(child)
+              val dchild = dealias(child, reporter)
               dchild match {
                 case Some(childT) => temp = temp :+ childT
                 case _ =>
