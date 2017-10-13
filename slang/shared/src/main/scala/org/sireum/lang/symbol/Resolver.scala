@@ -388,6 +388,7 @@ object Resolver {
     }
 
     @datatype class Sig(name: QName,
+                        outlined: B,
                         specVars: HashMap[String, AST.Stmt.SpecVar],
                         specMethods: HashMap[String, AST.Stmt.SpecMethod],
                         methods: HashMap[String, AST.Stmt.Method],
@@ -405,6 +406,7 @@ object Resolver {
     }
 
     @datatype class AbstractDatatype(name: QName,
+                                     outlined: B,
                                      specVars: HashMap[String, AST.Stmt.SpecVar],
                                      vars: HashMap[String, AST.Stmt.Var],
                                      specMethods: HashMap[String, AST.Stmt.SpecMethod],
@@ -423,6 +425,7 @@ object Resolver {
     }
 
     @datatype class Rich(name: QName,
+                         outlined: B,
                          methods: HashMap[String, AST.Stmt.Method],
                          scope: Scope.Global,
                          ast: AST.Stmt.Rich)

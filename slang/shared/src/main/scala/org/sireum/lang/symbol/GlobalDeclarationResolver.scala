@@ -125,19 +125,19 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         assert(members.vars.isEmpty)
-        declareType("sig", name, TypeInfo.Sig(name, members.specVars,
+        declareType("sig", name, TypeInfo.Sig(name, F, members.specVars,
           members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
-          TypeInfo.AbstractDatatype(name, members.specVars, members.vars, members.specMethods,
+          TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
             members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Rich =>
         val name = currentName :+ stmt.id.value
         val members = resolveMembers(stmt.stmts)
         assert(members.specVars.isEmpty & members.vars.isEmpty & members.specMethods.isEmpty)
-        declareType("rich", name, TypeInfo.Rich(name, members.methods,
+        declareType("rich", name, TypeInfo.Rich(name, F, members.methods,
           scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
