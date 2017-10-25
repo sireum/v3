@@ -679,8 +679,16 @@ object Resolver {
     return (t._1, p._1, p._2)
   }
 
+  @pure def typeParamNameString(s: String): String = {
+    return s"`$s"
+  }
+
   @pure def typeParamName(typeParam: AST.TypeParam): String = {
-    return s"`${typeParam.id.value}"
+    return typeParamNameString(typeParam.id.value)
+  }
+
+  @pure def isTypeParamName(id: String): B = {
+    return id.size > 0 && id.at(0) == '`'
   }
 
   def typeParamMap(typeParams: ISZ[AST.TypeParam],
