@@ -731,11 +731,54 @@ import TypeChecker._
     }
 
     @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
+      var map = HashMap.empty[String, Z]
+      def deBruijn(t: AST.Typed): AST.Typed = {
+        t match {
+          case t: AST.Typed.Name =>
+            if (t.args.nonEmpty) {
+              var args = ISZ[AST.Typed]()
+              for (arg <- t.args) {
+                val ta = deBruijn(arg)
+                args = args :+ ta
+              }
+              return t(args = args)
+            } else if (t.ids.size == 1 && isTypeParamName(t.ids(0).value)) {
+              val k = t.ids(0).value
+              val i: Z = map.get(k) match {
+                case Some(n) => n
+                case _ =>
+                  val n = map.size
+                  map = map.put(k, n)
+                  n
+              }
+              return t(ids = ISZ(typeParamNameString(s"!$i")))
+            } else {
+              return t
+            }
+          case t: AST.Typed.Tuple =>
+            var args = ISZ[AST.Typed]()
+            for (arg <- t.args) {
+              val ta = deBruijn(arg)
+              args = args :+ ta
+            }
+            return t(args = args)
+          case t: AST.Typed.Fun =>
+            var args = ISZ[AST.Typed]()
+            for (arg <- t.args) {
+              val ta = deBruijn(arg)
+              args = args :+ ta
+            }
+            val tr = deBruijn(t.ret)
+            return t(args = args, ret = tr)
+        }
+      }
       var pts = ISZ[AST.Typed]()
       for (p <- m.params) {
-        pts = pts :+ p.tipe.typedOpt.get
+        val t = deBruijn(p.tipe.typedOpt.get)
+        pts = pts :+ t
       }
-      return AST.Typed.Fun(pts, m.returnType.typedOpt.get, m.id.attr.posOpt)
+      val t = deBruijn(m.returnType.typedOpt.get)
+      return AST.Typed.Fun(pts, t, m.id.attr.posOpt)
     }
 
     def checkMethodEquality(m1: AST.Stmt.Method,
