@@ -166,6 +166,23 @@ import TypeChecker._
     }
   }
 
+  def buildSubstMap(name: QName,
+                    posOpt: Option[AST.PosInfo],
+                    typeParams: ISZ[AST.TypeParam],
+                    args: ISZ[AST.Typed],
+                    reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+    if (typeParams.size != args.size) {
+      reporter.error(posOpt, typeCheckerKind, st"Type ${(name, ".")} requires ${typeParams.size} type arguments, but only ${args.size} is supplied.".render)
+      return None()
+    }
+    var substMap = HashMap.empty[String, AST.Typed]
+    for (i <- 0 until args.size) {
+      substMap = substMap.put(typeParamName(typeParams(i)), args(i))
+    }
+    return Some(substMap)
+  }
+
+
   def applyTypeAlias(typed: AST.Typed.Name,
                      ti: TypeInfo.TypeAlias,
                      posOpt: Option[AST.PosInfo],
@@ -173,16 +190,13 @@ import TypeChecker._
     val tm = typeParamMap(ti.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, ti.scope)
     val tOpt = typeCheck(scope, ti.ast.tipe, reporter)
-    if (ti.ast.typeParams.size != typed.args.size) {
-      reporter.error(posOpt, typeCheckerKind, st"Type alias ${(ti.name, ".")} requires ${ti.ast.typeParams.size} type arguments, but ${typed.args.size} is supplied".render)
-      return None()
-    }
-    var substMap = HashMap.empty[String, AST.Typed]
-    for (i <- 0 until typed.args.size) {
-      substMap = substMap.put(typeParamName(ti.ast.typeParams(i)), typed.args(i))
-    }
     tOpt match {
-      case Some(t) => return Some(substType(substMap, t))
+      case Some(t) =>
+        val substMapOpt = buildSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)
+        substMapOpt match {
+          case Some(substMap) => return Some(substType(substMap, t))
+          case _ => return None()
+        }
       case _ => return tOpt
     }
   }
@@ -587,7 +601,7 @@ import TypeChecker._
         case Some((owner, _)) =>
           if (name != tname) {
             reporter.error(posOpt, typeCheckerKind,
-              st"Cannot inherit $id has be previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
           } else {
             reporter.error(posOpt, typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -599,7 +613,7 @@ import TypeChecker._
         case Some((owner, _)) =>
           if (name != tname) {
             reporter.error(posOpt, typeCheckerKind,
-              st"Cannot inherit $id has be previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
           } else {
             reporter.error(posOpt, typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -619,7 +633,7 @@ import TypeChecker._
         case Some((owner, _)) =>
           if (name != tname) {
             reporter.error(posOpt, typeCheckerKind,
-              st"Cannot inherit $id has be previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
           } else {
             reporter.error(posOpt, typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -631,7 +645,7 @@ import TypeChecker._
         case Some((owner, _)) =>
           if (name != tname) {
             reporter.error(posOpt, typeCheckerKind,
-              st"Cannot inherit $id has be previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
           } else {
             reporter.error(posOpt, typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -669,8 +683,36 @@ import TypeChecker._
       }
     }
 
+    def checkMethodEquality(m1: AST.Stmt.Method,
+                            m2: AST.Stmt.Method,
+                            substMap: HashMap[String, AST.Typed]): B = {
+      halt("TODO")
+    }
+
+    def checkMethodCompatibility(m1: AST.Stmt.Method,
+                                 m2: AST.Stmt.Method,
+                                 substMap: HashMap[String, AST.Typed]): B = {
+      halt("TODO")
+    }
+
+    def checkVarCompatibility(m: AST.Stmt.Method,
+                              v: AST.Stmt.Var,
+                              substMap: HashMap[String, AST.Typed]): B = {
+      if (m.sig.typeParams.nonEmpty) {
+        return F
+      }
+      if (m.sig.hasParams || m.sig.params.nonEmpty) {
+        return F
+      }
+      val rt = substType(substMap, m.sig.returnType.typedOpt.get)
+      val t = v.tipeOpt.get.typedOpt.get
+      val r = isSubType(t, rt)
+      return r
+    }
+
     def inheritMethod(p: (QName, AST.Stmt.Method),
-                      posOpt: Option[AST.PosInfo]): Unit = {
+                      posOpt: Option[AST.PosInfo],
+                      substMap: HashMap[String, AST.Typed]): Unit = {
       val id = p._2.sig.id.value
       val tname = p._1
       var ok = checkSpecInherit(id, tname, posOpt)
@@ -678,24 +720,62 @@ import TypeChecker._
         return
       }
       vars.get(id) match {
-        case Some((owner, v)) =>
+        case Some((owner, _)) =>
           if (name != tname) {
-            halt("TODO")
+            reporter.error(posOpt, typeCheckerKind,
+              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
           } else {
-            halt("TODO")
+            reporter.error(posOpt, typeCheckerKind,
+              s"Cannot inherit $id because it has been previously declared.")
           }
+          return
         case _ =>
       }
       methods.get(id) match {
         case Some((owner, m)) =>
+          val pm = p._2
           if (name != tname) {
-            halt("TODO")
+            ok = checkMethodEquality(m, pm, substMap)
+            if (!ok) {
+              reporter.error(posOpt, typeCheckerKind,
+                st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")} with differing type.".render)
+              return
+            }
+            if (pm.bodyOpt.nonEmpty) {
+              if (m.bodyOpt.nonEmpty) {
+                reporter.error(posOpt, typeCheckerKind,
+                  st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")} with their own implementation.".render)
+                return
+              } else {
+                methods = methods.put(id, p)
+              }
+            }
           } else {
-            halt("TODO")
+            ok = checkMethodCompatibility(m, pm, substMap)
+            if (!ok) {
+              reporter.error(posOpt, typeCheckerKind,
+                s"Cannot inherit $id because it has been previously declared with incompatible type.")
+              return
+            }
+            if (pm.bodyOpt.nonEmpty && m.bodyOpt.isEmpty) {
+              reporter.error(posOpt, typeCheckerKind,
+                s"Cannot inherit $id with implementation because it has been previously declared but unimplemented.")
+              return
+            }
           }
         case _ =>
+          vars.get(id) match {
+            case Some((owner, v)) =>
+              val pm = p._2
+              ok = checkVarCompatibility(pm, v, substMap)
+              if (!ok) {
+                reporter.error(posOpt, typeCheckerKind,
+                  s"Cannot inherit $id because it has been previously declared with incompatible type.")
+                return
+              }
+            case _ => methods = methods.put(id, p)
+          }
       }
-      halt("TODO")
     }
 
     for (parent <- parents) {
@@ -707,34 +787,49 @@ import TypeChecker._
             case dt: AST.Typed.Name =>
               globalTypeMap.get(dt.ids) match {
                 case Some(ti: TypeInfo.Sig) =>
-                  for (p <- ti.specVars.values) {
-                    inheritSpecVar(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.specMethods.values) {
-                    inheritSpecMethod(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.methods.values) {
-                    inheritMethod(p, parent.attr.posOpt)
+                  val substMapOpt = buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
+                  substMapOpt match {
+                    case Some(substMap) =>
+                      for (p <- ti.specVars.values) {
+                        inheritSpecVar(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.specMethods.values) {
+                        inheritSpecMethod(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.methods.values) {
+                        inheritMethod(p, parent.attr.posOpt, substMap)
+                      }
+                    case _ =>
                   }
                 case Some(ti: TypeInfo.AbstractDatatype) =>
-                  for (p <- ti.specVars.values) {
-                    inheritSpecVar(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.vars.values) {
-                    inheritVar(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.specMethods.values) {
-                    inheritSpecMethod(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.methods.values) {
-                    inheritMethod(p, parent.attr.posOpt)
+                  val substMapOpt = buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
+                  substMapOpt match {
+                    case Some(substMap) =>
+                      for (p <- ti.specVars.values) {
+                        inheritSpecVar(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.vars.values) {
+                        inheritVar(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.specMethods.values) {
+                        inheritSpecMethod(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.methods.values) {
+                        inheritMethod(p, parent.attr.posOpt, substMap)
+                      }
+                    case _ =>
                   }
                 case Some(ti: TypeInfo.Rich) =>
-                  for (p <- ti.specMethods.values) {
-                    inheritSpecMethod(p, parent.attr.posOpt)
-                  }
-                  for (p <- ti.methods.values) {
-                    inheritMethod(p, parent.attr.posOpt)
+                  val substMapOpt = buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
+                  substMapOpt match {
+                    case Some(substMap) =>
+                      for (p <- ti.specMethods.values) {
+                        inheritSpecMethod(p, parent.attr.posOpt)
+                      }
+                      for (p <- ti.methods.values) {
+                        inheritMethod(p, parent.attr.posOpt, substMap)
+                      }
+                    case _ =>
                   }
                 case _ =>
               }
