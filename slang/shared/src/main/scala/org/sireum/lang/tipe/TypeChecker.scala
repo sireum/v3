@@ -51,6 +51,122 @@ object TypeChecker {
       case t: AST.Typed.Fun => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)), ret = substType(m, t.ret))
     }
   }
+
+  def buildSubstMap(name: QName,
+                    posOpt: Option[AST.PosInfo],
+                    typeParams: ISZ[AST.TypeParam],
+                    args: ISZ[AST.Typed],
+                    reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+    if (typeParams.size != args.size) {
+      reporter.error(posOpt, typeCheckerKind, st"Type ${(name, ".")} requires ${typeParams.size} type arguments, but only ${args.size} is supplied.".render)
+      return None()
+    }
+    var substMap = HashMap.empty[String, AST.Typed]
+    for (i <- 0 until args.size) {
+      substMap = substMap.put(typeParamName(typeParams(i)), args(i))
+    }
+    return Some(substMap)
+  }
+
+  @pure def isEqType(t1: AST.Typed, t2: AST.Typed): B = {
+    (t1, t2) match {
+      case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (t1.ids != t2.ids) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case (t1: AST.Typed.Tuple, t2: AST.Typed.Tuple) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (!isEqType(t1.ret, t2.ret)) {
+          return F
+        }
+        for (i <- 0 until t1.args.size) {
+          if (!isEqType(t1.args(i), t2.args(i))) {
+            return F
+          }
+        }
+        return T
+      case _ => return F
+    }
+  }
+
+  @pure def deBruijn(t: AST.Typed): AST.Typed = {
+    var map = HashMap.empty[String, Z]
+    def db(t: AST.Typed): AST.Typed = {
+      t match {
+        case t: AST.Typed.Name =>
+          if (t.args.nonEmpty) {
+            var args = ISZ[AST.Typed]()
+            for (arg <- t.args) {
+              val ta = db(arg)
+              args = args :+ ta
+            }
+            return t(args = args)
+          } else if (t.ids.size == 1 && isTypeParamNameString(t.ids(0).value)) {
+            val k = t.ids(0).value
+            val i: Z = map.get(k) match {
+              case Some(n) => n
+              case _ =>
+                val n = map.size
+                map = map.put(k, n)
+                n
+            }
+            return t(ids = ISZ(typeParamNameString(s"!$i")))
+          } else {
+            return t
+          }
+        case t: AST.Typed.Tuple =>
+          var args = ISZ[AST.Typed]()
+          for (arg <- t.args) {
+            val ta = db(arg)
+            args = args :+ ta
+          }
+          return t(args = args)
+        case t: AST.Typed.Fun =>
+          var args = ISZ[AST.Typed]()
+          for (arg <- t.args) {
+            val ta = db(arg)
+            args = args :+ ta
+          }
+          val tr = db(t.ret)
+          return t(args = args, ret = tr)
+      }
+    }
+    val r = db(t)
+    return r
+  }
+
+  @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
+    var pts = ISZ[AST.Typed]()
+    for (p <- m.params) {
+      pts = pts :+ p.tipe.typedOpt.get
+    }
+    val t = deBruijn(AST.Typed.Fun(pts, m.returnType.typedOpt.get, m.id.attr.posOpt))
+    t match {
+      case t: AST.Typed.Fun => return t
+      case _ => halt("Infeasible")
+    }
+  }
 }
 
 import TypeChecker._
@@ -150,23 +266,6 @@ import TypeChecker._
     }
   }
 
-  def buildSubstMap(name: QName,
-                    posOpt: Option[AST.PosInfo],
-                    typeParams: ISZ[AST.TypeParam],
-                    args: ISZ[AST.Typed],
-                    reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
-    if (typeParams.size != args.size) {
-      reporter.error(posOpt, typeCheckerKind, st"Type ${(name, ".")} requires ${typeParams.size} type arguments, but only ${args.size} is supplied.".render)
-      return None()
-    }
-    var substMap = HashMap.empty[String, AST.Typed]
-    for (i <- 0 until args.size) {
-      substMap = substMap.put(typeParamName(typeParams(i)), args(i))
-    }
-    return Some(substMap)
-  }
-
-
   def applyTypeAlias(typed: AST.Typed.Name,
                      ti: TypeInfo.TypeAlias,
                      posOpt: Option[AST.PosInfo],
@@ -249,48 +348,6 @@ import TypeChecker._
 
     val rOpt = dealiasOpt(typed)
     return rOpt.getOrElse(typed)
-  }
-
-  @pure def isEqType(t1: AST.Typed, t2: AST.Typed): B = {
-    (t1, t2) match {
-      case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        if (t1.ids != t2.ids) {
-          return F
-        }
-        for (i <- 0 until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case (t1: AST.Typed.Tuple, t2: AST.Typed.Tuple) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        for (i <- 0 until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        if (!isEqType(t1.ret, t2.ret)) {
-          return F
-        }
-        for (i <- 0 until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case _ => return F
-    }
   }
 
   @pure def isRefinement(t1: AST.Typed, t2: AST.Typed): B = {
@@ -786,59 +843,6 @@ import TypeChecker._
       }
     }
 
-    @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
-      var map = HashMap.empty[String, Z]
-
-      def deBruijn(t: AST.Typed): AST.Typed = {
-        t match {
-          case t: AST.Typed.Name =>
-            if (t.args.nonEmpty) {
-              var args = ISZ[AST.Typed]()
-              for (arg <- t.args) {
-                val ta = deBruijn(arg)
-                args = args :+ ta
-              }
-              return t(args = args)
-            } else if (t.ids.size == 1 && isTypeParamNameString(t.ids(0).value)) {
-              val k = t.ids(0).value
-              val i: Z = map.get(k) match {
-                case Some(n) => n
-                case _ =>
-                  val n = map.size
-                  map = map.put(k, n)
-                  n
-              }
-              return t(ids = ISZ(typeParamNameString(s"!$i")))
-            } else {
-              return t
-            }
-          case t: AST.Typed.Tuple =>
-            var args = ISZ[AST.Typed]()
-            for (arg <- t.args) {
-              val ta = deBruijn(arg)
-              args = args :+ ta
-            }
-            return t(args = args)
-          case t: AST.Typed.Fun =>
-            var args = ISZ[AST.Typed]()
-            for (arg <- t.args) {
-              val ta = deBruijn(arg)
-              args = args :+ ta
-            }
-            val tr = deBruijn(t.ret)
-            return t(args = args, ret = tr)
-        }
-      }
-
-      var pts = ISZ[AST.Typed]()
-      for (p <- m.params) {
-        val t = deBruijn(p.tipe.typedOpt.get)
-        pts = pts :+ t
-      }
-      val t = deBruijn(m.returnType.typedOpt.get)
-      return AST.Typed.Fun(pts, t, m.id.attr.posOpt)
-    }
-
     def checkMethodEquality(m1: AST.Stmt.Method,
                             m2: AST.Stmt.Method,
                             substMap: HashMap[String, AST.Typed],
@@ -1018,7 +1022,7 @@ import TypeChecker._
     return TypeInfo.Members(specVars, vars, specMethods, methods)
   }
 
-  @pure def checkScript(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+  @pure def checkProgram(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("TODO")
   }
 
