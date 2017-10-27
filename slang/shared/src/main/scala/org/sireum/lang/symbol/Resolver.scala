@@ -687,8 +687,19 @@ object Resolver {
     return typeParamNameString(typeParam.id.value)
   }
 
-  @pure def isTypeParamName(id: String): B = {
+  @pure def isTypeParamNameString(id: String): B = {
     return id.size > 0 && id.at(0) == '`'
+  }
+
+  @pure def isTypeParamName(name: QName): B = {
+    return name.size == 1 && isTypeParamNameString(name(0))
+  }
+
+  @pure def isTypeParam(t: AST.Typed): B = {
+    t match {
+      case t: AST.Typed.Name => return t.args == 0 && isTypeParamName(t.ids)
+      case _ => return F
+    }
   }
 
   def typeParamMap(typeParams: ISZ[AST.TypeParam],
