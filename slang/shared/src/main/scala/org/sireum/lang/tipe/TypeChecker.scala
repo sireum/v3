@@ -571,7 +571,7 @@ import TypeChecker._
     val reporter = AccumulatingReporter.create
     var tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
-    var members = checkMembersOutline(
+    var members = checkMembersOutline(T, info.name,
       TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
     halt("TODO")
@@ -581,7 +581,7 @@ import TypeChecker._
     val reporter = AccumulatingReporter.create
     var tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
-    var members = checkMembersOutline(
+    var members = checkMembersOutline(info.ast.isRoot, info.name,
       TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
     halt("TODO")
@@ -591,14 +591,131 @@ import TypeChecker._
     val reporter = AccumulatingReporter.create
     var tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
-    var members = checkMembersOutline(
+    var members = checkMembersOutline(info.ast.isRoot, info.name,
       TypeInfo.Members(HashMap.empty, HashMap.empty, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
     halt("TODO")
   }
 
-  def checkMembersOutline(info: TypeInfo.Members, scope: Scope, reporter: Reporter): TypeInfo.Members = {
-    halt("TODO")
+  def checkMembersOutline(isAbstract: B,
+                          name: QName,
+                          info: TypeInfo.Members,
+                          scope: Scope,
+                          reporter: Reporter): TypeInfo.Members = {
+    var specVars = info.specVars
+    var vars = info.vars
+    var specMethods = info.specMethods
+    var methods = info.methods
+
+    def isDeclared(id: String): B = {
+      return specVars.contains(id) || vars.contains(id) || specMethods.contains(id) || methods.contains(id)
+    }
+
+    def checkSpecVar(sv: AST.Stmt.SpecVar): Unit = {
+      val id = sv.id.value
+      if (isDeclared(id)) {
+        reporter.error(sv.attr.posOpt, typeCheckerKind,
+          s"Cannot redeclare $id.")
+        return
+      }
+      val tOpt = typeCheck(scope, sv.tipe, reporter)
+      tOpt match {
+        case Some(t) => specVars = specVars.put(id, (name, sv(tipe = sv.tipe.typed(t))))
+        case _ =>
+      }
+    }
+
+    def checkVar(v: AST.Stmt.Var): Unit = {
+      val id = v.id.value
+      if (isDeclared(id)) {
+        reporter.error(v.attr.posOpt, typeCheckerKind,
+          s"Cannot redeclare $id.")
+        return
+      }
+      val tpe = v.tipeOpt.get
+      val tOpt = typeCheck(scope, tpe, reporter)
+      tOpt match {
+        case Some(t) =>
+          vars = vars.put(id, (name, v(tipeOpt = Some(tpe.typed(t)))))
+        case _ =>
+      }
+
+    }
+
+    def checkMethodSig(sig: AST.MethodSig): Option[AST.MethodSig] = {
+      val id = sig.id.value
+      if (isDeclared(id)) {
+        reporter.error(sig.id.attr.posOpt, typeCheckerKind,
+          s"Cannot redeclare $id.")
+        return None()
+      }
+      val typeParams = sig.typeParams
+      for (tp <- typeParams) {
+        scope.resolveType(globalTypeMap, ISZ(tp.id.value)) match {
+          case Some(ti) if isTypeParamName(ti.name) =>
+            reporter.error(tp.id.attr.posOpt, typeCheckerKind,
+              s"Cannot redeclare type parameter $id.")
+            return None()
+          case _ =>
+        }
+      }
+      var tm = typeParamMap(typeParams, reporter)
+      val mScope = localTypeScope(tm.map, scope)
+      var params = ISZ[AST.Param]()
+      for (p <- sig.params) {
+        var prm = p
+        val tOpt = typeCheck(mScope, p.tipe, reporter)
+        tOpt match {
+          case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
+          case _ => return None()
+        }
+      }
+      val tOpt = typeCheck(mScope, sig.returnType, reporter)
+      tOpt match {
+        case Some(t) => return Some(sig(params = params, returnType = sig.returnType.typed(t)))
+        case _ => return None()
+      }
+    }
+
+    def checkSpecMethod(sm: AST.Stmt.SpecMethod): Unit = {
+      val sigOpt = checkMethodSig(sm.sig)
+      sigOpt match {
+        case Some(sig) => specMethods = specMethods.put(sm.sig.id.value, (name, sm(sig = sig)))
+        case _ =>
+      }
+    }
+
+    def checkMethod(m: AST.Stmt.Method): Unit = {
+      val id = m.sig.id.value
+      if (!isAbstract && m.bodyOpt.isEmpty) {
+        reporter.error(m.sig.id.attr.posOpt, typeCheckerKind,
+          s"Method $id has to be implemented.")
+        return
+      }
+      val sigOpt = checkMethodSig(m.sig)
+      sigOpt match {
+        case Some(sig) => methods = methods.put(id, (name, m(sig = sig)))
+        case _ =>
+      }
+    }
+
+    for (p <- specVars.values) {
+      checkSpecVar(p._2)
+    }
+
+    for (p <- vars.values) {
+      checkVar(p._2)
+    }
+
+    for (p <- specMethods.values) {
+      checkSpecMethod(p._2)
+    }
+
+    for (p <- methods.values) {
+      checkMethod(p._2)
+    }
+
+    return TypeInfo.Members(specVars, vars, specMethods, methods)
   }
 
   def inheritMembersOutline(name: QName,
@@ -610,7 +727,6 @@ import TypeChecker._
     var vars = info.vars
     var specMethods = info.specMethods
     var methods = info.methods
-    var parentImplMethods = HashSet.empty[String]
 
     def checkSpecInherit(id: String, tname: QName, posOpt: Option[AST.PosInfo]): B = {
       specVars.get(id) match {
@@ -732,6 +848,7 @@ import TypeChecker._
 
     @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
       var map = HashMap.empty[String, Z]
+
       def deBruijn(t: AST.Typed): AST.Typed = {
         t match {
           case t: AST.Typed.Name =>
@@ -742,7 +859,7 @@ import TypeChecker._
                 args = args :+ ta
               }
               return t(args = args)
-            } else if (t.ids.size == 1 && isTypeParamName(t.ids(0).value)) {
+            } else if (t.ids.size == 1 && isTypeParamNameString(t.ids(0).value)) {
               val k = t.ids(0).value
               val i: Z = map.get(k) match {
                 case Some(n) => n
@@ -772,6 +889,7 @@ import TypeChecker._
             return t(args = args, ret = tr)
         }
       }
+
       var pts = ISZ[AST.Typed]()
       for (p <- m.params) {
         val t = deBruijn(p.tipe.typedOpt.get)
@@ -790,19 +908,19 @@ import TypeChecker._
       return isEqType(t1, t2)
     }
 
-    def checkMethodCompatibility(m: AST.Stmt.Method,
-                                 supM: AST.Stmt.Method,
-                                 substMap: HashMap[String, AST.Typed],
-                                 posOpt: Option[AST.PosInfo]): B = {
+    def checkMethodRefinement(m: AST.Stmt.Method,
+                              supM: AST.Stmt.Method,
+                              substMap: HashMap[String, AST.Typed],
+                              posOpt: Option[AST.PosInfo]): B = {
       val t1 = dealias(extractMethodType(m.sig), posOpt, reporter)
       val t2 = dealias(substType(substMap, extractMethodType(supM.sig)), posOpt, reporter)
       return isRefinement(t1, t2)
     }
 
-    def checkVarCompatibility(m: AST.Stmt.Method,
-                              v: AST.Stmt.Var,
-                              substMap: HashMap[String, AST.Typed],
-                              posOpt: Option[AST.PosInfo]): B = {
+    def checkVarRefinement(m: AST.Stmt.Method,
+                           v: AST.Stmt.Var,
+                           substMap: HashMap[String, AST.Typed],
+                           posOpt: Option[AST.PosInfo]): B = {
       if (m.sig.typeParams.nonEmpty) {
         return F
       }
@@ -857,7 +975,7 @@ import TypeChecker._
               }
             }
           } else {
-            ok = checkMethodCompatibility(m, pm, substMap, posOpt)
+            ok = checkMethodRefinement(m, pm, substMap, posOpt)
             if (!ok) {
               reporter.error(posOpt, typeCheckerKind,
                 s"Cannot inherit $id because it has been previously declared with incompatible type.")
@@ -872,7 +990,7 @@ import TypeChecker._
         case _ =>
           vars.get(id) match {
             case Some((owner, v)) =>
-              ok = checkVarCompatibility(pm, v, substMap, posOpt)
+              ok = checkVarRefinement(pm, v, substMap, posOpt)
               if (!ok) {
                 reporter.error(posOpt, typeCheckerKind,
                   s"Cannot inherit $id because it has been previously declared with incompatible type.")
