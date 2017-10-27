@@ -112,6 +112,7 @@ object TypeChecker {
 
   @pure def deBruijn(t: AST.Typed): AST.Typed = {
     var map = HashMap.empty[String, Z]
+
     def db(t: AST.Typed): AST.Typed = {
       t match {
         case t: AST.Typed.Name =>
@@ -152,6 +153,7 @@ object TypeChecker {
           return t(args = args, ret = tr)
       }
     }
+
     val r = db(t)
     return r
   }
@@ -481,66 +483,77 @@ import TypeChecker._
     return r._1
   }
 
-  @pure def checkObjectOutline(ast: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+  def checkSpecVarOutline(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
+    val sv = info.ast
+    val id = sv.id.value
+    val tOpt = typeCheck(info.scope, sv.tipe, reporter)
+    tOpt match {
+      case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
+      case _ => return None()
+    }
+  }
+
+  def checkVarOutline(info: Info.Var, reporter: Reporter): Option[Info] = {
+    val v = info.ast
+    val id = v.id.value
+    val tpe = v.tipeOpt.get
+    val tOpt = typeCheck(info.scope, tpe, reporter)
+    tOpt match {
+      case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
+      case _ => return None()
+    }
+  }
+
+  def checkSpecMethodOutline(info: Info.SpecMethod, reporter: Reporter): Option[Info] = {
+    val sm = info.ast
+    val id = sm.sig.id.value
+    val sigOpt = checkMethodSigOutline(info.scope, sm.sig, reporter)
+    sigOpt match {
+      case Some(sig) => return Some(info(ast = sm(sig = sig)))
+      case _ => return None()
+    }
+  }
+
+  def checkMethodOutline(info: Info.Method, reporter: Reporter): Option[Info] = {
+    val m = info.ast
+    val id = m.sig.id.value
+    val sigOpt = checkMethodSigOutline(info.scope, m.sig, reporter)
+    sigOpt match {
+      case Some(sig) => return Some(info(ast = m(sig = sig)))
+      case _ => return None()
+    }
+  }
+
+  @pure def checkObjectOutline(info: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
 
-    def checkSpecVar(info: Info.SpecVar): Option[Info] = {
-      val sv = info.ast
-      val id = sv.id.value
-      val tOpt = typeCheck(info.scope, sv.tipe, reporter)
-      tOpt match {
-        case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
-        case _ => return None()
-      }
-    }
-
-    def checkVar(info: Info.Var): Option[Info] = {
-      val v = info.ast
-      val id = v.id.value
-      val tpe = v.tipeOpt.get
-      val tOpt = typeCheck(info.scope, tpe, reporter)
-      tOpt match {
-        case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
-        case _ => return None()
-      }
-    }
-
-    def checkSpecMethod(info: Info.SpecMethod): Option[Info] = {
-      val sm = info.ast
-      val id = sm.sig.id.value
-      val sigOpt = checkMethodSigOutline(info.scope, sm.sig, reporter)
-      sigOpt match {
-        case Some(sig) => return Some(info(ast = sm(sig = sig)))
-        case _ => return None()
-      }
-    }
-
-    def checkMethod(info: Info.Method): Option[Info] = {
-      val m = info.ast
-      val id = m.sig.id.value
-      val sigOpt = checkMethodSigOutline(info.scope, m.sig, reporter)
-      sigOpt match {
-        case Some(sig) => return Some(info(ast = m(sig = sig)))
-        case _ => return None()
-      }
-    }
-
-    var gnm = globalNameMap
-    for (info <- gnm.values) {
-      val infoOpt: Option[Info] = info match {
-        case info: Info.SpecVar => val rOpt = checkSpecVar(info); rOpt
-        case info: Info.Var => val rOpt = checkVar(info); rOpt
-        case info: Info.SpecMethod => val rOpt = checkSpecMethod(info); rOpt
-        case info: Info.Method => val rOpt = checkMethod(info); rOpt
+    var infos = ISZ[(QName, Info)]()
+    for (stmt <- info.ast.stmts) {
+      val idOpt: Option[String] = stmt match {
+        case stmt: AST.Stmt.SpecVar => Some(stmt.id.value)
+        case stmt: AST.Stmt.Var => Some(stmt.id.value)
+        case stmt: AST.Stmt.SpecMethod => Some(stmt.sig.id.value)
+        case stmt: AST.Stmt.Method => Some(stmt.sig.id.value)
         case _ => None()
       }
-      infoOpt match {
-        case Some(inf) => gnm = gnm.put(inf.name, inf)
+      idOpt match {
+        case Some(id) =>
+          val infoOpt: Option[Info] = globalNameMap.get(info.name :+ id).get match {
+            case inf: Info.SpecVar => val rOpt = checkSpecVarOutline(inf, reporter); rOpt
+            case inf: Info.Var => val rOpt = checkVarOutline(inf, reporter); rOpt
+            case inf: Info.SpecMethod => val rOpt = checkSpecMethodOutline(inf, reporter); rOpt
+            case inf: Info.Method => val rOpt = checkMethodOutline(inf, reporter); rOpt
+            case _ => None()
+          }
+          infoOpt match {
+            case Some(inf) => infos = infos :+ ((inf.name, inf))
+            case _ =>
+          }
         case _ =>
       }
     }
 
-    return (tc: TypeChecker) => (tc(globalNameMap = gnm), reporter)
+    return (tc: TypeChecker) => (tc(globalNameMap = tc.globalNameMap.putAll(infos)), reporter)
   }
 
   @pure def checkSigOutline(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
