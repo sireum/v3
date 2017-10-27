@@ -37,22 +37,6 @@ object TypeChecker {
   val typeCheckerKind: String = "Type Checker"
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
 
-  @datatype class TypeConstructor(parameters: ISZ[String],
-                                  tipe: AST.Typed) {
-    def construct(args: Map[String, AST.Typed]): AST.Typed = {
-      var m = HashMap.empty[String, AST.Typed]
-      for (p <- parameters) {
-        args.get(p) match {
-          case Some(argType) =>
-            m = m.put(p, argType)
-          case _ =>
-            halt(s"Could not find argument for type parameter '$p'.")
-        }
-      }
-      return substType(m, tipe)
-    }
-  }
-
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
     t match {
       case t: AST.Typed.Name =>
@@ -344,34 +328,6 @@ import TypeChecker._
     }
   }
 
-  @memoize def applyType(isSpec: B,
-                         fqName: QName,
-                         typeArgs: Map[String, AST.Typed],
-                         argTypes: ISZ[AST.Typed]): (AST.Typed, AccumulatingReporter) = {
-    halt("TODO")
-  }
-
-  @memoize def applyTypeNamed(isSpec: B,
-                              fqName: QName,
-                              typeArgs: Map[String, AST.Typed],
-                              argTypes: Map[String, AST.Typed]): (AST.Typed, AccumulatingReporter) = {
-    halt("TODO")
-  }
-
-  @memoize def typeOfGlobalName(isSpec: B,
-                                fqName: QName,
-                                typeArgs: Map[String, AST.Typed]): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
-  }
-
-  @memoize def memberType(isSpec: B,
-                          fqName: QName,
-                          typeArgs: Map[String, AST.Typed],
-                          member: String,
-                          memberTypeArgs: Map[String, AST.Typed]): (TypeConstructor, AccumulatingReporter) = {
-    halt("TODO")
-  }
-
   @pure def rootTypes(): ISZ[QName] = {
     var r = ISZ[QName]()
     for (p <- typeHierarchy.poset.parents.entries) {
@@ -466,101 +422,6 @@ import TypeChecker._
         (this, AccumulatingReporter.create))
     reporter.reports(r._2.messages)
     return r._1
-  }
-
-  def checkVarType(typeParams: ISZ[AST.TypeParam],
-                   info: Info.Var,
-                   reporter: Reporter): Info.Var = {
-    var r = info
-    r.ast.tipeOpt match {
-      case Some(t) =>
-        val tm = typeParamMap(typeParams, reporter)
-        val scope = localTypeScope(tm.map, r.scope)
-        val typedOpt = typeCheck(scope, t, reporter)
-        typedOpt match {
-          case Some(typed) =>
-            up(r.ast.tipeOpt) = Some(t.typed(typed))
-            return r
-          case _ =>
-        }
-      case _ =>
-    }
-    return r
-  }
-
-  def checkSpecVarType(typeParams: ISZ[AST.TypeParam],
-                       info: Info.SpecVar,
-                       reporter: Reporter): Info.SpecVar = {
-    var r = info
-    val tm = typeParamMap(typeParams, reporter)
-    val scope = localTypeScope(tm.map, info.scope)
-    val typedOpt = typeCheck(scope, r.ast.tipe, reporter)
-    typedOpt match {
-      case Some(typed) =>
-        up(r.ast.tipe) = r.ast.tipe.typed(typed)
-        return r
-      case _ =>
-    }
-    return r
-  }
-
-  def checkMethodSigType(typeParams: ISZ[AST.TypeParam],
-                         sigScope: Scope,
-                         sig: AST.MethodSig,
-                         reporter: Reporter): Option[AST.MethodSig] = {
-    var tm = typeParamMap(typeParams, reporter)
-    tm = typeParamMapInit(sig.typeParams, tm, reporter)
-    val scope = localTypeScope(tm.map, sigScope)
-    val retOpt = typeCheck(scope, sig.returnType, reporter)
-    var hasError = retOpt.isEmpty
-    var params = ISZ[AST.Param]()
-    for (p <- sig.params) {
-      val tOpt = typeCheck(scope, p.tipe, reporter)
-      tOpt match {
-        case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
-        case _ => hasError = T
-      }
-    }
-    if (hasError) {
-      return None()
-    }
-    return Some(sig(params = params, returnType = sig.returnType.typed(retOpt.get)))
-  }
-
-  def checkSpecMethodType(typeParams: ISZ[AST.TypeParam],
-                          info: Info.SpecMethod,
-                          reporter: Reporter): Info.SpecMethod = {
-    var r = info
-    val sigOpt = checkMethodSigType(typeParams, info.scope, info.ast.sig, reporter)
-    sigOpt match {
-      case Some(sig) => up(r.ast.sig) = sig
-      case _ =>
-    }
-    return r
-  }
-
-  def checkExtMethodType(typeParams: ISZ[AST.TypeParam],
-                         info: Info.ExtMethod,
-                         reporter: Reporter): Info.ExtMethod = {
-    var r = info
-    val sigOpt = checkMethodSigType(typeParams, info.scope, info.ast.sig, reporter)
-    sigOpt match {
-      case Some(sig) => up(r.ast.sig) = sig
-      case _ =>
-    }
-    return r
-  }
-
-  def checkMethodType(typeParams: ISZ[AST.TypeParam],
-                      info: Info.Method,
-                      reporter: Reporter): Info.Method = {
-    var r = info
-    val sigOpt = checkMethodSigType(typeParams, info.scope, info.ast.sig, reporter)
-    sigOpt match {
-      case Some(sig) => up(r.ast.sig) = sig
-      case _ =>
-    }
-    return r
   }
 
   @pure def checkObjectOutline(ast: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
