@@ -564,7 +564,65 @@ import TypeChecker._
   }
 
   @pure def checkObjectOutline(ast: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
-    halt("TODO")
+    val reporter = AccumulatingReporter.create
+
+    def checkSpecVar(info: Info.SpecVar): Option[Info] = {
+      val sv = info.ast
+      val id = sv.id.value
+      val tOpt = typeCheck(info.scope, sv.tipe, reporter)
+      tOpt match {
+        case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
+        case _ => return None()
+      }
+    }
+
+    def checkVar(info: Info.Var): Option[Info] = {
+      val v = info.ast
+      val id = v.id.value
+      val tpe = v.tipeOpt.get
+      val tOpt = typeCheck(info.scope, tpe, reporter)
+      tOpt match {
+        case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
+        case _ => return None()
+      }
+    }
+
+    def checkSpecMethod(info: Info.SpecMethod): Option[Info] = {
+      val sm = info.ast
+      val id = sm.sig.id.value
+      val sigOpt = checkMethodSigOutline(info.scope, sm.sig, reporter)
+      sigOpt match {
+        case Some(sig) => return Some(info(ast = sm(sig = sig)))
+        case _ => return None()
+      }
+    }
+
+    def checkMethod(info: Info.Method): Option[Info] = {
+      val m = info.ast
+      val id = m.sig.id.value
+      val sigOpt = checkMethodSigOutline(info.scope, m.sig, reporter)
+      sigOpt match {
+        case Some(sig) => return Some(info(ast = m(sig = sig)))
+        case _ => return None()
+      }
+    }
+
+    var gnm = globalNameMap
+    for (info <- gnm.values) {
+      val infoOpt: Option[Info] = info match {
+        case info: Info.SpecVar => val rOpt = checkSpecVar(info); rOpt
+        case info: Info.Var => val rOpt = checkVar(info); rOpt
+        case info: Info.SpecMethod => val rOpt = checkSpecMethod(info); rOpt
+        case info: Info.Method => val rOpt = checkMethod(info); rOpt
+        case _ => None()
+      }
+      infoOpt match {
+        case Some(inf) => gnm = gnm.put(inf.name, inf)
+        case _ =>
+      }
+    }
+
+    return (tc: TypeChecker) => (tc(globalNameMap = gnm), reporter)
   }
 
   @pure def checkSigOutline(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
@@ -574,7 +632,13 @@ import TypeChecker._
     var members = checkMembersOutline(T, info.name,
       TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
-    halt("TODO")
+    val specVars = members.specVars
+    val specMethods = members.specMethods
+    val methods = members.methods
+    return (tc: TypeChecker) =>
+      (tc(globalTypeMap =
+        tc.globalTypeMap.put(info.name,
+          info(specVars = specVars, specMethods = specMethods, methods = methods))), reporter)
   }
 
   @pure def checkAdtOutline(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
@@ -584,7 +648,14 @@ import TypeChecker._
     var members = checkMembersOutline(info.ast.isRoot, info.name,
       TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
-    halt("TODO")
+    val specVars = members.specVars
+    val vars = members.vars
+    val specMethods = members.specMethods
+    val methods = members.methods
+    return (tc: TypeChecker) =>
+      (tc(globalTypeMap =
+        tc.globalTypeMap.put(info.name,
+          info(specVars = specVars, vars = vars, specMethods = specMethods, methods = methods))), reporter)
   }
 
   @pure def checkRichOutline(info: TypeInfo.Rich): TypeChecker => (TypeChecker, AccumulatingReporter) = {
@@ -594,8 +665,46 @@ import TypeChecker._
     var members = checkMembersOutline(info.ast.isRoot, info.name,
       TypeInfo.Members(HashMap.empty, HashMap.empty, info.specMethods, info.methods), scope, reporter)
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
-    halt("TODO")
+    val specMethods = members.specMethods
+    val methods = members.methods
+    return (tc: TypeChecker) =>
+      (tc(globalTypeMap =
+        tc.globalTypeMap.put(info.name,
+          info(specMethods = specMethods, methods = methods))), reporter)
   }
+
+  def checkMethodSigOutline(scope: Scope,
+                            sig: AST.MethodSig,
+                            reporter: Reporter): Option[AST.MethodSig] = {
+    val id = sig.id.value
+    val typeParams = sig.typeParams
+    for (tp <- typeParams) {
+      scope.resolveType(globalTypeMap, ISZ(tp.id.value)) match {
+        case Some(ti) if isTypeParamName(ti.name) =>
+          reporter.error(tp.id.attr.posOpt, typeCheckerKind,
+            s"Cannot redeclare type parameter $id.")
+          return None()
+        case _ =>
+      }
+    }
+    var tm = typeParamMap(typeParams, reporter)
+    val mScope = localTypeScope(tm.map, scope)
+    var params = ISZ[AST.Param]()
+    for (p <- sig.params) {
+      var prm = p
+      val tOpt = typeCheck(mScope, p.tipe, reporter)
+      tOpt match {
+        case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
+        case _ => return None()
+      }
+    }
+    val tOpt = typeCheck(mScope, sig.returnType, reporter)
+    tOpt match {
+      case Some(t) => return Some(sig(params = params, returnType = sig.returnType.typed(t)))
+      case _ => return None()
+    }
+  }
+
 
   def checkMembersOutline(isAbstract: B,
                           name: QName,
@@ -639,60 +748,30 @@ import TypeChecker._
           vars = vars.put(id, (name, v(tipeOpt = Some(tpe.typed(t)))))
         case _ =>
       }
-
-    }
-
-    def checkMethodSig(sig: AST.MethodSig): Option[AST.MethodSig] = {
-      val id = sig.id.value
-      if (isDeclared(id)) {
-        reporter.error(sig.id.attr.posOpt, typeCheckerKind,
-          s"Cannot redeclare $id.")
-        return None()
-      }
-      val typeParams = sig.typeParams
-      for (tp <- typeParams) {
-        scope.resolveType(globalTypeMap, ISZ(tp.id.value)) match {
-          case Some(ti) if isTypeParamName(ti.name) =>
-            reporter.error(tp.id.attr.posOpt, typeCheckerKind,
-              s"Cannot redeclare type parameter $id.")
-            return None()
-          case _ =>
-        }
-      }
-      var tm = typeParamMap(typeParams, reporter)
-      val mScope = localTypeScope(tm.map, scope)
-      var params = ISZ[AST.Param]()
-      for (p <- sig.params) {
-        var prm = p
-        val tOpt = typeCheck(mScope, p.tipe, reporter)
-        tOpt match {
-          case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
-          case _ => return None()
-        }
-      }
-      val tOpt = typeCheck(mScope, sig.returnType, reporter)
-      tOpt match {
-        case Some(t) => return Some(sig(params = params, returnType = sig.returnType.typed(t)))
-        case _ => return None()
-      }
     }
 
     def checkSpecMethod(sm: AST.Stmt.SpecMethod): Unit = {
-      val sigOpt = checkMethodSig(sm.sig)
+      val id = sm.sig.id.value
+      if (isDeclared(id)) {
+        reporter.error(sm.sig.id.attr.posOpt, typeCheckerKind,
+          s"Cannot redeclare $id.")
+        return
+      }
+      val sigOpt = checkMethodSigOutline(scope, sm.sig, reporter)
       sigOpt match {
-        case Some(sig) => specMethods = specMethods.put(sm.sig.id.value, (name, sm(sig = sig)))
+        case Some(sig) => specMethods = specMethods.put(id, (name, sm(sig = sig)))
         case _ =>
       }
     }
 
     def checkMethod(m: AST.Stmt.Method): Unit = {
       val id = m.sig.id.value
-      if (!isAbstract && m.bodyOpt.isEmpty) {
+      if (isDeclared(id)) {
         reporter.error(m.sig.id.attr.posOpt, typeCheckerKind,
-          s"Method $id has to be implemented.")
+          s"Cannot redeclare $id.")
         return
       }
-      val sigOpt = checkMethodSig(m.sig)
+      val sigOpt = checkMethodSigOutline(scope, m.sig, reporter)
       sigOpt match {
         case Some(sig) => methods = methods.put(id, (name, m(sig = sig)))
         case _ =>
