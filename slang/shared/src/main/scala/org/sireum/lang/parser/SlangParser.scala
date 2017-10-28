@@ -744,7 +744,7 @@ class SlangParser(text: Predef.String,
 
   def extractStaticZ(exp: Term): Z = {
     def extractString(s: Predef.String): Z = {
-      Try(Z.String(s)) match {
+      Try(Z.$String(s)) match {
         case Success(n) => n
         case _ => error(exp.pos, s"Invalid Slang Z literal '$s'"); 0
       }
@@ -1827,8 +1827,8 @@ class SlangParser(text: Predef.String,
     val List(Lit.String(value)) = lit.parts
     try {
       val r = lit.prefix.value match {
-        case "z" => AST.Exp.LitZ(Z.String(value), attr(lit.pos))
-        case "r" => AST.Exp.LitR(org.sireum.R.String(value), attr(lit.pos))
+        case "z" => AST.Exp.LitZ(Z.$String(value), attr(lit.pos))
+        case "r" => AST.Exp.LitR(org.sireum.R.$String(value), attr(lit.pos))
       }
       return r
     } catch {
