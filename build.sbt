@@ -32,7 +32,7 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-val scalaVer = "2.12.3"
+val scalaVer = "2.12.4"
 
 val metaVersion = "1.8.0"
 
@@ -95,13 +95,13 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
     "org.antlr" % "antlr4-runtime" % "4.7",
     "org.antlr" % "ST4" % "4.0.8",
-    "org.yaml" % "snakeyaml" % "1.18",
+    "org.yaml" % "snakeyaml" % "1.19",
     "org.ow2.asm" % "asm" % "5.2",
     "org.ow2.asm" % "asm-commons" % "5.2",
     "org.ow2.asm" % "asm-util" % "5.2",
     "org.jgrapht" % "jgrapht-core" % "1.0.1",
     "org.jgrapht" % "jgrapht-ext" % "1.0.1",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.2",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.3",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),
@@ -116,7 +116,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % "0.4.8"
+    "com.lihaoyi" %%% "utest" % "0.6.0"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
@@ -234,8 +234,8 @@ lazy val slangT = toSbtCrossProject(slangPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "fastparse" % fastParseVersion,
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
@@ -265,8 +265,8 @@ lazy val commonJs = commonT._3.settings(
 lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
 lazy val webT = toSbtCrossProject(webPI, Seq(
   libraryDependencies ++= Seq(
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
