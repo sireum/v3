@@ -37,7 +37,7 @@ object AstUtil {
            bitWidth: Natural,
            autoEnabled: Boolean)(
             implicit reporter: AccumulatingTagReporter): (String, Program) = {
-    val newProgramText = wipeContractAndPrintStatements(
+    val newProgramText = wipePrintStatements(
       wipeCommentsAndLogikaAssertions(programText),
       bitWidth,
       autoEnabled)
@@ -71,10 +71,10 @@ object AstUtil {
     new String(contentChars)
   }
 
-  private def wipeContractAndPrintStatements(content: String,
-                                             bitWidth: Natural,
-                                             autoEnabled: Boolean)(
-                                              implicit reporter: AccumulatingTagReporter): String = {
+  private def wipePrintStatements(content: String,
+                                  bitWidth: Natural,
+                                  autoEnabled: Boolean)(
+                                   implicit reporter: AccumulatingTagReporter): String = {
     val contentChars = content.toCharArray
 
     def wipe(li: LocationInfo): Boolean = {
@@ -89,8 +89,6 @@ object AstUtil {
     val program = Builder(None, content, bitWidth, autoEnabled).get
 
     Visitor.build({
-      case n: Assert => wipe(program.nodeLocMap(n))
-      case n: Assume => wipe(program.nodeLocMap(n))
       case n: Print => wipe(program.nodeLocMap(n))
     })(program)
 
@@ -161,4 +159,5 @@ object AstUtil {
   private final case class CompareException(node1: Node,
                                             node2: Node,
                                             diffElementIndex: NaturalSentinel = -1) extends RuntimeException
+
 }
