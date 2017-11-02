@@ -405,7 +405,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       }
     }
     if (node.isInstanceOf[While])
-      for (id <- collectAssignedVars(block) -- modifiedVars) {
+      for (id <- collectAssignedVars(block) -- modifiedVars if typeMap.contains(id.value)) {
         val li = program.nodeLocMap(id)
         val msg = s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause."
         if (weakModifies) warn(node, msg) else error(node, msg)
