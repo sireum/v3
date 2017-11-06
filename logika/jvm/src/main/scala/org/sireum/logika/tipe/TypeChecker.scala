@@ -215,6 +215,15 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case Some(t2) =>
                 if (!tipeEq(t, t2))
                   error(e, s"Expecting return type $t, but found $t2.")
+                else {
+                  e match {
+                    case Id(x) =>
+                      if (md.params.exists(p => p.id.value == x && t.isInstanceOf[MSeq])) {
+                        error(e, s"Cannot directly pass through the sequence from parameter $x as a return value.")
+                      }
+                    case _ =>
+                  }
+                }
               case _ =>
             }
           case Some(None) =>
