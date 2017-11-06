@@ -75,6 +75,8 @@ object Distros {
     "ignore" -> 38743
   )
 
+  val ignoredIcons = Set("idea.icns", "idea-dev.icns", "idea.png", "idea-dev.png", "idea-dev.ico")
+
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
     (baseDir / 'distros / "idea64.exe").toIO.isFile
 
@@ -195,16 +197,21 @@ object Distros {
 
   def patchIcon(platform: String, path: Path): Unit = {
     val iconsPath = pwd / 'resources / 'distro / 'icons
-    val (dirPath, filename) = platform match {
-      case "mac" => (path / 'Resources, "idea.icns")
+    val (dirPath, srcFilename, filename) = platform match {
+      case "mac" =>
+        if (isDev) (path / 'Resources, "idea-dev.icns", "idea.icns")
+        else (path / 'Resources, "idea.icns", "idea.icns")
       case "win" =>
         patchIconExe(path / 'bin / "idea.exe")
         patchIconExe(path / 'bin / "idea64.exe")
-        (path / 'bin, "idea.ico")
-      case "linux" => (path / 'bin, "idea.png")
+        if (isDev) (path / 'bin, "idea-dev.ico", "idea.ico")
+        else (path / 'bin, "idea.ico", "idea.ico")
+      case "linux" =>
+        if (isDev) (path / 'bin, "idea-dev.png", "idea.png")
+        else (path / 'bin, "idea.png", "idea.png")
     }
     print(s"Replacing icon $dirPath/$filename ... ")
-    %%('cp, filename, dirPath)(iconsPath)
+    %%('cp, srcFilename, dirPath / filename)(iconsPath)
     println("done!")
     val iconsJar = path / 'lib / "icons.jar"
     print(s"Patching $iconsJar ... ")
@@ -219,7 +226,7 @@ object Distros {
       }
     } while (!done)
     val entriesToUpdate =
-      (for (f <- iconsPath.toIO.listFiles if f.getName != "idea.icns" && f.getName != "idea.png") yield {
+      (for (f <- iconsPath.toIO.listFiles if !ignored.contains(f.getName)) yield {
         require(entries.contains(f.getName), s"File ${f.getName} is not in $iconsJar.")
         f.getName
       }).toVector
