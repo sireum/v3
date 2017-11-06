@@ -226,7 +226,7 @@ object Distros {
       }
     } while (!done)
     val entriesToUpdate =
-      (for (f <- iconsPath.toIO.listFiles if !ignored.contains(f.getName)) yield {
+      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName)) yield {
         require(entries.contains(f.getName), s"File ${f.getName} is not in $iconsJar.")
         f.getName
       }).toVector
