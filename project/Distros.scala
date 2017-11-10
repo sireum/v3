@@ -61,7 +61,7 @@ object Distros {
   lazy val pluginUpdateIdMap = Map(
     "sireum" -> (if (isDev) 0 else 0 /* 37398 */),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 39545 else 39545),
+    "scala" -> (if (isDev) 40254 else 40254),
     "markdown" -> 34393,
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
@@ -72,7 +72,7 @@ object Distros {
     "latex" -> 18476,
     "python" -> 38279,
     "rst" -> 14700,
-    "ignore" -> 38743
+    "ignore" -> 40109
   )
 
   val ignoredIcons = Set("idea.icns", "idea-dev.icns", "idea.png", "idea-dev.png", "idea-dev.ico")
