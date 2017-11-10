@@ -98,7 +98,8 @@ import org.sireum.lang.{ast => AST}
           }
         }
         declareName("enumeration", name, Info.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
-        declareType("enumeration", name :+ "Type", TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
+        val typeName = name :+ "Type"
+        declareType("enumeration", typeName, TypeInfo.Enum(name :+ "Type", elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
 
