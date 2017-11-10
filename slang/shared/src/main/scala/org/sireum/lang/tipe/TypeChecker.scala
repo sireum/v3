@@ -35,6 +35,7 @@ import org.sireum.lang.util._
 
 object TypeChecker {
   val typeCheckerKind: String = "Type Checker"
+  val unitType: AST.Typed.Tuple = AST.Typed.Tuple(ISZ(), None())
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
 
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
@@ -232,7 +233,11 @@ import TypeChecker._
             }
             return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
           case _ =>
-            reporter.error(t.posOpt, typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
+            if (name.size == 1 && argTypes.isEmpty && name(0) == "Unit") {
+              return Some(unitType)
+            } else {
+              reporter.error(t.posOpt, typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
+            }
             return None()
         }
       case t: AST.Type.Tuple =>
@@ -642,10 +647,10 @@ import TypeChecker._
                           info: TypeInfo.Members,
                           scope: Scope,
                           reporter: Reporter): TypeInfo.Members = {
-    var specVars = info.specVars
-    var vars = info.vars
-    var specMethods = info.specMethods
-    var methods = info.methods
+    var specVars = HashMap.empty[String, (QName, AST.Stmt.SpecVar)]
+    var vars = HashMap.empty[String, (QName, AST.Stmt.Var)]
+    var specMethods = HashMap.empty[String, (QName, AST.Stmt.SpecMethod)]
+    var methods = HashMap.empty[String, (QName, AST.Stmt.Method)]
 
     def isDeclared(id: String): B = {
       return specVars.contains(id) || vars.contains(id) || specMethods.contains(id) || methods.contains(id)
