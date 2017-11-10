@@ -27,14 +27,14 @@ package org.sireum.lang.test
 
 import org.sireum._
 import org.sireum.lang.symbol.Resolver
-import org.sireum.lang.tipe.TypeHierarchy
+import org.sireum.lang.tipe._
 import org.sireum.test.SireumSpec
 
 class SlangCodebaseTest extends SireumSpec {
 
   *("Slang") {
     val (initNameMap, initTypeMap) = Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
-    val (reporter, _, typeMap) = Resolver.parseProgramAndGloballyResolve(
+    val (reporter, nameMap, typeMap) = Resolver.parseProgramAndGloballyResolve(
       ISZ((org.sireum.$SlangFiles.map.toSeq ++ org.sireum.lang.$SlangFiles.map.toSeq).
         map(p => (Some(String(p._1.mkString("/"))), String(p._2))): _*),
       initNameMap, initTypeMap)
@@ -47,7 +47,9 @@ class SlangCodebaseTest extends SireumSpec {
       true
     }
     report()
-    TypeHierarchy.build(typeMap, TypeHierarchy.Type(Poset.empty, HashMap.empty), reporter)
+    val th = TypeHierarchy.build(typeMap, TypeHierarchy.Type(Poset.empty, HashMap.empty), reporter)
+    report()
+    TypeChecker(nameMap, typeMap, th).checkOutline(reporter)
     report()
   }
 
