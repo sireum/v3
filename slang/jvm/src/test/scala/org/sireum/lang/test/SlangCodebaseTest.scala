@@ -49,7 +49,15 @@ class SlangCodebaseTest extends SireumSpec {
     report()
     val th = TypeHierarchy.build(typeMap, TypeHierarchy.Type(Poset.empty, HashMap.empty), reporter)
     report()
-    TypeChecker(nameMap, typeMap, th).checkOutline(reporter)
+    val tc = TypeChecker(nameMap, typeMap, th).checkOutline(reporter)
+    for (ti <- tc.globalTypeMap.values) {
+      ti match {
+        case ti: Resolver.TypeInfo.Sig => assert(ti.outlined, st"${(ti.name, ".")} is not outlined!".render)
+        case ti: Resolver.TypeInfo.AbstractDatatype => assert(ti.outlined, st"${(ti.name, ".")} is not outlined!".render)
+        case ti: Resolver.TypeInfo.Rich => assert(ti.outlined, st"${(ti.name, ".")} is not outlined!".render)
+        case _ =>
+      }
+    }
     report()
   }
 
