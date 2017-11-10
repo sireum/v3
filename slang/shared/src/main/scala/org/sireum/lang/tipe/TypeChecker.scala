@@ -409,9 +409,9 @@ import TypeChecker._
       return (p._1, AccumulatingReporter.combine(r._2, p._2))
     }
 
-    def parentsOutlined(name: QName): B = {
+    def parentsOutlined(name: QName, typeMap: TypeMap): B = {
       def isOutlined(name: QName): B = {
-        globalTypeMap.get(name).get match {
+        typeMap.get(name).get match {
           case ti: TypeInfo.Sig => return ti.outlined
           case ti: TypeInfo.AbstractDatatype => return ti.outlined
           case ti: TypeInfo.Rich => return ti.outlined
@@ -421,7 +421,7 @@ import TypeChecker._
 
       var r = T
       for (p <- typeHierarchy.poset.parentsOf(AST.Typed.Name(name, ISZ(), None())).elements if r) {
-        globalTypeMap.get(p.ids).get match {
+        typeMap.get(p.ids).get match {
           case ti: TypeInfo.TypeAlias =>
             val t = typeHierarchy.dealias(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
             r = isOutlined(t.ids)
@@ -436,38 +436,46 @@ import TypeChecker._
     // due to issues in scalameta macro expansion
     var workList = rootTypes()
     var tc = this
-    while (workList.nonEmpty) {
+    while (workList.nonEmpty && !reporter.hasIssue) {
       var l = ISZ[QName]()
       var jobs = ISZ[B => TypeChecker => (TypeChecker, AccumulatingReporter)]()
       for (name <- workList) {
         val ti = tc.globalTypeMap.get(name).get
+        var ok: B = F
         ti match {
           case ti: TypeInfo.Sig if !ti.outlined =>
-            val po = parentsOutlined(ti.name)
+            val po = parentsOutlined(ti.name, tc.globalTypeMap)
             if (po) {
               jobs = jobs :+ ((_: B) => tc.checkSigOutline(ti))
+              ok = T
             }
           case ti: TypeInfo.AbstractDatatype if !ti.outlined =>
-            val po = parentsOutlined(ti.name)
+            val po = parentsOutlined(ti.name, tc.globalTypeMap)
             if (po) {
               jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
+              ok = T
             }
           case ti: TypeInfo.Rich if !ti.outlined =>
-            val po = parentsOutlined(ti.name)
+            val po = parentsOutlined(ti.name, tc.globalTypeMap)
             if (po) {
               jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
+              ok = T
             }
           case _ =>
         }
-        for (n <- typeHierarchy.poset.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements) {
-          l = l :+ n.ids
+        if (ok) {
+          val children = typeHierarchy.poset.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements
+          for (n <- children) {
+            l = l :+ n.ids
+          }
         }
       }
-      val r = ISOps(jobs).
+      val jobsOps = ISOps(jobs)
+      val r = jobsOps.
         parMapFoldLeft(
           (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
           combine _,
-          (this, AccumulatingReporter.create))
+          (tc, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
       tc = r._1
       workList = l
@@ -479,13 +487,17 @@ import TypeChecker._
         case _ =>
       }
     }
-    val r = ISOps(jobs).
-      parMapFoldLeft(
-        (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
-        combine _,
-        (this, AccumulatingReporter.create))
-    reporter.reports(r._2.messages)
-    return r._1
+    if (!reporter.hasIssue) {
+      val r = ISOps(jobs).
+        parMapFoldLeft(
+          (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
+          combine _,
+          (tc, AccumulatingReporter.create))
+      reporter.reports(r._2.messages)
+      return r._1
+    } else {
+      return tc
+    }
   }
 
   def checkSpecVarOutline(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
@@ -571,10 +583,8 @@ import TypeChecker._
     val specVars = members.specVars
     val specMethods = members.specMethods
     val methods = members.methods
-    return (tc: TypeChecker) =>
-      (tc(globalTypeMap =
-        tc.globalTypeMap.put(info.name,
-          info(specVars = specVars, specMethods = specMethods, methods = methods))), reporter)
+    val newInfo = info(outlined = T, specVars = specVars, specMethods = specMethods, methods = methods)
+    return (tc: TypeChecker) => (tc(globalTypeMap = tc.globalTypeMap.put(info.name, newInfo)), reporter)
   }
 
   @pure def checkAdtOutline(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
@@ -588,10 +598,8 @@ import TypeChecker._
     val vars = members.vars
     val specMethods = members.specMethods
     val methods = members.methods
-    return (tc: TypeChecker) =>
-      (tc(globalTypeMap =
-        tc.globalTypeMap.put(info.name,
-          info(specVars = specVars, vars = vars, specMethods = specMethods, methods = methods))), reporter)
+    val newInfo = info(outlined = T, specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
+    return (tc: TypeChecker) => (tc(globalTypeMap = tc.globalTypeMap.put(info.name, newInfo)), reporter)
   }
 
   @pure def checkRichOutline(info: TypeInfo.Rich): TypeChecker => (TypeChecker, AccumulatingReporter) = {
@@ -603,10 +611,8 @@ import TypeChecker._
     members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
     val specMethods = members.specMethods
     val methods = members.methods
-    return (tc: TypeChecker) =>
-      (tc(globalTypeMap =
-        tc.globalTypeMap.put(info.name,
-          info(specMethods = specMethods, methods = methods))), reporter)
+    val newInfo = info(outlined = T, specMethods = specMethods, methods = methods)
+    return (tc: TypeChecker) => (tc(globalTypeMap = tc.globalTypeMap.put(info.name, newInfo)), reporter)
   }
 
   def checkMethodSigOutline(scope: Scope,
