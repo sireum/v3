@@ -50,7 +50,7 @@ val scalaJsDomVersion = "0.9.3"
 
 val scalaJsJQueryVersion = "0.9.2"
 
-val scalaTagsVersion = "0.6.5"
+val scalaTagsVersion = "0.6.7"
 
 val BUILD_FILENAME = "BUILD"
 
