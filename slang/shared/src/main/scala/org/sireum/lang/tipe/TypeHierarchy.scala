@@ -86,7 +86,7 @@ object TypeHierarchy {
     }
     info match {
       case info: TypeInfo.SubZ => return AST.Typed.Name(info.name, ISZ(), info.posOpt)
-      case info: TypeInfo.Enum => return AST.Typed.Name(info.name, ISZ(), info.posOpt)
+      case info: TypeInfo.Enum => return AST.Typed.Name(info.name :+ "Type", ISZ(), info.posOpt)
       case info: TypeInfo.Sig =>
         val args = info.ast.typeParams.map(typedParam)
         return AST.Typed.Name(info.name, args, info.posOpt)
