@@ -34,7 +34,7 @@ import org.sireum.lang.{ast => AST}
 object TypeHierarchy {
   @datatype class Type(poset: Poset[AST.Typed.Name],
                        aliases: HashMap[AST.Typed.Name, AST.Typed]) {
-    def rootTypes: ISZ[AST.Typed.Name] = {
+    @pure def rootTypes: ISZ[AST.Typed.Name] = {
       var r = ISZ[AST.Typed.Name]()
       for (ps <- poset.parents.entries) {
         if (ps._2.isEmpty) {
@@ -57,25 +57,17 @@ object TypeHierarchy {
     }
 
     def checkCyclic(reporter: Reporter): Unit = {
-      var workList = rootTypes
-      var temp = ISZ[AST.Typed.Name]()
-      var seen = HashSet.empty[AST.Typed.Name]()
-      while (workList.nonEmpty) {
-        for (t <- workList) {
-          if (seen.contains(t)) {
-            reporter.error(None(), resolverKind, st"Cyclic type hierarchy from ${(t.ids, ".")}.".render)
-          } else {
-            seen = seen.add(t)
-            for (child <- poset.childrenOf(t).elements) {
-              val dchild = dealias(child, reporter)
-              dchild match {
-                case Some(childT) => temp = temp :+ childT
-                case _ =>
-              }
-            }
-          }
+      var cache = HashMap.empty[AST.Typed.Name, HashSet[AST.Typed.Name]]
+      for (t <- rootTypes) {
+        val r = poset.descendantsCache(t, cache)
+        cache = r._2
+      }
+      for (kv <- cache.entries) {
+        val k = kv._1
+        val v = kv._2
+        if (v.contains(k)) {
+          reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.ids, ".")}.".render)
         }
-        workList = temp
       }
     }
   }
@@ -107,9 +99,10 @@ object TypeHierarchy {
     def resolveType(scope: Scope, t: AST.Type): AST.Typed = {
       t match {
         case t: AST.Type.Named =>
-          val name = AST.Util.ids2strings(t.name.ids)
-          if (scope.resolveType(typeMap, name).isEmpty) {
-            reporter.error(t.name.attr.posOpt, resolverKind, s"Could not resolve type named '${st"${(name, ".")}".render}'.")
+          var name = AST.Util.ids2strings(t.name.ids)
+          scope.resolveType(typeMap, name) match {
+            case Some(ti) => name = ti.name
+            case _ => reporter.error(t.name.attr.posOpt, resolverKind, s"Could not resolve type named '${st"${(name, ".")}".render}'.")
           }
           val args: ISZ[AST.Typed] = {
             var as = ISZ[AST.Typed]()
