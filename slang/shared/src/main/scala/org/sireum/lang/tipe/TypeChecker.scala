@@ -494,7 +494,22 @@ import TypeChecker._
           combine _,
           (tc, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
-      return r._1
+      tc = r._1
+      var gnm = tc.globalNameMap
+      for (info <- gnm.values) {
+        val infoOpt: Option[Info] = info match {
+          case info: Info.Var if !info.outlined => checkVarOutline(info, reporter)
+          case info: Info.SpecVar if !info.outlined => checkSpecVarOutline(info, reporter)
+          case info: Info.Method if !info.outlined => checkMethodOutline(info, reporter)
+          case info: Info.SpecMethod if !info.outlined => checkSpecMethodOutline(info, reporter)
+          case _ => None()
+        }
+        infoOpt match {
+          case Some(inf) => gnm = gnm.put(info.name, inf)
+          case _ =>
+        }
+      }
+      return tc(globalNameMap = gnm)
     } else {
       return tc
     }
