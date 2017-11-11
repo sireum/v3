@@ -290,6 +290,13 @@ object Resolver {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
+      def outlined: B = {
+        ast.tipeOpt match {
+          case Some(t) => return t.typedOpt.nonEmpty
+          case _ => return T
+        }
+      }
     }
 
     @datatype class SpecVar(name: QName,
@@ -297,6 +304,9 @@ object Resolver {
                             ast: AST.Stmt.SpecVar) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
+      }
+      def outlined: B = {
+        return ast.tipe.typedOpt.nonEmpty
       }
     }
 
@@ -306,6 +316,9 @@ object Resolver {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+      def outlined: B = {
+        return ast.sig.returnType.typedOpt.nonEmpty
+      }
     }
 
     @datatype class SpecMethod(name: QName,
@@ -313,6 +326,9 @@ object Resolver {
                                ast: AST.Stmt.SpecMethod) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
+      }
+      def outlined: B = {
+        return ast.sig.returnType.typedOpt.nonEmpty
       }
     }
 
