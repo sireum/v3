@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.5"
+  val ideaVer = "2017.2.6"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -71,8 +71,11 @@ object Distros {
     "compare" -> 24991,
     "latex" -> 18476,
     "python" -> 38279,
-    "rst" -> 14700,
-    "ignore" -> 40109
+    "rst" -> 14700
+  )
+
+  lazy val pluginUpdateUrlMap = Map(
+    "ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
   )
 
   val ignoredIcons = Set("idea.icns", "idea-dev.icns", "idea.png", "idea-dev.png", "idea-dev.ico")
@@ -121,6 +124,11 @@ object Distros {
       %%('wget, "-q", "-O", s"$name-$updateId.zip", url)(pluginsDir)
       println("done!")
     }
+    for ((name, (version, url)) <- pluginUpdateUrlMap if !(pluginsDir / s"$name-$version.zip").toIO.exists) {
+      print(s"Downloading $name plugin from $url ... ")
+      %%('wget, "-q", "-O", s"$name-$version.zip", url)(pluginsDir)
+      println("done!")
+    }
   }
 
   def extractPlugins(p: Path): Unit = {
@@ -133,6 +141,17 @@ object Distros {
         case _ =>
           print(s"Extracting $name plugin ... ")
           %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$updateId.zip")(p)
+      }
+      println("done!")
+    }
+    for ((name, (version, _)) <- pluginUpdateUrlMap) {
+      jarPlugins.get(name) match {
+        case Some(_) =>
+          print(s"Copying $name plugin ... ")
+          %%('cp, ideaDir / 'plugins / s"$name-$version.zip", p / jarPlugins(name))(p)
+        case _ =>
+          print(s"Extracting $name plugin ... ")
+          %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$version.zip")(p)
       }
       println("done!")
     }
