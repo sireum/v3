@@ -226,7 +226,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                 }
               case _ =>
             }
-          case Some(None) =>
+          case Some(None) if md.returnTypeOpt.nonEmpty =>
             error(b.returnOpt.get, s"Expecting return type $t, but found none.")
           case _ =>
         }
@@ -502,6 +502,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                   case Some(pid) if pid.value != param.id.value =>
                     error(arg, s"Cannot pass ${Exp.toString(arg, inProof = false)} for parameter ${param.id.value} because it will be passed for modified parameter ${pid.value}.")
                   case _ =>
+                }
+                if (modifiedIds.contains(param.id) && !arg.isInstanceOf[Id]) {
+                  error(arg, s"Cannot pass non-identifier ${Exp.toString(arg, inProof = false)} for modified parameter ${param.id.value}.")
                 }
               }
             }
