@@ -48,4 +48,4 @@ for i in "$@" ; do
     break
   fi
 done
-$SIREUM_HOME/platform/sbt/bin/sbt -sbt-jar $SIREUM_HOME/platform/sbt/bin/sbt-launch.jar -Dfile.encoding=UTF-8 "$@"
+${JAVA} ${JVM_OPTS} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"
