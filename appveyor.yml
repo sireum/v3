@@ -28,7 +28,7 @@ cache:
   - '%USERPROFILE%\.sbt'
 
 install:
-  - bash -lc "pacman --noconfirm -S unzip"
+  - bash -lc "pacman --noconfirm -S unzip bc"
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"
 
 build_script:
