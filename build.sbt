@@ -72,7 +72,7 @@ lazy val sireumSettings = Seq(
   retrieveManaged := true,
   scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
     "-Ydelambdafy:method", "-feature", "-unchecked", "-Xfatal-warnings"),
-  javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+  javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "utf8"),
   javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
   scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
   logBuffered in Test := false,
