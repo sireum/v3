@@ -27,10 +27,10 @@ COMMANDS="wget unzip rm mv git"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=8.23.0.3-jdk8.0.144
+ZULU_VERSION=8.25.0.1-jdk8.0.152
 SCALA_VERSION=2.12.4
 SBT_VERSION=1.0.3
-NODE_VERSION=9.1.0
+NODE_VERSION=9.2.0
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
@@ -190,8 +190,6 @@ if [ ! -d "sbt" ] || [ "${SBT_UPDATE}" = "true" ]; then
   rm ${SBT_DROP}
   if [ -d "sbt/bin" ]; then
     echo "${SBT_VERSION}" > sbt/VER
-    curl -Ls https://git.io/sbt > sbt/bin/sbt
-    chmod 0755 sbt/bin/sbt
   else
     >&2 echo "Could not install Sbt ${SBT_VERSION}."
     exit 1
