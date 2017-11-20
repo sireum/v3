@@ -15,8 +15,8 @@ build:
     options: "-e HOME=/root"
   ci:
     - git submodule update --init --recursive
-    - bin/sbt-launch.sh clean test:compile test:fastOptJS
-    - SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh --error test
+    - bin/sbt-launch.sh "set logLevel := Level.Warn" clean test:compile test:fastOptJS
+    - SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh "set logLevel := Level.Error" test
   post_ci:
   on_success:
   on_failure:

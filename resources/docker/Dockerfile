@@ -34,10 +34,9 @@ RUN dpkg --add-architecture i386 && \
     ./emsdk activate latest && \
     cd /opt && \
     git clone --recursive -b master https://github.com/sireum/v3.git sireum-v3 && \
-    JAVA_OPTIONS="-XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m -Dorg.sireum.home=/opt/sireum-v3" && \
-    $SIREUM_HOME/bin/sbt-launch.sh clean test:compile test:fastOptJS && \
+    $SIREUM_HOME/bin/sbt-launch.sh "set logLevel := Level.Warn" clean test:compile test:fastOptJS && \
     SIREUM_PARALLEL_BUILD=false && \
-    $SIREUM_HOME/bin/sbt-launch.sh test && \
+    $SIREUM_HOME/bin/sbt-launch.sh "set logLevel := Level.Error" test && \
     sireum && \
     $SIREUM_HOME/bin/sbt-launch.sh clean && \
     git clone https://github.com/ksu-cis-706/compiler.git compiler && \

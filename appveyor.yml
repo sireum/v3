@@ -32,7 +32,7 @@ install:
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"
 
 build_script:
-  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile test:fastOptJS"
+  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh 'set logLevel := Level.Warn' clean test:compile test:fastOptJS"
 
 test_script:
-  - bash -lc "SIREUM_PARALLEL_BUILD=false $APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh --error test"
+  - bash -lc "SIREUM_PARALLEL_BUILD=false $APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh 'set logLevel := Level.Error' test"
