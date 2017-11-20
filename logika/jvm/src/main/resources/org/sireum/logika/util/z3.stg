@@ -367,12 +367,7 @@ prepend(c, a, v, tipe) ::= <<
 append(c, a, v, tipe) ::= <<
 (declare-const a_$c$ $tipe$)
 (assert (= ($tipe$_size a_$c$) (+ ($tipe$_size $a$) 1)))
-(assert (= (select a_$c$ ($tipe$_size $a$)) $v$))
-(assert
-  (forall ((_i Z))
-    (=>
-      (and (<= 0 _i) (< _i ($tipe$_size $a$)))
-      (= (select a_$c$ _i) (select $a$ _i)))))
+(assert (= a_$c$ (store $a$ ($tipe$_size $a$) $v$)))
 >>
 
 equal(a1, a2, tipe) ::= <<
