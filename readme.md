@@ -183,7 +183,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
 
 ### All Supported Platforms
 
-* Required tools for building Sireum: `bash`, `git`, `unzip`, `wget`
+* Required tools for building Sireum: `bash`, `git`, `unzip`, `wget`, `bc`
 
 ### Linux
 
