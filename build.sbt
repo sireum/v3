@@ -63,6 +63,8 @@ val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distr
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
 traceLevel in iveDistros := -1
+parallelExecution in Global := isParallelBuild
+concurrentRestrictions in Global ++= (if (isParallelBuild) Seq(Tags.limitAll(1)) else Seq())
 
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
@@ -78,7 +80,6 @@ lazy val sireumSettings = Seq(
   logBuffered in Test := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  parallelExecution in Global := isParallelBuild,
   resolvers += Resolver.sonatypeRepo("public")
 )
 
