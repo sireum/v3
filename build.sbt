@@ -64,7 +64,7 @@ val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
 traceLevel in iveDistros := -1
 parallelExecution in Global := isParallelBuild
-concurrentRestrictions in Global ++= (if (isParallelBuild) Seq(Tags.limitAll(1)) else Seq())
+concurrentRestrictions in Global ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
 
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
