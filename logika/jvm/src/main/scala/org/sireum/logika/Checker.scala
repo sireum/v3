@@ -557,7 +557,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
                timeoutMsg: => String): Boolean = {
     if (checkSatEnabled || !genMessage) {
       val es = additionalFacts(exps) ++ exps.toVector
-      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, bitWidth, es.toVector: _*)
+      val (script, r) = Z3.checkSat(satTimeoutInMs, isSymExe, isValidity = false, bitWidth, es.toVector: _*)
       if (inscribeSummoningsEnabled) {
         val lineSep = scala.util.Properties.lineSeparator
         val sb = new StringBuilder
@@ -1164,7 +1164,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
               premises: Iterable[ast.Exp], conclusions: Iterable[ast.Exp]): Boolean = {
     var ps = ilinkedSetEmpty[ast.Exp]
     ps ++= (if (coneInfluenceEnabled)
-        util.Z3.checkSat(satTimeoutInMs, isSymExe = true, bitWidth,
+        util.Z3.checkSat(satTimeoutInMs, isSymExe = true, isValidity = true, bitWidth,
           ast.Exp.And(conclusions.toVector))._2 match {
           case util.Z3.Sat => coneOfInfluence(premises, conclusions)
           case _ => premises

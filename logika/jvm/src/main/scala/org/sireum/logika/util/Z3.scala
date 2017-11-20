@@ -75,13 +75,20 @@ object Z3 {
                implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) = {
     import ast.Exp
     import org.sireum.logika.tipe._
-    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, bitWidth, Exp.Not(B, Exp.And(conclusions)))
-    else checkSat(timeoutInMs, isSymExe, bitWidth, Exp.Not(B, Exp.Implies(B, Exp.And(premises), Exp.And(conclusions))))
+    if (premises.isEmpty) checkSat(timeoutInMs, isSymExe, isValidity = true, bitWidth,
+      Exp.Not(B, Exp.And(conclusions)))
+    else if (isSymExe)
+      checkSat(timeoutInMs, isSymExe, isValidity = true, bitWidth,
+        premises :+ Exp.Not(B, Exp.And(conclusions)): _*)
+    else
+      checkSat(timeoutInMs, isSymExe, isValidity = true, bitWidth,
+        Exp.Not(B, Exp.Implies(B, Exp.And(premises), Exp.And(conclusions))))
   }
 
-  def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, bitWidth: Natural, es: ast.Exp*)(
+  def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, isValidity: Boolean, bitWidth: Natural, es: ast.Exp*)(
     implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) = {
-    def f() = new Z3(timeoutInMs, isSymExe, bitWidth).checkSat(es: _*)
+    def f() = new Z3(timeoutInMs, isSymExe, isValidity, bitWidth).checkSat(es: _*)
+
     if (satCacheEnabled) {
       val key: Object = es match {
         case Seq(e) => e
@@ -103,7 +110,7 @@ object Z3 {
   }
 }
 
-private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural)(
+private final class Z3(timeout: PosInteger, isSymExe: Boolean, isValidity: Boolean, bitWidth: Natural)(
   implicit reporter: TagReporter,
   nodeLocMap: MIdMap[ast.Node, LocationInfo]) {
 
@@ -122,7 +129,9 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
   val hardTimeout: PosInteger = timeout + (timeout * 10) / 100
 
   def checkSat(es: ast.Exp*): (String, CheckResult) = {
-    for (e <- es) {
+    val last = es.size - 1
+    for (i <- es.indices) {
+      val e = es(i)
       if (!e.isResolved) {
         Visitor.build({
           case e: ast.Exp if !e.isResolved =>
@@ -132,7 +141,7 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, bitWidth: Natural
       }
       stMain.add("e",
         stg.getInstanceOf("assertion").
-          add("e", translate(e))).add("e", lineSep)
+          add("e", translate(e, isValidity && i == last))).add("e", lineSep)
     }
     for ((name, tipe) <- typeMap)
       stMain.add("d", translate(name, tipe)).
@@ -227,7 +236,7 @@ $s"""))
   def normalizeTipe(t: org.sireum.logika.tipe.Tipe): org.sireum.logika.tipe.Tipe =
     org.sireum.logika.tipe.Tipe.normalize(bitWidth, t)
 
-  def translate(e: ast.Exp): ST =
+  def translate(e: ast.Exp, isArrayEq: Boolean): ST =
     e match {
       case ast.BooleanLit(value) =>
         stg.getInstanceOf(if (value) "truelit" else "falselit")
@@ -235,17 +244,17 @@ $s"""))
         typeMap += id.value -> id.tipe
         stg.getInstanceOf("id").add("value", id.value)
       case e@ast.Size(id) =>
-        stg.getInstanceOf("size").add("id", translate(id)).
+        stg.getInstanceOf("size").add("id", translate(id, isArrayEq)).
           add("tipe", translate(e.tipe))
       case e: ast.Result =>
-        translate(ast.Exp.Id(e.tipe, "result"))
+        translate(ast.Exp.Id(e.tipe, "result"), isArrayEq)
       case e: ast.Apply =>
         if (e.expTipe.isInstanceOf[org.sireum.logika.tipe.MSeq])
-          stg.getInstanceOf("index").add("a", translate(e.exp)).
-            add("i", translate(e.args.head))
+          stg.getInstanceOf("index").add("a", translate(e.exp, isArrayEq)).
+            add("i", translate(e.args.head, isArrayEq))
         else {
-          val r = stg.getInstanceOf("apply").add("id", translate(e.exp))
-          for (arg <- e.args) r.add("exp", translate(arg))
+          val r = stg.getInstanceOf("apply").add("id", translate(e.exp, isArrayEq))
+          for (arg <- e.args) r.add("exp", translate(arg, isArrayEq))
           r
         }
       case e@ast.IntLit(_, _, tpeOpt) =>
@@ -302,8 +311,8 @@ $s"""))
         translate(e.value, e.integralType)
       case e@ast.Prepend(left, right) =>
         val c = freshSeq()
-        val a = translate(right)
-        val v = translate(left)
+        val a = translate(right, isArrayEq)
+        val v = translate(left, isArrayEq)
         stMain.add("a",
           stg.getInstanceOf("prepend").add("c", c).add("a", a).add("v", v).
             add("tipe", translate(e.tipe))
@@ -311,8 +320,8 @@ $s"""))
         stg.getInstanceOf("a").add("c", c)
       case e@ast.Append(left, right) =>
         val c = freshSeq()
-        val a = translate(left)
-        val v = translate(right)
+        val a = translate(left, isArrayEq)
+        val v = translate(right, isArrayEq)
         stMain.add("a",
           stg.getInstanceOf("append").add("c", c).add("a", a).add("v", v).
             add("tipe", e.tipe)
@@ -325,7 +334,7 @@ $s"""))
             case e@ast.Ne(left, right) =>
               val eq = ast.Exp.Eq(e.tipe, left, right)
               eq.tipe = e.tipe
-              return translate(ast.Exp.Not(B, eq))
+              return translate(ast.Exp.Not(B, eq), isArrayEq)
             case e: ast.Mul =>
               normalizeTipe(e.tipe) match {
                 case S8 | S16 | S32 | S64 |
@@ -398,9 +407,9 @@ $s"""))
             case _: ast.UShr => "bvlshr"
             case e: ast.Eq =>
               normalizeTipe(e.tipe) match {
-                case _: org.sireum.logika.tipe.MSeq =>
-                  return stg.getInstanceOf("equal").add("a1", translate(e.left)).
-                    add("a2", translate(e.right)).add("tipe", translate(e.tipe))
+                case _: org.sireum.logika.tipe.MSeq if isArrayEq =>
+                  return stg.getInstanceOf("equal").add("a1", translate(e.left, isArrayEq)).
+                    add("a2", translate(e.right, isArrayEq)).add("tipe", translate(e.tipe))
                 case F32 | F64 => "fp.eq"
                 case _ => "="
               }
@@ -422,7 +431,7 @@ $s"""))
                     val st = stg.getInstanceOf("multi")
                     st.add("op", "and")
                     for (e <- l) {
-                      st.add("exp", translate(e))
+                      st.add("exp", translate(e, isArrayEq))
                     }
                     return st
                   } else "and"
@@ -451,7 +460,7 @@ $s"""))
                     val st = stg.getInstanceOf("multi")
                     st.add("op", "or")
                     for (e <- l) {
-                      st.add("exp", translate(e))
+                      st.add("exp", translate(e, isArrayEq))
                     }
                     return st
                   } else "or"
@@ -470,7 +479,7 @@ $s"""))
                 val st = stg.getInstanceOf("multi")
                 st.add("op", "=>")
                 for (e <- l) {
-                  st.add("exp", translate(e))
+                  st.add("exp", translate(e, isArrayEq))
                 }
                 return st
               } else "=>"
@@ -479,7 +488,7 @@ $s"""))
               "???"
           }
         stg.getInstanceOf(if (multiLine) "binaryLine" else "binary").add("op", op).
-          add("left", translate(e.left)).add("right", translate(e.right))
+          add("left", translate(e.left, isArrayEq)).add("right", translate(e.right, isArrayEq))
       case e: ast.UnaryExp =>
         e match {
           case ast.Not(exp) =>
@@ -487,23 +496,23 @@ $s"""))
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
                 stg.getInstanceOf("unary").add("op", "bvnot").
-                  add("exp", translate(exp))
+                  add("exp", translate(exp, isArrayEq))
               case _ =>
                 stg.getInstanceOf("unary").add("op", "not").
-                  add("exp", translate(exp))
+                  add("exp", translate(exp, isArrayEq))
             }
           case ast.Minus(exp) =>
             normalizeTipe(e.tipe) match {
               case S8 | S16 | S32 | S64 |
                    U8 | U16 | U32 | U64 =>
                 stg.getInstanceOf("unary").add("op", "bvneg").
-                  add("exp", translate(exp))
+                  add("exp", translate(exp, isArrayEq))
               case F32 | F64 =>
                 stg.getInstanceOf("unary").add("op", "fp.neg").
-                  add("exp", translate(exp))
+                  add("exp", translate(exp, isArrayEq))
               case _ =>
                 stg.getInstanceOf("unary").add("op", "-").
-                  add("exp", translate(exp))
+                  add("exp", translate(exp, isArrayEq))
             }
         }
       case e: ast.Quant[_] =>
@@ -537,7 +546,7 @@ $s"""))
               case e: ast.ForAll => e.copy(domainOpt = Some(ast.TypeDomain(tpe)))
               case e: ast.Exists => e.copy(domainOpt = Some(ast.TypeDomain(tpe)))
             }
-            return translate(q)
+            return translate(q, isArrayEq)
           case Some(ast.TypeDomain(tpe)) => translate(tpe)
           case None => assert(assertion = false, "Unexpected situation.")
         }
@@ -551,11 +560,11 @@ $s"""))
           }
           typeMap += name -> id.tipe
           st.add("param",
-            stg.getInstanceOf("param").add("id", translate(id)).
+            stg.getInstanceOf("param").add("id", translate(id, isArrayEq)).
               add("tipe", stType))
         }
         st.add("op", if (isForAll) "forall" else "exists").
-          add("exp", translate(e.exp))
+          add("exp", translate(e.exp, isArrayEq))
         for (id <- e.ids) {
           val name = id.value
           m.get(name) match {
@@ -575,11 +584,11 @@ $s"""))
           val args = e.args
           var i = 0
           var stZsExp = stg.getInstanceOf("seqexp").add("i", i).
-            add("v", translate(args.head)).add("tipe", tipe)
+            add("v", translate(args.head, isArrayEq)).add("tipe", tipe)
           i += 1
           for (arg <- args.tail) {
             stZsExp = stg.getInstanceOf("seqexp").add("i", i).
-              add("v", translate(arg)).add("a", stZsExp).add("tipe", tipe)
+              add("v", translate(arg, isArrayEq)).add("a", stZsExp).add("tipe", tipe)
             i += 1
           }
           stZs.add("exp", stZsExp)
