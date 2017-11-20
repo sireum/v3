@@ -14,5 +14,5 @@ install:
   - bin/prelude.sh
 
 script:
-  - bin/sbt-launch.sh "set logLevel := Level.Warn" clean test:compile test:fastOptJS
-  - SIREUM_PARALLEL_BUILD=false travis_wait 60 bin/sbt-launch.sh "set logLevel := Level.Error" test
+  - bin/sbt-launch.sh clean test:compile test:fastOptJS
+  - SIREUM_PARALLEL_BUILD=false travis_wait 60 bin/sbt-launch.sh test
