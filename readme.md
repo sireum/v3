@@ -15,7 +15,7 @@ Supported platforms (64-bit only):
 
 * macOS (test platform: [Sierra](https://www.apple.com/macos/sierra/) and [High Sierra](https://www.apple.com/macos/high-sierra/) -- 10.12 & 10.13)
 
-* Linux (test platform: [KDE Neon](https://neon.kde.org) and [Ubuntu](http://www.ubuntu.com) 17.10)
+* Linux (test platform: [KDE neon](https://neon.kde.org) and [Ubuntu](http://www.ubuntu.com) 17.10)
 
 * Windows (test platform: [Windows 10](https://www.microsoft.com/en-us/windows/features))
 
