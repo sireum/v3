@@ -25,7 +25,7 @@
 
 package org.sireum.logika.alir
 
-import org.jgrapht.ext.DOTExporter
+import org.jgrapht.io.DOTExporter
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.sireum.logika.ast._
 import org.sireum.util._
