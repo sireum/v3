@@ -274,9 +274,9 @@ object Distros {
         val tempDir = buildDir / platform
         mkdir ! tempDir
         %%("hdiutil", "attach", file)
-        val dirPath = Path((root / 'Volumes).toIO.
-          listFiles((_, name: String) => name.startsWith("IntelliJ"))(0))
-        val appPath = Path(dirPath.toIO.listFiles()(0).getCanonicalPath)
+        val dirPath = root / 'Volumes / (root / 'Volumes).toIO.
+          listFiles((_, name: String) => name.startsWith("IntelliJ"))(0).getName
+        val appPath = dirPath / dirPath.toIO.listFiles()(0).getName
         %%('cp, "-R", appPath, tempDir / "Sireum.app")
         %%("hdiutil", "eject", dirPath)
         println("done!")
