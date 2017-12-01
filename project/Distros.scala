@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.6"
+  val ideaVer: String = if (isDev) "2017.3" else "2016.2.6"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -61,21 +61,22 @@ object Distros {
   lazy val pluginUpdateIdMap = Map(
     "sireum" -> (if (isDev) 0 else 0 /* 37398 */),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 40254 else 40254),
-    "markdown" -> 34393,
+    "scala" -> (if (isDev) 40959 else 40254),
+    "markdown" -> (if (isDev) 39197 else 34393),
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 18619,
-    "bash" -> 38357,
+    "bash" -> (if (isDev) 38798 else 38357),
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 38279,
-    "rst" -> 14700
+    "python" -> (if (isDev) 41063 else 38279),
+    "rst" -> 14700,
+    "ignore" -> 40625
   )
 
-  lazy val pluginUpdateUrlMap = Map(
-    "ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
+  lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
+    //"ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
   )
 
   val ignoredIcons = Set("idea.icns", "idea-dev.icns", "idea.png", "idea-dev.png", "idea-dev.ico")
