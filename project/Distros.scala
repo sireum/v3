@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream, FilenameFilter}
 import java.util.jar.JarInputStream
 
 import ammonite.ops._
@@ -274,8 +274,11 @@ object Distros {
         val tempDir = buildDir / platform
         mkdir ! tempDir
         %%("hdiutil", "attach", file)
-        %%('cp, "-R", root / 'Volumes / "IntelliJ IDEA CE" / "IntelliJ IDEA CE.app", tempDir / "Sireum.app")
-        %%("hdiutil", "eject", root / 'Volumes / "IntelliJ IDEA CE")
+        val dirPath = Path((root / 'Volumes).toIO.
+          listFiles((_, name: String) => name.startsWith("IntelliJ"))(0))
+        val appPath = Path(dirPath.toIO.listFiles()(0).getCanonicalPath)
+        %%('cp, "-R", appPath, tempDir / "Sireum.app")
+        %%("hdiutil", "eject", dirPath)
         println("done!")
         extractPlugins(tempDir / "Sireum.app" / 'Contents / 'plugins)
         patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
@@ -422,7 +425,7 @@ object Distros {
     }
     cp(pwd / 'resources / 'distro / "wsd.js" / "wsd.js", baseDir / 'distros / "sireum-v3-wsd" / "wsd.js")
     %%('npm, "install", "ws")(baseDir / 'distros / "sireum-v3-wsd")
-    rm! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
+    rm ! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
 
     %('zip, "-qr", s"sireum-v3-wsd-${platform}64.zip", s"sireum-v3-wsd")(baseDir / 'distros)
 
