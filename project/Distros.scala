@@ -108,6 +108,12 @@ object Distros {
       case _: Throwable => sys.error("Need 7z.")
     }
 
+    try {
+      %%("unzip", "-h")
+    } catch {
+      case _: Throwable => sys.error("Need unzip.")
+    }
+
     downloadPlugins()
     buildIVE("mac")
     buildIVE("win")
@@ -274,9 +280,9 @@ object Distros {
         val tempDir = buildDir / platform
         mkdir ! tempDir
         %%("hdiutil", "attach", file)
-        val dirPath = root / 'Volumes / (root / 'Volumes).toIO.
-          listFiles((_, name: String) => name.startsWith("IntelliJ"))(0).getName
-        val appPath = dirPath / dirPath.toIO.listFiles()(0).getName
+        val filter: FilenameFilter = (_, name: String) => name.startsWith("IntelliJ")
+        val dirPath = Path((root / 'Volumes).toIO.listFiles(filter)(0))
+        val appPath = dirPath / dirPath.toIO.listFiles(filter)(0).getName
         %%('cp, "-R", appPath, tempDir / "Sireum.app")
         %%("hdiutil", "eject", dirPath)
         println("done!")
