@@ -482,8 +482,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             } else if (isMethod) {
               val Some(Left(md)) = e.declOpt
               mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
-              if (!md.isPure) for (arg@Id(value) <- e.args) typeMap(value) match {
-                case (_: RefTipe, _, _) if mdGlobalsMap(md.id.value).contains(value) =>
+              if (!md.isPure) for (arg@Id(value) <- e.args) typeMap.get(value) match {
+                case Some((_: RefTipe, _, _)) if mdGlobalsMap(md.id.value).contains(value) =>
                   error(arg, s"Cannot pass non-scalar global variable $value as an argument that can access $value directly.")
                 case _ =>
               }
