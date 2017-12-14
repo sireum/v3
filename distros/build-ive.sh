@@ -10,9 +10,9 @@ if [ -e $SCRIPT_DIR/../project/Distros.scala ]; then
   cp $SCRIPT_DIR/../project/Distros.scala $SCRIPT_DIR/sireum-v3/project/Distros.scala
 fi
 if [ "${SIREUM_DEV_DISTROS}" == "true" ]; then
-  $SCRIPT_DIR/sireum-v3/bin/sbt-launch.sh dev-ive-distros
+  $SCRIPT_DIR/sireum-v3/bin/sbt-launch.sh devIveDistros
 else
-  $SCRIPT_DIR/sireum-v3/bin/sbt-launch.sh ive-distros
+  $SCRIPT_DIR/sireum-v3/bin/sbt-launch.sh iveDistros
 fi
 if [ -z $SIREUM_DISTRO_BUILD_DIR ]; then
   mv $SCRIPT_DIR/sireum-v3/distros/*.zip $SCRIPT_DIR/

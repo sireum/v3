@@ -86,6 +86,7 @@ object JSON {
         case o: Stmt.ExtMethod => return printStmtExtMethod(o)
         case o: Stmt.SpecMethod => return printStmtSpecMethod(o)
         case o: Stmt.Enum => return printStmtEnum(o)
+        case o: Stmt.SubZ => return printStmtSubZ(o)
         case o: Stmt.Object => return printStmtObject(o)
         case o: Stmt.Sig => return printStmtSig(o)
         case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
@@ -187,8 +188,7 @@ object JSON {
         ("type", st""""Stmt.VarPattern""""),
         ("isVal", printB(o.isVal)),
         ("pattern", printPattern(o.pattern)),
-        ("tipeOpt", printOption(o.tipeOpt, printType)),
-        ("initOpt", printOption(o.initOpt, printAssignExp)),
+        ("init", printAssignExp(o.init)),
         ("attr", printAttr(o.attr))
       ))
     }
@@ -208,6 +208,7 @@ object JSON {
         ("type", st""""Stmt.Method""""),
         ("purity", printPurity(o.purity)),
         ("hasOverride", printB(o.hasOverride)),
+        ("isHelper", printB(o.isHelper)),
         ("sig", printMethodSig(o.sig)),
         ("contract", printContract(o.contract)),
         ("bodyOpt", printOption(o.bodyOpt, printBody)),
@@ -244,6 +245,23 @@ object JSON {
       ))
     }
 
+    @pure def printStmtSubZ(o: Stmt.SubZ): ST = {
+      return printObject(ISZ(
+        ("type", st""""Stmt.SubZ""""),
+        ("id", printId(o.id)),
+        ("isSigned", printB(o.isSigned)),
+        ("isBitVector", printB(o.isBitVector)),
+        ("isWrapped", printB(o.isWrapped)),
+        ("hasMin", printB(o.hasMin)),
+        ("hasMax", printB(o.hasMax)),
+        ("bitWidth", printZ(o.bitWidth)),
+        ("min", printZ(o.min)),
+        ("max", printZ(o.max)),
+        ("index", printZ(o.index)),
+        ("attr", printAttr(o.attr))
+      ))
+    }
+
     @pure def printStmtObject(o: Stmt.Object): ST = {
       return printObject(ISZ(
         ("type", st""""Stmt.Object""""),
@@ -259,6 +277,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.Sig""""),
         ("isImmutable", printB(o.isImmutable)),
+        ("isExt", printB(o.isExt)),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("parents", printISZ(F, o.parents, printTypeNamed)),
@@ -633,23 +652,6 @@ object JSON {
         case o: Exp.LitB => return printExpLitB(o)
         case o: Exp.LitC => return printExpLitC(o)
         case o: Exp.LitZ => return printExpLitZ(o)
-        case o: Exp.LitZ8 => return printExpLitZ8(o)
-        case o: Exp.LitZ16 => return printExpLitZ16(o)
-        case o: Exp.LitZ32 => return printExpLitZ32(o)
-        case o: Exp.LitZ64 => return printExpLitZ64(o)
-        case o: Exp.LitN => return printExpLitN(o)
-        case o: Exp.LitN8 => return printExpLitN8(o)
-        case o: Exp.LitN16 => return printExpLitN16(o)
-        case o: Exp.LitN32 => return printExpLitN32(o)
-        case o: Exp.LitN64 => return printExpLitN64(o)
-        case o: Exp.LitS8 => return printExpLitS8(o)
-        case o: Exp.LitS16 => return printExpLitS16(o)
-        case o: Exp.LitS32 => return printExpLitS32(o)
-        case o: Exp.LitS64 => return printExpLitS64(o)
-        case o: Exp.LitU8 => return printExpLitU8(o)
-        case o: Exp.LitU16 => return printExpLitU16(o)
-        case o: Exp.LitU32 => return printExpLitU32(o)
-        case o: Exp.LitU64 => return printExpLitU64(o)
         case o: Exp.LitF32 => return printExpLitF32(o)
         case o: Exp.LitF64 => return printExpLitF64(o)
         case o: Exp.LitR => return printExpLitR(o)
@@ -678,23 +680,6 @@ object JSON {
         case o: Exp.LitB => return printExpLitB(o)
         case o: Exp.LitC => return printExpLitC(o)
         case o: Exp.LitZ => return printExpLitZ(o)
-        case o: Exp.LitZ8 => return printExpLitZ8(o)
-        case o: Exp.LitZ16 => return printExpLitZ16(o)
-        case o: Exp.LitZ32 => return printExpLitZ32(o)
-        case o: Exp.LitZ64 => return printExpLitZ64(o)
-        case o: Exp.LitN => return printExpLitN(o)
-        case o: Exp.LitN8 => return printExpLitN8(o)
-        case o: Exp.LitN16 => return printExpLitN16(o)
-        case o: Exp.LitN32 => return printExpLitN32(o)
-        case o: Exp.LitN64 => return printExpLitN64(o)
-        case o: Exp.LitS8 => return printExpLitS8(o)
-        case o: Exp.LitS16 => return printExpLitS16(o)
-        case o: Exp.LitS32 => return printExpLitS32(o)
-        case o: Exp.LitS64 => return printExpLitS64(o)
-        case o: Exp.LitU8 => return printExpLitU8(o)
-        case o: Exp.LitU16 => return printExpLitU16(o)
-        case o: Exp.LitU32 => return printExpLitU32(o)
-        case o: Exp.LitU64 => return printExpLitU64(o)
         case o: Exp.LitF32 => return printExpLitF32(o)
         case o: Exp.LitF64 => return printExpLitF64(o)
         case o: Exp.LitR => return printExpLitR(o)
@@ -723,142 +708,6 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Exp.LitZ""""),
         ("value", printZ(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitZ8(o: Exp.LitZ8): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitZ8""""),
-        ("value", printZ8(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitZ16(o: Exp.LitZ16): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitZ16""""),
-        ("value", printZ16(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitZ32(o: Exp.LitZ32): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitZ32""""),
-        ("value", printZ32(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitZ64(o: Exp.LitZ64): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitZ64""""),
-        ("value", printZ64(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitN(o: Exp.LitN): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitN""""),
-        ("value", printN(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitN8(o: Exp.LitN8): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitN8""""),
-        ("value", printN8(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitN16(o: Exp.LitN16): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitN16""""),
-        ("value", printN16(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitN32(o: Exp.LitN32): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitN32""""),
-        ("value", printN32(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitN64(o: Exp.LitN64): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitN64""""),
-        ("value", printN64(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitS8(o: Exp.LitS8): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitS8""""),
-        ("value", printS8(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitS16(o: Exp.LitS16): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitS16""""),
-        ("value", printS16(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitS32(o: Exp.LitS32): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitS32""""),
-        ("value", printS32(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitS64(o: Exp.LitS64): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitS64""""),
-        ("value", printS64(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitU8(o: Exp.LitU8): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitU8""""),
-        ("value", printU8(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitU16(o: Exp.LitU16): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitU16""""),
-        ("value", printU16(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitU32(o: Exp.LitU32): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitU32""""),
-        ("value", printU32(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitU64(o: Exp.LitU64): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitU64""""),
-        ("value", printU64(o.value)),
         ("attr", printAttr(o.attr))
       ))
     }
@@ -1197,8 +1046,7 @@ object JSON {
     @pure def printTypeParam(o: TypeParam): ST = {
       return printObject(ISZ(
         ("type", st""""TypeParam""""),
-        ("id", printId(o.id)),
-        ("superTypeOpt", printOption(o.superTypeOpt, printType))
+        ("id", printId(o.id))
       ))
     }
 
@@ -1579,6 +1427,40 @@ object JSON {
       ))
     }
 
+    @pure def printTyped(o: Typed): ST = {
+      o match {
+        case o: Typed.Name => return printTypedName(o)
+        case o: Typed.Tuple => return printTypedTuple(o)
+        case o: Typed.Fun => return printTypedFun(o)
+      }
+    }
+
+    @pure def printTypedName(o: Typed.Name): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Name""""),
+        ("ids", printISZ(T, o.ids, printString)),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
+    @pure def printTypedTuple(o: Typed.Tuple): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Tuple""""),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
+    @pure def printTypedFun(o: Typed.Fun): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Fun""""),
+        ("args", printISZ(F, o.args, printTyped)),
+        ("ret", printTyped(o.ret)),
+        ("posOpt", printOption(o.posOpt, printPosInfo))
+      ))
+    }
+
     @pure def printAttr(o: Attr): ST = {
       return printObject(ISZ(
         ("type", st""""Attr""""),
@@ -1590,7 +1472,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""TypedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typedOpt", printOption(o.typedOpt, printTyped))
       ))
     }
 
@@ -1599,7 +1481,7 @@ object JSON {
         ("type", st""""ResolvedAttr""""),
         ("posOpt", printOption(o.posOpt, printPosInfo)),
         ("resOpt", printOption(o.resOpt, printResolvedInfo)),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typedOpt", printOption(o.typedOpt, printTyped))
       ))
     }
 
@@ -1743,7 +1625,7 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
       t match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
@@ -1753,6 +1635,7 @@ object JSON {
         case "Stmt.ExtMethod" => val r = parseStmtExtMethodT(T); return r
         case "Stmt.SpecMethod" => val r = parseStmtSpecMethodT(T); return r
         case "Stmt.Enum" => val r = parseStmtEnumT(T); return r
+        case "Stmt.SubZ" => val r = parseStmtSubZT(T); return r
         case "Stmt.Object" => val r = parseStmtObjectT(T); return r
         case "Stmt.Sig" => val r = parseStmtSigT(T); return r
         case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
@@ -1937,16 +1820,13 @@ object JSON {
       parser.parseObjectKey("pattern")
       val pattern = parsePattern()
       parser.parseObjectNext()
-      parser.parseObjectKey("tipeOpt")
-      val tipeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("initOpt")
-      val initOpt = parser.parseOption(parseAssignExp _)
+      parser.parseObjectKey("init")
+      val init = parseAssignExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.VarPattern(isVal, pattern, tipeOpt, initOpt, attr)
+      return Stmt.VarPattern(isVal, pattern, init, attr)
     }
 
     def parseStmtSpecVar(): Stmt.SpecVar = {
@@ -1988,6 +1868,9 @@ object JSON {
       parser.parseObjectKey("hasOverride")
       val hasOverride = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isHelper")
+      val isHelper = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("sig")
       val sig = parseMethodSig()
       parser.parseObjectNext()
@@ -2000,7 +1883,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Method(purity, hasOverride, sig, contract, bodyOpt, attr)
+      return Stmt.Method(purity, hasOverride, isHelper, sig, contract, bodyOpt, attr)
     }
 
     def parseStmtExtMethod(): Stmt.ExtMethod = {
@@ -2072,6 +1955,51 @@ object JSON {
       return Stmt.Enum(id, elements, attr)
     }
 
+    def parseStmtSubZ(): Stmt.SubZ = {
+      val r = parseStmtSubZT(F)
+      return r
+    }
+
+    def parseStmtSubZT(typeParsed: B): Stmt.SubZ = {
+      if (!typeParsed) {
+        parser.parseObjectType("Stmt.SubZ")
+      }
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isSigned")
+      val isSigned = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isBitVector")
+      val isBitVector = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isWrapped")
+      val isWrapped = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("hasMin")
+      val hasMin = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("hasMax")
+      val hasMax = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("bitWidth")
+      val bitWidth = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("min")
+      val min = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("max")
+      val max = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("index")
+      val index = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return Stmt.SubZ(id, isSigned, isBitVector, isWrapped, hasMin, hasMax, bitWidth, min, max, index, attr)
+    }
+
     def parseStmtObject(): Stmt.Object = {
       val r = parseStmtObjectT(F)
       return r
@@ -2111,6 +2039,9 @@ object JSON {
       parser.parseObjectKey("isImmutable")
       val isImmutable = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isExt")
+      val isExt = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -2129,7 +2060,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Sig(isImmutable, id, typeParams, parents, selfTypeOpt, stmts, attr)
+      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, selfTypeOpt, stmts, attr)
     }
 
     def parseStmtAbstractDatatype(): Stmt.AbstractDatatype = {
@@ -2925,28 +2856,11 @@ object JSON {
     }
 
     def parseExp(): Exp = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitZ8", "Exp.LitZ16", "Exp.LitZ32", "Exp.LitZ64", "Exp.LitN", "Exp.LitN8", "Exp.LitN16", "Exp.LitN32", "Exp.LitN64", "Exp.LitS8", "Exp.LitS16", "Exp.LitS32", "Exp.LitS64", "Exp.LitU8", "Exp.LitU16", "Exp.LitU32", "Exp.LitU64", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
       t match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
         case "Exp.LitZ" => val r = parseExpLitZT(T); return r
-        case "Exp.LitZ8" => val r = parseExpLitZ8T(T); return r
-        case "Exp.LitZ16" => val r = parseExpLitZ16T(T); return r
-        case "Exp.LitZ32" => val r = parseExpLitZ32T(T); return r
-        case "Exp.LitZ64" => val r = parseExpLitZ64T(T); return r
-        case "Exp.LitN" => val r = parseExpLitNT(T); return r
-        case "Exp.LitN8" => val r = parseExpLitN8T(T); return r
-        case "Exp.LitN16" => val r = parseExpLitN16T(T); return r
-        case "Exp.LitN32" => val r = parseExpLitN32T(T); return r
-        case "Exp.LitN64" => val r = parseExpLitN64T(T); return r
-        case "Exp.LitS8" => val r = parseExpLitS8T(T); return r
-        case "Exp.LitS16" => val r = parseExpLitS16T(T); return r
-        case "Exp.LitS32" => val r = parseExpLitS32T(T); return r
-        case "Exp.LitS64" => val r = parseExpLitS64T(T); return r
-        case "Exp.LitU8" => val r = parseExpLitU8T(T); return r
-        case "Exp.LitU16" => val r = parseExpLitU16T(T); return r
-        case "Exp.LitU32" => val r = parseExpLitU32T(T); return r
-        case "Exp.LitU64" => val r = parseExpLitU64T(T); return r
         case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
         case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
         case "Exp.LitR" => val r = parseExpLitRT(T); return r
@@ -2972,28 +2886,11 @@ object JSON {
     }
 
     def parseLit(): Lit = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitZ8", "Exp.LitZ16", "Exp.LitZ32", "Exp.LitZ64", "Exp.LitN", "Exp.LitN8", "Exp.LitN16", "Exp.LitN32", "Exp.LitN64", "Exp.LitS8", "Exp.LitS16", "Exp.LitS32", "Exp.LitS64", "Exp.LitU8", "Exp.LitU16", "Exp.LitU32", "Exp.LitU64", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
       t match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
         case "Exp.LitZ" => val r = parseExpLitZT(T); return r
-        case "Exp.LitZ8" => val r = parseExpLitZ8T(T); return r
-        case "Exp.LitZ16" => val r = parseExpLitZ16T(T); return r
-        case "Exp.LitZ32" => val r = parseExpLitZ32T(T); return r
-        case "Exp.LitZ64" => val r = parseExpLitZ64T(T); return r
-        case "Exp.LitN" => val r = parseExpLitNT(T); return r
-        case "Exp.LitN8" => val r = parseExpLitN8T(T); return r
-        case "Exp.LitN16" => val r = parseExpLitN16T(T); return r
-        case "Exp.LitN32" => val r = parseExpLitN32T(T); return r
-        case "Exp.LitN64" => val r = parseExpLitN64T(T); return r
-        case "Exp.LitS8" => val r = parseExpLitS8T(T); return r
-        case "Exp.LitS16" => val r = parseExpLitS16T(T); return r
-        case "Exp.LitS32" => val r = parseExpLitS32T(T); return r
-        case "Exp.LitS64" => val r = parseExpLitS64T(T); return r
-        case "Exp.LitU8" => val r = parseExpLitU8T(T); return r
-        case "Exp.LitU16" => val r = parseExpLitU16T(T); return r
-        case "Exp.LitU32" => val r = parseExpLitU32T(T); return r
-        case "Exp.LitU64" => val r = parseExpLitU64T(T); return r
         case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
         case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
         case "Exp.LitR" => val r = parseExpLitRT(T); return r
@@ -3055,312 +2952,6 @@ object JSON {
       val attr = parseAttr()
       parser.parseObjectNext()
       return Exp.LitZ(value, attr)
-    }
-
-    def parseExpLitZ8(): Exp.LitZ8 = {
-      val r = parseExpLitZ8T(F)
-      return r
-    }
-
-    def parseExpLitZ8T(typeParsed: B): Exp.LitZ8 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitZ8")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseZ8()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitZ8(value, attr)
-    }
-
-    def parseExpLitZ16(): Exp.LitZ16 = {
-      val r = parseExpLitZ16T(F)
-      return r
-    }
-
-    def parseExpLitZ16T(typeParsed: B): Exp.LitZ16 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitZ16")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseZ16()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitZ16(value, attr)
-    }
-
-    def parseExpLitZ32(): Exp.LitZ32 = {
-      val r = parseExpLitZ32T(F)
-      return r
-    }
-
-    def parseExpLitZ32T(typeParsed: B): Exp.LitZ32 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitZ32")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseZ32()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitZ32(value, attr)
-    }
-
-    def parseExpLitZ64(): Exp.LitZ64 = {
-      val r = parseExpLitZ64T(F)
-      return r
-    }
-
-    def parseExpLitZ64T(typeParsed: B): Exp.LitZ64 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitZ64")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseZ64()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitZ64(value, attr)
-    }
-
-    def parseExpLitN(): Exp.LitN = {
-      val r = parseExpLitNT(F)
-      return r
-    }
-
-    def parseExpLitNT(typeParsed: B): Exp.LitN = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitN")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseN()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitN(value, attr)
-    }
-
-    def parseExpLitN8(): Exp.LitN8 = {
-      val r = parseExpLitN8T(F)
-      return r
-    }
-
-    def parseExpLitN8T(typeParsed: B): Exp.LitN8 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitN8")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseN8()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitN8(value, attr)
-    }
-
-    def parseExpLitN16(): Exp.LitN16 = {
-      val r = parseExpLitN16T(F)
-      return r
-    }
-
-    def parseExpLitN16T(typeParsed: B): Exp.LitN16 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitN16")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseN16()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitN16(value, attr)
-    }
-
-    def parseExpLitN32(): Exp.LitN32 = {
-      val r = parseExpLitN32T(F)
-      return r
-    }
-
-    def parseExpLitN32T(typeParsed: B): Exp.LitN32 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitN32")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseN32()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitN32(value, attr)
-    }
-
-    def parseExpLitN64(): Exp.LitN64 = {
-      val r = parseExpLitN64T(F)
-      return r
-    }
-
-    def parseExpLitN64T(typeParsed: B): Exp.LitN64 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitN64")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseN64()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitN64(value, attr)
-    }
-
-    def parseExpLitS8(): Exp.LitS8 = {
-      val r = parseExpLitS8T(F)
-      return r
-    }
-
-    def parseExpLitS8T(typeParsed: B): Exp.LitS8 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitS8")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseS8()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitS8(value, attr)
-    }
-
-    def parseExpLitS16(): Exp.LitS16 = {
-      val r = parseExpLitS16T(F)
-      return r
-    }
-
-    def parseExpLitS16T(typeParsed: B): Exp.LitS16 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitS16")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseS16()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitS16(value, attr)
-    }
-
-    def parseExpLitS32(): Exp.LitS32 = {
-      val r = parseExpLitS32T(F)
-      return r
-    }
-
-    def parseExpLitS32T(typeParsed: B): Exp.LitS32 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitS32")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseS32()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitS32(value, attr)
-    }
-
-    def parseExpLitS64(): Exp.LitS64 = {
-      val r = parseExpLitS64T(F)
-      return r
-    }
-
-    def parseExpLitS64T(typeParsed: B): Exp.LitS64 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitS64")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseS64()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitS64(value, attr)
-    }
-
-    def parseExpLitU8(): Exp.LitU8 = {
-      val r = parseExpLitU8T(F)
-      return r
-    }
-
-    def parseExpLitU8T(typeParsed: B): Exp.LitU8 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitU8")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseU8()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitU8(value, attr)
-    }
-
-    def parseExpLitU16(): Exp.LitU16 = {
-      val r = parseExpLitU16T(F)
-      return r
-    }
-
-    def parseExpLitU16T(typeParsed: B): Exp.LitU16 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitU16")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseU16()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitU16(value, attr)
-    }
-
-    def parseExpLitU32(): Exp.LitU32 = {
-      val r = parseExpLitU32T(F)
-      return r
-    }
-
-    def parseExpLitU32T(typeParsed: B): Exp.LitU32 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitU32")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseU32()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitU32(value, attr)
-    }
-
-    def parseExpLitU64(): Exp.LitU64 = {
-      val r = parseExpLitU64T(F)
-      return r
-    }
-
-    def parseExpLitU64T(typeParsed: B): Exp.LitU64 = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitU64")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseU64()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitU64(value, attr)
     }
 
     def parseExpLitF32(): Exp.LitF32 = {
@@ -4084,10 +3675,7 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("superTypeOpt")
-      val superTypeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
-      return TypeParam(id, superTypeOpt)
+      return TypeParam(id)
     }
 
     def parseContract(): Contract = {
@@ -4897,6 +4485,76 @@ object JSON {
       return TruthTable.Conclusion.Contingent(trueAssignments, falseAssignments, attr)
     }
 
+    def parseTyped(): Typed = {
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun"))
+      t match {
+        case "Typed.Name" => val r = parseTypedNameT(T); return r
+        case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
+        case "Typed.Fun" => val r = parseTypedFunT(T); return r
+        case _ => halt(parser.errorMessage)
+      }
+    }
+
+    def parseTypedName(): Typed.Name = {
+      val r = parseTypedNameT(F)
+      return r
+    }
+
+    def parseTypedNameT(typeParsed: B): Typed.Name = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Name")
+      }
+      parser.parseObjectKey("ids")
+      val ids = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Name(ids, args, posOpt)
+    }
+
+    def parseTypedTuple(): Typed.Tuple = {
+      val r = parseTypedTupleT(F)
+      return r
+    }
+
+    def parseTypedTupleT(typeParsed: B): Typed.Tuple = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Tuple")
+      }
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Tuple(args, posOpt)
+    }
+
+    def parseTypedFun(): Typed.Fun = {
+      val r = parseTypedFunT(F)
+      return r
+    }
+
+    def parseTypedFunT(typeParsed: B): Typed.Fun = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Fun")
+      }
+      parser.parseObjectKey("args")
+      val args = parser.parseISZ(parseTyped _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("ret")
+      val ret = parseTyped()
+      parser.parseObjectNext()
+      parser.parseObjectKey("posOpt")
+      val posOpt = parser.parseOption(parsePosInfo _)
+      parser.parseObjectNext()
+      return Typed.Fun(args, ret, posOpt)
+    }
+
     def parseAttr(): Attr = {
       val r = parseAttrT(F)
       return r
@@ -4924,10 +4582,10 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectKey("typedOpt")
+      val typedOpt = parser.parseOption(parseTyped _)
       parser.parseObjectNext()
-      return TypedAttr(posOpt, typeOpt)
+      return TypedAttr(posOpt, typedOpt)
     }
 
     def parseResolvedAttr(): ResolvedAttr = {
@@ -4945,10 +4603,10 @@ object JSON {
       parser.parseObjectKey("resOpt")
       val resOpt = parser.parseOption(parseResolvedInfo _)
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectKey("typedOpt")
+      val typedOpt = parser.parseOption(parseTyped _)
       parser.parseObjectNext()
-      return ResolvedAttr(posOpt, resOpt, typeOpt)
+      return ResolvedAttr(posOpt, resOpt, typedOpt)
     }
 
     def parseResolvedInfo(): ResolvedInfo = {
@@ -5397,6 +5055,24 @@ object JSON {
       return r
     }
     val r = to(s, fStmtEnum)
+    return r
+  }
+
+  def fromStmtSubZ(o: Stmt.SubZ, isCompact: B): String = {
+    val st = Printer.printStmtSubZ(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toStmtSubZ(s: String): Stmt.SubZ = {
+    def fStmtSubZ(parser: Parser): Stmt.SubZ = {
+      var r = parser.parseStmtSubZ()
+      return r
+    }
+    val r = to(s, fStmtSubZ)
     return r
   }
 
@@ -6261,312 +5937,6 @@ object JSON {
       return r
     }
     val r = to(s, fExpLitZ)
-    return r
-  }
-
-  def fromExpLitZ8(o: Exp.LitZ8, isCompact: B): String = {
-    val st = Printer.printExpLitZ8(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitZ8(s: String): Exp.LitZ8 = {
-    def fExpLitZ8(parser: Parser): Exp.LitZ8 = {
-      var r = parser.parseExpLitZ8()
-      return r
-    }
-    val r = to(s, fExpLitZ8)
-    return r
-  }
-
-  def fromExpLitZ16(o: Exp.LitZ16, isCompact: B): String = {
-    val st = Printer.printExpLitZ16(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitZ16(s: String): Exp.LitZ16 = {
-    def fExpLitZ16(parser: Parser): Exp.LitZ16 = {
-      var r = parser.parseExpLitZ16()
-      return r
-    }
-    val r = to(s, fExpLitZ16)
-    return r
-  }
-
-  def fromExpLitZ32(o: Exp.LitZ32, isCompact: B): String = {
-    val st = Printer.printExpLitZ32(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitZ32(s: String): Exp.LitZ32 = {
-    def fExpLitZ32(parser: Parser): Exp.LitZ32 = {
-      var r = parser.parseExpLitZ32()
-      return r
-    }
-    val r = to(s, fExpLitZ32)
-    return r
-  }
-
-  def fromExpLitZ64(o: Exp.LitZ64, isCompact: B): String = {
-    val st = Printer.printExpLitZ64(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitZ64(s: String): Exp.LitZ64 = {
-    def fExpLitZ64(parser: Parser): Exp.LitZ64 = {
-      var r = parser.parseExpLitZ64()
-      return r
-    }
-    val r = to(s, fExpLitZ64)
-    return r
-  }
-
-  def fromExpLitN(o: Exp.LitN, isCompact: B): String = {
-    val st = Printer.printExpLitN(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitN(s: String): Exp.LitN = {
-    def fExpLitN(parser: Parser): Exp.LitN = {
-      var r = parser.parseExpLitN()
-      return r
-    }
-    val r = to(s, fExpLitN)
-    return r
-  }
-
-  def fromExpLitN8(o: Exp.LitN8, isCompact: B): String = {
-    val st = Printer.printExpLitN8(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitN8(s: String): Exp.LitN8 = {
-    def fExpLitN8(parser: Parser): Exp.LitN8 = {
-      var r = parser.parseExpLitN8()
-      return r
-    }
-    val r = to(s, fExpLitN8)
-    return r
-  }
-
-  def fromExpLitN16(o: Exp.LitN16, isCompact: B): String = {
-    val st = Printer.printExpLitN16(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitN16(s: String): Exp.LitN16 = {
-    def fExpLitN16(parser: Parser): Exp.LitN16 = {
-      var r = parser.parseExpLitN16()
-      return r
-    }
-    val r = to(s, fExpLitN16)
-    return r
-  }
-
-  def fromExpLitN32(o: Exp.LitN32, isCompact: B): String = {
-    val st = Printer.printExpLitN32(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitN32(s: String): Exp.LitN32 = {
-    def fExpLitN32(parser: Parser): Exp.LitN32 = {
-      var r = parser.parseExpLitN32()
-      return r
-    }
-    val r = to(s, fExpLitN32)
-    return r
-  }
-
-  def fromExpLitN64(o: Exp.LitN64, isCompact: B): String = {
-    val st = Printer.printExpLitN64(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitN64(s: String): Exp.LitN64 = {
-    def fExpLitN64(parser: Parser): Exp.LitN64 = {
-      var r = parser.parseExpLitN64()
-      return r
-    }
-    val r = to(s, fExpLitN64)
-    return r
-  }
-
-  def fromExpLitS8(o: Exp.LitS8, isCompact: B): String = {
-    val st = Printer.printExpLitS8(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitS8(s: String): Exp.LitS8 = {
-    def fExpLitS8(parser: Parser): Exp.LitS8 = {
-      var r = parser.parseExpLitS8()
-      return r
-    }
-    val r = to(s, fExpLitS8)
-    return r
-  }
-
-  def fromExpLitS16(o: Exp.LitS16, isCompact: B): String = {
-    val st = Printer.printExpLitS16(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitS16(s: String): Exp.LitS16 = {
-    def fExpLitS16(parser: Parser): Exp.LitS16 = {
-      var r = parser.parseExpLitS16()
-      return r
-    }
-    val r = to(s, fExpLitS16)
-    return r
-  }
-
-  def fromExpLitS32(o: Exp.LitS32, isCompact: B): String = {
-    val st = Printer.printExpLitS32(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitS32(s: String): Exp.LitS32 = {
-    def fExpLitS32(parser: Parser): Exp.LitS32 = {
-      var r = parser.parseExpLitS32()
-      return r
-    }
-    val r = to(s, fExpLitS32)
-    return r
-  }
-
-  def fromExpLitS64(o: Exp.LitS64, isCompact: B): String = {
-    val st = Printer.printExpLitS64(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitS64(s: String): Exp.LitS64 = {
-    def fExpLitS64(parser: Parser): Exp.LitS64 = {
-      var r = parser.parseExpLitS64()
-      return r
-    }
-    val r = to(s, fExpLitS64)
-    return r
-  }
-
-  def fromExpLitU8(o: Exp.LitU8, isCompact: B): String = {
-    val st = Printer.printExpLitU8(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitU8(s: String): Exp.LitU8 = {
-    def fExpLitU8(parser: Parser): Exp.LitU8 = {
-      var r = parser.parseExpLitU8()
-      return r
-    }
-    val r = to(s, fExpLitU8)
-    return r
-  }
-
-  def fromExpLitU16(o: Exp.LitU16, isCompact: B): String = {
-    val st = Printer.printExpLitU16(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitU16(s: String): Exp.LitU16 = {
-    def fExpLitU16(parser: Parser): Exp.LitU16 = {
-      var r = parser.parseExpLitU16()
-      return r
-    }
-    val r = to(s, fExpLitU16)
-    return r
-  }
-
-  def fromExpLitU32(o: Exp.LitU32, isCompact: B): String = {
-    val st = Printer.printExpLitU32(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitU32(s: String): Exp.LitU32 = {
-    def fExpLitU32(parser: Parser): Exp.LitU32 = {
-      var r = parser.parseExpLitU32()
-      return r
-    }
-    val r = to(s, fExpLitU32)
-    return r
-  }
-
-  def fromExpLitU64(o: Exp.LitU64, isCompact: B): String = {
-    val st = Printer.printExpLitU64(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitU64(s: String): Exp.LitU64 = {
-    def fExpLitU64(parser: Parser): Exp.LitU64 = {
-      var r = parser.parseExpLitU64()
-      return r
-    }
-    val r = to(s, fExpLitU64)
     return r
   }
 
@@ -7899,6 +7269,78 @@ object JSON {
       return r
     }
     val r = to(s, fTruthTableConclusionContingent)
+    return r
+  }
+
+  def fromTyped(o: Typed, isCompact: B): String = {
+    val st = Printer.printTyped(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTyped(s: String): Typed = {
+    def fTyped(parser: Parser): Typed = {
+      var r = parser.parseTyped()
+      return r
+    }
+    val r = to(s, fTyped)
+    return r
+  }
+
+  def fromTypedName(o: Typed.Name, isCompact: B): String = {
+    val st = Printer.printTypedName(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedName(s: String): Typed.Name = {
+    def fTypedName(parser: Parser): Typed.Name = {
+      var r = parser.parseTypedName()
+      return r
+    }
+    val r = to(s, fTypedName)
+    return r
+  }
+
+  def fromTypedTuple(o: Typed.Tuple, isCompact: B): String = {
+    val st = Printer.printTypedTuple(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedTuple(s: String): Typed.Tuple = {
+    def fTypedTuple(parser: Parser): Typed.Tuple = {
+      var r = parser.parseTypedTuple()
+      return r
+    }
+    val r = to(s, fTypedTuple)
+    return r
+  }
+
+  def fromTypedFun(o: Typed.Fun, isCompact: B): String = {
+    val st = Printer.printTypedFun(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedFun(s: String): Typed.Fun = {
+    def fTypedFun(parser: Parser): Typed.Fun = {
+      var r = parser.parseTypedFun()
+      return r
+    }
+    val r = to(s, fTypedFun)
     return r
   }
 

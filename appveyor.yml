@@ -28,11 +28,11 @@ cache:
   - '%USERPROFILE%\.sbt'
 
 install:
-  - bash -lc "pacman --noconfirm -S unzip"
+  - bash -lc "pacman --noconfirm -S unzip bc"
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/prelude.sh"
 
 build_script:
   - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh clean test:compile test:fastOptJS"
 
 test_script:
-  - bash -lc "$APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"
+  - bash -lc "SIREUM_PARALLEL_BUILD=false $APPVEYOR_BUILD_FOLDER/bin/sbt-launch.sh test"

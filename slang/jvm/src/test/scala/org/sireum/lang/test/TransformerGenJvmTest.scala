@@ -41,7 +41,7 @@ class TransformerGenJvmTest extends SireumSpec {
   *(gen(slangAstPath, slangTransformerPath, isImmutable = true))
 
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
-    val reporter = AccumulatingReporter(ISZ())
+    val reporter = AccumulatingReporter.create
     val rOpt = TransformerGenJvm(allowSireumPackage = true,
       isImmutable, Some(licensePath), src, dest, None, reporter)
     reporter.printMessages()

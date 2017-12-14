@@ -154,7 +154,7 @@ class Main(option: LogikaOption,
     val anchorFile = new File(anchorFileUri)
     val wipedAnchorFile = new File(anchorFile.getParentFile, s"anchor-${anchorFile.getName}")
     for ((fileUri, program, content) <- fileProofContent.tail if program != anchorProgram) try {
-      errPrintln(s"The program AST (sans contracts and prints) of $fileUri is structurally different than $anchorFileUri.")
+      errPrintln(s"The program AST (sans l${"\"\"\""}...${"\"\"\""} and prints) of $fileUri is structurally different than $anchorFileUri.")
       if (!hasError) {
         if (FileUtil.writeFile(wipedAnchorFile, anchorContent))
           outPrintln(s"Wrote to ${wipedAnchorFile.getCanonicalPath}.")

@@ -36,8 +36,9 @@ if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ] || [ ! -x ${Z
   exit 1
 fi
 PATH=${NODE_BIN}:${PATH}
-: ${JAVA_OPTIONS:=-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m}
-: ${JAVA_PROPERTIES:=-Dsbt.log.format=false}
+if [[ -n JVM_OPTS ]]; then
+  export JVM_OPTS="-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m"
+fi
 cd ${SIREUM_HOME}
 for i in "$@" ; do
   if [[ ${i} == "clean" ]]; then
@@ -47,4 +48,4 @@ for i in "$@" ; do
     break
   fi
 done
-${JAVA} ${JAVA_OPTIONS} ${JAVA_PROPERTIES} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"
+${JAVA} ${JVM_OPTS} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"

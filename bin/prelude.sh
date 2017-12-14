@@ -23,14 +23,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-COMMANDS="wget unzip rm mv git"
+COMMANDS="wget unzip rm mv git bc"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=8.23.0.3-jdk8.0.144
-SCALA_VERSION=2.12.3
-SBT_VERSION=1.0.0
-NODE_VERSION=8.4.0
+ZULU_VERSION=8.25.0.1-jdk8.0.152
+SCALA_VERSION=2.12.4
+SBT_VERSION=1.0.4
+NODE_VERSION=9.2.0
 Z3_VERSION=4.4.1
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then

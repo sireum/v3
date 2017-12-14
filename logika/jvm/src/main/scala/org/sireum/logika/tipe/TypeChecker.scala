@@ -215,9 +215,18 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
               case Some(t2) =>
                 if (!tipeEq(t, t2))
                   error(e, s"Expecting return type $t, but found $t2.")
+                else {
+                  e match {
+                    case Id(x) =>
+                      if (md.params.exists(p => p.id.value == x && t.isInstanceOf[MSeq])) {
+                        error(e, s"Cannot directly pass through the sequence from parameter $x as a return value.")
+                      }
+                    case _ =>
+                  }
+                }
               case _ =>
             }
-          case Some(None) =>
+          case Some(None) if md.returnTypeOpt.nonEmpty =>
             error(b.returnOpt.get, s"Expecting return type $t, but found none.")
           case _ =>
         }
@@ -405,7 +414,7 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
       }
     }
     if (node.isInstanceOf[While])
-      for (id <- collectAssignedVars(block) -- modifiedVars) {
+      for (id <- collectAssignedVars(block) -- modifiedVars if typeMap.contains(id.value)) {
         val li = program.nodeLocMap(id)
         val msg = s"Variable ${id.value} is modified at [${li.lineBegin}, ${li.columnBegin}] inside the loop but not declared in the loop modifies clause."
         if (weakModifies) warn(node, msg) else error(node, msg)
@@ -473,8 +482,8 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
             } else if (isMethod) {
               val Some(Left(md)) = e.declOpt
               mOpt.foreach(m => if (!md.isPure && m.isPure) error(e.exp, s"Can only call to another @pure method from a @pure method."))
-              if (!md.isPure) for (arg@Id(value) <- e.args) typeMap(value) match {
-                case (_: RefTipe, _, _) if mdGlobalsMap(md.id.value).contains(value) =>
+              if (!md.isPure) for (arg@Id(value) <- e.args) typeMap.get(value) match {
+                case Some((_: RefTipe, _, _)) if mdGlobalsMap(md.id.value).contains(value) =>
                   error(arg, s"Cannot pass non-scalar global variable $value as an argument that can access $value directly.")
                 case _ =>
               }
@@ -493,6 +502,9 @@ TypeContext(typeMap: IMap[String, (Tipe, Node, Program)],
                   case Some(pid) if pid.value != param.id.value =>
                     error(arg, s"Cannot pass ${Exp.toString(arg, inProof = false)} for parameter ${param.id.value} because it will be passed for modified parameter ${pid.value}.")
                   case _ =>
+                }
+                if (modifiedIds.contains(param.id) && !arg.isInstanceOf[Id]) {
+                  error(arg, s"Cannot pass non-identifier ${Exp.toString(arg, inProof = false)} for modified parameter ${param.id.value}.")
                 }
               }
             }

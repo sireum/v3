@@ -98,8 +98,7 @@ object Stmt {
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
-                             tipeOpt: Option[Type],
-                             initOpt: Option[AssignExp],
+                             init: AssignExp,
                              @hidden attr: Attr)
     extends Stmt
 
@@ -111,6 +110,7 @@ object Stmt {
 
   @datatype class Method(purity: Purity.Type,
                          hasOverride: B,
+                         isHelper: B,
                          sig: MethodSig,
                          contract: Contract,
                          bodyOpt: Option[Body],
@@ -134,6 +134,23 @@ object Stmt {
                        @hidden attr: Attr)
     extends Stmt
 
+  @datatype class SubZ(id: Id,
+                       isSigned: B,
+                       isBitVector: B,
+                       isWrapped: B,
+                       hasMin: B,
+                       hasMax: B,
+                       bitWidth: Z,
+                       min: Z,
+                       max: Z,
+                       index: Z,
+                       @hidden attr: Attr)
+    extends Stmt {
+    def isZeroIndex: B = {
+      return index == 0
+    }
+  }
+
   @datatype class Object(isExt: B,
                          id: Id,
                          parents: ISZ[Type],
@@ -142,6 +159,7 @@ object Stmt {
     extends Stmt
 
   @datatype class Sig(isImmutable: B,
+                      isExt: B,
                       id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type.Named],
@@ -305,7 +323,9 @@ object EnumGen {
 
 
 @datatype trait Type {
-  def posOpt: Option[PosInfo]
+  @pure def posOpt: Option[PosInfo]
+  @pure def typedOpt: Option[Typed]
+  @pure def typed(t: Typed): Type
 }
 
 object Type {
@@ -315,8 +335,16 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Named = {
+      return this(name, typeArgs, attr(typedOpt = Some(t)))
     }
   }
 
@@ -325,8 +353,16 @@ object Type {
                       attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Fun = {
+      return this(args, ret, attr(typedOpt = Some(t)))
     }
   }
 
@@ -334,8 +370,16 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    def posOpt: Option[PosInfo] = {
+    @pure def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
+
+    @pure def typed(t: Typed): Tuple = {
+      return this(args, attr(typedOpt = Some(t)))
     }
   }
 
@@ -396,159 +440,6 @@ object Exp {
 
   @datatype class LitZ(value: Z,
                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitZ8(value: Z8,
-                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitZ16(value: Z16,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitZ32(value: Z32,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitZ64(value: Z64,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitN(value: N,
-                       @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitN8(value: N8,
-                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitN16(value: N16,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitN32(value: N32,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitN64(value: N64,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitS8(value: S8,
-                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitS16(value: S16,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitS32(value: S32,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitS64(value: S64,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitU8(value: U8,
-                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitU16(value: U16,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitU32(value: U32,
-                         @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitU64(value: U64,
-                         @hidden attr: Attr)
     extends Exp with Lit {
 
     def posOpt: Option[PosInfo] = {
@@ -686,7 +577,7 @@ object Exp {
                         @hidden attr: ResolvedAttr)
     extends Exp {
 
-    @pure override def hash: Z = {
+    @pure def hash: Z = {
       attr.resOpt match {
         case Some(res) => return res.hash
         case _ => return id.hash
@@ -695,8 +586,8 @@ object Exp {
 
     @pure def isEqual(other: Ident): B = {
       (attr.resOpt, other.attr.resOpt) match {
-        case (Some(res), Some(otherRes)) => return res.isEqual(otherRes)
-        case _ => return id.isEqual(other.id)
+        case (Some(res), Some(otherRes)) => return res == otherRes
+        case _ => return id == other.id
       }
     }
 
@@ -856,8 +747,7 @@ object Domain {
                       id: Id,
                       tipe: Type)
 
-@datatype class TypeParam(id: Id,
-                          superTypeOpt: Option[Type])
+@datatype class TypeParam(id: Id)
 
 @datatype class Contract(reads: ISZ[Exp],
                          requires: ISZ[ContractExp],
@@ -1064,14 +954,35 @@ object TruthTable {
 
 }
 
+@datatype trait Typed {
+  def posOpt: Option[PosInfo]
+}
+
+object Typed {
+
+  @datatype class Name(ids: ISZ[String],
+                       @hidden args: ISZ[Typed],
+                       @hidden posOpt: Option[PosInfo])
+    extends Typed
+
+  @datatype class Tuple(args: ISZ[Typed],
+                        @hidden posOpt: Option[PosInfo])
+    extends Typed
+
+  @datatype class Fun(args: ISZ[Typed],
+                      ret: Typed,
+                      @hidden posOpt: Option[PosInfo])
+    extends Typed
+}
+
 @datatype class Attr(posOpt: Option[PosInfo])
 
 @datatype class TypedAttr(posOpt: Option[PosInfo],
-                          typeOpt: Option[Type])
+                          typedOpt: Option[Typed])
 
 @datatype class ResolvedAttr(posOpt: Option[PosInfo],
                              resOpt: Option[ResolvedInfo],
-                             typeOpt: Option[Type])
+                             typedOpt: Option[Typed])
 
 @datatype class ResolvedInfo(kind: SymbolKind.Type,
                              ids: ISZ[String],

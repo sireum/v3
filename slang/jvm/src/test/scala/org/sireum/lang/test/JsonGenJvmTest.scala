@@ -39,7 +39,7 @@ class JsonGenJvmTest extends SireumSpec {
   *(gen(slangAstPath, slangJSONPath))
 
   def gen(src: File, dest: File): Boolean = {
-    val reporter = AccumulatingReporter(ISZ())
+    val reporter = AccumulatingReporter.create
     val rOpt = JsonGenJvm(allowSireumPackage = true,
       Some(licensePath), src, dest, SNone(), reporter)
     reporter.printMessages()

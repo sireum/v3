@@ -498,7 +498,6 @@ ForwardProofContext(unitNode: ast.Program,
 
   def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): ForwardProofContext = {
     val Some(Left(md)) = a.declOpt
-    var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
     var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
     for (inv <- invariants if !md.isHelper) {
@@ -520,6 +519,7 @@ ForwardProofContext(unitNode: ast.Program,
           imapEmpty[ast.Node, ast.Node])
     }
     var premiseSubstMap = psm
+    var postSubstMap = md.params.map(_.id).zip(a.args.map(subst(_, psm))).toMap[ast.Node, ast.Node]
     postSubstMap += ast.Result() -> lhs
     var modParams = isetEmpty[String]
     for ((p, arg@ast.Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {

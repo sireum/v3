@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream, FilenameFilter}
 import java.util.jar.JarInputStream
 
 import ammonite.ops._
@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  val ideaVer = "2017.2.2"
+  lazy val ideaVer: String = if (isDev) "2017.3.1" else "2017.3.1"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -58,22 +58,29 @@ object Distros {
     "latex" -> "idea-latex.jar"
   )
 
-  lazy val pluginUpdateIdMap = Map(
-    "sireum" -> (if (isDev) 0 else 0 /* 37398 */),
+  lazy val pluginUpdateIdMap: Map[String, Int] = Map(
+    "sireum" -> (if (isDev) 41514 else 0),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 37646 else 37646),
-    "markdown" -> 34393,
+    "scala" -> (if (isDev) 41257 else 41257),
+    "markdown" -> (if (isDev) 39197 else 39197),
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 18619,
-    "bash" -> 37247,
+    "bash" -> (if (isDev) 38798 else 38798),
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> 37674,
+    "python" -> (if (isDev) 41063 else 41063),
     "rst" -> 14700
-    //"ignore" -> 32828 https://github.com/hsz/idea-gitignore/issues/408
+  ) ++ (if (isDev) Map(
+    "ignore" -> 40625
+  ) else Map())
+
+  lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
+    //"ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
   )
+
+  val ignoredIcons = Set("idea.icns", "idea-dev.icns", "idea.png", "idea-dev.png", "idea-dev.ico")
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
     (baseDir / 'distros / "idea64.exe").toIO.isFile
@@ -102,6 +109,12 @@ object Distros {
       case _: Throwable => sys.error("Need 7z.")
     }
 
+    try {
+      %%("unzip", "-h")
+    } catch {
+      case _: Throwable => sys.error("Need unzip.")
+    }
+
     downloadPlugins()
     buildIVE("mac")
     buildIVE("win")
@@ -119,6 +132,11 @@ object Distros {
       %%('wget, "-q", "-O", s"$name-$updateId.zip", url)(pluginsDir)
       println("done!")
     }
+    for ((name, (version, url)) <- pluginUpdateUrlMap if !(pluginsDir / s"$name-$version.zip").toIO.exists) {
+      print(s"Downloading $name plugin from $url ... ")
+      %%('wget, "-q", "-O", s"$name-$version.zip", url)(pluginsDir)
+      println("done!")
+    }
   }
 
   def extractPlugins(p: Path): Unit = {
@@ -131,6 +149,17 @@ object Distros {
         case _ =>
           print(s"Extracting $name plugin ... ")
           %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$updateId.zip")(p)
+      }
+      println("done!")
+    }
+    for ((name, (version, _)) <- pluginUpdateUrlMap) {
+      jarPlugins.get(name) match {
+        case Some(_) =>
+          print(s"Copying $name plugin ... ")
+          %%('cp, ideaDir / 'plugins / s"$name-$version.zip", p / jarPlugins(name))(p)
+        case _ =>
+          print(s"Extracting $name plugin ... ")
+          %%('unzip, "-oq", ideaDir / 'plugins / s"$name-$version.zip")(p)
       }
       println("done!")
     }
@@ -195,16 +224,21 @@ object Distros {
 
   def patchIcon(platform: String, path: Path): Unit = {
     val iconsPath = pwd / 'resources / 'distro / 'icons
-    val (dirPath, filename) = platform match {
-      case "mac" => (path / 'Resources, "idea.icns")
+    val (dirPath, srcFilename, filename) = platform match {
+      case "mac" =>
+        if (isDev) (path / 'Resources, "idea-dev.icns", "idea.icns")
+        else (path / 'Resources, "idea.icns", "idea.icns")
       case "win" =>
         patchIconExe(path / 'bin / "idea.exe")
         patchIconExe(path / 'bin / "idea64.exe")
-        (path / 'bin, "idea.ico")
-      case "linux" => (path / 'bin, "idea.png")
+        if (isDev) (path / 'bin, "idea-dev.ico", "idea.ico")
+        else (path / 'bin, "idea.ico", "idea.ico")
+      case "linux" =>
+        if (isDev) (path / 'bin, "idea-dev.png", "idea.png")
+        else (path / 'bin, "idea.png", "idea.png")
     }
     print(s"Replacing icon $dirPath/$filename ... ")
-    %%('cp, filename, dirPath)(iconsPath)
+    %%('cp, srcFilename, dirPath / filename)(iconsPath)
     println("done!")
     val iconsJar = path / 'lib / "icons.jar"
     print(s"Patching $iconsJar ... ")
@@ -219,7 +253,7 @@ object Distros {
       }
     } while (!done)
     val entriesToUpdate =
-      (for (f <- iconsPath.toIO.listFiles if f.getName != "idea.icns" && f.getName != "idea.png") yield {
+      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName)) yield {
         require(entries.contains(f.getName), s"File ${f.getName} is not in $iconsJar.")
         f.getName
       }).toVector
@@ -247,11 +281,14 @@ object Distros {
         val tempDir = buildDir / platform
         mkdir ! tempDir
         %%("hdiutil", "attach", file)
-        %%('cp, "-R", root / 'Volumes / "IntelliJ IDEA CE" / "IntelliJ IDEA CE.app", tempDir / "Sireum.app")
-        %%("hdiutil", "eject", root / 'Volumes / "IntelliJ IDEA CE")
+        val filter: FilenameFilter = (_, name: String) => name.startsWith("IntelliJ")
+        val dirPath = Path((root / 'Volumes).toIO.listFiles(filter)(0))
+        val appPath = dirPath / dirPath.toIO.listFiles(filter)(0).getName
+        %%('cp, "-R", appPath, tempDir / "Sireum.app")
+        %%("hdiutil", "eject", dirPath)
         println("done!")
         extractPlugins(tempDir / "Sireum.app" / 'Contents / 'plugins)
-        //patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
+        patchIdeaProperties(platform, tempDir / "Sireum.app" / 'Contents / "Info.plist")
         patchVMOptions(platform, tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
         patchImages(tempDir / "Sireum.app" / 'Contents)
         patchIcon(platform, tempDir / "Sireum.app" / 'Contents)
@@ -395,7 +432,7 @@ object Distros {
     }
     cp(pwd / 'resources / 'distro / "wsd.js" / "wsd.js", baseDir / 'distros / "sireum-v3-wsd" / "wsd.js")
     %%('npm, "install", "ws")(baseDir / 'distros / "sireum-v3-wsd")
-    rm! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
+    rm ! baseDir / 'distros / "sireum-v3-wsd" / "package-lock.json"
 
     %('zip, "-qr", s"sireum-v3-wsd-${platform}64.zip", s"sireum-v3-wsd")(baseDir / 'distros)
 

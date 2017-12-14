@@ -31,6 +31,7 @@
 <decl-stmt>        ::=  <val-decl>
                      |  <var-decl>
                      |  <def-decl>
+                     |  <subz-decl>
                      |  <enum-decl>
                      |  <object-decl>
                      |  <sig-decl>
@@ -47,8 +48,8 @@
                      |  @spec var <ID> : <type> = $
                      |  var <pattern> = <assign-exp>
 
-<def-decl>         ::=  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
-                     |  <def-mod> def <ID> <type-params>? <params>? : <type> = <def-body>
+<def-decl>         ::=  ⸨ @helper ⸩? ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
+                     |  ⸨ @helper ⸩? <def-mod> def <ID> <type-params>? <params>? : <type> = <def-body>
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = $
                      |  ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type> = <ldef-contract>
                      |  @spec def <ID> <type-params>? <params>? : <type> = $
@@ -57,6 +58,14 @@
 <def-mod>          ::=  @pure ⸨ override ⸩?
                      |  ⸨ @pure ⸩? override
                      |  @memoize
+
+<subz-decl>        ::=  @range ( <range-args> ) class <ID>
+                     |  @bits ( <bits-args> ) class <ID>
+
+<range-args>       ::=  min = <lit> ⸨ , max = <lit> ⸩? ⸨ , index = <lit> ⸩?
+                     |  max = <lit> ⸨ , index = <lit> ⸩?
+
+<bits-args>        ::=  signed = <lit> , width = <lit> ⸨ , min = <lit> ⸩? ⸨ , max = <lit> ⸩? ⸨ , index = <lit> ⸩?
 
 <enum-decl>        ::=  @enum object <ID> { <SYMBOL>* }
 
@@ -105,7 +114,7 @@
 
 <type-params>      ::=  [ <type-param> ⸨ , <type-param> ⸩* ]
 
-<type-param>       ::=  <ID> ⸨ <: type ⸩?
+<type-param>       ::=  <ID>
 
 <params>           ::=  ( ⸨ <param> ⸨ , param> ⸩* ⸩? )
 

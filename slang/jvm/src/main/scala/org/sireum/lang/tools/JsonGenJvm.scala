@@ -31,7 +31,7 @@ import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{FileUtil, Reporter}
-import org.sireum.{_2String, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object JsonGenJvm {
   val messageKind = "JsonGen"
@@ -50,10 +50,10 @@ object JsonGenJvm {
         val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
         gdr.resolveProgram(p)
         val lOpt = licenseOpt match {
-          case Some(f) => SSome(_2String(FileUtil.readFile(f).trim))
+          case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
           case _ => SNone[SString]()
         }
-        val fOpt = SSome(_2String(dest.getParentFile.toPath.relativize(src.toPath).toString))
+        val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
         Some(JsonGen.Gen(gdr.globalNameMap, gdr.globalTypeMap,
           Util.ids2strings(p.packageName.ids), reporter).gen(lOpt, fOpt, nameOpt).
           render.value)

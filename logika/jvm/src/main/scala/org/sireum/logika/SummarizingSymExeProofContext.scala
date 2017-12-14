@@ -402,7 +402,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
         }
         var pc2 = this
         for (id <- loopInv.modifies.ids) {
-          pc2 = defOldId(id, nodeLocMap(id).lineBegin)._1
+          pc2 = pc2.defOldId(id, nodeLocMap(id).lineBegin)._1
         }
         pc2.copy(premises = ps + exp).check(loopBlock) match {
           case Some(pc3) =>
@@ -437,7 +437,6 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
 
   def invoke(a: ast.Apply, lhsOpt: Option[ast.Id]): SummarizingSymExeProofContext = {
     val Some(Left(md)) = a.declOpt
-    var postSubstMap = md.params.map(_.id).zip(a.args).toMap[ast.Node, ast.Node]
     var invs = ivectorEmpty[ast.Exp]
     val modIds = md.contract.modifies.ids.map(_.value).toSet
     for (inv <- invariants if !md.isHelper) {
@@ -453,7 +452,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
     var pc2 = this
     val (lhs, psm) = lhsOpt match {
       case Some(x) =>
-        val (pc3, x_old) = defOldId(x, nodeLocMap(x).lineBegin)
+        val (pc3, x_old) = pc2.defOldId(x, nodeLocMap(x).lineBegin)
         pc2 = pc3
         (x, imapEmpty[ast.Node, ast.Node] + (x -> x_old))
       case _ =>
@@ -462,11 +461,12 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
           imapEmpty[ast.Node, ast.Node])
     }
     var premiseSubstMap = psm
+    var postSubstMap = md.params.map(_.id).zip(a.args.map(subst(_, psm))).toMap[ast.Node, ast.Node]
     postSubstMap += ast.Result() -> lhs
     var modParams = isetEmpty[String]
     for ((p, arg@ast.Id(_)) <- md.params.map(_.id).zip(a.args) if modIds.contains(p.value)) {
       modParams += p.value
-      val (pc3, arg_old) = defOldId(arg, nodeLocMap(a).lineBegin)
+      val (pc3, arg_old) = pc2.defOldId(arg, nodeLocMap(a).lineBegin)
       pc2 = pc3
       val p_in = ast.Exp.Id(p.tipe, p.value + "_in")
       premiseSubstMap += arg -> arg_old
@@ -475,7 +475,7 @@ SummarizingSymExeProofContext(unitNode: ast.Program,
       postSubstMap += p_in -> arg_old
     }
     for (g <- md.contract.modifies.ids if !modParams.contains(g.value)) {
-      val (pc3, g_old) = defOldId(g, nodeLocMap(a).lineBegin)
+      val (pc3, g_old) = pc2.defOldId(g, nodeLocMap(a).lineBegin)
       pc2 = pc3
       val g_in = ast.Exp.Id(g.tipe, g.value + "_in")
       premiseSubstMap += g -> g_old

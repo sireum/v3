@@ -32,7 +32,7 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-val scalaVer = "2.12.3"
+val scalaVer = "2.12.4"
 
 val metaVersion = "1.8.0"
 
@@ -42,17 +42,15 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.1.1"
+val sireumScalacVersion = "3.1.2"
 
-val silencerVersion = "0.5"
-
-val fastParseVersion = "0.4.3"
+val fastParseVersion = "0.4.4"
 
 val scalaJsDomVersion = "0.9.3"
 
 val scalaJsJQueryVersion = "0.9.2"
 
-val scalaTagsVersion = "0.6.5"
+val scalaTagsVersion = "0.6.7"
 
 val BUILD_FILENAME = "BUILD"
 
@@ -65,23 +63,23 @@ val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distr
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 
 traceLevel in iveDistros := -1
+parallelExecution in Global := isParallelBuild
+concurrentRestrictions in Global ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
 
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
-  incOptions := incOptions.value.withNameHashing(true),
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalaVersion := scalaVer,
   retrieveManaged := true,
   scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
     "-Ydelambdafy:method", "-feature", "-unchecked", "-Xfatal-warnings"),
-  javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+  javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "utf8"),
   javacOptions in(Compile, doc) := Seq("-notimestamp", "-linksource"),
   scalacOptions in(Compile, doc) := Seq("-groups", "-implicits"),
   logBuffered in Test := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  parallelExecution in Global := isParallelBuild,
   resolvers += Resolver.sonatypeRepo("public")
 )
 
@@ -98,13 +96,13 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
     "org.antlr" % "antlr4-runtime" % "4.7",
     "org.antlr" % "ST4" % "4.0.8",
-    "org.yaml" % "snakeyaml" % "1.18",
+    "org.yaml" % "snakeyaml" % "1.19",
     "org.ow2.asm" % "asm" % "5.2",
     "org.ow2.asm" % "asm-commons" % "5.2",
     "org.ow2.asm" % "asm-util" % "5.2",
-    "org.jgrapht" % "jgrapht-core" % "1.0.1",
-    "org.jgrapht" % "jgrapht-ext" % "1.0.1",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.0",
+    "org.jgrapht" % "jgrapht-core" % "1.1.0",
+    "org.jgrapht" % "jgrapht-io" % "1.1.0",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.3",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "com.novocode" % "junit-interface" % "0.11"
   ),
@@ -117,10 +115,9 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   parallelExecution in Test := false,
   relativeSourceMaps := true,
   scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
-  jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % "0.4.8"
+    "com.lihaoyi" %%% "utest" % "0.6.0"
   ),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
@@ -204,45 +201,42 @@ lazy val logikaJvm = logikaT._2.settings(
     logikaT._2.base / "c-runtime" / "src",
     logikaT._2.base / "c-runtime" / "cmake"
   )
-).dependsOn(runtimeJvm, preludeJvm)
+).dependsOn(macrosJvm, libraryJvm)
 lazy val logikaJs = logikaT._3
 
-lazy val runtimePI = new ProjectInfo("runtime/runtime", isCross = true)
-lazy val runtimeT = toSbtCrossProject(runtimePI, Seq(
+lazy val macrosPI = new ProjectInfo("runtime/macros", isCross = true)
+lazy val macrosT = toSbtCrossProject(macrosPI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.spire-math" %%% "spire" % "0.13.0"),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
-lazy val runtimeShared = runtimeT._1
-lazy val runtimeJvm = runtimeT._2
-lazy val runtimeJs = runtimeT._3
+lazy val macrosShared = macrosT._1
+lazy val macrosJvm = macrosT._2
+lazy val macrosJs = macrosT._3
 
-lazy val preludePI = new ProjectInfo("runtime/prelude", isCross = true, runtimePI)
-lazy val preludeT = toSbtCrossProject(preludePI, Seq(
+lazy val libraryPI = new ProjectInfo("runtime/library", isCross = true, macrosPI)
+lazy val libraryT = toSbtCrossProject(libraryPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-    "com.github.ghik" %% "silencer-lib" % silencerVersion
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
-  unmanagedResourceDirectories in Compile += file("runtime/prelude/shared/src/main/scala"),
-  addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
-lazy val preludeShared = preludeT._1
-lazy val preludeJvm = preludeT._2
-lazy val preludeJs = preludeT._3
+lazy val libraryShared = libraryT._1
+lazy val libraryJvm = libraryT._2
+lazy val libraryJs = libraryT._3
 
-lazy val slangPI = new ProjectInfo("slang", isCross = true, runtimePI, preludePI)
+lazy val slangPI = new ProjectInfo("slang", isCross = true, macrosPI, libraryPI)
 lazy val slangT = toSbtCrossProject(slangPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "fastparse" % fastParseVersion,
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
@@ -262,7 +256,6 @@ lazy val commonJs = commonT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
@@ -270,11 +263,11 @@ lazy val commonJs = commonT._3.settings(
   )
 )
 
-lazy val webPI = new ProjectInfo("web", isCross = true, runtimePI, preludePI, utilPI, commonPI)
+lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
 lazy val webT = toSbtCrossProject(webPI, Seq(
   libraryDependencies ++= Seq(
-    "org.scalameta" %% "scalameta" % metaVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    "org.scalameta" %%% "scalameta" % metaVersion,
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
@@ -288,7 +281,6 @@ lazy val webJs = webT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
@@ -317,7 +309,6 @@ lazy val awasJs = awasT._3.settings(
   crossTarget in(Compile, fullOptJS) := (classDirectory in Compile).value / "min",
   crossTarget in(Compile, packageMinifiedJSDependencies) := (classDirectory in Compile).value / "min",
   skip in packageJSDependencies := false,
-  jsDependencies += RuntimeDOM,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
@@ -331,12 +322,12 @@ lazy val awasJs = awasT._3.settings(
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  runtimeJvm, preludeJvm, logikaJvm, slangJvm, java, cli, awasJvm
+  macrosJvm, libraryJvm, logikaJvm, slangJvm, java, cli, awasJvm
 )
 
 lazy val subProjectsJs = Seq(
   utilJs, testJs, pilarJs,
-  runtimeJs, preludeJs, logikaJs, slangJs, commonJs, awasJs
+  macrosJs, libraryJs, logikaJs, slangJs, commonJs, awasJs
 )
 
 lazy val subProjectJvmReferences =

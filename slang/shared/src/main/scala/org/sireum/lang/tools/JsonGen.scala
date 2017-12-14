@@ -27,6 +27,8 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.ops._
+import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
@@ -313,7 +315,7 @@ object JsonGen {
     }
 
     def genEnum(ti: TypeInfo.Enum): Unit = {
-      val enumTypeString = typeString(packageName, ti.name)
+      val enumTypeString = typeNameString(packageName, ti.name)
       val enumTypeName = typeName(packageName, ti.name)
       printers = printers :+
         Template.printEnum(enumTypeName, enumTypeString,
@@ -329,7 +331,7 @@ object JsonGen {
       if (ti.ast.isRoot) {
         genRoot(ti.name)
       } else {
-        val adTypeString = typeString(packageName, ti.name)
+        val adTypeString = typeNameString(packageName, ti.name)
         val adTypeName = typeName(packageName, ti.name)
         var fieldNames = ISZ[String]()
         var printFields = ISZ[ST]()
@@ -351,15 +353,27 @@ object JsonGen {
     }
 
     def genRoot(name: QName): Unit = {
-      val rootTypeString = typeString(packageName, name)
+      val rootTypeString = typeNameString(packageName, name)
       val rootTypeName = typeName(packageName, name)
       var rootPrintCases = ISZ[ST]()
       var rootParseCases = ISZ[ST]()
       var childrenTypeStrings = ISZ[ST]()
-      for (childIds <- poset.descendantsOf(name).elements) {
-        globalTypeMap.get(childIds) match {
-          case Some(childTI: TypeInfo.AbstractDatatype) if !childTI.ast.isRoot =>
-            val childTypeString = typeString(packageName, childIds)
+      val descendants = poset.descendantsOf(name).elements
+      val sortedDescendants: ISZ[TypeInfo] = {
+        var r = ISZ[TypeInfo]()
+        for (d <- descendants) {
+          globalTypeMap.get(d) match {
+            case Some(info) => r = r :+ info
+            case _ =>
+          }
+        }
+        ISOps(r).sortWith(ltTypeInfo)
+      }
+      for (child <- sortedDescendants) {
+        child match {
+          case childTI: TypeInfo.AbstractDatatype if !childTI.ast.isRoot =>
+            val childIds = childTI.name
+            val childTypeString = typeNameString(packageName, childIds)
             val childTypeName = typeName(packageName, childIds)
             childrenTypeStrings = childrenTypeStrings :+ childTypeString
             rootPrintCases = rootPrintCases :+ Template.printRootCase(childTypeName, childTypeString)
@@ -518,41 +532,7 @@ object JsonGen {
       val btn = basicOrTypeName(ti, tipe.typeArgs(0))
       name match {
         case "ISZ" => return Some((T, "Z", btn))
-        case "ISZ8" => return Some((T, "Z8", btn))
-        case "ISZ16" => return Some((T, "Z16", btn))
-        case "ISZ32" => return Some((T, "Z32", btn))
-        case "ISZ64" => return Some((T, "Z64", btn))
-        case "ISN" => return Some((T, "N", btn))
-        case "ISN8" => return Some((T, "N8", btn))
-        case "ISN16" => return Some((T, "N16", btn))
-        case "ISN32" => return Some((T, "N32", btn))
-        case "ISN64" => return Some((T, "N64", btn))
-        case "ISS8" => return Some((T, "S8", btn))
-        case "ISS16" => return Some((T, "S16", btn))
-        case "ISS32" => return Some((T, "S32", btn))
-        case "ISS64" => return Some((T, "S64", btn))
-        case "ISU8" => return Some((T, "U8", btn))
-        case "ISU16" => return Some((T, "U16", btn))
-        case "ISU32" => return Some((T, "U32", btn))
-        case "ISU64" => return Some((T, "U64", btn))
         case "MSZ" => return Some((F, "Z", btn))
-        case "MSZ8" => return Some((F, "Z8", btn))
-        case "MSZ16" => return Some((F, "Z16", btn))
-        case "MSZ32" => return Some((F, "Z32", btn))
-        case "MSZ64" => return Some((F, "Z64", btn))
-        case "MSN" => return Some((F, "N", btn))
-        case "MSN8" => return Some((F, "N8", btn))
-        case "MSN16" => return Some((F, "N16", btn))
-        case "MSN32" => return Some((F, "N32", btn))
-        case "MSN64" => return Some((F, "N64", btn))
-        case "MSS8" => return Some((F, "S8", btn))
-        case "MSS16" => return Some((F, "S16", btn))
-        case "MSS32" => return Some((F, "S32", btn))
-        case "MSS64" => return Some((F, "S64", btn))
-        case "MSU8" => return Some((F, "U8", btn))
-        case "MSU16" => return Some((F, "U16", btn))
-        case "MSU32" => return Some((F, "U32", btn))
-        case "MSU64" => return Some((F, "U64", btn))
         case _ => return None()
       }
     }

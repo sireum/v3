@@ -25,14 +25,15 @@
 
 package org.sireum.lang
 
+import org.sireum.$internal.Trie
 import org.sireum.test._
-import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
-class ScalaMetaParserTest extends SireumSpec {
+class SlangFrontEndTest extends SireumSpec {
   {
 
     implicit val _spec: SireumSpec = this
@@ -114,8 +115,6 @@ class ScalaMetaParserTest extends SireumSpec {
 
         passing("def f[T](x: Z): Z = {}", isWorksheet = true)
 
-        passing("def f[A, B <: A](x: A, y: Z): B = {}", isWorksheet = true)
-
       }
 
       "Ext Object" - {
@@ -130,6 +129,18 @@ class ScalaMetaParserTest extends SireumSpec {
 
           passing("@ext object Foo { def f: Z = l\"\"\"reads g\nmodifies g\"\"\" }")
         }
+      }
+
+      "Library" - {
+
+        passingRc(org.sireum.$SlangFiles.trie)
+
+      }
+
+      "Slang" - {
+
+        passingRc(org.sireum.lang.$SlangFiles.trie)
+
       }
     }
 
@@ -256,6 +267,8 @@ class ScalaMetaParserTest extends SireumSpec {
 
         val typeParamForms = "type parameters of the forms"
 
+        failing("def f[A, B <: A](x: A, y: Z): B = {}", typeParamForms, isWorksheet = true)
+
         failing("def f[T >: B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
 
         failing("def f[T <% B](x: Z): Z = {}", typeParamForms, isWorksheet = true)
@@ -266,8 +279,55 @@ class ScalaMetaParserTest extends SireumSpec {
     }
   }
 
+
   def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean, reporter: Reporter): SlangParser.Result =
     SlangParser(isPrelude, isWorksheet, isDiet = false, SNone(), text, reporter)
+
+  def passingRc(n: Trie.Node[String, String])(implicit pos: org.scalactic.source.Position): Unit = n match {
+    case n: Trie.InNode[String, String] =>
+      for ((childKey, child) <- n.children) child match {
+        case child: Trie.InNode[String, String] =>
+          childKey - {
+            passingRc(child)
+          }
+        case child: Trie.Leaf[String, String] =>
+          registerTest(childKey, ts: _*)(assert(
+            passingCheck(child.data, addImport = false, isPrelude = true, checkJson = false)))(pos)
+      }
+    case _ =>
+  }
+
+  def passingCheck(text: String,
+                   addImport: Boolean = true,
+                   isWorksheet: Boolean = false,
+                   isPrelude: Boolean = false,
+                   checkJson: Boolean = true): Boolean = {
+    val reporter = AccumulatingReporter.create
+    val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+      isWorksheet, isPrelude, reporter)
+    var b = r.unitOpt.nonEmpty && !reporter.hasIssue
+    if (!b) report(r, reporter)
+    else {
+      val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
+        SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
+      if (reporter.hasIssue) report(r, reporter)
+      r.unitOpt.foreach {
+        case p: AST.TopUnit.Program =>
+          gdr.resolveProgram(p)
+          if (reporter.hasIssue) {
+            report(r, reporter)
+            b = false
+          }
+          if (checkJson) {
+            val json = AST.JSON.fromTopUnit(p, true)
+            //println(json)
+            assert(AST.JSON.toTopUnit(json) == p)
+          }
+        case _ => b = false
+      }
+    }
+    b
+  }
 
   def passing(text: String,
               addImport: Boolean = true,
@@ -275,29 +335,7 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false,
               checkJson: Boolean = true)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
-    spec.*(sub(text)) {
-      val reporter = AccumulatingReporter(ISZ())
-      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude, reporter)
-      var b = r.unitOpt.nonEmpty && !reporter.hasIssue
-      if (!b) report(r, reporter)
-      else {
-        val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
-          SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
-        if (reporter.hasIssue) report(r, reporter)
-        r.unitOpt.foreach {
-          case p: AST.TopUnit.Program =>
-            if (checkJson) {
-              val json = AST.JSON.fromTopUnit(p, true)
-              //println(json)
-              assert(AST.JSON.toTopUnit(json) == p)
-            }
-            gdr.resolveProgram(p)
-          case _ => b = false
-        }
-      }
-      b
-    }
+    spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
 
   def failing(text: String, msg: String,
               addImport: Boolean = true,
@@ -305,7 +343,7 @@ class ScalaMetaParserTest extends SireumSpec {
               isPrelude: Boolean = false)(
                implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
-      val reporter = AccumulatingReporter(ISZ())
+      val reporter = AccumulatingReporter.create
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude, reporter)
       val b = reporter.issues.elements.exists(_.message.value.contains(msg))

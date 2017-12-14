@@ -25,20 +25,20 @@
 
 package org.sireum.lang
 
+import org.sireum.$internal.RC
 import org.sireum.lang.ast.TopUnit
-import org.sireum.{B, HashSMap, ISZ, None => SNone, String => SString}
+import org.sireum.{None => SNone}
 import org.sireum.test.SireumRcSpec
-import org.sireum.`macro`.RC
 import org.sireum.lang.test.TestUtil
 
 class LParserTest extends SireumRcSpec {
-  lazy val textResources: HashSMap[ISZ[SString], SString] = RC.text(_.elements.last.value.endsWith(".slang"))
+  lazy val textResources: scala.collection.Map[scala.Seq[Predef.String], Predef.String] = RC.text((p, _) => p.last.endsWith(".slang"))
 
-  def check(path: ISZ[SString], content: SString): B = {
-    path(0).value match {
-      case "truthtable" => parseTruthTable(content.value)
-      case "propositional" => parsePropositional(content.value)
-      case "predicate" => parsePredicate(content.value)
+  def check(path: scala.Seq[Predef.String], content: Predef.String): Boolean = {
+    path.head match {
+      case "truthtable" => parseTruthTable(content)
+      case "propositional" => parsePropositional(content)
+      case "predicate" => parsePredicate(content)
     }
   }
 

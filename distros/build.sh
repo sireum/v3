@@ -30,7 +30,7 @@ export SIREUM_PARALLEL_BUILD=false
 bin/sbt-launch.sh clean test:compile test
 ./sireum
 if [ "${SIREUM_DEV_DISTROS}" == "true" ]; then
-  bin/sbt-launch.sh dev-distros
+  bin/sbt-launch.sh devDistros
 else
   bin/sbt-launch.sh distros
 fi

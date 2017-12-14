@@ -1,3 +1,4 @@
+// #Sireum
 /*
  Copyright (c) 2017, Robby, Kansas State University
  All rights reserved.
@@ -23,59 +24,21 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.test
+package org.sireum.lang.parser
 
-import java.io.File
+import org.sireum._
+import org.sireum.lang.util._
+import org.sireum.lang.{ast => AST}
 
-import Paths._
-import org.sireum.lang.ScalaMetaParserTest
-import org.sireum.test._
-import org.sireum.lang.util.FileUtil._
+@rich class Parser(text: String) {
 
-class ScalaMetaParserJvmTest extends SireumSpec {
+  @pure def parseStmt[T]: T = $
 
-  val smpt = new ScalaMetaParserTest
+  @pure def parseExp[T]: T = $
 
-  {
-    implicit val _spec: SireumSpec = this
-
-    "Passing" - {
-
-      passing(posetPath)
-
-      passing(setPath)
-
-      passing(mapPath)
-
-      passing(hashSetPath)
-
-      passing(hashMapPath)
-
-      passing(hashSSetPath)
-
-      passing(hashSMapPath)
-
-      passing(optionPath)
-
-      passing(preludePath)
-
-      passing(slangAstPath)
-
-      passing(slangAstUtilPath)
-
-      passing(slangTransformerPath)
-
-      passing(slangMTransformerPath)
-
-      passing(slangGlobalDeclarationResolverPath)
-
-      passing(slangResolverPath)
-
-      passing(slangSequentResolverPath)
-    }
-  }
-
-  def passing(file: File)(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit = {
-    smpt.passing(readFile(file), addImport = false, isPrelude = true, checkJson = false)
-  }
+  def parseTopUnit[T](allowSireum: B,
+                      isWorksheet: B,
+                      isDiet: B,
+                      fileUriOpt: Option[String],
+                      reporter: Reporter): Option[T] = $
 }

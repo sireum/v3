@@ -27,6 +27,8 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.ops._
+import org.sireum.ops.ISZOps._
 import Resolver._
 import org.sireum.lang.util.{Reporter}
 import org.sireum.lang.{ast => AST}
@@ -55,7 +57,7 @@ import org.sireum.lang.{ast => AST}
   @memoize def scope(packageName: QName,
                      imports: ISZ[AST.Stmt.Import],
                      name: QName): Scope.Global = {
-    return Scope.Global(packageName, imports, SI.dropRight(name, 1))
+    return Scope.Global(packageName, imports, ISOps(name).dropRight(1))
   }
 
   def resolveGlobalStmt(stmt: AST.Stmt): Unit = {
@@ -82,6 +84,9 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.sig.id.value
         declareName("specification method", name,
           Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+      case stmt: AST.Stmt.SubZ =>
+        val name = currentName :+ stmt.id.value
+        declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(name, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Set.empty[String]
@@ -92,7 +97,7 @@ import org.sireum.lang.{ast => AST}
             elements = elements.add(e.value)
           }
         }
-        declareName("enumeration", name, Info.Enum(name, elements), stmt.attr.posOpt)
+        declareName("enumeration", name, Info.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
         declareType("enumeration", name :+ "Type", TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
@@ -109,7 +114,7 @@ import org.sireum.lang.{ast => AST}
         }
 
         declareName(if (stmt.isExt) "extension object" else "object", name,
-          Info.Object(name, stmt.isExt), stmt.attr.posOpt)
+          Info.Object(name, stmt), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
@@ -118,21 +123,21 @@ import org.sireum.lang.{ast => AST}
         currentName = oldName
       case stmt: AST.Stmt.Sig =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
+        val members = resolveMembers(name, stmt.stmts)
         assert(members.vars.isEmpty)
-        declareType("sig", name, TypeInfo.Sig(name, members.specVars,
+        declareType("sig", name, TypeInfo.Sig(name, F, members.specVars,
           members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
+        val members = resolveMembers(name, stmt.stmts)
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
-          TypeInfo.AbstractDatatype(name, members.specVars, members.vars, members.specMethods,
+          TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
             members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Rich =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(stmt.stmts)
-        assert(members.specVars.isEmpty & members.vars.isEmpty & members.specMethods.isEmpty)
-        declareType("rich", name, TypeInfo.Rich(name, members.methods,
+        val members = resolveMembers(name, stmt.stmts)
+        assert(members.specVars.isEmpty & members.vars.isEmpty)
+        declareType("rich", name, TypeInfo.Rich(name, F, members.specMethods, members.methods,
           scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
@@ -142,11 +147,11 @@ import org.sireum.lang.{ast => AST}
     }
   }
 
-  def resolveMembers(stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
-    var specVars = HashMap.empty[String, AST.Stmt.SpecVar]
-    var vars = HashMap.empty[String, AST.Stmt.Var]
-    var specMethods = HashMap.empty[String, AST.Stmt.SpecMethod]
-    var methods = HashMap.empty[String, AST.Stmt.Method]
+  def resolveMembers(owner: QName, stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
+    var specVars = HashMap.empty[String, (QName, AST.Stmt.SpecVar)]
+    var vars = HashMap.empty[String, (QName, AST.Stmt.Var)]
+    var specMethods = HashMap.empty[String, (QName, AST.Stmt.SpecMethod)]
+    var methods = HashMap.empty[String, (QName, AST.Stmt.Method)]
 
     @pure def checkId(id: AST.Id): Unit = {
       val name = id.value
@@ -165,16 +170,16 @@ import org.sireum.lang.{ast => AST}
       stmt match {
         case stmt: AST.Stmt.Var =>
           checkId(stmt.id)
-          vars = vars.put(stmt.id.value, stmt)
+          vars = vars.put(stmt.id.value, (owner, stmt))
         case stmt: AST.Stmt.SpecVar =>
           checkId(stmt.id)
-          specVars = specVars.put(stmt.id.value, stmt)
+          specVars = specVars.put(stmt.id.value, (owner, stmt))
         case stmt: AST.Stmt.Method =>
           checkId(stmt.sig.id)
-          methods = methods.put(stmt.sig.id.value, stmt)
+          methods = methods.put(stmt.sig.id.value, (owner, stmt))
         case stmt: AST.Stmt.SpecMethod =>
           checkId(stmt.sig.id)
-          specMethods = specMethods.put(stmt.sig.id.value, stmt)
+          specMethods = specMethods.put(stmt.sig.id.value, (owner, stmt))
         case _ =>
       }
     }
@@ -196,7 +201,7 @@ import org.sireum.lang.{ast => AST}
                   info: TypeInfo,
                   posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
-      case Some(objectInfo: Info.Object) if !objectInfo.isExt =>
+      case Some(objectInfo: Info.Object) if !objectInfo.ast.isExt =>
         if (!info.canHaveCompanion) {
           reporter.error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
         } else if (!AST.Util.fileUriOptEq(posOpt, info.posOpt)) {

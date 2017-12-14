@@ -73,6 +73,7 @@ object Transformer {
         case o: Stmt.ExtMethod => return preStmtExtMethod(ctx, o)
         case o: Stmt.SpecMethod => return preStmtSpecMethod(ctx, o)
         case o: Stmt.Enum => return preStmtEnum(ctx, o)
+        case o: Stmt.SubZ => return preStmtSubZ(ctx, o)
         case o: Stmt.Object => return preStmtObject(ctx, o)
         case o: Stmt.Sig => return preStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(ctx, o)
@@ -90,6 +91,35 @@ object Transformer {
         case o: Stmt.Return => return preStmtReturn(ctx, o)
         case o: Stmt.LStmt => return preStmtLStmt(ctx, o)
         case o: Stmt.Expr => return preStmtExpr(ctx, o)
+      }
+    }
+
+    @pure def preAssignExp(ctx: Context, o: AssignExp): PreResult[Context, AssignExp] = {
+      o match {
+        case o: Stmt.Block =>
+          val r: PreResult[Context, AssignExp] = preStmtBlock(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: AssignExp)) => PreResult(preCtx, continue, Some[AssignExp](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.If =>
+          val r: PreResult[Context, AssignExp] = preStmtIf(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: AssignExp)) => PreResult(preCtx, continue, Some[AssignExp](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.Match =>
+          val r: PreResult[Context, AssignExp] = preStmtMatch(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: AssignExp)) => PreResult(preCtx, continue, Some[AssignExp](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.Expr =>
+          val r: PreResult[Context, AssignExp] = preStmtExpr(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: AssignExp)) => PreResult(preCtx, continue, Some[AssignExp](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
       }
     }
 
@@ -145,6 +175,10 @@ object Transformer {
     }
 
     @pure def preStmtEnum(ctx: Context, o: Stmt.Enum): PreResult[Context, Stmt] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preStmtSubZ(ctx: Context, o: Stmt.SubZ): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
@@ -346,23 +380,6 @@ object Transformer {
         case o: Exp.LitB => return preExpLitB(ctx, o)
         case o: Exp.LitC => return preExpLitC(ctx, o)
         case o: Exp.LitZ => return preExpLitZ(ctx, o)
-        case o: Exp.LitZ8 => return preExpLitZ8(ctx, o)
-        case o: Exp.LitZ16 => return preExpLitZ16(ctx, o)
-        case o: Exp.LitZ32 => return preExpLitZ32(ctx, o)
-        case o: Exp.LitZ64 => return preExpLitZ64(ctx, o)
-        case o: Exp.LitN => return preExpLitN(ctx, o)
-        case o: Exp.LitN8 => return preExpLitN8(ctx, o)
-        case o: Exp.LitN16 => return preExpLitN16(ctx, o)
-        case o: Exp.LitN32 => return preExpLitN32(ctx, o)
-        case o: Exp.LitN64 => return preExpLitN64(ctx, o)
-        case o: Exp.LitS8 => return preExpLitS8(ctx, o)
-        case o: Exp.LitS16 => return preExpLitS16(ctx, o)
-        case o: Exp.LitS32 => return preExpLitS32(ctx, o)
-        case o: Exp.LitS64 => return preExpLitS64(ctx, o)
-        case o: Exp.LitU8 => return preExpLitU8(ctx, o)
-        case o: Exp.LitU16 => return preExpLitU16(ctx, o)
-        case o: Exp.LitU32 => return preExpLitU32(ctx, o)
-        case o: Exp.LitU64 => return preExpLitU64(ctx, o)
         case o: Exp.LitF32 => return preExpLitF32(ctx, o)
         case o: Exp.LitF64 => return preExpLitF64(ctx, o)
         case o: Exp.LitR => return preExpLitR(ctx, o)
@@ -386,6 +403,59 @@ object Transformer {
       }
     }
 
+    @pure def preLit(ctx: Context, o: Lit): PreResult[Context, Lit] = {
+      o match {
+        case o: Exp.LitB =>
+          val r: PreResult[Context, Lit] = preExpLitB(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitC =>
+          val r: PreResult[Context, Lit] = preExpLitC(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitZ =>
+          val r: PreResult[Context, Lit] = preExpLitZ(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitF32 =>
+          val r: PreResult[Context, Lit] = preExpLitF32(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitF64 =>
+          val r: PreResult[Context, Lit] = preExpLitF64(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitR =>
+          val r: PreResult[Context, Lit] = preExpLitR(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitBv =>
+          val r: PreResult[Context, Lit] = preExpLitBv(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitString =>
+          val r: PreResult[Context, Lit] = preExpLitString(ctx, o) match {
+           case PreResult(preCtx, continue, Some(r: Lit)) => PreResult(preCtx, continue, Some[Lit](r))
+           case PreResult(preCtx, continue, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+      }
+    }
+
     @pure def preExpLitB(ctx: Context, o: Exp.LitB): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
@@ -395,74 +465,6 @@ object Transformer {
     }
 
     @pure def preExpLitZ(ctx: Context, o: Exp.LitZ): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitZ8(ctx: Context, o: Exp.LitZ8): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitZ16(ctx: Context, o: Exp.LitZ16): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitZ32(ctx: Context, o: Exp.LitZ32): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitZ64(ctx: Context, o: Exp.LitZ64): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitN(ctx: Context, o: Exp.LitN): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitN8(ctx: Context, o: Exp.LitN8): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitN16(ctx: Context, o: Exp.LitN16): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitN32(ctx: Context, o: Exp.LitN32): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitN64(ctx: Context, o: Exp.LitN64): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitS8(ctx: Context, o: Exp.LitS8): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitS16(ctx: Context, o: Exp.LitS16): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitS32(ctx: Context, o: Exp.LitS32): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitS64(ctx: Context, o: Exp.LitS64): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitU8(ctx: Context, o: Exp.LitU8): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitU16(ctx: Context, o: Exp.LitU16): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitU32(ctx: Context, o: Exp.LitU32): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitU64(ctx: Context, o: Exp.LitU64): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
@@ -801,6 +803,26 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preTyped(ctx: Context, o: Typed): PreResult[Context, Typed] = {
+      o match {
+        case o: Typed.Name => return preTypedName(ctx, o)
+        case o: Typed.Tuple => return preTypedTuple(ctx, o)
+        case o: Typed.Fun => return preTypedFun(ctx, o)
+      }
+    }
+
+    @pure def preTypedName(ctx: Context, o: Typed.Name): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedTuple(ctx: Context, o: Typed.Tuple): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedFun(ctx: Context, o: Typed.Fun): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
     @pure def preAttr(ctx: Context, o: Attr): PreResult[Context, Attr] = {
       return PreResult(ctx, T, None())
     }
@@ -851,6 +873,7 @@ object Transformer {
         case o: Stmt.ExtMethod => return postStmtExtMethod(ctx, o)
         case o: Stmt.SpecMethod => return postStmtSpecMethod(ctx, o)
         case o: Stmt.Enum => return postStmtEnum(ctx, o)
+        case o: Stmt.SubZ => return postStmtSubZ(ctx, o)
         case o: Stmt.Object => return postStmtObject(ctx, o)
         case o: Stmt.Sig => return postStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(ctx, o)
@@ -868,6 +891,35 @@ object Transformer {
         case o: Stmt.Return => return postStmtReturn(ctx, o)
         case o: Stmt.LStmt => return postStmtLStmt(ctx, o)
         case o: Stmt.Expr => return postStmtExpr(ctx, o)
+      }
+    }
+
+    @pure def postAssignExp(ctx: Context, o: AssignExp): Result[Context, AssignExp] = {
+      o match {
+        case o: Stmt.Block =>
+          val r: Result[Context, AssignExp] = postStmtBlock(ctx, o) match {
+           case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
+           case Result(postCtx, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.If =>
+          val r: Result[Context, AssignExp] = postStmtIf(ctx, o) match {
+           case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
+           case Result(postCtx, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.Match =>
+          val r: Result[Context, AssignExp] = postStmtMatch(ctx, o) match {
+           case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
+           case Result(postCtx, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
+        case o: Stmt.Expr =>
+          val r: Result[Context, AssignExp] = postStmtExpr(ctx, o) match {
+           case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
+           case Result(postCtx, _) => halt("Can only produce object of type AssignExp")
+          }
+          return r
       }
     }
 
@@ -923,6 +975,10 @@ object Transformer {
     }
 
     @pure def postStmtEnum(ctx: Context, o: Stmt.Enum): Result[Context, Stmt] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postStmtSubZ(ctx: Context, o: Stmt.SubZ): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
@@ -1124,23 +1180,6 @@ object Transformer {
         case o: Exp.LitB => return postExpLitB(ctx, o)
         case o: Exp.LitC => return postExpLitC(ctx, o)
         case o: Exp.LitZ => return postExpLitZ(ctx, o)
-        case o: Exp.LitZ8 => return postExpLitZ8(ctx, o)
-        case o: Exp.LitZ16 => return postExpLitZ16(ctx, o)
-        case o: Exp.LitZ32 => return postExpLitZ32(ctx, o)
-        case o: Exp.LitZ64 => return postExpLitZ64(ctx, o)
-        case o: Exp.LitN => return postExpLitN(ctx, o)
-        case o: Exp.LitN8 => return postExpLitN8(ctx, o)
-        case o: Exp.LitN16 => return postExpLitN16(ctx, o)
-        case o: Exp.LitN32 => return postExpLitN32(ctx, o)
-        case o: Exp.LitN64 => return postExpLitN64(ctx, o)
-        case o: Exp.LitS8 => return postExpLitS8(ctx, o)
-        case o: Exp.LitS16 => return postExpLitS16(ctx, o)
-        case o: Exp.LitS32 => return postExpLitS32(ctx, o)
-        case o: Exp.LitS64 => return postExpLitS64(ctx, o)
-        case o: Exp.LitU8 => return postExpLitU8(ctx, o)
-        case o: Exp.LitU16 => return postExpLitU16(ctx, o)
-        case o: Exp.LitU32 => return postExpLitU32(ctx, o)
-        case o: Exp.LitU64 => return postExpLitU64(ctx, o)
         case o: Exp.LitF32 => return postExpLitF32(ctx, o)
         case o: Exp.LitF64 => return postExpLitF64(ctx, o)
         case o: Exp.LitR => return postExpLitR(ctx, o)
@@ -1164,6 +1203,59 @@ object Transformer {
       }
     }
 
+    @pure def postLit(ctx: Context, o: Lit): Result[Context, Lit] = {
+      o match {
+        case o: Exp.LitB =>
+          val r: Result[Context, Lit] = postExpLitB(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitC =>
+          val r: Result[Context, Lit] = postExpLitC(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitZ =>
+          val r: Result[Context, Lit] = postExpLitZ(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitF32 =>
+          val r: Result[Context, Lit] = postExpLitF32(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitF64 =>
+          val r: Result[Context, Lit] = postExpLitF64(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitR =>
+          val r: Result[Context, Lit] = postExpLitR(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitBv =>
+          val r: Result[Context, Lit] = postExpLitBv(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+        case o: Exp.LitString =>
+          val r: Result[Context, Lit] = postExpLitString(ctx, o) match {
+           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
+           case Result(postCtx, _) => halt("Can only produce object of type Lit")
+          }
+          return r
+      }
+    }
+
     @pure def postExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp] = {
       return Result(ctx, None())
     }
@@ -1173,74 +1265,6 @@ object Transformer {
     }
 
     @pure def postExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitZ8(ctx: Context, o: Exp.LitZ8): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitZ16(ctx: Context, o: Exp.LitZ16): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitZ32(ctx: Context, o: Exp.LitZ32): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitZ64(ctx: Context, o: Exp.LitZ64): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitN(ctx: Context, o: Exp.LitN): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitN8(ctx: Context, o: Exp.LitN8): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitN16(ctx: Context, o: Exp.LitN16): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitN32(ctx: Context, o: Exp.LitN32): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitN64(ctx: Context, o: Exp.LitN64): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitS8(ctx: Context, o: Exp.LitS8): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitS16(ctx: Context, o: Exp.LitS16): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitS32(ctx: Context, o: Exp.LitS32): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitS64(ctx: Context, o: Exp.LitS64): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitU8(ctx: Context, o: Exp.LitU8): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitU16(ctx: Context, o: Exp.LitU16): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitU32(ctx: Context, o: Exp.LitU32): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitU64(ctx: Context, o: Exp.LitU64): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
@@ -1579,6 +1603,26 @@ object Transformer {
       return Result(ctx, None())
     }
 
+    @pure def postTyped(ctx: Context, o: Typed): Result[Context, Typed] = {
+      o match {
+        case o: Typed.Name => return postTypedName(ctx, o)
+        case o: Typed.Tuple => return postTypedTuple(ctx, o)
+        case o: Typed.Fun => return postTypedFun(ctx, o)
+      }
+    }
+
+    @pure def postTypedName(ctx: Context, o: Typed.Name): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedTuple(ctx: Context, o: Typed.Tuple): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedFun(ctx: Context, o: Typed.Fun): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
     @pure def postAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
       return Result(ctx, None())
     }
@@ -1602,7 +1646,7 @@ object Transformer {
   }
 
   @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
-    val s2: MS[Z, T] = SI.toMS(s)
+    val s2: MS[Z, T] = s.toMS
     var changed: B = F
     var ctxi = ctx
     for (i <- s2.indices) {
@@ -1613,7 +1657,7 @@ object Transformer {
       s2(i) = r.resultOpt.getOrElse(e)
     }
     if (changed) {
-      return Result(ctxi, Some(SM.toIS(s2)))
+      return Result(ctxi, Some(s2.toIS))
     } else {
       return Result(ctxi, None())
     }
@@ -1702,17 +1746,18 @@ import Transformer._
         case o2: Stmt.Var =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.tipeOpt, transformType)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), tipeOpt = r1.resultOpt.getOrElse(o2.tipeOpt), attr = r2.resultOpt.getOrElse(o2.attr))))
+          val r2: Result[Context, Option[AssignExp]] = transformOption(r1.ctx, o2.initOpt, transformAssignExp)
+          val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), tipeOpt = r1.resultOpt.getOrElse(o2.tipeOpt), initOpt = r2.resultOpt.getOrElse(o2.initOpt), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r2.ctx, None())
+            Result(r3.ctx, None())
         case o2: Stmt.VarPattern =>
           val r0: Result[Context, Pattern] = transformPattern(ctx, o2.pattern)
-          val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.tipeOpt, transformType)
+          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.init)
           val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(pattern = r0.resultOpt.getOrElse(o2.pattern), tipeOpt = r1.resultOpt.getOrElse(o2.tipeOpt), attr = r2.resultOpt.getOrElse(o2.attr))))
+            Result(r2.ctx, Some(o2(pattern = r0.resultOpt.getOrElse(o2.pattern), init = r1.resultOpt.getOrElse(o2.init), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
             Result(r2.ctx, None())
         case o2: Stmt.SpecVar =>
@@ -1757,6 +1802,13 @@ import Transformer._
             Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), elements = r1.resultOpt.getOrElse(o2.elements), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
             Result(r2.ctx, None())
+        case o2: Stmt.SubZ =>
+          val r0: Result[Context, Id] = transformId(ctx, o2.id)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
         case o2: Stmt.Object =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, IS[Z, Type]] = transformISZ(r0.ctx, o2.parents, transformType)
@@ -1810,25 +1862,28 @@ import Transformer._
             Result(r3.ctx, None())
         case o2: Stmt.Assign =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.lhs)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), attr = r1.resultOpt.getOrElse(o2.attr))))
+          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), rhs = r1.resultOpt.getOrElse(o2.rhs), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r1.ctx, None())
+            Result(r2.ctx, None())
         case o2: Stmt.AssignUp =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.lhs)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), attr = r1.resultOpt.getOrElse(o2.attr))))
+          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), rhs = r1.resultOpt.getOrElse(o2.rhs), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r1.ctx, None())
+            Result(r2.ctx, None())
         case o2: Stmt.AssignPattern =>
           val r0: Result[Context, Pattern] = transformPattern(ctx, o2.lhs)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), attr = r1.resultOpt.getOrElse(o2.attr))))
+          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), rhs = r1.resultOpt.getOrElse(o2.rhs), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r1.ctx, None())
+            Result(r2.ctx, None())
         case o2: Stmt.Block =>
           val r0: Result[Context, Body] = transformBody(ctx, o2.body)
           val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
@@ -1914,6 +1969,62 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Stmt = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Stmt] = pp.postStmt(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformAssignExp(ctx: Context, o: AssignExp): Result[Context, AssignExp] = {
+    val preR: PreResult[Context, AssignExp] = pp.preAssignExp(ctx, o)
+    val r: Result[Context, AssignExp] = if (preR.continue) {
+      val o2: AssignExp = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val rOpt: Result[Context, AssignExp] = o2 match {
+        case o2: Stmt.Block =>
+          val r0: Result[Context, Body] = transformBody(ctx, o2.body)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(body = r0.resultOpt.getOrElse(o2.body), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
+        case o2: Stmt.If =>
+          val r0: Result[Context, Exp] = transformExp(ctx, o2.cond)
+          val r1: Result[Context, Body] = transformBody(r0.ctx, o2.thenbody)
+          val r2: Result[Context, Body] = transformBody(r1.ctx, o2.elsebody)
+          val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenbody = r1.resultOpt.getOrElse(o2.thenbody), elsebody = r2.resultOpt.getOrElse(o2.elsebody), attr = r3.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r3.ctx, None())
+        case o2: Stmt.Match =>
+          val r0: Result[Context, Exp] = transformExp(ctx, o2.cond)
+          val r1: Result[Context, IS[Z, Case]] = transformISZ(r0.ctx, o2.cases, transformCase)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), cases = r1.resultOpt.getOrElse(o2.cases), attr = r2.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r2.ctx, None())
+        case o2: Stmt.Expr =>
+          val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
+      }
+      rOpt
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: AssignExp = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, AssignExp] = pp.postAssignExp(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2314,10 +2425,11 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: Result[Context, Pattern] = o2 match {
         case o2: Pattern.Literal =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
+          val r0: Result[Context, Lit] = transformLit(ctx, o2.lit)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(lit = r0.resultOpt.getOrElse(o2.lit))))
           else
-            Result(ctx, None())
+            Result(r0.ctx, None())
         case o2: Pattern.Ref =>
           val r0: Result[Context, Name] = transformName(ctx, o2.name)
           if (hasChanged || r0.resultOpt.nonEmpty)
@@ -2388,108 +2500,6 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Exp.LitZ =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitZ8 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitZ16 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitZ32 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitZ64 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitN =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitN8 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitN16 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitN32 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitN64 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitS8 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitS16 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitS32 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitS64 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitU8 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitU16 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitU32 =>
-          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r0.ctx, None())
-        case o2: Exp.LitU64 =>
           val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty)
             Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
@@ -2654,6 +2664,80 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Exp = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Exp] = pp.postExp(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformLit(ctx: Context, o: Lit): Result[Context, Lit] = {
+    val preR: PreResult[Context, Lit] = pp.preLit(ctx, o)
+    val r: Result[Context, Lit] = if (preR.continue) {
+      val o2: Lit = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val rOpt: Result[Context, Lit] = o2 match {
+        case o2: Exp.LitB =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitC =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitZ =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitF32 =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitF64 =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitR =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+        case o2: Exp.LitBv =>
+          val r0: Result[Context, Type] = transformType(ctx, o2.tipe)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(tipe = r0.resultOpt.getOrElse(o2.tipe), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
+        case o2: Exp.LitString =>
+          val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r0.ctx, None())
+      }
+      rOpt
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Lit = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Lit] = pp.postLit(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2933,11 +3017,10 @@ import Transformer._
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Id] = transformId(ctx, o2.id)
-      val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.superTypeOpt, transformType)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), superTypeOpt = r1.resultOpt.getOrElse(o2.superTypeOpt))))
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id))))
       else
-        Result(r1.ctx, None())
+        Result(r0.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {
@@ -3483,6 +3566,53 @@ import Transformer._
     }
   }
 
+  @pure def transformTyped(ctx: Context, o: Typed): Result[Context, Typed] = {
+    val preR: PreResult[Context, Typed] = pp.preTyped(ctx, o)
+    val r: Result[Context, Typed] = if (preR.continue) {
+      val o2: Typed = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val rOpt: Result[Context, Typed] = o2 match {
+        case o2: Typed.Name =>
+          val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
+          val r1: Result[Context, Option[PosInfo]] = transformOption(r0.ctx, o2.posOpt, transformPosInfo)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), posOpt = r1.resultOpt.getOrElse(o2.posOpt))))
+          else
+            Result(r1.ctx, None())
+        case o2: Typed.Tuple =>
+          val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
+          val r1: Result[Context, Option[PosInfo]] = transformOption(r0.ctx, o2.posOpt, transformPosInfo)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), posOpt = r1.resultOpt.getOrElse(o2.posOpt))))
+          else
+            Result(r1.ctx, None())
+        case o2: Typed.Fun =>
+          val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
+          val r1: Result[Context, Typed] = transformTyped(r0.ctx, o2.ret)
+          val r2: Result[Context, Option[PosInfo]] = transformOption(r1.ctx, o2.posOpt, transformPosInfo)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), ret = r1.resultOpt.getOrElse(o2.ret), posOpt = r2.resultOpt.getOrElse(o2.posOpt))))
+          else
+            Result(r2.ctx, None())
+      }
+      rOpt
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Typed = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Typed] = pp.postTyped(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
   @pure def transformAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
     val preR: PreResult[Context, Attr] = pp.preAttr(ctx, o)
     val r: Result[Context, Attr] = if (preR.continue) {
@@ -3516,9 +3646,9 @@ import Transformer._
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo)
-      val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.typeOpt, transformType)
+      val r1: Result[Context, Option[Typed]] = transformOption(r0.ctx, o2.typedOpt, transformTyped)
       if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt))))
+        Result(r1.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), typedOpt = r1.resultOpt.getOrElse(o2.typedOpt))))
       else
         Result(r1.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
@@ -3545,9 +3675,9 @@ import Transformer._
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo)
       val r1: Result[Context, Option[ResolvedInfo]] = transformOption(r0.ctx, o2.resOpt, transformResolvedInfo)
-      val r2: Result[Context, Option[Type]] = transformOption(r1.ctx, o2.typeOpt, transformType)
+      val r2: Result[Context, Option[Typed]] = transformOption(r1.ctx, o2.typedOpt, transformTyped)
       if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), resOpt = r1.resultOpt.getOrElse(o2.resOpt), typeOpt = r2.resultOpt.getOrElse(o2.typeOpt))))
+        Result(r2.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), resOpt = r1.resultOpt.getOrElse(o2.resOpt), typedOpt = r2.resultOpt.getOrElse(o2.typedOpt))))
       else
         Result(r2.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
@@ -3622,8 +3752,8 @@ import Transformer._
   @pure def transformLClauseProof(ctx: Context, o: LClause.Proof): Result[Context, LClause.Proof] = {
     val preR: PreResult[Context, LClause.Proof] = pp.preLClauseProof(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: LClause.Proof)) => PreResult(preCtx, continue, Some[LClause.Proof](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Proof]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type LClause.Proof")
+    }
     val r: Result[Context, LClause.Proof] = if (preR.continue) {
       val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3641,8 +3771,8 @@ import Transformer._
     val o2: LClause.Proof = r.resultOpt.getOrElse(o)
     val postR: Result[Context, LClause.Proof] = pp.postLClauseProof(r.ctx, o2) match {
      case Result(postCtx, Some(result: LClause.Proof)) => Result(postCtx, Some[LClause.Proof](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Proof]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type LClause.Proof")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3655,8 +3785,8 @@ import Transformer._
   @pure def transformLClauseSequent(ctx: Context, o: LClause.Sequent): Result[Context, LClause.Sequent] = {
     val preR: PreResult[Context, LClause.Sequent] = pp.preLClauseSequent(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: LClause.Sequent)) => PreResult(preCtx, continue, Some[LClause.Sequent](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[LClause.Sequent]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type LClause.Sequent")
+    }
     val r: Result[Context, LClause.Sequent] = if (preR.continue) {
       val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3676,8 +3806,8 @@ import Transformer._
     val o2: LClause.Sequent = r.resultOpt.getOrElse(o)
     val postR: Result[Context, LClause.Sequent] = pp.postLClauseSequent(r.ctx, o2) match {
      case Result(postCtx, Some(result: LClause.Sequent)) => Result(postCtx, Some[LClause.Sequent](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[LClause.Sequent]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type LClause.Sequent")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3690,8 +3820,8 @@ import Transformer._
   @pure def transformTypeNamed(ctx: Context, o: Type.Named): Result[Context, Type.Named] = {
     val preR: PreResult[Context, Type.Named] = pp.preTypeNamed(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: Type.Named)) => PreResult(preCtx, continue, Some[Type.Named](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Type.Named]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type Type.Named")
+    }
     val r: Result[Context, Type.Named] = if (preR.continue) {
       val o2: Type.Named = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3711,8 +3841,8 @@ import Transformer._
     val o2: Type.Named = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Type.Named] = pp.postTypeNamed(r.ctx, o2) match {
      case Result(postCtx, Some(result: Type.Named)) => Result(postCtx, Some[Type.Named](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[Type.Named]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type Type.Named")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3725,8 +3855,8 @@ import Transformer._
   @pure def transformExpLitString(ctx: Context, o: Exp.LitString): Result[Context, Exp.LitString] = {
     val preR: PreResult[Context, Exp.LitString] = pp.preExpLitString(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: Exp.LitString)) => PreResult(preCtx, continue, Some[Exp.LitString](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitString]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type Exp.LitString")
+    }
     val r: Result[Context, Exp.LitString] = if (preR.continue) {
       val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3744,8 +3874,8 @@ import Transformer._
     val o2: Exp.LitString = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Exp.LitString] = pp.postExpLitString(r.ctx, o2) match {
      case Result(postCtx, Some(result: Exp.LitString)) => Result(postCtx, Some[Exp.LitString](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitString]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type Exp.LitString")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3758,8 +3888,8 @@ import Transformer._
   @pure def transformExpLitZ(ctx: Context, o: Exp.LitZ): Result[Context, Exp.LitZ] = {
     val preR: PreResult[Context, Exp.LitZ] = pp.preExpLitZ(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: Exp.LitZ)) => PreResult(preCtx, continue, Some[Exp.LitZ](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitZ]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type Exp.LitZ")
+    }
     val r: Result[Context, Exp.LitZ] = if (preR.continue) {
       val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3777,8 +3907,8 @@ import Transformer._
     val o2: Exp.LitZ = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Exp.LitZ] = pp.postExpLitZ(r.ctx, o2) match {
      case Result(postCtx, Some(result: Exp.LitZ)) => Result(postCtx, Some[Exp.LitZ](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitZ]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type Exp.LitZ")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3791,8 +3921,8 @@ import Transformer._
   @pure def transformExpLitB(ctx: Context, o: Exp.LitB): Result[Context, Exp.LitB] = {
     val preR: PreResult[Context, Exp.LitB] = pp.preExpLitB(ctx, o) match {
      case PreResult(preCtx, continue, Some(r: Exp.LitB)) => PreResult(preCtx, continue, Some[Exp.LitB](r))
-     case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[Exp.LitB]())
-   }
+     case PreResult(preCtx, continue, _) => halt("Can only produce object of type Exp.LitB")
+    }
     val r: Result[Context, Exp.LitB] = if (preR.continue) {
       val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3810,8 +3940,8 @@ import Transformer._
     val o2: Exp.LitB = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Exp.LitB] = pp.postExpLitB(r.ctx, o2) match {
      case Result(postCtx, Some(result: Exp.LitB)) => Result(postCtx, Some[Exp.LitB](result))
-     case Result(postCtx, _) => assert(F); Result(postCtx, None[Exp.LitB]())
-   }
+     case Result(postCtx, _) => halt("Can only produce object of type Exp.LitB")
+    }
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

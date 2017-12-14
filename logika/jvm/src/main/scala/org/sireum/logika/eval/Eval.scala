@@ -83,24 +83,24 @@ object Eval {
   final private val rsType = RSType()
 
   def toZ(n: Any): Z = n match {
+    case n: N => n.toMP
+    case n: Z8 => n.toMP
+    case n: Z16 => n.toMP
+    case n: Z32 => n.toMP
+    case n: Z64 => n.toMP
+    case n: N8 => n.toMP
+    case n: N16 => n.toMP
+    case n: N32 => n.toMP
+    case n: N64 => n.toMP
+    case n: S8 => n.toMP
+    case n: S16 => n.toMP
+    case n: S32 => n.toMP
+    case n: S64 => n.toMP
+    case n: U8 => n.toMP
+    case n: U16 => n.toMP
+    case n: U32 => n.toMP
+    case n: U64 => n.toMP
     case n: Z => n
-    case n: N => org.sireum.N.toZ(n)
-    case n: Z8 => org.sireum.Z8.toZ(n)
-    case n: Z16 => org.sireum.Z16.toZ(n)
-    case n: Z32 => org.sireum.Z32.toZ(n)
-    case n: Z64 => org.sireum.Z64.toZ(n)
-    case n: N8 => org.sireum. N8.toZ(n)
-    case n: N16 => org.sireum.N16.toZ(n)
-    case n: N32 => org.sireum.N32.toZ(n)
-    case n: N64 => org.sireum.N64.toZ(n)
-    case n: S8 => org.sireum. S8.toZ(n)
-    case n: S16 => org.sireum.S16.toZ(n)
-    case n: S32 => org.sireum.S32.toZ(n)
-    case n: S64 => org.sireum.S64.toZ(n)
-    case n: U8 => org.sireum. U8.toZ(n)
-    case n: U16 => org.sireum.U16.toZ(n)
-    case n: U32 => org.sireum.U32.toZ(n)
-    case n: U64 => org.sireum.U64.toZ(n)
   }
 
   def simplify(bitWidth: Int, store: Store)(e: Exp): Exp = {
@@ -126,7 +126,7 @@ object Eval {
          Value(_, i) <- evalExp(store)(index);
          vv@Value(_, v) <- evalExp(store)(e)) yield ((ms, i, v): @unchecked) match {
       case (ms: MS[_, _], _, v: Value) =>
-        val ms2 = ms.clone.asInstanceOf[MS[Any, Value]]
+        val ms2 = ms.$clone.asInstanceOf[MS[Z, Value]]
         ms2(toZ(i)) = v
         val ms2v = Value(msType, ms2)
         (store + (id.value -> ms2v), ms2v, vv)
@@ -143,7 +143,6 @@ object Eval {
 
   def toLit(bitWidth: Int, l: Value): Exp = (l: @unchecked) match {
     case Value(_, v: B) => BooleanLit(v.value)
-    case Value(_, v: Z) => IntLit(v.toString, bitWidth, None)
     case Value(tipe.Z8, v) => IntLit(v.toString, 8, Some(z8Type))
     case Value(tipe.Z16, v) => IntLit(v.toString, 16, Some(z16Type))
     case Value(tipe.Z32, v) => IntLit(v.toString, 32, Some(z32Type))
@@ -161,6 +160,7 @@ object Eval {
     case Value(tipe.U16, v: U16) => IntLit(v.value.toString, 16, Some(u16Type))
     case Value(tipe.U32, v: U32) => IntLit(v.value.toString, 32, Some(u32Type))
     case Value(tipe.U64, v: U64) => IntLit(v.value.toString, 64, Some(u64Type))
+    case Value(_, v: Z) => IntLit(v.toString, bitWidth, None)
     case Value(_, v: R) => RealLit(v.toString)
     case Value(_, v: F32) => FloatLit(v.value.toString + "f")
     case Value(_, v: F64) => FloatLit(v.value.toString + "d")
@@ -224,23 +224,23 @@ private final class Eval(store: Store) {
   def int2v(tpeOpt: Option[Type], v: Z): Value = tpeOpt match {
     case Some(t) => (t: @unchecked) match {
       case _: ZType => Value(tipe.Z, v)
-      case _: Z8Type => Value(tipe.Z8, org.sireum.Z.toZ8(v))
-      case _: Z16Type => Value(tipe.Z16, org.sireum.Z.toZ16(v))
-      case _: Z32Type => Value(tipe.Z32, org.sireum.Z.toZ32(v))
-      case _: Z64Type => Value(tipe.Z64, org.sireum.Z.toZ64(v))
-      case _: NType => Value(tipe.N, org.sireum.Z.toN(v))
-      case _: N8Type => Value(tipe.N8, org.sireum.Z.toN8(v))
-      case _: N16Type => Value(tipe.N16, org.sireum.Z.toN16(v))
-      case _: N32Type => Value(tipe.N32, org.sireum.Z.toN32(v))
-      case _: N64Type => Value(tipe.N64, org.sireum.Z.toN64(v))
-      case _: S8Type => Value(tipe.S8, org.sireum.Z.toS8(v))
-      case _: S16Type => Value(tipe.S16, org.sireum.Z.toS16(v))
-      case _: S32Type => Value(tipe.S32, org.sireum.Z.toS32(v))
-      case _: S64Type => Value(tipe.S64, org.sireum.Z.toS64(v))
-      case _: U8Type => Value(tipe.U8, org.sireum.Z.toU8(v))
-      case _: U16Type => Value(tipe.U16, org.sireum.Z.toU16(v))
-      case _: U32Type => Value(tipe.U32, org.sireum.Z.toU32(v))
-      case _: U64Type => Value(tipe.U64, org.sireum.Z.toU64(v))
+      case _: Z8Type => Value(tipe.Z8, org.sireum.Z8(v))
+      case _: Z16Type => Value(tipe.Z16, org.sireum.Z16(v))
+      case _: Z32Type => Value(tipe.Z32, org.sireum.Z32(v))
+      case _: Z64Type => Value(tipe.Z64, org.sireum.Z64(v))
+      case _: NType => Value(tipe.N, org.sireum.N(v))
+      case _: N8Type => Value(tipe.N8, org.sireum.N8(v))
+      case _: N16Type => Value(tipe.N16, org.sireum.N16(v))
+      case _: N32Type => Value(tipe.N32, org.sireum.N32(v))
+      case _: N64Type => Value(tipe.N64, org.sireum.N64(v))
+      case _: S8Type => Value(tipe.S8, org.sireum.S8(v))
+      case _: S16Type => Value(tipe.S16, org.sireum.S16(v))
+      case _: S32Type => Value(tipe.S32, org.sireum.S32(v))
+      case _: S64Type => Value(tipe.S64, org.sireum.S64(v))
+      case _: U8Type => Value(tipe.U8, org.sireum.U8(v))
+      case _: U16Type => Value(tipe.U16, org.sireum.U16(v))
+      case _: U32Type => Value(tipe.U32, org.sireum.U32(v))
+      case _: U64Type => Value(tipe.U64, org.sireum.U64(v))
     }
     case _ => Value(tipe.Z, v)
   }
@@ -263,7 +263,7 @@ private final class Eval(store: Store) {
         case Value(_, v: MS[_, _]) => Value(tipe.Z, v.size)
       }
       case Clone(id) => for (v <- eval(id)) yield (v: @unchecked) match {
-        case Value(t, v: MS[_, _]) => Value(t, v.clone)
+        case Value(t, v: MS[_, _]) => Value(t, v.$clone)
       }
       case exp: Result => Some(Value(exp.tipe, store.get("result")))
       case Apply(id, Seq(arg)) =>
@@ -275,19 +275,19 @@ private final class Eval(store: Store) {
         }
       case _: RandomInt => None
       case _: ReadInt => None
-      case e: IntLit => Some(int2v(e.tpeOpt, _Z(e.normalize)))
+      case e: IntLit => Some(int2v(e.tpeOpt, Z(e.normalize)))
       case e: FloatLit =>
         Some(e.primitiveValue match {
           case Left(v) => Value(tipe.F32, v)
           case Right(v) => Value(tipe.F64, v)
         })
-      case e: RealLit => Some(Value(tipe.R, org.sireum._Helper.R(e.value)))
+      case e: RealLit => Some(Value(tipe.R, org.sireum.R(e.value)))
       case e: IntMin =>
         if (e.bitWidth == 0) None
-        else Some(int2v(Some(e.integralType), _Z(e.value)))
+        else Some(int2v(Some(e.integralType), Z(e.value)))
       case e: IntMax =>
         if (e.bitWidth == 0) None
-        else Some(int2v(Some(e.integralType), _Z(e.value)))
+        else Some(int2v(Some(e.integralType), Z(e.value)))
       case _: Random => None
       case e: Mul =>
         for (Value(t, v1) <- eval(e.left);
@@ -623,11 +623,11 @@ private final class Eval(store: Store) {
         })
       case e: Minus =>
         for (Value(t, v) <- eval(e.exp)) yield Value(t, (v: @unchecked) match {
-          case v: Z => -v
           case v: S8 => -v
           case v: S16 => -v
           case v: S32 => -v
           case v: S64 => -v
+          case v: Z => -v
           case v: R => -v
           case v: F32 => -v
           case v: F64 => -v

@@ -44,13 +44,13 @@ object TransformerGen {
                             tpe: ST,
                             preMethodRootCases: ISZ[ST]): ST
 
-    @pure def preMethodRootCase(typeName: ST, tpe: ST): ST
+    @pure def preMethodRootCase(typeName: ST, tpe: ST, superType: ST, preAdaptOpt: Option[ST]): ST
 
     @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST
 
     @pure def postMethodRoot(typeName: ST, tpe: ST, postMethodRootCases: ISZ[ST]): ST
 
-    @pure def postMethodRootCase(typeName: ST, tpe: ST): ST
+    @pure def postMethodRootCase(typeName: ST, tpe: ST, superType: ST, postAdaptOpt: Option[ST]): ST
 
     @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST
 
@@ -60,13 +60,9 @@ object TransformerGen {
                               preAdaptOpt: Option[ST],
                               postAdaptOpt: Option[ST]): ST
 
-    @pure def preAdaptDown(tpe: ST): ST
+    @pure def preAdapt(tpe: ST): ST
 
-    @pure def preAdaptUp(tpe: ST): ST
-
-    @pure def postAdaptDown(tpe: ST): ST
-
-    @pure def postAdaptUp(tpe: ST): ST
+    @pure def postAdapt(tpe: ST): ST
 
     @pure def transformMethodMatch(tpe: ST,
                                    transformMethodCases: ISZ[ST]): ST
@@ -153,8 +149,8 @@ object TransformerGen {
           st"""// This file is auto-generated from $text
               |""")
         val packageName: Option[ST] =
-          if (packageNames.nonEmpty) Some(st"""package ${(packageNames, ".")}
-                                         |""") else None[ST]()
+          if (packageNames.nonEmpty) Some( st"""package ${(packageNames, ".")}
+                                               |""") else None[ST]()
         return st"""// #Sireum
                    |// @formatter:off
                    |
@@ -203,8 +199,14 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def preMethodRootCase(typeName: ST, tpe: ST): ST = {
-        return st"case o: $tpe => return pre$typeName(ctx, o)"
+      @pure def preMethodRootCase(typeName: ST, tpe: ST, superType: ST, preAdaptOpt: Option[ST]): ST = {
+        preAdaptOpt match {
+          case Some(preAdapt) =>
+            return st"""case o: $tpe =>
+                       |  val r: PreResult[Context, $superType] = pre$typeName(ctx, o)$preAdapt
+                       |  return r"""
+          case _ => return st"case o: $tpe => return pre$typeName(ctx, o)"
+        }
       }
 
       @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
@@ -221,8 +223,14 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def postMethodRootCase(typeName: ST, tpe: ST): ST = {
-        return st"case o: $tpe => return post$typeName(ctx, o)"
+      @pure def postMethodRootCase(typeName: ST, tpe: ST, superType: ST, postAdaptOpt: Option[ST]): ST = {
+        postAdaptOpt match {
+          case Some(postAdapt) =>
+            return st"""case o: $tpe =>
+                       |  val r: Result[Context, $superType] = post$typeName(ctx, o)$postAdapt
+                       |  return r"""
+          case _ => return st"case o: $tpe => return post$typeName(ctx, o)"
+        }
       }
 
       @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
@@ -260,32 +268,18 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def preAdaptDown(tpe: ST): ST = {
+      @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(preCtx, continue, Some(r: $tpe)) => PreResult(preCtx, continue, Some[$tpe](r))
-                   |   case PreResult(preCtx, continue, _) => assert(F); PreResult(preCtx, F, None[$tpe]())
-                   | }"""
+                   |   case PreResult(preCtx, continue, _) => halt("Can only produce object of type $tpe")
+                   |  }"""
       }
 
-      @pure def preAdaptUp(tpe: ST): ST = {
-        return st""" match {
-                   |   case PreResult(preCtx, continue, Some(r)) => PreResult(preCtx, continue, Some[$tpe](r))
-                   |   case PreResult(preCtx, continue, _) => PreResult(preCtx, continue, None[$tpe]())
-                   | }"""
-      }
-
-      @pure def postAdaptDown(tpe: ST): ST = {
+      @pure def postAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case Result(postCtx, Some(result: $tpe)) => Result(postCtx, Some[$tpe](result))
-                   |   case Result(postCtx, _) => assert(F); Result(postCtx, None[$tpe]())
-                   | }"""
-      }
-
-      @pure def postAdaptUp(tpe: ST): ST = {
-        return st""" match {
-                   |   case Result(postCtx, Some(r)) => Result(postCtx, Some[$tpe](r))
-                   |   case Result(postCtx, _) => Result(postCtx, None[$tpe]())
-                   | }"""
+                   |   case Result(postCtx, _) => halt("Can only produce object of type $tpe")
+                   |  }"""
       }
 
       @pure def transformMethodMatch(tpe: ST,
@@ -397,7 +391,7 @@ object TransformerGen {
 
       @pure def transformIS(indexType: ST): ST = {
         return st"""@pure def transformIS$indexType[Context, T](ctx: Context, s: IS[$indexType, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[$indexType, T]] = {
-                   |  val s2: MS[$indexType, T] = SI.toMS(s)
+                   |  val s2: MS[$indexType, T] = s.toMS
                    |  var changed: B = F
                    |  var ctxi = ctx
                    |  for (i <- s2.indices) {
@@ -408,7 +402,7 @@ object TransformerGen {
                    |    s2(i) = r.resultOpt.getOrElse(e)
                    |  }
                    |  if (changed) {
-                   |    return Result(ctxi, Some(SM.toIS(s2)))
+                   |    return Result(ctxi, Some(s2.toIS))
                    |  } else {
                    |    return Result(ctxi, None())
                    |  }
@@ -439,8 +433,8 @@ object TransformerGen {
           st"""// This file is auto-generated from $text
               |""")
         val packageName: Option[ST] =
-          if (packageNames.nonEmpty) Some(st"""package ${(packageNames, ".")}
-                                              |""") else None[ST]()
+          if (packageNames.nonEmpty) Some( st"""package ${(packageNames, ".")}
+                                               |""") else None[ST]()
         return st"""// #Sireum
                    |// @formatter:off
                    |
@@ -485,8 +479,14 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def preMethodRootCase(typeName: ST, tpe: ST): ST = {
-        return st"case o: $tpe => return pre$typeName(o)"
+      @pure def preMethodRootCase(typeName: ST, tpe: ST, superType: ST, preAdaptOpt: Option[ST]): ST = {
+        preAdaptOpt match {
+          case Some(preAdapt) =>
+            return st"""case o: $tpe =>
+                       |  val r: PreResult[$superType] = pre$typeName(o)$preAdapt
+                       |  return r"""
+          case _ => return st"case o: $tpe => return pre$typeName(o)"
+        }
       }
 
       @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
@@ -503,8 +503,14 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def postMethodRootCase(typeName: ST, tpe: ST): ST = {
-        return st"case o: $tpe => return post$typeName(o)"
+      @pure def postMethodRootCase(typeName: ST, tpe: ST, superType: ST, postAdaptOpt: Option[ST]): ST = {
+        postAdaptOpt match {
+          case Some(postAdapt) =>
+            return st"""case o: $tpe =>
+                       |  val r: MOption[$superType] = post$typeName(o)$postAdapt
+                       |  return r"""
+          case _ => return st"case o: $tpe => return post$typeName(o)"
+        }
       }
 
       @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
@@ -542,32 +548,18 @@ object TransformerGen {
                    |}"""
       }
 
-      @pure def preAdaptDown(tpe: ST): ST = {
+      @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(continue, MSome(r: $tpe)) => PreResult(continue, MSome[$tpe](r))
-                   |   case _ => assert(F); PreResult(F, MNone[$tpe]())
-                   | }"""
+                   |   case _ => halt("Can only produce object of type $tpe")
+                   |  }"""
       }
 
-      @pure def preAdaptUp(tpe: ST): ST = {
-        return st""" match {
-                   |   case PreResult(continue, MSome(r)) => PreResult(continue, MSome[$tpe](r))
-                   |   case PreResult(continue, _) => PreResult(continue, MNone[$tpe]())
-                   | }"""
-      }
-
-      @pure def postAdaptDown(tpe: ST): ST = {
+      @pure def postAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case MSome(result: $tpe) => MSome[$tpe](result)
-                   |   case _ => assert(F); MNone[$tpe]()
-                   | }"""
-      }
-
-      @pure def postAdaptUp(tpe: ST): ST = {
-        return st""" match {
-                   |   case MSome(r) => MSome[$tpe](r)
-                   |   case _ => MNone[$tpe]()
-                   | }"""
+                   |   case _ => halt("Can only produce object of type $tpe")
+                   |  }"""
       }
 
       @pure def transformMethodMatch(tpe: ST,
@@ -682,7 +674,7 @@ object TransformerGen {
 
       @pure def transformIS(indexType: ST): ST = {
         return st"""def transformIS$indexType[T](s: IS[$indexType, T], f: T => MOption[T]): MOption[IS[$indexType, T]] = {
-                   |  val s2: MS[$indexType, T] = SI.toMS(s)
+                   |  val s2: MS[$indexType, T] = s.toMS
                    |  var changed: B = F
                    |  for (i <- s2.indices) {
                    |    val e: T = s(i)
@@ -691,7 +683,7 @@ object TransformerGen {
                    |    s2(i) = r.getOrElse(e)
                    |  }
                    |  if (changed) {
-                   |    return MSome(SM.toIS(s2))
+                   |    return MSome(s2.toIS)
                    |  } else {
                    |    return MNone()
                    |  }
