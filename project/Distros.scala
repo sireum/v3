@@ -58,7 +58,7 @@ object Distros {
     "latex" -> "idea-latex.jar"
   )
 
-  lazy val pluginUpdateIdMap = Map(
+  lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 41514 else 0),
     "jdt" -> 32149,
     "scala" -> (if (isDev) 41257 else 41257),
@@ -72,8 +72,9 @@ object Distros {
     "latex" -> 18476,
     "python" -> (if (isDev) 41063 else 41063),
     "rst" -> 14700
-    //"ignore" -> 40625
-  )
+  ) ++ (if (isDev) Map(
+    "ignore" -> 40625
+  ) else Map())
 
   lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
     //"ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
