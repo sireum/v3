@@ -44,7 +44,7 @@ val sireumVersion = "3"
 
 val sireumScalacVersion = "3.1.2"
 
-val fastParseVersion = "0.4.4"
+val fastParseVersion = "1.0.0"
 
 val scalaJsDomVersion = "0.9.3"
 
@@ -94,12 +94,12 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.antlr" % "antlr4-runtime" % "4.7",
+    "org.antlr" % "antlr4-runtime" % "4.7.1",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.19",
     "org.ow2.asm" % "asm" % "5.2",
-    "org.ow2.asm" % "asm-commons" % "5.2",
-    "org.ow2.asm" % "asm-util" % "5.2",
+    "org.ow2.asm" % "asm-commons" % "6.0",
+    "org.ow2.asm" % "asm-util" % "6.0",
     "org.jgrapht" % "jgrapht-core" % "1.1.0",
     "org.jgrapht" % "jgrapht-io" % "1.1.0",
     "com.lihaoyi" %% "ammonite-ops" % "1.0.3",
@@ -366,6 +366,7 @@ lazy val sireumJvm =
               Right(Seq(nonSharedFiles.head -> path))
             }
           }
+          case "module-info.class" => MergeStrategy.discard
           case x =>
             val oldStrategy = (assemblyMergeStrategy in assembly).value
             oldStrategy(x)
