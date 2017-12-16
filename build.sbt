@@ -52,6 +52,32 @@ val scalaJsJQueryVersion = "0.9.2"
 
 val scalaTagsVersion = "0.6.7"
 
+val asmVersion = "6.0"
+
+val jgraphtVersion = "1.1.0"
+
+val upickleVersion = "0.4.4"
+
+val java8CompatVersion = "0.8.0"
+
+val antlrRuntimeVersion = "4.7.1"
+
+val stVersion = "4.0.8"
+
+val ammoniteOpsVersion = "1.0.3"
+
+val diffVersion = "1.1.11"
+
+val snakeYamlVersion = "1.19"
+
+val junitInterfaceVersion = "0.11"
+
+val utestVersion = "0.6.0"
+
+val spireVersion = "0.13.0"
+
+val scalajsonVersion = "1.0.0-M4"
+
 val BUILD_FILENAME = "BUILD"
 
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
@@ -85,7 +111,7 @@ lazy val sireumSettings = Seq(
 
 lazy val sireumSharedSettings = sireumSettings ++ Seq(
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "upickle" % "0.4.4"
+    "com.lihaoyi" %%% "upickle" % upickleVersion
   )
 )
 
@@ -93,18 +119,18 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
     "org.scala-lang" % "scala-compiler" % scalaVer,
-    "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
-    "org.antlr" % "antlr4-runtime" % "4.7.1",
-    "org.antlr" % "ST4" % "4.0.8",
-    "org.yaml" % "snakeyaml" % "1.19",
-    "org.ow2.asm" % "asm" % "6.0",
-    "org.ow2.asm" % "asm-commons" % "6.0",
-    "org.ow2.asm" % "asm-util" % "6.0",
-    "org.jgrapht" % "jgrapht-core" % "1.1.0",
-    "org.jgrapht" % "jgrapht-io" % "1.1.0",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.3",
-    "com.sksamuel.diff" % "diff" % "1.1.11",
-    "com.novocode" % "junit-interface" % "0.11"
+    "org.scala-lang.modules" %% "scala-java8-compat" % java8CompatVersion,
+    "org.antlr" % "antlr4-runtime" % antlrRuntimeVersion,
+    "org.antlr" % "ST4" % stVersion,
+    "org.yaml" % "snakeyaml" % snakeYamlVersion,
+    "org.ow2.asm" % "asm" % asmVersion,
+    "org.ow2.asm" % "asm-commons" % asmVersion,
+    "org.ow2.asm" % "asm-util" % asmVersion,
+    "org.jgrapht" % "jgrapht-core" % jgraphtVersion,
+    "org.jgrapht" % "jgrapht-io" % jgraphtVersion,
+    "com.lihaoyi" %% "ammonite-ops" % ammoniteOpsVersion,
+    "com.sksamuel.diff" % "diff" % diffVesion,
+    "com.novocode" % "junit-interface" % junitInterfaceVersion
   ),
   parallelExecution in Test := true,
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
@@ -117,7 +143,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   scalaJSStage in Global := (if (isRelease) FullOptStage else FastOptStage),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % "0.6.0"
+    "com.lihaoyi" %%% "utest" % utestVersion
   ),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
@@ -209,7 +235,7 @@ lazy val macrosT = toSbtCrossProject(macrosPI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.spire-math" %%% "spire" % "0.13.0"),
+    "org.spire-math" %%% "spire" % spireVersion),
   addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
 lazy val macrosShared = macrosT._1
 lazy val macrosJvm = macrosT._2
@@ -220,7 +246,7 @@ lazy val libraryT = toSbtCrossProject(libraryPI, Seq(
   scalacOptions ++= Seq("-Yrangepos"),
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
-    "org.scala-lang.platform" %%% "scalajson" % "1.0.0-M4",
+    "org.scala-lang.platform" %%% "scalajson" % scalajsonVersion,
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
