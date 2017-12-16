@@ -46,7 +46,7 @@ val sireumScalacVersion = "3.1.2"
 
 val fastParseVersion = "1.0.0"
 
-val scalaJsDomVersion = "0.9.3"
+val scalaJsDomVersion = "0.9.4"
 
 val scalaJsJQueryVersion = "0.9.2"
 
@@ -97,7 +97,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.antlr" % "antlr4-runtime" % "4.7.1",
     "org.antlr" % "ST4" % "4.0.8",
     "org.yaml" % "snakeyaml" % "1.19",
-    "org.ow2.asm" % "asm" % "5.2",
+    "org.ow2.asm" % "asm" % "6.0",
     "org.ow2.asm" % "asm-commons" % "6.0",
     "org.ow2.asm" % "asm-util" % "6.0",
     "org.jgrapht" % "jgrapht-core" % "1.1.0",
