@@ -119,7 +119,7 @@ object SlangParser {
             reporter: Reporter): Result = {
     val text = txt.replaceAllLiterally("\r\n", "\n") // WORKAROUND: scalameta crlf issues
     val i = text.indexOf('\n')
-    val sb = new StringBuilder
+    val sb = new _root_.java.lang.StringBuilder
     if (i >= 0) {
       for (j <- 0 until i) text(j) match {
         case '\t' | '\r' | ' ' =>
@@ -239,6 +239,7 @@ class SlangParser(text: Predef.String,
     def topF(rest: List[Stat]): Result = {
       val shouldParse = fileUriOpt.forall(fileUri =>
         fileUri.value.endsWith(".logika") ||
+          fileUri.value.endsWith(".slang") ||
           fileUri.value.endsWith(".sc") ||
           (hashSireum && fileUri.value.endsWith(".scala")))
       if (shouldParse)
@@ -253,7 +254,7 @@ class SlangParser(text: Predef.String,
 
     source.stats match {
       case List(q"package $ref { ..$stats }") =>
-        if (hashSireum) {
+        if (hashSireum || fileUriOpt.isEmpty || fileUriOpt.get.value.endsWith(".slang")) {
           val name = AST.Name(ref2IS(ref), attr(ref.pos))
           val refSyntax = ref.syntax
           if (refSyntax == "org.sireum" || refSyntax.startsWith("org.sireum.")) {
@@ -1284,9 +1285,10 @@ class SlangParser(text: Predef.String,
       case q"${name: Pat.Var.Term}" => AST.Pattern.Variable(cid(name), None())
       case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)))
       case p"_" => AST.Pattern.Wildcard(None())
+      case p"${lit: Pat.Interpolate}" => AST.Pattern.Literal(translateLit(lit))
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
-        errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
+        errorInSlang(pat.pos, s"Invalid pattern: '${pat.structure}'")
         AST.Pattern.Wildcard(None())
     }
   }
@@ -1805,39 +1807,49 @@ class SlangParser(text: Predef.String,
       AST.Exp.LitB(false, attr(lit.pos))
   }
 
-  def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit = {
+  def translateLit(prefix: Term.Name,
+                   args: Seq[_],
+                   parts: Seq[Lit],
+                   pos: Position,
+                   syntx: => Predef.String): AST.Exp with AST.Lit = {
     def toBigInt(value: Predef.String): BigInt = {
       if (value.toUpperCase().startsWith("0X")) BigInt(value.substring(2), 16)
       else BigInt(value)
     }
 
-    def errR = AST.Exp.LitB(false, attr(lit.pos))
+    def errR = AST.Exp.LitB(false, attr(pos))
 
-    if (text.substring(lit.pos.start.offset, lit.pos.end.offset).startsWith(lit.prefix.value + "\"\"\"")) {
-      error(lit.pos, "'" + lit.prefix.value + "\"...\"' should be used instead of '" + lit.prefix.value + "\"\"...\"\"\"'.")
+    if (text.substring(pos.start.offset, pos.end.offset).startsWith(prefix.value + "\"\"\"")) {
+      error(pos, "'" + prefix.value + "\"...\"' should be used instead of '" + prefix.value + "\"\"...\"\"\"'.")
       return errR
     }
-    if (lit.args.nonEmpty || !(lit.parts match {
+    if (args.nonEmpty || !(parts match {
       case List(Lit.String(_)) => true
       case _ => false
     })) {
-      errorNotSlang(lit.pos, s"Literal '${syntax(lit)}' is")
+      errorNotSlang(pos, s"Literal '$syntx' is")
       return errR
     }
-    val List(Lit.String(value)) = lit.parts
+    val List(Lit.String(value)) = parts
     try {
-      val r = lit.prefix.value match {
-        case "z" => AST.Exp.LitZ(Z.$String(value), attr(lit.pos))
-        case "r" => AST.Exp.LitR(org.sireum.R.$String(value), attr(lit.pos))
+      val r = prefix.value match {
+        case "z" => AST.Exp.LitZ(Z.$String(value), attr(pos))
+        case "r" => AST.Exp.LitR(org.sireum.R.$String(value), attr(pos))
       }
       return r
     } catch {
       case e: IllegalArgumentException =>
       case e: NumberFormatException =>
     }
-    error(lit.pos, s"Invalid ${lit.prefix.value.toUpperCase} number: '${syntax(lit)}'")
-    AST.Exp.LitB(false, attr(lit.pos))
+    error(pos, s"Invalid ${prefix.value.toUpperCase} number: '$syntx'")
+    AST.Exp.LitB(false, attr(pos))
   }
+
+  def translateLit(lit: Pat.Interpolate): AST.Exp with AST.Lit =
+    translateLit(lit.prefix, lit.args, lit.parts, lit.pos, syntax(lit))
+
+  def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit =
+    translateLit(lit.prefix, lit.args, lit.parts, lit.pos, syntax(lit))
 
   def translateLitBv(isBigEndian: Boolean,
                      lit: Term.Interpolate,
