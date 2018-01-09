@@ -65,7 +65,7 @@ object Distros {
     "markdown" -> (if (isDev) 39197 else 39197),
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
-    "asm" -> 18619,
+    "asm" -> 41973,
     "bash" -> (if (isDev) 38798 else 38798),
     "batch" -> 22567,
     "compare" -> 24991,
