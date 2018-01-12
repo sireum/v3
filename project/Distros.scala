@@ -55,11 +55,13 @@ object Distros {
   val jarPlugins = Map(
     "rst" -> "rest.jar",
     "batch" -> "idea-batch.jar",
-    "latex" -> "idea-latex.jar"
+    "latex" -> "idea-latex.jar",
+    "sireum-injector" -> "sireum-injector.jar"
   )
 
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 41514 else 0),
+    "sireum-injector" -> (if (isDev) 0 else 0),
     "jdt" -> 32149,
     "scala" -> (if (isDev) 41523 else 41523),
     "markdown" -> (if (isDev) 39197 else 39197),
@@ -70,7 +72,7 @@ object Distros {
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
-    "python" -> (if (isDev) 41063 else 41063),
+    "python" -> (if (isDev) 41833 else 41833),
     "rst" -> 14700
   ) ++ (if (isDev) Map(
     "ignore" -> 40625
