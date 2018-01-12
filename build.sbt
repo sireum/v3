@@ -54,7 +54,7 @@ val asmVersion = "6.0"
 
 val jgraphtVersion = "1.1.0"
 
-val upickleVersion = "0.4.4"
+val upickleVersion = "0.5.1"
 
 val java8CompatVersion = "0.8.0"
 
@@ -70,7 +70,7 @@ val snakeYamlVersion = "1.19"
 
 val junitInterfaceVersion = "0.11"
 
-val utestVersion = "0.6.0"
+val utestVersion = "0.6.3"
 
 val spireVersion = "0.13.0"
 
