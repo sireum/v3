@@ -142,7 +142,6 @@ object SequentResolver {
       freeVarMap = fvm
       hasQuant = hasQuant || hq
     }
-    var conclusions = ISZ[Exp]()
     for (e <- sequent.conclusions) {
       val (hq, fvm) = resolveDeclExp(scope, freeVarMap, reporter, e)
       freeVarMap = fvm

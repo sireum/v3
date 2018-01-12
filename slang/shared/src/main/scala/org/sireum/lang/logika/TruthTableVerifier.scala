@@ -143,7 +143,7 @@ object TruthTableVerifier {
         val vars: ISZ[AST.Id] = tt.vars
         val size = vars.size
         var store = HashMap.emptyInit[String, B](size)
-        for (i <- 0 until size) {
+        for (i <- z"0" until size) {
           val x = vars(i)
           val v = assignment(i)
           if (!AST.Util.beginColumnEqual(x.attr.posOpt, v.attr.posOpt)) {

@@ -335,13 +335,11 @@ final class LParser(input: Input,
     if (token.is[LeftParen] || token.is[LeftBracket])
       Right(autoPos {
         val loExact = token.is[LeftBracket]
-        val start = token.start
         next()
         val lo = expr()
         accept[Comma]
         val hi = expr()
         val hiExact = token.is[RightBracket]
-        val end = token.end
         if (hiExact) next() else accept[RightParen]
         Term.Tuple(List(lo, Lit.Boolean(loExact), hi, Lit.Boolean(hiExact)))
       })
@@ -349,7 +347,7 @@ final class LParser(input: Input,
 
   def domain(): AST.Domain = domainRaw() match {
     case Left(t) => AST.Domain.Type(sparser.translateType(t), sparser.typedAttr(t.pos))
-    case Right(tt@Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean, pos))) =>
+    case Right(tt@Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean, _))) =>
       AST.Domain.Range(
         sparser.translateExp(lo),
         if (loExact.value) T else F,

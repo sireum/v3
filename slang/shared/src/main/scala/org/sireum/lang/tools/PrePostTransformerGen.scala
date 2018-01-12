@@ -242,7 +242,7 @@ object PrePostTransformerGen {
       p.tipe match {
         case t: AST.Type.Named =>
           val tids = t.name.ids
-          tids(tids.size - 1).value match {
+          tids(tids.size - 1).value.native match {
             case "IS" =>
               val ts = typeString(packageName, t.typeArgs(0), reporter)
               genS(T, ts, t.typeArgs(1), p)
@@ -314,7 +314,7 @@ object PrePostTransformerGen {
 
   def adtNameOpt(ti: TypeInfo.AbstractDatatype, ids: QName, posOpt: Option[AST.PosInfo]): Option[QName] = {
     if (ids.size == 1) {
-      ids(0) match {
+      ids(0).native match {
         case "B" => return None[QName]()
         case "C" => return None[QName]()
         case "Z" => return None[QName]()

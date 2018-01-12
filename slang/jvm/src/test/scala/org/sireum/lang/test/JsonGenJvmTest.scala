@@ -28,7 +28,7 @@ package org.sireum.lang.test
 import java.io.File
 
 import com.sksamuel.diffpatch.DiffMatchPatch
-import org.sireum.{ISZ, None => SNone}
+import org.sireum.{None => SNone}
 import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.JsonGenJvm
 import org.sireum.lang.util.{AccumulatingReporter, FileUtil}

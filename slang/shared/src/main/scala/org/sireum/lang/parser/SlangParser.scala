@@ -29,7 +29,7 @@ package org.sireum.lang.parser
 import fastparse.CharPredicates
 import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
-import org.sireum.{B, EnumSig, ISZ, None, Option, Some, String, Z, enum, helper}
+import org.sireum.{B, ISZ, None, Option, Some, String, Z}
 
 import scala.meta._
 import scala.meta.internal.parsers.ScalametaParser
@@ -511,7 +511,7 @@ class SlangParser(text: Predef.String,
     }
 
     stmt.initOpt match {
-      case Some(stmt) => check(stmt)
+      case Some(s) => check(s)
       case _ =>
     }
 
@@ -1415,7 +1415,7 @@ class SlangParser(text: Predef.String,
         }
       case _ =>
         var lhs = translateExp(stat.fun)
-        var prevPos = stat.fun.pos
+        val prevPos = stat.fun.pos
         if (stat.argss.nonEmpty) {
           for (args <- stat.argss) {
             val pos =
@@ -1563,7 +1563,7 @@ class SlangParser(text: Predef.String,
           modifies = ms
           invariants = is
           stats = rest
-        case (t: Term.Interpolate) :: rest =>
+        case (t: Term.Interpolate) :: _ =>
           hasError = true
           error(t.pos, "Expecting a Slang for-loop contract l\"\"\"{ ... }\"\"\" but found '" + syntax(t) + "'.")
         case _ =>
@@ -1574,7 +1574,7 @@ class SlangParser(text: Predef.String,
         errorInSlang(stat.body.pos, "For-loop body should be a code block")
     }
     if (hasError) rStmt else {
-      var enums = translateEnumGens(stat.enums)
+      val enums = translateEnumGens(stat.enums)
       if (enums.size == Z.MP.one) {
         AST.Stmt.For(enums(0), invariants, modifies,
           AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
@@ -1733,11 +1733,6 @@ class SlangParser(text: Predef.String,
                    parts: Seq[Lit],
                    pos: Position,
                    syntx: => Predef.String): AST.Exp with AST.Lit = {
-    def toBigInt(value: Predef.String): BigInt = {
-      if (value.toUpperCase().startsWith("0X")) BigInt(value.substring(2), 16)
-      else BigInt(value)
-    }
-
     def errR = AST.Exp.LitB(false, attr(pos))
 
     if (text.substring(pos.start.offset, pos.end.offset).startsWith(prefix.value + "\"\"\"")) {
@@ -1759,8 +1754,8 @@ class SlangParser(text: Predef.String,
       }
       return r
     } catch {
-      case e: IllegalArgumentException =>
-      case e: NumberFormatException =>
+      case _: IllegalArgumentException =>
+      case _: NumberFormatException =>
     }
     error(pos, s"Invalid ${prefix.value.toUpperCase} number: '$syntx'")
     AST.Exp.LitB(false, attr(pos))

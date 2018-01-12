@@ -508,7 +508,6 @@ import TypeChecker._
 
   def checkSpecVarOutline(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
     val sv = info.ast
-    val id = sv.id.value
     val tOpt = typeCheck(info.scope, sv.tipe, reporter)
     tOpt match {
       case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
@@ -518,7 +517,6 @@ import TypeChecker._
 
   def checkVarOutline(info: Info.Var, reporter: Reporter): Option[Info] = {
     val v = info.ast
-    val id = v.id.value
     val tpe = v.tipeOpt.get
     val tOpt = typeCheck(info.scope, tpe, reporter)
     tOpt match {
@@ -529,7 +527,6 @@ import TypeChecker._
 
   def checkSpecMethodOutline(info: Info.SpecMethod, reporter: Reporter): Option[Info] = {
     val sm = info.ast
-    val id = sm.sig.id.value
     val sigOpt = checkMethodSigOutline(info.scope, sm.sig, reporter)
     sigOpt match {
       case Some(sig) => return Some(info(ast = sm(sig = sig)))
@@ -539,7 +536,6 @@ import TypeChecker._
 
   def checkMethodOutline(info: Info.Method, reporter: Reporter): Option[Info] = {
     val m = info.ast
-    val id = m.sig.id.value
     val sigOpt = checkMethodSigOutline(info.scope, m.sig, reporter)
     sigOpt match {
       case Some(sig) => return Some(info(ast = m(sig = sig)))
@@ -581,7 +577,7 @@ import TypeChecker._
 
   @pure def checkSigOutline(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
-    var tm = typeParamMap(info.ast.typeParams, reporter)
+    val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
     var members = checkMembersOutline(T, info.name,
       TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
@@ -595,7 +591,7 @@ import TypeChecker._
 
   @pure def checkAdtOutline(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
-    var tm = typeParamMap(info.ast.typeParams, reporter)
+    val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
     var members = checkMembersOutline(info.ast.isRoot, info.name,
       TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
@@ -622,11 +618,10 @@ import TypeChecker._
         case _ =>
       }
     }
-    var tm = typeParamMap(typeParams, reporter)
+    val tm = typeParamMap(typeParams, reporter)
     val mScope = localTypeScope(tm.map, scope)
     var params = ISZ[AST.Param]()
     for (p <- sig.params) {
-      var prm = p
       val tOpt = typeCheck(mScope, p.tipe, reporter)
       tOpt match {
         case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
@@ -950,7 +945,7 @@ import TypeChecker._
           }
         case _ =>
           vars.get(id) match {
-            case Some((owner, v)) =>
+            case Some((_, v)) =>
               ok = checkVarRefinement(pm, v, substMap, posOpt)
               if (!ok) {
                 reporter.error(posOpt, typeCheckerKind,

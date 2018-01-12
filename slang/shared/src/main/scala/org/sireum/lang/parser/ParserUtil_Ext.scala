@@ -27,7 +27,6 @@ package org.sireum.lang.parser
 
 import org.sireum._
 import org.sireum.lang.util._
-import org.sireum.lang.{ast => AST}
 
 import scala.meta._
 import scala.meta.internal.parsers.ModifiedScalametaParser
