@@ -35,24 +35,7 @@ import scala.meta._
 import scala.meta.internal.parsers.ScalametaParser
 import scala.util.{Success, Try}
 
-// TODO: clean up quasiquotes due to IntelliJ's macro annotation inference workaround
 object SlangParser {
-
-  @enum object Enclosing {
-    'Top
-    'Package
-    'Object
-    'ExtObject
-    'DatatypeTrait
-    'DatatypeClass
-    'RecordTrait
-    'RecordClass
-    'Sig
-    'RichTrait
-    'RichClass
-    'Method
-    'Block
-  }
 
   val messageKind = "Slang Parser"
 
@@ -304,7 +287,6 @@ class SlangParser(text: Predef.String,
           case mod"@sig" | mod"@msig" | mod"@ext" => return translateSig(enclosing, stat)
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
-          case mod"@rich" => return translateRich(enclosing, stat)
           case _ =>
         }
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
@@ -318,7 +300,6 @@ class SlangParser(text: Predef.String,
         for (mod <- stat.mods.headOption) mod match {
           case mod"@datatype" => return translateDatatype(enclosing, stat)
           case mod"@record" => return translateRecord(enclosing, stat)
-          case mod"@rich" => return translateRich(enclosing, stat)
           case _ =>
         }
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
@@ -1117,65 +1098,6 @@ class SlangParser(text: Predef.String,
       attr(stat.pos))
   }
 
-  def translateRich(enclosing: Enclosing.Type, stat: Defn.Trait): AST.Stmt = {
-    enclosing match {
-      case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
-      case _ =>
-        if (isWorksheet) errorInSlang(stat.pos, "@rich trait declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInSlang(stat.pos, "@rich trait declarations can only appear at the package-level or inside objects")
-    }
-    val q"..$mods trait $tname[..$tparams] extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (estats.nonEmpty || hasSelfType(param))
-      error(tname.pos, "Slang @rich traits have to be of the form '@rich trait〈ID〉... { ... }'.")
-    var hasRich = false
-    for (mod <- mods) mod match {
-      case mod"@rich" =>
-        if (hasRich) {
-          error(mod.pos, "Redundant @rich.")
-        }
-        hasRich = true
-      case _ =>
-        error(mod.pos, "No modifiers are allowed for Slang @rich traits.")
-    }
-    AST.Stmt.Rich(isRoot = true,
-      cid(tname),
-      ISZ(tparams.map(translateTypeParam): _*),
-      ISZ(),
-      ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RichTrait)): _*),
-      attr(stat.pos))
-  }
-
-  def translateRich(enclosing: Enclosing.Type, stat: Defn.Class): AST.Stmt = {
-    enclosing match {
-      case Enclosing.Top | Enclosing.Package | Enclosing.Object =>
-      case _ =>
-        if (isWorksheet) errorInSlang(stat.pos, "@rich class declarations can only appear at the top-level, package-level, or inside objects")
-        else errorInSlang(stat.pos, "@rich class declarations can only appear at package-level or inside objects")
-    }
-    val q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends { ..$estats } with ..$ctorcalls { $param => ..$stats }" = stat
-    if (ctorMods.nonEmpty || paramss.size > 1 || estats.nonEmpty || hasSelfType(param)) {
-      error(tname.pos, "Slang @rich classes have to be of the form '@rich class〈ID〉... (...) ... { ... }'.")
-    }
-    var hasRich = false
-    for (mod <- mods) mod match {
-      case mod"@rich" =>
-        if (hasRich) {
-          error(mod.pos, "Redundant @rich.")
-        }
-        hasRich = true
-      case _ =>
-        error(mod.pos, "No modifiers are allowed for Slang @rich classes.")
-    }
-    AST.Stmt.Rich(isRoot = false,
-      cid(tname),
-      ISZ(tparams.map(translateTypeParam): _*),
-      ISZ(paramss.flatMap(_.map(translateParam(isMemoize = false))): _*),
-      ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RichClass)): _*),
-      attr(stat.pos))
-  }
-
   def translateTypeAlias(enclosing: Enclosing.Type, stat: Defn.Type): AST.Stmt = {
     val q"..$mods type $tname[..$tparams] = $tpe" = stat
     if (mods.nonEmpty) {
@@ -1418,6 +1340,7 @@ class SlangParser(text: Predef.String,
         }
         hasPure = true
       case mod"varparam" if !isDatatype => isVar = true
+      case mod"valparam" =>
       case _ =>
         hasError = true
         if (isDatatype) error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang @datatype class.")

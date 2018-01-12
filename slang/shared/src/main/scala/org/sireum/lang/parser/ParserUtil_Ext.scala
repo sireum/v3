@@ -33,7 +33,7 @@ import scala.meta._
 import scala.meta.internal.parsers.ModifiedScalametaParser
 import scala.util._
 
-object Parser_Ext {
+object ParserUtil_Ext {
 
   def parseStmt[T](text: String): T = {
     val reporter = AccumulatingReporter.create
@@ -45,7 +45,7 @@ object Parser_Ext {
     }
     val stmt = new SlangParser(text.value, input, dialect,
       allowSireumPackage = false, hashSireum = true, isWorksheet = false,
-      isDiet = false, None(), reporter).translateStat(SlangParser.Enclosing.Method)(stat)
+      isDiet = false, None(), reporter).translateStat(Enclosing.Method)(stat)
     reporter.printMessages()
     if (reporter.hasIssue) err()
     stmt.asInstanceOf[T]

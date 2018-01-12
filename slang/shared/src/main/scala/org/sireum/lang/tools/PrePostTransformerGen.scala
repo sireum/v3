@@ -28,7 +28,6 @@ package org.sireum.lang.tools
 
 import org.sireum._
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util.Reporter
@@ -101,7 +100,7 @@ object PrePostTransformerGen {
           case _ =>
         }
       }
-      ISOps(r).sortWith(ltTypeInfo)
+      ISZOps(r).sortWith(ltTypeInfo)
     }
     val p: (Option[ST], Option[ST]) =
       if (isSig) (Some(template.preAdapt(rootTypeString)), Some(template.postAdapt(rootTypeString)))

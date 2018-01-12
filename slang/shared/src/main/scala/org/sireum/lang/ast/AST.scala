@@ -34,17 +34,17 @@ import org.sireum._
 
 object TopUnit {
 
-  @datatype class Program(fileUriOpt: Option[String],
+  @datatype class Program(val fileUriOpt: Option[String],
                           packageName: Name,
                           body: Body)
     extends TopUnit
 
-  @datatype class SequentUnit(fileUriOpt: Option[String],
+  @datatype class SequentUnit(val fileUriOpt: Option[String],
                               sequent: LClause.Sequent)
     extends TopUnit
 
 
-  @datatype class TruthTableUnit(fileUriOpt: Option[String],
+  @datatype class TruthTableUnit(val fileUriOpt: Option[String],
                                  stars: ISZ[PosInfo],
                                  vars: ISZ[Id],
                                  separator: PosInfo,
@@ -71,7 +71,7 @@ object TopUnit {
 object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer],
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Stmt
 
   object Import {
@@ -93,19 +93,19 @@ object Stmt {
                       id: Id,
                       tipeOpt: Option[Type],
                       initOpt: Option[AssignExp],
-                      @hidden attr: Attr)
+                      @hidden val attr: Attr)
     extends Stmt
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
                              init: AssignExp,
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Stmt
 
   @datatype class SpecVar(isVal: B,
                           id: Id,
                           tipe: Type,
-                          @hidden attr: Attr)
+                          @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Method(purity: Purity.Type,
@@ -114,24 +114,24 @@ object Stmt {
                          sig: MethodSig,
                          contract: Contract,
                          bodyOpt: Option[Body],
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Stmt
 
   @datatype class ExtMethod(isPure: B,
                             sig: MethodSig,
                             contract: Contract,
-                            @hidden attr: Attr)
+                            @hidden val attr: Attr)
     extends Stmt
 
   @datatype class SpecMethod(sig: MethodSig,
                              defs: ISZ[SpecDef],
                              where: ISZ[WhereDef],
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Enum(id: Id,
                        elements: ISZ[Id],
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Stmt
 
   @datatype class SubZ(id: Id,
@@ -144,7 +144,7 @@ object Stmt {
                        min: Z,
                        max: Z,
                        index: Z,
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Stmt {
     def isZeroIndex: B = {
       return index == 0
@@ -155,7 +155,7 @@ object Stmt {
                          id: Id,
                          parents: ISZ[Type],
                          stmts: ISZ[Stmt],
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Sig(isImmutable: B,
@@ -165,7 +165,7 @@ object Stmt {
                       parents: ISZ[Type.Named],
                       selfTypeOpt: Option[Type],
                       stmts: ISZ[Stmt],
-                      @hidden attr: Attr)
+                      @hidden val attr: Attr)
     extends Stmt
 
   @datatype class AbstractDatatype(isRoot: B,
@@ -175,7 +175,7 @@ object Stmt {
                                    params: ISZ[AbstractDatatypeParam],
                                    parents: ISZ[Type.Named],
                                    stmts: ISZ[Stmt],
-                                   @hidden attr: Attr)
+                                   @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Rich(isRoot: B,
@@ -184,76 +184,76 @@ object Stmt {
                        params: ISZ[Param],
                        parents: ISZ[Type.Named],
                        stmts: ISZ[Stmt],
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Stmt
 
   @datatype class TypeAlias(id: Id,
                             typeParams: ISZ[TypeParam],
                             tipe: Type,
-                            @hidden attr: Attr)
+                            @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Assign(lhs: Exp,
                          rhs: AssignExp,
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Stmt
 
   @datatype class AssignUp(lhs: Exp,
                            rhs: AssignExp,
-                           @hidden attr: Attr)
+                           @hidden val attr: Attr)
     extends Stmt
 
   @datatype class AssignPattern(lhs: Pattern,
                                 rhs: AssignExp,
-                                @hidden attr: Attr)
+                                @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Block(body: Body,
-                        @hidden attr: Attr)
+                        @hidden val attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class If(cond: Exp,
                      thenbody: Body,
                      elsebody: Body,
-                     @hidden attr: Attr)
+                     @hidden val attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class Match(cond: Exp,
                         cases: ISZ[Case],
-                        @hidden attr: Attr)
+                        @hidden val attr: Attr)
     extends Stmt with AssignExp
 
   @datatype class While(cond: Exp,
                         invariants: ISZ[ContractExp],
                         modifies: ISZ[Exp],
                         body: Body,
-                        @hidden attr: Attr)
+                        @hidden val attr: Attr)
     extends Stmt
 
   @datatype class DoWhile(cond: Exp,
                           invariants: ISZ[ContractExp],
                           modifies: ISZ[Exp],
                           body: Body,
-                          @hidden attr: Attr)
+                          @hidden val attr: Attr)
     extends Stmt
 
   @datatype class For(enumGen: EnumGen.For,
                       invariants: ISZ[ContractExp],
                       modifies: ISZ[Exp],
                       body: Body,
-                      @hidden attr: Attr)
+                      @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Return(expOpt: Option[Exp],
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Stmt
 
   @datatype class LStmt(clause: LClause,
-                        @hidden attr: Attr)
+                        @hidden val attr: Attr)
     extends Stmt
 
   @datatype class Expr(exp: Exp,
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Stmt with AssignExp
 
 }
@@ -577,7 +577,7 @@ object Exp {
                         @hidden attr: ResolvedAttr)
     extends Exp {
 
-    @pure def hash: Z = {
+    @pure override def hash: Z = {
       attr.resOpt match {
         case Some(res) => return res.hash
         case _ => return id.hash
@@ -706,14 +706,14 @@ object Exp {
 object Domain {
 
   @datatype class Type(tipe: org.sireum.lang.ast.Type,
-                       @hidden attr: TypedAttr)
+                       @hidden val attr: TypedAttr)
     extends Domain
 
   @datatype class Range(lo: Exp,
                         loExact: B,
                         hi: Exp,
                         hiExact: B,
-                        @hidden attr: TypedAttr)
+                        @hidden val attr: TypedAttr)
     extends Domain
 
 }
@@ -789,12 +789,12 @@ object WhereDef {
 
 object ProofStep {
 
-  @datatype class Basic(step: Exp.LitZ,
+  @datatype class Basic(val step: Exp.LitZ,
                         exp: Exp,
                         just: Just)
     extends ProofStep
 
-  @datatype class SubProof(step: Exp.LitZ,
+  @datatype class SubProof(val step: Exp.LitZ,
                            assumeStep: AssumeProofStep,
                            steps: ISZ[ProofStep])
     extends ProofStep
@@ -807,15 +807,15 @@ object ProofStep {
 
 object AssumeProofStep {
 
-  @datatype class Regular(step: Exp.LitZ,
+  @datatype class Regular(val step: Exp.LitZ,
                           exp: Exp)
     extends AssumeProofStep
 
-  @datatype class ForallIntroAps(step: Exp.LitZ,
+  @datatype class ForallIntroAps(val step: Exp.LitZ,
                                  varFragments: ISZ[VarFragment])
     extends AssumeProofStep
 
-  @datatype class ExistsElimAps(step: Exp.LitZ,
+  @datatype class ExistsElimAps(val step: Exp.LitZ,
                                 varFragments: ISZ[VarFragment],
                                 exp: Exp)
     extends AssumeProofStep
@@ -828,95 +828,95 @@ object AssumeProofStep {
 
 object Just {
 
-  @datatype class Premise(@hidden attr: Attr) extends Just
+  @datatype class Premise(@hidden val attr: Attr) extends Just
 
   @datatype class AndIntro(steps: ISZ[Exp.LitZ],
-                           @hidden attr: Attr)
+                           @hidden val attr: Attr)
     extends Just
 
   @datatype class AndElim(is1: B,
                           andStep: Exp.LitZ,
-                          @hidden attr: Attr)
+                          @hidden val attr: Attr)
     extends Just
 
   @datatype class OrIntro(is1: B,
                           step: Exp.LitZ,
-                          @hidden attr: Attr)
+                          @hidden val attr: Attr)
     extends Just
 
   @datatype class OrElim(orStep: Exp.LitZ,
                          subProofSteps: ISZ[Exp.LitZ],
-                         @hidden attr: Attr)
+                         @hidden val attr: Attr)
     extends Just
 
   @datatype class ImplyIntro(subProofStep:
                              Exp.LitZ,
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Just
 
   @datatype class ImplyElim(implyStep: Exp.LitZ,
                             steps: ISZ[Exp.LitZ],
-                            @hidden attr: Attr)
+                            @hidden val attr: Attr)
     extends Just
 
   @datatype class NegIntro(subProofStep: Exp.LitZ,
-                           @hidden attr: Attr)
+                           @hidden val attr: Attr)
     extends Just
 
   @datatype class NegElim(step: Exp.LitZ,
                           negStep: Exp.LitZ,
-                          @hidden attr: Attr)
+                          @hidden val attr: Attr)
     extends Just
 
   @datatype class BottomElim(subProofStep: Exp.LitZ,
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Just
 
   @datatype class Pbc(subProofStep: Exp.LitZ,
-                      @hidden attr: Attr)
+                      @hidden val attr: Attr)
     extends Just
 
   @datatype class ForallIntro(subProofStep: Exp.LitZ,
-                              @hidden attr: Attr)
+                              @hidden val attr: Attr)
     extends Just
 
   @datatype class ForallElim(forallStep: Exp.LitZ,
                              args: ISZ[Exp],
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Just
 
   @datatype class ExistsIntro(existsStep: Exp.LitZ,
                               args: ISZ[Exp],
-                              @hidden attr: Attr)
+                              @hidden val attr: Attr)
     extends Just
 
   @datatype class ExistsElim(existsStep: Exp.LitZ,
                              subProofStep: Exp.LitZ,
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
     extends Just
 
   @datatype class Fact(name: Name,
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Just
 
   @datatype class Invariant(nameOpt: Option[Name],
-                            @hidden attr: Attr)
+                            @hidden val attr: Attr)
     extends Just
 
   @datatype class Subst(isRight: B,
                         eqStep: Exp.LitZ,
                         step: Exp.LitZ,
-                        @hidden attr: Attr)
+                        @hidden val attr: Attr)
     extends Just
 
   @datatype class Auto(isAlgebra: B,
                        steps: ISZ[Exp.LitZ],
-                       @hidden attr: Attr)
+                       @hidden val attr: Attr)
     extends Just
 
   @datatype class Coq(path: Exp.LitString,
                       steps: ISZ[Exp.LitZ],
-                      @hidden attr: Attr)
+                      @hidden val attr: Attr)
     extends Just
 
 }
@@ -938,16 +938,16 @@ object TruthTable {
 
     @datatype class Validity(isValid: B,
                              assignments: ISZ[Assignment],
-                             @hidden attr: Attr)
+                             @hidden val attr: Attr)
       extends Conclusion
 
-    @datatype class Tautology(@hidden attr: Attr) extends Conclusion
+    @datatype class Tautology(@hidden val attr: Attr) extends Conclusion
 
-    @datatype class Contradictory(@hidden attr: Attr) extends Conclusion
+    @datatype class Contradictory(@hidden val attr: Attr) extends Conclusion
 
     @datatype class Contingent(trueAssignments: ISZ[Assignment],
                                falseAssignments: ISZ[Assignment],
-                               @hidden attr: Attr)
+                               @hidden val attr: Attr)
       extends Conclusion
 
   }
@@ -962,16 +962,16 @@ object Typed {
 
   @datatype class Name(ids: ISZ[String],
                        @hidden args: ISZ[Typed],
-                       @hidden posOpt: Option[PosInfo])
+                       @hidden val posOpt: Option[PosInfo])
     extends Typed
 
   @datatype class Tuple(args: ISZ[Typed],
-                        @hidden posOpt: Option[PosInfo])
+                        @hidden val posOpt: Option[PosInfo])
     extends Typed
 
   @datatype class Fun(args: ISZ[Typed],
                       ret: Typed,
-                      @hidden posOpt: Option[PosInfo])
+                      @hidden val posOpt: Option[PosInfo])
     extends Typed
 }
 

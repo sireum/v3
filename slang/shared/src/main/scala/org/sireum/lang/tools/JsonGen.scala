@@ -114,7 +114,7 @@ object JsonGen {
     @pure def to(name: ST, tpe: ST): ST = {
       return st"""def to$name(s: String): $tpe = {
                  |  def f$name(parser: Parser): $tpe = {
-                 |    var r = parser.parse$name()
+                 |    val r = parser.parse$name()
                  |    return r
                  |  }
                  |  val r = to(s, f$name)
@@ -196,7 +196,7 @@ object JsonGen {
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
       return st"""def parse$name(): $tpe = {
                  |  val t = parser.parseObjectTypes(ISZ("${(childrenTpes, "\", \"")}"))
-                 |  t match {
+                 |  t.native match {
                  |    ${(parseRootCases, "\n")}
                  |    case _ => halt(parser.errorMessage)
                  |  }
@@ -250,7 +250,7 @@ object JsonGen {
                  |  parser.parseObjectKey("value")
                  |  val s = parser.parseString()
                  |  parser.parseObjectNext()
-                 |  s match {
+                 |  s.native match {
                  |    ${(parseEnumCases, "\n")}
                  |    case _ => halt(parser.errorMessage)
                  |  }
@@ -367,7 +367,7 @@ object JsonGen {
             case _ =>
           }
         }
-        ISOps(r).sortWith(ltTypeInfo)
+        ISZOps(r).sortWith(ltTypeInfo)
       }
       for (child <- sortedDescendants) {
         child match {

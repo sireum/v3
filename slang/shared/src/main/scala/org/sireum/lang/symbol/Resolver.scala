@@ -29,7 +29,6 @@ package org.sireum.lang.symbol
 import org.sireum._
 import org.sireum.lang.parser.Parser
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 import org.sireum.lang.{ast => AST}
 
@@ -117,7 +116,7 @@ object Resolver {
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
                   if (name0 == ns.to.value) {
-                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
+                    val n = (contextName :+ ns.from.value) ++ ISZOps(name).drop(1)
                     val rOpt = globalNameMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -142,7 +141,7 @@ object Resolver {
                 val name0 = name(0)
                 val contextLast = contextName(contextName.size - 1)
                 if (contextLast == name0) {
-                  val n = contextName ++ ISOps(name).drop(1)
+                  val n = contextName ++ ISZOps(name).drop(1)
                   val rOpt = globalNameMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
@@ -178,7 +177,7 @@ object Resolver {
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
                   if (name0 == ns.to.value) {
-                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
+                    val n = (contextName :+ ns.from.value) ++ ISZOps(name).drop(1)
                     val rOpt = globalTypeMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -203,7 +202,7 @@ object Resolver {
                 val name0 = name(0)
                 val contextLast = contextName(contextName.size - 1)
                 if (contextLast == name0) {
-                  val n = contextName ++ ISOps(name).drop(1)
+                  val n = contextName ++ ISZOps(name).drop(1)
                   val rOpt = globalTypeMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
@@ -232,7 +231,7 @@ object Resolver {
           if (enclosedOpt.nonEmpty) {
             return enclosedOpt
           }
-          en = ISOps(en).dropRight(1)
+          en = ISZOps(en).dropRight(1)
         }
 
         val importedOpt = resolveImported(globalNameMap, name)
@@ -256,7 +255,7 @@ object Resolver {
           if (enclosedTypeOpt.nonEmpty) {
             return enclosedTypeOpt
           }
-          en = ISOps(en).dropRight(1)
+          en = ISZOps(en).dropRight(1)
         }
 
         val importedTypeOpt = resolveImportedType(globalTypeMap, name)
@@ -506,7 +505,7 @@ object Resolver {
   }
 
   @pure def sortedGlobalTypes(globalTypeMap: TypeMap): ISZ[TypeInfo] = {
-    return ISOps(globalTypeMap.values).sortWith(ltTypeInfo)
+    return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo)
   }
 
   @pure def typePoset(globalTypeMap: TypeMap,
@@ -550,7 +549,7 @@ object Resolver {
       }
       i = i + 1
     }
-    return ISOps(ids).drop(sz)
+    return ISZOps(ids).drop(sz)
   }
 
   def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {
@@ -688,7 +687,7 @@ object Resolver {
       return (reporter, rNameMap, rTypeMap)
     }
 
-    var t = SOps(sources).
+    var t = ISZOps(sources).
       mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
       parseGloballyResolve _, combine _, (AccumulatingReporter.create, nameMap, typeMap))
     val p = addBuiltIns(t._2, t._3)

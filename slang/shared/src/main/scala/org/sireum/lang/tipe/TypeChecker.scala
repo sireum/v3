@@ -470,7 +470,7 @@ import TypeChecker._
           }
         }
       }
-      val jobsOps = ISOps(jobs)
+      val jobsOps = ISZOps(jobs)
       val r = jobsOps.
         parMapFoldLeft(
           (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
@@ -488,7 +488,7 @@ import TypeChecker._
       }
     }
     if (!reporter.hasIssue) {
-      val r = ISOps(jobs).
+      val r = ISZOps(jobs).
         parMapFoldLeft(
           (f: B => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(T),
           combine _,

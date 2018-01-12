@@ -36,13 +36,11 @@ val scalaVer = "2.12.4"
 
 val metaVersion = "1.8.0"
 
-val paradiseVersion = "3.0.0-M10"
-
 val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.1.2"
+val sireumScalacVersion = "3.2"
 
 val fastParseVersion = "1.0.0"
 
@@ -234,9 +232,7 @@ lazy val macrosPI = new ProjectInfo("runtime/macros", isCross = true)
 lazy val macrosT = toSbtCrossProject(macrosPI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
-    "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.spire-math" %%% "spire" % spireVersion),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
+    "org.spire-math" %%% "spire" % spireVersion)))
 lazy val macrosShared = macrosT._1
 lazy val macrosJvm = macrosT._2
 lazy val macrosJs = macrosT._3
@@ -247,11 +243,9 @@ lazy val libraryT = toSbtCrossProject(libraryPI, Seq(
   testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
   libraryDependencies ++= Seq(
     "org.scala-lang.platform" %%% "scalajson" % scalajsonVersion,
-    "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
-  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full)))
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion)))
 lazy val libraryShared = libraryT._1
 lazy val libraryJvm = libraryT._2
 lazy val libraryJs = libraryT._3
@@ -265,7 +259,6 @@ lazy val slangT = toSbtCrossProject(slangPI, Seq(
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := true
 ))
 lazy val slangShared = slangT._1
@@ -296,7 +289,6 @@ lazy val webT = toSbtCrossProject(webPI, Seq(
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  addCompilerPlugin("org.scalameta" % "paradise" % paradiseVersion cross CrossVersion.full),
   parallelExecution in Test := true
 ))
 lazy val webShared = webT._1
