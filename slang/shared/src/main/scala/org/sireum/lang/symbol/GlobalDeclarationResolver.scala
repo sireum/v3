@@ -132,12 +132,6 @@ import org.sireum.lang.{ast => AST}
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
           TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
             members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
-      case stmt: AST.Stmt.Rich =>
-        val name = currentName :+ stmt.id.value
-        val members = resolveMembers(name, stmt.stmts)
-        assert(members.specVars.isEmpty & members.vars.isEmpty)
-        declareType("rich", name, TypeInfo.Rich(name, F, members.specMethods, members.methods,
-          scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
         declareType("type alias", name,
@@ -232,7 +226,7 @@ import org.sireum.lang.{ast => AST}
     var currentPosOpt = ids(0).attr.posOpt
     declarePackage(currentName, currentPosOpt)
 
-    for (i <- 1 until ids.size) {
+    for (i <- z"1" until ids.size) {
       currentName = currentName :+ ids(i).value
       currentPosOpt = ids(i).attr.posOpt
       declarePackage(currentName, currentPosOpt)

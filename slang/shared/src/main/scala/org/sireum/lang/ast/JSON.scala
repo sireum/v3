@@ -90,7 +90,6 @@ object JSON {
         case o: Stmt.Object => return printStmtObject(o)
         case o: Stmt.Sig => return printStmtSig(o)
         case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return printStmtRich(o)
         case o: Stmt.TypeAlias => return printStmtTypeAlias(o)
         case o: Stmt.Assign => return printStmtAssign(o)
         case o: Stmt.AssignUp => return printStmtAssignUp(o)
@@ -295,19 +294,6 @@ object JSON {
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("params", printISZ(F, o.params, printAbstractDatatypeParam)),
-        ("parents", printISZ(F, o.parents, printTypeNamed)),
-        ("stmts", printISZ(F, o.stmts, printStmt)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printStmtRich(o: Stmt.Rich): ST = {
-      return printObject(ISZ(
-        ("type", st""""Stmt.Rich""""),
-        ("isRoot", printB(o.isRoot)),
-        ("id", printId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
-        ("params", printISZ(F, o.params, printParam)),
         ("parents", printISZ(F, o.parents, printTypeNamed)),
         ("stmts", printISZ(F, o.stmts, printStmt)),
         ("attr", printAttr(o.attr))
@@ -1508,8 +1494,6 @@ object JSON {
         case SymbolKind.DatatypeClass => "DatatypeClass"
         case SymbolKind.RecordTrait => "RecordTrait"
         case SymbolKind.RecordClass => "RecordClass"
-        case SymbolKind.RichTrait => "RichTrait"
-        case SymbolKind.RichClass => "RichClass"
         case SymbolKind.Enum => "Enum"
         case SymbolKind.TypeAlias => "TypeAlias"
         case SymbolKind.FreshVar => "FreshVar"
@@ -1625,7 +1609,7 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
       t.native match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
@@ -1639,7 +1623,6 @@ object JSON {
         case "Stmt.Object" => val r = parseStmtObjectT(T); return r
         case "Stmt.Sig" => val r = parseStmtSigT(T); return r
         case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
-        case "Stmt.Rich" => val r = parseStmtRichT(T); return r
         case "Stmt.TypeAlias" => val r = parseStmtTypeAliasT(T); return r
         case "Stmt.Assign" => val r = parseStmtAssignT(T); return r
         case "Stmt.AssignUp" => val r = parseStmtAssignUpT(T); return r
@@ -2097,39 +2080,6 @@ object JSON {
       val attr = parseAttr()
       parser.parseObjectNext()
       return Stmt.AbstractDatatype(isRoot, isDatatype, id, typeParams, params, parents, stmts, attr)
-    }
-
-    def parseStmtRich(): Stmt.Rich = {
-      val r = parseStmtRichT(F)
-      return r
-    }
-
-    def parseStmtRichT(typeParsed: B): Stmt.Rich = {
-      if (!typeParsed) {
-        parser.parseObjectType("Stmt.Rich")
-      }
-      parser.parseObjectKey("isRoot")
-      val isRoot = parser.parseB()
-      parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
-      parser.parseObjectKey("typeParams")
-      val typeParams = parser.parseISZ(parseTypeParam _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseParam _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("parents")
-      val parents = parser.parseISZ(parseTypeNamed _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("stmts")
-      val stmts = parser.parseISZ(parseStmt _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Stmt.Rich(isRoot, id, typeParams, params, parents, stmts, attr)
     }
 
     def parseStmtTypeAlias(): Stmt.TypeAlias = {
@@ -4655,8 +4605,6 @@ object JSON {
         case "DatatypeClass" => return SymbolKind.DatatypeClass
         case "RecordTrait" => return SymbolKind.RecordTrait
         case "RecordClass" => return SymbolKind.RecordClass
-        case "RichTrait" => return SymbolKind.RichTrait
-        case "RichClass" => return SymbolKind.RichClass
         case "Enum" => return SymbolKind.Enum
         case "TypeAlias" => return SymbolKind.TypeAlias
         case "FreshVar" => return SymbolKind.FreshVar
@@ -5127,24 +5075,6 @@ object JSON {
       return r
     }
     val r = to(s, fStmtAbstractDatatype)
-    return r
-  }
-
-  def fromStmtRich(o: Stmt.Rich, isCompact: B): String = {
-    val st = Printer.printStmtRich(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toStmtRich(s: String): Stmt.Rich = {
-    def fStmtRich(parser: Parser): Stmt.Rich = {
-      val r = parser.parseStmtRich()
-      return r
-    }
-    val r = to(s, fStmtRich)
     return r
   }
 

@@ -28,7 +28,6 @@ package org.sireum.lang.tipe
 
 import org.sireum._
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
@@ -63,7 +62,7 @@ object TypeChecker {
       return None()
     }
     var substMap = HashMap.empty[String, AST.Typed]
-    for (i <- 0 until args.size) {
+    for (i <- z"0" until args.size) {
       substMap = substMap.put(typeParamName(typeParams(i)), args(i))
     }
     return Some(substMap)
@@ -78,7 +77,7 @@ object TypeChecker {
         if (t1.ids != t2.ids) {
           return F
         }
-        for (i <- 0 until t1.args.size) {
+        for (i <- z"0" until t1.args.size) {
           if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
@@ -88,7 +87,7 @@ object TypeChecker {
         if (t1.args.size != t2.args.size) {
           return F
         }
-        for (i <- 0 until t1.args.size) {
+        for (i <- z"0" until t1.args.size) {
           if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
@@ -101,7 +100,7 @@ object TypeChecker {
         if (!isEqType(t1.ret, t2.ret)) {
           return F
         }
-        for (i <- 0 until t1.args.size) {
+        for (i <- z"0" until t1.args.size) {
           if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
@@ -218,7 +217,6 @@ import TypeChecker._
               case _: TypeInfo.Enum => ("@enum", 0)
               case ti: TypeInfo.Sig => (if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig", ti.ast.typeParams.size)
               case ti: TypeInfo.AbstractDatatype => (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size)
-              case ti: TypeInfo.Rich => ("@rich", ti.ast.typeParams.size)
               case _ => halt("Infeasible")
             }
             if (argTypes.size != p._2) {
@@ -363,7 +361,7 @@ import TypeChecker._
         if (t1.args.size != t2.args.size) {
           return F
         }
-        for (i <- 0 until t1.args.size) {
+        for (i <- z"0" until t1.args.size) {
           if (!isSubType(t2.args(i), t1.args(i))) {
             return F
           }
@@ -379,7 +377,7 @@ import TypeChecker._
         if (t1.args.size != t2.args.size) {
           return F
         }
-        for (i <- 0 until t1.args.size) {
+        for (i <- z"0" until t1.args.size) {
           if (!isEqType(t1.args(i), t2.args(i))) {
             return F
           }
@@ -414,7 +412,6 @@ import TypeChecker._
         typeMap.get(name).get match {
           case ti: TypeInfo.Sig => return ti.outlined
           case ti: TypeInfo.AbstractDatatype => return ti.outlined
-          case ti: TypeInfo.Rich => return ti.outlined
           case _ => return T
         }
       }
@@ -453,12 +450,6 @@ import TypeChecker._
             val po = parentsOutlined(ti.name, tc.globalTypeMap)
             if (po) {
               jobs = jobs :+ ((_: B) => tc.checkAdtOutline(ti))
-              ok = T
-            }
-          case ti: TypeInfo.Rich if !ti.outlined =>
-            val po = parentsOutlined(ti.name, tc.globalTypeMap)
-            if (po) {
-              jobs = jobs :+ ((_: B) => tc.checkRichOutline(ti))
               ok = T
             }
           case _ =>
@@ -614,19 +605,6 @@ import TypeChecker._
     val specMethods = members.specMethods
     val methods = members.methods
     val newInfo = info(outlined = T, specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
-    return (tc: TypeChecker) => (tc(globalTypeMap = tc.globalTypeMap.put(info.name, newInfo)), reporter)
-  }
-
-  @pure def checkRichOutline(info: TypeInfo.Rich): TypeChecker => (TypeChecker, AccumulatingReporter) = {
-    val reporter = AccumulatingReporter.create
-    var tm = typeParamMap(info.ast.typeParams, reporter)
-    val scope = localTypeScope(tm.map, info.scope)
-    var members = checkMembersOutline(info.ast.isRoot, info.name,
-      TypeInfo.Members(HashMap.empty, HashMap.empty, info.specMethods, info.methods), scope, reporter)
-    members = inheritMembersOutline(info.name, info.ast.parents, scope, members, reporter)
-    val specMethods = members.specMethods
-    val methods = members.methods
-    val newInfo = info(outlined = T, specMethods = specMethods, methods = methods)
     return (tc: TypeChecker) => (tc(globalTypeMap = tc.globalTypeMap.put(info.name, newInfo)), reporter)
   }
 
@@ -1031,18 +1009,6 @@ import TypeChecker._
                       for (p <- ti.vars.values) {
                         inheritVar(p, parent.attr.posOpt, substMap)
                       }
-                      for (p <- ti.specMethods.values) {
-                        inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.methods.values) {
-                        inheritMethod(p, parent.attr.posOpt, substMap)
-                      }
-                    case _ =>
-                  }
-                case Some(ti: TypeInfo.Rich) =>
-                  val substMapOpt = buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
-                  substMapOpt match {
-                    case Some(substMap) =>
                       for (p <- ti.specMethods.values) {
                         inheritSpecMethod(p, parent.attr.posOpt, substMap)
                       }

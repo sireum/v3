@@ -54,7 +54,6 @@ class SlangCodebaseTest extends SireumSpec {
       ti match {
         case ti: Resolver.TypeInfo.Sig => assert(ti.outlined, st"Type ${(ti.name, ".")} is not outlined!".render)
         case ti: Resolver.TypeInfo.AbstractDatatype => assert(ti.outlined, st"Type ${(ti.name, ".")} is not outlined!".render)
-        case ti: Resolver.TypeInfo.Rich => assert(ti.outlined, st"Type ${(ti.name, ".")} is not outlined!".render)
         case _ =>
       }
     }

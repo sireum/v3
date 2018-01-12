@@ -73,7 +73,6 @@ object MTransformer {
         case o: Stmt.Object => return preStmtObject(o)
         case o: Stmt.Sig => return preStmtSig(o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return preStmtRich(o)
         case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
         case o: Stmt.Assign => return preStmtAssign(o)
         case o: Stmt.AssignUp => return preStmtAssignUp(o)
@@ -187,10 +186,6 @@ object MTransformer {
     }
 
     def preStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtRich(o: Stmt.Rich): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
@@ -873,7 +868,6 @@ object MTransformer {
         case o: Stmt.Object => return postStmtObject(o)
         case o: Stmt.Sig => return postStmtSig(o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return postStmtRich(o)
         case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
         case o: Stmt.Assign => return postStmtAssign(o)
         case o: Stmt.AssignUp => return postStmtAssignUp(o)
@@ -987,10 +981,6 @@ object MTransformer {
     }
 
     def postStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtRich(o: Stmt.Rich): MOption[Stmt] = {
       return MNone()
     }
 
@@ -1827,17 +1817,6 @@ import MTransformer._
           val r0: MOption[Id] = transformId(o2.id)
           val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
           val r2: MOption[IS[Z, AbstractDatatypeParam]] = transformISZ(o2.params, transformAbstractDatatypeParam)
-          val r3: MOption[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed)
-          val r4: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
-          val r5: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty || r5.nonEmpty)
-            MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), params = r2.getOrElse(o2.params), parents = r3.getOrElse(o2.parents), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Stmt.Rich =>
-          val r0: MOption[Id] = transformId(o2.id)
-          val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
-          val r2: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam)
           val r3: MOption[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed)
           val r4: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
           val r5: MOption[Attr] = transformAttr(o2.attr)

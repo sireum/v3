@@ -77,7 +77,6 @@ object Transformer {
         case o: Stmt.Object => return preStmtObject(ctx, o)
         case o: Stmt.Sig => return preStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(ctx, o)
-        case o: Stmt.Rich => return preStmtRich(ctx, o)
         case o: Stmt.TypeAlias => return preStmtTypeAlias(ctx, o)
         case o: Stmt.Assign => return preStmtAssign(ctx, o)
         case o: Stmt.AssignUp => return preStmtAssignUp(ctx, o)
@@ -191,10 +190,6 @@ object Transformer {
     }
 
     @pure def preStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): PreResult[Context, Stmt] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preStmtRich(ctx: Context, o: Stmt.Rich): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
@@ -877,7 +872,6 @@ object Transformer {
         case o: Stmt.Object => return postStmtObject(ctx, o)
         case o: Stmt.Sig => return postStmtSig(ctx, o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(ctx, o)
-        case o: Stmt.Rich => return postStmtRich(ctx, o)
         case o: Stmt.TypeAlias => return postStmtTypeAlias(ctx, o)
         case o: Stmt.Assign => return postStmtAssign(ctx, o)
         case o: Stmt.AssignUp => return postStmtAssignUp(ctx, o)
@@ -991,10 +985,6 @@ object Transformer {
     }
 
     @pure def postStmtAbstractDatatype(ctx: Context, o: Stmt.AbstractDatatype): Result[Context, Stmt] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postStmtRich(ctx: Context, o: Stmt.Rich): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
@@ -1833,17 +1823,6 @@ import Transformer._
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, IS[Z, TypeParam]] = transformISZ(r0.ctx, o2.typeParams, transformTypeParam)
           val r2: Result[Context, IS[Z, AbstractDatatypeParam]] = transformISZ(r1.ctx, o2.params, transformAbstractDatatypeParam)
-          val r3: Result[Context, IS[Z, Type.Named]] = transformISZ(r2.ctx, o2.parents, transformTypeNamed)
-          val r4: Result[Context, IS[Z, Stmt]] = transformISZ(r3.ctx, o2.stmts, transformStmt)
-          val r5: Result[Context, Attr] = transformAttr(r4.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty || r5.resultOpt.nonEmpty)
-            Result(r5.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeParams = r1.resultOpt.getOrElse(o2.typeParams), params = r2.resultOpt.getOrElse(o2.params), parents = r3.resultOpt.getOrElse(o2.parents), stmts = r4.resultOpt.getOrElse(o2.stmts), attr = r5.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r5.ctx, None())
-        case o2: Stmt.Rich =>
-          val r0: Result[Context, Id] = transformId(ctx, o2.id)
-          val r1: Result[Context, IS[Z, TypeParam]] = transformISZ(r0.ctx, o2.typeParams, transformTypeParam)
-          val r2: Result[Context, IS[Z, Param]] = transformISZ(r1.ctx, o2.params, transformParam)
           val r3: Result[Context, IS[Z, Type.Named]] = transformISZ(r2.ctx, o2.parents, transformTypeNamed)
           val r4: Result[Context, IS[Z, Stmt]] = transformISZ(r3.ctx, o2.stmts, transformStmt)
           val r5: Result[Context, Attr] = transformAttr(r4.ctx, o2.attr)

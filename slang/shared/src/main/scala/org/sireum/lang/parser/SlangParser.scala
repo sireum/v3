@@ -358,7 +358,7 @@ class SlangParser(text: Predef.String,
   def translateVal(enclosing: Enclosing.Type, stat: Defn.Val): AST.Stmt = {
     var hasError = false
     enclosing match {
-      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.RichClass | Enclosing.Method | Enclosing.Block =>
+      case Enclosing.Top | Enclosing.Object | Enclosing.ExtObject | Enclosing.DatatypeClass | Enclosing.RecordClass | Enclosing.Method | Enclosing.Block =>
       case _ =>
         hasError = true
         if (isWorksheet) errorInSlang(stat.pos, "Val declarations can only appear at the top-level, inside objects, classes, methods, or code blocks")
@@ -520,7 +520,7 @@ class SlangParser(text: Predef.String,
 
   def translateDef(enclosing: Enclosing.Type, stat: Decl.Def): AST.Stmt = {
     enclosing match {
-      case Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.Sig | Enclosing.RichTrait =>
+      case Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.Sig =>
       case _ => errorInSlang(stat.pos, "Method declarations without a body can only appear inside traits")
     }
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = stat
@@ -677,7 +677,7 @@ class SlangParser(text: Predef.String,
           AST.Stmt.Method(purity, hasOverride, isHelper, sig, mc, bodyOpt, attr(tree.pos))
         case l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           enclosing match {
-            case Enclosing.Sig | Enclosing.DatatypeTrait | Enclosing.RecordTrait | Enclosing.RichTrait =>
+            case Enclosing.Sig | Enclosing.DatatypeTrait | Enclosing.RecordTrait =>
               if (isMemoize) {
                 errorInSlang(exp.pos, "Only the @pure and/or override method modifiers are allowed for method declarations")
               }
@@ -700,7 +700,7 @@ class SlangParser(text: Predef.String,
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
       }
-    else if (enclosing == Enclosing.ExtObject || enclosing == Enclosing.RichClass) {
+    else if (enclosing == Enclosing.ExtObject) {
       if (isHelper)
         errorInSlang(exp.pos, s"Extension methods cannot have a @helper modifier")
       if (hasOverride)
@@ -714,12 +714,10 @@ class SlangParser(text: Predef.String,
         case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseContract(exp), attr(tree.pos))
         case _ =>
-          if (enclosing == Enclosing.RichClass) body() else {
-            hasError = true
-            error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang extension method expression.")
-            AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
-              ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
-          }
+          hasError = true
+          error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang extension method expression.")
+          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(
+            ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
       }
     } else body()
   }

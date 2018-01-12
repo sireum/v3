@@ -178,15 +178,6 @@ object Stmt {
                                    @hidden val attr: Attr)
     extends Stmt
 
-  @datatype class Rich(isRoot: B,
-                       id: Id,
-                       typeParams: ISZ[TypeParam],
-                       params: ISZ[Param],
-                       parents: ISZ[Type.Named],
-                       stmts: ISZ[Stmt],
-                       @hidden val attr: Attr)
-    extends Stmt
-
   @datatype class TypeAlias(id: Id,
                             typeParams: ISZ[TypeParam],
                             tipe: Type,
@@ -1001,8 +992,6 @@ object Typed {
   'DatatypeClass
   'RecordTrait
   'RecordClass
-  'RichTrait
-  'RichClass
   'Enum
   'TypeAlias
   'FreshVar
