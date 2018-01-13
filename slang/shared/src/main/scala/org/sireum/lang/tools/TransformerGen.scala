@@ -162,7 +162,7 @@ object TransformerGen {
                    |object $name {
                    |
                    |  @datatype class PreResult[Context, T](ctx: Context,
-                   |                                        continue: B,
+                   |                                        continu: B,
                    |                                        resultOpt: Option[T])
                    |
                    |  @datatype class Result[Context, T](ctx: Context,
@@ -246,7 +246,7 @@ object TransformerGen {
                                 postAdaptOpt: Option[ST]): ST = {
         return st"""@pure def transform$typeName(ctx: Context, o: $tpe): Result[Context, $tpe] = {
                    |  val preR: PreResult[Context, $tpe] = pp.pre$typeName(ctx, o)${opt(preAdaptOpt)}
-                   |  val r: Result[Context, $tpe] = if (preR.continue) {
+                   |  val r: Result[Context, $tpe] = if (preR.continu) {
                    |    val o2: $tpe = preR.resultOpt.getOrElse(o)
                    |    val hasChanged: B = preR.resultOpt.nonEmpty
                    |    $transformMethodMatch
@@ -270,15 +270,15 @@ object TransformerGen {
 
       @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
-                   |   case PreResult(preCtx, continue, Some(r: $tpe)) => PreResult(preCtx, continue, Some[$tpe](r))
-                   |   case PreResult(preCtx, continue, _) => halt("Can only produce object of type $tpe")
+                   |   case PreResult(preCtx, continu, Some(r: $tpe)) => PreResult(preCtx, continu, Some[$tpe](r))
+                   |   case _ => halt("Can only produce object of type $tpe")
                    |  }"""
       }
 
       @pure def postAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case Result(postCtx, Some(result: $tpe)) => Result(postCtx, Some[$tpe](result))
-                   |   case Result(postCtx, _) => halt("Can only produce object of type $tpe")
+                   |   case _ => halt("Can only produce object of type $tpe")
                    |  }"""
       }
 
@@ -378,9 +378,9 @@ object TransformerGen {
                    |      val r = f(ctx, v)
                    |      r.resultOpt match {
                    |        case Some(_) => return Result(r.ctx, Some(r.resultOpt))
-                   |        case _ => return Result(r.ctx, None())
+                   |        case _ => return Result[Context, Option[T]](r.ctx, None[Option[T]]())
                    |      }
-                   |    case _ => return Result(ctx, None())
+                   |    case _ => return Result[Context, Option[T]](ctx, None[Option[T]]())
                    |  }
                    |}"""
       }
@@ -404,7 +404,7 @@ object TransformerGen {
                    |  if (changed) {
                    |    return Result(ctxi, Some(s2.toIS))
                    |  } else {
-                   |    return Result(ctxi, None())
+                   |    return Result[Context, IS[$indexType, T]](ctxi, None[IS[$indexType, T]]())
                    |  }
                    |}"""
       }
@@ -445,7 +445,7 @@ object TransformerGen {
                    |
                    |object $name {
                    |
-                   |  @record class PreResult[T](continue: B,
+                   |  @record class PreResult[T](continu: B,
                    |                             resultOpt: MOption[T])
                    |
                    |  @sig trait PrePost {
@@ -526,7 +526,7 @@ object TransformerGen {
                                 postAdaptOpt: Option[ST]): ST = {
         return st"""def transform$typeName(o: $tpe): MOption[$tpe] = {
                    |  val preR: PreResult[$tpe] = pp.pre$typeName(o)${opt(preAdaptOpt)}
-                   |  val r: MOption[$tpe] = if (preR.continue) {
+                   |  val r: MOption[$tpe] = if (preR.continu) {
                    |    val o2: $tpe = preR.resultOpt.getOrElse(o)
                    |    val hasChanged: B = preR.resultOpt.nonEmpty
                    |    $transformMethodMatch
@@ -550,7 +550,7 @@ object TransformerGen {
 
       @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
-                   |   case PreResult(continue, MSome(r: $tpe)) => PreResult(continue, MSome[$tpe](r))
+                   |   case PreResult(continu, MSome(r: $tpe)) => PreResult(continu, MSome[$tpe](r))
                    |   case _ => halt("Can only produce object of type $tpe")
                    |  }"""
       }

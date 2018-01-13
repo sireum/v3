@@ -80,7 +80,7 @@ final class Cli(outPrintln: Predef.String => Unit, errPrintln: Predef.String => 
       outPrintln(
         """
           |Sireum: A Software Analysis Platform (v3)
-          |(c) 2011-2017, SAnToS Laboratory, Kansas State University
+          |(c) 2011-2018, SAnToS Laboratory, Kansas State University
           |http://sireum.org
           |
           |Usage: sireum <mode>

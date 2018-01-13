@@ -91,6 +91,8 @@ class SlangFrontEndTest extends SireumSpec {
 
       "Type" - {
 
+        passing("@sig trait A { _: B => }", isWorksheet = true)
+
         passing("def f(x: ISZ[Z]): Z = {}", isWorksheet = true)
 
         passing("def f(x: A[Z, Z]): Z = {}", isWorksheet = true)
@@ -251,7 +253,7 @@ class SlangFrontEndTest extends SireumSpec {
 
         failing("object A extends { val x: Z = 5 } with B", "early init")
 
-        failing("object A extends B(5)", "Super constructor")
+        failing("object A extends B(5)", "Cannot supply arguments")
 
       }
 
@@ -260,6 +262,12 @@ class SlangFrontEndTest extends SireumSpec {
         failing("@ext @ext object Foo", "Redundant @ext")
 
         failing("@ext object Foo { def f: Z = 4 }", "extension method expression")
+
+      }
+
+      "Type" - {
+
+        failing("@sig trait A { x: B => }", "Self type", isWorksheet = true)
 
       }
 

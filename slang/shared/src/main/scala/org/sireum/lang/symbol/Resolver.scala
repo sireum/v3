@@ -29,7 +29,6 @@ package org.sireum.lang.symbol
 import org.sireum._
 import org.sireum.lang.parser.Parser
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 import org.sireum.lang.{ast => AST}
 
@@ -56,7 +55,7 @@ object Resolver {
 
     @datatype class Local(nameMap: HashMap[String, Info],
                           typeMap: HashMap[String, TypeInfo],
-                          outerOpt: Option[Scope])
+                          val outerOpt: Option[Scope])
       extends Scope {
 
       @pure def resolveName(globalNameMap: NameMap,
@@ -117,7 +116,7 @@ object Resolver {
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
                   if (name0 == ns.to.value) {
-                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
+                    val n = (contextName :+ ns.from.value) ++ ISZOps(name).drop(1)
                     val rOpt = globalNameMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -142,7 +141,7 @@ object Resolver {
                 val name0 = name(0)
                 val contextLast = contextName(contextName.size - 1)
                 if (contextLast == name0) {
-                  val n = contextName ++ ISOps(name).drop(1)
+                  val n = contextName ++ ISZOps(name).drop(1)
                   val rOpt = globalNameMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
@@ -178,7 +177,7 @@ object Resolver {
                 for (k <- nss.indices.reverse) {
                   val ns = nss(k)
                   if (name0 == ns.to.value) {
-                    val n = (contextName :+ ns.from.value) ++ ISOps(name).drop(1)
+                    val n = (contextName :+ ns.from.value) ++ ISZOps(name).drop(1)
                     val rOpt = globalTypeMap.get(packageName ++ n)
                     if (rOpt.nonEmpty) {
                       return rOpt
@@ -203,7 +202,7 @@ object Resolver {
                 val name0 = name(0)
                 val contextLast = contextName(contextName.size - 1)
                 if (contextLast == name0) {
-                  val n = contextName ++ ISOps(name).drop(1)
+                  val n = contextName ++ ISZOps(name).drop(1)
                   val rOpt = globalTypeMap.get(packageName ++ n)
                   if (rOpt.nonEmpty) {
                     return rOpt
@@ -232,7 +231,7 @@ object Resolver {
           if (enclosedOpt.nonEmpty) {
             return enclosedOpt
           }
-          en = ISOps(en).dropRight(1)
+          en = ISZOps(en).dropRight(1)
         }
 
         val importedOpt = resolveImported(globalNameMap, name)
@@ -256,7 +255,7 @@ object Resolver {
           if (enclosedTypeOpt.nonEmpty) {
             return enclosedTypeOpt
           }
-          en = ISOps(en).dropRight(1)
+          en = ISZOps(en).dropRight(1)
         }
 
         val importedTypeOpt = resolveImportedType(globalTypeMap, name)
@@ -278,13 +277,13 @@ object Resolver {
 
   object Info {
 
-    @datatype class Package(name: QName) extends Info {
+    @datatype class Package(val name: QName) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return None[AST.PosInfo]()
       }
     }
 
-    @datatype class Var(name: QName,
+    @datatype class Var(val name: QName,
                         scope: Scope.Global,
                         ast: AST.Stmt.Var) extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -299,7 +298,7 @@ object Resolver {
       }
     }
 
-    @datatype class SpecVar(name: QName,
+    @datatype class SpecVar(val name: QName,
                             scope: Scope.Global,
                             ast: AST.Stmt.SpecVar) extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -310,7 +309,7 @@ object Resolver {
       }
     }
 
-    @datatype class Method(name: QName,
+    @datatype class Method(val name: QName,
                            scope: Scope.Global,
                            ast: AST.Stmt.Method) extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -321,7 +320,7 @@ object Resolver {
       }
     }
 
-    @datatype class SpecMethod(name: QName,
+    @datatype class SpecMethod(val name: QName,
                                scope: Scope.Global,
                                ast: AST.Stmt.SpecMethod) extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -332,7 +331,7 @@ object Resolver {
       }
     }
 
-    @datatype class Object(name: QName,
+    @datatype class Object(val name: QName,
                            ast: AST.Stmt.Object)
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -340,7 +339,7 @@ object Resolver {
       }
     }
 
-    @datatype class ExtMethod(name: QName,
+    @datatype class ExtMethod(val name: QName,
                               scope: Scope.Global,
                               ast: AST.Stmt.ExtMethod)
       extends Info {
@@ -349,12 +348,12 @@ object Resolver {
       }
     }
 
-    @datatype class Enum(name: QName,
+    @datatype class Enum(val name: QName,
                          elements: Set[String],
-                         posOpt: Option[AST.PosInfo])
+                         val posOpt: Option[AST.PosInfo])
       extends Info
 
-    @datatype class FreshVar(name: QName,
+    @datatype class FreshVar(val name: QName,
                              ast: AST.Id)
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -362,7 +361,7 @@ object Resolver {
       }
     }
 
-    @datatype class QuantVar(name: QName,
+    @datatype class QuantVar(val name: QName,
                              ast: AST.Id)
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
@@ -383,7 +382,7 @@ object Resolver {
 
   object TypeInfo {
 
-    @datatype class SubZ(name: QName,
+    @datatype class SubZ(val name: QName,
                          ast: AST.Stmt.SubZ) extends TypeInfo {
       def canHaveCompanion: B = {
         return F
@@ -394,16 +393,16 @@ object Resolver {
       }
     }
 
-    @datatype class Enum(name: QName,
+    @datatype class Enum(val name: QName,
                          elements: Set[String],
-                         posOpt: Option[AST.PosInfo])
+                         val posOpt: Option[AST.PosInfo])
       extends TypeInfo {
       def canHaveCompanion: B = {
         return F
       }
     }
 
-    @datatype class Sig(name: QName,
+    @datatype class Sig(val name: QName,
                         outlined: B,
                         specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
                         specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
@@ -421,7 +420,7 @@ object Resolver {
       }
     }
 
-    @datatype class AbstractDatatype(name: QName,
+    @datatype class AbstractDatatype(val name: QName,
                                      outlined: B,
                                      specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
                                      vars: HashMap[String, (QName, AST.Stmt.Var)],
@@ -440,24 +439,7 @@ object Resolver {
       }
     }
 
-    @datatype class Rich(name: QName,
-                         outlined: B,
-                         specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
-                         methods: HashMap[String, (QName, AST.Stmt.Method)],
-                         scope: Scope.Global,
-                         ast: AST.Stmt.Rich)
-      extends TypeInfo {
-
-      def canHaveCompanion: B = {
-        return T
-      }
-
-      def posOpt: Option[AST.PosInfo] = {
-        return ast.attr.posOpt
-      }
-    }
-
-    @datatype class TypeAlias(name: QName,
+    @datatype class TypeAlias(val name: QName,
                               scope: Scope.Global,
                               ast: AST.Stmt.TypeAlias)
       extends TypeInfo {
@@ -506,7 +488,7 @@ object Resolver {
   }
 
   @pure def sortedGlobalTypes(globalTypeMap: TypeMap): ISZ[TypeInfo] = {
-    return ISOps(globalTypeMap.values).sortWith(ltTypeInfo)
+    return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo)
   }
 
   @pure def typePoset(globalTypeMap: TypeMap,
@@ -550,7 +532,7 @@ object Resolver {
       }
       i = i + 1
     }
-    return ISOps(ids).drop(sz)
+    return ISZOps(ids).drop(sz)
   }
 
   def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {
@@ -586,7 +568,7 @@ object Resolver {
   }
 
   @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
-    val sireumName = ISZ("org", "sireum")
+    val sireumName: QName = ISZ("org", "sireum")
     val iszName = sireumName :+ "ISZ"
 
     if (typeMap.contains(iszName)) {
@@ -651,7 +633,7 @@ object Resolver {
         rNameMap.get(name) match {
           case Some(rInfo) =>
             (rInfo, uInfo) match {
-              case (rInfo: Info.Package, uInfo: Info.Package) =>
+              case (_: Info.Package, _: Info.Package) =>
               case _ =>
                 rInfo.posOpt match {
                   case Some(pos) =>
@@ -688,7 +670,7 @@ object Resolver {
       return (reporter, rNameMap, rTypeMap)
     }
 
-    var t = SOps(sources).
+    val t = ISZOps(sources).
       mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
       parseGloballyResolve _, combine _, (AccumulatingReporter.create, nameMap, typeMap))
     val p = addBuiltIns(t._2, t._3)

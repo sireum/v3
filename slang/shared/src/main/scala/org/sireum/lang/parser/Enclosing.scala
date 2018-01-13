@@ -1,3 +1,4 @@
+// #Sireum
 /*
  Copyright (c) 2017, Robby, Kansas State University
  All rights reserved.
@@ -23,40 +24,23 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.test
+package org.sireum.lang.parser
 
-import java.io.File
+import org.sireum._
 
-import com.sksamuel.diffpatch.DiffMatchPatch
-import org.sireum.{None => SNone}
-import org.sireum.lang.test.Paths._
-import org.sireum.lang.tools.JsonGenJvm
-import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
-import org.sireum.test.SireumSpec
-
-class JsonGenJvmTest extends SireumSpec {
-
-  *(gen(slangAstPath, slangJSONPath))
-
-  def gen(src: File, dest: File): Boolean = {
-    val reporter = AccumulatingReporter.create
-    val rOpt = JsonGenJvm(allowSireumPackage = true,
-      Some(licensePath), src, dest, SNone(), reporter)
-    reporter.printMessages()
-    rOpt match {
-      case Some(r) =>
-        val expected = FileUtil.readFile(dest)
-        val result = r
-        if (result != expected) {
-          val dmp = new DiffMatchPatch()
-          Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
-          Console.err.flush()
-          //FileUtil.writeFile(dest, r)
-          //Console.err.println(r)
-          //Console.err.flush()
-          false
-        } else !reporter.hasIssue
-      case _ => false
-    }
-  }
+@enum object Enclosing {
+  'Top
+  'Package
+  'Object
+  'ExtObject
+  'DatatypeTrait
+  'DatatypeClass
+  'RecordTrait
+  'RecordClass
+  'Sig
+  'RichTrait
+  'RichClass
+  'Method
+  'Block
 }
+

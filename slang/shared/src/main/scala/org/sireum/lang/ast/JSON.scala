@@ -90,7 +90,6 @@ object JSON {
         case o: Stmt.Object => return printStmtObject(o)
         case o: Stmt.Sig => return printStmtSig(o)
         case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return printStmtRich(o)
         case o: Stmt.TypeAlias => return printStmtTypeAlias(o)
         case o: Stmt.Assign => return printStmtAssign(o)
         case o: Stmt.AssignUp => return printStmtAssignUp(o)
@@ -295,19 +294,6 @@ object JSON {
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("params", printISZ(F, o.params, printAbstractDatatypeParam)),
-        ("parents", printISZ(F, o.parents, printTypeNamed)),
-        ("stmts", printISZ(F, o.stmts, printStmt)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printStmtRich(o: Stmt.Rich): ST = {
-      return printObject(ISZ(
-        ("type", st""""Stmt.Rich""""),
-        ("isRoot", printB(o.isRoot)),
-        ("id", printId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
-        ("params", printISZ(F, o.params, printParam)),
         ("parents", printISZ(F, o.parents, printTypeNamed)),
         ("stmts", printISZ(F, o.stmts, printStmt)),
         ("attr", printAttr(o.attr))
@@ -1508,8 +1494,6 @@ object JSON {
         case SymbolKind.DatatypeClass => "DatatypeClass"
         case SymbolKind.RecordTrait => "RecordTrait"
         case SymbolKind.RecordClass => "RecordClass"
-        case SymbolKind.RichTrait => "RichTrait"
-        case SymbolKind.RichClass => "RichClass"
         case SymbolKind.Enum => "Enum"
         case SymbolKind.TypeAlias => "TypeAlias"
         case SymbolKind.FreshVar => "FreshVar"
@@ -1541,7 +1525,7 @@ object JSON {
 
     def parseTopUnit(): TopUnit = {
       val t = parser.parseObjectTypes(ISZ("TopUnit.Program", "TopUnit.SequentUnit", "TopUnit.TruthTableUnit"))
-      t match {
+      t.native match {
         case "TopUnit.Program" => val r = parseTopUnitProgramT(T); return r
         case "TopUnit.SequentUnit" => val r = parseTopUnitSequentUnitT(T); return r
         case "TopUnit.TruthTableUnit" => val r = parseTopUnitTruthTableUnitT(T); return r
@@ -1625,8 +1609,8 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.Rich", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
-      t match {
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      t.native match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
         case "Stmt.VarPattern" => val r = parseStmtVarPatternT(T); return r
@@ -1639,7 +1623,6 @@ object JSON {
         case "Stmt.Object" => val r = parseStmtObjectT(T); return r
         case "Stmt.Sig" => val r = parseStmtSigT(T); return r
         case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
-        case "Stmt.Rich" => val r = parseStmtRichT(T); return r
         case "Stmt.TypeAlias" => val r = parseStmtTypeAliasT(T); return r
         case "Stmt.Assign" => val r = parseStmtAssignT(T); return r
         case "Stmt.AssignUp" => val r = parseStmtAssignUpT(T); return r
@@ -1659,7 +1642,7 @@ object JSON {
 
     def parseAssignExp(): AssignExp = {
       val t = parser.parseObjectTypes(ISZ("Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.Expr"))
-      t match {
+      t.native match {
         case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.Match" => val r = parseStmtMatchT(T); return r
@@ -1680,7 +1663,7 @@ object JSON {
       parser.parseObjectKey("value")
       val s = parser.parseString()
       parser.parseObjectNext()
-      s match {
+      s.native match {
         case "Impure" => return Purity.Impure
         case "Pure" => return Purity.Pure
         case "Memoize" => return Purity.Memoize
@@ -1726,7 +1709,7 @@ object JSON {
 
     def parseStmtImportSelector(): Stmt.Import.Selector = {
       val t = parser.parseObjectTypes(ISZ("Stmt.Import.MultiSelector", "Stmt.Import.WildcardSelector"))
-      t match {
+      t.native match {
         case "Stmt.Import.MultiSelector" => val r = parseStmtImportMultiSelectorT(T); return r
         case "Stmt.Import.WildcardSelector" => val r = parseStmtImportWildcardSelectorT(T); return r
         case _ => halt(parser.errorMessage)
@@ -2099,39 +2082,6 @@ object JSON {
       return Stmt.AbstractDatatype(isRoot, isDatatype, id, typeParams, params, parents, stmts, attr)
     }
 
-    def parseStmtRich(): Stmt.Rich = {
-      val r = parseStmtRichT(F)
-      return r
-    }
-
-    def parseStmtRichT(typeParsed: B): Stmt.Rich = {
-      if (!typeParsed) {
-        parser.parseObjectType("Stmt.Rich")
-      }
-      parser.parseObjectKey("isRoot")
-      val isRoot = parser.parseB()
-      parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
-      parser.parseObjectKey("typeParams")
-      val typeParams = parser.parseISZ(parseTypeParam _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseParam _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("parents")
-      val parents = parser.parseISZ(parseTypeNamed _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("stmts")
-      val stmts = parser.parseISZ(parseStmt _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Stmt.Rich(isRoot, id, typeParams, params, parents, stmts, attr)
-    }
-
     def parseStmtTypeAlias(): Stmt.TypeAlias = {
       val r = parseStmtTypeAliasT(F)
       return r
@@ -2419,7 +2369,7 @@ object JSON {
 
     def parseLClause(): LClause = {
       val t = parser.parseObjectTypes(ISZ("LClause.Invariants", "LClause.Facts", "LClause.Theorems", "LClause.Sequent", "LClause.Proof"))
-      t match {
+      t.native match {
         case "LClause.Invariants" => val r = parseLClauseInvariantsT(T); return r
         case "LClause.Facts" => val r = parseLClauseFactsT(T); return r
         case "LClause.Theorems" => val r = parseLClauseTheoremsT(T); return r
@@ -2587,7 +2537,7 @@ object JSON {
 
     def parseEnumGenRange(): EnumGen.Range = {
       val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Expr", "EnumGen.Range.Indices", "EnumGen.Range.Step"))
-      t match {
+      t.native match {
         case "EnumGen.Range.Expr" => val r = parseEnumGenRangeExprT(T); return r
         case "EnumGen.Range.Indices" => val r = parseEnumGenRangeIndicesT(T); return r
         case "EnumGen.Range.Step" => val r = parseEnumGenRangeStepT(T); return r
@@ -2678,7 +2628,7 @@ object JSON {
 
     def parseType(): Type = {
       val t = parser.parseObjectTypes(ISZ("Type.Named", "Type.Fun", "Type.Tuple"))
-      t match {
+      t.native match {
         case "Type.Named" => val r = parseTypeNamedT(T); return r
         case "Type.Fun" => val r = parseTypeFunT(T); return r
         case "Type.Tuple" => val r = parseTypeTupleT(T); return r
@@ -2748,7 +2698,7 @@ object JSON {
 
     def parsePattern(): Pattern = {
       val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
-      t match {
+      t.native match {
         case "Pattern.Literal" => val r = parsePatternLiteralT(T); return r
         case "Pattern.Ref" => val r = parsePatternRefT(T); return r
         case "Pattern.Variable" => val r = parsePatternVariableT(T); return r
@@ -2857,7 +2807,7 @@ object JSON {
 
     def parseExp(): Exp = {
       val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
-      t match {
+      t.native match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
         case "Exp.LitZ" => val r = parseExpLitZT(T); return r
@@ -2887,7 +2837,7 @@ object JSON {
 
     def parseLit(): Lit = {
       val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
-      t match {
+      t.native match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
         case "Exp.LitZ" => val r = parseExpLitZT(T); return r
@@ -3113,7 +3063,7 @@ object JSON {
       parser.parseObjectKey("value")
       val s = parser.parseString()
       parser.parseObjectNext()
-      s match {
+      s.native match {
         case "Not" => return Exp.UnaryOp.Not
         case "Plus" => return Exp.UnaryOp.Plus
         case "Minus" => return Exp.UnaryOp.Minus
@@ -3155,7 +3105,7 @@ object JSON {
       parser.parseObjectKey("value")
       val s = parser.parseString()
       parser.parseObjectNext()
-      s match {
+      s.native match {
         case "Add" => return Exp.BinaryOp.Add
         case "Sub" => return Exp.BinaryOp.Sub
         case "Mul" => return Exp.BinaryOp.Mul
@@ -3468,7 +3418,7 @@ object JSON {
 
     def parseDomain(): Domain = {
       val t = parser.parseObjectTypes(ISZ("Domain.Type", "Domain.Range"))
-      t match {
+      t.native match {
         case "Domain.Type" => val r = parseDomainTypeT(T); return r
         case "Domain.Range" => val r = parseDomainRangeT(T); return r
         case _ => halt(parser.errorMessage)
@@ -3634,7 +3584,7 @@ object JSON {
       parser.parseObjectKey("value")
       val s = parser.parseString()
       parser.parseObjectNext()
-      s match {
+      s.native match {
         case "NoMod" => return ParamMod.NoMod
         case "Pure" => return ParamMod.Pure
         case "Hidden" => return ParamMod.Hidden
@@ -3746,7 +3696,7 @@ object JSON {
 
     def parseWhereDef(): WhereDef = {
       val t = parser.parseObjectTypes(ISZ("WhereDef.Val", "WhereDef.Def"))
-      t match {
+      t.native match {
         case "WhereDef.Val" => val r = parseWhereDefValT(T); return r
         case "WhereDef.Def" => val r = parseWhereDefDefT(T); return r
         case _ => halt(parser.errorMessage)
@@ -3827,7 +3777,7 @@ object JSON {
 
     def parseProofStep(): ProofStep = {
       val t = parser.parseObjectTypes(ISZ("ProofStep.Basic", "ProofStep.SubProof"))
-      t match {
+      t.native match {
         case "ProofStep.Basic" => val r = parseProofStepBasicT(T); return r
         case "ProofStep.SubProof" => val r = parseProofStepSubProofT(T); return r
         case _ => halt(parser.errorMessage)
@@ -3878,7 +3828,7 @@ object JSON {
 
     def parseAssumeProofStep(): AssumeProofStep = {
       val t = parser.parseObjectTypes(ISZ("AssumeProofStep.Regular", "AssumeProofStep.ForallIntroAps", "AssumeProofStep.ExistsElimAps"))
-      t match {
+      t.native match {
         case "AssumeProofStep.Regular" => val r = parseAssumeProofStepRegularT(T); return r
         case "AssumeProofStep.ForallIntroAps" => val r = parseAssumeProofStepForallIntroApsT(T); return r
         case "AssumeProofStep.ExistsElimAps" => val r = parseAssumeProofStepExistsElimApsT(T); return r
@@ -3945,7 +3895,7 @@ object JSON {
 
     def parseJust(): Just = {
       val t = parser.parseObjectTypes(ISZ("Just.Premise", "Just.AndIntro", "Just.AndElim", "Just.OrIntro", "Just.OrElim", "Just.ImplyIntro", "Just.ImplyElim", "Just.NegIntro", "Just.NegElim", "Just.BottomElim", "Just.Pbc", "Just.ForallIntro", "Just.ForallElim", "Just.ExistsIntro", "Just.ExistsElim", "Just.Fact", "Just.Invariant", "Just.Subst", "Just.Auto", "Just.Coq"))
-      t match {
+      t.native match {
         case "Just.Premise" => val r = parseJustPremiseT(T); return r
         case "Just.AndIntro" => val r = parseJustAndIntroT(T); return r
         case "Just.AndElim" => val r = parseJustAndElimT(T); return r
@@ -4404,7 +4354,7 @@ object JSON {
 
     def parseTruthTableConclusion(): TruthTable.Conclusion = {
       val t = parser.parseObjectTypes(ISZ("TruthTable.Conclusion.Validity", "TruthTable.Conclusion.Tautology", "TruthTable.Conclusion.Contradictory", "TruthTable.Conclusion.Contingent"))
-      t match {
+      t.native match {
         case "TruthTable.Conclusion.Validity" => val r = parseTruthTableConclusionValidityT(T); return r
         case "TruthTable.Conclusion.Tautology" => val r = parseTruthTableConclusionTautologyT(T); return r
         case "TruthTable.Conclusion.Contradictory" => val r = parseTruthTableConclusionContradictoryT(T); return r
@@ -4487,7 +4437,7 @@ object JSON {
 
     def parseTyped(): Typed = {
       val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun"))
-      t match {
+      t.native match {
         case "Typed.Name" => val r = parseTypedNameT(T); return r
         case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
         case "Typed.Fun" => val r = parseTypedFunT(T); return r
@@ -4642,7 +4592,7 @@ object JSON {
       parser.parseObjectKey("value")
       val s = parser.parseString()
       parser.parseObjectNext()
-      s match {
+      s.native match {
         case "Package" => return SymbolKind.Package
         case "Val" => return SymbolKind.Val
         case "Var" => return SymbolKind.Var
@@ -4655,8 +4605,6 @@ object JSON {
         case "DatatypeClass" => return SymbolKind.DatatypeClass
         case "RecordTrait" => return SymbolKind.RecordTrait
         case "RecordClass" => return SymbolKind.RecordClass
-        case "RichTrait" => return SymbolKind.RichTrait
-        case "RichClass" => return SymbolKind.RichClass
         case "Enum" => return SymbolKind.Enum
         case "TypeAlias" => return SymbolKind.TypeAlias
         case "FreshVar" => return SymbolKind.FreshVar
@@ -4727,7 +4675,7 @@ object JSON {
 
   def toTopUnit(s: String): TopUnit = {
     def fTopUnit(parser: Parser): TopUnit = {
-      var r = parser.parseTopUnit()
+      val r = parser.parseTopUnit()
       return r
     }
     val r = to(s, fTopUnit)
@@ -4745,7 +4693,7 @@ object JSON {
 
   def toTopUnitProgram(s: String): TopUnit.Program = {
     def fTopUnitProgram(parser: Parser): TopUnit.Program = {
-      var r = parser.parseTopUnitProgram()
+      val r = parser.parseTopUnitProgram()
       return r
     }
     val r = to(s, fTopUnitProgram)
@@ -4763,7 +4711,7 @@ object JSON {
 
   def toTopUnitSequentUnit(s: String): TopUnit.SequentUnit = {
     def fTopUnitSequentUnit(parser: Parser): TopUnit.SequentUnit = {
-      var r = parser.parseTopUnitSequentUnit()
+      val r = parser.parseTopUnitSequentUnit()
       return r
     }
     val r = to(s, fTopUnitSequentUnit)
@@ -4781,7 +4729,7 @@ object JSON {
 
   def toTopUnitTruthTableUnit(s: String): TopUnit.TruthTableUnit = {
     def fTopUnitTruthTableUnit(parser: Parser): TopUnit.TruthTableUnit = {
-      var r = parser.parseTopUnitTruthTableUnit()
+      val r = parser.parseTopUnitTruthTableUnit()
       return r
     }
     val r = to(s, fTopUnitTruthTableUnit)
@@ -4799,7 +4747,7 @@ object JSON {
 
   def toStmt(s: String): Stmt = {
     def fStmt(parser: Parser): Stmt = {
-      var r = parser.parseStmt()
+      val r = parser.parseStmt()
       return r
     }
     val r = to(s, fStmt)
@@ -4817,7 +4765,7 @@ object JSON {
 
   def toAssignExp(s: String): AssignExp = {
     def fAssignExp(parser: Parser): AssignExp = {
-      var r = parser.parseAssignExp()
+      val r = parser.parseAssignExp()
       return r
     }
     val r = to(s, fAssignExp)
@@ -4835,7 +4783,7 @@ object JSON {
 
   def toStmtImport(s: String): Stmt.Import = {
     def fStmtImport(parser: Parser): Stmt.Import = {
-      var r = parser.parseStmtImport()
+      val r = parser.parseStmtImport()
       return r
     }
     val r = to(s, fStmtImport)
@@ -4853,7 +4801,7 @@ object JSON {
 
   def toStmtImportImporter(s: String): Stmt.Import.Importer = {
     def fStmtImportImporter(parser: Parser): Stmt.Import.Importer = {
-      var r = parser.parseStmtImportImporter()
+      val r = parser.parseStmtImportImporter()
       return r
     }
     val r = to(s, fStmtImportImporter)
@@ -4871,7 +4819,7 @@ object JSON {
 
   def toStmtImportSelector(s: String): Stmt.Import.Selector = {
     def fStmtImportSelector(parser: Parser): Stmt.Import.Selector = {
-      var r = parser.parseStmtImportSelector()
+      val r = parser.parseStmtImportSelector()
       return r
     }
     val r = to(s, fStmtImportSelector)
@@ -4889,7 +4837,7 @@ object JSON {
 
   def toStmtImportMultiSelector(s: String): Stmt.Import.MultiSelector = {
     def fStmtImportMultiSelector(parser: Parser): Stmt.Import.MultiSelector = {
-      var r = parser.parseStmtImportMultiSelector()
+      val r = parser.parseStmtImportMultiSelector()
       return r
     }
     val r = to(s, fStmtImportMultiSelector)
@@ -4907,7 +4855,7 @@ object JSON {
 
   def toStmtImportWildcardSelector(s: String): Stmt.Import.WildcardSelector = {
     def fStmtImportWildcardSelector(parser: Parser): Stmt.Import.WildcardSelector = {
-      var r = parser.parseStmtImportWildcardSelector()
+      val r = parser.parseStmtImportWildcardSelector()
       return r
     }
     val r = to(s, fStmtImportWildcardSelector)
@@ -4925,7 +4873,7 @@ object JSON {
 
   def toStmtImportNamedSelector(s: String): Stmt.Import.NamedSelector = {
     def fStmtImportNamedSelector(parser: Parser): Stmt.Import.NamedSelector = {
-      var r = parser.parseStmtImportNamedSelector()
+      val r = parser.parseStmtImportNamedSelector()
       return r
     }
     val r = to(s, fStmtImportNamedSelector)
@@ -4943,7 +4891,7 @@ object JSON {
 
   def toStmtVar(s: String): Stmt.Var = {
     def fStmtVar(parser: Parser): Stmt.Var = {
-      var r = parser.parseStmtVar()
+      val r = parser.parseStmtVar()
       return r
     }
     val r = to(s, fStmtVar)
@@ -4961,7 +4909,7 @@ object JSON {
 
   def toStmtVarPattern(s: String): Stmt.VarPattern = {
     def fStmtVarPattern(parser: Parser): Stmt.VarPattern = {
-      var r = parser.parseStmtVarPattern()
+      val r = parser.parseStmtVarPattern()
       return r
     }
     val r = to(s, fStmtVarPattern)
@@ -4979,7 +4927,7 @@ object JSON {
 
   def toStmtSpecVar(s: String): Stmt.SpecVar = {
     def fStmtSpecVar(parser: Parser): Stmt.SpecVar = {
-      var r = parser.parseStmtSpecVar()
+      val r = parser.parseStmtSpecVar()
       return r
     }
     val r = to(s, fStmtSpecVar)
@@ -4997,7 +4945,7 @@ object JSON {
 
   def toStmtMethod(s: String): Stmt.Method = {
     def fStmtMethod(parser: Parser): Stmt.Method = {
-      var r = parser.parseStmtMethod()
+      val r = parser.parseStmtMethod()
       return r
     }
     val r = to(s, fStmtMethod)
@@ -5015,7 +4963,7 @@ object JSON {
 
   def toStmtExtMethod(s: String): Stmt.ExtMethod = {
     def fStmtExtMethod(parser: Parser): Stmt.ExtMethod = {
-      var r = parser.parseStmtExtMethod()
+      val r = parser.parseStmtExtMethod()
       return r
     }
     val r = to(s, fStmtExtMethod)
@@ -5033,7 +4981,7 @@ object JSON {
 
   def toStmtSpecMethod(s: String): Stmt.SpecMethod = {
     def fStmtSpecMethod(parser: Parser): Stmt.SpecMethod = {
-      var r = parser.parseStmtSpecMethod()
+      val r = parser.parseStmtSpecMethod()
       return r
     }
     val r = to(s, fStmtSpecMethod)
@@ -5051,7 +4999,7 @@ object JSON {
 
   def toStmtEnum(s: String): Stmt.Enum = {
     def fStmtEnum(parser: Parser): Stmt.Enum = {
-      var r = parser.parseStmtEnum()
+      val r = parser.parseStmtEnum()
       return r
     }
     val r = to(s, fStmtEnum)
@@ -5069,7 +5017,7 @@ object JSON {
 
   def toStmtSubZ(s: String): Stmt.SubZ = {
     def fStmtSubZ(parser: Parser): Stmt.SubZ = {
-      var r = parser.parseStmtSubZ()
+      val r = parser.parseStmtSubZ()
       return r
     }
     val r = to(s, fStmtSubZ)
@@ -5087,7 +5035,7 @@ object JSON {
 
   def toStmtObject(s: String): Stmt.Object = {
     def fStmtObject(parser: Parser): Stmt.Object = {
-      var r = parser.parseStmtObject()
+      val r = parser.parseStmtObject()
       return r
     }
     val r = to(s, fStmtObject)
@@ -5105,7 +5053,7 @@ object JSON {
 
   def toStmtSig(s: String): Stmt.Sig = {
     def fStmtSig(parser: Parser): Stmt.Sig = {
-      var r = parser.parseStmtSig()
+      val r = parser.parseStmtSig()
       return r
     }
     val r = to(s, fStmtSig)
@@ -5123,28 +5071,10 @@ object JSON {
 
   def toStmtAbstractDatatype(s: String): Stmt.AbstractDatatype = {
     def fStmtAbstractDatatype(parser: Parser): Stmt.AbstractDatatype = {
-      var r = parser.parseStmtAbstractDatatype()
+      val r = parser.parseStmtAbstractDatatype()
       return r
     }
     val r = to(s, fStmtAbstractDatatype)
-    return r
-  }
-
-  def fromStmtRich(o: Stmt.Rich, isCompact: B): String = {
-    val st = Printer.printStmtRich(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toStmtRich(s: String): Stmt.Rich = {
-    def fStmtRich(parser: Parser): Stmt.Rich = {
-      var r = parser.parseStmtRich()
-      return r
-    }
-    val r = to(s, fStmtRich)
     return r
   }
 
@@ -5159,7 +5089,7 @@ object JSON {
 
   def toStmtTypeAlias(s: String): Stmt.TypeAlias = {
     def fStmtTypeAlias(parser: Parser): Stmt.TypeAlias = {
-      var r = parser.parseStmtTypeAlias()
+      val r = parser.parseStmtTypeAlias()
       return r
     }
     val r = to(s, fStmtTypeAlias)
@@ -5177,7 +5107,7 @@ object JSON {
 
   def toStmtAssign(s: String): Stmt.Assign = {
     def fStmtAssign(parser: Parser): Stmt.Assign = {
-      var r = parser.parseStmtAssign()
+      val r = parser.parseStmtAssign()
       return r
     }
     val r = to(s, fStmtAssign)
@@ -5195,7 +5125,7 @@ object JSON {
 
   def toStmtAssignUp(s: String): Stmt.AssignUp = {
     def fStmtAssignUp(parser: Parser): Stmt.AssignUp = {
-      var r = parser.parseStmtAssignUp()
+      val r = parser.parseStmtAssignUp()
       return r
     }
     val r = to(s, fStmtAssignUp)
@@ -5213,7 +5143,7 @@ object JSON {
 
   def toStmtAssignPattern(s: String): Stmt.AssignPattern = {
     def fStmtAssignPattern(parser: Parser): Stmt.AssignPattern = {
-      var r = parser.parseStmtAssignPattern()
+      val r = parser.parseStmtAssignPattern()
       return r
     }
     val r = to(s, fStmtAssignPattern)
@@ -5231,7 +5161,7 @@ object JSON {
 
   def toStmtBlock(s: String): Stmt.Block = {
     def fStmtBlock(parser: Parser): Stmt.Block = {
-      var r = parser.parseStmtBlock()
+      val r = parser.parseStmtBlock()
       return r
     }
     val r = to(s, fStmtBlock)
@@ -5249,7 +5179,7 @@ object JSON {
 
   def toStmtIf(s: String): Stmt.If = {
     def fStmtIf(parser: Parser): Stmt.If = {
-      var r = parser.parseStmtIf()
+      val r = parser.parseStmtIf()
       return r
     }
     val r = to(s, fStmtIf)
@@ -5267,7 +5197,7 @@ object JSON {
 
   def toStmtMatch(s: String): Stmt.Match = {
     def fStmtMatch(parser: Parser): Stmt.Match = {
-      var r = parser.parseStmtMatch()
+      val r = parser.parseStmtMatch()
       return r
     }
     val r = to(s, fStmtMatch)
@@ -5285,7 +5215,7 @@ object JSON {
 
   def toStmtWhile(s: String): Stmt.While = {
     def fStmtWhile(parser: Parser): Stmt.While = {
-      var r = parser.parseStmtWhile()
+      val r = parser.parseStmtWhile()
       return r
     }
     val r = to(s, fStmtWhile)
@@ -5303,7 +5233,7 @@ object JSON {
 
   def toStmtDoWhile(s: String): Stmt.DoWhile = {
     def fStmtDoWhile(parser: Parser): Stmt.DoWhile = {
-      var r = parser.parseStmtDoWhile()
+      val r = parser.parseStmtDoWhile()
       return r
     }
     val r = to(s, fStmtDoWhile)
@@ -5321,7 +5251,7 @@ object JSON {
 
   def toStmtFor(s: String): Stmt.For = {
     def fStmtFor(parser: Parser): Stmt.For = {
-      var r = parser.parseStmtFor()
+      val r = parser.parseStmtFor()
       return r
     }
     val r = to(s, fStmtFor)
@@ -5339,7 +5269,7 @@ object JSON {
 
   def toStmtReturn(s: String): Stmt.Return = {
     def fStmtReturn(parser: Parser): Stmt.Return = {
-      var r = parser.parseStmtReturn()
+      val r = parser.parseStmtReturn()
       return r
     }
     val r = to(s, fStmtReturn)
@@ -5357,7 +5287,7 @@ object JSON {
 
   def toStmtLStmt(s: String): Stmt.LStmt = {
     def fStmtLStmt(parser: Parser): Stmt.LStmt = {
-      var r = parser.parseStmtLStmt()
+      val r = parser.parseStmtLStmt()
       return r
     }
     val r = to(s, fStmtLStmt)
@@ -5375,7 +5305,7 @@ object JSON {
 
   def toStmtExpr(s: String): Stmt.Expr = {
     def fStmtExpr(parser: Parser): Stmt.Expr = {
-      var r = parser.parseStmtExpr()
+      val r = parser.parseStmtExpr()
       return r
     }
     val r = to(s, fStmtExpr)
@@ -5393,7 +5323,7 @@ object JSON {
 
   def toLClause(s: String): LClause = {
     def fLClause(parser: Parser): LClause = {
-      var r = parser.parseLClause()
+      val r = parser.parseLClause()
       return r
     }
     val r = to(s, fLClause)
@@ -5411,7 +5341,7 @@ object JSON {
 
   def toLClauseInvariants(s: String): LClause.Invariants = {
     def fLClauseInvariants(parser: Parser): LClause.Invariants = {
-      var r = parser.parseLClauseInvariants()
+      val r = parser.parseLClauseInvariants()
       return r
     }
     val r = to(s, fLClauseInvariants)
@@ -5429,7 +5359,7 @@ object JSON {
 
   def toLClauseFacts(s: String): LClause.Facts = {
     def fLClauseFacts(parser: Parser): LClause.Facts = {
-      var r = parser.parseLClauseFacts()
+      val r = parser.parseLClauseFacts()
       return r
     }
     val r = to(s, fLClauseFacts)
@@ -5447,7 +5377,7 @@ object JSON {
 
   def toLClauseFact(s: String): LClause.Fact = {
     def fLClauseFact(parser: Parser): LClause.Fact = {
-      var r = parser.parseLClauseFact()
+      val r = parser.parseLClauseFact()
       return r
     }
     val r = to(s, fLClauseFact)
@@ -5465,7 +5395,7 @@ object JSON {
 
   def toLClauseTheorems(s: String): LClause.Theorems = {
     def fLClauseTheorems(parser: Parser): LClause.Theorems = {
-      var r = parser.parseLClauseTheorems()
+      val r = parser.parseLClauseTheorems()
       return r
     }
     val r = to(s, fLClauseTheorems)
@@ -5483,7 +5413,7 @@ object JSON {
 
   def toLClauseTheorem(s: String): LClause.Theorem = {
     def fLClauseTheorem(parser: Parser): LClause.Theorem = {
-      var r = parser.parseLClauseTheorem()
+      val r = parser.parseLClauseTheorem()
       return r
     }
     val r = to(s, fLClauseTheorem)
@@ -5501,7 +5431,7 @@ object JSON {
 
   def toLClauseSequent(s: String): LClause.Sequent = {
     def fLClauseSequent(parser: Parser): LClause.Sequent = {
-      var r = parser.parseLClauseSequent()
+      val r = parser.parseLClauseSequent()
       return r
     }
     val r = to(s, fLClauseSequent)
@@ -5519,7 +5449,7 @@ object JSON {
 
   def toLClauseProof(s: String): LClause.Proof = {
     def fLClauseProof(parser: Parser): LClause.Proof = {
-      var r = parser.parseLClauseProof()
+      val r = parser.parseLClauseProof()
       return r
     }
     val r = to(s, fLClauseProof)
@@ -5537,7 +5467,7 @@ object JSON {
 
   def toContractExp(s: String): ContractExp = {
     def fContractExp(parser: Parser): ContractExp = {
-      var r = parser.parseContractExp()
+      val r = parser.parseContractExp()
       return r
     }
     val r = to(s, fContractExp)
@@ -5555,7 +5485,7 @@ object JSON {
 
   def toCase(s: String): Case = {
     def fCase(parser: Parser): Case = {
-      var r = parser.parseCase()
+      val r = parser.parseCase()
       return r
     }
     val r = to(s, fCase)
@@ -5573,7 +5503,7 @@ object JSON {
 
   def toEnumGenRange(s: String): EnumGen.Range = {
     def fEnumGenRange(parser: Parser): EnumGen.Range = {
-      var r = parser.parseEnumGenRange()
+      val r = parser.parseEnumGenRange()
       return r
     }
     val r = to(s, fEnumGenRange)
@@ -5591,7 +5521,7 @@ object JSON {
 
   def toEnumGenRangeExpr(s: String): EnumGen.Range.Expr = {
     def fEnumGenRangeExpr(parser: Parser): EnumGen.Range.Expr = {
-      var r = parser.parseEnumGenRangeExpr()
+      val r = parser.parseEnumGenRangeExpr()
       return r
     }
     val r = to(s, fEnumGenRangeExpr)
@@ -5609,7 +5539,7 @@ object JSON {
 
   def toEnumGenRangeIndices(s: String): EnumGen.Range.Indices = {
     def fEnumGenRangeIndices(parser: Parser): EnumGen.Range.Indices = {
-      var r = parser.parseEnumGenRangeIndices()
+      val r = parser.parseEnumGenRangeIndices()
       return r
     }
     val r = to(s, fEnumGenRangeIndices)
@@ -5627,7 +5557,7 @@ object JSON {
 
   def toEnumGenRangeStep(s: String): EnumGen.Range.Step = {
     def fEnumGenRangeStep(parser: Parser): EnumGen.Range.Step = {
-      var r = parser.parseEnumGenRangeStep()
+      val r = parser.parseEnumGenRangeStep()
       return r
     }
     val r = to(s, fEnumGenRangeStep)
@@ -5645,7 +5575,7 @@ object JSON {
 
   def toEnumGenFor(s: String): EnumGen.For = {
     def fEnumGenFor(parser: Parser): EnumGen.For = {
-      var r = parser.parseEnumGenFor()
+      val r = parser.parseEnumGenFor()
       return r
     }
     val r = to(s, fEnumGenFor)
@@ -5663,7 +5593,7 @@ object JSON {
 
   def toType(s: String): Type = {
     def fType(parser: Parser): Type = {
-      var r = parser.parseType()
+      val r = parser.parseType()
       return r
     }
     val r = to(s, fType)
@@ -5681,7 +5611,7 @@ object JSON {
 
   def toTypeNamed(s: String): Type.Named = {
     def fTypeNamed(parser: Parser): Type.Named = {
-      var r = parser.parseTypeNamed()
+      val r = parser.parseTypeNamed()
       return r
     }
     val r = to(s, fTypeNamed)
@@ -5699,7 +5629,7 @@ object JSON {
 
   def toTypeFun(s: String): Type.Fun = {
     def fTypeFun(parser: Parser): Type.Fun = {
-      var r = parser.parseTypeFun()
+      val r = parser.parseTypeFun()
       return r
     }
     val r = to(s, fTypeFun)
@@ -5717,7 +5647,7 @@ object JSON {
 
   def toTypeTuple(s: String): Type.Tuple = {
     def fTypeTuple(parser: Parser): Type.Tuple = {
-      var r = parser.parseTypeTuple()
+      val r = parser.parseTypeTuple()
       return r
     }
     val r = to(s, fTypeTuple)
@@ -5735,7 +5665,7 @@ object JSON {
 
   def toPattern(s: String): Pattern = {
     def fPattern(parser: Parser): Pattern = {
-      var r = parser.parsePattern()
+      val r = parser.parsePattern()
       return r
     }
     val r = to(s, fPattern)
@@ -5753,7 +5683,7 @@ object JSON {
 
   def toPatternLiteral(s: String): Pattern.Literal = {
     def fPatternLiteral(parser: Parser): Pattern.Literal = {
-      var r = parser.parsePatternLiteral()
+      val r = parser.parsePatternLiteral()
       return r
     }
     val r = to(s, fPatternLiteral)
@@ -5771,7 +5701,7 @@ object JSON {
 
   def toPatternRef(s: String): Pattern.Ref = {
     def fPatternRef(parser: Parser): Pattern.Ref = {
-      var r = parser.parsePatternRef()
+      val r = parser.parsePatternRef()
       return r
     }
     val r = to(s, fPatternRef)
@@ -5789,7 +5719,7 @@ object JSON {
 
   def toPatternVariable(s: String): Pattern.Variable = {
     def fPatternVariable(parser: Parser): Pattern.Variable = {
-      var r = parser.parsePatternVariable()
+      val r = parser.parsePatternVariable()
       return r
     }
     val r = to(s, fPatternVariable)
@@ -5807,7 +5737,7 @@ object JSON {
 
   def toPatternWildcard(s: String): Pattern.Wildcard = {
     def fPatternWildcard(parser: Parser): Pattern.Wildcard = {
-      var r = parser.parsePatternWildcard()
+      val r = parser.parsePatternWildcard()
       return r
     }
     val r = to(s, fPatternWildcard)
@@ -5825,7 +5755,7 @@ object JSON {
 
   def toPatternSeqWildcard(s: String): Pattern.SeqWildcard = {
     def fPatternSeqWildcard(parser: Parser): Pattern.SeqWildcard = {
-      var r = parser.parsePatternSeqWildcard()
+      val r = parser.parsePatternSeqWildcard()
       return r
     }
     val r = to(s, fPatternSeqWildcard)
@@ -5843,7 +5773,7 @@ object JSON {
 
   def toPatternStructure(s: String): Pattern.Structure = {
     def fPatternStructure(parser: Parser): Pattern.Structure = {
-      var r = parser.parsePatternStructure()
+      val r = parser.parsePatternStructure()
       return r
     }
     val r = to(s, fPatternStructure)
@@ -5861,7 +5791,7 @@ object JSON {
 
   def toExp(s: String): Exp = {
     def fExp(parser: Parser): Exp = {
-      var r = parser.parseExp()
+      val r = parser.parseExp()
       return r
     }
     val r = to(s, fExp)
@@ -5879,7 +5809,7 @@ object JSON {
 
   def toLit(s: String): Lit = {
     def fLit(parser: Parser): Lit = {
-      var r = parser.parseLit()
+      val r = parser.parseLit()
       return r
     }
     val r = to(s, fLit)
@@ -5897,7 +5827,7 @@ object JSON {
 
   def toExpLitB(s: String): Exp.LitB = {
     def fExpLitB(parser: Parser): Exp.LitB = {
-      var r = parser.parseExpLitB()
+      val r = parser.parseExpLitB()
       return r
     }
     val r = to(s, fExpLitB)
@@ -5915,7 +5845,7 @@ object JSON {
 
   def toExpLitC(s: String): Exp.LitC = {
     def fExpLitC(parser: Parser): Exp.LitC = {
-      var r = parser.parseExpLitC()
+      val r = parser.parseExpLitC()
       return r
     }
     val r = to(s, fExpLitC)
@@ -5933,7 +5863,7 @@ object JSON {
 
   def toExpLitZ(s: String): Exp.LitZ = {
     def fExpLitZ(parser: Parser): Exp.LitZ = {
-      var r = parser.parseExpLitZ()
+      val r = parser.parseExpLitZ()
       return r
     }
     val r = to(s, fExpLitZ)
@@ -5951,7 +5881,7 @@ object JSON {
 
   def toExpLitF32(s: String): Exp.LitF32 = {
     def fExpLitF32(parser: Parser): Exp.LitF32 = {
-      var r = parser.parseExpLitF32()
+      val r = parser.parseExpLitF32()
       return r
     }
     val r = to(s, fExpLitF32)
@@ -5969,7 +5899,7 @@ object JSON {
 
   def toExpLitF64(s: String): Exp.LitF64 = {
     def fExpLitF64(parser: Parser): Exp.LitF64 = {
-      var r = parser.parseExpLitF64()
+      val r = parser.parseExpLitF64()
       return r
     }
     val r = to(s, fExpLitF64)
@@ -5987,7 +5917,7 @@ object JSON {
 
   def toExpLitR(s: String): Exp.LitR = {
     def fExpLitR(parser: Parser): Exp.LitR = {
-      var r = parser.parseExpLitR()
+      val r = parser.parseExpLitR()
       return r
     }
     val r = to(s, fExpLitR)
@@ -6005,7 +5935,7 @@ object JSON {
 
   def toExpLitBv(s: String): Exp.LitBv = {
     def fExpLitBv(parser: Parser): Exp.LitBv = {
-      var r = parser.parseExpLitBv()
+      val r = parser.parseExpLitBv()
       return r
     }
     val r = to(s, fExpLitBv)
@@ -6023,7 +5953,7 @@ object JSON {
 
   def toExpLitString(s: String): Exp.LitString = {
     def fExpLitString(parser: Parser): Exp.LitString = {
-      var r = parser.parseExpLitString()
+      val r = parser.parseExpLitString()
       return r
     }
     val r = to(s, fExpLitString)
@@ -6041,7 +5971,7 @@ object JSON {
 
   def toExpStringInterpolate(s: String): Exp.StringInterpolate = {
     def fExpStringInterpolate(parser: Parser): Exp.StringInterpolate = {
-      var r = parser.parseExpStringInterpolate()
+      val r = parser.parseExpStringInterpolate()
       return r
     }
     val r = to(s, fExpStringInterpolate)
@@ -6059,7 +5989,7 @@ object JSON {
 
   def toExpThis(s: String): Exp.This = {
     def fExpThis(parser: Parser): Exp.This = {
-      var r = parser.parseExpThis()
+      val r = parser.parseExpThis()
       return r
     }
     val r = to(s, fExpThis)
@@ -6077,7 +6007,7 @@ object JSON {
 
   def toExpSuper(s: String): Exp.Super = {
     def fExpSuper(parser: Parser): Exp.Super = {
-      var r = parser.parseExpSuper()
+      val r = parser.parseExpSuper()
       return r
     }
     val r = to(s, fExpSuper)
@@ -6095,7 +6025,7 @@ object JSON {
 
   def toExpUnary(s: String): Exp.Unary = {
     def fExpUnary(parser: Parser): Exp.Unary = {
-      var r = parser.parseExpUnary()
+      val r = parser.parseExpUnary()
       return r
     }
     val r = to(s, fExpUnary)
@@ -6113,7 +6043,7 @@ object JSON {
 
   def toExpBinary(s: String): Exp.Binary = {
     def fExpBinary(parser: Parser): Exp.Binary = {
-      var r = parser.parseExpBinary()
+      val r = parser.parseExpBinary()
       return r
     }
     val r = to(s, fExpBinary)
@@ -6131,7 +6061,7 @@ object JSON {
 
   def toExpIdent(s: String): Exp.Ident = {
     def fExpIdent(parser: Parser): Exp.Ident = {
-      var r = parser.parseExpIdent()
+      val r = parser.parseExpIdent()
       return r
     }
     val r = to(s, fExpIdent)
@@ -6149,7 +6079,7 @@ object JSON {
 
   def toExpEta(s: String): Exp.Eta = {
     def fExpEta(parser: Parser): Exp.Eta = {
-      var r = parser.parseExpEta()
+      val r = parser.parseExpEta()
       return r
     }
     val r = to(s, fExpEta)
@@ -6167,7 +6097,7 @@ object JSON {
 
   def toExpTuple(s: String): Exp.Tuple = {
     def fExpTuple(parser: Parser): Exp.Tuple = {
-      var r = parser.parseExpTuple()
+      val r = parser.parseExpTuple()
       return r
     }
     val r = to(s, fExpTuple)
@@ -6185,7 +6115,7 @@ object JSON {
 
   def toExpSelect(s: String): Exp.Select = {
     def fExpSelect(parser: Parser): Exp.Select = {
-      var r = parser.parseExpSelect()
+      val r = parser.parseExpSelect()
       return r
     }
     val r = to(s, fExpSelect)
@@ -6203,7 +6133,7 @@ object JSON {
 
   def toExpInvoke(s: String): Exp.Invoke = {
     def fExpInvoke(parser: Parser): Exp.Invoke = {
-      var r = parser.parseExpInvoke()
+      val r = parser.parseExpInvoke()
       return r
     }
     val r = to(s, fExpInvoke)
@@ -6221,7 +6151,7 @@ object JSON {
 
   def toExpInvokeNamed(s: String): Exp.InvokeNamed = {
     def fExpInvokeNamed(parser: Parser): Exp.InvokeNamed = {
-      var r = parser.parseExpInvokeNamed()
+      val r = parser.parseExpInvokeNamed()
       return r
     }
     val r = to(s, fExpInvokeNamed)
@@ -6239,7 +6169,7 @@ object JSON {
 
   def toExpIf(s: String): Exp.If = {
     def fExpIf(parser: Parser): Exp.If = {
-      var r = parser.parseExpIf()
+      val r = parser.parseExpIf()
       return r
     }
     val r = to(s, fExpIf)
@@ -6257,7 +6187,7 @@ object JSON {
 
   def toExpFun(s: String): Exp.Fun = {
     def fExpFun(parser: Parser): Exp.Fun = {
-      var r = parser.parseExpFun()
+      val r = parser.parseExpFun()
       return r
     }
     val r = to(s, fExpFun)
@@ -6275,7 +6205,7 @@ object JSON {
 
   def toExpForYield(s: String): Exp.ForYield = {
     def fExpForYield(parser: Parser): Exp.ForYield = {
-      var r = parser.parseExpForYield()
+      val r = parser.parseExpForYield()
       return r
     }
     val r = to(s, fExpForYield)
@@ -6293,7 +6223,7 @@ object JSON {
 
   def toExpQuant(s: String): Exp.Quant = {
     def fExpQuant(parser: Parser): Exp.Quant = {
-      var r = parser.parseExpQuant()
+      val r = parser.parseExpQuant()
       return r
     }
     val r = to(s, fExpQuant)
@@ -6311,7 +6241,7 @@ object JSON {
 
   def toNamedArg(s: String): NamedArg = {
     def fNamedArg(parser: Parser): NamedArg = {
-      var r = parser.parseNamedArg()
+      val r = parser.parseNamedArg()
       return r
     }
     val r = to(s, fNamedArg)
@@ -6329,7 +6259,7 @@ object JSON {
 
   def toVarFragment(s: String): VarFragment = {
     def fVarFragment(parser: Parser): VarFragment = {
-      var r = parser.parseVarFragment()
+      val r = parser.parseVarFragment()
       return r
     }
     val r = to(s, fVarFragment)
@@ -6347,7 +6277,7 @@ object JSON {
 
   def toDomain(s: String): Domain = {
     def fDomain(parser: Parser): Domain = {
-      var r = parser.parseDomain()
+      val r = parser.parseDomain()
       return r
     }
     val r = to(s, fDomain)
@@ -6365,7 +6295,7 @@ object JSON {
 
   def toDomainType(s: String): Domain.Type = {
     def fDomainType(parser: Parser): Domain.Type = {
-      var r = parser.parseDomainType()
+      val r = parser.parseDomainType()
       return r
     }
     val r = to(s, fDomainType)
@@ -6383,7 +6313,7 @@ object JSON {
 
   def toDomainRange(s: String): Domain.Range = {
     def fDomainRange(parser: Parser): Domain.Range = {
-      var r = parser.parseDomainRange()
+      val r = parser.parseDomainRange()
       return r
     }
     val r = to(s, fDomainRange)
@@ -6401,7 +6331,7 @@ object JSON {
 
   def toId(s: String): Id = {
     def fId(parser: Parser): Id = {
-      var r = parser.parseId()
+      val r = parser.parseId()
       return r
     }
     val r = to(s, fId)
@@ -6419,7 +6349,7 @@ object JSON {
 
   def toName(s: String): Name = {
     def fName(parser: Parser): Name = {
-      var r = parser.parseName()
+      val r = parser.parseName()
       return r
     }
     val r = to(s, fName)
@@ -6437,7 +6367,7 @@ object JSON {
 
   def toBody(s: String): Body = {
     def fBody(parser: Parser): Body = {
-      var r = parser.parseBody()
+      val r = parser.parseBody()
       return r
     }
     val r = to(s, fBody)
@@ -6455,7 +6385,7 @@ object JSON {
 
   def toAbstractDatatypeParam(s: String): AbstractDatatypeParam = {
     def fAbstractDatatypeParam(parser: Parser): AbstractDatatypeParam = {
-      var r = parser.parseAbstractDatatypeParam()
+      val r = parser.parseAbstractDatatypeParam()
       return r
     }
     val r = to(s, fAbstractDatatypeParam)
@@ -6473,7 +6403,7 @@ object JSON {
 
   def toMethodSig(s: String): MethodSig = {
     def fMethodSig(parser: Parser): MethodSig = {
-      var r = parser.parseMethodSig()
+      val r = parser.parseMethodSig()
       return r
     }
     val r = to(s, fMethodSig)
@@ -6491,7 +6421,7 @@ object JSON {
 
   def toParam(s: String): Param = {
     def fParam(parser: Parser): Param = {
-      var r = parser.parseParam()
+      val r = parser.parseParam()
       return r
     }
     val r = to(s, fParam)
@@ -6509,7 +6439,7 @@ object JSON {
 
   def toTypeParam(s: String): TypeParam = {
     def fTypeParam(parser: Parser): TypeParam = {
-      var r = parser.parseTypeParam()
+      val r = parser.parseTypeParam()
       return r
     }
     val r = to(s, fTypeParam)
@@ -6527,7 +6457,7 @@ object JSON {
 
   def toContract(s: String): Contract = {
     def fContract(parser: Parser): Contract = {
-      var r = parser.parseContract()
+      val r = parser.parseContract()
       return r
     }
     val r = to(s, fContract)
@@ -6545,7 +6475,7 @@ object JSON {
 
   def toSubContract(s: String): SubContract = {
     def fSubContract(parser: Parser): SubContract = {
-      var r = parser.parseSubContract()
+      val r = parser.parseSubContract()
       return r
     }
     val r = to(s, fSubContract)
@@ -6563,7 +6493,7 @@ object JSON {
 
   def toSubContractParam(s: String): SubContractParam = {
     def fSubContractParam(parser: Parser): SubContractParam = {
-      var r = parser.parseSubContractParam()
+      val r = parser.parseSubContractParam()
       return r
     }
     val r = to(s, fSubContractParam)
@@ -6581,7 +6511,7 @@ object JSON {
 
   def toWhereDef(s: String): WhereDef = {
     def fWhereDef(parser: Parser): WhereDef = {
-      var r = parser.parseWhereDef()
+      val r = parser.parseWhereDef()
       return r
     }
     val r = to(s, fWhereDef)
@@ -6599,7 +6529,7 @@ object JSON {
 
   def toWhereDefVal(s: String): WhereDef.Val = {
     def fWhereDefVal(parser: Parser): WhereDef.Val = {
-      var r = parser.parseWhereDefVal()
+      val r = parser.parseWhereDefVal()
       return r
     }
     val r = to(s, fWhereDefVal)
@@ -6617,7 +6547,7 @@ object JSON {
 
   def toWhereDefDef(s: String): WhereDef.Def = {
     def fWhereDefDef(parser: Parser): WhereDef.Def = {
-      var r = parser.parseWhereDefDef()
+      val r = parser.parseWhereDefDef()
       return r
     }
     val r = to(s, fWhereDefDef)
@@ -6635,7 +6565,7 @@ object JSON {
 
   def toSpecDef(s: String): SpecDef = {
     def fSpecDef(parser: Parser): SpecDef = {
-      var r = parser.parseSpecDef()
+      val r = parser.parseSpecDef()
       return r
     }
     val r = to(s, fSpecDef)
@@ -6653,7 +6583,7 @@ object JSON {
 
   def toProofStep(s: String): ProofStep = {
     def fProofStep(parser: Parser): ProofStep = {
-      var r = parser.parseProofStep()
+      val r = parser.parseProofStep()
       return r
     }
     val r = to(s, fProofStep)
@@ -6671,7 +6601,7 @@ object JSON {
 
   def toProofStepBasic(s: String): ProofStep.Basic = {
     def fProofStepBasic(parser: Parser): ProofStep.Basic = {
-      var r = parser.parseProofStepBasic()
+      val r = parser.parseProofStepBasic()
       return r
     }
     val r = to(s, fProofStepBasic)
@@ -6689,7 +6619,7 @@ object JSON {
 
   def toProofStepSubProof(s: String): ProofStep.SubProof = {
     def fProofStepSubProof(parser: Parser): ProofStep.SubProof = {
-      var r = parser.parseProofStepSubProof()
+      val r = parser.parseProofStepSubProof()
       return r
     }
     val r = to(s, fProofStepSubProof)
@@ -6707,7 +6637,7 @@ object JSON {
 
   def toAssumeProofStep(s: String): AssumeProofStep = {
     def fAssumeProofStep(parser: Parser): AssumeProofStep = {
-      var r = parser.parseAssumeProofStep()
+      val r = parser.parseAssumeProofStep()
       return r
     }
     val r = to(s, fAssumeProofStep)
@@ -6725,7 +6655,7 @@ object JSON {
 
   def toAssumeProofStepRegular(s: String): AssumeProofStep.Regular = {
     def fAssumeProofStepRegular(parser: Parser): AssumeProofStep.Regular = {
-      var r = parser.parseAssumeProofStepRegular()
+      val r = parser.parseAssumeProofStepRegular()
       return r
     }
     val r = to(s, fAssumeProofStepRegular)
@@ -6743,7 +6673,7 @@ object JSON {
 
   def toAssumeProofStepForallIntroAps(s: String): AssumeProofStep.ForallIntroAps = {
     def fAssumeProofStepForallIntroAps(parser: Parser): AssumeProofStep.ForallIntroAps = {
-      var r = parser.parseAssumeProofStepForallIntroAps()
+      val r = parser.parseAssumeProofStepForallIntroAps()
       return r
     }
     val r = to(s, fAssumeProofStepForallIntroAps)
@@ -6761,7 +6691,7 @@ object JSON {
 
   def toAssumeProofStepExistsElimAps(s: String): AssumeProofStep.ExistsElimAps = {
     def fAssumeProofStepExistsElimAps(parser: Parser): AssumeProofStep.ExistsElimAps = {
-      var r = parser.parseAssumeProofStepExistsElimAps()
+      val r = parser.parseAssumeProofStepExistsElimAps()
       return r
     }
     val r = to(s, fAssumeProofStepExistsElimAps)
@@ -6779,7 +6709,7 @@ object JSON {
 
   def toJust(s: String): Just = {
     def fJust(parser: Parser): Just = {
-      var r = parser.parseJust()
+      val r = parser.parseJust()
       return r
     }
     val r = to(s, fJust)
@@ -6797,7 +6727,7 @@ object JSON {
 
   def toJustPremise(s: String): Just.Premise = {
     def fJustPremise(parser: Parser): Just.Premise = {
-      var r = parser.parseJustPremise()
+      val r = parser.parseJustPremise()
       return r
     }
     val r = to(s, fJustPremise)
@@ -6815,7 +6745,7 @@ object JSON {
 
   def toJustAndIntro(s: String): Just.AndIntro = {
     def fJustAndIntro(parser: Parser): Just.AndIntro = {
-      var r = parser.parseJustAndIntro()
+      val r = parser.parseJustAndIntro()
       return r
     }
     val r = to(s, fJustAndIntro)
@@ -6833,7 +6763,7 @@ object JSON {
 
   def toJustAndElim(s: String): Just.AndElim = {
     def fJustAndElim(parser: Parser): Just.AndElim = {
-      var r = parser.parseJustAndElim()
+      val r = parser.parseJustAndElim()
       return r
     }
     val r = to(s, fJustAndElim)
@@ -6851,7 +6781,7 @@ object JSON {
 
   def toJustOrIntro(s: String): Just.OrIntro = {
     def fJustOrIntro(parser: Parser): Just.OrIntro = {
-      var r = parser.parseJustOrIntro()
+      val r = parser.parseJustOrIntro()
       return r
     }
     val r = to(s, fJustOrIntro)
@@ -6869,7 +6799,7 @@ object JSON {
 
   def toJustOrElim(s: String): Just.OrElim = {
     def fJustOrElim(parser: Parser): Just.OrElim = {
-      var r = parser.parseJustOrElim()
+      val r = parser.parseJustOrElim()
       return r
     }
     val r = to(s, fJustOrElim)
@@ -6887,7 +6817,7 @@ object JSON {
 
   def toJustImplyIntro(s: String): Just.ImplyIntro = {
     def fJustImplyIntro(parser: Parser): Just.ImplyIntro = {
-      var r = parser.parseJustImplyIntro()
+      val r = parser.parseJustImplyIntro()
       return r
     }
     val r = to(s, fJustImplyIntro)
@@ -6905,7 +6835,7 @@ object JSON {
 
   def toJustImplyElim(s: String): Just.ImplyElim = {
     def fJustImplyElim(parser: Parser): Just.ImplyElim = {
-      var r = parser.parseJustImplyElim()
+      val r = parser.parseJustImplyElim()
       return r
     }
     val r = to(s, fJustImplyElim)
@@ -6923,7 +6853,7 @@ object JSON {
 
   def toJustNegIntro(s: String): Just.NegIntro = {
     def fJustNegIntro(parser: Parser): Just.NegIntro = {
-      var r = parser.parseJustNegIntro()
+      val r = parser.parseJustNegIntro()
       return r
     }
     val r = to(s, fJustNegIntro)
@@ -6941,7 +6871,7 @@ object JSON {
 
   def toJustNegElim(s: String): Just.NegElim = {
     def fJustNegElim(parser: Parser): Just.NegElim = {
-      var r = parser.parseJustNegElim()
+      val r = parser.parseJustNegElim()
       return r
     }
     val r = to(s, fJustNegElim)
@@ -6959,7 +6889,7 @@ object JSON {
 
   def toJustBottomElim(s: String): Just.BottomElim = {
     def fJustBottomElim(parser: Parser): Just.BottomElim = {
-      var r = parser.parseJustBottomElim()
+      val r = parser.parseJustBottomElim()
       return r
     }
     val r = to(s, fJustBottomElim)
@@ -6977,7 +6907,7 @@ object JSON {
 
   def toJustPbc(s: String): Just.Pbc = {
     def fJustPbc(parser: Parser): Just.Pbc = {
-      var r = parser.parseJustPbc()
+      val r = parser.parseJustPbc()
       return r
     }
     val r = to(s, fJustPbc)
@@ -6995,7 +6925,7 @@ object JSON {
 
   def toJustForallIntro(s: String): Just.ForallIntro = {
     def fJustForallIntro(parser: Parser): Just.ForallIntro = {
-      var r = parser.parseJustForallIntro()
+      val r = parser.parseJustForallIntro()
       return r
     }
     val r = to(s, fJustForallIntro)
@@ -7013,7 +6943,7 @@ object JSON {
 
   def toJustForallElim(s: String): Just.ForallElim = {
     def fJustForallElim(parser: Parser): Just.ForallElim = {
-      var r = parser.parseJustForallElim()
+      val r = parser.parseJustForallElim()
       return r
     }
     val r = to(s, fJustForallElim)
@@ -7031,7 +6961,7 @@ object JSON {
 
   def toJustExistsIntro(s: String): Just.ExistsIntro = {
     def fJustExistsIntro(parser: Parser): Just.ExistsIntro = {
-      var r = parser.parseJustExistsIntro()
+      val r = parser.parseJustExistsIntro()
       return r
     }
     val r = to(s, fJustExistsIntro)
@@ -7049,7 +6979,7 @@ object JSON {
 
   def toJustExistsElim(s: String): Just.ExistsElim = {
     def fJustExistsElim(parser: Parser): Just.ExistsElim = {
-      var r = parser.parseJustExistsElim()
+      val r = parser.parseJustExistsElim()
       return r
     }
     val r = to(s, fJustExistsElim)
@@ -7067,7 +6997,7 @@ object JSON {
 
   def toJustFact(s: String): Just.Fact = {
     def fJustFact(parser: Parser): Just.Fact = {
-      var r = parser.parseJustFact()
+      val r = parser.parseJustFact()
       return r
     }
     val r = to(s, fJustFact)
@@ -7085,7 +7015,7 @@ object JSON {
 
   def toJustInvariant(s: String): Just.Invariant = {
     def fJustInvariant(parser: Parser): Just.Invariant = {
-      var r = parser.parseJustInvariant()
+      val r = parser.parseJustInvariant()
       return r
     }
     val r = to(s, fJustInvariant)
@@ -7103,7 +7033,7 @@ object JSON {
 
   def toJustSubst(s: String): Just.Subst = {
     def fJustSubst(parser: Parser): Just.Subst = {
-      var r = parser.parseJustSubst()
+      val r = parser.parseJustSubst()
       return r
     }
     val r = to(s, fJustSubst)
@@ -7121,7 +7051,7 @@ object JSON {
 
   def toJustAuto(s: String): Just.Auto = {
     def fJustAuto(parser: Parser): Just.Auto = {
-      var r = parser.parseJustAuto()
+      val r = parser.parseJustAuto()
       return r
     }
     val r = to(s, fJustAuto)
@@ -7139,7 +7069,7 @@ object JSON {
 
   def toJustCoq(s: String): Just.Coq = {
     def fJustCoq(parser: Parser): Just.Coq = {
-      var r = parser.parseJustCoq()
+      val r = parser.parseJustCoq()
       return r
     }
     val r = to(s, fJustCoq)
@@ -7157,7 +7087,7 @@ object JSON {
 
   def toTruthTableRow(s: String): TruthTable.Row = {
     def fTruthTableRow(parser: Parser): TruthTable.Row = {
-      var r = parser.parseTruthTableRow()
+      val r = parser.parseTruthTableRow()
       return r
     }
     val r = to(s, fTruthTableRow)
@@ -7175,7 +7105,7 @@ object JSON {
 
   def toTruthTableAssignment(s: String): TruthTable.Assignment = {
     def fTruthTableAssignment(parser: Parser): TruthTable.Assignment = {
-      var r = parser.parseTruthTableAssignment()
+      val r = parser.parseTruthTableAssignment()
       return r
     }
     val r = to(s, fTruthTableAssignment)
@@ -7193,7 +7123,7 @@ object JSON {
 
   def toTruthTableConclusion(s: String): TruthTable.Conclusion = {
     def fTruthTableConclusion(parser: Parser): TruthTable.Conclusion = {
-      var r = parser.parseTruthTableConclusion()
+      val r = parser.parseTruthTableConclusion()
       return r
     }
     val r = to(s, fTruthTableConclusion)
@@ -7211,7 +7141,7 @@ object JSON {
 
   def toTruthTableConclusionValidity(s: String): TruthTable.Conclusion.Validity = {
     def fTruthTableConclusionValidity(parser: Parser): TruthTable.Conclusion.Validity = {
-      var r = parser.parseTruthTableConclusionValidity()
+      val r = parser.parseTruthTableConclusionValidity()
       return r
     }
     val r = to(s, fTruthTableConclusionValidity)
@@ -7229,7 +7159,7 @@ object JSON {
 
   def toTruthTableConclusionTautology(s: String): TruthTable.Conclusion.Tautology = {
     def fTruthTableConclusionTautology(parser: Parser): TruthTable.Conclusion.Tautology = {
-      var r = parser.parseTruthTableConclusionTautology()
+      val r = parser.parseTruthTableConclusionTautology()
       return r
     }
     val r = to(s, fTruthTableConclusionTautology)
@@ -7247,7 +7177,7 @@ object JSON {
 
   def toTruthTableConclusionContradictory(s: String): TruthTable.Conclusion.Contradictory = {
     def fTruthTableConclusionContradictory(parser: Parser): TruthTable.Conclusion.Contradictory = {
-      var r = parser.parseTruthTableConclusionContradictory()
+      val r = parser.parseTruthTableConclusionContradictory()
       return r
     }
     val r = to(s, fTruthTableConclusionContradictory)
@@ -7265,7 +7195,7 @@ object JSON {
 
   def toTruthTableConclusionContingent(s: String): TruthTable.Conclusion.Contingent = {
     def fTruthTableConclusionContingent(parser: Parser): TruthTable.Conclusion.Contingent = {
-      var r = parser.parseTruthTableConclusionContingent()
+      val r = parser.parseTruthTableConclusionContingent()
       return r
     }
     val r = to(s, fTruthTableConclusionContingent)
@@ -7283,7 +7213,7 @@ object JSON {
 
   def toTyped(s: String): Typed = {
     def fTyped(parser: Parser): Typed = {
-      var r = parser.parseTyped()
+      val r = parser.parseTyped()
       return r
     }
     val r = to(s, fTyped)
@@ -7301,7 +7231,7 @@ object JSON {
 
   def toTypedName(s: String): Typed.Name = {
     def fTypedName(parser: Parser): Typed.Name = {
-      var r = parser.parseTypedName()
+      val r = parser.parseTypedName()
       return r
     }
     val r = to(s, fTypedName)
@@ -7319,7 +7249,7 @@ object JSON {
 
   def toTypedTuple(s: String): Typed.Tuple = {
     def fTypedTuple(parser: Parser): Typed.Tuple = {
-      var r = parser.parseTypedTuple()
+      val r = parser.parseTypedTuple()
       return r
     }
     val r = to(s, fTypedTuple)
@@ -7337,7 +7267,7 @@ object JSON {
 
   def toTypedFun(s: String): Typed.Fun = {
     def fTypedFun(parser: Parser): Typed.Fun = {
-      var r = parser.parseTypedFun()
+      val r = parser.parseTypedFun()
       return r
     }
     val r = to(s, fTypedFun)
@@ -7355,7 +7285,7 @@ object JSON {
 
   def toAttr(s: String): Attr = {
     def fAttr(parser: Parser): Attr = {
-      var r = parser.parseAttr()
+      val r = parser.parseAttr()
       return r
     }
     val r = to(s, fAttr)
@@ -7373,7 +7303,7 @@ object JSON {
 
   def toTypedAttr(s: String): TypedAttr = {
     def fTypedAttr(parser: Parser): TypedAttr = {
-      var r = parser.parseTypedAttr()
+      val r = parser.parseTypedAttr()
       return r
     }
     val r = to(s, fTypedAttr)
@@ -7391,7 +7321,7 @@ object JSON {
 
   def toResolvedAttr(s: String): ResolvedAttr = {
     def fResolvedAttr(parser: Parser): ResolvedAttr = {
-      var r = parser.parseResolvedAttr()
+      val r = parser.parseResolvedAttr()
       return r
     }
     val r = to(s, fResolvedAttr)
@@ -7409,7 +7339,7 @@ object JSON {
 
   def toResolvedInfo(s: String): ResolvedInfo = {
     def fResolvedInfo(parser: Parser): ResolvedInfo = {
-      var r = parser.parseResolvedInfo()
+      val r = parser.parseResolvedInfo()
       return r
     }
     val r = to(s, fResolvedInfo)
@@ -7427,7 +7357,7 @@ object JSON {
 
   def toPosInfo(s: String): PosInfo = {
     def fPosInfo(parser: Parser): PosInfo = {
-      var r = parser.parsePosInfo()
+      val r = parser.parsePosInfo()
       return r
     }
     val r = to(s, fPosInfo)

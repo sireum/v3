@@ -32,7 +32,6 @@ import Paths._
 import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.lang.tools.TransformerGenJvm
 import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
-import org.sireum.ISZ
 
 class TransformerGenJvmTest extends SireumSpec {
 

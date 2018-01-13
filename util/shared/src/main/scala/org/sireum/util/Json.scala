@@ -159,7 +159,7 @@ object Json {
 
   implicit final def toLong(v: Js.Value): Long =
     v match {
-      case Js.Str(s) => s.toLong
+      case Js.Str(s) => s.toString.toLong
       case _ => sys.error("Unexpected Js.Value for a Long: " + v)
     }
 
@@ -178,20 +178,20 @@ object Json {
   implicit final def toByteArray(v: Js.Value): Array[Byte] =
     v match {
       case Js.Str(s) =>
-        s.replaceAll("[^0-9A-Fa-f]", "").sliding(2, 2).
+        s.toString.replaceAll("[^0-9A-Fa-f]", "").sliding(2, 2).
           toArray.map(Integer.parseInt(_, 16).toByte)
       case _ => sys.error("Unexpected Js.Value for an Array[Byte]: " + v)
     }
 
   final def toStrIntern(v: Js.Value): String =
     v match {
-      case Js.Str(s) => s.intern()
+      case Js.Str(s) => s.toString.intern()
       case _ => sys.error("Unexpected Js.Value for a String: " + v)
     }
 
   implicit final def toStr(v: Js.Value): String =
     v match {
-      case Js.Str(s) => s
+      case Js.Str(s) => s.toString
       case _ => sys.error("Unexpected Js.Value for a String: " + v)
     }
 

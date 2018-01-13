@@ -28,9 +28,8 @@ package org.sireum.lang.symbol
 
 import org.sireum._
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import Resolver._
-import org.sireum.lang.util.{Reporter}
+import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
 @record class GlobalDeclarationResolver(var globalNameMap: NameMap,
@@ -57,7 +56,7 @@ import org.sireum.lang.{ast => AST}
   @memoize def scope(packageName: QName,
                      imports: ISZ[AST.Stmt.Import],
                      name: QName): Scope.Global = {
-    return Scope.Global(packageName, imports, ISOps(name).dropRight(1))
+    return Scope.Global(packageName, imports, ISZOps(name).dropRight(1))
   }
 
   def resolveGlobalStmt(stmt: AST.Stmt): Unit = {
@@ -133,12 +132,6 @@ import org.sireum.lang.{ast => AST}
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
           TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
             members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
-      case stmt: AST.Stmt.Rich =>
-        val name = currentName :+ stmt.id.value
-        val members = resolveMembers(name, stmt.stmts)
-        assert(members.specVars.isEmpty & members.vars.isEmpty)
-        declareType("rich", name, TypeInfo.Rich(name, F, members.specMethods, members.methods,
-          scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
         declareType("type alias", name,
@@ -233,7 +226,7 @@ import org.sireum.lang.{ast => AST}
     var currentPosOpt = ids(0).attr.posOpt
     declarePackage(currentName, currentPosOpt)
 
-    for (i <- 1 until ids.size) {
+    for (i <- z"1" until ids.size) {
       currentName = currentName :+ ids(i).value
       currentPosOpt = ids(i).attr.posOpt
       declarePackage(currentName, currentPosOpt)

@@ -28,17 +28,37 @@ package org.sireum.lang.parser
 
 import org.sireum._
 import org.sireum.lang.util._
-import org.sireum.lang.{ast => AST}
 
-@rich class Parser(text: String) {
+@ext object ParserUtil {
 
-  @pure def parseStmt[T]: T = $
+  @pure def parseStmt[T](text: String): T = $
 
-  @pure def parseExp[T]: T = $
+  @pure def parseExp[T](text: String): T = $
+
+  def parseTopUnit[T](text: String,
+                      allowSireum: B,
+                      isWorksheet: B,
+                      isDiet: B,
+                      fileUriOpt: Option[String],
+                      reporter: Reporter): Option[T] = $
+}
+
+@datatype class Parser(text: String) {
+
+  @pure def parseStmt[T]: T = {
+    return ParserUtil.parseStmt[T](text)
+  }
+
+  @pure def parseExp[T]: T = {
+    return ParserUtil.parseExp[T](text)
+  }
 
   def parseTopUnit[T](allowSireum: B,
                       isWorksheet: B,
                       isDiet: B,
                       fileUriOpt: Option[String],
-                      reporter: Reporter): Option[T] = $
+                      reporter: Reporter): Option[T] = {
+    val r = ParserUtil.parseTopUnit[T](text, allowSireum, isWorksheet, isDiet, fileUriOpt, reporter)
+    return r
+  }
 }

@@ -34,7 +34,7 @@ import org.sireum._
 
 object MTransformer {
 
-  @record class PreResult[T](continue: B,
+  @record class PreResult[T](continu: B,
                              resultOpt: MOption[T])
 
   @sig trait PrePost {
@@ -73,7 +73,6 @@ object MTransformer {
         case o: Stmt.Object => return preStmtObject(o)
         case o: Stmt.Sig => return preStmtSig(o)
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return preStmtRich(o)
         case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
         case o: Stmt.Assign => return preStmtAssign(o)
         case o: Stmt.AssignUp => return preStmtAssignUp(o)
@@ -94,25 +93,25 @@ object MTransformer {
       o match {
         case o: Stmt.Block =>
           val r: PreResult[AssignExp] = preStmtBlock(o) match {
-           case PreResult(continue, MSome(r: AssignExp)) => PreResult(continue, MSome[AssignExp](r))
+           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
            case _ => halt("Can only produce object of type AssignExp")
           }
           return r
         case o: Stmt.If =>
           val r: PreResult[AssignExp] = preStmtIf(o) match {
-           case PreResult(continue, MSome(r: AssignExp)) => PreResult(continue, MSome[AssignExp](r))
+           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
            case _ => halt("Can only produce object of type AssignExp")
           }
           return r
         case o: Stmt.Match =>
           val r: PreResult[AssignExp] = preStmtMatch(o) match {
-           case PreResult(continue, MSome(r: AssignExp)) => PreResult(continue, MSome[AssignExp](r))
+           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
            case _ => halt("Can only produce object of type AssignExp")
           }
           return r
         case o: Stmt.Expr =>
           val r: PreResult[AssignExp] = preStmtExpr(o) match {
-           case PreResult(continue, MSome(r: AssignExp)) => PreResult(continue, MSome[AssignExp](r))
+           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
            case _ => halt("Can only produce object of type AssignExp")
           }
           return r
@@ -187,10 +186,6 @@ object MTransformer {
     }
 
     def preStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtRich(o: Stmt.Rich): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
@@ -403,49 +398,49 @@ object MTransformer {
       o match {
         case o: Exp.LitB =>
           val r: PreResult[Lit] = preExpLitB(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitC =>
           val r: PreResult[Lit] = preExpLitC(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitZ =>
           val r: PreResult[Lit] = preExpLitZ(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitF32 =>
           val r: PreResult[Lit] = preExpLitF32(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitF64 =>
           val r: PreResult[Lit] = preExpLitF64(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitR =>
           val r: PreResult[Lit] = preExpLitR(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitBv =>
           val r: PreResult[Lit] = preExpLitBv(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
         case o: Exp.LitString =>
           val r: PreResult[Lit] = preExpLitString(o) match {
-           case PreResult(continue, MSome(r: Lit)) => PreResult(continue, MSome[Lit](r))
+           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
            case _ => halt("Can only produce object of type Lit")
           }
           return r
@@ -873,7 +868,6 @@ object MTransformer {
         case o: Stmt.Object => return postStmtObject(o)
         case o: Stmt.Sig => return postStmtSig(o)
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
-        case o: Stmt.Rich => return postStmtRich(o)
         case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
         case o: Stmt.Assign => return postStmtAssign(o)
         case o: Stmt.AssignUp => return postStmtAssignUp(o)
@@ -987,10 +981,6 @@ object MTransformer {
     }
 
     def postStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtRich(o: Stmt.Rich): MOption[Stmt] = {
       return MNone()
     }
 
@@ -1677,7 +1667,7 @@ import MTransformer._
 
   def transformTopUnit(o: TopUnit): MOption[TopUnit] = {
     val preR: PreResult[TopUnit] = pp.preTopUnit(o)
-    val r: MOption[TopUnit] = if (preR.continue) {
+    val r: MOption[TopUnit] = if (preR.continu) {
       val o2: TopUnit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[TopUnit] = o2 match {
@@ -1726,7 +1716,7 @@ import MTransformer._
 
   def transformStmt(o: Stmt): MOption[Stmt] = {
     val preR: PreResult[Stmt] = pp.preStmt(o)
-    val r: MOption[Stmt] = if (preR.continue) {
+    val r: MOption[Stmt] = if (preR.continu) {
       val o2: Stmt = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Stmt] = o2 match {
@@ -1827,17 +1817,6 @@ import MTransformer._
           val r0: MOption[Id] = transformId(o2.id)
           val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
           val r2: MOption[IS[Z, AbstractDatatypeParam]] = transformISZ(o2.params, transformAbstractDatatypeParam)
-          val r3: MOption[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed)
-          val r4: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
-          val r5: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty || r5.nonEmpty)
-            MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), params = r2.getOrElse(o2.params), parents = r3.getOrElse(o2.parents), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Stmt.Rich =>
-          val r0: MOption[Id] = transformId(o2.id)
-          val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
-          val r2: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam)
           val r3: MOption[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed)
           val r4: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
           val r5: MOption[Attr] = transformAttr(o2.attr)
@@ -1974,7 +1953,7 @@ import MTransformer._
 
   def transformAssignExp(o: AssignExp): MOption[AssignExp] = {
     val preR: PreResult[AssignExp] = pp.preAssignExp(o)
-    val r: MOption[AssignExp] = if (preR.continue) {
+    val r: MOption[AssignExp] = if (preR.continu) {
       val o2: AssignExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[AssignExp] = o2 match {
@@ -2030,7 +2009,7 @@ import MTransformer._
 
   def transformStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
     val preR: PreResult[Stmt.Import.Importer] = pp.preStmtImportImporter(o)
-    val r: MOption[Stmt.Import.Importer] = if (preR.continue) {
+    val r: MOption[Stmt.Import.Importer] = if (preR.continu) {
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Name] = transformName(o2.name)
@@ -2058,7 +2037,7 @@ import MTransformer._
 
   def transformStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
     val preR: PreResult[Stmt.Import.Selector] = pp.preStmtImportSelector(o)
-    val r: MOption[Stmt.Import.Selector] = if (preR.continue) {
+    val r: MOption[Stmt.Import.Selector] = if (preR.continu) {
       val o2: Stmt.Import.Selector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Stmt.Import.Selector] = o2 match {
@@ -2094,7 +2073,7 @@ import MTransformer._
 
   def transformStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
     val preR: PreResult[Stmt.Import.NamedSelector] = pp.preStmtImportNamedSelector(o)
-    val r: MOption[Stmt.Import.NamedSelector] = if (preR.continue) {
+    val r: MOption[Stmt.Import.NamedSelector] = if (preR.continu) {
       val o2: Stmt.Import.NamedSelector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.from)
@@ -2122,7 +2101,7 @@ import MTransformer._
 
   def transformLClause(o: LClause): MOption[LClause] = {
     val preR: PreResult[LClause] = pp.preLClause(o)
-    val r: MOption[LClause] = if (preR.continue) {
+    val r: MOption[LClause] = if (preR.continu) {
       val o2: LClause = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[LClause] = o2 match {
@@ -2179,7 +2158,7 @@ import MTransformer._
 
   def transformLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
     val preR: PreResult[LClause.Fact] = pp.preLClauseFact(o)
-    val r: MOption[LClause.Fact] = if (preR.continue) {
+    val r: MOption[LClause.Fact] = if (preR.continu) {
       val o2: LClause.Fact = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2207,7 +2186,7 @@ import MTransformer._
 
   def transformLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
     val preR: PreResult[LClause.Theorem] = pp.preLClauseTheorem(o)
-    val r: MOption[LClause.Theorem] = if (preR.continue) {
+    val r: MOption[LClause.Theorem] = if (preR.continu) {
       val o2: LClause.Theorem = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2235,7 +2214,7 @@ import MTransformer._
 
   def transformContractExp(o: ContractExp): MOption[ContractExp] = {
     val preR: PreResult[ContractExp] = pp.preContractExp(o)
-    val r: MOption[ContractExp] = if (preR.continue) {
+    val r: MOption[ContractExp] = if (preR.continu) {
       val o2: ContractExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId)
@@ -2263,7 +2242,7 @@ import MTransformer._
 
   def transformCase(o: Case): MOption[Case] = {
     val preR: PreResult[Case] = pp.preCase(o)
-    val r: MOption[Case] = if (preR.continue) {
+    val r: MOption[Case] = if (preR.continu) {
       val o2: Case = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Pattern] = transformPattern(o2.pattern)
@@ -2292,7 +2271,7 @@ import MTransformer._
 
   def transformEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
     val preR: PreResult[EnumGen.Range] = pp.preEnumGenRange(o)
-    val r: MOption[EnumGen.Range] = if (preR.continue) {
+    val r: MOption[EnumGen.Range] = if (preR.continu) {
       val o2: EnumGen.Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[EnumGen.Range] = o2 match {
@@ -2337,7 +2316,7 @@ import MTransformer._
 
   def transformEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
     val preR: PreResult[EnumGen.For] = pp.preEnumGenFor(o)
-    val r: MOption[EnumGen.For] = if (preR.continue) {
+    val r: MOption[EnumGen.For] = if (preR.continu) {
       val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2366,7 +2345,7 @@ import MTransformer._
 
   def transformType(o: Type): MOption[Type] = {
     val preR: PreResult[Type] = pp.preType(o)
-    val r: MOption[Type] = if (preR.continue) {
+    val r: MOption[Type] = if (preR.continu) {
       val o2: Type = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Type] = o2 match {
@@ -2414,7 +2393,7 @@ import MTransformer._
 
   def transformPattern(o: Pattern): MOption[Pattern] = {
     val preR: PreResult[Pattern] = pp.prePattern(o)
-    val r: MOption[Pattern] = if (preR.continue) {
+    val r: MOption[Pattern] = if (preR.continu) {
       val o2: Pattern = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Pattern] = o2 match {
@@ -2477,7 +2456,7 @@ import MTransformer._
 
   def transformExp(o: Exp): MOption[Exp] = {
     val preR: PreResult[Exp] = pp.preExp(o)
-    val r: MOption[Exp] = if (preR.continue) {
+    val r: MOption[Exp] = if (preR.continu) {
       val o2: Exp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Exp] = o2 match {
@@ -2669,7 +2648,7 @@ import MTransformer._
 
   def transformLit(o: Lit): MOption[Lit] = {
     val preR: PreResult[Lit] = pp.preLit(o)
-    val r: MOption[Lit] = if (preR.continue) {
+    val r: MOption[Lit] = if (preR.continu) {
       val o2: Lit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Lit] = o2 match {
@@ -2743,7 +2722,7 @@ import MTransformer._
 
   def transformNamedArg(o: NamedArg): MOption[NamedArg] = {
     val preR: PreResult[NamedArg] = pp.preNamedArg(o)
-    val r: MOption[NamedArg] = if (preR.continue) {
+    val r: MOption[NamedArg] = if (preR.continu) {
       val o2: NamedArg = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2771,7 +2750,7 @@ import MTransformer._
 
   def transformVarFragment(o: VarFragment): MOption[VarFragment] = {
     val preR: PreResult[VarFragment] = pp.preVarFragment(o)
-    val r: MOption[VarFragment] = if (preR.continue) {
+    val r: MOption[VarFragment] = if (preR.continu) {
       val o2: VarFragment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Id]] = transformISZ(o2.ids, transformId)
@@ -2799,7 +2778,7 @@ import MTransformer._
 
   def transformDomain(o: Domain): MOption[Domain] = {
     val preR: PreResult[Domain] = pp.preDomain(o)
-    val r: MOption[Domain] = if (preR.continue) {
+    val r: MOption[Domain] = if (preR.continu) {
       val o2: Domain = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Domain] = o2 match {
@@ -2839,7 +2818,7 @@ import MTransformer._
 
   def transformId(o: Id): MOption[Id] = {
     val preR: PreResult[Id] = pp.preId(o)
-    val r: MOption[Id] = if (preR.continue) {
+    val r: MOption[Id] = if (preR.continu) {
       val o2: Id = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Attr] = transformAttr(o2.attr)
@@ -2866,7 +2845,7 @@ import MTransformer._
 
   def transformName(o: Name): MOption[Name] = {
     val preR: PreResult[Name] = pp.preName(o)
-    val r: MOption[Name] = if (preR.continue) {
+    val r: MOption[Name] = if (preR.continu) {
       val o2: Name = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Id]] = transformISZ(o2.ids, transformId)
@@ -2894,7 +2873,7 @@ import MTransformer._
 
   def transformBody(o: Body): MOption[Body] = {
     val preR: PreResult[Body] = pp.preBody(o)
-    val r: MOption[Body] = if (preR.continue) {
+    val r: MOption[Body] = if (preR.continu) {
       val o2: Body = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
@@ -2921,7 +2900,7 @@ import MTransformer._
 
   def transformAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
     val preR: PreResult[AbstractDatatypeParam] = pp.preAbstractDatatypeParam(o)
-    val r: MOption[AbstractDatatypeParam] = if (preR.continue) {
+    val r: MOption[AbstractDatatypeParam] = if (preR.continu) {
       val o2: AbstractDatatypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2949,7 +2928,7 @@ import MTransformer._
 
   def transformMethodSig(o: MethodSig): MOption[MethodSig] = {
     val preR: PreResult[MethodSig] = pp.preMethodSig(o)
-    val r: MOption[MethodSig] = if (preR.continue) {
+    val r: MOption[MethodSig] = if (preR.continu) {
       val o2: MethodSig = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -2979,7 +2958,7 @@ import MTransformer._
 
   def transformParam(o: Param): MOption[Param] = {
     val preR: PreResult[Param] = pp.preParam(o)
-    val r: MOption[Param] = if (preR.continue) {
+    val r: MOption[Param] = if (preR.continu) {
       val o2: Param = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -3007,7 +2986,7 @@ import MTransformer._
 
   def transformTypeParam(o: TypeParam): MOption[TypeParam] = {
     val preR: PreResult[TypeParam] = pp.preTypeParam(o)
-    val r: MOption[TypeParam] = if (preR.continue) {
+    val r: MOption[TypeParam] = if (preR.continu) {
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -3034,7 +3013,7 @@ import MTransformer._
 
   def transformContract(o: Contract): MOption[Contract] = {
     val preR: PreResult[Contract] = pp.preContract(o)
-    val r: MOption[Contract] = if (preR.continue) {
+    val r: MOption[Contract] = if (preR.continu) {
       val o2: Contract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Exp]] = transformISZ(o2.reads, transformExp)
@@ -3065,7 +3044,7 @@ import MTransformer._
 
   def transformSubContract(o: SubContract): MOption[SubContract] = {
     val preR: PreResult[SubContract] = pp.preSubContract(o)
-    val r: MOption[SubContract] = if (preR.continue) {
+    val r: MOption[SubContract] = if (preR.continu) {
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -3094,7 +3073,7 @@ import MTransformer._
 
   def transformSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
     val preR: PreResult[SubContractParam] = pp.preSubContractParam(o)
-    val r: MOption[SubContractParam] = if (preR.continue) {
+    val r: MOption[SubContractParam] = if (preR.continu) {
       val o2: SubContractParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
@@ -3121,7 +3100,7 @@ import MTransformer._
 
   def transformWhereDef(o: WhereDef): MOption[WhereDef] = {
     val preR: PreResult[WhereDef] = pp.preWhereDef(o)
-    val r: MOption[WhereDef] = if (preR.continue) {
+    val r: MOption[WhereDef] = if (preR.continu) {
       val o2: WhereDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[WhereDef] = o2 match {
@@ -3163,7 +3142,7 @@ import MTransformer._
 
   def transformSpecDef(o: SpecDef): MOption[SpecDef] = {
     val preR: PreResult[SpecDef] = pp.preSpecDef(o)
-    val r: MOption[SpecDef] = if (preR.continue) {
+    val r: MOption[SpecDef] = if (preR.continu) {
       val o2: SpecDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId)
@@ -3193,7 +3172,7 @@ import MTransformer._
 
   def transformProofStep(o: ProofStep): MOption[ProofStep] = {
     val preR: PreResult[ProofStep] = pp.preProofStep(o)
-    val r: MOption[ProofStep] = if (preR.continue) {
+    val r: MOption[ProofStep] = if (preR.continu) {
       val o2: ProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[ProofStep] = o2 match {
@@ -3234,7 +3213,7 @@ import MTransformer._
 
   def transformAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
     val preR: PreResult[AssumeProofStep] = pp.preAssumeProofStep(o)
-    val r: MOption[AssumeProofStep] = if (preR.continue) {
+    val r: MOption[AssumeProofStep] = if (preR.continu) {
       val o2: AssumeProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[AssumeProofStep] = o2 match {
@@ -3281,7 +3260,7 @@ import MTransformer._
 
   def transformJust(o: Just): MOption[Just] = {
     val preR: PreResult[Just] = pp.preJust(o)
-    val r: MOption[Just] = if (preR.continue) {
+    val r: MOption[Just] = if (preR.continu) {
       val o2: Just = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Just] = o2 match {
@@ -3453,7 +3432,7 @@ import MTransformer._
 
   def transformTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
     val preR: PreResult[TruthTable.Row] = pp.preTruthTableRow(o)
-    val r: MOption[TruthTable.Row] = if (preR.continue) {
+    val r: MOption[TruthTable.Row] = if (preR.continu) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.assignment)
@@ -3482,7 +3461,7 @@ import MTransformer._
 
   def transformTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
     val preR: PreResult[TruthTable.Assignment] = pp.preTruthTableAssignment(o)
-    val r: MOption[TruthTable.Assignment] = if (preR.continue) {
+    val r: MOption[TruthTable.Assignment] = if (preR.continu) {
       val o2: TruthTable.Assignment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Exp.LitB]] = transformISZ(o2.values, transformExpLitB)
@@ -3510,7 +3489,7 @@ import MTransformer._
 
   def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
     val preR: PreResult[TruthTable.Conclusion] = pp.preTruthTableConclusion(o)
-    val r: MOption[TruthTable.Conclusion] = if (preR.continue) {
+    val r: MOption[TruthTable.Conclusion] = if (preR.continu) {
       val o2: TruthTable.Conclusion = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[TruthTable.Conclusion] = o2 match {
@@ -3562,7 +3541,7 @@ import MTransformer._
 
   def transformTyped(o: Typed): MOption[Typed] = {
     val preR: PreResult[Typed] = pp.preTyped(o)
-    val r: MOption[Typed] = if (preR.continue) {
+    val r: MOption[Typed] = if (preR.continu) {
       val o2: Typed = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val rOpt: MOption[Typed] = o2 match {
@@ -3609,7 +3588,7 @@ import MTransformer._
 
   def transformAttr(o: Attr): MOption[Attr] = {
     val preR: PreResult[Attr] = pp.preAttr(o)
-    val r: MOption[Attr] = if (preR.continue) {
+    val r: MOption[Attr] = if (preR.continu) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
@@ -3636,7 +3615,7 @@ import MTransformer._
 
   def transformTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
     val preR: PreResult[TypedAttr] = pp.preTypedAttr(o)
-    val r: MOption[TypedAttr] = if (preR.continue) {
+    val r: MOption[TypedAttr] = if (preR.continu) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
@@ -3664,7 +3643,7 @@ import MTransformer._
 
   def transformResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
     val preR: PreResult[ResolvedAttr] = pp.preResolvedAttr(o)
-    val r: MOption[ResolvedAttr] = if (preR.continue) {
+    val r: MOption[ResolvedAttr] = if (preR.continu) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
@@ -3693,7 +3672,7 @@ import MTransformer._
 
   def transformResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
     val preR: PreResult[ResolvedInfo] = pp.preResolvedInfo(o)
-    val r: MOption[ResolvedInfo] = if (preR.continue) {
+    val r: MOption[ResolvedInfo] = if (preR.continu) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       if (hasChanged)
@@ -3719,7 +3698,7 @@ import MTransformer._
 
   def transformPosInfo(o: PosInfo): MOption[PosInfo] = {
     val preR: PreResult[PosInfo] = pp.prePosInfo(o)
-    val r: MOption[PosInfo] = if (preR.continue) {
+    val r: MOption[PosInfo] = if (preR.continu) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       if (hasChanged)
@@ -3745,10 +3724,10 @@ import MTransformer._
 
   def transformLClauseProof(o: LClause.Proof): MOption[LClause.Proof] = {
     val preR: PreResult[LClause.Proof] = pp.preLClauseProof(o) match {
-     case PreResult(continue, MSome(r: LClause.Proof)) => PreResult(continue, MSome[LClause.Proof](r))
+     case PreResult(continu, MSome(r: LClause.Proof)) => PreResult(continu, MSome[LClause.Proof](r))
      case _ => halt("Can only produce object of type LClause.Proof")
     }
-    val r: MOption[LClause.Proof] = if (preR.continue) {
+    val r: MOption[LClause.Proof] = if (preR.continu) {
       val o2: LClause.Proof = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, ProofStep]] = transformISZ(o2.steps, transformProofStep)
@@ -3778,10 +3757,10 @@ import MTransformer._
 
   def transformLClauseSequent(o: LClause.Sequent): MOption[LClause.Sequent] = {
     val preR: PreResult[LClause.Sequent] = pp.preLClauseSequent(o) match {
-     case PreResult(continue, MSome(r: LClause.Sequent)) => PreResult(continue, MSome[LClause.Sequent](r))
+     case PreResult(continu, MSome(r: LClause.Sequent)) => PreResult(continu, MSome[LClause.Sequent](r))
      case _ => halt("Can only produce object of type LClause.Sequent")
     }
-    val r: MOption[LClause.Sequent] = if (preR.continue) {
+    val r: MOption[LClause.Sequent] = if (preR.continu) {
       val o2: LClause.Sequent = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[IS[Z, Exp]] = transformISZ(o2.premises, transformExp)
@@ -3813,10 +3792,10 @@ import MTransformer._
 
   def transformTypeNamed(o: Type.Named): MOption[Type.Named] = {
     val preR: PreResult[Type.Named] = pp.preTypeNamed(o) match {
-     case PreResult(continue, MSome(r: Type.Named)) => PreResult(continue, MSome[Type.Named](r))
+     case PreResult(continu, MSome(r: Type.Named)) => PreResult(continu, MSome[Type.Named](r))
      case _ => halt("Can only produce object of type Type.Named")
     }
-    val r: MOption[Type.Named] = if (preR.continue) {
+    val r: MOption[Type.Named] = if (preR.continu) {
       val o2: Type.Named = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Name] = transformName(o2.name)
@@ -3848,10 +3827,10 @@ import MTransformer._
 
   def transformExpLitString(o: Exp.LitString): MOption[Exp.LitString] = {
     val preR: PreResult[Exp.LitString] = pp.preExpLitString(o) match {
-     case PreResult(continue, MSome(r: Exp.LitString)) => PreResult(continue, MSome[Exp.LitString](r))
+     case PreResult(continu, MSome(r: Exp.LitString)) => PreResult(continu, MSome[Exp.LitString](r))
      case _ => halt("Can only produce object of type Exp.LitString")
     }
-    val r: MOption[Exp.LitString] = if (preR.continue) {
+    val r: MOption[Exp.LitString] = if (preR.continu) {
       val o2: Exp.LitString = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Attr] = transformAttr(o2.attr)
@@ -3881,10 +3860,10 @@ import MTransformer._
 
   def transformExpLitZ(o: Exp.LitZ): MOption[Exp.LitZ] = {
     val preR: PreResult[Exp.LitZ] = pp.preExpLitZ(o) match {
-     case PreResult(continue, MSome(r: Exp.LitZ)) => PreResult(continue, MSome[Exp.LitZ](r))
+     case PreResult(continu, MSome(r: Exp.LitZ)) => PreResult(continu, MSome[Exp.LitZ](r))
      case _ => halt("Can only produce object of type Exp.LitZ")
     }
-    val r: MOption[Exp.LitZ] = if (preR.continue) {
+    val r: MOption[Exp.LitZ] = if (preR.continu) {
       val o2: Exp.LitZ = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Attr] = transformAttr(o2.attr)
@@ -3914,10 +3893,10 @@ import MTransformer._
 
   def transformExpLitB(o: Exp.LitB): MOption[Exp.LitB] = {
     val preR: PreResult[Exp.LitB] = pp.preExpLitB(o) match {
-     case PreResult(continue, MSome(r: Exp.LitB)) => PreResult(continue, MSome[Exp.LitB](r))
+     case PreResult(continu, MSome(r: Exp.LitB)) => PreResult(continu, MSome[Exp.LitB](r))
      case _ => halt("Can only produce object of type Exp.LitB")
     }
-    val r: MOption[Exp.LitB] = if (preR.continue) {
+    val r: MOption[Exp.LitB] = if (preR.continu) {
       val o2: Exp.LitB = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Attr] = transformAttr(o2.attr)

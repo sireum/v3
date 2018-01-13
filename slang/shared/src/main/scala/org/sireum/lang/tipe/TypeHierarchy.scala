@@ -85,9 +85,6 @@ object TypeHierarchy {
       case info: TypeInfo.AbstractDatatype =>
         val args = info.ast.typeParams.map(typedParam)
         return AST.Typed.Name(info.name, args, info.posOpt)
-      case info: TypeInfo.Rich =>
-        val args = info.ast.typeParams.map(typedParam)
-        return AST.Typed.Name(info.name, args, info.posOpt)
       case info: TypeInfo.TypeAlias =>
         val args = info.ast.typeParams.map(typedParam)
         return AST.Typed.Name(info.name, args, info.posOpt)
@@ -149,7 +146,7 @@ object TypeHierarchy {
       }
       return r
     }
-    val zName = ISZ("org", "sireum", "Z")
+    val zName: QName = ISZ("org", "sireum", "Z")
     var r = init
     def resolveAlias(info: TypeInfo.TypeAlias, seen: HashSet[QName]): AST.Typed = {
       if (seen.contains(info.name)) {
@@ -193,11 +190,6 @@ object TypeHierarchy {
           val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
           up(r.poset) = r.poset.addParents(typed, parents)
         case info: TypeInfo.AbstractDatatype =>
-          val typed = typedInfo(info)
-          val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
-          up(r.poset) = r.poset.addParents(typed, parents)
-        case info: TypeInfo.Rich =>
           val typed = typedInfo(info)
           val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
           val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)

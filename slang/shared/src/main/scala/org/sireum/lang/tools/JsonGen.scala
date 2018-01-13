@@ -28,7 +28,6 @@ package org.sireum.lang.tools
 
 import org.sireum._
 import org.sireum.ops._
-import org.sireum.ops.ISZOps._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
@@ -114,7 +113,7 @@ object JsonGen {
     @pure def to(name: ST, tpe: ST): ST = {
       return st"""def to$name(s: String): $tpe = {
                  |  def f$name(parser: Parser): $tpe = {
-                 |    var r = parser.parse$name()
+                 |    val r = parser.parse$name()
                  |    return r
                  |  }
                  |  val r = to(s, f$name)
@@ -196,7 +195,7 @@ object JsonGen {
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
       return st"""def parse$name(): $tpe = {
                  |  val t = parser.parseObjectTypes(ISZ("${(childrenTpes, "\", \"")}"))
-                 |  t match {
+                 |  t.native match {
                  |    ${(parseRootCases, "\n")}
                  |    case _ => halt(parser.errorMessage)
                  |  }
@@ -250,7 +249,7 @@ object JsonGen {
                  |  parser.parseObjectKey("value")
                  |  val s = parser.parseString()
                  |  parser.parseObjectNext()
-                 |  s match {
+                 |  s.native match {
                  |    ${(parseEnumCases, "\n")}
                  |    case _ => halt(parser.errorMessage)
                  |  }
@@ -367,7 +366,7 @@ object JsonGen {
             case _ =>
           }
         }
-        ISOps(r).sortWith(ltTypeInfo)
+        ISZOps(r).sortWith(ltTypeInfo)
       }
       for (child <- sortedDescendants) {
         child match {
@@ -487,7 +486,7 @@ object JsonGen {
         return None()
       }
       val name = tipe.name.ids(0).value
-      name match {
+      name.native match {
         case "Either" =>
           val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
           val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
@@ -504,7 +503,7 @@ object JsonGen {
         return None()
       }
       val name = tipe.name.ids(0).value
-      name match {
+      name.native match {
         case "Option" =>
           val btn = basicOrTypeName(ti, tipe.typeArgs(0))
           return Some((T, btn))
@@ -530,7 +529,7 @@ object JsonGen {
         }
       }
       val btn = basicOrTypeName(ti, tipe.typeArgs(0))
-      name match {
+      name.native match {
         case "ISZ" => return Some((T, "Z", btn))
         case "MSZ" => return Some((F, "Z", btn))
         case _ => return None()
@@ -564,7 +563,7 @@ object JsonGen {
             return None()
           }
           val r = tipe.name.ids(0).value
-          r match {
+          r.native match {
             case "B" =>
             case "C" =>
             case "Z" =>

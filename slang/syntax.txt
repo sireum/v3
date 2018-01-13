@@ -37,7 +37,6 @@
                      |  <sig-decl>
                      |  <datatype-decl>
                      |  <record-decl>
-                     |  <rich-decl>
                      |  <type-decl>
 
 <val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <assign-exp>
@@ -72,17 +71,14 @@
 <object-decl>      ::=  object <ID> <extends>? { <stmt>* }
                      |  @ext object <ID> { <stmt>* }
 
-<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
-                     |  @msig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
+<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { ⸨ _ : <type> => ⸩? <stmt>* }
+                     |  @msig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { ⸨ _ : <type> => ⸩? <stmt>* }
 
 <datatype-decl>    ::=  @datatype trait <ID> <type-params>? <extends>? { <stmt>* }
                      |  @datatype class <ID> <type-params>? <datatype-params>? <extends>? { <stmt>* }
 
 <record-decl>      ::=  @record trait <ID> <type-params>? <extends>? { <stmt>* }
                      |  @record class <ID> <type-params>? <record-params>? <extends>? { <stmt>* }
-
-<rich-decl>        ::=  @rich trait <ID> <type-params> { <stmt>* }
-                     |  @rich class <ID> <type-params>? <params>? <extends>? { <stmt>* }
 
 <type-decl>        ::=  type <ID> <type-params>? = <type>
 
@@ -135,7 +131,7 @@
 
 <datatype-params>  ::=  ( ⸨ <datatype-param> ⸨ , <datatype-param> ⸩* ⸩? )
 
-<datatype-param>   ::=  <adt-param-mod>? <ID> : <type>
+<datatype-param>   ::=  <adt-param-mod>? ⸨ val ⸩? <ID> : <type>
 
 <adt-param-mod>    ::=  @pure ⸨ @hidden ⸩?
                      |  @hidden ⸨ @pure ⸩?
@@ -143,6 +139,7 @@
 <record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
 <record-param>     ::=  <adt-param-mod>* ⸨ var ⸩?  <ID> : <type>
+                     |  <adt-param-mod>* val  <ID> : <type>
 
 <assign-stmt>      ::=  <lhs> = <assign-exp>
                      |  up ( <lhs> ) = <assign-exp>

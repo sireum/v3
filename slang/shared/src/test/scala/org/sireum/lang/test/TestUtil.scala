@@ -39,11 +39,11 @@ object TestUtil {
       //println(fparser(parser)
     } catch {
       case e: TokenizeException =>
-        Console.err.println(s"[${e.pos.start.line}, ${e.pos.end.line}] ${e.getMessage}")
+        Console.err.println(s"[${e.pos.startLine}, ${e.pos.endLine}] ${e.getMessage}")
         e.printStackTrace()
         false
       case e: ParseException =>
-        Console.err.println(s"[${e.pos.start.line}, ${e.pos.end.line}] ${e.getMessage}")
+        Console.err.println(s"[${e.pos.startLine}, ${e.pos.endLine}] ${e.getMessage}")
         e.printStackTrace()
         false
     }
