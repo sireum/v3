@@ -306,7 +306,7 @@ class SlangParser(text: Predef.String,
       case stat: Defn.Type => translateTypeAlias(enclosing, stat)
       case stat: Term.Assign =>
         stat.lhs match {
-          case q"$fun(...$argss)" if argss.nonEmpty => translateAssign(enclosing, fun, argss, stat.rhs, stat)
+          case q"$fun(...${argss: List[List[Term]]})" if argss.nonEmpty => translateAssign(enclosing, fun, argss, stat.rhs, stat)
           case _ => translateAssign(enclosing, stat)
         }
       case stat: Term.Block => translateBlock(enclosing, stat, isAssignExp = false)
@@ -1278,7 +1278,7 @@ class SlangParser(text: Predef.String,
 
   def translatePattern(pat: Term): AST.Pattern = {
     pat match {
-      case q"$expr(...$aexprssnel)" =>
+      case q"$expr(...${aexprssnel: List[List[Term]]})" =>
         if (aexprssnel.size == 1) {
           val args = aexprssnel.head
           expr match {
@@ -1302,10 +1302,10 @@ class SlangParser(text: Predef.String,
   }
 
   def translateTypeParam(tp: Type.Param): AST.TypeParam = tp match {
-    case tparam"..$mods $tparamname[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
+    case tparam"..$mods $_[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
         errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' is")
-      AST.TypeParam(cid(tparamname))
+      AST.TypeParam(cid(tp.name))
   }
 
   def translateParam(isMemoize: Boolean)(tp: Term.Param): AST.Param = {
@@ -1365,7 +1365,10 @@ class SlangParser(text: Predef.String,
   }
 
   def translateAbstractDatatypeParam(isDatatype: Boolean)(tp: Term.Param): AST.AbstractDatatypeParam = {
-    val param"..$mods $paramname: ${atpeopt: scala.Option[Type]} = ${expropt: scala.Option[Term]}" = tp
+    val mods = tp.mods
+    val paramname = tp.name
+    val atpeopt = tp.decltpe
+    val expropt = tp.default
     var hasError = false
     var hasHidden = false
     var hasPure = false
@@ -1693,7 +1696,7 @@ class SlangParser(text: Predef.String,
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
-      case q"L$$Quant(..$args)" =>
+      case q"L$$Quant(..${args: List[Term]})" =>
         val es = args
         es match {
           case Seq(b: Lit.Boolean, q"$ids: $t", e) =>
@@ -1714,13 +1717,13 @@ class SlangParser(text: Predef.String,
                 Some(AST.Domain.Range(translateExp(lo), loExact.value, translateExp(hi), hiExact.value, typedAttr(tt.pos))))),
               translateExp(e), attr(exp.pos))
         }
-      case q"$expr.$name[..$tpes](...$aexprssnel)" if tpes.nonEmpty =>
+      case q"$expr.$name[..$tpes](...${aexprssnel: List[List[Term]]})" if tpes.nonEmpty =>
         translateInvoke(scala.Some(expr), cid(name), name.pos, tpes, aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
-      case q"$expr.$name(...$aexprssnel)" =>
+      case q"$expr.$name(...${aexprssnel: List[List[Term]]})" =>
         translateInvoke(scala.Some(expr), cid(name), name.pos, List(), aexprssnel, Position.Range(expr.pos.input, name.pos.start, exp.pos.end))
-      case q"${name: Term.Name}[..$tpes](...$aexprssnel)" => translateInvoke(scala.None, cid(name), name.pos, tpes, aexprssnel, exp.pos)
-      case q"${name: Term.Name}(...$aexprssnel)" => translateInvoke(scala.None, cid(name), name.pos, List(), aexprssnel, exp.pos)
-      case q"${fun@q"this"}(...$aexprssnel)" => translateInvoke(scala.None, cidNoCheck("this", fun.pos), fun.pos, List(), aexprssnel, exp.pos)
+      case q"${name: Term.Name}[..$tpes](...${aexprssnel: List[List[Term]]})" => translateInvoke(scala.None, cid(name), name.pos, tpes, aexprssnel, exp.pos)
+      case q"${name: Term.Name}(...${aexprssnel: List[List[Term]]})" => translateInvoke(scala.None, cid(name), name.pos, List(), aexprssnel, exp.pos)
+      case q"${fun@q"this"}(...${aexprssnel: List[List[Term]]})" => translateInvoke(scala.None, cidNoCheck("this", fun.pos), fun.pos, List(), aexprssnel, exp.pos)
       case q"$expr.$name[..$tpes]" if tpes.nonEmpty =>
         translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
