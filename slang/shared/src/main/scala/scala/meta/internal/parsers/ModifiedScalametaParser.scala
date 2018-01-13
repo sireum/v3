@@ -40,23 +40,17 @@ import scala.meta.{Dialect, Term}
 class ModifiedScalametaParser(input: Input, dialect: Dialect)
   extends ScalametaParser(input: Input, dialect: Dialect) {
 
-  def isInfixOp(): Boolean = token.is[Ident]
+  def isInfixOp: Boolean = token.is[Ident]
 
-  /** {{{
-   *  PostfixExpr   ::= InfixExpr [Id [nl]]
-   *  InfixExpr     ::= PrefixExpr
-   *                  | InfixExpr Id [nl] InfixExpr
-   *  }}}
-   */
-  override def postfixExpr(): Term = {
-    val ctx = termInfixContext
+  override def postfixExpr(allowRepeated: Boolean): Term = {
+    val ctx  = termInfixContext
     val base = ctx.stack
 
     // Skip to later in the `postfixExpr` method to start mental debugging.
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
-      if (!isInfixOp() && !token.is[Unquote]) { // MODIFIED: token.is[Ident] ==> isInfixOp()
+      if (!isInfixOp && !token.is[Unquote]) { // MODIFIED: token.is[Ident] => isInfixOp
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
@@ -95,10 +89,7 @@ class ModifiedScalametaParser(input: Input, dialect: Dialect)
           // TODO: The two type conversions that I have to do here are unfortunate,
           // but I don't have time to figure our an elegant way of approaching this
           val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
-          val finQual = lhsQual match {
-            case List(finQual) => finQual;
-            case _ => unreachable(debug(lhsQual))
-          }
+          val finQual = lhsQual match { case List(finQual) => finQual; case _ => unreachable(debug(lhsQual)) }
           if (targs.nonEmpty) reporter.syntaxError("type application is not allowed for postfix operators", at = token)
           ctx.toRhs(atPos(finQual, op)(Term.Select(finQual, op)))
         }
@@ -107,7 +98,7 @@ class ModifiedScalametaParser(input: Input, dialect: Dialect)
 
     // Start the infix chain.
     // We'll use `a + b` as our running example.
-    val rhs0 = ctx.toRhs(prefixExpr())
+    val rhs0 = ctx.toRhs(prefixExpr(allowRepeated))
 
     // Iteratively read the infix chain via `loop`.
     // rhs0 is now [a]
@@ -123,9 +114,7 @@ class ModifiedScalametaParser(input: Input, dialect: Dialect)
 
     // This is something not captured by the type system.
     // When applied to a result of `loop`, `reduceStack` will produce a singleton list.
-    lhsResult match {
-      case List(finResult) => finResult;
-      case _ => unreachable(debug(lhsResult))
-    }
+    lhsResult match { case List(finResult) => finResult; case _ => unreachable(debug(lhsResult)) }
   }
+
 }

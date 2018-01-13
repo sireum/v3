@@ -97,7 +97,7 @@ final class LParser(input: Input,
 
     def argType(): Type = typ()
 
-    def functionArgType(): Type.Arg = paramType()
+    def functionArgType(): Type = paramType()
   }
 
   class LimitingTokenIterator(var i: Int, val end: Int) extends TokenIterator {
@@ -170,9 +170,9 @@ final class LParser(input: Input,
         val t1 = token
         isIdentOf("_") && ahead {
           val t2 = token
-          isIdentOf("|") && t2.pos.start.offset == t1.pos.start.offset + 1 && aheadNF {
+          isIdentOf("|") && t2.pos.start == t1.pos.start + 1 && aheadNF {
             val t3 = token
-            isIdentOf("_") && t3.pos.start.offset == t2.pos.start.offset + 1 &&
+            isIdentOf("_") && t3.pos.start == t2.pos.start + 1 &&
               aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))
           }
         }
@@ -255,7 +255,7 @@ final class LParser(input: Input,
     AST.Exp.LitZ(Z(t.value.toInt), sparser.attr(t.pos))
   }
 
-  override def isInfixOp(): Boolean = token match {
+  override def isInfixOp: Boolean = token match {
     case Ident(value) if value.forall(Character.isJavaIdentifierPart) || value == "∀" || value == "∃" => false
     case Ident(_) => true
     case _ => false
@@ -266,9 +266,9 @@ final class LParser(input: Input,
    *                    |  ... super.simpleExpr()
    *  }}}
    */
-  override def simpleExpr(): Term = token match {
+  override def simpleExpr(allowRepeated: Boolean): Term = token match {
     case Ident(value) if quantTokens.contains(value) => quantExpr()
-    case _ => super.simpleExpr()
+    case _ => super.simpleExpr(allowRepeated)
   }
 
   /** {{{
@@ -510,11 +510,11 @@ final class LParser(input: Input,
       next()
       val pOpt: SOption[AST.Pattern] = if (token.is[KwCase]) {
         next()
-        SSome(sparser.translatePatternArg(pattern()))
+        SSome(sparser.translatePattern(pattern()))
       } else SNone()
       val gOpt: SOption[AST.Exp] = if (token.is[KwIf]) {
         next()
-        SSome(sparser.translateExp(postfixExpr()))
+        SSome(sparser.translateExp(postfixExpr(allowRepeated = false)))
       } else SNone()
       (F, pOpt, gOpt)
     } else if (isIdentOf("otherwise")) (T, SNone[AST.Pattern](), SNone[AST.Exp]())
@@ -772,11 +772,12 @@ final class LParser(input: Input,
    */
   private def proof(): AST.LClause.Proof = {
     def just(kind: String, offset: Int): AST.Just = {
+      val input = token.pos.input
       val startPoint = token.pos.start
       (0 until offset - 1).foreach(_ => next())
       val endPoint = token.pos.end
       next()
-      val attr = sparser.attr(Position.Range(Input.Slice(input, startPoint.offset, endPoint.offset), startPoint, endPoint))
+      val attr = sparser.attr(Position.Range(input, startPoint, endPoint))
       kind match {
         case "premise" => AST.Just.Premise(attr)
         case "∧i" =>
@@ -1059,7 +1060,7 @@ final class LParser(input: Input,
 
       def blit(): List[AST.Exp.LitB] = {
         val token = acceptToken[Ident]
-        val offset = token.pos.start.offset
+        val offset = token.pos.start
         val value = token.value
         (for (j <- 0 until value.length) yield {
           AST.Exp.LitB(value.charAt(j) == 'T',

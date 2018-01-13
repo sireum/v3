@@ -34,7 +34,7 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.4"
 
-val metaVersion = "1.8.0"
+val metaVersion = "2.1.5"
 
 val scalaTestVersion = "3.0.1"
 
@@ -104,7 +104,9 @@ lazy val sireumSettings = Seq(
   Test / logBuffered := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  resolvers += Resolver.sonatypeRepo("public")
+  resolvers += Resolver.sonatypeRepo("public"),
+  dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatest"),
+  dependencyUpdatesFilter -= moduleFilter(organization = "org.eclipse.jetty")
 )
 
 lazy val sireumSharedSettings = sireumSettings ++ Seq(
