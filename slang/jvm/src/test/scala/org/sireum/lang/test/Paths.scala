@@ -38,4 +38,5 @@ object Paths {
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
   val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
   val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
+  val slangMsgPackPath = new File(slangPackagePath, "ast/MsgPack.scala")
 }

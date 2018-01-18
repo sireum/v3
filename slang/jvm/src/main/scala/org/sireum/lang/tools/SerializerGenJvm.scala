@@ -33,10 +33,11 @@ import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{FileUtil, Reporter}
 import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
-object JsonGenJvm {
+object SerializerGenJvm {
   val messageKind = "JsonGen"
 
   def apply(allowSireumPackage: Boolean,
+            mode: SerializerGen.Mode.Type,
             licenseOpt: Option[File],
             src: File,
             dest: File,
@@ -54,7 +55,7 @@ object JsonGenJvm {
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
-        Some(JsonGen.Gen(gdr.globalNameMap, gdr.globalTypeMap,
+        Some(SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
           Util.ids2strings(p.packageName.ids), reporter).gen(lOpt, fOpt, nameOpt).
           render.value)
       case _ =>

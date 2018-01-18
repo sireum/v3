@@ -30,32 +30,41 @@ import java.io.File
 import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.{None => SNone}
 import org.sireum.lang.test.Paths._
-import org.sireum.lang.tools.JsonGenJvm
+import org.sireum.lang.tools.{SerializerGen, SerializerGenJvm}
 import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
 import org.sireum.test.SireumSpec
 
-class JsonGenJvmTest extends SireumSpec {
+class SerializerGenJvmTest extends SireumSpec {
 
-  *(gen(slangAstPath, slangJSONPath))
+  *(gen(slangAstPath, slangJSONPath, SerializerGen.Mode.JSON))
 
-  def gen(src: File, dest: File): Boolean = {
+  *(gen(slangAstPath, slangMsgPackPath, SerializerGen.Mode.MessagePack))
+
+  def gen(src: File, dest: File, mode: SerializerGen.Mode.Type): Boolean = {
     val reporter = AccumulatingReporter.create
-    val rOpt = JsonGenJvm(allowSireumPackage = true,
+    val rOpt = SerializerGenJvm(allowSireumPackage = true, mode,
       Some(licensePath), src, dest, SNone(), reporter)
     reporter.printMessages()
     rOpt match {
       case Some(r) =>
-        val expected = FileUtil.readFile(dest)
-        val result = r
-        if (result != expected) {
-          val dmp = new DiffMatchPatch()
-          Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
-          Console.err.flush()
-          //FileUtil.writeFile(dest, r)
-          //Console.err.println(r)
-          //Console.err.flush()
-          false
-        } else !reporter.hasIssue
+        scala.util.Try(FileUtil.readFile(dest)) match {
+          case scala.util.Success(expected) =>
+            val result = r
+            if (result != expected) {
+              val dmp = new DiffMatchPatch()
+              Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
+              Console.err.flush()
+              //FileUtil.writeFile(dest, r)
+              //Console.err.println(r)
+              //Console.err.flush()
+              false
+            } else !reporter.hasIssue
+          case _ =>
+            FileUtil.writeFile(dest, r)
+            Console.err.println(r)
+            Console.err.flush()
+            false
+        }
       case _ => false
     }
   }
