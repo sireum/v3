@@ -299,8 +299,10 @@ class SlangFrontEndTest extends SireumSpec {
             passingRc(child)
           }
         case child: Trie.Leaf[String, String] =>
+          val notJs = !org.sireum.helper.isJs
           registerTest(childKey, ts: _*)(assert(
-            passingCheck(child.data, addImport = false, isPrelude = true, checkJson = false)))(pos)
+            passingCheck(child.data, addImport = false, isPrelude = true,
+              checkJson = notJs, checkMsgPack = notJs)))(pos)
       }
     case _ =>
   }
