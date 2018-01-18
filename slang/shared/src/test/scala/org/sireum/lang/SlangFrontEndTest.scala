@@ -309,7 +309,8 @@ class SlangFrontEndTest extends SireumSpec {
                    addImport: Boolean = true,
                    isWorksheet: Boolean = false,
                    isPrelude: Boolean = false,
-                   checkJson: Boolean = true): Boolean = {
+                   checkJson: Boolean = true,
+                   checkMsgPack: Boolean = true): Boolean = {
     val reporter = AccumulatingReporter.create
     val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
       isWorksheet, isPrelude, reporter)
@@ -330,6 +331,10 @@ class SlangFrontEndTest extends SireumSpec {
             val json = AST.JSON.fromTopUnit(p, true)
             //println(json)
             assert(AST.JSON.toTopUnit(json) == p)
+          }
+          if (checkMsgPack) {
+            val bin = AST.MsgPack.fromTopUnit(p)
+            assert(AST.MsgPack.toTopUnit(bin) == p)
           }
         case _ => b = false
       }
