@@ -34,6 +34,8 @@ import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
 class SlangFrontEndTest extends SireumSpec {
+  val notJs: Boolean = !org.sireum.$internal.Macro.isJs
+
   {
 
     implicit val _spec: SireumSpec = this
@@ -299,7 +301,6 @@ class SlangFrontEndTest extends SireumSpec {
             passingRc(child)
           }
         case child: Trie.Leaf[String, String] =>
-          val notJs = !org.sireum.helper.isJs
           registerTest(childKey, ts: _*)(assert(
             passingCheck(child.data, addImport = false, isPrelude = true,
               checkJson = notJs, checkMsgPack = notJs)))(pos)
