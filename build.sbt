@@ -40,7 +40,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.2.1"
+val sireumScalacVersion = "3.2.2"
 
 val fastParseVersion = "1.0.0"
 
