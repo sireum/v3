@@ -303,7 +303,7 @@ class SlangFrontEndTest extends SireumSpec {
         case child: Trie.Leaf[String, String] =>
           registerTest(childKey, ts: _*)(assert(
             passingCheck(child.data, addImport = false, isPrelude = true,
-              checkJson = notJs, checkMsgPack = notJs)))(pos)
+              checkJson = false, checkMsgPack = notJs)))(pos)
       }
     case _ =>
   }
@@ -330,11 +330,13 @@ class SlangFrontEndTest extends SireumSpec {
             report(r, reporter)
             b = false
           }
+
           if (checkJson) {
             val json = AST.JSON.fromTopUnit(p, true)
             //println(json)
             assert(AST.JSON.toTopUnit(json) == p)
           }
+
           if (checkMsgPack) {
             val bin = AST.MsgPack.fromTopUnit(p)
             assert(AST.MsgPack.toTopUnit(bin) == p)
