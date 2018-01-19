@@ -506,10 +506,6 @@ object SerializerGen {
                  |      return writer.result
                  |    }
                  |
-                 |    def resultBase64: String = {
-                 |      return writer.resultBase64
-                 |    }
-                 |
                  |  }
                  |
                  |  @record class Reader(reader: MessagePack.Reader) {
@@ -523,11 +519,6 @@ object SerializerGen {
                  |    return r
                  |  }
                  |
-                 |  def toBase64[T](s: String, f: Reader => T): T = {
-                 |    val r = f(Reader(MessagePack.readerBase64(s)))
-                 |    return r
-                 |  }
-                 |
                  |  ${(fromsTos, "\n\n")}
                  |
                  |}"""
@@ -538,12 +529,6 @@ object SerializerGen {
                  |  val w = Writer(MessagePack.writer)
                  |  w.write$name(o)
                  |  return w.result
-                 |}
-                 |
-                 |def from${name}Base64(o: $tpe): String = {
-                 |  val w = Writer(MessagePack.writer)
-                 |  w.write$name(o)
-                 |  return w.resultBase64
                  |}"""
     }
 
@@ -554,15 +539,6 @@ object SerializerGen {
                  |    return r
                  |  }
                  |  val r = to(data, f$name)
-                 |  return r
-                 |}
-                 |
-                 |def to${name}Base64(s: String): $tpe = {
-                 |  def f$name(reader: Reader): $tpe = {
-                 |    val r = reader.read$name()
-                 |    return r
-                 |  }
-                 |  val r = toBase64(s, f$name)
                  |  return r
                  |}"""
     }

@@ -1546,10 +1546,6 @@ object MsgPack {
       return writer.result
     }
 
-    def resultBase64: String = {
-      return writer.resultBase64
-    }
-
   }
 
   @record class Reader(reader: MessagePack.Reader) {
@@ -3804,21 +3800,10 @@ object MsgPack {
     return r
   }
 
-  def toBase64[T](s: String, f: Reader => T): T = {
-    val r = f(Reader(MessagePack.readerBase64(s)))
-    return r
-  }
-
   def fromTopUnit(o: TopUnit): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTopUnit(o)
     return w.result
-  }
-
-  def fromTopUnitBase64(o: TopUnit): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTopUnit(o)
-    return w.resultBase64
   }
 
   def toTopUnit(data: ISZ[U8]): TopUnit = {
@@ -3830,25 +3815,10 @@ object MsgPack {
     return r
   }
 
-  def toTopUnitBase64(s: String): TopUnit = {
-    def fTopUnit(reader: Reader): TopUnit = {
-      val r = reader.readTopUnit()
-      return r
-    }
-    val r = toBase64(s, fTopUnit)
-    return r
-  }
-
   def fromTopUnitProgram(o: TopUnit.Program): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTopUnitProgram(o)
     return w.result
-  }
-
-  def fromTopUnitProgramBase64(o: TopUnit.Program): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTopUnitProgram(o)
-    return w.resultBase64
   }
 
   def toTopUnitProgram(data: ISZ[U8]): TopUnit.Program = {
@@ -3860,25 +3830,10 @@ object MsgPack {
     return r
   }
 
-  def toTopUnitProgramBase64(s: String): TopUnit.Program = {
-    def fTopUnitProgram(reader: Reader): TopUnit.Program = {
-      val r = reader.readTopUnitProgram()
-      return r
-    }
-    val r = toBase64(s, fTopUnitProgram)
-    return r
-  }
-
   def fromTopUnitSequentUnit(o: TopUnit.SequentUnit): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTopUnitSequentUnit(o)
     return w.result
-  }
-
-  def fromTopUnitSequentUnitBase64(o: TopUnit.SequentUnit): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTopUnitSequentUnit(o)
-    return w.resultBase64
   }
 
   def toTopUnitSequentUnit(data: ISZ[U8]): TopUnit.SequentUnit = {
@@ -3890,25 +3845,10 @@ object MsgPack {
     return r
   }
 
-  def toTopUnitSequentUnitBase64(s: String): TopUnit.SequentUnit = {
-    def fTopUnitSequentUnit(reader: Reader): TopUnit.SequentUnit = {
-      val r = reader.readTopUnitSequentUnit()
-      return r
-    }
-    val r = toBase64(s, fTopUnitSequentUnit)
-    return r
-  }
-
   def fromTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTopUnitTruthTableUnit(o)
     return w.result
-  }
-
-  def fromTopUnitTruthTableUnitBase64(o: TopUnit.TruthTableUnit): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTopUnitTruthTableUnit(o)
-    return w.resultBase64
   }
 
   def toTopUnitTruthTableUnit(data: ISZ[U8]): TopUnit.TruthTableUnit = {
@@ -3920,25 +3860,10 @@ object MsgPack {
     return r
   }
 
-  def toTopUnitTruthTableUnitBase64(s: String): TopUnit.TruthTableUnit = {
-    def fTopUnitTruthTableUnit(reader: Reader): TopUnit.TruthTableUnit = {
-      val r = reader.readTopUnitTruthTableUnit()
-      return r
-    }
-    val r = toBase64(s, fTopUnitTruthTableUnit)
-    return r
-  }
-
   def fromStmt(o: Stmt): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmt(o)
     return w.result
-  }
-
-  def fromStmtBase64(o: Stmt): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmt(o)
-    return w.resultBase64
   }
 
   def toStmt(data: ISZ[U8]): Stmt = {
@@ -3950,25 +3875,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtBase64(s: String): Stmt = {
-    def fStmt(reader: Reader): Stmt = {
-      val r = reader.readStmt()
-      return r
-    }
-    val r = toBase64(s, fStmt)
-    return r
-  }
-
   def fromAssignExp(o: AssignExp): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAssignExp(o)
     return w.result
-  }
-
-  def fromAssignExpBase64(o: AssignExp): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAssignExp(o)
-    return w.resultBase64
   }
 
   def toAssignExp(data: ISZ[U8]): AssignExp = {
@@ -3980,25 +3890,10 @@ object MsgPack {
     return r
   }
 
-  def toAssignExpBase64(s: String): AssignExp = {
-    def fAssignExp(reader: Reader): AssignExp = {
-      val r = reader.readAssignExp()
-      return r
-    }
-    val r = toBase64(s, fAssignExp)
-    return r
-  }
-
   def fromStmtImport(o: Stmt.Import): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImport(o)
     return w.result
-  }
-
-  def fromStmtImportBase64(o: Stmt.Import): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImport(o)
-    return w.resultBase64
   }
 
   def toStmtImport(data: ISZ[U8]): Stmt.Import = {
@@ -4010,25 +3905,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportBase64(s: String): Stmt.Import = {
-    def fStmtImport(reader: Reader): Stmt.Import = {
-      val r = reader.readStmtImport()
-      return r
-    }
-    val r = toBase64(s, fStmtImport)
-    return r
-  }
-
   def fromStmtImportImporter(o: Stmt.Import.Importer): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImportImporter(o)
     return w.result
-  }
-
-  def fromStmtImportImporterBase64(o: Stmt.Import.Importer): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImportImporter(o)
-    return w.resultBase64
   }
 
   def toStmtImportImporter(data: ISZ[U8]): Stmt.Import.Importer = {
@@ -4040,25 +3920,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportImporterBase64(s: String): Stmt.Import.Importer = {
-    def fStmtImportImporter(reader: Reader): Stmt.Import.Importer = {
-      val r = reader.readStmtImportImporter()
-      return r
-    }
-    val r = toBase64(s, fStmtImportImporter)
-    return r
-  }
-
   def fromStmtImportSelector(o: Stmt.Import.Selector): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImportSelector(o)
     return w.result
-  }
-
-  def fromStmtImportSelectorBase64(o: Stmt.Import.Selector): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImportSelector(o)
-    return w.resultBase64
   }
 
   def toStmtImportSelector(data: ISZ[U8]): Stmt.Import.Selector = {
@@ -4070,25 +3935,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportSelectorBase64(s: String): Stmt.Import.Selector = {
-    def fStmtImportSelector(reader: Reader): Stmt.Import.Selector = {
-      val r = reader.readStmtImportSelector()
-      return r
-    }
-    val r = toBase64(s, fStmtImportSelector)
-    return r
-  }
-
   def fromStmtImportMultiSelector(o: Stmt.Import.MultiSelector): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImportMultiSelector(o)
     return w.result
-  }
-
-  def fromStmtImportMultiSelectorBase64(o: Stmt.Import.MultiSelector): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImportMultiSelector(o)
-    return w.resultBase64
   }
 
   def toStmtImportMultiSelector(data: ISZ[U8]): Stmt.Import.MultiSelector = {
@@ -4100,25 +3950,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportMultiSelectorBase64(s: String): Stmt.Import.MultiSelector = {
-    def fStmtImportMultiSelector(reader: Reader): Stmt.Import.MultiSelector = {
-      val r = reader.readStmtImportMultiSelector()
-      return r
-    }
-    val r = toBase64(s, fStmtImportMultiSelector)
-    return r
-  }
-
   def fromStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImportWildcardSelector(o)
     return w.result
-  }
-
-  def fromStmtImportWildcardSelectorBase64(o: Stmt.Import.WildcardSelector): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImportWildcardSelector(o)
-    return w.resultBase64
   }
 
   def toStmtImportWildcardSelector(data: ISZ[U8]): Stmt.Import.WildcardSelector = {
@@ -4130,25 +3965,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportWildcardSelectorBase64(s: String): Stmt.Import.WildcardSelector = {
-    def fStmtImportWildcardSelector(reader: Reader): Stmt.Import.WildcardSelector = {
-      val r = reader.readStmtImportWildcardSelector()
-      return r
-    }
-    val r = toBase64(s, fStmtImportWildcardSelector)
-    return r
-  }
-
   def fromStmtImportNamedSelector(o: Stmt.Import.NamedSelector): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtImportNamedSelector(o)
     return w.result
-  }
-
-  def fromStmtImportNamedSelectorBase64(o: Stmt.Import.NamedSelector): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtImportNamedSelector(o)
-    return w.resultBase64
   }
 
   def toStmtImportNamedSelector(data: ISZ[U8]): Stmt.Import.NamedSelector = {
@@ -4160,25 +3980,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtImportNamedSelectorBase64(s: String): Stmt.Import.NamedSelector = {
-    def fStmtImportNamedSelector(reader: Reader): Stmt.Import.NamedSelector = {
-      val r = reader.readStmtImportNamedSelector()
-      return r
-    }
-    val r = toBase64(s, fStmtImportNamedSelector)
-    return r
-  }
-
   def fromStmtVar(o: Stmt.Var): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtVar(o)
     return w.result
-  }
-
-  def fromStmtVarBase64(o: Stmt.Var): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtVar(o)
-    return w.resultBase64
   }
 
   def toStmtVar(data: ISZ[U8]): Stmt.Var = {
@@ -4190,25 +3995,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtVarBase64(s: String): Stmt.Var = {
-    def fStmtVar(reader: Reader): Stmt.Var = {
-      val r = reader.readStmtVar()
-      return r
-    }
-    val r = toBase64(s, fStmtVar)
-    return r
-  }
-
   def fromStmtVarPattern(o: Stmt.VarPattern): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtVarPattern(o)
     return w.result
-  }
-
-  def fromStmtVarPatternBase64(o: Stmt.VarPattern): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtVarPattern(o)
-    return w.resultBase64
   }
 
   def toStmtVarPattern(data: ISZ[U8]): Stmt.VarPattern = {
@@ -4220,25 +4010,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtVarPatternBase64(s: String): Stmt.VarPattern = {
-    def fStmtVarPattern(reader: Reader): Stmt.VarPattern = {
-      val r = reader.readStmtVarPattern()
-      return r
-    }
-    val r = toBase64(s, fStmtVarPattern)
-    return r
-  }
-
   def fromStmtSpecVar(o: Stmt.SpecVar): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtSpecVar(o)
     return w.result
-  }
-
-  def fromStmtSpecVarBase64(o: Stmt.SpecVar): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtSpecVar(o)
-    return w.resultBase64
   }
 
   def toStmtSpecVar(data: ISZ[U8]): Stmt.SpecVar = {
@@ -4250,25 +4025,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtSpecVarBase64(s: String): Stmt.SpecVar = {
-    def fStmtSpecVar(reader: Reader): Stmt.SpecVar = {
-      val r = reader.readStmtSpecVar()
-      return r
-    }
-    val r = toBase64(s, fStmtSpecVar)
-    return r
-  }
-
   def fromStmtMethod(o: Stmt.Method): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtMethod(o)
     return w.result
-  }
-
-  def fromStmtMethodBase64(o: Stmt.Method): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtMethod(o)
-    return w.resultBase64
   }
 
   def toStmtMethod(data: ISZ[U8]): Stmt.Method = {
@@ -4280,25 +4040,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtMethodBase64(s: String): Stmt.Method = {
-    def fStmtMethod(reader: Reader): Stmt.Method = {
-      val r = reader.readStmtMethod()
-      return r
-    }
-    val r = toBase64(s, fStmtMethod)
-    return r
-  }
-
   def fromStmtExtMethod(o: Stmt.ExtMethod): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtExtMethod(o)
     return w.result
-  }
-
-  def fromStmtExtMethodBase64(o: Stmt.ExtMethod): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtExtMethod(o)
-    return w.resultBase64
   }
 
   def toStmtExtMethod(data: ISZ[U8]): Stmt.ExtMethod = {
@@ -4310,25 +4055,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtExtMethodBase64(s: String): Stmt.ExtMethod = {
-    def fStmtExtMethod(reader: Reader): Stmt.ExtMethod = {
-      val r = reader.readStmtExtMethod()
-      return r
-    }
-    val r = toBase64(s, fStmtExtMethod)
-    return r
-  }
-
   def fromStmtSpecMethod(o: Stmt.SpecMethod): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtSpecMethod(o)
     return w.result
-  }
-
-  def fromStmtSpecMethodBase64(o: Stmt.SpecMethod): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtSpecMethod(o)
-    return w.resultBase64
   }
 
   def toStmtSpecMethod(data: ISZ[U8]): Stmt.SpecMethod = {
@@ -4340,25 +4070,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtSpecMethodBase64(s: String): Stmt.SpecMethod = {
-    def fStmtSpecMethod(reader: Reader): Stmt.SpecMethod = {
-      val r = reader.readStmtSpecMethod()
-      return r
-    }
-    val r = toBase64(s, fStmtSpecMethod)
-    return r
-  }
-
   def fromStmtEnum(o: Stmt.Enum): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtEnum(o)
     return w.result
-  }
-
-  def fromStmtEnumBase64(o: Stmt.Enum): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtEnum(o)
-    return w.resultBase64
   }
 
   def toStmtEnum(data: ISZ[U8]): Stmt.Enum = {
@@ -4370,25 +4085,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtEnumBase64(s: String): Stmt.Enum = {
-    def fStmtEnum(reader: Reader): Stmt.Enum = {
-      val r = reader.readStmtEnum()
-      return r
-    }
-    val r = toBase64(s, fStmtEnum)
-    return r
-  }
-
   def fromStmtSubZ(o: Stmt.SubZ): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtSubZ(o)
     return w.result
-  }
-
-  def fromStmtSubZBase64(o: Stmt.SubZ): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtSubZ(o)
-    return w.resultBase64
   }
 
   def toStmtSubZ(data: ISZ[U8]): Stmt.SubZ = {
@@ -4400,25 +4100,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtSubZBase64(s: String): Stmt.SubZ = {
-    def fStmtSubZ(reader: Reader): Stmt.SubZ = {
-      val r = reader.readStmtSubZ()
-      return r
-    }
-    val r = toBase64(s, fStmtSubZ)
-    return r
-  }
-
   def fromStmtObject(o: Stmt.Object): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtObject(o)
     return w.result
-  }
-
-  def fromStmtObjectBase64(o: Stmt.Object): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtObject(o)
-    return w.resultBase64
   }
 
   def toStmtObject(data: ISZ[U8]): Stmt.Object = {
@@ -4430,25 +4115,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtObjectBase64(s: String): Stmt.Object = {
-    def fStmtObject(reader: Reader): Stmt.Object = {
-      val r = reader.readStmtObject()
-      return r
-    }
-    val r = toBase64(s, fStmtObject)
-    return r
-  }
-
   def fromStmtSig(o: Stmt.Sig): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtSig(o)
     return w.result
-  }
-
-  def fromStmtSigBase64(o: Stmt.Sig): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtSig(o)
-    return w.resultBase64
   }
 
   def toStmtSig(data: ISZ[U8]): Stmt.Sig = {
@@ -4460,25 +4130,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtSigBase64(s: String): Stmt.Sig = {
-    def fStmtSig(reader: Reader): Stmt.Sig = {
-      val r = reader.readStmtSig()
-      return r
-    }
-    val r = toBase64(s, fStmtSig)
-    return r
-  }
-
   def fromStmtAbstractDatatype(o: Stmt.AbstractDatatype): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtAbstractDatatype(o)
     return w.result
-  }
-
-  def fromStmtAbstractDatatypeBase64(o: Stmt.AbstractDatatype): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtAbstractDatatype(o)
-    return w.resultBase64
   }
 
   def toStmtAbstractDatatype(data: ISZ[U8]): Stmt.AbstractDatatype = {
@@ -4490,25 +4145,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtAbstractDatatypeBase64(s: String): Stmt.AbstractDatatype = {
-    def fStmtAbstractDatatype(reader: Reader): Stmt.AbstractDatatype = {
-      val r = reader.readStmtAbstractDatatype()
-      return r
-    }
-    val r = toBase64(s, fStmtAbstractDatatype)
-    return r
-  }
-
   def fromStmtTypeAlias(o: Stmt.TypeAlias): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtTypeAlias(o)
     return w.result
-  }
-
-  def fromStmtTypeAliasBase64(o: Stmt.TypeAlias): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtTypeAlias(o)
-    return w.resultBase64
   }
 
   def toStmtTypeAlias(data: ISZ[U8]): Stmt.TypeAlias = {
@@ -4520,25 +4160,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtTypeAliasBase64(s: String): Stmt.TypeAlias = {
-    def fStmtTypeAlias(reader: Reader): Stmt.TypeAlias = {
-      val r = reader.readStmtTypeAlias()
-      return r
-    }
-    val r = toBase64(s, fStmtTypeAlias)
-    return r
-  }
-
   def fromStmtAssign(o: Stmt.Assign): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtAssign(o)
     return w.result
-  }
-
-  def fromStmtAssignBase64(o: Stmt.Assign): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtAssign(o)
-    return w.resultBase64
   }
 
   def toStmtAssign(data: ISZ[U8]): Stmt.Assign = {
@@ -4550,25 +4175,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtAssignBase64(s: String): Stmt.Assign = {
-    def fStmtAssign(reader: Reader): Stmt.Assign = {
-      val r = reader.readStmtAssign()
-      return r
-    }
-    val r = toBase64(s, fStmtAssign)
-    return r
-  }
-
   def fromStmtAssignUp(o: Stmt.AssignUp): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtAssignUp(o)
     return w.result
-  }
-
-  def fromStmtAssignUpBase64(o: Stmt.AssignUp): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtAssignUp(o)
-    return w.resultBase64
   }
 
   def toStmtAssignUp(data: ISZ[U8]): Stmt.AssignUp = {
@@ -4580,25 +4190,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtAssignUpBase64(s: String): Stmt.AssignUp = {
-    def fStmtAssignUp(reader: Reader): Stmt.AssignUp = {
-      val r = reader.readStmtAssignUp()
-      return r
-    }
-    val r = toBase64(s, fStmtAssignUp)
-    return r
-  }
-
   def fromStmtAssignPattern(o: Stmt.AssignPattern): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtAssignPattern(o)
     return w.result
-  }
-
-  def fromStmtAssignPatternBase64(o: Stmt.AssignPattern): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtAssignPattern(o)
-    return w.resultBase64
   }
 
   def toStmtAssignPattern(data: ISZ[U8]): Stmt.AssignPattern = {
@@ -4610,25 +4205,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtAssignPatternBase64(s: String): Stmt.AssignPattern = {
-    def fStmtAssignPattern(reader: Reader): Stmt.AssignPattern = {
-      val r = reader.readStmtAssignPattern()
-      return r
-    }
-    val r = toBase64(s, fStmtAssignPattern)
-    return r
-  }
-
   def fromStmtBlock(o: Stmt.Block): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtBlock(o)
     return w.result
-  }
-
-  def fromStmtBlockBase64(o: Stmt.Block): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtBlock(o)
-    return w.resultBase64
   }
 
   def toStmtBlock(data: ISZ[U8]): Stmt.Block = {
@@ -4640,25 +4220,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtBlockBase64(s: String): Stmt.Block = {
-    def fStmtBlock(reader: Reader): Stmt.Block = {
-      val r = reader.readStmtBlock()
-      return r
-    }
-    val r = toBase64(s, fStmtBlock)
-    return r
-  }
-
   def fromStmtIf(o: Stmt.If): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtIf(o)
     return w.result
-  }
-
-  def fromStmtIfBase64(o: Stmt.If): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtIf(o)
-    return w.resultBase64
   }
 
   def toStmtIf(data: ISZ[U8]): Stmt.If = {
@@ -4670,25 +4235,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtIfBase64(s: String): Stmt.If = {
-    def fStmtIf(reader: Reader): Stmt.If = {
-      val r = reader.readStmtIf()
-      return r
-    }
-    val r = toBase64(s, fStmtIf)
-    return r
-  }
-
   def fromStmtMatch(o: Stmt.Match): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtMatch(o)
     return w.result
-  }
-
-  def fromStmtMatchBase64(o: Stmt.Match): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtMatch(o)
-    return w.resultBase64
   }
 
   def toStmtMatch(data: ISZ[U8]): Stmt.Match = {
@@ -4700,25 +4250,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtMatchBase64(s: String): Stmt.Match = {
-    def fStmtMatch(reader: Reader): Stmt.Match = {
-      val r = reader.readStmtMatch()
-      return r
-    }
-    val r = toBase64(s, fStmtMatch)
-    return r
-  }
-
   def fromStmtWhile(o: Stmt.While): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtWhile(o)
     return w.result
-  }
-
-  def fromStmtWhileBase64(o: Stmt.While): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtWhile(o)
-    return w.resultBase64
   }
 
   def toStmtWhile(data: ISZ[U8]): Stmt.While = {
@@ -4730,25 +4265,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtWhileBase64(s: String): Stmt.While = {
-    def fStmtWhile(reader: Reader): Stmt.While = {
-      val r = reader.readStmtWhile()
-      return r
-    }
-    val r = toBase64(s, fStmtWhile)
-    return r
-  }
-
   def fromStmtDoWhile(o: Stmt.DoWhile): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtDoWhile(o)
     return w.result
-  }
-
-  def fromStmtDoWhileBase64(o: Stmt.DoWhile): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtDoWhile(o)
-    return w.resultBase64
   }
 
   def toStmtDoWhile(data: ISZ[U8]): Stmt.DoWhile = {
@@ -4760,25 +4280,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtDoWhileBase64(s: String): Stmt.DoWhile = {
-    def fStmtDoWhile(reader: Reader): Stmt.DoWhile = {
-      val r = reader.readStmtDoWhile()
-      return r
-    }
-    val r = toBase64(s, fStmtDoWhile)
-    return r
-  }
-
   def fromStmtFor(o: Stmt.For): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtFor(o)
     return w.result
-  }
-
-  def fromStmtForBase64(o: Stmt.For): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtFor(o)
-    return w.resultBase64
   }
 
   def toStmtFor(data: ISZ[U8]): Stmt.For = {
@@ -4790,25 +4295,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtForBase64(s: String): Stmt.For = {
-    def fStmtFor(reader: Reader): Stmt.For = {
-      val r = reader.readStmtFor()
-      return r
-    }
-    val r = toBase64(s, fStmtFor)
-    return r
-  }
-
   def fromStmtReturn(o: Stmt.Return): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtReturn(o)
     return w.result
-  }
-
-  def fromStmtReturnBase64(o: Stmt.Return): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtReturn(o)
-    return w.resultBase64
   }
 
   def toStmtReturn(data: ISZ[U8]): Stmt.Return = {
@@ -4820,25 +4310,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtReturnBase64(s: String): Stmt.Return = {
-    def fStmtReturn(reader: Reader): Stmt.Return = {
-      val r = reader.readStmtReturn()
-      return r
-    }
-    val r = toBase64(s, fStmtReturn)
-    return r
-  }
-
   def fromStmtLStmt(o: Stmt.LStmt): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtLStmt(o)
     return w.result
-  }
-
-  def fromStmtLStmtBase64(o: Stmt.LStmt): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtLStmt(o)
-    return w.resultBase64
   }
 
   def toStmtLStmt(data: ISZ[U8]): Stmt.LStmt = {
@@ -4850,25 +4325,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtLStmtBase64(s: String): Stmt.LStmt = {
-    def fStmtLStmt(reader: Reader): Stmt.LStmt = {
-      val r = reader.readStmtLStmt()
-      return r
-    }
-    val r = toBase64(s, fStmtLStmt)
-    return r
-  }
-
   def fromStmtExpr(o: Stmt.Expr): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeStmtExpr(o)
     return w.result
-  }
-
-  def fromStmtExprBase64(o: Stmt.Expr): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeStmtExpr(o)
-    return w.resultBase64
   }
 
   def toStmtExpr(data: ISZ[U8]): Stmt.Expr = {
@@ -4880,25 +4340,10 @@ object MsgPack {
     return r
   }
 
-  def toStmtExprBase64(s: String): Stmt.Expr = {
-    def fStmtExpr(reader: Reader): Stmt.Expr = {
-      val r = reader.readStmtExpr()
-      return r
-    }
-    val r = toBase64(s, fStmtExpr)
-    return r
-  }
-
   def fromLClause(o: LClause): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClause(o)
     return w.result
-  }
-
-  def fromLClauseBase64(o: LClause): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClause(o)
-    return w.resultBase64
   }
 
   def toLClause(data: ISZ[U8]): LClause = {
@@ -4910,25 +4355,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseBase64(s: String): LClause = {
-    def fLClause(reader: Reader): LClause = {
-      val r = reader.readLClause()
-      return r
-    }
-    val r = toBase64(s, fLClause)
-    return r
-  }
-
   def fromLClauseInvariants(o: LClause.Invariants): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseInvariants(o)
     return w.result
-  }
-
-  def fromLClauseInvariantsBase64(o: LClause.Invariants): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseInvariants(o)
-    return w.resultBase64
   }
 
   def toLClauseInvariants(data: ISZ[U8]): LClause.Invariants = {
@@ -4940,25 +4370,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseInvariantsBase64(s: String): LClause.Invariants = {
-    def fLClauseInvariants(reader: Reader): LClause.Invariants = {
-      val r = reader.readLClauseInvariants()
-      return r
-    }
-    val r = toBase64(s, fLClauseInvariants)
-    return r
-  }
-
   def fromLClauseFacts(o: LClause.Facts): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseFacts(o)
     return w.result
-  }
-
-  def fromLClauseFactsBase64(o: LClause.Facts): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseFacts(o)
-    return w.resultBase64
   }
 
   def toLClauseFacts(data: ISZ[U8]): LClause.Facts = {
@@ -4970,25 +4385,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseFactsBase64(s: String): LClause.Facts = {
-    def fLClauseFacts(reader: Reader): LClause.Facts = {
-      val r = reader.readLClauseFacts()
-      return r
-    }
-    val r = toBase64(s, fLClauseFacts)
-    return r
-  }
-
   def fromLClauseFact(o: LClause.Fact): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseFact(o)
     return w.result
-  }
-
-  def fromLClauseFactBase64(o: LClause.Fact): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseFact(o)
-    return w.resultBase64
   }
 
   def toLClauseFact(data: ISZ[U8]): LClause.Fact = {
@@ -5000,25 +4400,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseFactBase64(s: String): LClause.Fact = {
-    def fLClauseFact(reader: Reader): LClause.Fact = {
-      val r = reader.readLClauseFact()
-      return r
-    }
-    val r = toBase64(s, fLClauseFact)
-    return r
-  }
-
   def fromLClauseTheorems(o: LClause.Theorems): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseTheorems(o)
     return w.result
-  }
-
-  def fromLClauseTheoremsBase64(o: LClause.Theorems): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseTheorems(o)
-    return w.resultBase64
   }
 
   def toLClauseTheorems(data: ISZ[U8]): LClause.Theorems = {
@@ -5030,25 +4415,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseTheoremsBase64(s: String): LClause.Theorems = {
-    def fLClauseTheorems(reader: Reader): LClause.Theorems = {
-      val r = reader.readLClauseTheorems()
-      return r
-    }
-    val r = toBase64(s, fLClauseTheorems)
-    return r
-  }
-
   def fromLClauseTheorem(o: LClause.Theorem): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseTheorem(o)
     return w.result
-  }
-
-  def fromLClauseTheoremBase64(o: LClause.Theorem): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseTheorem(o)
-    return w.resultBase64
   }
 
   def toLClauseTheorem(data: ISZ[U8]): LClause.Theorem = {
@@ -5060,25 +4430,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseTheoremBase64(s: String): LClause.Theorem = {
-    def fLClauseTheorem(reader: Reader): LClause.Theorem = {
-      val r = reader.readLClauseTheorem()
-      return r
-    }
-    val r = toBase64(s, fLClauseTheorem)
-    return r
-  }
-
   def fromLClauseSequent(o: LClause.Sequent): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseSequent(o)
     return w.result
-  }
-
-  def fromLClauseSequentBase64(o: LClause.Sequent): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseSequent(o)
-    return w.resultBase64
   }
 
   def toLClauseSequent(data: ISZ[U8]): LClause.Sequent = {
@@ -5090,25 +4445,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseSequentBase64(s: String): LClause.Sequent = {
-    def fLClauseSequent(reader: Reader): LClause.Sequent = {
-      val r = reader.readLClauseSequent()
-      return r
-    }
-    val r = toBase64(s, fLClauseSequent)
-    return r
-  }
-
   def fromLClauseProof(o: LClause.Proof): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLClauseProof(o)
     return w.result
-  }
-
-  def fromLClauseProofBase64(o: LClause.Proof): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLClauseProof(o)
-    return w.resultBase64
   }
 
   def toLClauseProof(data: ISZ[U8]): LClause.Proof = {
@@ -5120,25 +4460,10 @@ object MsgPack {
     return r
   }
 
-  def toLClauseProofBase64(s: String): LClause.Proof = {
-    def fLClauseProof(reader: Reader): LClause.Proof = {
-      val r = reader.readLClauseProof()
-      return r
-    }
-    val r = toBase64(s, fLClauseProof)
-    return r
-  }
-
   def fromContractExp(o: ContractExp): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeContractExp(o)
     return w.result
-  }
-
-  def fromContractExpBase64(o: ContractExp): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeContractExp(o)
-    return w.resultBase64
   }
 
   def toContractExp(data: ISZ[U8]): ContractExp = {
@@ -5150,25 +4475,10 @@ object MsgPack {
     return r
   }
 
-  def toContractExpBase64(s: String): ContractExp = {
-    def fContractExp(reader: Reader): ContractExp = {
-      val r = reader.readContractExp()
-      return r
-    }
-    val r = toBase64(s, fContractExp)
-    return r
-  }
-
   def fromCase(o: Case): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeCase(o)
     return w.result
-  }
-
-  def fromCaseBase64(o: Case): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeCase(o)
-    return w.resultBase64
   }
 
   def toCase(data: ISZ[U8]): Case = {
@@ -5180,25 +4490,10 @@ object MsgPack {
     return r
   }
 
-  def toCaseBase64(s: String): Case = {
-    def fCase(reader: Reader): Case = {
-      val r = reader.readCase()
-      return r
-    }
-    val r = toBase64(s, fCase)
-    return r
-  }
-
   def fromEnumGenRange(o: EnumGen.Range): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeEnumGenRange(o)
     return w.result
-  }
-
-  def fromEnumGenRangeBase64(o: EnumGen.Range): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeEnumGenRange(o)
-    return w.resultBase64
   }
 
   def toEnumGenRange(data: ISZ[U8]): EnumGen.Range = {
@@ -5210,25 +4505,10 @@ object MsgPack {
     return r
   }
 
-  def toEnumGenRangeBase64(s: String): EnumGen.Range = {
-    def fEnumGenRange(reader: Reader): EnumGen.Range = {
-      val r = reader.readEnumGenRange()
-      return r
-    }
-    val r = toBase64(s, fEnumGenRange)
-    return r
-  }
-
   def fromEnumGenRangeExpr(o: EnumGen.Range.Expr): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeEnumGenRangeExpr(o)
     return w.result
-  }
-
-  def fromEnumGenRangeExprBase64(o: EnumGen.Range.Expr): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeEnumGenRangeExpr(o)
-    return w.resultBase64
   }
 
   def toEnumGenRangeExpr(data: ISZ[U8]): EnumGen.Range.Expr = {
@@ -5240,25 +4520,10 @@ object MsgPack {
     return r
   }
 
-  def toEnumGenRangeExprBase64(s: String): EnumGen.Range.Expr = {
-    def fEnumGenRangeExpr(reader: Reader): EnumGen.Range.Expr = {
-      val r = reader.readEnumGenRangeExpr()
-      return r
-    }
-    val r = toBase64(s, fEnumGenRangeExpr)
-    return r
-  }
-
   def fromEnumGenRangeIndices(o: EnumGen.Range.Indices): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeEnumGenRangeIndices(o)
     return w.result
-  }
-
-  def fromEnumGenRangeIndicesBase64(o: EnumGen.Range.Indices): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeEnumGenRangeIndices(o)
-    return w.resultBase64
   }
 
   def toEnumGenRangeIndices(data: ISZ[U8]): EnumGen.Range.Indices = {
@@ -5270,25 +4535,10 @@ object MsgPack {
     return r
   }
 
-  def toEnumGenRangeIndicesBase64(s: String): EnumGen.Range.Indices = {
-    def fEnumGenRangeIndices(reader: Reader): EnumGen.Range.Indices = {
-      val r = reader.readEnumGenRangeIndices()
-      return r
-    }
-    val r = toBase64(s, fEnumGenRangeIndices)
-    return r
-  }
-
   def fromEnumGenRangeStep(o: EnumGen.Range.Step): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeEnumGenRangeStep(o)
     return w.result
-  }
-
-  def fromEnumGenRangeStepBase64(o: EnumGen.Range.Step): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeEnumGenRangeStep(o)
-    return w.resultBase64
   }
 
   def toEnumGenRangeStep(data: ISZ[U8]): EnumGen.Range.Step = {
@@ -5300,25 +4550,10 @@ object MsgPack {
     return r
   }
 
-  def toEnumGenRangeStepBase64(s: String): EnumGen.Range.Step = {
-    def fEnumGenRangeStep(reader: Reader): EnumGen.Range.Step = {
-      val r = reader.readEnumGenRangeStep()
-      return r
-    }
-    val r = toBase64(s, fEnumGenRangeStep)
-    return r
-  }
-
   def fromEnumGenFor(o: EnumGen.For): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeEnumGenFor(o)
     return w.result
-  }
-
-  def fromEnumGenForBase64(o: EnumGen.For): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeEnumGenFor(o)
-    return w.resultBase64
   }
 
   def toEnumGenFor(data: ISZ[U8]): EnumGen.For = {
@@ -5330,25 +4565,10 @@ object MsgPack {
     return r
   }
 
-  def toEnumGenForBase64(s: String): EnumGen.For = {
-    def fEnumGenFor(reader: Reader): EnumGen.For = {
-      val r = reader.readEnumGenFor()
-      return r
-    }
-    val r = toBase64(s, fEnumGenFor)
-    return r
-  }
-
   def fromType(o: Type): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeType(o)
     return w.result
-  }
-
-  def fromTypeBase64(o: Type): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeType(o)
-    return w.resultBase64
   }
 
   def toType(data: ISZ[U8]): Type = {
@@ -5360,25 +4580,10 @@ object MsgPack {
     return r
   }
 
-  def toTypeBase64(s: String): Type = {
-    def fType(reader: Reader): Type = {
-      val r = reader.readType()
-      return r
-    }
-    val r = toBase64(s, fType)
-    return r
-  }
-
   def fromTypeNamed(o: Type.Named): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypeNamed(o)
     return w.result
-  }
-
-  def fromTypeNamedBase64(o: Type.Named): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypeNamed(o)
-    return w.resultBase64
   }
 
   def toTypeNamed(data: ISZ[U8]): Type.Named = {
@@ -5390,25 +4595,10 @@ object MsgPack {
     return r
   }
 
-  def toTypeNamedBase64(s: String): Type.Named = {
-    def fTypeNamed(reader: Reader): Type.Named = {
-      val r = reader.readTypeNamed()
-      return r
-    }
-    val r = toBase64(s, fTypeNamed)
-    return r
-  }
-
   def fromTypeFun(o: Type.Fun): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypeFun(o)
     return w.result
-  }
-
-  def fromTypeFunBase64(o: Type.Fun): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypeFun(o)
-    return w.resultBase64
   }
 
   def toTypeFun(data: ISZ[U8]): Type.Fun = {
@@ -5420,25 +4610,10 @@ object MsgPack {
     return r
   }
 
-  def toTypeFunBase64(s: String): Type.Fun = {
-    def fTypeFun(reader: Reader): Type.Fun = {
-      val r = reader.readTypeFun()
-      return r
-    }
-    val r = toBase64(s, fTypeFun)
-    return r
-  }
-
   def fromTypeTuple(o: Type.Tuple): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypeTuple(o)
     return w.result
-  }
-
-  def fromTypeTupleBase64(o: Type.Tuple): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypeTuple(o)
-    return w.resultBase64
   }
 
   def toTypeTuple(data: ISZ[U8]): Type.Tuple = {
@@ -5450,25 +4625,10 @@ object MsgPack {
     return r
   }
 
-  def toTypeTupleBase64(s: String): Type.Tuple = {
-    def fTypeTuple(reader: Reader): Type.Tuple = {
-      val r = reader.readTypeTuple()
-      return r
-    }
-    val r = toBase64(s, fTypeTuple)
-    return r
-  }
-
   def fromPattern(o: Pattern): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePattern(o)
     return w.result
-  }
-
-  def fromPatternBase64(o: Pattern): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePattern(o)
-    return w.resultBase64
   }
 
   def toPattern(data: ISZ[U8]): Pattern = {
@@ -5480,25 +4640,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternBase64(s: String): Pattern = {
-    def fPattern(reader: Reader): Pattern = {
-      val r = reader.readPattern()
-      return r
-    }
-    val r = toBase64(s, fPattern)
-    return r
-  }
-
   def fromPatternLiteral(o: Pattern.Literal): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternLiteral(o)
     return w.result
-  }
-
-  def fromPatternLiteralBase64(o: Pattern.Literal): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternLiteral(o)
-    return w.resultBase64
   }
 
   def toPatternLiteral(data: ISZ[U8]): Pattern.Literal = {
@@ -5510,25 +4655,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternLiteralBase64(s: String): Pattern.Literal = {
-    def fPatternLiteral(reader: Reader): Pattern.Literal = {
-      val r = reader.readPatternLiteral()
-      return r
-    }
-    val r = toBase64(s, fPatternLiteral)
-    return r
-  }
-
   def fromPatternRef(o: Pattern.Ref): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternRef(o)
     return w.result
-  }
-
-  def fromPatternRefBase64(o: Pattern.Ref): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternRef(o)
-    return w.resultBase64
   }
 
   def toPatternRef(data: ISZ[U8]): Pattern.Ref = {
@@ -5540,25 +4670,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternRefBase64(s: String): Pattern.Ref = {
-    def fPatternRef(reader: Reader): Pattern.Ref = {
-      val r = reader.readPatternRef()
-      return r
-    }
-    val r = toBase64(s, fPatternRef)
-    return r
-  }
-
   def fromPatternVariable(o: Pattern.Variable): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternVariable(o)
     return w.result
-  }
-
-  def fromPatternVariableBase64(o: Pattern.Variable): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternVariable(o)
-    return w.resultBase64
   }
 
   def toPatternVariable(data: ISZ[U8]): Pattern.Variable = {
@@ -5570,25 +4685,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternVariableBase64(s: String): Pattern.Variable = {
-    def fPatternVariable(reader: Reader): Pattern.Variable = {
-      val r = reader.readPatternVariable()
-      return r
-    }
-    val r = toBase64(s, fPatternVariable)
-    return r
-  }
-
   def fromPatternWildcard(o: Pattern.Wildcard): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternWildcard(o)
     return w.result
-  }
-
-  def fromPatternWildcardBase64(o: Pattern.Wildcard): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternWildcard(o)
-    return w.resultBase64
   }
 
   def toPatternWildcard(data: ISZ[U8]): Pattern.Wildcard = {
@@ -5600,25 +4700,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternWildcardBase64(s: String): Pattern.Wildcard = {
-    def fPatternWildcard(reader: Reader): Pattern.Wildcard = {
-      val r = reader.readPatternWildcard()
-      return r
-    }
-    val r = toBase64(s, fPatternWildcard)
-    return r
-  }
-
   def fromPatternSeqWildcard(o: Pattern.SeqWildcard): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternSeqWildcard(o)
     return w.result
-  }
-
-  def fromPatternSeqWildcardBase64(o: Pattern.SeqWildcard): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternSeqWildcard(o)
-    return w.resultBase64
   }
 
   def toPatternSeqWildcard(data: ISZ[U8]): Pattern.SeqWildcard = {
@@ -5630,25 +4715,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternSeqWildcardBase64(s: String): Pattern.SeqWildcard = {
-    def fPatternSeqWildcard(reader: Reader): Pattern.SeqWildcard = {
-      val r = reader.readPatternSeqWildcard()
-      return r
-    }
-    val r = toBase64(s, fPatternSeqWildcard)
-    return r
-  }
-
   def fromPatternStructure(o: Pattern.Structure): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePatternStructure(o)
     return w.result
-  }
-
-  def fromPatternStructureBase64(o: Pattern.Structure): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePatternStructure(o)
-    return w.resultBase64
   }
 
   def toPatternStructure(data: ISZ[U8]): Pattern.Structure = {
@@ -5660,25 +4730,10 @@ object MsgPack {
     return r
   }
 
-  def toPatternStructureBase64(s: String): Pattern.Structure = {
-    def fPatternStructure(reader: Reader): Pattern.Structure = {
-      val r = reader.readPatternStructure()
-      return r
-    }
-    val r = toBase64(s, fPatternStructure)
-    return r
-  }
-
   def fromExp(o: Exp): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExp(o)
     return w.result
-  }
-
-  def fromExpBase64(o: Exp): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExp(o)
-    return w.resultBase64
   }
 
   def toExp(data: ISZ[U8]): Exp = {
@@ -5690,25 +4745,10 @@ object MsgPack {
     return r
   }
 
-  def toExpBase64(s: String): Exp = {
-    def fExp(reader: Reader): Exp = {
-      val r = reader.readExp()
-      return r
-    }
-    val r = toBase64(s, fExp)
-    return r
-  }
-
   def fromLit(o: Lit): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeLit(o)
     return w.result
-  }
-
-  def fromLitBase64(o: Lit): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeLit(o)
-    return w.resultBase64
   }
 
   def toLit(data: ISZ[U8]): Lit = {
@@ -5720,25 +4760,10 @@ object MsgPack {
     return r
   }
 
-  def toLitBase64(s: String): Lit = {
-    def fLit(reader: Reader): Lit = {
-      val r = reader.readLit()
-      return r
-    }
-    val r = toBase64(s, fLit)
-    return r
-  }
-
   def fromExpLitB(o: Exp.LitB): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitB(o)
     return w.result
-  }
-
-  def fromExpLitBBase64(o: Exp.LitB): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitB(o)
-    return w.resultBase64
   }
 
   def toExpLitB(data: ISZ[U8]): Exp.LitB = {
@@ -5750,25 +4775,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitBBase64(s: String): Exp.LitB = {
-    def fExpLitB(reader: Reader): Exp.LitB = {
-      val r = reader.readExpLitB()
-      return r
-    }
-    val r = toBase64(s, fExpLitB)
-    return r
-  }
-
   def fromExpLitC(o: Exp.LitC): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitC(o)
     return w.result
-  }
-
-  def fromExpLitCBase64(o: Exp.LitC): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitC(o)
-    return w.resultBase64
   }
 
   def toExpLitC(data: ISZ[U8]): Exp.LitC = {
@@ -5780,25 +4790,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitCBase64(s: String): Exp.LitC = {
-    def fExpLitC(reader: Reader): Exp.LitC = {
-      val r = reader.readExpLitC()
-      return r
-    }
-    val r = toBase64(s, fExpLitC)
-    return r
-  }
-
   def fromExpLitZ(o: Exp.LitZ): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitZ(o)
     return w.result
-  }
-
-  def fromExpLitZBase64(o: Exp.LitZ): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitZ(o)
-    return w.resultBase64
   }
 
   def toExpLitZ(data: ISZ[U8]): Exp.LitZ = {
@@ -5810,25 +4805,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitZBase64(s: String): Exp.LitZ = {
-    def fExpLitZ(reader: Reader): Exp.LitZ = {
-      val r = reader.readExpLitZ()
-      return r
-    }
-    val r = toBase64(s, fExpLitZ)
-    return r
-  }
-
   def fromExpLitF32(o: Exp.LitF32): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitF32(o)
     return w.result
-  }
-
-  def fromExpLitF32Base64(o: Exp.LitF32): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitF32(o)
-    return w.resultBase64
   }
 
   def toExpLitF32(data: ISZ[U8]): Exp.LitF32 = {
@@ -5840,25 +4820,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitF32Base64(s: String): Exp.LitF32 = {
-    def fExpLitF32(reader: Reader): Exp.LitF32 = {
-      val r = reader.readExpLitF32()
-      return r
-    }
-    val r = toBase64(s, fExpLitF32)
-    return r
-  }
-
   def fromExpLitF64(o: Exp.LitF64): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitF64(o)
     return w.result
-  }
-
-  def fromExpLitF64Base64(o: Exp.LitF64): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitF64(o)
-    return w.resultBase64
   }
 
   def toExpLitF64(data: ISZ[U8]): Exp.LitF64 = {
@@ -5870,25 +4835,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitF64Base64(s: String): Exp.LitF64 = {
-    def fExpLitF64(reader: Reader): Exp.LitF64 = {
-      val r = reader.readExpLitF64()
-      return r
-    }
-    val r = toBase64(s, fExpLitF64)
-    return r
-  }
-
   def fromExpLitR(o: Exp.LitR): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitR(o)
     return w.result
-  }
-
-  def fromExpLitRBase64(o: Exp.LitR): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitR(o)
-    return w.resultBase64
   }
 
   def toExpLitR(data: ISZ[U8]): Exp.LitR = {
@@ -5900,25 +4850,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitRBase64(s: String): Exp.LitR = {
-    def fExpLitR(reader: Reader): Exp.LitR = {
-      val r = reader.readExpLitR()
-      return r
-    }
-    val r = toBase64(s, fExpLitR)
-    return r
-  }
-
   def fromExpLitBv(o: Exp.LitBv): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitBv(o)
     return w.result
-  }
-
-  def fromExpLitBvBase64(o: Exp.LitBv): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitBv(o)
-    return w.resultBase64
   }
 
   def toExpLitBv(data: ISZ[U8]): Exp.LitBv = {
@@ -5930,25 +4865,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitBvBase64(s: String): Exp.LitBv = {
-    def fExpLitBv(reader: Reader): Exp.LitBv = {
-      val r = reader.readExpLitBv()
-      return r
-    }
-    val r = toBase64(s, fExpLitBv)
-    return r
-  }
-
   def fromExpLitString(o: Exp.LitString): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpLitString(o)
     return w.result
-  }
-
-  def fromExpLitStringBase64(o: Exp.LitString): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitString(o)
-    return w.resultBase64
   }
 
   def toExpLitString(data: ISZ[U8]): Exp.LitString = {
@@ -5960,25 +4880,10 @@ object MsgPack {
     return r
   }
 
-  def toExpLitStringBase64(s: String): Exp.LitString = {
-    def fExpLitString(reader: Reader): Exp.LitString = {
-      val r = reader.readExpLitString()
-      return r
-    }
-    val r = toBase64(s, fExpLitString)
-    return r
-  }
-
   def fromExpStringInterpolate(o: Exp.StringInterpolate): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpStringInterpolate(o)
     return w.result
-  }
-
-  def fromExpStringInterpolateBase64(o: Exp.StringInterpolate): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpStringInterpolate(o)
-    return w.resultBase64
   }
 
   def toExpStringInterpolate(data: ISZ[U8]): Exp.StringInterpolate = {
@@ -5990,25 +4895,10 @@ object MsgPack {
     return r
   }
 
-  def toExpStringInterpolateBase64(s: String): Exp.StringInterpolate = {
-    def fExpStringInterpolate(reader: Reader): Exp.StringInterpolate = {
-      val r = reader.readExpStringInterpolate()
-      return r
-    }
-    val r = toBase64(s, fExpStringInterpolate)
-    return r
-  }
-
   def fromExpThis(o: Exp.This): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpThis(o)
     return w.result
-  }
-
-  def fromExpThisBase64(o: Exp.This): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpThis(o)
-    return w.resultBase64
   }
 
   def toExpThis(data: ISZ[U8]): Exp.This = {
@@ -6020,25 +4910,10 @@ object MsgPack {
     return r
   }
 
-  def toExpThisBase64(s: String): Exp.This = {
-    def fExpThis(reader: Reader): Exp.This = {
-      val r = reader.readExpThis()
-      return r
-    }
-    val r = toBase64(s, fExpThis)
-    return r
-  }
-
   def fromExpSuper(o: Exp.Super): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpSuper(o)
     return w.result
-  }
-
-  def fromExpSuperBase64(o: Exp.Super): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpSuper(o)
-    return w.resultBase64
   }
 
   def toExpSuper(data: ISZ[U8]): Exp.Super = {
@@ -6050,25 +4925,10 @@ object MsgPack {
     return r
   }
 
-  def toExpSuperBase64(s: String): Exp.Super = {
-    def fExpSuper(reader: Reader): Exp.Super = {
-      val r = reader.readExpSuper()
-      return r
-    }
-    val r = toBase64(s, fExpSuper)
-    return r
-  }
-
   def fromExpUnary(o: Exp.Unary): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpUnary(o)
     return w.result
-  }
-
-  def fromExpUnaryBase64(o: Exp.Unary): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpUnary(o)
-    return w.resultBase64
   }
 
   def toExpUnary(data: ISZ[U8]): Exp.Unary = {
@@ -6080,25 +4940,10 @@ object MsgPack {
     return r
   }
 
-  def toExpUnaryBase64(s: String): Exp.Unary = {
-    def fExpUnary(reader: Reader): Exp.Unary = {
-      val r = reader.readExpUnary()
-      return r
-    }
-    val r = toBase64(s, fExpUnary)
-    return r
-  }
-
   def fromExpBinary(o: Exp.Binary): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpBinary(o)
     return w.result
-  }
-
-  def fromExpBinaryBase64(o: Exp.Binary): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpBinary(o)
-    return w.resultBase64
   }
 
   def toExpBinary(data: ISZ[U8]): Exp.Binary = {
@@ -6110,25 +4955,10 @@ object MsgPack {
     return r
   }
 
-  def toExpBinaryBase64(s: String): Exp.Binary = {
-    def fExpBinary(reader: Reader): Exp.Binary = {
-      val r = reader.readExpBinary()
-      return r
-    }
-    val r = toBase64(s, fExpBinary)
-    return r
-  }
-
   def fromExpIdent(o: Exp.Ident): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpIdent(o)
     return w.result
-  }
-
-  def fromExpIdentBase64(o: Exp.Ident): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpIdent(o)
-    return w.resultBase64
   }
 
   def toExpIdent(data: ISZ[U8]): Exp.Ident = {
@@ -6140,25 +4970,10 @@ object MsgPack {
     return r
   }
 
-  def toExpIdentBase64(s: String): Exp.Ident = {
-    def fExpIdent(reader: Reader): Exp.Ident = {
-      val r = reader.readExpIdent()
-      return r
-    }
-    val r = toBase64(s, fExpIdent)
-    return r
-  }
-
   def fromExpEta(o: Exp.Eta): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpEta(o)
     return w.result
-  }
-
-  def fromExpEtaBase64(o: Exp.Eta): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpEta(o)
-    return w.resultBase64
   }
 
   def toExpEta(data: ISZ[U8]): Exp.Eta = {
@@ -6170,25 +4985,10 @@ object MsgPack {
     return r
   }
 
-  def toExpEtaBase64(s: String): Exp.Eta = {
-    def fExpEta(reader: Reader): Exp.Eta = {
-      val r = reader.readExpEta()
-      return r
-    }
-    val r = toBase64(s, fExpEta)
-    return r
-  }
-
   def fromExpTuple(o: Exp.Tuple): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpTuple(o)
     return w.result
-  }
-
-  def fromExpTupleBase64(o: Exp.Tuple): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpTuple(o)
-    return w.resultBase64
   }
 
   def toExpTuple(data: ISZ[U8]): Exp.Tuple = {
@@ -6200,25 +5000,10 @@ object MsgPack {
     return r
   }
 
-  def toExpTupleBase64(s: String): Exp.Tuple = {
-    def fExpTuple(reader: Reader): Exp.Tuple = {
-      val r = reader.readExpTuple()
-      return r
-    }
-    val r = toBase64(s, fExpTuple)
-    return r
-  }
-
   def fromExpSelect(o: Exp.Select): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpSelect(o)
     return w.result
-  }
-
-  def fromExpSelectBase64(o: Exp.Select): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpSelect(o)
-    return w.resultBase64
   }
 
   def toExpSelect(data: ISZ[U8]): Exp.Select = {
@@ -6230,25 +5015,10 @@ object MsgPack {
     return r
   }
 
-  def toExpSelectBase64(s: String): Exp.Select = {
-    def fExpSelect(reader: Reader): Exp.Select = {
-      val r = reader.readExpSelect()
-      return r
-    }
-    val r = toBase64(s, fExpSelect)
-    return r
-  }
-
   def fromExpInvoke(o: Exp.Invoke): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpInvoke(o)
     return w.result
-  }
-
-  def fromExpInvokeBase64(o: Exp.Invoke): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpInvoke(o)
-    return w.resultBase64
   }
 
   def toExpInvoke(data: ISZ[U8]): Exp.Invoke = {
@@ -6260,25 +5030,10 @@ object MsgPack {
     return r
   }
 
-  def toExpInvokeBase64(s: String): Exp.Invoke = {
-    def fExpInvoke(reader: Reader): Exp.Invoke = {
-      val r = reader.readExpInvoke()
-      return r
-    }
-    val r = toBase64(s, fExpInvoke)
-    return r
-  }
-
   def fromExpInvokeNamed(o: Exp.InvokeNamed): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpInvokeNamed(o)
     return w.result
-  }
-
-  def fromExpInvokeNamedBase64(o: Exp.InvokeNamed): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpInvokeNamed(o)
-    return w.resultBase64
   }
 
   def toExpInvokeNamed(data: ISZ[U8]): Exp.InvokeNamed = {
@@ -6290,25 +5045,10 @@ object MsgPack {
     return r
   }
 
-  def toExpInvokeNamedBase64(s: String): Exp.InvokeNamed = {
-    def fExpInvokeNamed(reader: Reader): Exp.InvokeNamed = {
-      val r = reader.readExpInvokeNamed()
-      return r
-    }
-    val r = toBase64(s, fExpInvokeNamed)
-    return r
-  }
-
   def fromExpIf(o: Exp.If): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpIf(o)
     return w.result
-  }
-
-  def fromExpIfBase64(o: Exp.If): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpIf(o)
-    return w.resultBase64
   }
 
   def toExpIf(data: ISZ[U8]): Exp.If = {
@@ -6320,25 +5060,10 @@ object MsgPack {
     return r
   }
 
-  def toExpIfBase64(s: String): Exp.If = {
-    def fExpIf(reader: Reader): Exp.If = {
-      val r = reader.readExpIf()
-      return r
-    }
-    val r = toBase64(s, fExpIf)
-    return r
-  }
-
   def fromExpFun(o: Exp.Fun): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpFun(o)
     return w.result
-  }
-
-  def fromExpFunBase64(o: Exp.Fun): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpFun(o)
-    return w.resultBase64
   }
 
   def toExpFun(data: ISZ[U8]): Exp.Fun = {
@@ -6350,25 +5075,10 @@ object MsgPack {
     return r
   }
 
-  def toExpFunBase64(s: String): Exp.Fun = {
-    def fExpFun(reader: Reader): Exp.Fun = {
-      val r = reader.readExpFun()
-      return r
-    }
-    val r = toBase64(s, fExpFun)
-    return r
-  }
-
   def fromExpForYield(o: Exp.ForYield): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpForYield(o)
     return w.result
-  }
-
-  def fromExpForYieldBase64(o: Exp.ForYield): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpForYield(o)
-    return w.resultBase64
   }
 
   def toExpForYield(data: ISZ[U8]): Exp.ForYield = {
@@ -6380,25 +5090,10 @@ object MsgPack {
     return r
   }
 
-  def toExpForYieldBase64(s: String): Exp.ForYield = {
-    def fExpForYield(reader: Reader): Exp.ForYield = {
-      val r = reader.readExpForYield()
-      return r
-    }
-    val r = toBase64(s, fExpForYield)
-    return r
-  }
-
   def fromExpQuant(o: Exp.Quant): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeExpQuant(o)
     return w.result
-  }
-
-  def fromExpQuantBase64(o: Exp.Quant): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpQuant(o)
-    return w.resultBase64
   }
 
   def toExpQuant(data: ISZ[U8]): Exp.Quant = {
@@ -6410,25 +5105,10 @@ object MsgPack {
     return r
   }
 
-  def toExpQuantBase64(s: String): Exp.Quant = {
-    def fExpQuant(reader: Reader): Exp.Quant = {
-      val r = reader.readExpQuant()
-      return r
-    }
-    val r = toBase64(s, fExpQuant)
-    return r
-  }
-
   def fromNamedArg(o: NamedArg): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeNamedArg(o)
     return w.result
-  }
-
-  def fromNamedArgBase64(o: NamedArg): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeNamedArg(o)
-    return w.resultBase64
   }
 
   def toNamedArg(data: ISZ[U8]): NamedArg = {
@@ -6440,25 +5120,10 @@ object MsgPack {
     return r
   }
 
-  def toNamedArgBase64(s: String): NamedArg = {
-    def fNamedArg(reader: Reader): NamedArg = {
-      val r = reader.readNamedArg()
-      return r
-    }
-    val r = toBase64(s, fNamedArg)
-    return r
-  }
-
   def fromVarFragment(o: VarFragment): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeVarFragment(o)
     return w.result
-  }
-
-  def fromVarFragmentBase64(o: VarFragment): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeVarFragment(o)
-    return w.resultBase64
   }
 
   def toVarFragment(data: ISZ[U8]): VarFragment = {
@@ -6470,25 +5135,10 @@ object MsgPack {
     return r
   }
 
-  def toVarFragmentBase64(s: String): VarFragment = {
-    def fVarFragment(reader: Reader): VarFragment = {
-      val r = reader.readVarFragment()
-      return r
-    }
-    val r = toBase64(s, fVarFragment)
-    return r
-  }
-
   def fromDomain(o: Domain): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeDomain(o)
     return w.result
-  }
-
-  def fromDomainBase64(o: Domain): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeDomain(o)
-    return w.resultBase64
   }
 
   def toDomain(data: ISZ[U8]): Domain = {
@@ -6500,25 +5150,10 @@ object MsgPack {
     return r
   }
 
-  def toDomainBase64(s: String): Domain = {
-    def fDomain(reader: Reader): Domain = {
-      val r = reader.readDomain()
-      return r
-    }
-    val r = toBase64(s, fDomain)
-    return r
-  }
-
   def fromDomainType(o: Domain.Type): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeDomainType(o)
     return w.result
-  }
-
-  def fromDomainTypeBase64(o: Domain.Type): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeDomainType(o)
-    return w.resultBase64
   }
 
   def toDomainType(data: ISZ[U8]): Domain.Type = {
@@ -6530,25 +5165,10 @@ object MsgPack {
     return r
   }
 
-  def toDomainTypeBase64(s: String): Domain.Type = {
-    def fDomainType(reader: Reader): Domain.Type = {
-      val r = reader.readDomainType()
-      return r
-    }
-    val r = toBase64(s, fDomainType)
-    return r
-  }
-
   def fromDomainRange(o: Domain.Range): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeDomainRange(o)
     return w.result
-  }
-
-  def fromDomainRangeBase64(o: Domain.Range): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeDomainRange(o)
-    return w.resultBase64
   }
 
   def toDomainRange(data: ISZ[U8]): Domain.Range = {
@@ -6560,25 +5180,10 @@ object MsgPack {
     return r
   }
 
-  def toDomainRangeBase64(s: String): Domain.Range = {
-    def fDomainRange(reader: Reader): Domain.Range = {
-      val r = reader.readDomainRange()
-      return r
-    }
-    val r = toBase64(s, fDomainRange)
-    return r
-  }
-
   def fromId(o: Id): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeId(o)
     return w.result
-  }
-
-  def fromIdBase64(o: Id): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeId(o)
-    return w.resultBase64
   }
 
   def toId(data: ISZ[U8]): Id = {
@@ -6590,25 +5195,10 @@ object MsgPack {
     return r
   }
 
-  def toIdBase64(s: String): Id = {
-    def fId(reader: Reader): Id = {
-      val r = reader.readId()
-      return r
-    }
-    val r = toBase64(s, fId)
-    return r
-  }
-
   def fromName(o: Name): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeName(o)
     return w.result
-  }
-
-  def fromNameBase64(o: Name): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeName(o)
-    return w.resultBase64
   }
 
   def toName(data: ISZ[U8]): Name = {
@@ -6620,25 +5210,10 @@ object MsgPack {
     return r
   }
 
-  def toNameBase64(s: String): Name = {
-    def fName(reader: Reader): Name = {
-      val r = reader.readName()
-      return r
-    }
-    val r = toBase64(s, fName)
-    return r
-  }
-
   def fromBody(o: Body): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeBody(o)
     return w.result
-  }
-
-  def fromBodyBase64(o: Body): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeBody(o)
-    return w.resultBase64
   }
 
   def toBody(data: ISZ[U8]): Body = {
@@ -6650,25 +5225,10 @@ object MsgPack {
     return r
   }
 
-  def toBodyBase64(s: String): Body = {
-    def fBody(reader: Reader): Body = {
-      val r = reader.readBody()
-      return r
-    }
-    val r = toBase64(s, fBody)
-    return r
-  }
-
   def fromAbstractDatatypeParam(o: AbstractDatatypeParam): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAbstractDatatypeParam(o)
     return w.result
-  }
-
-  def fromAbstractDatatypeParamBase64(o: AbstractDatatypeParam): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAbstractDatatypeParam(o)
-    return w.resultBase64
   }
 
   def toAbstractDatatypeParam(data: ISZ[U8]): AbstractDatatypeParam = {
@@ -6680,25 +5240,10 @@ object MsgPack {
     return r
   }
 
-  def toAbstractDatatypeParamBase64(s: String): AbstractDatatypeParam = {
-    def fAbstractDatatypeParam(reader: Reader): AbstractDatatypeParam = {
-      val r = reader.readAbstractDatatypeParam()
-      return r
-    }
-    val r = toBase64(s, fAbstractDatatypeParam)
-    return r
-  }
-
   def fromMethodSig(o: MethodSig): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeMethodSig(o)
     return w.result
-  }
-
-  def fromMethodSigBase64(o: MethodSig): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeMethodSig(o)
-    return w.resultBase64
   }
 
   def toMethodSig(data: ISZ[U8]): MethodSig = {
@@ -6710,25 +5255,10 @@ object MsgPack {
     return r
   }
 
-  def toMethodSigBase64(s: String): MethodSig = {
-    def fMethodSig(reader: Reader): MethodSig = {
-      val r = reader.readMethodSig()
-      return r
-    }
-    val r = toBase64(s, fMethodSig)
-    return r
-  }
-
   def fromParam(o: Param): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeParam(o)
     return w.result
-  }
-
-  def fromParamBase64(o: Param): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeParam(o)
-    return w.resultBase64
   }
 
   def toParam(data: ISZ[U8]): Param = {
@@ -6740,25 +5270,10 @@ object MsgPack {
     return r
   }
 
-  def toParamBase64(s: String): Param = {
-    def fParam(reader: Reader): Param = {
-      val r = reader.readParam()
-      return r
-    }
-    val r = toBase64(s, fParam)
-    return r
-  }
-
   def fromTypeParam(o: TypeParam): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypeParam(o)
     return w.result
-  }
-
-  def fromTypeParamBase64(o: TypeParam): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypeParam(o)
-    return w.resultBase64
   }
 
   def toTypeParam(data: ISZ[U8]): TypeParam = {
@@ -6770,25 +5285,10 @@ object MsgPack {
     return r
   }
 
-  def toTypeParamBase64(s: String): TypeParam = {
-    def fTypeParam(reader: Reader): TypeParam = {
-      val r = reader.readTypeParam()
-      return r
-    }
-    val r = toBase64(s, fTypeParam)
-    return r
-  }
-
   def fromContract(o: Contract): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeContract(o)
     return w.result
-  }
-
-  def fromContractBase64(o: Contract): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeContract(o)
-    return w.resultBase64
   }
 
   def toContract(data: ISZ[U8]): Contract = {
@@ -6800,25 +5300,10 @@ object MsgPack {
     return r
   }
 
-  def toContractBase64(s: String): Contract = {
-    def fContract(reader: Reader): Contract = {
-      val r = reader.readContract()
-      return r
-    }
-    val r = toBase64(s, fContract)
-    return r
-  }
-
   def fromSubContract(o: SubContract): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeSubContract(o)
     return w.result
-  }
-
-  def fromSubContractBase64(o: SubContract): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeSubContract(o)
-    return w.resultBase64
   }
 
   def toSubContract(data: ISZ[U8]): SubContract = {
@@ -6830,25 +5315,10 @@ object MsgPack {
     return r
   }
 
-  def toSubContractBase64(s: String): SubContract = {
-    def fSubContract(reader: Reader): SubContract = {
-      val r = reader.readSubContract()
-      return r
-    }
-    val r = toBase64(s, fSubContract)
-    return r
-  }
-
   def fromSubContractParam(o: SubContractParam): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeSubContractParam(o)
     return w.result
-  }
-
-  def fromSubContractParamBase64(o: SubContractParam): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeSubContractParam(o)
-    return w.resultBase64
   }
 
   def toSubContractParam(data: ISZ[U8]): SubContractParam = {
@@ -6860,25 +5330,10 @@ object MsgPack {
     return r
   }
 
-  def toSubContractParamBase64(s: String): SubContractParam = {
-    def fSubContractParam(reader: Reader): SubContractParam = {
-      val r = reader.readSubContractParam()
-      return r
-    }
-    val r = toBase64(s, fSubContractParam)
-    return r
-  }
-
   def fromWhereDef(o: WhereDef): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeWhereDef(o)
     return w.result
-  }
-
-  def fromWhereDefBase64(o: WhereDef): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeWhereDef(o)
-    return w.resultBase64
   }
 
   def toWhereDef(data: ISZ[U8]): WhereDef = {
@@ -6890,25 +5345,10 @@ object MsgPack {
     return r
   }
 
-  def toWhereDefBase64(s: String): WhereDef = {
-    def fWhereDef(reader: Reader): WhereDef = {
-      val r = reader.readWhereDef()
-      return r
-    }
-    val r = toBase64(s, fWhereDef)
-    return r
-  }
-
   def fromWhereDefVal(o: WhereDef.Val): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeWhereDefVal(o)
     return w.result
-  }
-
-  def fromWhereDefValBase64(o: WhereDef.Val): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeWhereDefVal(o)
-    return w.resultBase64
   }
 
   def toWhereDefVal(data: ISZ[U8]): WhereDef.Val = {
@@ -6920,25 +5360,10 @@ object MsgPack {
     return r
   }
 
-  def toWhereDefValBase64(s: String): WhereDef.Val = {
-    def fWhereDefVal(reader: Reader): WhereDef.Val = {
-      val r = reader.readWhereDefVal()
-      return r
-    }
-    val r = toBase64(s, fWhereDefVal)
-    return r
-  }
-
   def fromWhereDefDef(o: WhereDef.Def): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeWhereDefDef(o)
     return w.result
-  }
-
-  def fromWhereDefDefBase64(o: WhereDef.Def): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeWhereDefDef(o)
-    return w.resultBase64
   }
 
   def toWhereDefDef(data: ISZ[U8]): WhereDef.Def = {
@@ -6950,25 +5375,10 @@ object MsgPack {
     return r
   }
 
-  def toWhereDefDefBase64(s: String): WhereDef.Def = {
-    def fWhereDefDef(reader: Reader): WhereDef.Def = {
-      val r = reader.readWhereDefDef()
-      return r
-    }
-    val r = toBase64(s, fWhereDefDef)
-    return r
-  }
-
   def fromSpecDef(o: SpecDef): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeSpecDef(o)
     return w.result
-  }
-
-  def fromSpecDefBase64(o: SpecDef): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeSpecDef(o)
-    return w.resultBase64
   }
 
   def toSpecDef(data: ISZ[U8]): SpecDef = {
@@ -6980,25 +5390,10 @@ object MsgPack {
     return r
   }
 
-  def toSpecDefBase64(s: String): SpecDef = {
-    def fSpecDef(reader: Reader): SpecDef = {
-      val r = reader.readSpecDef()
-      return r
-    }
-    val r = toBase64(s, fSpecDef)
-    return r
-  }
-
   def fromProofStep(o: ProofStep): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeProofStep(o)
     return w.result
-  }
-
-  def fromProofStepBase64(o: ProofStep): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeProofStep(o)
-    return w.resultBase64
   }
 
   def toProofStep(data: ISZ[U8]): ProofStep = {
@@ -7010,25 +5405,10 @@ object MsgPack {
     return r
   }
 
-  def toProofStepBase64(s: String): ProofStep = {
-    def fProofStep(reader: Reader): ProofStep = {
-      val r = reader.readProofStep()
-      return r
-    }
-    val r = toBase64(s, fProofStep)
-    return r
-  }
-
   def fromProofStepBasic(o: ProofStep.Basic): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeProofStepBasic(o)
     return w.result
-  }
-
-  def fromProofStepBasicBase64(o: ProofStep.Basic): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeProofStepBasic(o)
-    return w.resultBase64
   }
 
   def toProofStepBasic(data: ISZ[U8]): ProofStep.Basic = {
@@ -7040,25 +5420,10 @@ object MsgPack {
     return r
   }
 
-  def toProofStepBasicBase64(s: String): ProofStep.Basic = {
-    def fProofStepBasic(reader: Reader): ProofStep.Basic = {
-      val r = reader.readProofStepBasic()
-      return r
-    }
-    val r = toBase64(s, fProofStepBasic)
-    return r
-  }
-
   def fromProofStepSubProof(o: ProofStep.SubProof): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeProofStepSubProof(o)
     return w.result
-  }
-
-  def fromProofStepSubProofBase64(o: ProofStep.SubProof): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeProofStepSubProof(o)
-    return w.resultBase64
   }
 
   def toProofStepSubProof(data: ISZ[U8]): ProofStep.SubProof = {
@@ -7070,25 +5435,10 @@ object MsgPack {
     return r
   }
 
-  def toProofStepSubProofBase64(s: String): ProofStep.SubProof = {
-    def fProofStepSubProof(reader: Reader): ProofStep.SubProof = {
-      val r = reader.readProofStepSubProof()
-      return r
-    }
-    val r = toBase64(s, fProofStepSubProof)
-    return r
-  }
-
   def fromAssumeProofStep(o: AssumeProofStep): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAssumeProofStep(o)
     return w.result
-  }
-
-  def fromAssumeProofStepBase64(o: AssumeProofStep): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAssumeProofStep(o)
-    return w.resultBase64
   }
 
   def toAssumeProofStep(data: ISZ[U8]): AssumeProofStep = {
@@ -7100,25 +5450,10 @@ object MsgPack {
     return r
   }
 
-  def toAssumeProofStepBase64(s: String): AssumeProofStep = {
-    def fAssumeProofStep(reader: Reader): AssumeProofStep = {
-      val r = reader.readAssumeProofStep()
-      return r
-    }
-    val r = toBase64(s, fAssumeProofStep)
-    return r
-  }
-
   def fromAssumeProofStepRegular(o: AssumeProofStep.Regular): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAssumeProofStepRegular(o)
     return w.result
-  }
-
-  def fromAssumeProofStepRegularBase64(o: AssumeProofStep.Regular): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAssumeProofStepRegular(o)
-    return w.resultBase64
   }
 
   def toAssumeProofStepRegular(data: ISZ[U8]): AssumeProofStep.Regular = {
@@ -7130,25 +5465,10 @@ object MsgPack {
     return r
   }
 
-  def toAssumeProofStepRegularBase64(s: String): AssumeProofStep.Regular = {
-    def fAssumeProofStepRegular(reader: Reader): AssumeProofStep.Regular = {
-      val r = reader.readAssumeProofStepRegular()
-      return r
-    }
-    val r = toBase64(s, fAssumeProofStepRegular)
-    return r
-  }
-
   def fromAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAssumeProofStepForallIntroAps(o)
     return w.result
-  }
-
-  def fromAssumeProofStepForallIntroApsBase64(o: AssumeProofStep.ForallIntroAps): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAssumeProofStepForallIntroAps(o)
-    return w.resultBase64
   }
 
   def toAssumeProofStepForallIntroAps(data: ISZ[U8]): AssumeProofStep.ForallIntroAps = {
@@ -7160,25 +5480,10 @@ object MsgPack {
     return r
   }
 
-  def toAssumeProofStepForallIntroApsBase64(s: String): AssumeProofStep.ForallIntroAps = {
-    def fAssumeProofStepForallIntroAps(reader: Reader): AssumeProofStep.ForallIntroAps = {
-      val r = reader.readAssumeProofStepForallIntroAps()
-      return r
-    }
-    val r = toBase64(s, fAssumeProofStepForallIntroAps)
-    return r
-  }
-
   def fromAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAssumeProofStepExistsElimAps(o)
     return w.result
-  }
-
-  def fromAssumeProofStepExistsElimApsBase64(o: AssumeProofStep.ExistsElimAps): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAssumeProofStepExistsElimAps(o)
-    return w.resultBase64
   }
 
   def toAssumeProofStepExistsElimAps(data: ISZ[U8]): AssumeProofStep.ExistsElimAps = {
@@ -7190,25 +5495,10 @@ object MsgPack {
     return r
   }
 
-  def toAssumeProofStepExistsElimApsBase64(s: String): AssumeProofStep.ExistsElimAps = {
-    def fAssumeProofStepExistsElimAps(reader: Reader): AssumeProofStep.ExistsElimAps = {
-      val r = reader.readAssumeProofStepExistsElimAps()
-      return r
-    }
-    val r = toBase64(s, fAssumeProofStepExistsElimAps)
-    return r
-  }
-
   def fromJust(o: Just): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJust(o)
     return w.result
-  }
-
-  def fromJustBase64(o: Just): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJust(o)
-    return w.resultBase64
   }
 
   def toJust(data: ISZ[U8]): Just = {
@@ -7220,25 +5510,10 @@ object MsgPack {
     return r
   }
 
-  def toJustBase64(s: String): Just = {
-    def fJust(reader: Reader): Just = {
-      val r = reader.readJust()
-      return r
-    }
-    val r = toBase64(s, fJust)
-    return r
-  }
-
   def fromJustPremise(o: Just.Premise): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustPremise(o)
     return w.result
-  }
-
-  def fromJustPremiseBase64(o: Just.Premise): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustPremise(o)
-    return w.resultBase64
   }
 
   def toJustPremise(data: ISZ[U8]): Just.Premise = {
@@ -7250,25 +5525,10 @@ object MsgPack {
     return r
   }
 
-  def toJustPremiseBase64(s: String): Just.Premise = {
-    def fJustPremise(reader: Reader): Just.Premise = {
-      val r = reader.readJustPremise()
-      return r
-    }
-    val r = toBase64(s, fJustPremise)
-    return r
-  }
-
   def fromJustAndIntro(o: Just.AndIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustAndIntro(o)
     return w.result
-  }
-
-  def fromJustAndIntroBase64(o: Just.AndIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustAndIntro(o)
-    return w.resultBase64
   }
 
   def toJustAndIntro(data: ISZ[U8]): Just.AndIntro = {
@@ -7280,25 +5540,10 @@ object MsgPack {
     return r
   }
 
-  def toJustAndIntroBase64(s: String): Just.AndIntro = {
-    def fJustAndIntro(reader: Reader): Just.AndIntro = {
-      val r = reader.readJustAndIntro()
-      return r
-    }
-    val r = toBase64(s, fJustAndIntro)
-    return r
-  }
-
   def fromJustAndElim(o: Just.AndElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustAndElim(o)
     return w.result
-  }
-
-  def fromJustAndElimBase64(o: Just.AndElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustAndElim(o)
-    return w.resultBase64
   }
 
   def toJustAndElim(data: ISZ[U8]): Just.AndElim = {
@@ -7310,25 +5555,10 @@ object MsgPack {
     return r
   }
 
-  def toJustAndElimBase64(s: String): Just.AndElim = {
-    def fJustAndElim(reader: Reader): Just.AndElim = {
-      val r = reader.readJustAndElim()
-      return r
-    }
-    val r = toBase64(s, fJustAndElim)
-    return r
-  }
-
   def fromJustOrIntro(o: Just.OrIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustOrIntro(o)
     return w.result
-  }
-
-  def fromJustOrIntroBase64(o: Just.OrIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustOrIntro(o)
-    return w.resultBase64
   }
 
   def toJustOrIntro(data: ISZ[U8]): Just.OrIntro = {
@@ -7340,25 +5570,10 @@ object MsgPack {
     return r
   }
 
-  def toJustOrIntroBase64(s: String): Just.OrIntro = {
-    def fJustOrIntro(reader: Reader): Just.OrIntro = {
-      val r = reader.readJustOrIntro()
-      return r
-    }
-    val r = toBase64(s, fJustOrIntro)
-    return r
-  }
-
   def fromJustOrElim(o: Just.OrElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustOrElim(o)
     return w.result
-  }
-
-  def fromJustOrElimBase64(o: Just.OrElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustOrElim(o)
-    return w.resultBase64
   }
 
   def toJustOrElim(data: ISZ[U8]): Just.OrElim = {
@@ -7370,25 +5585,10 @@ object MsgPack {
     return r
   }
 
-  def toJustOrElimBase64(s: String): Just.OrElim = {
-    def fJustOrElim(reader: Reader): Just.OrElim = {
-      val r = reader.readJustOrElim()
-      return r
-    }
-    val r = toBase64(s, fJustOrElim)
-    return r
-  }
-
   def fromJustImplyIntro(o: Just.ImplyIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustImplyIntro(o)
     return w.result
-  }
-
-  def fromJustImplyIntroBase64(o: Just.ImplyIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustImplyIntro(o)
-    return w.resultBase64
   }
 
   def toJustImplyIntro(data: ISZ[U8]): Just.ImplyIntro = {
@@ -7400,25 +5600,10 @@ object MsgPack {
     return r
   }
 
-  def toJustImplyIntroBase64(s: String): Just.ImplyIntro = {
-    def fJustImplyIntro(reader: Reader): Just.ImplyIntro = {
-      val r = reader.readJustImplyIntro()
-      return r
-    }
-    val r = toBase64(s, fJustImplyIntro)
-    return r
-  }
-
   def fromJustImplyElim(o: Just.ImplyElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustImplyElim(o)
     return w.result
-  }
-
-  def fromJustImplyElimBase64(o: Just.ImplyElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustImplyElim(o)
-    return w.resultBase64
   }
 
   def toJustImplyElim(data: ISZ[U8]): Just.ImplyElim = {
@@ -7430,25 +5615,10 @@ object MsgPack {
     return r
   }
 
-  def toJustImplyElimBase64(s: String): Just.ImplyElim = {
-    def fJustImplyElim(reader: Reader): Just.ImplyElim = {
-      val r = reader.readJustImplyElim()
-      return r
-    }
-    val r = toBase64(s, fJustImplyElim)
-    return r
-  }
-
   def fromJustNegIntro(o: Just.NegIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustNegIntro(o)
     return w.result
-  }
-
-  def fromJustNegIntroBase64(o: Just.NegIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustNegIntro(o)
-    return w.resultBase64
   }
 
   def toJustNegIntro(data: ISZ[U8]): Just.NegIntro = {
@@ -7460,25 +5630,10 @@ object MsgPack {
     return r
   }
 
-  def toJustNegIntroBase64(s: String): Just.NegIntro = {
-    def fJustNegIntro(reader: Reader): Just.NegIntro = {
-      val r = reader.readJustNegIntro()
-      return r
-    }
-    val r = toBase64(s, fJustNegIntro)
-    return r
-  }
-
   def fromJustNegElim(o: Just.NegElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustNegElim(o)
     return w.result
-  }
-
-  def fromJustNegElimBase64(o: Just.NegElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustNegElim(o)
-    return w.resultBase64
   }
 
   def toJustNegElim(data: ISZ[U8]): Just.NegElim = {
@@ -7490,25 +5645,10 @@ object MsgPack {
     return r
   }
 
-  def toJustNegElimBase64(s: String): Just.NegElim = {
-    def fJustNegElim(reader: Reader): Just.NegElim = {
-      val r = reader.readJustNegElim()
-      return r
-    }
-    val r = toBase64(s, fJustNegElim)
-    return r
-  }
-
   def fromJustBottomElim(o: Just.BottomElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustBottomElim(o)
     return w.result
-  }
-
-  def fromJustBottomElimBase64(o: Just.BottomElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustBottomElim(o)
-    return w.resultBase64
   }
 
   def toJustBottomElim(data: ISZ[U8]): Just.BottomElim = {
@@ -7520,25 +5660,10 @@ object MsgPack {
     return r
   }
 
-  def toJustBottomElimBase64(s: String): Just.BottomElim = {
-    def fJustBottomElim(reader: Reader): Just.BottomElim = {
-      val r = reader.readJustBottomElim()
-      return r
-    }
-    val r = toBase64(s, fJustBottomElim)
-    return r
-  }
-
   def fromJustPbc(o: Just.Pbc): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustPbc(o)
     return w.result
-  }
-
-  def fromJustPbcBase64(o: Just.Pbc): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustPbc(o)
-    return w.resultBase64
   }
 
   def toJustPbc(data: ISZ[U8]): Just.Pbc = {
@@ -7550,25 +5675,10 @@ object MsgPack {
     return r
   }
 
-  def toJustPbcBase64(s: String): Just.Pbc = {
-    def fJustPbc(reader: Reader): Just.Pbc = {
-      val r = reader.readJustPbc()
-      return r
-    }
-    val r = toBase64(s, fJustPbc)
-    return r
-  }
-
   def fromJustForallIntro(o: Just.ForallIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustForallIntro(o)
     return w.result
-  }
-
-  def fromJustForallIntroBase64(o: Just.ForallIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustForallIntro(o)
-    return w.resultBase64
   }
 
   def toJustForallIntro(data: ISZ[U8]): Just.ForallIntro = {
@@ -7580,25 +5690,10 @@ object MsgPack {
     return r
   }
 
-  def toJustForallIntroBase64(s: String): Just.ForallIntro = {
-    def fJustForallIntro(reader: Reader): Just.ForallIntro = {
-      val r = reader.readJustForallIntro()
-      return r
-    }
-    val r = toBase64(s, fJustForallIntro)
-    return r
-  }
-
   def fromJustForallElim(o: Just.ForallElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustForallElim(o)
     return w.result
-  }
-
-  def fromJustForallElimBase64(o: Just.ForallElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustForallElim(o)
-    return w.resultBase64
   }
 
   def toJustForallElim(data: ISZ[U8]): Just.ForallElim = {
@@ -7610,25 +5705,10 @@ object MsgPack {
     return r
   }
 
-  def toJustForallElimBase64(s: String): Just.ForallElim = {
-    def fJustForallElim(reader: Reader): Just.ForallElim = {
-      val r = reader.readJustForallElim()
-      return r
-    }
-    val r = toBase64(s, fJustForallElim)
-    return r
-  }
-
   def fromJustExistsIntro(o: Just.ExistsIntro): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustExistsIntro(o)
     return w.result
-  }
-
-  def fromJustExistsIntroBase64(o: Just.ExistsIntro): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustExistsIntro(o)
-    return w.resultBase64
   }
 
   def toJustExistsIntro(data: ISZ[U8]): Just.ExistsIntro = {
@@ -7640,25 +5720,10 @@ object MsgPack {
     return r
   }
 
-  def toJustExistsIntroBase64(s: String): Just.ExistsIntro = {
-    def fJustExistsIntro(reader: Reader): Just.ExistsIntro = {
-      val r = reader.readJustExistsIntro()
-      return r
-    }
-    val r = toBase64(s, fJustExistsIntro)
-    return r
-  }
-
   def fromJustExistsElim(o: Just.ExistsElim): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustExistsElim(o)
     return w.result
-  }
-
-  def fromJustExistsElimBase64(o: Just.ExistsElim): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustExistsElim(o)
-    return w.resultBase64
   }
 
   def toJustExistsElim(data: ISZ[U8]): Just.ExistsElim = {
@@ -7670,25 +5735,10 @@ object MsgPack {
     return r
   }
 
-  def toJustExistsElimBase64(s: String): Just.ExistsElim = {
-    def fJustExistsElim(reader: Reader): Just.ExistsElim = {
-      val r = reader.readJustExistsElim()
-      return r
-    }
-    val r = toBase64(s, fJustExistsElim)
-    return r
-  }
-
   def fromJustFact(o: Just.Fact): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustFact(o)
     return w.result
-  }
-
-  def fromJustFactBase64(o: Just.Fact): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustFact(o)
-    return w.resultBase64
   }
 
   def toJustFact(data: ISZ[U8]): Just.Fact = {
@@ -7700,25 +5750,10 @@ object MsgPack {
     return r
   }
 
-  def toJustFactBase64(s: String): Just.Fact = {
-    def fJustFact(reader: Reader): Just.Fact = {
-      val r = reader.readJustFact()
-      return r
-    }
-    val r = toBase64(s, fJustFact)
-    return r
-  }
-
   def fromJustInvariant(o: Just.Invariant): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustInvariant(o)
     return w.result
-  }
-
-  def fromJustInvariantBase64(o: Just.Invariant): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustInvariant(o)
-    return w.resultBase64
   }
 
   def toJustInvariant(data: ISZ[U8]): Just.Invariant = {
@@ -7730,25 +5765,10 @@ object MsgPack {
     return r
   }
 
-  def toJustInvariantBase64(s: String): Just.Invariant = {
-    def fJustInvariant(reader: Reader): Just.Invariant = {
-      val r = reader.readJustInvariant()
-      return r
-    }
-    val r = toBase64(s, fJustInvariant)
-    return r
-  }
-
   def fromJustSubst(o: Just.Subst): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustSubst(o)
     return w.result
-  }
-
-  def fromJustSubstBase64(o: Just.Subst): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustSubst(o)
-    return w.resultBase64
   }
 
   def toJustSubst(data: ISZ[U8]): Just.Subst = {
@@ -7760,25 +5780,10 @@ object MsgPack {
     return r
   }
 
-  def toJustSubstBase64(s: String): Just.Subst = {
-    def fJustSubst(reader: Reader): Just.Subst = {
-      val r = reader.readJustSubst()
-      return r
-    }
-    val r = toBase64(s, fJustSubst)
-    return r
-  }
-
   def fromJustAuto(o: Just.Auto): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustAuto(o)
     return w.result
-  }
-
-  def fromJustAutoBase64(o: Just.Auto): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustAuto(o)
-    return w.resultBase64
   }
 
   def toJustAuto(data: ISZ[U8]): Just.Auto = {
@@ -7790,25 +5795,10 @@ object MsgPack {
     return r
   }
 
-  def toJustAutoBase64(s: String): Just.Auto = {
-    def fJustAuto(reader: Reader): Just.Auto = {
-      val r = reader.readJustAuto()
-      return r
-    }
-    val r = toBase64(s, fJustAuto)
-    return r
-  }
-
   def fromJustCoq(o: Just.Coq): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeJustCoq(o)
     return w.result
-  }
-
-  def fromJustCoqBase64(o: Just.Coq): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeJustCoq(o)
-    return w.resultBase64
   }
 
   def toJustCoq(data: ISZ[U8]): Just.Coq = {
@@ -7820,25 +5810,10 @@ object MsgPack {
     return r
   }
 
-  def toJustCoqBase64(s: String): Just.Coq = {
-    def fJustCoq(reader: Reader): Just.Coq = {
-      val r = reader.readJustCoq()
-      return r
-    }
-    val r = toBase64(s, fJustCoq)
-    return r
-  }
-
   def fromTruthTableRow(o: TruthTable.Row): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableRow(o)
     return w.result
-  }
-
-  def fromTruthTableRowBase64(o: TruthTable.Row): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableRow(o)
-    return w.resultBase64
   }
 
   def toTruthTableRow(data: ISZ[U8]): TruthTable.Row = {
@@ -7850,25 +5825,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableRowBase64(s: String): TruthTable.Row = {
-    def fTruthTableRow(reader: Reader): TruthTable.Row = {
-      val r = reader.readTruthTableRow()
-      return r
-    }
-    val r = toBase64(s, fTruthTableRow)
-    return r
-  }
-
   def fromTruthTableAssignment(o: TruthTable.Assignment): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableAssignment(o)
     return w.result
-  }
-
-  def fromTruthTableAssignmentBase64(o: TruthTable.Assignment): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableAssignment(o)
-    return w.resultBase64
   }
 
   def toTruthTableAssignment(data: ISZ[U8]): TruthTable.Assignment = {
@@ -7880,25 +5840,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableAssignmentBase64(s: String): TruthTable.Assignment = {
-    def fTruthTableAssignment(reader: Reader): TruthTable.Assignment = {
-      val r = reader.readTruthTableAssignment()
-      return r
-    }
-    val r = toBase64(s, fTruthTableAssignment)
-    return r
-  }
-
   def fromTruthTableConclusion(o: TruthTable.Conclusion): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableConclusion(o)
     return w.result
-  }
-
-  def fromTruthTableConclusionBase64(o: TruthTable.Conclusion): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableConclusion(o)
-    return w.resultBase64
   }
 
   def toTruthTableConclusion(data: ISZ[U8]): TruthTable.Conclusion = {
@@ -7910,25 +5855,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableConclusionBase64(s: String): TruthTable.Conclusion = {
-    def fTruthTableConclusion(reader: Reader): TruthTable.Conclusion = {
-      val r = reader.readTruthTableConclusion()
-      return r
-    }
-    val r = toBase64(s, fTruthTableConclusion)
-    return r
-  }
-
   def fromTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableConclusionValidity(o)
     return w.result
-  }
-
-  def fromTruthTableConclusionValidityBase64(o: TruthTable.Conclusion.Validity): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableConclusionValidity(o)
-    return w.resultBase64
   }
 
   def toTruthTableConclusionValidity(data: ISZ[U8]): TruthTable.Conclusion.Validity = {
@@ -7940,25 +5870,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableConclusionValidityBase64(s: String): TruthTable.Conclusion.Validity = {
-    def fTruthTableConclusionValidity(reader: Reader): TruthTable.Conclusion.Validity = {
-      val r = reader.readTruthTableConclusionValidity()
-      return r
-    }
-    val r = toBase64(s, fTruthTableConclusionValidity)
-    return r
-  }
-
   def fromTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableConclusionTautology(o)
     return w.result
-  }
-
-  def fromTruthTableConclusionTautologyBase64(o: TruthTable.Conclusion.Tautology): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableConclusionTautology(o)
-    return w.resultBase64
   }
 
   def toTruthTableConclusionTautology(data: ISZ[U8]): TruthTable.Conclusion.Tautology = {
@@ -7970,25 +5885,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableConclusionTautologyBase64(s: String): TruthTable.Conclusion.Tautology = {
-    def fTruthTableConclusionTautology(reader: Reader): TruthTable.Conclusion.Tautology = {
-      val r = reader.readTruthTableConclusionTautology()
-      return r
-    }
-    val r = toBase64(s, fTruthTableConclusionTautology)
-    return r
-  }
-
   def fromTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableConclusionContradictory(o)
     return w.result
-  }
-
-  def fromTruthTableConclusionContradictoryBase64(o: TruthTable.Conclusion.Contradictory): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableConclusionContradictory(o)
-    return w.resultBase64
   }
 
   def toTruthTableConclusionContradictory(data: ISZ[U8]): TruthTable.Conclusion.Contradictory = {
@@ -8000,25 +5900,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableConclusionContradictoryBase64(s: String): TruthTable.Conclusion.Contradictory = {
-    def fTruthTableConclusionContradictory(reader: Reader): TruthTable.Conclusion.Contradictory = {
-      val r = reader.readTruthTableConclusionContradictory()
-      return r
-    }
-    val r = toBase64(s, fTruthTableConclusionContradictory)
-    return r
-  }
-
   def fromTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTruthTableConclusionContingent(o)
     return w.result
-  }
-
-  def fromTruthTableConclusionContingentBase64(o: TruthTable.Conclusion.Contingent): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTruthTableConclusionContingent(o)
-    return w.resultBase64
   }
 
   def toTruthTableConclusionContingent(data: ISZ[U8]): TruthTable.Conclusion.Contingent = {
@@ -8030,25 +5915,10 @@ object MsgPack {
     return r
   }
 
-  def toTruthTableConclusionContingentBase64(s: String): TruthTable.Conclusion.Contingent = {
-    def fTruthTableConclusionContingent(reader: Reader): TruthTable.Conclusion.Contingent = {
-      val r = reader.readTruthTableConclusionContingent()
-      return r
-    }
-    val r = toBase64(s, fTruthTableConclusionContingent)
-    return r
-  }
-
   def fromTyped(o: Typed): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTyped(o)
     return w.result
-  }
-
-  def fromTypedBase64(o: Typed): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTyped(o)
-    return w.resultBase64
   }
 
   def toTyped(data: ISZ[U8]): Typed = {
@@ -8060,25 +5930,10 @@ object MsgPack {
     return r
   }
 
-  def toTypedBase64(s: String): Typed = {
-    def fTyped(reader: Reader): Typed = {
-      val r = reader.readTyped()
-      return r
-    }
-    val r = toBase64(s, fTyped)
-    return r
-  }
-
   def fromTypedName(o: Typed.Name): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypedName(o)
     return w.result
-  }
-
-  def fromTypedNameBase64(o: Typed.Name): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypedName(o)
-    return w.resultBase64
   }
 
   def toTypedName(data: ISZ[U8]): Typed.Name = {
@@ -8090,25 +5945,10 @@ object MsgPack {
     return r
   }
 
-  def toTypedNameBase64(s: String): Typed.Name = {
-    def fTypedName(reader: Reader): Typed.Name = {
-      val r = reader.readTypedName()
-      return r
-    }
-    val r = toBase64(s, fTypedName)
-    return r
-  }
-
   def fromTypedTuple(o: Typed.Tuple): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypedTuple(o)
     return w.result
-  }
-
-  def fromTypedTupleBase64(o: Typed.Tuple): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypedTuple(o)
-    return w.resultBase64
   }
 
   def toTypedTuple(data: ISZ[U8]): Typed.Tuple = {
@@ -8120,25 +5960,10 @@ object MsgPack {
     return r
   }
 
-  def toTypedTupleBase64(s: String): Typed.Tuple = {
-    def fTypedTuple(reader: Reader): Typed.Tuple = {
-      val r = reader.readTypedTuple()
-      return r
-    }
-    val r = toBase64(s, fTypedTuple)
-    return r
-  }
-
   def fromTypedFun(o: Typed.Fun): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypedFun(o)
     return w.result
-  }
-
-  def fromTypedFunBase64(o: Typed.Fun): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypedFun(o)
-    return w.resultBase64
   }
 
   def toTypedFun(data: ISZ[U8]): Typed.Fun = {
@@ -8150,25 +5975,10 @@ object MsgPack {
     return r
   }
 
-  def toTypedFunBase64(s: String): Typed.Fun = {
-    def fTypedFun(reader: Reader): Typed.Fun = {
-      val r = reader.readTypedFun()
-      return r
-    }
-    val r = toBase64(s, fTypedFun)
-    return r
-  }
-
   def fromAttr(o: Attr): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeAttr(o)
     return w.result
-  }
-
-  def fromAttrBase64(o: Attr): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeAttr(o)
-    return w.resultBase64
   }
 
   def toAttr(data: ISZ[U8]): Attr = {
@@ -8180,25 +5990,10 @@ object MsgPack {
     return r
   }
 
-  def toAttrBase64(s: String): Attr = {
-    def fAttr(reader: Reader): Attr = {
-      val r = reader.readAttr()
-      return r
-    }
-    val r = toBase64(s, fAttr)
-    return r
-  }
-
   def fromTypedAttr(o: TypedAttr): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeTypedAttr(o)
     return w.result
-  }
-
-  def fromTypedAttrBase64(o: TypedAttr): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeTypedAttr(o)
-    return w.resultBase64
   }
 
   def toTypedAttr(data: ISZ[U8]): TypedAttr = {
@@ -8210,25 +6005,10 @@ object MsgPack {
     return r
   }
 
-  def toTypedAttrBase64(s: String): TypedAttr = {
-    def fTypedAttr(reader: Reader): TypedAttr = {
-      val r = reader.readTypedAttr()
-      return r
-    }
-    val r = toBase64(s, fTypedAttr)
-    return r
-  }
-
   def fromResolvedAttr(o: ResolvedAttr): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeResolvedAttr(o)
     return w.result
-  }
-
-  def fromResolvedAttrBase64(o: ResolvedAttr): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeResolvedAttr(o)
-    return w.resultBase64
   }
 
   def toResolvedAttr(data: ISZ[U8]): ResolvedAttr = {
@@ -8240,25 +6020,10 @@ object MsgPack {
     return r
   }
 
-  def toResolvedAttrBase64(s: String): ResolvedAttr = {
-    def fResolvedAttr(reader: Reader): ResolvedAttr = {
-      val r = reader.readResolvedAttr()
-      return r
-    }
-    val r = toBase64(s, fResolvedAttr)
-    return r
-  }
-
   def fromResolvedInfo(o: ResolvedInfo): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writeResolvedInfo(o)
     return w.result
-  }
-
-  def fromResolvedInfoBase64(o: ResolvedInfo): String = {
-    val w = Writer(MessagePack.writer)
-    w.writeResolvedInfo(o)
-    return w.resultBase64
   }
 
   def toResolvedInfo(data: ISZ[U8]): ResolvedInfo = {
@@ -8270,25 +6035,10 @@ object MsgPack {
     return r
   }
 
-  def toResolvedInfoBase64(s: String): ResolvedInfo = {
-    def fResolvedInfo(reader: Reader): ResolvedInfo = {
-      val r = reader.readResolvedInfo()
-      return r
-    }
-    val r = toBase64(s, fResolvedInfo)
-    return r
-  }
-
   def fromPosInfo(o: PosInfo): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
     w.writePosInfo(o)
     return w.result
-  }
-
-  def fromPosInfoBase64(o: PosInfo): String = {
-    val w = Writer(MessagePack.writer)
-    w.writePosInfo(o)
-    return w.resultBase64
   }
 
   def toPosInfo(data: ISZ[U8]): PosInfo = {
@@ -8297,15 +6047,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fPosInfo)
-    return r
-  }
-
-  def toPosInfoBase64(s: String): PosInfo = {
-    def fPosInfo(reader: Reader): PosInfo = {
-      val r = reader.readPosInfo()
-      return r
-    }
-    val r = toBase64(s, fPosInfo)
     return r
   }
 
