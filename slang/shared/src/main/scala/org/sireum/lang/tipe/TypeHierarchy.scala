@@ -32,50 +32,12 @@ import org.sireum.lang.util._
 import org.sireum.lang.{ast => AST}
 
 object TypeHierarchy {
-  @datatype class Type(poset: Poset[AST.Typed.Name],
-                       aliases: HashMap[AST.Typed.Name, AST.Typed]) {
-    @pure def rootTypes: ISZ[AST.Typed.Name] = {
-      var r = ISZ[AST.Typed.Name]()
-      for (ps <- poset.parents.entries) {
-        if (ps._2.isEmpty) {
-          r = r :+ ps._1
-        }
-      }
-      return r
-    }
-
-    def dealias(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
-      aliases.get(t) match {
-        case Some(t2: AST.Typed.Name) =>
-          val r = dealias(t2, reporter)
-          return r
-        case Some(_) =>
-          reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
-          return None()
-        case _ => return Some(t)
-      }
-    }
-
-    def checkCyclic(reporter: Reporter): Unit = {
-      var cache = HashMap.empty[AST.Typed.Name, HashSet[AST.Typed.Name]]
-      for (t <- rootTypes) {
-        val r = poset.descendantsCache(t, cache)
-        cache = r._2
-      }
-      for (kv <- cache.entries) {
-        val k = kv._1
-        val v = kv._2
-        if (v.contains(k)) {
-          reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.ids, ".")}.".render)
-        }
-      }
-    }
-  }
 
   @pure def typedInfo(info: TypeInfo): AST.Typed.Name = {
     @pure def typedParam(tp: AST.TypeParam): AST.Typed = {
       return AST.Typed.Name(ISZ(tp.id.value), ISZ(), tp.id.attr.posOpt)
     }
+
     info match {
       case info: TypeInfo.SubZ => return AST.Typed.Name(info.name, ISZ(), info.posOpt)
       case info: TypeInfo.Enum => return AST.Typed.Name(info.name :+ "Type", ISZ(), info.posOpt)
@@ -92,7 +54,9 @@ object TypeHierarchy {
     }
   }
 
-  def build(typeMap: TypeMap, init: Type, reporter: Reporter): Type = {
+  def build(init: TypeHierarchy, reporter: Reporter): TypeHierarchy = {
+    val typeMap = init.typeMap
+
     def resolveType(scope: Scope, t: AST.Type): AST.Typed = {
       t match {
         case t: AST.Type.Named =>
@@ -133,6 +97,7 @@ object TypeHierarchy {
           AST.Typed.Fun(ts, rt, t.posOpt)
       }
     }
+
     def resolveTypeNameds(posOpt: Option[AST.PosInfo],
                           scope: Scope,
                           ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
@@ -146,8 +111,10 @@ object TypeHierarchy {
       }
       return r
     }
+
     val zName: QName = ISZ("org", "sireum", "Z")
     var r = init
+
     def resolveAlias(info: TypeInfo.TypeAlias, seen: HashSet[QName]): AST.Typed = {
       if (seen.contains(info.name)) {
         reporter.error(info.posOpt, resolverKind, st"Type alias ${(info.name, ".")} is cyclic.".render)
@@ -171,6 +138,7 @@ object TypeHierarchy {
       up(r.aliases) = r.aliases.put(typed, t)
       return t
     }
+
     if (!typeMap.contains(zName)) {
       reporter.error(None(), resolverKind, "Could not find Z type.")
       return r
@@ -204,5 +172,47 @@ object TypeHierarchy {
     }
     r.checkCyclic(reporter)
     return r
+  }
+}
+
+@datatype class TypeHierarchy(nameMap: NameMap,
+                              typeMap: TypeMap,
+                              poset: Poset[AST.Typed.Name],
+                              aliases: HashMap[AST.Typed.Name, AST.Typed]) {
+  @pure def rootTypes: ISZ[AST.Typed.Name] = {
+    var r = ISZ[AST.Typed.Name]()
+    for (ps <- poset.parents.entries) {
+      if (ps._2.isEmpty) {
+        r = r :+ ps._1
+      }
+    }
+    return r
+  }
+
+  def dealias(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
+    aliases.get(t) match {
+      case Some(t2: AST.Typed.Name) =>
+        val r = dealias(t2, reporter)
+        return r
+      case Some(_) =>
+        reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
+        return None()
+      case _ => return Some(t)
+    }
+  }
+
+  def checkCyclic(reporter: Reporter): Unit = {
+    var cache = HashMap.empty[AST.Typed.Name, HashSet[AST.Typed.Name]]
+    for (t <- rootTypes) {
+      val r = poset.descendantsCache(t, cache)
+      cache = r._2
+    }
+    for (kv <- cache.entries) {
+      val k = kv._1
+      val v = kv._2
+      if (v.contains(k)) {
+        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.ids, ".")}.".render)
+      }
+    }
   }
 }
