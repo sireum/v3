@@ -34,10 +34,10 @@ import org.sireum.lang.util._
 
 object TypeOutliner {
 
-  def checkOutline(typeChecker: TypeChecker,
-                   reporter: Reporter): TypeChecker = {
-    def combine(r: (TypeChecker, AccumulatingReporter),
-                f: TypeChecker => (TypeChecker, AccumulatingReporter)): (TypeChecker, AccumulatingReporter) = {
+  def checkOutline(typeHierarchy: TypeHierarchy,
+                   reporter: Reporter): TypeHierarchy = {
+    def combine(r: (TypeHierarchy, AccumulatingReporter),
+                f: TypeHierarchy => (TypeHierarchy, AccumulatingReporter)): (TypeHierarchy, AccumulatingReporter) = {
       val p = f(r._1)
       return (p._1, AccumulatingReporter.combine(r._2, p._2))
     }
@@ -52,10 +52,10 @@ object TypeOutliner {
       }
 
       var r = T
-      for (p <- typeChecker.typeHierarchy.poset.parentsOf(AST.Typed.Name(name, ISZ(), None())).elements if r) {
+      for (p <- typeHierarchy.poset.parentsOf(AST.Typed.Name(name, ISZ(), None())).elements if r) {
         typeMap.get(p.ids).get match {
           case ti: TypeInfo.TypeAlias =>
-            val t = typeChecker.typeHierarchy.dealias(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
+            val t = typeHierarchy.dealias(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
             r = isOutlined(t.ids)
           case ti =>
             r = isOutlined(ti.name)
@@ -64,24 +64,24 @@ object TypeOutliner {
       return r
     }
 
-    var workList = typeChecker.rootTypes()
-    var tc = typeChecker
+    var workList = typeHierarchy.rootTypeNames()
+    var th = typeHierarchy
     while (workList.nonEmpty && !reporter.hasIssue) {
       var l = ISZ[QName]()
-      var jobs = ISZ[() => TypeChecker => (TypeChecker, AccumulatingReporter)]()
+      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
       for (name <- workList) {
-        val ti = tc.typeMap.get(name).get
+        val ti = th.typeMap.get(name).get
         var ok: B = F
-        val to = TypeOutliner(tc)
+        val to = TypeOutliner(th)
         ti match {
           case ti: TypeInfo.Sig if !ti.outlined =>
-            val po = parentsOutlined(ti.name, tc.typeMap)
+            val po = parentsOutlined(ti.name, th.typeMap)
             if (po) {
               jobs = jobs :+ (() => to.outlineSig(ti))
               ok = T
             }
           case ti: TypeInfo.AbstractDatatype if !ti.outlined =>
-            val po = parentsOutlined(ti.name, tc.typeMap)
+            val po = parentsOutlined(ti.name, th.typeMap)
             if (po) {
               jobs = jobs :+ (() => to.outlineAdt(ti))
               ok = T
@@ -89,7 +89,7 @@ object TypeOutliner {
           case _ =>
         }
         if (ok) {
-          val children = tc.typeHierarchy.poset.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements
+          val children = typeHierarchy.poset.childrenOf(AST.Typed.Name(name, ISZ(), None())).elements
           for (n <- children) {
             l = l :+ n.ids
           }
@@ -98,16 +98,16 @@ object TypeOutliner {
       val jobsOps = ISZOps(jobs)
       val r = jobsOps.
         parMapFoldLeft(
-          (f: () => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(),
+          (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
           combine _,
-          (tc, AccumulatingReporter.create))
+          (th, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
-      tc = r._1
+      th = r._1
       workList = l
     }
-    var jobs = ISZ[() => TypeChecker => (TypeChecker, AccumulatingReporter)]()
-    val to = TypeOutliner(tc)
-    for (info <- tc.nameMap.values) {
+    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
+    val to = TypeOutliner(th)
+    for (info <- th.nameMap.values) {
       info match {
         case info: Info.Object => jobs = jobs :+ (() => to.outlineObject(info))
         case _ =>
@@ -116,13 +116,13 @@ object TypeOutliner {
     if (!reporter.hasIssue) {
       val r = ISZOps(jobs).
         parMapFoldLeft(
-          (f: () => TypeChecker => (TypeChecker, AccumulatingReporter)) => f(),
+          (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
           combine _,
-          (tc, AccumulatingReporter.create))
+          (th, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
-      tc = r._1
-      var gnm = tc.nameMap
-      val to2 = TypeOutliner(tc)
+      th = r._1
+      var gnm = th.nameMap
+      val to2 = TypeOutliner(th)
       for (info <- gnm.values) {
         val infoOpt: Option[Info] = info match {
           case info: Info.Var if !info.outlined => to2.outlineVar(info, reporter)
@@ -136,18 +136,18 @@ object TypeOutliner {
           case _ =>
         }
       }
-      return tc(typeHierarchy = tc.typeHierarchy(nameMap = gnm))
+      return th(nameMap = gnm)
     } else {
-      return tc
+      return th
     }
   }
 }
 
-@datatype class TypeOutliner(typeChecker: TypeChecker) {
+@datatype class TypeOutliner(typeHierarchy: TypeHierarchy) {
 
   def outlineSpecVar(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
     val sv = info.ast
-    val tOpt = typeChecker.typeCheck(info.scope, sv.tipe, reporter)
+    val tOpt = typeHierarchy.typed(info.scope, sv.tipe, reporter)
     tOpt match {
       case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
       case _ => return None()
@@ -157,7 +157,7 @@ object TypeOutliner {
   def outlineVar(info: Info.Var, reporter: Reporter): Option[Info] = {
     val v = info.ast
     val tpe = v.tipeOpt.get
-    val tOpt = typeChecker.typeCheck(info.scope, tpe, reporter)
+    val tOpt = typeHierarchy.typed(info.scope, tpe, reporter)
     tOpt match {
       case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
       case _ => return None()
@@ -182,7 +182,7 @@ object TypeOutliner {
     }
   }
 
-  @pure def outlineObject(info: Info.Object): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+  @pure def outlineObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
 
     var infos = ISZ[(QName, Info)]()
@@ -196,7 +196,7 @@ object TypeOutliner {
       }
       idOpt match {
         case Some(id) =>
-          val infoOpt: Option[Info] = typeChecker.nameMap.get(info.name :+ id).get match {
+          val infoOpt: Option[Info] = typeHierarchy.nameMap.get(info.name :+ id).get match {
             case inf: Info.SpecVar => val rOpt = outlineSpecVar(inf, reporter); rOpt
             case inf: Info.Var => val rOpt = outlineVar(inf, reporter); rOpt
             case inf: Info.SpecMethod => val rOpt = outlineSpecMethod(inf, reporter); rOpt
@@ -211,10 +211,10 @@ object TypeOutliner {
       }
     }
 
-    return (tc: TypeChecker) => (tc(typeHierarchy = tc.typeHierarchy(nameMap = tc.nameMap.putAll(infos))), reporter)
+    return (th: TypeHierarchy) => (th(nameMap = th.nameMap.putAll(infos)), reporter)
   }
 
-  @pure def outlineSig(info: TypeInfo.Sig): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+  @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
@@ -225,10 +225,10 @@ object TypeOutliner {
     val specMethods = members.specMethods
     val methods = members.methods
     val newInfo = info(outlined = T, specVars = specVars, specMethods = specMethods, methods = methods)
-    return (tc: TypeChecker) => (tc(typeHierarchy = tc.typeHierarchy(typeMap = tc.typeMap.put(info.name, newInfo))), reporter)
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
-  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeChecker => (TypeChecker, AccumulatingReporter) = {
+  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
@@ -240,7 +240,7 @@ object TypeOutliner {
     val specMethods = members.specMethods
     val methods = members.methods
     val newInfo = info(outlined = T, specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
-    return (tc: TypeChecker) => (tc(typeHierarchy = tc.typeHierarchy(typeMap = tc.typeMap.put(info.name, newInfo))), reporter)
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
   def outlineMethodSig(scope: Scope,
@@ -249,7 +249,7 @@ object TypeOutliner {
     val id = sig.id.value
     val typeParams = sig.typeParams
     for (tp <- typeParams) {
-      scope.resolveType(typeChecker.typeMap, ISZ(tp.id.value)) match {
+      scope.resolveType(typeHierarchy.typeMap, ISZ(tp.id.value)) match {
         case Some(ti) if isTypeParamName(ti.name) =>
           reporter.error(tp.id.attr.posOpt, TypeChecker.typeCheckerKind,
             s"Cannot redeclare type parameter $id.")
@@ -261,13 +261,13 @@ object TypeOutliner {
     val mScope = localTypeScope(tm.map, scope)
     var params = ISZ[AST.Param]()
     for (p <- sig.params) {
-      val tOpt = typeChecker.typeCheck(mScope, p.tipe, reporter)
+      val tOpt = typeHierarchy.typed(mScope, p.tipe, reporter)
       tOpt match {
         case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
         case _ => return None()
       }
     }
-    val tOpt = typeChecker.typeCheck(mScope, sig.returnType, reporter)
+    val tOpt = typeHierarchy.typed(mScope, sig.returnType, reporter)
     tOpt match {
       case Some(t) => return Some(sig(params = params, returnType = sig.returnType.typed(t)))
       case _ => return None()
@@ -296,7 +296,7 @@ object TypeOutliner {
           s"Cannot redeclare $id.")
         return
       }
-      val tOpt = typeChecker.typeCheck(scope, sv.tipe, reporter)
+      val tOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
       tOpt match {
         case Some(t) => specVars = specVars.put(id, (name, sv(tipe = sv.tipe.typed(t))))
         case _ =>
@@ -311,7 +311,7 @@ object TypeOutliner {
         return
       }
       val tpe = v.tipeOpt.get
-      val tOpt = typeChecker.typeCheck(scope, tpe, reporter)
+      val tOpt = typeHierarchy.typed(scope, tpe, reporter)
       tOpt match {
         case Some(t) =>
           vars = vars.put(id, (name, v(tipeOpt = Some(tpe.typed(t)))))
@@ -498,8 +498,8 @@ object TypeOutliner {
                             m2: AST.Stmt.Method,
                             substMap: HashMap[String, AST.Typed],
                             posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeChecker.dealias(TypeChecker.extractMethodType(m1.sig), posOpt, reporter)
-      val t2 = typeChecker.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(m2.sig)), posOpt, reporter)
+      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m1.sig), posOpt, reporter)
+      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(m2.sig)), posOpt, reporter)
       return TypeChecker.isEqType(t1, t2)
     }
 
@@ -507,9 +507,9 @@ object TypeOutliner {
                               supM: AST.Stmt.Method,
                               substMap: HashMap[String, AST.Typed],
                               posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeChecker.dealias(TypeChecker.extractMethodType(m.sig), posOpt, reporter)
-      val t2 = typeChecker.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(supM.sig)), posOpt, reporter)
-      return typeChecker.isRefinement(t1, t2)
+      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m.sig), posOpt, reporter)
+      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(supM.sig)), posOpt, reporter)
+      return typeHierarchy.isRefinement(t1, t2)
     }
 
     def checkVarRefinement(m: AST.Stmt.Method,
@@ -522,9 +522,9 @@ object TypeOutliner {
       if (m.sig.hasParams || m.sig.params.nonEmpty) {
         return F
       }
-      val rt = typeChecker.dealias(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get), posOpt, reporter)
-      val t = typeChecker.dealias(v.tipeOpt.get.typedOpt.get, posOpt, reporter)
-      val r = typeChecker.isSubType(t, rt)
+      val rt = typeHierarchy.dealias(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get), posOpt, reporter)
+      val t = typeHierarchy.dealias(v.tipeOpt.get.typedOpt.get, posOpt, reporter)
+      val r = typeHierarchy.isSubType(t, rt)
       return r
     }
 
@@ -611,13 +611,13 @@ object TypeOutliner {
     }
 
     for (parent <- parents) {
-      val tOpt = typeChecker.typeCheck(scope, parent, reporter)
+      val tOpt = typeHierarchy.typed(scope, parent, reporter)
       tOpt match {
         case Some(t: AST.Typed.Name) =>
-          val dt = typeChecker.dealias(t, parent.attr.posOpt, reporter)
+          val dt = typeHierarchy.dealias(t, parent.attr.posOpt, reporter)
           dt match {
             case dt: AST.Typed.Name =>
-              typeChecker.typeMap.get(dt.ids) match {
+              typeHierarchy.typeMap.get(dt.ids) match {
                 case Some(ti: TypeInfo.Sig) =>
                   val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
                   substMapOpt match {
