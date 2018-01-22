@@ -55,7 +55,7 @@ object TypeOutliner {
       for (p <- typeHierarchy.poset.parentsOf(AST.Typed.Name(name, ISZ(), None())).elements if r) {
         typeMap.get(p.ids).get match {
           case ti: TypeInfo.TypeAlias =>
-            val t = typeHierarchy.dealias(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
+            val t = typeHierarchy.dealiasInit(AST.Typed.Name(ti.name, ISZ(), None()), reporter).get
             r = isOutlined(t.ids)
           case ti =>
             r = isOutlined(ti.name)

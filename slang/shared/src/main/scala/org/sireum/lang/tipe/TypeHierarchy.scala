@@ -201,10 +201,10 @@ object TypeHierarchy {
   }
 
 
-  def dealias(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
+  def dealiasInit(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
     aliases.get(t) match {
       case Some(t2: AST.Typed.Name) =>
-        val r = dealias(t2, reporter)
+        val r = dealiasInit(t2, reporter)
         return r
       case Some(_) =>
         reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
