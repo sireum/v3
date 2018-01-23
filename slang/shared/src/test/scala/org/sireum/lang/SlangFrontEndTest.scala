@@ -35,6 +35,7 @@ import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
 class SlangFrontEndTest extends SireumSpec {
   val notJs: Boolean = !org.sireum.$internal.Macro.isJs
+  val tq = "\"\"\""
 
   {
 
@@ -159,6 +160,13 @@ class SlangFrontEndTest extends SireumSpec {
       failing("package a.b.c; object Foo", packageFirstMember, addImport = false)
 
       failing("object Foo", "⊢", addImport = false)
+
+      failingPos(
+        s"""def foo(x: Z): Unit = {
+           |  l$tq requires x > -2
+           |                x = 0 $tq
+           |}
+       """.stripMargin, (4, 17), (4, 22), isWorksheet = true)
 
       "Val/Var" - {
 
@@ -365,6 +373,25 @@ class SlangFrontEndTest extends SireumSpec {
       val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet, isPrelude, reporter)
       val b = reporter.issues.elements.exists(_.message.value.contains(msg))
+      if (!b) report(r, reporter)
+      b
+    }
+
+  def failingPos(text: String,
+                 begin: (org.sireum.Z, org.sireum.Z),
+                 end: (org.sireum.Z, org.sireum.Z),
+                 addImport: Boolean = true,
+                 isWorksheet: Boolean = false,
+                 isPrelude: Boolean = false)(
+                  implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
+    spec.*(sub(text)) {
+      val reporter = AccumulatingReporter.create
+      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+        isWorksheet, isPrelude, reporter)
+      val b = reporter.issues.elements.exists(_.posOpt.exists(info =>
+        info.beginLine == begin._1 && info.beginColumn == begin._2 &&
+          info.endLine == end._1 && info.endColumn == end._2
+      ))
       if (!b) report(r, reporter)
       b
     }

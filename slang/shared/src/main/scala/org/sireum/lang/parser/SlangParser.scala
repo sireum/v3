@@ -143,7 +143,7 @@ class SlangParser(text: Predef.String,
                   isDiet: Boolean,
                   fileUriOpt: Option[String],
                   reporter: Reporter) {
-  var lPointOpt: scala.Option[(Int, Int, Int)] = scala.None
+  var lPointOpt: scala.Option[Int] = scala.None
 
   def parseTopUnit(): Result = {
     try {
@@ -182,30 +182,24 @@ class SlangParser(text: Predef.String,
   }
 
   def posInfo(pos: Position): AST.PosInfo = {
-    val (startOffset, startLine, startColumn) = lPointOpt.getOrElse((0, 0, 0))
+    val startOffset = lPointOpt.getOrElse(0)
+    val range = Position.Range(input, startOffset + pos.start, startOffset + pos.end)
     AST.PosInfo(
       fileUriOpt = fileUriOpt,
-      beginLine = startLine + pos.startLine + 1,
-      beginColumn = startColumn + pos.startColumn + 1,
-      endLine = startLine + pos.endLine + 1,
-      endColumn = startColumn + pos.endColumn + 1,
-      offset = startOffset + pos.start,
-      length = pos.end - pos.start
+      beginLine = range.startLine + 1,
+      beginColumn = range.startColumn + 1,
+      endLine = range.endLine + 1,
+      endColumn = range.endColumn + 1,
+      offset = range.start,
+      length = range.end - range.start
     )
   }
 
   def posOpt(pos: Position): Option[AST.PosInfo] = Some(posInfo(pos))
 
   def error(pos: Position,
-            message: Predef.String): Unit = {
-    lPointOpt match {
-      case scala.Some((startOffset, _, _)) =>
-        reporter.error(
-          posOpt(Position.Range(input, startOffset + pos.start, startOffset + pos.end)),
-          SlangParser.messageKind, message)
-      case _ => reporter.error(posOpt(pos), SlangParser.messageKind, message)
-    }
-  }
+            message: Predef.String): Unit =
+    reporter.error(posOpt(pos), SlangParser.messageKind, message)
 
   val unitType = AST.Type.Named(AST.Name(ISZ(AST.Id("Unit", emptyAttr)), emptyAttr), ISZ(), emptyTypedAttr)
 
@@ -2008,10 +2002,8 @@ class SlangParser(text: Predef.String,
   def lParser[T](exp: Term.Interpolate)(f: LParser => T): T = {
     val pos = exp.pos
     val startOffset = pos.start + 4
-    val startLine = pos.startLine
-    val startColum = pos.startColumn
     val endOffset = pos.end - 3
-    lPointOpt = scala.Some((startOffset, startLine, startColum))
+    lPointOpt = scala.Some(startOffset)
     try f(new LParser(Input.Slice(input, startOffset, endOffset), dialect, this))
     catch {
       case e: ParseException => throw ParseException(
@@ -2113,7 +2105,7 @@ class SlangParser(text: Predef.String,
   }
 
   def syntax(t: Tree, max: Int = 20): Predef.String = {
-    val startOffset = lPointOpt.map(_._1).getOrElse(0)
+    val startOffset = lPointOpt.getOrElse(0)
     val text = this.text.substring(startOffset + t.pos.start, startOffset + t.pos.end)
     (if (text.length < max) text else text.substring(0, max) + "...").map {
       case '\r' => ' '
