@@ -77,6 +77,8 @@ object SlangParser {
     "++" -> AST.Exp.BinaryOp.AppendAll,
     "--" -> AST.Exp.BinaryOp.RemoveAll)
 
+  val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
+
   def scalaDialect(isWorksheet: Boolean): Dialect =
     if (isWorksheet) scala.meta.dialects.Scala212.copy(
       allowToplevelTerms = true, allowLiteralTypes = true, allowTrailingCommas = true)
@@ -176,6 +178,7 @@ class SlangParser(text: Predef.String,
         error(e.pos, e.shortMessage)
         Result(text, hashSireum, None())
       case e: Throwable =>
+        e.printStackTrace()
         reporter.error(None(), messageKind, s"Parsing error: ${e.getMessage}.")
         Result(text, hashSireum, None())
     }
@@ -1261,7 +1264,7 @@ class SlangParser(text: Predef.String,
       case q"${name: Pat.Var}" => AST.Pattern.Variable(cid(name), None())
       case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)))
       case p"_" => AST.Pattern.Wildcard(None())
-      case p"${lit: Pat.Interpolate}" => AST.Pattern.Literal(translateLit(lit))
+      case p"${lit: Pat.Interpolate}" => translateLit(lit)
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _: Pat.SeqWildcard => AST.Pattern.SeqWildcard()
       case _ =>
@@ -1672,7 +1675,7 @@ class SlangParser(text: Predef.String,
       }) => translateLitBv(isBigEndian = expr.prefix.value == "bb", expr, tpesnel.head)
       case exp: Term.Interpolate =>
         val prefix = exp.prefix.value
-        if (prefix == "z" || prefix == "r") translateLit(exp)
+        if (builtinPrefix.contains(prefix)) translateLit(exp)
         else translateStringInterpolate(exp)
       case exp: Term.Name =>
         if (exp.value.forall(c => c == '¬' || c == '~' || c == '!')) {
@@ -1778,6 +1781,26 @@ class SlangParser(text: Predef.String,
       val r = prefix.value match {
         case "z" => AST.Exp.LitZ(Z.$String(value), attr(pos))
         case "r" => AST.Exp.LitR(org.sireum.R.$String(value), attr(pos))
+        case "c" =>
+          if (value.size != 1) {
+            error(pos, s"Invalid C literal '${value}'.")
+            AST.Exp.LitC('?', attr(pos))
+          } else AST.Exp.LitC(value.head, attr(pos))
+        case "f32" =>
+          try AST.Exp.LitF32(value.toFloat, attr(pos))
+          catch {
+            case _: NumberFormatException =>
+              error(pos, "Invalid 32-bit float number form.")
+              AST.Exp.LitF32(0.0f, attr(pos))
+          }
+        case "f64" =>
+          try AST.Exp.LitF32(value.toFloat, attr(pos))
+          catch {
+            case _: NumberFormatException =>
+              error(pos, "Invalid 64-bit double number form.")
+              AST.Exp.LitF32(0.0f, attr(pos))
+          }
+        case "string" => AST.Exp.LitString(value, attr(pos))
       }
       return r
     } catch {
@@ -1788,8 +1811,12 @@ class SlangParser(text: Predef.String,
     AST.Exp.LitB(false, attr(pos))
   }
 
-  def translateLit(lit: Pat.Interpolate): AST.Exp with AST.Lit =
-    translateLit(lit.prefix, lit.args, lit.parts, lit.pos, syntax(lit))
+  def translateLit(lit: Pat.Interpolate): AST.Pattern.LitInterpolate = {
+    if (lit.args.nonEmpty || lit.parts.size != 1) {
+      errorInSlang(lit.pos, s"Literal pattern interpolation cannot have arguments")
+      AST.Pattern.LitInterpolate(lit.prefix.value, "")
+    } else AST.Pattern.LitInterpolate(lit.prefix.value, lit.parts.head.value.toString)
+  }
 
   def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit =
     translateLit(lit.prefix, lit.args, lit.parts, lit.pos, syntax(lit))
