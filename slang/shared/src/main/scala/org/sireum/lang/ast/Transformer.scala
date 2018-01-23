@@ -338,6 +338,7 @@ object Transformer {
     @pure def prePattern(ctx: Context, o: Pattern): PreResult[Context, Pattern] = {
       o match {
         case o: Pattern.Literal => return prePatternLiteral(ctx, o)
+        case o: Pattern.LitInterpolate => return prePatternLitInterpolate(ctx, o)
         case o: Pattern.Ref => return prePatternRef(ctx, o)
         case o: Pattern.Variable => return prePatternVariable(ctx, o)
         case o: Pattern.Wildcard => return prePatternWildcard(ctx, o)
@@ -347,6 +348,10 @@ object Transformer {
     }
 
     @pure def prePatternLiteral(ctx: Context, o: Pattern.Literal): PreResult[Context, Pattern] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def prePatternLitInterpolate(ctx: Context, o: Pattern.LitInterpolate): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1133,6 +1138,7 @@ object Transformer {
     @pure def postPattern(ctx: Context, o: Pattern): Result[Context, Pattern] = {
       o match {
         case o: Pattern.Literal => return postPatternLiteral(ctx, o)
+        case o: Pattern.LitInterpolate => return postPatternLitInterpolate(ctx, o)
         case o: Pattern.Ref => return postPatternRef(ctx, o)
         case o: Pattern.Variable => return postPatternVariable(ctx, o)
         case o: Pattern.Wildcard => return postPatternWildcard(ctx, o)
@@ -1142,6 +1148,10 @@ object Transformer {
     }
 
     @pure def postPatternLiteral(ctx: Context, o: Pattern.Literal): Result[Context, Pattern] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postPatternLitInterpolate(ctx: Context, o: Pattern.LitInterpolate): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
@@ -2409,6 +2419,11 @@ import Transformer._
             Result(r0.ctx, Some(o2(lit = r0.resultOpt.getOrElse(o2.lit))))
           else
             Result(r0.ctx, None())
+        case o2: Pattern.LitInterpolate =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
         case o2: Pattern.Ref =>
           val r0: Result[Context, Name] = transformName(ctx, o2.name)
           if (hasChanged || r0.resultOpt.nonEmpty)

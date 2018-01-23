@@ -334,6 +334,7 @@ object MTransformer {
     def prePattern(o: Pattern): PreResult[Pattern] = {
       o match {
         case o: Pattern.Literal => return prePatternLiteral(o)
+        case o: Pattern.LitInterpolate => return prePatternLitInterpolate(o)
         case o: Pattern.Ref => return prePatternRef(o)
         case o: Pattern.Variable => return prePatternVariable(o)
         case o: Pattern.Wildcard => return prePatternWildcard(o)
@@ -343,6 +344,10 @@ object MTransformer {
     }
 
     def prePatternLiteral(o: Pattern.Literal): PreResult[Pattern] = {
+      return PreResult(T, MNone())
+    }
+
+    def prePatternLitInterpolate(o: Pattern.LitInterpolate): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
@@ -1129,6 +1134,7 @@ object MTransformer {
     def postPattern(o: Pattern): MOption[Pattern] = {
       o match {
         case o: Pattern.Literal => return postPatternLiteral(o)
+        case o: Pattern.LitInterpolate => return postPatternLitInterpolate(o)
         case o: Pattern.Ref => return postPatternRef(o)
         case o: Pattern.Variable => return postPatternVariable(o)
         case o: Pattern.Wildcard => return postPatternWildcard(o)
@@ -1138,6 +1144,10 @@ object MTransformer {
     }
 
     def postPatternLiteral(o: Pattern.Literal): MOption[Pattern] = {
+      return MNone()
+    }
+
+    def postPatternLitInterpolate(o: Pattern.LitInterpolate): MOption[Pattern] = {
       return MNone()
     }
 
@@ -2401,6 +2411,11 @@ import MTransformer._
           val r0: MOption[Lit] = transformLit(o2.lit)
           if (hasChanged || r0.nonEmpty)
             MSome(o2(lit = r0.getOrElse(o2.lit)))
+          else
+            MNone()
+        case o2: Pattern.LitInterpolate =>
+          if (hasChanged)
+            MSome(o2)
           else
             MNone()
         case o2: Pattern.Ref =>

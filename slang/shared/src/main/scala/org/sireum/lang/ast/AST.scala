@@ -315,7 +315,9 @@ object EnumGen {
 
 @datatype trait Type {
   @pure def posOpt: Option[PosInfo]
+
   @pure def typedOpt: Option[Typed]
+
   @pure def typed(t: Typed): Type
 }
 
@@ -335,7 +337,7 @@ object Type {
     }
 
     @pure def typed(t: Typed): Named = {
-      return this(name, typeArgs, attr(typedOpt = Some(t)))
+      return this (name, typeArgs, attr(typedOpt = Some(t)))
     }
   }
 
@@ -353,7 +355,7 @@ object Type {
     }
 
     @pure def typed(t: Typed): Fun = {
-      return this(args, ret, attr(typedOpt = Some(t)))
+      return this (args, ret, attr(typedOpt = Some(t)))
     }
   }
 
@@ -370,7 +372,7 @@ object Type {
     }
 
     @pure def typed(t: Typed): Tuple = {
-      return this(args, attr(typedOpt = Some(t)))
+      return this (args, attr(typedOpt = Some(t)))
     }
   }
 
@@ -381,6 +383,10 @@ object Type {
 object Pattern {
 
   @datatype class Literal(lit: Lit)
+    extends Pattern
+
+  @datatype class LitInterpolate(prefix: String,
+                                 value: String)
     extends Pattern
 
   @datatype class Ref(name: Name)
@@ -964,6 +970,7 @@ object Typed {
                       ret: Typed,
                       @hidden val posOpt: Option[PosInfo])
     extends Typed
+
 }
 
 @datatype class Attr(posOpt: Option[PosInfo])

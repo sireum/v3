@@ -134,173 +134,175 @@ object MsgPack {
 
     val PatternLiteral: Z = 48
 
-    val PatternRef: Z = 49
+    val PatternLitInterpolate: Z = 49
 
-    val PatternVariable: Z = 50
+    val PatternRef: Z = 50
 
-    val PatternWildcard: Z = 51
+    val PatternVariable: Z = 51
 
-    val PatternSeqWildcard: Z = 52
+    val PatternWildcard: Z = 52
 
-    val PatternStructure: Z = 53
+    val PatternSeqWildcard: Z = 53
 
-    val ExpLitB: Z = 54
+    val PatternStructure: Z = 54
 
-    val ExpLitC: Z = 55
+    val ExpLitB: Z = 55
 
-    val ExpLitZ: Z = 56
+    val ExpLitC: Z = 56
 
-    val ExpLitF32: Z = 57
+    val ExpLitZ: Z = 57
 
-    val ExpLitF64: Z = 58
+    val ExpLitF32: Z = 58
 
-    val ExpLitR: Z = 59
+    val ExpLitF64: Z = 59
 
-    val ExpLitBv: Z = 60
+    val ExpLitR: Z = 60
 
-    val ExpLitString: Z = 61
+    val ExpLitBv: Z = 61
 
-    val ExpStringInterpolate: Z = 62
+    val ExpLitString: Z = 62
 
-    val ExpThis: Z = 63
+    val ExpStringInterpolate: Z = 63
 
-    val ExpSuper: Z = 64
+    val ExpThis: Z = 64
 
-    val ExpUnary: Z = 65
+    val ExpSuper: Z = 65
 
-    val ExpBinary: Z = 66
+    val ExpUnary: Z = 66
 
-    val ExpIdent: Z = 67
+    val ExpBinary: Z = 67
 
-    val ExpEta: Z = 68
+    val ExpIdent: Z = 68
 
-    val ExpTuple: Z = 69
+    val ExpEta: Z = 69
 
-    val ExpSelect: Z = 70
+    val ExpTuple: Z = 70
 
-    val ExpInvoke: Z = 71
+    val ExpSelect: Z = 71
 
-    val ExpInvokeNamed: Z = 72
+    val ExpInvoke: Z = 72
 
-    val ExpIf: Z = 73
+    val ExpInvokeNamed: Z = 73
 
-    val ExpFun: Z = 74
+    val ExpIf: Z = 74
 
-    val ExpForYield: Z = 75
+    val ExpFun: Z = 75
 
-    val ExpQuant: Z = 76
+    val ExpForYield: Z = 76
 
-    val NamedArg: Z = 77
+    val ExpQuant: Z = 77
 
-    val VarFragment: Z = 78
+    val NamedArg: Z = 78
 
-    val DomainType: Z = 79
+    val VarFragment: Z = 79
 
-    val DomainRange: Z = 80
+    val DomainType: Z = 80
 
-    val Id: Z = 81
+    val DomainRange: Z = 81
 
-    val Name: Z = 82
+    val Id: Z = 82
 
-    val Body: Z = 83
+    val Name: Z = 83
 
-    val AbstractDatatypeParam: Z = 84
+    val Body: Z = 84
 
-    val MethodSig: Z = 85
+    val AbstractDatatypeParam: Z = 85
 
-    val Param: Z = 86
+    val MethodSig: Z = 86
 
-    val TypeParam: Z = 87
+    val Param: Z = 87
 
-    val Contract: Z = 88
+    val TypeParam: Z = 88
 
-    val SubContract: Z = 89
+    val Contract: Z = 89
 
-    val SubContractParam: Z = 90
+    val SubContract: Z = 90
 
-    val WhereDefVal: Z = 91
+    val SubContractParam: Z = 91
 
-    val WhereDefDef: Z = 92
+    val WhereDefVal: Z = 92
 
-    val SpecDef: Z = 93
+    val WhereDefDef: Z = 93
 
-    val ProofStepBasic: Z = 94
+    val SpecDef: Z = 94
 
-    val ProofStepSubProof: Z = 95
+    val ProofStepBasic: Z = 95
 
-    val AssumeProofStepRegular: Z = 96
+    val ProofStepSubProof: Z = 96
 
-    val AssumeProofStepForallIntroAps: Z = 97
+    val AssumeProofStepRegular: Z = 97
 
-    val AssumeProofStepExistsElimAps: Z = 98
+    val AssumeProofStepForallIntroAps: Z = 98
 
-    val JustPremise: Z = 99
+    val AssumeProofStepExistsElimAps: Z = 99
 
-    val JustAndIntro: Z = 100
+    val JustPremise: Z = 100
 
-    val JustAndElim: Z = 101
+    val JustAndIntro: Z = 101
 
-    val JustOrIntro: Z = 102
+    val JustAndElim: Z = 102
 
-    val JustOrElim: Z = 103
+    val JustOrIntro: Z = 103
 
-    val JustImplyIntro: Z = 104
+    val JustOrElim: Z = 104
 
-    val JustImplyElim: Z = 105
+    val JustImplyIntro: Z = 105
 
-    val JustNegIntro: Z = 106
+    val JustImplyElim: Z = 106
 
-    val JustNegElim: Z = 107
+    val JustNegIntro: Z = 107
 
-    val JustBottomElim: Z = 108
+    val JustNegElim: Z = 108
 
-    val JustPbc: Z = 109
+    val JustBottomElim: Z = 109
 
-    val JustForallIntro: Z = 110
+    val JustPbc: Z = 110
 
-    val JustForallElim: Z = 111
+    val JustForallIntro: Z = 111
 
-    val JustExistsIntro: Z = 112
+    val JustForallElim: Z = 112
 
-    val JustExistsElim: Z = 113
+    val JustExistsIntro: Z = 113
 
-    val JustFact: Z = 114
+    val JustExistsElim: Z = 114
 
-    val JustInvariant: Z = 115
+    val JustFact: Z = 115
 
-    val JustSubst: Z = 116
+    val JustInvariant: Z = 116
 
-    val JustAuto: Z = 117
+    val JustSubst: Z = 117
 
-    val JustCoq: Z = 118
+    val JustAuto: Z = 118
 
-    val TruthTableRow: Z = 119
+    val JustCoq: Z = 119
 
-    val TruthTableAssignment: Z = 120
+    val TruthTableRow: Z = 120
 
-    val TruthTableConclusionValidity: Z = 121
+    val TruthTableAssignment: Z = 121
 
-    val TruthTableConclusionTautology: Z = 122
+    val TruthTableConclusionValidity: Z = 122
 
-    val TruthTableConclusionContradictory: Z = 123
+    val TruthTableConclusionTautology: Z = 123
 
-    val TruthTableConclusionContingent: Z = 124
+    val TruthTableConclusionContradictory: Z = 124
 
-    val TypedName: Z = 125
+    val TruthTableConclusionContingent: Z = 125
 
-    val TypedTuple: Z = 126
+    val TypedName: Z = 126
 
-    val TypedFun: Z = 127
+    val TypedTuple: Z = 127
 
-    val Attr: Z = 128
+    val TypedFun: Z = 128
 
-    val TypedAttr: Z = 129
+    val Attr: Z = 129
 
-    val ResolvedAttr: Z = 130
+    val TypedAttr: Z = 130
 
-    val ResolvedInfo: Z = 131
+    val ResolvedAttr: Z = 131
 
-    val PosInfo: Z = 132
+    val ResolvedInfo: Z = 132
+
+    val PosInfo: Z = 133
 
   }
 
@@ -746,6 +748,7 @@ object MsgPack {
     def writePattern(o: Pattern): Unit = {
       o match {
         case o: Pattern.Literal => writePatternLiteral(o)
+        case o: Pattern.LitInterpolate => writePatternLitInterpolate(o)
         case o: Pattern.Ref => writePatternRef(o)
         case o: Pattern.Variable => writePatternVariable(o)
         case o: Pattern.Wildcard => writePatternWildcard(o)
@@ -757,6 +760,12 @@ object MsgPack {
     def writePatternLiteral(o: Pattern.Literal): Unit = {
       writer.writeZ(Constants.PatternLiteral)
       writeLit(o.lit)
+    }
+
+    def writePatternLitInterpolate(o: Pattern.LitInterpolate): Unit = {
+      writer.writeZ(Constants.PatternLitInterpolate)
+      writeString(o.prefix)
+      writeString(o.value)
     }
 
     def writePatternRef(o: Pattern.Ref): Unit = {
@@ -2390,6 +2399,7 @@ object MsgPack {
       val t = reader.readZ()
       t match {
         case Constants.PatternLiteral => val r = readPatternLiteralT(T); return r
+        case Constants.PatternLitInterpolate => val r = readPatternLitInterpolateT(T); return r
         case Constants.PatternRef => val r = readPatternRefT(T); return r
         case Constants.PatternVariable => val r = readPatternVariableT(T); return r
         case Constants.PatternWildcard => val r = readPatternWildcardT(T); return r
@@ -2410,6 +2420,20 @@ object MsgPack {
       }
       val lit = readLit()
       return Pattern.Literal(lit)
+    }
+
+    def readPatternLitInterpolate(): Pattern.LitInterpolate = {
+      val r = readPatternLitInterpolateT(F)
+      return r
+    }
+
+    def readPatternLitInterpolateT(typeParsed: B): Pattern.LitInterpolate = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.PatternLitInterpolate)
+      }
+      val prefix = reader.readString()
+      val value = reader.readString()
+      return Pattern.LitInterpolate(prefix, value)
     }
 
     def readPatternRef(): Pattern.Ref = {
@@ -4652,6 +4676,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fPatternLiteral)
+    return r
+  }
+
+  def fromPatternLitInterpolate(o: Pattern.LitInterpolate): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writePatternLitInterpolate(o)
+    return w.result
+  }
+
+  def toPatternLitInterpolate(data: ISZ[U8]): Pattern.LitInterpolate = {
+    def fPatternLitInterpolate(reader: Reader): Pattern.LitInterpolate = {
+      val r = reader.readPatternLitInterpolate()
+      return r
+    }
+    val r = to(data, fPatternLitInterpolate)
     return r
   }
 

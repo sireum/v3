@@ -581,6 +581,7 @@ object JSON {
     @pure def printPattern(o: Pattern): ST = {
       o match {
         case o: Pattern.Literal => return printPatternLiteral(o)
+        case o: Pattern.LitInterpolate => return printPatternLitInterpolate(o)
         case o: Pattern.Ref => return printPatternRef(o)
         case o: Pattern.Variable => return printPatternVariable(o)
         case o: Pattern.Wildcard => return printPatternWildcard(o)
@@ -593,6 +594,14 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Pattern.Literal""""),
         ("lit", printLit(o.lit))
+      ))
+    }
+
+    @pure def printPatternLitInterpolate(o: Pattern.LitInterpolate): ST = {
+      return printObject(ISZ(
+        ("type", st""""Pattern.LitInterpolate""""),
+        ("prefix", printString(o.prefix)),
+        ("value", printString(o.value))
       ))
     }
 
@@ -2697,9 +2706,10 @@ object JSON {
     }
 
     def parsePattern(): Pattern = {
-      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
+      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.LitInterpolate", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
       t.native match {
         case "Pattern.Literal" => val r = parsePatternLiteralT(T); return r
+        case "Pattern.LitInterpolate" => val r = parsePatternLitInterpolateT(T); return r
         case "Pattern.Ref" => val r = parsePatternRefT(T); return r
         case "Pattern.Variable" => val r = parsePatternVariableT(T); return r
         case "Pattern.Wildcard" => val r = parsePatternWildcardT(T); return r
@@ -2722,6 +2732,24 @@ object JSON {
       val lit = parseLit()
       parser.parseObjectNext()
       return Pattern.Literal(lit)
+    }
+
+    def parsePatternLitInterpolate(): Pattern.LitInterpolate = {
+      val r = parsePatternLitInterpolateT(F)
+      return r
+    }
+
+    def parsePatternLitInterpolateT(typeParsed: B): Pattern.LitInterpolate = {
+      if (!typeParsed) {
+        parser.parseObjectType("Pattern.LitInterpolate")
+      }
+      parser.parseObjectKey("prefix")
+      val prefix = parser.parseString()
+      parser.parseObjectNext()
+      parser.parseObjectKey("value")
+      val value = parser.parseString()
+      parser.parseObjectNext()
+      return Pattern.LitInterpolate(prefix, value)
     }
 
     def parsePatternRef(): Pattern.Ref = {
@@ -5687,6 +5715,24 @@ object JSON {
       return r
     }
     val r = to(s, fPatternLiteral)
+    return r
+  }
+
+  def fromPatternLitInterpolate(o: Pattern.LitInterpolate, isCompact: B): String = {
+    val st = Printer.printPatternLitInterpolate(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toPatternLitInterpolate(s: String): Pattern.LitInterpolate = {
+    def fPatternLitInterpolate(parser: Parser): Pattern.LitInterpolate = {
+      val r = parser.parsePatternLitInterpolate()
+      return r
+    }
+    val r = to(s, fPatternLitInterpolate)
     return r
   }
 
