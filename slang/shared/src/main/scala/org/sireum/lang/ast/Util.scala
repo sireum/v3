@@ -83,6 +83,160 @@ object Util {
     }
   }
 
+  def unop(op: Exp.UnaryOp.Type): String = {
+    op match {
+      case Exp.UnaryOp.Not => return "!"
+      case Exp.UnaryOp.Plus => return "+"
+      case Exp.UnaryOp.Minus => return "-"
+      case Exp.UnaryOp.Complement => return "~"
+    }
+  }
+
+  @pure def binop(op: Exp.BinaryOp.Type): String = {
+    op match {
+      case Exp.BinaryOp.Add => return "+"
+      case Exp.BinaryOp.Sub => return "-"
+      case Exp.BinaryOp.Mul => return "*"
+      case Exp.BinaryOp.Div => return "/"
+      case Exp.BinaryOp.Rem => return "%"
+      case Exp.BinaryOp.Eq => return "=="
+      case Exp.BinaryOp.Ne => return "!="
+      case Exp.BinaryOp.Shl => return "<<"
+      case Exp.BinaryOp.Shr => return ">>"
+      case Exp.BinaryOp.Ushr => return ">>>"
+      case Exp.BinaryOp.Lt => return "<"
+      case Exp.BinaryOp.Le => return "<="
+      case Exp.BinaryOp.Gt => return ">"
+      case Exp.BinaryOp.Ge => return ">="
+      case Exp.BinaryOp.And => return "&"
+      case Exp.BinaryOp.Or => return "|"
+      case Exp.BinaryOp.Xor => return "|^"
+      case Exp.BinaryOp.Imply => return "→"
+      case Exp.BinaryOp.CondAnd => return "&&"
+      case Exp.BinaryOp.CondOr => return "||"
+      case Exp.BinaryOp.Append => return ":+"
+      case Exp.BinaryOp.Prepend => return "+:"
+      case Exp.BinaryOp.AppendAll => return "++"
+      case Exp.BinaryOp.RemoveAll => return "--"
+    }
+  }
+
+  @pure def isBoolBinop(op: Exp.BinaryOp.Type): B = {
+    op match {
+      case Exp.BinaryOp.Add => return F
+      case Exp.BinaryOp.Sub => return F
+      case Exp.BinaryOp.Mul => return F
+      case Exp.BinaryOp.Div => return F
+      case Exp.BinaryOp.Rem => return F
+      case Exp.BinaryOp.Eq => return T
+      case Exp.BinaryOp.Ne => return T
+      case Exp.BinaryOp.Shl => return F
+      case Exp.BinaryOp.Shr => return F
+      case Exp.BinaryOp.Ushr => return F
+      case Exp.BinaryOp.Lt => return F
+      case Exp.BinaryOp.Le => return F
+      case Exp.BinaryOp.Gt => return F
+      case Exp.BinaryOp.Ge => return F
+      case Exp.BinaryOp.And => return T
+      case Exp.BinaryOp.Or => return T
+      case Exp.BinaryOp.Xor => return T
+      case Exp.BinaryOp.Imply => return T
+      case Exp.BinaryOp.CondAnd => return T
+      case Exp.BinaryOp.CondOr => return T
+      case Exp.BinaryOp.Append => return F
+      case Exp.BinaryOp.Prepend => return F
+      case Exp.BinaryOp.AppendAll => return F
+      case Exp.BinaryOp.RemoveAll => return F
+    }
+  }
+
+  @pure def isArithBinop(op: Exp.BinaryOp.Type): B = {
+    op match {
+      case Exp.BinaryOp.Add => return T
+      case Exp.BinaryOp.Sub => return T
+      case Exp.BinaryOp.Mul => return T
+      case Exp.BinaryOp.Div => return T
+      case Exp.BinaryOp.Rem => return T
+      case Exp.BinaryOp.Eq => return F
+      case Exp.BinaryOp.Ne => return F
+      case Exp.BinaryOp.Shl => return F
+      case Exp.BinaryOp.Shr => return F
+      case Exp.BinaryOp.Ushr => return F
+      case Exp.BinaryOp.Lt => return F
+      case Exp.BinaryOp.Le => return F
+      case Exp.BinaryOp.Gt => return F
+      case Exp.BinaryOp.Ge => return F
+      case Exp.BinaryOp.And => return F
+      case Exp.BinaryOp.Or => return F
+      case Exp.BinaryOp.Xor => return F
+      case Exp.BinaryOp.Imply => return F
+      case Exp.BinaryOp.CondAnd => return F
+      case Exp.BinaryOp.CondOr => return F
+      case Exp.BinaryOp.Append => return F
+      case Exp.BinaryOp.Prepend => return F
+      case Exp.BinaryOp.AppendAll => return F
+      case Exp.BinaryOp.RemoveAll => return F
+    }
+  }
+
+  @pure def isBitsBinop(op: Exp.BinaryOp.Type): B = {
+    op match {
+      case Exp.BinaryOp.Add => return F
+      case Exp.BinaryOp.Sub => return F
+      case Exp.BinaryOp.Mul => return F
+      case Exp.BinaryOp.Div => return F
+      case Exp.BinaryOp.Rem => return F
+      case Exp.BinaryOp.Eq => return F
+      case Exp.BinaryOp.Ne => return F
+      case Exp.BinaryOp.Shl => return T
+      case Exp.BinaryOp.Shr => return T
+      case Exp.BinaryOp.Ushr => return T
+      case Exp.BinaryOp.Lt => return F
+      case Exp.BinaryOp.Le => return F
+      case Exp.BinaryOp.Gt => return F
+      case Exp.BinaryOp.Ge => return F
+      case Exp.BinaryOp.And => return T
+      case Exp.BinaryOp.Or => return T
+      case Exp.BinaryOp.Xor => return T
+      case Exp.BinaryOp.Imply => return F
+      case Exp.BinaryOp.CondAnd => return F
+      case Exp.BinaryOp.CondOr => return F
+      case Exp.BinaryOp.Append => return F
+      case Exp.BinaryOp.Prepend => return F
+      case Exp.BinaryOp.AppendAll => return F
+      case Exp.BinaryOp.RemoveAll => return F
+    }
+  }
+
+  @pure def isCompareBinop(op: Exp.BinaryOp.Type): B = {
+    op match {
+      case Exp.BinaryOp.Add => return F
+      case Exp.BinaryOp.Sub => return F
+      case Exp.BinaryOp.Mul => return F
+      case Exp.BinaryOp.Div => return F
+      case Exp.BinaryOp.Rem => return F
+      case Exp.BinaryOp.Eq => return T
+      case Exp.BinaryOp.Ne => return T
+      case Exp.BinaryOp.Shl => return F
+      case Exp.BinaryOp.Shr => return F
+      case Exp.BinaryOp.Ushr => return F
+      case Exp.BinaryOp.Lt => return T
+      case Exp.BinaryOp.Le => return T
+      case Exp.BinaryOp.Gt => return T
+      case Exp.BinaryOp.Ge => return T
+      case Exp.BinaryOp.And => return F
+      case Exp.BinaryOp.Or => return F
+      case Exp.BinaryOp.Xor => return F
+      case Exp.BinaryOp.Imply => return F
+      case Exp.BinaryOp.CondAnd => return F
+      case Exp.BinaryOp.CondOr => return F
+      case Exp.BinaryOp.Append => return F
+      case Exp.BinaryOp.Prepend => return F
+      case Exp.BinaryOp.AppendAll => return F
+      case Exp.BinaryOp.RemoveAll => return F
+    }
+  }
+
   @pure def typedString(t: Typed): ST = {
     t match {
       case t: Typed.Name =>
