@@ -429,6 +429,135 @@ import TypeChecker._
     }
   }
 
+  def expectBExp(scope: Scope, exp: AST.Exp, reporter: Reporter): AST.Exp = {
+    val (newExp, expTypeOpt) = checkExp(scope, exp, reporter)
+    expTypeOpt match {
+      case Some(expType) =>
+        val t = typeHierarchy.dealias(expType, exp.posOpt, reporter)
+        if (t != typeB) {
+          reporter.error(exp.posOpt, typeCheckerKind,
+            st"Expecting expression of type org.sireum.B, but found ${AST.Util.typedString(t)}.".render)
+          return exp
+        } else {
+          return newExp
+        }
+      case _ => return exp
+    }
+  }
+
+  def expectStringExp(scope: Scope, exp: AST.Exp, reporter: Reporter): AST.Exp = {
+    val (newExp, expTypeOpt) = checkExp(scope, exp, reporter)
+    expTypeOpt match {
+      case Some(expType) =>
+        val t = typeHierarchy.dealias(expType, exp.posOpt, reporter)
+        if (t != typeString) {
+          reporter.error(exp.posOpt, typeCheckerKind,
+            st"Expecting expression of type org.sireum.String, but found ${AST.Util.typedString(t)}.".render)
+          return exp
+        } else {
+          return newExp
+        }
+      case _ => return exp
+    }
+  }
+
+  def checkStmt(scope: Scope, stmt: AST.Stmt, reporter: Reporter): AST.Stmt = {
+
+    def checkAssertume(isAssert: B, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
+                       cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
+      val newCondExp = expectBExp(scope, cond, reporter)
+
+      msgOpt match {
+        case Some(msg) =>
+          val newMsg = expectStringExp(scope, cond, reporter)
+          return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg)))
+        case _ =>
+          return assertume(exp = assertumeExp(args = ISZ(newCondExp)))
+      }
+    }
+
+    stmt match {
+
+      case stmt: AST.Stmt.LStmt => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.AbstractDatatype => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Assign => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.AssignPattern => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.AssignUp => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Block => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.DoWhile => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Expr =>
+
+        stmt.exp match {
+
+          case exp@AST.Exp.Invoke(None(), AST.Id(string"assert"), targs, args) if targs.isEmpty =>
+            args.size match {
+              case z"1" => val r = checkAssertume(T, stmt, exp, args(0), None()); return r
+              case z"2" => val r = checkAssertume(T, stmt, exp, args(0), Some(args(1))); return r
+              case _ =>
+                reporter.error(stmt.exp.posOpt, typeCheckerKind,
+                  s"Invalid number of arguments (${args.size}) for assert.")
+                return stmt
+            }
+
+          case exp@AST.Exp.Invoke(None(), AST.Id(string"assume"), targs, args) if targs.isEmpty =>
+            args.size match {
+              case z"1" => val r = checkAssertume(F, stmt, exp, args(0), None()); return r
+              case z"2" => val r = checkAssertume(F, stmt, exp, args(0), Some(args(1))); return r
+              case _ =>
+                reporter.error(stmt.exp.posOpt, typeCheckerKind,
+                  s"Invalid number of arguments (${args.size}) for assume.")
+                return stmt
+            }
+
+            halt("Unimplemented.") // TODO
+
+          case _ => halt("Unimplemented.") // TODO
+        }
+
+      case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.For => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.If => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Import => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Match => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Method => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Object => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Return => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Sig => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.SpecMethod => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.SpecVar => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.SubZ => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.TypeAlias => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.Var => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.VarPattern => halt("Unimplemented.") // TODO
+
+      case stmt: AST.Stmt.While => halt("Unimplemented.") // TODO
+
+    }
+  }
+
   @pure def checkProgram(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
     halt("Unimplemented") // TODO
   }
