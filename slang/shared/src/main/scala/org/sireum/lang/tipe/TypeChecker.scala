@@ -172,6 +172,41 @@ object TypeChecker {
 
 @datatype class TypeChecker(typeHierarchy: TypeHierarchy) {
 
+  val typeB: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "B")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeC: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "C")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeF32: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "F32")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeF64: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "F64")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeZ: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "Z")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeR: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "R")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
+  val typeString: AST.Typed.Name = {
+    val name = ISZ[String]("org", "sireum", "String")
+    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
+  }
+
   @pure def typeMap: TypeMap = {
     return typeHierarchy.typeMap
   }
@@ -180,8 +215,67 @@ object TypeChecker {
     return typeHierarchy.nameMap
   }
 
+  def checkExp(scope: Scope,
+               exp: AST.Exp,
+               reporter: Reporter): (AST.Exp, Option[AST.Typed]) = {
+    exp match {
+      case exp: AST.Exp.Binary => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Eta => halt("Unimplemented") // TODO
+      case exp: AST.Exp.ForYield => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Fun => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Ident => halt("Unimplemented") // TODO
+      case exp: AST.Exp.If => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Invoke => halt("Unimplemented") // TODO
+      case exp: AST.Exp.InvokeNamed => halt("Unimplemented") // TODO
+      case exp: AST.Exp.LitB => return (exp, Some(typeB))
+      case exp: AST.Exp.LitBv => halt("Unimplemented") // TODO
+      case exp: AST.Exp.LitC => return (exp, Some(typeC))
+      case exp: AST.Exp.LitF32 => return (exp, Some(typeF32))
+      case exp: AST.Exp.LitF64 => return (exp, Some(typeF64))
+      case exp: AST.Exp.LitR => return (exp, Some(typeR))
+      case exp: AST.Exp.LitString => return (exp, Some(typeString))
+      case exp: AST.Exp.LitZ => return (exp, Some(typeZ))
+      case exp: AST.Exp.Quant => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Select => halt("Unimplemented") // TODO
+      case exp: AST.Exp.StringInterpolate =>
+        exp.prefix.native match {
+          case "s" =>
+            var args = ISZ[AST.Exp]()
+            for (arg <- exp.args) {
+              val (newArg, _) = checkExp(scope, arg, reporter)
+              args = args :+ newArg
+            }
+            return (exp(args = args), Some(typeString))
+          case _ => halt("Unimplemented") // TODO
+        }
+      case exp: AST.Exp.Super => halt("Unimplemented") // TODO
+      case exp: AST.Exp.This => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Tuple =>
+        var args = ISZ[AST.Exp]()
+        var argTypes = ISZ[AST.Typed]()
+        var ok = T
+        for (arg <- args) {
+          val (newArg, argTypeOpt) = checkExp(scope, arg, reporter)
+          args = args :+ newArg
+          argTypeOpt match {
+            case Some(argType) => argTypes = argTypes :+ argType
+            case _ => ok = F
+          }
+        }
+        var r = exp
+        up(r.args) = args
+        if (!ok) {
+          return (r, None())
+        }
+        val t: AST.Typed = AST.Typed.Tuple(argTypes, exp.posOpt)
+        up(r.attr.typedOpt) = Some(t)
+        return (r, Some(t))
+      case exp: AST.Exp.Unary => halt("Unimplemented") // TODO
+    }
+  }
+
   @pure def checkProgram(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
-    halt("TODO")
+    halt("Unimplemented") // TODO
   }
 
 }
