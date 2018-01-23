@@ -469,7 +469,7 @@ import TypeChecker._
 
       msgOpt match {
         case Some(msg) =>
-          val newMsg = expectStringExp(scope, cond, reporter)
+          val newMsg = expectStringExp(scope, msg, reporter)
           return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg)))
         case _ =>
           return assertume(exp = assertumeExp(args = ISZ(newCondExp)))
