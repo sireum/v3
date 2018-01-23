@@ -252,7 +252,7 @@ import TypeChecker._
             return Some((tpe, BasicKind.F64))
           }
           if (tpe.ids == typeR.ids) {
-            return Some((tpe, BasicKind.F64))
+            return Some((tpe, BasicKind.R))
           }
         }
         scope.resolveType(typeMap, tpe.ids) match {
