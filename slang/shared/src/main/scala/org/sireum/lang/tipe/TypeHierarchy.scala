@@ -143,12 +143,11 @@ object TypeHierarchy {
       reporter.error(None(), resolverKind, "Could not find Z type.")
       return r
     }
-    val zTyped = typedInfo(typeMap.get(zName).get)
     for (info <- typeMap.values) {
       info match {
         case _: TypeInfo.SubZ =>
           val typed = typedInfo(info)
-          up(r.poset) = r.poset.addParents(typed, ISZ(zTyped))
+          up(r.poset) = r.poset.addNode(typed)
         case _: TypeInfo.Enum =>
           val typed = typedInfo(info)
           up(r.poset) = r.poset.addNode(typed)
