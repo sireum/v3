@@ -27,6 +27,7 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
@@ -50,6 +51,22 @@ object TypeChecker {
   val builtInMethods: HashSet[String] = HashSet.empty[String].addAll(ISZ(
     "assert", "assume", "println", "print", "eprintln", "eprint"
   ))
+
+  var _typeHierarchyReporter: Option[(TypeHierarchy, AccumulatingReporter)] = None()
+
+  def typeHierarchyReporter: (TypeHierarchy, AccumulatingReporter) = {
+    if (_typeHierarchyReporter.nonEmpty) {
+      return _typeHierarchyReporter.get
+    }
+    val (initNameMap, initTypeMap) = Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
+    val (reporter, nameMap, typeMap) = Resolver.parseProgramAndGloballyResolve(
+      LibraryUtil.files, initNameMap, initTypeMap)
+    val th = TypeHierarchy.build(TypeHierarchy(nameMap, typeMap, Poset.empty, HashMap.empty), reporter)
+    val thOutlined = TypeOutliner.checkOutline(th, reporter)
+    val r = (thOutlined, reporter)
+    _typeHierarchyReporter = Some(r)
+    return r
+  }
 
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
     t match {
@@ -193,6 +210,41 @@ object TypeChecker {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
     }
+  }
+
+  def checkWorksheet(program: AST.TopUnit.Program,
+                     reporter: Reporter): AST.TopUnit.Program = {
+    val (th, rep) = typeHierarchyReporter
+    if (rep.hasIssue) {
+      reporter.reports(rep.messages)
+      return program
+    }
+
+    val gdr = GlobalDeclarationResolver(th.nameMap, th.typeMap, reporter)
+    gdr.resolveProgram(program)
+    if (reporter.hasIssue) {
+      return program
+    }
+
+    val th2 = TypeHierarchy.build(th(nameMap = gdr.globalNameMap, typeMap = gdr.globalTypeMap), reporter)
+    if (reporter.hasIssue) {
+      return program
+    }
+
+    val th3 = TypeOutliner.checkOutline(th2, reporter)
+    if (reporter.hasIssue) {
+      return program
+    }
+
+    val tc = TypeChecker(th3)
+    var scope = Scope.Local(HashMap.empty, HashMap.empty, Some(Scope.Global(ISZ(), ISZ(), ISZ())))
+
+    for (stmt <- program.body.stmts) {
+      val (newScope, newStmt) = tc.checkStmt(scope, stmt, reporter)
+      scope = newScope
+    }
+
+    return program // TODO
   }
 }
 
@@ -473,7 +525,7 @@ import TypeChecker._
     }
   }
 
-  def checkStmt(scope: Scope, stmt: AST.Stmt, reporter: Reporter): AST.Stmt = {
+  def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Scope.Local, AST.Stmt) = {
 
     def checkAssertume(name: String, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
                        cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
@@ -494,7 +546,7 @@ import TypeChecker._
       }
     }
 
-    def checkPrint(scope: Scope, name: String, printStmt: AST.Stmt.Expr,
+    def checkPrint(name: String, printStmt: AST.Stmt.Expr,
                    printExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
       var ok = T
       var newArgs = ISZ[AST.Exp]()
@@ -516,7 +568,52 @@ import TypeChecker._
         val attr = printExp.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
         return printStmt(exp = printExp(args = newArgs, attr = attr))
       }
+    }
 
+    def checkExpr(stmt: AST.Stmt.Expr): AST.Stmt = {
+      stmt.exp match {
+
+        case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
+          val (isPrint, isAssertume) = name.native match {
+            case "assert" => (F, T)
+            case "assume" => (F, T)
+            case "println" => (T, F)
+            case "print" => (T, F)
+            case "eprintln" => (T, F)
+            case "eprint" => (T, F)
+            case _ => (F, F)
+          }
+          if (isAssertume) {
+            args.size match {
+              case z"1" => val r = checkAssertume(name, stmt, exp, args(0), None()); return r
+              case z"2" => val r = checkAssertume(name, stmt, exp, args(0), Some(args(1))); return r
+              case _ =>
+                reporter.error(stmt.exp.posOpt, typeCheckerKind,
+                  s"Invalid number of arguments (${args.size}) for $name.")
+                return stmt
+            }
+          }
+          if (isPrint) {
+            val r = checkPrint(name, stmt, exp, args, reporter)
+            return r
+          }
+          halt(s"Unimplemented built-in method $name.")
+        case _ => halt("Unimplemented.") // TODO
+      }
+    }
+
+    def checkImport(stmt: AST.Stmt.Import): (Scope.Local, AST.Stmt) = {
+      // TODO: resolve import
+
+      @pure def addImport(s: Scope.Local): Scope.Local = {
+        s.outerOpt match {
+          case Some(outer: Scope.Local) => s(outerOpt = Some(addImport(outer)))
+          case Some(outer: Scope.Global) => s(outerOpt = Some(outer(imports = outer.imports :+ stmt)))
+          case _ => halt("Unexpected local scope without an outer scope.")
+        }
+      }
+
+      return (addImport(scope), stmt)
     }
 
     stmt match {
@@ -537,37 +634,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Expr =>
-
-        stmt.exp match {
-
-          case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
-            val (isPrint, isAssertume) = name.native match {
-              case "assert" => (F, T)
-              case "assume" => (F, T)
-              case "println" => (T, F)
-              case "print" => (T, F)
-              case "eprintln" => (T, F)
-              case "eprint" => (T, F)
-              case _ => (F, F)
-            }
-            if (isAssertume) {
-              args.size match {
-                case z"1" => val r = checkAssertume(name, stmt, exp, args(0), None()); return r
-                case z"2" => val r = checkAssertume(name, stmt, exp, args(0), Some(args(1))); return r
-                case _ =>
-                  reporter.error(stmt.exp.posOpt, typeCheckerKind,
-                    s"Invalid number of arguments (${args.size}) for $name.")
-                  return stmt
-              }
-            }
-            if (isPrint) {
-              val r = checkPrint(scope, name, stmt, exp, args, reporter)
-              return r
-            }
-            halt(s"Unimplemented built-in method $name.")
-          case _ => halt("Unimplemented.") // TODO
-        }
+      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return (scope, r)
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
 
@@ -575,7 +642,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.If => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Import => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Import => val r = checkImport(stmt); return r
 
       case stmt: AST.Stmt.Match => halt("Unimplemented.") // TODO
 
@@ -604,8 +671,5 @@ import TypeChecker._
     }
   }
 
-  @pure def checkProgram(program: AST.TopUnit.Program): TypeChecker => (TypeChecker, AccumulatingReporter) = {
-    halt("Unimplemented") // TODO
-  }
 
 }
