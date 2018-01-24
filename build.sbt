@@ -42,8 +42,6 @@ val sireumVersion = "3"
 
 val sireumScalacVersion = "3.2.2"
 
-val fastParseVersion = "1.0.0"
-
 val scalaJsDomVersion = "0.9.4"
 
 val scalaJsJQueryVersion = "0.9.2"
@@ -270,7 +268,6 @@ lazy val libraryJs = libraryT._3
 lazy val slangPI = new ProjectInfo("slang", isCross = true, macrosPI, libraryPI)
 lazy val slangT = toSbtCrossProject(slangPI, slangSettings ++ Seq(
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "fastparse" % fastParseVersion,
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
