@@ -152,15 +152,19 @@ object TypeHierarchy {
           val typed = typedInfo(info)
           up(r.poset) = r.poset.addNode(typed)
         case info: TypeInfo.Sig =>
-          val typed = typedInfo(info)
-          val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
-          up(r.poset) = r.poset.addParents(typed, parents)
+          if (!info.outlined) {
+            val typed = typedInfo(info)
+            val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
+            val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
+            up(r.poset) = r.poset.addParents(typed, parents)
+          }
         case info: TypeInfo.AbstractDatatype =>
-          val typed = typedInfo(info)
-          val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
-          val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
-          up(r.poset) = r.poset.addParents(typed, parents)
+          if (!info.outlined) {
+            val typed = typedInfo(info)
+            val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
+            val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
+            up(r.poset) = r.poset.addParents(typed, parents)
+          }
         case info: TypeInfo.TypeAlias =>
           resolveAlias(info, HashSet.empty)
         case _: TypeInfo.TypeVar => halt("Infeasible")

@@ -74,16 +74,24 @@ object TypeOutliner {
         var ok: B = F
         val to = TypeOutliner(th)
         ti match {
-          case ti: TypeInfo.Sig if !ti.outlined =>
-            val po = parentsOutlined(ti.name, th.typeMap)
-            if (po) {
-              jobs = jobs :+ (() => to.outlineSig(ti))
+          case ti: TypeInfo.Sig =>
+            if (!ti.outlined) {
+              val po = parentsOutlined(ti.name, th.typeMap)
+              if (po) {
+                jobs = jobs :+ (() => to.outlineSig(ti))
+                ok = T
+              }
+            } else {
               ok = T
             }
-          case ti: TypeInfo.AbstractDatatype if !ti.outlined =>
-            val po = parentsOutlined(ti.name, th.typeMap)
-            if (po) {
-              jobs = jobs :+ (() => to.outlineAdt(ti))
+          case ti: TypeInfo.AbstractDatatype =>
+            if (!ti.outlined) {
+              val po = parentsOutlined(ti.name, th.typeMap)
+              if (po) {
+                jobs = jobs :+ (() => to.outlineAdt(ti))
+                ok = T
+              }
+            } else {
               ok = T
             }
           case _ =>
@@ -105,22 +113,21 @@ object TypeOutliner {
       th = r._1
       workList = l
     }
-    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
-    val to = TypeOutliner(th)
-    for (info <- th.nameMap.values) {
-      info match {
-        case info: Info.Object => jobs = jobs :+ (() => to.outlineObject(info))
-        case _ =>
-      }
-    }
     if (!reporter.hasIssue) {
+      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
+      val to = TypeOutliner(th)
+      for (info <- th.nameMap.values) {
+        info match {
+          case info: Info.Object if !info.outlined => jobs = jobs :+ (() => to.outlineObject(info))
+          case _ =>
+        }
+      }
       val r = ISZOps(jobs).
         parMapFoldLeft(
           (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
           combine _,
           (th, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
-      th = r._1
       var gnm = th.nameMap
       val to2 = TypeOutliner(th)
       for (info <- gnm.values) {
@@ -211,7 +218,7 @@ object TypeOutliner {
       }
     }
 
-    return (th: TypeHierarchy) => (th(nameMap = th.nameMap.putAll(infos)), reporter)
+    return (th: TypeHierarchy) => (th(nameMap = th.nameMap.putAll(infos).put(info.name, info(outlined = T))), reporter)
   }
 
   @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
