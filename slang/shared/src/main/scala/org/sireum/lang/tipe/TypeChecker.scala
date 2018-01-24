@@ -45,8 +45,11 @@ object TypeChecker {
   }
 
   val typeCheckerKind: String = "Type Checker"
-  val unitType: AST.Typed.Tuple = AST.Typed.Tuple(ISZ(), None())
+  val typeUnit: AST.Typed = AST.Typed.Name(ISZ("Unit"), ISZ(), None())
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
+  val builtInMethods: HashSet[String] = HashSet.empty[String].addAll(ISZ(
+    "assert", "assume", "println", "print", "eprintln", "eprint"
+  ))
 
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
     t match {
@@ -77,6 +80,13 @@ object TypeChecker {
       substMap = substMap.put(typeParamName(typeParams(i)), args(i))
     }
     return Some(substMap)
+  }
+
+  @pure def isUnitType(t: AST.Typed): B = {
+    t match {
+      case t: AST.Typed.Tuple if t.args.isEmpty => return T
+      case _ => return t == typeUnit
+    }
   }
 
   @pure def isEqType(t1: AST.Typed, t2: AST.Typed): B = {
@@ -117,7 +127,11 @@ object TypeChecker {
           }
         }
         return T
-      case _ => return F
+      case _ =>
+        if (isUnitType(t1) && isUnitType(t2)) {
+          return T
+        }
+        return F
     }
   }
 
@@ -169,12 +183,12 @@ object TypeChecker {
     return r
   }
 
-  @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
+  @pure def extractMethodType(isPure: B, m: AST.MethodSig): AST.Typed.Fun = {
     var pts = ISZ[AST.Typed]()
     for (p <- m.params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = deBruijn(AST.Typed.Fun(pts, m.returnType.typedOpt.get, m.id.attr.posOpt))
+    val t = deBruijn(AST.Typed.Fun(isPure, F, pts, m.returnType.typedOpt.get, m.id.attr.posOpt))
     t match {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
@@ -461,17 +475,48 @@ import TypeChecker._
 
   def checkStmt(scope: Scope, stmt: AST.Stmt, reporter: Reporter): AST.Stmt = {
 
-    def checkAssertume(isAssert: B, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
+    def checkAssertume(name: String, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
                        cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
       val newCondExp = expectBExp(scope, cond, reporter)
 
       msgOpt match {
         case Some(msg) =>
           val newMsg = expectStringExp(scope, msg, reporter)
-          return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg)))
+          val attr = assertumeExp.attr(
+            typedOpt = Some(AST.Typed.Fun(F, F, ISZ(typeB, typeString), typeUnit, None())),
+            resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
+          return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg), attr = attr))
         case _ =>
-          return assertume(exp = assertumeExp(args = ISZ(newCondExp)))
+          val attr = assertumeExp.attr(
+            typedOpt = Some(AST.Typed.Fun(F, F, ISZ(typeB), typeUnit, None())),
+            resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
+          return assertume(exp = assertumeExp(args = ISZ(newCondExp), attr = attr))
       }
+    }
+
+    def checkPrint(scope: Scope, name: String, printStmt: AST.Stmt.Expr,
+                   printExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
+      var ok = T
+      var newArgs = ISZ[AST.Exp]()
+      var argTypes = ISZ[AST.Typed]()
+      for (arg <- args) {
+        val (newArg, argTypeOpt) = checkExp(scope, arg, reporter)
+        newArgs = newArgs :+ newArg
+        argTypeOpt match {
+          case Some(argType) => argTypes = argTypes :+ argType
+          case _ => ok = F
+        }
+      }
+      if (ok) {
+        val attr = printExp.attr(
+          typedOpt = Some(AST.Typed.Fun(F, F, argTypes, typeUnit, None())),
+          resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
+        return printStmt(exp = printExp(args = newArgs, attr = attr))
+      } else {
+        val attr = printExp.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
+        return printStmt(exp = printExp(args = newArgs, attr = attr))
+      }
+
     }
 
     stmt match {
@@ -496,28 +541,31 @@ import TypeChecker._
 
         stmt.exp match {
 
-          case exp@AST.Exp.Invoke(None(), AST.Id(string"assert"), targs, args) if targs.isEmpty =>
-            args.size match {
-              case z"1" => val r = checkAssertume(T, stmt, exp, args(0), None()); return r
-              case z"2" => val r = checkAssertume(T, stmt, exp, args(0), Some(args(1))); return r
-              case _ =>
-                reporter.error(stmt.exp.posOpt, typeCheckerKind,
-                  s"Invalid number of arguments (${args.size}) for assert.")
-                return stmt
+          case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
+            val (isPrint, isAssertume) = name.native match {
+              case "assert" => (F, T)
+              case "assume" => (F, T)
+              case "println" => (T, F)
+              case "print" => (T, F)
+              case "eprintln" => (T, F)
+              case "eprint" => (T, F)
+              case _ => (F, F)
             }
-
-          case exp@AST.Exp.Invoke(None(), AST.Id(string"assume"), targs, args) if targs.isEmpty =>
-            args.size match {
-              case z"1" => val r = checkAssertume(F, stmt, exp, args(0), None()); return r
-              case z"2" => val r = checkAssertume(F, stmt, exp, args(0), Some(args(1))); return r
-              case _ =>
-                reporter.error(stmt.exp.posOpt, typeCheckerKind,
-                  s"Invalid number of arguments (${args.size}) for assume.")
-                return stmt
+            if (isAssertume) {
+              args.size match {
+                case z"1" => val r = checkAssertume(name, stmt, exp, args(0), None()); return r
+                case z"2" => val r = checkAssertume(name, stmt, exp, args(0), Some(args(1))); return r
+                case _ =>
+                  reporter.error(stmt.exp.posOpt, typeCheckerKind,
+                    s"Invalid number of arguments (${args.size}) for $name.")
+                  return stmt
+              }
             }
-
-            halt("Unimplemented.") // TODO
-
+            if (isPrint) {
+              val r = checkPrint(scope, name, stmt, exp, args, reporter)
+              return r
+            }
+            halt(s"Unimplemented built-in method $name.")
           case _ => halt("Unimplemented.") // TODO
         }
 

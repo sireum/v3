@@ -26,7 +26,7 @@
 package org.sireum.lang
 
 import org.sireum._
-import org.sireum.lang.ast.{Transformer, TypedAttr}
+import org.sireum.lang.ast.{ResolvedAttr, Transformer, TypedAttr}
 import org.sireum.lang.parser._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
@@ -72,9 +72,17 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingStmt("assert(true)"))
 
-        *(passingStmt("assert(1 + 3 > 2)"))
+        *(passingStmt("assume(1 + 3 > 2)"))
 
         *(passingStmt("""assert(1 + 3 > 2, "ok")"""))
+
+        *(passingStmt("""println(1, 2, "a", "b")"""))
+
+        *(passingStmt("""eprintln(1, 2, "a", "b")"""))
+
+        *(passingStmt("""print(1, 2, "a", "b")"""))
+
+        *(passingStmt("""eprint(1, 2, "a", "b")"""))
       }
     }
 
@@ -104,6 +112,11 @@ class TypeCheckerTest extends SireumSpec {
             override def preTypedAttr(ctx: Unit, o: TypedAttr): Transformer.PreResult[Unit, TypedAttr] = {
               assert(o.typedOpt.nonEmpty)
               super.preTypedAttr(ctx, o)
+            }
+
+            override def preResolvedAttr(ctx: Unit, o: ResolvedAttr): Transformer.PreResult[Unit, ResolvedAttr] = {
+              assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
+              super.preResolvedAttr(ctx, o)
             }
             def string: String = ""
           })
