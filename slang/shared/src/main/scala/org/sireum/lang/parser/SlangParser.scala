@@ -26,7 +26,6 @@
 
 package org.sireum.lang.parser
 
-import fastparse.CharPredicates
 import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 import org.sireum.{B, ISZ, None, Option, Some, String, Z}
@@ -48,8 +47,6 @@ object SlangParser {
     "~" -> AST.Exp.UnaryOp.Complement,
     "¬" -> AST.Exp.UnaryOp.Not
   )
-
-  val scalaUnops: Set[Predef.String] = Set("unary_!", "unary_+", "unary_!", "unary_-", "unary_~")
 
   val binops: Map[Predef.String, AST.Exp.BinaryOp.Type] = Map(
     "+" -> AST.Exp.BinaryOp.Add,
@@ -78,6 +75,8 @@ object SlangParser {
     "--" -> AST.Exp.BinaryOp.RemoveAll)
 
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
+
+  val disallowedMethodIds = Seq("assert", "assume", "println")
 
   def scalaDialect(isWorksheet: Boolean): Dialect =
     if (isWorksheet) scala.meta.dialects.Scala212.copy(
@@ -534,6 +533,9 @@ class SlangParser(text: Predef.String,
     val paramss = stat.paramss
     val tpe = stat.decltpe
     var hasError = false
+    if (disallowedMethodIds.contains(name.value)) {
+      errorInSlang(name.pos, s"Method name ${name.value} is reserved")
+    }
     if (paramss.size > 1) {
       hasError = true
       errorNotSlang(name.pos, "Methods with multiple parameter tuples are")
@@ -586,6 +588,9 @@ class SlangParser(text: Predef.String,
     val tpeopt = tree.decltpe
     val exp = tree.body
     var hasError = false
+    if (disallowedMethodIds.contains(name.value)) {
+      errorInSlang(name.pos, s"Method name ${name.value} is reserved")
+    }
     if (paramss.size > 1) {
       hasError = true
       errorNotSlang(name.pos, "Methods with multiple parameter tuples are")
@@ -940,7 +945,7 @@ class SlangParser(text: Predef.String,
     val self = stat.templ.self
     val stats = stat.templ.stats
 
-    if (self.name.value != "") {
+    if (hasSelfType(self)) {
       errorNotSlang(tname.pos, s"Self type: ${syntax(self)} is")
     }
 
@@ -995,7 +1000,6 @@ class SlangParser(text: Predef.String,
     AST.Stmt.Sig(hasSig, hasExt, cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
-      opt(self.decltpe.map(translateType)),
       ISZ(stats.map(translateStat(Enclosing.Sig)): _*),
       attr(stat.pos))
   }
@@ -1192,26 +1196,6 @@ class SlangParser(text: Predef.String,
     }
   }
 
-  /*
-  def translateType(t: Pat.Type): AST.Type = t match {
-    case t"${name: Type.Name}" =>
-      AST.Type.Named(AST.Name(ISZ(cid(name)), attr(name.pos)), ISZ(), typedAttr(t.pos))
-    case pt"$ref.$tname" =>
-      def f(t: Term): ISZ[AST.Id] = t match {
-        case q"$expr.$name" => f(expr) :+ cid(name)
-        case q"${name: Term.Name}" => ISZ(cid(name))
-        case _ =>
-          errorInSlang(t.pos, s"Invalid type reference '${t.syntax}'")
-          ISZ(rDollarId)
-      }
-
-      AST.Type.Named(AST.Name(f(ref) :+ cid(tname), attr(t.pos)), ISZ(), typedAttr(t.pos))
-    case _ =>
-      errorNotSlang(t.pos, s"Pattern type '${syntax(t)}' is")
-      unitType
-  }
-  */
-
   def translateTypeArg(allowByName: Boolean)(ta: Type): AST.Type = ta match {
     case _: Type.Repeated =>
       errorNotSlang(ta.pos, "Repeated types '〈type〉*' are")
@@ -1249,27 +1233,28 @@ class SlangParser(text: Predef.String,
     pat match {
       case p"${pname: Pat.Var} @ $ref(..${apats: List[Pat]})" =>
         AST.Pattern.Structure(Some(cid(pname.name)), Some(AST.Name(ref2IS(ref), attr(ref.pos))),
-          ISZ(apats.map(translatePattern): _*))
+          ISZ(apats.map(translatePattern): _*), resolvedAttr(pat.pos))
       case p"${pname: Pat.Var} @ (..$patsnel)" =>
         AST.Pattern.Structure(Some(cid(pname.name)), None(),
-          ISZ(patsnel.map(translatePattern): _*))
+          ISZ(patsnel.map(translatePattern): _*), resolvedAttr(pat.pos))
       case p"$ref(..${apats: List[Pat]})" =>
         AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(ref), attr(ref.pos))),
-          ISZ(apats.map(translatePattern): _*))
+          ISZ(apats.map(translatePattern): _*), resolvedAttr(pat.pos))
       case p"(..$patsnel)" if patsnel.size > 1 =>
-        AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*))
+        AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*), resolvedAttr(pat.pos))
       case p"${ref: Term.Ref}.$ename" =>
-        AST.Pattern.Ref(AST.Name(ref2IS(ref) :+ cid(ename), attr(pat.pos)))
-      case p"${name: Pat.Var} : $tpe" => AST.Pattern.Variable(cid(name), Some(translateType(tpe)))
-      case q"${name: Pat.Var}" => AST.Pattern.Variable(cid(name), None())
-      case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)))
-      case p"_" => AST.Pattern.Wildcard(None())
+        AST.Pattern.Ref(AST.Name(ref2IS(ref) :+ cid(ename), attr(pat.pos)), resolvedAttr(pat.pos))
+      case pat: Term.Name => AST.Pattern.Ref(AST.Name(ISZ(cid(pat)), attr(pat.pos)), resolvedAttr(pat.pos))
+      case p"${name: Pat.Var} : $tpe" => AST.Pattern.VarBinding(cid(name), Some(translateType(tpe)), attr(pat.pos))
+      case q"${name: Pat.Var}" => AST.Pattern.VarBinding(cid(name), None(), attr(pat.pos))
+      case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)), attr(pat.pos))
+      case p"_" => AST.Pattern.Wildcard(None(), attr(pat.pos))
       case p"${lit: Pat.Interpolate}" => translateLit(lit)
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
-      case _: Pat.SeqWildcard => AST.Pattern.SeqWildcard()
+      case _: Pat.SeqWildcard => AST.Pattern.SeqWildcard(typedAttr(pat.pos))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${pat.structure}'")
-        AST.Pattern.Wildcard(None())
+        AST.Pattern.Wildcard(None(), attr(pat.pos))
     }
   }
 
@@ -1281,20 +1266,20 @@ class SlangParser(text: Predef.String,
           expr match {
             case expr: Term.Ref =>
               return AST.Pattern.Structure(None(), Some(AST.Name(ref2IS(expr), attr(expr.pos))),
-                ISZ(args.map(translatePattern): _*))
+                ISZ(args.map(translatePattern): _*), resolvedAttr(pat.pos))
             case _ =>
           }
         }
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard(None())
+        AST.Pattern.Wildcard(None(), attr(pat.pos))
       case q"(..$exprsnel)" if exprsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(),
-          ISZ(exprsnel.map(translatePattern): _*))
-      case q"${name: Term.Name}" => AST.Pattern.Variable(cid(name), None())
+          ISZ(exprsnel.map(translatePattern): _*), resolvedAttr(pat.pos))
+      case q"${name: Term.Name}" => AST.Pattern.VarBinding(cid(name), None(), attr(pat.pos))
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard(None())
+        AST.Pattern.Wildcard(None(), attr(pat.pos))
     }
   }
 
@@ -1415,7 +1400,7 @@ class SlangParser(text: Predef.String,
 
   def translateAssign(enclosing: Enclosing.Type, fun: Term, argss: List[List[Term]], rhs: Term, stat: Term): AST.Stmt = {
     def patVar(arg: Term): AST.Pattern = arg match {
-      case arg: Term.Name => AST.Pattern.Variable(cid(arg), None())
+      case arg: Term.Name => AST.Pattern.VarBinding(cid(arg), None(), attr(arg.pos))
     }
 
     val pos = stat.pos
@@ -1438,7 +1423,7 @@ class SlangParser(text: Predef.String,
               case _ => false
             })) {
               AST.Stmt.AssignPattern(AST.Pattern.Structure(None(), None(),
-                ISZ(args.map(patVar): _*)), translateAssignExp(rhs), attr(pos))
+                ISZ(args.map(patVar): _*), resolvedAttr(stat.pos)), translateAssignExp(rhs), attr(pos))
             } else {
               error(pos, "Slang tuple pat should be of the form: 'pat(〈ID〉,〈ID〉, ... ) = ...'")
               rStmt
@@ -1668,11 +1653,6 @@ class SlangParser(text: Predef.String,
 
     exp match {
       case exp: Lit => translateLit(exp)
-      case q"${expr: Term.Interpolate}[..$tpesnel]" if bvs.contains(expr.prefix.value) &&
-        expr.args.size == 1 && (expr.parts match {
-        case List(Lit.String(_)) => true
-        case _ => false
-      }) => translateLitBv(isBigEndian = expr.prefix.value == "bb", expr, tpesnel.head)
       case exp: Term.Interpolate =>
         val prefix = exp.prefix.value
         if (builtinPrefix.contains(prefix)) translateLit(exp)
@@ -1814,67 +1794,12 @@ class SlangParser(text: Predef.String,
   def translateLit(lit: Pat.Interpolate): AST.Pattern.LitInterpolate = {
     if (lit.args.nonEmpty || lit.parts.size != 1) {
       errorInSlang(lit.pos, s"Literal pattern interpolation cannot have arguments")
-      AST.Pattern.LitInterpolate(lit.prefix.value, "")
-    } else AST.Pattern.LitInterpolate(lit.prefix.value, lit.parts.head.value.toString)
+      AST.Pattern.LitInterpolate(lit.prefix.value, "", typedAttr(lit.pos))
+    } else AST.Pattern.LitInterpolate(lit.prefix.value, lit.parts.head.value.toString, typedAttr(lit.pos))
   }
 
   def translateLit(lit: Term.Interpolate): AST.Exp with AST.Lit =
     translateLit(lit.prefix, lit.args, lit.parts, lit.pos, syntax(lit))
-
-  def translateLitBv(isBigEndian: Boolean,
-                     lit: Term.Interpolate,
-                     indexType: Type): AST.Exp with AST.Lit = {
-    val List(Lit.String(v)) = lit.parts
-    val v2 = v.filter(_.isWhitespace).toLowerCase
-    if (v2.startsWith("0x")) {
-      val v3 = if (isBigEndian) v2.substring(2).reverse else v2.substring(2)
-      val size = v3.length * 4
-      val bs = scala.collection.mutable.BitSet(size)
-      for (i <- v3.indices) {
-        val n = v3(i) match {
-          case '0' => 0
-          case '1' => 1
-          case '2' => 2
-          case '3' => 3
-          case '4' => 4
-          case '5' => 5
-          case '6' => 6
-          case '7' => 7
-          case '8' => 8
-          case '9' => 9
-          case 'a' => 10
-          case 'b' => 11
-          case 'c' => 12
-          case 'd' => 13
-          case 'e' => 14
-          case 'f' => 15
-          case _ =>
-            error(lit.pos, s"Invalid bit-vector literal: '${syntax(lit)}'")
-            return AST.Exp.LitB(false, attr(lit.pos))
-        }
-        for (j <- 0 until 4 if (1 << j & n) != 0) {
-          bs += (i * 4 + j)
-        }
-      }
-      AST.Exp.LitBv(ISZ((0 until size).map(bs(_): B): _*),
-        translateType(indexType), attr(lit.pos)) // TODO: Optimize ISZ for B
-    } else {
-      val v3 = if (isBigEndian) v2.reverse else v2
-      val size = v3.length
-      val bs = scala.collection.mutable.BitSet(size)
-      for (i <- v3.indices) {
-        v3(i) match {
-          case '0' =>
-          case '1' => bs += i
-          case _ =>
-            error(lit.pos, s"Invalid bit-vector literal: '${syntax(lit)}'")
-            return AST.Exp.LitB(false, attr(lit.pos))
-        }
-      }
-      AST.Exp.LitBv(ISZ((0 until size).map(bs(_): B): _*),
-        translateType(indexType), attr(lit.pos)) // TODO: Optimize ISZ for B
-    }
-  }
 
   def translateStringInterpolate(s: Term.Interpolate): AST.Exp.StringInterpolate =
     AST.Exp.StringInterpolate(s.prefix.value,
@@ -2097,18 +2022,11 @@ class SlangParser(text: Predef.String,
 
   def cid(name: Name): AST.Id = cid(name.value, name.pos)
 
-  def cid(name: Name.Indeterminate): AST.Id = cid(name.value, name.pos)
-
   def cidNoCheck(id: Predef.String, pos: Position): AST.Id =
     AST.Id(id, attr(pos))
 
   def cid(id: Predef.String, pos: Position): AST.Id = {
-    def isOpChar(c: Char) = c match {
-      case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
-      case _ => CharPredicates.isOtherSymbol(c) || CharPredicates.isMathSymbol(c)
-    }
-
-    if (input.chars(pos.start) != '`' && !id.forall(isOpChar) && id.exists(isOpChar) && !scalaUnops.contains(id))
+    if (id.contains('$') || id.endsWith("_="))
       errorInSlang(pos, s"'$id' is not a valid identifier form")
 
     cidNoCheck(id, pos)

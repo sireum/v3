@@ -336,7 +336,7 @@ object MTransformer {
         case o: Pattern.Literal => return prePatternLiteral(o)
         case o: Pattern.LitInterpolate => return prePatternLitInterpolate(o)
         case o: Pattern.Ref => return prePatternRef(o)
-        case o: Pattern.Variable => return prePatternVariable(o)
+        case o: Pattern.VarBinding => return prePatternVarBinding(o)
         case o: Pattern.Wildcard => return prePatternWildcard(o)
         case o: Pattern.SeqWildcard => return prePatternSeqWildcard(o)
         case o: Pattern.Structure => return prePatternStructure(o)
@@ -355,7 +355,7 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
-    def prePatternVariable(o: Pattern.Variable): PreResult[Pattern] = {
+    def prePatternVarBinding(o: Pattern.VarBinding): PreResult[Pattern] = {
       return PreResult(T, MNone())
     }
 
@@ -379,7 +379,6 @@ object MTransformer {
         case o: Exp.LitF32 => return preExpLitF32(o)
         case o: Exp.LitF64 => return preExpLitF64(o)
         case o: Exp.LitR => return preExpLitR(o)
-        case o: Exp.LitBv => return preExpLitBv(o)
         case o: Exp.LitString => return preExpLitString(o)
         case o: Exp.StringInterpolate => return preExpStringInterpolate(o)
         case o: Exp.This => return preExpThis(o)
@@ -437,12 +436,6 @@ object MTransformer {
            case _ => halt("Can only produce object of type Lit")
           }
           return r
-        case o: Exp.LitBv =>
-          val r: PreResult[Lit] = preExpLitBv(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case _ => halt("Can only produce object of type Lit")
-          }
-          return r
         case o: Exp.LitString =>
           val r: PreResult[Lit] = preExpLitString(o) match {
            case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
@@ -473,10 +466,6 @@ object MTransformer {
     }
 
     def preExpLitR(o: Exp.LitR): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitBv(o: Exp.LitBv): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
 
@@ -832,6 +821,57 @@ object MTransformer {
     }
 
     def preResolvedInfo(o: ResolvedInfo): PreResult[ResolvedInfo] = {
+      o match {
+        case o: ResolvedInfo.BuiltIn => return preResolvedInfoBuiltIn(o)
+        case o: ResolvedInfo.Package => return preResolvedInfoPackage(o)
+        case o: ResolvedInfo.Enum => return preResolvedInfoEnum(o)
+        case o: ResolvedInfo.Object => return preResolvedInfoObject(o)
+        case o: ResolvedInfo.ObjectVar => return preResolvedInfoObjectVar(o)
+        case o: ResolvedInfo.ObjectMethod => return preResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Type => return preResolvedInfoType(o)
+        case o: ResolvedInfo.TypeVar => return preResolvedInfoTypeVar(o)
+        case o: ResolvedInfo.TypeMethod => return preResolvedInfoTypeMethod(o)
+        case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(o)
+      }
+    }
+
+    def preResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoPackage(o: ResolvedInfo.Package): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoEnum(o: ResolvedInfo.Enum): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoObject(o: ResolvedInfo.Object): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoType(o: ResolvedInfo.Type): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
@@ -1136,7 +1176,7 @@ object MTransformer {
         case o: Pattern.Literal => return postPatternLiteral(o)
         case o: Pattern.LitInterpolate => return postPatternLitInterpolate(o)
         case o: Pattern.Ref => return postPatternRef(o)
-        case o: Pattern.Variable => return postPatternVariable(o)
+        case o: Pattern.VarBinding => return postPatternVarBinding(o)
         case o: Pattern.Wildcard => return postPatternWildcard(o)
         case o: Pattern.SeqWildcard => return postPatternSeqWildcard(o)
         case o: Pattern.Structure => return postPatternStructure(o)
@@ -1155,7 +1195,7 @@ object MTransformer {
       return MNone()
     }
 
-    def postPatternVariable(o: Pattern.Variable): MOption[Pattern] = {
+    def postPatternVarBinding(o: Pattern.VarBinding): MOption[Pattern] = {
       return MNone()
     }
 
@@ -1179,7 +1219,6 @@ object MTransformer {
         case o: Exp.LitF32 => return postExpLitF32(o)
         case o: Exp.LitF64 => return postExpLitF64(o)
         case o: Exp.LitR => return postExpLitR(o)
-        case o: Exp.LitBv => return postExpLitBv(o)
         case o: Exp.LitString => return postExpLitString(o)
         case o: Exp.StringInterpolate => return postExpStringInterpolate(o)
         case o: Exp.This => return postExpThis(o)
@@ -1237,12 +1276,6 @@ object MTransformer {
            case _ => halt("Can only produce object of type Lit")
           }
           return r
-        case o: Exp.LitBv =>
-          val r: MOption[Lit] = postExpLitBv(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case _ => halt("Can only produce object of type Lit")
-          }
-          return r
         case o: Exp.LitString =>
           val r: MOption[Lit] = postExpLitString(o) match {
            case MSome(result: Lit) => MSome[Lit](result)
@@ -1273,10 +1306,6 @@ object MTransformer {
     }
 
     def postExpLitR(o: Exp.LitR): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitBv(o: Exp.LitBv): MOption[Exp] = {
       return MNone()
     }
 
@@ -1632,6 +1661,57 @@ object MTransformer {
     }
 
     def postResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
+      o match {
+        case o: ResolvedInfo.BuiltIn => return postResolvedInfoBuiltIn(o)
+        case o: ResolvedInfo.Package => return postResolvedInfoPackage(o)
+        case o: ResolvedInfo.Enum => return postResolvedInfoEnum(o)
+        case o: ResolvedInfo.Object => return postResolvedInfoObject(o)
+        case o: ResolvedInfo.ObjectVar => return postResolvedInfoObjectVar(o)
+        case o: ResolvedInfo.ObjectMethod => return postResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Type => return postResolvedInfoType(o)
+        case o: ResolvedInfo.TypeVar => return postResolvedInfoTypeVar(o)
+        case o: ResolvedInfo.TypeMethod => return postResolvedInfoTypeMethod(o)
+        case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(o)
+      }
+    }
+
+    def postResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoPackage(o: ResolvedInfo.Package): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoEnum(o: ResolvedInfo.Enum): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoObject(o: ResolvedInfo.Object): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoType(o: ResolvedInfo.Type): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): MOption[ResolvedInfo] = {
       return MNone()
     }
 
@@ -1816,11 +1896,10 @@ import MTransformer._
           val r0: MOption[Id] = transformId(o2.id)
           val r1: MOption[IS[Z, TypeParam]] = transformISZ(o2.typeParams, transformTypeParam)
           val r2: MOption[IS[Z, Type.Named]] = transformISZ(o2.parents, transformTypeNamed)
-          val r3: MOption[Option[Type]] = transformOption(o2.selfTypeOpt, transformType)
-          val r4: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
-          val r5: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty || r5.nonEmpty)
-            MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), parents = r2.getOrElse(o2.parents), selfTypeOpt = r3.getOrElse(o2.selfTypeOpt), stmts = r4.getOrElse(o2.stmts), attr = r5.getOrElse(o2.attr)))
+          val r3: MOption[IS[Z, Stmt]] = transformISZ(o2.stmts, transformStmt)
+          val r4: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty)
+            MSome(o2(id = r0.getOrElse(o2.id), typeParams = r1.getOrElse(o2.typeParams), parents = r2.getOrElse(o2.parents), stmts = r3.getOrElse(o2.stmts), attr = r4.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.AbstractDatatype =>
@@ -2414,40 +2493,46 @@ import MTransformer._
           else
             MNone()
         case o2: Pattern.LitInterpolate =>
-          if (hasChanged)
-            MSome(o2)
+          val r0: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(attr = r0.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Pattern.Ref =>
           val r0: MOption[Name] = transformName(o2.name)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(name = r0.getOrElse(o2.name)))
+          val r1: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(name = r0.getOrElse(o2.name), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
-        case o2: Pattern.Variable =>
+        case o2: Pattern.VarBinding =>
           val r0: MOption[Id] = transformId(o2.id)
           val r1: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(id = r0.getOrElse(o2.id), typeOpt = r1.getOrElse(o2.typeOpt)))
+          val r2: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
+            MSome(o2(id = r0.getOrElse(o2.id), typeOpt = r1.getOrElse(o2.typeOpt), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Pattern.Wildcard =>
           val r0: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(typeOpt = r0.getOrElse(o2.typeOpt)))
+          val r1: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(typeOpt = r0.getOrElse(o2.typeOpt), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Pattern.SeqWildcard =>
-          if (hasChanged)
-            MSome(o2)
+          val r0: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(attr = r0.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Pattern.Structure =>
           val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId)
           val r1: MOption[Option[Name]] = transformOption(o2.nameOpt, transformName)
           val r2: MOption[IS[Z, Pattern]] = transformISZ(o2.patterns, transformPattern)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(idOpt = r0.getOrElse(o2.idOpt), nameOpt = r1.getOrElse(o2.nameOpt), patterns = r2.getOrElse(o2.patterns)))
+          val r3: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(idOpt = r0.getOrElse(o2.idOpt), nameOpt = r1.getOrElse(o2.nameOpt), patterns = r2.getOrElse(o2.patterns), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
       }
@@ -2509,13 +2594,6 @@ import MTransformer._
           val r0: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty)
             MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitBv =>
-          val r0: MOption[Type] = transformType(o2.tipe)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(tipe = r0.getOrElse(o2.tipe), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.LitString =>
@@ -2701,13 +2779,6 @@ import MTransformer._
           val r0: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty)
             MSome(o2(attr = r0.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Exp.LitBv =>
-          val r0: MOption[Type] = transformType(o2.tipe)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(tipe = r0.getOrElse(o2.tipe), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.LitString =>
@@ -3690,10 +3761,59 @@ import MTransformer._
     val r: MOption[ResolvedInfo] = if (preR.continu) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      if (hasChanged)
-        MSome(o2)
-      else
-        MNone()
+      val rOpt: MOption[ResolvedInfo] = o2 match {
+        case o2: ResolvedInfo.BuiltIn =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.Package =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.Enum =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.Object =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.ObjectVar =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.ObjectMethod =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.Type =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.TypeVar =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.TypeMethod =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: ResolvedInfo.LocalVar =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+      }
+      rOpt
     } else if (preR.resultOpt.nonEmpty) {
       MSome(preR.resultOpt.getOrElse(o))
     } else {

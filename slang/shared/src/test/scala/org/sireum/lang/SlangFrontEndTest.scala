@@ -94,8 +94,6 @@ class SlangFrontEndTest extends SireumSpec {
 
       "Type" - {
 
-        passing("@sig trait A { _: B => }", isWorksheet = true)
-
         passing("def f(x: ISZ[Z]): Z = {}", isWorksheet = true)
 
         passing("def f(x: A[Z, Z]): Z = {}", isWorksheet = true)
@@ -276,6 +274,8 @@ class SlangFrontEndTest extends SireumSpec {
       }
 
       "Type" - {
+
+        failing("@sig trait A { _: B => }", "Self type", isWorksheet = true)
 
         failing("@sig trait A { x: B => }", "Self type", isWorksheet = true)
 

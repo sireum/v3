@@ -280,7 +280,6 @@ object JSON {
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("parents", printISZ(F, o.parents, printTypeNamed)),
-        ("selfTypeOpt", printOption(o.selfTypeOpt, printType)),
         ("stmts", printISZ(F, o.stmts, printStmt)),
         ("attr", printAttr(o.attr))
       ))
@@ -583,7 +582,7 @@ object JSON {
         case o: Pattern.Literal => return printPatternLiteral(o)
         case o: Pattern.LitInterpolate => return printPatternLitInterpolate(o)
         case o: Pattern.Ref => return printPatternRef(o)
-        case o: Pattern.Variable => return printPatternVariable(o)
+        case o: Pattern.VarBinding => return printPatternVarBinding(o)
         case o: Pattern.Wildcard => return printPatternWildcard(o)
         case o: Pattern.SeqWildcard => return printPatternSeqWildcard(o)
         case o: Pattern.Structure => return printPatternStructure(o)
@@ -601,35 +600,40 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Pattern.LitInterpolate""""),
         ("prefix", printString(o.prefix)),
-        ("value", printString(o.value))
+        ("value", printString(o.value)),
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
     @pure def printPatternRef(o: Pattern.Ref): ST = {
       return printObject(ISZ(
         ("type", st""""Pattern.Ref""""),
-        ("name", printName(o.name))
+        ("name", printName(o.name)),
+        ("attr", printResolvedAttr(o.attr))
       ))
     }
 
-    @pure def printPatternVariable(o: Pattern.Variable): ST = {
+    @pure def printPatternVarBinding(o: Pattern.VarBinding): ST = {
       return printObject(ISZ(
-        ("type", st""""Pattern.Variable""""),
+        ("type", st""""Pattern.VarBinding""""),
         ("id", printId(o.id)),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typeOpt", printOption(o.typeOpt, printType)),
+        ("attr", printAttr(o.attr))
       ))
     }
 
     @pure def printPatternWildcard(o: Pattern.Wildcard): ST = {
       return printObject(ISZ(
         ("type", st""""Pattern.Wildcard""""),
-        ("typeOpt", printOption(o.typeOpt, printType))
+        ("typeOpt", printOption(o.typeOpt, printType)),
+        ("attr", printAttr(o.attr))
       ))
     }
 
     @pure def printPatternSeqWildcard(o: Pattern.SeqWildcard): ST = {
       return printObject(ISZ(
-        ("type", st""""Pattern.SeqWildcard"""")
+        ("type", st""""Pattern.SeqWildcard""""),
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -638,7 +642,8 @@ object JSON {
         ("type", st""""Pattern.Structure""""),
         ("idOpt", printOption(o.idOpt, printId)),
         ("nameOpt", printOption(o.nameOpt, printName)),
-        ("patterns", printISZ(F, o.patterns, printPattern))
+        ("patterns", printISZ(F, o.patterns, printPattern)),
+        ("attr", printResolvedAttr(o.attr))
       ))
     }
 
@@ -650,7 +655,6 @@ object JSON {
         case o: Exp.LitF32 => return printExpLitF32(o)
         case o: Exp.LitF64 => return printExpLitF64(o)
         case o: Exp.LitR => return printExpLitR(o)
-        case o: Exp.LitBv => return printExpLitBv(o)
         case o: Exp.LitString => return printExpLitString(o)
         case o: Exp.StringInterpolate => return printExpStringInterpolate(o)
         case o: Exp.This => return printExpThis(o)
@@ -678,7 +682,6 @@ object JSON {
         case o: Exp.LitF32 => return printExpLitF32(o)
         case o: Exp.LitF64 => return printExpLitF64(o)
         case o: Exp.LitR => return printExpLitR(o)
-        case o: Exp.LitBv => return printExpLitBv(o)
         case o: Exp.LitString => return printExpLitString(o)
       }
     }
@@ -727,15 +730,6 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Exp.LitR""""),
         ("value", printR(o.value)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printExpLitBv(o: Exp.LitBv): ST = {
-      return printObject(ISZ(
-        ("type", st""""Exp.LitBv""""),
-        ("value", printISZ(T, o.value, printB)),
-        ("tipe", printType(o.tipe)),
         ("attr", printAttr(o.attr))
       ))
     }
@@ -1481,36 +1475,91 @@ object JSON {
     }
 
     @pure def printResolvedInfo(o: ResolvedInfo): ST = {
+      o match {
+        case o: ResolvedInfo.BuiltIn => return printResolvedInfoBuiltIn(o)
+        case o: ResolvedInfo.Package => return printResolvedInfoPackage(o)
+        case o: ResolvedInfo.Enum => return printResolvedInfoEnum(o)
+        case o: ResolvedInfo.Object => return printResolvedInfoObject(o)
+        case o: ResolvedInfo.ObjectVar => return printResolvedInfoObjectVar(o)
+        case o: ResolvedInfo.ObjectMethod => return printResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Type => return printResolvedInfoType(o)
+        case o: ResolvedInfo.TypeVar => return printResolvedInfoTypeVar(o)
+        case o: ResolvedInfo.TypeMethod => return printResolvedInfoTypeMethod(o)
+        case o: ResolvedInfo.LocalVar => return printResolvedInfoLocalVar(o)
+      }
+    }
+
+    @pure def printResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): ST = {
       return printObject(ISZ(
-        ("type", st""""ResolvedInfo""""),
-        ("kind", printSymbolKind(o.kind)),
-        ("ids", printISZ(T, o.ids, printString)),
-        ("externFileUriOpt", printOption(o.externFileUriOpt, printString))
+        ("type", st""""ResolvedInfo.BuiltIn""""),
+        ("name", printString(o.name))
       ))
     }
 
-    @pure def printSymbolKind(o: SymbolKind.Type): ST = {
-      val value: String = o match {
-        case SymbolKind.Package => "Package"
-        case SymbolKind.Val => "Val"
-        case SymbolKind.Var => "Var"
-        case SymbolKind.Method => "Method"
-        case SymbolKind.ExtMethod => "ExtMethod"
-        case SymbolKind.SpecMethod => "SpecMethod"
-        case SymbolKind.Object => "Object"
-        case SymbolKind.Sig => "Sig"
-        case SymbolKind.DatatypeTrait => "DatatypeTrait"
-        case SymbolKind.DatatypeClass => "DatatypeClass"
-        case SymbolKind.RecordTrait => "RecordTrait"
-        case SymbolKind.RecordClass => "RecordClass"
-        case SymbolKind.Enum => "Enum"
-        case SymbolKind.TypeAlias => "TypeAlias"
-        case SymbolKind.FreshVar => "FreshVar"
-        case SymbolKind.QuantVar => "QuantVar"
-      }
+    @pure def printResolvedInfoPackage(o: ResolvedInfo.Package): ST = {
       return printObject(ISZ(
-        ("type", printString("SymbolKind")),
-        ("value", printString(value))
+        ("type", st""""ResolvedInfo.Package""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoEnum(o: ResolvedInfo.Enum): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.Enum""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoObject(o: ResolvedInfo.Object): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.Object""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.ObjectVar""""),
+        ("objectName", printISZ(T, o.objectName, printString)),
+        ("id", printString(o.id))
+      ))
+    }
+
+    @pure def printResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.ObjectMethod""""),
+        ("objectName", printISZ(T, o.objectName, printString)),
+        ("id", printString(o.id))
+      ))
+    }
+
+    @pure def printResolvedInfoType(o: ResolvedInfo.Type): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.Type""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.TypeVar""""),
+        ("typeName", printISZ(T, o.typeName, printString)),
+        ("id", printString(o.id))
+      ))
+    }
+
+    @pure def printResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.TypeMethod""""),
+        ("typeName", printISZ(T, o.typeName, printString)),
+        ("id", printString(o.id))
+      ))
+    }
+
+    @pure def printResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.LocalVar""""),
+        ("id", printString(o.id))
       ))
     }
 
@@ -2043,16 +2092,13 @@ object JSON {
       parser.parseObjectKey("parents")
       val parents = parser.parseISZ(parseTypeNamed _)
       parser.parseObjectNext()
-      parser.parseObjectKey("selfTypeOpt")
-      val selfTypeOpt = parser.parseOption(parseType _)
-      parser.parseObjectNext()
       parser.parseObjectKey("stmts")
       val stmts = parser.parseISZ(parseStmt _)
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, selfTypeOpt, stmts, attr)
+      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, stmts, attr)
     }
 
     def parseStmtAbstractDatatype(): Stmt.AbstractDatatype = {
@@ -2706,12 +2752,12 @@ object JSON {
     }
 
     def parsePattern(): Pattern = {
-      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.LitInterpolate", "Pattern.Ref", "Pattern.Variable", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
+      val t = parser.parseObjectTypes(ISZ("Pattern.Literal", "Pattern.LitInterpolate", "Pattern.Ref", "Pattern.VarBinding", "Pattern.Wildcard", "Pattern.SeqWildcard", "Pattern.Structure"))
       t.native match {
         case "Pattern.Literal" => val r = parsePatternLiteralT(T); return r
         case "Pattern.LitInterpolate" => val r = parsePatternLitInterpolateT(T); return r
         case "Pattern.Ref" => val r = parsePatternRefT(T); return r
-        case "Pattern.Variable" => val r = parsePatternVariableT(T); return r
+        case "Pattern.VarBinding" => val r = parsePatternVarBindingT(T); return r
         case "Pattern.Wildcard" => val r = parsePatternWildcardT(T); return r
         case "Pattern.SeqWildcard" => val r = parsePatternSeqWildcardT(T); return r
         case "Pattern.Structure" => val r = parsePatternStructureT(T); return r
@@ -2749,7 +2795,10 @@ object JSON {
       parser.parseObjectKey("value")
       val value = parser.parseString()
       parser.parseObjectNext()
-      return Pattern.LitInterpolate(prefix, value)
+      parser.parseObjectKey("attr")
+      val attr = parseTypedAttr()
+      parser.parseObjectNext()
+      return Pattern.LitInterpolate(prefix, value, attr)
     }
 
     def parsePatternRef(): Pattern.Ref = {
@@ -2764,17 +2813,20 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parseName()
       parser.parseObjectNext()
-      return Pattern.Ref(name)
+      parser.parseObjectKey("attr")
+      val attr = parseResolvedAttr()
+      parser.parseObjectNext()
+      return Pattern.Ref(name, attr)
     }
 
-    def parsePatternVariable(): Pattern.Variable = {
-      val r = parsePatternVariableT(F)
+    def parsePatternVarBinding(): Pattern.VarBinding = {
+      val r = parsePatternVarBindingT(F)
       return r
     }
 
-    def parsePatternVariableT(typeParsed: B): Pattern.Variable = {
+    def parsePatternVarBindingT(typeParsed: B): Pattern.VarBinding = {
       if (!typeParsed) {
-        parser.parseObjectType("Pattern.Variable")
+        parser.parseObjectType("Pattern.VarBinding")
       }
       parser.parseObjectKey("id")
       val id = parseId()
@@ -2782,7 +2834,10 @@ object JSON {
       parser.parseObjectKey("typeOpt")
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
-      return Pattern.Variable(id, typeOpt)
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return Pattern.VarBinding(id, typeOpt, attr)
     }
 
     def parsePatternWildcard(): Pattern.Wildcard = {
@@ -2797,7 +2852,10 @@ object JSON {
       parser.parseObjectKey("typeOpt")
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
-      return Pattern.Wildcard(typeOpt)
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return Pattern.Wildcard(typeOpt, attr)
     }
 
     def parsePatternSeqWildcard(): Pattern.SeqWildcard = {
@@ -2809,7 +2867,10 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Pattern.SeqWildcard")
       }
-      return Pattern.SeqWildcard()
+      parser.parseObjectKey("attr")
+      val attr = parseTypedAttr()
+      parser.parseObjectNext()
+      return Pattern.SeqWildcard(attr)
     }
 
     def parsePatternStructure(): Pattern.Structure = {
@@ -2830,11 +2891,14 @@ object JSON {
       parser.parseObjectKey("patterns")
       val patterns = parser.parseISZ(parsePattern _)
       parser.parseObjectNext()
-      return Pattern.Structure(idOpt, nameOpt, patterns)
+      parser.parseObjectKey("attr")
+      val attr = parseResolvedAttr()
+      parser.parseObjectNext()
+      return Pattern.Structure(idOpt, nameOpt, patterns, attr)
     }
 
     def parseExp(): Exp = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitString", "Exp.StringInterpolate", "Exp.This", "Exp.Super", "Exp.Unary", "Exp.Binary", "Exp.Ident", "Exp.Eta", "Exp.Tuple", "Exp.Select", "Exp.Invoke", "Exp.InvokeNamed", "Exp.If", "Exp.Fun", "Exp.ForYield", "Exp.Quant"))
       t.native match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
@@ -2842,7 +2906,6 @@ object JSON {
         case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
         case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
         case "Exp.LitR" => val r = parseExpLitRT(T); return r
-        case "Exp.LitBv" => val r = parseExpLitBvT(T); return r
         case "Exp.LitString" => val r = parseExpLitStringT(T); return r
         case "Exp.StringInterpolate" => val r = parseExpStringInterpolateT(T); return r
         case "Exp.This" => val r = parseExpThisT(T); return r
@@ -2864,7 +2927,7 @@ object JSON {
     }
 
     def parseLit(): Lit = {
-      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitBv", "Exp.LitString"))
+      val t = parser.parseObjectTypes(ISZ("Exp.LitB", "Exp.LitC", "Exp.LitZ", "Exp.LitF32", "Exp.LitF64", "Exp.LitR", "Exp.LitString"))
       t.native match {
         case "Exp.LitB" => val r = parseExpLitBT(T); return r
         case "Exp.LitC" => val r = parseExpLitCT(T); return r
@@ -2872,7 +2935,6 @@ object JSON {
         case "Exp.LitF32" => val r = parseExpLitF32T(T); return r
         case "Exp.LitF64" => val r = parseExpLitF64T(T); return r
         case "Exp.LitR" => val r = parseExpLitRT(T); return r
-        case "Exp.LitBv" => val r = parseExpLitBvT(T); return r
         case "Exp.LitString" => val r = parseExpLitStringT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -2984,27 +3046,6 @@ object JSON {
       val attr = parseAttr()
       parser.parseObjectNext()
       return Exp.LitR(value, attr)
-    }
-
-    def parseExpLitBv(): Exp.LitBv = {
-      val r = parseExpLitBvT(F)
-      return r
-    }
-
-    def parseExpLitBvT(typeParsed: B): Exp.LitBv = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.LitBv")
-      }
-      parser.parseObjectKey("value")
-      val value = parser.parseISZ(parser.parseB _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("tipe")
-      val tipe = parseType()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Exp.LitBv(value, tipe, attr)
     }
 
     def parseExpLitString(): Exp.LitString = {
@@ -4588,57 +4629,182 @@ object JSON {
     }
 
     def parseResolvedInfo(): ResolvedInfo = {
-      val r = parseResolvedInfoT(F)
-      return r
-    }
-
-    def parseResolvedInfoT(typeParsed: B): ResolvedInfo = {
-      if (!typeParsed) {
-        parser.parseObjectType("ResolvedInfo")
-      }
-      parser.parseObjectKey("kind")
-      val kind = parseSymbolKind()
-      parser.parseObjectNext()
-      parser.parseObjectKey("ids")
-      val ids = parser.parseISZ(parser.parseString _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("externFileUriOpt")
-      val externFileUriOpt = parser.parseOption(parser.parseString _)
-      parser.parseObjectNext()
-      return ResolvedInfo(kind, ids, externFileUriOpt)
-    }
-
-    def parseSymbolKind(): SymbolKind.Type = {
-      val r = parseSymbolKindT(F)
-      return r
-    }
-
-    def parseSymbolKindT(typeParsed: B): SymbolKind.Type = {
-      if (!typeParsed) {
-        parser.parseObjectType("SymbolKind")
-      }
-      parser.parseObjectKey("value")
-      val s = parser.parseString()
-      parser.parseObjectNext()
-      s.native match {
-        case "Package" => return SymbolKind.Package
-        case "Val" => return SymbolKind.Val
-        case "Var" => return SymbolKind.Var
-        case "Method" => return SymbolKind.Method
-        case "ExtMethod" => return SymbolKind.ExtMethod
-        case "SpecMethod" => return SymbolKind.SpecMethod
-        case "Object" => return SymbolKind.Object
-        case "Sig" => return SymbolKind.Sig
-        case "DatatypeTrait" => return SymbolKind.DatatypeTrait
-        case "DatatypeClass" => return SymbolKind.DatatypeClass
-        case "RecordTrait" => return SymbolKind.RecordTrait
-        case "RecordClass" => return SymbolKind.RecordClass
-        case "Enum" => return SymbolKind.Enum
-        case "TypeAlias" => return SymbolKind.TypeAlias
-        case "FreshVar" => return SymbolKind.FreshVar
-        case "QuantVar" => return SymbolKind.QuantVar
+      val t = parser.parseObjectTypes(ISZ("ResolvedInfo.BuiltIn", "ResolvedInfo.Package", "ResolvedInfo.Enum", "ResolvedInfo.Object", "ResolvedInfo.ObjectVar", "ResolvedInfo.ObjectMethod", "ResolvedInfo.Type", "ResolvedInfo.TypeVar", "ResolvedInfo.TypeMethod", "ResolvedInfo.LocalVar"))
+      t.native match {
+        case "ResolvedInfo.BuiltIn" => val r = parseResolvedInfoBuiltInT(T); return r
+        case "ResolvedInfo.Package" => val r = parseResolvedInfoPackageT(T); return r
+        case "ResolvedInfo.Enum" => val r = parseResolvedInfoEnumT(T); return r
+        case "ResolvedInfo.Object" => val r = parseResolvedInfoObjectT(T); return r
+        case "ResolvedInfo.ObjectVar" => val r = parseResolvedInfoObjectVarT(T); return r
+        case "ResolvedInfo.ObjectMethod" => val r = parseResolvedInfoObjectMethodT(T); return r
+        case "ResolvedInfo.Type" => val r = parseResolvedInfoTypeT(T); return r
+        case "ResolvedInfo.TypeVar" => val r = parseResolvedInfoTypeVarT(T); return r
+        case "ResolvedInfo.TypeMethod" => val r = parseResolvedInfoTypeMethodT(T); return r
+        case "ResolvedInfo.LocalVar" => val r = parseResolvedInfoLocalVarT(T); return r
         case _ => halt(parser.errorMessage)
       }
+    }
+
+    def parseResolvedInfoBuiltIn(): ResolvedInfo.BuiltIn = {
+      val r = parseResolvedInfoBuiltInT(F)
+      return r
+    }
+
+    def parseResolvedInfoBuiltInT(typeParsed: B): ResolvedInfo.BuiltIn = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.BuiltIn")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.BuiltIn(name)
+    }
+
+    def parseResolvedInfoPackage(): ResolvedInfo.Package = {
+      val r = parseResolvedInfoPackageT(F)
+      return r
+    }
+
+    def parseResolvedInfoPackageT(typeParsed: B): ResolvedInfo.Package = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.Package")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return ResolvedInfo.Package(name)
+    }
+
+    def parseResolvedInfoEnum(): ResolvedInfo.Enum = {
+      val r = parseResolvedInfoEnumT(F)
+      return r
+    }
+
+    def parseResolvedInfoEnumT(typeParsed: B): ResolvedInfo.Enum = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.Enum")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return ResolvedInfo.Enum(name)
+    }
+
+    def parseResolvedInfoObject(): ResolvedInfo.Object = {
+      val r = parseResolvedInfoObjectT(F)
+      return r
+    }
+
+    def parseResolvedInfoObjectT(typeParsed: B): ResolvedInfo.Object = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.Object")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return ResolvedInfo.Object(name)
+    }
+
+    def parseResolvedInfoObjectVar(): ResolvedInfo.ObjectVar = {
+      val r = parseResolvedInfoObjectVarT(F)
+      return r
+    }
+
+    def parseResolvedInfoObjectVarT(typeParsed: B): ResolvedInfo.ObjectVar = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.ObjectVar")
+      }
+      parser.parseObjectKey("objectName")
+      val objectName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.ObjectVar(objectName, id)
+    }
+
+    def parseResolvedInfoObjectMethod(): ResolvedInfo.ObjectMethod = {
+      val r = parseResolvedInfoObjectMethodT(F)
+      return r
+    }
+
+    def parseResolvedInfoObjectMethodT(typeParsed: B): ResolvedInfo.ObjectMethod = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.ObjectMethod")
+      }
+      parser.parseObjectKey("objectName")
+      val objectName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.ObjectMethod(objectName, id)
+    }
+
+    def parseResolvedInfoType(): ResolvedInfo.Type = {
+      val r = parseResolvedInfoTypeT(F)
+      return r
+    }
+
+    def parseResolvedInfoTypeT(typeParsed: B): ResolvedInfo.Type = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.Type")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return ResolvedInfo.Type(name)
+    }
+
+    def parseResolvedInfoTypeVar(): ResolvedInfo.TypeVar = {
+      val r = parseResolvedInfoTypeVarT(F)
+      return r
+    }
+
+    def parseResolvedInfoTypeVarT(typeParsed: B): ResolvedInfo.TypeVar = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.TypeVar")
+      }
+      parser.parseObjectKey("typeName")
+      val typeName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.TypeVar(typeName, id)
+    }
+
+    def parseResolvedInfoTypeMethod(): ResolvedInfo.TypeMethod = {
+      val r = parseResolvedInfoTypeMethodT(F)
+      return r
+    }
+
+    def parseResolvedInfoTypeMethodT(typeParsed: B): ResolvedInfo.TypeMethod = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.TypeMethod")
+      }
+      parser.parseObjectKey("typeName")
+      val typeName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.TypeMethod(typeName, id)
+    }
+
+    def parseResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
+      val r = parseResolvedInfoLocalVarT(F)
+      return r
+    }
+
+    def parseResolvedInfoLocalVarT(typeParsed: B): ResolvedInfo.LocalVar = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.LocalVar")
+      }
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return ResolvedInfo.LocalVar(id)
     }
 
     def parsePosInfo(): PosInfo = {
@@ -5754,8 +5920,8 @@ object JSON {
     return r
   }
 
-  def fromPatternVariable(o: Pattern.Variable, isCompact: B): String = {
-    val st = Printer.printPatternVariable(o)
+  def fromPatternVarBinding(o: Pattern.VarBinding, isCompact: B): String = {
+    val st = Printer.printPatternVarBinding(o)
     if (isCompact) {
       return st.renderCompact
     } else {
@@ -5763,12 +5929,12 @@ object JSON {
     }
   }
 
-  def toPatternVariable(s: String): Pattern.Variable = {
-    def fPatternVariable(parser: Parser): Pattern.Variable = {
-      val r = parser.parsePatternVariable()
+  def toPatternVarBinding(s: String): Pattern.VarBinding = {
+    def fPatternVarBinding(parser: Parser): Pattern.VarBinding = {
+      val r = parser.parsePatternVarBinding()
       return r
     }
-    val r = to(s, fPatternVariable)
+    val r = to(s, fPatternVarBinding)
     return r
   }
 
@@ -5967,24 +6133,6 @@ object JSON {
       return r
     }
     val r = to(s, fExpLitR)
-    return r
-  }
-
-  def fromExpLitBv(o: Exp.LitBv, isCompact: B): String = {
-    val st = Printer.printExpLitBv(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toExpLitBv(s: String): Exp.LitBv = {
-    def fExpLitBv(parser: Parser): Exp.LitBv = {
-      val r = parser.parseExpLitBv()
-      return r
-    }
-    val r = to(s, fExpLitBv)
     return r
   }
 
@@ -7389,6 +7537,186 @@ object JSON {
       return r
     }
     val r = to(s, fResolvedInfo)
+    return r
+  }
+
+  def fromResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn, isCompact: B): String = {
+    val st = Printer.printResolvedInfoBuiltIn(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoBuiltIn(s: String): ResolvedInfo.BuiltIn = {
+    def fResolvedInfoBuiltIn(parser: Parser): ResolvedInfo.BuiltIn = {
+      val r = parser.parseResolvedInfoBuiltIn()
+      return r
+    }
+    val r = to(s, fResolvedInfoBuiltIn)
+    return r
+  }
+
+  def fromResolvedInfoPackage(o: ResolvedInfo.Package, isCompact: B): String = {
+    val st = Printer.printResolvedInfoPackage(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoPackage(s: String): ResolvedInfo.Package = {
+    def fResolvedInfoPackage(parser: Parser): ResolvedInfo.Package = {
+      val r = parser.parseResolvedInfoPackage()
+      return r
+    }
+    val r = to(s, fResolvedInfoPackage)
+    return r
+  }
+
+  def fromResolvedInfoEnum(o: ResolvedInfo.Enum, isCompact: B): String = {
+    val st = Printer.printResolvedInfoEnum(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoEnum(s: String): ResolvedInfo.Enum = {
+    def fResolvedInfoEnum(parser: Parser): ResolvedInfo.Enum = {
+      val r = parser.parseResolvedInfoEnum()
+      return r
+    }
+    val r = to(s, fResolvedInfoEnum)
+    return r
+  }
+
+  def fromResolvedInfoObject(o: ResolvedInfo.Object, isCompact: B): String = {
+    val st = Printer.printResolvedInfoObject(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoObject(s: String): ResolvedInfo.Object = {
+    def fResolvedInfoObject(parser: Parser): ResolvedInfo.Object = {
+      val r = parser.parseResolvedInfoObject()
+      return r
+    }
+    val r = to(s, fResolvedInfoObject)
+    return r
+  }
+
+  def fromResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar, isCompact: B): String = {
+    val st = Printer.printResolvedInfoObjectVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoObjectVar(s: String): ResolvedInfo.ObjectVar = {
+    def fResolvedInfoObjectVar(parser: Parser): ResolvedInfo.ObjectVar = {
+      val r = parser.parseResolvedInfoObjectVar()
+      return r
+    }
+    val r = to(s, fResolvedInfoObjectVar)
+    return r
+  }
+
+  def fromResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod, isCompact: B): String = {
+    val st = Printer.printResolvedInfoObjectMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoObjectMethod(s: String): ResolvedInfo.ObjectMethod = {
+    def fResolvedInfoObjectMethod(parser: Parser): ResolvedInfo.ObjectMethod = {
+      val r = parser.parseResolvedInfoObjectMethod()
+      return r
+    }
+    val r = to(s, fResolvedInfoObjectMethod)
+    return r
+  }
+
+  def fromResolvedInfoType(o: ResolvedInfo.Type, isCompact: B): String = {
+    val st = Printer.printResolvedInfoType(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoType(s: String): ResolvedInfo.Type = {
+    def fResolvedInfoType(parser: Parser): ResolvedInfo.Type = {
+      val r = parser.parseResolvedInfoType()
+      return r
+    }
+    val r = to(s, fResolvedInfoType)
+    return r
+  }
+
+  def fromResolvedInfoTypeVar(o: ResolvedInfo.TypeVar, isCompact: B): String = {
+    val st = Printer.printResolvedInfoTypeVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoTypeVar(s: String): ResolvedInfo.TypeVar = {
+    def fResolvedInfoTypeVar(parser: Parser): ResolvedInfo.TypeVar = {
+      val r = parser.parseResolvedInfoTypeVar()
+      return r
+    }
+    val r = to(s, fResolvedInfoTypeVar)
+    return r
+  }
+
+  def fromResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod, isCompact: B): String = {
+    val st = Printer.printResolvedInfoTypeMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoTypeMethod(s: String): ResolvedInfo.TypeMethod = {
+    def fResolvedInfoTypeMethod(parser: Parser): ResolvedInfo.TypeMethod = {
+      val r = parser.parseResolvedInfoTypeMethod()
+      return r
+    }
+    val r = to(s, fResolvedInfoTypeMethod)
+    return r
+  }
+
+  def fromResolvedInfoLocalVar(o: ResolvedInfo.LocalVar, isCompact: B): String = {
+    val st = Printer.printResolvedInfoLocalVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoLocalVar(s: String): ResolvedInfo.LocalVar = {
+    def fResolvedInfoLocalVar(parser: Parser): ResolvedInfo.LocalVar = {
+      val r = parser.parseResolvedInfoLocalVar()
+      return r
+    }
+    val r = to(s, fResolvedInfoLocalVar)
     return r
   }
 

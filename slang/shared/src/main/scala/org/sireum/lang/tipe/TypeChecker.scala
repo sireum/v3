@@ -334,8 +334,6 @@ import TypeChecker._
 
       case exp: AST.Exp.LitB => return (exp, Some(typeB))
 
-      case exp: AST.Exp.LitBv => halt("Unimplemented") // TODO
-
       case exp: AST.Exp.LitC => return (exp, Some(typeC))
 
       case exp: AST.Exp.LitF32 => return (exp, Some(typeF32))

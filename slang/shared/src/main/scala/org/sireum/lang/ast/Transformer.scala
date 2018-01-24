@@ -340,7 +340,7 @@ object Transformer {
         case o: Pattern.Literal => return prePatternLiteral(ctx, o)
         case o: Pattern.LitInterpolate => return prePatternLitInterpolate(ctx, o)
         case o: Pattern.Ref => return prePatternRef(ctx, o)
-        case o: Pattern.Variable => return prePatternVariable(ctx, o)
+        case o: Pattern.VarBinding => return prePatternVarBinding(ctx, o)
         case o: Pattern.Wildcard => return prePatternWildcard(ctx, o)
         case o: Pattern.SeqWildcard => return prePatternSeqWildcard(ctx, o)
         case o: Pattern.Structure => return prePatternStructure(ctx, o)
@@ -359,7 +359,7 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
-    @pure def prePatternVariable(ctx: Context, o: Pattern.Variable): PreResult[Context, Pattern] = {
+    @pure def prePatternVarBinding(ctx: Context, o: Pattern.VarBinding): PreResult[Context, Pattern] = {
       return PreResult(ctx, T, None())
     }
 
@@ -383,7 +383,6 @@ object Transformer {
         case o: Exp.LitF32 => return preExpLitF32(ctx, o)
         case o: Exp.LitF64 => return preExpLitF64(ctx, o)
         case o: Exp.LitR => return preExpLitR(ctx, o)
-        case o: Exp.LitBv => return preExpLitBv(ctx, o)
         case o: Exp.LitString => return preExpLitString(ctx, o)
         case o: Exp.StringInterpolate => return preExpStringInterpolate(ctx, o)
         case o: Exp.This => return preExpThis(ctx, o)
@@ -441,12 +440,6 @@ object Transformer {
            case _ => halt("Can only produce object of type Lit")
           }
           return r
-        case o: Exp.LitBv =>
-          val r: PreResult[Context, Lit] = preExpLitBv(ctx, o) match {
-           case PreResult(preCtx, continu, Some(r: Lit)) => PreResult(preCtx, continu, Some[Lit](r))
-           case _ => halt("Can only produce object of type Lit")
-          }
-          return r
         case o: Exp.LitString =>
           val r: PreResult[Context, Lit] = preExpLitString(ctx, o) match {
            case PreResult(preCtx, continu, Some(r: Lit)) => PreResult(preCtx, continu, Some[Lit](r))
@@ -477,10 +470,6 @@ object Transformer {
     }
 
     @pure def preExpLitR(ctx: Context, o: Exp.LitR): PreResult[Context, Exp] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preExpLitBv(ctx: Context, o: Exp.LitBv): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
 
@@ -836,6 +825,57 @@ object Transformer {
     }
 
     @pure def preResolvedInfo(ctx: Context, o: ResolvedInfo): PreResult[Context, ResolvedInfo] = {
+      o match {
+        case o: ResolvedInfo.BuiltIn => return preResolvedInfoBuiltIn(ctx, o)
+        case o: ResolvedInfo.Package => return preResolvedInfoPackage(ctx, o)
+        case o: ResolvedInfo.Enum => return preResolvedInfoEnum(ctx, o)
+        case o: ResolvedInfo.Object => return preResolvedInfoObject(ctx, o)
+        case o: ResolvedInfo.ObjectVar => return preResolvedInfoObjectVar(ctx, o)
+        case o: ResolvedInfo.ObjectMethod => return preResolvedInfoObjectMethod(ctx, o)
+        case o: ResolvedInfo.Type => return preResolvedInfoType(ctx, o)
+        case o: ResolvedInfo.TypeVar => return preResolvedInfoTypeVar(ctx, o)
+        case o: ResolvedInfo.TypeMethod => return preResolvedInfoTypeMethod(ctx, o)
+        case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(ctx, o)
+      }
+    }
+
+    @pure def preResolvedInfoBuiltIn(ctx: Context, o: ResolvedInfo.BuiltIn): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoPackage(ctx: Context, o: ResolvedInfo.Package): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoEnum(ctx: Context, o: ResolvedInfo.Enum): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoObject(ctx: Context, o: ResolvedInfo.Object): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoObjectVar(ctx: Context, o: ResolvedInfo.ObjectVar): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoObjectMethod(ctx: Context, o: ResolvedInfo.ObjectMethod): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoType(ctx: Context, o: ResolvedInfo.Type): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoTypeVar(ctx: Context, o: ResolvedInfo.TypeVar): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoTypeMethod(ctx: Context, o: ResolvedInfo.TypeMethod): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoLocalVar(ctx: Context, o: ResolvedInfo.LocalVar): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1140,7 +1180,7 @@ object Transformer {
         case o: Pattern.Literal => return postPatternLiteral(ctx, o)
         case o: Pattern.LitInterpolate => return postPatternLitInterpolate(ctx, o)
         case o: Pattern.Ref => return postPatternRef(ctx, o)
-        case o: Pattern.Variable => return postPatternVariable(ctx, o)
+        case o: Pattern.VarBinding => return postPatternVarBinding(ctx, o)
         case o: Pattern.Wildcard => return postPatternWildcard(ctx, o)
         case o: Pattern.SeqWildcard => return postPatternSeqWildcard(ctx, o)
         case o: Pattern.Structure => return postPatternStructure(ctx, o)
@@ -1159,7 +1199,7 @@ object Transformer {
       return Result(ctx, None())
     }
 
-    @pure def postPatternVariable(ctx: Context, o: Pattern.Variable): Result[Context, Pattern] = {
+    @pure def postPatternVarBinding(ctx: Context, o: Pattern.VarBinding): Result[Context, Pattern] = {
       return Result(ctx, None())
     }
 
@@ -1183,7 +1223,6 @@ object Transformer {
         case o: Exp.LitF32 => return postExpLitF32(ctx, o)
         case o: Exp.LitF64 => return postExpLitF64(ctx, o)
         case o: Exp.LitR => return postExpLitR(ctx, o)
-        case o: Exp.LitBv => return postExpLitBv(ctx, o)
         case o: Exp.LitString => return postExpLitString(ctx, o)
         case o: Exp.StringInterpolate => return postExpStringInterpolate(ctx, o)
         case o: Exp.This => return postExpThis(ctx, o)
@@ -1241,12 +1280,6 @@ object Transformer {
            case _ => halt("Can only produce object of type Lit")
           }
           return r
-        case o: Exp.LitBv =>
-          val r: Result[Context, Lit] = postExpLitBv(ctx, o) match {
-           case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
-           case _ => halt("Can only produce object of type Lit")
-          }
-          return r
         case o: Exp.LitString =>
           val r: Result[Context, Lit] = postExpLitString(ctx, o) match {
            case Result(postCtx, Some(result: Lit)) => Result(postCtx, Some[Lit](result))
@@ -1277,10 +1310,6 @@ object Transformer {
     }
 
     @pure def postExpLitR(ctx: Context, o: Exp.LitR): Result[Context, Exp] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postExpLitBv(ctx: Context, o: Exp.LitBv): Result[Context, Exp] = {
       return Result(ctx, None())
     }
 
@@ -1636,6 +1665,57 @@ object Transformer {
     }
 
     @pure def postResolvedInfo(ctx: Context, o: ResolvedInfo): Result[Context, ResolvedInfo] = {
+      o match {
+        case o: ResolvedInfo.BuiltIn => return postResolvedInfoBuiltIn(ctx, o)
+        case o: ResolvedInfo.Package => return postResolvedInfoPackage(ctx, o)
+        case o: ResolvedInfo.Enum => return postResolvedInfoEnum(ctx, o)
+        case o: ResolvedInfo.Object => return postResolvedInfoObject(ctx, o)
+        case o: ResolvedInfo.ObjectVar => return postResolvedInfoObjectVar(ctx, o)
+        case o: ResolvedInfo.ObjectMethod => return postResolvedInfoObjectMethod(ctx, o)
+        case o: ResolvedInfo.Type => return postResolvedInfoType(ctx, o)
+        case o: ResolvedInfo.TypeVar => return postResolvedInfoTypeVar(ctx, o)
+        case o: ResolvedInfo.TypeMethod => return postResolvedInfoTypeMethod(ctx, o)
+        case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(ctx, o)
+      }
+    }
+
+    @pure def postResolvedInfoBuiltIn(ctx: Context, o: ResolvedInfo.BuiltIn): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoPackage(ctx: Context, o: ResolvedInfo.Package): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoEnum(ctx: Context, o: ResolvedInfo.Enum): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoObject(ctx: Context, o: ResolvedInfo.Object): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoObjectVar(ctx: Context, o: ResolvedInfo.ObjectVar): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoObjectMethod(ctx: Context, o: ResolvedInfo.ObjectMethod): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoType(ctx: Context, o: ResolvedInfo.Type): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoTypeVar(ctx: Context, o: ResolvedInfo.TypeVar): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoTypeMethod(ctx: Context, o: ResolvedInfo.TypeMethod): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoLocalVar(ctx: Context, o: ResolvedInfo.LocalVar): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
@@ -1822,13 +1902,12 @@ import Transformer._
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, IS[Z, TypeParam]] = transformISZ(r0.ctx, o2.typeParams, transformTypeParam)
           val r2: Result[Context, IS[Z, Type.Named]] = transformISZ(r1.ctx, o2.parents, transformTypeNamed)
-          val r3: Result[Context, Option[Type]] = transformOption(r2.ctx, o2.selfTypeOpt, transformType)
-          val r4: Result[Context, IS[Z, Stmt]] = transformISZ(r3.ctx, o2.stmts, transformStmt)
-          val r5: Result[Context, Attr] = transformAttr(r4.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty || r5.resultOpt.nonEmpty)
-            Result(r5.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeParams = r1.resultOpt.getOrElse(o2.typeParams), parents = r2.resultOpt.getOrElse(o2.parents), selfTypeOpt = r3.resultOpt.getOrElse(o2.selfTypeOpt), stmts = r4.resultOpt.getOrElse(o2.stmts), attr = r5.resultOpt.getOrElse(o2.attr))))
+          val r3: Result[Context, IS[Z, Stmt]] = transformISZ(r2.ctx, o2.stmts, transformStmt)
+          val r4: Result[Context, Attr] = transformAttr(r3.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty)
+            Result(r4.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeParams = r1.resultOpt.getOrElse(o2.typeParams), parents = r2.resultOpt.getOrElse(o2.parents), stmts = r3.resultOpt.getOrElse(o2.stmts), attr = r4.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r5.ctx, None())
+            Result(r4.ctx, None())
         case o2: Stmt.AbstractDatatype =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, IS[Z, TypeParam]] = transformISZ(r0.ctx, o2.typeParams, transformTypeParam)
@@ -2420,42 +2499,48 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: Pattern.LitInterpolate =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
+          val r0: Result[Context, TypedAttr] = transformTypedAttr(ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
-            Result(ctx, None())
+            Result(r0.ctx, None())
         case o2: Pattern.Ref =>
           val r0: Result[Context, Name] = transformName(ctx, o2.name)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name))))
-          else
-            Result(r0.ctx, None())
-        case o2: Pattern.Variable =>
-          val r0: Result[Context, Id] = transformId(ctx, o2.id)
-          val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.typeOpt, transformType)
+          val r1: Result[Context, ResolvedAttr] = transformResolvedAttr(r0.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt))))
+            Result(r1.ctx, Some(o2(name = r0.resultOpt.getOrElse(o2.name), attr = r1.resultOpt.getOrElse(o2.attr))))
           else
             Result(r1.ctx, None())
+        case o2: Pattern.VarBinding =>
+          val r0: Result[Context, Id] = transformId(ctx, o2.id)
+          val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.typeOpt, transformType)
+          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
+            Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt), attr = r2.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r2.ctx, None())
         case o2: Pattern.Wildcard =>
           val r0: Result[Context, Option[Type]] = transformOption(ctx, o2.typeOpt, transformType)
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(typeOpt = r0.resultOpt.getOrElse(o2.typeOpt), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
+        case o2: Pattern.SeqWildcard =>
+          val r0: Result[Context, TypedAttr] = transformTypedAttr(ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(typeOpt = r0.resultOpt.getOrElse(o2.typeOpt))))
+            Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
             Result(r0.ctx, None())
-        case o2: Pattern.SeqWildcard =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
-          else
-            Result(ctx, None())
         case o2: Pattern.Structure =>
           val r0: Result[Context, Option[Id]] = transformOption(ctx, o2.idOpt, transformId)
           val r1: Result[Context, Option[Name]] = transformOption(r0.ctx, o2.nameOpt, transformName)
           val r2: Result[Context, IS[Z, Pattern]] = transformISZ(r1.ctx, o2.patterns, transformPattern)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(idOpt = r0.resultOpt.getOrElse(o2.idOpt), nameOpt = r1.resultOpt.getOrElse(o2.nameOpt), patterns = r2.resultOpt.getOrElse(o2.patterns))))
+          val r3: Result[Context, ResolvedAttr] = transformResolvedAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(idOpt = r0.resultOpt.getOrElse(o2.idOpt), nameOpt = r1.resultOpt.getOrElse(o2.nameOpt), patterns = r2.resultOpt.getOrElse(o2.patterns), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r2.ctx, None())
+            Result(r3.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -2517,13 +2602,6 @@ import Transformer._
             Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
             Result(r0.ctx, None())
-        case o2: Exp.LitBv =>
-          val r0: Result[Context, Type] = transformType(ctx, o2.tipe)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(tipe = r0.resultOpt.getOrElse(o2.tipe), attr = r1.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r1.ctx, None())
         case o2: Exp.LitString =>
           val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty)
@@ -2709,13 +2787,6 @@ import Transformer._
             Result(r0.ctx, Some(o2(attr = r0.resultOpt.getOrElse(o2.attr))))
           else
             Result(r0.ctx, None())
-        case o2: Exp.LitBv =>
-          val r0: Result[Context, Type] = transformType(ctx, o2.tipe)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(tipe = r0.resultOpt.getOrElse(o2.tipe), attr = r1.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r1.ctx, None())
         case o2: Exp.LitString =>
           val r0: Result[Context, Attr] = transformAttr(ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty)
@@ -3696,10 +3767,59 @@ import Transformer._
     val r: Result[Context, ResolvedInfo] = if (preR.continu) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      if (hasChanged)
-        Result(ctx, Some(o2))
-      else
-        Result(ctx, None())
+      val rOpt: Result[Context, ResolvedInfo] = o2 match {
+        case o2: ResolvedInfo.BuiltIn =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.Package =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.Enum =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.Object =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.ObjectVar =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.ObjectMethod =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.Type =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.TypeVar =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.TypeMethod =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: ResolvedInfo.LocalVar =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+      }
+      rOpt
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {

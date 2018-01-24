@@ -163,7 +163,6 @@ object Stmt {
                       id: Id,
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type.Named],
-                      selfTypeOpt: Option[Type],
                       stmts: ISZ[Stmt],
                       @hidden val attr: Attr)
     extends Stmt
@@ -386,25 +385,30 @@ object Pattern {
     extends Pattern
 
   @datatype class LitInterpolate(prefix: String,
-                                 value: String)
+                                 value: String,
+                                 @hidden attr: TypedAttr)
     extends Pattern
 
-  @datatype class Ref(name: Name)
+  @datatype class Ref(name: Name,
+                      @hidden attr: ResolvedAttr)
     extends Pattern
 
-  @datatype class Variable(id: Id,
-                           typeOpt: Option[Type])
+  @datatype class VarBinding(id: Id,
+                             typeOpt: Option[Type],
+                             @hidden attr: Attr)
     extends Pattern
 
-  @datatype class Wildcard(typeOpt: Option[Type])
+  @datatype class Wildcard(typeOpt: Option[Type],
+                           @hidden attr: Attr)
     extends Pattern
 
-  @datatype class SeqWildcard
+  @datatype class SeqWildcard(@hidden attr: TypedAttr)
     extends Pattern
 
   @datatype class Structure(idOpt: Option[Id],
                             nameOpt: Option[Name],
-                            patterns: ISZ[Pattern])
+                            patterns: ISZ[Pattern],
+                            @hidden attr: ResolvedAttr)
     extends Pattern
 
 }
@@ -464,16 +468,6 @@ object Exp {
 
   @datatype class LitR(value: R,
                        @hidden attr: Attr)
-    extends Exp with Lit {
-
-    def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-  }
-
-  @datatype class LitBv(value: ISZ[B],
-                        tipe: Type,
-                        @hidden attr: Attr)
     extends Exp with Lit {
 
     def posOpt: Option[PosInfo] = {
@@ -982,27 +976,34 @@ object Typed {
                              resOpt: Option[ResolvedInfo],
                              typedOpt: Option[Typed])
 
-@datatype class ResolvedInfo(kind: SymbolKind.Type,
-                             ids: ISZ[String],
-                             externFileUriOpt: Option[String])
+@datatype trait ResolvedInfo
 
-@enum object SymbolKind {
-  'Package
-  'Val
-  'Var
-  'Method
-  'ExtMethod
-  'SpecMethod
-  'Object
-  'Sig
-  'DatatypeTrait
-  'DatatypeClass
-  'RecordTrait
-  'RecordClass
-  'Enum
-  'TypeAlias
-  'FreshVar
-  'QuantVar
+object ResolvedInfo {
+
+  @datatype class BuiltIn(name: String) extends ResolvedInfo
+
+  @datatype class Package(name: ISZ[String]) extends ResolvedInfo
+
+  @datatype class Enum(name: ISZ[String]) extends ResolvedInfo
+
+  @datatype class Object(name: ISZ[String]) extends ResolvedInfo
+
+  @datatype class ObjectVar(objectName: ISZ[String],
+                            id: String) extends ResolvedInfo
+
+  @datatype class ObjectMethod(objectName: ISZ[String],
+                               id: String) extends ResolvedInfo
+
+  @datatype class Type(name: ISZ[String]) extends ResolvedInfo
+
+  @datatype class TypeVar(typeName: ISZ[String],
+                          id: String) extends ResolvedInfo
+
+  @datatype class TypeMethod(typeName: ISZ[String],
+                             id: String) extends ResolvedInfo
+
+  @datatype class LocalVar(id: String) extends ResolvedInfo
+
 }
 
 @datatype class PosInfo(fileUriOpt: Option[String],

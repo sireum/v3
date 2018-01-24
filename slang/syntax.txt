@@ -71,8 +71,8 @@
 <object-decl>      ::=  object <ID> <extends>? { <stmt>* }
                      |  @ext object <ID> { <stmt>* }
 
-<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { ⸨ _ : <type> => ⸩? <stmt>* }
-                     |  @msig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { ⸨ _ : <type> => ⸩? <stmt>* }
+<sig-decl>         ::=  @sig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
+                     |  @msig ⸨ sealed ⸩? trait <ID> <type-params>? <extends>? { <stmt>* }
 
 <datatype-decl>    ::=  @datatype trait <ID> <type-params>? <extends>? { <stmt>* }
                      |  @datatype class <ID> <type-params>? <datatype-params>? <extends>? { <stmt>* }
@@ -251,8 +251,6 @@
                      |  f32"<FLOAT>"
                      |  f64"<DOUBLE>"
                      |  r"<REAL>"
-                     |  bb"<INT>" [ <int-type> ]
-                     |  bl"<INT>" [ <int-type> ]
                      |  <FLOAT>
                      |  <DOUBLE>
                      |  <STRING>

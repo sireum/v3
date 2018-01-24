@@ -138,7 +138,7 @@ object MsgPack {
 
     val PatternRef: Z = 50
 
-    val PatternVariable: Z = 51
+    val PatternVarBinding: Z = 51
 
     val PatternWildcard: Z = 52
 
@@ -158,151 +158,167 @@ object MsgPack {
 
     val ExpLitR: Z = 60
 
-    val ExpLitBv: Z = 61
+    val ExpLitString: Z = 61
 
-    val ExpLitString: Z = 62
+    val ExpStringInterpolate: Z = 62
 
-    val ExpStringInterpolate: Z = 63
+    val ExpThis: Z = 63
 
-    val ExpThis: Z = 64
+    val ExpSuper: Z = 64
 
-    val ExpSuper: Z = 65
+    val ExpUnary: Z = 65
 
-    val ExpUnary: Z = 66
+    val ExpBinary: Z = 66
 
-    val ExpBinary: Z = 67
+    val ExpIdent: Z = 67
 
-    val ExpIdent: Z = 68
+    val ExpEta: Z = 68
 
-    val ExpEta: Z = 69
+    val ExpTuple: Z = 69
 
-    val ExpTuple: Z = 70
+    val ExpSelect: Z = 70
 
-    val ExpSelect: Z = 71
+    val ExpInvoke: Z = 71
 
-    val ExpInvoke: Z = 72
+    val ExpInvokeNamed: Z = 72
 
-    val ExpInvokeNamed: Z = 73
+    val ExpIf: Z = 73
 
-    val ExpIf: Z = 74
+    val ExpFun: Z = 74
 
-    val ExpFun: Z = 75
+    val ExpForYield: Z = 75
 
-    val ExpForYield: Z = 76
+    val ExpQuant: Z = 76
 
-    val ExpQuant: Z = 77
+    val NamedArg: Z = 77
 
-    val NamedArg: Z = 78
+    val VarFragment: Z = 78
 
-    val VarFragment: Z = 79
+    val DomainType: Z = 79
 
-    val DomainType: Z = 80
+    val DomainRange: Z = 80
 
-    val DomainRange: Z = 81
+    val Id: Z = 81
 
-    val Id: Z = 82
+    val Name: Z = 82
 
-    val Name: Z = 83
+    val Body: Z = 83
 
-    val Body: Z = 84
+    val AbstractDatatypeParam: Z = 84
 
-    val AbstractDatatypeParam: Z = 85
+    val MethodSig: Z = 85
 
-    val MethodSig: Z = 86
+    val Param: Z = 86
 
-    val Param: Z = 87
+    val TypeParam: Z = 87
 
-    val TypeParam: Z = 88
+    val Contract: Z = 88
 
-    val Contract: Z = 89
+    val SubContract: Z = 89
 
-    val SubContract: Z = 90
+    val SubContractParam: Z = 90
 
-    val SubContractParam: Z = 91
+    val WhereDefVal: Z = 91
 
-    val WhereDefVal: Z = 92
+    val WhereDefDef: Z = 92
 
-    val WhereDefDef: Z = 93
+    val SpecDef: Z = 93
 
-    val SpecDef: Z = 94
+    val ProofStepBasic: Z = 94
 
-    val ProofStepBasic: Z = 95
+    val ProofStepSubProof: Z = 95
 
-    val ProofStepSubProof: Z = 96
+    val AssumeProofStepRegular: Z = 96
 
-    val AssumeProofStepRegular: Z = 97
+    val AssumeProofStepForallIntroAps: Z = 97
 
-    val AssumeProofStepForallIntroAps: Z = 98
+    val AssumeProofStepExistsElimAps: Z = 98
 
-    val AssumeProofStepExistsElimAps: Z = 99
+    val JustPremise: Z = 99
 
-    val JustPremise: Z = 100
+    val JustAndIntro: Z = 100
 
-    val JustAndIntro: Z = 101
+    val JustAndElim: Z = 101
 
-    val JustAndElim: Z = 102
+    val JustOrIntro: Z = 102
 
-    val JustOrIntro: Z = 103
+    val JustOrElim: Z = 103
 
-    val JustOrElim: Z = 104
+    val JustImplyIntro: Z = 104
 
-    val JustImplyIntro: Z = 105
+    val JustImplyElim: Z = 105
 
-    val JustImplyElim: Z = 106
+    val JustNegIntro: Z = 106
 
-    val JustNegIntro: Z = 107
+    val JustNegElim: Z = 107
 
-    val JustNegElim: Z = 108
+    val JustBottomElim: Z = 108
 
-    val JustBottomElim: Z = 109
+    val JustPbc: Z = 109
 
-    val JustPbc: Z = 110
+    val JustForallIntro: Z = 110
 
-    val JustForallIntro: Z = 111
+    val JustForallElim: Z = 111
 
-    val JustForallElim: Z = 112
+    val JustExistsIntro: Z = 112
 
-    val JustExistsIntro: Z = 113
+    val JustExistsElim: Z = 113
 
-    val JustExistsElim: Z = 114
+    val JustFact: Z = 114
 
-    val JustFact: Z = 115
+    val JustInvariant: Z = 115
 
-    val JustInvariant: Z = 116
+    val JustSubst: Z = 116
 
-    val JustSubst: Z = 117
+    val JustAuto: Z = 117
 
-    val JustAuto: Z = 118
+    val JustCoq: Z = 118
 
-    val JustCoq: Z = 119
+    val TruthTableRow: Z = 119
 
-    val TruthTableRow: Z = 120
+    val TruthTableAssignment: Z = 120
 
-    val TruthTableAssignment: Z = 121
+    val TruthTableConclusionValidity: Z = 121
 
-    val TruthTableConclusionValidity: Z = 122
+    val TruthTableConclusionTautology: Z = 122
 
-    val TruthTableConclusionTautology: Z = 123
+    val TruthTableConclusionContradictory: Z = 123
 
-    val TruthTableConclusionContradictory: Z = 124
+    val TruthTableConclusionContingent: Z = 124
 
-    val TruthTableConclusionContingent: Z = 125
+    val TypedName: Z = 125
 
-    val TypedName: Z = 126
+    val TypedTuple: Z = 126
 
-    val TypedTuple: Z = 127
+    val TypedFun: Z = 127
 
-    val TypedFun: Z = 128
+    val Attr: Z = 128
 
-    val Attr: Z = 129
+    val TypedAttr: Z = 129
 
-    val TypedAttr: Z = 130
+    val ResolvedAttr: Z = 130
 
-    val ResolvedAttr: Z = 131
+    val ResolvedInfoBuiltIn: Z = 131
 
-    val ResolvedInfo: Z = 132
+    val ResolvedInfoPackage: Z = 132
 
-    val PosInfo: Z = 133
+    val ResolvedInfoEnum: Z = 133
+
+    val ResolvedInfoObject: Z = 134
+
+    val ResolvedInfoObjectVar: Z = 135
+
+    val ResolvedInfoObjectMethod: Z = 136
+
+    val ResolvedInfoType: Z = 137
+
+    val ResolvedInfoTypeVar: Z = 138
+
+    val ResolvedInfoTypeMethod: Z = 139
+
+    val ResolvedInfoLocalVar: Z = 140
+
+    val PosInfo: Z = 141
 
   }
 
@@ -508,7 +524,6 @@ object MsgPack {
       writeId(o.id)
       writer.writeISZ(o.typeParams, writeTypeParam)
       writer.writeISZ(o.parents, writeTypeNamed)
-      writer.writeOption(o.selfTypeOpt, writeType)
       writer.writeISZ(o.stmts, writeStmt)
       writeAttr(o.attr)
     }
@@ -750,7 +765,7 @@ object MsgPack {
         case o: Pattern.Literal => writePatternLiteral(o)
         case o: Pattern.LitInterpolate => writePatternLitInterpolate(o)
         case o: Pattern.Ref => writePatternRef(o)
-        case o: Pattern.Variable => writePatternVariable(o)
+        case o: Pattern.VarBinding => writePatternVarBinding(o)
         case o: Pattern.Wildcard => writePatternWildcard(o)
         case o: Pattern.SeqWildcard => writePatternSeqWildcard(o)
         case o: Pattern.Structure => writePatternStructure(o)
@@ -766,26 +781,31 @@ object MsgPack {
       writer.writeZ(Constants.PatternLitInterpolate)
       writeString(o.prefix)
       writeString(o.value)
+      writeTypedAttr(o.attr)
     }
 
     def writePatternRef(o: Pattern.Ref): Unit = {
       writer.writeZ(Constants.PatternRef)
       writeName(o.name)
+      writeResolvedAttr(o.attr)
     }
 
-    def writePatternVariable(o: Pattern.Variable): Unit = {
-      writer.writeZ(Constants.PatternVariable)
+    def writePatternVarBinding(o: Pattern.VarBinding): Unit = {
+      writer.writeZ(Constants.PatternVarBinding)
       writeId(o.id)
       writer.writeOption(o.typeOpt, writeType)
+      writeAttr(o.attr)
     }
 
     def writePatternWildcard(o: Pattern.Wildcard): Unit = {
       writer.writeZ(Constants.PatternWildcard)
       writer.writeOption(o.typeOpt, writeType)
+      writeAttr(o.attr)
     }
 
     def writePatternSeqWildcard(o: Pattern.SeqWildcard): Unit = {
       writer.writeZ(Constants.PatternSeqWildcard)
+      writeTypedAttr(o.attr)
     }
 
     def writePatternStructure(o: Pattern.Structure): Unit = {
@@ -793,6 +813,7 @@ object MsgPack {
       writer.writeOption(o.idOpt, writeId)
       writer.writeOption(o.nameOpt, writeName)
       writer.writeISZ(o.patterns, writePattern)
+      writeResolvedAttr(o.attr)
     }
 
     def writeExp(o: Exp): Unit = {
@@ -803,7 +824,6 @@ object MsgPack {
         case o: Exp.LitF32 => writeExpLitF32(o)
         case o: Exp.LitF64 => writeExpLitF64(o)
         case o: Exp.LitR => writeExpLitR(o)
-        case o: Exp.LitBv => writeExpLitBv(o)
         case o: Exp.LitString => writeExpLitString(o)
         case o: Exp.StringInterpolate => writeExpStringInterpolate(o)
         case o: Exp.This => writeExpThis(o)
@@ -831,7 +851,6 @@ object MsgPack {
         case o: Exp.LitF32 => writeExpLitF32(o)
         case o: Exp.LitF64 => writeExpLitF64(o)
         case o: Exp.LitR => writeExpLitR(o)
-        case o: Exp.LitBv => writeExpLitBv(o)
         case o: Exp.LitString => writeExpLitString(o)
       }
     }
@@ -869,13 +888,6 @@ object MsgPack {
     def writeExpLitR(o: Exp.LitR): Unit = {
       writer.writeZ(Constants.ExpLitR)
       writeR(o.value)
-      writeAttr(o.attr)
-    }
-
-    def writeExpLitBv(o: Exp.LitBv): Unit = {
-      writer.writeZ(Constants.ExpLitBv)
-      writer.writeISZ(o.value, writeB)
-      writeType(o.tipe)
       writeAttr(o.attr)
     }
 
@@ -1434,14 +1446,72 @@ object MsgPack {
     }
 
     def writeResolvedInfo(o: ResolvedInfo): Unit = {
-      writer.writeZ(Constants.ResolvedInfo)
-      writeSymbolKind(o.kind)
-      writer.writeISZ(o.ids, writeString)
-      writer.writeOption(o.externFileUriOpt, writeString)
+      o match {
+        case o: ResolvedInfo.BuiltIn => writeResolvedInfoBuiltIn(o)
+        case o: ResolvedInfo.Package => writeResolvedInfoPackage(o)
+        case o: ResolvedInfo.Enum => writeResolvedInfoEnum(o)
+        case o: ResolvedInfo.Object => writeResolvedInfoObject(o)
+        case o: ResolvedInfo.ObjectVar => writeResolvedInfoObjectVar(o)
+        case o: ResolvedInfo.ObjectMethod => writeResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Type => writeResolvedInfoType(o)
+        case o: ResolvedInfo.TypeVar => writeResolvedInfoTypeVar(o)
+        case o: ResolvedInfo.TypeMethod => writeResolvedInfoTypeMethod(o)
+        case o: ResolvedInfo.LocalVar => writeResolvedInfoLocalVar(o)
+      }
     }
 
-    def writeSymbolKind(o: SymbolKind.Type): Unit = {
-      writer.writeZ(o.ordinal)
+    def writeResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): Unit = {
+      writer.writeZ(Constants.ResolvedInfoBuiltIn)
+      writeString(o.name)
+    }
+
+    def writeResolvedInfoPackage(o: ResolvedInfo.Package): Unit = {
+      writer.writeZ(Constants.ResolvedInfoPackage)
+      writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoEnum(o: ResolvedInfo.Enum): Unit = {
+      writer.writeZ(Constants.ResolvedInfoEnum)
+      writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoObject(o: ResolvedInfo.Object): Unit = {
+      writer.writeZ(Constants.ResolvedInfoObject)
+      writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): Unit = {
+      writer.writeZ(Constants.ResolvedInfoObjectVar)
+      writer.writeISZ(o.objectName, writeString)
+      writeString(o.id)
+    }
+
+    def writeResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): Unit = {
+      writer.writeZ(Constants.ResolvedInfoObjectMethod)
+      writer.writeISZ(o.objectName, writeString)
+      writeString(o.id)
+    }
+
+    def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
+      writer.writeZ(Constants.ResolvedInfoType)
+      writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): Unit = {
+      writer.writeZ(Constants.ResolvedInfoTypeVar)
+      writer.writeISZ(o.typeName, writeString)
+      writeString(o.id)
+    }
+
+    def writeResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): Unit = {
+      writer.writeZ(Constants.ResolvedInfoTypeMethod)
+      writer.writeISZ(o.typeName, writeString)
+      writeString(o.id)
+    }
+
+    def writeResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): Unit = {
+      writer.writeZ(Constants.ResolvedInfoLocalVar)
+      writeString(o.id)
     }
 
     def writePosInfo(o: PosInfo): Unit = {
@@ -1911,10 +1981,9 @@ object MsgPack {
       val id = readId()
       val typeParams = reader.readISZ(readTypeParam _)
       val parents = reader.readISZ(readTypeNamed _)
-      val selfTypeOpt = reader.readOption(readType _)
       val stmts = reader.readISZ(readStmt _)
       val attr = readAttr()
-      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, selfTypeOpt, stmts, attr)
+      return Stmt.Sig(isImmutable, isExt, id, typeParams, parents, stmts, attr)
     }
 
     def readStmtAbstractDatatype(): Stmt.AbstractDatatype = {
@@ -2401,7 +2470,7 @@ object MsgPack {
         case Constants.PatternLiteral => val r = readPatternLiteralT(T); return r
         case Constants.PatternLitInterpolate => val r = readPatternLitInterpolateT(T); return r
         case Constants.PatternRef => val r = readPatternRefT(T); return r
-        case Constants.PatternVariable => val r = readPatternVariableT(T); return r
+        case Constants.PatternVarBinding => val r = readPatternVarBindingT(T); return r
         case Constants.PatternWildcard => val r = readPatternWildcardT(T); return r
         case Constants.PatternSeqWildcard => val r = readPatternSeqWildcardT(T); return r
         case Constants.PatternStructure => val r = readPatternStructureT(T); return r
@@ -2433,7 +2502,8 @@ object MsgPack {
       }
       val prefix = reader.readString()
       val value = reader.readString()
-      return Pattern.LitInterpolate(prefix, value)
+      val attr = readTypedAttr()
+      return Pattern.LitInterpolate(prefix, value, attr)
     }
 
     def readPatternRef(): Pattern.Ref = {
@@ -2446,21 +2516,23 @@ object MsgPack {
         reader.expectZ(Constants.PatternRef)
       }
       val name = readName()
-      return Pattern.Ref(name)
+      val attr = readResolvedAttr()
+      return Pattern.Ref(name, attr)
     }
 
-    def readPatternVariable(): Pattern.Variable = {
-      val r = readPatternVariableT(F)
+    def readPatternVarBinding(): Pattern.VarBinding = {
+      val r = readPatternVarBindingT(F)
       return r
     }
 
-    def readPatternVariableT(typeParsed: B): Pattern.Variable = {
+    def readPatternVarBindingT(typeParsed: B): Pattern.VarBinding = {
       if (!typeParsed) {
-        reader.expectZ(Constants.PatternVariable)
+        reader.expectZ(Constants.PatternVarBinding)
       }
       val id = readId()
       val typeOpt = reader.readOption(readType _)
-      return Pattern.Variable(id, typeOpt)
+      val attr = readAttr()
+      return Pattern.VarBinding(id, typeOpt, attr)
     }
 
     def readPatternWildcard(): Pattern.Wildcard = {
@@ -2473,7 +2545,8 @@ object MsgPack {
         reader.expectZ(Constants.PatternWildcard)
       }
       val typeOpt = reader.readOption(readType _)
-      return Pattern.Wildcard(typeOpt)
+      val attr = readAttr()
+      return Pattern.Wildcard(typeOpt, attr)
     }
 
     def readPatternSeqWildcard(): Pattern.SeqWildcard = {
@@ -2485,7 +2558,8 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.PatternSeqWildcard)
       }
-      return Pattern.SeqWildcard()
+      val attr = readTypedAttr()
+      return Pattern.SeqWildcard(attr)
     }
 
     def readPatternStructure(): Pattern.Structure = {
@@ -2500,7 +2574,8 @@ object MsgPack {
       val idOpt = reader.readOption(readId _)
       val nameOpt = reader.readOption(readName _)
       val patterns = reader.readISZ(readPattern _)
-      return Pattern.Structure(idOpt, nameOpt, patterns)
+      val attr = readResolvedAttr()
+      return Pattern.Structure(idOpt, nameOpt, patterns, attr)
     }
 
     def readExp(): Exp = {
@@ -2512,7 +2587,6 @@ object MsgPack {
         case Constants.ExpLitF32 => val r = readExpLitF32T(T); return r
         case Constants.ExpLitF64 => val r = readExpLitF64T(T); return r
         case Constants.ExpLitR => val r = readExpLitRT(T); return r
-        case Constants.ExpLitBv => val r = readExpLitBvT(T); return r
         case Constants.ExpLitString => val r = readExpLitStringT(T); return r
         case Constants.ExpStringInterpolate => val r = readExpStringInterpolateT(T); return r
         case Constants.ExpThis => val r = readExpThisT(T); return r
@@ -2542,7 +2616,6 @@ object MsgPack {
         case Constants.ExpLitF32 => val r = readExpLitF32T(T); return r
         case Constants.ExpLitF64 => val r = readExpLitF64T(T); return r
         case Constants.ExpLitR => val r = readExpLitRT(T); return r
-        case Constants.ExpLitBv => val r = readExpLitBvT(T); return r
         case Constants.ExpLitString => val r = readExpLitStringT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
@@ -2630,21 +2703,6 @@ object MsgPack {
       val value = reader.readR()
       val attr = readAttr()
       return Exp.LitR(value, attr)
-    }
-
-    def readExpLitBv(): Exp.LitBv = {
-      val r = readExpLitBvT(F)
-      return r
-    }
-
-    def readExpLitBvT(typeParsed: B): Exp.LitBv = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.ExpLitBv)
-      }
-      val value = reader.readISZ(reader.readB _)
-      val tipe = readType()
-      val attr = readAttr()
-      return Exp.LitBv(value, tipe, attr)
     }
 
     def readExpLitString(): Exp.LitString = {
@@ -3779,23 +3837,154 @@ object MsgPack {
     }
 
     def readResolvedInfo(): ResolvedInfo = {
-      val r = readResolvedInfoT(F)
+      val t = reader.readZ()
+      t match {
+        case Constants.ResolvedInfoBuiltIn => val r = readResolvedInfoBuiltInT(T); return r
+        case Constants.ResolvedInfoPackage => val r = readResolvedInfoPackageT(T); return r
+        case Constants.ResolvedInfoEnum => val r = readResolvedInfoEnumT(T); return r
+        case Constants.ResolvedInfoObject => val r = readResolvedInfoObjectT(T); return r
+        case Constants.ResolvedInfoObjectVar => val r = readResolvedInfoObjectVarT(T); return r
+        case Constants.ResolvedInfoObjectMethod => val r = readResolvedInfoObjectMethodT(T); return r
+        case Constants.ResolvedInfoType => val r = readResolvedInfoTypeT(T); return r
+        case Constants.ResolvedInfoTypeVar => val r = readResolvedInfoTypeVarT(T); return r
+        case Constants.ResolvedInfoTypeMethod => val r = readResolvedInfoTypeMethodT(T); return r
+        case Constants.ResolvedInfoLocalVar => val r = readResolvedInfoLocalVarT(T); return r
+        case _ => halt(s"Unexpected type code $t.")
+      }
+    }
+
+    def readResolvedInfoBuiltIn(): ResolvedInfo.BuiltIn = {
+      val r = readResolvedInfoBuiltInT(F)
       return r
     }
 
-    def readResolvedInfoT(typeParsed: B): ResolvedInfo = {
+    def readResolvedInfoBuiltInT(typeParsed: B): ResolvedInfo.BuiltIn = {
       if (!typeParsed) {
-        reader.expectZ(Constants.ResolvedInfo)
+        reader.expectZ(Constants.ResolvedInfoBuiltIn)
       }
-      val kind = readSymbolKind()
-      val ids = reader.readISZ(reader.readString _)
-      val externFileUriOpt = reader.readOption(reader.readString _)
-      return ResolvedInfo(kind, ids, externFileUriOpt)
+      val name = reader.readString()
+      return ResolvedInfo.BuiltIn(name)
     }
 
-    def readSymbolKind(): SymbolKind.Type = {
-      val r = reader.readZ()
-      return SymbolKind.byOrdinal(r).get
+    def readResolvedInfoPackage(): ResolvedInfo.Package = {
+      val r = readResolvedInfoPackageT(F)
+      return r
+    }
+
+    def readResolvedInfoPackageT(typeParsed: B): ResolvedInfo.Package = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoPackage)
+      }
+      val name = reader.readISZ(reader.readString _)
+      return ResolvedInfo.Package(name)
+    }
+
+    def readResolvedInfoEnum(): ResolvedInfo.Enum = {
+      val r = readResolvedInfoEnumT(F)
+      return r
+    }
+
+    def readResolvedInfoEnumT(typeParsed: B): ResolvedInfo.Enum = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoEnum)
+      }
+      val name = reader.readISZ(reader.readString _)
+      return ResolvedInfo.Enum(name)
+    }
+
+    def readResolvedInfoObject(): ResolvedInfo.Object = {
+      val r = readResolvedInfoObjectT(F)
+      return r
+    }
+
+    def readResolvedInfoObjectT(typeParsed: B): ResolvedInfo.Object = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoObject)
+      }
+      val name = reader.readISZ(reader.readString _)
+      return ResolvedInfo.Object(name)
+    }
+
+    def readResolvedInfoObjectVar(): ResolvedInfo.ObjectVar = {
+      val r = readResolvedInfoObjectVarT(F)
+      return r
+    }
+
+    def readResolvedInfoObjectVarT(typeParsed: B): ResolvedInfo.ObjectVar = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoObjectVar)
+      }
+      val objectName = reader.readISZ(reader.readString _)
+      val id = reader.readString()
+      return ResolvedInfo.ObjectVar(objectName, id)
+    }
+
+    def readResolvedInfoObjectMethod(): ResolvedInfo.ObjectMethod = {
+      val r = readResolvedInfoObjectMethodT(F)
+      return r
+    }
+
+    def readResolvedInfoObjectMethodT(typeParsed: B): ResolvedInfo.ObjectMethod = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoObjectMethod)
+      }
+      val objectName = reader.readISZ(reader.readString _)
+      val id = reader.readString()
+      return ResolvedInfo.ObjectMethod(objectName, id)
+    }
+
+    def readResolvedInfoType(): ResolvedInfo.Type = {
+      val r = readResolvedInfoTypeT(F)
+      return r
+    }
+
+    def readResolvedInfoTypeT(typeParsed: B): ResolvedInfo.Type = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoType)
+      }
+      val name = reader.readISZ(reader.readString _)
+      return ResolvedInfo.Type(name)
+    }
+
+    def readResolvedInfoTypeVar(): ResolvedInfo.TypeVar = {
+      val r = readResolvedInfoTypeVarT(F)
+      return r
+    }
+
+    def readResolvedInfoTypeVarT(typeParsed: B): ResolvedInfo.TypeVar = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoTypeVar)
+      }
+      val typeName = reader.readISZ(reader.readString _)
+      val id = reader.readString()
+      return ResolvedInfo.TypeVar(typeName, id)
+    }
+
+    def readResolvedInfoTypeMethod(): ResolvedInfo.TypeMethod = {
+      val r = readResolvedInfoTypeMethodT(F)
+      return r
+    }
+
+    def readResolvedInfoTypeMethodT(typeParsed: B): ResolvedInfo.TypeMethod = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoTypeMethod)
+      }
+      val typeName = reader.readISZ(reader.readString _)
+      val id = reader.readString()
+      return ResolvedInfo.TypeMethod(typeName, id)
+    }
+
+    def readResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
+      val r = readResolvedInfoLocalVarT(F)
+      return r
+    }
+
+    def readResolvedInfoLocalVarT(typeParsed: B): ResolvedInfo.LocalVar = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoLocalVar)
+      }
+      val id = reader.readString()
+      return ResolvedInfo.LocalVar(id)
     }
 
     def readPosInfo(): PosInfo = {
@@ -4709,18 +4898,18 @@ object MsgPack {
     return r
   }
 
-  def fromPatternVariable(o: Pattern.Variable): ISZ[U8] = {
+  def fromPatternVarBinding(o: Pattern.VarBinding): ISZ[U8] = {
     val w = Writer(MessagePack.writer)
-    w.writePatternVariable(o)
+    w.writePatternVarBinding(o)
     return w.result
   }
 
-  def toPatternVariable(data: ISZ[U8]): Pattern.Variable = {
-    def fPatternVariable(reader: Reader): Pattern.Variable = {
-      val r = reader.readPatternVariable()
+  def toPatternVarBinding(data: ISZ[U8]): Pattern.VarBinding = {
+    def fPatternVarBinding(reader: Reader): Pattern.VarBinding = {
+      val r = reader.readPatternVarBinding()
       return r
     }
-    val r = to(data, fPatternVariable)
+    val r = to(data, fPatternVarBinding)
     return r
   }
 
@@ -4886,21 +5075,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fExpLitR)
-    return r
-  }
-
-  def fromExpLitBv(o: Exp.LitBv): ISZ[U8] = {
-    val w = Writer(MessagePack.writer)
-    w.writeExpLitBv(o)
-    return w.result
-  }
-
-  def toExpLitBv(data: ISZ[U8]): Exp.LitBv = {
-    def fExpLitBv(reader: Reader): Exp.LitBv = {
-      val r = reader.readExpLitBv()
-      return r
-    }
-    val r = to(data, fExpLitBv)
     return r
   }
 
@@ -6071,6 +6245,156 @@ object MsgPack {
       return r
     }
     val r = to(data, fResolvedInfo)
+    return r
+  }
+
+  def fromResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoBuiltIn(o)
+    return w.result
+  }
+
+  def toResolvedInfoBuiltIn(data: ISZ[U8]): ResolvedInfo.BuiltIn = {
+    def fResolvedInfoBuiltIn(reader: Reader): ResolvedInfo.BuiltIn = {
+      val r = reader.readResolvedInfoBuiltIn()
+      return r
+    }
+    val r = to(data, fResolvedInfoBuiltIn)
+    return r
+  }
+
+  def fromResolvedInfoPackage(o: ResolvedInfo.Package): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoPackage(o)
+    return w.result
+  }
+
+  def toResolvedInfoPackage(data: ISZ[U8]): ResolvedInfo.Package = {
+    def fResolvedInfoPackage(reader: Reader): ResolvedInfo.Package = {
+      val r = reader.readResolvedInfoPackage()
+      return r
+    }
+    val r = to(data, fResolvedInfoPackage)
+    return r
+  }
+
+  def fromResolvedInfoEnum(o: ResolvedInfo.Enum): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoEnum(o)
+    return w.result
+  }
+
+  def toResolvedInfoEnum(data: ISZ[U8]): ResolvedInfo.Enum = {
+    def fResolvedInfoEnum(reader: Reader): ResolvedInfo.Enum = {
+      val r = reader.readResolvedInfoEnum()
+      return r
+    }
+    val r = to(data, fResolvedInfoEnum)
+    return r
+  }
+
+  def fromResolvedInfoObject(o: ResolvedInfo.Object): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoObject(o)
+    return w.result
+  }
+
+  def toResolvedInfoObject(data: ISZ[U8]): ResolvedInfo.Object = {
+    def fResolvedInfoObject(reader: Reader): ResolvedInfo.Object = {
+      val r = reader.readResolvedInfoObject()
+      return r
+    }
+    val r = to(data, fResolvedInfoObject)
+    return r
+  }
+
+  def fromResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoObjectVar(o)
+    return w.result
+  }
+
+  def toResolvedInfoObjectVar(data: ISZ[U8]): ResolvedInfo.ObjectVar = {
+    def fResolvedInfoObjectVar(reader: Reader): ResolvedInfo.ObjectVar = {
+      val r = reader.readResolvedInfoObjectVar()
+      return r
+    }
+    val r = to(data, fResolvedInfoObjectVar)
+    return r
+  }
+
+  def fromResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoObjectMethod(o)
+    return w.result
+  }
+
+  def toResolvedInfoObjectMethod(data: ISZ[U8]): ResolvedInfo.ObjectMethod = {
+    def fResolvedInfoObjectMethod(reader: Reader): ResolvedInfo.ObjectMethod = {
+      val r = reader.readResolvedInfoObjectMethod()
+      return r
+    }
+    val r = to(data, fResolvedInfoObjectMethod)
+    return r
+  }
+
+  def fromResolvedInfoType(o: ResolvedInfo.Type): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoType(o)
+    return w.result
+  }
+
+  def toResolvedInfoType(data: ISZ[U8]): ResolvedInfo.Type = {
+    def fResolvedInfoType(reader: Reader): ResolvedInfo.Type = {
+      val r = reader.readResolvedInfoType()
+      return r
+    }
+    val r = to(data, fResolvedInfoType)
+    return r
+  }
+
+  def fromResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoTypeVar(o)
+    return w.result
+  }
+
+  def toResolvedInfoTypeVar(data: ISZ[U8]): ResolvedInfo.TypeVar = {
+    def fResolvedInfoTypeVar(reader: Reader): ResolvedInfo.TypeVar = {
+      val r = reader.readResolvedInfoTypeVar()
+      return r
+    }
+    val r = to(data, fResolvedInfoTypeVar)
+    return r
+  }
+
+  def fromResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoTypeMethod(o)
+    return w.result
+  }
+
+  def toResolvedInfoTypeMethod(data: ISZ[U8]): ResolvedInfo.TypeMethod = {
+    def fResolvedInfoTypeMethod(reader: Reader): ResolvedInfo.TypeMethod = {
+      val r = reader.readResolvedInfoTypeMethod()
+      return r
+    }
+    val r = to(data, fResolvedInfoTypeMethod)
+    return r
+  }
+
+  def fromResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): ISZ[U8] = {
+    val w = Writer(MessagePack.writer)
+    w.writeResolvedInfoLocalVar(o)
+    return w.result
+  }
+
+  def toResolvedInfoLocalVar(data: ISZ[U8]): ResolvedInfo.LocalVar = {
+    def fResolvedInfoLocalVar(reader: Reader): ResolvedInfo.LocalVar = {
+      val r = reader.readResolvedInfoLocalVar()
+      return r
+    }
+    val r = to(data, fResolvedInfoLocalVar)
     return r
   }
 
