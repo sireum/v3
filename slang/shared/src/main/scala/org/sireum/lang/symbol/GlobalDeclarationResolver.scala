@@ -113,7 +113,7 @@ import org.sireum.lang.{ast => AST}
         }
 
         declareName(if (stmt.isExt) "extension object" else "object", name,
-          Info.Object(name, stmt), stmt.attr.posOpt)
+          Info.Object(name, F, stmt), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {

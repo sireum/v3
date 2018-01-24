@@ -332,6 +332,7 @@ object Resolver {
     }
 
     @datatype class Object(val name: QName,
+                           outlined: B,
                            ast: AST.Stmt.Object)
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
