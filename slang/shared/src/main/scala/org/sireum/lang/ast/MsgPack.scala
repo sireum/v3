@@ -749,6 +749,8 @@ object MsgPack {
 
     def writeTypeFun(o: Type.Fun): Unit = {
       writer.writeZ(Constants.TypeFun)
+      writeB(o.isPure)
+      writeB(o.isByName)
       writer.writeISZ(o.args, writeType)
       writeType(o.ret)
       writeTypedAttr(o.attr)
@@ -1422,6 +1424,8 @@ object MsgPack {
 
     def writeTypedFun(o: Typed.Fun): Unit = {
       writer.writeZ(Constants.TypedFun)
+      writeB(o.isImmutable)
+      writeB(o.isByName)
       writer.writeISZ(o.args, writeTyped)
       writeTyped(o.ret)
       writer.writeOption(o.posOpt, writePosInfo)
@@ -2444,10 +2448,12 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.TypeFun)
       }
+      val isPure = reader.readB()
+      val isByName = reader.readB()
       val args = reader.readISZ(readType _)
       val ret = readType()
       val attr = readTypedAttr()
-      return Type.Fun(args, ret, attr)
+      return Type.Fun(isPure, isByName, args, ret, attr)
     }
 
     def readTypeTuple(): Type.Tuple = {
@@ -3788,10 +3794,12 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.TypedFun)
       }
+      val isImmutable = reader.readB()
+      val isByName = reader.readB()
       val args = reader.readISZ(readTyped _)
       val ret = readTyped()
       val posOpt = reader.readOption(readPosInfo _)
-      return Typed.Fun(args, ret, posOpt)
+      return Typed.Fun(isImmutable, isByName, args, ret, posOpt)
     }
 
     def readAttr(): Attr = {

@@ -563,6 +563,8 @@ object JSON {
     @pure def printTypeFun(o: Type.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""Type.Fun""""),
+        ("isPure", printB(o.isPure)),
+        ("isByName", printB(o.isByName)),
         ("args", printISZ(F, o.args, printType)),
         ("ret", printType(o.ret)),
         ("attr", printTypedAttr(o.attr))
@@ -1444,6 +1446,8 @@ object JSON {
     @pure def printTypedFun(o: Typed.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""Typed.Fun""""),
+        ("isImmutable", printB(o.isImmutable)),
+        ("isByName", printB(o.isByName)),
         ("args", printISZ(F, o.args, printTyped)),
         ("ret", printTyped(o.ret)),
         ("posOpt", printOption(o.posOpt, printPosInfo))
@@ -2721,6 +2725,12 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Type.Fun")
       }
+      parser.parseObjectKey("isPure")
+      val isPure = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isByName")
+      val isByName = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseType _)
       parser.parseObjectNext()
@@ -2730,7 +2740,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Type.Fun(args, ret, attr)
+      return Type.Fun(isPure, isByName, args, ret, attr)
     }
 
     def parseTypeTuple(): Type.Tuple = {
@@ -4562,6 +4572,12 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Typed.Fun")
       }
+      parser.parseObjectKey("isImmutable")
+      val isImmutable = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isByName")
+      val isByName = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseTyped _)
       parser.parseObjectNext()
@@ -4571,7 +4587,7 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      return Typed.Fun(args, ret, posOpt)
+      return Typed.Fun(isImmutable, isByName, args, ret, posOpt)
     }
 
     def parseAttr(): Attr = {

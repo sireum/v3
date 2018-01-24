@@ -340,7 +340,9 @@ object Type {
     }
   }
 
-  @datatype class Fun(args: ISZ[Type],
+  @datatype class Fun(isPure: B,
+                      isByName: B,
+                      args: ISZ[Type],
                       ret: Type,
                       attr: TypedAttr)
     extends Type {
@@ -354,7 +356,7 @@ object Type {
     }
 
     @pure def typed(t: Typed): Fun = {
-      return this (args, ret, attr(typedOpt = Some(t)))
+      return this(isPure, isByName, args, ret, attr(typedOpt = Some(t)))
     }
   }
 
@@ -960,7 +962,9 @@ object Typed {
                         @hidden val posOpt: Option[PosInfo])
     extends Typed
 
-  @datatype class Fun(args: ISZ[Typed],
+  @datatype class Fun(isImmutable: B,
+                      isByName: B,
+                      args: ISZ[Typed],
                       ret: Typed,
                       @hidden val posOpt: Option[PosInfo])
     extends Typed

@@ -94,7 +94,7 @@ object TypeHierarchy {
             as
           }
           val rt = resolveType(scope, t.ret)
-          AST.Typed.Fun(ts, rt, t.posOpt)
+          AST.Typed.Fun(t.isPure, t.isByName, ts, rt, t.posOpt)
       }
     }
 
@@ -283,7 +283,7 @@ object TypeHierarchy {
             return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
           case _ =>
             if (name.size == 1 && argTypes.isEmpty && name(0) == "Unit") {
-              return Some(TypeChecker.unitType)
+              return Some(TypeChecker.typeUnit)
             } else {
               reporter.error(t.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
             }
@@ -316,7 +316,8 @@ object TypeHierarchy {
         }
         val trOpt = typed(scope, t.ret, reporter)
         trOpt match {
-          case Some(tr) if !hasError => return Some(AST.Typed.Fun(paramTypes, tr, t.posOpt))
+          case Some(tr) if !hasError =>
+            return Some(AST.Typed.Fun(t.isPure, t.isByName, paramTypes, tr, t.posOpt))
           case _ => return None[AST.Typed]()
         }
     }

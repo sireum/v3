@@ -89,7 +89,7 @@
 
 <type>             ::=  <name> <type-args>?
                      |  ( <type> ⸨ , <type> ⸩+ )
-                     |  <type> => <type>
+                     |  <type> => <type> ⸨ @pure ⸩?
 
 <type-args>        ::=  [ <type> ⸨ , <type> ⸩* ]
 

@@ -498,8 +498,10 @@ object TypeOutliner {
                             m2: AST.Stmt.Method,
                             substMap: HashMap[String, AST.Typed],
                             posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m1.sig), posOpt, reporter)
-      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(m2.sig)), posOpt, reporter)
+      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(
+        m1.purity != AST.Purity.Impure, m1.sig), posOpt, reporter)
+      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap,
+        TypeChecker.extractMethodType(m1.purity != AST.Purity.Impure, m2.sig)), posOpt, reporter)
       return TypeChecker.isEqType(t1, t2)
     }
 
@@ -507,8 +509,9 @@ object TypeOutliner {
                               supM: AST.Stmt.Method,
                               substMap: HashMap[String, AST.Typed],
                               posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m.sig), posOpt, reporter)
-      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap, TypeChecker.extractMethodType(supM.sig)), posOpt, reporter)
+      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m.purity != AST.Purity.Impure, m.sig), posOpt, reporter)
+      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap,
+        TypeChecker.extractMethodType(supM.purity != AST.Purity.Impure, supM.sig)), posOpt, reporter)
       return typeHierarchy.isRefinement(t1, t2)
     }
 
