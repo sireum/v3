@@ -40,7 +40,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.2.2"
+val sireumScalacVersion = "3.2.3"
 
 val scalaJsDomVersion = "0.9.4"
 
@@ -87,6 +87,10 @@ val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 iveDistros / traceLevel := -1
 Global / parallelExecution := isParallelBuild
 Global / concurrentRestrictions ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
+
+addCommandAlias("clean-library", "; clean; project runtime-macros-jvm; clean; project runtime-library-jvm; clean; project runtime-macros-js; clean; project runtime-library-js; clean; project runtime-macros; clean; project runtime-library")
+addCommandAlias("clean-slang-only", "; project slang-jvm; clean; project slang-js; clean; project slang; clean")
+addCommandAlias("clean-slang", "; clean-library; clean-slang-only")
 
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
