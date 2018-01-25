@@ -35,7 +35,7 @@ class SlangCodebaseTest extends SireumSpec {
   *("Slang") {
     val (initNameMap, initTypeMap) = Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
     val (reporter, nameMap, typeMap) = Resolver.parseProgramAndGloballyResolve(
-      ISZ((org.sireum.$SlangFiles.map.toSeq ++ org.sireum.lang.$SlangFiles.map.toSeq).
+      ISZ((org.sireum.Library_Ext.map.toSeq ++ org.sireum.lang.$SlangFiles.map.toSeq).
         map(p => (Some(String(p._1.mkString("/"))), String(p._2))): _*),
       initNameMap, initTypeMap)
     def report(): Boolean = {
