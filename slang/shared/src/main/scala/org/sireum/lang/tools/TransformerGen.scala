@@ -127,11 +127,7 @@ object TransformerGen {
       return opt(tOpt.map(f))
     }
 
-    @datatype class Transformer extends TransformerSig // WORKAROUND: scalameta string interpolation escape char issue in Windows
-
-    @datatype class MTransformer extends MTransformerSig // WORKAROUND: scalameta string interpolation escape char issue in Windows
-
-    @sig trait TransformerSig extends Template {
+    @datatype class Transformer extends Template {
       @pure def main(licenseOpt: Option[String],
                      fileUriOpt: Option[String],
                      packageNames: ISZ[String],
@@ -415,7 +411,7 @@ object TransformerGen {
 
     }
 
-    @sig trait MTransformerSig extends Template {
+    @datatype class MTransformer extends Template {
       @pure def main(licenseOpt: Option[String],
                      fileUriOpt: Option[String],
                      packageNames: ISZ[String],
@@ -448,7 +444,7 @@ object TransformerGen {
                    |  @record class PreResult[T](continu: B,
                    |                             resultOpt: MOption[T])
                    |
-                   |  @sig trait PrePost {
+                   |  @msig trait PrePost {
                    |
                    |    ${(preMethods, "\n\n")}
                    |

@@ -996,7 +996,6 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""AbstractDatatypeParam""""),
         ("isHidden", printB(o.isHidden)),
-        ("isPure", printB(o.isPure)),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe))
       ))
@@ -1056,16 +1055,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""SubContract""""),
         ("id", printId(o.id)),
-        ("params", printISZ(F, o.params, printSubContractParam)),
+        ("params", printISZ(F, o.params, printId)),
         ("contract", printContract(o.contract))
-      ))
-    }
-
-    @pure def printSubContractParam(o: SubContractParam): ST = {
-      return printObject(ISZ(
-        ("type", st""""SubContractParam""""),
-        ("isPure", printB(o.isPure)),
-        ("id", printId(o.id))
       ))
     }
 
@@ -1446,7 +1437,7 @@ object JSON {
     @pure def printTypedFun(o: Typed.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""Typed.Fun""""),
-        ("isImmutable", printB(o.isImmutable)),
+        ("isPure", printB(o.isPure)),
         ("isByName", printB(o.isByName)),
         ("args", printISZ(F, o.args, printTyped)),
         ("ret", printTyped(o.ret)),
@@ -3612,16 +3603,13 @@ object JSON {
       parser.parseObjectKey("isHidden")
       val isHidden = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("isPure")
-      val isPure = parser.parseB()
-      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
-      return AbstractDatatypeParam(isHidden, isPure, id, tipe)
+      return AbstractDatatypeParam(isHidden, id, tipe)
     }
 
     def parseMethodSig(): MethodSig = {
@@ -3747,30 +3735,12 @@ object JSON {
       val id = parseId()
       parser.parseObjectNext()
       parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseSubContractParam _)
+      val params = parser.parseISZ(parseId _)
       parser.parseObjectNext()
       parser.parseObjectKey("contract")
       val contract = parseContract()
       parser.parseObjectNext()
       return SubContract(id, params, contract)
-    }
-
-    def parseSubContractParam(): SubContractParam = {
-      val r = parseSubContractParamT(F)
-      return r
-    }
-
-    def parseSubContractParamT(typeParsed: B): SubContractParam = {
-      if (!typeParsed) {
-        parser.parseObjectType("SubContractParam")
-      }
-      parser.parseObjectKey("isPure")
-      val isPure = parser.parseB()
-      parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parseId()
-      parser.parseObjectNext()
-      return SubContractParam(isPure, id)
     }
 
     def parseWhereDef(): WhereDef = {
@@ -4572,8 +4542,8 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Typed.Fun")
       }
-      parser.parseObjectKey("isImmutable")
-      val isImmutable = parser.parseB()
+      parser.parseObjectKey("isPure")
+      val isPure = parser.parseB()
       parser.parseObjectNext()
       parser.parseObjectKey("isByName")
       val isByName = parser.parseB()
@@ -4587,7 +4557,7 @@ object JSON {
       parser.parseObjectKey("posOpt")
       val posOpt = parser.parseOption(parsePosInfo _)
       parser.parseObjectNext()
-      return Typed.Fun(isImmutable, isByName, args, ret, posOpt)
+      return Typed.Fun(isPure, isByName, args, ret, posOpt)
     }
 
     def parseAttr(): Attr = {
@@ -6689,24 +6659,6 @@ object JSON {
       return r
     }
     val r = to(s, fSubContract)
-    return r
-  }
-
-  def fromSubContractParam(o: SubContractParam, isCompact: B): String = {
-    val st = Printer.printSubContractParam(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toSubContractParam(s: String): SubContractParam = {
-    def fSubContractParam(parser: Parser): SubContractParam = {
-      val r = parser.parseSubContractParam()
-      return r
-    }
-    val r = to(s, fSubContractParam)
     return r
   }
 

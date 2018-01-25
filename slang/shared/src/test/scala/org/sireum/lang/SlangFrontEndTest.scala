@@ -136,7 +136,7 @@ class SlangFrontEndTest extends SireumSpec {
 
       "Library" - {
 
-        passingRc(org.sireum.$SlangFiles.trie)
+        passingRc(org.sireum.Library_Ext.trie)
 
       }
 

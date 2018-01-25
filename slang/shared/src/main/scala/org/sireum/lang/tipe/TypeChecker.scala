@@ -60,7 +60,7 @@ object TypeChecker {
     }
     val (initNameMap, initTypeMap) = Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
     val (reporter, nameMap, typeMap) = Resolver.parseProgramAndGloballyResolve(
-      LibraryUtil.files, initNameMap, initTypeMap)
+      Library.files, initNameMap, initTypeMap)
     val th = TypeHierarchy.build(TypeHierarchy(nameMap, typeMap, Poset.empty, HashMap.empty), reporter)
     val thOutlined = TypeOutliner.checkOutline(th, reporter)
     val r = (thOutlined, reporter)
@@ -132,6 +132,9 @@ object TypeChecker {
         }
         return T
       case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
+        if (t1.isPure != t2.isPure) {
+          return F
+        }
         if (t1.args.size != t2.args.size) {
           return F
         }
@@ -144,6 +147,10 @@ object TypeChecker {
           }
         }
         return T
+      case (t1: AST.Typed.Fun, _) if t1.isByName =>
+        return isEqType(t1.ret, t2)
+      case (_, t2: AST.Typed.Fun) if t2.isByName =>
+        return isEqType(t1, t2.ret)
       case _ =>
         if (isUnitType(t1) && isUnitType(t2)) {
           return T
@@ -493,33 +500,17 @@ import TypeChecker._
     }
   }
 
-  def expectBExp(scope: Scope, exp: AST.Exp, reporter: Reporter): AST.Exp = {
+  def expectExp(scope: Scope, exp: AST.Exp, expected: AST.Typed, reporter: Reporter): AST.Exp = {
     val (newExp, expTypeOpt) = checkExp(scope, exp, reporter)
     expTypeOpt match {
       case Some(expType) =>
         val t = typeHierarchy.dealias(expType, exp.posOpt, reporter)
-        if (t != typeB) {
-          reporter.error(exp.posOpt, typeCheckerKind,
-            st"Expecting expression of type org.sireum.B, but found ${AST.Util.typedString(t)}.".render)
-          return exp
-        } else {
+        if (isEqType(t, expected)) {
           return newExp
-        }
-      case _ => return exp
-    }
-  }
-
-  def expectStringExp(scope: Scope, exp: AST.Exp, reporter: Reporter): AST.Exp = {
-    val (newExp, expTypeOpt) = checkExp(scope, exp, reporter)
-    expTypeOpt match {
-      case Some(expType) =>
-        val t = typeHierarchy.dealias(expType, exp.posOpt, reporter)
-        if (t != typeString) {
-          reporter.error(exp.posOpt, typeCheckerKind,
-            st"Expecting expression of type org.sireum.String, but found ${AST.Util.typedString(t)}.".render)
-          return exp
         } else {
-          return newExp
+          reporter.error(exp.posOpt, typeCheckerKind,
+            st"Expecting expression of type ${AST.Util.typedString(expected)}, but found ${AST.Util.typedString(t)}.".render)
+          return exp
         }
       case _ => return exp
     }
@@ -529,18 +520,16 @@ import TypeChecker._
 
     def checkAssertume(name: String, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
                        cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
-      val newCondExp = expectBExp(scope, cond, reporter)
+      val newCondExp = expectExp(scope, cond, typeB, reporter)
 
       msgOpt match {
         case Some(msg) =>
-          val newMsg = expectStringExp(scope, msg, reporter)
-          val attr = assertumeExp.attr(
-            typedOpt = Some(AST.Typed.Fun(F, F, ISZ(typeB, typeString), typeUnit, None())),
+          val newMsg = expectExp(scope, msg, typeString, reporter)
+          val attr = assertumeExp.attr(typedOpt = Some(typeUnit),
             resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
           return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg), attr = attr))
         case _ =>
-          val attr = assertumeExp.attr(
-            typedOpt = Some(AST.Typed.Fun(F, F, ISZ(typeB), typeUnit, None())),
+          val attr = assertumeExp.attr(typedOpt = Some(typeUnit),
             resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
           return assertume(exp = assertumeExp(args = ISZ(newCondExp), attr = attr))
       }
@@ -548,33 +537,22 @@ import TypeChecker._
 
     def checkPrint(name: String, printStmt: AST.Stmt.Expr,
                    printExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
-      var ok = T
       var newArgs = ISZ[AST.Exp]()
-      var argTypes = ISZ[AST.Typed]()
       for (arg <- args) {
-        val (newArg, argTypeOpt) = checkExp(scope, arg, reporter)
+        val (newArg, _) = checkExp(scope, arg, reporter)
         newArgs = newArgs :+ newArg
-        argTypeOpt match {
-          case Some(argType) => argTypes = argTypes :+ argType
-          case _ => ok = F
-        }
       }
-      if (ok) {
-        val attr = printExp.attr(
-          typedOpt = Some(AST.Typed.Fun(F, F, argTypes, typeUnit, None())),
-          resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
-        return printStmt(exp = printExp(args = newArgs, attr = attr))
-      } else {
-        val attr = printExp.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
-        return printStmt(exp = printExp(args = newArgs, attr = attr))
-      }
+      val attr = printExp.attr(
+        typedOpt = Some(typeUnit),
+        resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
+      return printStmt(exp = printExp(args = newArgs, attr = attr))
     }
 
     def checkExpr(stmt: AST.Stmt.Expr): AST.Stmt = {
       stmt.exp match {
 
         case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
-          val (isPrint, isAssertume) = name.native match {
+          val (isPrint: B, isAssertume: B) = name.native match {
             case "assert" => (F, T)
             case "assume" => (F, T)
             case "println" => (T, F)

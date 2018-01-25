@@ -37,7 +37,7 @@ object MTransformer {
   @record class PreResult[T](continu: B,
                              resultOpt: MOption[T])
 
-  @sig trait PrePost {
+  @msig trait PrePost {
 
     def preTopUnit(o: TopUnit): PreResult[TopUnit] = {
       o match {
@@ -589,10 +589,6 @@ object MTransformer {
     }
 
     def preSubContract(o: SubContract): PreResult[SubContract] = {
-      return PreResult(T, MNone())
-    }
-
-    def preSubContractParam(o: SubContractParam): PreResult[SubContractParam] = {
       return PreResult(T, MNone())
     }
 
@@ -1429,10 +1425,6 @@ object MTransformer {
     }
 
     def postSubContract(o: SubContract): MOption[SubContract] = {
-      return MNone()
-    }
-
-    def postSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
       return MNone()
     }
 
@@ -3134,7 +3126,7 @@ import MTransformer._
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[Id] = transformId(o2.id)
-      val r1: MOption[IS[Z, SubContractParam]] = transformISZ(o2.params, transformSubContractParam)
+      val r1: MOption[IS[Z, Id]] = transformISZ(o2.params, transformId)
       val r2: MOption[Contract] = transformContract(o2.contract)
       if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
         MSome(o2(id = r0.getOrElse(o2.id), params = r1.getOrElse(o2.params), contract = r2.getOrElse(o2.contract)))
@@ -3148,33 +3140,6 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: SubContract = r.getOrElse(o)
     val postR: MOption[SubContract] = pp.postSubContract(o2)
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformSubContractParam(o: SubContractParam): MOption[SubContractParam] = {
-    val preR: PreResult[SubContractParam] = pp.preSubContractParam(o)
-    val r: MOption[SubContractParam] = if (preR.continu) {
-      val o2: SubContractParam = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Id] = transformId(o2.id)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(id = r0.getOrElse(o2.id)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: SubContractParam = r.getOrElse(o)
-    val postR: MOption[SubContractParam] = pp.postSubContractParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {

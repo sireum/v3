@@ -94,7 +94,7 @@ object TypeHierarchy {
             as
           }
           val rt = resolveType(scope, t.ret)
-          AST.Typed.Fun(t.isPure, t.isByName, ts, rt, t.posOpt)
+          AST.Typed.Fun(t.isPure || rt.isPureFun, t.isByName, ts, rt, t.posOpt)
       }
     }
 
@@ -121,7 +121,7 @@ object TypeHierarchy {
         return AST.Typed.Name(info.name, ISZ(), info.posOpt)
       }
       val typed = typedInfo(info)
-      r.aliases.get(typed) match {
+      r.aliases.get(TypeHierarchy.TypeName(typed)) match {
         case Some(rt) => return rt
         case _ =>
       }
@@ -135,7 +135,7 @@ object TypeHierarchy {
           }
         case _ =>
       }
-      up(r.aliases) = r.aliases.put(typed, t)
+      up(r.aliases) = r.aliases.put(TypeHierarchy.TypeName(typed), t)
       return t
     }
 
@@ -147,23 +147,25 @@ object TypeHierarchy {
       info match {
         case _: TypeInfo.SubZ =>
           val typed = typedInfo(info)
-          up(r.poset) = r.poset.addNode(typed)
+          up(r.poset) = r.poset.addNode(TypeHierarchy.TypeName(typed))
         case _: TypeInfo.Enum =>
           val typed = typedInfo(info)
-          up(r.poset) = r.poset.addNode(typed)
+          up(r.poset) = r.poset.addNode(TypeHierarchy.TypeName(typed))
         case info: TypeInfo.Sig =>
           if (!info.outlined) {
             val typed = typedInfo(info)
             val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
             val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
-            up(r.poset) = r.poset.addParents(typed, parents)
+            up(r.poset) = r.poset.addParents(TypeHierarchy.TypeName(typed),
+              parents.map((t: AST.Typed.Name) => TypeHierarchy.TypeName(t)))
           }
         case info: TypeInfo.AbstractDatatype =>
           if (!info.outlined) {
             val typed = typedInfo(info)
             val scope = typeParamsScope(info.ast.typeParams, info.scope, reporter)
             val parents = resolveTypeNameds(info.posOpt, scope, info.ast.parents)
-            up(r.poset) = r.poset.addParents(typed, parents)
+            up(r.poset) = r.poset.addParents(TypeHierarchy.TypeName(typed),
+              parents.map((t: AST.Typed.Name) => TypeHierarchy.TypeName(t)))
           }
         case info: TypeInfo.TypeAlias =>
           resolveAlias(info, HashSet.empty)
@@ -176,18 +178,28 @@ object TypeHierarchy {
     r.checkCyclic(reporter)
     return r
   }
+
+  @datatype class TypeName(t: AST.Typed.Name) {
+    override def hash: Z = {
+      return t.ids.hash
+    }
+
+    def isEqual(other: TypeName): B = {
+      return t.ids == other.t.ids
+    }
+  }
 }
 
 @datatype class TypeHierarchy(nameMap: NameMap,
                               typeMap: TypeMap,
-                              poset: Poset[AST.Typed.Name],
-                              aliases: HashMap[AST.Typed.Name, AST.Typed]) {
+                              poset: Poset[TypeHierarchy.TypeName],
+                              aliases: HashMap[TypeHierarchy.TypeName, AST.Typed]) {
 
   @pure def rootTypes: ISZ[AST.Typed.Name] = {
     var r = ISZ[AST.Typed.Name]()
     for (ps <- poset.parents.entries) {
       if (ps._2.isEmpty) {
-        r = r :+ ps._1
+        r = r :+ ps._1.t
       }
     }
     return r
@@ -197,7 +209,7 @@ object TypeHierarchy {
     var r = ISZ[QName]()
     for (p <- poset.parents.entries) {
       if (p._2.isEmpty) {
-        r = r :+ p._1.ids
+        r = r :+ p._1.t.ids
       }
     }
     return r
@@ -205,7 +217,7 @@ object TypeHierarchy {
 
 
   def dealiasInit(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
-    aliases.get(t) match {
+    aliases.get(TypeHierarchy.TypeName(t)) match {
       case Some(t2: AST.Typed.Name) =>
         val r = dealiasInit(t2, reporter)
         return r
@@ -217,16 +229,16 @@ object TypeHierarchy {
   }
 
   def checkCyclic(reporter: Reporter): Unit = {
-    var cache = HashMap.empty[AST.Typed.Name, HashSet[AST.Typed.Name]]
+    var cache = HashMap.empty[TypeHierarchy.TypeName, HashSet[TypeHierarchy.TypeName]]
     for (t <- rootTypes) {
-      val r = poset.descendantsCache(t, cache)
+      val r = poset.descendantsCache(TypeHierarchy.TypeName(t), cache)
       cache = r._2
     }
     for (kv <- cache.entries) {
       val k = kv._1
       val v = kv._2
       if (v.contains(k)) {
-        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.ids, ".")}.".render)
+        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.t.ids, ".")}.".render)
       }
     }
   }
@@ -320,7 +332,7 @@ object TypeHierarchy {
         val trOpt = typed(scope, t.ret, reporter)
         trOpt match {
           case Some(tr) if !hasError =>
-            return Some(AST.Typed.Fun(t.isPure, t.isByName, paramTypes, tr, t.posOpt))
+            return Some(AST.Typed.Fun(t.isPure || tr.isPureFun, t.isByName, paramTypes, tr, t.posOpt))
           case _ => return None[AST.Typed]()
         }
     }
@@ -440,7 +452,7 @@ object TypeHierarchy {
         if (t1.ids == t2.ids) {
           return T
         }
-        return poset.ancestorsOf(t1).contains(t2)
+        return poset.ancestorsOf(TypeHierarchy.TypeName(t1)).contains(TypeHierarchy.TypeName(t2))
       case _ => return TypeChecker.isEqType(t1, t2)
     }
   }

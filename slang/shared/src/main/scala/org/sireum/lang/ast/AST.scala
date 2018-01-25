@@ -338,6 +338,7 @@ object Type {
     @pure def typed(t: Typed): Named = {
       return this (name, typeArgs, attr(typedOpt = Some(t)))
     }
+
   }
 
   @datatype class Fun(isPure: B,
@@ -356,8 +357,9 @@ object Type {
     }
 
     @pure def typed(t: Typed): Fun = {
-      return this(isPure, isByName, args, ret, attr(typedOpt = Some(t)))
+      return this (isPure, isByName, args, ret, attr(typedOpt = Some(t)))
     }
+
   }
 
   @datatype class Tuple(args: ISZ[Type],
@@ -375,6 +377,7 @@ object Type {
     @pure def typed(t: Typed): Tuple = {
       return this (args, attr(typedOpt = Some(t)))
     }
+
   }
 
 }
@@ -720,7 +723,6 @@ object Domain {
 @datatype class Body(stmts: ISZ[Stmt])
 
 @datatype class AbstractDatatypeParam(isHidden: B,
-                                      isPure: B,
                                       id: Id,
                                       tipe: Type)
 
@@ -749,11 +751,8 @@ object Domain {
                          subs: ISZ[SubContract])
 
 @datatype class SubContract(id: Id,
-                            params: ISZ[SubContractParam],
+                            params: ISZ[Id],
                             contract: Contract)
-
-@datatype class SubContractParam(isPure: B,
-                                 id: Id)
 
 @datatype trait WhereDef
 
@@ -949,25 +948,62 @@ object TruthTable {
 
 @datatype trait Typed {
   def posOpt: Option[PosInfo]
+
+  @pure def isPureFun: B
+
+  def isEqual(other: Typed): B = {
+    halt("Unallowed use of direct equality test on org.sireum.lang.ast.Typed.")
+  }
 }
 
 object Typed {
 
   @datatype class Name(ids: ISZ[String],
-                       @hidden args: ISZ[Typed],
+                       args: ISZ[Typed],
                        @hidden val posOpt: Option[PosInfo])
-    extends Typed
+    extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return if (args.isEmpty) st"${(ids, ".")}".render
+      else st"${(ids, ".")}[${(args, ", ")}]".render
+    }
+  }
 
   @datatype class Tuple(args: ISZ[Typed],
                         @hidden val posOpt: Option[PosInfo])
-    extends Typed
+    extends Typed {
 
-  @datatype class Fun(isImmutable: B,
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return st"(${(args, ", ")})".render
+    }
+  }
+
+  @datatype class Fun(isPure: B,
                       isByName: B,
                       args: ISZ[Typed],
                       ret: Typed,
                       @hidden val posOpt: Option[PosInfo])
-    extends Typed
+    extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return if (isByName) st"=> $ret".render
+      else if (isPure) st"((${(args, ", ")}) => $ret @pure)".render
+      else st"(${(args, ", ")}) => $ret".render
+    }
+
+  }
 
 }
 

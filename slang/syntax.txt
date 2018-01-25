@@ -116,8 +116,7 @@
 
 <param>            ::=  ⸨ <param-mod> ⸩? <ID> : <param-type>
 
-<param-mod>        ::=  @pure
-                     |  @hidden // only for @memoize def
+<param-mod>        ::=  @hidden // only for @memoize def
 
 <param-type>       ::=  <type>
                      |  => <type>
@@ -328,7 +327,7 @@
 
 <named-exps>       ::=  ⸨ ⸨ <ID> : ⸩? <exp> ⸩+  // newline separated
 
-<sub-contract>     ::=  def <ID> ( ⸨ @pure ⸩? <ID> ⸨ , ⸨ @pure ⸩? <ID> ⸩* ) <def-contract>
+<sub-contract>     ::=  def <ID> ( <ID> ⸨ , <ID> ⸩* ) <def-contract>
 
 
 <spec-defs>        ::=  <spec-def>+            // newline separated

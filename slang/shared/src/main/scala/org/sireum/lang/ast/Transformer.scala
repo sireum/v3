@@ -596,10 +596,6 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preSubContractParam(ctx: Context, o: SubContractParam): PreResult[Context, SubContractParam] = {
-      return PreResult(ctx, T, None())
-    }
-
     @pure def preWhereDef(ctx: Context, o: WhereDef): PreResult[Context, WhereDef] = {
       o match {
         case o: WhereDef.Val => return preWhereDefVal(ctx, o)
@@ -1433,10 +1429,6 @@ object Transformer {
     }
 
     @pure def postSubContract(ctx: Context, o: SubContract): Result[Context, SubContract] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postSubContractParam(ctx: Context, o: SubContractParam): Result[Context, SubContractParam] = {
       return Result(ctx, None())
     }
 
@@ -3140,7 +3132,7 @@ import Transformer._
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, Id] = transformId(ctx, o2.id)
-      val r1: Result[Context, IS[Z, SubContractParam]] = transformISZ(r0.ctx, o2.params, transformSubContractParam)
+      val r1: Result[Context, IS[Z, Id]] = transformISZ(r0.ctx, o2.params, transformId)
       val r2: Result[Context, Contract] = transformContract(r1.ctx, o2.contract)
       if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
         Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), params = r1.resultOpt.getOrElse(o2.params), contract = r2.resultOpt.getOrElse(o2.contract))))
@@ -3154,33 +3146,6 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: SubContract = r.resultOpt.getOrElse(o)
     val postR: Result[Context, SubContract] = pp.postSubContract(r.ctx, o2)
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformSubContractParam(ctx: Context, o: SubContractParam): Result[Context, SubContractParam] = {
-    val preR: PreResult[Context, SubContractParam] = pp.preSubContractParam(ctx, o)
-    val r: Result[Context, SubContractParam] = if (preR.continu) {
-      val o2: SubContractParam = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Id] = transformId(ctx, o2.id)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: SubContractParam = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, SubContractParam] = pp.postSubContractParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

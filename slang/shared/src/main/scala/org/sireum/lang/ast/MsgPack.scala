@@ -216,109 +216,107 @@ object MsgPack {
 
     val SubContract: Z = 89
 
-    val SubContractParam: Z = 90
+    val WhereDefVal: Z = 90
 
-    val WhereDefVal: Z = 91
+    val WhereDefDef: Z = 91
 
-    val WhereDefDef: Z = 92
+    val SpecDef: Z = 92
 
-    val SpecDef: Z = 93
+    val ProofStepBasic: Z = 93
 
-    val ProofStepBasic: Z = 94
+    val ProofStepSubProof: Z = 94
 
-    val ProofStepSubProof: Z = 95
+    val AssumeProofStepRegular: Z = 95
 
-    val AssumeProofStepRegular: Z = 96
+    val AssumeProofStepForallIntroAps: Z = 96
 
-    val AssumeProofStepForallIntroAps: Z = 97
+    val AssumeProofStepExistsElimAps: Z = 97
 
-    val AssumeProofStepExistsElimAps: Z = 98
+    val JustPremise: Z = 98
 
-    val JustPremise: Z = 99
+    val JustAndIntro: Z = 99
 
-    val JustAndIntro: Z = 100
+    val JustAndElim: Z = 100
 
-    val JustAndElim: Z = 101
+    val JustOrIntro: Z = 101
 
-    val JustOrIntro: Z = 102
+    val JustOrElim: Z = 102
 
-    val JustOrElim: Z = 103
+    val JustImplyIntro: Z = 103
 
-    val JustImplyIntro: Z = 104
+    val JustImplyElim: Z = 104
 
-    val JustImplyElim: Z = 105
+    val JustNegIntro: Z = 105
 
-    val JustNegIntro: Z = 106
+    val JustNegElim: Z = 106
 
-    val JustNegElim: Z = 107
+    val JustBottomElim: Z = 107
 
-    val JustBottomElim: Z = 108
+    val JustPbc: Z = 108
 
-    val JustPbc: Z = 109
+    val JustForallIntro: Z = 109
 
-    val JustForallIntro: Z = 110
+    val JustForallElim: Z = 110
 
-    val JustForallElim: Z = 111
+    val JustExistsIntro: Z = 111
 
-    val JustExistsIntro: Z = 112
+    val JustExistsElim: Z = 112
 
-    val JustExistsElim: Z = 113
+    val JustFact: Z = 113
 
-    val JustFact: Z = 114
+    val JustInvariant: Z = 114
 
-    val JustInvariant: Z = 115
+    val JustSubst: Z = 115
 
-    val JustSubst: Z = 116
+    val JustAuto: Z = 116
 
-    val JustAuto: Z = 117
+    val JustCoq: Z = 117
 
-    val JustCoq: Z = 118
+    val TruthTableRow: Z = 118
 
-    val TruthTableRow: Z = 119
+    val TruthTableAssignment: Z = 119
 
-    val TruthTableAssignment: Z = 120
+    val TruthTableConclusionValidity: Z = 120
 
-    val TruthTableConclusionValidity: Z = 121
+    val TruthTableConclusionTautology: Z = 121
 
-    val TruthTableConclusionTautology: Z = 122
+    val TruthTableConclusionContradictory: Z = 122
 
-    val TruthTableConclusionContradictory: Z = 123
+    val TruthTableConclusionContingent: Z = 123
 
-    val TruthTableConclusionContingent: Z = 124
+    val TypedName: Z = 124
 
-    val TypedName: Z = 125
+    val TypedTuple: Z = 125
 
-    val TypedTuple: Z = 126
+    val TypedFun: Z = 126
 
-    val TypedFun: Z = 127
+    val Attr: Z = 127
 
-    val Attr: Z = 128
+    val TypedAttr: Z = 128
 
-    val TypedAttr: Z = 129
+    val ResolvedAttr: Z = 129
 
-    val ResolvedAttr: Z = 130
+    val ResolvedInfoBuiltIn: Z = 130
 
-    val ResolvedInfoBuiltIn: Z = 131
+    val ResolvedInfoPackage: Z = 131
 
-    val ResolvedInfoPackage: Z = 132
+    val ResolvedInfoEnum: Z = 132
 
-    val ResolvedInfoEnum: Z = 133
+    val ResolvedInfoObject: Z = 133
 
-    val ResolvedInfoObject: Z = 134
+    val ResolvedInfoObjectVar: Z = 134
 
-    val ResolvedInfoObjectVar: Z = 135
+    val ResolvedInfoObjectMethod: Z = 135
 
-    val ResolvedInfoObjectMethod: Z = 136
+    val ResolvedInfoType: Z = 136
 
-    val ResolvedInfoType: Z = 137
+    val ResolvedInfoTypeVar: Z = 137
 
-    val ResolvedInfoTypeVar: Z = 138
+    val ResolvedInfoTypeMethod: Z = 138
 
-    val ResolvedInfoTypeMethod: Z = 139
+    val ResolvedInfoLocalVar: Z = 139
 
-    val ResolvedInfoLocalVar: Z = 140
-
-    val PosInfo: Z = 141
+    val PosInfo: Z = 140
 
   }
 
@@ -1068,7 +1066,6 @@ object MsgPack {
     def writeAbstractDatatypeParam(o: AbstractDatatypeParam): Unit = {
       writer.writeZ(Constants.AbstractDatatypeParam)
       writeB(o.isHidden)
-      writeB(o.isPure)
       writeId(o.id)
       writeType(o.tipe)
     }
@@ -1110,14 +1107,8 @@ object MsgPack {
     def writeSubContract(o: SubContract): Unit = {
       writer.writeZ(Constants.SubContract)
       writeId(o.id)
-      writer.writeISZ(o.params, writeSubContractParam)
+      writer.writeISZ(o.params, writeId)
       writeContract(o.contract)
-    }
-
-    def writeSubContractParam(o: SubContractParam): Unit = {
-      writer.writeZ(Constants.SubContractParam)
-      writeB(o.isPure)
-      writeId(o.id)
     }
 
     def writeWhereDef(o: WhereDef): Unit = {
@@ -1424,7 +1415,7 @@ object MsgPack {
 
     def writeTypedFun(o: Typed.Fun): Unit = {
       writer.writeZ(Constants.TypedFun)
-      writeB(o.isImmutable)
+      writeB(o.isPure)
       writeB(o.isByName)
       writer.writeISZ(o.args, writeTyped)
       writeTyped(o.ret)
@@ -3081,10 +3072,9 @@ object MsgPack {
         reader.expectZ(Constants.AbstractDatatypeParam)
       }
       val isHidden = reader.readB()
-      val isPure = reader.readB()
       val id = readId()
       val tipe = readType()
-      return AbstractDatatypeParam(isHidden, isPure, id, tipe)
+      return AbstractDatatypeParam(isHidden, id, tipe)
     }
 
     def readMethodSig(): MethodSig = {
@@ -3164,23 +3154,9 @@ object MsgPack {
         reader.expectZ(Constants.SubContract)
       }
       val id = readId()
-      val params = reader.readISZ(readSubContractParam _)
+      val params = reader.readISZ(readId _)
       val contract = readContract()
       return SubContract(id, params, contract)
-    }
-
-    def readSubContractParam(): SubContractParam = {
-      val r = readSubContractParamT(F)
-      return r
-    }
-
-    def readSubContractParamT(typeParsed: B): SubContractParam = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.SubContractParam)
-      }
-      val isPure = reader.readB()
-      val id = readId()
-      return SubContractParam(isPure, id)
     }
 
     def readWhereDef(): WhereDef = {
@@ -3794,12 +3770,12 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.TypedFun)
       }
-      val isImmutable = reader.readB()
+      val isPure = reader.readB()
       val isByName = reader.readB()
       val args = reader.readISZ(readTyped _)
       val ret = readTyped()
       val posOpt = reader.readOption(readPosInfo _)
-      return Typed.Fun(isImmutable, isByName, args, ret, posOpt)
+      return Typed.Fun(isPure, isByName, args, ret, posOpt)
     }
 
     def readAttr(): Attr = {
@@ -5533,21 +5509,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fSubContract)
-    return r
-  }
-
-  def fromSubContractParam(o: SubContractParam): ISZ[U8] = {
-    val w = Writer(MessagePack.writer)
-    w.writeSubContractParam(o)
-    return w.result
-  }
-
-  def toSubContractParam(data: ISZ[U8]): SubContractParam = {
-    def fSubContractParam(reader: Reader): SubContractParam = {
-      val r = reader.readSubContractParam()
-      return r
-    }
-    val r = to(data, fSubContractParam)
     return r
   }
 

@@ -443,8 +443,21 @@ class SlangParser(text: Predef.String,
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable val pattern: '${pattern.syntax}'")
         }
+        val exp = translateAssignExp(expr)
+        exp match {
+          case _: AST.Stmt.Expr =>
+          case _ =>
+            pattern match {
+              case pattern: Pat.Tuple =>
+                for (arg <- pattern.args) arg match {
+                  case p"$_: $_" =>
+                  case _ => errorInSlang(arg.pos, "Var tuple pattern element with complex initialization has to be explicitly typed")
+                }
+              case _ =>
+            }
+        }
         AST.Stmt.VarPattern(isVal = true, pat,
-          translateAssignExp(expr), attr(stat.pos))
+          exp, attr(stat.pos))
     }
   }
 
@@ -524,8 +537,21 @@ class SlangParser(text: Predef.String,
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
+        val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos)))
+        exp match {
+          case _: AST.Stmt.Expr =>
+          case _ =>
+            pattern match {
+              case pattern: Pat.Tuple =>
+                for (arg <- pattern.args) arg match {
+                  case p"$_: $_" =>
+                  case _ => errorInSlang(arg.pos, "Var tuple pattern element with complex initialization has to be explicitly typed")
+                }
+              case _ =>
+            }
+        }
         AST.Stmt.VarPattern(isVal = false, pat,
-          expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos))), attr(stat.pos))
+          exp, attr(stat.pos))
     }
   }
 
@@ -1396,7 +1422,6 @@ class SlangParser(text: Predef.String,
     val expropt = tp.default
     var hasError = false
     var hasHidden = false
-    var hasPure = false
     var isVar = false
     if (disallowedMethodIds.contains(tp.name.value)) {
       errorInSlang(tp.name.pos, s"Identifier ${tp.name.value} is reserved")
@@ -1408,12 +1433,6 @@ class SlangParser(text: Predef.String,
           error(mod.pos, "Redundant @hidden.")
         }
         hasHidden = true
-      case mod"@pure" =>
-        if (hasPure) {
-          hasError = true
-          error(mod.pos, "Redundant @pure.")
-        }
-        hasPure = true
       case mod"varparam" if !isDatatype => isVar = true
       case mod"valparam" =>
       case _ =>
@@ -1424,11 +1443,10 @@ class SlangParser(text: Predef.String,
     if (atpeopt.isEmpty || expropt.nonEmpty) {
       hasError = true
       val hidden = if (hasHidden) "@hidden " else ""
-      val pure = if (hasPure) "@pure" else ""
-      errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden$pure〈ID〉:〈type〉'")
+      errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden〈ID〉:〈type〉'")
     }
-    if (hasError) AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), unitType)
-    else AST.AbstractDatatypeParam(hasHidden, hasPure, cid(paramname), translateTypeArg(allowByName = false)(atpeopt.get))
+    if (hasError) AST.AbstractDatatypeParam(hasHidden, cid(paramname), unitType)
+    else AST.AbstractDatatypeParam(hasHidden, cid(paramname), translateTypeArg(allowByName = false)(atpeopt.get))
   }
 
   def stmtCheck(enclosing: Enclosing.Type, stat: Term, kind: Predef.String): Boolean = enclosing match {

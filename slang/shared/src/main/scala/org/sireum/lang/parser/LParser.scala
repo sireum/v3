@@ -382,7 +382,7 @@ final class LParser(input: Input,
    *
    *  NamedExpr      ::= [ Ident `:' {nl} ] Expr
    *
-   *  SubContract    ::= def Ident `(' PureOpt Ident {`,' PureOpt Ident} `)' {nl} DefContract
+   *  SubContract    ::= def Ident `(' Ident {`,' Ident} `)' {nl} DefContract
    *
    *  PureOpt        ::= [ `@' Ident<pure> ]
    *  }}}
@@ -402,10 +402,10 @@ final class LParser(input: Input,
         val ident = id(acceptToken[Ident])
         accept[LeftParen]
         val params = if (token.isNot[RightParen]) {
-          var ps = List(AST.SubContractParam(pureOpt(), id(acceptToken[Ident])))
+          var ps = List(id(acceptToken[Ident]))
           while (token.is[Comma]) {
             next()
-            ps ::= AST.SubContractParam(pureOpt(), id(acceptToken[Ident]))
+            ps ::= id(acceptToken[Ident])
           }
           ps
         } else List()
