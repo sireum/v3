@@ -509,8 +509,25 @@ object Resolver {
         case ti: TypeInfo.AbstractDatatype if !ti.ast.isRoot =>
           for (t <- ti.ast.parents) {
             ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(t.name.ids)) match {
-              case Some(parent: TypeInfo.AbstractDatatype) => r = r.addChildren(parent.name, ISZ(ti.name))
-              case Some(parent: TypeInfo.Sig) => r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(parent: TypeInfo.AbstractDatatype) if parent.ast.isDatatype == ti.ast.isDatatype =>
+                  r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(parent: TypeInfo.Sig) if parent.ast.isImmutable == ti.ast.isDatatype =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(_) =>
+                reporter.error(t.attr.posOpt, resolverKind,
+                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
+              case _ => reporter.error(t.attr.posOpt, resolverKind,
+                st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
+            }
+          }
+        case ti: TypeInfo.Sig =>
+          for (t <- ti.ast.parents) {
+            ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(t.name.ids)) match {
+              case Some(parent: TypeInfo.Sig) if parent.ast.isImmutable == ti.ast.isImmutable =>
+                r = r.addChildren(parent.name, ISZ(ti.name))
+              case Some(_) =>
+                reporter.error(t.attr.posOpt, resolverKind,
+                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
               case _ => reporter.error(t.attr.posOpt, resolverKind,
                 st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
             }
