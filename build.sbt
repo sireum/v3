@@ -40,7 +40,7 @@ val scalaTestVersion = "3.0.1"
 
 val sireumVersion = "3"
 
-val sireumScalacVersion = "3.2.3"
+val sireumScalacVersion = "3.2.4"
 
 val scalaJsDomVersion = "0.9.4"
 
