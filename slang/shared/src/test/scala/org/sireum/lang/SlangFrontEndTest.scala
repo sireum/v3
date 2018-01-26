@@ -346,7 +346,8 @@ class SlangFrontEndTest extends SireumSpec {
           }
 
           if (checkMsgPack) {
-            val bin = AST.MsgPack.fromTopUnit(p)
+            val bin = AST.MsgPack.fromTopUnit(p, true)
+            println(bin.size)
             assert(AST.MsgPack.toTopUnit(bin) == p)
           }
         case _ => b = false

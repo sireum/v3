@@ -525,8 +525,8 @@ object SerializerGen {
     }
 
     @pure def from(name: ST, tpe: ST): ST = {
-      return st"""def from$name(o: $tpe): ISZ[U8] = {
-                 |  val w = Writer(MessagePack.writer)
+      return st"""def from$name(o: $tpe, poolString: B): ISZ[U8] = {
+                 |  val w = Writer(MessagePack.writer(poolString))
                  |  w.write$name(o)
                  |  return w.result
                  |}"""
