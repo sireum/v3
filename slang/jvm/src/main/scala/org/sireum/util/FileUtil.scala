@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.util
+package org.sireum.util
 
 import java.io.File
 import java.nio.charset.StandardCharsets

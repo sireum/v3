@@ -31,7 +31,8 @@ import java.nio.file.Files
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
-import org.sireum.lang.util.{FileUtil, Reporter}
+import org.sireum.lang.util.Reporter
+import org.sireum.util.FileUtil
 import org.sireum.{ISZ, Poset, HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object TransformerGenJvm {

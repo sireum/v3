@@ -30,7 +30,8 @@ import java.io.File
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
-import org.sireum.lang.util.{FileUtil, Reporter}
+import org.sireum.lang.util.Reporter
+import org.sireum.util.FileUtil
 import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object SerializerGenJvm {

@@ -31,8 +31,9 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.{None => SNone}
 import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.{SerializerGen, SerializerGenJvm}
-import org.sireum.lang.util.{AccumulatingReporter, FileUtil}
+import org.sireum.lang.util.AccumulatingReporter
 import org.sireum.test.SireumSpec
+import org.sireum.util.FileUtil
 
 class SerializerGenJvmTest extends SireumSpec {
 
