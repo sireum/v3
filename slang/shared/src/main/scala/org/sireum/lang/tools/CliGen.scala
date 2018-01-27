@@ -273,7 +273,7 @@ import CliGen.CliOpt._
           |    }
           |  }
           |
-          |  @pure def select(mode: String, args: ISZ[String], i: Z, choices: ISZ[String]): Option[String] = {
+          |  def select(mode: String, args: ISZ[String], i: Z, choices: ISZ[String]): Option[String] = {
           |    val arg = args(i)
           |    var cs = ISZ[String]()
           |    for (c <- choices) {
