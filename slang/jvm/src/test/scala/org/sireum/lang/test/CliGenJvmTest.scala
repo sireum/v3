@@ -27,19 +27,38 @@ package org.sireum.lang.test
 
 import java.io.File
 
-object Paths {
-  val rootDir: File = new File(getClass.getResource(".").getPath, "../../../../../../../../../").getCanonicalFile
+import com.sksamuel.diffpatch.DiffMatchPatch
+import org.sireum.lang.test.Paths._
+import org.sireum.lang.tools.CliGenJvm
+import org.sireum.test.SireumSpec
+import org.sireum.util.FileUtil
+import org.sireum.{None => SNone, ISZ, Some => SSome}
 
-  val licensePath = new File(rootDir, "license.txt")
+class CliGenJvmTest extends SireumSpec {
 
-  val sireumPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum")
-  val slangPackagePath = new File(sireumPackagePath, "lang")
+  *(gen(cliConfigPath, cliPath))
 
-  val cliConfigPath = new File(sireumPackagePath, "cli/CliConfig.sc")
-  val cliPath = new File(sireumPackagePath, "cli/Cli.scala")
-  val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
-  val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
-  val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
-  val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
-  val slangMsgPackPath = new File(slangPackagePath, "ast/MsgPack.scala")
+  def gen(src: File, dest: File): Boolean = {
+    val r = CliGenJvm(
+      SSome(licensePath), src, dest, ISZ("org", "sireum", "cli"), SNone(), 25, 55)
+    scala.util.Try(FileUtil.readFile(dest)) match {
+      case scala.util.Success(expected) =>
+        val result = r
+        if (result != expected) {
+          val dmp = new DiffMatchPatch()
+          Console.err.println(dmp.patch_toText(dmp.patch_make(expected, result)))
+          Console.err.flush()
+          //FileUtil.writeFile(dest, r)
+          //Console.err.println(r)
+          //Console.err.flush()
+          return false
+        }
+        true
+      case _ =>
+        FileUtil.writeFile(dest, r)
+        Console.err.println(r)
+        Console.err.flush()
+        false
+    }
+  }
 }

@@ -23,23 +23,29 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.test
+package org.sireum.lang.tools
 
 import java.io.File
 
-object Paths {
-  val rootDir: File = new File(getClass.getResource(".").getPath, "../../../../../../../../../").getCanonicalFile
+import org.sireum.util.{FileUtil, ReflectUtil}
+import org.sireum.{ISZ, Z, None => SNone, Option => SOption, Some => SSome, String => SString}
 
-  val licensePath = new File(rootDir, "license.txt")
-
-  val sireumPackagePath = new File(rootDir, "slang/shared/src/main/scala/org/sireum")
-  val slangPackagePath = new File(sireumPackagePath, "lang")
-
-  val cliConfigPath = new File(sireumPackagePath, "cli/CliConfig.sc")
-  val cliPath = new File(sireumPackagePath, "cli/Cli.scala")
-  val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
-  val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
-  val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
-  val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
-  val slangMsgPackPath = new File(slangPackagePath, "ast/MsgPack.scala")
+object CliGenJvm {
+  def apply(licenseOpt: SOption[File],
+            src: File,
+            dest: File,
+            packageName: ISZ[SString],
+            nameOpt: SOption[SString],
+            firstColumnLimit: Z,
+            secondColumnLimit: Z): String = {
+    val srcText = FileUtil.readFile(src)
+    val config = ReflectUtil.eval[CliGen.CliOpt.Group](srcText)
+    val lOpt = licenseOpt match {
+      case SSome(f) => SSome(SString(FileUtil.readFile(f).trim))
+      case _ => SNone[SString]()
+    }
+    val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
+    CliGen(firstColumnLimit, secondColumnLimit + firstColumnLimit).
+      gen(lOpt, fOpt, packageName, nameOpt.getOrElse("Cli"), config).render.value
+  }
 }
