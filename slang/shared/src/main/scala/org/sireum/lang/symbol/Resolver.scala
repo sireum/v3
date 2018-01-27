@@ -704,7 +704,7 @@ object Resolver {
   }
 
   @pure def isTypeParamNameString(id: String): B = {
-    return id.size > 0 && id.at(0) == '`'
+    return id.size > 0 && id(0) == '`'
   }
 
   @pure def isTypeParamName(name: QName): B = {
