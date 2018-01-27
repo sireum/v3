@@ -572,8 +572,3 @@ import CliGen.CliOpt._
     return r
   }
 }
-
-
-object Config {
-
-}
