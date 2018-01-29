@@ -431,10 +431,8 @@ class SlangParser(text: Predef.String,
         r
       case pattern: Pat =>
         enclosing match {
-          case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-          case _ =>
-            if (isWorksheet) errorInSlang(pattern.pos, "Val pattern can only appear at the top-level, inside methods or code blocks")
-            else errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
+          case Enclosing.Method | Enclosing.Block =>
+          case _ => errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
         }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Val pattern cannot be explicitly typed")
@@ -523,10 +521,8 @@ class SlangParser(text: Predef.String,
         r
       case pattern: Pat =>
         enclosing match {
-          case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
-          case _ =>
-            if (isWorksheet) errorInSlang(pattern.pos, "Var pattern can only appear at the top-level, inside methods or code blocks")
-            else errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
+          case Enclosing.Method | Enclosing.Block =>
+          case _ => errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
         }
         if (tpeopt.nonEmpty)
           errorInSlang(pattern.pos, "Var pattern cannot be explicitly typed")
