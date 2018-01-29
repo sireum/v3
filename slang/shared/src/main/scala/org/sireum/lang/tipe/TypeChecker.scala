@@ -246,12 +246,14 @@ object TypeChecker {
     val tc = TypeChecker(th3)
     var scope = Scope.Local(HashMap.empty, HashMap.empty, Some(Scope.Global(ISZ(), ISZ(), ISZ())))
 
+    var newStmts = ISZ[AST.Stmt]()
     for (stmt <- program.body.stmts) {
       val (newScope, newStmt) = tc.checkStmt(scope, stmt, reporter)
+      newStmts = newStmts :+ newStmt
       scope = newScope
     }
 
-    return program // TODO
+    return program(body = program.body(newStmts))
   }
 }
 
@@ -346,16 +348,30 @@ import TypeChecker._
     return typeHierarchy.nameMap
   }
 
-  def checkExp(scope: Scope,
+  def checkExp(expectedOpt: Option[AST.Typed],
+               scope: Scope,
                exp: AST.Exp,
                reporter: Reporter): (AST.Exp, Option[AST.Typed]) = {
+
+    @pure def checkExpected(t: AST.Typed): Option[AST.Typed] = {
+      expectedOpt match {
+        case Some(expected) =>
+          if (typeHierarchy.isSubType(t, expected)) {
+            return Some(t)
+          } else {
+            reporter.error(exp.posOpt, typeCheckerKind, s"Expected type $expected, but found $t")
+            return None()
+          }
+        case _ => return Some(t)
+      }
+    }
 
     exp match {
 
       case exp: AST.Exp.Binary =>
 
-        val (left, leftTypeOpt) = checkExp(scope, exp.left, reporter)
-        val (right, rightTypeOpt) = checkExp(scope, exp.right, reporter)
+        val (left, leftTypeOpt) = checkExp(None(), scope, exp.left, reporter)
+        val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
         val newBinaryExp = exp(left = left, right = right)
         (leftTypeOpt, rightTypeOpt) match {
           case (Some(leftType), Some(rightType)) =>
@@ -372,12 +388,12 @@ import TypeChecker._
                   (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
                   (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
                   var r = newBinaryExp
-                  val tOpt = Some(leftT)
+                  val tOpt = checkExpected(leftT)
                   up(r.attr.typedOpt) = tOpt
                   return (r, tOpt)
                 } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
                   var r = newBinaryExp
-                  val tOpt: Option[AST.Typed] = Some(typeB)
+                  val tOpt: Option[AST.Typed] = checkExpected(typeB)
                   up(r.attr.typedOpt) = tOpt
                   return (r, tOpt)
                 } else {
@@ -405,19 +421,19 @@ import TypeChecker._
 
       case exp: AST.Exp.InvokeNamed => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.LitB => return (exp, Some(typeB))
+      case exp: AST.Exp.LitB => return (exp, checkExpected(typeB))
 
-      case exp: AST.Exp.LitC => return (exp, Some(typeC))
+      case exp: AST.Exp.LitC => return (exp, checkExpected(typeC))
 
-      case exp: AST.Exp.LitF32 => return (exp, Some(typeF32))
+      case exp: AST.Exp.LitF32 => return (exp, checkExpected(typeF32))
 
-      case exp: AST.Exp.LitF64 => return (exp, Some(typeF64))
+      case exp: AST.Exp.LitF64 => return (exp, checkExpected(typeF64))
 
-      case exp: AST.Exp.LitR => return (exp, Some(typeR))
+      case exp: AST.Exp.LitR => return (exp, checkExpected(typeR))
 
-      case exp: AST.Exp.LitString => return (exp, Some(typeString))
+      case exp: AST.Exp.LitString => return (exp, checkExpected(typeString))
 
-      case exp: AST.Exp.LitZ => return (exp, Some(typeZ))
+      case exp: AST.Exp.LitZ => return (exp, checkExpected(typeZ))
 
       case exp: AST.Exp.Quant => halt("Unimplemented") // TODO
 
@@ -428,7 +444,7 @@ import TypeChecker._
         var argTypes = ISZ[AST.Typed]()
         var ok = T
         for (arg <- exp.args) {
-          val (newArg, argTypeOpt) = checkExp(scope, arg, reporter)
+          val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
           args = args :+ newArg
           argTypeOpt match {
             case Some(argType) => argTypes = argTypes :+ argType
@@ -436,8 +452,8 @@ import TypeChecker._
           }
         }
         exp.prefix.native match {
-          case "s" => return (exp(args = args), Some(typeString))
-          case "st" => return (exp(args = args), Some(typeST))
+          case "s" => return (exp(args = args), checkExpected(typeString))
+          case "st" => return (exp(args = args), checkExpected(typeST))
           case _ => halt("Unimplemented") // TODO
         }
 
@@ -450,7 +466,7 @@ import TypeChecker._
         var argTypes = ISZ[AST.Typed]()
         var ok = T
         for (arg <- args) {
-          val (newArg, argTypeOpt) = checkExp(scope, arg, reporter)
+          val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
           args = args :+ newArg
           argTypeOpt match {
             case Some(argType) => argTypes = argTypes :+ argType
@@ -463,11 +479,12 @@ import TypeChecker._
           return (r, None())
         }
         val t: AST.Typed = AST.Typed.Tuple(argTypes, exp.posOpt)
-        up(r.attr.typedOpt) = Some(t)
-        return (r, Some(t))
+        val tOpt = checkExpected(t)
+        up(r.attr.typedOpt) = tOpt
+        return (r, tOpt)
 
       case exp: AST.Exp.Unary =>
-        val (newExp, expTypeOpt) = checkExp(scope, exp.exp, reporter)
+        val (newExp, expTypeOpt) = checkExp(None(), scope, exp.exp, reporter)
         val newUnaryExp = exp(exp = newExp)
         expTypeOpt match {
           case Some(expType) =>
@@ -486,7 +503,7 @@ import TypeChecker._
                   return (newUnaryExp, None())
                 }
                 var r = newUnaryExp
-                val tOpt = Some(tpe)
+                val tOpt = checkExpected(tpe)
                 up(r.attr.typedOpt) = tOpt
                 return (newUnaryExp, tOpt)
               case _ =>
@@ -500,31 +517,15 @@ import TypeChecker._
     }
   }
 
-  def expectExp(scope: Scope, exp: AST.Exp, expected: AST.Typed, reporter: Reporter): AST.Exp = {
-    val (newExp, expTypeOpt) = checkExp(scope, exp, reporter)
-    expTypeOpt match {
-      case Some(expType) =>
-        val t = typeHierarchy.dealias(expType, exp.posOpt, reporter)
-        if (isEqType(t, expected)) {
-          return newExp
-        } else {
-          reporter.error(exp.posOpt, typeCheckerKind,
-            st"Expecting expression of type ${AST.Util.typedString(expected)}, but found ${AST.Util.typedString(t)}.".render)
-          return exp
-        }
-      case _ => return exp
-    }
-  }
-
   def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Scope.Local, AST.Stmt) = {
 
     def checkAssertume(name: String, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
                        cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
-      val newCondExp = expectExp(scope, cond, typeB, reporter)
+      val (newCondExp, _) = checkExp(Some(typeB), scope, cond, reporter)
 
       msgOpt match {
         case Some(msg) =>
-          val newMsg = expectExp(scope, msg, typeString, reporter)
+          val (newMsg, _) = checkExp(Some(typeString), scope, msg, reporter)
           val attr = assertumeExp.attr(typedOpt = Some(typeUnit),
             resOpt = Some(AST.ResolvedInfo.BuiltIn(name)))
           return assertume(exp = assertumeExp(args = ISZ(newCondExp, newMsg), attr = attr))
@@ -539,7 +540,7 @@ import TypeChecker._
                    printExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
       var newArgs = ISZ[AST.Exp]()
       for (arg <- args) {
-        val (newArg, _) = checkExp(scope, arg, reporter)
+        val (newArg, _) = checkExp(None(), scope, arg, reporter)
         newArgs = newArgs :+ newArg
       }
       val attr = printExp.attr(
