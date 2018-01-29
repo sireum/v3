@@ -188,6 +188,7 @@ object TypeHierarchy {
       return t.ids == other.t.ids
     }
   }
+
 }
 
 @datatype class TypeHierarchy(nameMap: NameMap,
@@ -243,7 +244,8 @@ object TypeHierarchy {
     }
   }
 
-  def typed(scope: Scope,
+  def typed(isPureByDefault: B,
+            scope: Scope,
             t: AST.Type,
             reporter: Reporter): Option[AST.Typed] = {
     t match {
@@ -251,7 +253,7 @@ object TypeHierarchy {
         var argTypes = ISZ[AST.Typed]()
         var hasError = F
         for (arg <- t.typeArgs) {
-          val targOpt = typed(scope, arg, reporter)
+          val targOpt = typed(isPureByDefault, scope, arg, reporter)
           targOpt match {
             case Some(targ) => argTypes = argTypes :+ targ
             case _ => hasError = T
@@ -308,7 +310,7 @@ object TypeHierarchy {
         var esTypes = ISZ[AST.Typed]()
         var hasError = F
         for (arg <- t.args) {
-          val targOpt = typed(scope, arg, reporter)
+          val targOpt = typed(isPureByDefault, scope, arg, reporter)
           targOpt match {
             case Some(targ) => esTypes = esTypes :+ targ
             case _ => hasError = T
@@ -323,16 +325,16 @@ object TypeHierarchy {
         var paramTypes = ISZ[AST.Typed]()
         var hasError = F
         for (arg <- t.args) {
-          val targOpt = typed(scope, arg, reporter)
+          val targOpt = typed(isPureByDefault, scope, arg, reporter)
           targOpt match {
             case Some(targ) => paramTypes = paramTypes :+ targ
             case _ => hasError = T
           }
         }
-        val trOpt = typed(scope, t.ret, reporter)
+        val trOpt = typed(isPureByDefault, scope, t.ret, reporter)
         trOpt match {
           case Some(tr) if !hasError =>
-            return Some(AST.Typed.Fun(t.isPure || tr.isPureFun, t.isByName, paramTypes, tr, t.posOpt))
+            return Some(AST.Typed.Fun(isPureByDefault || t.isPure || tr.isPureFun, t.isByName, paramTypes, tr, t.posOpt))
           case _ => return None[AST.Typed]()
         }
     }
@@ -344,7 +346,7 @@ object TypeHierarchy {
                      reporter: Reporter): Option[AST.Typed] = {
     val tm = typeParamMap(ti.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, ti.scope)
-    val tOpt = this.typed(scope, ti.ast.tipe, reporter)
+    val tOpt = this.typed(F, scope, ti.ast.tipe, reporter)
     tOpt match {
       case Some(t) =>
         val substMapOpt = TypeChecker.buildSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)

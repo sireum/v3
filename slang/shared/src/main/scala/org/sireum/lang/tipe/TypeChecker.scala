@@ -132,7 +132,7 @@ object TypeChecker {
         }
         return T
       case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
-        if (t1.isPure != t2.isPure) {
+        if (t1.isPure != t2.isPure || t1.isByName != t2.isByName) {
           return F
         }
         if (t1.args.size != t2.args.size) {

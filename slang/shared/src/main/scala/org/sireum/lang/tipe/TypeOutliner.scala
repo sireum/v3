@@ -154,7 +154,7 @@ object TypeOutliner {
 
   def outlineSpecVar(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
     val sv = info.ast
-    val tOpt = typeHierarchy.typed(info.scope, sv.tipe, reporter)
+    val tOpt = typeHierarchy.typed(F, info.scope, sv.tipe, reporter)
     tOpt match {
       case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
       case _ => return None()
@@ -164,7 +164,7 @@ object TypeOutliner {
   def outlineVar(info: Info.Var, reporter: Reporter): Option[Info] = {
     val v = info.ast
     val tpe = v.tipeOpt.get
-    val tOpt = typeHierarchy.typed(info.scope, tpe, reporter)
+    val tOpt = typeHierarchy.typed(F, info.scope, tpe, reporter)
     tOpt match {
       case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
       case _ => return None()
@@ -173,7 +173,7 @@ object TypeOutliner {
 
   def outlineSpecMethod(info: Info.SpecMethod, reporter: Reporter): Option[Info] = {
     val sm = info.ast
-    val sigOpt = outlineMethodSig(info.scope, sm.sig, reporter)
+    val sigOpt = outlineMethodSig(T, info.scope, sm.sig, reporter)
     sigOpt match {
       case Some(sig) => return Some(info(ast = sm(sig = sig)))
       case _ => return None()
@@ -182,7 +182,7 @@ object TypeOutliner {
 
   def outlineMethod(info: Info.Method, reporter: Reporter): Option[Info] = {
     val m = info.ast
-    val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
+    val sigOpt = outlineMethodSig(info.ast.purity != AST.Purity.Impure, info.scope, m.sig, reporter)
     sigOpt match {
       case Some(sig) => return Some(info(ast = m(sig = sig)))
       case _ => return None()
@@ -250,7 +250,8 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
-  def outlineMethodSig(scope: Scope,
+  def outlineMethodSig(isPureByDefault: B,
+                       scope: Scope,
                        sig: AST.MethodSig,
                        reporter: Reporter): Option[AST.MethodSig] = {
     val id = sig.id.value
@@ -268,13 +269,13 @@ object TypeOutliner {
     val mScope = localTypeScope(tm.map, scope)
     var params = ISZ[AST.Param]()
     for (p <- sig.params) {
-      val tOpt = typeHierarchy.typed(mScope, p.tipe, reporter)
+      val tOpt = typeHierarchy.typed(isPureByDefault, mScope, p.tipe, reporter)
       tOpt match {
         case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
         case _ => return None()
       }
     }
-    val tOpt = typeHierarchy.typed(mScope, sig.returnType, reporter)
+    val tOpt = typeHierarchy.typed(isPureByDefault, mScope, sig.returnType, reporter)
     tOpt match {
       case Some(t) => return Some(sig(params = params, returnType = sig.returnType.typed(t)))
       case _ => return None()
@@ -303,7 +304,7 @@ object TypeOutliner {
           s"Cannot redeclare $id.")
         return
       }
-      val tOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
+      val tOpt = typeHierarchy.typed(T, scope, sv.tipe, reporter)
       tOpt match {
         case Some(t) => specVars = specVars.put(id, (name, sv(tipe = sv.tipe.typed(t))))
         case _ =>
@@ -318,7 +319,7 @@ object TypeOutliner {
         return
       }
       val tpe = v.tipeOpt.get
-      val tOpt = typeHierarchy.typed(scope, tpe, reporter)
+      val tOpt = typeHierarchy.typed(F, scope, tpe, reporter)
       tOpt match {
         case Some(t) =>
           vars = vars.put(id, (name, v(tipeOpt = Some(tpe.typed(t)))))
@@ -333,7 +334,7 @@ object TypeOutliner {
           s"Cannot redeclare $id.")
         return
       }
-      val sigOpt = outlineMethodSig(scope, sm.sig, reporter)
+      val sigOpt = outlineMethodSig(T, scope, sm.sig, reporter)
       sigOpt match {
         case Some(sig) => specMethods = specMethods.put(id, (name, sm(sig = sig)))
         case _ =>
@@ -347,7 +348,7 @@ object TypeOutliner {
           s"Cannot redeclare $id.")
         return
       }
-      val sigOpt = outlineMethodSig(scope, m.sig, reporter)
+      val sigOpt = outlineMethodSig(m.purity != AST.Purity.Impure, scope, m.sig, reporter)
       sigOpt match {
         case Some(sig) => methods = methods.put(id, (name, m(sig = sig)))
         case _ =>
@@ -621,7 +622,7 @@ object TypeOutliner {
     }
 
     for (parent <- parents) {
-      val tOpt = typeHierarchy.typed(scope, parent, reporter)
+      val tOpt = typeHierarchy.typed(F, scope, parent, reporter)
       tOpt match {
         case Some(t: AST.Typed.Name) =>
           val dt = typeHierarchy.dealias(t, parent.attr.posOpt, reporter)
