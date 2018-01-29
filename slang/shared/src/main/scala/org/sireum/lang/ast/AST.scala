@@ -657,7 +657,7 @@ object Exp {
   }
 
   @datatype class Fun(params: ISZ[Param],
-                      exp: Exp,
+                      exp: AssignExp,
                       @hidden attr: TypedAttr)
     extends Exp {
 

@@ -993,7 +993,7 @@ object MsgPack {
     def writeExpFun(o: Exp.Fun): Unit = {
       writer.writeZ(Constants.ExpFun)
       writer.writeISZ(o.params, writeParam)
-      writeExp(o.exp)
+      writeAssignExp(o.exp)
       writeTypedAttr(o.attr)
     }
 
@@ -2917,7 +2917,7 @@ object MsgPack {
         reader.expectZ(Constants.ExpFun)
       }
       val params = reader.readISZ(readParam _)
-      val exp = readExp()
+      val exp = readAssignExp()
       val attr = readTypedAttr()
       return Exp.Fun(params, exp, attr)
     }

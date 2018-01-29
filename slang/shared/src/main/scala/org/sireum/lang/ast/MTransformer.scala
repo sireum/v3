@@ -2690,7 +2690,7 @@ import MTransformer._
             MNone()
         case o2: Exp.Fun =>
           val r0: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam)
-          val r1: MOption[Exp] = transformExp(o2.exp)
+          val r1: MOption[AssignExp] = transformAssignExp(o2.exp)
           val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(params = r0.getOrElse(o2.params), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))

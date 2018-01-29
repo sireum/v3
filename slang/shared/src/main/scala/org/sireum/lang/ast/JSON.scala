@@ -903,7 +903,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Exp.Fun""""),
         ("params", printISZ(F, o.params, printParam)),
-        ("exp", printExp(o.exp)),
+        ("exp", printAssignExp(o.exp)),
         ("attr", printTypedAttr(o.attr))
       ))
     }
@@ -3397,7 +3397,7 @@ object JSON {
       val params = parser.parseISZ(parseParam _)
       parser.parseObjectNext()
       parser.parseObjectKey("exp")
-      val exp = parseExp()
+      val exp = parseAssignExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()

@@ -1270,7 +1270,7 @@ class SlangParser(text: Predef.String,
 
   def translateStmtsExp(pos: Position, stats: Seq[Stat]): ISZ[AST.Stmt] = {
     stats.lastOption match {
-      case scala.Some(exp: Term) => ISZ(stats.dropRight(1).map(translateStat(Enclosing.Block)) :+ AST.Stmt.Expr(translateExp(exp), attr(exp.pos)): _*)
+      case scala.Some(exp: Term) => ISZ(stats.dropRight(1).map(translateStat(Enclosing.Block)) :+ translateAssignExp(exp): _*)
       case scala.Some(stat) =>
         error(stat.pos, s"Expecting an expression but '${syntax(stat)}' found.")
         ISZ()
@@ -1970,7 +1970,7 @@ class SlangParser(text: Predef.String,
 
   def translateFun(exp: Term.Function): AST.Exp = {
     val ps = ISZ(exp.params.map(translateParam(isMemoize = false)): _*)
-    AST.Exp.Fun(ps, translateExp(exp.body), typedAttr(exp.pos))
+    AST.Exp.Fun(ps, translateAssignExp(exp.body), typedAttr(exp.pos))
   }
 
   def translateArgs(args: Seq[Term]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
