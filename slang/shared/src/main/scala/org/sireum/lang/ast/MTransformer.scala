@@ -2002,7 +2002,7 @@ import MTransformer._
             MNone()
         case o2: Stmt.Return =>
           val r0: MOption[Option[Exp]] = transformOption(o2.expOpt, transformExp)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(expOpt = r0.getOrElse(o2.expOpt), attr = r1.getOrElse(o2.attr)))
           else
@@ -2016,7 +2016,7 @@ import MTransformer._
             MNone()
         case o2: Stmt.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
@@ -2072,7 +2072,7 @@ import MTransformer._
             MNone()
         case o2: Stmt.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else

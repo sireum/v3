@@ -400,7 +400,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.Return""""),
         ("expOpt", printOption(o.expOpt, printExp)),
-        ("attr", printAttr(o.attr))
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -416,7 +416,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.Expr""""),
         ("exp", printExp(o.exp)),
-        ("attr", printAttr(o.attr))
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -2374,7 +2374,7 @@ object JSON {
       val expOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseAttr()
+      val attr = parseTypedAttr()
       parser.parseObjectNext()
       return Stmt.Return(expOpt, attr)
     }
@@ -2410,7 +2410,7 @@ object JSON {
       val exp = parseExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseAttr()
+      val attr = parseTypedAttr()
       parser.parseObjectNext()
       return Stmt.Expr(exp, attr)
     }

@@ -57,7 +57,7 @@ object TopUnit {
 }
 
 @datatype trait Stmt {
-  def attr: Attr
+  def posOpt: Option[PosInfo]
 }
 
 @sig sealed trait AssignExp
@@ -71,8 +71,14 @@ object TopUnit {
 object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer],
-                         @hidden val attr: Attr)
-    extends Stmt
+                         @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   object Import {
 
@@ -93,20 +99,38 @@ object Stmt {
                       id: Id,
                       tipeOpt: Option[Type],
                       initOpt: Option[AssignExp],
-                      @hidden val attr: Attr)
-    extends Stmt
+                      @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class VarPattern(isVal: B,
                              pattern: Pattern,
                              init: AssignExp,
-                             @hidden val attr: Attr)
-    extends Stmt
+                             @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class SpecVar(isVal: B,
                           id: Id,
                           tipe: Type,
-                          @hidden val attr: Attr)
-    extends Stmt
+                          @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Method(purity: Purity.Type,
                          hasOverride: B,
@@ -114,25 +138,49 @@ object Stmt {
                          sig: MethodSig,
                          contract: Contract,
                          bodyOpt: Option[Body],
-                         @hidden val attr: Attr)
-    extends Stmt
+                         @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class ExtMethod(isPure: B,
                             sig: MethodSig,
                             contract: Contract,
-                            @hidden val attr: Attr)
-    extends Stmt
+                            @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class SpecMethod(sig: MethodSig,
                              defs: ISZ[SpecDef],
                              where: ISZ[WhereDef],
-                             @hidden val attr: Attr)
-    extends Stmt
+                             @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Enum(id: Id,
                        elements: ISZ[Id],
-                       @hidden val attr: Attr)
-    extends Stmt
+                       @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class SubZ(id: Id,
                        isSigned: B,
@@ -144,8 +192,13 @@ object Stmt {
                        min: Z,
                        max: Z,
                        index: Z,
-                       @hidden val attr: Attr)
+                       @hidden attr: Attr)
     extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
     def isZeroIndex: B = {
       return index == 0
     }
@@ -155,8 +208,14 @@ object Stmt {
                          id: Id,
                          parents: ISZ[Type],
                          stmts: ISZ[Stmt],
-                         @hidden val attr: Attr)
-    extends Stmt
+                         @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Sig(isImmutable: B,
                       isExt: B,
@@ -164,8 +223,14 @@ object Stmt {
                       typeParams: ISZ[TypeParam],
                       parents: ISZ[Type.Named],
                       stmts: ISZ[Stmt],
-                      @hidden val attr: Attr)
-    extends Stmt
+                      @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class AbstractDatatype(isRoot: B,
                                    isDatatype: B,
@@ -174,77 +239,161 @@ object Stmt {
                                    params: ISZ[AbstractDatatypeParam],
                                    parents: ISZ[Type.Named],
                                    stmts: ISZ[Stmt],
-                                   @hidden val attr: Attr)
-    extends Stmt
+                                   @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class TypeAlias(id: Id,
                             typeParams: ISZ[TypeParam],
                             tipe: Type,
-                            @hidden val attr: Attr)
-    extends Stmt
+                            @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Assign(lhs: Exp,
                          rhs: AssignExp,
-                         @hidden val attr: Attr)
-    extends Stmt
+                         @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class AssignUp(lhs: Exp,
                            rhs: AssignExp,
-                           @hidden val attr: Attr)
-    extends Stmt
+                           @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class AssignPattern(lhs: Pattern,
                                 rhs: AssignExp,
-                                @hidden val attr: Attr)
-    extends Stmt
+                                @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Block(body: Body,
-                        @hidden val attr: Attr)
-    extends Stmt with AssignExp
+                        @hidden attr: Attr)
+    extends Stmt with AssignExp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class If(cond: Exp,
                      thenbody: Body,
                      elsebody: Body,
-                     @hidden val attr: Attr)
-    extends Stmt with AssignExp
+                     @hidden attr: Attr)
+    extends Stmt with AssignExp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Match(cond: Exp,
                         cases: ISZ[Case],
-                        @hidden val attr: Attr)
-    extends Stmt with AssignExp
+                        @hidden attr: Attr)
+    extends Stmt with AssignExp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class While(cond: Exp,
                         invariants: ISZ[ContractExp],
                         modifies: ISZ[Exp],
                         body: Body,
-                        @hidden val attr: Attr)
-    extends Stmt
+                        @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class DoWhile(cond: Exp,
                           invariants: ISZ[ContractExp],
                           modifies: ISZ[Exp],
                           body: Body,
-                          @hidden val attr: Attr)
-    extends Stmt
+                          @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class For(enumGen: EnumGen.For,
                       invariants: ISZ[ContractExp],
                       modifies: ISZ[Exp],
                       body: Body,
-                      @hidden val attr: Attr)
-    extends Stmt
+                      @hidden attr: Attr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Return(expOpt: Option[Exp],
-                         @hidden val attr: Attr)
-    extends Stmt
+                         @hidden attr: TypedAttr)
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class LStmt(clause: LClause,
                         @hidden val attr: Attr)
-    extends Stmt
+    extends Stmt {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Expr(exp: Exp,
-                       @hidden val attr: Attr)
-    extends Stmt with AssignExp
+                       @hidden attr: TypedAttr)
+    extends Stmt with AssignExp {
+
+    def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
 }
 

@@ -620,7 +620,7 @@ object MsgPack {
     def writeStmtReturn(o: Stmt.Return): Unit = {
       writer.writeZ(Constants.StmtReturn)
       writer.writeOption(o.expOpt, writeExp)
-      writeAttr(o.attr)
+      writeTypedAttr(o.attr)
     }
 
     def writeStmtLStmt(o: Stmt.LStmt): Unit = {
@@ -632,7 +632,7 @@ object MsgPack {
     def writeStmtExpr(o: Stmt.Expr): Unit = {
       writer.writeZ(Constants.StmtExpr)
       writeExp(o.exp)
-      writeAttr(o.attr)
+      writeTypedAttr(o.attr)
     }
 
     def writeLClause(o: LClause): Unit = {
@@ -2174,7 +2174,7 @@ object MsgPack {
         reader.expectZ(Constants.StmtReturn)
       }
       val expOpt = reader.readOption(readExp _)
-      val attr = readAttr()
+      val attr = readTypedAttr()
       return Stmt.Return(expOpt, attr)
     }
 
@@ -2202,7 +2202,7 @@ object MsgPack {
         reader.expectZ(Constants.StmtExpr)
       }
       val exp = readExp()
-      val attr = readAttr()
+      val attr = readTypedAttr()
       return Stmt.Expr(exp, attr)
     }
 
