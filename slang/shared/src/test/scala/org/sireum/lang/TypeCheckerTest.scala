@@ -41,6 +41,22 @@ class TypeCheckerTest extends SireumSpec {
 
     "Passing" - {
 
+      "Worksheet" - {
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |val x: Z = 1
+            |val y = x + 1
+            |assert(y > x)
+          """.stripMargin))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |assert(3 > 0)
+          """.stripMargin))
+
+      }
+
       "Stmt" - {
 
         *(passingStmt("assert(true)"))
@@ -56,14 +72,6 @@ class TypeCheckerTest extends SireumSpec {
         *(passingStmt("""print(1, 2, "a", "b")"""))
 
         *(passingStmt("""eprint(1, 2, "a", "b")"""))
-      }
-
-      "Worksheet" - {
-
-        *(passingWorksheet(
-          """import org.sireum._
-            |assert(3 > 0)
-          """.stripMargin))
       }
     }
 
@@ -93,6 +101,9 @@ class TypeCheckerTest extends SireumSpec {
         TypeChecker.checkWorksheet(program, reporter)
       case _ =>
     }
+    if (reporter.hasIssue) {
+      reporter.printMessages()
+    }
     !reporter.hasIssue
   }
 
@@ -102,29 +113,32 @@ class TypeCheckerTest extends SireumSpec {
       rep.printMessages()
       return false
     }
-    val typeChecker = TypeChecker(th)
+    val typeChecker = TypeChecker(th, ISZ())
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope = Resolver.Scope.Local(HashMap.empty, HashMap.empty, Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
-    val (_, checkedStmt) = typeChecker.checkStmt(scope, stmt, reporter)
-    if (isPassing) {
-      val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
-        override def preTypedAttr(ctx: Unit, o: TypedAttr): Transformer.PreResult[Unit, TypedAttr] = {
-          assert(o.typedOpt.nonEmpty)
-          super.preTypedAttr(ctx, o)
-        }
+    typeChecker.checkStmt(scope, stmt, reporter) match {
+      case Some((_, checkedStmt)) if isPassing =>
+        val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
+          override def preTypedAttr(ctx: Unit, o: TypedAttr): Transformer.PreResult[Unit, TypedAttr] = {
+            assert(o.typedOpt.nonEmpty)
+            super.preTypedAttr(ctx, o)
+          }
 
-        override def preResolvedAttr(ctx: Unit, o: ResolvedAttr): Transformer.PreResult[Unit, ResolvedAttr] = {
-          assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
-          super.preResolvedAttr(ctx, o)
-        }
+          override def preResolvedAttr(ctx: Unit, o: ResolvedAttr): Transformer.PreResult[Unit, ResolvedAttr] = {
+            assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
+            super.preResolvedAttr(ctx, o)
+          }
 
-        def string: String = ""
-      })
-      t.transformStmt((), checkedStmt)
-      !reporter.hasIssue
-    } else {
-      reporter.hasIssue && reporter.errors.elements.exists(_.message.value.contains(msg))
+          def string: String = ""
+        })
+        t.transformStmt((), checkedStmt)
+        if (reporter.hasIssue) {
+          reporter.printMessages()
+        }
+        !reporter.hasIssue
+      case _ =>
+        !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
     }
   }
 }

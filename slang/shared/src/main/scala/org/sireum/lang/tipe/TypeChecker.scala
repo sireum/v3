@@ -243,14 +243,23 @@ object TypeChecker {
       return program
     }
 
-    val tc = TypeChecker(th3)
+    val tc = TypeChecker(th3, ISZ())
     var scope = Scope.Local(HashMap.empty, HashMap.empty, Some(Scope.Global(ISZ(), ISZ(), ISZ())))
 
     var newStmts = ISZ[AST.Stmt]()
-    for (stmt <- program.body.stmts) {
-      val (newScope, newStmt) = tc.checkStmt(scope, stmt, reporter)
-      newStmts = newStmts :+ newStmt
-      scope = newScope
+    val stmts = program.body.stmts
+    for (i <- z"0" until stmts.size) {
+      val rOpt = tc.checkStmt(scope, stmts(i), reporter)
+      rOpt match {
+        case Some((newScope, newStmt)) =>
+          newStmts = newStmts :+ newStmt
+          scope = newScope
+        case _ =>
+          for (j <- i until stmts.size) {
+            newStmts = newStmts :+ stmts(j)
+          }
+          return program(body = program.body(newStmts))
+      }
     }
 
     return program(body = program.body(newStmts))
@@ -259,7 +268,8 @@ object TypeChecker {
 
 import TypeChecker._
 
-@datatype class TypeChecker(typeHierarchy: TypeHierarchy) {
+@datatype class TypeChecker(typeHierarchy: TypeHierarchy,
+                            context: QName) {
 
   val typeB: AST.Typed.Name = {
     val name = ISZ[String]("org", "sireum", "B")
@@ -413,7 +423,14 @@ import TypeChecker._
 
       case exp: AST.Exp.Fun => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Ident => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Ident =>
+        scope.resolveName(typeHierarchy.nameMap, ISZ(exp.id.value)) match {
+          case Some(info: Info.LocalVar) =>
+            // TODO: update closure captures
+            val tOpt = Some(info.tpe)
+            return (exp(attr = exp.attr(typedOpt = tOpt, resOpt = Some(info.resolvedInfo))), tOpt)
+          case _ => halt("Unimplemented") // TODO
+        }
 
       case exp: AST.Exp.If => halt("Unimplemented") // TODO
 
@@ -517,7 +534,20 @@ import TypeChecker._
     }
   }
 
-  def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Scope.Local, AST.Stmt) = {
+  def checkAssignExp(expected: Option[AST.Typed], scope: Scope, aexp: AST.AssignExp,
+                     reporter: Reporter): (AST.AssignExp, Option[AST.Typed]) = {
+    aexp match {
+      case aexp: AST.Stmt.Expr =>
+        val (newExp, tOpt) = checkExp(expected, scope, aexp.exp, reporter)
+        return (aexp(exp = newExp), tOpt)
+      case aexp: AST.Stmt.Block => halt("Unimplemented") // TODO
+      case aexp: AST.Stmt.If => halt("Unimplemented") // TODO
+      case aexp: AST.Stmt.Match => halt("Unimplemented") // TODO
+    }
+
+  }
+
+  def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): Option[(Scope.Local, AST.Stmt)] = {
 
     def checkAssertume(name: String, assertume: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
                        cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
@@ -549,7 +579,7 @@ import TypeChecker._
       return printStmt(exp = printExp(args = newArgs, attr = attr))
     }
 
-    def checkExpr(stmt: AST.Stmt.Expr): AST.Stmt = {
+    def checkExpr(stmt: AST.Stmt.Expr): Option[AST.Stmt] = {
       stmt.exp match {
 
         case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
@@ -564,24 +594,24 @@ import TypeChecker._
           }
           if (isAssertume) {
             args.size match {
-              case z"1" => val r = checkAssertume(name, stmt, exp, args(0), None()); return r
-              case z"2" => val r = checkAssertume(name, stmt, exp, args(0), Some(args(1))); return r
+              case z"1" => val r = checkAssertume(name, stmt, exp, args(0), None()); return Some(r)
+              case z"2" => val r = checkAssertume(name, stmt, exp, args(0), Some(args(1))); return Some(r)
               case _ =>
                 reporter.error(stmt.exp.posOpt, typeCheckerKind,
                   s"Invalid number of arguments (${args.size}) for $name.")
-                return stmt
+                return None()
             }
           }
           if (isPrint) {
             val r = checkPrint(name, stmt, exp, args, reporter)
-            return r
+            return Some(r)
           }
           halt(s"Unimplemented built-in method $name.")
         case _ => halt("Unimplemented.") // TODO
       }
     }
 
-    def checkImport(stmt: AST.Stmt.Import): (Scope.Local, AST.Stmt) = {
+    def checkImport(stmt: AST.Stmt.Import): Option[(Scope.Local, AST.Stmt)] = {
       // TODO: resolve import
 
       @pure def addImport(s: Scope.Local): Scope.Local = {
@@ -592,7 +622,53 @@ import TypeChecker._
         }
       }
 
-      return (addImport(scope), stmt)
+      return Some((addImport(scope), stmt))
+    }
+
+    def checkVar(stmt: AST.Stmt.Var): Option[(Scope.Local, AST.Stmt)] = {
+      val key = stmt.id.value
+      def err(): Unit = {
+        reporter.error(stmt.id.attr.posOpt, typeCheckerKind, s"Cannot declare $key because the name has already been declared previously.")
+      }
+      val name = context :+ stmt.id.value
+      var r = stmt
+      scope.resolveName(typeHierarchy.nameMap, ISZ(key)) match {
+        case Some(other: Info.Var) =>
+          if (stmt.attr.posOpt != other.posOpt) {
+            err()
+            return None()
+          }
+          r = other.ast
+        case Some(_) =>
+          err()
+          return None()
+        case _ =>
+      }
+      val expected: Option[AST.Typed] = stmt.tipeOpt match {
+        case Some(tipe) =>
+          tipe.typedOpt match {
+            case Some(t) =>
+              Some(t)
+            case _ =>
+              val tOpt = typeHierarchy.typed(F, scope, tipe, reporter)
+              if (tOpt.isEmpty) {
+                return None()
+              }
+              r = r(tipeOpt = Some(tipe.typed(tOpt.get)))
+              tOpt
+          }
+        case _ => None()
+      }
+      val (rhs, tOpt) = checkAssignExp(expected, scope, stmt.initOpt.get, reporter)
+      tOpt match {
+        case Some(t) =>
+          val newScope = scope(nameMap = scope.nameMap.put(key,
+            Info.LocalVar(name, r.id, t, AST.ResolvedInfo.LocalVar(context, key))))
+          val newStmt = r(initOpt = Some(rhs))
+          return Some((newScope, newStmt))
+        case _ =>
+          return None()
+      }
     }
 
     stmt match {
@@ -613,7 +689,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return (scope, r)
+      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return r.map((newStmt: AST.Stmt) => (scope, newStmt))
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
 
@@ -621,7 +697,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.If => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Import => val r = checkImport(stmt); return r
+      case stmt: AST.Stmt.Import =>  val r = checkImport(stmt); return r
 
       case stmt: AST.Stmt.Match => halt("Unimplemented.") // TODO
 
@@ -641,7 +717,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.TypeAlias => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Var => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Var => val r = checkVar(stmt); return r
 
       case stmt: AST.Stmt.VarPattern => halt("Unimplemented.") // TODO
 
