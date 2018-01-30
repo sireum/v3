@@ -45,6 +45,23 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet(
           """import org.sireum._
+            |var x: Z = 1
+            |while (x > 0) {
+            |  println("x is positive")
+            |  x = 0
+            |}
+          """.stripMargin))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |val x: Z = 1
+            |if (x > 0) {
+            |  println("x is positive")
+            |}
+          """.stripMargin))
+
+        *(passingWorksheet(
+          """import org.sireum._
             |val x: Z = 1
             |val y = x + 1
             |assert(y > x)
@@ -115,10 +132,10 @@ class TypeCheckerTest extends SireumSpec {
     }
     val typeChecker = TypeChecker(th, ISZ())
     val stmt = Parser(input).parseStmt[ast.Stmt]
-    val scope = Resolver.Scope.Local(HashMap.empty, HashMap.empty, Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
+    val scope = Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
-      case Some((_, checkedStmt)) if isPassing =>
+      case (Some(_), checkedStmt) if isPassing =>
         val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
           override def preTypedAttr(ctx: Unit, o: TypedAttr): Transformer.PreResult[Unit, TypedAttr] = {
             assert(o.typedOpt.nonEmpty)
