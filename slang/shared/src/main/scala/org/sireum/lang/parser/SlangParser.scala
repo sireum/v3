@@ -131,7 +131,7 @@ object SlangParser {
 
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
-  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
+  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyTypedAttr)
 }
 
 import SlangParser._
@@ -333,7 +333,7 @@ class SlangParser(text: Predef.String,
       case stat: Term.Return => translateReturn(enclosing, stat)
       case stat: Term.Apply =>
         stmtCheck(enclosing, stat, s"${syntax(stat)}")
-        AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
+        AST.Stmt.Expr(translateExp(stat), typedAttr(stat.pos))
       case stat@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
@@ -533,7 +533,7 @@ class SlangParser(text: Predef.String,
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
-        val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos)))
+        val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, typedAttr(pattern.pos)))
         exp match {
           case _: AST.Stmt.Expr =>
           case _ =>
@@ -1265,7 +1265,7 @@ class SlangParser(text: Predef.String,
     case exp: Term.If if exp.thenp.isInstanceOf[Term.Block] =>
       translateIfStmt(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Match => translateMatch(Enclosing.Block, exp, isAssignExp = true)
-    case _ => AST.Stmt.Expr(translateExp(exp), attr(exp.pos))
+    case _ => AST.Stmt.Expr(translateExp(exp), typedAttr(exp.pos))
   }
 
   def translateStmtsExp(pos: Position, stats: Seq[Stat]): ISZ[AST.Stmt] = {
@@ -1715,8 +1715,8 @@ class SlangParser(text: Predef.String,
   def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
     stmtCheck(enclosing, stat, "Return-statements")
     stat.expr match {
-      case _: Lit.Unit => AST.Stmt.Return(None(), attr(stat.pos))
-      case _ => AST.Stmt.Return(Some(translateExp(stat.expr)), attr(stat.pos))
+      case _: Lit.Unit => AST.Stmt.Return(None(), typedAttr(stat.pos))
+      case _ => AST.Stmt.Return(Some(translateExp(stat.expr)), typedAttr(stat.pos))
     }
   }
 
