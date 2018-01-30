@@ -77,9 +77,9 @@ object TypeChecker {
             case _ =>
           }
         }
-        return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)))
-      case t: AST.Typed.Tuple => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)))
-      case t: AST.Typed.Fun => return t(args = t.args.map((ta: AST.Typed) => substType(m, ta)), ret = substType(m, t.ret))
+        return t(args = t.args.map(ta => substType(m, ta)))
+      case t: AST.Typed.Tuple => return t(args = t.args.map(ta => substType(m, ta)))
+      case t: AST.Typed.Fun => return t(args = t.args.map(ta => substType(m, ta)), ret = substType(m, t.ret))
     }
   }
 
@@ -650,7 +650,7 @@ import TypeChecker._
             case Some(t) =>
               Some(t)
             case _ =>
-              val tOpt = typeHierarchy.typed(F, scope, tipe, reporter)
+              val tOpt = typeHierarchy.typed(scope, tipe, reporter)
               if (tOpt.isEmpty) {
                 return None()
               }
@@ -689,7 +689,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return r.map((newStmt: AST.Stmt) => (scope, newStmt))
+      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return r.map(newStmt => (scope, newStmt))
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
 
