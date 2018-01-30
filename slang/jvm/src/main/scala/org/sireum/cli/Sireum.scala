@@ -43,7 +43,9 @@ object Sireum extends App {
   })
 
   def logika(o: Cli.LogikaOption): Int = {
-    println(s"Coming soon: $o")
+    println(s"Coming soon!")
+    println()
+    println(o.help)
     0 // TODO
   }
 
