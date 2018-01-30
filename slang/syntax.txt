@@ -153,7 +153,7 @@
 
 <match-stmt>       ::=  <exp> match { <match-case>+ }
 
-<case>             ::=  case <pattern> ⸨ if <exp> ⸩? => <stmt>*
+<match-case>       ::=  case <pattern> ⸨ if <exp> ⸩? => <stmt>*
 
 <while-stmt>       ::=  while ( <exp> ) {
                           <loop-contract>?
@@ -182,12 +182,12 @@
 
 <proof-stmt>       ::=  l""" <l-clause> """
 
-<block-assign-exp> ::=  { <stmt>* <exp> }
+<block-assign-exp> ::=  { <stmt>* <assign-exp> }
 
 <if-assign-exp>    ::=  if ( <exp> ) <block-assign-exp> else <block-assign-exp>
                      |  if ( <exp> ) <block-assign-exp> else <if-assign-exp>
 
-<match-assign-exp> ::=  <exp> match { ⸨ <match-case> <exp> ⸩+ }
+<match-assign-exp> ::=  <exp> match { ⸨ <match-case> <assign-exp> ⸩+ }
 
 <exp>              ::=  <lit>
                      |  <STRING-INTERP>      // s"..."  or s"""..."""

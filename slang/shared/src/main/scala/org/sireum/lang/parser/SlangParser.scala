@@ -251,16 +251,16 @@ class SlangParser(text: Predef.String,
                 AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))))
 
             stats match {
-              case q"import org.sireum._" :: rest => packageF(rest)
-              case q"import org.sireum.logika._" :: rest => packageF(rest)
+              case q"import org.sireum._" :: rest => packageF(stats)
+              case q"import org.sireum.logika._" :: rest => packageF(stats)
               case _ =>
                 errorInSlang(ref.pos, "The first member of packages should be 'import org.sireum._'")
                 Result(text, hashSireum, None())
             }
           }
         } else Result(text, hashSireum, None())
-      case q"import org.sireum._" :: rest => topF(rest)
-      case q"import org.sireum.logika._" :: rest => topF(rest)
+      case q"import org.sireum._" :: rest => topF(source.stats)
+      case q"import org.sireum.logika._" :: rest => topF(source.stats)
       case Nil =>
         Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ()))))
       case stats =>
@@ -1562,7 +1562,7 @@ class SlangParser(text: Predef.String,
           else ISZ(b.stats.map(translateStat(Enclosing.Block)): _*))
         case b: Term if isAssignExp =>
           AST.Body(
-            if (isAssignExp) ISZ(AST.Stmt.Expr(translateExp(b), attr(b.pos)))
+            if (isAssignExp) ISZ(translateAssignExp(b))
             else ISZ(translateStat(Enclosing.Block)(b)))
         case b if isAssignExp =>
           error(stat.body.pos, s"Expecting an expression but '${syntax(b)}' found.")
