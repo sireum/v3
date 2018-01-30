@@ -66,7 +66,8 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.Var(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          Info.Var(name, scope(packageName, currentImports, name), stmt,
+            AST.ResolvedInfo.ObjectVar(currentName, stmt.id.value)), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,

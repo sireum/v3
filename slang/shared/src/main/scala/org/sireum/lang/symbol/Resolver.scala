@@ -285,7 +285,8 @@ object Resolver {
 
     @datatype class Var(val name: QName,
                         scope: Scope.Global,
-                        ast: AST.Stmt.Var) extends Info {
+                        ast: AST.Stmt.Var,
+                        resolvedInfo: AST.ResolvedInfo) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -354,8 +355,10 @@ object Resolver {
                          val posOpt: Option[AST.PosInfo])
       extends Info
 
-    @datatype class FreshVar(val name: QName,
-                             ast: AST.Id)
+    @datatype class LocalVar(val name: QName,
+                             ast: AST.Id,
+                             tpe: AST.Typed,
+                             resolvedInfo: AST.ResolvedInfo)
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -611,11 +614,13 @@ object Resolver {
 
     val tName = sireumName :+ "T"
     var nm = nameMap.put(tName, Info.Var(tName, scope,
-      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp))))
+      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      AST.ResolvedInfo.ObjectVar(tName, "T")))
 
     val fName = sireumName :+ "F"
     nm = nm.put(fName, Info.Var(fName, scope,
-      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp))))
+      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      AST.ResolvedInfo.ObjectVar(tName, "F")))
 
     return (nm, tm)
 
