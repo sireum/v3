@@ -92,6 +92,10 @@ addCommandAlias("clean-library", "; clean; project runtime-macros-jvm; clean; pr
 addCommandAlias("clean-slang-only", "; project slang-jvm; clean; project slang-js; clean; project slang; clean")
 addCommandAlias("clean-slang", "; clean-library; clean-slang-only")
 
+addCommandAlias("rebuild-library", "; clean-library; test:compile")
+addCommandAlias("rebuild-slang-only", "; clean-slang-only; test:compile")
+addCommandAlias("rebuild-slang", "; clean-slang; test:compile")
+
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
