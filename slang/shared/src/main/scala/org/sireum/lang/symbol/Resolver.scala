@@ -42,6 +42,7 @@ object Resolver {
 
 
   @datatype trait Scope {
+
     @pure def outerOpt: Option[Scope]
 
     @pure def resolveName(globalNameMap: NameMap,
@@ -49,12 +50,15 @@ object Resolver {
 
     @pure def resolveType(globalTypeMap: TypeMap,
                           name: QName): Option[TypeInfo]
+
+    @pure def returnOpt: Option[AST.Typed]
   }
 
   object Scope {
 
     @datatype class Local(nameMap: HashMap[String, Info],
                           typeMap: HashMap[String, TypeInfo],
+                          val returnOpt: Option[AST.Typed],
                           val outerOpt: Option[Scope])
       extends Scope {
 
@@ -87,13 +91,25 @@ object Resolver {
       }
     }
 
+    object Global {
+
+      val OuterOpt: Option[Scope] = None()
+
+      val ReturnOpt: Option[AST.Typed] = None()
+
+    }
+
     @datatype class Global(packageName: QName,
                            imports: ISZ[AST.Stmt.Import],
                            enclosingName: QName)
       extends Scope {
 
       @pure def outerOpt: Option[Scope] = {
-        return None()
+        return Global.OuterOpt
+      }
+
+      @pure def returnOpt: Option[AST.Typed] = {
+        return Global.ReturnOpt
       }
 
       @pure def resolveName(globalNameMap: NameMap,
@@ -577,7 +593,7 @@ object Resolver {
         typeMap = typeMap.put(id, TypeInfo.TypeVar(id, tp))
       }
     }
-    return Scope.Local(HashMap.empty, typeMap, Some(scope))
+    return Scope.Local(HashMap.empty, typeMap, None(), Some(scope))
   }
 
   @pure def typeNameString(name: QName, ids: QName): ST = {
@@ -600,7 +616,7 @@ object Resolver {
     val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
       AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
-    val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
+    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.TypedAttr(None(), None()))
 
     val scope = Scope.Global(sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 
@@ -744,7 +760,7 @@ object Resolver {
   }
 
   @pure def localTypeScope(typeMap: HashMap[String, TypeInfo], outer: Scope): Scope = {
-    return Scope.Local(HashMap.empty[String, Info], typeMap, Some(outer))
+    return Scope.Local(HashMap.empty[String, Info], typeMap, None(), Some(outer))
   }
 
 }
