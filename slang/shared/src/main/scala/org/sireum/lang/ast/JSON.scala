@@ -1554,6 +1554,7 @@ object JSON {
     @pure def printResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): ST = {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.LocalVar""""),
+        ("context", printISZ(T, o.context, printString)),
         ("id", printString(o.id))
       ))
     }
@@ -4787,10 +4788,13 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("ResolvedInfo.LocalVar")
       }
+      parser.parseObjectKey("context")
+      val context = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.LocalVar(id)
+      return ResolvedInfo.LocalVar(context, id)
     }
 
     def parsePosInfo(): PosInfo = {

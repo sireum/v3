@@ -1042,7 +1042,8 @@ object ResolvedInfo {
   @datatype class TypeMethod(typeName: ISZ[String],
                              id: String) extends ResolvedInfo
 
-  @datatype class LocalVar(id: String) extends ResolvedInfo
+  @datatype class LocalVar(context: ISZ[String],
+                           id: String) extends ResolvedInfo
 
 }
 

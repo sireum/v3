@@ -1506,6 +1506,7 @@ object MsgPack {
 
     def writeResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): Unit = {
       writer.writeZ(Constants.ResolvedInfoLocalVar)
+      writer.writeISZ(o.context, writeString)
       writeString(o.id)
     }
 
@@ -3967,8 +3968,9 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ResolvedInfoLocalVar)
       }
+      val context = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.LocalVar(id)
+      return ResolvedInfo.LocalVar(context, id)
     }
 
     def readPosInfo(): PosInfo = {
