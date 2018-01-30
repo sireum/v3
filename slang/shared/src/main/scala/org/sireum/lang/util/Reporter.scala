@@ -190,23 +190,24 @@ object AccumulatingReporter {
   def printMessages(): Unit = {
     val map = messagesByFileUri
     val inclFileUri = map.size > 1
+    val err = hasIssue
     for (kv <- map.entries) {
       val fileUriOpt = kv._1
       val ms = kv._2
       fileUriOpt match {
         case Some(fileUri) =>
           if (inclFileUri) {
-            println(s"* $fileUri")
+            cprintln(err, s"* $fileUri")
           }
           for (m <- ms) {
             if (inclFileUri) {
-              cprint(m.isError, "  ")
+              cprint(err, "  ")
             }
             val mText: String = m.posOpt match {
               case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
               case _ => s"- ${m.message}"
             }
-            cprintln(m.isError, mText)
+            cprintln(err, mText)
           }
         case _ =>
           for (m <- ms) {
@@ -214,7 +215,7 @@ object AccumulatingReporter {
               case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
               case _ => s"- ${m.message}"
             }
-            cprintln(m.isError, mText)
+            cprintln(err, mText)
           }
       }
     }
