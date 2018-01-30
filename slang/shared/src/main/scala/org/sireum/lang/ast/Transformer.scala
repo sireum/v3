@@ -525,6 +525,10 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preExpFunParam(ctx: Context, o: Exp.Fun.Param): PreResult[Context, Exp.Fun.Param] = {
+      return PreResult(ctx, T, None())
+    }
+
     @pure def preExpFun(ctx: Context, o: Exp.Fun): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
@@ -1361,6 +1365,10 @@ object Transformer {
       return Result(ctx, None())
     }
 
+    @pure def postExpFunParam(ctx: Context, o: Exp.Fun.Param): Result[Context, Exp.Fun.Param] = {
+      return Result(ctx, None())
+    }
+
     @pure def postExpFun(ctx: Context, o: Exp.Fun): Result[Context, Exp] = {
       return Result(ctx, None())
     }
@@ -1717,7 +1725,7 @@ object Transformer {
 
   }
 
-  @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[Z, T]] = {
+  @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T] @pure): Result[Context, IS[Z, T]] = {
     val s2: MS[Z, T] = s.toMS
     var changed: B = F
     var ctxi = ctx
@@ -1735,7 +1743,7 @@ object Transformer {
     }
   }
 
-  @pure def transformOption[Context, T](ctx: Context, option: Option[T], @pure f: (Context, T) => Result[Context, T]): Result[Context, Option[T]] = {
+  @pure def transformOption[Context, T](ctx: Context, option: Option[T], f: (Context, T) => Result[Context, T] @pure): Result[Context, Option[T]] = {
     option match {
       case Some(v) =>
         val r = f(ctx, v)
@@ -2695,13 +2703,14 @@ import Transformer._
           else
             Result(r3.ctx, None())
         case o2: Exp.Fun =>
-          val r0: Result[Context, IS[Z, Param]] = transformISZ(ctx, o2.params, transformParam)
-          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.exp)
-          val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(params = r0.resultOpt.getOrElse(o2.params), exp = r1.resultOpt.getOrElse(o2.exp), attr = r2.resultOpt.getOrElse(o2.attr))))
+          val r0: Result[Context, IS[Z, Exp.Fun.Param]] = transformISZ(ctx, o2.params, transformExpFunParam)
+          val r1: Result[Context, Contract] = transformContract(r0.ctx, o2.contract)
+          val r2: Result[Context, AssignExp] = transformAssignExp(r1.ctx, o2.exp)
+          val r3: Result[Context, TypedAttr] = transformTypedAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(params = r0.resultOpt.getOrElse(o2.params), contract = r1.resultOpt.getOrElse(o2.contract), exp = r2.resultOpt.getOrElse(o2.exp), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r2.ctx, None())
+            Result(r3.ctx, None())
         case o2: Exp.ForYield =>
           val r0: Result[Context, IS[Z, EnumGen.For]] = transformISZ(ctx, o2.enumGens, transformEnumGenFor)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.exp)
@@ -2795,6 +2804,34 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Lit = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Lit] = pp.postLit(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformExpFunParam(ctx: Context, o: Exp.Fun.Param): Result[Context, Exp.Fun.Param] = {
+    val preR: PreResult[Context, Exp.Fun.Param] = pp.preExpFunParam(ctx, o)
+    val r: Result[Context, Exp.Fun.Param] = if (preR.continu) {
+      val o2: Exp.Fun.Param = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Id] = transformId(ctx, o2.id)
+      val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.tipeOpt, transformType)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+        Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), tipeOpt = r1.resultOpt.getOrElse(o2.tipeOpt))))
+      else
+        Result(r1.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Exp.Fun.Param = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Exp.Fun.Param] = pp.postExpFunParam(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

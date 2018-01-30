@@ -526,7 +526,7 @@ final class LParser(input: Input,
     def specParam(): AST.Param = {
       val ident = id(acceptToken[Ident])
       accept[Colon]
-      AST.Param(AST.ParamMod.NoMod, ident, sparser.translateType(loutPattern.typ()))
+      AST.Param(F, ident, sparser.translateType(loutPattern.typ()))
     }
 
     def specParams(): List[AST.Param] = {

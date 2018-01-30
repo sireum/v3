@@ -184,139 +184,141 @@ object MsgPack {
 
     val ExpIf: Z = 73
 
-    val ExpFun: Z = 74
+    val ExpFunParam: Z = 74
 
-    val ExpForYield: Z = 75
+    val ExpFun: Z = 75
 
-    val ExpQuant: Z = 76
+    val ExpForYield: Z = 76
 
-    val NamedArg: Z = 77
+    val ExpQuant: Z = 77
 
-    val VarFragment: Z = 78
+    val NamedArg: Z = 78
 
-    val DomainType: Z = 79
+    val VarFragment: Z = 79
 
-    val DomainRange: Z = 80
+    val DomainType: Z = 80
 
-    val Id: Z = 81
+    val DomainRange: Z = 81
 
-    val Name: Z = 82
+    val Id: Z = 82
 
-    val Body: Z = 83
+    val Name: Z = 83
 
-    val AbstractDatatypeParam: Z = 84
+    val Body: Z = 84
 
-    val MethodSig: Z = 85
+    val AbstractDatatypeParam: Z = 85
 
-    val Param: Z = 86
+    val MethodSig: Z = 86
 
-    val TypeParam: Z = 87
+    val Param: Z = 87
 
-    val Contract: Z = 88
+    val TypeParam: Z = 88
 
-    val SubContract: Z = 89
+    val Contract: Z = 89
 
-    val WhereDefVal: Z = 90
+    val SubContract: Z = 90
 
-    val WhereDefDef: Z = 91
+    val WhereDefVal: Z = 91
 
-    val SpecDef: Z = 92
+    val WhereDefDef: Z = 92
 
-    val ProofStepBasic: Z = 93
+    val SpecDef: Z = 93
 
-    val ProofStepSubProof: Z = 94
+    val ProofStepBasic: Z = 94
 
-    val AssumeProofStepRegular: Z = 95
+    val ProofStepSubProof: Z = 95
 
-    val AssumeProofStepForallIntroAps: Z = 96
+    val AssumeProofStepRegular: Z = 96
 
-    val AssumeProofStepExistsElimAps: Z = 97
+    val AssumeProofStepForallIntroAps: Z = 97
 
-    val JustPremise: Z = 98
+    val AssumeProofStepExistsElimAps: Z = 98
 
-    val JustAndIntro: Z = 99
+    val JustPremise: Z = 99
 
-    val JustAndElim: Z = 100
+    val JustAndIntro: Z = 100
 
-    val JustOrIntro: Z = 101
+    val JustAndElim: Z = 101
 
-    val JustOrElim: Z = 102
+    val JustOrIntro: Z = 102
 
-    val JustImplyIntro: Z = 103
+    val JustOrElim: Z = 103
 
-    val JustImplyElim: Z = 104
+    val JustImplyIntro: Z = 104
 
-    val JustNegIntro: Z = 105
+    val JustImplyElim: Z = 105
 
-    val JustNegElim: Z = 106
+    val JustNegIntro: Z = 106
 
-    val JustBottomElim: Z = 107
+    val JustNegElim: Z = 107
 
-    val JustPbc: Z = 108
+    val JustBottomElim: Z = 108
 
-    val JustForallIntro: Z = 109
+    val JustPbc: Z = 109
 
-    val JustForallElim: Z = 110
+    val JustForallIntro: Z = 110
 
-    val JustExistsIntro: Z = 111
+    val JustForallElim: Z = 111
 
-    val JustExistsElim: Z = 112
+    val JustExistsIntro: Z = 112
 
-    val JustFact: Z = 113
+    val JustExistsElim: Z = 113
 
-    val JustInvariant: Z = 114
+    val JustFact: Z = 114
 
-    val JustSubst: Z = 115
+    val JustInvariant: Z = 115
 
-    val JustAuto: Z = 116
+    val JustSubst: Z = 116
 
-    val JustCoq: Z = 117
+    val JustAuto: Z = 117
 
-    val TruthTableRow: Z = 118
+    val JustCoq: Z = 118
 
-    val TruthTableAssignment: Z = 119
+    val TruthTableRow: Z = 119
 
-    val TruthTableConclusionValidity: Z = 120
+    val TruthTableAssignment: Z = 120
 
-    val TruthTableConclusionTautology: Z = 121
+    val TruthTableConclusionValidity: Z = 121
 
-    val TruthTableConclusionContradictory: Z = 122
+    val TruthTableConclusionTautology: Z = 122
 
-    val TruthTableConclusionContingent: Z = 123
+    val TruthTableConclusionContradictory: Z = 123
 
-    val TypedName: Z = 124
+    val TruthTableConclusionContingent: Z = 124
 
-    val TypedTuple: Z = 125
+    val TypedName: Z = 125
 
-    val TypedFun: Z = 126
+    val TypedTuple: Z = 126
 
-    val Attr: Z = 127
+    val TypedFun: Z = 127
 
-    val TypedAttr: Z = 128
+    val Attr: Z = 128
 
-    val ResolvedAttr: Z = 129
+    val TypedAttr: Z = 129
 
-    val ResolvedInfoBuiltIn: Z = 130
+    val ResolvedAttr: Z = 130
 
-    val ResolvedInfoPackage: Z = 131
+    val ResolvedInfoBuiltIn: Z = 131
 
-    val ResolvedInfoEnum: Z = 132
+    val ResolvedInfoPackage: Z = 132
 
-    val ResolvedInfoObject: Z = 133
+    val ResolvedInfoEnum: Z = 133
 
-    val ResolvedInfoObjectVar: Z = 134
+    val ResolvedInfoObject: Z = 134
 
-    val ResolvedInfoObjectMethod: Z = 135
+    val ResolvedInfoObjectVar: Z = 135
 
-    val ResolvedInfoType: Z = 136
+    val ResolvedInfoObjectMethod: Z = 136
 
-    val ResolvedInfoTypeVar: Z = 137
+    val ResolvedInfoType: Z = 137
 
-    val ResolvedInfoTypeMethod: Z = 138
+    val ResolvedInfoTypeVar: Z = 138
 
-    val ResolvedInfoLocalVar: Z = 139
+    val ResolvedInfoTypeMethod: Z = 139
 
-    val PosInfo: Z = 140
+    val ResolvedInfoLocalVar: Z = 140
+
+    val PosInfo: Z = 141
 
   }
 
@@ -990,9 +992,16 @@ object MsgPack {
       writeTypedAttr(o.attr)
     }
 
+    def writeExpFunParam(o: Exp.Fun.Param): Unit = {
+      writer.writeZ(Constants.ExpFunParam)
+      writeId(o.id)
+      writer.writeOption(o.tipeOpt, writeType)
+    }
+
     def writeExpFun(o: Exp.Fun): Unit = {
       writer.writeZ(Constants.ExpFun)
-      writer.writeISZ(o.params, writeParam)
+      writer.writeISZ(o.params, writeExpFunParam)
+      writeContract(o.contract)
       writeAssignExp(o.exp)
       writeTypedAttr(o.attr)
     }
@@ -1079,13 +1088,9 @@ object MsgPack {
       writeType(o.returnType)
     }
 
-    def writeParamMod(o: ParamMod.Type): Unit = {
-      writer.writeZ(o.ordinal)
-    }
-
     def writeParam(o: Param): Unit = {
       writer.writeZ(Constants.Param)
-      writeParamMod(o.mod)
+      writeB(o.isHidden)
       writeId(o.id)
       writeType(o.tipe)
     }
@@ -2908,6 +2913,20 @@ object MsgPack {
       return Exp.If(cond, thenExp, elseExp, attr)
     }
 
+    def readExpFunParam(): Exp.Fun.Param = {
+      val r = readExpFunParamT(F)
+      return r
+    }
+
+    def readExpFunParamT(typeParsed: B): Exp.Fun.Param = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ExpFunParam)
+      }
+      val id = readId()
+      val tipeOpt = reader.readOption(readType _)
+      return Exp.Fun.Param(id, tipeOpt)
+    }
+
     def readExpFun(): Exp.Fun = {
       val r = readExpFunT(F)
       return r
@@ -2917,10 +2936,11 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ExpFun)
       }
-      val params = reader.readISZ(readParam _)
+      val params = reader.readISZ(readExpFunParam _)
+      val contract = readContract()
       val exp = readAssignExp()
       val attr = readTypedAttr()
-      return Exp.Fun(params, exp, attr)
+      return Exp.Fun(params, contract, exp, attr)
     }
 
     def readExpForYield(): Exp.ForYield = {
@@ -3095,11 +3115,6 @@ object MsgPack {
       return MethodSig(id, typeParams, hasParams, params, returnType)
     }
 
-    def readParamMod(): ParamMod.Type = {
-      val r = reader.readZ()
-      return ParamMod.byOrdinal(r).get
-    }
-
     def readParam(): Param = {
       val r = readParamT(F)
       return r
@@ -3109,10 +3124,10 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.Param)
       }
-      val mod = readParamMod()
+      val isHidden = reader.readB()
       val id = readId()
       val tipe = readType()
-      return Param(mod, id, tipe)
+      return Param(isHidden, id, tipe)
     }
 
     def readTypeParam(): TypeParam = {
@@ -5256,6 +5271,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fExpIf)
+    return r
+  }
+
+  def fromExpFunParam(o: Exp.Fun.Param, poolString: B): ISZ[U8] = {
+    val w = Writer(MessagePack.writer(poolString))
+    w.writeExpFunParam(o)
+    return w.result
+  }
+
+  def toExpFunParam(data: ISZ[U8]): Exp.Fun.Param = {
+    def fExpFunParam(reader: Reader): Exp.Fun.Param = {
+      val r = reader.readExpFunParam()
+      return r
+    }
+    val r = to(data, fExpFunParam)
     return r
   }
 

@@ -521,6 +521,10 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preExpFunParam(o: Exp.Fun.Param): PreResult[Exp.Fun.Param] = {
+      return PreResult(T, MNone())
+    }
+
     def preExpFun(o: Exp.Fun): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
@@ -1354,6 +1358,10 @@ object MTransformer {
     }
 
     def postExpIf(o: Exp.If): MOption[Exp] = {
+      return MNone()
+    }
+
+    def postExpFunParam(o: Exp.Fun.Param): MOption[Exp.Fun.Param] = {
       return MNone()
     }
 
@@ -2689,11 +2697,12 @@ import MTransformer._
           else
             MNone()
         case o2: Exp.Fun =>
-          val r0: MOption[IS[Z, Param]] = transformISZ(o2.params, transformParam)
-          val r1: MOption[AssignExp] = transformAssignExp(o2.exp)
-          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(params = r0.getOrElse(o2.params), exp = r1.getOrElse(o2.exp), attr = r2.getOrElse(o2.attr)))
+          val r0: MOption[IS[Z, Exp.Fun.Param]] = transformISZ(o2.params, transformExpFunParam)
+          val r1: MOption[Contract] = transformContract(o2.contract)
+          val r2: MOption[AssignExp] = transformAssignExp(o2.exp)
+          val r3: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(params = r0.getOrElse(o2.params), contract = r1.getOrElse(o2.contract), exp = r2.getOrElse(o2.exp), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.ForYield =>
@@ -2789,6 +2798,34 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: Lit = r.getOrElse(o)
     val postR: MOption[Lit] = pp.postLit(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformExpFunParam(o: Exp.Fun.Param): MOption[Exp.Fun.Param] = {
+    val preR: PreResult[Exp.Fun.Param] = pp.preExpFunParam(o)
+    val r: MOption[Exp.Fun.Param] = if (preR.continu) {
+      val o2: Exp.Fun.Param = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Id] = transformId(o2.id)
+      val r1: MOption[Option[Type]] = transformOption(o2.tipeOpt, transformType)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(id = r0.getOrElse(o2.id), tipeOpt = r1.getOrElse(o2.tipeOpt)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Exp.Fun.Param = r.getOrElse(o)
+    val postR: MOption[Exp.Fun.Param] = pp.postExpFunParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {

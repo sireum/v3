@@ -368,7 +368,7 @@ object TransformerGen {
       }
 
       @pure def transformOption: ST = {
-        return st"""@pure def transformOption[Context, T](ctx: Context, option: Option[T], @pure f: (Context, T) => Result[Context, T]): Result[Context, Option[T]] = {
+        return st"""@pure def transformOption[Context, T](ctx: Context, option: Option[T], f: (Context, T) => Result[Context, T] @pure): Result[Context, Option[T]] = {
                    |  option match {
                    |    case Some(v) =>
                    |      val r = f(ctx, v)
@@ -386,7 +386,7 @@ object TransformerGen {
       }
 
       @pure def transformIS(indexType: ST): ST = {
-        return st"""@pure def transformIS$indexType[Context, T](ctx: Context, s: IS[$indexType, T], f: (Context, T) => Result[Context, T]): Result[Context, IS[$indexType, T]] = {
+        return st"""@pure def transformIS$indexType[Context, T](ctx: Context, s: IS[$indexType, T], f: (Context, T) => Result[Context, T] @pure): Result[Context, IS[$indexType, T]] = {
                    |  val s2: MS[$indexType, T] = s.toMS
                    |  var changed: B = F
                    |  var ctxi = ctx

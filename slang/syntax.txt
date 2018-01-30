@@ -130,15 +130,12 @@
 
 <datatype-params>  ::=  ( ⸨ <datatype-param> ⸨ , <datatype-param> ⸩* ⸩? )
 
-<datatype-param>   ::=  <adt-param-mod>? ⸨ val ⸩? <ID> : <type>
-
-<adt-param-mod>    ::=  @pure ⸨ @hidden ⸩?
-                     |  @hidden ⸨ @pure ⸩?
+<datatype-param>   ::=  ⸨ @hidden ⸩? ⸨ val ⸩? <ID> : <type>
 
 <record-params>    ::=  ( ⸨ <record-param> ⸨ , <record-param> ⸩* ⸩? )
 
-<record-param>     ::=  <adt-param-mod>* ⸨ var ⸩?  <ID> : <type>
-                     |  <adt-param-mod>* val  <ID> : <type>
+<record-param>     ::=  ⸨ @hidden ⸩? ⸨ val ⸩?  <ID> : <type>
+                     |  ⸨ @hidden ⸩? var  <ID> : <type>
 
 <assign-stmt>      ::=  <lhs> = <assign-exp>
                      |  up ( <lhs> ) = <assign-exp>

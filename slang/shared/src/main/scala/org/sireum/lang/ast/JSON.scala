@@ -899,10 +899,19 @@ object JSON {
       ))
     }
 
+    @pure def printExpFunParam(o: Exp.Fun.Param): ST = {
+      return printObject(ISZ(
+        ("type", st""""Exp.Fun.Param""""),
+        ("id", printId(o.id)),
+        ("tipeOpt", printOption(o.tipeOpt, printType))
+      ))
+    }
+
     @pure def printExpFun(o: Exp.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""Exp.Fun""""),
-        ("params", printISZ(F, o.params, printParam)),
+        ("params", printISZ(F, o.params, printExpFunParam)),
+        ("contract", printContract(o.contract)),
         ("exp", printAssignExp(o.exp)),
         ("attr", printTypedAttr(o.attr))
       ))
@@ -1012,22 +1021,10 @@ object JSON {
       ))
     }
 
-    @pure def printParamMod(o: ParamMod.Type): ST = {
-      val value: String = o match {
-        case ParamMod.NoMod => "NoMod"
-        case ParamMod.Pure => "Pure"
-        case ParamMod.Hidden => "Hidden"
-      }
-      return printObject(ISZ(
-        ("type", printString("ParamMod")),
-        ("value", printString(value))
-      ))
-    }
-
     @pure def printParam(o: Param): ST = {
       return printObject(ISZ(
         ("type", st""""Param""""),
-        ("mod", printParamMod(o.mod)),
+        ("isHidden", printB(o.isHidden)),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe))
       ))
@@ -3385,6 +3382,24 @@ object JSON {
       return Exp.If(cond, thenExp, elseExp, attr)
     }
 
+    def parseExpFunParam(): Exp.Fun.Param = {
+      val r = parseExpFunParamT(F)
+      return r
+    }
+
+    def parseExpFunParamT(typeParsed: B): Exp.Fun.Param = {
+      if (!typeParsed) {
+        parser.parseObjectType("Exp.Fun.Param")
+      }
+      parser.parseObjectKey("id")
+      val id = parseId()
+      parser.parseObjectNext()
+      parser.parseObjectKey("tipeOpt")
+      val tipeOpt = parser.parseOption(parseType _)
+      parser.parseObjectNext()
+      return Exp.Fun.Param(id, tipeOpt)
+    }
+
     def parseExpFun(): Exp.Fun = {
       val r = parseExpFunT(F)
       return r
@@ -3395,7 +3410,10 @@ object JSON {
         parser.parseObjectType("Exp.Fun")
       }
       parser.parseObjectKey("params")
-      val params = parser.parseISZ(parseParam _)
+      val params = parser.parseISZ(parseExpFunParam _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("contract")
+      val contract = parseContract()
       parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseAssignExp()
@@ -3403,7 +3421,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Exp.Fun(params, exp, attr)
+      return Exp.Fun(params, contract, exp, attr)
     }
 
     def parseExpForYield(): Exp.ForYield = {
@@ -3640,26 +3658,6 @@ object JSON {
       return MethodSig(id, typeParams, hasParams, params, returnType)
     }
 
-    def parseParamMod(): ParamMod.Type = {
-      val r = parseParamModT(F)
-      return r
-    }
-
-    def parseParamModT(typeParsed: B): ParamMod.Type = {
-      if (!typeParsed) {
-        parser.parseObjectType("ParamMod")
-      }
-      parser.parseObjectKey("value")
-      val s = parser.parseString()
-      parser.parseObjectNext()
-      s.native match {
-        case "NoMod" => return ParamMod.NoMod
-        case "Pure" => return ParamMod.Pure
-        case "Hidden" => return ParamMod.Hidden
-        case _ => halt(parser.errorMessage)
-      }
-    }
-
     def parseParam(): Param = {
       val r = parseParamT(F)
       return r
@@ -3669,8 +3667,8 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Param")
       }
-      parser.parseObjectKey("mod")
-      val mod = parseParamMod()
+      parser.parseObjectKey("isHidden")
+      val isHidden = parser.parseB()
       parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
@@ -3678,7 +3676,7 @@ object JSON {
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
-      return Param(mod, id, tipe)
+      return Param(isHidden, id, tipe)
     }
 
     def parseTypeParam(): TypeParam = {
@@ -6357,6 +6355,24 @@ object JSON {
       return r
     }
     val r = to(s, fExpIf)
+    return r
+  }
+
+  def fromExpFunParam(o: Exp.Fun.Param, isCompact: B): String = {
+    val st = Printer.printExpFunParam(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toExpFunParam(s: String): Exp.Fun.Param = {
+    def fExpFunParam(parser: Parser): Exp.Fun.Param = {
+      val r = parser.parseExpFunParam()
+      return r
+    }
+    val r = to(s, fExpFunParam)
     return r
   }
 

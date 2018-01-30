@@ -656,7 +656,15 @@ object Exp {
     }
   }
 
-  @datatype class Fun(params: ISZ[Param],
+  object Fun {
+
+    @datatype class Param(id: Id,
+                          tipeOpt: Option[Type])
+
+  }
+
+  @datatype class Fun(params: ISZ[Fun.Param],
+                      contract: Contract,
                       exp: AssignExp,
                       @hidden attr: TypedAttr)
     extends Exp {
@@ -732,13 +740,7 @@ object Domain {
                           params: ISZ[Param],
                           returnType: Type)
 
-@enum object ParamMod {
-  'NoMod
-  'Pure
-  'Hidden
-}
-
-@datatype class Param(mod: ParamMod.Type,
+@datatype class Param(isHidden: B,
                       id: Id,
                       tipe: Type)
 

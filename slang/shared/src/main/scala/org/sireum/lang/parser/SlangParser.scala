@@ -1239,7 +1239,7 @@ class SlangParser(text: Predef.String,
         }
         AST.Type.Fun(isPure, false,
           ISZ(t.params.map(t => translateTypeArg(allowByName = false)(t)): _*),
-          translateType(t.res), typedAttr(t.pos))
+          translateType(ret), typedAttr(t.pos))
       case _ =>
         errorNotSlang(t.pos, s"Type '${syntax(t)}' is")
         unitType
@@ -1360,14 +1360,8 @@ class SlangParser(text: Predef.String,
     val paramname = tp.name
     val atpeopt = tp.decltpe
     val expropt = tp.default
-    var hasPure = false
     var hasHidden = false
     for (mod <- mods) mod match {
-      case mod"@pure" =>
-        if (hasPure) {
-          error(mod.pos, "Redundant @pure.")
-        }
-        hasPure = true
       case mod"@hidden" =>
         if (isMemoize) {
           if (hasHidden) {
@@ -1379,12 +1373,27 @@ class SlangParser(text: Predef.String,
         error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang method.")
     }
     if (atpeopt.isEmpty || expropt.nonEmpty) {
-      val mod = if (hasPure) "@pure " else if (hasHidden) "@hidden " else ""
+      val mod = if (hasHidden) "@hidden " else ""
       errorInSlang(tp.pos, s"The parameter should have the form '$mod〈ID〉:〈type〉'")
     }
-    val mod = if (hasPure) AST.ParamMod.Pure else if (hasHidden) AST.ParamMod.Hidden else AST.ParamMod.NoMod
-    atpeopt.map(ta => AST.Param(mod, cid(tp.name), translateTypeArg(!isMemoize)(ta))).
-      getOrElse(AST.Param(mod, cid(tp.name), unitType))
+    atpeopt.map(ta => AST.Param(hasHidden, cid(tp.name), translateTypeArg(!isMemoize)(ta))).
+      getOrElse(AST.Param(hasHidden, cid(tp.name), unitType))
+  }
+
+  def translateFunParam(tp: Term.Param): AST.Exp.Fun.Param = {
+    val mods = tp.mods
+    val paramname = tp.name
+    val atpeopt = tp.decltpe
+    val expropt = tp.default
+    for (mod <- mods) mod match {
+      case _ =>
+        error(mod.pos, s"Unallowed modifier '${syntax(mod)}' for a Slang fun expression.")
+    }
+    if (expropt.nonEmpty) {
+      errorInSlang(tp.pos, s"The parameter should have the form '〈ID〉⸨ :〈type〉⸩?'")
+    }
+    atpeopt.map(ta => AST.Exp.Fun.Param(cid(tp.name), Some(translateTypeArg(false)(ta)))).
+      getOrElse(AST.Exp.Fun.Param(cid(tp.name), None()))
   }
 
   def translateBlock(enclosing: Enclosing.Type, stat: Term.Block, isAssignExp: Boolean): AST.Stmt.Block = {
@@ -1772,6 +1781,7 @@ class SlangParser(text: Predef.String,
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
       case exp: Term.If => translateIfExp(exp)
       case exp: Term.Function => translateFun(exp)
+      case Term.Block(List(fn: Term.Function)) => translateFun(fn)
       case exp: Term.ForYield => translateForYield(exp)
       case _ =>
         errorNotSlang(exp.pos, s"Expression '${syntax(exp)}' is")
@@ -1969,8 +1979,20 @@ class SlangParser(text: Predef.String,
   }
 
   def translateFun(exp: Term.Function): AST.Exp = {
-    val ps = ISZ(exp.params.map(translateParam(isMemoize = false)): _*)
-    AST.Exp.Fun(ps, translateAssignExp(exp.body), typedAttr(exp.pos))
+    val ps = ISZ(exp.params.map(translateFunParam): _*)
+
+    val (mc, body) = exp.body match {
+      case tbody@Term.Block(stats) =>
+        stats.headOption match {
+          case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
+            val newBlock = tbody.copy(stats = stats.tail)
+            (parseContract(l), translateAssignExp(newBlock))
+          case _ =>
+            (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), translateAssignExp(tbody))
+        }
+      case _ => (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), translateAssignExp(exp.body))
+    }
+    AST.Exp.Fun(ps, mc, body, typedAttr(exp.pos))
   }
 
   def translateArgs(args: Seq[Term]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
