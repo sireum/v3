@@ -81,7 +81,7 @@ object CliGen {
 
       @datatype class Choice(name: String, sep: Option[C], elements: ISZ[String]) extends Type
 
-      @datatype class Path(default: Option[String]) extends Type
+      @datatype class Path(multiple: B, default: Option[String]) extends Type
 
     }
 
@@ -151,8 +151,15 @@ import CliGen.CliOpt._
           |    return r
           |  }
           |
-          |  def parsePath(args: ISZ[String], i: Z): Option[ISZ[String]] = {
+          |  def parsePaths(args: ISZ[String], i: Z): Option[ISZ[String]] = {
           |    return tokenize(args, i, "path", pathSep, F)
+          |  }
+          |
+          |  def parsePath(args: ISZ[String], i: Z): Option[String] = {
+          |    if (i >= args.size) {
+          |      eprintln("Expecting a path, but none found.")
+          |    }
+          |    return Some(args(i))
           |  }
           |
           |  def parseStrings(args: ISZ[String], i: Z, sep: C): Option[ISZ[String]] = {
@@ -336,15 +343,22 @@ import CliGen.CliOpt._
         val shortKey: String = if (opt.shortKey.isEmpty) "" else s"-${opt.shortKey.get}"
         val longKey: String = s"--${opt.longKey}"
         val desc: String = opt.tpe match {
-            case t: Type.Choice => st"${opt.description} (expects one of { ${(t.elements, ", ")} })".render
+            case t: Type.Choice =>
+              if (t.sep.nonEmpty) st"${opt.description} (expects one or more of { ${(t.elements, ", ")} }; default: ${t.elements(0)})".render
+              else st"${opt.description} (expects one of { ${(t.elements, ", ")} }; default: ${t.elements(0)})".render
             case _: Type.Flag => opt.description
             case t: Type.Num =>
               if (t.sep.isEmpty) s"${opt.description} (expects an integer; default is ${t.default})"
               else s"${opt.description} (expects an int-list separated by '${t.sep.get}')"
             case t: Type.NumChoice => st"${opt.description} (expects one of { ${(t.choices, ", ")} })".render
             case t: Type.Path =>
-              if (t.default.isEmpty) s"${opt.description} (expects a path)"
-              else s"""${opt.description} (expects a path; default is "${t.default.get}")"""
+              if (t.multiple) {
+                if (t.default.isEmpty) s"${opt.description} (expects paths)"
+                else s"""${opt.description} (expects paths; default is "${t.default.get}")"""
+              } else {
+                if (t.default.isEmpty) s"${opt.description} (expects a path)"
+                else s"""${opt.description} (expects a path; default is "${t.default.get}")"""
+              }
             case t: Type.Str =>
               if (t.sep.isEmpty) s"${opt.description} (expects a string)"
               else if (t.default.isEmpty) s"""${opt.description} (expects a string separated by "${t.sep.get}")"""
@@ -363,7 +377,9 @@ import CliGen.CliOpt._
 
     def optCase(opt: Opt): Unit = {
       val parse: String = opt.tpe match {
-        case t: Type.Choice => s"parse${ops.StringOps(t.name).firstToUpper}(args, j + 1)"
+        case t: Type.Choice =>
+          if (t.sep.nonEmpty) s"parse${ops.StringOps(t.name).firstToUpper}s(args, j + 1)"
+          else s"parse${ops.StringOps(t.name).firstToUpper}(args, j + 1)"
         case _: Type.Flag => s"Some(!${opt.name})"
         case t: Type.Num =>
           val r: String = t.sep match {
@@ -372,7 +388,7 @@ import CliGen.CliOpt._
           }
           r
         case t: Type.NumChoice => st"""parseNumChoice(args, j + 1, ISZ(z"${(t.choices, "\", z\"")}"))""".render
-        case _: Type.Path => s"parsePath(args, j + 1)"
+        case t: Type.Path => if (t.multiple) s"parsePaths(args, j + 1)" else s"parsePath(args, j + 1)"
         case t: Type.Str =>
           val r: String = t.sep match {
             case Some(sep) => s"""parseStrings(args, j + 1, '$sep')"""
@@ -406,6 +422,8 @@ import CliGen.CliOpt._
       st"""def parse$name(args: ISZ[String], i: Z): Option[$topName] = {
           |  val help =
           |    st$tqs${(tokenizeH(c.header, '\n', F), "\n        |")}
+          |        |
+          |        |Usage: ${c.usage}
           |        ${(options, "\n")}$tqs.render
           |
           |  ${(vars, "\n")}
@@ -442,17 +460,41 @@ import CliGen.CliOpt._
           |}"""
     val cases: ISZ[String] = for (e <- c.elements) yield s"""case "$e" => return Some($name.${ops.StringOps(e).firstToUpper})"""
     parser = parser :+
-      st"""def parse$name(args: ISZ[String], i: Z): Option[$name.Type] = {
-          |  if (i >= args.size) {
-          |    eprintln("Expecting one of the following: { ${(c.elements, ", ")} }, but none found.")
-          |    return None()
-          |  }
-          |  args(i).native match {
+      st"""def parse${name}H(arg: String): Option[$name.Type] = {
+          |  arg.native match {
           |    ${(cases, "\n")}
           |    case s =>
           |      eprintln(s"Expecting one of the following: { ${(c.elements, ", ")} }, but found '$$s'.")
           |      return None()
           |  }
+          |}"""
+    parser = parser :+
+      st"""def parse$name(args: ISZ[String], i: Z): Option[$name.Type] = {
+          |  if (i >= args.size) {
+          |    eprintln("Expecting one of the following: { ${(c.elements, ", ")} }, but none found.")
+          |    return None()
+          |  }
+          |  val r = parse${name}H(args(i))
+          |  return r
+          |}"""
+    if (c.sep.isEmpty) {
+      return
+    }
+    parser = parser :+
+      st"""def parse${name}s(args: ISZ[String], i: Z): Option[ISZ[$name.Type]] = {
+          |  val tokensOpt = tokenize(args, i, "$name", '${c.sep.get}', T)
+          |  if (tokensOpt.isEmpty) {
+          |    return None()
+          |  }
+          |  var r = ISZ[$name.Type]()
+          |  for (token <- tokensOpt.get) {
+          |    val e = parse${name}H(token)
+          |    e match {
+          |      case Some(v) => r = r :+ v
+          |      case _ => return None()
+          |    }
+          |  }
+          |  return Some(r)
           |}"""
   }
 
@@ -505,9 +547,11 @@ import CliGen.CliOpt._
       case c: Type.Choice =>
         val name = ops.StringOps(c.name).firstToUpper
         choiceEnum(name, c)
-        return (s"$name.Type", s"$name.${ops.StringOps(c.elements(0)).firstToUpper}")
+        return if (c.sep.nonEmpty) (s"ISZ[$name.Type]", s"ISZ($name.${ops.StringOps(c.elements(0)).firstToUpper})")
+          else (s"$name.Type", s"$name.${ops.StringOps(c.elements(0)).firstToUpper}")
       case c: Type.Path =>
-        return ("ISZ[String]", if (c.default.isEmpty) "ISZ[String]()" else s"""ISZ("${c.default.get}")""")
+        return if (c.multiple) ("ISZ[String]", if (c.default.isEmpty) "ISZ[String]()" else s"""ISZ("${c.default.get}")""")
+          else ("String", if (c.default.isEmpty) "\"\"" else s""""${c.default.get}"""")
     }
   }
 

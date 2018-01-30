@@ -32,7 +32,7 @@ import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.CliGenJvm
 import org.sireum.test.SireumSpec
 import org.sireum.util.FileUtil
-import org.sireum.{None => SNone, ISZ, Some => SSome}
+import org.sireum.{None => SNone, ISZ}
 
 class CliGenJvmTest extends SireumSpec {
 
@@ -40,7 +40,7 @@ class CliGenJvmTest extends SireumSpec {
 
   def gen(src: File, dest: File): Boolean = {
     val r = CliGenJvm(
-      SSome(licensePath), src, dest, ISZ("org", "sireum", "cli"), SNone(), 25, 55)
+      Some(licensePath), src, dest, ISZ("org", "sireum", "cli"), SNone(), 25, 55)
     scala.util.Try(FileUtil.readFile(dest)) match {
       case scala.util.Success(expected) =>
         val result = r

@@ -57,8 +57,36 @@ object Cli {
     packageName: ISZ[String],
     name: String,
     width: ISZ[Z],
-    license: ISZ[String],
-    outputDir: ISZ[String]
+    license: String,
+    outputDir: String
+  ) extends SireumOption
+
+  @enum object SerializerMode {
+    'Json
+    'Msgpack
+  }
+
+  @datatype class SergenOption(
+    help: String,
+    args: ISZ[String],
+    modes: ISZ[SerializerMode.Type],
+    name: String,
+    license: String,
+    outputDir: String
+  ) extends SireumOption
+
+  @enum object TransformerMode {
+    'Immutable
+    'Mutable
+  }
+
+  @datatype class TransgenOption(
+    help: String,
+    args: ISZ[String],
+    modes: ISZ[TransformerMode.Type],
+    name: String,
+    license: String,
+    outputDir: String
   ) extends SireumOption
 }
 
@@ -91,6 +119,8 @@ import Cli._
       st"""Sireum/Logika:
           |A Program Verifier and A Natural Deduction Proof Checker
           |... for Propositional, Predicate, and Programming Logics
+          |
+          |Usage: <option>* <file>+
           |
           |Available Options:
           |-a, --auto               Enables auto mode
@@ -187,13 +217,17 @@ import Cli._
         st"""Sireum Utility Tools
             |
             |Available modes:
-            |cligen                   Command-line interface generator""".render
+            |cligen                   Command-line interface (CLI) generator
+            |sergen                   De/Serializer generator
+            |transgen                 Transformer (visitor/rewriter) generator""".render
       )
       return Some(HelpOption())
     }
-    val opt = select("util", args, i, ISZ("cligen"))
+    val opt = select("util", args, i, ISZ("cligen", "sergen", "transgen"))
     opt match {
       case Some(string"cligen") => parseCligen(args, i + 1)
+      case Some(string"sergen") => parseSergen(args, i + 1)
+      case Some(string"transgen") => parseTransgen(args, i + 1)
       case _ => return None()
     }
   }
@@ -202,10 +236,11 @@ import Cli._
     val help =
       st"""Sireum CLI Generator
           |
+          |Usage: <option>* <config-file>
+          |
           |Available Options:
-          |-p, --package            Package name for the CLI @record class processor
-          |                           (expects a string separated by "."; default is
-          |                           "cli")
+          |-p, --package            Package name for the CLI processor (expects a string
+          |                           separated by "."; default is "cli")
           |-n, --name               Type simple name for the CLI @record class processor
           |                           (expects a string)
           |-w, --width              First (key) column (default: 25) and second column
@@ -220,8 +255,8 @@ import Cli._
     var packageName: ISZ[String] = ISZ("cli")
     var name: String = "Cli"
     var width: ISZ[Z] = ISZ()
-    var license: ISZ[String] = ISZ[String]()
-    var outputDir: ISZ[String] = ISZ(".")
+    var license: String = ""
+    var outputDir: String = "."
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -272,6 +307,206 @@ import Cli._
     return Some(CligenOption(help, parseArguments(args, j), packageName, name, width, license, outputDir))
   }
 
+  def parseSerializerModeH(arg: String): Option[SerializerMode.Type] = {
+    arg.native match {
+      case "json" => return Some(SerializerMode.Json)
+      case "msgpack" => return Some(SerializerMode.Msgpack)
+      case s =>
+        eprintln(s"Expecting one of the following: { json, msgpack }, but found '$s'.")
+        return None()
+    }
+  }
+
+  def parseSerializerMode(args: ISZ[String], i: Z): Option[SerializerMode.Type] = {
+    if (i >= args.size) {
+      eprintln("Expecting one of the following: { json, msgpack }, but none found.")
+      return None()
+    }
+    val r = parseSerializerModeH(args(i))
+    return r
+  }
+
+  def parseSerializerModes(args: ISZ[String], i: Z): Option[ISZ[SerializerMode.Type]] = {
+    val tokensOpt = tokenize(args, i, "SerializerMode", ',', T)
+    if (tokensOpt.isEmpty) {
+      return None()
+    }
+    var r = ISZ[SerializerMode.Type]()
+    for (token <- tokensOpt.get) {
+      val e = parseSerializerModeH(token)
+      e match {
+        case Some(v) => r = r :+ v
+        case _ => return None()
+      }
+    }
+    return Some(r)
+  }
+
+  def parseSergen(args: ISZ[String], i: Z): Option[SireumOption] = {
+    val help =
+      st"""Sireum De/Serializer Generator
+          |
+          |Usage: <option>* <slang-file>
+          |
+          |Available Options:
+          |-m, --modes              De/serializer mode (expects one or more of { json,
+          |                           msgpack }; default: json)
+          |-n, --name               Type simple name for the de/serializers (default:
+          |                           "Json" or "MsgPack") (expects a string)
+          |-l, --license            License file to be inserted in the file header
+          |                           (expects a path)
+          |-o, --output-dir         Output directory for the generated de/serializer Slang
+          |                           files (expects a path; default is ".")
+          |-h, --help               Display this information""".render
+
+    var modes: ISZ[SerializerMode.Type] = ISZ(SerializerMode.Json)
+    var name: String = ""
+    var license: String = ""
+    var outputDir: String = "."
+    var j = i
+    var isOption = T
+    while (j < args.size && isOption) {
+      val arg = args(j)
+      if (arg(0) == '-') {
+        if (args(j) == "-h" || args(j) == "--help") {
+          println(help)
+          return Some(HelpOption())
+        } else if (arg == "-m" || arg == "--modes") {
+           val o = parseSerializerModes(args, j + 1)
+           o match {
+             case Some(v) => modes = v
+             case _ => return None()
+           }
+         } else if (arg == "-n" || arg == "--name") {
+           val o = parseString(args, j + 1)
+           o match {
+             case Some(v) => name = v
+             case _ => return None()
+           }
+         } else if (arg == "-l" || arg == "--license") {
+           val o = parsePath(args, j + 1)
+           o match {
+             case Some(v) => license = v
+             case _ => return None()
+           }
+         } else if (arg == "-o" || arg == "--output-dir") {
+           val o = parsePath(args, j + 1)
+           o match {
+             case Some(v) => outputDir = v
+             case _ => return None()
+           }
+         } else {
+          eprintln(s"Unrecognized option '$arg'.")
+          return None()
+        }
+        j = j + 2
+      } else {
+        isOption = F
+      }
+    }
+    return Some(SergenOption(help, parseArguments(args, j), modes, name, license, outputDir))
+  }
+
+  def parseTransformerModeH(arg: String): Option[TransformerMode.Type] = {
+    arg.native match {
+      case "immutable" => return Some(TransformerMode.Immutable)
+      case "mutable" => return Some(TransformerMode.Mutable)
+      case s =>
+        eprintln(s"Expecting one of the following: { immutable, mutable }, but found '$s'.")
+        return None()
+    }
+  }
+
+  def parseTransformerMode(args: ISZ[String], i: Z): Option[TransformerMode.Type] = {
+    if (i >= args.size) {
+      eprintln("Expecting one of the following: { immutable, mutable }, but none found.")
+      return None()
+    }
+    val r = parseTransformerModeH(args(i))
+    return r
+  }
+
+  def parseTransformerModes(args: ISZ[String], i: Z): Option[ISZ[TransformerMode.Type]] = {
+    val tokensOpt = tokenize(args, i, "TransformerMode", ',', T)
+    if (tokensOpt.isEmpty) {
+      return None()
+    }
+    var r = ISZ[TransformerMode.Type]()
+    for (token <- tokensOpt.get) {
+      val e = parseTransformerModeH(token)
+      e match {
+        case Some(v) => r = r :+ v
+        case _ => return None()
+      }
+    }
+    return Some(r)
+  }
+
+  def parseTransgen(args: ISZ[String], i: Z): Option[SireumOption] = {
+    val help =
+      st"""Sireum Transformer Generator
+          |
+          |Usage: <option>* <slang-file>
+          |
+          |Available Options:
+          |-m, --modes              Transformer mode (expects one or more of { immutable,
+          |                           mutable }; default: immutable)
+          |-n, --name               Type simple name for the transformers (default:
+          |                           "Transformer" or "MTransformer") (expects a string)
+          |-l, --license            License file to be inserted in the file header
+          |                           (expects a path)
+          |-o, --output-dir         Output directory for the generated transformer Slang
+          |                           files (expects a path; default is ".")
+          |-h, --help               Display this information""".render
+
+    var modes: ISZ[TransformerMode.Type] = ISZ(TransformerMode.Immutable)
+    var name: String = ""
+    var license: String = ""
+    var outputDir: String = "."
+    var j = i
+    var isOption = T
+    while (j < args.size && isOption) {
+      val arg = args(j)
+      if (arg(0) == '-') {
+        if (args(j) == "-h" || args(j) == "--help") {
+          println(help)
+          return Some(HelpOption())
+        } else if (arg == "-m" || arg == "--modes") {
+           val o = parseTransformerModes(args, j + 1)
+           o match {
+             case Some(v) => modes = v
+             case _ => return None()
+           }
+         } else if (arg == "-n" || arg == "--name") {
+           val o = parseString(args, j + 1)
+           o match {
+             case Some(v) => name = v
+             case _ => return None()
+           }
+         } else if (arg == "-l" || arg == "--license") {
+           val o = parsePath(args, j + 1)
+           o match {
+             case Some(v) => license = v
+             case _ => return None()
+           }
+         } else if (arg == "-o" || arg == "--output-dir") {
+           val o = parsePath(args, j + 1)
+           o match {
+             case Some(v) => outputDir = v
+             case _ => return None()
+           }
+         } else {
+          eprintln(s"Unrecognized option '$arg'.")
+          return None()
+        }
+        j = j + 2
+      } else {
+        isOption = F
+      }
+    }
+    return Some(TransgenOption(help, parseArguments(args, j), modes, name, license, outputDir))
+  }
+
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {
     var r = ISZ[String]()
     var j = i
@@ -282,8 +517,15 @@ import Cli._
     return r
   }
 
-  def parsePath(args: ISZ[String], i: Z): Option[ISZ[String]] = {
+  def parsePaths(args: ISZ[String], i: Z): Option[ISZ[String]] = {
     return tokenize(args, i, "path", pathSep, F)
+  }
+
+  def parsePath(args: ISZ[String], i: Z): Option[String] = {
+    if (i >= args.size) {
+      eprintln("Expecting a path, but none found.")
+    }
+    return Some(args(i))
   }
 
   def parseStrings(args: ISZ[String], i: Z, sep: C): Option[ISZ[String]] = {

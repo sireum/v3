@@ -29,7 +29,7 @@ import java.io.File
 
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
-import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
+import org.sireum.lang.symbol.GlobalDeclarationResolver
 import org.sireum.lang.util.Reporter
 import org.sireum.util.FileUtil
 import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
@@ -43,7 +43,7 @@ object SerializerGenJvm {
             src: File,
             dest: File,
             nameOpt: SOption[SString],
-            reporter: Reporter): Option[String] = {
+            reporter: Reporter): SOption[String] = {
     val srcText = FileUtil.readFile(src)
     val srcUri = FileUtil.toUri(src)
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
@@ -56,12 +56,12 @@ object SerializerGenJvm {
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
-        Some(SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
+        SSome(SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
           Util.ids2strings(p.packageName.ids), reporter).gen(lOpt, fOpt, nameOpt).
           render.value)
       case _ =>
         reporter.error(SNone(), messageKind, "Expecting program input.")
-        return None
+        return SNone()
     }
   }
 }

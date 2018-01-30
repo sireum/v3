@@ -33,6 +33,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.lang.tools.TransformerGenJvm
 import org.sireum.lang.util.AccumulatingReporter
 import org.sireum.util.FileUtil
+import org.sireum.{Some => SSome, None => SNone}
 
 class TransformerGenJvmTest extends SireumSpec {
 
@@ -43,10 +44,10 @@ class TransformerGenJvmTest extends SireumSpec {
   def gen(src: File, dest: File, isImmutable: Boolean): Boolean = {
     val reporter = AccumulatingReporter.create
     val rOpt = TransformerGenJvm(allowSireumPackage = true,
-      isImmutable, Some(licensePath), src, dest, None, reporter)
+      isImmutable, Some(licensePath), src, dest, SNone(), reporter)
     reporter.printMessages()
     rOpt match {
-      case Some(r) =>
+      case SSome(r) =>
         val expected = FileUtil.readFile(dest)
         val result = r
         if (result != expected) {

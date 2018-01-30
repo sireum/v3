@@ -27,28 +27,34 @@ package org.sireum.cli
 
 import org.sireum._
 import _root_.java.io._
-import org.sireum.lang.tools.CliGenJvm
+
+import org.sireum.lang.tools._
+import org.sireum.lang.util.AccumulatingReporter
 
 object Sireum extends App {
-  Cli(_root_.java.io.File.pathSeparatorChar).
+  System.exit(Cli(_root_.java.io.File.pathSeparatorChar).
     parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
     case Some(o: Cli.LogikaOption) => logika(o)
     case Some(o: Cli.CligenOption) => cliGen(o)
-    case Some(o: Cli.HelpOption) => 0
+    case Some(o: Cli.SergenOption) => serGen(o)
+    case Some(o: Cli.TransgenOption) => transGen(o)
+    case Some(_: Cli.HelpOption) => 0
     case _ => -1
-  }
+  })
 
   def logika(o: Cli.LogikaOption): Int = {
-    println(s"Coming soon: $o"); 0 // TODO
+    println(s"Coming soon: $o")
+    0 // TODO
   }
 
   def cliGen(o: Cli.CligenOption): Int = try {
-    if (o.args.size != 1) {
-      eprintln(s"Expecting one argument, but found ${o.args.size}.")
-      return -1
+    o.args.size match {
+      case z"0" => println(o.help); return 0
+      case z"1" =>
+      case _ => println(s"Expecting one argument, but found ${o.args.size}."); return -1
     }
     val lOpt = path2fileOpt("license file", o.license, T)
-    val src = path2fileOpt("config file", o.args, T).get
+    val src = paths2fileOpt("config file", o.args, T).get
     val destDir = path2fileOpt("output directory", o.outputDir, T).get
     if (!destDir.isDirectory) error(s"Path ${destDir.getPath} is not a directory")
     val dest = new File(destDir, o.name.value + ".scala")
@@ -68,18 +74,107 @@ object Sireum extends App {
       -1
   }
 
-  def path2fileOpt(pathFor: String,
-                   path: ISZ[String],
-                   checkExist: B): Option[File] = {
+  def serGen(o: Cli.SergenOption): Int = try {
+    o.args.size match {
+      case z"0" => println(o.help); return 0
+      case z"1" =>
+      case _ => println(s"Expecting one argument, but found ${o.args.size}."); return -1
+    }
+    val lOpt = path2fileOpt("license file", o.license, T)
+    val src = paths2fileOpt("Slang file", o.args, T).get
+    val destDir = path2fileOpt("output directory", o.outputDir, T).get
+    if (!destDir.isDirectory) error(s"Path ${destDir.getPath} is not a directory")
+    for (m <- o.modes) {
+      val (name, mode) = m match {
+        case Cli.SerializerMode.Json =>
+          (if (o.modes.size > 1)
+            if (o.name.value == "") String(o.name + "JSON") else o.name
+          else if (o.name.value == "") String("JSON") else o.name, SerializerGen.Mode.JSON)
+        case Cli.SerializerMode.Msgpack =>
+          (if (o.modes.size > 1)
+            if (o.name.value == "") String(o.name + "MsgPack") else o.name
+          else if (o.name.value == "") String("MsgPack") else o.name, SerializerGen.Mode.MessagePack)
+      }
+      val dest = new File(destDir, name.value + ".scala")
+      val reporter = AccumulatingReporter.create
+      SerializerGenJvm(T, mode, lOpt, src, dest, Some(name), reporter) match {
+        case Some(out) =>
+          val fw = new FileWriter(dest)
+          fw.write(out)
+          fw.close()
+          println(s"Wrote ${dest.getAbsolutePath}")
+        case _ =>
+          reporter.printMessages()
+      }
+    }
+    0
+  } catch {
+    case e: Throwable =>
+      eprintln(e.getMessage)
+      -1
+  }
+
+  def transGen(o: Cli.TransgenOption): Int = try {
+    o.args.size match {
+      case z"0" => println(o.help); return 0
+      case z"1" =>
+      case _ => println(s"Expecting one argument, but found ${o.args.size}."); return -1
+    }
+    val lOpt = path2fileOpt("license file", o.license, T)
+    val src = paths2fileOpt("Slang file", o.args, T).get
+    val destDir = path2fileOpt("output directory", o.outputDir, T).get
+    if (!destDir.isDirectory) error(s"Path ${destDir.getPath} is not a directory")
+    for (m <- o.modes) {
+      val (name, mode) = m match {
+        case Cli.TransformerMode.Immutable =>
+          (if (o.modes.size > 1)
+            if (o.name.value == "") String(o.name + "Transformer") else o.name
+          else if (o.name.value == "") String("Transformer") else o.name, T)
+        case Cli.TransformerMode.Mutable =>
+          (if (o.modes.size > 1)
+            if (o.name.value == "") String("M" + o.name + "Transformer") else o.name
+          else if (o.name.value == "") String("MTransformer") else o.name, F)
+      }
+      val dest = new File(destDir, name.value + ".scala")
+      val reporter = AccumulatingReporter.create
+      TransformerGenJvm(T, mode, lOpt, src, dest, Some(name), reporter) match {
+        case Some(out) =>
+          val fw = new FileWriter(dest)
+          fw.write(out)
+          fw.close()
+          println(s"Wrote ${dest.getAbsolutePath}")
+        case _ =>
+          reporter.printMessages()
+      }
+    }
+    0
+  } catch {
+    case e: Throwable =>
+      eprintln(e.getMessage)
+      -1
+  }
+
+  def paths2fileOpt(pathFor: String,
+                    path: ISZ[String],
+                    checkExist: B): scala.Option[File] = {
     path.size match {
-      case z"0" => None()
+      case z"0" => scala.None
       case z"1" =>
         val f = new File(path(0).value)
         if (checkExist && !f.exists) error(s"File ${path(0)} does not exist.")
-        return Some(f)
+        return scala.Some(f)
       case _ =>
         error(s"Expecting a path for $pathFor, but found multiple.")
     }
+  }
+
+  def path2fileOpt(pathFor: String,
+                   path: String,
+                   checkExist: B): scala.Option[File] = {
+    if (path.value == "") return scala.None
+    val f = new File(path.value)
+    if (checkExist && !f.exists) error(s"File '${path(0)}' does not exist.")
+    return scala.Some(f)
   }
 
   def error(msg: Predef.String): Nothing = {

@@ -28,7 +28,7 @@ package org.sireum.lang.test
 import java.io.File
 
 import com.sksamuel.diffpatch.DiffMatchPatch
-import org.sireum.{None => SNone}
+import org.sireum.{None => SNone, Some => SSome}
 import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.{SerializerGen, SerializerGenJvm}
 import org.sireum.lang.util.AccumulatingReporter
@@ -47,7 +47,7 @@ class SerializerGenJvmTest extends SireumSpec {
       Some(licensePath), src, dest, SNone(), reporter)
     reporter.printMessages()
     rOpt match {
-      case Some(r) =>
+      case SSome(r) =>
         scala.util.Try(FileUtil.readFile(dest)) match {
           case scala.util.Success(expected) =>
             val result = r

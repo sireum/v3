@@ -31,7 +31,7 @@ import org.sireum.util.{FileUtil, ReflectUtil}
 import org.sireum.{ISZ, Z, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object CliGenJvm {
-  def apply(licenseOpt: SOption[File],
+  def apply(licenseOpt: Option[File],
             src: File,
             dest: File,
             packageName: ISZ[SString],
@@ -41,7 +41,7 @@ object CliGenJvm {
     val srcText = FileUtil.readFile(src)
     val config = ReflectUtil.eval[CliGen.CliOpt.Group](srcText)
     val lOpt = licenseOpt match {
-      case SSome(f) => SSome(SString(FileUtil.readFile(f).trim))
+      case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
       case _ => SNone[SString]()
     }
     val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
