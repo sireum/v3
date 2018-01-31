@@ -402,7 +402,15 @@ object SerializerGen {
                  |
                  |  }
                  |
-                 |  @record class Writer(writer: MessagePack.Writer) {
+                 |  object Writer {
+                 |
+                 |    @record class Default(val writer: MessagePack.Writer) extends Writer
+                 |
+                 |  }
+                 |
+                 |  @msig trait Writer {
+                 |
+                 |    def writer: MessagePack.Writer
                  |
                  |    ${(writers, "\n\n")}
                  |
@@ -508,14 +516,24 @@ object SerializerGen {
                  |
                  |  }
                  |
-                 |  @record class Reader(reader: MessagePack.Reader) {
+                 |  object Reader {
+                 |
+                 |    @record class Default(val reader: MessagePack.Reader) extends Reader
+                 |
+                 |  }
+                 |
+                 |  @msig trait Reader {
+                 |
+                 |    def reader: MessagePack.Reader
                  |
                  |    ${(readers, "\n\n")}
                  |
                  |  }
                  |
                  |  def to[T](data: ISZ[U8], f: Reader => T): T = {
-                 |    val r = f(Reader(MessagePack.reader(data)))
+                 |    val rd = Reader.Default(MessagePack.reader(data))
+                 |    rd.reader.init()
+                 |    val r = f(rd)
                  |    return r
                  |  }
                  |
@@ -526,7 +544,7 @@ object SerializerGen {
 
     @pure def from(name: ST, tpe: ST): ST = {
       return st"""def from$name(o: $tpe, poolString: B): ISZ[U8] = {
-                 |  val w = Writer(MessagePack.writer(poolString))
+                 |  val w = Writer.Default(MessagePack.writer(poolString))
                  |  w.write$name(o)
                  |  return w.result
                  |}"""
