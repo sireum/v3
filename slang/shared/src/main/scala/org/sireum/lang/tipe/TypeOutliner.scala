@@ -156,7 +156,9 @@ object TypeOutliner {
     val sv = info.ast
     val tOpt = typeHierarchy.typed(info.scope, sv.tipe, reporter)
     tOpt match {
-      case Some(t) => return Some(info(ast = sv(tipe = sv.tipe.typed(t))))
+      case Some(t) =>
+        val t2 = sv.tipe.typed(t)
+        return Some(info(ast = sv(tipe = t2), typedOpt = t2.typedOpt))
       case _ => return None()
     }
   }
@@ -166,7 +168,9 @@ object TypeOutliner {
     val tpe = v.tipeOpt.get
     val tOpt = typeHierarchy.typed(info.scope, tpe, reporter)
     tOpt match {
-      case Some(t) => return Some(info(ast = v(tipeOpt = Some(tpe.typed(t)))))
+      case Some(t) =>
+        val t2 = tpe.typed(t)
+        return Some(info(ast = v(tipeOpt = Some(t2)), typedOpt = t2.typedOpt))
       case _ => return None()
     }
   }

@@ -66,40 +66,51 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.Var(name, scope(packageName, currentImports, name), stmt,
-            Some(AST.ResolvedInfo.ObjectVar(currentName, stmt.id.value))), stmt.attr.posOpt)
+          Info.Var(name, scope(packageName, currentImports, name), stmt, None(),
+            Some(AST.ResolvedInfo.Var(T, F, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.SpecVar(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          Info.SpecVar(name, scope(packageName, currentImports, name), stmt, None(),
+            Some(AST.ResolvedInfo.Var(T, T, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.Method =>
-        val name = currentName :+ stmt.sig.id.value
+        val id = stmt.sig.id.value
+        val name = currentName :+ id
         declareName("method", name,
-          Info.Method(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          Info.Method(name, scope(packageName, currentImports, name), stmt,
+            Some(AST.Typed.Method(T, currentName, id)),
+            Some(AST.ResolvedInfo.Method(T, F, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.ExtMethod =>
         val name = currentName :+ stmt.sig.id.value
         declareName("extension method", name,
           Info.ExtMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecMethod =>
-        val name = currentName :+ stmt.sig.id.value
+        val id = stmt.sig.id.value
+        val name = currentName :+ id
         declareName("specification method", name,
-          Info.SpecMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          Info.SpecMethod(name, scope(packageName, currentImports, name), stmt,
+            Some(AST.Typed.Method(T, currentName, id)),
+            Some(AST.ResolvedInfo.Method(T, T, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SubZ =>
         val name = currentName :+ stmt.id.value
         declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(name, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
-        var elements = Set.empty[String]
+        var elements = Map.empty[String, Option[AST.ResolvedInfo]]
+        val elementTypeName = name :+ "Type"
+        val elementTypedOpt: Option[AST.Typed] = Some(AST.Typed.Name(elementTypeName, ISZ()))
+        var ordinal = 0
         for (e <- stmt.elements) {
           if (elements.contains(e.value)) {
             reporter.error(e.attr.posOpt, resolverKind, s"Redeclaration of @enum element ${e.value}.")
           } else {
-            elements = elements.add(e.value)
+            elements = elements.put(e.value, Some(AST.ResolvedInfo.EnumElement(name, e.value, ordinal)))
           }
+          ordinal = ordinal + 1
         }
         declareName("enumeration", name, Info.Enum(name, elements, Some(AST.Typed.Enum(name)),
-          Some(AST.ResolvedInfo.Enum(name)), stmt.attr.posOpt), stmt.attr.posOpt)
-        declareType("enumeration", name :+ "Type", TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
+          Some(AST.ResolvedInfo.Enum(name)), elementTypedOpt, stmt.attr.posOpt), stmt.attr.posOpt)
+        declareType("enumeration", elementTypeName, TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
 

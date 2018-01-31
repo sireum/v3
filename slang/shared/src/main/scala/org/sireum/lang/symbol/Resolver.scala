@@ -302,8 +302,9 @@ object Resolver {
     }
 
     @datatype class Var(val name: QName,
-                        scope: Scope.Global,
+                        scope: Scope,
                         ast: AST.Stmt.Var,
+                        typedOpt: Option[AST.Typed],
                         resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -318,8 +319,10 @@ object Resolver {
     }
 
     @datatype class SpecVar(val name: QName,
-                            scope: Scope.Global,
-                            ast: AST.Stmt.SpecVar) extends Info {
+                            scope: Scope,
+                            ast: AST.Stmt.SpecVar,
+                            typedOpt: Option[AST.Typed],
+                            resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -329,8 +332,10 @@ object Resolver {
     }
 
     @datatype class Method(val name: QName,
-                           scope: Scope.Global,
-                           ast: AST.Stmt.Method) extends Info {
+                           scope: Scope,
+                           ast: AST.Stmt.Method,
+                           typedOpt: Option[AST.Typed],
+                           resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -340,8 +345,10 @@ object Resolver {
     }
 
     @datatype class SpecMethod(val name: QName,
-                               scope: Scope.Global,
-                               ast: AST.Stmt.SpecMethod) extends Info {
+                               scope: Scope,
+                               ast: AST.Stmt.SpecMethod,
+                               typedOpt: Option[AST.Typed],
+                               resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -371,9 +378,10 @@ object Resolver {
     }
 
     @datatype class Enum(val name: QName,
-                         elements: Set[String],
+                         elements: Map[String, Option[AST.ResolvedInfo]],
                          typedOpt: Option[AST.Typed],
                          resOpt: Option[AST.ResolvedInfo],
+                         elementTypedOpt: Option[AST.Typed],
                          val posOpt: Option[AST.PosInfo])
       extends Info
 
@@ -420,7 +428,7 @@ object Resolver {
     }
 
     @datatype class Enum(val name: QName,
-                         elements: Set[String],
+                         elements: Map[String, Option[AST.ResolvedInfo]],
                          val posOpt: Option[AST.PosInfo])
       extends TypeInfo {
       def canHaveCompanion: B = {
@@ -637,13 +645,13 @@ object Resolver {
 
     val tName = sireumName :+ "T"
     var nm = nameMap.put(tName, Info.Var(tName, scope,
-      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      Some(AST.ResolvedInfo.ObjectVar(tName, "T"))))
+      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "T"))))
 
     val fName = sireumName :+ "F"
     nm = nm.put(fName, Info.Var(fName, scope,
-      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      Some(AST.ResolvedInfo.ObjectVar(tName, "F"))))
+      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
 
     return (nm, tm)
 
