@@ -75,8 +75,6 @@ class TypeCheckerTest extends SireumSpec {
 
       "Stmt" - {
 
-        *(passingStmt("val x: org.sireum.Z = 1"))
-
         *(passingStmt("assert(true)"))
 
         *(passingStmt("assume(1 + 3 > 2)"))
@@ -90,6 +88,12 @@ class TypeCheckerTest extends SireumSpec {
         *(passingStmt("""print(1, 2, "a", "b")"""))
 
         *(passingStmt("""eprint(1, 2, "a", "b")"""))
+
+        *(passingStmt("val x: org.sireum.Z = 1"))
+
+        *(passingStmt("assert(org.sireum.T)"))
+
+        *(passingStmt("assert(!org.sireum.F)"))
       }
     }
 
