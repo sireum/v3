@@ -176,7 +176,7 @@ object Sireum extends App {
     if (path.value == "") return scala.None
     val f = new File(path.value)
     if (checkExist && !f.exists) error(s"File '${path(0)}' does not exist.")
-    return scala.Some(f)
+    return scala.Some(f.getCanonicalFile)
   }
 
   def error(msg: Predef.String): Nothing = {
