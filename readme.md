@@ -194,7 +194,7 @@ we also provide **Development** builds for trying out Sireum v3 experimental fea
 * Required tools for building Sireum: [MSYS2](https://msys2.github.io)
 
   ```bash
-  pacman -S git unzip wget
+  pacman -S git unzip wget bc
   ```
   
 ## Installing and Running Sireum from Source
@@ -278,8 +278,6 @@ Requirements:
 * [dmgbuild](http://dmgbuild.readthedocs.io)
 
 * [P7ZIP](http://p7zip.sourceforge.net)
-
-* [Wine](https://www.winehq.org)
 
 Run: `sireum-v3/distros/build-idea.sh`
 
