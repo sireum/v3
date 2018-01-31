@@ -1098,8 +1098,6 @@ object TruthTable {
 }
 
 @datatype trait Typed {
-  def posOpt: Option[PosInfo]
-
   @pure def isPureFun: B
 
   def isEqual(other: Typed): B = {
@@ -1110,8 +1108,7 @@ object TruthTable {
 object Typed {
 
   @datatype class Name(ids: ISZ[String],
-                       args: ISZ[Typed],
-                       @hidden val posOpt: Option[PosInfo])
+                       args: ISZ[Typed])
     extends Typed {
 
     @pure def isPureFun: B = {
@@ -1124,9 +1121,7 @@ object Typed {
     }
   }
 
-  @datatype class Tuple(args: ISZ[Typed],
-                        @hidden val posOpt: Option[PosInfo])
-    extends Typed {
+  @datatype class Tuple(args: ISZ[Typed]) extends Typed {
 
     @pure def isPureFun: B = {
       return F
@@ -1140,8 +1135,7 @@ object Typed {
   @datatype class Fun(isPure: B,
                       isByName: B,
                       args: ISZ[Typed],
-                      ret: Typed,
-                      @hidden val posOpt: Option[PosInfo])
+                      ret: Typed)
     extends Typed {
 
     @pure def isPureFun: B = {
@@ -1154,6 +1148,39 @@ object Typed {
       else st"(${(args, ", ")}) => $ret".render
     }
 
+  }
+
+  @datatype class Package(name: ISZ[String]) extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return st"${(name, ".")}".render
+    }
+  }
+
+  @datatype class Object(name: ISZ[String]) extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return st"${(name, ".")}".render
+    }
+  }
+
+  @datatype class Enum(name: ISZ[String]) extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return st"${(name, ".")}".render
+    }
   }
 
 }

@@ -293,7 +293,9 @@ object Resolver {
 
   object Info {
 
-    @datatype class Package(val name: QName) extends Info {
+    @datatype class Package(val name: QName,
+                            typedOpt: Option[AST.Typed],
+                            resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return None[AST.PosInfo]()
       }
@@ -302,7 +304,7 @@ object Resolver {
     @datatype class Var(val name: QName,
                         scope: Scope.Global,
                         ast: AST.Stmt.Var,
-                        resolvedInfo: AST.ResolvedInfo) extends Info {
+                        resOpt: Option[AST.ResolvedInfo]) extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -350,7 +352,9 @@ object Resolver {
 
     @datatype class Object(val name: QName,
                            outlined: B,
-                           ast: AST.Stmt.Object)
+                           ast: AST.Stmt.Object,
+                           typedOpt: Option[AST.Typed],
+                           resOpt: Option[AST.ResolvedInfo])
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -368,13 +372,15 @@ object Resolver {
 
     @datatype class Enum(val name: QName,
                          elements: Set[String],
+                         typedOpt: Option[AST.Typed],
+                         resOpt: Option[AST.ResolvedInfo],
                          val posOpt: Option[AST.PosInfo])
       extends Info
 
     @datatype class LocalVar(val name: QName,
                              ast: AST.Id,
-                             tpe: AST.Typed,
-                             resolvedInfo: AST.ResolvedInfo)
+                             typedOpt: Option[AST.Typed],
+                             resOpt: Option[AST.ResolvedInfo])
       extends Info {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -498,7 +504,8 @@ object Resolver {
   }
 
   val resolverKind: String = "Slang Resolver"
-  val rootPackageInfo: Info.Package = Info.Package(ISZ())
+  val rootPackageInfo: Info.Package = Info.Package(ISZ(),
+    Some(AST.Typed.Package(ISZ())), Some(AST.ResolvedInfo.Package(ISZ())))
 
   @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
     (ti1.posOpt, ti2.posOpt) match {
@@ -631,12 +638,12 @@ object Resolver {
     val tName = sireumName :+ "T"
     var nm = nameMap.put(tName, Info.Var(tName, scope,
       Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      AST.ResolvedInfo.ObjectVar(tName, "T")))
+      Some(AST.ResolvedInfo.ObjectVar(tName, "T"))))
 
     val fName = sireumName :+ "F"
     nm = nm.put(fName, Info.Var(fName, scope,
       Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      AST.ResolvedInfo.ObjectVar(tName, "F")))
+      Some(AST.ResolvedInfo.ObjectVar(tName, "F"))))
 
     return (nm, tm)
 

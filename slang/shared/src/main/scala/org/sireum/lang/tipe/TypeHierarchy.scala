@@ -35,21 +35,21 @@ object TypeHierarchy {
 
   @pure def typedInfo(info: TypeInfo): AST.Typed.Name = {
     @pure def typedParam(tp: AST.TypeParam): AST.Typed = {
-      return AST.Typed.Name(ISZ(tp.id.value), ISZ(), tp.id.attr.posOpt)
+      return AST.Typed.Name(ISZ(tp.id.value), ISZ())
     }
 
     info match {
-      case info: TypeInfo.SubZ => return AST.Typed.Name(info.name, ISZ(), info.posOpt)
-      case info: TypeInfo.Enum => return AST.Typed.Name(info.name :+ "Type", ISZ(), info.posOpt)
+      case info: TypeInfo.SubZ => return AST.Typed.Name(info.name, ISZ())
+      case info: TypeInfo.Enum => return AST.Typed.Name(info.name :+ "Type", ISZ())
       case info: TypeInfo.Sig =>
         val args = info.ast.typeParams.map(typedParam)
-        return AST.Typed.Name(info.name, args, info.posOpt)
+        return AST.Typed.Name(info.name, args)
       case info: TypeInfo.AbstractDatatype =>
         val args = info.ast.typeParams.map(typedParam)
-        return AST.Typed.Name(info.name, args, info.posOpt)
+        return AST.Typed.Name(info.name, args)
       case info: TypeInfo.TypeAlias =>
         val args = info.ast.typeParams.map(typedParam)
-        return AST.Typed.Name(info.name, args, info.posOpt)
+        return AST.Typed.Name(info.name, args)
       case _: TypeInfo.TypeVar => halt("Infeasible")
     }
   }
@@ -73,7 +73,7 @@ object TypeHierarchy {
             }
             as
           }
-          AST.Typed.Name(name, args, t.posOpt)
+          AST.Typed.Name(name, args)
         case t: AST.Type.Tuple =>
           val ts: ISZ[AST.Typed] = {
             var as = ISZ[AST.Typed]()
@@ -83,7 +83,7 @@ object TypeHierarchy {
             }
             as
           }
-          AST.Typed.Tuple(ts, t.posOpt)
+          AST.Typed.Tuple(ts)
         case t: AST.Type.Fun =>
           val ts: ISZ[AST.Typed] = {
             var as = ISZ[AST.Typed]()
@@ -94,7 +94,7 @@ object TypeHierarchy {
             as
           }
           val rt = resolveType(scope, t.ret)
-          AST.Typed.Fun(t.isPure || rt.isPureFun, t.isByName, ts, rt, t.posOpt)
+          AST.Typed.Fun(t.isPure || rt.isPureFun, t.isByName, ts, rt)
       }
     }
 
@@ -118,7 +118,7 @@ object TypeHierarchy {
     def resolveAlias(info: TypeInfo.TypeAlias, seen: HashSet[QName]): AST.Typed = {
       if (seen.contains(info.name)) {
         reporter.error(info.posOpt, resolverKind, st"Type alias ${(info.name, ".")} is cyclic.".render)
-        return AST.Typed.Name(info.name, ISZ(), info.posOpt)
+        return AST.Typed.Name(info.name, ISZ())
       }
       val typed = typedInfo(info)
       r.aliases.get(TypeHierarchy.TypeName(typed)) match {
@@ -270,14 +270,14 @@ object TypeHierarchy {
                 st"Type alias ${(name, ".")} requires $tparamSize type arguments but ${argTypes.size} supplied.".render)
               return None()
             }
-            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+            return Some(AST.Typed.Name(ti.name, argTypes))
           case Some(ti: TypeInfo.TypeVar) =>
             if (argTypes.nonEmpty) {
               reporter.error(t.posOpt, TypeChecker.typeCheckerKind,
                 s"Type variable ${name(0)} does not accept type arguments.")
               return None()
             }
-            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+            return Some(AST.Typed.Name(ti.name, argTypes))
           case Some(ti) =>
             val p: (String, Z) = ti match {
               case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0)
@@ -296,7 +296,7 @@ object TypeHierarchy {
               }
               return None()
             }
-            return Some(AST.Typed.Name(ti.name, argTypes, t.posOpt))
+            return Some(AST.Typed.Name(ti.name, argTypes))
           case _ =>
             if (name.size == 1 && argTypes.isEmpty && name(0) == "Unit") {
               return Some(TypeChecker.typeUnit)
@@ -318,7 +318,7 @@ object TypeHierarchy {
         if (hasError) {
           return None[AST.Typed]()
         } else {
-          return Some(AST.Typed.Tuple(esTypes, t.posOpt))
+          return Some(AST.Typed.Tuple(esTypes))
         }
       case t: AST.Type.Fun =>
         var paramTypes = ISZ[AST.Typed]()
@@ -333,7 +333,7 @@ object TypeHierarchy {
         val trOpt = typed(scope, t.ret, reporter)
         trOpt match {
           case Some(tr) if !hasError =>
-            return Some(AST.Typed.Fun(t.isPure || tr.isPureFun, t.isByName, paramTypes, tr, t.posOpt))
+            return Some(AST.Typed.Fun(t.isPure || tr.isPureFun, t.isByName, paramTypes, tr))
           case _ => return None[AST.Typed]()
         }
     }

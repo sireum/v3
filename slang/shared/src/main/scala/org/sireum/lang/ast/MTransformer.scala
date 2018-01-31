@@ -793,6 +793,9 @@ object MTransformer {
         case o: Typed.Name => return preTypedName(o)
         case o: Typed.Tuple => return preTypedTuple(o)
         case o: Typed.Fun => return preTypedFun(o)
+        case o: Typed.Package => return preTypedPackage(o)
+        case o: Typed.Object => return preTypedObject(o)
+        case o: Typed.Enum => return preTypedEnum(o)
       }
     }
 
@@ -805,6 +808,18 @@ object MTransformer {
     }
 
     def preTypedFun(o: Typed.Fun): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
+    def preTypedPackage(o: Typed.Package): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
+    def preTypedObject(o: Typed.Object): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
+    def preTypedEnum(o: Typed.Enum): PreResult[Typed] = {
       return PreResult(T, MNone())
     }
 
@@ -1633,6 +1648,9 @@ object MTransformer {
         case o: Typed.Name => return postTypedName(o)
         case o: Typed.Tuple => return postTypedTuple(o)
         case o: Typed.Fun => return postTypedFun(o)
+        case o: Typed.Package => return postTypedPackage(o)
+        case o: Typed.Object => return postTypedObject(o)
+        case o: Typed.Enum => return postTypedEnum(o)
       }
     }
 
@@ -1645,6 +1663,18 @@ object MTransformer {
     }
 
     def postTypedFun(o: Typed.Fun): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedPackage(o: Typed.Package): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedObject(o: Typed.Object): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedEnum(o: Typed.Enum): MOption[Typed] = {
       return MNone()
     }
 
@@ -3635,24 +3665,36 @@ import MTransformer._
       val rOpt: MOption[Typed] = o2 match {
         case o2: Typed.Name =>
           val r0: MOption[IS[Z, Typed]] = transformISZ(o2.args, transformTyped)
-          val r1: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(args = r0.getOrElse(o2.args), posOpt = r1.getOrElse(o2.posOpt)))
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(args = r0.getOrElse(o2.args)))
           else
             MNone()
         case o2: Typed.Tuple =>
           val r0: MOption[IS[Z, Typed]] = transformISZ(o2.args, transformTyped)
-          val r1: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(args = r0.getOrElse(o2.args), posOpt = r1.getOrElse(o2.posOpt)))
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(args = r0.getOrElse(o2.args)))
           else
             MNone()
         case o2: Typed.Fun =>
           val r0: MOption[IS[Z, Typed]] = transformISZ(o2.args, transformTyped)
           val r1: MOption[Typed] = transformTyped(o2.ret)
-          val r2: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(args = r0.getOrElse(o2.args), ret = r1.getOrElse(o2.ret), posOpt = r2.getOrElse(o2.posOpt)))
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(args = r0.getOrElse(o2.args), ret = r1.getOrElse(o2.ret)))
+          else
+            MNone()
+        case o2: Typed.Package =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: Typed.Object =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
+        case o2: Typed.Enum =>
+          if (hasChanged)
+            MSome(o2)
           else
             MNone()
       }

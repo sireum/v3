@@ -67,7 +67,7 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
           Info.Var(name, scope(packageName, currentImports, name), stmt,
-            AST.ResolvedInfo.ObjectVar(currentName, stmt.id.value)), stmt.attr.posOpt)
+            Some(AST.ResolvedInfo.ObjectVar(currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
@@ -97,7 +97,8 @@ import org.sireum.lang.{ast => AST}
             elements = elements.add(e.value)
           }
         }
-        declareName("enumeration", name, Info.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
+        declareName("enumeration", name, Info.Enum(name, elements, Some(AST.Typed.Enum(name)),
+          Some(AST.ResolvedInfo.Enum(name)), stmt.attr.posOpt), stmt.attr.posOpt)
         declareType("enumeration", name :+ "Type", TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
@@ -113,8 +114,8 @@ import org.sireum.lang.{ast => AST}
           case _ =>
         }
 
-        declareName(if (stmt.isExt) "extension object" else "object", name,
-          Info.Object(name, F, stmt), stmt.attr.posOpt)
+        declareName(if (stmt.isExt) "extension object" else "object", name, Info.Object(name, F, stmt,
+          Some(AST.Typed.Object(name)), Some(AST.ResolvedInfo.Object(name))), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
@@ -214,7 +215,8 @@ import org.sireum.lang.{ast => AST}
     globalNameMap.get(name) match {
       case Some(_: Info.Package) =>
       case Some(_) => reporter.error(posOpt, resolverKind, "Cannot declare package because the name has already been used for a non-package entity.")
-      case _ => globalNameMap = globalNameMap.put(name, Info.Package(name))
+      case _ => globalNameMap = globalNameMap.put(name, Info.Package(name,
+        Some(AST.Typed.Package(name)), Some(AST.ResolvedInfo.Package(name))))
     }
   }
 

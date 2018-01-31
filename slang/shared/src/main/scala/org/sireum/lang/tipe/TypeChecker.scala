@@ -46,9 +46,25 @@ object TypeChecker {
   }
 
   val typeCheckerKind: String = "Type Checker"
-  val typeUnit: AST.Typed = AST.Typed.Name(ISZ("Unit"), ISZ(), None())
+  val typeUnit: AST.Typed = AST.Typed.Name(ISZ("Unit"), ISZ())
   val typeUnitOpt: Option[AST.Typed] = Some(typeUnit)
-  val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ(), None())
+  val typeB: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "B"), ISZ())
+  val typeBOpt: Option[AST.Typed] = Some(typeB)
+  val typeC: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "C"), ISZ())
+  val typeCOpt: Option[AST.Typed] = Some(typeC)
+  val typeF32: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "F32"), ISZ())
+  val typeF32Opt: Option[AST.Typed] = Some(typeF32)
+  val typeF64: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "F64"), ISZ())
+  val typeF64Opt: Option[AST.Typed] = Some(typeF64)
+  val typeZ: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "Z"), ISZ())
+  val typeZOpt: Option[AST.Typed] = Some(typeZ)
+  val typeR: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "R"), ISZ())
+  val typeROpt: Option[AST.Typed] = Some(typeR)
+  val typeString: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "String"), ISZ())
+  val typeStringOpt: Option[AST.Typed] = Some(typeString)
+  val typeST: AST.Typed.Name = AST.Typed.Name(ISZ[String]("org", "sireum", "ST"), ISZ())
+  val typeSTOpt: Option[AST.Typed] = Some(typeST)
+  val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ())
   val builtInMethods: HashSet[String] = HashSet.empty[String].addAll(ISZ(
     "assert", "assume", "println", "print", "eprintln", "eprint"
   ))
@@ -152,6 +168,12 @@ object TypeChecker {
         return isEqType(t1.ret, t2)
       case (_, t2: AST.Typed.Fun) if t2.isByName =>
         return isEqType(t1, t2.ret)
+      case (t1: AST.Typed.Package, t2: AST.Typed.Package) =>
+        return t1.name == t2.name
+      case (t1: AST.Typed.Object, t2: AST.Typed.Object) =>
+        return t1.name == t2.name
+      case (t1: AST.Typed.Enum, t2: AST.Typed.Enum) =>
+        return t1.name == t2.name
       case _ =>
         if (isUnitType(t1) && isUnitType(t2)) {
           return T
@@ -213,7 +235,7 @@ object TypeChecker {
     for (p <- m.params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = deBruijn(AST.Typed.Fun(isPure, F, pts, m.returnType.typedOpt.get, m.id.attr.posOpt))
+    val t = deBruijn(AST.Typed.Fun(isPure, F, pts, m.returnType.typedOpt.get))
     t match {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
@@ -252,65 +274,10 @@ object TypeChecker {
 }
 
 import TypeChecker._
+import TypeChecker.typeString
 
 @datatype class TypeChecker(typeHierarchy: TypeHierarchy,
                             context: QName) {
-
-  val typeB: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "B")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeBOpt: Option[AST.Typed] = Some(typeB)
-
-  val typeC: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "C")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeCOpt: Option[AST.Typed] = Some(typeC)
-
-  val typeF32: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "F32")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeF32Opt: Option[AST.Typed] = Some(typeF32)
-
-  val typeF64: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "F64")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeF64Opt: Option[AST.Typed] = Some(typeF64)
-
-  val typeZ: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "Z")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeZOpt: Option[AST.Typed] = Some(typeZ)
-
-  val typeR: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "R")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeROpt: Option[AST.Typed] = Some(typeR)
-
-  val typeString: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "String")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeStringOpt: Option[AST.Typed] = Some(typeString)
-
-  val typeST: AST.Typed.Name = {
-    val name = ISZ[String]("org", "sireum", "ST")
-    AST.Typed.Name(name, ISZ(), typeHierarchy.typeMap.get(name).get.posOpt)
-  }
-
-  val typeSTOpt: Option[AST.Typed] = Some(typeST)
 
   def basicKind(scope: Scope, t: AST.Typed,
                 posOpt: Option[AST.PosInfo],
@@ -377,6 +344,25 @@ import TypeChecker._
       }
     }
 
+    def checkIdent(exp: AST.Exp.Ident): (AST.Exp, Option[AST.Typed]) = {
+      scope.resolveName(typeHierarchy.nameMap, ISZ(exp.id.value)) match {
+        case Some(info: Info.LocalVar) =>
+          // TODO: update closure captures
+          return (exp(attr = exp.attr(typedOpt = info.typedOpt, resOpt = info.resOpt)), info.typedOpt)
+        case Some(info: Info.Package) =>
+          return (exp(attr = exp.attr(typedOpt = info.typedOpt, resOpt = info.resOpt)), info.typedOpt)
+        case Some(info: Info.Object) =>
+          return (exp(attr = exp.attr(typedOpt = info.typedOpt, resOpt = info.resOpt)), info.typedOpt)
+        case Some(info: Info.Enum) =>
+          return (exp(attr = exp.attr(typedOpt = info.typedOpt, resOpt = info.resOpt)), info.typedOpt)
+        case _ => halt("Unimplemented") // TODO
+      }
+    }
+
+    def checkSelect(exp: AST.Exp.Select): (AST.Exp, Option[AST.Typed]) = {
+      halt("Unimplemented") // TODO
+    }
+
     exp match {
 
       case exp: AST.Exp.Binary =>
@@ -424,14 +410,7 @@ import TypeChecker._
 
       case exp: AST.Exp.Fun => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Ident =>
-        scope.resolveName(typeHierarchy.nameMap, ISZ(exp.id.value)) match {
-          case Some(info: Info.LocalVar) =>
-            // TODO: update closure captures
-            val tOpt = Some(info.tpe)
-            return (exp(attr = exp.attr(typedOpt = tOpt, resOpt = Some(info.resolvedInfo))), tOpt)
-          case _ => halt("Unimplemented") // TODO
-        }
+      case exp: AST.Exp.Ident => val r = checkIdent(exp); return r
 
       case exp: AST.Exp.If => halt("Unimplemented") // TODO
 
@@ -455,7 +434,7 @@ import TypeChecker._
 
       case exp: AST.Exp.Quant => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Select => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Select => val r = checkSelect(exp); return r
 
       case exp: AST.Exp.StringInterpolate =>
         var args = ISZ[AST.Exp]()
@@ -496,7 +475,7 @@ import TypeChecker._
         if (!ok) {
           return (r, None())
         }
-        val t: AST.Typed = AST.Typed.Tuple(argTypes, exp.posOpt)
+        val t: AST.Typed = AST.Typed.Tuple(argTypes)
         val tOpt = checkExpected(t)
         up(r.attr.typedOpt) = tOpt
         return (r, tOpt)
@@ -693,7 +672,7 @@ import TypeChecker._
       tOpt match {
         case Some(t) =>
           val newScope = scope(nameMap = scope.nameMap.put(key,
-            Info.LocalVar(name, r.id, t, AST.ResolvedInfo.LocalVar(context, key))))
+            Info.LocalVar(name, r.id, Some(t), Some(AST.ResolvedInfo.LocalVar(context, key)))))
           val newStmt = r(initOpt = Some(rhs))
           return (Some(newScope), newStmt)
         case _ =>
@@ -706,9 +685,9 @@ import TypeChecker._
         case lhs: AST.Exp.Ident =>
           scope.resolveName(typeHierarchy.nameMap, ISZ(lhs.id.value)) match {
             case Some(info: Info.LocalVar) =>
-              val expected = Some(info.tpe)
+              val expected = info.typedOpt
               val (rhs, _) = checkAssignExp(expected, scope, stmt.rhs, reporter)
-              return stmt(lhs = lhs(attr = lhs.attr(resOpt = Some(info.resolvedInfo), typedOpt = expected)),
+              return stmt(lhs = lhs(attr = lhs.attr(resOpt = info.resOpt, typedOpt = expected)),
                 rhs = rhs)
             case Some(_) => halt("Unimplemented.") // TODO
             case _ => halt("Unimplemented.") // TODO

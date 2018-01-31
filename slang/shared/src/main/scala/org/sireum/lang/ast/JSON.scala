@@ -1411,6 +1411,9 @@ object JSON {
         case o: Typed.Name => return printTypedName(o)
         case o: Typed.Tuple => return printTypedTuple(o)
         case o: Typed.Fun => return printTypedFun(o)
+        case o: Typed.Package => return printTypedPackage(o)
+        case o: Typed.Object => return printTypedObject(o)
+        case o: Typed.Enum => return printTypedEnum(o)
       }
     }
 
@@ -1418,16 +1421,14 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Typed.Name""""),
         ("ids", printISZ(T, o.ids, printString)),
-        ("args", printISZ(F, o.args, printTyped)),
-        ("posOpt", printOption(o.posOpt, printPosInfo))
+        ("args", printISZ(F, o.args, printTyped))
       ))
     }
 
     @pure def printTypedTuple(o: Typed.Tuple): ST = {
       return printObject(ISZ(
         ("type", st""""Typed.Tuple""""),
-        ("args", printISZ(F, o.args, printTyped)),
-        ("posOpt", printOption(o.posOpt, printPosInfo))
+        ("args", printISZ(F, o.args, printTyped))
       ))
     }
 
@@ -1437,8 +1438,28 @@ object JSON {
         ("isPure", printB(o.isPure)),
         ("isByName", printB(o.isByName)),
         ("args", printISZ(F, o.args, printTyped)),
-        ("ret", printTyped(o.ret)),
-        ("posOpt", printOption(o.posOpt, printPosInfo))
+        ("ret", printTyped(o.ret))
+      ))
+    }
+
+    @pure def printTypedPackage(o: Typed.Package): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Package""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printTypedObject(o: Typed.Object): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Object""""),
+        ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printTypedEnum(o: Typed.Enum): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Enum""""),
+        ("name", printISZ(T, o.name, printString))
       ))
     }
 
@@ -4484,11 +4505,14 @@ object JSON {
     }
 
     def parseTyped(): Typed = {
-      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun"))
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.Package", "Typed.Object", "Typed.Enum"))
       t.native match {
         case "Typed.Name" => val r = parseTypedNameT(T); return r
         case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
         case "Typed.Fun" => val r = parseTypedFunT(T); return r
+        case "Typed.Package" => val r = parseTypedPackageT(T); return r
+        case "Typed.Object" => val r = parseTypedObjectT(T); return r
+        case "Typed.Enum" => val r = parseTypedEnumT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -4508,10 +4532,7 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseTyped _)
       parser.parseObjectNext()
-      parser.parseObjectKey("posOpt")
-      val posOpt = parser.parseOption(parsePosInfo _)
-      parser.parseObjectNext()
-      return Typed.Name(ids, args, posOpt)
+      return Typed.Name(ids, args)
     }
 
     def parseTypedTuple(): Typed.Tuple = {
@@ -4526,10 +4547,7 @@ object JSON {
       parser.parseObjectKey("args")
       val args = parser.parseISZ(parseTyped _)
       parser.parseObjectNext()
-      parser.parseObjectKey("posOpt")
-      val posOpt = parser.parseOption(parsePosInfo _)
-      parser.parseObjectNext()
-      return Typed.Tuple(args, posOpt)
+      return Typed.Tuple(args)
     }
 
     def parseTypedFun(): Typed.Fun = {
@@ -4553,10 +4571,52 @@ object JSON {
       parser.parseObjectKey("ret")
       val ret = parseTyped()
       parser.parseObjectNext()
-      parser.parseObjectKey("posOpt")
-      val posOpt = parser.parseOption(parsePosInfo _)
+      return Typed.Fun(isPure, isByName, args, ret)
+    }
+
+    def parseTypedPackage(): Typed.Package = {
+      val r = parseTypedPackageT(F)
+      return r
+    }
+
+    def parseTypedPackageT(typeParsed: B): Typed.Package = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Package")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
-      return Typed.Fun(isPure, isByName, args, ret, posOpt)
+      return Typed.Package(name)
+    }
+
+    def parseTypedObject(): Typed.Object = {
+      val r = parseTypedObjectT(F)
+      return r
+    }
+
+    def parseTypedObjectT(typeParsed: B): Typed.Object = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Object")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return Typed.Object(name)
+    }
+
+    def parseTypedEnum(): Typed.Enum = {
+      val r = parseTypedEnumT(F)
+      return r
+    }
+
+    def parseTypedEnumT(typeParsed: B): Typed.Enum = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Enum")
+      }
+      parser.parseObjectKey("name")
+      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return Typed.Enum(name)
     }
 
     def parseAttr(): Attr = {
@@ -7453,6 +7513,60 @@ object JSON {
       return r
     }
     val r = to(s, fTypedFun)
+    return r
+  }
+
+  def fromTypedPackage(o: Typed.Package, isCompact: B): String = {
+    val st = Printer.printTypedPackage(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedPackage(s: String): Typed.Package = {
+    def fTypedPackage(parser: Parser): Typed.Package = {
+      val r = parser.parseTypedPackage()
+      return r
+    }
+    val r = to(s, fTypedPackage)
+    return r
+  }
+
+  def fromTypedObject(o: Typed.Object, isCompact: B): String = {
+    val st = Printer.printTypedObject(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedObject(s: String): Typed.Object = {
+    def fTypedObject(parser: Parser): Typed.Object = {
+      val r = parser.parseTypedObject()
+      return r
+    }
+    val r = to(s, fTypedObject)
+    return r
+  }
+
+  def fromTypedEnum(o: Typed.Enum, isCompact: B): String = {
+    val st = Printer.printTypedEnum(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedEnum(s: String): Typed.Enum = {
+    def fTypedEnum(parser: Parser): Typed.Enum = {
+      val r = parser.parseTypedEnum()
+      return r
+    }
+    val r = to(s, fTypedEnum)
     return r
   }
 

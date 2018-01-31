@@ -797,6 +797,9 @@ object Transformer {
         case o: Typed.Name => return preTypedName(ctx, o)
         case o: Typed.Tuple => return preTypedTuple(ctx, o)
         case o: Typed.Fun => return preTypedFun(ctx, o)
+        case o: Typed.Package => return preTypedPackage(ctx, o)
+        case o: Typed.Object => return preTypedObject(ctx, o)
+        case o: Typed.Enum => return preTypedEnum(ctx, o)
       }
     }
 
@@ -809,6 +812,18 @@ object Transformer {
     }
 
     @pure def preTypedFun(ctx: Context, o: Typed.Fun): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedPackage(ctx: Context, o: Typed.Package): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedObject(ctx: Context, o: Typed.Object): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedEnum(ctx: Context, o: Typed.Enum): PreResult[Context, Typed] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1637,6 +1652,9 @@ object Transformer {
         case o: Typed.Name => return postTypedName(ctx, o)
         case o: Typed.Tuple => return postTypedTuple(ctx, o)
         case o: Typed.Fun => return postTypedFun(ctx, o)
+        case o: Typed.Package => return postTypedPackage(ctx, o)
+        case o: Typed.Object => return postTypedObject(ctx, o)
+        case o: Typed.Enum => return postTypedEnum(ctx, o)
       }
     }
 
@@ -1649,6 +1667,18 @@ object Transformer {
     }
 
     @pure def postTypedFun(ctx: Context, o: Typed.Fun): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedPackage(ctx: Context, o: Typed.Package): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedObject(ctx: Context, o: Typed.Object): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedEnum(ctx: Context, o: Typed.Enum): Result[Context, Typed] = {
       return Result(ctx, None())
     }
 
@@ -3641,26 +3671,38 @@ import Transformer._
       val rOpt: Result[Context, Typed] = o2 match {
         case o2: Typed.Name =>
           val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
-          val r1: Result[Context, Option[PosInfo]] = transformOption(r0.ctx, o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), posOpt = r1.resultOpt.getOrElse(o2.posOpt))))
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args))))
           else
-            Result(r1.ctx, None())
+            Result(r0.ctx, None())
         case o2: Typed.Tuple =>
           val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
-          val r1: Result[Context, Option[PosInfo]] = transformOption(r0.ctx, o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), posOpt = r1.resultOpt.getOrElse(o2.posOpt))))
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args))))
           else
-            Result(r1.ctx, None())
+            Result(r0.ctx, None())
         case o2: Typed.Fun =>
           val r0: Result[Context, IS[Z, Typed]] = transformISZ(ctx, o2.args, transformTyped)
           val r1: Result[Context, Typed] = transformTyped(r0.ctx, o2.ret)
-          val r2: Result[Context, Option[PosInfo]] = transformOption(r1.ctx, o2.posOpt, transformPosInfo)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), ret = r1.resultOpt.getOrElse(o2.ret), posOpt = r2.resultOpt.getOrElse(o2.posOpt))))
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), ret = r1.resultOpt.getOrElse(o2.ret))))
           else
-            Result(r2.ctx, None())
+            Result(r1.ctx, None())
+        case o2: Typed.Package =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: Typed.Object =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
+        case o2: Typed.Enum =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
