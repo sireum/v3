@@ -312,17 +312,21 @@ object MsgPack {
 
     val ResolvedInfoEnum: Z = 137
 
-    val ResolvedInfoObject: Z = 138
+    val ResolvedInfoEnumElement: Z = 138
 
-    val ResolvedInfoVar: Z = 139
+    val ResolvedInfoObject: Z = 139
 
-    val ResolvedInfoMethod: Z = 140
+    val ResolvedInfoVar: Z = 140
 
-    val ResolvedInfoType: Z = 141
+    val ResolvedInfoMethod: Z = 141
 
-    val ResolvedInfoLocalVar: Z = 142
+    val ResolvedInfoType: Z = 142
 
-    val PosInfo: Z = 143
+    val ResolvedInfoTuple: Z = 143
+
+    val ResolvedInfoLocalVar: Z = 144
+
+    val PosInfo: Z = 145
 
   }
 
@@ -1485,10 +1489,12 @@ object MsgPack {
         case o: ResolvedInfo.BuiltIn => writeResolvedInfoBuiltIn(o)
         case o: ResolvedInfo.Package => writeResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => writeResolvedInfoEnum(o)
+        case o: ResolvedInfo.EnumElement => writeResolvedInfoEnumElement(o)
         case o: ResolvedInfo.Object => writeResolvedInfoObject(o)
         case o: ResolvedInfo.Var => writeResolvedInfoVar(o)
         case o: ResolvedInfo.Method => writeResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => writeResolvedInfoType(o)
+        case o: ResolvedInfo.Tuple => writeResolvedInfoTuple(o)
         case o: ResolvedInfo.LocalVar => writeResolvedInfoLocalVar(o)
       }
     }
@@ -1506,6 +1512,13 @@ object MsgPack {
     def writeResolvedInfoEnum(o: ResolvedInfo.Enum): Unit = {
       writer.writeZ(Constants.ResolvedInfoEnum)
       writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): Unit = {
+      writer.writeZ(Constants.ResolvedInfoEnumElement)
+      writer.writeISZ(o.owner, writeString)
+      writeString(o.name)
+      writeZ(o.ordinal)
     }
 
     def writeResolvedInfoObject(o: ResolvedInfo.Object): Unit = {
@@ -1532,6 +1545,12 @@ object MsgPack {
     def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
       writer.writeZ(Constants.ResolvedInfoType)
       writer.writeISZ(o.name, writeString)
+    }
+
+    def writeResolvedInfoTuple(o: ResolvedInfo.Tuple): Unit = {
+      writer.writeZ(Constants.ResolvedInfoTuple)
+      writeZ(o.size)
+      writeZ(o.index)
     }
 
     def writeResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): Unit = {
@@ -3930,10 +3949,12 @@ object MsgPack {
         case Constants.ResolvedInfoBuiltIn => val r = readResolvedInfoBuiltInT(T); return r
         case Constants.ResolvedInfoPackage => val r = readResolvedInfoPackageT(T); return r
         case Constants.ResolvedInfoEnum => val r = readResolvedInfoEnumT(T); return r
+        case Constants.ResolvedInfoEnumElement => val r = readResolvedInfoEnumElementT(T); return r
         case Constants.ResolvedInfoObject => val r = readResolvedInfoObjectT(T); return r
         case Constants.ResolvedInfoVar => val r = readResolvedInfoVarT(T); return r
         case Constants.ResolvedInfoMethod => val r = readResolvedInfoMethodT(T); return r
         case Constants.ResolvedInfoType => val r = readResolvedInfoTypeT(T); return r
+        case Constants.ResolvedInfoTuple => val r = readResolvedInfoTupleT(T); return r
         case Constants.ResolvedInfoLocalVar => val r = readResolvedInfoLocalVarT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
@@ -3976,6 +3997,21 @@ object MsgPack {
       }
       val name = reader.readISZ(reader.readString _)
       return ResolvedInfo.Enum(name)
+    }
+
+    def readResolvedInfoEnumElement(): ResolvedInfo.EnumElement = {
+      val r = readResolvedInfoEnumElementT(F)
+      return r
+    }
+
+    def readResolvedInfoEnumElementT(typeParsed: B): ResolvedInfo.EnumElement = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoEnumElement)
+      }
+      val owner = reader.readISZ(reader.readString _)
+      val name = reader.readString()
+      val ordinal = reader.readZ()
+      return ResolvedInfo.EnumElement(owner, name, ordinal)
     }
 
     def readResolvedInfoObject(): ResolvedInfo.Object = {
@@ -4034,6 +4070,20 @@ object MsgPack {
       }
       val name = reader.readISZ(reader.readString _)
       return ResolvedInfo.Type(name)
+    }
+
+    def readResolvedInfoTuple(): ResolvedInfo.Tuple = {
+      val r = readResolvedInfoTupleT(F)
+      return r
+    }
+
+    def readResolvedInfoTupleT(typeParsed: B): ResolvedInfo.Tuple = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoTuple)
+      }
+      val size = reader.readZ()
+      val index = reader.readZ()
+      return ResolvedInfo.Tuple(size, index)
     }
 
     def readResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
@@ -6418,6 +6468,21 @@ object MsgPack {
     return r
   }
 
+  def fromResolvedInfoEnumElement(o: ResolvedInfo.EnumElement, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeResolvedInfoEnumElement(o)
+    return w.result
+  }
+
+  def toResolvedInfoEnumElement(data: ISZ[U8]): ResolvedInfo.EnumElement = {
+    def fResolvedInfoEnumElement(reader: Reader): ResolvedInfo.EnumElement = {
+      val r = reader.readResolvedInfoEnumElement()
+      return r
+    }
+    val r = to(data, fResolvedInfoEnumElement)
+    return r
+  }
+
   def fromResolvedInfoObject(o: ResolvedInfo.Object, poolString: B): ISZ[U8] = {
     val w = Writer.Default(MessagePack.writer(poolString))
     w.writeResolvedInfoObject(o)
@@ -6475,6 +6540,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fResolvedInfoType)
+    return r
+  }
+
+  def fromResolvedInfoTuple(o: ResolvedInfo.Tuple, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeResolvedInfoTuple(o)
+    return w.result
+  }
+
+  def toResolvedInfoTuple(data: ISZ[U8]): ResolvedInfo.Tuple = {
+    def fResolvedInfoTuple(reader: Reader): ResolvedInfo.Tuple = {
+      val r = reader.readResolvedInfoTuple()
+      return r
+    }
+    val r = to(data, fResolvedInfoTuple)
     return r
   }
 

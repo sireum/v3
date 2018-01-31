@@ -1502,10 +1502,12 @@ object JSON {
         case o: ResolvedInfo.BuiltIn => return printResolvedInfoBuiltIn(o)
         case o: ResolvedInfo.Package => return printResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => return printResolvedInfoEnum(o)
+        case o: ResolvedInfo.EnumElement => return printResolvedInfoEnumElement(o)
         case o: ResolvedInfo.Object => return printResolvedInfoObject(o)
         case o: ResolvedInfo.Var => return printResolvedInfoVar(o)
         case o: ResolvedInfo.Method => return printResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => return printResolvedInfoType(o)
+        case o: ResolvedInfo.Tuple => return printResolvedInfoTuple(o)
         case o: ResolvedInfo.LocalVar => return printResolvedInfoLocalVar(o)
       }
     }
@@ -1528,6 +1530,15 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.Enum""""),
         ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.EnumElement""""),
+        ("owner", printISZ(T, o.owner, printString)),
+        ("name", printString(o.name)),
+        ("ordinal", printZ(o.ordinal))
       ))
     }
 
@@ -1562,6 +1573,14 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.Type""""),
         ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printResolvedInfoTuple(o: ResolvedInfo.Tuple): ST = {
+      return printObject(ISZ(
+        ("type", st""""ResolvedInfo.Tuple""""),
+        ("size", printZ(o.size)),
+        ("index", printZ(o.index))
       ))
     }
 
@@ -4692,15 +4711,17 @@ object JSON {
     }
 
     def parseResolvedInfo(): ResolvedInfo = {
-      val t = parser.parseObjectTypes(ISZ("ResolvedInfo.BuiltIn", "ResolvedInfo.Package", "ResolvedInfo.Enum", "ResolvedInfo.Object", "ResolvedInfo.Var", "ResolvedInfo.Method", "ResolvedInfo.Type", "ResolvedInfo.LocalVar"))
+      val t = parser.parseObjectTypes(ISZ("ResolvedInfo.BuiltIn", "ResolvedInfo.Package", "ResolvedInfo.Enum", "ResolvedInfo.EnumElement", "ResolvedInfo.Object", "ResolvedInfo.Var", "ResolvedInfo.Method", "ResolvedInfo.Type", "ResolvedInfo.Tuple", "ResolvedInfo.LocalVar"))
       t.native match {
         case "ResolvedInfo.BuiltIn" => val r = parseResolvedInfoBuiltInT(T); return r
         case "ResolvedInfo.Package" => val r = parseResolvedInfoPackageT(T); return r
         case "ResolvedInfo.Enum" => val r = parseResolvedInfoEnumT(T); return r
+        case "ResolvedInfo.EnumElement" => val r = parseResolvedInfoEnumElementT(T); return r
         case "ResolvedInfo.Object" => val r = parseResolvedInfoObjectT(T); return r
         case "ResolvedInfo.Var" => val r = parseResolvedInfoVarT(T); return r
         case "ResolvedInfo.Method" => val r = parseResolvedInfoMethodT(T); return r
         case "ResolvedInfo.Type" => val r = parseResolvedInfoTypeT(T); return r
+        case "ResolvedInfo.Tuple" => val r = parseResolvedInfoTupleT(T); return r
         case "ResolvedInfo.LocalVar" => val r = parseResolvedInfoLocalVarT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -4749,6 +4770,27 @@ object JSON {
       val name = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       return ResolvedInfo.Enum(name)
+    }
+
+    def parseResolvedInfoEnumElement(): ResolvedInfo.EnumElement = {
+      val r = parseResolvedInfoEnumElementT(F)
+      return r
+    }
+
+    def parseResolvedInfoEnumElementT(typeParsed: B): ResolvedInfo.EnumElement = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.EnumElement")
+      }
+      parser.parseObjectKey("owner")
+      val owner = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("name")
+      val name = parser.parseString()
+      parser.parseObjectNext()
+      parser.parseObjectKey("ordinal")
+      val ordinal = parser.parseZ()
+      parser.parseObjectNext()
+      return ResolvedInfo.EnumElement(owner, name, ordinal)
     }
 
     def parseResolvedInfoObject(): ResolvedInfo.Object = {
@@ -4827,6 +4869,24 @@ object JSON {
       val name = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       return ResolvedInfo.Type(name)
+    }
+
+    def parseResolvedInfoTuple(): ResolvedInfo.Tuple = {
+      val r = parseResolvedInfoTupleT(F)
+      return r
+    }
+
+    def parseResolvedInfoTupleT(typeParsed: B): ResolvedInfo.Tuple = {
+      if (!typeParsed) {
+        parser.parseObjectType("ResolvedInfo.Tuple")
+      }
+      parser.parseObjectKey("size")
+      val size = parser.parseZ()
+      parser.parseObjectNext()
+      parser.parseObjectKey("index")
+      val index = parser.parseZ()
+      parser.parseObjectNext()
+      return ResolvedInfo.Tuple(size, index)
     }
 
     def parseResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
@@ -7706,6 +7766,24 @@ object JSON {
     return r
   }
 
+  def fromResolvedInfoEnumElement(o: ResolvedInfo.EnumElement, isCompact: B): String = {
+    val st = Printer.printResolvedInfoEnumElement(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoEnumElement(s: String): ResolvedInfo.EnumElement = {
+    def fResolvedInfoEnumElement(parser: Parser): ResolvedInfo.EnumElement = {
+      val r = parser.parseResolvedInfoEnumElement()
+      return r
+    }
+    val r = to(s, fResolvedInfoEnumElement)
+    return r
+  }
+
   def fromResolvedInfoObject(o: ResolvedInfo.Object, isCompact: B): String = {
     val st = Printer.printResolvedInfoObject(o)
     if (isCompact) {
@@ -7775,6 +7853,24 @@ object JSON {
       return r
     }
     val r = to(s, fResolvedInfoType)
+    return r
+  }
+
+  def fromResolvedInfoTuple(o: ResolvedInfo.Tuple, isCompact: B): String = {
+    val st = Printer.printResolvedInfoTuple(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toResolvedInfoTuple(s: String): ResolvedInfo.Tuple = {
+    def fResolvedInfoTuple(parser: Parser): ResolvedInfo.Tuple = {
+      val r = parser.parseResolvedInfoTuple()
+      return r
+    }
+    val r = to(s, fResolvedInfoTuple)
     return r
   }
 
