@@ -1157,7 +1157,7 @@ object Typed {
     }
 
     @pure def string: String = {
-      return st"${(name, ".")}".render
+      return st"<package> ${(name, ".")}".render
     }
   }
 
@@ -1168,7 +1168,7 @@ object Typed {
     }
 
     @pure def string: String = {
-      return st"${(name, ".")}".render
+      return st"<object> ${(name, ".")}".render
     }
   }
 
@@ -1179,7 +1179,21 @@ object Typed {
     }
 
     @pure def string: String = {
-      return st"${(name, ".")}".render
+      return st"<@enum> ${(name, ".")}".render
+    }
+  }
+
+  @datatype class Method(isInObject: B,
+                         owner: ISZ[String],
+                         name: String)
+    extends Typed {
+
+    @pure def isPureFun: B = {
+      return F
+    }
+
+    @pure def string: String = {
+      return st"<method> ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
     }
   }
 
@@ -1204,21 +1218,25 @@ object ResolvedInfo {
 
   @datatype class Enum(name: ISZ[String]) extends ResolvedInfo
 
+  @datatype class EnumElement(owner: ISZ[String],
+                              name: String,
+                              ordinal: Z) extends ResolvedInfo
+
   @datatype class Object(name: ISZ[String]) extends ResolvedInfo
 
-  @datatype class ObjectVar(objectName: ISZ[String],
-                            id: String) extends ResolvedInfo
+  @datatype class Var(isInObject: B,
+                      isSpec: B,
+                      objectName: ISZ[String],
+                      id: String) extends ResolvedInfo
 
-  @datatype class ObjectMethod(objectName: ISZ[String],
-                               id: String) extends ResolvedInfo
+  @datatype class Method(isInObject: B,
+                         isSpec: B,
+                         objectName: ISZ[String],
+                         id: String) extends ResolvedInfo
 
   @datatype class Type(name: ISZ[String]) extends ResolvedInfo
 
-  @datatype class TypeVar(typeName: ISZ[String],
-                          id: String) extends ResolvedInfo
-
-  @datatype class TypeMethod(typeName: ISZ[String],
-                             id: String) extends ResolvedInfo
+  @datatype class Tuple(size: Z, index: Z) extends ResolvedInfo
 
   @datatype class LocalVar(context: ISZ[String],
                            id: String) extends ResolvedInfo

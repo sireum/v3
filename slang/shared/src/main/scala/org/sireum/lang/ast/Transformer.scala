@@ -800,6 +800,7 @@ object Transformer {
         case o: Typed.Package => return preTypedPackage(ctx, o)
         case o: Typed.Object => return preTypedObject(ctx, o)
         case o: Typed.Enum => return preTypedEnum(ctx, o)
+        case o: Typed.Method => return preTypedMethod(ctx, o)
       }
     }
 
@@ -827,6 +828,10 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preTypedMethod(ctx: Context, o: Typed.Method): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
     @pure def preAttr(ctx: Context, o: Attr): PreResult[Context, Attr] = {
       return PreResult(ctx, T, None())
     }
@@ -845,11 +850,9 @@ object Transformer {
         case o: ResolvedInfo.Package => return preResolvedInfoPackage(ctx, o)
         case o: ResolvedInfo.Enum => return preResolvedInfoEnum(ctx, o)
         case o: ResolvedInfo.Object => return preResolvedInfoObject(ctx, o)
-        case o: ResolvedInfo.ObjectVar => return preResolvedInfoObjectVar(ctx, o)
-        case o: ResolvedInfo.ObjectMethod => return preResolvedInfoObjectMethod(ctx, o)
+        case o: ResolvedInfo.Var => return preResolvedInfoVar(ctx, o)
+        case o: ResolvedInfo.Method => return preResolvedInfoMethod(ctx, o)
         case o: ResolvedInfo.Type => return preResolvedInfoType(ctx, o)
-        case o: ResolvedInfo.TypeVar => return preResolvedInfoTypeVar(ctx, o)
-        case o: ResolvedInfo.TypeMethod => return preResolvedInfoTypeMethod(ctx, o)
         case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(ctx, o)
       }
     }
@@ -870,23 +873,15 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preResolvedInfoObjectVar(ctx: Context, o: ResolvedInfo.ObjectVar): PreResult[Context, ResolvedInfo] = {
+    @pure def preResolvedInfoVar(ctx: Context, o: ResolvedInfo.Var): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
-    @pure def preResolvedInfoObjectMethod(ctx: Context, o: ResolvedInfo.ObjectMethod): PreResult[Context, ResolvedInfo] = {
+    @pure def preResolvedInfoMethod(ctx: Context, o: ResolvedInfo.Method): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
     @pure def preResolvedInfoType(ctx: Context, o: ResolvedInfo.Type): PreResult[Context, ResolvedInfo] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preResolvedInfoTypeVar(ctx: Context, o: ResolvedInfo.TypeVar): PreResult[Context, ResolvedInfo] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preResolvedInfoTypeMethod(ctx: Context, o: ResolvedInfo.TypeMethod): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1655,6 +1650,7 @@ object Transformer {
         case o: Typed.Package => return postTypedPackage(ctx, o)
         case o: Typed.Object => return postTypedObject(ctx, o)
         case o: Typed.Enum => return postTypedEnum(ctx, o)
+        case o: Typed.Method => return postTypedMethod(ctx, o)
       }
     }
 
@@ -1682,6 +1678,10 @@ object Transformer {
       return Result(ctx, None())
     }
 
+    @pure def postTypedMethod(ctx: Context, o: Typed.Method): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
     @pure def postAttr(ctx: Context, o: Attr): Result[Context, Attr] = {
       return Result(ctx, None())
     }
@@ -1700,11 +1700,9 @@ object Transformer {
         case o: ResolvedInfo.Package => return postResolvedInfoPackage(ctx, o)
         case o: ResolvedInfo.Enum => return postResolvedInfoEnum(ctx, o)
         case o: ResolvedInfo.Object => return postResolvedInfoObject(ctx, o)
-        case o: ResolvedInfo.ObjectVar => return postResolvedInfoObjectVar(ctx, o)
-        case o: ResolvedInfo.ObjectMethod => return postResolvedInfoObjectMethod(ctx, o)
+        case o: ResolvedInfo.Var => return postResolvedInfoVar(ctx, o)
+        case o: ResolvedInfo.Method => return postResolvedInfoMethod(ctx, o)
         case o: ResolvedInfo.Type => return postResolvedInfoType(ctx, o)
-        case o: ResolvedInfo.TypeVar => return postResolvedInfoTypeVar(ctx, o)
-        case o: ResolvedInfo.TypeMethod => return postResolvedInfoTypeMethod(ctx, o)
         case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(ctx, o)
       }
     }
@@ -1725,23 +1723,15 @@ object Transformer {
       return Result(ctx, None())
     }
 
-    @pure def postResolvedInfoObjectVar(ctx: Context, o: ResolvedInfo.ObjectVar): Result[Context, ResolvedInfo] = {
+    @pure def postResolvedInfoVar(ctx: Context, o: ResolvedInfo.Var): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
-    @pure def postResolvedInfoObjectMethod(ctx: Context, o: ResolvedInfo.ObjectMethod): Result[Context, ResolvedInfo] = {
+    @pure def postResolvedInfoMethod(ctx: Context, o: ResolvedInfo.Method): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
     @pure def postResolvedInfoType(ctx: Context, o: ResolvedInfo.Type): Result[Context, ResolvedInfo] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postResolvedInfoTypeVar(ctx: Context, o: ResolvedInfo.TypeVar): Result[Context, ResolvedInfo] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postResolvedInfoTypeMethod(ctx: Context, o: ResolvedInfo.TypeMethod): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
@@ -3703,6 +3693,11 @@ import Transformer._
             Result(ctx, Some(o2))
           else
             Result(ctx, None())
+        case o2: Typed.Method =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -3832,27 +3827,17 @@ import Transformer._
             Result(ctx, Some(o2))
           else
             Result(ctx, None())
-        case o2: ResolvedInfo.ObjectVar =>
+        case o2: ResolvedInfo.Var =>
           if (hasChanged)
             Result(ctx, Some(o2))
           else
             Result(ctx, None())
-        case o2: ResolvedInfo.ObjectMethod =>
+        case o2: ResolvedInfo.Method =>
           if (hasChanged)
             Result(ctx, Some(o2))
           else
             Result(ctx, None())
         case o2: ResolvedInfo.Type =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
-          else
-            Result(ctx, None())
-        case o2: ResolvedInfo.TypeVar =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
-          else
-            Result(ctx, None())
-        case o2: ResolvedInfo.TypeMethod =>
           if (hasChanged)
             Result(ctx, Some(o2))
           else

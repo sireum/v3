@@ -1414,6 +1414,7 @@ object JSON {
         case o: Typed.Package => return printTypedPackage(o)
         case o: Typed.Object => return printTypedObject(o)
         case o: Typed.Enum => return printTypedEnum(o)
+        case o: Typed.Method => return printTypedMethod(o)
       }
     }
 
@@ -1463,6 +1464,15 @@ object JSON {
       ))
     }
 
+    @pure def printTypedMethod(o: Typed.Method): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Method""""),
+        ("isInObject", printB(o.isInObject)),
+        ("owner", printISZ(T, o.owner, printString)),
+        ("name", printString(o.name))
+      ))
+    }
+
     @pure def printAttr(o: Attr): ST = {
       return printObject(ISZ(
         ("type", st""""Attr""""),
@@ -1493,11 +1503,9 @@ object JSON {
         case o: ResolvedInfo.Package => return printResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => return printResolvedInfoEnum(o)
         case o: ResolvedInfo.Object => return printResolvedInfoObject(o)
-        case o: ResolvedInfo.ObjectVar => return printResolvedInfoObjectVar(o)
-        case o: ResolvedInfo.ObjectMethod => return printResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Var => return printResolvedInfoVar(o)
+        case o: ResolvedInfo.Method => return printResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => return printResolvedInfoType(o)
-        case o: ResolvedInfo.TypeVar => return printResolvedInfoTypeVar(o)
-        case o: ResolvedInfo.TypeMethod => return printResolvedInfoTypeMethod(o)
         case o: ResolvedInfo.LocalVar => return printResolvedInfoLocalVar(o)
       }
     }
@@ -1530,17 +1538,21 @@ object JSON {
       ))
     }
 
-    @pure def printResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): ST = {
+    @pure def printResolvedInfoVar(o: ResolvedInfo.Var): ST = {
       return printObject(ISZ(
-        ("type", st""""ResolvedInfo.ObjectVar""""),
+        ("type", st""""ResolvedInfo.Var""""),
+        ("isInObject", printB(o.isInObject)),
+        ("isSpec", printB(o.isSpec)),
         ("objectName", printISZ(T, o.objectName, printString)),
         ("id", printString(o.id))
       ))
     }
 
-    @pure def printResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): ST = {
+    @pure def printResolvedInfoMethod(o: ResolvedInfo.Method): ST = {
       return printObject(ISZ(
-        ("type", st""""ResolvedInfo.ObjectMethod""""),
+        ("type", st""""ResolvedInfo.Method""""),
+        ("isInObject", printB(o.isInObject)),
+        ("isSpec", printB(o.isSpec)),
         ("objectName", printISZ(T, o.objectName, printString)),
         ("id", printString(o.id))
       ))
@@ -1550,22 +1562,6 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.Type""""),
         ("name", printISZ(T, o.name, printString))
-      ))
-    }
-
-    @pure def printResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): ST = {
-      return printObject(ISZ(
-        ("type", st""""ResolvedInfo.TypeVar""""),
-        ("typeName", printISZ(T, o.typeName, printString)),
-        ("id", printString(o.id))
-      ))
-    }
-
-    @pure def printResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): ST = {
-      return printObject(ISZ(
-        ("type", st""""ResolvedInfo.TypeMethod""""),
-        ("typeName", printISZ(T, o.typeName, printString)),
-        ("id", printString(o.id))
       ))
     }
 
@@ -4505,7 +4501,7 @@ object JSON {
     }
 
     def parseTyped(): Typed = {
-      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.Package", "Typed.Object", "Typed.Enum"))
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.Package", "Typed.Object", "Typed.Enum", "Typed.Method"))
       t.native match {
         case "Typed.Name" => val r = parseTypedNameT(T); return r
         case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
@@ -4513,6 +4509,7 @@ object JSON {
         case "Typed.Package" => val r = parseTypedPackageT(T); return r
         case "Typed.Object" => val r = parseTypedObjectT(T); return r
         case "Typed.Enum" => val r = parseTypedEnumT(T); return r
+        case "Typed.Method" => val r = parseTypedMethodT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -4619,6 +4616,27 @@ object JSON {
       return Typed.Enum(name)
     }
 
+    def parseTypedMethod(): Typed.Method = {
+      val r = parseTypedMethodT(F)
+      return r
+    }
+
+    def parseTypedMethodT(typeParsed: B): Typed.Method = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Method")
+      }
+      parser.parseObjectKey("isInObject")
+      val isInObject = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("owner")
+      val owner = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("name")
+      val name = parser.parseString()
+      parser.parseObjectNext()
+      return Typed.Method(isInObject, owner, name)
+    }
+
     def parseAttr(): Attr = {
       val r = parseAttrT(F)
       return r
@@ -4674,17 +4692,15 @@ object JSON {
     }
 
     def parseResolvedInfo(): ResolvedInfo = {
-      val t = parser.parseObjectTypes(ISZ("ResolvedInfo.BuiltIn", "ResolvedInfo.Package", "ResolvedInfo.Enum", "ResolvedInfo.Object", "ResolvedInfo.ObjectVar", "ResolvedInfo.ObjectMethod", "ResolvedInfo.Type", "ResolvedInfo.TypeVar", "ResolvedInfo.TypeMethod", "ResolvedInfo.LocalVar"))
+      val t = parser.parseObjectTypes(ISZ("ResolvedInfo.BuiltIn", "ResolvedInfo.Package", "ResolvedInfo.Enum", "ResolvedInfo.Object", "ResolvedInfo.Var", "ResolvedInfo.Method", "ResolvedInfo.Type", "ResolvedInfo.LocalVar"))
       t.native match {
         case "ResolvedInfo.BuiltIn" => val r = parseResolvedInfoBuiltInT(T); return r
         case "ResolvedInfo.Package" => val r = parseResolvedInfoPackageT(T); return r
         case "ResolvedInfo.Enum" => val r = parseResolvedInfoEnumT(T); return r
         case "ResolvedInfo.Object" => val r = parseResolvedInfoObjectT(T); return r
-        case "ResolvedInfo.ObjectVar" => val r = parseResolvedInfoObjectVarT(T); return r
-        case "ResolvedInfo.ObjectMethod" => val r = parseResolvedInfoObjectMethodT(T); return r
+        case "ResolvedInfo.Var" => val r = parseResolvedInfoVarT(T); return r
+        case "ResolvedInfo.Method" => val r = parseResolvedInfoMethodT(T); return r
         case "ResolvedInfo.Type" => val r = parseResolvedInfoTypeT(T); return r
-        case "ResolvedInfo.TypeVar" => val r = parseResolvedInfoTypeVarT(T); return r
-        case "ResolvedInfo.TypeMethod" => val r = parseResolvedInfoTypeMethodT(T); return r
         case "ResolvedInfo.LocalVar" => val r = parseResolvedInfoLocalVarT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -4750,40 +4766,52 @@ object JSON {
       return ResolvedInfo.Object(name)
     }
 
-    def parseResolvedInfoObjectVar(): ResolvedInfo.ObjectVar = {
-      val r = parseResolvedInfoObjectVarT(F)
+    def parseResolvedInfoVar(): ResolvedInfo.Var = {
+      val r = parseResolvedInfoVarT(F)
       return r
     }
 
-    def parseResolvedInfoObjectVarT(typeParsed: B): ResolvedInfo.ObjectVar = {
+    def parseResolvedInfoVarT(typeParsed: B): ResolvedInfo.Var = {
       if (!typeParsed) {
-        parser.parseObjectType("ResolvedInfo.ObjectVar")
+        parser.parseObjectType("ResolvedInfo.Var")
       }
+      parser.parseObjectKey("isInObject")
+      val isInObject = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isSpec")
+      val isSpec = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("objectName")
       val objectName = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.ObjectVar(objectName, id)
+      return ResolvedInfo.Var(isInObject, isSpec, objectName, id)
     }
 
-    def parseResolvedInfoObjectMethod(): ResolvedInfo.ObjectMethod = {
-      val r = parseResolvedInfoObjectMethodT(F)
+    def parseResolvedInfoMethod(): ResolvedInfo.Method = {
+      val r = parseResolvedInfoMethodT(F)
       return r
     }
 
-    def parseResolvedInfoObjectMethodT(typeParsed: B): ResolvedInfo.ObjectMethod = {
+    def parseResolvedInfoMethodT(typeParsed: B): ResolvedInfo.Method = {
       if (!typeParsed) {
-        parser.parseObjectType("ResolvedInfo.ObjectMethod")
+        parser.parseObjectType("ResolvedInfo.Method")
       }
+      parser.parseObjectKey("isInObject")
+      val isInObject = parser.parseB()
+      parser.parseObjectNext()
+      parser.parseObjectKey("isSpec")
+      val isSpec = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("objectName")
       val objectName = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.ObjectMethod(objectName, id)
+      return ResolvedInfo.Method(isInObject, isSpec, objectName, id)
     }
 
     def parseResolvedInfoType(): ResolvedInfo.Type = {
@@ -4799,42 +4827,6 @@ object JSON {
       val name = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       return ResolvedInfo.Type(name)
-    }
-
-    def parseResolvedInfoTypeVar(): ResolvedInfo.TypeVar = {
-      val r = parseResolvedInfoTypeVarT(F)
-      return r
-    }
-
-    def parseResolvedInfoTypeVarT(typeParsed: B): ResolvedInfo.TypeVar = {
-      if (!typeParsed) {
-        parser.parseObjectType("ResolvedInfo.TypeVar")
-      }
-      parser.parseObjectKey("typeName")
-      val typeName = parser.parseISZ(parser.parseString _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parser.parseString()
-      parser.parseObjectNext()
-      return ResolvedInfo.TypeVar(typeName, id)
-    }
-
-    def parseResolvedInfoTypeMethod(): ResolvedInfo.TypeMethod = {
-      val r = parseResolvedInfoTypeMethodT(F)
-      return r
-    }
-
-    def parseResolvedInfoTypeMethodT(typeParsed: B): ResolvedInfo.TypeMethod = {
-      if (!typeParsed) {
-        parser.parseObjectType("ResolvedInfo.TypeMethod")
-      }
-      parser.parseObjectKey("typeName")
-      val typeName = parser.parseISZ(parser.parseString _)
-      parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parser.parseString()
-      parser.parseObjectNext()
-      return ResolvedInfo.TypeMethod(typeName, id)
     }
 
     def parseResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
@@ -7570,6 +7562,24 @@ object JSON {
     return r
   }
 
+  def fromTypedMethod(o: Typed.Method, isCompact: B): String = {
+    val st = Printer.printTypedMethod(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedMethod(s: String): Typed.Method = {
+    def fTypedMethod(parser: Parser): Typed.Method = {
+      val r = parser.parseTypedMethod()
+      return r
+    }
+    val r = to(s, fTypedMethod)
+    return r
+  }
+
   def fromAttr(o: Attr, isCompact: B): String = {
     val st = Printer.printAttr(o)
     if (isCompact) {
@@ -7714,8 +7724,8 @@ object JSON {
     return r
   }
 
-  def fromResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar, isCompact: B): String = {
-    val st = Printer.printResolvedInfoObjectVar(o)
+  def fromResolvedInfoVar(o: ResolvedInfo.Var, isCompact: B): String = {
+    val st = Printer.printResolvedInfoVar(o)
     if (isCompact) {
       return st.renderCompact
     } else {
@@ -7723,17 +7733,17 @@ object JSON {
     }
   }
 
-  def toResolvedInfoObjectVar(s: String): ResolvedInfo.ObjectVar = {
-    def fResolvedInfoObjectVar(parser: Parser): ResolvedInfo.ObjectVar = {
-      val r = parser.parseResolvedInfoObjectVar()
+  def toResolvedInfoVar(s: String): ResolvedInfo.Var = {
+    def fResolvedInfoVar(parser: Parser): ResolvedInfo.Var = {
+      val r = parser.parseResolvedInfoVar()
       return r
     }
-    val r = to(s, fResolvedInfoObjectVar)
+    val r = to(s, fResolvedInfoVar)
     return r
   }
 
-  def fromResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod, isCompact: B): String = {
-    val st = Printer.printResolvedInfoObjectMethod(o)
+  def fromResolvedInfoMethod(o: ResolvedInfo.Method, isCompact: B): String = {
+    val st = Printer.printResolvedInfoMethod(o)
     if (isCompact) {
       return st.renderCompact
     } else {
@@ -7741,12 +7751,12 @@ object JSON {
     }
   }
 
-  def toResolvedInfoObjectMethod(s: String): ResolvedInfo.ObjectMethod = {
-    def fResolvedInfoObjectMethod(parser: Parser): ResolvedInfo.ObjectMethod = {
-      val r = parser.parseResolvedInfoObjectMethod()
+  def toResolvedInfoMethod(s: String): ResolvedInfo.Method = {
+    def fResolvedInfoMethod(parser: Parser): ResolvedInfo.Method = {
+      val r = parser.parseResolvedInfoMethod()
       return r
     }
-    val r = to(s, fResolvedInfoObjectMethod)
+    val r = to(s, fResolvedInfoMethod)
     return r
   }
 
@@ -7765,42 +7775,6 @@ object JSON {
       return r
     }
     val r = to(s, fResolvedInfoType)
-    return r
-  }
-
-  def fromResolvedInfoTypeVar(o: ResolvedInfo.TypeVar, isCompact: B): String = {
-    val st = Printer.printResolvedInfoTypeVar(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toResolvedInfoTypeVar(s: String): ResolvedInfo.TypeVar = {
-    def fResolvedInfoTypeVar(parser: Parser): ResolvedInfo.TypeVar = {
-      val r = parser.parseResolvedInfoTypeVar()
-      return r
-    }
-    val r = to(s, fResolvedInfoTypeVar)
-    return r
-  }
-
-  def fromResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod, isCompact: B): String = {
-    val st = Printer.printResolvedInfoTypeMethod(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toResolvedInfoTypeMethod(s: String): ResolvedInfo.TypeMethod = {
-    def fResolvedInfoTypeMethod(parser: Parser): ResolvedInfo.TypeMethod = {
-      val r = parser.parseResolvedInfoTypeMethod()
-      return r
-    }
-    val r = to(s, fResolvedInfoTypeMethod)
     return r
   }
 

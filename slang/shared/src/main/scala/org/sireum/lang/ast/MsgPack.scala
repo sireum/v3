@@ -298,33 +298,31 @@ object MsgPack {
 
     val TypedEnum: Z = 130
 
-    val Attr: Z = 131
+    val TypedMethod: Z = 131
 
-    val TypedAttr: Z = 132
+    val Attr: Z = 132
 
-    val ResolvedAttr: Z = 133
+    val TypedAttr: Z = 133
 
-    val ResolvedInfoBuiltIn: Z = 134
+    val ResolvedAttr: Z = 134
 
-    val ResolvedInfoPackage: Z = 135
+    val ResolvedInfoBuiltIn: Z = 135
 
-    val ResolvedInfoEnum: Z = 136
+    val ResolvedInfoPackage: Z = 136
 
-    val ResolvedInfoObject: Z = 137
+    val ResolvedInfoEnum: Z = 137
 
-    val ResolvedInfoObjectVar: Z = 138
+    val ResolvedInfoObject: Z = 138
 
-    val ResolvedInfoObjectMethod: Z = 139
+    val ResolvedInfoVar: Z = 139
 
-    val ResolvedInfoType: Z = 140
+    val ResolvedInfoMethod: Z = 140
 
-    val ResolvedInfoTypeVar: Z = 141
+    val ResolvedInfoType: Z = 141
 
-    val ResolvedInfoTypeMethod: Z = 142
+    val ResolvedInfoLocalVar: Z = 142
 
-    val ResolvedInfoLocalVar: Z = 143
-
-    val PosInfo: Z = 144
+    val PosInfo: Z = 143
 
   }
 
@@ -1419,6 +1417,7 @@ object MsgPack {
         case o: Typed.Package => writeTypedPackage(o)
         case o: Typed.Object => writeTypedObject(o)
         case o: Typed.Enum => writeTypedEnum(o)
+        case o: Typed.Method => writeTypedMethod(o)
       }
     }
 
@@ -1456,6 +1455,13 @@ object MsgPack {
       writer.writeISZ(o.name, writeString)
     }
 
+    def writeTypedMethod(o: Typed.Method): Unit = {
+      writer.writeZ(Constants.TypedMethod)
+      writeB(o.isInObject)
+      writer.writeISZ(o.owner, writeString)
+      writeString(o.name)
+    }
+
     def writeAttr(o: Attr): Unit = {
       writer.writeZ(Constants.Attr)
       writer.writeOption(o.posOpt, writePosInfo)
@@ -1480,11 +1486,9 @@ object MsgPack {
         case o: ResolvedInfo.Package => writeResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => writeResolvedInfoEnum(o)
         case o: ResolvedInfo.Object => writeResolvedInfoObject(o)
-        case o: ResolvedInfo.ObjectVar => writeResolvedInfoObjectVar(o)
-        case o: ResolvedInfo.ObjectMethod => writeResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Var => writeResolvedInfoVar(o)
+        case o: ResolvedInfo.Method => writeResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => writeResolvedInfoType(o)
-        case o: ResolvedInfo.TypeVar => writeResolvedInfoTypeVar(o)
-        case o: ResolvedInfo.TypeMethod => writeResolvedInfoTypeMethod(o)
         case o: ResolvedInfo.LocalVar => writeResolvedInfoLocalVar(o)
       }
     }
@@ -1509,14 +1513,18 @@ object MsgPack {
       writer.writeISZ(o.name, writeString)
     }
 
-    def writeResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): Unit = {
-      writer.writeZ(Constants.ResolvedInfoObjectVar)
+    def writeResolvedInfoVar(o: ResolvedInfo.Var): Unit = {
+      writer.writeZ(Constants.ResolvedInfoVar)
+      writeB(o.isInObject)
+      writeB(o.isSpec)
       writer.writeISZ(o.objectName, writeString)
       writeString(o.id)
     }
 
-    def writeResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): Unit = {
-      writer.writeZ(Constants.ResolvedInfoObjectMethod)
+    def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
+      writer.writeZ(Constants.ResolvedInfoMethod)
+      writeB(o.isInObject)
+      writeB(o.isSpec)
       writer.writeISZ(o.objectName, writeString)
       writeString(o.id)
     }
@@ -1524,18 +1532,6 @@ object MsgPack {
     def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
       writer.writeZ(Constants.ResolvedInfoType)
       writer.writeISZ(o.name, writeString)
-    }
-
-    def writeResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): Unit = {
-      writer.writeZ(Constants.ResolvedInfoTypeVar)
-      writer.writeISZ(o.typeName, writeString)
-      writeString(o.id)
-    }
-
-    def writeResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): Unit = {
-      writer.writeZ(Constants.ResolvedInfoTypeMethod)
-      writer.writeISZ(o.typeName, writeString)
-      writeString(o.id)
     }
 
     def writeResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): Unit = {
@@ -3784,6 +3780,7 @@ object MsgPack {
         case Constants.TypedPackage => val r = readTypedPackageT(T); return r
         case Constants.TypedObject => val r = readTypedObjectT(T); return r
         case Constants.TypedEnum => val r = readTypedEnumT(T); return r
+        case Constants.TypedMethod => val r = readTypedMethodT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
     }
@@ -3870,6 +3867,21 @@ object MsgPack {
       return Typed.Enum(name)
     }
 
+    def readTypedMethod(): Typed.Method = {
+      val r = readTypedMethodT(F)
+      return r
+    }
+
+    def readTypedMethodT(typeParsed: B): Typed.Method = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.TypedMethod)
+      }
+      val isInObject = reader.readB()
+      val owner = reader.readISZ(reader.readString _)
+      val name = reader.readString()
+      return Typed.Method(isInObject, owner, name)
+    }
+
     def readAttr(): Attr = {
       val r = readAttrT(F)
       return r
@@ -3919,11 +3931,9 @@ object MsgPack {
         case Constants.ResolvedInfoPackage => val r = readResolvedInfoPackageT(T); return r
         case Constants.ResolvedInfoEnum => val r = readResolvedInfoEnumT(T); return r
         case Constants.ResolvedInfoObject => val r = readResolvedInfoObjectT(T); return r
-        case Constants.ResolvedInfoObjectVar => val r = readResolvedInfoObjectVarT(T); return r
-        case Constants.ResolvedInfoObjectMethod => val r = readResolvedInfoObjectMethodT(T); return r
+        case Constants.ResolvedInfoVar => val r = readResolvedInfoVarT(T); return r
+        case Constants.ResolvedInfoMethod => val r = readResolvedInfoMethodT(T); return r
         case Constants.ResolvedInfoType => val r = readResolvedInfoTypeT(T); return r
-        case Constants.ResolvedInfoTypeVar => val r = readResolvedInfoTypeVarT(T); return r
-        case Constants.ResolvedInfoTypeMethod => val r = readResolvedInfoTypeMethodT(T); return r
         case Constants.ResolvedInfoLocalVar => val r = readResolvedInfoLocalVarT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
@@ -3981,32 +3991,36 @@ object MsgPack {
       return ResolvedInfo.Object(name)
     }
 
-    def readResolvedInfoObjectVar(): ResolvedInfo.ObjectVar = {
-      val r = readResolvedInfoObjectVarT(F)
+    def readResolvedInfoVar(): ResolvedInfo.Var = {
+      val r = readResolvedInfoVarT(F)
       return r
     }
 
-    def readResolvedInfoObjectVarT(typeParsed: B): ResolvedInfo.ObjectVar = {
+    def readResolvedInfoVarT(typeParsed: B): ResolvedInfo.Var = {
       if (!typeParsed) {
-        reader.expectZ(Constants.ResolvedInfoObjectVar)
+        reader.expectZ(Constants.ResolvedInfoVar)
       }
+      val isInObject = reader.readB()
+      val isSpec = reader.readB()
       val objectName = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.ObjectVar(objectName, id)
+      return ResolvedInfo.Var(isInObject, isSpec, objectName, id)
     }
 
-    def readResolvedInfoObjectMethod(): ResolvedInfo.ObjectMethod = {
-      val r = readResolvedInfoObjectMethodT(F)
+    def readResolvedInfoMethod(): ResolvedInfo.Method = {
+      val r = readResolvedInfoMethodT(F)
       return r
     }
 
-    def readResolvedInfoObjectMethodT(typeParsed: B): ResolvedInfo.ObjectMethod = {
+    def readResolvedInfoMethodT(typeParsed: B): ResolvedInfo.Method = {
       if (!typeParsed) {
-        reader.expectZ(Constants.ResolvedInfoObjectMethod)
+        reader.expectZ(Constants.ResolvedInfoMethod)
       }
+      val isInObject = reader.readB()
+      val isSpec = reader.readB()
       val objectName = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.ObjectMethod(objectName, id)
+      return ResolvedInfo.Method(isInObject, isSpec, objectName, id)
     }
 
     def readResolvedInfoType(): ResolvedInfo.Type = {
@@ -4020,34 +4034,6 @@ object MsgPack {
       }
       val name = reader.readISZ(reader.readString _)
       return ResolvedInfo.Type(name)
-    }
-
-    def readResolvedInfoTypeVar(): ResolvedInfo.TypeVar = {
-      val r = readResolvedInfoTypeVarT(F)
-      return r
-    }
-
-    def readResolvedInfoTypeVarT(typeParsed: B): ResolvedInfo.TypeVar = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.ResolvedInfoTypeVar)
-      }
-      val typeName = reader.readISZ(reader.readString _)
-      val id = reader.readString()
-      return ResolvedInfo.TypeVar(typeName, id)
-    }
-
-    def readResolvedInfoTypeMethod(): ResolvedInfo.TypeMethod = {
-      val r = readResolvedInfoTypeMethodT(F)
-      return r
-    }
-
-    def readResolvedInfoTypeMethodT(typeParsed: B): ResolvedInfo.TypeMethod = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.ResolvedInfoTypeMethod)
-      }
-      val typeName = reader.readISZ(reader.readString _)
-      val id = reader.readString()
-      return ResolvedInfo.TypeMethod(typeName, id)
     }
 
     def readResolvedInfoLocalVar(): ResolvedInfo.LocalVar = {
@@ -6312,6 +6298,21 @@ object MsgPack {
     return r
   }
 
+  def fromTypedMethod(o: Typed.Method, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeTypedMethod(o)
+    return w.result
+  }
+
+  def toTypedMethod(data: ISZ[U8]): Typed.Method = {
+    def fTypedMethod(reader: Reader): Typed.Method = {
+      val r = reader.readTypedMethod()
+      return r
+    }
+    val r = to(data, fTypedMethod)
+    return r
+  }
+
   def fromAttr(o: Attr, poolString: B): ISZ[U8] = {
     val w = Writer.Default(MessagePack.writer(poolString))
     w.writeAttr(o)
@@ -6432,33 +6433,33 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar, poolString: B): ISZ[U8] = {
+  def fromResolvedInfoVar(o: ResolvedInfo.Var, poolString: B): ISZ[U8] = {
     val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeResolvedInfoObjectVar(o)
+    w.writeResolvedInfoVar(o)
     return w.result
   }
 
-  def toResolvedInfoObjectVar(data: ISZ[U8]): ResolvedInfo.ObjectVar = {
-    def fResolvedInfoObjectVar(reader: Reader): ResolvedInfo.ObjectVar = {
-      val r = reader.readResolvedInfoObjectVar()
+  def toResolvedInfoVar(data: ISZ[U8]): ResolvedInfo.Var = {
+    def fResolvedInfoVar(reader: Reader): ResolvedInfo.Var = {
+      val r = reader.readResolvedInfoVar()
       return r
     }
-    val r = to(data, fResolvedInfoObjectVar)
+    val r = to(data, fResolvedInfoVar)
     return r
   }
 
-  def fromResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod, poolString: B): ISZ[U8] = {
+  def fromResolvedInfoMethod(o: ResolvedInfo.Method, poolString: B): ISZ[U8] = {
     val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeResolvedInfoObjectMethod(o)
+    w.writeResolvedInfoMethod(o)
     return w.result
   }
 
-  def toResolvedInfoObjectMethod(data: ISZ[U8]): ResolvedInfo.ObjectMethod = {
-    def fResolvedInfoObjectMethod(reader: Reader): ResolvedInfo.ObjectMethod = {
-      val r = reader.readResolvedInfoObjectMethod()
+  def toResolvedInfoMethod(data: ISZ[U8]): ResolvedInfo.Method = {
+    def fResolvedInfoMethod(reader: Reader): ResolvedInfo.Method = {
+      val r = reader.readResolvedInfoMethod()
       return r
     }
-    val r = to(data, fResolvedInfoObjectMethod)
+    val r = to(data, fResolvedInfoMethod)
     return r
   }
 
@@ -6474,36 +6475,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fResolvedInfoType)
-    return r
-  }
-
-  def fromResolvedInfoTypeVar(o: ResolvedInfo.TypeVar, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeResolvedInfoTypeVar(o)
-    return w.result
-  }
-
-  def toResolvedInfoTypeVar(data: ISZ[U8]): ResolvedInfo.TypeVar = {
-    def fResolvedInfoTypeVar(reader: Reader): ResolvedInfo.TypeVar = {
-      val r = reader.readResolvedInfoTypeVar()
-      return r
-    }
-    val r = to(data, fResolvedInfoTypeVar)
-    return r
-  }
-
-  def fromResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeResolvedInfoTypeMethod(o)
-    return w.result
-  }
-
-  def toResolvedInfoTypeMethod(data: ISZ[U8]): ResolvedInfo.TypeMethod = {
-    def fResolvedInfoTypeMethod(reader: Reader): ResolvedInfo.TypeMethod = {
-      val r = reader.readResolvedInfoTypeMethod()
-      return r
-    }
-    val r = to(data, fResolvedInfoTypeMethod)
     return r
   }
 

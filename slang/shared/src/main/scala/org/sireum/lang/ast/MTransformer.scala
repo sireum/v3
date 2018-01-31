@@ -796,6 +796,7 @@ object MTransformer {
         case o: Typed.Package => return preTypedPackage(o)
         case o: Typed.Object => return preTypedObject(o)
         case o: Typed.Enum => return preTypedEnum(o)
+        case o: Typed.Method => return preTypedMethod(o)
       }
     }
 
@@ -823,6 +824,10 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preTypedMethod(o: Typed.Method): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
     def preAttr(o: Attr): PreResult[Attr] = {
       return PreResult(T, MNone())
     }
@@ -841,11 +846,9 @@ object MTransformer {
         case o: ResolvedInfo.Package => return preResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => return preResolvedInfoEnum(o)
         case o: ResolvedInfo.Object => return preResolvedInfoObject(o)
-        case o: ResolvedInfo.ObjectVar => return preResolvedInfoObjectVar(o)
-        case o: ResolvedInfo.ObjectMethod => return preResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Var => return preResolvedInfoVar(o)
+        case o: ResolvedInfo.Method => return preResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => return preResolvedInfoType(o)
-        case o: ResolvedInfo.TypeVar => return preResolvedInfoTypeVar(o)
-        case o: ResolvedInfo.TypeMethod => return preResolvedInfoTypeMethod(o)
         case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(o)
       }
     }
@@ -866,23 +869,15 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
-    def preResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): PreResult[ResolvedInfo] = {
+    def preResolvedInfoVar(o: ResolvedInfo.Var): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
-    def preResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): PreResult[ResolvedInfo] = {
+    def preResolvedInfoMethod(o: ResolvedInfo.Method): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
     def preResolvedInfoType(o: ResolvedInfo.Type): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
@@ -1651,6 +1646,7 @@ object MTransformer {
         case o: Typed.Package => return postTypedPackage(o)
         case o: Typed.Object => return postTypedObject(o)
         case o: Typed.Enum => return postTypedEnum(o)
+        case o: Typed.Method => return postTypedMethod(o)
       }
     }
 
@@ -1678,6 +1674,10 @@ object MTransformer {
       return MNone()
     }
 
+    def postTypedMethod(o: Typed.Method): MOption[Typed] = {
+      return MNone()
+    }
+
     def postAttr(o: Attr): MOption[Attr] = {
       return MNone()
     }
@@ -1696,11 +1696,9 @@ object MTransformer {
         case o: ResolvedInfo.Package => return postResolvedInfoPackage(o)
         case o: ResolvedInfo.Enum => return postResolvedInfoEnum(o)
         case o: ResolvedInfo.Object => return postResolvedInfoObject(o)
-        case o: ResolvedInfo.ObjectVar => return postResolvedInfoObjectVar(o)
-        case o: ResolvedInfo.ObjectMethod => return postResolvedInfoObjectMethod(o)
+        case o: ResolvedInfo.Var => return postResolvedInfoVar(o)
+        case o: ResolvedInfo.Method => return postResolvedInfoMethod(o)
         case o: ResolvedInfo.Type => return postResolvedInfoType(o)
-        case o: ResolvedInfo.TypeVar => return postResolvedInfoTypeVar(o)
-        case o: ResolvedInfo.TypeMethod => return postResolvedInfoTypeMethod(o)
         case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(o)
       }
     }
@@ -1721,23 +1719,15 @@ object MTransformer {
       return MNone()
     }
 
-    def postResolvedInfoObjectVar(o: ResolvedInfo.ObjectVar): MOption[ResolvedInfo] = {
+    def postResolvedInfoVar(o: ResolvedInfo.Var): MOption[ResolvedInfo] = {
       return MNone()
     }
 
-    def postResolvedInfoObjectMethod(o: ResolvedInfo.ObjectMethod): MOption[ResolvedInfo] = {
+    def postResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo] = {
       return MNone()
     }
 
     def postResolvedInfoType(o: ResolvedInfo.Type): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoTypeVar(o: ResolvedInfo.TypeVar): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoTypeMethod(o: ResolvedInfo.TypeMethod): MOption[ResolvedInfo] = {
       return MNone()
     }
 
@@ -3697,6 +3687,11 @@ import MTransformer._
             MSome(o2)
           else
             MNone()
+        case o2: Typed.Method =>
+          if (hasChanged)
+            MSome(o2)
+          else
+            MNone()
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -3826,27 +3821,17 @@ import MTransformer._
             MSome(o2)
           else
             MNone()
-        case o2: ResolvedInfo.ObjectVar =>
+        case o2: ResolvedInfo.Var =>
           if (hasChanged)
             MSome(o2)
           else
             MNone()
-        case o2: ResolvedInfo.ObjectMethod =>
+        case o2: ResolvedInfo.Method =>
           if (hasChanged)
             MSome(o2)
           else
             MNone()
         case o2: ResolvedInfo.Type =>
-          if (hasChanged)
-            MSome(o2)
-          else
-            MNone()
-        case o2: ResolvedInfo.TypeVar =>
-          if (hasChanged)
-            MSome(o2)
-          else
-            MNone()
-        case o2: ResolvedInfo.TypeMethod =>
           if (hasChanged)
             MSome(o2)
           else
