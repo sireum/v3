@@ -740,7 +740,7 @@ object Resolver {
   }
 
   @pure def isTypeParamNameString(id: String): B = {
-    return id.size > 0 && id(0) == '`'
+    return id.size > 0 && ops.StringOps(id).first == '`'
   }
 
   @pure def isTypeParamName(name: QName): B = {

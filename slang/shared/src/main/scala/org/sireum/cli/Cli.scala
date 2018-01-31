@@ -147,7 +147,7 @@ import Cli._
     var isOption = T
     while (j < args.size && isOption) {
       val arg = args(j)
-      if (arg(0) == '-') {
+      if (ops.StringOps(arg).first == '-') {
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())
@@ -261,7 +261,7 @@ import Cli._
     var isOption = T
     while (j < args.size && isOption) {
       val arg = args(j)
-      if (arg(0) == '-') {
+      if (ops.StringOps(arg).first == '-') {
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())
@@ -367,7 +367,7 @@ import Cli._
     var isOption = T
     while (j < args.size && isOption) {
       val arg = args(j)
-      if (arg(0) == '-') {
+      if (ops.StringOps(arg).first == '-') {
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())
@@ -467,7 +467,7 @@ import Cli._
     var isOption = T
     while (j < args.size && isOption) {
       val arg = args(j)
-      if (arg(0) == '-') {
+      if (ops.StringOps(arg).first == '-') {
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())

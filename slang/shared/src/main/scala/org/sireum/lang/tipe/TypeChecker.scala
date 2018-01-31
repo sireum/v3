@@ -392,7 +392,7 @@ import TypeChecker.typeString
               receiverType match {
                 case receiverType: AST.Typed.Name => halt("Unimplemented") // TODO
                 case receiverType: AST.Typed.Tuple =>
-                  if (id.size == 0 || id(0) == '_') {
+                  if (id.size == 0 || ops.StringOps(id).first == '_') {
                     err(receiverType)
                     return (newReceiver, receiverTypeOpt)
                   }
@@ -440,8 +440,6 @@ import TypeChecker.typeString
           }
         case _ => halt("Unimplemented") // TODO
       }
-
-
     }
 
     exp match {
