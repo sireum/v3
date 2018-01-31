@@ -130,7 +130,7 @@ class TypeCheckerTest extends SireumSpec {
       rep.printMessages()
       return false
     }
-    val typeChecker = TypeChecker(th, ISZ())
+    val typeChecker = TypeChecker(th, ISZ(), F)
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope = Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
