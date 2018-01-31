@@ -26,7 +26,6 @@
 package org.sireum.lang
 
 import org.sireum._
-import org.sireum.lang.ast.{ResolvedAttr, Transformer, TypedAttr}
 import org.sireum.lang.parser._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
@@ -76,6 +75,8 @@ class TypeCheckerTest extends SireumSpec {
 
       "Stmt" - {
 
+        *(passingStmt("val x: org.sireum.Z = 1"))
+
         *(passingStmt("assert(true)"))
 
         *(passingStmt("assume(1 + 3 > 2)"))
@@ -116,6 +117,24 @@ class TypeCheckerTest extends SireumSpec {
       allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) =>
         TypeChecker.checkWorksheet(program, reporter)
+        if (reporter.hasIssue) {
+          reporter.printMessages()
+        }
+        val t = ast.MTransformer(new ast.MTransformer.PrePost {
+          def $owned: Boolean = F
+          def $owned_=(b: Boolean): $internal.MutableMarker = this
+          def $clone: $internal.MutableMarker = this
+          def string: String = ""
+          override def preTypedAttr(o: ast.TypedAttr): ast.MTransformer.PreResult[ast.TypedAttr] = {
+            assert(o.typedOpt.nonEmpty)
+            super.preTypedAttr(o)
+          }
+          override def preResolvedAttr(o: ast.ResolvedAttr): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
+            assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
+            super.preResolvedAttr(o)
+          }
+
+        })
       case _ =>
     }
     if (reporter.hasIssue) {
@@ -136,13 +155,16 @@ class TypeCheckerTest extends SireumSpec {
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>
+        if (reporter.hasIssue) {
+          reporter.printMessages()
+        }
         val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
-          override def preTypedAttr(ctx: Unit, o: TypedAttr): Transformer.PreResult[Unit, TypedAttr] = {
+          override def preTypedAttr(ctx: Unit, o: ast.TypedAttr): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
             assert(o.typedOpt.nonEmpty)
             super.preTypedAttr(ctx, o)
           }
 
-          override def preResolvedAttr(ctx: Unit, o: ResolvedAttr): Transformer.PreResult[Unit, ResolvedAttr] = {
+          override def preResolvedAttr(ctx: Unit, o: ast.ResolvedAttr): ast.Transformer.PreResult[Unit, ast.ResolvedAttr] = {
             assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
             super.preResolvedAttr(ctx, o)
           }
@@ -150,9 +172,6 @@ class TypeCheckerTest extends SireumSpec {
           def string: String = ""
         })
         t.transformStmt((), checkedStmt)
-        if (reporter.hasIssue) {
-          reporter.printMessages()
-        }
         !reporter.hasIssue
       case _ =>
         !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
