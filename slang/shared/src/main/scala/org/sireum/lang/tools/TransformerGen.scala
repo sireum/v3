@@ -267,14 +267,16 @@ object TransformerGen {
       @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(preCtx, continu, Some(r: $tpe)) => PreResult(preCtx, continu, Some[$tpe](r))
-                   |   case _ => halt("Can only produce object of type $tpe")
+                   |   case PreResult(_, _, Some(_)) => halt("Can only produce object of type $tpe")
+                   |   case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[$tpe]())
                    |  }"""
       }
 
       @pure def postAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case Result(postCtx, Some(result: $tpe)) => Result(postCtx, Some[$tpe](result))
-                   |   case _ => halt("Can only produce object of type $tpe")
+                   |   case Result(_, Some(_)) => halt("Can only produce object of type $tpe")
+                   |   case Result(postCtx, _) => Result(postCtx, None[$tpe]())
                    |  }"""
       }
 
@@ -547,14 +549,16 @@ object TransformerGen {
       @pure def preAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case PreResult(continu, MSome(r: $tpe)) => PreResult(continu, MSome[$tpe](r))
-                   |   case _ => halt("Can only produce object of type $tpe")
+                   |   case PreResult(_, MSome(_)) => halt("Can only produce object of type $tpe")
+                   |   case PreResult(continu, _) => PreResult(continu, MNone[$tpe]())
                    |  }"""
       }
 
       @pure def postAdapt(tpe: ST): ST = {
         return st""" match {
                    |   case MSome(result: $tpe) => MSome[$tpe](result)
-                   |   case _ => halt("Can only produce object of type $tpe")
+                   |   case MSome(_) => halt("Can only produce object of type $tpe")
+                   |   case _ => MNone[$tpe]()
                    |  }"""
       }
 
