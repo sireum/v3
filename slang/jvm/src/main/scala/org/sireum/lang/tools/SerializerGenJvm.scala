@@ -55,7 +55,7 @@ object SerializerGenJvm {
           case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
           case _ => SNone[SString]()
         }
-        val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
+        val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
         SSome(SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
           Util.ids2strings(p.packageName.ids), reporter).gen(lOpt, fOpt, nameOpt).
           render.value)
