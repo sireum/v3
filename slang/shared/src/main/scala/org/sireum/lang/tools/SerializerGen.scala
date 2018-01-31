@@ -743,11 +743,11 @@ object SerializerGen {
       val enumTypeName = typeName(packageName, ti.name)
       printers = printers :+
         template.printEnum(enumTypeName, enumTypeString,
-          for (e <- ti.elements.elements)
+          for (e <- ti.elements.keys)
             yield template.printEnumCase(e, enumTypeString))
       parsers = parsers :+
         template.parseEnum(enumTypeName, enumTypeString,
-          for (e <- ti.elements.elements)
+          for (e <- ti.elements.keys)
             yield template.parseEnumCase(e, enumTypeString))
     }
 
