@@ -581,7 +581,7 @@ import TypeChecker.typeString
                 var r = newUnaryExp
                 val tOpt = checkExpected(tpe)
                 up(r.attr.typedOpt) = tOpt
-                return (newUnaryExp, tOpt)
+                return (r, tOpt)
               case _ =>
                 // TODO: resolve unary_<op> on <expType>
                 reporter.error(exp.posOpt, typeCheckerKind,
