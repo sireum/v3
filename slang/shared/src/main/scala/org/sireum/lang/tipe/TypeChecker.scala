@@ -598,7 +598,7 @@ import TypeChecker.typeString
     aexp match {
       case aexp: AST.Stmt.Expr =>
         val (newExp, tOpt) = checkExp(expected, scope, aexp.exp, reporter)
-        return (aexp(exp = newExp), tOpt)
+        return (aexp(exp = newExp, attr = aexp.attr(typedOpt = tOpt)), tOpt)
       case aexp: AST.Stmt.Block => halt("Unimplemented") // TODO
       case aexp: AST.Stmt.If => halt("Unimplemented") // TODO
       case aexp: AST.Stmt.Match => halt("Unimplemented") // TODO
