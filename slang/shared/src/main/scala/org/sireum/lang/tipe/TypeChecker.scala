@@ -235,7 +235,7 @@ object TypeChecker {
     for (p <- m.params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = deBruijn(AST.Typed.Fun(m.isPure, F, pts, m.returnType.typedOpt.get))
+    val t = deBruijn(AST.Typed.Fun(m.isPure, !m.hasParams, pts, m.returnType.typedOpt.get))
     t match {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
@@ -483,20 +483,40 @@ import TypeChecker.typeString
                       s"Expecting ${exp.targs.size} type arguments, but found ${typeArgs.size}.")
                     return (newExp, None())
                   }
+                  var substMap = HashMap.emptyInit[String, AST.Typed](typeArgs.size)
+                  val size = typeArgs.size
+                  var i = 0
+                  while (i < size) {
+                    substMap = substMap.put(t.typeParams(i), typeArgs(i))
+                    i = i + 1
+                  }
                   if (exp.targs.nonEmpty) {
                     if (etaParent) {
-
+                      val tpe: AST.Typed = if (t.tpe.isByName) t.tpe(isByName = F) else t.tpe
+                      return (newExp, Some(substType(substMap, tpe)))
                     } else {
-
+                      if (t.tpe.isByName) {
+                        return (newExp, Some(substType(substMap, t.tpe.ret)))
+                      } else {
+                        reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                          "Method access has to be explicitly eta-expanded to become a function using '_'.")
+                        return (newExp, None())
+                      }
                     }
                   } else {
                     if (etaParent) {
-
+                      val tpe: AST.Typed = if (t.tpe.isByName) t.tpe(isByName = F) else t.tpe
+                      return (newExp, Some(tpe))
                     } else {
-
+                      if (t.tpe.isByName) {
+                        return (newExp, Some(t.tpe.ret))
+                      } else {
+                        reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                          "Method access has to be explicitly eta-expanded to become a function using '_'.")
+                        return (newExp, None())
+                      }
                     }
                   }
-                  halt("Unimplemented") // TODO
                 case t =>
                   if (exp.targs.nonEmpty) {
                     reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot supply type arguments on '$t'.")
