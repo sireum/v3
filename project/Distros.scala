@@ -68,7 +68,7 @@ object Distros {
     "snakeyaml" -> 24503,
     "antlr" -> 34128,
     "asm" -> 41973,
-    "bash" -> (if (isDev) 42543 else 38798),
+    "bash" -> (if (isDev) 38798 else 38798),
     "batch" -> 22567,
     "compare" -> 24991,
     "latex" -> 18476,
@@ -76,7 +76,6 @@ object Distros {
     "rst" -> 14700
   ) ++ (if (isDev) Map(
     "ignore" -> 42151,
-    "go" -> 42110,
     "rust" -> 42464,
     "rust-cargo" -> 42155
   ) else Map())
