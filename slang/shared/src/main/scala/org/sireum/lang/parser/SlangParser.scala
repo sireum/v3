@@ -1746,7 +1746,15 @@ class SlangParser(text: Predef.String,
         } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
       case exp: Term.This => AST.Exp.This(typedAttr(exp.pos))
       case q"super" => AST.Exp.Super(typedAttr(exp.pos))
-      case exp: Term.Eta => AST.Exp.Eta(translateExp(exp.expr), resolvedAttr(exp.pos))
+      case exp: Term.Eta =>
+        val ref: AST.Exp.Ref = translateExp(exp.expr) match {
+          case r: AST.Exp.Ident => r
+          case r: AST.Exp.Select => r
+          case _ =>
+            error(exp.expr.pos, s"Expecting an identifier or an access expression, but found ${syntax(exp.expr)}.")
+            rExp
+        }
+        AST.Exp.Eta(ref, typedAttr(exp.pos))
       case exp: Term.Tuple => AST.Exp.Tuple(ISZ(exp.args.map(translateExp): _*), typedAttr(exp.pos))
       case exp: Term.ApplyUnary => translateUnaryExp(exp)
       case exp: Term.ApplyInfix => translateBinaryExp(exp)
