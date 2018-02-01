@@ -64,6 +64,9 @@ object TopUnit {
 }
 
 @sig sealed trait AssignExp {
+
+  @pure def asStmt: Stmt
+
   @pure def exprs: ISZ[Stmt.Expr] = {
     this match {
       case stmt: Stmt.Expr => return ISZ(stmt)
@@ -320,6 +323,10 @@ object Stmt {
       return this
     }
 
+    @pure override def asStmt: Stmt = {
+      return this
+    }
+
   }
 
   @datatype class If(cond: Exp,
@@ -335,6 +342,10 @@ object Stmt {
     @pure override def asAssignExp: AssignExp = {
       return this
     }
+
+    @pure override def asStmt: Stmt = {
+      return this
+    }
   }
 
   @datatype class Match(cond: Exp,
@@ -347,6 +358,10 @@ object Stmt {
     }
 
     @pure override def asAssignExp: AssignExp = {
+      return this
+    }
+
+    @pure override def asStmt: Stmt = {
       return this
     }
 
@@ -420,6 +435,10 @@ object Stmt {
     }
 
     @pure override def asAssignExp: AssignExp = {
+      return this
+    }
+
+    @pure override def asStmt: Stmt = {
       return this
     }
 
