@@ -97,6 +97,10 @@ object TypeChecker {
         return t(args = t.args.map(ta => substType(m, ta)))
       case t: AST.Typed.Tuple => return t(args = t.args.map(ta => substType(m, ta)))
       case t: AST.Typed.Fun => return t(args = t.args.map(ta => substType(m, ta)), ret = substType(m, t.ret))
+      case t: AST.Typed.Enum => return t
+      case t: AST.Typed.Method => return t
+      case t: AST.Typed.Object => return t
+      case t: AST.Typed.Package => return t
     }
   }
 
@@ -223,6 +227,10 @@ object TypeChecker {
           }
           val tr = db(t.ret)
           return t(args = args, ret = tr)
+        case t: AST.Typed.Enum => return t
+        case t: AST.Typed.Method => return t
+        case t: AST.Typed.Object => return t
+        case t: AST.Typed.Package => return t
       }
     }
 

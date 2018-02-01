@@ -417,6 +417,10 @@ object TypeHierarchy {
           val newRet = newRetOpt.getOrElse(t.ret)
           changed = changed || newRetOpt.nonEmpty
           return if (changed) Some(t(args = newArgs, ret = newRet)) else None()
+        case _: AST.Typed.Enum => return None()
+        case _: AST.Typed.Method => return None()
+        case _: AST.Typed.Object => return None()
+        case _: AST.Typed.Package => return None()
       }
     }
 
