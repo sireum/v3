@@ -707,6 +707,11 @@ object Exp {
     'RemoveAll
   }
 
+  @sig trait Ref {
+    @pure def targs: ISZ[Type]
+    @pure def asExp: Exp
+  }
+
   @datatype class Binary(left: Exp,
                          op: BinaryOp.Type,
                          right: Exp,
@@ -718,9 +723,23 @@ object Exp {
     }
   }
 
+  object Ident {
+
+    val targs: ISZ[Type] = ISZ()
+
+  }
+
   @datatype class Ident(id: Id,
                         @hidden attr: ResolvedAttr)
-    extends Exp {
+    extends Exp with Ref {
+
+    @pure override def targs: ISZ[Type] = {
+      return Ident.targs
+    }
+
+    @pure override def asExp: Exp = {
+      return this
+    }
 
     @pure override def hash: Z = {
       attr.resOpt match {
@@ -741,8 +760,8 @@ object Exp {
     }
   }
 
-  @datatype class Eta(exp: Exp,
-                      @hidden attr: ResolvedAttr)
+  @datatype class Eta(ref: Ref,
+                      @hidden attr: TypedAttr)
     extends Exp {
 
     def posOpt: Option[PosInfo] = {
@@ -761,9 +780,13 @@ object Exp {
 
   @datatype class Select(receiverOpt: Option[Exp],
                          id: Id,
-                         targs: ISZ[Type],
+                         val targs: ISZ[Type],
                          @hidden attr: ResolvedAttr)
-    extends Exp {
+    extends Exp with Ref {
+
+    @pure override def asExp: Exp = {
+      return this
+    }
 
     def posOpt: Option[PosInfo] = {
       return attr.posOpt

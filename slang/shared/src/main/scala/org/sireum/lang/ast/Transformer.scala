@@ -504,6 +504,25 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preExpRef(ctx: Context, o: Exp.Ref): PreResult[Context, Exp.Ref] = {
+      o match {
+        case o: Exp.Ident =>
+          val r: PreResult[Context, Exp.Ref] = preExpIdent(ctx, o) match {
+           case PreResult(preCtx, continu, Some(r: Exp.Ref)) => PreResult(preCtx, continu, Some[Exp.Ref](r))
+           case PreResult(_, _, Some(_)) => halt("Can only produce object of type Exp.Ref")
+           case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[Exp.Ref]())
+          }
+          return r
+        case o: Exp.Select =>
+          val r: PreResult[Context, Exp.Ref] = preExpSelect(ctx, o) match {
+           case PreResult(preCtx, continu, Some(r: Exp.Ref)) => PreResult(preCtx, continu, Some[Exp.Ref](r))
+           case PreResult(_, _, Some(_)) => halt("Can only produce object of type Exp.Ref")
+           case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[Exp.Ref]())
+          }
+          return r
+      }
+    }
+
     @pure def preExpBinary(ctx: Context, o: Exp.Binary): PreResult[Context, Exp] = {
       return PreResult(ctx, T, None())
     }
@@ -1373,6 +1392,25 @@ object Transformer {
 
     @pure def postExpUnary(ctx: Context, o: Exp.Unary): Result[Context, Exp] = {
       return Result(ctx, None())
+    }
+
+    @pure def postExpRef(ctx: Context, o: Exp.Ref): Result[Context, Exp.Ref] = {
+      o match {
+        case o: Exp.Ident =>
+          val r: Result[Context, Exp.Ref] = postExpIdent(ctx, o) match {
+           case Result(postCtx, Some(result: Exp.Ref)) => Result(postCtx, Some[Exp.Ref](result))
+           case Result(_, Some(_)) => halt("Can only produce object of type Exp.Ref")
+           case Result(postCtx, _) => Result(postCtx, None[Exp.Ref]())
+          }
+          return r
+        case o: Exp.Select =>
+          val r: Result[Context, Exp.Ref] = postExpSelect(ctx, o) match {
+           case Result(postCtx, Some(result: Exp.Ref)) => Result(postCtx, Some[Exp.Ref](result))
+           case Result(_, Some(_)) => halt("Can only produce object of type Exp.Ref")
+           case Result(postCtx, _) => Result(postCtx, None[Exp.Ref]())
+          }
+          return r
+      }
     }
 
     @pure def postExpBinary(ctx: Context, o: Exp.Binary): Result[Context, Exp] = {
@@ -2713,10 +2751,10 @@ import Transformer._
           else
             Result(r1.ctx, None())
         case o2: Exp.Eta =>
-          val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
-          val r1: Result[Context, ResolvedAttr] = transformResolvedAttr(r0.ctx, o2.attr)
+          val r0: Result[Context, Exp.Ref] = transformExpRef(ctx, o2.ref)
+          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp), attr = r1.resultOpt.getOrElse(o2.attr))))
+            Result(r1.ctx, Some(o2(ref = r0.resultOpt.getOrElse(o2.ref), attr = r1.resultOpt.getOrElse(o2.attr))))
           else
             Result(r1.ctx, None())
         case o2: Exp.Tuple =>
@@ -2866,6 +2904,47 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: Lit = r.resultOpt.getOrElse(o)
     val postR: Result[Context, Lit] = pp.postLit(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformExpRef(ctx: Context, o: Exp.Ref): Result[Context, Exp.Ref] = {
+    val preR: PreResult[Context, Exp.Ref] = pp.preExpRef(ctx, o)
+    val r: Result[Context, Exp.Ref] = if (preR.continu) {
+      val o2: Exp.Ref = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val rOpt: Result[Context, Exp.Ref] = o2 match {
+        case o2: Exp.Ident =>
+          val r0: Result[Context, Id] = transformId(ctx, o2.id)
+          val r1: Result[Context, ResolvedAttr] = transformResolvedAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
+        case o2: Exp.Select =>
+          val r0: Result[Context, Option[Exp]] = transformOption(ctx, o2.receiverOpt, transformExp)
+          val r1: Result[Context, Id] = transformId(r0.ctx, o2.id)
+          val r2: Result[Context, IS[Z, Type]] = transformISZ(r1.ctx, o2.targs, transformType)
+          val r3: Result[Context, ResolvedAttr] = transformResolvedAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(receiverOpt = r0.resultOpt.getOrElse(o2.receiverOpt), id = r1.resultOpt.getOrElse(o2.id), targs = r2.resultOpt.getOrElse(o2.targs), attr = r3.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r3.ctx, None())
+      }
+      rOpt
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Exp.Ref = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Exp.Ref] = pp.postExpRef(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

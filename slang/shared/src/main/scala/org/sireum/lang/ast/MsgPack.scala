@@ -948,6 +948,13 @@ object MsgPack {
       writer.writeZ(o.ordinal)
     }
 
+    def writeExpRef(o: Exp.Ref): Unit = {
+      o match {
+        case o: Exp.Ident => writeExpIdent(o)
+        case o: Exp.Select => writeExpSelect(o)
+      }
+    }
+
     def writeExpBinary(o: Exp.Binary): Unit = {
       writer.writeZ(Constants.ExpBinary)
       writeExp(o.left)
@@ -964,8 +971,8 @@ object MsgPack {
 
     def writeExpEta(o: Exp.Eta): Unit = {
       writer.writeZ(Constants.ExpEta)
-      writeExp(o.exp)
-      writeResolvedAttr(o.attr)
+      writeExpRef(o.ref)
+      writeTypedAttr(o.attr)
     }
 
     def writeExpTuple(o: Exp.Tuple): Unit = {
@@ -2844,6 +2851,15 @@ object MsgPack {
       return Exp.BinaryOp.byOrdinal(r).get
     }
 
+    def readExpRef(): Exp.Ref = {
+      val t = reader.readZ()
+      t match {
+        case Constants.ExpIdent => val r = readExpIdentT(T); return r
+        case Constants.ExpSelect => val r = readExpSelectT(T); return r
+        case _ => halt(s"Unexpected type code $t.")
+      }
+    }
+
     def readExpBinary(): Exp.Binary = {
       val r = readExpBinaryT(F)
       return r
@@ -2883,9 +2899,9 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ExpEta)
       }
-      val exp = readExp()
-      val attr = readResolvedAttr()
-      return Exp.Eta(exp, attr)
+      val ref = readExpRef()
+      val attr = readTypedAttr()
+      return Exp.Eta(ref, attr)
     }
 
     def readExpTuple(): Exp.Tuple = {
@@ -5271,6 +5287,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fExpUnary)
+    return r
+  }
+
+  def fromExpRef(o: Exp.Ref, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeExpRef(o)
+    return w.result
+  }
+
+  def toExpRef(data: ISZ[U8]): Exp.Ref = {
+    def fExpRef(reader: Reader): Exp.Ref = {
+      val r = reader.readExpRef()
+      return r
+    }
+    val r = to(data, fExpRef)
     return r
   }
 

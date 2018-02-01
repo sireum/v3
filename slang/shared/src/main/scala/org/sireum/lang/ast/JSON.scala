@@ -823,6 +823,13 @@ object JSON {
       ))
     }
 
+    @pure def printExpRef(o: Exp.Ref): ST = {
+      o match {
+        case o: Exp.Ident => return printExpIdent(o)
+        case o: Exp.Select => return printExpSelect(o)
+      }
+    }
+
     @pure def printExpBinary(o: Exp.Binary): ST = {
       return printObject(ISZ(
         ("type", st""""Exp.Binary""""),
@@ -844,8 +851,8 @@ object JSON {
     @pure def printExpEta(o: Exp.Eta): ST = {
       return printObject(ISZ(
         ("type", st""""Exp.Eta""""),
-        ("exp", printExp(o.exp)),
-        ("attr", printResolvedAttr(o.attr))
+        ("ref", printExpRef(o.ref)),
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -3241,6 +3248,15 @@ object JSON {
       }
     }
 
+    def parseExpRef(): Exp.Ref = {
+      val t = parser.parseObjectTypes(ISZ("Exp.Ident", "Exp.Select"))
+      t.native match {
+        case "Exp.Ident" => val r = parseExpIdentT(T); return r
+        case "Exp.Select" => val r = parseExpSelectT(T); return r
+        case _ => halt(parser.errorMessage)
+      }
+    }
+
     def parseExpBinary(): Exp.Binary = {
       val r = parseExpBinaryT(F)
       return r
@@ -3292,13 +3308,13 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Exp.Eta")
       }
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
+      parser.parseObjectKey("ref")
+      val ref = parseExpRef()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseResolvedAttr()
+      val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Exp.Eta(exp, attr)
+      return Exp.Eta(ref, attr)
     }
 
     def parseExpTuple(): Exp.Tuple = {
@@ -6335,6 +6351,24 @@ object JSON {
       return r
     }
     val r = to(s, fExpUnary)
+    return r
+  }
+
+  def fromExpRef(o: Exp.Ref, isCompact: B): String = {
+    val st = Printer.printExpRef(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toExpRef(s: String): Exp.Ref = {
+    def fExpRef(parser: Parser): Exp.Ref = {
+      val r = parser.parseExpRef()
+      return r
+    }
+    val r = to(s, fExpRef)
     return r
   }
 

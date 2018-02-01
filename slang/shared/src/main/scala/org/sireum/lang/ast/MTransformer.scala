@@ -500,6 +500,25 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preExpRef(o: Exp.Ref): PreResult[Exp.Ref] = {
+      o match {
+        case o: Exp.Ident =>
+          val r: PreResult[Exp.Ref] = preExpIdent(o) match {
+           case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
+           case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
+           case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
+          }
+          return r
+        case o: Exp.Select =>
+          val r: PreResult[Exp.Ref] = preExpSelect(o) match {
+           case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
+           case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
+           case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
+          }
+          return r
+      }
+    }
+
     def preExpBinary(o: Exp.Binary): PreResult[Exp] = {
       return PreResult(T, MNone())
     }
@@ -1369,6 +1388,25 @@ object MTransformer {
 
     def postExpUnary(o: Exp.Unary): MOption[Exp] = {
       return MNone()
+    }
+
+    def postExpRef(o: Exp.Ref): MOption[Exp.Ref] = {
+      o match {
+        case o: Exp.Ident =>
+          val r: MOption[Exp.Ref] = postExpIdent(o) match {
+           case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
+           case MSome(_) => halt("Can only produce object of type Exp.Ref")
+           case _ => MNone[Exp.Ref]()
+          }
+          return r
+        case o: Exp.Select =>
+          val r: MOption[Exp.Ref] = postExpSelect(o) match {
+           case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
+           case MSome(_) => halt("Can only produce object of type Exp.Ref")
+           case _ => MNone[Exp.Ref]()
+          }
+          return r
+      }
     }
 
     def postExpBinary(o: Exp.Binary): MOption[Exp] = {
@@ -2707,10 +2745,10 @@ import MTransformer._
           else
             MNone()
         case o2: Exp.Eta =>
-          val r0: MOption[Exp] = transformExp(o2.exp)
-          val r1: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
+          val r0: MOption[Exp.Ref] = transformExpRef(o2.ref)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
+            MSome(o2(ref = r0.getOrElse(o2.ref), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Exp.Tuple =>
@@ -2860,6 +2898,47 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: Lit = r.getOrElse(o)
     val postR: MOption[Lit] = pp.postLit(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformExpRef(o: Exp.Ref): MOption[Exp.Ref] = {
+    val preR: PreResult[Exp.Ref] = pp.preExpRef(o)
+    val r: MOption[Exp.Ref] = if (preR.continu) {
+      val o2: Exp.Ref = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val rOpt: MOption[Exp.Ref] = o2 match {
+        case o2: Exp.Ident =>
+          val r0: MOption[Id] = transformId(o2.id)
+          val r1: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(id = r0.getOrElse(o2.id), attr = r1.getOrElse(o2.attr)))
+          else
+            MNone()
+        case o2: Exp.Select =>
+          val r0: MOption[Option[Exp]] = transformOption(o2.receiverOpt, transformExp)
+          val r1: MOption[Id] = transformId(o2.id)
+          val r2: MOption[IS[Z, Type]] = transformISZ(o2.targs, transformType)
+          val r3: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(receiverOpt = r0.getOrElse(o2.receiverOpt), id = r1.getOrElse(o2.id), targs = r2.getOrElse(o2.targs), attr = r3.getOrElse(o2.attr)))
+          else
+            MNone()
+      }
+      rOpt
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Exp.Ref = r.getOrElse(o)
+    val postR: MOption[Exp.Ref] = pp.postExpRef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
