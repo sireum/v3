@@ -230,12 +230,12 @@ object TypeChecker {
     return r
   }
 
-  @pure def extractMethodType(isPure: B, m: AST.MethodSig): AST.Typed.Fun = {
+  @pure def extractMethodType(m: AST.MethodSig): AST.Typed.Fun = {
     var pts = ISZ[AST.Typed]()
     for (p <- m.params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = deBruijn(AST.Typed.Fun(isPure, F, pts, m.returnType.typedOpt.get))
+    val t = deBruijn(AST.Typed.Fun(m.isPure, F, pts, m.returnType.typedOpt.get))
     t match {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
@@ -368,75 +368,183 @@ import TypeChecker.typeString
       }
     }
 
-    def checkIdent(exp: AST.Exp.Ident): (AST.Exp, Option[AST.Typed]) = {
+    def checkIdent(exp: AST.Exp.Ident,
+                   etaParent: B): (AST.Exp, Option[AST.Typed]) = {
       scope.resolveName(typeHierarchy.nameMap, ISZ(exp.id.value)) match {
         case Some(info) =>
           val (typedOpt, resOpt) = checkInfo(info)
+          // TODO: eta-expansion
           return (exp(attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
         case _ => halt("Unimplemented") // TODO: check this.<exp>
       }
     }
 
-    def checkSelect(exp: AST.Exp.Select): (AST.Exp, Option[AST.Typed]) = {
-      val id = exp.id.value
+    def checkSelectH(receiverType: AST.Typed, ident: AST.Id,
+                     hasTypeArgs: B): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+      val id = ident.value
 
-      def err(t: AST.Typed): Unit = {
-        reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot access '$id' from type '$t'.")
+      def errAccess(t: AST.Typed): Unit = {
+        reporter.error(ident.attr.posOpt, typeCheckerKind, s"Cannot access '$id' from type '$t'.")
       }
 
+      def errTypeArgs(t: AST.Typed): Unit = {
+        reporter.error(ident.attr.posOpt, typeCheckerKind, s"Method '$id' does not accept type arguments.")
+      }
+
+      @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+        return (None(), None())
+      }
+
+      receiverType match {
+        case receiverType: AST.Typed.Name => halt("Unimplemented") // TODO
+        case receiverType: AST.Typed.Tuple =>
+          if (id.size == 0 || ops.StringOps(id).first == '_') {
+            errAccess(receiverType)
+            return noResult
+          }
+          Z(ops.StringOps(id).substring(1, id.size)) match {
+            case Some(n) =>
+              val size = receiverType.args.size
+              if (!(0 <= n && n < size)) {
+                errAccess(receiverType)
+                return noResult
+              }
+              if (hasTypeArgs) {
+                errTypeArgs(receiverType)
+                return noResult
+              }
+              return (Some(receiverType.args(n)), Some(AST.ResolvedInfo.Tuple(size, n)))
+            case _ =>
+              errAccess(receiverType)
+              return noResult
+          }
+        case receiverType: AST.Typed.Fun =>
+          errAccess(receiverType)
+          return noResult
+        case receiverType: AST.Typed.Package =>
+          if (hasTypeArgs) {
+            errTypeArgs(receiverType)
+            return noResult
+          }
+          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+        case receiverType: AST.Typed.Object =>
+          if (hasTypeArgs) {
+            errTypeArgs(receiverType)
+            return noResult
+          }
+          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+        case receiverType: AST.Typed.Enum =>
+          typeHierarchy.nameMap.get(receiverType.name) match {
+            case Some(info: Info.Enum) =>
+              info.elements.get(id) match {
+                case Some(resOpt) =>
+                  if (hasTypeArgs) {
+                    errTypeArgs(receiverType)
+                    return noResult
+                  }
+                  return (info.elementTypedOpt, resOpt)
+                case _ =>
+                  errAccess(receiverType)
+                  return noResult
+              }
+            case _ => halt("Unexpected case while type checking enum access.")
+          }
+        case receiverType: AST.Typed.Method =>
+          errAccess(receiverType)
+          return noResult
+      }
+    }
+
+    def checkSelect(exp: AST.Exp.Select,
+                    etaParent: B): (AST.Exp, Option[AST.Typed]) = {
+      var typeArgs = ISZ[AST.Typed]()
+      for (targ <- exp.targs) {
+        val tOpt = typeHierarchy.typed(scope, targ, reporter)
+        tOpt match {
+          case Some(t) => typeArgs = typeArgs :+ t
+          case _ =>
+            return (exp, None())
+        }
+      }
       exp.receiverOpt match {
         case Some(receiver) =>
           val (newReceiver, receiverTypeOpt) = checkExp(None(), scope, receiver, reporter)
           receiverTypeOpt match {
             case Some(receiverType) =>
-              receiverType match {
-                case receiverType: AST.Typed.Name => halt("Unimplemented") // TODO
-                case receiverType: AST.Typed.Tuple =>
-                  if (id.size == 0 || ops.StringOps(id).first == '_') {
-                    err(receiverType)
-                    return (newReceiver, receiverTypeOpt)
+              val (typedOpt, resOpt) = checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
+              val newExp = exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
+              if (typedOpt.isEmpty) {
+                return (newExp, typedOpt)
+              }
+              typedOpt.get match {
+                case t: AST.Typed.Method =>
+                  if (exp.targs.size != typeArgs.size) {
+                    reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                      s"Expecting ${exp.targs.size} type arguments, but found ${typeArgs.size}.")
+                    return (newExp, None())
                   }
-                  Z(ops.StringOps(id).substring(1, id.size)) match {
-                    case Some(n) =>
-                      val size = receiverType.args.size
-                      if (!(0 <= n && n < size)) {
-                        err(receiverType)
-                        return (newReceiver, receiverTypeOpt)
-                      }
-                      val typedOpt = Some(receiverType.args(n))
-                      val resOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.Tuple(size, n))
-                      return (exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
-                    case _ =>
-                      err(receiverType)
-                      return (newReceiver, receiverTypeOpt)
+                  if (exp.targs.nonEmpty) {
+                    if (etaParent) {
+
+                    } else {
+
+                    }
+                  } else {
+                    if (etaParent) {
+
+                    } else {
+
+                    }
                   }
-                case receiverType: AST.Typed.Fun =>
-                  err(receiverType)
-                  return (newReceiver, receiverTypeOpt)
-                case receiverType: AST.Typed.Package =>
-                  val (typedOpt, resOpt) = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
-                  return (exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
-                case receiverType: AST.Typed.Object =>
-                  val (typedOpt, resOpt) = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
-                  return (exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
-                case receiverType: AST.Typed.Enum =>
-                  typeHierarchy.nameMap.get(receiverType.name) match {
-                    case Some(info: Info.Enum) =>
-                      info.elements.get(id) match {
-                        case Some(resOpt) =>
-                          val typedOpt = info.elementTypedOpt
-                          return (exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
-                        case _ =>
-                          err(receiverType)
-                          return (newReceiver, receiverTypeOpt)
-                      }
-                    case _ => halt("Unexpected case while type checking enum access.")
+                  halt("Unimplemented") // TODO
+                case t =>
+                  if (exp.targs.nonEmpty) {
+                    reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot supply type arguments on '$t'.")
+                    return (newExp, None())
+                  } else {
+                    if (etaParent) {
+                      reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot eta-expand non-method '$t'.")
+                      return (newExp, None())
+                    } else {
+                      return (newExp, typedOpt)
+                    }
                   }
-                case receiverType: AST.Typed.Method =>
-                  err(receiverType)
-                  return (newReceiver, receiverTypeOpt)
               }
             case _ => return (newReceiver, receiverTypeOpt)
+          }
+        case _ => halt("Unimplemented") // TODO
+      }
+    }
+
+    def checkInvoke(exp: AST.Exp.Invoke): (AST.Exp, Option[AST.Typed]) = {
+      exp.receiverOpt match {
+        case Some(receiver) =>
+          val (newReceiver, receiverTypeOpt) = checkExp(None(), scope, receiver, reporter)
+
+          @pure def partResult: (AST.Exp, Option[AST.Typed]) = {
+            return (exp(receiverOpt = Some(newReceiver)), None())
+          }
+
+          receiverTypeOpt match {
+            case Some(receiverType) =>
+              val (typedOpt, resOpt) = checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
+              typedOpt match {
+                case Some(t) =>
+                  t match {
+                    case t: AST.Typed.Name =>
+                    case t: AST.Typed.Fun =>
+                      if (exp.targs.nonEmpty) {
+
+                      }
+                    case t: AST.Typed.Method =>
+                    case _ =>
+                      reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot invoke on '$t'.")
+                      return partResult
+                  }
+                  halt("Unimplemented") // TODO
+                case _ => return partResult
+              }
+            case _ => return partResult
           }
         case _ => halt("Unimplemented") // TODO
       }
@@ -457,7 +565,7 @@ import TypeChecker.typeString
               case (Some((leftT, leftKind)), Some((rightT, rightKind))) =>
                 if (leftKind != rightKind) {
                   reporter.error(exp.posOpt, typeCheckerKind,
-                    st"Incompatible types for binary operation ${AST.Util.typedString(leftT)} ${AST.Util.binop(exp.op)} ${AST.Util.typedString(rightT)}.".render)
+                    st"Incompatible types for binary operation '$leftT' ${AST.Util.binop(exp.op)} '$rightT'.".render)
                   return (newBinaryExp, None())
                 }
                 if ((leftKind == BasicKind.B && AST.Util.isBoolBinop(exp.op)) ||
@@ -474,7 +582,7 @@ import TypeChecker.typeString
                   return (r, tOpt)
                 } else {
                   reporter.error(exp.posOpt, typeCheckerKind,
-                    st"Undefined binary operation ${AST.Util.binop(exp.op)} on ${AST.Util.typedString(leftT)}".render)
+                    st"Undefined binary operation ${AST.Util.binop(exp.op)} on '$leftT'".render)
                 }
                 halt("Unimplemented") // TODO
               case _ =>
@@ -489,11 +597,11 @@ import TypeChecker.typeString
 
       case exp: AST.Exp.Fun => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Ident => val r = checkIdent(exp); return r
+      case exp: AST.Exp.Ident => val r = checkIdent(exp, F); return r
 
       case exp: AST.Exp.If => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Invoke => halt("Unimplemented") // TODO
+      case exp: AST.Exp.Invoke => val r = checkInvoke(exp); return r
 
       case exp: AST.Exp.InvokeNamed => halt("Unimplemented") // TODO
 
@@ -513,7 +621,7 @@ import TypeChecker.typeString
 
       case exp: AST.Exp.Quant => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Select => val r = checkSelect(exp); return r
+      case exp: AST.Exp.Select => val r = checkSelect(exp, F); return r
 
       case exp: AST.Exp.StringInterpolate =>
         var args = ISZ[AST.Exp]()
@@ -569,13 +677,13 @@ import TypeChecker.typeString
               case Some((tpe, kind)) =>
                 if (exp.op == AST.Exp.UnaryOp.Not && kind != BasicKind.B) {
                   reporter.error(exp.posOpt, typeCheckerKind,
-                    st"Undefined unary operation ! on ${AST.Util.typedString(tpe)}.".render)
+                    st"Undefined unary operation ! on '$tpe'.".render)
                   return (newUnaryExp, None())
                 }
                 if (exp.op == AST.Exp.UnaryOp.Complement &&
                   !(kind == BasicKind.B || kind == BasicKind.Bits)) {
                   reporter.error(exp.posOpt, typeCheckerKind,
-                    st"Undefined unary operation ~ on ${AST.Util.typedString(tpe)}.".render)
+                    st"Undefined unary operation ~ on 'tpe'.".render)
                   return (newUnaryExp, None())
                 }
                 var r = newUnaryExp
@@ -585,7 +693,7 @@ import TypeChecker.typeString
               case _ =>
                 // TODO: resolve unary_<op> on <expType>
                 reporter.error(exp.posOpt, typeCheckerKind,
-                  st"Undefined unary operation ${AST.Util.unop(exp.op)} on ${AST.Util.typedString(expType)}.".render)
+                  st"Undefined unary operation ${AST.Util.unop(exp.op)} on '$expType'.".render)
             }
           case _ =>
         }
@@ -825,14 +933,13 @@ import TypeChecker.typeString
               case Some(t) =>
                 if (typeHierarchy.isSubType(t, tOpt.get)) {
                   reporter.error(exp.posOpt, typeCheckerKind,
-                    s"Expecting type '${AST.Util.typedString(tOpt.get)}', but found incompatible type ${AST.Util.typedString(t)}.")
+                    s"Expecting type '${tOpt.get}', but found incompatible type '$t'.")
                 }
                 return (Some(scope), stmt(expOpt = Some(newExp), attr = stmt.attr(typedOpt = tOpt)))
               case _ => return (None(), stmt(expOpt = Some(newExp)))
             }
           case (Some(t), _) =>
-            reporter.error(stmt.posOpt, typeCheckerKind,
-              s"Expecting type '${AST.Util.typedString(t)}', but none found.")
+            reporter.error(stmt.posOpt, typeCheckerKind, s"Expecting type '$t', but none found.")
             return (None(), stmt)
           case (_, Some(exp)) =>
             val (newExp, _) = checkExp(None(), scope, exp, reporter)
