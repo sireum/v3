@@ -1097,6 +1097,7 @@ object MsgPack {
 
     def writeMethodSig(o: MethodSig): Unit = {
       writer.writeZ(Constants.MethodSig)
+      writeB(o.isPure)
       writeId(o.id)
       writer.writeISZ(o.typeParams, writeTypeParam)
       writeB(o.hasParams)
@@ -1462,8 +1463,10 @@ object MsgPack {
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writeB(o.isInObject)
+      writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
+      writeTypedFun(o.tpe)
     }
 
     def writeAttr(o: Attr): Unit = {
@@ -3159,12 +3162,13 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.MethodSig)
       }
+      val isPure = reader.readB()
       val id = readId()
       val typeParams = reader.readISZ(readTypeParam _)
       val hasParams = reader.readB()
       val params = reader.readISZ(readParam _)
       val returnType = readType()
-      return MethodSig(id, typeParams, hasParams, params, returnType)
+      return MethodSig(isPure, id, typeParams, hasParams, params, returnType)
     }
 
     def readParam(): Param = {
@@ -3896,9 +3900,11 @@ object MsgPack {
         reader.expectZ(Constants.TypedMethod)
       }
       val isInObject = reader.readB()
+      val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
-      return Typed.Method(isInObject, owner, name)
+      val tpe = readTypedFun()
+      return Typed.Method(isInObject, typeParams, owner, name, tpe)
     }
 
     def readAttr(): Attr = {

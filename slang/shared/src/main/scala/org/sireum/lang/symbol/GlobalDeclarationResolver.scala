@@ -77,8 +77,7 @@ import org.sireum.lang.{ast => AST}
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("method", name,
-          Info.Method(name, scope(packageName, currentImports, name), stmt,
-            Some(AST.Typed.Method(T, currentName, id)),
+          Info.Method(name, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, F, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.ExtMethod =>
         val name = currentName :+ stmt.sig.id.value
@@ -88,8 +87,7 @@ import org.sireum.lang.{ast => AST}
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("specification method", name,
-          Info.SpecMethod(name, scope(packageName, currentImports, name), stmt,
-            Some(AST.Typed.Method(T, currentName, id)),
+          Info.SpecMethod(name, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, T, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SubZ =>
         val name = currentName :+ stmt.id.value

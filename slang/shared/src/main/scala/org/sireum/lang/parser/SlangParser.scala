@@ -615,6 +615,7 @@ class SlangParser(text: Predef.String,
       case _ => (false, ISZ[AST.Param]())
     }
     val sig = AST.MethodSig(
+      isPure,
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
       hasParams,
@@ -710,6 +711,7 @@ class SlangParser(text: Predef.String,
       case _ => (false, ISZ[AST.Param]())
     }
     val sig = AST.MethodSig(
+      isMemoize || isPure,
       cid(name),
       ISZ(tparams.map(translateTypeParam): _*),
       hasParams,

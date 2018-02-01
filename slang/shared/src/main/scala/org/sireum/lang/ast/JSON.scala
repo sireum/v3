@@ -1013,6 +1013,7 @@ object JSON {
     @pure def printMethodSig(o: MethodSig): ST = {
       return printObject(ISZ(
         ("type", st""""MethodSig""""),
+        ("isPure", printB(o.isPure)),
         ("id", printId(o.id)),
         ("typeParams", printISZ(F, o.typeParams, printTypeParam)),
         ("hasParams", printB(o.hasParams)),
@@ -1468,8 +1469,10 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Typed.Method""""),
         ("isInObject", printB(o.isInObject)),
+        ("typeParams", printISZ(T, o.typeParams, printString)),
         ("owner", printISZ(T, o.owner, printString)),
-        ("name", printString(o.name))
+        ("name", printString(o.name)),
+        ("tpe", printTypedFun(o.tpe))
       ))
     }
 
@@ -3676,6 +3679,9 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("MethodSig")
       }
+      parser.parseObjectKey("isPure")
+      val isPure = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
@@ -3691,7 +3697,7 @@ object JSON {
       parser.parseObjectKey("returnType")
       val returnType = parseType()
       parser.parseObjectNext()
-      return MethodSig(id, typeParams, hasParams, params, returnType)
+      return MethodSig(isPure, id, typeParams, hasParams, params, returnType)
     }
 
     def parseParam(): Param = {
@@ -4647,13 +4653,19 @@ object JSON {
       parser.parseObjectKey("isInObject")
       val isInObject = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("typeParams")
+      val typeParams = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("owner")
       val owner = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("name")
       val name = parser.parseString()
       parser.parseObjectNext()
-      return Typed.Method(isInObject, owner, name)
+      parser.parseObjectKey("tpe")
+      val tpe = parseTypedFun()
+      parser.parseObjectNext()
+      return Typed.Method(isInObject, typeParams, owner, name, tpe)
     }
 
     def parseAttr(): Attr = {

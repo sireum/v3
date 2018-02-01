@@ -236,23 +236,4 @@ object Util {
       case Exp.BinaryOp.RemoveAll => return F
     }
   }
-
-  @pure def typedString(t: Typed): ST = {
-    t match {
-      case t: Typed.Name =>
-        if (t.args.isEmpty) {
-          return st"${(t.ids, ".")}"
-        } else {
-          return st"${(t.ids, ".")}[${(t.args.map(typedString), ", ")}]"
-        }
-      case t: Typed.Tuple => return st"(${(t.args.map(typedString), ", ")})"
-      case t: Typed.Fun =>
-        if (t.args.size == 1) {
-          return st"${typedString(t.args(0))} => ${typedString(t.ret)}"
-        } else {
-          return st"(${(t.args.map(typedString), ", ")}) => ${typedString(t.ret)}"
-        }
-
-    }
-  }
 }

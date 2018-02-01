@@ -3730,8 +3730,9 @@ import MTransformer._
           else
             MNone()
         case o2: Typed.Method =>
-          if (hasChanged)
-            MSome(o2)
+          val r0: MOption[Typed.Fun] = transformTypedFun(o2.tpe)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(tpe = r0.getOrElse(o2.tpe)))
           else
             MNone()
       }
@@ -4142,6 +4143,42 @@ import MTransformer._
      case MSome(result: Exp.LitB) => MSome[Exp.LitB](result)
      case MSome(_) => halt("Can only produce object of type Exp.LitB")
      case _ => MNone[Exp.LitB]()
+    }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformTypedFun(o: Typed.Fun): MOption[Typed.Fun] = {
+    val preR: PreResult[Typed.Fun] = pp.preTypedFun(o) match {
+     case PreResult(continu, MSome(r: Typed.Fun)) => PreResult(continu, MSome[Typed.Fun](r))
+     case PreResult(_, MSome(_)) => halt("Can only produce object of type Typed.Fun")
+     case PreResult(continu, _) => PreResult(continu, MNone[Typed.Fun]())
+    }
+    val r: MOption[Typed.Fun] = if (preR.continu) {
+      val o2: Typed.Fun = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[IS[Z, Typed]] = transformISZ(o2.args, transformTyped)
+      val r1: MOption[Typed] = transformTyped(o2.ret)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(args = r0.getOrElse(o2.args), ret = r1.getOrElse(o2.ret)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Typed.Fun = r.getOrElse(o)
+    val postR: MOption[Typed.Fun] = pp.postTypedFun(o2) match {
+     case MSome(result: Typed.Fun) => MSome[Typed.Fun](result)
+     case MSome(_) => halt("Can only produce object of type Typed.Fun")
+     case _ => MNone[Typed.Fun]()
     }
     if (postR.nonEmpty) {
       return postR

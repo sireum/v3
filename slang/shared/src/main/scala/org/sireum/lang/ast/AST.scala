@@ -883,7 +883,8 @@ object Domain {
                                       id: Id,
                                       tipe: Type)
 
-@datatype class MethodSig(id: Id,
+@datatype class MethodSig(isPure: B,
+                          id: Id,
                           typeParams: ISZ[TypeParam],
                           hasParams: B,
                           params: ISZ[Param],
@@ -1184,8 +1185,10 @@ object Typed {
   }
 
   @datatype class Method(isInObject: B,
+                         typeParams: ISZ[String],
                          owner: ISZ[String],
-                         name: String)
+                         name: String,
+                         tpe: Typed.Fun)
     extends Typed {
 
     @pure def isPureFun: B = {
