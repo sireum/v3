@@ -77,7 +77,7 @@ object Distros {
   ) ++ (if (isDev) Map(
     "ignore" -> 42151,
     "rust" -> 42464,
-    "rust-cargo" -> 42155
+    "toml" -> 42459
   ) else Map())
 
   lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
