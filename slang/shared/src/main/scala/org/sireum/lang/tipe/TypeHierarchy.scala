@@ -270,7 +270,8 @@ object TypeHierarchy {
                 st"Type alias ${(name, ".")} requires $tparamSize type arguments but ${argTypes.size} supplied.".render)
               return None()
             }
-            return Some(AST.Typed.Name(ti.name, argTypes))
+            val tpe = dealias(AST.Typed.Name(ti.name, argTypes), t.posOpt, reporter)
+            return Some(tpe)
           case Some(ti: TypeInfo.TypeVar) =>
             if (argTypes.nonEmpty) {
               reporter.error(t.posOpt, TypeChecker.typeCheckerKind,

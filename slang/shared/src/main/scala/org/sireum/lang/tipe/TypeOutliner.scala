@@ -513,9 +513,8 @@ object TypeOutliner {
                             m2: AST.Stmt.Method,
                             substMap: HashMap[String, AST.Typed],
                             posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m1.sig), posOpt, reporter)
-      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap,
-        TypeChecker.extractMethodType(m2.sig)), posOpt, reporter)
+      val t1 = TypeChecker.extractMethodType(m1.sig)
+      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodType(m2.sig))
       return TypeChecker.isEqType(t1, t2)
     }
 
@@ -523,9 +522,8 @@ object TypeOutliner {
                               supM: AST.Stmt.Method,
                               substMap: HashMap[String, AST.Typed],
                               posOpt: Option[AST.PosInfo]): B = {
-      val t1 = typeHierarchy.dealias(TypeChecker.extractMethodType(m.sig), posOpt, reporter)
-      val t2 = typeHierarchy.dealias(TypeChecker.substType(substMap,
-        TypeChecker.extractMethodType(supM.sig)), posOpt, reporter)
+      val t1 = TypeChecker.extractMethodType(m.sig)
+      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodType(supM.sig))
       return typeHierarchy.isRefinement(t1, t2)
     }
 
@@ -539,8 +537,8 @@ object TypeOutliner {
       if (m.sig.hasParams || m.sig.params.nonEmpty) {
         return F
       }
-      val rt = typeHierarchy.dealias(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get), posOpt, reporter)
-      val t = typeHierarchy.dealias(v.tipeOpt.get.typedOpt.get, posOpt, reporter)
+      val rt = TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get)
+      val t = v.tipeOpt.get.typedOpt.get
       val r = typeHierarchy.isSubType(t, rt)
       return r
     }
@@ -631,12 +629,11 @@ object TypeOutliner {
       val tOpt = typeHierarchy.typed(scope, parent, reporter)
       tOpt match {
         case Some(t: AST.Typed.Name) =>
-          val dt = typeHierarchy.dealias(t, parent.attr.posOpt, reporter)
-          dt match {
-            case dt: AST.Typed.Name =>
-              typeHierarchy.typeMap.get(dt.ids) match {
+          t match {
+            case t: AST.Typed.Name =>
+              typeHierarchy.typeMap.get(t.ids) match {
                 case Some(ti: TypeInfo.Sig) =>
-                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
+                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
                       for (p <- ti.specVars.values) {
@@ -651,7 +648,7 @@ object TypeOutliner {
                     case _ =>
                   }
                 case Some(ti: TypeInfo.AbstractDatatype) =>
-                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, dt.args, reporter)
+                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
                       for (p <- ti.specVars.values) {
