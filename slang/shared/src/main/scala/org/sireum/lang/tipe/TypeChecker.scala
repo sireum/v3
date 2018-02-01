@@ -800,7 +800,15 @@ import TypeChecker.typeString
 
   def checkAssignExp(expected: Option[AST.Typed], scope: Scope.Local, aexp: AST.AssignExp,
                      reporter: Reporter): (AST.AssignExp, Option[AST.Typed]) = {
+    aexp match {
+      case aexp: AST.Stmt.Expr =>
+        val (newExp, typedOpt) = checkExp(None(), scope, aexp.exp, reporter)
+        return (aexp(exp = newExp, attr = aexp.attr(typedOpt = typedOpt)), typedOpt)
+      case _ =>
+    }
+
     val (sOpt, newStmt) = checkStmt(scope, aexp.asStmt, reporter)
+
     val newAexp = newStmt.asAssignExp
 
     def noResult: (AST.AssignExp, Option[AST.Typed]) = {
