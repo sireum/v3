@@ -235,11 +235,10 @@ object TypeOutliner {
     val scope = localTypeScope(tm.map, info.scope)
     var members = outlineMembers(T, info.name,
       TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
-    members = outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
-    val specVars = members.specVars
-    val specMethods = members.specMethods
-    val methods = members.methods
-    val newInfo = info(outlined = T, specVars = specVars, specMethods = specMethods, methods = methods)
+    val (TypeInfo.Members(specVars, _, specMethods, methods), ancestors) =
+      outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
+    val newInfo = info(outlined = T, ancestors = ancestors, specVars = specVars,
+      specMethods = specMethods, methods = methods)
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
@@ -249,12 +248,10 @@ object TypeOutliner {
     val scope = localTypeScope(tm.map, info.scope)
     var members = outlineMembers(info.ast.isRoot, info.name,
       TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
-    members = outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
-    val specVars = members.specVars
-    val vars = members.vars
-    val specMethods = members.specMethods
-    val methods = members.methods
-    val newInfo = info(outlined = T, specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
+    val (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors) =
+      outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
+    val newInfo = info(outlined = T, ancestors = ancestors, specVars = specVars,
+      vars = vars, specMethods = specMethods, methods = methods)
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
@@ -295,16 +292,17 @@ object TypeOutliner {
                      info: TypeInfo.Members,
                      scope: Scope,
                      reporter: Reporter): TypeInfo.Members = {
-    var specVars = HashMap.empty[String, (QName, AST.Stmt.SpecVar)]
-    var vars = HashMap.empty[String, (QName, AST.Stmt.Var)]
-    var specMethods = HashMap.empty[String, (QName, AST.Stmt.SpecMethod)]
-    var methods = HashMap.empty[String, (QName, AST.Stmt.Method)]
+    var specVars = HashMap.empty[String, Info.SpecVar]
+    var vars = HashMap.empty[String, Info.Var]
+    var specMethods = HashMap.empty[String, Info.SpecMethod]
+    var methods = HashMap.empty[String, Info.Method]
 
     def isDeclared(id: String): B = {
       return specVars.contains(id) || vars.contains(id) || specMethods.contains(id) || methods.contains(id)
     }
 
-    def checkSpecVar(sv: AST.Stmt.SpecVar): Unit = {
+    def checkSpecVar(info: Info.SpecVar): Unit = {
+      val sv = info.ast
       val id = sv.id.value
       if (isDeclared(id)) {
         reporter.error(sv.attr.posOpt, TypeChecker.typeCheckerKind,
@@ -313,12 +311,15 @@ object TypeOutliner {
       }
       val tOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
       tOpt match {
-        case Some(t) => specVars = specVars.put(id, (name, sv(tipe = sv.tipe.typed(t))))
+        case Some(t) =>
+          val t2 = sv.tipe.typed(t)
+          specVars = specVars.put(id, info(ast = sv(tipe = t2), typedOpt = t2.typedOpt))
         case _ =>
       }
     }
 
-    def checkVar(v: AST.Stmt.Var): Unit = {
+    def checkVar(info: Info.Var): Unit = {
+      val v = info.ast
       val id = v.id.value
       if (isDeclared(id)) {
         reporter.error(v.attr.posOpt, TypeChecker.typeCheckerKind,
@@ -329,12 +330,14 @@ object TypeOutliner {
       val tOpt = typeHierarchy.typed(scope, tpe, reporter)
       tOpt match {
         case Some(t) =>
-          vars = vars.put(id, (name, v(tipeOpt = Some(tpe.typed(t)))))
+          val t2 = tpe.typed(t)
+          vars = vars.put(id, info(ast = v(tipeOpt = Some(t2)), typedOpt = t2.typedOpt))
         case _ =>
       }
     }
 
-    def checkSpecMethod(sm: AST.Stmt.SpecMethod): Unit = {
+    def checkSpecMethod(info: Info.SpecMethod): Unit = {
+      val sm = info.ast
       val id = sm.sig.id.value
       if (isDeclared(id)) {
         reporter.error(sm.sig.id.attr.posOpt, TypeChecker.typeCheckerKind,
@@ -343,12 +346,15 @@ object TypeOutliner {
       }
       val sigOpt = outlineMethodSig(scope, sm.sig, reporter)
       sigOpt match {
-        case Some((sig, _)) => specMethods = specMethods.put(id, (name, sm(sig = sig)))
+        case Some((sig, _)) =>
+          specMethods = specMethods.put(id, info(ast = sm(sig = sig),
+            typedOpt = Some(TypeChecker.extractMethodType(sig))))
         case _ =>
       }
     }
 
-    def checkMethod(m: AST.Stmt.Method): Unit = {
+    def checkMethod(info: Info.Method): Unit = {
+      val m = info.ast
       val id = m.sig.id.value
       if (isDeclared(id)) {
         reporter.error(m.sig.id.attr.posOpt, TypeChecker.typeCheckerKind,
@@ -357,25 +363,26 @@ object TypeOutliner {
       }
       val sigOpt = outlineMethodSig(scope, m.sig, reporter)
       sigOpt match {
-        case Some((sig, _)) => methods = methods.put(id, (name, m(sig = sig)))
+        case Some((sig, _)) => methods = methods.put(id, info(ast = m(sig = sig),
+          typedOpt = Some(TypeChecker.extractMethodType(sig))))
         case _ =>
       }
     }
 
     for (p <- specVars.values) {
-      checkSpecVar(p._2)
+      checkSpecVar(p)
     }
 
     for (p <- vars.values) {
-      checkVar(p._2)
+      checkVar(p)
     }
 
     for (p <- specMethods.values) {
-      checkSpecMethod(p._2)
+      checkSpecMethod(p)
     }
 
     for (p <- methods.values) {
-      checkMethod(p._2)
+      checkMethod(p)
     }
 
     return TypeInfo.Members(specVars, vars, specMethods, methods)
@@ -385,7 +392,7 @@ object TypeOutliner {
                               parents: ISZ[AST.Type.Named],
                               scope: Scope,
                               info: TypeInfo.Members,
-                              reporter: Reporter): TypeInfo.Members = {
+                              reporter: Reporter): (TypeInfo.Members, ISZ[AST.Typed]) = {
     var specVars = info.specVars
     var vars = info.vars
     var specMethods = info.specMethods
@@ -393,10 +400,10 @@ object TypeOutliner {
 
     def checkSpecInherit(id: String, tname: QName, posOpt: Option[AST.PosInfo]): B = {
       specVars.get(id) match {
-        case Some((owner, _)) =>
+        case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -405,10 +412,10 @@ object TypeOutliner {
         case _ =>
       }
       specMethods.get(id) match {
-        case Some((owner, _)) =>
+        case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -425,10 +432,10 @@ object TypeOutliner {
         return ok
       }
       vars.get(id) match {
-        case Some((owner, _)) =>
+        case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -437,10 +444,10 @@ object TypeOutliner {
         case _ =>
       }
       methods.get(id) match {
-        case Some((owner, _)) =>
+        case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -451,50 +458,57 @@ object TypeOutliner {
       return T
     }
 
-    def inheritSpecVar(p: (QName, AST.Stmt.SpecVar),
+    def inheritSpecVar(info: Info.SpecVar,
                        posOpt: Option[AST.PosInfo],
                        substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = p._1
-      var sv = p._2
+      val owner = info.nameOrOwner
+      var sv = info.ast
       val id = sv.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
         if (substMap.isEmpty) {
-          specVars = specVars.put(id, p)
+          specVars = specVars.put(id, info)
         } else {
           up(sv.tipe) = sv.tipe.typed(TypeChecker.substType(substMap, sv.tipe.typedOpt.get))
-          specVars = specVars.put(id, (owner, sv))
+          specVars = specVars.put(id, info(ast = sv, typedOpt = sv.tipe.typedOpt))
         }
       }
     }
 
-    def inheritVar(p: (QName, AST.Stmt.Var),
+    def inheritVar(info: Info.Var,
                    posOpt: Option[AST.PosInfo],
                    substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = p._1
-      var v = p._2
+      val owner = info.nameOrOwner
+      var v = info.ast
       val id = v.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
         if (substMap.isEmpty) {
-          vars = vars.put(id, p)
+          if (v.initOpt.nonEmpty) {
+            v = v(initOpt = None())
+          }
+          vars = vars.put(id, info(ast = v))
         } else {
-          up(v.tipeOpt) = Some(v.tipeOpt.get.typed(TypeChecker.substType(substMap, v.tipeOpt.get.typedOpt.get)))
-          vars = vars.put(id, (owner, v))
+          val t = v.tipeOpt.get.typed(TypeChecker.substType(substMap, v.tipeOpt.get.typedOpt.get))
+          v = v(tipeOpt = Some(t), initOpt = None())
+          vars = vars.put(id, info(ast = v, typedOpt = t.typedOpt))
         }
       }
     }
 
-    def inheritSpecMethod(p: (QName, AST.Stmt.SpecMethod),
+    def inheritSpecMethod(info: Info.SpecMethod,
                           posOpt: Option[AST.PosInfo],
                           substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = p._1
-      var sm = p._2
+      val owner = info.nameOrOwner
+      var sm = info.ast
       val id = sm.sig.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
         if (substMap.isEmpty) {
-          specMethods = specMethods.put(id, p)
+          if (sm.defs.nonEmpty || sm.where.nonEmpty) {
+            sm = sm(defs = ISZ(), where = ISZ())
+          }
+          specMethods = specMethods.put(id, info(ast = sm))
         } else {
           var params = ISZ[AST.Param]()
           for (param <- sm.sig.params) {
@@ -502,9 +516,10 @@ object TypeOutliner {
             up(prm.tipe) = prm.tipe.typed(TypeChecker.substType(substMap, prm.tipe.typedOpt.get))
             params = params :+ prm
           }
-          up(sm.sig.params) = params
-          up(sm.sig.returnType) = sm.sig.returnType.typed(TypeChecker.substType(substMap, sm.sig.returnType.typedOpt.get))
-          specMethods = specMethods.put(id, (owner, sm))
+          sm = sm(sig = sm.sig(params = params, returnType =
+            sm.sig.returnType.typed(TypeChecker.substType(substMap, sm.sig.returnType.typedOpt.get))))
+          specMethods = specMethods.put(id, info(ast = sm, typedOpt =
+            Some(TypeChecker.extractMethodType(sm.sig))))
         }
       }
     }
@@ -543,11 +558,11 @@ object TypeOutliner {
       return r
     }
 
-    def inheritMethod(p: (QName, AST.Stmt.Method),
+    def inheritMethod(info: Info.Method,
                       posOpt: Option[AST.PosInfo],
                       substMap: HashMap[String, AST.Typed]): Unit = {
-      val tname = p._1
-      val pm = p._2
+      val tname = info.nameOrOwner
+      val pm = info.ast
       val id = pm.sig.id.value
 
       var ok = checkSpecInherit(id, tname, posOpt)
@@ -555,10 +570,10 @@ object TypeOutliner {
         return
       }
       vars.get(id) match {
-        case Some((owner, _)) =>
+        case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -567,21 +582,20 @@ object TypeOutliner {
         case _ =>
       }
       methods.get(id) match {
-        case Some((owner, m)) =>
+        case Some(otherInfo) =>
+          val m = otherInfo.ast
           if (name != tname) {
             ok = checkMethodEquality(m, pm, substMap, posOpt)
             if (!ok) {
               reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")} with differing type.".render)
+                st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")} with differing type.".render)
               return
             }
             if (pm.bodyOpt.nonEmpty) {
               if (m.bodyOpt.nonEmpty) {
                 reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                  st"Cannot inherit $id because it has been previously inherited from ${(owner, ".")} with their own implementation.".render)
+                  st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")} with their own implementation.".render)
                 return
-              } else {
-                methods = methods.put(id, p)
               }
             }
           } else {
@@ -599,7 +613,8 @@ object TypeOutliner {
           }
         case _ =>
           vars.get(id) match {
-            case Some((_, v)) =>
+            case Some(otherInfo) =>
+              val v = otherInfo.ast
               ok = checkVarRefinement(pm, v, substMap, posOpt)
               if (!ok) {
                 reporter.error(posOpt, TypeChecker.typeCheckerKind,
@@ -608,7 +623,9 @@ object TypeOutliner {
               }
             case _ =>
               if (substMap.isEmpty) {
-                methods = methods.put(id, p)
+                methods = methods.put(id,
+                  if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None()))
+                  else info)
               } else {
                 var m = pm
                 var params = ISZ[AST.Param]()
@@ -617,14 +634,15 @@ object TypeOutliner {
                   up(prm.tipe) = prm.tipe.typed(TypeChecker.substType(substMap, prm.tipe.typedOpt.get))
                   params = params :+ prm
                 }
-                up(m.sig.params) = params
-                up(m.sig.returnType) = m.sig.returnType.typed(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get))
-                methods = methods.put(id, (tname, m))
+                m = m(bodyOpt = None(), sig = m.sig(params = params, returnType =
+                  m.sig.returnType.typed(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get))))
+                methods = methods.put(id, info(ast = m, typedOpt = Some(TypeChecker.extractMethodType(m.sig))))
               }
           }
       }
     }
 
+    var ancestors = HashSSet.empty[TypeChecker.TypedEq]
     for (parent <- parents) {
       val tOpt = typeHierarchy.typed(scope, parent, reporter)
       tOpt match {
@@ -636,6 +654,10 @@ object TypeOutliner {
                   val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
+                      ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, ti.tpe)))
+                      for (tpe <- ti.ancestors) {
+                        ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, tpe)))
+                      }
                       for (p <- ti.specVars.values) {
                         inheritSpecVar(p, parent.attr.posOpt, substMap)
                       }
@@ -651,6 +673,10 @@ object TypeOutliner {
                   val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
+                      ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, ti.tpe)))
+                      for (tpe <- ti.ancestors) {
+                        ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, tpe)))
+                      }
                       for (p <- ti.specVars.values) {
                         inheritSpecVar(p, parent.attr.posOpt, substMap)
                       }
@@ -672,7 +698,7 @@ object TypeOutliner {
         case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
       }
     }
-    return TypeInfo.Members(specVars, vars, specMethods, methods)
+    return (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors.elements.map(teq => teq.t))
   }
 
 }

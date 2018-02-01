@@ -301,7 +301,8 @@ object Resolver {
       }
     }
 
-    @datatype class Var(val name: QName,
+    @datatype class Var(nameOrOwner: QName,
+                        isInObject: B,
                         scope: Scope,
                         ast: AST.Stmt.Var,
                         typedOpt: Option[AST.Typed],
@@ -316,9 +317,14 @@ object Resolver {
           case _ => return T
         }
       }
+
+      def name: QName = {
+        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.id.value
+      }
     }
 
-    @datatype class SpecVar(val name: QName,
+    @datatype class SpecVar(nameOrOwner: QName,
+                            isInObject: B,
                             scope: Scope,
                             ast: AST.Stmt.SpecVar,
                             typedOpt: Option[AST.Typed],
@@ -326,12 +332,18 @@ object Resolver {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
       def outlined: B = {
         return ast.tipe.typedOpt.nonEmpty
       }
+
+      def name: QName = {
+        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.id.value
+      }
     }
 
-    @datatype class Method(val name: QName,
+    @datatype class Method(nameOrOwner: QName,
+                           isInObject: B,
                            scope: Scope,
                            ast: AST.Stmt.Method,
                            typedOpt: Option[AST.Typed],
@@ -339,12 +351,19 @@ object Resolver {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
       def outlined: B = {
         return ast.sig.returnType.typedOpt.nonEmpty
       }
+
+      def name: QName = {
+        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.sig.id.value
+      }
+
     }
 
-    @datatype class SpecMethod(val name: QName,
+    @datatype class SpecMethod(val nameOrOwner: QName,
+                               isInObject: B,
                                scope: Scope,
                                ast: AST.Stmt.SpecMethod,
                                typedOpt: Option[AST.Typed],
@@ -352,8 +371,13 @@ object Resolver {
       def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
       def outlined: B = {
         return ast.sig.returnType.typedOpt.nonEmpty
+      }
+
+      def name: QName = {
+        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.sig.id.value
       }
     }
 
@@ -438,9 +462,11 @@ object Resolver {
 
     @datatype class Sig(val name: QName,
                         outlined: B,
-                        specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
-                        specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
-                        methods: HashMap[String, (QName, AST.Stmt.Method)],
+                        tpe: AST.Typed.Name,
+                        ancestors: ISZ[AST.Typed],
+                        specVars: HashMap[String, Info.SpecVar],
+                        specMethods: HashMap[String, Info.SpecMethod],
+                        methods: HashMap[String, Info.Method],
                         scope: Scope.Global,
                         ast: AST.Stmt.Sig)
       extends TypeInfo {
@@ -456,10 +482,12 @@ object Resolver {
 
     @datatype class AbstractDatatype(val name: QName,
                                      outlined: B,
-                                     specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
-                                     vars: HashMap[String, (QName, AST.Stmt.Var)],
-                                     specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
-                                     methods: HashMap[String, (QName, AST.Stmt.Method)],
+                                     tpe: AST.Typed.Name,
+                                     ancestors: ISZ[AST.Typed],
+                                     specVars: HashMap[String, Info.SpecVar],
+                                     vars: HashMap[String, Info.Var],
+                                     specMethods: HashMap[String, Info.SpecMethod],
+                                     methods: HashMap[String, Info.Method],
                                      scope: Scope.Global,
                                      ast: AST.Stmt.AbstractDatatype)
       extends TypeInfo {
@@ -504,10 +532,10 @@ object Resolver {
       }
     }
 
-    @datatype class Members(specVars: HashMap[String, (QName, AST.Stmt.SpecVar)],
-                            vars: HashMap[String, (QName, AST.Stmt.Var)],
-                            specMethods: HashMap[String, (QName, AST.Stmt.SpecMethod)],
-                            methods: HashMap[String, (QName, AST.Stmt.Method)])
+    @datatype class Members(specVars: HashMap[String, Info.SpecVar],
+                            vars: HashMap[String, Info.Var],
+                            specMethods: HashMap[String, Info.SpecMethod],
+                            methods: HashMap[String, Info.Method])
 
   }
 
@@ -644,12 +672,12 @@ object Resolver {
       Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
 
     val tName = sireumName :+ "T"
-    var nm = nameMap.put(tName, Info.Var(tName, scope,
+    var nm = nameMap.put(tName, Info.Var(tName, T, scope,
       Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "T"))))
 
     val fName = sireumName :+ "F"
-    nm = nm.put(fName, Info.Var(fName, scope,
+    nm = nm.put(fName, Info.Var(fName, T, scope,
       Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
 

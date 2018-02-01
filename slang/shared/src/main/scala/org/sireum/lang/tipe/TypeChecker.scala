@@ -34,6 +34,16 @@ import org.sireum.lang.util._
 
 object TypeChecker {
 
+  @datatype class TypedEq(t: AST.Typed) {
+    @pure override def hash: Z = {
+      return t.hash
+    }
+
+    @pure def isEqual(other: TypedEq): B = {
+      return TypeChecker.isEqType(t, other.t)
+    }
+  }
+
   @enum object BasicKind {
     'B
     'C
@@ -86,6 +96,9 @@ object TypeChecker {
   }
 
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
+    if (m.isEmpty) {
+      return t
+    }
     t match {
       case t: AST.Typed.Name =>
         if (t.ids.size == 1 && t.args.isEmpty) {

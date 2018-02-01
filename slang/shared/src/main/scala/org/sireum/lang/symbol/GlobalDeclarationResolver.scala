@@ -66,18 +66,18 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.Var(name, scope(packageName, currentImports, name), stmt, None(),
+          Info.Var(name, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Var(T, F, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.SpecVar(name, scope(packageName, currentImports, name), stmt, None(),
+          Info.SpecVar(name, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Var(T, T, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.Method =>
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("method", name,
-          Info.Method(name, scope(packageName, currentImports, name), stmt, None(),
+          Info.Method(name, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, F, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.ExtMethod =>
         val name = currentName :+ stmt.sig.id.value
@@ -87,7 +87,7 @@ import org.sireum.lang.{ast => AST}
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("specification method", name,
-          Info.SpecMethod(name, scope(packageName, currentImports, name), stmt, None(),
+          Info.SpecMethod(name, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, T, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SubZ =>
         val name = currentName :+ stmt.id.value
@@ -133,16 +133,24 @@ import org.sireum.lang.{ast => AST}
         currentName = oldName
       case stmt: AST.Stmt.Sig =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(name, stmt.stmts)
+        val sc = scope(packageName, currentImports, name)
+        val members = resolveMembers(name, sc, stmt.stmts)
         assert(members.vars.isEmpty)
-        declareType("sig", name, TypeInfo.Sig(name, F, members.specVars,
-          members.specMethods, members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+        val tpe = AST.Typed.Name(name,
+          for (tVar <- typeParamMap(stmt.typeParams, reporter).keys.elements)
+            yield AST.Typed.Name(ISZ(tVar), ISZ()))
+        declareType("sig", name, TypeInfo.Sig(name, F, tpe, ISZ(), members.specVars,
+          members.specMethods, members.methods, sc, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value
-        val members = resolveMembers(name, stmt.stmts)
+        val sc = scope(packageName, currentImports, name)
+        val members = resolveMembers(name, sc, stmt.stmts)
+        val tpe = AST.Typed.Name(name,
+          for (tVar <- typeParamMap(stmt.typeParams, reporter).keys.elements)
+            yield AST.Typed.Name(ISZ(tVar), ISZ()))
         declareType(if (stmt.isDatatype) "datatype" else "record", name,
-          TypeInfo.AbstractDatatype(name, F, members.specVars, members.vars, members.specMethods,
-            members.methods, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          TypeInfo.AbstractDatatype(name, F, tpe, ISZ(), members.specVars, members.vars,
+            members.specMethods, members.methods, sc, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.TypeAlias =>
         val name = currentName :+ stmt.id.value
         declareType("type alias", name,
@@ -151,11 +159,11 @@ import org.sireum.lang.{ast => AST}
     }
   }
 
-  def resolveMembers(owner: QName, stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
-    var specVars = HashMap.empty[String, (QName, AST.Stmt.SpecVar)]
-    var vars = HashMap.empty[String, (QName, AST.Stmt.Var)]
-    var specMethods = HashMap.empty[String, (QName, AST.Stmt.SpecMethod)]
-    var methods = HashMap.empty[String, (QName, AST.Stmt.Method)]
+  def resolveMembers(owner: QName, scope: Scope, stmts: ISZ[AST.Stmt]): TypeInfo.Members = {
+    var specVars = HashMap.empty[String, Info.SpecVar]
+    var vars = HashMap.empty[String, Info.Var]
+    var specMethods = HashMap.empty[String, Info.SpecMethod]
+    var methods = HashMap.empty[String, Info.Method]
 
     @pure def checkId(id: AST.Id): Unit = {
       val name = id.value
@@ -174,16 +182,24 @@ import org.sireum.lang.{ast => AST}
       stmt match {
         case stmt: AST.Stmt.Var =>
           checkId(stmt.id)
-          vars = vars.put(stmt.id.value, (owner, stmt))
+          val id = stmt.id.value
+          vars = vars.put(id, Info.Var(owner, F, scope, stmt, None(),
+            Some(AST.ResolvedInfo.Var(F, F, owner, id))))
         case stmt: AST.Stmt.SpecVar =>
           checkId(stmt.id)
-          specVars = specVars.put(stmt.id.value, (owner, stmt))
+          val id = stmt.id.value
+          specVars = specVars.put(id, Info.SpecVar(owner, F, scope, stmt, None(),
+            Some(AST.ResolvedInfo.Var(F, T, owner, id))))
         case stmt: AST.Stmt.Method =>
           checkId(stmt.sig.id)
-          methods = methods.put(stmt.sig.id.value, (owner, stmt))
+          val id = stmt.sig.id.value
+          methods = methods.put(id, Info.Method(owner, F, scope, stmt, None(),
+            Some(AST.ResolvedInfo.Method(F, F, owner, id))))
         case stmt: AST.Stmt.SpecMethod =>
           checkId(stmt.sig.id)
-          specMethods = specMethods.put(stmt.sig.id.value, (owner, stmt))
+          val id = stmt.sig.id.value
+          specMethods = specMethods.put(id, Info.SpecMethod(owner, F, scope, stmt, None(),
+            Some(AST.ResolvedInfo.Method(F, T, owner, id))))
         case _ =>
       }
     }
