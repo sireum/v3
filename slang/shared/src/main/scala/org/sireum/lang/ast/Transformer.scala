@@ -2061,11 +2061,11 @@ import Transformer._
             Result(r1.ctx, None())
         case o2: Stmt.If =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.cond)
-          val r1: Result[Context, Body] = transformBody(r0.ctx, o2.thenbody)
-          val r2: Result[Context, Body] = transformBody(r1.ctx, o2.elsebody)
+          val r1: Result[Context, Body] = transformBody(r0.ctx, o2.thenBody)
+          val r2: Result[Context, Body] = transformBody(r1.ctx, o2.elseBody)
           val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
-            Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenbody = r1.resultOpt.getOrElse(o2.thenbody), elsebody = r2.resultOpt.getOrElse(o2.elsebody), attr = r3.resultOpt.getOrElse(o2.attr))))
+            Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenBody = r1.resultOpt.getOrElse(o2.thenBody), elseBody = r2.resultOpt.getOrElse(o2.elseBody), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
             Result(r3.ctx, None())
         case o2: Stmt.Match =>
@@ -2161,11 +2161,11 @@ import Transformer._
             Result(r1.ctx, None())
         case o2: Stmt.If =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.cond)
-          val r1: Result[Context, Body] = transformBody(r0.ctx, o2.thenbody)
-          val r2: Result[Context, Body] = transformBody(r1.ctx, o2.elsebody)
+          val r1: Result[Context, Body] = transformBody(r0.ctx, o2.thenBody)
+          val r2: Result[Context, Body] = transformBody(r1.ctx, o2.elseBody)
           val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
-            Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenbody = r1.resultOpt.getOrElse(o2.thenbody), elsebody = r2.resultOpt.getOrElse(o2.elsebody), attr = r3.resultOpt.getOrElse(o2.attr))))
+            Result(r3.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), thenBody = r1.resultOpt.getOrElse(o2.thenBody), elseBody = r2.resultOpt.getOrElse(o2.elseBody), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
             Result(r3.ctx, None())
         case o2: Stmt.Match =>

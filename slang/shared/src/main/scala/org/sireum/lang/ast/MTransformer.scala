@@ -2055,11 +2055,11 @@ import MTransformer._
             MNone()
         case o2: Stmt.If =>
           val r0: MOption[Exp] = transformExp(o2.cond)
-          val r1: MOption[Body] = transformBody(o2.thenbody)
-          val r2: MOption[Body] = transformBody(o2.elsebody)
+          val r1: MOption[Body] = transformBody(o2.thenBody)
+          val r2: MOption[Body] = transformBody(o2.elseBody)
           val r3: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
-            MSome(o2(cond = r0.getOrElse(o2.cond), thenbody = r1.getOrElse(o2.thenbody), elsebody = r2.getOrElse(o2.elsebody), attr = r3.getOrElse(o2.attr)))
+            MSome(o2(cond = r0.getOrElse(o2.cond), thenBody = r1.getOrElse(o2.thenBody), elseBody = r2.getOrElse(o2.elseBody), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Match =>
@@ -2155,11 +2155,11 @@ import MTransformer._
             MNone()
         case o2: Stmt.If =>
           val r0: MOption[Exp] = transformExp(o2.cond)
-          val r1: MOption[Body] = transformBody(o2.thenbody)
-          val r2: MOption[Body] = transformBody(o2.elsebody)
+          val r1: MOption[Body] = transformBody(o2.thenBody)
+          val r2: MOption[Body] = transformBody(o2.elseBody)
           val r3: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
-            MSome(o2(cond = r0.getOrElse(o2.cond), thenbody = r1.getOrElse(o2.thenbody), elsebody = r2.getOrElse(o2.elsebody), attr = r3.getOrElse(o2.attr)))
+            MSome(o2(cond = r0.getOrElse(o2.cond), thenBody = r1.getOrElse(o2.thenBody), elseBody = r2.getOrElse(o2.elseBody), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Match =>

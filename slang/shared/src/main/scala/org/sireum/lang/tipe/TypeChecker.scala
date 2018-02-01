@@ -966,9 +966,9 @@ import TypeChecker.typeString
 
       case stmt: AST.Stmt.If =>
         val (newCond, _) = checkExp(typeBOpt, scope, stmt.cond, reporter)
-        val (_, tBody) = checkBody(scope, stmt.thenbody, reporter)
-        val (_, eBody) = checkBody(scope, stmt.elsebody, reporter)
-        return (Some(scope), stmt(cond = newCond, thenbody = tBody, elsebody = eBody))
+        val (_, tBody) = checkBody(scope, stmt.thenBody, reporter)
+        val (_, eBody) = checkBody(scope, stmt.elseBody, reporter)
+        return (Some(scope), stmt(cond = newCond, thenBody = tBody, elseBody = eBody))
 
       case stmt: AST.Stmt.Import => val r = checkImport(stmt); return r
 

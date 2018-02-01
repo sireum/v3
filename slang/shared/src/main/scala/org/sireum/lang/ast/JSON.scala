@@ -348,8 +348,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.If""""),
         ("cond", printExp(o.cond)),
-        ("thenbody", printBody(o.thenbody)),
-        ("elsebody", printBody(o.elsebody)),
+        ("thenBody", printBody(o.thenBody)),
+        ("elseBody", printBody(o.elseBody)),
         ("attr", printAttr(o.attr))
       ))
     }
@@ -2293,16 +2293,16 @@ object JSON {
       parser.parseObjectKey("cond")
       val cond = parseExp()
       parser.parseObjectNext()
-      parser.parseObjectKey("thenbody")
-      val thenbody = parseBody()
+      parser.parseObjectKey("thenBody")
+      val thenBody = parseBody()
       parser.parseObjectNext()
-      parser.parseObjectKey("elsebody")
-      val elsebody = parseBody()
+      parser.parseObjectKey("elseBody")
+      val elseBody = parseBody()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.If(cond, thenbody, elsebody, attr)
+      return Stmt.If(cond, thenBody, elseBody, attr)
     }
 
     def parseStmtMatch(): Stmt.Match = {

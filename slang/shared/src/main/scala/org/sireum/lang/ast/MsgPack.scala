@@ -594,8 +594,8 @@ object MsgPack {
     def writeStmtIf(o: Stmt.If): Unit = {
       writer.writeZ(Constants.StmtIf)
       writeExp(o.cond)
-      writeBody(o.thenbody)
-      writeBody(o.elsebody)
+      writeBody(o.thenBody)
+      writeBody(o.elseBody)
       writeAttr(o.attr)
     }
 
@@ -2154,10 +2154,10 @@ object MsgPack {
         reader.expectZ(Constants.StmtIf)
       }
       val cond = readExp()
-      val thenbody = readBody()
-      val elsebody = readBody()
+      val thenBody = readBody()
+      val elseBody = readBody()
       val attr = readAttr()
-      return Stmt.If(cond, thenbody, elsebody, attr)
+      return Stmt.If(cond, thenBody, elseBody, attr)
     }
 
     def readStmtMatch(): Stmt.Match = {

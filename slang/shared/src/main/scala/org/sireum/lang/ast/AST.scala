@@ -29,7 +29,7 @@ package org.sireum.lang.ast
 import org.sireum._
 
 @datatype trait TopUnit {
-  def fileUriOpt: Option[String]
+  @pure def fileUriOpt: Option[String]
 }
 
 object TopUnit {
@@ -58,9 +58,24 @@ object TopUnit {
 
 @datatype trait Stmt {
   def posOpt: Option[PosInfo]
+  def asAssignExp: AssignExp = {
+    halt(s"Invalid operation 'asAssignExp' on $this.")
+  }
 }
 
-@sig sealed trait AssignExp
+@sig sealed trait AssignExp {
+  @pure def exprs: ISZ[Stmt.Expr] = {
+    this match {
+      case stmt: Stmt.Expr => return ISZ(stmt)
+      case stmt: Stmt.Block => return ops.ISZOps(stmt.body.stmts).last.asAssignExp.exprs
+      case stmt: Stmt.If =>
+        return ops.ISZOps(stmt.thenBody.stmts).last.asAssignExp.exprs ++
+          ops.ISZOps(stmt.elseBody.stmts).last.asAssignExp.exprs
+      case stmt: Stmt.Match =>
+        return for (c <- stmt.cases; e <- ops.ISZOps(c.body.stmts).last.asAssignExp.exprs) yield e
+    }
+  }
+}
 
 @enum object Purity {
   'Impure
@@ -74,7 +89,7 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -102,7 +117,7 @@ object Stmt {
                       @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -114,7 +129,7 @@ object Stmt {
                              @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -126,7 +141,7 @@ object Stmt {
                           @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -141,7 +156,7 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -153,7 +168,7 @@ object Stmt {
                             @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -165,7 +180,7 @@ object Stmt {
                              @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -176,7 +191,7 @@ object Stmt {
                        @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -195,7 +210,7 @@ object Stmt {
                        @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -211,7 +226,7 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -226,7 +241,7 @@ object Stmt {
                       @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -242,7 +257,7 @@ object Stmt {
                                    @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -254,7 +269,7 @@ object Stmt {
                             @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -265,7 +280,7 @@ object Stmt {
                          @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -276,7 +291,7 @@ object Stmt {
                            @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -287,7 +302,7 @@ object Stmt {
                                 @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -297,22 +312,29 @@ object Stmt {
                         @hidden attr: Attr)
     extends Stmt with AssignExp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def asAssignExp: AssignExp = {
+      return this
     }
 
   }
 
   @datatype class If(cond: Exp,
-                     thenbody: Body,
-                     elsebody: Body,
+                     thenBody: Body,
+                     elseBody: Body,
                      @hidden attr: Attr)
     extends Stmt with AssignExp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
+    @pure override def asAssignExp: AssignExp = {
+      return this
+    }
   }
 
   @datatype class Match(cond: Exp,
@@ -320,8 +342,12 @@ object Stmt {
                         @hidden attr: Attr)
     extends Stmt with AssignExp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def asAssignExp: AssignExp = {
+      return this
     }
 
   }
@@ -333,7 +359,7 @@ object Stmt {
                         @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -346,7 +372,7 @@ object Stmt {
                           @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -359,7 +385,7 @@ object Stmt {
                       @hidden attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -369,7 +395,7 @@ object Stmt {
                          @hidden attr: TypedAttr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -379,7 +405,7 @@ object Stmt {
                         @hidden val attr: Attr)
     extends Stmt {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
@@ -389,8 +415,12 @@ object Stmt {
                        @hidden attr: TypedAttr)
     extends Stmt with AssignExp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def asAssignExp: AssignExp = {
+      return this
     }
 
   }
@@ -476,15 +506,15 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    @pure def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    @pure def typedOpt: Option[Typed] = {
+    @pure override def typedOpt: Option[Typed] = {
       return attr.typedOpt
     }
 
-    @pure def typed(t: Typed): Named = {
+    @pure override def typed(t: Typed): Named = {
       return this (name, typeArgs, attr(typedOpt = Some(t)))
     }
 
@@ -497,15 +527,15 @@ object Type {
                       attr: TypedAttr)
     extends Type {
 
-    @pure def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    @pure def typedOpt: Option[Typed] = {
+    @pure override def typedOpt: Option[Typed] = {
       return attr.typedOpt
     }
 
-    @pure def typed(t: Typed): Fun = {
+    @pure override def typed(t: Typed): Fun = {
       return this (isPure, isByName, args, ret, attr(typedOpt = Some(t)))
     }
 
@@ -515,15 +545,15 @@ object Type {
                         attr: TypedAttr)
     extends Type {
 
-    @pure def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
-    @pure def typedOpt: Option[Typed] = {
+    @pure override def typedOpt: Option[Typed] = {
       return attr.typedOpt
     }
 
-    @pure def typed(t: Typed): Tuple = {
+    @pure override def typed(t: Typed): Tuple = {
       return this (args, attr(typedOpt = Some(t)))
     }
 
@@ -579,7 +609,7 @@ object Exp {
                        @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -588,7 +618,7 @@ object Exp {
                        @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -597,7 +627,7 @@ object Exp {
                        @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -606,7 +636,7 @@ object Exp {
                          @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -615,7 +645,7 @@ object Exp {
                          @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -624,7 +654,7 @@ object Exp {
                        @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -633,7 +663,7 @@ object Exp {
                             @hidden attr: Attr)
     extends Exp with Lit {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -644,21 +674,21 @@ object Exp {
                                     @hidden attr: Attr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
 
   @datatype class This(@hidden attr: TypedAttr) extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
 
   @datatype class Super(@hidden attr: TypedAttr) extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -675,7 +705,7 @@ object Exp {
                         @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -707,7 +737,7 @@ object Exp {
     'RemoveAll
   }
 
-  @sig trait Ref {
+  @sig sealed trait Ref {
     @pure def targs: ISZ[Type]
     @pure def asExp: Exp
   }
@@ -718,7 +748,7 @@ object Exp {
                          @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -755,7 +785,7 @@ object Exp {
       }
     }
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -764,7 +794,7 @@ object Exp {
                       @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -773,7 +803,7 @@ object Exp {
                         @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -788,7 +818,7 @@ object Exp {
       return this
     }
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -800,7 +830,7 @@ object Exp {
                          @hidden attr: ResolvedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -812,7 +842,7 @@ object Exp {
                               @hidden attr: ResolvedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -823,7 +853,7 @@ object Exp {
                      @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -841,7 +871,7 @@ object Exp {
                       @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -851,7 +881,7 @@ object Exp {
                            @hidden attr: TypedAttr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -862,7 +892,7 @@ object Exp {
                         @hidden attr: Attr)
     extends Exp {
 
-    def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
   }
@@ -1135,11 +1165,11 @@ object Typed {
                        args: ISZ[Typed])
     extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return if (args.isEmpty) st"${(ids, ".")}".render
       else st"${(ids, ".")}[${(args, ", ")}]".render
     }
@@ -1147,11 +1177,11 @@ object Typed {
 
   @datatype class Tuple(args: ISZ[Typed]) extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return st"(${(args, ", ")})".render
     }
   }
@@ -1162,11 +1192,11 @@ object Typed {
                       ret: Typed)
     extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return if (isByName) st"=> $ret".render
       else if (isPure) st"((${(args, ", ")}) => $ret @pure)".render
       else st"(${(args, ", ")}) => $ret".render
@@ -1176,33 +1206,33 @@ object Typed {
 
   @datatype class Package(name: ISZ[String]) extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return st"<package> ${(name, ".")}".render
     }
   }
 
   @datatype class Object(name: ISZ[String]) extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return st"<object> ${(name, ".")}".render
     }
   }
 
   @datatype class Enum(name: ISZ[String]) extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return st"<@enum> ${(name, ".")}".render
     }
   }
@@ -1214,11 +1244,11 @@ object Typed {
                          tpe: Typed.Fun)
     extends Typed {
 
-    @pure def isPureFun: B = {
+    @pure override def isPureFun: B = {
       return F
     }
 
-    @pure def string: String = {
+    @pure override def string: String = {
       return st"<method> ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
     }
   }
