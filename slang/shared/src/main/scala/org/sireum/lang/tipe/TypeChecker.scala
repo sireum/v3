@@ -798,17 +798,48 @@ import TypeChecker.typeString
     }
   }
 
-  def checkAssignExp(expected: Option[AST.Typed], scope: Scope, aexp: AST.AssignExp,
+  def checkAssignExp(expected: Option[AST.Typed], scope: Scope.Local, aexp: AST.AssignExp,
                      reporter: Reporter): (AST.AssignExp, Option[AST.Typed]) = {
-    aexp match {
-      case aexp: AST.Stmt.Expr =>
-        val (newExp, tOpt) = checkExp(expected, scope, aexp.exp, reporter)
-        return (aexp(exp = newExp, attr = aexp.attr(typedOpt = tOpt)), tOpt)
-      case aexp: AST.Stmt.Block => halt("Unimplemented") // TODO
-      case aexp: AST.Stmt.If => halt("Unimplemented") // TODO
-      case aexp: AST.Stmt.Match => halt("Unimplemented") // TODO
+    val (sOpt, newStmt) = checkStmt(scope, aexp.asStmt, reporter)
+    val newAexp = newStmt.asAssignExp
+
+    def noResult: (AST.AssignExp, Option[AST.Typed]) = {
+      return (newAexp, None())
     }
 
+    def errType(): Unit = {
+      reporter.error(aexp.asStmt.posOpt, typeCheckerKind,
+        s"Could not find a common type for leaf expressions.")
+    }
+
+    if (sOpt.isEmpty) {
+      return noResult
+    }
+    var typeNames = ISZ[AST.Typed.Name]()
+    val exprs = newAexp.exprs
+    val tOpt = exprs(0).attr.typedOpt
+    if (tOpt.isEmpty) {
+      return noResult
+    }
+    val t = tOpt.get
+    for (expr <- newAexp.exprs) {
+      expr.attr.typedOpt match {
+        case Some(tn: AST.Typed.Name) =>
+          typeNames = typeNames :+ tn
+        case Some(t2) =>
+          if (!isEqType(t, t2)) {
+            errType()
+            return noResult
+          }
+        case _ => return noResult
+      }
+    }
+    if (typeNames.isEmpty) {
+      return (newAexp, Some(t))
+    }
+
+
+    halt("Unimplemented") // TODO
   }
 
   def checkStmts(scope: Scope.Local, stmts: ISZ[AST.Stmt],
