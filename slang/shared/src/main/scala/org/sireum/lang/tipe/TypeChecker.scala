@@ -286,7 +286,7 @@ import TypeChecker.typeString
 
   def basicKind(scope: Scope, tpe: AST.Typed,
                 posOpt: Option[AST.PosInfo],
-                reporter: Reporter): Option[(AST.Typed, BasicKind.Type)] = {
+                reporter: Reporter): Option[BasicKind.Type] = {
     tpe match {
       case tpe: AST.Typed.Name =>
         if (tpe.args.nonEmpty) {
@@ -294,27 +294,27 @@ import TypeChecker.typeString
         }
         if (tpe.ids.size == 3) {
           if (tpe.ids == typeB.ids) {
-            return Some((tpe, BasicKind.B))
+            return Some(BasicKind.B)
           }
           if (tpe.ids == typeZ.ids) {
-            return Some((tpe, BasicKind.Z))
+            return Some(BasicKind.Z)
           }
           if (tpe.ids == typeC.ids) {
-            return Some((tpe, BasicKind.C))
+            return Some(BasicKind.C)
           }
           if (tpe.ids == typeF32.ids) {
-            return Some((tpe, BasicKind.F32))
+            return Some(BasicKind.F32)
           }
           if (tpe.ids == typeF64.ids) {
-            return Some((tpe, BasicKind.F64))
+            return Some(BasicKind.F64)
           }
           if (tpe.ids == typeR.ids) {
-            return Some((tpe, BasicKind.R))
+            return Some(BasicKind.R)
           }
         }
         scope.resolveType(typeMap, tpe.ids) match {
           case Some(ti: TypeInfo.SubZ) =>
-            return Some((tpe, if (ti.ast.isBitVector) BasicKind.Bits else BasicKind.Range))
+            return Some(if (ti.ast.isBitVector) BasicKind.Bits else BasicKind.Range)
           case _ =>
         }
       case _ =>
@@ -356,10 +356,10 @@ import TypeChecker.typeString
         case Some(expType) =>
           val kindOpt = basicKind(scope, expType, exp.posOpt, reporter)
           kindOpt match {
-            case Some((tpe, kind)) =>
+            case Some(kind) =>
               if (exp.op == AST.Exp.UnaryOp.Not && kind != BasicKind.B) {
                 reporter.error(exp.posOpt, typeCheckerKind,
-                  st"Undefined unary operation ! on '$tpe'.".render)
+                  st"Undefined unary operation ! on '$expType'.".render)
                 return (newUnaryExp, None())
               }
               if (exp.op == AST.Exp.UnaryOp.Complement &&
@@ -369,7 +369,7 @@ import TypeChecker.typeString
                 return (newUnaryExp, None())
               }
               var r = newUnaryExp
-              val tOpt = checkExpected(tpe)
+              val tOpt = checkExpected(expType)
               up(r.attr.typedOpt) = tOpt
               return (r, tOpt)
             case _ =>
@@ -385,39 +385,62 @@ import TypeChecker.typeString
     def checkBinary(exp: AST.Exp.Binary): (AST.Exp, Option[AST.Typed]) = {
       val (left, leftTypeOpt) = checkExp(None(), scope, exp.left, reporter)
       val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
-      val newBinaryExp = exp(left = left, right = right)
+      var newBinaryExp = exp(left = left, right = right)
+
+      def noResult: (AST.Exp, Option[AST.Typed]) = {
+        return (newBinaryExp, None())
+      }
+
       (leftTypeOpt, rightTypeOpt) match {
         case (Some(leftType), Some(rightType)) =>
+
+          def errIncompat(): Unit = {
+            reporter.error(exp.posOpt, typeCheckerKind,
+              st"Incompatible types for binary operation '$leftType' ${AST.Util.binop(exp.op)} '$rightType'.".render)
+          }
+
+          def errUndef(): Unit = {
+            reporter.error(exp.posOpt, typeCheckerKind,
+              st"Undefined binary operation ${AST.Util.binop(exp.op)} on '$leftType'".render)
+          }
+
+          if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Eq) {
+            val isCompat = typeHierarchy.isCompatible(leftType, rightType)
+            if (isCompat) {
+              up(newBinaryExp.attr.typedOpt) = typeBOpt
+              return (newBinaryExp, typeBOpt)
+            } else {
+              errIncompat()
+              return noResult
+            }
+          }
+
           val lOpt = basicKind(scope, leftType, exp.left.posOpt, reporter)
           val rOpt = basicKind(scope, rightType, exp.right.posOpt, reporter)
           (lOpt, rOpt) match {
-            case (Some((leftT, leftKind)), Some((rightT, rightKind))) =>
+            case (Some(leftKind), Some(rightKind)) =>
               if (leftKind != rightKind) {
-                reporter.error(exp.posOpt, typeCheckerKind,
-                  st"Incompatible types for binary operation '$leftT' ${AST.Util.binop(exp.op)} '$rightT'.".render)
-                return (newBinaryExp, None())
+                errIncompat()
+                return noResult
               }
               if ((leftKind == BasicKind.B && AST.Util.isBoolBinop(exp.op)) ||
                 (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
                 (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
-                var r = newBinaryExp
-                val tOpt = checkExpected(leftT)
-                up(r.attr.typedOpt) = tOpt
-                return (r, tOpt)
+                val tOpt = checkExpected(leftType)
+                up(newBinaryExp.attr.typedOpt) = tOpt
+                return (newBinaryExp, tOpt)
               } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
-                var r = newBinaryExp
                 val tOpt: Option[AST.Typed] = checkExpected(typeB)
-                up(r.attr.typedOpt) = tOpt
-                return (r, tOpt)
+                up(newBinaryExp.attr.typedOpt) = tOpt
+                return (newBinaryExp, tOpt)
               } else {
-                reporter.error(exp.posOpt, typeCheckerKind,
-                  st"Undefined binary operation ${AST.Util.binop(exp.op)} on '$leftT'".render)
+                errUndef()
+                return noResult
               }
-              halt("Unimplemented") // TODO
             case _ =>
               halt("Unimplemented") // TODO: find <op> binary methods
           }
-        case _ => return (exp(left = left, right = right), None())
+        case _ => return noResult
       }
     }
 
