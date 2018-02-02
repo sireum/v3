@@ -295,6 +295,7 @@ object TypeChecker {
       case _: AST.Stmt.SpecVar => F
       case _ => T
     }))))
+    reporter.reports(gdr.reporter.messages)
     if (reporter.hasIssue) {
       return program
     }

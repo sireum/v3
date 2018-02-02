@@ -784,6 +784,7 @@ object Resolver {
         case Some(program) =>
           val gdr = GlobalDeclarationResolver(nameMap, typeMap, reporter)
           gdr.resolveProgram(program)
+          reporter.reports(gdr.reporter.messages)
           return (reporter, gdr.globalNameMap, gdr.globalTypeMap)
         case _ => return (reporter, nameMap, typeMap)
       }

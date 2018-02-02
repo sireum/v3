@@ -330,6 +330,7 @@ class SlangFrontEndTest extends SireumSpec {
     else {
       val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
         SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
+      reporter.reports(gdr.reporter.messages)
       if (reporter.hasIssue) report(r, reporter)
       r.unitOpt.foreach {
         case p: AST.TopUnit.Program =>
