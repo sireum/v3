@@ -392,7 +392,7 @@ object TypeOutliner {
                               parents: ISZ[AST.Type.Named],
                               scope: Scope,
                               info: TypeInfo.Members,
-                              reporter: Reporter): (TypeInfo.Members, ISZ[AST.Typed]) = {
+                              reporter: Reporter): (TypeInfo.Members, ISZ[AST.Typed.Name]) = {
     var specVars = info.specVars
     var vars = info.vars
     var specMethods = info.specMethods
@@ -698,7 +698,10 @@ object TypeOutliner {
         case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
       }
     }
-    return (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors.elements.map(teq => teq.t))
+    return (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors.elements.map(teq => teq.t match {
+      case t: AST.Typed.Name => t
+      case _ => halt("Unexpected situation while outlining types.")
+    }))
   }
 
 }
