@@ -111,6 +111,7 @@ object JSON {
         case o: Stmt.Block => return printStmtBlock(o)
         case o: Stmt.If => return printStmtIf(o)
         case o: Stmt.Match => return printStmtMatch(o)
+        case o: Stmt.Return => return printStmtReturn(o)
         case o: Stmt.Expr => return printStmtExpr(o)
       }
     }
@@ -1738,11 +1739,12 @@ object JSON {
     }
 
     def parseAssignExp(): AssignExp = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.Return", "Stmt.Expr"))
       t.native match {
         case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.Match" => val r = parseStmtMatchT(T); return r
+        case "Stmt.Return" => val r = parseStmtReturnT(T); return r
         case "Stmt.Expr" => val r = parseStmtExprT(T); return r
         case _ => halt(parser.errorMessage)
       }

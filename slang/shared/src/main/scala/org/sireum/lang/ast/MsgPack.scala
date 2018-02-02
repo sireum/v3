@@ -408,6 +408,7 @@ object MsgPack {
         case o: Stmt.Block => writeStmtBlock(o)
         case o: Stmt.If => writeStmtIf(o)
         case o: Stmt.Match => writeStmtMatch(o)
+        case o: Stmt.Return => writeStmtReturn(o)
         case o: Stmt.Expr => writeStmtExpr(o)
       }
     }
@@ -1789,6 +1790,7 @@ object MsgPack {
         case Constants.StmtBlock => val r = readStmtBlockT(T); return r
         case Constants.StmtIf => val r = readStmtIfT(T); return r
         case Constants.StmtMatch => val r = readStmtMatchT(T); return r
+        case Constants.StmtReturn => val r = readStmtReturnT(T); return r
         case Constants.StmtExpr => val r = readStmtExprT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }

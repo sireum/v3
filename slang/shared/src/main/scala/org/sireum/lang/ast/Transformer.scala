@@ -116,6 +116,13 @@ object Transformer {
            case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[AssignExp]())
           }
           return r
+        case o: Stmt.Return =>
+          val r: PreResult[Context, AssignExp] = preStmtReturn(ctx, o) match {
+           case PreResult(preCtx, continu, Some(r: AssignExp)) => PreResult(preCtx, continu, Some[AssignExp](r))
+           case PreResult(_, _, Some(_)) => halt("Can only produce object of type AssignExp")
+           case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[AssignExp]())
+          }
+          return r
         case o: Stmt.Expr =>
           val r: PreResult[Context, AssignExp] = preStmtExpr(ctx, o) match {
            case PreResult(preCtx, continu, Some(r: AssignExp)) => PreResult(preCtx, continu, Some[AssignExp](r))
@@ -1001,6 +1008,13 @@ object Transformer {
           return r
         case o: Stmt.Match =>
           val r: Result[Context, AssignExp] = postStmtMatch(ctx, o) match {
+           case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
+           case Result(_, Some(_)) => halt("Can only produce object of type AssignExp")
+           case Result(postCtx, _) => Result(postCtx, None[AssignExp]())
+          }
+          return r
+        case o: Stmt.Return =>
+          val r: Result[Context, AssignExp] = postStmtReturn(ctx, o) match {
            case Result(postCtx, Some(result: AssignExp)) => Result(postCtx, Some[AssignExp](result))
            case Result(_, Some(_)) => halt("Can only produce object of type AssignExp")
            case Result(postCtx, _) => Result(postCtx, None[AssignExp]())
@@ -2176,6 +2190,13 @@ import Transformer._
             Result(r2.ctx, Some(o2(cond = r0.resultOpt.getOrElse(o2.cond), cases = r1.resultOpt.getOrElse(o2.cases), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
             Result(r2.ctx, None())
+        case o2: Stmt.Return =>
+          val r0: Result[Context, Option[Exp]] = transformOption(ctx, o2.expOpt, transformExp)
+          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(expOpt = r0.resultOpt.getOrElse(o2.expOpt), attr = r1.resultOpt.getOrElse(o2.attr))))
+          else
+            Result(r1.ctx, None())
         case o2: Stmt.Expr =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
           val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)

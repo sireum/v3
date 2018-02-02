@@ -76,6 +76,7 @@ object TopUnit {
           ops.ISZOps(stmt.elseBody.stmts).last.asAssignExp.exprs
       case stmt: Stmt.Match =>
         return for (c <- stmt.cases; e <- ops.ISZOps(c.body.stmts).last.asAssignExp.exprs) yield e
+      case _: Stmt.Return => return ISZ()
     }
   }
 }
@@ -408,10 +409,14 @@ object Stmt {
 
   @datatype class Return(expOpt: Option[Exp],
                          @hidden attr: TypedAttr)
-    extends Stmt {
+    extends Stmt with AssignExp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def asStmt: Stmt = {
+      return this
     }
 
   }

@@ -112,6 +112,13 @@ object MTransformer {
            case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
           }
           return r
+        case o: Stmt.Return =>
+          val r: PreResult[AssignExp] = preStmtReturn(o) match {
+           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+          }
+          return r
         case o: Stmt.Expr =>
           val r: PreResult[AssignExp] = preStmtExpr(o) match {
            case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
@@ -997,6 +1004,13 @@ object MTransformer {
           return r
         case o: Stmt.Match =>
           val r: MOption[AssignExp] = postStmtMatch(o) match {
+           case MSome(result: AssignExp) => MSome[AssignExp](result)
+           case MSome(_) => halt("Can only produce object of type AssignExp")
+           case _ => MNone[AssignExp]()
+          }
+          return r
+        case o: Stmt.Return =>
+          val r: MOption[AssignExp] = postStmtReturn(o) match {
            case MSome(result: AssignExp) => MSome[AssignExp](result)
            case MSome(_) => halt("Can only produce object of type AssignExp")
            case _ => MNone[AssignExp]()
@@ -2168,6 +2182,13 @@ import MTransformer._
           val r2: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(cond = r0.getOrElse(o2.cond), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
+          else
+            MNone()
+        case o2: Stmt.Return =>
+          val r0: MOption[Option[Exp]] = transformOption(o2.expOpt, transformExp)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(expOpt = r0.getOrElse(o2.expOpt), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Expr =>
