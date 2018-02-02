@@ -76,8 +76,8 @@ object SlangParser {
 
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
-  val disallowedTypeIds = Seq("Unit")
-  val disallowedMethodIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln")
+  val disallowedTypeIds = Seq("Unit", "Nothing")
+  val disallowedMethodIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt")
 
   def scalaDialect(isWorksheet: Boolean): Dialect =
     if (isWorksheet) scala.meta.dialects.Scala212.copy(
@@ -1267,6 +1267,7 @@ class SlangParser(text: Predef.String,
     case exp: Term.If if exp.thenp.isInstanceOf[Term.Block] =>
       translateIfStmt(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Match => translateMatch(Enclosing.Block, exp, isAssignExp = true)
+    case exp: Term.Return => translateReturn(Enclosing.Block, exp)
     case _ => AST.Stmt.Expr(translateExp(exp), typedAttr(exp.pos))
   }
 
@@ -1714,7 +1715,7 @@ class SlangParser(text: Predef.String,
       ISZ()
   }
 
-  def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt = {
+  def translateReturn(enclosing: Enclosing.Type, stat: Term.Return): AST.Stmt.Return = {
     stmtCheck(enclosing, stat, "Return-statements")
     stat.expr match {
       case _: Lit.Unit => AST.Stmt.Return(None(), typedAttr(stat.pos))
