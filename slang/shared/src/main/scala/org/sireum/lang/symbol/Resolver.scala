@@ -62,7 +62,7 @@ object Resolver {
                           val outerOpt: Option[Scope])
       extends Scope {
 
-      @pure def resolveName(globalNameMap: NameMap,
+      @pure override def resolveName(globalNameMap: NameMap,
                             name: QName): Option[Info] = {
         if (name.size == 1) {
           val infoOpt = nameMap.get(name(0))
@@ -76,7 +76,7 @@ object Resolver {
         }
       }
 
-      @pure def resolveType(globalTypeMap: TypeMap,
+      @pure override def resolveType(globalTypeMap: TypeMap,
                             name: QName): Option[TypeInfo] = {
         if (name.size == 1) {
           val typeInfoOpt = typeMap.get(name(0))
@@ -104,15 +104,15 @@ object Resolver {
                            enclosingName: QName)
       extends Scope {
 
-      @pure def outerOpt: Option[Scope] = {
+      @pure override def outerOpt: Option[Scope] = {
         return Global.OuterOpt
       }
 
-      @pure def returnOpt: Option[AST.Typed] = {
+      @pure override def returnOpt: Option[AST.Typed] = {
         return Global.ReturnOpt
       }
 
-      @pure def resolveName(globalNameMap: NameMap,
+      @pure override def resolveName(globalNameMap: NameMap,
                             name: QName): Option[Info] = {
         return resolveNameMemoized(globalNameMap, name)
       }
@@ -173,7 +173,7 @@ object Resolver {
         return None()
       }
 
-      @pure def resolveType(globalTypeMap: TypeMap,
+      @pure override def resolveType(globalTypeMap: TypeMap,
                             name: QName): Option[TypeInfo] = {
         return resolveTypeMemoized(globalTypeMap, name)
       }
@@ -286,9 +286,9 @@ object Resolver {
   }
 
   @datatype trait Info {
-    def name: QName
+    @pure def name: QName
 
-    def posOpt: Option[AST.PosInfo]
+    @pure def posOpt: Option[AST.PosInfo]
   }
 
   object Info {
@@ -296,88 +296,88 @@ object Resolver {
     @datatype class Package(val name: QName,
                             typedOpt: Option[AST.Typed],
                             resOpt: Option[AST.ResolvedInfo]) extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return None[AST.PosInfo]()
       }
     }
 
-    @datatype class Var(nameOrOwner: QName,
+    @datatype class Var(owner: QName,
                         isInObject: B,
                         scope: Scope,
                         ast: AST.Stmt.Var,
                         typedOpt: Option[AST.Typed],
                         resOpt: Option[AST.ResolvedInfo]) extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
 
-      def outlined: B = {
+      @pure def outlined: B = {
         ast.tipeOpt match {
           case Some(t) => return t.typedOpt.nonEmpty
           case _ => return T
         }
       }
 
-      def name: QName = {
-        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.id.value
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
       }
     }
 
-    @datatype class SpecVar(nameOrOwner: QName,
+    @datatype class SpecVar(owner: QName,
                             isInObject: B,
                             scope: Scope,
                             ast: AST.Stmt.SpecVar,
                             typedOpt: Option[AST.Typed],
                             resOpt: Option[AST.ResolvedInfo]) extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
 
-      def outlined: B = {
+      @pure def outlined: B = {
         return ast.tipe.typedOpt.nonEmpty
       }
 
-      def name: QName = {
-        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.id.value
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
       }
     }
 
-    @datatype class Method(nameOrOwner: QName,
+    @datatype class Method(owner: QName,
                            isInObject: B,
                            scope: Scope,
                            ast: AST.Stmt.Method,
                            typedOpt: Option[AST.Typed],
                            resOpt: Option[AST.ResolvedInfo]) extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
 
-      def outlined: B = {
+      @pure def outlined: B = {
         return ast.sig.returnType.typedOpt.nonEmpty
       }
 
-      def name: QName = {
-        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.sig.id.value
+      @pure override def name: QName = {
+        return owner :+ ast.sig.id.value
       }
 
     }
 
-    @datatype class SpecMethod(val nameOrOwner: QName,
+    @datatype class SpecMethod(val owner: QName,
                                isInObject: B,
                                scope: Scope,
                                ast: AST.Stmt.SpecMethod,
                                typedOpt: Option[AST.Typed],
                                resOpt: Option[AST.ResolvedInfo]) extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
 
-      def outlined: B = {
+      @pure def outlined: B = {
         return ast.sig.returnType.typedOpt.nonEmpty
       }
 
-      def name: QName = {
-        return if (isInObject) nameOrOwner else nameOrOwner :+ ast.sig.id.value
+      @pure override def name: QName = {
+        return owner :+ ast.sig.id.value
       }
     }
 
@@ -387,18 +387,32 @@ object Resolver {
                            typedOpt: Option[AST.Typed],
                            resOpt: Option[AST.ResolvedInfo])
       extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
     }
 
-    @datatype class ExtMethod(val name: QName,
+    @datatype class ExtMethod(owner: QName,
                               scope: Scope.Global,
-                              ast: AST.Stmt.ExtMethod)
+                              ast: AST.Stmt.ExtMethod,
+                              typedOpt: Option[AST.Typed],
+                              resOpt: Option[AST.ResolvedInfo])
       extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
+      @pure override def name: QName = {
+        return owner :+ ast.sig.id.value
+      }
+
+      @pure def outlined: B = {
+        return ast.sig.returnType.typedOpt.nonEmpty
+      }
+
     }
 
     @datatype class Enum(val name: QName,
@@ -414,39 +428,46 @@ object Resolver {
                              typedOpt: Option[AST.Typed],
                              resOpt: Option[AST.ResolvedInfo])
       extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
     }
 
     @datatype class QuantVar(val name: QName,
-                             ast: AST.Id)
+                             ast: AST.Id,
+                             typedOpt: Option[AST.Typed],
+                             resOpt: Option[AST.ResolvedInfo])
       extends Info {
-      def posOpt: Option[AST.PosInfo] = {
+
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
+
     }
 
   }
 
   @datatype trait TypeInfo {
 
-    def name: QName
+    @pure def name: QName
 
-    def canHaveCompanion: B
+    @pure def canHaveCompanion: B
 
-    def posOpt: Option[AST.PosInfo]
+    @pure def posOpt: Option[AST.PosInfo]
   }
 
   object TypeInfo {
 
     @datatype class SubZ(val name: QName,
                          ast: AST.Stmt.SubZ) extends TypeInfo {
-      def canHaveCompanion: B = {
+
+      @pure override def canHaveCompanion: B = {
         return F
       }
 
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
     }
@@ -455,7 +476,8 @@ object Resolver {
                          elements: Map[String, Option[AST.ResolvedInfo]],
                          val posOpt: Option[AST.PosInfo])
       extends TypeInfo {
-      def canHaveCompanion: B = {
+
+      @pure override def canHaveCompanion: B = {
         return F
       }
     }
@@ -471,12 +493,42 @@ object Resolver {
                         ast: AST.Stmt.Sig)
       extends TypeInfo {
 
-      def canHaveCompanion: B = {
+      @pure override def canHaveCompanion: B = {
         return T
       }
 
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
+      }
+
+      @pure def typeRes(id: String, inSpec: B): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+
+        @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+          return (None(), None())
+        }
+
+        methods.get(id) match {
+          case Some(m) =>
+            return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
+              else (m.typedOpt, m.resOpt)
+          case _ =>
+        }
+
+        if (!inSpec) {
+          return noResult
+        }
+
+        specMethods.get(id) match {
+          case Some(sm) => return (sm.typedOpt, sm.resOpt)
+          case _ =>
+        }
+
+        specVars.get(id) match {
+          case Some(sv) => return (sv.typedOpt, sv.resOpt)
+          case _ =>
+        }
+
+        return noResult
       }
     }
 
@@ -492,12 +544,47 @@ object Resolver {
                                      ast: AST.Stmt.AbstractDatatype)
       extends TypeInfo {
 
-      def canHaveCompanion: B = {
+      @pure override def canHaveCompanion: B = {
         return T
       }
 
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
+      }
+
+      @pure def typeRes(id: String, inSpec: B): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+
+        @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+          return (None(), None())
+        }
+
+        vars.get(id) match {
+          case Some(v) => return (v.typedOpt, v.resOpt)
+          case _ =>
+        }
+
+        methods.get(id) match {
+          case Some(m) =>
+            return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
+              else (m.typedOpt, m.resOpt)
+          case _ =>
+        }
+
+        if (!inSpec) {
+          return noResult
+        }
+
+        specMethods.get(id) match {
+          case Some(sm) => return (sm.typedOpt, sm.resOpt)
+          case _ =>
+        }
+
+        specVars.get(id) match {
+          case Some(sv) => return (sv.typedOpt, sv.resOpt)
+          case _ =>
+        }
+
+        return noResult
       }
     }
 
@@ -506,11 +593,11 @@ object Resolver {
                               ast: AST.Stmt.TypeAlias)
       extends TypeInfo {
 
-      def canHaveCompanion: B = {
+      @pure override def canHaveCompanion: B = {
         return F
       }
 
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
     }
@@ -519,15 +606,15 @@ object Resolver {
                             ast: AST.TypeParam)
       extends TypeInfo {
 
-      def name: QName = {
+      @pure override def name: QName = {
         return ISZ(id)
       }
 
-      def canHaveCompanion: B = {
+      @pure override def canHaveCompanion: B = {
         return F
       }
 
-      def posOpt: Option[AST.PosInfo] = {
+      @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.id.attr.posOpt
       }
     }
@@ -672,12 +759,12 @@ object Resolver {
       Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
 
     val tName = sireumName :+ "T"
-    var nm = nameMap.put(tName, Info.Var(tName, T, scope,
+    var nm = nameMap.put(tName, Info.Var(sireumName, T, scope,
       Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "T"))))
 
     val fName = sireumName :+ "F"
-    nm = nm.put(fName, Info.Var(fName, T, scope,
+    nm = nm.put(fName, Info.Var(sireumName, T, scope,
       Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
 

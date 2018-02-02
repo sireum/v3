@@ -66,28 +66,30 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Var =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.Var(name, T, scope(packageName, currentImports, name), stmt, None(),
+          Info.Var(currentName, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Var(T, F, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecVar =>
         val name = currentName :+ stmt.id.value
         declareName(if (stmt.isVal) "val" else "var", name,
-          Info.SpecVar(name, T, scope(packageName, currentImports, name), stmt, None(),
+          Info.SpecVar(currentName, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Var(T, T, currentName, stmt.id.value))), stmt.attr.posOpt)
       case stmt: AST.Stmt.Method =>
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("method", name,
-          Info.Method(name, T, scope(packageName, currentImports, name), stmt, None(),
+          Info.Method(currentName, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, F, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.ExtMethod =>
+        val id = stmt.sig.id.value
         val name = currentName :+ stmt.sig.id.value
         declareName("extension method", name,
-          Info.ExtMethod(name, scope(packageName, currentImports, name), stmt), stmt.attr.posOpt)
+          Info.ExtMethod(currentName, scope(packageName, currentImports, name), stmt, None(),
+            Some(AST.ResolvedInfo.Method(T, F, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SpecMethod =>
         val id = stmt.sig.id.value
         val name = currentName :+ id
         declareName("specification method", name,
-          Info.SpecMethod(name, T, scope(packageName, currentImports, name), stmt, None(),
+          Info.SpecMethod(currentName, T, scope(packageName, currentImports, name), stmt, None(),
             Some(AST.ResolvedInfo.Method(T, T, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SubZ =>
         val name = currentName :+ stmt.id.value
