@@ -128,6 +128,7 @@ object TypeOutliner {
           combine _,
           (th, AccumulatingReporter.create))
       reporter.reports(r._2.messages)
+      th = r._1
       var gnm = th.nameMap
       val to2 = TypeOutliner(th)
       for (info <- gnm.values) {
@@ -180,7 +181,7 @@ object TypeOutliner {
     val sigOpt = outlineMethodSig(info.scope, sm.sig, reporter)
     sigOpt match {
       case Some((sig, tvars)) => return Some(info(ast = sm(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, tvars, ISZOps(info.name).dropRight(1), sig.id.value,
+        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
           TypeChecker.extractMethodType(sig)))))
       case _ => return None()
     }
@@ -191,7 +192,18 @@ object TypeOutliner {
     val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
     sigOpt match {
       case Some((sig, tvars)) => return Some(info(ast = m(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, tvars, ISZOps(info.name).dropRight(1), sig.id.value,
+        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
+          TypeChecker.extractMethodType(sig)))))
+      case _ => return None()
+    }
+  }
+
+  def outlineExtMethod(info: Info.ExtMethod, reporter: Reporter): Option[Info] = {
+    val m = info.ast
+    val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
+    sigOpt match {
+      case Some((sig, tvars)) => return Some(info(ast = m(sig = sig),
+        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
           TypeChecker.extractMethodType(sig)))))
       case _ => return None()
     }
@@ -207,6 +219,7 @@ object TypeOutliner {
         case stmt: AST.Stmt.Var => Some(stmt.id.value)
         case stmt: AST.Stmt.SpecMethod => Some(stmt.sig.id.value)
         case stmt: AST.Stmt.Method => Some(stmt.sig.id.value)
+        case stmt: AST.Stmt.ExtMethod => Some(stmt.sig.id.value)
         case _ => None()
       }
       idOpt match {
@@ -216,6 +229,7 @@ object TypeOutliner {
             case inf: Info.Var => val rOpt = outlineVar(inf, reporter); rOpt
             case inf: Info.SpecMethod => val rOpt = outlineSpecMethod(inf, reporter); rOpt
             case inf: Info.Method => val rOpt = outlineMethod(inf, reporter); rOpt
+            case inf: Info.ExtMethod => val rOpt = outlineExtMethod(inf, reporter); rOpt
             case _ => None()
           }
           infoOpt match {
@@ -403,7 +417,7 @@ object TypeOutliner {
         case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -415,7 +429,7 @@ object TypeOutliner {
         case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -435,7 +449,7 @@ object TypeOutliner {
         case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -447,7 +461,7 @@ object TypeOutliner {
         case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -461,7 +475,7 @@ object TypeOutliner {
     def inheritSpecVar(info: Info.SpecVar,
                        posOpt: Option[AST.PosInfo],
                        substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = info.nameOrOwner
+      val owner = info.owner
       var sv = info.ast
       val id = sv.id.value
       val ok = checkInherit(id, owner, posOpt)
@@ -478,7 +492,7 @@ object TypeOutliner {
     def inheritVar(info: Info.Var,
                    posOpt: Option[AST.PosInfo],
                    substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = info.nameOrOwner
+      val owner = info.owner
       var v = info.ast
       val id = v.id.value
       val ok = checkInherit(id, owner, posOpt)
@@ -499,7 +513,7 @@ object TypeOutliner {
     def inheritSpecMethod(info: Info.SpecMethod,
                           posOpt: Option[AST.PosInfo],
                           substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = info.nameOrOwner
+      val owner = info.owner
       var sm = info.ast
       val id = sm.sig.id.value
       val ok = checkInherit(id, owner, posOpt)
@@ -561,7 +575,7 @@ object TypeOutliner {
     def inheritMethod(info: Info.Method,
                       posOpt: Option[AST.PosInfo],
                       substMap: HashMap[String, AST.Typed]): Unit = {
-      val tname = info.nameOrOwner
+      val tname = info.owner
       val pm = info.ast
       val id = pm.sig.id.value
 
@@ -573,7 +587,7 @@ object TypeOutliner {
         case Some(otherInfo) =>
           if (name != tname) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")}.".render)
+              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
           } else {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
               s"Cannot inherit $id because it has been previously declared.")
@@ -588,13 +602,13 @@ object TypeOutliner {
             ok = checkMethodEquality(m, pm, substMap, posOpt)
             if (!ok) {
               reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")} with differing type.".render)
+                st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")} with differing type.".render)
               return
             }
             if (pm.bodyOpt.nonEmpty) {
               if (m.bodyOpt.nonEmpty) {
                 reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                  st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.nameOrOwner, ".")} with their own implementation.".render)
+                  st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")} with their own implementation.".render)
                 return
               }
             }
