@@ -321,7 +321,7 @@ import TypeChecker.typeString
 
 @datatype class TypeChecker(typeHierarchy: TypeHierarchy,
                             context: QName,
-                            isSpec: B) {
+                            inSpec: B) {
 
   def basicKind(scope: Scope, tpe: AST.Typed,
                 posOpt: Option[AST.PosInfo],
@@ -386,6 +386,49 @@ import TypeChecker.typeString
         case _ =>
           return Some(t)
       }
+    }
+
+    def checkAssertume(resOpt: Option[AST.ResolvedInfo], assertumeExp: AST.Exp.Invoke,
+                       cond: AST.Exp, msgOpt: Option[AST.Exp]): (AST.Exp, Option[AST.Typed]) = {
+      val (newCondExp, _) = checkExp(typeBOpt, scope, cond, reporter)
+
+      msgOpt match {
+        case Some(msg) =>
+          val (newMsg, _) = checkExp(typeStringOpt, scope, msg, reporter)
+          val attr = assertumeExp.attr(typedOpt = assertume2TypedOpt, resOpt = resOpt)
+          return (assertumeExp(args = ISZ(newCondExp, newMsg), attr = attr), typeUnitOpt)
+        case _ =>
+          val attr = assertumeExp.attr(typedOpt = assertume1TypedOpt, resOpt = resOpt)
+          return (assertumeExp(args = ISZ(newCondExp), attr = attr), typeUnitOpt)
+      }
+    }
+
+    def checkPrint(resOpt: Option[AST.ResolvedInfo], printExp: AST.Exp.Invoke,
+                   args: ISZ[AST.Exp]): (AST.Exp, Option[AST.Typed]) = {
+      var newArgs = ISZ[AST.Exp]()
+      var argTypes = ISZ[AST.Typed]()
+      for (arg <- args) {
+        val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
+        argTypeOpt match {
+          case Some(argType) => argTypes = argTypes :+ argType
+          case _ =>
+        }
+        newArgs = newArgs :+ newArg
+      }
+      val attr = printExp.attr(typedOpt = Some(AST.Typed.Fun(F, F, argTypes, typeUnit)), resOpt = resOpt)
+      return (printExp(args = newArgs, attr = attr), typeUnitOpt)
+    }
+
+    def checkHalt(haltExp: AST.Exp.Invoke, args: ISZ[AST.Exp]): (AST.Exp, Option[AST.Typed]) = {
+      if (args.size != 1) {
+        reporter.error(haltExp.posOpt, typeCheckerKind,
+          s"Expecting one argument, but found ${args.size}.")
+        return (haltExp(attr = haltExp.attr(resOpt = haltResOpt,
+          typedOpt = haltTypedOpt)), typeNothingOpt)
+      }
+      val (newArg, _) = checkExp(typeStringOpt, scope, args(0), reporter)
+      return (haltExp(args = ISZ(newArg), attr = haltExp.
+        attr(resOpt = haltResOpt, typedOpt = haltTypedOpt)), typeNothingOpt)
     }
 
     def checkUnary(exp: AST.Exp.Unary): (AST.Exp, Option[AST.Typed]) = {
@@ -512,9 +555,17 @@ import TypeChecker.typeString
         case info: Info.Package => return (info.typedOpt, info.resOpt)
         case info: Info.Object => return (info.typedOpt, info.resOpt)
         case info: Info.Enum => return (info.typedOpt, info.resOpt)
-        case info: Info.Method => return (info.typedOpt, info.resOpt)
+        case info: Info.Method =>
+          return if (inSpec && info.ast.purity == AST.Purity.Impure) (None(), None())
+          else (info.typedOpt, info.resOpt)
+        case info: Info.ExtMethod =>
+          return if (inSpec && !info.ast.isPure) (None(), None())
+          else (info.typedOpt, info.resOpt)
         case info: Info.Var => return (info.typedOpt, info.resOpt)
-        case _ => halt("Unimplemented") // TODO
+        case info: Info.QuantVar =>
+          return if (inSpec) (info.typedOpt, info.resOpt) else (None(), None())
+        case info: Info.SpecMethod => return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
+        case info: Info.SpecVar => return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
       }
     }
 
@@ -635,7 +686,13 @@ import TypeChecker.typeString
       }
 
       receiverType match {
-        case receiverType: AST.Typed.Name => halt("Unimplemented") // TODO
+        case receiverType: AST.Typed.Name =>
+          val id = ident.value
+          typeHierarchy.typeMap.get(receiverType.ids).get match {
+            case info: TypeInfo.Sig => return info.typeRes(id, inSpec)
+            case info: TypeInfo.AbstractDatatype => return info.typeRes(id, inSpec)
+            case _ => halt("Unexpected situation while type checking method access.")
+          }
         case receiverType: AST.Typed.Tuple =>
           if (id.size == 0 || ops.StringOps(id).first == '_') {
             errAccess(receiverType)
@@ -705,6 +762,7 @@ import TypeChecker.typeString
             return (exp, None())
         }
       }
+
       def helper: (AST.Exp.Select, Option[AST.Typed]) = {
         exp.receiverOpt match {
           case Some(receiver) =>
@@ -722,6 +780,7 @@ import TypeChecker.typeString
             return (newExp, typedOpt)
         }
       }
+
       val (newExp: AST.Exp.Select, typedOpt: Option[AST.Typed]) = helper
       if (typedOpt.isEmpty) {
         return (newExp, typedOpt)
@@ -782,7 +841,35 @@ import TypeChecker.typeString
 
       case exp: AST.Exp.If => halt("Unimplemented") // TODO
 
-      case exp: AST.Exp.Invoke => val r = checkInvoke(exp); return r
+      case exp: AST.Exp.Invoke =>
+        exp match {
+          case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
+            val (kind: BuiltInKind.Type, resOpt: Option[AST.ResolvedInfo]) = name.native match {
+              case "assert" => (BuiltInKind.Assertume, assertResOpt)
+              case "assume" => (BuiltInKind.Assertume, assumeResOpt)
+              case "println" => (BuiltInKind.Print, printlnResOpt)
+              case "print" => (BuiltInKind.Print, printResOpt)
+              case "eprintln" => (BuiltInKind.Print, eprintlnResOpt)
+              case "eprint" => (BuiltInKind.Print, eprintResOpt)
+              case "halt" => (BuiltInKind.Halt, haltResOpt)
+              case _ => halt(s"Unimplemented built-in method $name.")
+            }
+            kind match {
+              case BuiltInKind.Assertume =>
+                args.size match {
+                  case z"1" => val r = checkAssertume(resOpt, exp, args(0), None()); return r
+                  case z"2" => val r = checkAssertume(resOpt, exp, args(0), Some(args(1))); return r
+                  case _ =>
+                    reporter.error(exp.posOpt, typeCheckerKind,
+                      s"Invalid number of arguments (${args.size}) for $name.")
+                    return (exp, None())
+                }
+              case BuiltInKind.Print => val r = checkPrint(resOpt, exp, args); return r
+              case BuiltInKind.Halt => val r = checkHalt(exp, args); return r
+            }
+          case _ =>
+            val r = checkInvoke(exp); return r
+        }
 
       case exp: AST.Exp.InvokeNamed => halt("Unimplemented") // TODO
 
@@ -876,87 +963,6 @@ import TypeChecker.typeString
   }
 
   def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
-
-    def checkAssertume(resOpt: Option[AST.ResolvedInfo], assertumeStmt: AST.Stmt.Expr, assertumeExp: AST.Exp.Invoke,
-                       cond: AST.Exp, msgOpt: Option[AST.Exp]): AST.Stmt = {
-      val (newCondExp, _) = checkExp(typeBOpt, scope, cond, reporter)
-
-      msgOpt match {
-        case Some(msg) =>
-          val (newMsg, _) = checkExp(typeStringOpt, scope, msg, reporter)
-          val attr = assertumeExp.attr(typedOpt = assertume2TypedOpt, resOpt = resOpt)
-          return assertumeStmt(exp = assertumeExp(args = ISZ(newCondExp, newMsg), attr = attr),
-            attr = assertumeStmt.attr(typedOpt = typeUnitOpt))
-        case _ =>
-          val attr = assertumeExp.attr(typedOpt = assertume1TypedOpt, resOpt = resOpt)
-          return assertumeStmt(exp = assertumeExp(args = ISZ(newCondExp), attr = attr),
-            attr = assertumeStmt.attr(typedOpt = typeUnitOpt))
-      }
-    }
-
-    def checkPrint(resOpt: Option[AST.ResolvedInfo], printStmt: AST.Stmt.Expr,
-                   printExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
-      var newArgs = ISZ[AST.Exp]()
-      var argTypes = ISZ[AST.Typed]()
-      for (arg <- args) {
-        val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
-        argTypeOpt match {
-          case Some(argType) => argTypes = argTypes :+ argType
-          case _ =>
-        }
-        newArgs = newArgs :+ newArg
-      }
-      val attr = printExp.attr(typedOpt = Some(AST.Typed.Fun(F, F, argTypes, typeUnit)), resOpt = resOpt)
-      return printStmt(exp = printExp(args = newArgs, attr = attr),
-        attr = printStmt.attr(typedOpt = typeUnitOpt))
-    }
-
-    def checkHalt(haltStmt: AST.Stmt.Expr, haltExp: AST.Exp.Invoke, args: ISZ[AST.Exp], reporter: Reporter): AST.Stmt = {
-      if (args.size != 1) {
-        reporter.error(haltStmt.posOpt, typeCheckerKind,
-          s"Expecting one argument, but found ${args.size}.")
-        return haltStmt(exp = haltExp(attr = haltExp.attr(resOpt = haltResOpt, typedOpt = haltTypedOpt)),
-          attr = haltStmt.attr(typedOpt = typeNothingOpt))
-      }
-      val (newArg, _) = checkExp(typeStringOpt, scope, args(0), reporter)
-      return haltStmt(exp = haltExp(args = ISZ(newArg),
-        attr = haltExp.attr(resOpt = haltResOpt, typedOpt = haltTypedOpt)),
-        attr = haltStmt.attr(typedOpt = typeNothingOpt))
-    }
-
-    def checkExpr(stmt: AST.Stmt.Expr): AST.Stmt = {
-      stmt.exp match {
-
-        case exp@AST.Exp.Invoke(None(), AST.Id(name), targs, args) if targs.isEmpty && builtInMethods.contains(name) =>
-          val (kind: BuiltInKind.Type, resOpt: Option[AST.ResolvedInfo]) = name.native match {
-            case "assert" => (BuiltInKind.Assertume, assertResOpt)
-            case "assume" => (BuiltInKind.Assertume, assumeResOpt)
-            case "println" => (BuiltInKind.Print, printlnResOpt)
-            case "print" => (BuiltInKind.Print, printResOpt)
-            case "eprintln" => (BuiltInKind.Print, eprintlnResOpt)
-            case "eprint" => (BuiltInKind.Print, eprintResOpt)
-            case "halt" => (BuiltInKind.Halt, haltResOpt)
-            case _ => halt(s"Unimplemented built-in method $name.")
-          }
-          kind match {
-            case BuiltInKind.Assertume =>
-              args.size match {
-                case z"1" => val r = checkAssertume(resOpt, stmt, exp, args(0), None()); return r
-                case z"2" => val r = checkAssertume(resOpt, stmt, exp, args(0), Some(args(1))); return r
-                case _ =>
-                  reporter.error(stmt.exp.posOpt, typeCheckerKind,
-                    s"Invalid number of arguments (${args.size}) for $name.")
-                  return stmt
-              }
-            case BuiltInKind.Print => val r = checkPrint(resOpt, stmt, exp, args, reporter); return r
-            case BuiltInKind.Halt => val r = checkHalt(stmt, exp, args, reporter); return r
-          }
-        case _ =>
-          val (newExp, typedOpt) = checkExp(None(), scope, stmt.exp, reporter)
-          return stmt(exp = newExp, attr = stmt.attr(typedOpt = typedOpt))
-
-      }
-    }
 
     def checkImport(stmt: AST.Stmt.Import): (Option[Scope.Local], AST.Stmt) = {
       // TODO: resolve import
@@ -1057,7 +1063,9 @@ import TypeChecker.typeString
 
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Expr => val r = checkExpr(stmt); return (Some(scope), r)
+      case stmt: AST.Stmt.Expr =>
+        val (newExp, typedOpt) = checkExp(None(), scope, stmt.exp, reporter)
+        return (Some(scope), stmt(exp = newExp, attr = stmt.attr(typedOpt = typedOpt)))
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
 
