@@ -56,6 +56,8 @@ object Reporter {
 
   def hasIssue: B
 
+  def messages: ISZ[Message]
+
   def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
     report(Message(Level.InternalError, posOpt, kind, message))
   }
