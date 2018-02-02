@@ -53,17 +53,39 @@ class SlangCodebaseTest extends SireumSpec {
     val tc = TypeChecker(thOutlined, ISZ(), F)
     for (ti <- tc.typeMap.values) {
       ti match {
-        case ti: Resolver.TypeInfo.Sig => assert(ti.outlined, st"Type ${(ti.name, ".")} is not outlined!".render)
-        case ti: Resolver.TypeInfo.AbstractDatatype => assert(ti.outlined, st"Type ${(ti.name, ".")} is not outlined!".render)
+        case ti: Resolver.TypeInfo.Sig =>
+          if (!ti.outlined) {
+            reporter.error(None(), "", st"Type ${(ti.name, ".")} is not outlined!".render)
+          }
+        case ti: Resolver.TypeInfo.AbstractDatatype =>
+          if (!ti.outlined) {
+            reporter.error(None(), "", st"Type ${(ti.name, ".")} is not outlined!".render)
+          }
         case _ =>
       }
     }
     for (info <- tc.nameMap.values) {
       info match {
-        case info: Resolver.Info.Var => assert(info.outlined, st"Var ${(info.name, ".")} is not outlined!".render)
-        case info: Resolver.Info.SpecVar => assert(info.outlined, st"Spec var ${(info.name, ".")} is not outlined!".render)
-        case info: Resolver.Info.Method => assert(info.outlined, st"Method ${(info.name, ".")} is not outlined!".render)
-        case info: Resolver.Info.SpecMethod => assert(info.outlined, st"Spec method ${(info.name, ".")} is not outlined!".render)
+        case info: Resolver.Info.Var =>
+          if (!info.outlined) {
+            reporter.error(None(), "", st"Var ${(info.name, ".")} is not outlined!".render)
+          }
+        case info: Resolver.Info.SpecVar =>
+          if (!info.outlined) {
+            reporter.error(None(), "", st"Spec var ${(info.name, ".")} is not outlined!".render)
+          }
+        case info: Resolver.Info.Method =>
+          if (!info.outlined) {
+            reporter.error(None(), "", st"Method ${(info.name, ".")} is not outlined!".render)
+          }
+        case info: Resolver.Info.SpecMethod =>
+          if (!info.outlined) {
+            reporter.error(None(), "", st"Spec method ${(info.name, ".")} is not outlined!".render)
+          }
+        case info: Resolver.Info.ExtMethod =>
+          if (!info.outlined) {
+            reporter.error(None(), "", st"@ext object method ${(info.name, ".")} is not outlined!".render)
+          }
         case _ =>
       }
     }
