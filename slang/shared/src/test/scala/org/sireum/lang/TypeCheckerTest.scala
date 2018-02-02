@@ -94,6 +94,8 @@ class TypeCheckerTest extends SireumSpec {
         *(passingStmt("assert(org.sireum.T)"))
 
         *(passingStmt("assert(!org.sireum.F)"))
+
+        *(passingStmt("""halt("foo")"""))
       }
     }
 
@@ -102,6 +104,9 @@ class TypeCheckerTest extends SireumSpec {
       "Stmt" - {
 
         *(failingStmt("assert(1)", "but found org.sireum.Z"))
+
+        *(failingStmt("""halt(1)""", "but found org.sireum.Z"))
+
       }
 
     }
