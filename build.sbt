@@ -34,7 +34,7 @@ val isRelease = System.getenv("SIREUM_RELEASE") != null
 
 val scalaVer = "2.12.4"
 
-val metaVersion = "2.1.7"
+val metaVersion = "3.0.0"
 
 val scalaTestVersion = "3.0.1"
 
