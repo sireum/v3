@@ -629,7 +629,7 @@ object MsgPack {
     def writeStmtExpr(o: Stmt.Expr): Unit = {
       writer.writeZ(Constants.StmtExpr)
       writeExp(o.exp)
-      writeTypedAttr(o.attr)
+      writeAttr(o.attr)
     }
 
     def writeLClause(o: LClause): Unit = {
@@ -901,7 +901,7 @@ object MsgPack {
       writeString(o.prefix)
       writer.writeISZ(o.lits, writeExpLitString)
       writer.writeISZ(o.args, writeExp)
-      writeAttr(o.attr)
+      writeTypedAttr(o.attr)
     }
 
     def writeExpThis(o: Exp.This): Unit = {
@@ -2214,7 +2214,7 @@ object MsgPack {
         reader.expectZ(Constants.StmtExpr)
       }
       val exp = readExp()
-      val attr = readTypedAttr()
+      val attr = readAttr()
       return Stmt.Expr(exp, attr)
     }
 
@@ -2746,7 +2746,7 @@ object MsgPack {
       val prefix = reader.readString()
       val lits = reader.readISZ(readExpLitString _)
       val args = reader.readISZ(readExp _)
-      val attr = readAttr()
+      val attr = readTypedAttr()
       return Exp.StringInterpolate(prefix, lits, args, attr)
     }
 

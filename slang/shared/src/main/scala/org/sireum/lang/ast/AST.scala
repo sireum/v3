@@ -410,11 +410,15 @@ object Stmt {
   }
 
   @datatype class Expr(exp: Exp,
-                       @hidden attr: TypedAttr)
+                       @hidden attr: Attr)
     extends Stmt with AssignExp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure def typedOpt: Option[Typed] = {
+      return exp.typedOpt
     }
 
     @pure override def asAssignExp: AssignExp = {
@@ -600,7 +604,11 @@ object Pattern {
 }
 
 @datatype trait Exp {
-  def posOpt: Option[PosInfo]
+
+  @pure def posOpt: Option[PosInfo]
+
+  @pure def typedOpt: Option[Typed]
+
 }
 
 @sig sealed trait Lit
@@ -614,6 +622,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.bOpt
+    }
   }
 
   @datatype class LitC(value: C,
@@ -622,6 +634,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.cOpt
     }
   }
 
@@ -632,6 +648,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.zOpt
+    }
   }
 
   @datatype class LitF32(value: F32,
@@ -640,6 +660,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.f32Opt
     }
   }
 
@@ -650,6 +674,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.f64Opt
+    }
   }
 
   @datatype class LitR(value: R,
@@ -658,6 +686,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.rOpt
     }
   }
 
@@ -668,16 +700,24 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.stringOpt
+    }
   }
 
   @datatype class StringInterpolate(prefix: String,
                                     lits: ISZ[LitString],
                                     args: ISZ[Exp],
-                                    @hidden attr: Attr)
+                                    @hidden attr: TypedAttr)
     extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -686,12 +726,20 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Super(@hidden attr: TypedAttr) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -709,6 +757,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -753,6 +805,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   object Ident {
@@ -790,6 +846,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Eta(ref: Ref,
@@ -799,6 +859,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Tuple(args: ISZ[Exp],
@@ -807,6 +871,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -823,6 +891,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class Invoke(receiverOpt: Option[Exp],
@@ -834,6 +906,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -847,6 +923,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class If(cond: Exp,
@@ -857,6 +937,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -876,6 +960,10 @@ object Exp {
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
+    }
   }
 
   @datatype class ForYield(enumGens: ISZ[EnumGen.For],
@@ -885,6 +973,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return attr.typedOpt
     }
   }
 
@@ -896,6 +988,10 @@ object Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
+    }
+
+    @pure override def typedOpt: Option[Typed] = {
+      return Typed.bOpt
     }
   }
 
@@ -1255,6 +1351,26 @@ object Typed {
     }
   }
 
+  val nothing: Typed.Name = Typed.Name(ISZ("Nothing"), ISZ())
+  val nothingOpt: Option[Typed] = Some(nothing)
+  val unit: Typed = Typed.Name(ISZ("Unit"), ISZ())
+  val unitOpt: Option[Typed] = Some(unit)
+  val b: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "B"), ISZ())
+  val bOpt: Option[Typed] = Some(b)
+  val c: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "C"), ISZ())
+  val cOpt: Option[Typed] = Some(c)
+  val f32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "F32"), ISZ())
+  val f32Opt: Option[Typed] = Some(f32)
+  val f64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "F64"), ISZ())
+  val f64Opt: Option[Typed] = Some(f64)
+  val z: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z"), ISZ())
+  val zOpt: Option[Typed] = Some(z)
+  val r: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "R"), ISZ())
+  val rOpt: Option[Typed] = Some(r)
+  val string: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "String"), ISZ())
+  val stringOpt: Option[Typed] = Some(string)
+  val st: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "ST"), ISZ())
+  val stOpt: Option[Typed] = Some(st)
 }
 
 @datatype class Attr(posOpt: Option[PosInfo])

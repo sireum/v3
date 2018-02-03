@@ -746,7 +746,7 @@ object Resolver {
     val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
       AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
-    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.TypedAttr(None(), None()))
+    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.Attr(None()))
 
     val scope = Scope.Global(sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 

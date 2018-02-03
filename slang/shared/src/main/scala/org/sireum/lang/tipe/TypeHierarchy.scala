@@ -43,7 +43,7 @@ object TypeHierarchy {
     }
   }
 
-  val NothingTypeName: TypeName = TypeName(TypeChecker.typeNothing)
+  val NothingTypeName: TypeName = TypeName(AST.Typed.nothing)
 
   @pure def typedInfo(info: TypeInfo): AST.Typed.Name = {
     @pure def typedParam(tp: AST.TypeParam): AST.Typed = {
@@ -231,7 +231,7 @@ object TypeHierarchy {
 
   @pure def lub(ts: ISZ[AST.Typed]): Option[AST.Typed] = {
     val types: ISZ[AST.Typed] =
-      for (t <- ts if !TypeChecker.isEqType(TypeChecker.typeNothing, t)) yield t
+      for (t <- ts if !TypeChecker.isEqType(AST.Typed.nothing, t)) yield t
     types.size match {
       case z"0" => return if (ts.isEmpty) None() else Some(ts(0))
       case z"1" => return Some(types(0))
@@ -369,7 +369,7 @@ object TypeHierarchy {
             return Some(AST.Typed.Name(ti.name, argTypes))
           case _ =>
             if (name.size == 1 && argTypes.isEmpty && name(0) == "Unit") {
-              return Some(TypeChecker.typeUnit)
+              return Some(AST.Typed.unit)
             } else {
               reporter.error(t.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
             }
@@ -514,7 +514,7 @@ object TypeHierarchy {
   }
 
   @pure def isSubType(t1: AST.Typed, t2: AST.Typed): B = {
-    if (TypeChecker.isEqType(TypeChecker.typeNothing, t1)) {
+    if (TypeChecker.isEqType(AST.Typed.nothing, t1)) {
       return T
     }
     (t1, t2) match {

@@ -131,7 +131,7 @@ object SlangParser {
 
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
-  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyTypedAttr)
+  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
 }
 
 import SlangParser._
@@ -333,7 +333,7 @@ class SlangParser(text: Predef.String,
       case stat: Term.Return => translateReturn(enclosing, stat)
       case stat: Term.Apply =>
         stmtCheck(enclosing, stat, s"${syntax(stat)}")
-        AST.Stmt.Expr(translateExp(stat), typedAttr(stat.pos))
+        AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
       case stat@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
@@ -533,7 +533,7 @@ class SlangParser(text: Predef.String,
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
-        val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, typedAttr(pattern.pos)))
+        val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos)))
         exp match {
           case _: AST.Stmt.Expr =>
           case _ =>
@@ -1268,7 +1268,7 @@ class SlangParser(text: Predef.String,
       translateIfStmt(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Match => translateMatch(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Return => translateReturn(Enclosing.Block, exp)
-    case _ => AST.Stmt.Expr(translateExp(exp), typedAttr(exp.pos))
+    case _ => AST.Stmt.Expr(translateExp(exp), attr(exp.pos))
   }
 
   def translateStmtsExp(pos: Position, stats: Seq[Stat]): ISZ[AST.Stmt] = {
@@ -1868,7 +1868,7 @@ class SlangParser(text: Predef.String,
           error(s.pos, s"Invalid string interpolation: '${syntax(s)}'")
           AST.Exp.LitString("", attr(s.pos))
       }): _*),
-      ISZ(s.args.map(translateExp): _*), attr(s.pos))
+      ISZ(s.args.map(translateExp): _*), typedAttr(s.pos))
 
   def translateUnaryExp(t: Term.ApplyUnary): AST.Exp = {
     unops.get(t.op.value) match {

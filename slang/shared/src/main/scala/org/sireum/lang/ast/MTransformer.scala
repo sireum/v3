@@ -2094,7 +2094,7 @@ import MTransformer._
             MNone()
         case o2: Stmt.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
-          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          val r1: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
@@ -2157,7 +2157,7 @@ import MTransformer._
             MNone()
         case o2: Stmt.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
-          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          val r1: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
@@ -2690,7 +2690,7 @@ import MTransformer._
         case o2: Exp.StringInterpolate =>
           val r0: MOption[IS[Z, Exp.LitString]] = transformISZ(o2.lits, transformExpLitString)
           val r1: MOption[IS[Z, Exp]] = transformISZ(o2.args, transformExp)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
+          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(lits = r0.getOrElse(o2.lits), args = r1.getOrElse(o2.args), attr = r2.getOrElse(o2.attr)))
           else
