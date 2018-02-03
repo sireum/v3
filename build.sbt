@@ -96,6 +96,8 @@ addCommandAlias("rebuild-library", "; clean-library; test:compile")
 addCommandAlias("rebuild-slang-only", "; clean-slang-only; test:compile")
 addCommandAlias("rebuild-slang", "; clean-slang; test:compile")
 
+addCommandAlias("fatjar", "; project sireum; assembly")
+
 lazy val sireumSettings = Seq(
   organization := "org.sireum",
   version := sireumVersion,
