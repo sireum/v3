@@ -431,9 +431,9 @@ lazy val sireum = Project(
       dotDependency(args)
     },
     initialize := {
-      val required = "1.8"
+      val required = Set("1.8", "9")
       val current = sys.props("java.specification.version")
-      assert(current == required, s"Unsupported Java version: $current (required: $required)")
+      assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
     },
     publish := {},
     publishLocal := {}
