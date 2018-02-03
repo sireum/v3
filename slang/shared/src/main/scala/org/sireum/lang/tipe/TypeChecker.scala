@@ -453,7 +453,7 @@ import TypeChecker.typeString
               }
               var r = newUnaryExp
               val tOpt = checkExpected(expType)
-              up(r.attr.typedOpt) = tOpt
+              r = r(attr = r.attr(typedOpt = tOpt))
               return (r, tOpt)
             case _ =>
               // TODO: resolve unary_<op> on <expType>
@@ -490,7 +490,7 @@ import TypeChecker.typeString
           if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Eq) {
             val isCompat = typeHierarchy.isCompatible(leftType, rightType)
             if (isCompat) {
-              up(newBinaryExp.attr.typedOpt) = typeBOpt
+              newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = typeBOpt))
               return (newBinaryExp, typeBOpt)
             } else {
               errIncompat()
@@ -510,11 +510,11 @@ import TypeChecker.typeString
                 (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
                 (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
                 val tOpt = checkExpected(leftType)
-                up(newBinaryExp.attr.typedOpt) = tOpt
+                newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt))
                 return (newBinaryExp, tOpt)
               } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
                 val tOpt: Option[AST.Typed] = checkExpected(typeB)
-                up(newBinaryExp.attr.typedOpt) = tOpt
+                newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt))
                 return (newBinaryExp, tOpt)
               } else {
                 errUndef()
@@ -540,13 +540,13 @@ import TypeChecker.typeString
         }
       }
       var r = exp
-      up(r.args) = args
+      r = r(args = args)
       if (!ok) {
         return (r, None())
       }
       val t: AST.Typed = AST.Typed.Tuple(argTypes)
       val tOpt = checkExpected(t)
-      up(r.attr.typedOpt) = tOpt
+      r = r(attr = r.attr(typedOpt = tOpt))
       return (r, tOpt)
     }
 
@@ -1043,10 +1043,6 @@ import TypeChecker.typeString
       case stmt: AST.Stmt.AbstractDatatype => halt("Unimplemented.") // TODO
 
       case stmt: AST.Stmt.Assign => val r = checkAssign(stmt); return (Some(scope), r)
-
-      case stmt: AST.Stmt.AssignPattern => halt("Unimplemented.") // TODO
-
-      case stmt: AST.Stmt.AssignUp => halt("Unimplemented.") // TODO
 
       case stmt: AST.Stmt.Block =>
         val (_, newBody) = checkBody(scope, stmt.body, reporter)

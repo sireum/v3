@@ -92,8 +92,6 @@ object JSON {
         case o: Stmt.AbstractDatatype => return printStmtAbstractDatatype(o)
         case o: Stmt.TypeAlias => return printStmtTypeAlias(o)
         case o: Stmt.Assign => return printStmtAssign(o)
-        case o: Stmt.AssignUp => return printStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return printStmtAssignPattern(o)
         case o: Stmt.Block => return printStmtBlock(o)
         case o: Stmt.If => return printStmtIf(o)
         case o: Stmt.Match => return printStmtMatch(o)
@@ -314,24 +312,6 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Stmt.Assign""""),
         ("lhs", printExp(o.lhs)),
-        ("rhs", printAssignExp(o.rhs)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printStmtAssignUp(o: Stmt.AssignUp): ST = {
-      return printObject(ISZ(
-        ("type", st""""Stmt.AssignUp""""),
-        ("lhs", printExp(o.lhs)),
-        ("rhs", printAssignExp(o.rhs)),
-        ("attr", printAttr(o.attr))
-      ))
-    }
-
-    @pure def printStmtAssignPattern(o: Stmt.AssignPattern): ST = {
-      return printObject(ISZ(
-        ("type", st""""Stmt.AssignPattern""""),
-        ("lhs", printPattern(o.lhs)),
         ("rhs", printAssignExp(o.rhs)),
         ("attr", printAttr(o.attr))
       ))
@@ -1565,7 +1545,7 @@ object JSON {
         ("type", st""""ResolvedInfo.Var""""),
         ("isInObject", printB(o.isInObject)),
         ("isSpec", printB(o.isSpec)),
-        ("objectName", printISZ(T, o.objectName, printString)),
+        ("owner", printISZ(T, o.owner, printString)),
         ("id", printString(o.id))
       ))
     }
@@ -1575,7 +1555,7 @@ object JSON {
         ("type", st""""ResolvedInfo.Method""""),
         ("isInObject", printB(o.isInObject)),
         ("isSpec", printB(o.isSpec)),
-        ("objectName", printISZ(T, o.objectName, printString)),
+        ("owner", printISZ(T, o.owner, printString)),
         ("id", printString(o.id))
       ))
     }
@@ -1707,7 +1687,7 @@ object JSON {
     }
 
     def parseStmt(): Stmt = {
-      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.AssignUp", "Stmt.AssignPattern", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
+      val t = parser.parseObjectTypes(ISZ("Stmt.Import", "Stmt.Var", "Stmt.VarPattern", "Stmt.SpecVar", "Stmt.Method", "Stmt.ExtMethod", "Stmt.SpecMethod", "Stmt.Enum", "Stmt.SubZ", "Stmt.Object", "Stmt.Sig", "Stmt.AbstractDatatype", "Stmt.TypeAlias", "Stmt.Assign", "Stmt.Block", "Stmt.If", "Stmt.Match", "Stmt.While", "Stmt.DoWhile", "Stmt.For", "Stmt.Return", "Stmt.LStmt", "Stmt.Expr"))
       t.native match {
         case "Stmt.Import" => val r = parseStmtImportT(T); return r
         case "Stmt.Var" => val r = parseStmtVarT(T); return r
@@ -1723,8 +1703,6 @@ object JSON {
         case "Stmt.AbstractDatatype" => val r = parseStmtAbstractDatatypeT(T); return r
         case "Stmt.TypeAlias" => val r = parseStmtTypeAliasT(T); return r
         case "Stmt.Assign" => val r = parseStmtAssignT(T); return r
-        case "Stmt.AssignUp" => val r = parseStmtAssignUpT(T); return r
-        case "Stmt.AssignPattern" => val r = parseStmtAssignPatternT(T); return r
         case "Stmt.Block" => val r = parseStmtBlockT(T); return r
         case "Stmt.If" => val r = parseStmtIfT(T); return r
         case "Stmt.Match" => val r = parseStmtMatchT(T); return r
@@ -2221,48 +2199,6 @@ object JSON {
       val attr = parseAttr()
       parser.parseObjectNext()
       return Stmt.Assign(lhs, rhs, attr)
-    }
-
-    def parseStmtAssignUp(): Stmt.AssignUp = {
-      val r = parseStmtAssignUpT(F)
-      return r
-    }
-
-    def parseStmtAssignUpT(typeParsed: B): Stmt.AssignUp = {
-      if (!typeParsed) {
-        parser.parseObjectType("Stmt.AssignUp")
-      }
-      parser.parseObjectKey("lhs")
-      val lhs = parseExp()
-      parser.parseObjectNext()
-      parser.parseObjectKey("rhs")
-      val rhs = parseAssignExp()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Stmt.AssignUp(lhs, rhs, attr)
-    }
-
-    def parseStmtAssignPattern(): Stmt.AssignPattern = {
-      val r = parseStmtAssignPatternT(F)
-      return r
-    }
-
-    def parseStmtAssignPatternT(typeParsed: B): Stmt.AssignPattern = {
-      if (!typeParsed) {
-        parser.parseObjectType("Stmt.AssignPattern")
-      }
-      parser.parseObjectKey("lhs")
-      val lhs = parsePattern()
-      parser.parseObjectNext()
-      parser.parseObjectKey("rhs")
-      val rhs = parseAssignExp()
-      parser.parseObjectNext()
-      parser.parseObjectKey("attr")
-      val attr = parseAttr()
-      parser.parseObjectNext()
-      return Stmt.AssignPattern(lhs, rhs, attr)
     }
 
     def parseStmtBlock(): Stmt.Block = {
@@ -4853,13 +4789,13 @@ object JSON {
       parser.parseObjectKey("isSpec")
       val isSpec = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("objectName")
-      val objectName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectKey("owner")
+      val owner = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.Var(isInObject, isSpec, objectName, id)
+      return ResolvedInfo.Var(isInObject, isSpec, owner, id)
     }
 
     def parseResolvedInfoMethod(): ResolvedInfo.Method = {
@@ -4877,13 +4813,13 @@ object JSON {
       parser.parseObjectKey("isSpec")
       val isSpec = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("objectName")
-      val objectName = parser.parseISZ(parser.parseString _)
+      parser.parseObjectKey("owner")
+      val owner = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.Method(isInObject, isSpec, objectName, id)
+      return ResolvedInfo.Method(isInObject, isSpec, owner, id)
     }
 
     def parseResolvedInfoType(): ResolvedInfo.Type = {
@@ -5435,42 +5371,6 @@ object JSON {
       return r
     }
     val r = to(s, fStmtAssign)
-    return r
-  }
-
-  def fromStmtAssignUp(o: Stmt.AssignUp, isCompact: B): String = {
-    val st = Printer.printStmtAssignUp(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toStmtAssignUp(s: String): Stmt.AssignUp = {
-    def fStmtAssignUp(parser: Parser): Stmt.AssignUp = {
-      val r = parser.parseStmtAssignUp()
-      return r
-    }
-    val r = to(s, fStmtAssignUp)
-    return r
-  }
-
-  def fromStmtAssignPattern(o: Stmt.AssignPattern, isCompact: B): String = {
-    val st = Printer.printStmtAssignPattern(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toStmtAssignPattern(s: String): Stmt.AssignPattern = {
-    def fStmtAssignPattern(parser: Parser): Stmt.AssignPattern = {
-      val r = parser.parseStmtAssignPattern()
-      return r
-    }
-    val r = to(s, fStmtAssignPattern)
     return r
   }
 

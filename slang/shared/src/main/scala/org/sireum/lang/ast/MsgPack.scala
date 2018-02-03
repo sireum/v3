@@ -78,255 +78,251 @@ object MsgPack {
 
     val StmtAssign: Z = 20
 
-    val StmtAssignUp: Z = 21
+    val StmtBlock: Z = 21
 
-    val StmtAssignPattern: Z = 22
+    val StmtIf: Z = 22
 
-    val StmtBlock: Z = 23
+    val StmtMatch: Z = 23
 
-    val StmtIf: Z = 24
+    val StmtWhile: Z = 24
 
-    val StmtMatch: Z = 25
+    val StmtDoWhile: Z = 25
 
-    val StmtWhile: Z = 26
+    val StmtFor: Z = 26
 
-    val StmtDoWhile: Z = 27
+    val StmtReturn: Z = 27
 
-    val StmtFor: Z = 28
+    val StmtLStmt: Z = 28
 
-    val StmtReturn: Z = 29
+    val StmtExpr: Z = 29
 
-    val StmtLStmt: Z = 30
+    val LClauseInvariants: Z = 30
 
-    val StmtExpr: Z = 31
+    val LClauseFacts: Z = 31
 
-    val LClauseInvariants: Z = 32
+    val LClauseFact: Z = 32
 
-    val LClauseFacts: Z = 33
+    val LClauseTheorems: Z = 33
 
-    val LClauseFact: Z = 34
+    val LClauseTheorem: Z = 34
 
-    val LClauseTheorems: Z = 35
+    val LClauseSequent: Z = 35
 
-    val LClauseTheorem: Z = 36
+    val LClauseProof: Z = 36
 
-    val LClauseSequent: Z = 37
+    val ContractExp: Z = 37
 
-    val LClauseProof: Z = 38
+    val Case: Z = 38
 
-    val ContractExp: Z = 39
+    val EnumGenRangeExpr: Z = 39
 
-    val Case: Z = 40
+    val EnumGenRangeIndices: Z = 40
 
-    val EnumGenRangeExpr: Z = 41
+    val EnumGenRangeStep: Z = 41
 
-    val EnumGenRangeIndices: Z = 42
+    val EnumGenFor: Z = 42
 
-    val EnumGenRangeStep: Z = 43
+    val TypeNamed: Z = 43
 
-    val EnumGenFor: Z = 44
+    val TypeFun: Z = 44
 
-    val TypeNamed: Z = 45
+    val TypeTuple: Z = 45
 
-    val TypeFun: Z = 46
+    val PatternLiteral: Z = 46
 
-    val TypeTuple: Z = 47
+    val PatternLitInterpolate: Z = 47
 
-    val PatternLiteral: Z = 48
+    val PatternRef: Z = 48
 
-    val PatternLitInterpolate: Z = 49
+    val PatternVarBinding: Z = 49
 
-    val PatternRef: Z = 50
+    val PatternWildcard: Z = 50
 
-    val PatternVarBinding: Z = 51
+    val PatternSeqWildcard: Z = 51
 
-    val PatternWildcard: Z = 52
+    val PatternStructure: Z = 52
 
-    val PatternSeqWildcard: Z = 53
+    val ExpLitB: Z = 53
 
-    val PatternStructure: Z = 54
+    val ExpLitC: Z = 54
 
-    val ExpLitB: Z = 55
+    val ExpLitZ: Z = 55
 
-    val ExpLitC: Z = 56
+    val ExpLitF32: Z = 56
 
-    val ExpLitZ: Z = 57
+    val ExpLitF64: Z = 57
 
-    val ExpLitF32: Z = 58
+    val ExpLitR: Z = 58
 
-    val ExpLitF64: Z = 59
+    val ExpLitString: Z = 59
 
-    val ExpLitR: Z = 60
+    val ExpStringInterpolate: Z = 60
 
-    val ExpLitString: Z = 61
+    val ExpThis: Z = 61
 
-    val ExpStringInterpolate: Z = 62
+    val ExpSuper: Z = 62
 
-    val ExpThis: Z = 63
+    val ExpUnary: Z = 63
 
-    val ExpSuper: Z = 64
+    val ExpBinary: Z = 64
 
-    val ExpUnary: Z = 65
+    val ExpIdent: Z = 65
 
-    val ExpBinary: Z = 66
+    val ExpEta: Z = 66
 
-    val ExpIdent: Z = 67
+    val ExpTuple: Z = 67
 
-    val ExpEta: Z = 68
+    val ExpSelect: Z = 68
 
-    val ExpTuple: Z = 69
+    val ExpInvoke: Z = 69
 
-    val ExpSelect: Z = 70
+    val ExpInvokeNamed: Z = 70
 
-    val ExpInvoke: Z = 71
+    val ExpIf: Z = 71
 
-    val ExpInvokeNamed: Z = 72
+    val ExpFunParam: Z = 72
 
-    val ExpIf: Z = 73
+    val ExpFun: Z = 73
 
-    val ExpFunParam: Z = 74
+    val ExpForYield: Z = 74
 
-    val ExpFun: Z = 75
+    val ExpQuant: Z = 75
 
-    val ExpForYield: Z = 76
+    val NamedArg: Z = 76
 
-    val ExpQuant: Z = 77
+    val VarFragment: Z = 77
 
-    val NamedArg: Z = 78
+    val DomainType: Z = 78
 
-    val VarFragment: Z = 79
+    val DomainRange: Z = 79
 
-    val DomainType: Z = 80
+    val Id: Z = 80
 
-    val DomainRange: Z = 81
+    val Name: Z = 81
 
-    val Id: Z = 82
+    val Body: Z = 82
 
-    val Name: Z = 83
+    val AbstractDatatypeParam: Z = 83
 
-    val Body: Z = 84
+    val MethodSig: Z = 84
 
-    val AbstractDatatypeParam: Z = 85
+    val Param: Z = 85
 
-    val MethodSig: Z = 86
+    val TypeParam: Z = 86
 
-    val Param: Z = 87
+    val Contract: Z = 87
 
-    val TypeParam: Z = 88
+    val SubContract: Z = 88
 
-    val Contract: Z = 89
+    val WhereDefVal: Z = 89
 
-    val SubContract: Z = 90
+    val WhereDefDef: Z = 90
 
-    val WhereDefVal: Z = 91
+    val SpecDef: Z = 91
 
-    val WhereDefDef: Z = 92
+    val ProofStepBasic: Z = 92
 
-    val SpecDef: Z = 93
+    val ProofStepSubProof: Z = 93
 
-    val ProofStepBasic: Z = 94
+    val AssumeProofStepRegular: Z = 94
 
-    val ProofStepSubProof: Z = 95
+    val AssumeProofStepForallIntroAps: Z = 95
 
-    val AssumeProofStepRegular: Z = 96
+    val AssumeProofStepExistsElimAps: Z = 96
 
-    val AssumeProofStepForallIntroAps: Z = 97
+    val JustPremise: Z = 97
 
-    val AssumeProofStepExistsElimAps: Z = 98
+    val JustAndIntro: Z = 98
 
-    val JustPremise: Z = 99
+    val JustAndElim: Z = 99
 
-    val JustAndIntro: Z = 100
+    val JustOrIntro: Z = 100
 
-    val JustAndElim: Z = 101
+    val JustOrElim: Z = 101
 
-    val JustOrIntro: Z = 102
+    val JustImplyIntro: Z = 102
 
-    val JustOrElim: Z = 103
+    val JustImplyElim: Z = 103
 
-    val JustImplyIntro: Z = 104
+    val JustNegIntro: Z = 104
 
-    val JustImplyElim: Z = 105
+    val JustNegElim: Z = 105
 
-    val JustNegIntro: Z = 106
+    val JustBottomElim: Z = 106
 
-    val JustNegElim: Z = 107
+    val JustPbc: Z = 107
 
-    val JustBottomElim: Z = 108
+    val JustForallIntro: Z = 108
 
-    val JustPbc: Z = 109
+    val JustForallElim: Z = 109
 
-    val JustForallIntro: Z = 110
+    val JustExistsIntro: Z = 110
 
-    val JustForallElim: Z = 111
+    val JustExistsElim: Z = 111
 
-    val JustExistsIntro: Z = 112
+    val JustFact: Z = 112
 
-    val JustExistsElim: Z = 113
+    val JustInvariant: Z = 113
 
-    val JustFact: Z = 114
+    val JustSubst: Z = 114
 
-    val JustInvariant: Z = 115
+    val JustAuto: Z = 115
 
-    val JustSubst: Z = 116
+    val JustCoq: Z = 116
 
-    val JustAuto: Z = 117
+    val TruthTableRow: Z = 117
 
-    val JustCoq: Z = 118
+    val TruthTableAssignment: Z = 118
 
-    val TruthTableRow: Z = 119
+    val TruthTableConclusionValidity: Z = 119
 
-    val TruthTableAssignment: Z = 120
+    val TruthTableConclusionTautology: Z = 120
 
-    val TruthTableConclusionValidity: Z = 121
+    val TruthTableConclusionContradictory: Z = 121
 
-    val TruthTableConclusionTautology: Z = 122
+    val TruthTableConclusionContingent: Z = 122
 
-    val TruthTableConclusionContradictory: Z = 123
+    val TypedName: Z = 123
 
-    val TruthTableConclusionContingent: Z = 124
+    val TypedTuple: Z = 124
 
-    val TypedName: Z = 125
+    val TypedFun: Z = 125
 
-    val TypedTuple: Z = 126
+    val TypedPackage: Z = 126
 
-    val TypedFun: Z = 127
+    val TypedObject: Z = 127
 
-    val TypedPackage: Z = 128
+    val TypedEnum: Z = 128
 
-    val TypedObject: Z = 129
+    val TypedMethod: Z = 129
 
-    val TypedEnum: Z = 130
+    val Attr: Z = 130
 
-    val TypedMethod: Z = 131
+    val TypedAttr: Z = 131
 
-    val Attr: Z = 132
+    val ResolvedAttr: Z = 132
 
-    val TypedAttr: Z = 133
+    val ResolvedInfoBuiltIn: Z = 133
 
-    val ResolvedAttr: Z = 134
+    val ResolvedInfoPackage: Z = 134
 
-    val ResolvedInfoBuiltIn: Z = 135
+    val ResolvedInfoEnum: Z = 135
 
-    val ResolvedInfoPackage: Z = 136
+    val ResolvedInfoEnumElement: Z = 136
 
-    val ResolvedInfoEnum: Z = 137
+    val ResolvedInfoObject: Z = 137
 
-    val ResolvedInfoEnumElement: Z = 138
+    val ResolvedInfoVar: Z = 138
 
-    val ResolvedInfoObject: Z = 139
+    val ResolvedInfoMethod: Z = 139
 
-    val ResolvedInfoVar: Z = 140
+    val ResolvedInfoType: Z = 140
 
-    val ResolvedInfoMethod: Z = 141
+    val ResolvedInfoTuple: Z = 141
 
-    val ResolvedInfoType: Z = 142
+    val ResolvedInfoLocalVar: Z = 142
 
-    val ResolvedInfoTuple: Z = 143
-
-    val ResolvedInfoLocalVar: Z = 144
-
-    val PosInfo: Z = 145
+    val PosInfo: Z = 143
 
   }
 
@@ -389,8 +385,6 @@ object MsgPack {
         case o: Stmt.AbstractDatatype => writeStmtAbstractDatatype(o)
         case o: Stmt.TypeAlias => writeStmtTypeAlias(o)
         case o: Stmt.Assign => writeStmtAssign(o)
-        case o: Stmt.AssignUp => writeStmtAssignUp(o)
-        case o: Stmt.AssignPattern => writeStmtAssignPattern(o)
         case o: Stmt.Block => writeStmtBlock(o)
         case o: Stmt.If => writeStmtIf(o)
         case o: Stmt.Match => writeStmtMatch(o)
@@ -568,20 +562,6 @@ object MsgPack {
     def writeStmtAssign(o: Stmt.Assign): Unit = {
       writer.writeZ(Constants.StmtAssign)
       writeExp(o.lhs)
-      writeAssignExp(o.rhs)
-      writeAttr(o.attr)
-    }
-
-    def writeStmtAssignUp(o: Stmt.AssignUp): Unit = {
-      writer.writeZ(Constants.StmtAssignUp)
-      writeExp(o.lhs)
-      writeAssignExp(o.rhs)
-      writeAttr(o.attr)
-    }
-
-    def writeStmtAssignPattern(o: Stmt.AssignPattern): Unit = {
-      writer.writeZ(Constants.StmtAssignPattern)
-      writePattern(o.lhs)
       writeAssignExp(o.rhs)
       writeAttr(o.attr)
     }
@@ -1541,7 +1521,7 @@ object MsgPack {
       writer.writeZ(Constants.ResolvedInfoVar)
       writeB(o.isInObject)
       writeB(o.isSpec)
-      writer.writeISZ(o.objectName, writeString)
+      writer.writeISZ(o.owner, writeString)
       writeString(o.id)
     }
 
@@ -1549,7 +1529,7 @@ object MsgPack {
       writer.writeZ(Constants.ResolvedInfoMethod)
       writeB(o.isInObject)
       writeB(o.isSpec)
-      writer.writeISZ(o.objectName, writeString)
+      writer.writeISZ(o.owner, writeString)
       writeString(o.id)
     }
 
@@ -1769,8 +1749,6 @@ object MsgPack {
         case Constants.StmtAbstractDatatype => val r = readStmtAbstractDatatypeT(T); return r
         case Constants.StmtTypeAlias => val r = readStmtTypeAliasT(T); return r
         case Constants.StmtAssign => val r = readStmtAssignT(T); return r
-        case Constants.StmtAssignUp => val r = readStmtAssignUpT(T); return r
-        case Constants.StmtAssignPattern => val r = readStmtAssignPatternT(T); return r
         case Constants.StmtBlock => val r = readStmtBlockT(T); return r
         case Constants.StmtIf => val r = readStmtIfT(T); return r
         case Constants.StmtMatch => val r = readStmtMatchT(T); return r
@@ -2100,36 +2078,6 @@ object MsgPack {
       val rhs = readAssignExp()
       val attr = readAttr()
       return Stmt.Assign(lhs, rhs, attr)
-    }
-
-    def readStmtAssignUp(): Stmt.AssignUp = {
-      val r = readStmtAssignUpT(F)
-      return r
-    }
-
-    def readStmtAssignUpT(typeParsed: B): Stmt.AssignUp = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.StmtAssignUp)
-      }
-      val lhs = readExp()
-      val rhs = readAssignExp()
-      val attr = readAttr()
-      return Stmt.AssignUp(lhs, rhs, attr)
-    }
-
-    def readStmtAssignPattern(): Stmt.AssignPattern = {
-      val r = readStmtAssignPatternT(F)
-      return r
-    }
-
-    def readStmtAssignPatternT(typeParsed: B): Stmt.AssignPattern = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.StmtAssignPattern)
-      }
-      val lhs = readPattern()
-      val rhs = readAssignExp()
-      val attr = readAttr()
-      return Stmt.AssignPattern(lhs, rhs, attr)
     }
 
     def readStmtBlock(): Stmt.Block = {
@@ -4062,9 +4010,9 @@ object MsgPack {
       }
       val isInObject = reader.readB()
       val isSpec = reader.readB()
-      val objectName = reader.readISZ(reader.readString _)
+      val owner = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.Var(isInObject, isSpec, objectName, id)
+      return ResolvedInfo.Var(isInObject, isSpec, owner, id)
     }
 
     def readResolvedInfoMethod(): ResolvedInfo.Method = {
@@ -4078,9 +4026,9 @@ object MsgPack {
       }
       val isInObject = reader.readB()
       val isSpec = reader.readB()
-      val objectName = reader.readISZ(reader.readString _)
+      val owner = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.Method(isInObject, isSpec, objectName, id)
+      return ResolvedInfo.Method(isInObject, isSpec, owner, id)
     }
 
     def readResolvedInfoType(): ResolvedInfo.Type = {
@@ -4524,36 +4472,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fStmtAssign)
-    return r
-  }
-
-  def fromStmtAssignUp(o: Stmt.AssignUp, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeStmtAssignUp(o)
-    return w.result
-  }
-
-  def toStmtAssignUp(data: ISZ[U8]): Stmt.AssignUp = {
-    def fStmtAssignUp(reader: Reader): Stmt.AssignUp = {
-      val r = reader.readStmtAssignUp()
-      return r
-    }
-    val r = to(data, fStmtAssignUp)
-    return r
-  }
-
-  def fromStmtAssignPattern(o: Stmt.AssignPattern, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeStmtAssignPattern(o)
-    return w.result
-  }
-
-  def toStmtAssignPattern(data: ISZ[U8]): Stmt.AssignPattern = {
-    def fStmtAssignPattern(reader: Reader): Stmt.AssignPattern = {
-      val r = reader.readStmtAssignPattern()
-      return r
-    }
-    val r = to(data, fStmtAssignPattern)
     return r
   }
 

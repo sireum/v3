@@ -483,7 +483,7 @@ object TypeOutliner {
         if (substMap.isEmpty) {
           specVars = specVars.put(id, info)
         } else {
-          up(sv.tipe) = sv.tipe.typed(TypeChecker.substType(substMap, sv.tipe.typedOpt.get))
+          sv = sv(tipe = sv.tipe.typed(TypeChecker.substType(substMap, sv.tipe.typedOpt.get)))
           specVars = specVars.put(id, info(ast = sv, typedOpt = sv.tipe.typedOpt))
         }
       }
@@ -526,9 +526,7 @@ object TypeOutliner {
         } else {
           var params = ISZ[AST.Param]()
           for (param <- sm.sig.params) {
-            var prm = param
-            up(prm.tipe) = prm.tipe.typed(TypeChecker.substType(substMap, prm.tipe.typedOpt.get))
-            params = params :+ prm
+            params = params :+ param(tipe = param.tipe.typed(TypeChecker.substType(substMap, param.tipe.typedOpt.get)))
           }
           sm = sm(sig = sm.sig(params = params, returnType =
             sm.sig.returnType.typed(TypeChecker.substType(substMap, sm.sig.returnType.typedOpt.get))))
@@ -644,9 +642,7 @@ object TypeOutliner {
                 var m = pm
                 var params = ISZ[AST.Param]()
                 for (param <- m.sig.params) {
-                  var prm = param
-                  up(prm.tipe) = prm.tipe.typed(TypeChecker.substType(substMap, prm.tipe.typedOpt.get))
-                  params = params :+ prm
+                  params = params :+ param(tipe = param.tipe.typed(TypeChecker.substType(substMap, param.tipe.typedOpt.get)))
                 }
                 m = m(bodyOpt = None(), sig = m.sig(params = params, returnType =
                   m.sig.returnType.typed(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get))))

@@ -75,8 +75,6 @@ object MTransformer {
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
         case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
         case o: Stmt.Assign => return preStmtAssign(o)
-        case o: Stmt.AssignUp => return preStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return preStmtAssignPattern(o)
         case o: Stmt.Block => return preStmtBlock(o)
         case o: Stmt.If => return preStmtIf(o)
         case o: Stmt.Match => return preStmtMatch(o)
@@ -205,14 +203,6 @@ object MTransformer {
     }
 
     def preStmtAssign(o: Stmt.Assign): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtAssignUp(o: Stmt.AssignUp): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtAssignPattern(o: Stmt.AssignPattern): PreResult[Stmt] = {
       return PreResult(T, MNone())
     }
 
@@ -972,8 +962,6 @@ object MTransformer {
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
         case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
         case o: Stmt.Assign => return postStmtAssign(o)
-        case o: Stmt.AssignUp => return postStmtAssignUp(o)
-        case o: Stmt.AssignPattern => return postStmtAssignPattern(o)
         case o: Stmt.Block => return postStmtBlock(o)
         case o: Stmt.If => return postStmtIf(o)
         case o: Stmt.Match => return postStmtMatch(o)
@@ -1102,14 +1090,6 @@ object MTransformer {
     }
 
     def postStmtAssign(o: Stmt.Assign): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtAssignUp(o: Stmt.AssignUp): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtAssignPattern(o: Stmt.AssignPattern): MOption[Stmt] = {
       return MNone()
     }
 
@@ -2038,22 +2018,6 @@ import MTransformer._
             MNone()
         case o2: Stmt.Assign =>
           val r0: MOption[Exp] = transformExp(o2.lhs)
-          val r1: MOption[AssignExp] = transformAssignExp(o2.rhs)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(lhs = r0.getOrElse(o2.lhs), rhs = r1.getOrElse(o2.rhs), attr = r2.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Stmt.AssignUp =>
-          val r0: MOption[Exp] = transformExp(o2.lhs)
-          val r1: MOption[AssignExp] = transformAssignExp(o2.rhs)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(lhs = r0.getOrElse(o2.lhs), rhs = r1.getOrElse(o2.rhs), attr = r2.getOrElse(o2.attr)))
-          else
-            MNone()
-        case o2: Stmt.AssignPattern =>
-          val r0: MOption[Pattern] = transformPattern(o2.lhs)
           val r1: MOption[AssignExp] = transformAssignExp(o2.rhs)
           val r2: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)

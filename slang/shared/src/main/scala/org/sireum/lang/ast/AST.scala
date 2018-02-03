@@ -290,28 +290,6 @@ object Stmt {
 
   }
 
-  @datatype class AssignUp(lhs: Exp,
-                           rhs: AssignExp,
-                           @hidden attr: Attr)
-    extends Stmt {
-
-    @pure override def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-
-  }
-
-  @datatype class AssignPattern(lhs: Pattern,
-                                rhs: AssignExp,
-                                @hidden attr: Attr)
-    extends Stmt {
-
-    @pure override def posOpt: Option[PosInfo] = {
-      return attr.posOpt
-    }
-
-  }
-
   @datatype class Block(body: Body,
                         @hidden attr: Attr)
     extends Stmt with AssignExp {
@@ -1306,12 +1284,12 @@ object ResolvedInfo {
 
   @datatype class Var(isInObject: B,
                       isSpec: B,
-                      objectName: ISZ[String],
+                      owner: ISZ[String],
                       id: String) extends ResolvedInfo
 
   @datatype class Method(isInObject: B,
                          isSpec: B,
-                         objectName: ISZ[String],
+                         owner: ISZ[String],
                          id: String) extends ResolvedInfo
 
   @datatype class Type(name: ISZ[String]) extends ResolvedInfo

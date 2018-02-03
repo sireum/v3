@@ -79,8 +79,6 @@ object Transformer {
         case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(ctx, o)
         case o: Stmt.TypeAlias => return preStmtTypeAlias(ctx, o)
         case o: Stmt.Assign => return preStmtAssign(ctx, o)
-        case o: Stmt.AssignUp => return preStmtAssignUp(ctx, o)
-        case o: Stmt.AssignPattern => return preStmtAssignPattern(ctx, o)
         case o: Stmt.Block => return preStmtBlock(ctx, o)
         case o: Stmt.If => return preStmtIf(ctx, o)
         case o: Stmt.Match => return preStmtMatch(ctx, o)
@@ -209,14 +207,6 @@ object Transformer {
     }
 
     @pure def preStmtAssign(ctx: Context, o: Stmt.Assign): PreResult[Context, Stmt] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preStmtAssignUp(ctx: Context, o: Stmt.AssignUp): PreResult[Context, Stmt] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): PreResult[Context, Stmt] = {
       return PreResult(ctx, T, None())
     }
 
@@ -976,8 +966,6 @@ object Transformer {
         case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(ctx, o)
         case o: Stmt.TypeAlias => return postStmtTypeAlias(ctx, o)
         case o: Stmt.Assign => return postStmtAssign(ctx, o)
-        case o: Stmt.AssignUp => return postStmtAssignUp(ctx, o)
-        case o: Stmt.AssignPattern => return postStmtAssignPattern(ctx, o)
         case o: Stmt.Block => return postStmtBlock(ctx, o)
         case o: Stmt.If => return postStmtIf(ctx, o)
         case o: Stmt.Match => return postStmtMatch(ctx, o)
@@ -1106,14 +1094,6 @@ object Transformer {
     }
 
     @pure def postStmtAssign(ctx: Context, o: Stmt.Assign): Result[Context, Stmt] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postStmtAssignUp(ctx: Context, o: Stmt.AssignUp): Result[Context, Stmt] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postStmtAssignPattern(ctx: Context, o: Stmt.AssignPattern): Result[Context, Stmt] = {
       return Result(ctx, None())
     }
 
@@ -2044,22 +2024,6 @@ import Transformer._
             Result(r3.ctx, None())
         case o2: Stmt.Assign =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.lhs)
-          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), rhs = r1.resultOpt.getOrElse(o2.rhs), attr = r2.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r2.ctx, None())
-        case o2: Stmt.AssignUp =>
-          val r0: Result[Context, Exp] = transformExp(ctx, o2.lhs)
-          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(lhs = r0.resultOpt.getOrElse(o2.lhs), rhs = r1.resultOpt.getOrElse(o2.rhs), attr = r2.resultOpt.getOrElse(o2.attr))))
-          else
-            Result(r2.ctx, None())
-        case o2: Stmt.AssignPattern =>
-          val r0: Result[Context, Pattern] = transformPattern(ctx, o2.lhs)
           val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.rhs)
           val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)

@@ -138,8 +138,6 @@
                      |  ⸨ @hidden ⸩? var  <ID> : <type>
 
 <assign-stmt>      ::=  <lhs> = <assign-exp>
-                     |  up ( <lhs> ) = <assign-exp>
-                     |  pat ( <pattern> ) = <assign-exp>
 
 <lhs>              ::=  <ID>
                      |  <lhs> . <ID>

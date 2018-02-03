@@ -1478,50 +1478,19 @@ class SlangParser(text: Predef.String,
     val pos = stat.pos
 
     stmtCheck(enclosing, stat, "Assigments")
-    fun match {
-      case Term.Name("up") =>
-        if (argss.size == 1 && argss.head.size == 1 && argss.head.head.isInstanceOf[Term])
-          AST.Stmt.AssignUp(translateExp(argss.head.head), translateAssignExp(rhs), attr(pos))
-        else {
-          error(pos, "Slang up should be of the form: 'up(...) = ...'")
-          rStmt
-        }
-      case Term.Name("pat") =>
-        if (argss.size == 1) {
-          val args = argss.head
-          if (args.length > 1) {
-            if (args.forall({
-              case _: Term.Name => true
-              case _ => false
-            })) {
-              AST.Stmt.AssignPattern(AST.Pattern.Structure(None(), None(),
-                ISZ(args.map(patVar): _*), resolvedAttr(stat.pos)), translateAssignExp(rhs), attr(pos))
-            } else {
-              error(pos, "Slang tuple pat should be of the form: 'pat(〈ID〉,〈ID〉, ... ) = ...'")
-              rStmt
-            }
-          } else {
-            AST.Stmt.AssignPattern(translatePattern(args.head), translateAssignExp(rhs), attr(pos))
-          }
-        } else {
-          error(pos, "Slang pat should be of the form: 'pat(...) = ...'")
-          rStmt
-        }
-      case _ =>
-        var lhs = translateExp(fun)
-        val prevPos = fun.pos
-        if (argss.nonEmpty) {
-          for (args <- argss) {
-            val pos =
-              if (args.nonEmpty) Position.Range(args.head.pos.input, args.head.pos.start, args.last.pos.end)
-              else prevPos
-            lhs = translateApply(lhs, args, pos)
-          }
-        } else {
-          errorInSlang(pos, s"Invalid update form: '${syntax(stat)}'")
-        }
-        AST.Stmt.Assign(lhs, translateAssignExp(rhs), attr(pos))
+    var lhs = translateExp(fun)
+    val prevPos = fun.pos
+    if (argss.nonEmpty) {
+      for (args <- argss) {
+        val pos =
+          if (args.nonEmpty) Position.Range(args.head.pos.input, args.head.pos.start, args.last.pos.end)
+          else prevPos
+        lhs = translateApply(lhs, args, pos)
+      }
+    } else {
+      errorInSlang(pos, s"Invalid update form: '${syntax(stat)}'")
     }
+    AST.Stmt.Assign(lhs, translateAssignExp(rhs), attr(pos))
   }
 
   def translateIfStmt(enclosing: Enclosing.Type,

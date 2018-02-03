@@ -147,7 +147,7 @@ object TypeHierarchy {
           }
         case _ =>
       }
-      up(r.aliases) = r.aliases.put(TypeHierarchy.TypeName(typed), t)
+      r = r(aliases = r.aliases.put(TypeHierarchy.TypeName(typed), t))
       return t
     }
 
@@ -160,11 +160,11 @@ object TypeHierarchy {
         case _: TypeInfo.SubZ =>
           val typed = typedInfo(info)
           val ttn = TypeHierarchy.TypeName(typed)
-          up(r.poset) = r.poset.addNode(ttn)
+          r = r(poset = r.poset.addNode(ttn))
         case _: TypeInfo.Enum =>
           val typed = typedInfo(info)
           val ttn = TypeHierarchy.TypeName(typed)
-          up(r.poset) = r.poset.addNode(ttn)
+          r = r(poset = r.poset.addNode(ttn))
         case info: TypeInfo.Sig =>
           if (!info.outlined) {
             val typed = typedInfo(info)
@@ -176,7 +176,7 @@ object TypeHierarchy {
               val ptn = TypeHierarchy.TypeName(p)
               parentTypeNames = parentTypeNames :+ ptn
             }
-            up(r.poset) = r.poset.addParents(ttn, parentTypeNames)
+            r = r(poset = r.poset.addParents(ttn, parentTypeNames))
           }
         case info: TypeInfo.AbstractDatatype =>
           if (!info.outlined) {
@@ -189,7 +189,7 @@ object TypeHierarchy {
               val ptn = TypeHierarchy.TypeName(p)
               parentTypeNames = parentTypeNames :+ ptn
             }
-            up(r.poset) = r.poset.addParents(ttn, parentTypeNames)
+            r = r(poset = r.poset.addParents(ttn, parentTypeNames))
           }
         case info: TypeInfo.TypeAlias => resolveAlias(info, HashSet.empty)
         case _: TypeInfo.TypeVar => halt("Infeasible")
