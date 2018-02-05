@@ -1473,7 +1473,7 @@ object JSON {
         ("owner", printISZ(T, o.owner, printString)),
         ("name", printString(o.name)),
         ("paramNames", printISZ(T, o.paramNames, printString)),
-        ("subst", printISZ(F, o.subst, printTypedMethodSubst)),
+        ("substs", printISZ(F, o.substs, printTypedMethodSubst)),
         ("tpe", printTypedFun(o.tpe))
       ))
     }
@@ -4662,13 +4662,13 @@ object JSON {
       parser.parseObjectKey("paramNames")
       val paramNames = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
-      parser.parseObjectKey("subst")
-      val subst = parser.parseISZ(parseTypedMethodSubst _)
+      parser.parseObjectKey("substs")
+      val substs = parser.parseISZ(parseTypedMethodSubst _)
       parser.parseObjectNext()
       parser.parseObjectKey("tpe")
       val tpe = parseTypedFun()
       parser.parseObjectNext()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, subst, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, substs, tpe)
     }
 
     def parseAttr(): Attr = {

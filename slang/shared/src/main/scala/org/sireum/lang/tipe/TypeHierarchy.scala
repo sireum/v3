@@ -231,7 +231,7 @@ object TypeHierarchy {
 
   @pure def lub(ts: ISZ[AST.Typed]): Option[AST.Typed] = {
     val types: ISZ[AST.Typed] =
-      for (t <- ts if !TypeChecker.isEqType(AST.Typed.nothing, t)) yield t
+      for (t <- ts if AST.Typed.nothing != t) yield t
     types.size match {
       case z"0" => return if (ts.isEmpty) None() else Some(ts(0))
       case z"1" => return Some(types(0))
@@ -247,7 +247,7 @@ object TypeHierarchy {
         case t: AST.Typed.Name =>
           typeNames = typeNames :+ t
         case t =>
-          if (!TypeChecker.isEqType(first, t)) {
+          if (first != t) {
             return None()
           }
       }
@@ -420,7 +420,7 @@ object TypeHierarchy {
       case Some(t) =>
         val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)
         substMapOpt match {
-          case Some(substMap) => return Some(TypeChecker.substType(substMap, t))
+          case Some(substMap) => return Some(t.subst(substMap))
           case _ => return None()
         }
       case _ => return tOpt
@@ -509,12 +509,14 @@ object TypeHierarchy {
           }
         }
         return isSubType(t1.ret, t2.ret)
+      case (t1: AST.Typed.Method, t2: AST.Typed.Method) =>
+        return isRefinement(t1.tpe, t2.tpe)
       case _ => isSubType(t1, t2)
     }
   }
 
   @pure def isSubType(t1: AST.Typed, t2: AST.Typed): B = {
-    if (TypeChecker.isEqType(AST.Typed.nothing, t1)) {
+    if (AST.Typed.nothing == t1) {
       return T
     }
     (t1, t2) match {
@@ -523,7 +525,7 @@ object TypeHierarchy {
           return F
         }
         for (i <- z"0" until t1.args.size) {
-          if (!TypeChecker.isEqType(t1.args(i), t2.args(i))) {
+          if (t1.args(i) != t2.args(i)) {
             return F
           }
         }
@@ -531,7 +533,7 @@ object TypeHierarchy {
           return T
         }
         return poset.ancestorsOf(TypeHierarchy.TypeName(t1)).contains(TypeHierarchy.TypeName(t2))
-      case _ => return TypeChecker.isEqType(t1, t2)
+      case _ => return t1 == t2
     }
   }
 

@@ -58,6 +58,7 @@ object TopUnit {
 
 @datatype trait Stmt {
   def posOpt: Option[PosInfo]
+
   def asAssignExp: AssignExp = {
     halt(s"Invalid operation 'asAssignExp' on $this.")
   }
@@ -794,6 +795,7 @@ object Exp {
 
   @sig sealed trait Ref {
     @pure def targs: ISZ[Type]
+
     @pure def asExp: Exp
   }
 
@@ -1042,7 +1044,20 @@ object Domain {
                           typeParams: ISZ[TypeParam],
                           hasParams: B,
                           params: ISZ[Param],
-                          returnType: Type)
+                          returnType: Type) {
+
+  @pure def funType: Typed.Fun = {
+    var pts = ISZ[Typed]()
+    for (p <- params) {
+      pts = pts :+ p.tipe.typedOpt.get
+    }
+    val t = Typed.Fun(isPure, !hasParams, pts, returnType.typedOpt.get)
+    t match {
+      case t: Typed.Fun => return t
+      case _ => halt("Infeasible")
+    }
+  }
+}
 
 @datatype class Param(isHidden: B,
                       id: Id,
@@ -1255,8 +1270,124 @@ object TruthTable {
 @datatype trait Typed {
   @pure def isPureFun: B
 
-  def isEqual(other: Typed): B = {
-    halt("Unallowed use of direct equality test on org.sireum.lang.ast.Typed.")
+  @pure def subst(map: HashMap[String, Typed]): Typed
+
+  @pure def isEqual(other: Typed): B = {
+    (this, other) match {
+      case (t1: Typed.Name, t2: Typed.Name) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (t1.ids != t2.ids) {
+          return F
+        }
+        for (i <- z"0" until t1.args.size) {
+          if (t1.args(i) != t2.args(i)) {
+            return F
+          }
+        }
+        return T
+      case (t1: Typed.Tuple, t2: Typed.Tuple) =>
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        for (i <- z"0" until t1.args.size) {
+          if (t1.args(i) != t2.args(i)) {
+            return F
+          }
+        }
+        return T
+      case (t1: Typed.Fun, t2: Typed.Fun) =>
+        if (t1.isPure != t2.isPure || t1.isByName != t2.isByName) {
+          return F
+        }
+        if (t1.args.size != t2.args.size) {
+          return F
+        }
+        if (t1.ret != t2.ret) {
+          return F
+        }
+        for (i <- z"0" until t1.args.size) {
+          if (t1.args(i) != t2.args(i)) {
+            return F
+          }
+        }
+        return T
+      case (t1: Typed.Fun, _) if t1.isByName =>
+        return t1.ret == other
+      case (_, t2: Typed.Fun) if t2.isByName =>
+        return this == t2.ret
+      case (t1: Typed.Package, t2: Typed.Package) =>
+        return t1.name == t2.name
+      case (t1: Typed.Object, t2: Typed.Object) =>
+        return t1.name == t2.name
+      case (t1: Typed.Enum, t2: Typed.Enum) =>
+        return t1.name == t2.name
+      case _ =>
+        if (this.isUnitType && other.isUnitType) {
+          return T
+        }
+        return F
+    }
+  }
+
+  @pure def deBruijn(typeParams: HashSet[String]): Typed = {
+    var map = HashMap.empty[String, Z]
+
+    def db(t: Typed): Typed = {
+      t match {
+        case t: Typed.Name =>
+          if (t.args.nonEmpty) {
+            var args = ISZ[Typed]()
+            for (arg <- t.args) {
+              val ta = db(arg)
+              args = args :+ ta
+            }
+            return t(args = args)
+          } else if (t.ids.size == 1 && typeParams.contains(t.ids(0).value)) {
+            val k = t.ids(0).value
+            val i: Z = map.get(k) match {
+              case Some(n) => n
+              case _ =>
+                val n = map.size
+                map = map.put(k, n)
+                n
+            }
+            return t(ids = ISZ(s"$$$i"))
+          } else {
+            return t
+          }
+        case t: Typed.Tuple =>
+          var args = ISZ[Typed]()
+          for (arg <- t.args) {
+            val ta = db(arg)
+            args = args :+ ta
+          }
+          return t(args = args)
+        case t: Typed.Fun =>
+          var args = ISZ[Typed]()
+          for (arg <- t.args) {
+            val ta = db(arg)
+            args = args :+ ta
+          }
+          val tr = db(t.ret)
+          return t(args = args, ret = tr)
+        case t: Typed.Enum => return t
+        case t: Typed.Method => return t
+        case t: Typed.Object => return t
+        case t: Typed.Package => return t
+      }
+    }
+
+    val r = db(this)
+    return r
+  }
+
+  @pure def isUnitType: B = {
+    this match {
+      case t: Typed.Tuple if t.args.isEmpty => return T
+      case _ => return this == Typed.unit
+    }
   }
 }
 
@@ -1274,6 +1405,20 @@ object Typed {
       return if (args.isEmpty) st"${(ids, ".")}".render
       else st"${(ids, ".")}[${(args, ", ")}]".render
     }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed = {
+      if (m.isEmpty) {
+        return this
+      }
+      if (ids.size == 1 && args.isEmpty) {
+        m.get(ids(0)) match {
+          case Some(t2) => return t2
+          case _ =>
+        }
+      }
+      return Name(ids, args.map(ta => ta.subst(m)))
+    }
+
   }
 
   @datatype class Tuple(args: ISZ[Typed]) extends Typed {
@@ -1284,6 +1429,13 @@ object Typed {
 
     @pure override def string: String = {
       return st"(${(args, ", ")})".render
+    }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Tuple = {
+      if (m.isEmpty) {
+        return this
+      }
+      return Tuple(args.map(ta => ta.subst(m)))
     }
   }
 
@@ -1303,6 +1455,13 @@ object Typed {
       else st"(${(args, ", ")}) => $ret".render
     }
 
+    @pure def subst(m: HashMap[String, Typed]): Typed.Fun = {
+      if (m.isEmpty) {
+        return this
+      }
+      return Fun(isPure, isByName, args.map(ta => ta.subst(m)), ret.subst(m))
+    }
+
   }
 
   @datatype class Package(name: ISZ[String]) extends Typed {
@@ -1313,6 +1472,10 @@ object Typed {
 
     @pure override def string: String = {
       return st"Package ${(name, ".")}".render
+    }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Package = {
+      return this
     }
   }
 
@@ -1325,6 +1488,10 @@ object Typed {
     @pure override def string: String = {
       return st"Object ${(name, ".")}".render
     }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Object = {
+      return this
+    }
   }
 
   @datatype class Enum(name: ISZ[String]) extends Typed {
@@ -1336,11 +1503,16 @@ object Typed {
     @pure override def string: String = {
       return st"@enum ${(name, ".")}".render
     }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Enum = {
+      return this
+    }
   }
 
   object Method {
 
     @datatype class Subst(id: String, tipe: Typed)
+
   }
 
   @datatype class Method(isInObject: B,
@@ -1349,7 +1521,7 @@ object Typed {
                          owner: ISZ[String],
                          name: String,
                          paramNames: ISZ[String],
-                         subst: ISZ[Method.Subst],
+                         substs: ISZ[Method.Subst],
                          tpe: Typed.Fun)
     extends Typed {
 
@@ -1360,11 +1532,20 @@ object Typed {
     @pure override def string: String = {
       return st"${if (isConstructor) "Constructor" else "Method"} ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
     }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Method = {
+      if (m.isEmpty) {
+        return this
+      }
+      return Method(isInObject, isConstructor, typeParams, owner, name, paramNames,
+        substs ++ m.entries.map(p => Typed.Method.Subst(p._1, p._2)), tpe.subst(m))
+    }
+
   }
 
-  val nothing: Typed.Name = Typed.Name(ISZ("Nothing"), ISZ())
+  val nothing: Typed.Name = Typed.Name(ISZ("org", "sireum", "Nothing"), ISZ())
   val nothingOpt: Option[Typed] = Some(nothing)
-  val unit: Typed.Name = Typed.Name(ISZ("Unit"), ISZ())
+  val unit: Typed.Name = Typed.Name(ISZ("org", "sireum", "Unit"), ISZ())
   val unitOpt: Option[Typed] = Some(unit)
   val b: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "B"), ISZ())
   val bOpt: Option[Typed] = Some(b)
@@ -1382,7 +1563,6 @@ object Typed {
   val stringOpt: Option[Typed] = Some(string)
   val st: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "ST"), ISZ())
   val stOpt: Option[Typed] = Some(st)
-
 }
 
 @datatype class Attr(posOpt: Option[PosInfo])

@@ -34,16 +34,6 @@ import org.sireum.lang.util._
 
 object TypeChecker {
 
-  @datatype class TypedEq(t: AST.Typed) {
-    @pure override def hash: Z = {
-      return t.hash
-    }
-
-    @pure def isEqual(other: TypedEq): B = {
-      return TypeChecker.isEqType(t, other.t)
-    }
-  }
-
   @enum object BasicKind {
     'B
     'C
@@ -96,34 +86,6 @@ object TypeChecker {
     return r
   }
 
-  @pure def substFunType(m: HashMap[String, AST.Typed], t: AST.Typed.Fun): AST.Typed.Fun = {
-    return t(args = t.args.map(ta => substType(m, ta)), ret = substType(m, t.ret))
-  }
-
-  @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
-    if (m.isEmpty) {
-      return t
-    }
-    t match {
-      case t: AST.Typed.Name =>
-        if (t.ids.size == 1 && t.args.isEmpty) {
-          m.get(t.ids(0)) match {
-            case Some(t2) => return t2
-            case _ =>
-          }
-        }
-        return t(args = t.args.map(ta => substType(m, ta)))
-      case t: AST.Typed.Tuple => return t(args = t.args.map(ta => substType(m, ta)))
-      case t: AST.Typed.Fun => return substFunType(m, t)
-      case t: AST.Typed.Enum => return t
-      case t: AST.Typed.Method =>
-        t(subst = t.subst ++ m.entries.map(p => AST.Typed.Method.Subst(p._1, p._2)),
-          tpe = substFunType(m, t.tpe))
-      case t: AST.Typed.Object => return t
-      case t: AST.Typed.Package => return t
-    }
-  }
-
   def buildTypeSubstMap(name: QName,
                         posOpt: Option[AST.PosInfo],
                         typeParams: ISZ[AST.TypeParam],
@@ -154,136 +116,6 @@ object TypeChecker {
       substMap = substMap.put(m.typeParams(i), args(i))
     }
     return Some(substMap)
-  }
-
-  @pure def isUnitType(t: AST.Typed): B = {
-    t match {
-      case t: AST.Typed.Tuple if t.args.isEmpty => return T
-      case _ => return isEqType(t, AST.Typed.unit)
-    }
-  }
-
-  @pure def isEqType(t1: AST.Typed, t2: AST.Typed): B = {
-    (t1, t2) match {
-      case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        if (t1.ids != t2.ids) {
-          return F
-        }
-        for (i <- z"0" until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case (t1: AST.Typed.Tuple, t2: AST.Typed.Tuple) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        for (i <- z"0" until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case (t1: AST.Typed.Fun, t2: AST.Typed.Fun) =>
-        if (t1.isPure != t2.isPure || t1.isByName != t2.isByName) {
-          return F
-        }
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        if (!isEqType(t1.ret, t2.ret)) {
-          return F
-        }
-        for (i <- z"0" until t1.args.size) {
-          if (!isEqType(t1.args(i), t2.args(i))) {
-            return F
-          }
-        }
-        return T
-      case (t1: AST.Typed.Fun, _) if t1.isByName =>
-        return isEqType(t1.ret, t2)
-      case (_, t2: AST.Typed.Fun) if t2.isByName =>
-        return isEqType(t1, t2.ret)
-      case (t1: AST.Typed.Package, t2: AST.Typed.Package) =>
-        return t1.name == t2.name
-      case (t1: AST.Typed.Object, t2: AST.Typed.Object) =>
-        return t1.name == t2.name
-      case (t1: AST.Typed.Enum, t2: AST.Typed.Enum) =>
-        return t1.name == t2.name
-      case _ =>
-        if (isUnitType(t1) && isUnitType(t2)) {
-          return T
-        }
-        return F
-    }
-  }
-
-  @pure def deBruijn(typeParams: HashSet[String], t: AST.Typed): AST.Typed = {
-    var map = HashMap.empty[String, Z]
-
-    def db(t: AST.Typed): AST.Typed = {
-      t match {
-        case t: AST.Typed.Name =>
-          if (t.args.nonEmpty) {
-            var args = ISZ[AST.Typed]()
-            for (arg <- t.args) {
-              val ta = db(arg)
-              args = args :+ ta
-            }
-            return t(args = args)
-          } else if (t.ids.size == 1 && typeParams.contains(t.ids(0).value)) {
-            val k = t.ids(0).value
-            val i: Z = map.get(k) match {
-              case Some(n) => n
-              case _ =>
-                val n = map.size
-                map = map.put(k, n)
-                n
-            }
-            return t(ids = ISZ(s"$$$i"))
-          } else {
-            return t
-          }
-        case t: AST.Typed.Tuple =>
-          var args = ISZ[AST.Typed]()
-          for (arg <- t.args) {
-            val ta = db(arg)
-            args = args :+ ta
-          }
-          return t(args = args)
-        case t: AST.Typed.Fun =>
-          var args = ISZ[AST.Typed]()
-          for (arg <- t.args) {
-            val ta = db(arg)
-            args = args :+ ta
-          }
-          val tr = db(t.ret)
-          return t(args = args, ret = tr)
-        case t: AST.Typed.Enum => return t
-        case t: AST.Typed.Method => return t
-        case t: AST.Typed.Object => return t
-        case t: AST.Typed.Package => return t
-      }
-    }
-
-    val r = db(t)
-    return r
-  }
-
-  @pure def extractMethodFunType(m: AST.MethodSig): AST.Typed.Fun = {
-    var pts = ISZ[AST.Typed]()
-    for (p <- m.params) {
-      pts = pts :+ p.tipe.typedOpt.get
-    }
-    val t = AST.Typed.Fun(m.isPure, !m.hasParams, pts, m.returnType.typedOpt.get)
-    t match {
-      case t: AST.Typed.Fun => return t
-      case _ => halt("Infeasible")
-    }
   }
 
   def checkWorksheet(program: AST.TopUnit.Program,
@@ -656,9 +488,9 @@ import TypeChecker._
             etaParentOpt match {
               case Some(etaParent) =>
                 val tpe: AST.Typed = if (t.tpe.isByName) t.tpe(isByName = F) else t.tpe
-                val tOpt = Some(substType(substMap, tpe))
+                val tOpt = Some(tpe.subst(substMap))
                 return (etaParent(ref = ref, attr = etaParent.attr(typedOpt = tOpt)), tOpt)
-              case _ if t.tpe.isByName => return (exp, Some(substType(substMap, t.tpe.ret)))
+              case _ if t.tpe.isByName => return (exp, Some(t.tpe.ret.subst(substMap)))
               case _ =>
                 reporter.error(exp.posOpt, typeCheckerKind,
                   "Method access has to be explicitly eta-expanded to become a function using '_'.")
@@ -728,7 +560,7 @@ import TypeChecker._
                 case Some(rt) =>
                   val smOpt = buildTypeSubstMap(info.name, ident.attr.posOpt, info.ast.typeParams, receiverType.args, reporter)
                   smOpt match {
-                    case Some(sm) => return (Some(substType(sm, rt)), r._2)
+                    case Some(sm) => return (Some(rt.subst(sm)), r._2)
                     case _ => return noResult
                   }
                 case _ => errAccess(receiverType); return noResult
@@ -739,7 +571,7 @@ import TypeChecker._
                 case Some(rt) =>
                   val smOpt = buildTypeSubstMap(info.name, ident.attr.posOpt, info.ast.typeParams, receiverType.args, reporter)
                   smOpt match {
-                    case Some(sm) => return (Some(substType(sm, rt)), r._2)
+                    case Some(sm) => return (Some(rt.subst(sm)), r._2)
                     case _ => return noResult
                   }
                 case _ => errAccess(receiverType); return noResult
@@ -862,7 +694,7 @@ import TypeChecker._
       }
 
       def checkH(sm: HashMap[String, AST.Typed]): (AST.Exp, Option[AST.Typed]) = {
-        val funType = substFunType(sm, m.tpe)
+        val funType = m.tpe.subst(sm)
         var i = 0
         val size = expArgs.size
         var args = Map.empty[String, AST.Exp]
@@ -898,7 +730,7 @@ import TypeChecker._
             val smOpt = unifies(expId.attr.posOpt, T, argTypes, m.tpe.args, reporter)
             smOpt match {
               case Some(sm) =>
-                val funType = substFunType(sm, m.tpe)
+                val funType = m.tpe.subst(sm)
                 return (make(newArgs, Some(funType)), Some(funType.ret))
               case _ =>
                 return (make(newArgs, None()), None())
@@ -1435,7 +1267,7 @@ import TypeChecker._
       val (key, value) = e
       res.get(key) match {
         case Some(v) =>
-          if (!isEqType(value, v)) {
+          if (value != v) {
             return None()
           }
         case _ => res = res.put(key, value)
@@ -1450,7 +1282,7 @@ import TypeChecker._
       reporter.error(posOpt, typeCheckerKind, s"Could not unify type $expected with $tpe.")
     }
 
-    if (isEqType(expected, tpe)) {
+    if (expected == tpe) {
       return Some(HashMap.empty)
     }
     (expected, tpe) match {

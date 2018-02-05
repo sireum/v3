@@ -3802,10 +3802,10 @@ import MTransformer._
           else
             MNone()
         case o2: Typed.Method =>
-          val r0: MOption[IS[Z, Typed.Method.Subst]] = transformISZ(o2.subst, transformTypedMethodSubst)
+          val r0: MOption[IS[Z, Typed.Method.Subst]] = transformISZ(o2.substs, transformTypedMethodSubst)
           val r1: MOption[Typed.Fun] = transformTypedFun(o2.tpe)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-            MSome(o2(subst = r0.getOrElse(o2.subst), tpe = r1.getOrElse(o2.tpe)))
+            MSome(o2(substs = r0.getOrElse(o2.substs), tpe = r1.getOrElse(o2.tpe)))
           else
             MNone()
       }

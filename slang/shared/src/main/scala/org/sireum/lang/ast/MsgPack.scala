@@ -1466,7 +1466,7 @@ object MsgPack {
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
       writer.writeISZ(o.paramNames, writeString)
-      writer.writeISZ(o.subst, writeTypedMethodSubst)
+      writer.writeISZ(o.substs, writeTypedMethodSubst)
       writeTypedFun(o.tpe)
     }
 
@@ -3901,9 +3901,9 @@ object MsgPack {
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
       val paramNames = reader.readISZ(reader.readString _)
-      val subst = reader.readISZ(readTypedMethodSubst _)
+      val substs = reader.readISZ(readTypedMethodSubst _)
       val tpe = readTypedFun()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, subst, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, substs, tpe)
     }
 
     def readAttr(): Attr = {

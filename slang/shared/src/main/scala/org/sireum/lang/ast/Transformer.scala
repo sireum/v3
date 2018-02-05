@@ -3808,10 +3808,10 @@ import Transformer._
           else
             Result(ctx, None())
         case o2: Typed.Method =>
-          val r0: Result[Context, IS[Z, Typed.Method.Subst]] = transformISZ(ctx, o2.subst, transformTypedMethodSubst)
+          val r0: Result[Context, IS[Z, Typed.Method.Subst]] = transformISZ(ctx, o2.substs, transformTypedMethodSubst)
           val r1: Result[Context, Typed.Fun] = transformTypedFun(r0.ctx, o2.tpe)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-            Result(r1.ctx, Some(o2(subst = r0.resultOpt.getOrElse(o2.subst), tpe = r1.resultOpt.getOrElse(o2.tpe))))
+            Result(r1.ctx, Some(o2(substs = r0.resultOpt.getOrElse(o2.substs), tpe = r1.resultOpt.getOrElse(o2.tpe))))
           else
             Result(r1.ctx, None())
       }
