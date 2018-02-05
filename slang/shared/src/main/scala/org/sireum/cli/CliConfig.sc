@@ -127,7 +127,7 @@
     name = "util",
     description = "Utility Tools",
     header = "Sireum Utility Tools",
-    hidden = F,
+    unlisted = F,
     subs = ISZ(cliGenTool, serializerGenTool, transformerGenTool)
   )
 
@@ -137,7 +137,7 @@
     header =
       st"""Sireum: A Software Analysis Platform (v3)
           |(c) 2018, SAnToS Laboratory, Kansas State University""".render,
-    hidden = F,
+    unlisted = F,
     subs = ISZ(logikaTool, utilGroup)
   )
 
