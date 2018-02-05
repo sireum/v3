@@ -183,7 +183,7 @@ object TypeOutliner {
       case Some((sig, tVars)) =>
         return Some(info(ast = sm(sig = sig),
           typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
-            sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
+            sig.params.map(p => p.id.value), ISZ(), TypeChecker.extractMethodFunType(sig)))))
       case _ => return None()
     }
   }
@@ -194,7 +194,7 @@ object TypeOutliner {
     sigOpt match {
       case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
         typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
-          sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
+          sig.params.map(p => p.id.value), ISZ(), TypeChecker.extractMethodFunType(sig)))))
       case _ => return None()
     }
   }
@@ -205,7 +205,7 @@ object TypeOutliner {
     sigOpt match {
       case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
         typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
-          sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
+          sig.params.map(p => p.id.value), ISZ(), TypeChecker.extractMethodFunType(sig)))))
       case _ => return None()
     }
   }
@@ -284,7 +284,7 @@ object TypeOutliner {
         info(outlined = T, ancestors = ancestors,
           constructorTypeOpt = Some(AST.Typed.Method(F, T, tm.keys.elements,
             info.owner, info.ast.id.value, info.ast.params.map(p => p.id.value),
-            AST.Typed.Fun(T, F, paramTypes, info.tpe))),
+            ISZ(), AST.Typed.Fun(T, F, paramTypes, info.tpe))),
           specVars = specVars, vars = vars, specMethods = specMethods, methods = methods,
           ast = info.ast(params = newParams))
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
@@ -381,9 +381,10 @@ object TypeOutliner {
       }
       val sigOpt = outlineMethodSig(scope, sm.sig, reporter)
       sigOpt match {
-        case Some((sig, _)) =>
+        case Some((sig, tVars)) =>
           specMethods = specMethods.put(id, info(ast = sm(sig = sig),
-            typedOpt = Some(TypeChecker.extractMethodType(sig))))
+            typedOpt = Some(AST.Typed.Method(F, F, tVars, info.owner, id,
+              sig.params.map(p => p.id.value), ISZ(), TypeChecker.extractMethodFunType(sig)))))
         case _ =>
       }
     }
@@ -398,8 +399,9 @@ object TypeOutliner {
       }
       val sigOpt = outlineMethodSig(scope, m.sig, reporter)
       sigOpt match {
-        case Some((sig, _)) => methods = methods.put(id, info(ast = m(sig = sig),
-          typedOpt = Some(TypeChecker.extractMethodType(sig))))
+        case Some((sig, tVars)) => methods = methods.put(id, info(ast = m(sig = sig),
+          typedOpt = Some(AST.Typed.Method(F, F, tVars, info.owner, id,
+            sig.params.map(p => p.id.value), ISZ(), TypeChecker.extractMethodFunType(sig)))))
         case _ =>
       }
     }
@@ -552,7 +554,7 @@ object TypeOutliner {
           sm = sm(sig = sm.sig(params = params, returnType =
             sm.sig.returnType.typed(TypeChecker.substType(substMap, sm.sig.returnType.typedOpt.get))))
           specMethods = specMethods.put(id, info(ast = sm, typedOpt =
-            Some(TypeChecker.extractMethodType(sm.sig))))
+            Some(TypeChecker.extractMethodFunType(sm.sig))))
         }
       }
     }
@@ -561,8 +563,8 @@ object TypeOutliner {
                             m2: AST.Stmt.Method,
                             substMap: HashMap[String, AST.Typed],
                             posOpt: Option[AST.PosInfo]): B = {
-      val t1 = TypeChecker.extractMethodType(m1.sig)
-      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodType(m2.sig))
+      val t1 = TypeChecker.extractMethodFunType(m1.sig)
+      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodFunType(m2.sig))
       return TypeChecker.isEqType(t1, t2)
     }
 
@@ -570,8 +572,8 @@ object TypeOutliner {
                               supM: AST.Stmt.Method,
                               substMap: HashMap[String, AST.Typed],
                               posOpt: Option[AST.PosInfo]): B = {
-      val t1 = TypeChecker.extractMethodType(m.sig)
-      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodType(supM.sig))
+      val t1 = TypeChecker.extractMethodFunType(m.sig)
+      val t2 = TypeChecker.substType(substMap, TypeChecker.extractMethodFunType(supM.sig))
       return typeHierarchy.isRefinement(t1, t2)
     }
 
@@ -668,7 +670,7 @@ object TypeOutliner {
                 }
                 m = m(bodyOpt = None(), sig = m.sig(params = params, returnType =
                   m.sig.returnType.typed(TypeChecker.substType(substMap, m.sig.returnType.typedOpt.get))))
-                methods = methods.put(id, info(ast = m, typedOpt = Some(TypeChecker.extractMethodType(m.sig))))
+                methods = methods.put(id, info(ast = m, typedOpt = Some(TypeChecker.substType(substMap, info.typedOpt.get))))
               }
           }
       }
