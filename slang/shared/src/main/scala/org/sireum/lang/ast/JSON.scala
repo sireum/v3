@@ -338,7 +338,7 @@ object JSON {
     @pure def printStmtMatch(o: Stmt.Match): ST = {
       return printObject(ISZ(
         ("type", st""""Stmt.Match""""),
-        ("cond", printExp(o.cond)),
+        ("exp", printExp(o.exp)),
         ("cases", printISZ(F, o.cases, printCase)),
         ("attr", printAttr(o.attr))
       ))
@@ -2267,8 +2267,8 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Stmt.Match")
       }
-      parser.parseObjectKey("cond")
-      val cond = parseExp()
+      parser.parseObjectKey("exp")
+      val exp = parseExp()
       parser.parseObjectNext()
       parser.parseObjectKey("cases")
       val cases = parser.parseISZ(parseCase _)
@@ -2276,7 +2276,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.Match(cond, cases, attr)
+      return Stmt.Match(exp, cases, attr)
     }
 
     def parseStmtWhile(): Stmt.While = {

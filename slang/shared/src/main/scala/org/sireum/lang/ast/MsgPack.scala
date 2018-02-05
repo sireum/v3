@@ -584,7 +584,7 @@ object MsgPack {
 
     def writeStmtMatch(o: Stmt.Match): Unit = {
       writer.writeZ(Constants.StmtMatch)
-      writeExp(o.cond)
+      writeExp(o.exp)
       writer.writeISZ(o.cases, writeCase)
       writeAttr(o.attr)
     }
@@ -2133,10 +2133,10 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.StmtMatch)
       }
-      val cond = readExp()
+      val exp = readExp()
       val cases = reader.readISZ(readCase _)
       val attr = readAttr()
-      return Stmt.Match(cond, cases, attr)
+      return Stmt.Match(exp, cases, attr)
     }
 
     def readStmtWhile(): Stmt.While = {

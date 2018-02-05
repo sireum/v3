@@ -2049,11 +2049,11 @@ import MTransformer._
           else
             MNone()
         case o2: Stmt.Match =>
-          val r0: MOption[Exp] = transformExp(o2.cond)
+          val r0: MOption[Exp] = transformExp(o2.exp)
           val r1: MOption[IS[Z, Case]] = transformISZ(o2.cases, transformCase)
           val r2: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(cond = r0.getOrElse(o2.cond), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
+            MSome(o2(exp = r0.getOrElse(o2.exp), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.While =>
@@ -2149,11 +2149,11 @@ import MTransformer._
           else
             MNone()
         case o2: Stmt.Match =>
-          val r0: MOption[Exp] = transformExp(o2.cond)
+          val r0: MOption[Exp] = transformExp(o2.exp)
           val r1: MOption[IS[Z, Case]] = transformISZ(o2.cases, transformCase)
           val r2: MOption[Attr] = transformAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(cond = r0.getOrElse(o2.cond), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
+            MSome(o2(exp = r0.getOrElse(o2.exp), cases = r1.getOrElse(o2.cases), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.Return =>

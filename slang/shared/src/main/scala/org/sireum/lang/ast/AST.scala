@@ -328,7 +328,7 @@ object Stmt {
     }
   }
 
-  @datatype class Match(cond: Exp,
+  @datatype class Match(exp: Exp,
                         cases: ISZ[Case],
                         @hidden attr: Attr)
     extends Stmt with AssignExp {
