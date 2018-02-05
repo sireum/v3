@@ -50,6 +50,18 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet(
           """import org.sireum._
+            |val x: Either[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
             |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
           """.stripMargin
         ))
