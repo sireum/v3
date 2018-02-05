@@ -78,7 +78,7 @@ object SlangParser {
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
   val disallowedTypeIds = Seq("Unit", "Nothing")
-  val disallowedMethodIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt")
+  val disallowedMethodIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt", "native")
 
   def scalaDialect(isWorksheet: Boolean): Dialect =
     if (isWorksheet) scala.meta.dialects.Scala212.copy(
@@ -1557,9 +1557,22 @@ class SlangParser(text: Predef.String,
     }
 
     stmtCheck(enclosing, stat, "Match-statements")
-    AST.Stmt.Match(translateExp(stat.expr),
-      ISZ(stat.cases.map(translateCase): _*),
-      attr(stat.pos))
+    val exp = translateExp(stat.expr)
+    val cases = stat.cases.map(translateCase)
+    exp match {
+      case exp@AST.Exp.Select(_, AST.Id(String("native")), _) =>
+        var i = 0
+        for (c <- cases) {
+          c.pattern match {
+            case pat: AST.Pattern.LitInterpolate =>
+              error(stat.cases(i).pat.pos, s"Cannot use a literal interpolator when matching using 'native'.")
+            case _ =>
+          }
+          i = i + 1
+        }
+      case _ =>
+    }
+    AST.Stmt.Match(exp, ISZ(cases: _*), attr(stat.pos))
   }
 
   def translateWhile(enclosing: Enclosing.Type, stat: Term.While): AST.Stmt = {
@@ -1927,6 +1940,9 @@ class SlangParser(text: Predef.String,
   }
 
   def translateSelect(receiver: Term, name: Term.Name, tpes: Seq[Type], pos: Position): AST.Exp = {
+    if (name.value == "native" && tpes.nonEmpty) {
+      error(name.pos, "Selector 'native' does not accept type arguments.")
+    }
     AST.Exp.Select(Some(translateExp(receiver)), cid(name), ISZ(tpes.map(translateType): _*), resolvedAttr(pos))
   }
 
