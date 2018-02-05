@@ -345,6 +345,7 @@ object Resolver {
     @datatype class Method(owner: QName,
                            isInObject: B,
                            scope: Scope,
+                           hasBody: B,
                            ast: AST.Stmt.Method,
                            typedOpt: Option[AST.Typed],
                            resOpt: Option[AST.ResolvedInfo]) extends Info {
@@ -382,6 +383,7 @@ object Resolver {
     }
 
     @datatype class Object(val name: QName,
+                           isSynthetic: B,
                            outlined: B,
                            ast: AST.Stmt.Object,
                            typedOpt: Option[AST.Typed],
@@ -532,9 +534,11 @@ object Resolver {
       }
     }
 
-    @datatype class AbstractDatatype(val name: QName,
+    @datatype class AbstractDatatype(owner: QName,
                                      outlined: B,
-                                     tpe: AST.Typed.Name,
+                                     tpe: AST.Typed,
+                                     constructorTypeOpt: Option[AST.Typed],
+                                     constructorResOpt: Option[AST.ResolvedInfo],
                                      ancestors: ISZ[AST.Typed.Name],
                                      specVars: HashMap[String, Info.SpecVar],
                                      vars: HashMap[String, Info.Var],
@@ -546,6 +550,10 @@ object Resolver {
 
       @pure override def canHaveCompanion: B = {
         return T
+      }
+
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
       }
 
       @pure override def posOpt: Option[AST.PosInfo] = {
@@ -746,7 +754,7 @@ object Resolver {
     val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
       AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
-    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.Attr(None()))
+    val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
 
     val scope = Scope.Global(sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 
@@ -767,6 +775,14 @@ object Resolver {
     nm = nm.put(fName, Info.Var(sireumName, T, scope,
       Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
+
+    tm = tm.put(AST.Typed.unit.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.unit, None(), None(), ISZ(),
+      HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
+      AST.Stmt.AbstractDatatype(F, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
+
+    tm = tm.put(AST.Typed.nothing.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.unit, None(), None(), ISZ(),
+      HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
+      AST.Stmt.AbstractDatatype(F, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
 
     return (nm, tm)
 
@@ -847,29 +863,6 @@ object Resolver {
     return (t._1, p._1, p._2)
   }
 
-  @pure def typeParamNameString(s: String): String = {
-    return s"`$s"
-  }
-
-  @pure def typeParamName(typeParam: AST.TypeParam): String = {
-    return typeParamNameString(typeParam.id.value)
-  }
-
-  @pure def isTypeParamNameString(id: String): B = {
-    return id.size > 0 && ops.StringOps(id).first == '`'
-  }
-
-  @pure def isTypeParamName(name: QName): B = {
-    return name.size == 1 && isTypeParamNameString(name(0))
-  }
-
-  @pure def isTypeParam(t: AST.Typed): B = {
-    t match {
-      case t: AST.Typed.Name => return t.args == 0 && isTypeParamName(t.ids)
-      case _ => return F
-    }
-  }
-
   def typeParamMap(typeParams: ISZ[AST.TypeParam],
                    reporter: Reporter): HashSMap[String, TypeInfo] = {
     val r = typeParamMapInit(typeParams, HashSMap.empty[String, TypeInfo], reporter)
@@ -881,11 +874,11 @@ object Resolver {
                        reporter: Reporter): HashSMap[String, TypeInfo] = {
     var r = init
     for (tp <- typeParams) {
-      val name = typeParamName(tp)
-      if (r.contains(name)) {
-        reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter ${tp.id.value}.")
+      val id = tp.id.value
+      if (r.contains(id)) {
+        reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter $id.")
       }
-      r = r.put(tp.id.value, TypeInfo.TypeVar(name, tp))
+      r = r.put(id, TypeInfo.TypeVar(id, tp))
     }
     return r
   }
