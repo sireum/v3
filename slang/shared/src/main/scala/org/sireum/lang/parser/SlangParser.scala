@@ -1989,10 +1989,10 @@ class SlangParser(text: Predef.String,
     }
 
     def namedArg(arg: Term): AST.NamedArg = arg match {
-      case q"${name: Term.Name} = ${expr: Term}" => AST.NamedArg(cid(name), expArg(expr))
+      case q"${name: Term.Name} = ${expr: Term}" => AST.NamedArg(cid(name), expArg(expr), -1)
       case _ =>
         errorNotSlang(arg.pos, s"Argument ${syntax(arg)} is")
-        AST.NamedArg(rDollarId, rExp)
+        AST.NamedArg(rDollarId, rExp, -1)
     }
 
     var isNamed = false

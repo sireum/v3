@@ -294,35 +294,37 @@ object MsgPack {
 
     val TypedEnum: Z = 128
 
-    val TypedMethod: Z = 129
+    val TypedMethodSubst: Z = 129
 
-    val Attr: Z = 130
+    val TypedMethod: Z = 130
 
-    val TypedAttr: Z = 131
+    val Attr: Z = 131
 
-    val ResolvedAttr: Z = 132
+    val TypedAttr: Z = 132
 
-    val ResolvedInfoBuiltIn: Z = 133
+    val ResolvedAttr: Z = 133
 
-    val ResolvedInfoPackage: Z = 134
+    val ResolvedInfoBuiltIn: Z = 134
 
-    val ResolvedInfoEnum: Z = 135
+    val ResolvedInfoPackage: Z = 135
 
-    val ResolvedInfoEnumElement: Z = 136
+    val ResolvedInfoEnum: Z = 136
 
-    val ResolvedInfoObject: Z = 137
+    val ResolvedInfoEnumElement: Z = 137
 
-    val ResolvedInfoVar: Z = 138
+    val ResolvedInfoObject: Z = 138
 
-    val ResolvedInfoMethod: Z = 139
+    val ResolvedInfoVar: Z = 139
 
-    val ResolvedInfoType: Z = 140
+    val ResolvedInfoMethod: Z = 140
 
-    val ResolvedInfoTuple: Z = 141
+    val ResolvedInfoType: Z = 141
 
-    val ResolvedInfoLocalVar: Z = 142
+    val ResolvedInfoTuple: Z = 142
 
-    val PosInfo: Z = 143
+    val ResolvedInfoLocalVar: Z = 143
+
+    val PosInfo: Z = 144
 
   }
 
@@ -1029,6 +1031,7 @@ object MsgPack {
       writer.writeZ(Constants.NamedArg)
       writeId(o.id)
       writeExp(o.arg)
+      writeZ(o.index)
     }
 
     def writeVarFragment(o: VarFragment): Unit = {
@@ -1449,6 +1452,12 @@ object MsgPack {
       writer.writeISZ(o.name, writeString)
     }
 
+    def writeTypedMethodSubst(o: Typed.Method.Subst): Unit = {
+      writer.writeZ(Constants.TypedMethodSubst)
+      writeString(o.id)
+      writeTyped(o.tipe)
+    }
+
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writeB(o.isInObject)
@@ -1457,6 +1466,7 @@ object MsgPack {
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
       writer.writeISZ(o.paramNames, writeString)
+      writer.writeISZ(o.subst, writeTypedMethodSubst)
       writeTypedFun(o.tpe)
     }
 
@@ -3010,7 +3020,8 @@ object MsgPack {
       }
       val id = readId()
       val arg = readExp()
-      return NamedArg(id, arg)
+      val index = reader.readZ()
+      return NamedArg(id, arg, index)
     }
 
     def readVarFragment(): VarFragment = {
@@ -3861,6 +3872,20 @@ object MsgPack {
       return Typed.Enum(name)
     }
 
+    def readTypedMethodSubst(): Typed.Method.Subst = {
+      val r = readTypedMethodSubstT(F)
+      return r
+    }
+
+    def readTypedMethodSubstT(typeParsed: B): Typed.Method.Subst = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.TypedMethodSubst)
+      }
+      val id = reader.readString()
+      val tipe = readTyped()
+      return Typed.Method.Subst(id, tipe)
+    }
+
     def readTypedMethod(): Typed.Method = {
       val r = readTypedMethodT(F)
       return r
@@ -3876,8 +3901,9 @@ object MsgPack {
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
       val paramNames = reader.readISZ(reader.readString _)
+      val subst = reader.readISZ(readTypedMethodSubst _)
       val tpe = readTypedFun()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, subst, tpe)
     }
 
     def readAttr(): Attr = {
@@ -6310,6 +6336,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fTypedEnum)
+    return r
+  }
+
+  def fromTypedMethodSubst(o: Typed.Method.Subst, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeTypedMethodSubst(o)
+    return w.result
+  }
+
+  def toTypedMethodSubst(data: ISZ[U8]): Typed.Method.Subst = {
+    def fTypedMethodSubst(reader: Reader): Typed.Method.Subst = {
+      val r = reader.readTypedMethodSubst()
+      return r
+    }
+    val r = to(data, fTypedMethodSubst)
     return r
   }
 

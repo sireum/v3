@@ -999,7 +999,8 @@ object Exp {
 }
 
 @datatype class NamedArg(id: Id,
-                         arg: Exp)
+                         arg: Exp,
+                         index: Z)
 
 @datatype class VarFragment(ids: ISZ[Id],
                             domainOpt: Option[Domain])
@@ -1337,12 +1338,18 @@ object Typed {
     }
   }
 
+  object Method {
+
+    @datatype class Subst(id: String, tipe: Typed)
+  }
+
   @datatype class Method(isInObject: B,
                          isConstructor: B,
                          typeParams: ISZ[String],
                          owner: ISZ[String],
                          name: String,
                          paramNames: ISZ[String],
+                         subst: ISZ[Method.Subst],
                          tpe: Typed.Fun)
     extends Typed {
 

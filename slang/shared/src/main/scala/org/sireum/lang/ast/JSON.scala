@@ -929,7 +929,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""NamedArg""""),
         ("id", printId(o.id)),
-        ("arg", printExp(o.arg))
+        ("arg", printExp(o.arg)),
+        ("index", printZ(o.index))
       ))
     }
 
@@ -1455,6 +1456,14 @@ object JSON {
       ))
     }
 
+    @pure def printTypedMethodSubst(o: Typed.Method.Subst): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Method.Subst""""),
+        ("id", printString(o.id)),
+        ("tipe", printTyped(o.tipe))
+      ))
+    }
+
     @pure def printTypedMethod(o: Typed.Method): ST = {
       return printObject(ISZ(
         ("type", st""""Typed.Method""""),
@@ -1464,6 +1473,7 @@ object JSON {
         ("owner", printISZ(T, o.owner, printString)),
         ("name", printString(o.name)),
         ("paramNames", printISZ(T, o.paramNames, printString)),
+        ("subst", printISZ(F, o.subst, printTypedMethodSubst)),
         ("tpe", printTypedFun(o.tpe))
       ))
     }
@@ -3483,7 +3493,10 @@ object JSON {
       parser.parseObjectKey("arg")
       val arg = parseExp()
       parser.parseObjectNext()
-      return NamedArg(id, arg)
+      parser.parseObjectKey("index")
+      val index = parser.parseZ()
+      parser.parseObjectNext()
+      return NamedArg(id, arg, index)
     }
 
     def parseVarFragment(): VarFragment = {
@@ -4604,6 +4617,24 @@ object JSON {
       return Typed.Enum(name)
     }
 
+    def parseTypedMethodSubst(): Typed.Method.Subst = {
+      val r = parseTypedMethodSubstT(F)
+      return r
+    }
+
+    def parseTypedMethodSubstT(typeParsed: B): Typed.Method.Subst = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Method.Subst")
+      }
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      parser.parseObjectKey("tipe")
+      val tipe = parseTyped()
+      parser.parseObjectNext()
+      return Typed.Method.Subst(id, tipe)
+    }
+
     def parseTypedMethod(): Typed.Method = {
       val r = parseTypedMethodT(F)
       return r
@@ -4631,10 +4662,13 @@ object JSON {
       parser.parseObjectKey("paramNames")
       val paramNames = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
+      parser.parseObjectKey("subst")
+      val subst = parser.parseISZ(parseTypedMethodSubst _)
+      parser.parseObjectNext()
       parser.parseObjectKey("tpe")
       val tpe = parseTypedFun()
       parser.parseObjectNext()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, subst, tpe)
     }
 
     def parseAttr(): Attr = {
@@ -7585,6 +7619,24 @@ object JSON {
       return r
     }
     val r = to(s, fTypedEnum)
+    return r
+  }
+
+  def fromTypedMethodSubst(o: Typed.Method.Subst, isCompact: B): String = {
+    val st = Printer.printTypedMethodSubst(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedMethodSubst(s: String): Typed.Method.Subst = {
+    def fTypedMethodSubst(parser: Parser): Typed.Method.Subst = {
+      val r = parser.parseTypedMethodSubst()
+      return r
+    }
+    val r = to(s, fTypedMethodSubst)
     return r
   }
 

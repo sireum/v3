@@ -851,6 +851,10 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preTypedMethodSubst(o: Typed.Method.Subst): PreResult[Typed.Method.Subst] = {
+      return PreResult(T, MNone())
+    }
+
     def preTypedMethod(o: Typed.Method): PreResult[Typed] = {
       return PreResult(T, MNone())
     }
@@ -1735,6 +1739,10 @@ object MTransformer {
     }
 
     def postTypedEnum(o: Typed.Enum): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedMethodSubst(o: Typed.Method.Subst): MOption[Typed.Method.Subst] = {
       return MNone()
     }
 
@@ -3794,9 +3802,10 @@ import MTransformer._
           else
             MNone()
         case o2: Typed.Method =>
-          val r0: MOption[Typed.Fun] = transformTypedFun(o2.tpe)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(tpe = r0.getOrElse(o2.tpe)))
+          val r0: MOption[IS[Z, Typed.Method.Subst]] = transformISZ(o2.subst, transformTypedMethodSubst)
+          val r1: MOption[Typed.Fun] = transformTypedFun(o2.tpe)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(subst = r0.getOrElse(o2.subst), tpe = r1.getOrElse(o2.tpe)))
           else
             MNone()
       }
@@ -3809,6 +3818,33 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: Typed = r.getOrElse(o)
     val postR: MOption[Typed] = pp.postTyped(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformTypedMethodSubst(o: Typed.Method.Subst): MOption[Typed.Method.Subst] = {
+    val preR: PreResult[Typed.Method.Subst] = pp.preTypedMethodSubst(o)
+    val r: MOption[Typed.Method.Subst] = if (preR.continu) {
+      val o2: Typed.Method.Subst = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Typed] = transformTyped(o2.tipe)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(tipe = r0.getOrElse(o2.tipe)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Typed.Method.Subst = r.getOrElse(o)
+    val postR: MOption[Typed.Method.Subst] = pp.postTypedMethodSubst(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
