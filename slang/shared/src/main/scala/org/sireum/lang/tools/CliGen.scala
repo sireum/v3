@@ -36,6 +36,8 @@ object CliGen {
     def description: String
 
     def header: String
+
+    def hidden: B
   }
 
   object CliOpt {
@@ -45,6 +47,7 @@ object CliGen {
     @datatype class Group(val name: String,
                           val description: String,
                           val header: String,
+                          val hidden: B,
                           subs: ISZ[CliOpt]) extends CliOpt
 
     @datatype class Tool(val name: String,
@@ -52,7 +55,11 @@ object CliGen {
                          val header: String,
                          usage: String,
                          opts: ISZ[Opt],
-                         groups: ISZ[OptGroup]) extends CliOpt
+                         groups: ISZ[OptGroup]) extends CliOpt {
+      override def hidden: B = {
+        return F
+      }
+    }
 
     @datatype class OptGroup(name: String,
                              opts: ISZ[Opt])
@@ -503,7 +510,7 @@ import CliGen.CliOpt._
     val choices: ISZ[String] = for (sub <- c.subs) yield sub.name
     val choiceCases: ISZ[ST] = for (sub <- c.subs) yield
       st"""case Some(string"${sub.name}") => parse${ops.StringOps(sub.name).firstToUpper}(args, i + 1)"""
-    val columns: ISZ[(String, String, String)] = for (sub <- c.subs) yield (sub.name, "", sub.description)
+    val columns: ISZ[(String, String, String)] = for (sub <- c.subs if !sub.hidden) yield (sub.name, "", sub.description)
     parser = parser :+
       st"""def parse${ops.StringOps(c.name).firstToUpper}(args: ISZ[String], i: Z): Option[$topName] = {
           |  if (i >= args.size) {
