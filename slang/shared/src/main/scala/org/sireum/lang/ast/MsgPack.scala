@@ -1079,6 +1079,7 @@ object MsgPack {
     def writeAbstractDatatypeParam(o: AbstractDatatypeParam): Unit = {
       writer.writeZ(Constants.AbstractDatatypeParam)
       writeB(o.isHidden)
+      writeB(o.isVal)
       writeId(o.id)
       writeType(o.tipe)
     }
@@ -1451,9 +1452,11 @@ object MsgPack {
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writeB(o.isInObject)
+      writeB(o.isConstructor)
       writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
+      writer.writeISZ(o.paramNames, writeString)
       writeTypedFun(o.tpe)
     }
 
@@ -1528,6 +1531,7 @@ object MsgPack {
     def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
       writer.writeZ(Constants.ResolvedInfoMethod)
       writeB(o.isInObject)
+      writeB(o.isConstructor)
       writeB(o.isSpec)
       writer.writeISZ(o.owner, writeString)
       writeString(o.id)
@@ -3114,9 +3118,10 @@ object MsgPack {
         reader.expectZ(Constants.AbstractDatatypeParam)
       }
       val isHidden = reader.readB()
+      val isVal = reader.readB()
       val id = readId()
       val tipe = readType()
-      return AbstractDatatypeParam(isHidden, id, tipe)
+      return AbstractDatatypeParam(isHidden, isVal, id, tipe)
     }
 
     def readMethodSig(): MethodSig = {
@@ -3866,11 +3871,13 @@ object MsgPack {
         reader.expectZ(Constants.TypedMethod)
       }
       val isInObject = reader.readB()
+      val isConstructor = reader.readB()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
+      val paramNames = reader.readISZ(reader.readString _)
       val tpe = readTypedFun()
-      return Typed.Method(isInObject, typeParams, owner, name, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, tpe)
     }
 
     def readAttr(): Attr = {
@@ -4025,10 +4032,11 @@ object MsgPack {
         reader.expectZ(Constants.ResolvedInfoMethod)
       }
       val isInObject = reader.readB()
+      val isConstructor = reader.readB()
       val isSpec = reader.readB()
       val owner = reader.readISZ(reader.readString _)
       val id = reader.readString()
-      return ResolvedInfo.Method(isInObject, isSpec, owner, id)
+      return ResolvedInfo.Method(isInObject, isConstructor, isSpec, owner, id)
     }
 
     def readResolvedInfoType(): ResolvedInfo.Type = {

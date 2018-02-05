@@ -789,6 +789,7 @@ object Exp {
     'Prepend
     'AppendAll
     'RemoveAll
+    'MapsTo
   }
 
   @sig sealed trait Ref {
@@ -1031,6 +1032,7 @@ object Domain {
 @datatype class Body(stmts: ISZ[Stmt])
 
 @datatype class AbstractDatatypeParam(isHidden: B,
+                                      isVal: B,
                                       id: Id,
                                       tipe: Type)
 
@@ -1309,7 +1311,7 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"<package> ${(name, ".")}".render
+      return st"Package ${(name, ".")}".render
     }
   }
 
@@ -1320,7 +1322,7 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"<object> ${(name, ".")}".render
+      return st"Object ${(name, ".")}".render
     }
   }
 
@@ -1331,14 +1333,16 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"<@enum> ${(name, ".")}".render
+      return st"@enum ${(name, ".")}".render
     }
   }
 
   @datatype class Method(isInObject: B,
+                         isConstructor: B,
                          typeParams: ISZ[String],
                          owner: ISZ[String],
                          name: String,
+                         paramNames: ISZ[String],
                          tpe: Typed.Fun)
     extends Typed {
 
@@ -1347,13 +1351,13 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"<method> ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
+      return st"${if (isConstructor) "Constructor" else "Method"} ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
     }
   }
 
   val nothing: Typed.Name = Typed.Name(ISZ("Nothing"), ISZ())
   val nothingOpt: Option[Typed] = Some(nothing)
-  val unit: Typed = Typed.Name(ISZ("Unit"), ISZ())
+  val unit: Typed.Name = Typed.Name(ISZ("Unit"), ISZ())
   val unitOpt: Option[Typed] = Some(unit)
   val b: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "B"), ISZ())
   val bOpt: Option[Typed] = Some(b)
@@ -1371,6 +1375,7 @@ object Typed {
   val stringOpt: Option[Typed] = Some(string)
   val st: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "ST"), ISZ())
   val stOpt: Option[Typed] = Some(st)
+
 }
 
 @datatype class Attr(posOpt: Option[PosInfo])
@@ -1404,6 +1409,7 @@ object ResolvedInfo {
                       id: String) extends ResolvedInfo
 
   @datatype class Method(isInObject: B,
+                         isConstructor: B,
                          isSpec: B,
                          owner: ISZ[String],
                          id: String) extends ResolvedInfo

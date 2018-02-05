@@ -797,6 +797,7 @@ object JSON {
         case Exp.BinaryOp.Prepend => "Prepend"
         case Exp.BinaryOp.AppendAll => "AppendAll"
         case Exp.BinaryOp.RemoveAll => "RemoveAll"
+        case Exp.BinaryOp.MapsTo => "MapsTo"
       }
       return printObject(ISZ(
         ("type", printString("Exp.BinaryOp")),
@@ -993,6 +994,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""AbstractDatatypeParam""""),
         ("isHidden", printB(o.isHidden)),
+        ("isVal", printB(o.isVal)),
         ("id", printId(o.id)),
         ("tipe", printType(o.tipe))
       ))
@@ -1457,9 +1459,11 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Typed.Method""""),
         ("isInObject", printB(o.isInObject)),
+        ("isConstructor", printB(o.isConstructor)),
         ("typeParams", printISZ(T, o.typeParams, printString)),
         ("owner", printISZ(T, o.owner, printString)),
         ("name", printString(o.name)),
+        ("paramNames", printISZ(T, o.paramNames, printString)),
         ("tpe", printTypedFun(o.tpe))
       ))
     }
@@ -1554,6 +1558,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.Method""""),
         ("isInObject", printB(o.isInObject)),
+        ("isConstructor", printB(o.isConstructor)),
         ("isSpec", printB(o.isSpec)),
         ("owner", printISZ(T, o.owner, printString)),
         ("id", printString(o.id))
@@ -3182,6 +3187,7 @@ object JSON {
         case "Prepend" => return Exp.BinaryOp.Prepend
         case "AppendAll" => return Exp.BinaryOp.AppendAll
         case "RemoveAll" => return Exp.BinaryOp.RemoveAll
+        case "MapsTo" => return Exp.BinaryOp.MapsTo
         case _ => halt(parser.errorMessage)
       }
     }
@@ -3615,13 +3621,16 @@ object JSON {
       parser.parseObjectKey("isHidden")
       val isHidden = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isVal")
+      val isVal = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
       parser.parseObjectKey("tipe")
       val tipe = parseType()
       parser.parseObjectNext()
-      return AbstractDatatypeParam(isHidden, id, tipe)
+      return AbstractDatatypeParam(isHidden, isVal, id, tipe)
     }
 
     def parseMethodSig(): MethodSig = {
@@ -4607,6 +4616,9 @@ object JSON {
       parser.parseObjectKey("isInObject")
       val isInObject = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isConstructor")
+      val isConstructor = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
@@ -4616,10 +4628,13 @@ object JSON {
       parser.parseObjectKey("name")
       val name = parser.parseString()
       parser.parseObjectNext()
+      parser.parseObjectKey("paramNames")
+      val paramNames = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("tpe")
       val tpe = parseTypedFun()
       parser.parseObjectNext()
-      return Typed.Method(isInObject, typeParams, owner, name, tpe)
+      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, tpe)
     }
 
     def parseAttr(): Attr = {
@@ -4810,6 +4825,9 @@ object JSON {
       parser.parseObjectKey("isInObject")
       val isInObject = parser.parseB()
       parser.parseObjectNext()
+      parser.parseObjectKey("isConstructor")
+      val isConstructor = parser.parseB()
+      parser.parseObjectNext()
       parser.parseObjectKey("isSpec")
       val isSpec = parser.parseB()
       parser.parseObjectNext()
@@ -4819,7 +4837,7 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.Method(isInObject, isSpec, owner, id)
+      return ResolvedInfo.Method(isInObject, isConstructor, isSpec, owner, id)
     }
 
     def parseResolvedInfoType(): ResolvedInfo.Type = {
