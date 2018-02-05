@@ -180,9 +180,10 @@ object TypeOutliner {
     val sm = info.ast
     val sigOpt = outlineMethodSig(info.scope, sm.sig, reporter)
     sigOpt match {
-      case Some((sig, tvars)) => return Some(info(ast = sm(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
-          TypeChecker.extractMethodType(sig)))))
+      case Some((sig, tVars)) =>
+        return Some(info(ast = sm(sig = sig),
+          typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+            sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
       case _ => return None()
     }
   }
@@ -191,9 +192,9 @@ object TypeOutliner {
     val m = info.ast
     val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
     sigOpt match {
-      case Some((sig, tvars)) => return Some(info(ast = m(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
-          TypeChecker.extractMethodType(sig)))))
+      case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
+        typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+          sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
       case _ => return None()
     }
   }
@@ -202,9 +203,9 @@ object TypeOutliner {
     val m = info.ast
     val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
     sigOpt match {
-      case Some((sig, tvars)) => return Some(info(ast = m(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, tvars, info.owner, sig.id.value,
-          TypeChecker.extractMethodType(sig)))))
+      case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
+        typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+          sig.params.map(p => p.id.value), TypeChecker.extractMethodType(sig)))))
       case _ => return None()
     }
   }
@@ -247,7 +248,7 @@ object TypeOutliner {
     val reporter = AccumulatingReporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
-    var members = outlineMembers(T, info.name,
+    val members = outlineMembers(T, info.name,
       TypeInfo.Members(info.specVars, HashMap.empty, info.specMethods, info.methods), scope, reporter)
     val (TypeInfo.Members(specVars, _, specMethods, methods), ancestors) =
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
@@ -260,12 +261,32 @@ object TypeOutliner {
     val reporter = AccumulatingReporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
-    var members = outlineMembers(info.ast.isRoot, info.name,
+    val members = outlineMembers(info.ast.isRoot, info.name,
       TypeInfo.Members(info.specVars, info.vars, info.specMethods, info.methods), scope, reporter)
     val (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors) =
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
-    val newInfo = info(outlined = T, ancestors = ancestors, specVars = specVars,
-      vars = vars, specMethods = specMethods, methods = methods)
+    var newParams = ISZ[AST.AbstractDatatypeParam]()
+    var paramTypes = ISZ[AST.Typed]()
+    for (p <- info.ast.params) {
+      val tOpt = typeHierarchy.typed(scope, p.tipe, reporter)
+      tOpt match {
+        case Some(t) =>
+          paramTypes = paramTypes :+ t
+          newParams = newParams :+ p(tipe = p.tipe.typed(t))
+        case _ =>
+      }
+    }
+    val newInfo: TypeInfo.AbstractDatatype =
+      if (info.ast.isRoot)
+        info(outlined = T, ancestors = ancestors,
+          specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
+      else
+        info(outlined = T, ancestors = ancestors,
+          constructorTypeOpt = Some(AST.Typed.Method(F, T, tm.keys.elements,
+            info.owner, info.ast.id.value, info.ast.params.map(p => p.id.value),
+            AST.Typed.Fun(T, F, paramTypes, info.tpe))),
+          specVars = specVars, vars = vars, specMethods = specMethods, methods = methods,
+          ast = info.ast(params = newParams))
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
   }
 
@@ -276,9 +297,9 @@ object TypeOutliner {
     val typeParams = sig.typeParams
     for (tp <- typeParams) {
       scope.resolveType(typeHierarchy.typeMap, ISZ(tp.id.value)) match {
-        case Some(ti) if isTypeParamName(ti.name) =>
+        case Some(info) if info.name.size == 1 =>
           reporter.error(tp.id.attr.posOpt, TypeChecker.typeCheckerKind,
-            s"Cannot redeclare type parameter $id.")
+            s"Cannot redeclare type parameter ${tp.id.value}.")
           return None()
         case _ =>
       }
@@ -383,19 +404,19 @@ object TypeOutliner {
       }
     }
 
-    for (p <- specVars.values) {
+    for (p <- info.specVars.values) {
       checkSpecVar(p)
     }
 
-    for (p <- vars.values) {
+    for (p <- info.vars.values) {
       checkVar(p)
     }
 
-    for (p <- specMethods.values) {
+    for (p <- info.specMethods.values) {
       checkSpecMethod(p)
     }
 
-    for (p <- methods.values) {
+    for (p <- info.methods.values) {
       checkMethod(p)
     }
 
@@ -583,43 +604,44 @@ object TypeOutliner {
       }
       vars.get(id) match {
         case Some(otherInfo) =>
-          if (name != tname) {
+          if (name != otherInfo.owner) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")}.".render)
-          } else {
+              st"Cannot inherit $id from ${(tname, ".")} because it has been previously inherited from ${(name, ".")}.".render)
+            return
+          } else if (!(!info.ast.sig.hasParams && typeHierarchy.isSubType(otherInfo.typedOpt.get,
+            info.ast.sig.returnType.typedOpt.get))) {
             reporter.error(posOpt, TypeChecker.typeCheckerKind,
-              s"Cannot inherit $id because it has been previously declared.")
+              st"Cannot inherit $id from ${(tname, ".")} because it is declared with incompatible type.".render)
+            return
           }
-          return
         case _ =>
       }
       methods.get(id) match {
         case Some(otherInfo) =>
           val m = otherInfo.ast
-          if (name != tname) {
+          if (name != otherInfo.owner) {
             ok = checkMethodEquality(m, pm, substMap, posOpt)
             if (!ok) {
               reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")} with differing type.".render)
+                st"Cannot inherit $id from ${(tname, ".")} because it has been previously inherited from ${(otherInfo.owner, ".")} with differing type.".render)
               return
             }
-            if (pm.bodyOpt.nonEmpty) {
-              if (m.bodyOpt.nonEmpty) {
-                reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                  st"Cannot inherit $id because it has been previously inherited from ${(otherInfo.owner, ".")} with their own implementation.".render)
-                return
-              }
+            if (info.hasBody && otherInfo.hasBody) {
+              reporter.error(posOpt, TypeChecker.typeCheckerKind,
+                st"Cannot inherit $id from ${(tname, ".")} because it has been previously inherited from ${(otherInfo.owner, ".")} with their own implementation.".render)
+              return
             }
           } else {
             ok = checkMethodRefinement(m, pm, substMap, posOpt)
             if (!ok) {
+              checkMethodRefinement(m, pm, substMap, posOpt)
               reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                s"Cannot inherit $id because it has been previously declared with incompatible type.")
+                st"Cannot inherit $id from ${(tname, ".")} because it is declared with incompatible type.".render)
               return
             }
-            if (pm.bodyOpt.nonEmpty && m.bodyOpt.isEmpty) {
+            if (info.hasBody && !otherInfo.hasBody) {
               reporter.error(posOpt, TypeChecker.typeCheckerKind,
-                s"Cannot inherit $id with implementation because it has been previously declared but unimplemented.")
+                st"Cannot inherit $id from ${(tname, ".")} with implementation because it is declared but unimplemented.".render)
               return
             }
           }
@@ -661,7 +683,7 @@ object TypeOutliner {
             case t: AST.Typed.Name =>
               typeHierarchy.typeMap.get(t.ids) match {
                 case Some(ti: TypeInfo.Sig) =>
-                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                  val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
                       ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, ti.tpe)))
@@ -680,7 +702,7 @@ object TypeOutliner {
                     case _ =>
                   }
                 case Some(ti: TypeInfo.AbstractDatatype) =>
-                  val substMapOpt = TypeChecker.buildSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                  val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                   substMapOpt match {
                     case Some(substMap) =>
                       ancestors = ancestors.add(TypeChecker.TypedEq(TypeChecker.substType(substMap, ti.tpe)))
