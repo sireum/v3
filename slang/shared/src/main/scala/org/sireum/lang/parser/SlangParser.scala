@@ -72,7 +72,8 @@ object SlangParser {
     ":+" -> AST.Exp.BinaryOp.Append,
     "+:" -> AST.Exp.BinaryOp.Prepend,
     "++" -> AST.Exp.BinaryOp.AppendAll,
-    "--" -> AST.Exp.BinaryOp.RemoveAll)
+    "--" -> AST.Exp.BinaryOp.RemoveAll,
+    "~>" -> AST.Exp.BinaryOp.MapsTo)
 
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
@@ -1355,6 +1356,9 @@ class SlangParser(text: Predef.String,
     case tparam"..$mods $_[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
         errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' is")
+      if (disallowedTypeIds.contains(tp.name.value)) {
+        errorInSlang(tp.name.pos, s"Identifier ${tp.name.value} is reserved")
+      }
       AST.TypeParam(cid(tp.name))
   }
 
@@ -1453,8 +1457,8 @@ class SlangParser(text: Predef.String,
       val hidden = if (hasHidden) "@hidden " else ""
       errorInSlang(tp.pos, s"The abstract dataype parameter should have the form '$hidden〈ID〉:〈type〉'")
     }
-    if (hasError) AST.AbstractDatatypeParam(hasHidden, cid(paramname), unitType)
-    else AST.AbstractDatatypeParam(hasHidden, cid(paramname), translateTypeArg(allowByName = false)(atpeopt.get))
+    if (hasError) AST.AbstractDatatypeParam(hasHidden, !isVar, cid(paramname), unitType)
+    else AST.AbstractDatatypeParam(hasHidden, !isVar, cid(paramname), translateTypeArg(allowByName = false)(atpeopt.get))
   }
 
   def stmtCheck(enclosing: Enclosing.Type, stat: Term, kind: Predef.String): Boolean = enclosing match {
