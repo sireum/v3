@@ -63,6 +63,9 @@ object TypeChecker {
 
   val typeCheckerKind: String = "Type Checker"
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ())
+  val builtInTypes: HashSet[String] = HashSet.empty[String].addAll(ISZ(
+    "Unit", "Nothing"
+  ))
   val builtInMethods: HashSet[String] = HashSet.empty[String].addAll(ISZ(
     "assert", "assume", "println", "print", "eprintln", "eprint", "halt"
   ))
@@ -93,6 +96,10 @@ object TypeChecker {
     return r
   }
 
+  @pure def substFunType(m: HashMap[String, AST.Typed], t: AST.Typed.Fun): AST.Typed.Fun = {
+    return t(args = t.args.map(ta => substType(m, ta)), ret = substType(m, t.ret))
+  }
+
   @pure def substType(m: HashMap[String, AST.Typed], t: AST.Typed): AST.Typed = {
     if (m.isEmpty) {
       return t
@@ -115,18 +122,34 @@ object TypeChecker {
     }
   }
 
-  def buildSubstMap(name: QName,
-                    posOpt: Option[AST.PosInfo],
-                    typeParams: ISZ[AST.TypeParam],
-                    args: ISZ[AST.Typed],
-                    reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+  def buildTypeSubstMap(name: QName,
+                        posOpt: Option[AST.PosInfo],
+                        typeParams: ISZ[AST.TypeParam],
+                        args: ISZ[AST.Typed],
+                        reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
     if (typeParams.size != args.size) {
       reporter.error(posOpt, typeCheckerKind, st"Type ${(name, ".")} requires ${typeParams.size} type arguments, but only ${args.size} is supplied.".render)
       return None()
     }
     var substMap = HashMap.empty[String, AST.Typed]
     for (i <- z"0" until args.size) {
-      substMap = substMap.put(typeParamName(typeParams(i)), args(i))
+      substMap = substMap.put(typeParams(i).id.value, args(i))
+    }
+    return Some(substMap)
+  }
+
+  def buildMethodSubstMap(m: AST.Typed.Method,
+                          posOpt: Option[AST.PosInfo],
+                          args: ISZ[AST.Typed],
+                          reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+    if (m.typeParams.size != args.size) {
+      reporter.error(posOpt, typeCheckerKind,
+        st"$m requires ${m.typeParams.size} type arguments, but only ${args.size} is supplied.".render)
+      return None()
+    }
+    var substMap = HashMap.empty[String, AST.Typed]
+    for (i <- z"0" until args.size) {
+      substMap = substMap.put(m.typeParams(i), args(i))
     }
     return Some(substMap)
   }
@@ -134,7 +157,7 @@ object TypeChecker {
   @pure def isUnitType(t: AST.Typed): B = {
     t match {
       case t: AST.Typed.Tuple if t.args.isEmpty => return T
-      case _ => return t == AST.Typed.unit
+      case _ => return isEqType(t, AST.Typed.unit)
     }
   }
 
@@ -197,7 +220,7 @@ object TypeChecker {
     }
   }
 
-  @pure def deBruijn(t: AST.Typed): AST.Typed = {
+  @pure def deBruijn(typeParams: HashSet[String], t: AST.Typed): AST.Typed = {
     var map = HashMap.empty[String, Z]
 
     def db(t: AST.Typed): AST.Typed = {
@@ -210,7 +233,7 @@ object TypeChecker {
               args = args :+ ta
             }
             return t(args = args)
-          } else if (t.ids.size == 1 && isTypeParamNameString(t.ids(0).value)) {
+          } else if (t.ids.size == 1 && typeParams.contains(t.ids(0).value)) {
             val k = t.ids(0).value
             val i: Z = map.get(k) match {
               case Some(n) => n
@@ -219,7 +242,7 @@ object TypeChecker {
                 map = map.put(k, n)
                 n
             }
-            return t(ids = ISZ(typeParamNameString(s"!$i")))
+            return t(ids = ISZ(s"$$$i"))
           } else {
             return t
           }
@@ -254,7 +277,7 @@ object TypeChecker {
     for (p <- m.params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = deBruijn(AST.Typed.Fun(m.isPure, !m.hasParams, pts, m.returnType.typedOpt.get))
+    val t = AST.Typed.Fun(m.isPure, !m.hasParams, pts, m.returnType.typedOpt.get)
     t match {
       case t: AST.Typed.Fun => return t
       case _ => halt("Infeasible")
@@ -263,37 +286,39 @@ object TypeChecker {
 
   def checkWorksheet(program: AST.TopUnit.Program,
                      reporter: Reporter): AST.TopUnit.Program = {
+    val emptyAttr = AST.Attr(None())
+    val p = program(packageName = AST.Name(ISZ(AST.Id("worksheet", emptyAttr)), emptyAttr))
     val (th, rep) = typeHierarchyReporter
     if (rep.hasIssue) {
       reporter.reports(rep.messages)
-      return program
+      return p
     }
 
     val gdr = GlobalDeclarationResolver(th.nameMap, th.typeMap, reporter)
-    gdr.resolveProgram(program(body = program.body(stmts = program.body.stmts.withFilter(p => p match {
+    gdr.resolveProgram(p(body = p.body(stmts = p.body.stmts.withFilter(p => p match {
       case _: AST.Stmt.Var => F
       case _: AST.Stmt.SpecVar => F
       case _ => T
     }))))
     reporter.reports(gdr.reporter.messages)
     if (reporter.hasIssue) {
-      return program
+      return p
     }
 
     val th2 = TypeHierarchy.build(th(nameMap = gdr.globalNameMap, typeMap = gdr.globalTypeMap), reporter)
     if (reporter.hasIssue) {
-      return program
+      return p
     }
 
     val th3 = TypeOutliner.checkOutline(th2, reporter)
     if (reporter.hasIssue) {
-      return program
+      return p
     }
 
     val tc = TypeChecker(th3, ISZ(), F)
     val scope = Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
-    val (_, newStmts) = tc.checkStmts(scope, program.body.stmts, reporter)
-    return program(body = program.body(newStmts))
+    val (_, newStmts) = tc.checkStmts(scope, p.body.stmts, reporter)
+    return p(body = p.body(newStmts))
   }
 }
 
@@ -475,6 +500,9 @@ import TypeChecker._
               errIncompat()
               return noResult
             }
+          } else if (exp.op == AST.Exp.BinaryOp.MapsTo) {
+            val tOpt: Option[AST.Typed] = Some(AST.Typed.Tuple(ISZ(leftType, rightType)))
+            return (newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt)), tOpt)
           }
 
           val lOpt = basicKind(scope, leftType, exp.left.posOpt, reporter)
@@ -584,21 +612,44 @@ import TypeChecker._
 
     def checkEtaH(t: AST.Typed, ref: AST.Exp.Ref, typeArgs: ISZ[AST.Typed],
                   etaParentOpt: Option[AST.Exp.Eta]): (AST.Exp, Option[AST.Typed]) = {
+
       val exp = ref.asExp
+
+      def noResult: (AST.Exp, Option[AST.Typed]) = {
+        return (exp, None())
+      }
+
       t match {
         case t: AST.Typed.Method =>
-          if (t.typeParams.size != typeArgs.size) {
-            reporter.error(exp.posOpt, typeCheckerKind,
-              s"Expecting ${ref.targs.size} type arguments, but found ${typeArgs.size}.")
-            return (exp, None())
-          }
-          var substMap = HashMap.emptyInit[String, AST.Typed](typeArgs.size)
-          val size = typeArgs.size
-          var i = 0
-          while (i < size) {
-            substMap = substMap.put(t.typeParams(i), typeArgs(i))
-            i = i + 1
-          }
+          val substMap: HashMap[String, AST.Typed] =
+            if (typeArgs.isEmpty && t.typeParams.nonEmpty && t.tpe.isByName) {
+              expectedOpt match {
+                case Some(expected) =>
+                  val smOpt = unify(exp.posOpt, T, expected, t.tpe.ret, reporter)
+                  smOpt match {
+                    case Some(sm) => sm
+                    case _ => return noResult
+                  }
+                case _ =>
+                  reporter.error(exp.posOpt, typeCheckerKind,
+                    s"Explicit type arguments are required.")
+                  return noResult
+              }
+            } else {
+              if (t.typeParams.size != typeArgs.size) {
+                reporter.error(exp.posOpt, typeCheckerKind,
+                  s"Expecting ${t.typeParams.size} type arguments, but found ${typeArgs.size}.")
+                return noResult
+              }
+              var sm = HashMap.emptyInit[String, AST.Typed](typeArgs.size)
+              val size = typeArgs.size
+              var i = 0
+              while (i < size) {
+                sm = sm.put(t.typeParams(i), typeArgs(i))
+                i = i + 1
+              }
+              sm
+            }
           if (ref.targs.nonEmpty) {
             etaParentOpt match {
               case Some(etaParent) =>
@@ -609,7 +660,7 @@ import TypeChecker._
               case _ =>
                 reporter.error(exp.posOpt, typeCheckerKind,
                   "Method access has to be explicitly eta-expanded to become a function using '_'.")
-                return (exp, None())
+                return noResult
             }
           } else {
             etaParentOpt match {
@@ -620,18 +671,18 @@ import TypeChecker._
               case _ =>
                 reporter.error(exp.posOpt, typeCheckerKind,
                   "Method access has to be explicitly eta-expanded to become a function using '_'.")
-                return (exp, None())
+                return noResult
             }
           }
         case _ =>
           if (ref.targs.nonEmpty) {
             reporter.error(exp.posOpt, typeCheckerKind, s"Cannot supply type arguments on '$t'.")
-            return (exp, None())
+            return noResult
           } else {
             etaParentOpt match {
               case Some(_) =>
                 reporter.error(exp.posOpt, typeCheckerKind, s"Cannot eta-expand non-method '$t'.")
-                return (exp, None())
+                return noResult
               case _ => return (exp, Some(t))
             }
           }
@@ -669,8 +720,28 @@ import TypeChecker._
         case receiverType: AST.Typed.Name =>
           val id = ident.value
           typeHierarchy.typeMap.get(receiverType.ids).get match {
-            case info: TypeInfo.Sig => return info.typeRes(id, inSpec)
-            case info: TypeInfo.AbstractDatatype => return info.typeRes(id, inSpec)
+            case info: TypeInfo.Sig =>
+              val r = info.typeRes(id, inSpec)
+              r._1 match {
+                case Some(rt) =>
+                  val smOpt = buildTypeSubstMap(info.name, ident.attr.posOpt, info.ast.typeParams, receiverType.args, reporter)
+                  smOpt match {
+                    case Some(sm) => return (Some(substType(sm, rt)), r._2)
+                    case _ => return noResult
+                  }
+                case _ => errAccess(receiverType); return noResult
+              }
+            case info: TypeInfo.AbstractDatatype =>
+              val r = info.typeRes(id, inSpec)
+              r._1 match {
+                case Some(rt) =>
+                  val smOpt = buildTypeSubstMap(info.name, ident.attr.posOpt, info.ast.typeParams, receiverType.args, reporter)
+                  smOpt match {
+                    case Some(sm) => return (Some(substType(sm, rt)), r._2)
+                    case _ => return noResult
+                  }
+                case _ => errAccess(receiverType); return noResult
+              }
             case _ => halt("Unexpected situation while type checking method access.")
           }
         case receiverType: AST.Typed.Tuple =>
@@ -697,18 +768,8 @@ import TypeChecker._
         case receiverType: AST.Typed.Fun =>
           errAccess(receiverType)
           return noResult
-        case receiverType: AST.Typed.Package =>
-          if (hasTypeArgs) {
-            errTypeArgs(receiverType)
-            return noResult
-          }
-          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
-        case receiverType: AST.Typed.Object =>
-          if (hasTypeArgs) {
-            errTypeArgs(receiverType)
-            return noResult
-          }
-          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+        case receiverType: AST.Typed.Package => return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+        case receiverType: AST.Typed.Object => return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
         case receiverType: AST.Typed.Enum =>
           typeHierarchy.nameMap.get(receiverType.name) match {
             case Some(info: Info.Enum) =>
@@ -734,10 +795,13 @@ import TypeChecker._
     def checkSelect(exp: AST.Exp.Select,
                     etaParentOpt: Option[AST.Exp.Eta]): (AST.Exp, Option[AST.Typed]) = {
       var typeArgs = ISZ[AST.Typed]()
+      var newTargs = ISZ[AST.Type]()
       for (targ <- exp.targs) {
         val tOpt = typeHierarchy.typed(scope, targ, reporter)
         tOpt match {
-          case Some(t) => typeArgs = typeArgs :+ t
+          case Some(t) =>
+            typeArgs = typeArgs :+ t
+            newTargs = newTargs :+ targ.typed(t)
           case _ =>
             return (exp, None())
         }
@@ -750,13 +814,13 @@ import TypeChecker._
             receiverTypeOpt match {
               case Some(receiverType) =>
                 val (typedOpt, resOpt) = checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
-                val newExp = exp(receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
+                val newExp = exp(targs = newTargs, receiverOpt = Some(newReceiver), attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
                 return (newExp, typedOpt)
-              case _ => return (exp(receiverOpt = Some(newReceiver)), None[AST.Typed]())
+              case _ => return (exp(targs = newTargs, receiverOpt = Some(newReceiver)), None[AST.Typed]())
             }
           case _ =>
             val (typedOpt, resOpt) = checkId(exp.id)
-            val newExp = exp(attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
+            val newExp = exp(targs = newTargs, attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
             return (newExp, typedOpt)
         }
       }
@@ -770,36 +834,146 @@ import TypeChecker._
     }
 
     def checkInvoke(exp: AST.Exp.Invoke): (AST.Exp, Option[AST.Typed]) = {
+      var typeArgs = ISZ[AST.Typed]()
+      var newTargs = ISZ[AST.Type]()
+      for (ta <- exp.targs) {
+        val tOpt = typeHierarchy.typed(scope, ta, reporter)
+        tOpt match {
+          case Some(t) =>
+            typeArgs = typeArgs :+ t
+            newTargs = newTargs :+ ta.typed(t)
+          case _ => return (exp, None())
+        }
+      }
+
+      def checkInvokeH(tOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo],
+                       receiverOpt: Option[AST.Exp]): (AST.Exp, Option[AST.Typed]) = {
+        @pure def partResult: (AST.Exp, Option[AST.Typed]) = {
+          return (exp(targs = newTargs, receiverOpt = receiverOpt), None())
+        }
+
+        val t: AST.Typed = tOpt match {
+          case Some(tpe) =>
+            tpe match {
+              case tpe: AST.Typed.Object =>
+                typeHierarchy.typeMap.get(tpe.name) match {
+                  case Some(info: TypeInfo.AbstractDatatype) if !info.ast.isRoot =>
+                    info.constructorTypeOpt match {
+                      case Some(constructorType) => constructorType
+                      case _ =>
+                        reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                          st"Cannot create an object of type ${(tpe.name, ".")}.".render)
+                        return partResult
+                    }
+                  case _ => return partResult
+                }
+              case tpe: AST.Typed.Name => halt("Unimplemented") // TODO: IS.apply, MS.apply, Z, subZ
+              case _ => tpe
+            }
+          case _ => return partResult
+        }
+
+        t match {
+          case m: AST.Typed.Method =>
+            if (m.tpe.args.size != exp.args.size) {
+              reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                s"$m is expecting ${m.tpe.args.size} arguments, but found ${exp.args.size}.")
+              return partResult
+            }
+
+            def checkH(sm: HashMap[String, AST.Typed]): (AST.Exp, Option[AST.Typed]) = {
+              val funType = substFunType(sm, m.tpe)
+              var i = 0
+              val size = exp.args.size
+              var args = Map.empty[String, AST.Exp]
+              while (i < size) {
+                val (newArg, _) = checkExp(Some(funType.args(i)), scope, exp.args(i), reporter)
+                args = args.put(m.paramNames(i), newArg)
+                i = i + 1
+              }
+              return (exp(targs = newTargs, args = args.values, receiverOpt = receiverOpt,
+                attr = exp.attr(resOpt = resOpt, typedOpt = Some(funType))), Some(funType.ret))
+            }
+
+            if (typeArgs.isEmpty && m.typeParams.nonEmpty) {
+              expectedOpt match {
+                case Some(expected) =>
+                  val smOpt = unify(exp.id.attr.posOpt, T, expected, m.tpe.ret, reporter)
+                  smOpt match {
+                    case Some(sm) => val r = checkH(sm); return r
+                    case _ => return partResult
+                  }
+                case _ =>
+                  var newArgs = ISZ[AST.Exp]()
+                  var argTypes = ISZ[AST.Typed]()
+                  for (e <- exp.args) {
+                    val (newArg, argTypeOpt) = checkExp(None(), scope, e, reporter)
+                    argTypeOpt match {
+                      case Some(argType) =>
+                        newArgs = newArgs :+ newArg
+                        argTypes = argTypes :+ argType
+                      case _ =>
+                    }
+                  }
+                  val smOpt = unifies(exp.id.attr.posOpt, T, argTypes, m.tpe.args, reporter)
+                  smOpt match {
+                    case Some(sm) =>
+                      val funType = substFunType(sm, m.tpe)
+                      return (exp(targs = newTargs, args = newArgs, receiverOpt = receiverOpt,
+                        attr = exp.attr(resOpt = resOpt, typedOpt = Some(funType))), Some(funType.ret))
+                    case _ =>
+                      return (exp(targs = newTargs, args = newArgs, receiverOpt = receiverOpt,
+                        attr = exp.attr(resOpt = resOpt)), None())
+                  }
+              }
+            } else {
+              val smOpt = buildMethodSubstMap(m, exp.id.attr.posOpt, typeArgs, reporter)
+              smOpt match {
+                case Some(sm) => val r = checkH(sm); return r
+                case _ => return partResult
+              }
+            }
+          case t: AST.Typed.Fun =>
+            if (exp.targs.nonEmpty) {
+              reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                s"Cannot supply type arguments when applying a function.")
+              return partResult
+            }
+            val size = exp.args.size
+            if (t.args.size != size) {
+              reporter.error(exp.id.attr.posOpt, typeCheckerKind,
+                s"Function '$t' is expecting $size arguments, but found $size.")
+              return partResult
+            }
+            var i = 0
+            var newArgs = ISZ[AST.Exp]()
+            while (i < size) {
+              val (newArg, _) = checkExp(Some(t.args(i)), scope, exp.args(i), reporter)
+              newArgs = newArgs :+ newArg
+              i = i + 1
+            }
+            return (exp(args = newArgs, receiverOpt = receiverOpt,
+              attr = exp.attr(resOpt = resOpt, typedOpt = Some(t))), Some(t.ret))
+          case _ =>
+            reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot invoke on '$t'.")
+            return partResult
+        }
+      }
+
       exp.receiverOpt match {
         case Some(receiver) =>
           val (newReceiver, receiverTypeOpt) = checkExp(None(), scope, receiver, reporter)
-
-          @pure def partResult: (AST.Exp, Option[AST.Typed]) = {
-            return (exp(receiverOpt = Some(newReceiver)), None())
+          val receiverType: AST.Typed = receiverTypeOpt match {
+            case Some(t) => t
+            case _ => return (exp(targs = newTargs, receiverOpt = Some(newReceiver)), None())
           }
-
-          receiverTypeOpt match {
-            case Some(receiverType) =>
-              val (typedOpt, resOpt) = checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
-              typedOpt match {
-                case Some(t) =>
-                  t match {
-                    case t: AST.Typed.Name =>
-                    case t: AST.Typed.Fun =>
-                      if (exp.targs.nonEmpty) {
-
-                      }
-                    case t: AST.Typed.Method =>
-                    case _ =>
-                      reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot invoke on '$t'.")
-                      return partResult
-                  }
-                  halt("Unimplemented") // TODO
-                case _ => return partResult
-              }
-            case _ => return partResult
-          }
-        case _ => halt("Unimplemented") // TODO
+          val (typedOpt, resOpt) = checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
+          val r = checkInvokeH(typedOpt, resOpt, Some(newReceiver))
+          return r
+        case _ =>
+          val (typedOpt, resOpt) = checkId(exp.id)
+          val r = checkInvokeH(typedOpt, resOpt, None())
+          return r
       }
     }
 
@@ -937,12 +1111,14 @@ import TypeChecker._
     return (Some(newScope), newStmts)
   }
 
-  def checkBody(scope: Scope.Local, stmt: AST.Body, reporter: Reporter): (Option[Scope.Local], AST.Body) = {
+  def checkBody(scope: Scope.Local, stmt: AST.Body,
+                reporter: Reporter): (Option[Scope.Local], AST.Body) = {
     val (newScopeOpt, newStmts) = checkStmts(scope, stmt.stmts, reporter)
     return (newScopeOpt, stmt(stmts = newStmts))
   }
 
-  def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
+  def checkStmt(scope: Scope.Local, stmt: AST.Stmt,
+                reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
 
     def checkImport(stmt: AST.Stmt.Import): (Option[Scope.Local], AST.Stmt) = {
       // TODO: resolve import
@@ -1107,5 +1283,152 @@ import TypeChecker._
     }
   }
 
+  @pure def unifyCombine(r: HashMap[String, AST.Typed],
+                         m: HashMap[String, AST.Typed]): Option[HashMap[String, AST.Typed]] = {
+    var res = r
+    for (e <- m.entries) {
+      val (key, value) = e
+      res.get(key) match {
+        case Some(v) =>
+          if (!isEqType(value, v)) {
+            return None()
+          }
+        case _ => res = res.put(key, value)
+      }
+    }
+    return Some(res)
+  }
 
+  def unify(posOpt: Option[AST.PosInfo], allowSubType: B, expected: AST.Typed, tpe: AST.Typed,
+            reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+    def err(): Unit = {
+      reporter.error(posOpt, typeCheckerKind, s"Could not unify type $expected with $tpe.")
+    }
+
+    if (isEqType(expected, tpe)) {
+      return Some(HashMap.empty)
+    }
+    (expected, tpe) match {
+      case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
+        val name = tpe.ids
+        if (name.size == 1 && !builtInTypes.contains(name(0))) {
+          return Some(HashMap.empty[String, AST.Typed].put(name(0), expected))
+        }
+        val rt: AST.Typed.Name = if (allowSubType) {
+          if (typeHierarchy.isSubType(tpe, expected)) {
+            err()
+            return None()
+          }
+          typeHierarchy.typeMap.get(expected.ids) match {
+            case Some(info: TypeInfo.AbstractDatatype) =>
+              AST.Typed.Name(expected.ids, info.ast.typeParams.map(tp => AST.Typed.Name(ISZ(tp.id.value), ISZ())))
+            case Some(info: TypeInfo.Sig) =>
+              AST.Typed.Name(expected.ids, info.ast.typeParams.map(tp => AST.Typed.Name(ISZ(tp.id.value), ISZ())))
+            case _ => halt(s"Unexpected situation when trying to unify $expected and $tpe")
+          }
+        } else {
+          if (tpe.ids != expected.ids || tpe.args.size != expected.args.size) {
+            err()
+            return None()
+          }
+          tpe
+        }
+        val size = rt.args.size
+        var i = 0
+        var r = HashMap.empty[String, AST.Typed]
+        while (i < size) {
+          val mOpt = unify(posOpt, F, expected.args(i), rt.args(i), reporter)
+          mOpt match {
+            case Some(m) =>
+              unifyCombine(r, m) match {
+                case Some(c) => r = c
+                case _ => err(); return None()
+              }
+            case _ => return None()
+          }
+          i = i + 1
+        }
+        return Some(r)
+      case (expected: AST.Typed.Tuple, tpe: AST.Typed.Tuple) =>
+        val size = expected.args.size
+        if (size != tpe.args.size) {
+          err()
+          return None()
+        }
+        var i = 0
+        var r = HashMap.empty[String, AST.Typed]
+        while (i < size) {
+          val mOpt = unify(posOpt, F, expected.args(i), tpe.args(i), reporter)
+          mOpt match {
+            case Some(m) =>
+              unifyCombine(r, m) match {
+                case Some(c) => r = c
+                case _ => err(); return None()
+              }
+            case _ => return None()
+          }
+          i = i + 1
+        }
+        return Some(r)
+      case (expected: AST.Typed.Fun, tpe: AST.Typed.Fun) =>
+        val size = expected.args.size
+        if (size != tpe.args.size) {
+          err()
+          return None()
+        }
+        var i = 0
+        var r = HashMap.empty[String, AST.Typed]
+        while (i < size) {
+          val mOpt = unify(posOpt, F, expected.args(i), tpe.args(i), reporter)
+          mOpt match {
+            case Some(m) =>
+              unifyCombine(r, m) match {
+                case Some(c) => r = c
+                case _ => err(); return None()
+              }
+            case _ => return None()
+          }
+          i = i + 1
+        }
+        val mOpt = unify(posOpt, F, expected.ret, tpe.ret, reporter)
+        mOpt match {
+          case Some(m) =>
+            unifyCombine(r, m) match {
+              case Some(c) => r = c
+              case _ => err(); return None()
+            }
+          case _ => return None()
+        }
+        return Some(r)
+      case _ => return None()
+    }
+  }
+
+
+  def unifies(posOpt: Option[AST.PosInfo], allowSubType: B, expected: ISZ[AST.Typed],
+              tpe: ISZ[AST.Typed], reporter: Reporter): Option[HashMap[String, AST.Typed]] = {
+    def err(): Unit = {
+      reporter.error(posOpt, typeCheckerKind, s"Could not unify type ${AST.Typed.Tuple(expected)} with ${AST.Typed.Tuple(tpe)}.")
+    }
+
+    val size = expected.size
+    if (size != tpe.size) {
+      return None()
+    }
+    var r = HashMap.empty[String, AST.Typed]
+    var i = 0
+    while (i < size) {
+      val mOpt = unify(posOpt, allowSubType, expected(i), tpe(i), reporter)
+      mOpt match {
+        case Some(m) =>
+          unifyCombine(r, m) match {
+            case Some(c) => r = c
+            case _ => err(); return None()
+          }
+        case _ => return None()
+      }
+      i = i + 1
+    }
+    return Some(r)
+  }
 }

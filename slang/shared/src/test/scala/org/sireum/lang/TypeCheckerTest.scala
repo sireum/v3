@@ -44,6 +44,18 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet(
           """import org.sireum._
+            |val x: Either[B, Z] = Either(Some(T), None())
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
             |var x: Z = 1
             |while (x > 0) {
             |  println("x is positive")
@@ -107,6 +119,10 @@ class TypeCheckerTest extends SireumSpec {
 
         *(failingStmt("""halt(1)""", "but found org.sireum.Z"))
 
+        *(failingStmt("""println(org.sireum.Map.empty)""", "Explicit type"))
+
+        *(failingStmt("""println(org.sireum.Map.empty[org.sireum.Z])""", "Expecting 2 type arg"))
+
       }
 
     }
@@ -128,6 +144,7 @@ class TypeCheckerTest extends SireumSpec {
         TypeChecker.checkWorksheet(program, reporter)
         if (reporter.hasIssue) {
           reporter.printMessages()
+          return false
         }
         val t = ast.MTransformer(new ast.MTransformer.PrePost {
           def $owned: Boolean = F
@@ -166,6 +183,7 @@ class TypeCheckerTest extends SireumSpec {
       case (Some(_), checkedStmt) if isPassing =>
         if (reporter.hasIssue) {
           reporter.printMessages()
+          return false
         }
         val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
           override def preTypedAttr(ctx: Unit, o: ast.TypedAttr): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
