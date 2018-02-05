@@ -118,6 +118,7 @@ object Util {
       case Exp.BinaryOp.Prepend => return "+:"
       case Exp.BinaryOp.AppendAll => return "++"
       case Exp.BinaryOp.RemoveAll => return "--"
+      case Exp.BinaryOp.MapsTo => return "~>"
     }
   }
 
@@ -147,6 +148,7 @@ object Util {
       case Exp.BinaryOp.Prepend => return F
       case Exp.BinaryOp.AppendAll => return F
       case Exp.BinaryOp.RemoveAll => return F
+      case Exp.BinaryOp.MapsTo => return F
     }
   }
 
@@ -176,6 +178,7 @@ object Util {
       case Exp.BinaryOp.Prepend => return F
       case Exp.BinaryOp.AppendAll => return F
       case Exp.BinaryOp.RemoveAll => return F
+      case Exp.BinaryOp.MapsTo => return F
     }
   }
 
@@ -205,6 +208,7 @@ object Util {
       case Exp.BinaryOp.Prepend => return F
       case Exp.BinaryOp.AppendAll => return F
       case Exp.BinaryOp.RemoveAll => return F
+      case Exp.BinaryOp.MapsTo => return F
     }
   }
 
@@ -234,6 +238,7 @@ object Util {
       case Exp.BinaryOp.Prepend => return F
       case Exp.BinaryOp.AppendAll => return F
       case Exp.BinaryOp.RemoveAll => return F
+      case Exp.BinaryOp.MapsTo => return F
     }
   }
 }
