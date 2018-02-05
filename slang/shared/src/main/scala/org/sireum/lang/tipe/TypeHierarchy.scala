@@ -418,7 +418,7 @@ object TypeHierarchy {
     val tOpt = this.typed(scope, ti.ast.tipe, reporter)
     tOpt match {
       case Some(t) =>
-        val substMapOpt = TypeChecker.buildSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)
+        val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)
         substMapOpt match {
           case Some(substMap) => return Some(TypeChecker.substType(substMap, t))
           case _ => return None()
