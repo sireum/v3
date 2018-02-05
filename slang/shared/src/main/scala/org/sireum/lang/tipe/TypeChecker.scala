@@ -53,9 +53,6 @@ object TypeChecker {
 
   val typeCheckerKind: String = "Type Checker"
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ())
-  val builtInTypes: HashSet[String] = HashSet.empty[String].addAll(ISZ(
-    "Unit", "Nothing"
-  ))
   val builtInMethods: HashSet[String] = HashSet.empty[String].addAll(ISZ(
     "assert", "assume", "println", "print", "eprintln", "eprint", "halt"
   ))
@@ -69,6 +66,11 @@ object TypeChecker {
   val eprintResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("eprint"))
   val haltResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("halt"))
   val haltTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, F, ISZ(AST.Typed.string), AST.Typed.nothing))
+  val nativeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("native"))
+  val nativeCTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.c))
+  val nativeStringTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.string))
+  val nativeF32TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f32))
+  val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
 
   var _typeHierarchyReporter: Option[(TypeHierarchy, AccumulatingReporter)] = None()
 
@@ -206,6 +208,33 @@ import TypeChecker._
 
   @pure def nameMap: NameMap = {
     return typeHierarchy.nameMap
+  }
+
+  def checkSelectNative(scope: Scope.Local, exp: AST.Exp.Select,
+                        reporter: Reporter): (AST.Exp, Option[AST.Typed]) = {
+    val receiver: AST.Exp = exp.receiverOpt.get
+    val (newExp, expTypeOpt) = checkExp(None(), scope, receiver, reporter)
+    def partResult: (AST.Exp, Option[AST.Typed]) = {
+      return (exp(receiverOpt = Some(newExp)), None())
+    }
+    expTypeOpt match {
+      case Some(t) =>
+        t match {
+          case AST.Typed.`c` => return (exp(receiverOpt = Some(newExp),
+            attr = exp.attr(resOpt = nativeResOpt, typedOpt = nativeCTypedOpt)), Some(t))
+          case AST.Typed.`string` => return (exp(receiverOpt = Some(newExp),
+            attr = exp.attr(resOpt = nativeResOpt, typedOpt = nativeStringTypedOpt)), Some(t))
+          case AST.Typed.`f32` =>return (exp(receiverOpt = Some(newExp),
+            attr = exp.attr(resOpt = nativeResOpt, typedOpt = nativeF32TypedOpt)), Some(t))
+          case AST.Typed.`f64` =>return (exp(receiverOpt = Some(newExp),
+            attr = exp.attr(resOpt = nativeResOpt, typedOpt = nativeF64TypedOpt)), Some(t))
+          case _ =>
+            reporter.error(receiver.posOpt, typeCheckerKind,
+              s"Selector native is only usable from type C, String, F32, and F64, but found '$t'.")
+            return partResult
+        }
+      case _ => return partResult
+    }
   }
 
   def checkExp(expectedOpt: Option[AST.Typed],
@@ -1094,6 +1123,12 @@ import TypeChecker._
     return (newScopeOpt, stmt(stmts = newStmts))
   }
 
+
+  def checkPattern(expectedOpt: Option[AST.Typed], scope: Scope.Local,
+                   pattern: AST.Pattern, reporter: Reporter): (Option[Scope.Local], AST.Pattern) = {
+    halt("Unimplemented") // TODO
+  }
+
   def checkStmt(scope: Scope.Local, stmt: AST.Stmt,
                 reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
 
@@ -1168,6 +1203,40 @@ import TypeChecker._
       }
     }
 
+    def checkMatch(stmt: AST.Stmt.Match): AST.Stmt = {
+      val (newExp: AST.Exp, expTypeOpt: Option[AST.Typed]) = stmt.exp match {
+        case exp@AST.Exp.Select(Some(_), AST.Id(string"native"), _) =>
+          val p = checkSelectNative(scope, exp, reporter)
+          p
+        case _ =>
+          val p = checkExp(None(), scope, stmt.exp, reporter)
+          p
+      }
+      val expType: AST.Typed = expTypeOpt match {
+        case Some(et) => et
+        case _ => return stmt(exp = newExp)
+      }
+
+      var newCases = ISZ[AST.Case]()
+      for (c <- stmt.cases) {
+        val (newScopeOpt, newPattern) = checkPattern(Some(expType), scope, c.pattern, reporter)
+        newScopeOpt match {
+          case Some(newScope) =>
+            val newCondOpt: Option[AST.Exp] = c.condOpt match {
+              case Some(cond) =>
+                val (newCond, _) = checkExp(AST.Typed.bOpt, newScope, cond, reporter)
+                Some(newCond)
+              case o => o
+            }
+            val (_, newBody) = checkBody(scope, c.body, reporter)
+            newCases = newCases :+  c(pattern = newPattern, condOpt = newCondOpt, body = newBody)
+          case _ => newCases = newCases :+ c(pattern = newPattern)
+        }
+      }
+
+      return stmt(exp = newExp, cases = newCases)
+    }
+
     stmt match {
 
       case stmt: AST.Stmt.LStmt => halt("Unimplemented.") // TODO
@@ -1193,7 +1262,7 @@ import TypeChecker._
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
       case stmt: AST.Stmt.Expr =>
-        val (newExp, typedOpt) = checkExp(None(), scope, stmt.exp, reporter)
+        val (newExp, _) = checkExp(None(), scope, stmt.exp, reporter)
         return (Some(scope), stmt(exp = newExp))
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
@@ -1208,7 +1277,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Import => val r = checkImport(stmt); return r
 
-      case stmt: AST.Stmt.Match => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Match => val r = checkMatch(stmt); return (Some(scope), r)
 
       case stmt: AST.Stmt.Method => halt("Unimplemented.") // TODO
 
@@ -1288,7 +1357,7 @@ import TypeChecker._
     (expected, tpe) match {
       case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
         val name = tpe.ids
-        if (name.size == 1 && !builtInTypes.contains(name(0))) {
+        if (name.size == 1) {
           return Some(HashMap.empty[String, AST.Typed].put(name(0), expected))
         }
         val rt: AST.Typed.Name = if (allowSubType) {
