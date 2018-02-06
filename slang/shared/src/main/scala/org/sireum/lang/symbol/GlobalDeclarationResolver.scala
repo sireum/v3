@@ -53,33 +53,39 @@ import org.sireum.lang.{ast => AST}
     }
 
     for (info <- globalTypeMap.values) {
-      var desc = ""
-      var posOpt: Option[AST.PosInfo] = None()
-      val name: ISZ[String] = info match {
-        case info: TypeInfo.Sig =>
-          desc = if (info.ast.isImmutable) "@sig trait" else "@msig trait"
-          posOpt = info.ast.id.attr.posOpt
-          info.name
-        case info: TypeInfo.AbstractDatatype =>
-          desc =
-            if (info.ast.isRoot)
-              if (info.ast.isDatatype) "@datatype trait" else "@record trait"
-            else if (info.ast.isDatatype) "@datatype class" else "@record class"
-          posOpt = info.ast.id.attr.posOpt
-          info.name
-        case _ => ISZ()
+
+      @pure def helper: (ISZ[String], String, B, String, Option[AST.PosInfo]) = {
+        info match {
+          case info: TypeInfo.Sig =>
+            return (info.owner, info.ast.id.value, T,
+              if (info.ast.isImmutable) "@sig trait" else "@msig trait", info.ast.id.attr.posOpt)
+          case info: TypeInfo.AbstractDatatype =>
+            return (info.owner, info.ast.id.value, T,
+              if (info.ast.isRoot)
+                if (info.ast.isDatatype) "@datatype trait" else "@record trait"
+              else if (info.ast.isDatatype) "@datatype class" else "@record class",
+              info.ast.id.attr.posOpt)
+          case info: TypeInfo.SubZ =>
+            return (info.owner, info.ast.id.value, T,
+              if (info.ast.isBitVector) "@bits class" else "@range class",
+              info.ast.id.attr.posOpt)
+          case _ => return (ISZ(), "", F, "", None())
+        }
       }
+
+      val (owner, id, ok, desc, posOpt) = helper
+      val name = owner :+ id
       globalNameMap.get(name) match {
         case Some(_: Info.Object) =>
         case Some(_) =>
           reporter.error(info.posOpt, resolverKind,
             s"Cannot declare ${(info.name, ".")} as a different entity as it was used for a name of a $desc.")
         case _ =>
-          if (name.nonEmpty) {
+          if (ok) {
             val attr = AST.Attr(posOpt)
-            globalNameMap = globalNameMap.put(name, Info.Object(name, T, T,
-              AST.Stmt.Object(F, AST.Id(name(name.size - 1), attr), ISZ(), ISZ(), attr),
-              Some(AST.Typed.Object(name)), Some(AST.ResolvedInfo.Object(name))))
+            globalNameMap = globalNameMap.put(name, Info.Object(owner, T, T,
+              AST.Stmt.Object(F, AST.Id(id, attr), ISZ(), ISZ(), attr),
+              Some(AST.Typed.Object(owner, id)), Some(AST.ResolvedInfo.Object(name))))
           }
       }
     }
@@ -125,7 +131,7 @@ import org.sireum.lang.{ast => AST}
             Some(AST.ResolvedInfo.Method(T, F, T, currentName, id))), stmt.attr.posOpt)
       case stmt: AST.Stmt.SubZ =>
         val name = currentName :+ stmt.id.value
-        declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(name, stmt), stmt.attr.posOpt)
+        declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(currentName, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Map.empty[String, Option[AST.ResolvedInfo]]
@@ -157,8 +163,8 @@ import org.sireum.lang.{ast => AST}
           case _ =>
         }
 
-        declareName(if (stmt.isExt) "extension object" else "object", name, Info.Object(name, F, F, stmt,
-          Some(AST.Typed.Object(name)), Some(AST.ResolvedInfo.Object(name))), stmt.attr.posOpt)
+        declareName(if (stmt.isExt) "extension object" else "object", name, Info.Object(currentName, F, F, stmt,
+          Some(AST.Typed.Object(currentName, stmt.id.value)), Some(AST.ResolvedInfo.Object(name))), stmt.attr.posOpt)
         val oldName = currentName
         currentName = name
         for (s <- stmt.stmts) {
@@ -173,7 +179,7 @@ import org.sireum.lang.{ast => AST}
         val tpe = AST.Typed.Name(name,
           for (tVar <- typeParamMap(stmt.typeParams, reporter).keys.elements)
             yield AST.Typed.Name(ISZ(tVar), ISZ()))
-        declareType("sig", name, TypeInfo.Sig(name, F, tpe, ISZ(), members.specVars,
+        declareType("sig", name, TypeInfo.Sig(currentName, F, tpe, ISZ(), members.specVars,
           members.specMethods, members.methods, sc, stmt), stmt.attr.posOpt)
       case stmt: AST.Stmt.AbstractDatatype =>
         val name = currentName :+ stmt.id.value

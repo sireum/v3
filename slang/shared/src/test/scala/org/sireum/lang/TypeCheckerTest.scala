@@ -44,12 +44,6 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet(
           """import org.sireum._
-            |val x: Either[B, Z] = Either(Some(T), None())
-          """.stripMargin
-        ))
-
-        *(passingWorksheet(
-          """import org.sireum._
             |val x: Either[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
           """.stripMargin
         ))
@@ -57,6 +51,18 @@ class TypeCheckerTest extends SireumSpec {
         *(passingWorksheet(
           """import org.sireum._
             |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |println(Z("0").getOrElse(1))
+          """.stripMargin
+        ))
+
+        *(passingWorksheet(
+          """import org.sireum._
+            |val x: Either[B, Z] = Either(Some(T), None())
           """.stripMargin
         ))
 
@@ -125,6 +131,17 @@ class TypeCheckerTest extends SireumSpec {
 
     "Failing" - {
 
+      "Worksheet" - {
+
+        *(failingWorksheet(
+          """import org.sireum._
+            |println(Z(s = "0").getOrElse(1))
+          """.stripMargin,
+          "Could not find parameter 's'"
+        ))
+
+      }
+
       "Stmt" - {
 
         *(failingStmt("assert(1)", "but found org.sireum.Z"))
@@ -153,11 +170,16 @@ class TypeCheckerTest extends SireumSpec {
     Parser(input).parseTopUnit[ast.TopUnit.Program](
       allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) =>
-        TypeChecker.checkWorksheet(program, reporter)
+        val p = TypeChecker.checkWorksheet(program, reporter)
         if (reporter.hasIssue) {
-          reporter.printMessages()
-          return false
+          if (isPassing) {
+            reporter.printMessages()
+            return false
+          } else {
+            return reporter.messages.elements.exists(m => m.message.value.contains(msg))
+          }
         }
+        assert(isPassing)
         val t = ast.MTransformer(new ast.MTransformer.PrePost {
           def $owned: Boolean = F
           def $owned_=(b: Boolean): $internal.MutableMarker = this
@@ -168,11 +190,15 @@ class TypeCheckerTest extends SireumSpec {
             super.preTypedAttr(o)
           }
           override def preResolvedAttr(o: ast.ResolvedAttr): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
+            if (o.typedOpt.isEmpty) {
+              new Throwable().printStackTrace()
+            }
             assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
             super.preResolvedAttr(o)
           }
 
         })
+        t.transformTopUnit(p)
       case _ =>
     }
     if (reporter.hasIssue) {

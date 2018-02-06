@@ -155,11 +155,10 @@ object TypeOutliner {
 
   def outlineSpecVar(info: Info.SpecVar, reporter: Reporter): Option[Info] = {
     val sv = info.ast
-    val tOpt = typeHierarchy.typed(info.scope, sv.tipe, reporter)
-    tOpt match {
-      case Some(t) =>
-        val t2 = sv.tipe.typed(t)
-        return Some(info(ast = sv(tipe = t2), typedOpt = t2.typedOpt))
+    val newTipeOpt = typeHierarchy.typed(info.scope, sv.tipe, reporter)
+    newTipeOpt match {
+      case Some(newTipe) =>
+        return Some(info(ast = sv(tipe = newTipe), typedOpt = newTipe.typedOpt))
       case _ => return None()
     }
   }
@@ -167,11 +166,10 @@ object TypeOutliner {
   def outlineVar(info: Info.Var, reporter: Reporter): Option[Info] = {
     val v = info.ast
     val tpe = v.tipeOpt.get
-    val tOpt = typeHierarchy.typed(info.scope, tpe, reporter)
-    tOpt match {
-      case Some(t) =>
-        val t2 = tpe.typed(t)
-        return Some(info(ast = v(tipeOpt = Some(t2)), typedOpt = t2.typedOpt))
+    val newTipeOpt = typeHierarchy.typed(info.scope, tpe, reporter)
+    newTipeOpt match {
+      case Some(newTipe) =>
+        return Some(info(ast = v(tipeOpt = newTipeOpt), typedOpt = newTipe.typedOpt))
       case _ => return None()
     }
   }
@@ -182,7 +180,7 @@ object TypeOutliner {
     sigOpt match {
       case Some((sig, tVars)) =>
         return Some(info(ast = sm(sig = sig),
-          typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+          typedOpt = Some(AST.Typed.Method(T, AST.Typed.Method.Mode.Spec, tVars, info.owner, sig.id.value,
             sig.params.map(p => p.id.value), ISZ(), sig.funType))))
       case _ => return None()
     }
@@ -193,7 +191,7 @@ object TypeOutliner {
     val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
     sigOpt match {
       case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+        typedOpt = Some(AST.Typed.Method(T, AST.Typed.Method.Mode.Normal, tVars, info.owner, sig.id.value,
           sig.params.map(p => p.id.value), ISZ(), sig.funType))))
       case _ => return None()
     }
@@ -204,7 +202,7 @@ object TypeOutliner {
     val sigOpt = outlineMethodSig(info.scope, m.sig, reporter)
     sigOpt match {
       case Some((sig, tVars)) => return Some(info(ast = m(sig = sig),
-        typedOpt = Some(AST.Typed.Method(T, F, tVars, info.owner, sig.id.value,
+        typedOpt = Some(AST.Typed.Method(T, AST.Typed.Method.Mode.Ext, tVars, info.owner, sig.id.value,
           sig.params.map(p => p.id.value), ISZ(), sig.funType))))
       case _ => return None()
     }
@@ -268,11 +266,11 @@ object TypeOutliner {
     var newParams = ISZ[AST.AbstractDatatypeParam]()
     var paramTypes = ISZ[AST.Typed]()
     for (p <- info.ast.params) {
-      val tOpt = typeHierarchy.typed(scope, p.tipe, reporter)
-      tOpt match {
-        case Some(t) =>
-          paramTypes = paramTypes :+ t
-          newParams = newParams :+ p(tipe = p.tipe.typed(t))
+      val newTipeOpt = typeHierarchy.typed(scope, p.tipe, reporter)
+      newTipeOpt match {
+        case Some(newTipe) if newTipe.typedOpt.nonEmpty =>
+          paramTypes = paramTypes :+ newTipe.typedOpt.get
+          newParams = newParams :+ p(tipe = newTipe)
         case _ =>
       }
     }
@@ -282,7 +280,7 @@ object TypeOutliner {
           specVars = specVars, vars = vars, specMethods = specMethods, methods = methods)
       else
         info(outlined = T, ancestors = ancestors,
-          constructorTypeOpt = Some(AST.Typed.Method(F, T, tm.keys.elements,
+          constructorTypeOpt = Some(AST.Typed.Method(F, AST.Typed.Method.Mode.Constructor, tm.keys.elements,
             info.owner, info.ast.id.value, info.ast.params.map(p => p.id.value),
             ISZ(), AST.Typed.Fun(T, F, paramTypes, info.tpe))),
           specVars = specVars, vars = vars, specMethods = specMethods, methods = methods,
@@ -307,15 +305,16 @@ object TypeOutliner {
     val mScope = localTypeScope(tm.map, scope)
     var params = ISZ[AST.Param]()
     for (p <- sig.params) {
-      val tOpt = typeHierarchy.typed(mScope, p.tipe, reporter)
-      tOpt match {
-        case Some(t) => params = params :+ p(tipe = p.tipe.typed(t))
+      val tipeOpt = typeHierarchy.typed(mScope, p.tipe, reporter)
+      tipeOpt match {
+        case Some(tipe) if tipe.typedOpt.nonEmpty => params = params :+ p(tipe = tipe)
         case _ => return None()
       }
     }
-    val tOpt = typeHierarchy.typed(mScope, sig.returnType, reporter)
-    tOpt match {
-      case Some(t) => return Some((sig(params = params, returnType = sig.returnType.typed(t)), tm.keys.elements))
+    val returnTypeOpt = typeHierarchy.typed(mScope, sig.returnType, reporter)
+    returnTypeOpt match {
+      case Some(returnType) if returnTypeOpt.nonEmpty =>
+        return Some((sig(params = params, returnType = returnType), tm.keys.elements))
       case _ => return None()
     }
   }
@@ -343,11 +342,10 @@ object TypeOutliner {
           s"Cannot redeclare $id.")
         return
       }
-      val tOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
-      tOpt match {
-        case Some(t) =>
-          val t2 = sv.tipe.typed(t)
-          specVars = specVars.put(id, info(ast = sv(tipe = t2), typedOpt = t2.typedOpt))
+      val tipeOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
+      tipeOpt match {
+        case Some(tipe) if tipe.typedOpt.nonEmpty =>
+          specVars = specVars.put(id, info(ast = sv(tipe = tipe), typedOpt = tipe.typedOpt))
         case _ =>
       }
     }
@@ -361,11 +359,10 @@ object TypeOutliner {
         return
       }
       val tpe = v.tipeOpt.get
-      val tOpt = typeHierarchy.typed(scope, tpe, reporter)
-      tOpt match {
-        case Some(t) =>
-          val t2 = tpe.typed(t)
-          vars = vars.put(id, info(ast = v(tipeOpt = Some(t2)), typedOpt = t2.typedOpt))
+      val tipeOpt = typeHierarchy.typed(scope, tpe, reporter)
+      tipeOpt match {
+        case Some(tipe) =>
+          vars = vars.put(id, info(ast = v(tipeOpt = Some(tipe)), typedOpt = tipe.typedOpt))
         case _ =>
       }
     }
@@ -382,7 +379,7 @@ object TypeOutliner {
       sigOpt match {
         case Some((sig, tVars)) =>
           specMethods = specMethods.put(id, info(ast = sm(sig = sig),
-            typedOpt = Some(AST.Typed.Method(F, F, tVars, info.owner, id,
+            typedOpt = Some(AST.Typed.Method(F, AST.Typed.Method.Mode.Spec, tVars, info.owner, id,
               sig.params.map(p => p.id.value), ISZ(), sig.funType))))
         case _ =>
       }
@@ -399,7 +396,7 @@ object TypeOutliner {
       val sigOpt = outlineMethodSig(scope, m.sig, reporter)
       sigOpt match {
         case Some((sig, tVars)) => methods = methods.put(id, info(ast = m(sig = sig),
-          typedOpt = Some(AST.Typed.Method(F, F, tVars, info.owner, id,
+          typedOpt = Some(AST.Typed.Method(F, AST.Typed.Method.Mode.Normal, tVars, info.owner, id,
             sig.params.map(p => p.id.value), ISZ(), sig.funType))))
         case _ =>
       }
@@ -558,16 +555,12 @@ object TypeOutliner {
       }
     }
 
-    @pure def typeParamSet(info: Info.Method): HashSet[String] = {
-      return HashSet.empty[String].addAll(info.ast.sig.typeParams.map(tp => tp.id.value))
-    }
-
     def checkMethodEquality(m1: Info.Method,
                             m2: Info.Method,
                             substMap: HashMap[String, AST.Typed],
                             posOpt: Option[AST.PosInfo]): B = {
-      val t1 = m1.typedOpt.get.deBruijn(typeParamSet(m1))
-      val t2 = m2.typedOpt.get.subst(substMap).deBruijn(typeParamSet(m2))
+      val t1 = m1.typedOpt.get.deBruijn
+      val t2 = m2.typedOpt.get.subst(substMap).deBruijn
       return t1 == t2
     }
 
@@ -575,8 +568,8 @@ object TypeOutliner {
                               supM: Info.Method,
                               substMap: HashMap[String, AST.Typed],
                               posOpt: Option[AST.PosInfo]): B = {
-      val t1 = m.typedOpt.get.deBruijn(typeParamSet(m))
-      val t2 = supM.typedOpt.get.subst(substMap).deBruijn(typeParamSet(supM))
+      val t1 = m.typedOpt.get.deBruijn
+      val t2 = supM.typedOpt.get.subst(substMap).deBruijn
       return typeHierarchy.isRefinement(t1, t2)
     }
 
@@ -680,58 +673,60 @@ object TypeOutliner {
 
     var ancestors = HashSSet.empty[AST.Typed]
     for (parent <- parents) {
-      val tOpt = typeHierarchy.typed(scope, parent, reporter)
-      tOpt match {
-        case Some(t: AST.Typed.Name) =>
-          t match {
-            case t: AST.Typed.Name =>
-              typeHierarchy.typeMap.get(t.ids) match {
-                case Some(ti: TypeInfo.Sig) =>
-                  val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                  substMapOpt match {
-                    case Some(substMap) =>
-                      ancestors = ancestors.add(ti.tpe.subst(substMap))
-                      for (tpe <- ti.ancestors) {
-                        ancestors = ancestors.add(tpe.subst(substMap))
-                      }
-                      for (p <- ti.specVars.values) {
-                        inheritSpecVar(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.specMethods.values) {
-                        inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.methods.values) {
-                        inheritMethod(p, parent.attr.posOpt, substMap)
-                      }
-                    case _ =>
-                  }
-                case Some(ti: TypeInfo.AbstractDatatype) =>
-                  val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                  substMapOpt match {
-                    case Some(substMap) =>
-                      ancestors = ancestors.add(ti.tpe.subst(substMap))
-                      for (tpe <- ti.ancestors) {
-                        ancestors = ancestors.add(tpe.subst(substMap))
-                      }
-                      for (p <- ti.specVars.values) {
-                        inheritSpecVar(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.vars.values) {
-                        inheritVar(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.specMethods.values) {
-                        inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                      }
-                      for (p <- ti.methods.values) {
-                        inheritMethod(p, parent.attr.posOpt, substMap)
-                      }
-                    case _ =>
-                  }
-                case _ =>
-              }
-            case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich.")
-          }
-        case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
+      val tipeOpt = typeHierarchy.typed(scope, parent, reporter)
+      for (tipe <- tipeOpt) {
+        tipe.typedOpt match {
+          case Some(t: AST.Typed.Name) =>
+            t match {
+              case t: AST.Typed.Name =>
+                typeHierarchy.typeMap.get(t.ids) match {
+                  case Some(ti: TypeInfo.Sig) =>
+                    val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                    substMapOpt match {
+                      case Some(substMap) =>
+                        ancestors = ancestors.add(ti.tpe.subst(substMap))
+                        for (tpe <- ti.ancestors) {
+                          ancestors = ancestors.add(tpe.subst(substMap))
+                        }
+                        for (p <- ti.specVars.values) {
+                          inheritSpecVar(p, parent.attr.posOpt, substMap)
+                        }
+                        for (p <- ti.specMethods.values) {
+                          inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                        }
+                        for (p <- ti.methods.values) {
+                          inheritMethod(p, parent.attr.posOpt, substMap)
+                        }
+                      case _ =>
+                    }
+                  case Some(ti: TypeInfo.AbstractDatatype) =>
+                    val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                    substMapOpt match {
+                      case Some(substMap) =>
+                        ancestors = ancestors.add(ti.tpe.subst(substMap))
+                        for (tpe <- ti.ancestors) {
+                          ancestors = ancestors.add(tpe.subst(substMap))
+                        }
+                        for (p <- ti.specVars.values) {
+                          inheritSpecVar(p, parent.attr.posOpt, substMap)
+                        }
+                        for (p <- ti.vars.values) {
+                          inheritVar(p, parent.attr.posOpt, substMap)
+                        }
+                        for (p <- ti.specMethods.values) {
+                          inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                        }
+                        for (p <- ti.methods.values) {
+                          inheritMethod(p, parent.attr.posOpt, substMap)
+                        }
+                      case _ =>
+                    }
+                  case _ =>
+                }
+              case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich.")
+            }
+          case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
+        }
       }
     }
     return (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors.elements.map(t => t match {

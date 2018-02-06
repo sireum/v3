@@ -382,13 +382,17 @@ object Resolver {
       }
     }
 
-    @datatype class Object(val name: QName,
+    @datatype class Object(owner: QName,
                            isSynthetic: B,
                            outlined: B,
                            ast: AST.Stmt.Object,
                            typedOpt: Option[AST.Typed],
                            resOpt: Option[AST.ResolvedInfo])
       extends Info {
+
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
+      }
 
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -462,8 +466,12 @@ object Resolver {
 
   object TypeInfo {
 
-    @datatype class SubZ(val name: QName,
+    @datatype class SubZ(owner: QName,
                          ast: AST.Stmt.SubZ) extends TypeInfo {
+
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
+      }
 
       @pure override def canHaveCompanion: B = {
         return F
@@ -484,7 +492,7 @@ object Resolver {
       }
     }
 
-    @datatype class Sig(val name: QName,
+    @datatype class Sig(owner: QName,
                         outlined: B,
                         tpe: AST.Typed.Name,
                         ancestors: ISZ[AST.Typed.Name],
@@ -494,6 +502,10 @@ object Resolver {
                         scope: Scope.Global,
                         ast: AST.Stmt.Sig)
       extends TypeInfo {
+
+      @pure override def name: QName = {
+        return owner :+ ast.id.value
+      }
 
       @pure override def canHaveCompanion: B = {
         return T
@@ -743,10 +755,7 @@ object Resolver {
   }
 
   @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
-    val sireumName: QName = ISZ("org", "sireum")
-    val iszName = sireumName :+ "ISZ"
-
-    if (typeMap.contains(iszName)) {
+    if (typeMap.contains(AST.Typed.iszName)) {
       return (nameMap, typeMap)
     }
 
@@ -756,23 +765,24 @@ object Resolver {
 
     val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
 
-    val scope = Scope.Global(sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
+    val scope = Scope.Global(AST.Typed.sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 
-    var tm = typeMap.put(iszName, TypeInfo.TypeAlias(iszName, scope,
+    var tm = typeMap.put(AST.Typed.iszName, TypeInfo.TypeAlias(AST.Typed.iszName, scope,
       Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
 
-    val mszName = sireumName :+ "MSZ"
-
-    tm = tm.put(mszName, TypeInfo.TypeAlias(mszName, scope,
+    tm = tm.put(AST.Typed.mszName, TypeInfo.TypeAlias(AST.Typed.mszName, scope,
       Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
 
-    val tName = sireumName :+ "T"
-    var nm = nameMap.put(tName, Info.Var(sireumName, T, scope,
+    tm = tm.put(AST.Typed.zsName, TypeInfo.TypeAlias(AST.Typed.zsName, scope,
+      Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias]))
+
+    val tName = AST.Typed.sireumName :+ "T"
+    var nm = nameMap.put(tName, Info.Var(AST.Typed.sireumName, T, scope,
       Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "T"))))
 
-    val fName = sireumName :+ "F"
-    nm = nm.put(fName, Info.Var(sireumName, T, scope,
+    val fName = AST.Typed.sireumName :+ "F"
+    nm = nm.put(fName, Info.Var(AST.Typed.sireumName, T, scope,
       Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
       Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
 
@@ -780,7 +790,7 @@ object Resolver {
       HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
       AST.Stmt.AbstractDatatype(F, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
 
-    tm = tm.put(AST.Typed.nothing.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.unit, None(), None(), ISZ(),
+    tm = tm.put(AST.Typed.nothing.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.nothing, None(), None(), ISZ(),
       HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
       AST.Stmt.AbstractDatatype(F, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
 
