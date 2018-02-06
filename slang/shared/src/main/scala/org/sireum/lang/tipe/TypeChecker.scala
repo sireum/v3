@@ -942,14 +942,16 @@ import TypeChecker._
             }
 
             @pure def make(eArgs: ISZ[AST.Exp], tpeOpt: Option[AST.Typed]): AST.Exp = {
-              var args: ISZ[AST.NamedArg] = ISZ()
-              for (na <- exp.args) {
-                val name = na.id.value
-                val index = nameToIndexMap.get(name).get
-                if (eArgs.size <= index) {
-                  println("here")
+              val args: ISZ[AST.NamedArg] = if (eArgs.size == expArgs) {
+                var r = ISZ[AST.NamedArg]()
+                for (na <- exp.args) {
+                  val name = na.id.value
+                  val index = nameToIndexMap.get(name).get
+                  r = r :+ na(arg = eArgs(index), index = index)
                 }
-                args = args :+ na(arg = eArgs(index), index = index)
+                r
+              } else {
+                exp.args
               }
               return exp(receiverOpt = receiverOpt, targs = newTargs, args = args,
                 attr = exp.attr(typedOpt = tpeOpt, resOpt = resOpt))
