@@ -1403,6 +1403,7 @@ object JSON {
         case o: Typed.Name => return printTypedName(o)
         case o: Typed.Tuple => return printTypedTuple(o)
         case o: Typed.Fun => return printTypedFun(o)
+        case o: Typed.TypeVar => return printTypedTypeVar(o)
         case o: Typed.Package => return printTypedPackage(o)
         case o: Typed.Object => return printTypedObject(o)
         case o: Typed.Enum => return printTypedEnum(o)
@@ -1432,6 +1433,13 @@ object JSON {
         ("isByName", printB(o.isByName)),
         ("args", printISZ(F, o.args, printTyped)),
         ("ret", printTyped(o.ret))
+      ))
+    }
+
+    @pure def printTypedTypeVar(o: Typed.TypeVar): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.TypeVar""""),
+        ("id", printString(o.id))
       ))
     }
 
@@ -4502,11 +4510,12 @@ object JSON {
     }
 
     def parseTyped(): Typed = {
-      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.Package", "Typed.Object", "Typed.Enum", "Typed.Method"))
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.TypeVar", "Typed.Package", "Typed.Object", "Typed.Enum", "Typed.Method"))
       t.native match {
         case "Typed.Name" => val r = parseTypedNameT(T); return r
         case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
         case "Typed.Fun" => val r = parseTypedFunT(T); return r
+        case "Typed.TypeVar" => val r = parseTypedTypeVarT(T); return r
         case "Typed.Package" => val r = parseTypedPackageT(T); return r
         case "Typed.Object" => val r = parseTypedObjectT(T); return r
         case "Typed.Enum" => val r = parseTypedEnumT(T); return r
@@ -4570,6 +4579,21 @@ object JSON {
       val ret = parseTyped()
       parser.parseObjectNext()
       return Typed.Fun(isPure, isByName, args, ret)
+    }
+
+    def parseTypedTypeVar(): Typed.TypeVar = {
+      val r = parseTypedTypeVarT(F)
+      return r
+    }
+
+    def parseTypedTypeVarT(typeParsed: B): Typed.TypeVar = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.TypeVar")
+      }
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return Typed.TypeVar(id)
     }
 
     def parseTypedPackage(): Typed.Package = {
@@ -7565,6 +7589,24 @@ object JSON {
       return r
     }
     val r = to(s, fTypedFun)
+    return r
+  }
+
+  def fromTypedTypeVar(o: Typed.TypeVar, isCompact: B): String = {
+    val st = Printer.printTypedTypeVar(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedTypeVar(s: String): Typed.TypeVar = {
+    def fTypedTypeVar(parser: Parser): Typed.TypeVar = {
+      val r = parser.parseTypedTypeVar()
+      return r
+    }
+    val r = to(s, fTypedTypeVar)
     return r
   }
 

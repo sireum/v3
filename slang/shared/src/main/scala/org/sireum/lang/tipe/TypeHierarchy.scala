@@ -347,7 +347,7 @@ object TypeHierarchy {
                 s"Type variable ${name(0)} does not accept type arguments.")
               return None()
             }
-            return Some(AST.Typed.Name(ti.name, argTypes))
+            return Some(AST.Typed.TypeVar(ti.name(0)))
           case Some(ti) =>
             val p: (String, Z) = ti match {
               case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0)
@@ -486,6 +486,7 @@ object TypeHierarchy {
           val newRet = newRetOpt.getOrElse(t.ret)
           changed = changed || newRetOpt.nonEmpty
           return if (changed) Some(t(args = newArgs, ret = newRet)) else None()
+        case _: AST.Typed.TypeVar => return None()
         case _: AST.Typed.Enum => return None()
         case _: AST.Typed.Method => return None()
         case _: AST.Typed.Object => return None()

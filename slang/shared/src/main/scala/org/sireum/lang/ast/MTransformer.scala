@@ -820,6 +820,7 @@ object MTransformer {
         case o: Typed.Name => return preTypedName(o)
         case o: Typed.Tuple => return preTypedTuple(o)
         case o: Typed.Fun => return preTypedFun(o)
+        case o: Typed.TypeVar => return preTypedTypeVar(o)
         case o: Typed.Package => return preTypedPackage(o)
         case o: Typed.Object => return preTypedObject(o)
         case o: Typed.Enum => return preTypedEnum(o)
@@ -836,6 +837,10 @@ object MTransformer {
     }
 
     def preTypedFun(o: Typed.Fun): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
+    def preTypedTypeVar(o: Typed.TypeVar): PreResult[Typed] = {
       return PreResult(T, MNone())
     }
 
@@ -1711,6 +1716,7 @@ object MTransformer {
         case o: Typed.Name => return postTypedName(o)
         case o: Typed.Tuple => return postTypedTuple(o)
         case o: Typed.Fun => return postTypedFun(o)
+        case o: Typed.TypeVar => return postTypedTypeVar(o)
         case o: Typed.Package => return postTypedPackage(o)
         case o: Typed.Object => return postTypedObject(o)
         case o: Typed.Enum => return postTypedEnum(o)
@@ -1727,6 +1733,10 @@ object MTransformer {
     }
 
     def postTypedFun(o: Typed.Fun): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedTypeVar(o: Typed.TypeVar): MOption[Typed] = {
       return MNone()
     }
 
@@ -3784,6 +3794,11 @@ import MTransformer._
           val r1: MOption[Typed] = transformTyped(o2.ret)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(args = r0.getOrElse(o2.args), ret = r1.getOrElse(o2.ret)))
+          else
+            MNone()
+        case o2: Typed.TypeVar =>
+          if (hasChanged)
+            MSome(o2)
           else
             MNone()
         case o2: Typed.Package =>

@@ -652,6 +652,9 @@ import TypeChecker._
         case receiverType: AST.Typed.Method =>
           errAccess(receiverType)
           return noResult
+        case receiverType: AST.Typed.TypeVar =>
+          errAccess(receiverType)
+          return noResult
       }
     }
 
@@ -943,6 +946,9 @@ import TypeChecker._
               for (na <- exp.args) {
                 val name = na.id.value
                 val index = nameToIndexMap.get(name).get
+                if (eArgs.size <= index) {
+                  println("here")
+                }
                 args = args :+ na(arg = eArgs(index), index = index)
               }
               return exp(receiverOpt = receiverOpt, targs = newTargs, args = args,
@@ -1355,11 +1361,9 @@ import TypeChecker._
       return Some(HashMap.empty)
     }
     (expected, tpe) match {
+      case (expected: AST.Typed.Name, tpe: AST.Typed.TypeVar) =>
+        return Some(HashMap.empty[String, AST.Typed].put(tpe.id, expected))
       case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
-        val name = tpe.ids
-        if (name.size == 1) {
-          return Some(HashMap.empty[String, AST.Typed].put(name(0), expected))
-        }
         val rt: AST.Typed.Name = if (allowSubType) {
           if (typeHierarchy.isSubType(tpe, expected)) {
             err()

@@ -288,43 +288,45 @@ object MsgPack {
 
     val TypedFun: Z = 125
 
-    val TypedPackage: Z = 126
+    val TypedTypeVar: Z = 126
 
-    val TypedObject: Z = 127
+    val TypedPackage: Z = 127
 
-    val TypedEnum: Z = 128
+    val TypedObject: Z = 128
 
-    val TypedMethodSubst: Z = 129
+    val TypedEnum: Z = 129
 
-    val TypedMethod: Z = 130
+    val TypedMethodSubst: Z = 130
 
-    val Attr: Z = 131
+    val TypedMethod: Z = 131
 
-    val TypedAttr: Z = 132
+    val Attr: Z = 132
 
-    val ResolvedAttr: Z = 133
+    val TypedAttr: Z = 133
 
-    val ResolvedInfoBuiltIn: Z = 134
+    val ResolvedAttr: Z = 134
 
-    val ResolvedInfoPackage: Z = 135
+    val ResolvedInfoBuiltIn: Z = 135
 
-    val ResolvedInfoEnum: Z = 136
+    val ResolvedInfoPackage: Z = 136
 
-    val ResolvedInfoEnumElement: Z = 137
+    val ResolvedInfoEnum: Z = 137
 
-    val ResolvedInfoObject: Z = 138
+    val ResolvedInfoEnumElement: Z = 138
 
-    val ResolvedInfoVar: Z = 139
+    val ResolvedInfoObject: Z = 139
 
-    val ResolvedInfoMethod: Z = 140
+    val ResolvedInfoVar: Z = 140
 
-    val ResolvedInfoType: Z = 141
+    val ResolvedInfoMethod: Z = 141
 
-    val ResolvedInfoTuple: Z = 142
+    val ResolvedInfoType: Z = 142
 
-    val ResolvedInfoLocalVar: Z = 143
+    val ResolvedInfoTuple: Z = 143
 
-    val PosInfo: Z = 144
+    val ResolvedInfoLocalVar: Z = 144
+
+    val PosInfo: Z = 145
 
   }
 
@@ -1411,6 +1413,7 @@ object MsgPack {
         case o: Typed.Name => writeTypedName(o)
         case o: Typed.Tuple => writeTypedTuple(o)
         case o: Typed.Fun => writeTypedFun(o)
+        case o: Typed.TypeVar => writeTypedTypeVar(o)
         case o: Typed.Package => writeTypedPackage(o)
         case o: Typed.Object => writeTypedObject(o)
         case o: Typed.Enum => writeTypedEnum(o)
@@ -1435,6 +1438,11 @@ object MsgPack {
       writeB(o.isByName)
       writer.writeISZ(o.args, writeTyped)
       writeTyped(o.ret)
+    }
+
+    def writeTypedTypeVar(o: Typed.TypeVar): Unit = {
+      writer.writeZ(Constants.TypedTypeVar)
+      writeString(o.id)
     }
 
     def writeTypedPackage(o: Typed.Package): Unit = {
@@ -3782,6 +3790,7 @@ object MsgPack {
         case Constants.TypedName => val r = readTypedNameT(T); return r
         case Constants.TypedTuple => val r = readTypedTupleT(T); return r
         case Constants.TypedFun => val r = readTypedFunT(T); return r
+        case Constants.TypedTypeVar => val r = readTypedTypeVarT(T); return r
         case Constants.TypedPackage => val r = readTypedPackageT(T); return r
         case Constants.TypedObject => val r = readTypedObjectT(T); return r
         case Constants.TypedEnum => val r = readTypedEnumT(T); return r
@@ -3831,6 +3840,19 @@ object MsgPack {
       val args = reader.readISZ(readTyped _)
       val ret = readTyped()
       return Typed.Fun(isPure, isByName, args, ret)
+    }
+
+    def readTypedTypeVar(): Typed.TypeVar = {
+      val r = readTypedTypeVarT(F)
+      return r
+    }
+
+    def readTypedTypeVarT(typeParsed: B): Typed.TypeVar = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.TypedTypeVar)
+      }
+      val id = reader.readString()
+      return Typed.TypeVar(id)
     }
 
     def readTypedPackage(): Typed.Package = {
@@ -6291,6 +6313,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fTypedFun)
+    return r
+  }
+
+  def fromTypedTypeVar(o: Typed.TypeVar, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeTypedTypeVar(o)
+    return w.result
+  }
+
+  def toTypedTypeVar(data: ISZ[U8]): Typed.TypeVar = {
+    def fTypedTypeVar(reader: Reader): Typed.TypeVar = {
+      val r = reader.readTypedTypeVar()
+      return r
+    }
+    val r = to(data, fTypedTypeVar)
     return r
   }
 

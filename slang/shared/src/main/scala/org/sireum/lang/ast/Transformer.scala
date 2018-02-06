@@ -824,6 +824,7 @@ object Transformer {
         case o: Typed.Name => return preTypedName(ctx, o)
         case o: Typed.Tuple => return preTypedTuple(ctx, o)
         case o: Typed.Fun => return preTypedFun(ctx, o)
+        case o: Typed.TypeVar => return preTypedTypeVar(ctx, o)
         case o: Typed.Package => return preTypedPackage(ctx, o)
         case o: Typed.Object => return preTypedObject(ctx, o)
         case o: Typed.Enum => return preTypedEnum(ctx, o)
@@ -840,6 +841,10 @@ object Transformer {
     }
 
     @pure def preTypedFun(ctx: Context, o: Typed.Fun): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedTypeVar(ctx: Context, o: Typed.TypeVar): PreResult[Context, Typed] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1715,6 +1720,7 @@ object Transformer {
         case o: Typed.Name => return postTypedName(ctx, o)
         case o: Typed.Tuple => return postTypedTuple(ctx, o)
         case o: Typed.Fun => return postTypedFun(ctx, o)
+        case o: Typed.TypeVar => return postTypedTypeVar(ctx, o)
         case o: Typed.Package => return postTypedPackage(ctx, o)
         case o: Typed.Object => return postTypedObject(ctx, o)
         case o: Typed.Enum => return postTypedEnum(ctx, o)
@@ -1731,6 +1737,10 @@ object Transformer {
     }
 
     @pure def postTypedFun(ctx: Context, o: Typed.Fun): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedTypeVar(ctx: Context, o: Typed.TypeVar): Result[Context, Typed] = {
       return Result(ctx, None())
     }
 
@@ -3792,6 +3802,11 @@ import Transformer._
             Result(r1.ctx, Some(o2(args = r0.resultOpt.getOrElse(o2.args), ret = r1.resultOpt.getOrElse(o2.ret))))
           else
             Result(r1.ctx, None())
+        case o2: Typed.TypeVar =>
+          if (hasChanged)
+            Result(ctx, Some(o2))
+          else
+            Result(ctx, None())
         case o2: Typed.Package =>
           if (hasChanged)
             Result(ctx, Some(o2))

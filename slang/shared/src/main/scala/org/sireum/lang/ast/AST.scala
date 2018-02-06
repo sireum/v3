@@ -1313,6 +1313,8 @@ object TruthTable {
           }
         }
         return T
+      case (t1: Typed.TypeVar, t2: Typed.TypeVar) =>
+        return t1.id == t2.id
       case (t1: Typed.Fun, _) if t1.isByName =>
         return t1.ret == other
       case (_, t2: Typed.Fun) if t2.isByName =>
@@ -1323,6 +1325,12 @@ object TruthTable {
         return t1.name == t2.name
       case (t1: Typed.Enum, t2: Typed.Enum) =>
         return t1.name == t2.name
+      case (t1: Typed.Method, t2: Typed.Method) =>
+        return t1.isInObject == t2.isInObject &&
+          t1.isConstructor == t2.isConstructor &&
+          t1.owner == t2.owner &&
+          t1.name == t2.name &&
+          t1.tpe == t2.tpe
       case _ =>
         if (this.isUnitType && other.isUnitType) {
           return T
@@ -1334,6 +1342,16 @@ object TruthTable {
   @pure def deBruijn(typeParams: HashSet[String]): Typed = {
     var map = HashMap.empty[String, Z]
 
+    def dbFun(t: Typed.Fun): Typed.Fun = {
+      var args = ISZ[Typed]()
+      for (arg <- t.args) {
+        val ta = db(arg)
+        args = args :+ ta
+      }
+      val tr = db(t.ret)
+      return t(args = args, ret = tr)
+    }
+
     def db(t: Typed): Typed = {
       t match {
         case t: Typed.Name =>
@@ -1344,16 +1362,6 @@ object TruthTable {
               args = args :+ ta
             }
             return t(args = args)
-          } else if (t.ids.size == 1 && typeParams.contains(t.ids(0).value)) {
-            val k = t.ids(0).value
-            val i: Z = map.get(k) match {
-              case Some(n) => n
-              case _ =>
-                val n = map.size
-                map = map.put(k, n)
-                n
-            }
-            return t(ids = ISZ(s"$$$i"))
           } else {
             return t
           }
@@ -1364,16 +1372,30 @@ object TruthTable {
             args = args :+ ta
           }
           return t(args = args)
-        case t: Typed.Fun =>
-          var args = ISZ[Typed]()
-          for (arg <- t.args) {
-            val ta = db(arg)
-            args = args :+ ta
+        case t: Typed.Fun => return dbFun(t)
+        case t: Typed.TypeVar =>
+          val i: Z = map.get(t.id) match {
+            case Some(n) => n
+            case _ =>
+              val n = map.size
+              map = map.put(t.id, n)
+              n
           }
-          val tr = db(t.ret)
-          return t(args = args, ret = tr)
+          return t(id = s"$$$i")
         case t: Typed.Enum => return t
-        case t: Typed.Method => return t
+        case t: Typed.Method =>
+          var newTypeParams = ISZ[String]()
+          for (t <- t.typeParams) {
+            val i: Z = map.get(t) match {
+              case Some(n) => n
+              case _ =>
+                val n = map.size
+                map = map.put(t, n)
+                n
+            }
+            newTypeParams = newTypeParams :+ s"$$$i"
+          }
+          t(typeParams = newTypeParams, tpe = dbFun(t.tpe))
         case t: Typed.Object => return t
         case t: Typed.Package => return t
       }
@@ -1386,7 +1408,8 @@ object TruthTable {
   @pure def isUnitType: B = {
     this match {
       case t: Typed.Tuple if t.args.isEmpty => return T
-      case _ => return this == Typed.unit
+      case t: Typed.Name => return t.args.isEmpty && t.ids == Typed.unit.ids
+      case _ => return F
     }
   }
 }
@@ -1406,15 +1429,9 @@ object Typed {
       else st"${(ids, ".")}[${(args, ", ")}]".render
     }
 
-    @pure def subst(m: HashMap[String, Typed]): Typed = {
+    @pure def subst(m: HashMap[String, Typed]): Typed.Name = {
       if (m.isEmpty) {
         return this
-      }
-      if (ids.size == 1 && args.isEmpty) {
-        m.get(ids(0)) match {
-          case Some(t2) => return t2
-          case _ =>
-        }
       }
       return Name(ids, args.map(ta => ta.subst(m)))
     }
@@ -1462,6 +1479,27 @@ object Typed {
       return Fun(isPure, isByName, args.map(ta => ta.subst(m)), ret.subst(m))
     }
 
+  }
+
+  @datatype class TypeVar(id: String) extends Typed {
+
+    @pure override def isPureFun: B = {
+      return F
+    }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed = {
+      if (m.isEmpty) {
+        return this
+      }
+      m.get(id) match {
+        case Some(t2) => return t2
+        case _ => return this
+      }
+    }
+
+    @pure def string: String = {
+      return id
+    }
   }
 
   @datatype class Package(name: ISZ[String]) extends Typed {
