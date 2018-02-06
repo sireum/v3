@@ -987,7 +987,8 @@ object JSON {
     @pure def printBody(o: Body): ST = {
       return printObject(ISZ(
         ("type", st""""Body""""),
-        ("stmts", printISZ(F, o.stmts, printStmt))
+        ("stmts", printISZ(F, o.stmts, printStmt)),
+        ("undecls", printISZ(T, o.undecls, printString))
       ))
     }
 
@@ -1408,6 +1409,7 @@ object JSON {
         case o: Typed.Object => return printTypedObject(o)
         case o: Typed.Enum => return printTypedEnum(o)
         case o: Typed.Method => return printTypedMethod(o)
+        case o: Typed.Methods => return printTypedMethods(o)
       }
     }
 
@@ -1453,7 +1455,8 @@ object JSON {
     @pure def printTypedObject(o: Typed.Object): ST = {
       return printObject(ISZ(
         ("type", st""""Typed.Object""""),
-        ("name", printISZ(T, o.name, printString))
+        ("owner", printISZ(T, o.owner, printString)),
+        ("id", printString(o.id))
       ))
     }
 
@@ -1461,6 +1464,21 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Typed.Enum""""),
         ("name", printISZ(T, o.name, printString))
+      ))
+    }
+
+    @pure def printTypedMethodMode(o: Typed.Method.Mode.Type): ST = {
+      val value: String = o match {
+        case Typed.Method.Mode.Normal => "Normal"
+        case Typed.Method.Mode.Spec => "Spec"
+        case Typed.Method.Mode.Ext => "Ext"
+        case Typed.Method.Mode.Constructor => "Constructor"
+        case Typed.Method.Mode.Copy => "Copy"
+        case Typed.Method.Mode.Extractor => "Extractor"
+      }
+      return printObject(ISZ(
+        ("type", printString("Typed.Method.Mode")),
+        ("value", printString(value))
       ))
     }
 
@@ -1476,13 +1494,20 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Typed.Method""""),
         ("isInObject", printB(o.isInObject)),
-        ("isConstructor", printB(o.isConstructor)),
+        ("mode", printTypedMethodMode(o.mode)),
         ("typeParams", printISZ(T, o.typeParams, printString)),
         ("owner", printISZ(T, o.owner, printString)),
         ("name", printString(o.name)),
         ("paramNames", printISZ(T, o.paramNames, printString)),
         ("substs", printISZ(F, o.substs, printTypedMethodSubst)),
         ("tpe", printTypedFun(o.tpe))
+      ))
+    }
+
+    @pure def printTypedMethods(o: Typed.Methods): ST = {
+      return printObject(ISZ(
+        ("type", st""""Typed.Methods""""),
+        ("methods", printISZ(F, o.methods, printTypedMethod))
       ))
     }
 
@@ -3627,7 +3652,10 @@ object JSON {
       parser.parseObjectKey("stmts")
       val stmts = parser.parseISZ(parseStmt _)
       parser.parseObjectNext()
-      return Body(stmts)
+      parser.parseObjectKey("undecls")
+      val undecls = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      return Body(stmts, undecls)
     }
 
     def parseAbstractDatatypeParam(): AbstractDatatypeParam = {
@@ -4510,7 +4538,7 @@ object JSON {
     }
 
     def parseTyped(): Typed = {
-      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.TypeVar", "Typed.Package", "Typed.Object", "Typed.Enum", "Typed.Method"))
+      val t = parser.parseObjectTypes(ISZ("Typed.Name", "Typed.Tuple", "Typed.Fun", "Typed.TypeVar", "Typed.Package", "Typed.Object", "Typed.Enum", "Typed.Method", "Typed.Methods"))
       t.native match {
         case "Typed.Name" => val r = parseTypedNameT(T); return r
         case "Typed.Tuple" => val r = parseTypedTupleT(T); return r
@@ -4520,6 +4548,7 @@ object JSON {
         case "Typed.Object" => val r = parseTypedObjectT(T); return r
         case "Typed.Enum" => val r = parseTypedEnumT(T); return r
         case "Typed.Method" => val r = parseTypedMethodT(T); return r
+        case "Typed.Methods" => val r = parseTypedMethodsT(T); return r
         case _ => halt(parser.errorMessage)
       }
     }
@@ -4620,10 +4649,13 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Typed.Object")
       }
-      parser.parseObjectKey("name")
-      val name = parser.parseISZ(parser.parseString _)
+      parser.parseObjectKey("owner")
+      val owner = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
-      return Typed.Object(name)
+      parser.parseObjectKey("id")
+      val id = parser.parseString()
+      parser.parseObjectNext()
+      return Typed.Object(owner, id)
     }
 
     def parseTypedEnum(): Typed.Enum = {
@@ -4639,6 +4671,29 @@ object JSON {
       val name = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       return Typed.Enum(name)
+    }
+
+    def parseTypedMethodMode(): Typed.Method.Mode.Type = {
+      val r = parseTypedMethodModeT(F)
+      return r
+    }
+
+    def parseTypedMethodModeT(typeParsed: B): Typed.Method.Mode.Type = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Method.Mode")
+      }
+      parser.parseObjectKey("value")
+      val s = parser.parseString()
+      parser.parseObjectNext()
+      s.native match {
+        case "Normal" => return Typed.Method.Mode.Normal
+        case "Spec" => return Typed.Method.Mode.Spec
+        case "Ext" => return Typed.Method.Mode.Ext
+        case "Constructor" => return Typed.Method.Mode.Constructor
+        case "Copy" => return Typed.Method.Mode.Copy
+        case "Extractor" => return Typed.Method.Mode.Extractor
+        case _ => halt(parser.errorMessage)
+      }
     }
 
     def parseTypedMethodSubst(): Typed.Method.Subst = {
@@ -4671,8 +4726,8 @@ object JSON {
       parser.parseObjectKey("isInObject")
       val isInObject = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("isConstructor")
-      val isConstructor = parser.parseB()
+      parser.parseObjectKey("mode")
+      val mode = parseTypedMethodMode()
       parser.parseObjectNext()
       parser.parseObjectKey("typeParams")
       val typeParams = parser.parseISZ(parser.parseString _)
@@ -4692,7 +4747,22 @@ object JSON {
       parser.parseObjectKey("tpe")
       val tpe = parseTypedFun()
       parser.parseObjectNext()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, substs, tpe)
+      return Typed.Method(isInObject, mode, typeParams, owner, name, paramNames, substs, tpe)
+    }
+
+    def parseTypedMethods(): Typed.Methods = {
+      val r = parseTypedMethodsT(F)
+      return r
+    }
+
+    def parseTypedMethodsT(typeParsed: B): Typed.Methods = {
+      if (!typeParsed) {
+        parser.parseObjectType("Typed.Methods")
+      }
+      parser.parseObjectKey("methods")
+      val methods = parser.parseISZ(parseTypedMethod _)
+      parser.parseObjectNext()
+      return Typed.Methods(methods)
     }
 
     def parseAttr(): Attr = {
@@ -7697,6 +7767,24 @@ object JSON {
       return r
     }
     val r = to(s, fTypedMethod)
+    return r
+  }
+
+  def fromTypedMethods(o: Typed.Methods, isCompact: B): String = {
+    val st = Printer.printTypedMethods(o)
+    if (isCompact) {
+      return st.renderCompact
+    } else {
+      return st.render
+    }
+  }
+
+  def toTypedMethods(s: String): Typed.Methods = {
+    def fTypedMethods(parser: Parser): Typed.Methods = {
+      val r = parser.parseTypedMethods()
+      return r
+    }
+    val r = to(s, fTypedMethods)
     return r
   }
 

@@ -825,6 +825,7 @@ object MTransformer {
         case o: Typed.Object => return preTypedObject(o)
         case o: Typed.Enum => return preTypedEnum(o)
         case o: Typed.Method => return preTypedMethod(o)
+        case o: Typed.Methods => return preTypedMethods(o)
       }
     }
 
@@ -861,6 +862,10 @@ object MTransformer {
     }
 
     def preTypedMethod(o: Typed.Method): PreResult[Typed] = {
+      return PreResult(T, MNone())
+    }
+
+    def preTypedMethods(o: Typed.Methods): PreResult[Typed] = {
       return PreResult(T, MNone())
     }
 
@@ -1721,6 +1726,7 @@ object MTransformer {
         case o: Typed.Object => return postTypedObject(o)
         case o: Typed.Enum => return postTypedEnum(o)
         case o: Typed.Method => return postTypedMethod(o)
+        case o: Typed.Methods => return postTypedMethods(o)
       }
     }
 
@@ -1757,6 +1763,10 @@ object MTransformer {
     }
 
     def postTypedMethod(o: Typed.Method): MOption[Typed] = {
+      return MNone()
+    }
+
+    def postTypedMethods(o: Typed.Methods): MOption[Typed] = {
       return MNone()
     }
 
@@ -3823,6 +3833,12 @@ import MTransformer._
             MSome(o2(substs = r0.getOrElse(o2.substs), tpe = r1.getOrElse(o2.tpe)))
           else
             MNone()
+        case o2: Typed.Methods =>
+          val r0: MOption[IS[Z, Typed.Method]] = transformISZ(o2.methods, transformTypedMethod)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(methods = r0.getOrElse(o2.methods)))
+          else
+            MNone()
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -4294,6 +4310,42 @@ import MTransformer._
      case MSome(result: Typed.Fun) => MSome[Typed.Fun](result)
      case MSome(_) => halt("Can only produce object of type Typed.Fun")
      case _ => MNone[Typed.Fun]()
+    }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformTypedMethod(o: Typed.Method): MOption[Typed.Method] = {
+    val preR: PreResult[Typed.Method] = pp.preTypedMethod(o) match {
+     case PreResult(continu, MSome(r: Typed.Method)) => PreResult(continu, MSome[Typed.Method](r))
+     case PreResult(_, MSome(_)) => halt("Can only produce object of type Typed.Method")
+     case PreResult(continu, _) => PreResult(continu, MNone[Typed.Method]())
+    }
+    val r: MOption[Typed.Method] = if (preR.continu) {
+      val o2: Typed.Method = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[IS[Z, Typed.Method.Subst]] = transformISZ(o2.substs, transformTypedMethodSubst)
+      val r1: MOption[Typed.Fun] = transformTypedFun(o2.tpe)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(substs = r0.getOrElse(o2.substs), tpe = r1.getOrElse(o2.tpe)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: Typed.Method = r.getOrElse(o)
+    val postR: MOption[Typed.Method] = pp.postTypedMethod(o2) match {
+     case MSome(result: Typed.Method) => MSome[Typed.Method](result)
+     case MSome(_) => halt("Can only produce object of type Typed.Method")
+     case _ => MNone[Typed.Method]()
     }
     if (postR.nonEmpty) {
       return postR

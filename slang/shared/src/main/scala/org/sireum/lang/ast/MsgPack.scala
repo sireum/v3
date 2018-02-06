@@ -300,33 +300,35 @@ object MsgPack {
 
     val TypedMethod: Z = 131
 
-    val Attr: Z = 132
+    val TypedMethods: Z = 132
 
-    val TypedAttr: Z = 133
+    val Attr: Z = 133
 
-    val ResolvedAttr: Z = 134
+    val TypedAttr: Z = 134
 
-    val ResolvedInfoBuiltIn: Z = 135
+    val ResolvedAttr: Z = 135
 
-    val ResolvedInfoPackage: Z = 136
+    val ResolvedInfoBuiltIn: Z = 136
 
-    val ResolvedInfoEnum: Z = 137
+    val ResolvedInfoPackage: Z = 137
 
-    val ResolvedInfoEnumElement: Z = 138
+    val ResolvedInfoEnum: Z = 138
 
-    val ResolvedInfoObject: Z = 139
+    val ResolvedInfoEnumElement: Z = 139
 
-    val ResolvedInfoVar: Z = 140
+    val ResolvedInfoObject: Z = 140
 
-    val ResolvedInfoMethod: Z = 141
+    val ResolvedInfoVar: Z = 141
 
-    val ResolvedInfoType: Z = 142
+    val ResolvedInfoMethod: Z = 142
 
-    val ResolvedInfoTuple: Z = 143
+    val ResolvedInfoType: Z = 143
 
-    val ResolvedInfoLocalVar: Z = 144
+    val ResolvedInfoTuple: Z = 144
 
-    val PosInfo: Z = 145
+    val ResolvedInfoLocalVar: Z = 145
+
+    val PosInfo: Z = 146
 
   }
 
@@ -1079,6 +1081,7 @@ object MsgPack {
     def writeBody(o: Body): Unit = {
       writer.writeZ(Constants.Body)
       writer.writeISZ(o.stmts, writeStmt)
+      writer.writeISZ(o.undecls, writeString)
     }
 
     def writeAbstractDatatypeParam(o: AbstractDatatypeParam): Unit = {
@@ -1418,6 +1421,7 @@ object MsgPack {
         case o: Typed.Object => writeTypedObject(o)
         case o: Typed.Enum => writeTypedEnum(o)
         case o: Typed.Method => writeTypedMethod(o)
+        case o: Typed.Methods => writeTypedMethods(o)
       }
     }
 
@@ -1452,12 +1456,17 @@ object MsgPack {
 
     def writeTypedObject(o: Typed.Object): Unit = {
       writer.writeZ(Constants.TypedObject)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.owner, writeString)
+      writeString(o.id)
     }
 
     def writeTypedEnum(o: Typed.Enum): Unit = {
       writer.writeZ(Constants.TypedEnum)
       writer.writeISZ(o.name, writeString)
+    }
+
+    def writeTypedMethodMode(o: Typed.Method.Mode.Type): Unit = {
+      writer.writeZ(o.ordinal)
     }
 
     def writeTypedMethodSubst(o: Typed.Method.Subst): Unit = {
@@ -1469,13 +1478,18 @@ object MsgPack {
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writeB(o.isInObject)
-      writeB(o.isConstructor)
+      writeTypedMethodMode(o.mode)
       writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
       writer.writeISZ(o.paramNames, writeString)
       writer.writeISZ(o.substs, writeTypedMethodSubst)
       writeTypedFun(o.tpe)
+    }
+
+    def writeTypedMethods(o: Typed.Methods): Unit = {
+      writer.writeZ(Constants.TypedMethods)
+      writer.writeISZ(o.methods, writeTypedMethod)
     }
 
     def writeAttr(o: Attr): Unit = {
@@ -3124,7 +3138,8 @@ object MsgPack {
         reader.expectZ(Constants.Body)
       }
       val stmts = reader.readISZ(readStmt _)
-      return Body(stmts)
+      val undecls = reader.readISZ(reader.readString _)
+      return Body(stmts, undecls)
     }
 
     def readAbstractDatatypeParam(): AbstractDatatypeParam = {
@@ -3795,6 +3810,7 @@ object MsgPack {
         case Constants.TypedObject => val r = readTypedObjectT(T); return r
         case Constants.TypedEnum => val r = readTypedEnumT(T); return r
         case Constants.TypedMethod => val r = readTypedMethodT(T); return r
+        case Constants.TypedMethods => val r = readTypedMethodsT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
     }
@@ -3877,8 +3893,9 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.TypedObject)
       }
-      val name = reader.readISZ(reader.readString _)
-      return Typed.Object(name)
+      val owner = reader.readISZ(reader.readString _)
+      val id = reader.readString()
+      return Typed.Object(owner, id)
     }
 
     def readTypedEnum(): Typed.Enum = {
@@ -3892,6 +3909,11 @@ object MsgPack {
       }
       val name = reader.readISZ(reader.readString _)
       return Typed.Enum(name)
+    }
+
+    def readTypedMethodMode(): Typed.Method.Mode.Type = {
+      val r = reader.readZ()
+      return Typed.Method.Mode.byOrdinal(r).get
     }
 
     def readTypedMethodSubst(): Typed.Method.Subst = {
@@ -3918,14 +3940,27 @@ object MsgPack {
         reader.expectZ(Constants.TypedMethod)
       }
       val isInObject = reader.readB()
-      val isConstructor = reader.readB()
+      val mode = readTypedMethodMode()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
       val paramNames = reader.readISZ(reader.readString _)
       val substs = reader.readISZ(readTypedMethodSubst _)
       val tpe = readTypedFun()
-      return Typed.Method(isInObject, isConstructor, typeParams, owner, name, paramNames, substs, tpe)
+      return Typed.Method(isInObject, mode, typeParams, owner, name, paramNames, substs, tpe)
+    }
+
+    def readTypedMethods(): Typed.Methods = {
+      val r = readTypedMethodsT(F)
+      return r
+    }
+
+    def readTypedMethodsT(typeParsed: B): Typed.Methods = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.TypedMethods)
+      }
+      val methods = reader.readISZ(readTypedMethod _)
+      return Typed.Methods(methods)
     }
 
     def readAttr(): Attr = {
@@ -6403,6 +6438,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fTypedMethod)
+    return r
+  }
+
+  def fromTypedMethods(o: Typed.Methods, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeTypedMethods(o)
+    return w.result
+  }
+
+  def toTypedMethods(data: ISZ[U8]): Typed.Methods = {
+    def fTypedMethods(reader: Reader): Typed.Methods = {
+      val r = reader.readTypedMethods()
+      return r
+    }
+    val r = to(data, fTypedMethods)
     return r
   }
 

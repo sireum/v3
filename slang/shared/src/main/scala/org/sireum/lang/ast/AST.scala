@@ -499,6 +499,7 @@ object EnumGen {
 
 
 @datatype trait Type {
+
   @pure def posOpt: Option[PosInfo]
 
   @pure def typedOpt: Option[Typed]
@@ -1032,7 +1033,8 @@ object Domain {
 @datatype class Name(ids: ISZ[Id],
                      @hidden attr: Attr)
 
-@datatype class Body(stmts: ISZ[Stmt])
+@datatype class Body(stmts: ISZ[Stmt],
+                     @hidden undecls: ISZ[String])
 
 @datatype class AbstractDatatypeParam(isHidden: B,
                                       isVal: B,
@@ -1268,6 +1270,7 @@ object TruthTable {
 }
 
 @datatype trait Typed {
+
   @pure def isPureFun: B
 
   @pure def subst(map: HashMap[String, Typed]): Typed
@@ -1327,10 +1330,12 @@ object TruthTable {
         return t1.name == t2.name
       case (t1: Typed.Method, t2: Typed.Method) =>
         return t1.isInObject == t2.isInObject &&
-          t1.isConstructor == t2.isConstructor &&
+          t1.mode == t2.mode &&
           t1.owner == t2.owner &&
           t1.name == t2.name &&
           t1.tpe == t2.tpe
+      case (t1: Typed.Methods, t2: Typed.Methods) =>
+        return t1.methods == t2.methods
       case _ =>
         if (this.isUnitType && other.isUnitType) {
           return T
@@ -1339,7 +1344,7 @@ object TruthTable {
     }
   }
 
-  @pure def deBruijn(typeParams: HashSet[String]): Typed = {
+  @pure def deBruijn: Typed = {
     var map = HashMap.empty[String, Z]
 
     def dbFun(t: Typed.Fun): Typed.Fun = {
@@ -1350,6 +1355,21 @@ object TruthTable {
       }
       val tr = db(t.ret)
       return t(args = args, ret = tr)
+    }
+
+    def dbMethod(t: Typed.Method): Typed.Method = {
+      var newTypeParams = ISZ[String]()
+      for (t <- t.typeParams) {
+        val i: Z = map.get(t) match {
+          case Some(n) => n
+          case _ =>
+            val n = map.size
+            map = map.put(t, n)
+            n
+        }
+        newTypeParams = newTypeParams :+ s"$$$i"
+      }
+      t(typeParams = newTypeParams, tpe = dbFun(t.tpe))
     }
 
     def db(t: Typed): Typed = {
@@ -1383,21 +1403,11 @@ object TruthTable {
           }
           return t(id = s"$$$i")
         case t: Typed.Enum => return t
-        case t: Typed.Method =>
-          var newTypeParams = ISZ[String]()
-          for (t <- t.typeParams) {
-            val i: Z = map.get(t) match {
-              case Some(n) => n
-              case _ =>
-                val n = map.size
-                map = map.put(t, n)
-                n
-            }
-            newTypeParams = newTypeParams :+ s"$$$i"
-          }
-          t(typeParams = newTypeParams, tpe = dbFun(t.tpe))
+        case t: Typed.Method => return dbMethod(t)
         case t: Typed.Object => return t
         case t: Typed.Package => return t
+        case t: Typed.Methods =>
+          t(t.methods.map(dbMethod _))
       }
     }
 
@@ -1517,7 +1527,11 @@ object Typed {
     }
   }
 
-  @datatype class Object(name: ISZ[String]) extends Typed {
+  @datatype class Object(owner: ISZ[String], id: String) extends Typed {
+
+    @pure def name: ISZ[String] = {
+      return owner :+ id
+    }
 
     @pure override def isPureFun: B = {
       return F
@@ -1549,12 +1563,40 @@ object Typed {
 
   object Method {
 
+    @enum object Mode {
+      'Normal
+      'Spec
+      'Ext
+      'Constructor
+      'Copy
+      'Extractor
+    }
+
+    object Subst {
+
+      @pure def summarize(substs: ISZ[Subst]): HashSMap[String, Typed] = {
+        var r = HashSMap.emptyInit[String, Typed](substs.size)
+        for (subst <- substs) {
+          r.get(subst.id) match {
+            case Some(_) =>
+            case _ =>
+              r = r.put(subst.id, subst.tipe)
+          }
+        }
+        return r
+      }
+
+      @pure def summarizeAsSubst(substs: ISZ[Subst]): ISZ[Subst] = {
+        return for (e <- summarize(substs).entries) yield Subst(e._1, e._2)
+      }
+    }
+
     @datatype class Subst(id: String, tipe: Typed)
 
   }
 
   @datatype class Method(isInObject: B,
-                         isConstructor: B,
+                         mode: Method.Mode.Type,
                          typeParams: ISZ[String],
                          owner: ISZ[String],
                          name: String,
@@ -1568,19 +1610,37 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"${if (isConstructor) "Constructor" else "Method"} ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
+      return st"$mode ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
     }
 
     @pure def subst(m: HashMap[String, Typed]): Typed.Method = {
       if (m.isEmpty) {
         return this
       }
-      return Method(isInObject, isConstructor, typeParams, owner, name, paramNames,
-        substs ++ m.entries.map(p => Typed.Method.Subst(p._1, p._2)), tpe.subst(m))
+      return Method(isInObject, mode, typeParams, owner, name, paramNames,
+        Method.Subst.summarizeAsSubst(substs ++ m.entries.map(p => Method.Subst(p._1, p._2))),
+        tpe.subst(m))
     }
 
   }
 
+  @datatype class Methods(methods: ISZ[Method])
+    extends Typed {
+
+    @pure override def isPureFun: B = {
+      return F
+    }
+
+    @pure override def string: String = {
+      return st"{ ${(methods, ", ")} }".render
+    }
+
+    @pure def subst(m: HashMap[String, Typed]): Typed.Methods = {
+      return this(methods.map(mt => mt.subst(m)))
+    }
+  }
+
+  val sireumName: ISZ[String] = ISZ("org", "sireum")
   val nothing: Typed.Name = Typed.Name(ISZ("org", "sireum", "Nothing"), ISZ())
   val nothingOpt: Option[Typed] = Some(nothing)
   val unit: Typed.Name = Typed.Name(ISZ("org", "sireum", "Unit"), ISZ())
@@ -1589,18 +1649,142 @@ object Typed {
   val bOpt: Option[Typed] = Some(b)
   val c: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "C"), ISZ())
   val cOpt: Option[Typed] = Some(c)
+  val z: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z"), ISZ())
+  val zOpt: Option[Typed] = Some(z)
+  val z8: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z8"), ISZ())
+  val z16: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z16"), ISZ())
+  val z32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z32"), ISZ())
+  val z64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z64"), ISZ())
+  val n: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "N"), ISZ())
+  val n8: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "N8"), ISZ())
+  val n16: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "N16"), ISZ())
+  val n32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "N32"), ISZ())
+  val n64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "N64"), ISZ())
+  val s8: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "S8"), ISZ())
+  val s16: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "S16"), ISZ())
+  val s32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "S32"), ISZ())
+  val s64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "S64"), ISZ())
+  val u8: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "U8"), ISZ())
+  val u16: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "U16"), ISZ())
+  val u32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "U32"), ISZ())
+  val u64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "U64"), ISZ())
   val f32: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "F32"), ISZ())
   val f32Opt: Option[Typed] = Some(f32)
   val f64: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "F64"), ISZ())
   val f64Opt: Option[Typed] = Some(f64)
-  val z: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "Z"), ISZ())
-  val zOpt: Option[Typed] = Some(z)
   val r: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "R"), ISZ())
   val rOpt: Option[Typed] = Some(r)
   val string: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "String"), ISZ())
   val stringOpt: Option[Typed] = Some(string)
   val st: Typed.Name = Typed.Name(ISZ[String]("org", "sireum", "ST"), ISZ())
   val stOpt: Option[Typed] = Some(st)
+
+  val optionName: ISZ[String] = ISZ("org", "sireum", "Option")
+  val isName: ISZ[String] = ISZ("org", "sireum", "IS")
+  val msName: ISZ[String] = ISZ("org", "sireum", "MS")
+  val iszName: ISZ[String] = ISZ("org", "sireum", "ISZ")
+  val mszName: ISZ[String] = ISZ("org", "sireum", "MSZ")
+  val zsName: ISZ[String] = ISZ("org", "sireum", "ZS")
+
+  // B, C, Z, Z8, Z16, Z32, Z64, N, N8, N16, N32, N64, S8, S16, S32, S64, U8, U16, U32, U64, F32, F64, R
+
+  val bConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.b)))
+  val bConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "B", ISZ(), ISZ(), Typed.bConstructorType))
+  val cConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.c)))
+  val cConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "C", ISZ(), ISZ(), Typed.cConstructorType))
+  val zConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z)))
+  val zConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "Z", ISZ(), ISZ(), Typed.zConstructorType))
+  val z8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z8)))
+  val z8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "Z8", ISZ(), ISZ(), Typed.z8ConstructorType))
+  val z16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z16)))
+  val z16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "Z16", ISZ(), ISZ(), Typed.z16ConstructorType))
+  val z32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z32)))
+  val z32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "Z32", ISZ(), ISZ(), Typed.z32ConstructorType))
+  val z64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z64)))
+  val z64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "Z64", ISZ(), ISZ(), Typed.z64ConstructorType))
+  val nConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n)))
+  val nConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "N", ISZ(), ISZ(), Typed.nConstructorType))
+  val n8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n8)))
+  val n8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "N8", ISZ(), ISZ(), Typed.n8ConstructorType))
+  val n16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n16)))
+  val n16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "N16", ISZ(), ISZ(), Typed.n16ConstructorType))
+  val n32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n32)))
+  val n32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "N32", ISZ(), ISZ(), Typed.n32ConstructorType))
+  val n64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n64)))
+  val n64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "N64", ISZ(), ISZ(), Typed.n64ConstructorType))
+  val s8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s8)))
+  val s8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "S8", ISZ(), ISZ(), Typed.s8ConstructorType))
+  val s16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s16)))
+  val s16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "S16", ISZ(), ISZ(), Typed.s16ConstructorType))
+  val s32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s32)))
+  val s32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "S32", ISZ(), ISZ(), Typed.s32ConstructorType))
+  val s64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s64)))
+  val s64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "S64", ISZ(), ISZ(), Typed.s64ConstructorType))
+  val u8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u8)))
+  val u8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "U8", ISZ(), ISZ(), Typed.u8ConstructorType))
+  val u16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u16)))
+  val u16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "U16", ISZ(), ISZ(), Typed.u16ConstructorType))
+  val u32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u32)))
+  val u32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "U32", ISZ(), ISZ(), Typed.u32ConstructorType))
+  val u64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u64)))
+  val u64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "U64", ISZ(), ISZ(), Typed.u64ConstructorType))
+  val f32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.f32)))
+  val f32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "F32", ISZ(), ISZ(), Typed.f32ConstructorType))
+  val f64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.f64)))
+  val f64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "F64", ISZ(), ISZ(), Typed.f64ConstructorType))
+  val rConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.r)))
+  val rConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+    sireumName, "R", ISZ(), ISZ(), Typed.rConstructorType))
+
+  val basicConstructorMap: HashMap[ISZ[String], Option[Typed]] = {
+    var m = HashMap.emptyInit[ISZ[String], Option[Typed]](30)
+    m = m.put(b.ids, bConstructorMethodOpt)
+    m = m.put(c.ids, cConstructorMethodOpt)
+    m = m.put(z.ids, zConstructorMethodOpt)
+    m = m.put(z8.ids, z8ConstructorMethodOpt)
+    m = m.put(z16.ids, z16ConstructorMethodOpt)
+    m = m.put(z32.ids, z32ConstructorMethodOpt)
+    m = m.put(z64.ids, z64ConstructorMethodOpt)
+    m = m.put(n.ids, nConstructorMethodOpt)
+    m = m.put(n8.ids, n8ConstructorMethodOpt)
+    m = m.put(n16.ids, n16ConstructorMethodOpt)
+    m = m.put(n32.ids, n32ConstructorMethodOpt)
+    m = m.put(n64.ids, n64ConstructorMethodOpt)
+    m = m.put(s8.ids, s8ConstructorMethodOpt)
+    m = m.put(s16.ids, s16ConstructorMethodOpt)
+    m = m.put(s32.ids, s32ConstructorMethodOpt)
+    m = m.put(s64.ids, s64ConstructorMethodOpt)
+    m = m.put(u8.ids, u8ConstructorMethodOpt)
+    m = m.put(u16.ids, u16ConstructorMethodOpt)
+    m = m.put(u32.ids, u32ConstructorMethodOpt)
+    m = m.put(u64.ids, u64ConstructorMethodOpt)
+    m = m.put(f32.ids, f32ConstructorMethodOpt)
+    m = m.put(f64.ids, f64ConstructorMethodOpt)
+    m = m.put(r.ids, rConstructorMethodOpt)
+    m
+  }
 }
 
 @datatype class Attr(posOpt: Option[PosInfo])

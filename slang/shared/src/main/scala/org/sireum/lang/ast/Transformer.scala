@@ -829,6 +829,7 @@ object Transformer {
         case o: Typed.Object => return preTypedObject(ctx, o)
         case o: Typed.Enum => return preTypedEnum(ctx, o)
         case o: Typed.Method => return preTypedMethod(ctx, o)
+        case o: Typed.Methods => return preTypedMethods(ctx, o)
       }
     }
 
@@ -865,6 +866,10 @@ object Transformer {
     }
 
     @pure def preTypedMethod(ctx: Context, o: Typed.Method): PreResult[Context, Typed] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preTypedMethods(ctx: Context, o: Typed.Methods): PreResult[Context, Typed] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1725,6 +1730,7 @@ object Transformer {
         case o: Typed.Object => return postTypedObject(ctx, o)
         case o: Typed.Enum => return postTypedEnum(ctx, o)
         case o: Typed.Method => return postTypedMethod(ctx, o)
+        case o: Typed.Methods => return postTypedMethods(ctx, o)
       }
     }
 
@@ -1761,6 +1767,10 @@ object Transformer {
     }
 
     @pure def postTypedMethod(ctx: Context, o: Typed.Method): Result[Context, Typed] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postTypedMethods(ctx: Context, o: Typed.Methods): Result[Context, Typed] = {
       return Result(ctx, None())
     }
 
@@ -3829,6 +3839,12 @@ import Transformer._
             Result(r1.ctx, Some(o2(substs = r0.resultOpt.getOrElse(o2.substs), tpe = r1.resultOpt.getOrElse(o2.tpe))))
           else
             Result(r1.ctx, None())
+        case o2: Typed.Methods =>
+          val r0: Result[Context, IS[Z, Typed.Method]] = transformISZ(ctx, o2.methods, transformTypedMethod)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(methods = r0.resultOpt.getOrElse(o2.methods))))
+          else
+            Result(r0.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -4300,6 +4316,42 @@ import Transformer._
      case Result(postCtx, Some(result: Typed.Fun)) => Result(postCtx, Some[Typed.Fun](result))
      case Result(_, Some(_)) => halt("Can only produce object of type Typed.Fun")
      case Result(postCtx, _) => Result(postCtx, None[Typed.Fun]())
+    }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformTypedMethod(ctx: Context, o: Typed.Method): Result[Context, Typed.Method] = {
+    val preR: PreResult[Context, Typed.Method] = pp.preTypedMethod(ctx, o) match {
+     case PreResult(preCtx, continu, Some(r: Typed.Method)) => PreResult(preCtx, continu, Some[Typed.Method](r))
+     case PreResult(_, _, Some(_)) => halt("Can only produce object of type Typed.Method")
+     case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[Typed.Method]())
+    }
+    val r: Result[Context, Typed.Method] = if (preR.continu) {
+      val o2: Typed.Method = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, IS[Z, Typed.Method.Subst]] = transformISZ(ctx, o2.substs, transformTypedMethodSubst)
+      val r1: Result[Context, Typed.Fun] = transformTypedFun(r0.ctx, o2.tpe)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+        Result(r1.ctx, Some(o2(substs = r0.resultOpt.getOrElse(o2.substs), tpe = r1.resultOpt.getOrElse(o2.tpe))))
+      else
+        Result(r1.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: Typed.Method = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, Typed.Method] = pp.postTypedMethod(r.ctx, o2) match {
+     case Result(postCtx, Some(result: Typed.Method)) => Result(postCtx, Some[Typed.Method](result))
+     case Result(_, Some(_)) => halt("Can only produce object of type Typed.Method")
+     case Result(postCtx, _) => Result(postCtx, None[Typed.Method]())
     }
     if (postR.resultOpt.nonEmpty) {
       return postR
