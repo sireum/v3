@@ -225,7 +225,7 @@ class SlangParser(text: Predef.String,
           Some(AST.TopUnit.Program(
             fileUriOpt,
             AST.Name(ISZ(), emptyAttr),
-            AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*)))))
+            AST.Body(ISZ(rest.map(translateStat(Enclosing.Top)): _*), ISZ()))))
       else
         Result(text, hashSireum, None())
     }
@@ -241,7 +241,7 @@ class SlangParser(text: Predef.String,
             if (allowSireumPackage)
               Result(text, hashSireum,
                 Some(AST.TopUnit.Program(fileUriOpt, name,
-                  AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*)))))
+                  AST.Body(ISZ(stats.map(translateStat(Enclosing.Package)): _*), ISZ()))))
             else {
               errorInSlang(ref.pos, s"Cannot define members of the $refSyntax package")
               Result(text, hashSireum, None())
@@ -249,7 +249,7 @@ class SlangParser(text: Predef.String,
           } else {
             def packageF(rest: List[Stat]) = Result(text, hashSireum,
               Some(AST.TopUnit.Program(fileUriOpt, name,
-                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*)))))
+                AST.Body(ISZ(rest.map(translateStat(Enclosing.Package)): _*), ISZ()))))
 
             stats match {
               case q"import org.sireum._" :: rest => packageF(stats)
@@ -263,7 +263,7 @@ class SlangParser(text: Predef.String,
       case q"import org.sireum._" :: rest => topF(source.stats)
       case q"import org.sireum.logika._" :: rest => topF(source.stats)
       case Nil =>
-        Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ()))))
+        Result(text, hashSireum, Some(AST.TopUnit.Program(fileUriOpt, AST.Name(ISZ(), emptyAttr), AST.Body(ISZ(), ISZ()))))
       case stats =>
         if (hashSireum)
           errorInSlang(stats.head.pos, "The first statement should be either 'package <name>' or 'import org.sireum._'")
@@ -731,11 +731,11 @@ class SlangParser(text: Predef.String,
             case scala.Some(l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil)) =>
               (parseContract(l),
                 if (isDiet) None[AST.Body]()
-                else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*))))
+                else Some(AST.Body(ISZ(exp.stats.tail.map(translateStat(Enclosing.Method)): _*), ISZ())))
             case _ =>
               (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
                 if (isDiet) None[AST.Body]()
-                else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*))))
+                else Some(AST.Body(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*), ISZ())))
           }
           AST.Stmt.Method(purity, hasOverride, isHelper, sig, mc, bodyOpt, attr(tree.pos))
         case l@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
@@ -1409,11 +1409,11 @@ class SlangParser(text: Predef.String,
         val stmts =
           if (isAssignExp) translateStmtsExp(stat.pos, stat.stats)
           else ISZ(stat.stats.map(translateStat(Enclosing.Block)): _*)
-        AST.Stmt.Block(AST.Body(stmts), attr(stat.pos))
+        AST.Stmt.Block(AST.Body(stmts, ISZ()), attr(stat.pos))
       case _ =>
         if (isWorksheet) errorInSlang(stat.pos, "Code-blocks can only appear at the top-level, inside @datatype classes, @record classes, methods, or other code blocks")
         else errorInSlang(stat.pos, "Code-blocks can only appear inside @datatype classes, @record classes, methods or other code blocks")
-        AST.Stmt.Block(AST.Body(ISZ()), emptyAttr)
+        AST.Stmt.Block(AST.Body(ISZ(), ISZ()), emptyAttr)
     }
   }
 
@@ -1512,29 +1512,29 @@ class SlangParser(text: Predef.String,
         errorInSlang(stat.elsep.pos, "If-else part should be either a code block or another if-conditional.")
     }
     val cond = translateExp(stat.cond)
-    if (hasError) AST.Stmt.If(cond, AST.Body(ISZ()), AST.Body(ISZ()), emptyAttr)
+    if (hasError) AST.Stmt.If(cond, AST.Body(ISZ(), ISZ()), AST.Body(ISZ(), ISZ()), emptyAttr)
     else ((stat.thenp, stat.elsep): @unchecked) match {
       case (thenp: Term.Block, elsep: Term.Block) =>
         AST.Stmt.If(cond,
           AST.Body(
             if (isAssignExp) translateStmtsExp(thenp.pos, thenp.stats)
-            else ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
+            else ISZ(thenp.stats.map(translateStat(enclosing)): _*), ISZ()),
           AST.Body(
             if (isAssignExp) translateStmtsExp(elsep.pos, elsep.stats)
-            else ISZ(elsep.stats.map(translateStat(enclosing)): _*)),
+            else ISZ(elsep.stats.map(translateStat(enclosing)): _*), ISZ()),
           attr(stat.pos))
       case (thenp: Term.Block, elsep: Term.If) =>
         AST.Stmt.If(cond,
           AST.Body(
             if (isAssignExp) translateStmtsExp(thenp.pos, thenp.stats)
-            else ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, isAssignExp))),
+            else ISZ(thenp.stats.map(translateStat(enclosing)): _*), ISZ()),
+          AST.Body(ISZ(translateIfStmt(Enclosing.Block, elsep, isAssignExp)), ISZ()),
           attr(stat.pos))
       case (thenp: Term.Block, elsep: Lit.Unit) =>
         if (isAssignExp) error(elsep.pos, "Expecting a code block with an expression.")
         AST.Stmt.If(cond,
-          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*)),
-          AST.Body(ISZ()),
+          AST.Body(ISZ(thenp.stats.map(translateStat(enclosing)): _*), ISZ()),
+          AST.Body(ISZ(), ISZ()),
           attr(stat.pos))
     }
   }
@@ -1544,15 +1544,15 @@ class SlangParser(text: Predef.String,
       AST.Case(translatePattern(stat.pat), opt(stat.cond.map(translateExp)), stat.body match {
         case b: Term.Block => AST.Body(
           if (isAssignExp) translateStmtsExp(b.pos, b.stats)
-          else ISZ(b.stats.map(translateStat(Enclosing.Block)): _*))
+          else ISZ(b.stats.map(translateStat(Enclosing.Block)): _*), ISZ())
         case b: Term if isAssignExp =>
           AST.Body(
             if (isAssignExp) ISZ(translateAssignExp(b))
-            else ISZ(translateStat(Enclosing.Block)(b)))
+            else ISZ(translateStat(Enclosing.Block)(b)), ISZ())
         case b if isAssignExp =>
           error(stat.body.pos, s"Expecting an expression but '${syntax(b)}' found.")
-          AST.Body(ISZ())
-        case b => AST.Body(ISZ(translateStat(Enclosing.Block)(b)))
+          AST.Body(ISZ(), ISZ())
+        case b => AST.Body(ISZ(translateStat(Enclosing.Block)(b)), ISZ())
       })
     }
 
@@ -1599,7 +1599,7 @@ class SlangParser(text: Predef.String,
     }
     if (hasError) rStmt else
       AST.Stmt.While(translateExp(stat.expr), invariants, mods,
-        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*), ISZ()),
         attr(stat.pos))
   }
 
@@ -1627,7 +1627,7 @@ class SlangParser(text: Predef.String,
     }
     if (hasError) rStmt else
       AST.Stmt.DoWhile(translateExp(stat.expr), invariants, modifies,
-        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)),
+        AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*), ISZ()),
         attr(stat.pos))
   }
 
@@ -1657,7 +1657,7 @@ class SlangParser(text: Predef.String,
       val enums = translateEnumGens(stat.enums)
       if (enums.size == Z.MP.one) {
         AST.Stmt.For(enums(0), invariants, modifies,
-          AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*)), attr(stat.pos))
+          AST.Body(ISZ(stats.map(translateStat(Enclosing.Block)): _*), ISZ()), attr(stat.pos))
       } else if (enums.size > Z.MP.one) {
         errorInSlang(stat.pos, s"For-loops can only one enumerator")
         rStmt
