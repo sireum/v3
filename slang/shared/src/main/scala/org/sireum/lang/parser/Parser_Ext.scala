@@ -32,7 +32,7 @@ import scala.meta._
 import scala.meta.internal.parsers.ModifiedScalametaParser
 import scala.util._
 
-object ParserUtil_Ext {
+object Parser_Ext {
 
   def parseStmt[T](text: String): T = {
     val reporter = AccumulatingReporter.create
