@@ -152,49 +152,49 @@ import Cli._
           println(help)
           return Some(HelpOption())
         } else if (arg == "-a" || arg == "--auto") {
-           val o = Some(!auto)
+           val o: Option[B] = { j = j - 1; Some(!auto) }
            o match {
              case Some(v) => auto = v
              case _ => return None()
            }
          } else if (arg == "-x" || arg == "--symexe") {
-           val o = Some(!symexe)
+           val o: Option[B] = { j = j - 1; Some(!symexe) }
            o match {
              case Some(v) => symexe = v
              case _ => return None()
            }
          } else if (arg == "-f" || arg == "--formula") {
-           val o = parseString(args, j + 1)
+           val o: Option[String] = parseString(args, j + 1)
            o match {
              case Some(v) => formula = v
              case _ => return None()
            }
          } else if (arg == "-b" || arg == "--bitwidth") {
-           val o = parseNumChoice(args, j + 1, ISZ(z"0", z"8", z"16", z"32", z"64"))
+           val o: Option[Z] = parseNumChoice(args, j + 1, ISZ(z"0", z"8", z"16", z"32", z"64"))
            o match {
              case Some(v) => bitwidth = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--last") {
-           val o = Some(!last)
+           val o: Option[B] = { j = j - 1; Some(!last) }
            o match {
              case Some(v) => last = v
              case _ => return None()
            }
          } else if (arg == "--sat") {
-           val o = Some(!sat)
+           val o: Option[B] = { j = j - 1; Some(!sat) }
            o match {
              case Some(v) => sat = v
              case _ => return None()
            }
          } else if (arg == "--server") {
-           val o = Some(!server)
+           val o: Option[B] = { j = j - 1; Some(!server) }
            o match {
              case Some(v) => server = v
              case _ => return None()
            }
          } else if (arg == "-t" || arg == "--timeout") {
-           val o = parseNum(args, j + 1, Some(1000), None())
+           val o: Option[Z] = parseNum(args, j + 1, Some(1000), None())
            o match {
              case Some(v) => timeout = v
              case _ => return None()
@@ -266,31 +266,31 @@ import Cli._
           println(help)
           return Some(HelpOption())
         } else if (arg == "-p" || arg == "--package") {
-           val o = parseStrings(args, j + 1, '.')
+           val o: Option[ISZ[String]] = parseStrings(args, j + 1, '.')
            o match {
              case Some(v) => packageName = v
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o = parseString(args, j + 1)
+           val o: Option[String] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
            }
          } else if (arg == "-w" || arg == "--width") {
-           val o = parseNums(args, j + 1, ',', Some(0), None())
+           val o: Option[ISZ[Z]] = parseNums(args, j + 1, ',', Some(0), None())
            o match {
              case Some(v) => width = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()
@@ -372,25 +372,25 @@ import Cli._
           println(help)
           return Some(HelpOption())
         } else if (arg == "-m" || arg == "--modes") {
-           val o = parseSerializerModes(args, j + 1)
+           val o: Option[ISZ[SerializerMode.Type]] = parseSerializerModes(args, j + 1)
            o match {
              case Some(v) => modes = v
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o = parseString(args, j + 1)
+           val o: Option[String] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()
@@ -472,25 +472,25 @@ import Cli._
           println(help)
           return Some(HelpOption())
         } else if (arg == "-m" || arg == "--modes") {
-           val o = parseTransformerModes(args, j + 1)
+           val o: Option[ISZ[TransformerMode.Type]] = parseTransformerModes(args, j + 1)
            o match {
              case Some(v) => modes = v
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o = parseString(args, j + 1)
+           val o: Option[String] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o = parsePath(args, j + 1)
+           val o: Option[String] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()

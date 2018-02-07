@@ -387,7 +387,7 @@ import CliGen.CliOpt._
         case t: Type.Choice =>
           if (t.sep.nonEmpty) s"parse${ops.StringOps(t.name).firstToUpper}s(args, j + 1)"
           else s"parse${ops.StringOps(t.name).firstToUpper}(args, j + 1)"
-        case _: Type.Flag => s"Some(!${opt.name})"
+        case _: Type.Flag => s"{ j = j - 1; Some(!${opt.name}) }"
         case t: Type.Num =>
           val r: String = t.sep match {
             case Some(sep) => s"""parseNums(args, j + 1, '$sep', ${t.min}, ${t.max})"""
@@ -406,7 +406,7 @@ import CliGen.CliOpt._
       val sh: String = if (opt.shortKey.isEmpty) "" else s"""arg == "-${opt.shortKey.get}" || """
       cases = cases :+
         st""" else if (${sh}arg == "--${opt.longKey}") {
-            |  val o = $parse
+            |  val o: Option[${tpe(opt.tpe)._1}] = $parse
             |  o match {
             |    case Some(v) => ${opt.name} = v
             |    case _ => return None()
