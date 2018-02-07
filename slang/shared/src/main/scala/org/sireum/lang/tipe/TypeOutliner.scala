@@ -212,7 +212,7 @@ object TypeOutliner {
             typedOpt = Some(
               AST.Typed.Method(
                 T,
-                AST.MethodMode.Normal,
+                AST.MethodMode.Method,
                 tVars,
                 info.owner,
                 sig.id.value,
@@ -489,7 +489,7 @@ object TypeOutliner {
               typedOpt = Some(
                 AST.Typed.Method(
                   F,
-                  AST.MethodMode.Normal,
+                  AST.MethodMode.Method,
                   tVars,
                   info.owner,
                   id,

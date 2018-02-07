@@ -1186,7 +1186,7 @@ object TruthTable {
 }
 
 @enum object MethodMode {
-  'Normal
+  'Method
   'Spec
   'Ext
   'Constructor

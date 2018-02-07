@@ -168,7 +168,7 @@ import org.sireum.lang.{ast => AST}
             Some(
               AST.ResolvedInfo.Method(
                 T,
-                AST.MethodMode.Normal,
+                AST.MethodMode.Method,
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 currentName,
                 id,
@@ -434,7 +434,7 @@ import org.sireum.lang.{ast => AST}
               Some(
                 AST.ResolvedInfo.Method(
                   F,
-                  AST.MethodMode.Normal,
+                  AST.MethodMode.Method,
                   stmt.sig.typeParams.map(tp => tp.id.value),
                   owner,
                   id,
