@@ -78,7 +78,8 @@ object Distros {
             "scalafmt" -> 41928,
             "ignore" -> 42151,
             "rust" -> 42464,
-            "toml" -> 42459
+            "toml" -> 42459,
+            "jbsdk" -> 32949
           )
         else Map())
 
