@@ -42,61 +42,53 @@ class TypeCheckerTest extends SireumSpec {
 
       "Worksheet" - {
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |val x: Either[B, Z] = Either(Some(T), None())
-            """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |val a = ISZ(1, 2, 3)
+                             |val first = a(0)
+                             |val firstTyped: Z = first
+                             |val upFirst = a(0 ~> 5)
+                             |val upFirstTyped: ISZ[Z] = upFirst
+                             |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
+                             |val upAllTyped: IS[Z, Z] = upAll
+            """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |val x: ISZ[Z] = IS[Z, Z](1, 2, 3)
-            """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |val a = ZS(1, 2, 3)
+                             |val first = a(0)
+                             |val firstTyped: Z = first
+                             |val upFirst = a(0 ~> 5)
+                             |val upFirstTyped: ZS = upFirst
+                             |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
+                             |val upAllTyped: MS[Z, Z] = upAll
+            """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |val x: MEither[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
-          """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |val x: Either[B, Z] = Either(Some(T), None())
+            """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
-          """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |val x: ISZ[Z] = IS[Z, Z](1, 2, 3)
+            """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |println(Z("0").getOrElse(1))
-          """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |val x: MEither[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
+          """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |val x: Either[B, Z] = Either(Some(T), None())
-          """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
+          """.stripMargin))
 
-        *(
-          passingWorksheet(
-            """import org.sireum._
-              |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
-          """.stripMargin
-          )
-        )
+        *(passingWorksheet("""import org.sireum._
+                             |println(Z("0").getOrElse(1))
+          """.stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val x: Either[B, Z] = Either(Some(T), None())
+          """.stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
+          """.stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |var x: Z = 1
@@ -155,23 +147,13 @@ class TypeCheckerTest extends SireumSpec {
 
       "Worksheet" - {
 
-        *(
-          failingWorksheet(
-            """import org.sireum._
-              |val x = Either(Some(T), None())
-            """.stripMargin,
-            "type parameter(s): 'T'"
-          )
-        )
+        *(failingWorksheet("""import org.sireum._
+                             |val x = Either(Some(T), None())
+            """.stripMargin, "type parameter(s): 'T'"))
 
-        *(
-          failingWorksheet(
-            """import org.sireum._
-              |println(Z(s = "0").getOrElse(1))
-          """.stripMargin,
-            "Could not find parameter 's'"
-          )
-        )
+        *(failingWorksheet("""import org.sireum._
+                             |println(Z(s = "0").getOrElse(1))
+          """.stripMargin, "Could not find parameter 's'"))
 
       }
 
@@ -205,21 +187,14 @@ class TypeCheckerTest extends SireumSpec {
   def testWorksheet(input: Predef.String, isPassing: Boolean, msg: Predef.String = ""): Boolean = {
     val reporter = AccumulatingReporter.create
     Parser(input)
-      .parseTopUnit[ast.TopUnit.Program](
-        allowSireum = F,
-        isWorksheet = T,
-        isDiet      = F,
-        None(),
-        reporter
-      ) match {
+      .parseTopUnit[ast.TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) =>
         val p = TypeChecker.checkWorksheet(program, reporter)
         if (reporter.hasIssue) {
           if (isPassing) {
             reporter.printMessages()
             return false
-          }
-          else {
+          } else {
             return reporter.messages.elements.exists(m => m.message.value.contains(msg))
           }
         }
@@ -228,14 +203,12 @@ class TypeCheckerTest extends SireumSpec {
           def $owned: Boolean = F
           def $owned_=(b: Boolean): $internal.MutableMarker = this
           def $clone: $internal.MutableMarker = this
-          def string: String                  = ""
+          def string: String = ""
           override def preTypedAttr(o: ast.TypedAttr): ast.MTransformer.PreResult[ast.TypedAttr] = {
             assert(o.typedOpt.nonEmpty)
             super.preTypedAttr(o)
           }
-          override def preResolvedAttr(
-            o: ast.ResolvedAttr
-          ): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
+          override def preResolvedAttr(o: ast.ResolvedAttr): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
             if (o.typedOpt.isEmpty) {
               new Throwable().printStackTrace()
             }
@@ -260,14 +233,9 @@ class TypeCheckerTest extends SireumSpec {
       return false
     }
     val typeChecker = TypeChecker(th, ISZ(), F)
-    val stmt        = Parser(input).parseStmt[ast.Stmt]
+    val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope =
-      Resolver.Scope.Local(
-        HashMap.empty,
-        HashMap.empty,
-        None(),
-        Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ()))
-      )
+      Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>
@@ -276,17 +244,14 @@ class TypeCheckerTest extends SireumSpec {
           return false
         }
         val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
-          override def preTypedAttr(
-            ctx: Unit,
-            o:   ast.TypedAttr
-          ): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
+          override def preTypedAttr(ctx: Unit, o: ast.TypedAttr): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
             assert(o.typedOpt.nonEmpty)
             super.preTypedAttr(ctx, o)
           }
 
           override def preResolvedAttr(
             ctx: Unit,
-            o:   ast.ResolvedAttr
+            o: ast.ResolvedAttr
           ): ast.Transformer.PreResult[Unit, ast.ResolvedAttr] = {
             assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
             super.preResolvedAttr(ctx, o)
@@ -297,8 +262,7 @@ class TypeCheckerTest extends SireumSpec {
         t.transformStmt((), checkedStmt)
         !reporter.hasIssue
       case _ =>
-        !isPassing && reporter.errors.elements
-          .exists(_.message.value.contains(msg))
+        !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
     }
   }
 }
