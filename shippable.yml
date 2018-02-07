@@ -28,3 +28,9 @@ build:
     - $HOME/.sbt
     - $SHIPPABLE_BUILD_DIR/platform
     - $SHIPPABLE_BUILD_DIR/apps
+
+integrations:
+  notifications:
+    - integrationName: email
+      type: email
+      on_cancel: never
