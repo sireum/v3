@@ -311,7 +311,7 @@ class SlangFrontEndTest extends SireumSpec {
         case child: Trie.Leaf[String, String] =>
           registerTest(childKey, ts: _*)(assert(
             passingCheck(child.data, addImport = false, isPrelude = true,
-              checkJson = notJs, checkMsgPack = notJs)))(pos)
+              checkJson = false, checkMsgPack = notJs)))(pos)
       }
     case _ =>
   }
