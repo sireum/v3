@@ -1563,10 +1563,12 @@ object MsgPack {
     def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
       writer.writeZ(Constants.ResolvedInfoMethod)
       writeB(o.isInObject)
-      writeB(o.isConstructor)
-      writeB(o.isSpec)
+      writeTypedMethodMode(o.mode)
+      writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
-      writeString(o.id)
+      writeString(o.name)
+      writer.writeISZ(o.paramNames, writeString)
+      writer.writeOption(o.tpeOpt, writeTypedFun)
     }
 
     def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
@@ -4115,11 +4117,13 @@ object MsgPack {
         reader.expectZ(Constants.ResolvedInfoMethod)
       }
       val isInObject = reader.readB()
-      val isConstructor = reader.readB()
-      val isSpec = reader.readB()
+      val mode = readTypedMethodMode()
+      val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
-      val id = reader.readString()
-      return ResolvedInfo.Method(isInObject, isConstructor, isSpec, owner, id)
+      val name = reader.readString()
+      val paramNames = reader.readISZ(reader.readString _)
+      val tpeOpt = reader.readOption(readTypedFun _)
+      return ResolvedInfo.Method(isInObject, mode, typeParams, owner, name, paramNames, tpeOpt)
     }
 
     def readResolvedInfoType(): ResolvedInfo.Type = {

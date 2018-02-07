@@ -4006,8 +4006,9 @@ import MTransformer._
           else
             MNone()
         case o2: ResolvedInfo.Method =>
-          if (hasChanged)
-            MSome(o2)
+          val r0: MOption[Option[Typed.Fun]] = transformOption(o2.tpeOpt, transformTypedFun)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(tpeOpt = r0.getOrElse(o2.tpeOpt)))
           else
             MNone()
         case o2: ResolvedInfo.Type =>

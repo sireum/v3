@@ -1601,10 +1601,12 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""ResolvedInfo.Method""""),
         ("isInObject", printB(o.isInObject)),
-        ("isConstructor", printB(o.isConstructor)),
-        ("isSpec", printB(o.isSpec)),
+        ("mode", printTypedMethodMode(o.mode)),
+        ("typeParams", printISZ(T, o.typeParams, printString)),
         ("owner", printISZ(T, o.owner, printString)),
-        ("id", printString(o.id))
+        ("name", printString(o.name)),
+        ("paramNames", printISZ(T, o.paramNames, printString)),
+        ("tpeOpt", printOption(o.tpeOpt, printTypedFun))
       ))
     }
 
@@ -4953,19 +4955,25 @@ object JSON {
       parser.parseObjectKey("isInObject")
       val isInObject = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("isConstructor")
-      val isConstructor = parser.parseB()
+      parser.parseObjectKey("mode")
+      val mode = parseTypedMethodMode()
       parser.parseObjectNext()
-      parser.parseObjectKey("isSpec")
-      val isSpec = parser.parseB()
+      parser.parseObjectKey("typeParams")
+      val typeParams = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
       parser.parseObjectKey("owner")
       val owner = parser.parseISZ(parser.parseString _)
       parser.parseObjectNext()
-      parser.parseObjectKey("id")
-      val id = parser.parseString()
+      parser.parseObjectKey("name")
+      val name = parser.parseString()
       parser.parseObjectNext()
-      return ResolvedInfo.Method(isInObject, isConstructor, isSpec, owner, id)
+      parser.parseObjectKey("paramNames")
+      val paramNames = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
+      parser.parseObjectKey("tpeOpt")
+      val tpeOpt = parser.parseOption(parseTypedFun _)
+      parser.parseObjectNext()
+      return ResolvedInfo.Method(isInObject, mode, typeParams, owner, name, paramNames, tpeOpt)
     }
 
     def parseResolvedInfoType(): ResolvedInfo.Type = {

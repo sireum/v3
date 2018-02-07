@@ -4012,10 +4012,11 @@ import Transformer._
           else
             Result(ctx, None())
         case o2: ResolvedInfo.Method =>
-          if (hasChanged)
-            Result(ctx, Some(o2))
+          val r0: Result[Context, Option[Typed.Fun]] = transformOption(ctx, o2.tpeOpt, transformTypedFun)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(tpeOpt = r0.resultOpt.getOrElse(o2.tpeOpt))))
           else
-            Result(ctx, None())
+            Result(r0.ctx, None())
         case o2: ResolvedInfo.Type =>
           if (hasChanged)
             Result(ctx, Some(o2))
