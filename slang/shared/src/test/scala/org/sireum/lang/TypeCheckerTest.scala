@@ -229,14 +229,11 @@ class TypeCheckerTest extends SireumSpec {
           def $clone: $internal.MutableMarker = this
           def string: String = ""
           override def preTypedAttr(o: ast.TypedAttr): ast.MTransformer.PreResult[ast.TypedAttr] = {
-            assert(o.typedOpt.nonEmpty)
+            errIf(o.typedOpt.isEmpty)
             super.preTypedAttr(o)
           }
           override def preResolvedAttr(o: ast.ResolvedAttr): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
-            if (o.typedOpt.isEmpty) {
-              new Throwable().printStackTrace()
-            }
-            assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
+            errIf(o.resOpt.isEmpty || o.typedOpt.isEmpty)
             super.preResolvedAttr(o)
           }
 
@@ -269,7 +266,7 @@ class TypeCheckerTest extends SireumSpec {
         }
         val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
           override def preTypedAttr(ctx: Unit, o: ast.TypedAttr): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
-            assert(o.typedOpt.nonEmpty)
+            errIf(o.typedOpt.isEmpty)
             super.preTypedAttr(ctx, o)
           }
 
@@ -277,7 +274,7 @@ class TypeCheckerTest extends SireumSpec {
             ctx: Unit,
             o: ast.ResolvedAttr
           ): ast.Transformer.PreResult[Unit, ast.ResolvedAttr] = {
-            assert(o.resOpt.nonEmpty && o.typedOpt.nonEmpty)
+            errIf(o.resOpt.isEmpty || o.typedOpt.isEmpty)
             super.preResolvedAttr(ctx, o)
           }
 
@@ -288,5 +285,10 @@ class TypeCheckerTest extends SireumSpec {
       case _ =>
         !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
     }
+  }
+
+  def errIf(b: Boolean): Unit = {
+    if (b) new Throwable().printStackTrace()
+    assert(!b)
   }
 }
