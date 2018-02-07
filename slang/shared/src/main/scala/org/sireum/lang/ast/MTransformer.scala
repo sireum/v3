@@ -890,6 +890,7 @@ object MTransformer {
         case o: ResolvedInfo.Object => return preResolvedInfoObject(o)
         case o: ResolvedInfo.Var => return preResolvedInfoVar(o)
         case o: ResolvedInfo.Method => return preResolvedInfoMethod(o)
+        case o: ResolvedInfo.Methods => return preResolvedInfoMethods(o)
         case o: ResolvedInfo.Type => return preResolvedInfoType(o)
         case o: ResolvedInfo.Tuple => return preResolvedInfoTuple(o)
         case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(o)
@@ -921,6 +922,10 @@ object MTransformer {
     }
 
     def preResolvedInfoMethod(o: ResolvedInfo.Method): PreResult[ResolvedInfo] = {
+      return PreResult(T, MNone())
+    }
+
+    def preResolvedInfoMethods(o: ResolvedInfo.Methods): PreResult[ResolvedInfo] = {
       return PreResult(T, MNone())
     }
 
@@ -1791,6 +1796,7 @@ object MTransformer {
         case o: ResolvedInfo.Object => return postResolvedInfoObject(o)
         case o: ResolvedInfo.Var => return postResolvedInfoVar(o)
         case o: ResolvedInfo.Method => return postResolvedInfoMethod(o)
+        case o: ResolvedInfo.Methods => return postResolvedInfoMethods(o)
         case o: ResolvedInfo.Type => return postResolvedInfoType(o)
         case o: ResolvedInfo.Tuple => return postResolvedInfoTuple(o)
         case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(o)
@@ -1822,6 +1828,10 @@ object MTransformer {
     }
 
     def postResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo] = {
+      return MNone()
+    }
+
+    def postResolvedInfoMethods(o: ResolvedInfo.Methods): MOption[ResolvedInfo] = {
       return MNone()
     }
 
@@ -4012,6 +4022,12 @@ import MTransformer._
             MSome(o2(tpeOpt = r0.getOrElse(o2.tpeOpt)))
           else
             MNone()
+        case o2: ResolvedInfo.Methods =>
+          val r0: MOption[IS[Z, ResolvedInfo.Method]] = transformISZ(o2.methods, transformResolvedInfoMethod)
+          if (hasChanged || r0.nonEmpty)
+            MSome(o2(methods = r0.getOrElse(o2.methods)))
+          else
+            MNone()
         case o2: ResolvedInfo.Type =>
           if (hasChanged)
             MSome(o2)
@@ -4348,6 +4364,41 @@ import MTransformer._
      case MSome(result: Typed.Method) => MSome[Typed.Method](result)
      case MSome(_) => halt("Can only produce object of type Typed.Method")
      case _ => MNone[Typed.Method]()
+    }
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo.Method] = {
+    val preR: PreResult[ResolvedInfo.Method] = pp.preResolvedInfoMethod(o) match {
+     case PreResult(continu, MSome(r: ResolvedInfo.Method)) => PreResult(continu, MSome[ResolvedInfo.Method](r))
+     case PreResult(_, MSome(_)) => halt("Can only produce object of type ResolvedInfo.Method")
+     case PreResult(continu, _) => PreResult(continu, MNone[ResolvedInfo.Method]())
+    }
+    val r: MOption[ResolvedInfo.Method] = if (preR.continu) {
+      val o2: ResolvedInfo.Method = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: MOption[Option[Typed.Fun]] = transformOption(o2.tpeOpt, transformTypedFun)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(tpeOpt = r0.getOrElse(o2.tpeOpt)))
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: ResolvedInfo.Method = r.getOrElse(o)
+    val postR: MOption[ResolvedInfo.Method] = pp.postResolvedInfoMethod(o2) match {
+     case MSome(result: ResolvedInfo.Method) => MSome[ResolvedInfo.Method](result)
+     case MSome(_) => halt("Can only produce object of type ResolvedInfo.Method")
+     case _ => MNone[ResolvedInfo.Method]()
     }
     if (postR.nonEmpty) {
       return postR

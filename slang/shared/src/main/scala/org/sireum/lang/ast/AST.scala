@@ -40,13 +40,13 @@ object TopUnit {
 
   @datatype class TruthTableUnit(
     val fileUriOpt: Option[String],
-    stars:          ISZ[PosInfo],
-    vars:           ISZ[Id],
-    separator:      PosInfo,
-    isSequent:      B,
-    sequent:        LClause.Sequent,
-    rows:           ISZ[TruthTable.Row],
-    conclusionOpt:  Option[TruthTable.Conclusion]
+    stars: ISZ[PosInfo],
+    vars: ISZ[Id],
+    separator: PosInfo,
+    isSequent: B,
+    sequent: LClause.Sequent,
+    rows: ISZ[TruthTable.Row],
+    conclusionOpt: Option[TruthTable.Conclusion]
   ) extends TopUnit
 
 }
@@ -73,7 +73,7 @@ object TopUnit {
           ops.ISZOps(stmt.elseBody.stmts).last.asAssignExp.exprs
       case stmt: Stmt.Match =>
         return for (c <- stmt.cases;
-                    e <- ops.ISZOps(c.body.stmts).last.asAssignExp.exprs)
+          e <- ops.ISZOps(c.body.stmts).last.asAssignExp.exprs)
           yield e
       case _: Stmt.Return => return ISZ()
     }
@@ -110,13 +110,8 @@ object Stmt {
 
   }
 
-  @datatype class Var(
-    isVal:        B,
-    id:           Id,
-    tipeOpt:      Option[Type],
-    initOpt:      Option[AssignExp],
-    @hidden attr: Attr
-  ) extends Stmt {
+  @datatype class Var(isVal: B, id: Id, tipeOpt: Option[Type], initOpt: Option[AssignExp], @hidden attr: Attr)
+      extends Stmt {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -142,12 +137,12 @@ object Stmt {
   }
 
   @datatype class Method(
-    purity:       Purity.Type,
-    hasOverride:  B,
-    isHelper:     B,
-    sig:          MethodSig,
-    contract:     Contract,
-    bodyOpt:      Option[Body],
+    purity: Purity.Type,
+    hasOverride: B,
+    isHelper: B,
+    sig: MethodSig,
+    contract: Contract,
+    bodyOpt: Option[Body],
     @hidden attr: Attr
   ) extends Stmt {
 
@@ -165,12 +160,8 @@ object Stmt {
 
   }
 
-  @datatype class SpecMethod(
-    sig:          MethodSig,
-    defs:         ISZ[SpecDef],
-    where:        ISZ[WhereDef],
-    @hidden attr: Attr
-  ) extends Stmt {
+  @datatype class SpecMethod(sig: MethodSig, defs: ISZ[SpecDef], where: ISZ[WhereDef], @hidden attr: Attr)
+      extends Stmt {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -187,16 +178,16 @@ object Stmt {
   }
 
   @datatype class SubZ(
-    id:           Id,
-    isSigned:     B,
-    isBitVector:  B,
-    isWrapped:    B,
-    hasMin:       B,
-    hasMax:       B,
-    bitWidth:     Z,
-    min:          Z,
-    max:          Z,
-    index:        Z,
+    id: Id,
+    isSigned: B,
+    isBitVector: B,
+    isWrapped: B,
+    hasMin: B,
+    hasMax: B,
+    bitWidth: Z,
+    min: Z,
+    max: Z,
+    index: Z,
     @hidden attr: Attr
   ) extends Stmt {
 
@@ -218,12 +209,12 @@ object Stmt {
   }
 
   @datatype class Sig(
-    isImmutable:  B,
-    isExt:        B,
-    id:           Id,
-    typeParams:   ISZ[TypeParam],
-    parents:      ISZ[Type.Named],
-    stmts:        ISZ[Stmt],
+    isImmutable: B,
+    isExt: B,
+    id: Id,
+    typeParams: ISZ[TypeParam],
+    parents: ISZ[Type.Named],
+    stmts: ISZ[Stmt],
     @hidden attr: Attr
   ) extends Stmt {
 
@@ -234,13 +225,13 @@ object Stmt {
   }
 
   @datatype class AbstractDatatype(
-    isRoot:       B,
-    isDatatype:   B,
-    id:           Id,
-    typeParams:   ISZ[TypeParam],
-    params:       ISZ[AbstractDatatypeParam],
-    parents:      ISZ[Type.Named],
-    stmts:        ISZ[Stmt],
+    isRoot: B,
+    isDatatype: B,
+    id: Id,
+    typeParams: ISZ[TypeParam],
+    params: ISZ[AbstractDatatypeParam],
+    parents: ISZ[Type.Named],
+    stmts: ISZ[Stmt],
     @hidden attr: Attr
   ) extends Stmt {
 
@@ -313,13 +304,8 @@ object Stmt {
 
   }
 
-  @datatype class While(
-    cond:         Exp,
-    invariants:   ISZ[ContractExp],
-    modifies:     ISZ[Exp],
-    body:         Body,
-    @hidden attr: Attr
-  ) extends Stmt {
+  @datatype class While(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
+      extends Stmt {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -327,13 +313,8 @@ object Stmt {
 
   }
 
-  @datatype class DoWhile(
-    cond:         Exp,
-    invariants:   ISZ[ContractExp],
-    modifies:     ISZ[Exp],
-    body:         Body,
-    @hidden attr: Attr
-  ) extends Stmt {
+  @datatype class DoWhile(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
+      extends Stmt {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -342,10 +323,10 @@ object Stmt {
   }
 
   @datatype class For(
-    enumGen:      EnumGen.For,
-    invariants:   ISZ[ContractExp],
-    modifies:     ISZ[Exp],
-    body:         Body,
+    enumGen: EnumGen.For,
+    invariants: ISZ[ContractExp],
+    modifies: ISZ[Exp],
+    body: Body,
     @hidden attr: Attr
   ) extends Stmt {
 
@@ -517,9 +498,9 @@ object Pattern {
   @datatype class SeqWildcard(@hidden attr: TypedAttr) extends Pattern
 
   @datatype class Structure(
-    idOpt:        Option[Id],
-    nameOpt:      Option[Name],
-    patterns:     ISZ[Pattern],
+    idOpt: Option[Id],
+    nameOpt: Option[Name],
+    patterns: ISZ[Pattern],
     @hidden attr: ResolvedAttr
   ) extends Pattern
 
@@ -614,12 +595,8 @@ object Exp {
     }
   }
 
-  @datatype class StringInterpolate(
-    prefix:       String,
-    lits:         ISZ[LitString],
-    args:         ISZ[Exp],
-    @hidden attr: TypedAttr
-  ) extends Exp {
+  @datatype class StringInterpolate(prefix: String, lits: ISZ[LitString], args: ISZ[Exp], @hidden attr: TypedAttr)
+      extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -734,7 +711,7 @@ object Exp {
     @pure override def hash: Z = {
       attr.resOpt match {
         case Some(res) => return res.hash
-        case _         => return id.hash
+        case _ => return id.hash
       }
     }
 
@@ -776,12 +753,8 @@ object Exp {
     }
   }
 
-  @datatype class Select(
-    receiverOpt:  Option[Exp],
-    id:           Id,
-    val targs:    ISZ[Type],
-    @hidden attr: ResolvedAttr
-  ) extends Exp with Ref {
+  @datatype class Select(receiverOpt: Option[Exp], id: Id, val targs: ISZ[Type], @hidden attr: ResolvedAttr)
+      extends Exp with Ref {
 
     @pure override def asExp: Exp = {
       return this
@@ -796,13 +769,8 @@ object Exp {
     }
   }
 
-  @datatype class Invoke(
-    receiverOpt:  Option[Exp],
-    id:           Id,
-    targs:        ISZ[Type],
-    args:         ISZ[Exp],
-    @hidden attr: ResolvedAttr
-  ) extends Exp {
+  @datatype class Invoke(receiverOpt: Option[Exp], id: Id, targs: ISZ[Type], args: ISZ[Exp], @hidden attr: ResolvedAttr)
+      extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -814,10 +782,10 @@ object Exp {
   }
 
   @datatype class InvokeNamed(
-    receiverOpt:  Option[Exp],
-    id:           Id,
-    targs:        ISZ[Type],
-    args:         ISZ[NamedArg],
+    receiverOpt: Option[Exp],
+    id: Id,
+    targs: ISZ[Type],
+    args: ISZ[NamedArg],
     @hidden attr: ResolvedAttr
   ) extends Exp {
 
@@ -847,12 +815,7 @@ object Exp {
 
   }
 
-  @datatype class Fun(
-    params:       ISZ[Fun.Param],
-    contract:     Contract,
-    exp:          AssignExp,
-    @hidden attr: TypedAttr
-  ) extends Exp {
+  @datatype class Fun(params: ISZ[Fun.Param], contract: Contract, exp: AssignExp, @hidden attr: TypedAttr) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -912,11 +875,11 @@ object Domain {
 @datatype class AbstractDatatypeParam(isHidden: B, isVal: B, id: Id, tipe: Type)
 
 @datatype class MethodSig(
-  isPure:     B,
-  id:         Id,
+  isPure: B,
+  id: Id,
   typeParams: ISZ[TypeParam],
-  hasParams:  B,
-  params:     ISZ[Param],
+  hasParams: B,
+  params: ISZ[Param],
   returnType: Type
 ) {
 
@@ -938,11 +901,11 @@ object Domain {
 @datatype class TypeParam(id: Id)
 
 @datatype class Contract(
-  reads:    ISZ[Exp],
+  reads: ISZ[Exp],
   requires: ISZ[ContractExp],
   modifies: ISZ[Exp],
-  ensures:  ISZ[ContractExp],
-  subs:     ISZ[SubContract]
+  ensures: ISZ[ContractExp],
+  subs: ISZ[SubContract]
 )
 
 @datatype class SubContract(id: Id, params: ISZ[Id], contract: Contract)
@@ -957,13 +920,7 @@ object WhereDef {
 
 }
 
-@datatype class SpecDef(
-  idOpt:       Option[Id],
-  exp:         Exp,
-  isOtherwise: B,
-  patternOpt:  Option[Pattern],
-  guardOpt:    Option[Exp]
-)
+@datatype class SpecDef(idOpt: Option[Id], exp: Exp, isOtherwise: B, patternOpt: Option[Pattern], guardOpt: Option[Exp])
 
 @datatype trait ProofStep {
   def step: Exp.LitZ
@@ -1058,7 +1015,7 @@ object TruthTable {
     @datatype class Contradictory(@hidden val attr: Attr) extends Conclusion
 
     @datatype class Contingent(
-      trueAssignments:  ISZ[Assignment],
+      trueAssignments: ISZ[Assignment],
       falseAssignments: ISZ[Assignment],
       @hidden val attr: Attr
     ) extends Conclusion
@@ -1180,8 +1137,7 @@ object TruthTable {
               args = args :+ ta
             }
             return t(args = args)
-          }
-          else {
+          } else {
             return t
           }
         case t: Typed.Tuple =>
@@ -1217,7 +1173,7 @@ object TruthTable {
   @pure def isUnitType: B = {
     this match {
       case t: Typed.Tuple if t.args.isEmpty => return T
-      case t: Typed.Name                    => return t.args.isEmpty && t.ids == Typed.unit.ids
+      case t: Typed.Name => return t.args.isEmpty && t.ids == Typed.unit.ids
       case _ => return F
     }
   }
@@ -1227,6 +1183,17 @@ object TruthTable {
   }
 
   @pure def collectTypeVars: ISZ[String]
+}
+
+@enum object MethodMode {
+  'Normal
+  'Spec
+  'Ext
+  'Constructor
+  'Copy
+  'Extractor
+  'Select
+  'Store
 }
 
 object Typed {
@@ -1239,7 +1206,7 @@ object Typed {
 
     @pure override def string: String = {
       return if (args.isEmpty) st"${(ids, ".")}".render
-      else st"${(ids,                     ".")}[${(args, ", ")}]".render
+      else st"${(ids, ".")}[${(args, ", ")}]".render
     }
 
     @pure override def subst(m: HashMap[String, Typed]): Typed.Name = {
@@ -1286,7 +1253,7 @@ object Typed {
     @pure override def string: String = {
       return if (isByName) st"=> $ret".render
       else if (isPure) st"((${(args, ", ")}) => $ret @pure)".render
-      else st"(${(args,              ", ")}) => $ret".render
+      else st"(${(args, ", ")}) => $ret".render
     }
 
     @pure override def subst(m: HashMap[String, Typed]): Typed.Fun = {
@@ -1314,7 +1281,7 @@ object Typed {
       }
       m.get(id) match {
         case Some(t2) => return t2
-        case _        => return this
+        case _ => return this
       }
     }
 
@@ -1390,15 +1357,6 @@ object Typed {
 
   object Method {
 
-    @enum object Mode {
-      'Normal
-      'Spec
-      'Ext
-      'Constructor
-      'Copy
-      'Extractor
-    }
-
     object Subst {
 
       @pure def summarize(substs: ISZ[Subst]): HashSMap[String, Typed] = {
@@ -1424,13 +1382,13 @@ object Typed {
 
   @datatype class Method(
     isInObject: B,
-    mode:       Method.Mode.Type,
+    mode: MethodMode.Type,
     typeParams: ISZ[String],
-    owner:      ISZ[String],
-    name:       String,
+    owner: ISZ[String],
+    name: String,
     paramNames: ISZ[String],
-    substs:     ISZ[Method.Subst],
-    tpe:        Typed.Fun
+    substs: ISZ[Method.Subst],
+    tpe: Typed.Fun
   ) extends Typed {
 
     @pure override def isPureFun: B = {
@@ -1529,119 +1487,119 @@ object Typed {
   val zsName: ISZ[String] = ISZ("org", "sireum", "ZS")
 
   val bConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.b)))
-  val bConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val bConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "B", ISZ(), ISZ(), Typed.bConstructorType))
-  val bConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val bConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "B", ISZ(), Some(Typed.bConstructorType)))
   val cConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.c)))
-  val cConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val cConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "C", ISZ(), ISZ(), Typed.cConstructorType))
-  val cConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val cConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "C", ISZ(), Some(Typed.cConstructorType)))
   val zConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z)))
-  val zConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val zConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z", ISZ(), ISZ(), Typed.zConstructorType))
-  val zConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val zConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z", ISZ(), Some(Typed.zConstructorType)))
   val z8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z8)))
-  val z8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z8", ISZ(), ISZ(), Typed.z8ConstructorType))
-  val z8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z8", ISZ(), Some(Typed.z8ConstructorType)))
   val z16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z16)))
-  val z16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z16", ISZ(), ISZ(), Typed.z16ConstructorType))
-  val z16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z16", ISZ(), Some(Typed.z16ConstructorType)))
   val z32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z32)))
-  val z32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z32", ISZ(), ISZ(), Typed.z32ConstructorType))
-  val z32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z32", ISZ(), Some(Typed.z32ConstructorType)))
   val z64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.z64)))
-  val z64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z64", ISZ(), ISZ(), Typed.z64ConstructorType))
-  val z64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val z64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "Z64", ISZ(), Some(Typed.z64ConstructorType)))
   val nConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n)))
-  val nConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val nConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N", ISZ(), ISZ(), Typed.nConstructorType))
-  val nConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val nConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N", ISZ(), Some(Typed.nConstructorType)))
   val n8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n8)))
-  val n8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N8", ISZ(), ISZ(), Typed.n8ConstructorType))
-  val n8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N8", ISZ(), Some(Typed.n8ConstructorType)))
   val n16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n16)))
-  val n16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N16", ISZ(), ISZ(), Typed.n16ConstructorType))
-  val n16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N16", ISZ(), Some(Typed.n16ConstructorType)))
   val n32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n32)))
-  val n32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N32", ISZ(), ISZ(), Typed.n32ConstructorType))
-  val n32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N32", ISZ(), Some(Typed.n32ConstructorType)))
   val n64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.n64)))
-  val n64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N64", ISZ(), ISZ(), Typed.n64ConstructorType))
-  val n64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val n64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "N64", ISZ(), Some(Typed.n64ConstructorType)))
   val s8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s8)))
-  val s8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S8", ISZ(), ISZ(), Typed.s8ConstructorType))
-  val s8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S8", ISZ(), Some(Typed.s8ConstructorType)))
   val s16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s16)))
-  val s16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S16", ISZ(), ISZ(), Typed.s16ConstructorType))
-  val s16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S16", ISZ(), Some(Typed.s16ConstructorType)))
   val s32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s32)))
-  val s32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S32", ISZ(), ISZ(), Typed.s32ConstructorType))
-  val s32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S32", ISZ(), Some(Typed.s32ConstructorType)))
   val s64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.s64)))
-  val s64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S64", ISZ(), ISZ(), Typed.s64ConstructorType))
-  val s64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val s64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "S64", ISZ(), Some(Typed.s64ConstructorType)))
   val u8ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u8)))
-  val u8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u8ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U8", ISZ(), ISZ(), Typed.u8ConstructorType))
-  val u8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u8ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U8", ISZ(), Some(Typed.u8ConstructorType)))
   val u16ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u16)))
-  val u16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u16ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U16", ISZ(), ISZ(), Typed.u16ConstructorType))
-  val u16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u16ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U16", ISZ(), Some(Typed.u16ConstructorType)))
   val u32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u32)))
-  val u32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U32", ISZ(), ISZ(), Typed.u32ConstructorType))
-  val u32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U32", ISZ(), Some(Typed.u32ConstructorType)))
   val u64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.u64)))
-  val u64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U64", ISZ(), ISZ(), Typed.u64ConstructorType))
-  val u64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val u64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "U64", ISZ(), Some(Typed.u64ConstructorType)))
   val f32ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.f32)))
-  val f32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val f32ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "F32", ISZ(), ISZ(), Typed.f32ConstructorType))
-  val f32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val f32ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "F32", ISZ(), Some(Typed.f32ConstructorType)))
   val f64ConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.f64)))
-  val f64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val f64ConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "F64", ISZ(), ISZ(), Typed.f64ConstructorType))
-  val f64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val f64ConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "F64", ISZ(), Some(Typed.f64ConstructorType)))
   val rConstructorType: Typed.Fun = Typed.Fun(T, F, ISZ(Typed.string), Typed.Name(optionName, ISZ(Typed.r)))
-  val rConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val rConstructorMethodOpt: Option[Typed] = Some(Typed.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "R", ISZ(), ISZ(), Typed.rConstructorType))
-  val rConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, Typed.Method.Mode.Constructor, ISZ(),
+  val rConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "R", ISZ(), Some(Typed.rConstructorType)))
 
   val basicConstructorMap: HashMap[ISZ[String], (Option[Typed], Option[ResolvedInfo])] = {
@@ -1679,11 +1637,7 @@ object Typed {
 
 @datatype class TypedAttr(posOpt: Option[PosInfo], typedOpt: Option[Typed])
 
-@datatype class ResolvedAttr(
-  posOpt:   Option[PosInfo],
-  resOpt:   Option[ResolvedInfo],
-  typedOpt: Option[Typed]
-)
+@datatype class ResolvedAttr(posOpt: Option[PosInfo], resOpt: Option[ResolvedInfo], typedOpt: Option[Typed])
 
 @datatype trait ResolvedInfo
 
@@ -1703,13 +1657,15 @@ object ResolvedInfo {
 
   @datatype class Method(
     isInObject: B,
-    mode:       Typed.Method.Mode.Type,
+    mode: MethodMode.Type,
     typeParams: ISZ[String],
-    owner:      ISZ[String],
-    name:       String,
+    owner: ISZ[String],
+    name: String,
     paramNames: ISZ[String],
-    tpeOpt:     Option[Typed.Fun]
+    tpeOpt: Option[Typed.Fun]
   ) extends ResolvedInfo
+
+  @datatype class Methods(methods: ISZ[Method]) extends ResolvedInfo
 
   @datatype class Type(name: ISZ[String]) extends ResolvedInfo
 
@@ -1720,21 +1676,21 @@ object ResolvedInfo {
 }
 
 @datatype class PosInfo(
-  fileUriOpt:  Option[String],
-  beginLine:   Z,
+  fileUriOpt: Option[String],
+  beginLine: Z,
   beginColumn: Z,
-  endLine:     Z,
-  endColumn:   Z,
-  offset:      Z,
-  length:      Z
+  endLine: Z,
+  endColumn: Z,
+  offset: Z,
+  length: Z
 ) {
   {
-    assert(beginLine >= 1,   "beginLine")
+    assert(beginLine >= 1, "beginLine")
     assert(beginColumn >= 1, "beginColumn")
-    assert(endLine >= 1,     "endLine")
-    assert(endColumn >= 1,   "endColumn")
-    assert(offset >= 0,      "offset")
-    assert(length >= 0,      "length")
+    assert(endLine >= 1, "endLine")
+    assert(endColumn >= 1, "endColumn")
+    assert(offset >= 0, "offset")
+    assert(length >= 0, "length")
   }
 
   l"""invariant beginLine ≥ 1

@@ -894,6 +894,7 @@ object Transformer {
         case o: ResolvedInfo.Object => return preResolvedInfoObject(ctx, o)
         case o: ResolvedInfo.Var => return preResolvedInfoVar(ctx, o)
         case o: ResolvedInfo.Method => return preResolvedInfoMethod(ctx, o)
+        case o: ResolvedInfo.Methods => return preResolvedInfoMethods(ctx, o)
         case o: ResolvedInfo.Type => return preResolvedInfoType(ctx, o)
         case o: ResolvedInfo.Tuple => return preResolvedInfoTuple(ctx, o)
         case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(ctx, o)
@@ -925,6 +926,10 @@ object Transformer {
     }
 
     @pure def preResolvedInfoMethod(ctx: Context, o: ResolvedInfo.Method): PreResult[Context, ResolvedInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
+    @pure def preResolvedInfoMethods(ctx: Context, o: ResolvedInfo.Methods): PreResult[Context, ResolvedInfo] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1795,6 +1800,7 @@ object Transformer {
         case o: ResolvedInfo.Object => return postResolvedInfoObject(ctx, o)
         case o: ResolvedInfo.Var => return postResolvedInfoVar(ctx, o)
         case o: ResolvedInfo.Method => return postResolvedInfoMethod(ctx, o)
+        case o: ResolvedInfo.Methods => return postResolvedInfoMethods(ctx, o)
         case o: ResolvedInfo.Type => return postResolvedInfoType(ctx, o)
         case o: ResolvedInfo.Tuple => return postResolvedInfoTuple(ctx, o)
         case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(ctx, o)
@@ -1826,6 +1832,10 @@ object Transformer {
     }
 
     @pure def postResolvedInfoMethod(ctx: Context, o: ResolvedInfo.Method): Result[Context, ResolvedInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postResolvedInfoMethods(ctx: Context, o: ResolvedInfo.Methods): Result[Context, ResolvedInfo] = {
       return Result(ctx, None())
     }
 
@@ -4018,6 +4028,12 @@ import Transformer._
             Result(r0.ctx, Some(o2(tpeOpt = r0.resultOpt.getOrElse(o2.tpeOpt))))
           else
             Result(r0.ctx, None())
+        case o2: ResolvedInfo.Methods =>
+          val r0: Result[Context, IS[Z, ResolvedInfo.Method]] = transformISZ(ctx, o2.methods, transformResolvedInfoMethod)
+          if (hasChanged || r0.resultOpt.nonEmpty)
+            Result(r0.ctx, Some(o2(methods = r0.resultOpt.getOrElse(o2.methods))))
+          else
+            Result(r0.ctx, None())
         case o2: ResolvedInfo.Type =>
           if (hasChanged)
             Result(ctx, Some(o2))
@@ -4354,6 +4370,41 @@ import Transformer._
      case Result(postCtx, Some(result: Typed.Method)) => Result(postCtx, Some[Typed.Method](result))
      case Result(_, Some(_)) => halt("Can only produce object of type Typed.Method")
      case Result(postCtx, _) => Result(postCtx, None[Typed.Method]())
+    }
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformResolvedInfoMethod(ctx: Context, o: ResolvedInfo.Method): Result[Context, ResolvedInfo.Method] = {
+    val preR: PreResult[Context, ResolvedInfo.Method] = pp.preResolvedInfoMethod(ctx, o) match {
+     case PreResult(preCtx, continu, Some(r: ResolvedInfo.Method)) => PreResult(preCtx, continu, Some[ResolvedInfo.Method](r))
+     case PreResult(_, _, Some(_)) => halt("Can only produce object of type ResolvedInfo.Method")
+     case PreResult(preCtx, continu, _) => PreResult(preCtx, continu, None[ResolvedInfo.Method]())
+    }
+    val r: Result[Context, ResolvedInfo.Method] = if (preR.continu) {
+      val o2: ResolvedInfo.Method = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, Option[Typed.Fun]] = transformOption(ctx, o2.tpeOpt, transformTypedFun)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(tpeOpt = r0.resultOpt.getOrElse(o2.tpeOpt))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: ResolvedInfo.Method = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, ResolvedInfo.Method] = pp.postResolvedInfoMethod(r.ctx, o2) match {
+     case Result(postCtx, Some(result: ResolvedInfo.Method)) => Result(postCtx, Some[ResolvedInfo.Method](result))
+     case Result(_, Some(_)) => halt("Can only produce object of type ResolvedInfo.Method")
+     case Result(postCtx, _) => Result(postCtx, None[ResolvedInfo.Method]())
     }
     if (postR.resultOpt.nonEmpty) {
       return postR

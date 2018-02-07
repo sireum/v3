@@ -322,13 +322,15 @@ object MsgPack {
 
     val ResolvedInfoMethod: Z = 142
 
-    val ResolvedInfoType: Z = 143
+    val ResolvedInfoMethods: Z = 143
 
-    val ResolvedInfoTuple: Z = 144
+    val ResolvedInfoType: Z = 144
 
-    val ResolvedInfoLocalVar: Z = 145
+    val ResolvedInfoTuple: Z = 145
 
-    val PosInfo: Z = 146
+    val ResolvedInfoLocalVar: Z = 146
+
+    val PosInfo: Z = 147
 
   }
 
@@ -1426,6 +1428,10 @@ object MsgPack {
       }
     }
 
+    def writeMethodMode(o: MethodMode.Type): Unit = {
+      writer.writeZ(o.ordinal)
+    }
+
     def writeTypedName(o: Typed.Name): Unit = {
       writer.writeZ(Constants.TypedName)
       writer.writeISZ(o.ids, writeString)
@@ -1466,10 +1472,6 @@ object MsgPack {
       writer.writeISZ(o.name, writeString)
     }
 
-    def writeTypedMethodMode(o: Typed.Method.Mode.Type): Unit = {
-      writer.writeZ(o.ordinal)
-    }
-
     def writeTypedMethodSubst(o: Typed.Method.Subst): Unit = {
       writer.writeZ(Constants.TypedMethodSubst)
       writeString(o.id)
@@ -1479,7 +1481,7 @@ object MsgPack {
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writeB(o.isInObject)
-      writeTypedMethodMode(o.mode)
+      writeMethodMode(o.mode)
       writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
@@ -1520,6 +1522,7 @@ object MsgPack {
         case o: ResolvedInfo.Object => writeResolvedInfoObject(o)
         case o: ResolvedInfo.Var => writeResolvedInfoVar(o)
         case o: ResolvedInfo.Method => writeResolvedInfoMethod(o)
+        case o: ResolvedInfo.Methods => writeResolvedInfoMethods(o)
         case o: ResolvedInfo.Type => writeResolvedInfoType(o)
         case o: ResolvedInfo.Tuple => writeResolvedInfoTuple(o)
         case o: ResolvedInfo.LocalVar => writeResolvedInfoLocalVar(o)
@@ -1564,12 +1567,17 @@ object MsgPack {
     def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
       writer.writeZ(Constants.ResolvedInfoMethod)
       writeB(o.isInObject)
-      writeTypedMethodMode(o.mode)
+      writeMethodMode(o.mode)
       writer.writeISZ(o.typeParams, writeString)
       writer.writeISZ(o.owner, writeString)
       writeString(o.name)
       writer.writeISZ(o.paramNames, writeString)
       writer.writeOption(o.tpeOpt, writeTypedFun)
+    }
+
+    def writeResolvedInfoMethods(o: ResolvedInfo.Methods): Unit = {
+      writer.writeZ(Constants.ResolvedInfoMethods)
+      writer.writeISZ(o.methods, writeResolvedInfoMethod)
     }
 
     def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
@@ -3819,6 +3827,11 @@ object MsgPack {
       }
     }
 
+    def readMethodMode(): MethodMode.Type = {
+      val r = reader.readZ()
+      return MethodMode.byOrdinal(r).get
+    }
+
     def readTypedName(): Typed.Name = {
       val r = readTypedNameT(F)
       return r
@@ -3915,11 +3928,6 @@ object MsgPack {
       return Typed.Enum(name)
     }
 
-    def readTypedMethodMode(): Typed.Method.Mode.Type = {
-      val r = reader.readZ()
-      return Typed.Method.Mode.byOrdinal(r).get
-    }
-
     def readTypedMethodSubst(): Typed.Method.Subst = {
       val r = readTypedMethodSubstT(F)
       return r
@@ -3944,7 +3952,7 @@ object MsgPack {
         reader.expectZ(Constants.TypedMethod)
       }
       val isInObject = reader.readB()
-      val mode = readTypedMethodMode()
+      val mode = readMethodMode()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
@@ -4019,6 +4027,7 @@ object MsgPack {
         case Constants.ResolvedInfoObject => val r = readResolvedInfoObjectT(T); return r
         case Constants.ResolvedInfoVar => val r = readResolvedInfoVarT(T); return r
         case Constants.ResolvedInfoMethod => val r = readResolvedInfoMethodT(T); return r
+        case Constants.ResolvedInfoMethods => val r = readResolvedInfoMethodsT(T); return r
         case Constants.ResolvedInfoType => val r = readResolvedInfoTypeT(T); return r
         case Constants.ResolvedInfoTuple => val r = readResolvedInfoTupleT(T); return r
         case Constants.ResolvedInfoLocalVar => val r = readResolvedInfoLocalVarT(T); return r
@@ -4119,13 +4128,26 @@ object MsgPack {
         reader.expectZ(Constants.ResolvedInfoMethod)
       }
       val isInObject = reader.readB()
-      val mode = readTypedMethodMode()
+      val mode = readMethodMode()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
       val paramNames = reader.readISZ(reader.readString _)
       val tpeOpt = reader.readOption(readTypedFun _)
       return ResolvedInfo.Method(isInObject, mode, typeParams, owner, name, paramNames, tpeOpt)
+    }
+
+    def readResolvedInfoMethods(): ResolvedInfo.Methods = {
+      val r = readResolvedInfoMethodsT(F)
+      return r
+    }
+
+    def readResolvedInfoMethodsT(typeParsed: B): ResolvedInfo.Methods = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.ResolvedInfoMethods)
+      }
+      val methods = reader.readISZ(readResolvedInfoMethod _)
+      return ResolvedInfo.Methods(methods)
     }
 
     def readResolvedInfoType(): ResolvedInfo.Type = {
@@ -6624,6 +6646,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fResolvedInfoMethod)
+    return r
+  }
+
+  def fromResolvedInfoMethods(o: ResolvedInfo.Methods, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeResolvedInfoMethods(o)
+    return w.result
+  }
+
+  def toResolvedInfoMethods(data: ISZ[U8]): ResolvedInfo.Methods = {
+    def fResolvedInfoMethods(reader: Reader): ResolvedInfo.Methods = {
+      val r = reader.readResolvedInfoMethods()
+      return r
+    }
+    val r = to(data, fResolvedInfoMethods)
     return r
   }
 
