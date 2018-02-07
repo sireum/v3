@@ -43,6 +43,18 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty[Z].addAll(ISZ(1, 2, 3))))
+                             |val upPosetTyped: Poset[Z] = upPoset
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty))
+                             |val upPosetTyped: Poset[Z] = upPoset
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val a = ISZ(1, 2, 3)
                              |val first = a(0)
                              |val firstTyped: Z = first
@@ -50,7 +62,7 @@ class TypeCheckerTest extends SireumSpec {
                              |val upFirstTyped: ISZ[Z] = upFirst
                              |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
                              |val upAllTyped: IS[Z, Z] = upAll
-            """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val a = ZS(1, 2, 3)
@@ -60,35 +72,35 @@ class TypeCheckerTest extends SireumSpec {
                              |val upFirstTyped: ZS = upFirst
                              |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
                              |val upAllTyped: MS[Z, Z] = upAll
-            """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: Either[B, Z] = Either(Some(T), None())
-            """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: ISZ[Z] = IS[Z, Z](1, 2, 3)
-            """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: MEither[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |println(Z("0").getOrElse(1))
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: Either[B, Z] = Either(Some(T), None())
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |var x: Z = 1
@@ -96,24 +108,24 @@ class TypeCheckerTest extends SireumSpec {
                              |  println("x is positive")
                              |  x = 0
                              |}
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: Z = 1
                              |if (x > 0) {
                              |  println("x is positive")
                              |}
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val x: Z = 1
                              |val y = x + 1
                              |assert(y > x)
-          """.stripMargin))
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |assert(3 > 0)
-          """.stripMargin))
+                             |""".stripMargin))
 
       }
 
@@ -148,12 +160,24 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(failingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty[Z].addAll(1, 2, 3)))
+                             |val upPosetTyped: Poset[Z] = upPoset
+                             |""".stripMargin, "expecting 1 argument"))
+
+        *(failingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty.addAll(1, 2, 3)))
+                             |val upPosetTyped: Poset[Z] = upPoset
+                             |""".stripMargin, "Explicit type"))
+
+        *(failingWorksheet("""import org.sireum._
                              |val x = Either(Some(T), None())
-            """.stripMargin, "type parameter(s): 'T'"))
+                             |""".stripMargin, "type parameter(s): 'T'"))
 
         *(failingWorksheet("""import org.sireum._
                              |println(Z(s = "0").getOrElse(1))
-          """.stripMargin, "Could not find parameter 's'"))
+                             |""".stripMargin, "Could not find parameter 's'"))
 
       }
 

@@ -594,7 +594,7 @@ import TypeChecker._
               case Some(etaParent) =>
                 val tOpt: Option[AST.Typed] = Some(if (t.tpe.isByName) t.tpe(isByName = F) else t.tpe)
                 return (etaParent(ref = ref, attr = etaParent.attr(typedOpt = tOpt)), tOpt)
-              case _ if t.tpe.isByName => return (exp, Some(t.tpe.ret))
+              case _ if t.tpe.isByName => return (exp, Some(t.tpe.ret.subst(substMap)))
               case _ =>
                 reporter.error(
                   exp.posOpt,
@@ -800,7 +800,8 @@ import TypeChecker._
       posOpt: Option[AST.PosInfo],
       resOpt: Option[AST.ResolvedInfo],
       tpe: AST.Typed,
-      numOfArgs: Z
+      numOfArgs: Z,
+      argNames: ISZ[String]
     ): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
       tpe match {
         case tpe: AST.Typed.Object =>
@@ -1132,13 +1133,36 @@ import TypeChecker._
                   )
                 )
               }
-            case _ if tpe.args.isEmpty =>
+            case _ =>
               typeHierarchy.typeMap.get(tpe.ids) match {
                 case Some(info: TypeInfo.AbstractDatatype) if !info.ast.isRoot =>
-                // TODO: copy of @record, @datatype
-                case _ =>
+                  val argNameSet = HashSSet.emptyInit[String](argNames.size).addAll(argNames)
+                  val params = info.ast.params.withFilter(p => argNameSet.contains(p.id.value))
+                  if (argNameSet.size != params.size) {
+                    val names = argNameSet.removeAll(info.ast.params.map(p => p.id.value))
+                    reporter.error(
+                      posOpt,
+                      typeCheckerKind,
+                      st"Could not find parameter(s) '${(names.elements, "', '")}' in '$tpe'.".render
+                    )
+                    return (None(), resOpt)
+                  }
+                  val paramNames = params.map(p => p.id.value)
+                  val paramTypes = params.map(p => p.tipe.typedOpt.get)
+                  val smOpt = unify(posOpt, F, tpe, info.tpe, reporter)
+                  smOpt match {
+                    case Some(sm) =>
+                      val copyType = AST.Typed.Fun(T, F, paramTypes, tpe).subst(sm)
+                      val id = info.ast.id.value
+                      return (
+                        Some(AST.Typed.Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, ISZ(), copyType)),
+                        Some(
+                          AST.ResolvedInfo.Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, Some(copyType))
+                        )
+                      )
+                    case _ => return (None(), resOpt)
+                  }
               }
-            case _ =>
           }
         case _ =>
       }
@@ -1260,7 +1284,7 @@ import TypeChecker._
         val (t, resOpt): (AST.Typed, Option[AST.ResolvedInfo]) = tOpt match {
           case Some(tpe) =>
             val (t2Opt, newResOpt) =
-              checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size)
+              checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size, ISZ())
             t2Opt match {
               case Some(t2) => (t2, newResOpt)
               case _ => return partResult
@@ -1277,7 +1301,7 @@ import TypeChecker._
             reporter.error(
               exp.id.attr.posOpt,
               typeCheckerKind,
-              s"$m is expecting ${m.tpe.args.size} arguments, but found ${exp.args.size}."
+              s"$m is expecting ${m.tpe.args.size} argument(s), but found ${exp.args.size}."
             )
             return partResult
           }
@@ -1402,7 +1426,7 @@ import TypeChecker._
         val (t, resOpt): (AST.Typed, Option[AST.ResolvedInfo]) = tOpt match {
           case Some(tpe) =>
             val (t2Opt, newResOpt) =
-              checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size)
+              checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size, exp.args.map(na => na.id.value))
             t2Opt match {
               case Some(t2) => (t2, newResOpt)
               case _ => return partResult
@@ -1489,7 +1513,7 @@ import TypeChecker._
               .error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot supply named arguments when applying a function.")
             return partResult
           case _ =>
-            reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot invoke named on '$t'.")
+            reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"Cannot invoke with named arguments on '$t'.")
             return partResult
         }
       }
@@ -2039,10 +2063,8 @@ import TypeChecker._
             return None()
           }
           typeHierarchy.typeMap.get(expected.ids) match {
-            case Some(info: TypeInfo.AbstractDatatype) =>
-              AST.Typed.Name(expected.ids, info.ast.typeParams.map(tp => AST.Typed.TypeVar(tp.id.value)))
-            case Some(info: TypeInfo.Sig) =>
-              AST.Typed.Name(expected.ids, info.ast.typeParams.map(tp => AST.Typed.TypeVar(tp.id.value)))
+            case Some(info: TypeInfo.AbstractDatatype) => info.tpe
+            case Some(info: TypeInfo.Sig) => info.tpe
             case _ =>
               halt(s"Unexpected situation when trying to unify $expected and $tpe")
           }
