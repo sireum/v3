@@ -83,18 +83,11 @@ val iveDistros = TaskKey[Unit]("ive-distros", "Build Sireum IVE distributions.")
 val devDistros = TaskKey[Unit]("dev-distros", "Build Sireum-dev distributions.")
 val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distributions.")
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
+val refreshSlang = TaskKey[Unit]("refresh-slang", "Refresh Slang files.")
 
 iveDistros / traceLevel := -1
 Global / parallelExecution := isParallelBuild
 Global / concurrentRestrictions ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
-
-addCommandAlias("clean-library", "; clean; project runtime-macros-jvm; clean; project runtime-library-jvm; clean; project runtime-macros-js; clean; project runtime-library-js; clean; project runtime-macros; clean; project runtime-library")
-addCommandAlias("clean-slang-only", "; project slang-jvm; clean; project slang-js; clean; project slang; clean")
-addCommandAlias("clean-slang", "; clean-library; clean-slang-only")
-
-addCommandAlias("rebuild-library", "; clean-library; test:compile")
-addCommandAlias("rebuild-slang-only", "; clean-slang-only; test:compile")
-addCommandAlias("rebuild-slang", "; clean-slang; test:compile")
 
 addCommandAlias("fatjar", "; project sireum; assembly")
 
@@ -429,6 +422,24 @@ lazy val sireum = Project(
     depDot := {
       val args = spaceDelimited("<arg>").parsed
       dotDependency(args)
+    },
+    refreshSlang := {
+      import ammonite.ops._
+      val rootDir = baseDirectory.value
+      val runtimeFile = Path(new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/Library_Ext.scala").getCanonicalFile)
+      val slangFile = Path(new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
+
+      def touche(p: Path): Unit = {
+        val text = read ! p
+        if (text.last == '\n') {
+          write.over(p, text.trim)
+        } else {
+          write.over(p, text + '\n')
+        }
+      }
+
+      touche(runtimeFile)
+      touche(slangFile)
     },
     initialize := {
       val required = Set("1.8", "9")
