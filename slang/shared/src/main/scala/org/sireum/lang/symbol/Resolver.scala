@@ -548,7 +548,7 @@ object Resolver {
 
     @datatype class AbstractDatatype(owner: QName,
                                      outlined: B,
-                                     tpe: AST.Typed,
+                                     tpe: AST.Typed.Name,
                                      constructorTypeOpt: Option[AST.Typed],
                                      constructorResOpt: Option[AST.ResolvedInfo],
                                      ancestors: ISZ[AST.Typed.Name],
