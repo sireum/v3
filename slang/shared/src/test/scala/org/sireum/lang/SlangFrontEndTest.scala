@@ -403,8 +403,8 @@ class SlangFrontEndTest extends SireumSpec {
   }
 
   def report(r: SlangParser.Result, reporter: AccumulatingReporter): Unit = {
+    reporter.printMessages()
     Console.err.println(r.text)
     Console.err.println(r.unitOpt)
-    reporter.printMessages()
   }
 }

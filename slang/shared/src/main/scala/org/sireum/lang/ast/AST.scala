@@ -124,7 +124,8 @@ object Stmt {
 
   }
 
-  @datatype class VarPattern(isVal: B, pattern: Pattern, init: AssignExp, @hidden attr: Attr) extends Stmt {
+  @datatype class VarPattern(isVal: B, pattern: Pattern, tipeOpt: Option[Type], init: AssignExp, @hidden attr: Attr)
+      extends Stmt {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt

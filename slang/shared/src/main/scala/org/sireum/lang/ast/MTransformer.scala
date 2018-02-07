@@ -1950,10 +1950,11 @@ import MTransformer._
             MNone()
         case o2: Stmt.VarPattern =>
           val r0: MOption[Pattern] = transformPattern(o2.pattern)
-          val r1: MOption[AssignExp] = transformAssignExp(o2.init)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(pattern = r0.getOrElse(o2.pattern), init = r1.getOrElse(o2.init), attr = r2.getOrElse(o2.attr)))
+          val r1: MOption[Option[Type]] = transformOption(o2.tipeOpt, transformType)
+          val r2: MOption[AssignExp] = transformAssignExp(o2.init)
+          val r3: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(pattern = r0.getOrElse(o2.pattern), tipeOpt = r1.getOrElse(o2.tipeOpt), init = r2.getOrElse(o2.init), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Stmt.SpecVar =>

@@ -839,7 +839,7 @@ import TypeChecker._
       exp:          AST.Exp.Select,
       etaParentOpt: Option[AST.Exp.Eta]
     ): (AST.Exp, Option[AST.Typed]) = {
-      val (typeArgs: ISZ[AST.Typed], newTargs: ISZ[AST.Type]) = {
+      val (typeArgs, newTargs): (ISZ[AST.Typed], ISZ[AST.Type]) = {
         val pOpt = checkTypeArgs(exp.targs)
         if (pOpt.nonEmpty) {
           pOpt.get
@@ -1248,7 +1248,7 @@ import TypeChecker._
     }
 
     def checkInvoke(exp: AST.Exp.Invoke): (AST.Exp, Option[AST.Typed]) = {
-      val (typeArgs: ISZ[AST.Typed], newTargs: ISZ[AST.Type]) = {
+      val (typeArgs, newTargs): (ISZ[AST.Typed], ISZ[AST.Type]) = {
         val pOpt = checkTypeArgs(exp.targs)
         if (pOpt.nonEmpty) {
           pOpt.get
@@ -1268,13 +1268,11 @@ import TypeChecker._
           return (exp(targs = newTargs, receiverOpt = receiverOpt), None())
         }
 
-        var resOpt = rOpt
-        val t: AST.Typed = tOpt match {
+        val (t, resOpt): (AST.Typed, Option[AST.ResolvedInfo]) = tOpt match {
           case Some(tpe) =>
             val (t2Opt, newResOpt) = checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size)
-            resOpt = newResOpt
             t2Opt match {
-              case Some(t2) => t2
+              case Some(t2) => (t2, newResOpt)
               case _        => return partResult
             }
           case _ => return partResult
@@ -1384,7 +1382,7 @@ import TypeChecker._
     }
 
     def checkInvokeNamed(exp: AST.Exp.InvokeNamed): (AST.Exp, Option[AST.Typed]) = {
-      val (typeArgs: ISZ[AST.Typed], newTargs: ISZ[AST.Type]) = {
+      val (typeArgs, newTargs): (ISZ[AST.Typed], ISZ[AST.Type]) = {
         val pOpt = checkTypeArgs(exp.targs)
         if (pOpt.nonEmpty) {
           pOpt.get
@@ -1404,13 +1402,11 @@ import TypeChecker._
           return (exp(targs = newTargs, receiverOpt = receiverOpt), None())
         }
 
-        var resOpt = rOpt
-        val t: AST.Typed = tOpt match {
+        val (t, resOpt): (AST.Typed, Option[AST.ResolvedInfo]) = tOpt match {
           case Some(tpe) =>
             val (t2Opt, newResOpt) = checkInvokeType(exp.id.attr.posOpt, rOpt, tpe, exp.args.size)
-            resOpt = newResOpt
             t2Opt match {
-              case Some(t2) => t2
+              case Some(t2) => (t2, newResOpt)
               case _        => return partResult
             }
           case _ => return partResult
@@ -1552,7 +1548,7 @@ import TypeChecker._
         exp match {
           case exp @ AST.Exp.Invoke(None(), AST.Id(name), targs, args)
               if targs.isEmpty && builtInMethods.contains(name) =>
-            val (kind: BuiltInKind.Type, resOpt: Option[AST.ResolvedInfo]) =
+            val (kind, resOpt): (BuiltInKind.Type, Option[AST.ResolvedInfo]) =
               name.native match {
                 case "assert"   => (BuiltInKind.Assertume, assertResOpt)
                 case "assume"   => (BuiltInKind.Assertume, assumeResOpt)
@@ -1790,7 +1786,7 @@ import TypeChecker._
     stmt:        AST.Stmt.Match,
     reporter:    Reporter
   ): AST.Stmt = {
-    val (newExp: AST.Exp, expTypeOpt: Option[AST.Typed]) = stmt.exp match {
+    val (newExp, expTypeOpt): (AST.Exp, Option[AST.Typed]) = stmt.exp match {
       case exp @ AST.Exp.Select(Some(_), AST.Id(string"native"), _) =>
         val p = checkSelectNative(scope, exp, reporter)
         p

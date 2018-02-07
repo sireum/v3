@@ -1956,12 +1956,13 @@ import Transformer._
             Result(r3.ctx, None())
         case o2: Stmt.VarPattern =>
           val r0: Result[Context, Pattern] = transformPattern(ctx, o2.pattern)
-          val r1: Result[Context, AssignExp] = transformAssignExp(r0.ctx, o2.init)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(pattern = r0.resultOpt.getOrElse(o2.pattern), init = r1.resultOpt.getOrElse(o2.init), attr = r2.resultOpt.getOrElse(o2.attr))))
+          val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.tipeOpt, transformType)
+          val r2: Result[Context, AssignExp] = transformAssignExp(r1.ctx, o2.init)
+          val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(pattern = r0.resultOpt.getOrElse(o2.pattern), tipeOpt = r1.resultOpt.getOrElse(o2.tipeOpt), init = r2.resultOpt.getOrElse(o2.init), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r2.ctx, None())
+            Result(r3.ctx, None())
         case o2: Stmt.SpecVar =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, Type] = transformType(r0.ctx, o2.tipe)

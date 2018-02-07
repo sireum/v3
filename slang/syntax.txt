@@ -39,13 +39,11 @@
                      |  <record-decl>
                      |  <type-decl>
 
-<val-decl>         ::=  val <ID> ⸨ : <type> ⸩? = <assign-exp>
+<val-decl>         ::=  val <pattern> ⸨ : <type> ⸩? = <assign-exp>
                      |  @spec val <ID> : <type> = $
-                     |  val <pattern> = <assign-exp>
 
-<var-decl>         ::=  var <ID> ⸨ : <type> ⸩? = <assign-exp>
+<var-decl>         ::=  var <pattern> ⸨ : <type> ⸩? = <assign-exp>
                      |  @spec var <ID> : <type> = $
-                     |  var <pattern> = <assign-exp>
 
 <def-decl>         ::=  ⸨ @helper ⸩? ⸨ @pure ⸩? def <ID> <type-params>? <params>? : <type>
                      |  ⸨ @helper ⸩? <def-mod> def <ID> <type-params>? <params>? : <type> = <def-body>
@@ -100,11 +98,12 @@
 
 <pattern>          ::=  <lit>
                      |  <name>
+                     | ⸨ <name> ⸩? . `<ID>`
                      |  <ID> : <type>
                      |  _ ⸨ : <type> ⸩?
-                     |  _*
                      |  ⸨ <ID> @ ⸩? <name> ( <patterns>? )
                      |  ⸨ <ID> @ ⸩? ( <patterns> )
+                     |  _*
 
 <patterns>         ::=  <pattern> ⸨ , <pattern> ⸩*
 

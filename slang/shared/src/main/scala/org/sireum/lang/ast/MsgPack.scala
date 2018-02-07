@@ -464,6 +464,7 @@ object MsgPack {
       writer.writeZ(Constants.StmtVarPattern)
       writeB(o.isVal)
       writePattern(o.pattern)
+      writer.writeOption(o.tipeOpt, writeType)
       writeAssignExp(o.init)
       writeAttr(o.attr)
     }
@@ -1921,9 +1922,10 @@ object MsgPack {
       }
       val isVal = reader.readB()
       val pattern = readPattern()
+      val tipeOpt = reader.readOption(readType _)
       val init = readAssignExp()
       val attr = readAttr()
-      return Stmt.VarPattern(isVal, pattern, init, attr)
+      return Stmt.VarPattern(isVal, pattern, tipeOpt, init, attr)
     }
 
     def readStmtSpecVar(): Stmt.SpecVar = {

@@ -428,35 +428,23 @@ class SlangParser(text: Predef.String,
           opt(tpeopt.map(translateType)),
           if (isDiet && tpeopt.nonEmpty) None()
           else if (isDollarExpr) None() else Some(translateAssignExp(expr)), attr(stat.pos))
-        if (tpeopt.isEmpty) checkTyped(expr.pos, r)
+        if (tpeopt.isEmpty) checkTyped(expr.pos, r.initOpt)
         r
       case pattern: Pat =>
         enclosing match {
           case Enclosing.Method | Enclosing.Block =>
           case _ => errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
         }
-        if (tpeopt.nonEmpty)
-          errorInSlang(pattern.pos, "Val pattern cannot be explicitly typed")
         val pat = translatePattern(pattern)
         pat match {
           case _: AST.Pattern.Structure =>
           case _ => error(pattern.pos, s"Unallowable val pattern: '${pattern.syntax}'")
         }
         val exp = translateAssignExp(expr)
-        exp match {
-          case _: AST.Stmt.Expr =>
-          case _ =>
-            pattern match {
-              case pattern: Pat.Tuple =>
-                for (arg <- pattern.args) arg match {
-                  case p"$_: $_" =>
-                  case _ => errorInSlang(arg.pos, "Var tuple pattern element with complex initialization has to be explicitly typed")
-                }
-              case _ =>
-            }
-        }
-        AST.Stmt.VarPattern(isVal = true, pat,
+        val r = AST.Stmt.VarPattern(isVal = true, pat, opt(tpeopt.map(translateType)),
           exp, attr(stat.pos))
+        if (tpeopt.isEmpty) checkTyped(expr.pos, Some(r.init))
+        r
     }
   }
 
@@ -518,7 +506,7 @@ class SlangParser(text: Predef.String,
           opt(tpeopt.map(translateType)),
           if (isDiet && tpeopt.nonEmpty) None()
           else if (isDollarExpr) None() else opt(expropt.map(translateAssignExp)), attr(stat.pos))
-        if (tpeopt.isEmpty) checkTyped(expropt.get.pos, r)
+        if (tpeopt.isEmpty) checkTyped(expropt.get.pos, r.initOpt)
         r
       case pattern: Pat =>
         enclosing match {
@@ -535,24 +523,14 @@ class SlangParser(text: Predef.String,
           case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
         }
         val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos)))
-        exp match {
-          case _: AST.Stmt.Expr =>
-          case _ =>
-            pattern match {
-              case pattern: Pat.Tuple =>
-                for (arg <- pattern.args) arg match {
-                  case p"$_: $_" =>
-                  case _ => errorInSlang(arg.pos, "Var tuple pattern element with complex initialization has to be explicitly typed")
-                }
-              case _ =>
-            }
-        }
-        AST.Stmt.VarPattern(isVal = false, pat,
+        val r = AST.Stmt.VarPattern(isVal = false, pat, opt(tpeopt.map(translateType)),
           exp, attr(stat.pos))
+        if (tpeopt.isEmpty) checkTyped(expropt.get.pos, Some(r.init))
+        r
     }
   }
 
-  def checkTyped(pos: => Position, stmt: AST.Stmt.Var): Unit = {
+  def checkTyped(pos: => Position, initOpt: Option[AST.AssignExp]): Unit = {
     var hasError = false
 
     def check(stmt: Any): Unit = stmt match {
@@ -562,7 +540,7 @@ class SlangParser(text: Predef.String,
       case _ => hasError = true
     }
 
-    stmt.initOpt match {
+    initOpt match {
       case Some(s) => check(s)
       case _ =>
     }

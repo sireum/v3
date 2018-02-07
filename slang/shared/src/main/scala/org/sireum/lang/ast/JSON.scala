@@ -186,6 +186,7 @@ object JSON {
         ("type", st""""Stmt.VarPattern""""),
         ("isVal", printB(o.isVal)),
         ("pattern", printPattern(o.pattern)),
+        ("tipeOpt", printOption(o.tipeOpt, printType)),
         ("init", printAssignExp(o.init)),
         ("attr", printAttr(o.attr))
       ))
@@ -1930,13 +1931,16 @@ object JSON {
       parser.parseObjectKey("pattern")
       val pattern = parsePattern()
       parser.parseObjectNext()
+      parser.parseObjectKey("tipeOpt")
+      val tipeOpt = parser.parseOption(parseType _)
+      parser.parseObjectNext()
       parser.parseObjectKey("init")
       val init = parseAssignExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.VarPattern(isVal, pattern, init, attr)
+      return Stmt.VarPattern(isVal, pattern, tipeOpt, init, attr)
     }
 
     def parseStmtSpecVar(): Stmt.SpecVar = {
