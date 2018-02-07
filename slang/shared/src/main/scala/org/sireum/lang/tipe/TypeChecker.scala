@@ -77,12 +77,12 @@ object TypeChecker {
   val nativeF32TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f32))
   val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
 
-  var _typeHierarchyReporter: Option[(TypeHierarchy, AccumulatingReporter)] =
+  var _libraryCheckerReporter: Option[(TypeChecker, AccumulatingReporter)] =
     None()
 
-  def typeHierarchyReporter: (TypeHierarchy, AccumulatingReporter) = {
-    if (_typeHierarchyReporter.nonEmpty) {
-      return _typeHierarchyReporter.get
+  def libraryCheckerReporter: (TypeChecker, AccumulatingReporter) = {
+    if (_libraryCheckerReporter.nonEmpty) {
+      return _libraryCheckerReporter.get
     }
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
@@ -91,8 +91,9 @@ object TypeChecker {
     val th =
       TypeHierarchy.build(TypeHierarchy(nameMap, typeMap, Poset.empty, HashMap.empty), reporter)
     val thOutlined = TypeOutliner.checkOutline(th, reporter)
-    val r = (thOutlined, reporter)
-    _typeHierarchyReporter = Some(r)
+    val tc = TypeChecker(thOutlined, ISZ(), F)
+    val r = (tc, reporter)
+    _libraryCheckerReporter = Some(r)
     return r
   }
 
@@ -142,10 +143,13 @@ object TypeChecker {
   def checkWorksheet(program: AST.TopUnit.Program, reporter: Reporter): AST.TopUnit.Program = {
     val emptyAttr = AST.Attr(None())
     val p = program(packageName = AST.Name(ISZ(AST.Id("worksheet", emptyAttr)), emptyAttr))
-    val (th, rep) = typeHierarchyReporter
-    if (rep.hasIssue) {
-      reporter.reports(rep.messages)
-      return p
+    val th: TypeHierarchy = {
+      val (tc, rep) = libraryCheckerReporter
+      if (rep.hasIssue) {
+        reporter.reports(rep.messages)
+        return p
+      }
+      tc.typeHierarchy
     }
 
     val gdr = GlobalDeclarationResolver(th.nameMap, th.typeMap, reporter)
@@ -179,10 +183,10 @@ object TypeChecker {
       return p
     }
 
-    val tc = TypeChecker(th3, ISZ(), F)
+    val typeChecker = TypeChecker(th3, ISZ(), F)
     val scope =
       Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
-    val (_, newStmts) = tc.checkStmts(None(), scope, p.body.stmts, reporter)
+    val (_, newStmts) = typeChecker.checkStmts(None(), scope, p.body.stmts, reporter)
     return p(body = p.body(newStmts))
   }
 }
@@ -1155,9 +1159,12 @@ import TypeChecker._
                       val copyType = AST.Typed.Fun(T, F, paramTypes, tpe).subst(sm)
                       val id = info.ast.id.value
                       return (
-                        Some(AST.Typed.Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, ISZ(), copyType)),
                         Some(
-                          AST.ResolvedInfo.Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, Some(copyType))
+                          AST.Typed.Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, ISZ(), copyType)
+                        ),
+                        Some(
+                          AST.ResolvedInfo
+                            .Method(F, AST.MethodMode.Copy, ISZ(), info.owner, id, paramNames, Some(copyType))
                         )
                       )
                     case _ => return (None(), resOpt)

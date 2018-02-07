@@ -248,12 +248,14 @@ class TypeCheckerTest extends SireumSpec {
   }
 
   def testStmt(input: Predef.String, isPassing: Boolean, msg: Predef.String = ""): Boolean = {
-    val (th, rep) = TypeChecker.typeHierarchyReporter
-    if (rep.hasIssue) {
-      rep.printMessages()
-      return false
+    val typeChecker: TypeChecker = {
+      val (tc, rep) = TypeChecker.libraryCheckerReporter
+      if (rep.hasIssue) {
+        rep.printMessages()
+        return false
+      }
+      tc
     }
-    val typeChecker = TypeChecker(th, ISZ(), F)
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope =
       Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
