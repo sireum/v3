@@ -1216,16 +1216,22 @@ import TypeChecker._
             val smOpt = unifies(expId.attr.posOpt, T, argTypes, m.tpe.args, rep)
             smOpt match {
               case Some(sm) =>
-                val funType = m.tpe.subst(sm)
-                val tvs     = funType.typeVarSet
-                if (tvs.nonEmpty) {
+                var unbound = ISZ[String]()
+                for (tp <- m.typeParams) {
+                  sm.get(tp) match {
+                    case Some(_) => unbound = unbound :+ tp
+                    case _ =>
+                  }
+                }
+                if (unbound.nonEmpty) {
                   reporter.error(
                     expId.attr.posOpt,
                     typeCheckerKind,
-                    st"Could not infer type parameter(s): '${(tvs.elements, "', '")}'.".render
+                    st"Could not infer type parameter(s): '${(unbound, "', '")}'.".render
                   )
                   return (make(newArgs, None()), None())
                 }
+                val funType = m.tpe.subst(sm)
                 return (make(newArgs, Some(funType.ret)), Some(funType.ret))
               case _ =>
                 return (make(newArgs, None()), None())
@@ -2026,7 +2032,7 @@ import TypeChecker._
       return Some(HashMap.empty)
     }
     (expected, tpe) match {
-      case (expected: AST.Typed.Name, tpe: AST.Typed.TypeVar) =>
+      case (_, tpe: AST.Typed.TypeVar) =>
         return Some(HashMap.empty[String, AST.Typed].put(tpe.id, expected))
       case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
         val rt: AST.Typed.Name = if (allowSubType) {

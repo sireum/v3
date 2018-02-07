@@ -158,6 +158,15 @@ class TypeCheckerTest extends SireumSpec {
         *(
           failingWorksheet(
             """import org.sireum._
+              |val x = Either(Some(T), None())
+            """.stripMargin,
+            "type parameter(s): 'T'"
+          )
+        )
+
+        *(
+          failingWorksheet(
+            """import org.sireum._
               |println(Z(s = "0").getOrElse(1))
           """.stripMargin,
             "Could not find parameter 's'"
