@@ -730,7 +730,7 @@ object MsgPack {
 
     def writeEnumGenFor(o: EnumGen.For): Unit = {
       writer.writeZ(Constants.EnumGenFor)
-      writeId(o.id)
+      writer.writeOption(o.idOpt, writeId)
       writeEnumGenRange(o.range)
       writer.writeOption(o.condOpt, writeExp)
     }
@@ -2453,10 +2453,10 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.EnumGenFor)
       }
-      val id = readId()
+      val idOpt = reader.readOption(readId _)
       val range = readEnumGenRange()
       val condOpt = reader.readOption(readExp _)
-      return EnumGen.For(id, range, condOpt)
+      return EnumGen.For(idOpt, range, condOpt)
     }
 
     def readType(): Type = {

@@ -2527,11 +2527,11 @@ import Transformer._
     val r: Result[Context, EnumGen.For] = if (preR.continu) {
       val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Id] = transformId(ctx, o2.id)
+      val r0: Result[Context, Option[Id]] = transformOption(ctx, o2.idOpt, transformId)
       val r1: Result[Context, EnumGen.Range] = transformEnumGenRange(r0.ctx, o2.range)
       val r2: Result[Context, Option[Exp]] = transformOption(r1.ctx, o2.condOpt, transformExp)
       if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), range = r1.resultOpt.getOrElse(o2.range), condOpt = r2.resultOpt.getOrElse(o2.condOpt))))
+        Result(r2.ctx, Some(o2(idOpt = r0.resultOpt.getOrElse(o2.idOpt), range = r1.resultOpt.getOrElse(o2.range), condOpt = r2.resultOpt.getOrElse(o2.condOpt))))
       else
         Result(r2.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {

@@ -518,7 +518,7 @@ object JSON {
     @pure def printEnumGenFor(o: EnumGen.For): ST = {
       return printObject(ISZ(
         ("type", st""""EnumGen.For""""),
-        ("id", printId(o.id)),
+        ("idOpt", printOption(o.idOpt, printId)),
         ("range", printEnumGenRange(o.range)),
         ("condOpt", printOption(o.condOpt, printExp))
       ))
@@ -2694,8 +2694,8 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("EnumGen.For")
       }
-      parser.parseObjectKey("id")
-      val id = parseId()
+      parser.parseObjectKey("idOpt")
+      val idOpt = parser.parseOption(parseId _)
       parser.parseObjectNext()
       parser.parseObjectKey("range")
       val range = parseEnumGenRange()
@@ -2703,7 +2703,7 @@ object JSON {
       parser.parseObjectKey("condOpt")
       val condOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      return EnumGen.For(id, range, condOpt)
+      return EnumGen.For(idOpt, range, condOpt)
     }
 
     def parseType(): Type = {

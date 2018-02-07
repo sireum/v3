@@ -2521,11 +2521,11 @@ import MTransformer._
     val r: MOption[EnumGen.For] = if (preR.continu) {
       val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Id] = transformId(o2.id)
+      val r0: MOption[Option[Id]] = transformOption(o2.idOpt, transformId)
       val r1: MOption[EnumGen.Range] = transformEnumGenRange(o2.range)
       val r2: MOption[Option[Exp]] = transformOption(o2.condOpt, transformExp)
       if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(id = r0.getOrElse(o2.id), range = r1.getOrElse(o2.range), condOpt = r2.getOrElse(o2.condOpt)))
+        MSome(o2(idOpt = r0.getOrElse(o2.idOpt), range = r1.getOrElse(o2.range), condOpt = r2.getOrElse(o2.condOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {

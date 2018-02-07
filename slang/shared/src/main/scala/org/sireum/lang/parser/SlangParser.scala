@@ -1681,20 +1681,24 @@ class SlangParser(text: Predef.String,
   def translateEnumGens(enums: Seq[Enumerator]): ISZ[AST.EnumGen.For] = enums match {
     case head :: enumerator"if $cond" :: rest =>
       head match {
+        case enumerator"${_: Pat.Wildcard} <- $expr" =>
+          AST.EnumGen.For(None(), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
         case enumerator"${id: Pat.Var} <- $expr" =>
           if (disallowedMethodIds.contains(id.name.value)) {
             errorInSlang(id.name.pos, s"Identifier ${id.name.value} is reserved")
           }
-          AST.EnumGen.For(cid(id), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
+          AST.EnumGen.For(Some(cid(id)), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
         case _ =>
           errorNotSlang(head.pos, s"For-loop enumerator: '${syntax(head)}'")
           ISZ()
       }
+    case enumerator"${_: Pat.Wildcard} <- $expr" :: rest =>
+      AST.EnumGen.For(None(), translateRange(expr), None()) +: translateEnumGens(rest)
     case enumerator"${id: Pat.Var} <- $expr" :: rest =>
       if (disallowedMethodIds.contains(id.name.value)) {
         errorInSlang(id.name.pos, s"Identifier ${id.name.value} is reserved")
       }
-      AST.EnumGen.For(cid(id), translateRange(expr), None()) +: translateEnumGens(rest)
+      AST.EnumGen.For(Some(cid(id)), translateRange(expr), None()) +: translateEnumGens(rest)
     case Nil => ISZ()
     case _ =>
       errorNotSlang(enums.head.pos, s"For-loop enumerator: '${syntax(enums.head)}'")
