@@ -516,7 +516,7 @@ import org.sireum.lang.{ast => AST}
 
   def declareType(entity: String, name: QName, info: TypeInfo, posOpt: Option[AST.PosInfo]): Unit = {
     globalNameMap.get(name) match {
-      case Some(objectInfo: Info.Object) if !objectInfo.ast.isExt =>
+      case Some(_: Info.Object) =>
         if (!info.canHaveCompanion) {
           reporter.error(
             posOpt,
