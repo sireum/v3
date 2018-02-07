@@ -1416,7 +1416,7 @@ object JSON {
 
     @pure def printMethodMode(o: MethodMode.Type): ST = {
       val value: String = o match {
-        case MethodMode.Normal => "Normal"
+        case MethodMode.Method => "Method"
         case MethodMode.Spec => "Spec"
         case MethodMode.Ext => "Ext"
         case MethodMode.Constructor => "Constructor"
@@ -4582,7 +4582,7 @@ object JSON {
       val s = parser.parseString()
       parser.parseObjectNext()
       s.native match {
-        case "Normal" => return MethodMode.Normal
+        case "Method" => return MethodMode.Method
         case "Spec" => return MethodMode.Spec
         case "Ext" => return MethodMode.Ext
         case "Constructor" => return MethodMode.Constructor
