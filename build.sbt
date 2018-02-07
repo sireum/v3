@@ -32,15 +32,15 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
-val scalaVer = "2.12.4"
-
-val metaVersion = "3.0.0"
-
-val scalaTestVersion = "3.0.1"
-
 val sireumVersion = "3"
 
+val scalaVer = "2.12.4"
+
 val sireumScalacVersion = "3.2.5"
+
+val metaVersion = "3.2.0"
+
+val scalaTestVersion = "3.0.1"
 
 val scalaJsDomVersion = "0.9.4"
 
