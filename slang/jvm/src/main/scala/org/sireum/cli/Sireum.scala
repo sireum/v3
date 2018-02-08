@@ -38,6 +38,8 @@ object Sireum extends App {
     case Some(o: Cli.CligenOption) => cliGen(o)
     case Some(o: Cli.SergenOption) => serGen(o)
     case Some(o: Cli.TransgenOption) => transGen(o)
+    case Some(o: Cli.ArsitOption) => arsitGen(o)
+    case Some(o: Cli.AwasOption) => awasGen(o)
     case Some(_: Cli.HelpOption) => 0
     case _ => -1
   })
@@ -153,6 +155,43 @@ object Sireum extends App {
     case e: Throwable =>
       eprintln(e.getMessage)
       -1
+  }
+
+  def arsitGen(o: Cli.ArsitOption): Int = {
+    try {
+      var cls = Class.forName("org.sireum.aadl.arsit.Runner")
+      val m = cls.getDeclaredMethod("run", classOf[java.io.File], classOf[scala.Boolean], classOf[scala.Predef.String])
+
+      val destDir = path2fileOpt("output directory", o.outputDir, T).get
+      if (!destDir.isDirectory) {
+        println(s"Path ${destDir.getPath} is not a directory")
+        return -1
+      }
+
+      val inputFile = path2fileOpt("input file", o.inputFile, F)
+      val input = if(inputFile.nonEmpty) {
+        scala.io.Source.fromFile(inputFile.get).getLines.mkString
+      } else {
+        var s, l = ""
+        while({l = scala.io.StdIn.readLine; l != null})
+          s += l
+        s
+      }
+
+      // params need to extend Object
+      m.invoke(null, destDir, Boolean.box(o.json), input.toString).asInstanceOf[Int]
+    } catch {
+      case e: Throwable =>
+        println(s"This feature is not available")
+        -1
+    }
+  }
+
+  def awasGen(o: Cli.AwasOption): Int = {
+    println(s"Coming soon!")
+    println()
+    println(o.help)
+    0 // TODO
   }
 
   def paths2fileOpt(pathFor: String,
