@@ -572,3 +572,9 @@ object Logika {
   implicit def toInt(s: org.sireum.String): Predef.String = s.value
 
 }
+
+class Logika {
+  def run(option: LogikaOption): Int = {
+    Logika.run(option)
+  }
+}
