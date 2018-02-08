@@ -25,9 +25,9 @@
 
 package org.sireum.cli
 
-import org.sireum._
 import _root_.java.io._
 
+import org.sireum._
 import org.sireum.lang.tools._
 import org.sireum.lang.util.AccumulatingReporter
 
@@ -42,11 +42,10 @@ object Sireum extends App {
     case _ => -1
   })
 
-  def logika(o: Cli.LogikaOption): Int = {
-    println(s"Coming soon!")
-    println()
-    println(o.help)
-    0 // TODO
+  def logika(option: Cli.LogikaOption): Int = {
+    val clz = Class.forName("org.sireum.cli.Logika")
+    val o = clz.getDeclaredConstructor().newInstance()
+    clz.getMethod("run", option.getClass).invoke(o, option).asInstanceOf[Int]
   }
 
   def cliGen(o: Cli.CligenOption): Int = try {
@@ -59,12 +58,12 @@ object Sireum extends App {
     val src = paths2fileOpt("config file", o.args, T).get
     val destDir = path2fileOpt("output directory", o.outputDir, T).get
     if (!destDir.isDirectory) error(s"Path ${destDir.getPath} is not a directory")
-    val dest = new File(destDir, o.name.value + ".scala")
+    val dest = new File(destDir, o.name.get + ".scala")
     val (first, second) = o.width.size match {
       case z"2" => (o.width(0), o.width(1))
       case _ => (z"25", z"55")
     }
-    val out = CliGenJvm(lOpt, src, dest, o.packageName, Some(o.name), first, second)
+    val out = CliGenJvm(lOpt, src, dest, o.packageName, o.name, first, second)
     val fw = new FileWriter(dest)
     fw.write(out)
     fw.close()
@@ -90,12 +89,12 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.SerializerMode.Json =>
           (if (o.modes.size > 1)
-            if (o.name.value == "") String(o.name + "JSON") else o.name
-          else if (o.name.value == "") String("JSON") else o.name, SerializerGen.Mode.JSON)
+            if (o.name.isEmpty) String(o.name.get + "JSON") else o.name.get
+          else if (o.name.isEmpty) String("JSON") else o.name.get, SerializerGen.Mode.JSON)
         case Cli.SerializerMode.Msgpack =>
           (if (o.modes.size > 1)
-            if (o.name.value == "") String(o.name + "MsgPack") else o.name
-          else if (o.name.value == "") String("MsgPack") else o.name, SerializerGen.Mode.MessagePack)
+            if (o.name.isEmpty) String(o.name.get + "MsgPack") else o.name.get
+          else if (o.name.isEmpty) String("MsgPack") else o.name.get, SerializerGen.Mode.MessagePack)
       }
       val dest = new File(destDir, name.value + ".scala")
       val reporter = AccumulatingReporter.create
@@ -130,12 +129,12 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.TransformerMode.Immutable =>
           (if (o.modes.size > 1)
-            if (o.name.value == "") String(o.name + "Transformer") else o.name
-          else if (o.name.value == "") String("Transformer") else o.name, T)
+            if (o.name.isEmpty) String(o.name.get + "Transformer") else o.name.get
+          else if (o.name.isEmpty) String("Transformer") else o.name.get, T)
         case Cli.TransformerMode.Mutable =>
           (if (o.modes.size > 1)
-            if (o.name.value == "") String("M" + o.name + "Transformer") else o.name
-          else if (o.name.value == "") String("MTransformer") else o.name, F)
+            if (o.name.isEmpty) String("M" + o.name.get + "Transformer") else o.name.get
+          else if (o.name.isEmpty) String("MTransformer") else o.name.get, F)
       }
       val dest = new File(destDir, name.value + ".scala")
       val reporter = AccumulatingReporter.create
@@ -171,10 +170,10 @@ object Sireum extends App {
   }
 
   def path2fileOpt(pathFor: String,
-                   path: String,
+                   path: Option[String],
                    checkExist: B): scala.Option[File] = {
-    if (path.value == "") return scala.None
-    val f = new File(path.value)
+    if (path.isEmpty) return scala.None
+    val f = new File(path.get.value)
     if (checkExist && !f.exists) error(s"File '$path' does not exist.")
     return scala.Some(f.getCanonicalFile)
   }
