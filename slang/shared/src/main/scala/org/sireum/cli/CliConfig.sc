@@ -21,9 +21,7 @@
  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-{
+ */ {
 
   import org.sireum._
   import org.sireum.lang.tools.CliGen.CliOpt._
@@ -37,27 +35,43 @@
           |... for Propositional, Predicate, and Programming Logics""".render,
     usage = "<option>* <file>+",
     opts = ISZ(
-      Opt(name = "auto", longKey = "auto", shortKey = Some('a'),
-        tpe = Type.Flag(F), description = "Enables auto mode"),
-      Opt(name = "symexe", longKey = "symexe", shortKey = Some('x'),
-        tpe = Type.Flag(F), description = "Enables symbolic execution mode"),
       Opt(name = "formula", longKey = "formula", shortKey = Some('f'),
         tpe = Type.Str(sep = None(), default = None()),
-        description = "Enables symbolic execution mode"),
-      Opt(name = "bitwidth", longKey = "bitwidth", shortKey = Some('b'),
-        tpe = Type.NumChoice(sep = None(), choices = ISZ(0, 8, 16, 32, 64)),
-        description = "Default bitwidth for Z and N"),
-      Opt(name = "last", longKey = "last", shortKey = Some('l'),
-        tpe = Type.Flag(F), description = "Verifies the last file only"),
-      Opt(name = "sat", longKey = "sat", shortKey = None(),
-        tpe = Type.Flag(F), description = "Enables facts and contracts satisfiability checking"),
+        description = "Formula/sequent matching the truth table/logic input file's"),
       Opt(name = "server", longKey = "server", shortKey = None(),
-        tpe = Type.Flag(F), description = "Enables symbolic execution mode"),
-      Opt(name = "timeout", longKey = "timeout", shortKey = Some('t'),
-        tpe = Type.Num(sep = None(), default = 1000, min = Some(1000), max = None()),
-        description = "Timeout for SMT2 solver (in milliseconds)")
+        tpe = Type.Flag(F), description = "Enable server mode")
     ),
-    groups = ISZ()
+    groups = ISZ(
+      OptGroup(name = "Programming Logic", opts = ISZ(
+        Opt(name = "auto", longKey = "auto", shortKey = Some('a'),
+          tpe = Type.Flag(F), description = "Enable auto mode"),
+        Opt(name = "bitwidth", longKey = "bitwidth", shortKey = Some('b'),
+          tpe = Type.NumChoice(sep = None(), choices = ISZ(0, 8, 16, 32, 64)),
+          description = "Default integer bit-width for symbolic execution & translation"),
+        Opt(name = "c", longKey = "c", shortKey = None(),
+          tpe = Type.Path(multiple = F, default = None()),
+          description = "File/directory path for C translation"),
+        Opt(name = "compare", longKey = "compare", shortKey = None(),
+          tpe = Type.Flag(F), description = "Compare well-formed input program files (sans contracts/prints)"),
+        Opt(name = "last", longKey = "last", shortKey = Some('l'),
+          tpe = Type.Flag(F), description = "Check last program only"),
+        Opt(name = "run", longKey = "run", shortKey = None(),
+          tpe = Type.Flag(F), description = "Run input program file(s)"),
+        Opt(name = "sat", longKey = "sat", shortKey = None(),
+          tpe = Type.Flag(F), description = "Enable sat checking of facts and contracts"),
+        Opt(name = "symexe", longKey = "symexe", shortKey = Some('x'),
+          tpe = Type.Flag(F), description = "Enable symbolic execution"),
+        Opt(name = "timeout", longKey = "timeout", shortKey = Some('t'),
+          tpe = Type.Num(sep = None(), default = 1000, min = Some(1000), max = None()),
+          description = "Timeout for algebra and auto (in milliseconds)"))
+      ),
+      OptGroup(name = "Symbol Conversion", opts = ISZ(
+        Opt(name = "ascii", longKey = "ascii", shortKey = None(),
+          tpe = Type.Flag(F), description = "Convert to ASCII"),
+        Opt(name = "unicode", longKey = "unicode", shortKey = None(),
+          tpe = Type.Flag(F), description = "Convert to Unicode"))
+      )
+    )
   )
 
   val cliGenTool: Tool = Tool(
