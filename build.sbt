@@ -302,7 +302,7 @@ lazy val webJs = webT._3.settings(webSettings: _*)
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
 lazy val java = toSbtJvmProject(javaPI)
 
-lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI)
+lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, slangPI)
 lazy val cli = toSbtJvmProject(cliPI)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, skemaPI)
@@ -363,7 +363,7 @@ lazy val sireumJvm =
       Seq(
         name := "Sireum.jvm",
         libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
-        assembly / mainClass := Some("org.Sireum"),
+        assembly / mainClass := Some("org.sireum.cli.Sireum"),
         assembly / assemblyOutputPath := file("bin/sireum.jar"),
         assembly / test := {},
         assembly / logLevel := Level.Error,
