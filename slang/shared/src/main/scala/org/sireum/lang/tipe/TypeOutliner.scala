@@ -56,7 +56,7 @@ object TypeOutliner {
       for (p <- typeHierarchy.poset.parentsOf(TypeHierarchy.TypeName(AST.Typed.Name(name, ISZ()))).elements if r) {
         typeMap.get(p.t.ids).get match {
           case ti: TypeInfo.TypeAlias =>
-            val t = typeHierarchy.dealiasInit(AST.Typed.Name(ti.name, ISZ()), reporter).get
+            val t = typeHierarchy.dealiasInit(None(), AST.Typed.Name(ti.name, ISZ()), reporter).get
             r = isOutlined(t.ids)
           case ti =>
             r = isOutlined(ti.name)
@@ -66,10 +66,21 @@ object TypeOutliner {
     }
 
     var workList = typeHierarchy.rootTypeNames()
+
+    var typeAliases: ISZ[TypeInfo.TypeAlias] = ISZ()
+    for (typeInfo <- typeHierarchy.typeMap.values) {
+      typeInfo match {
+        case typeInfo: TypeInfo.TypeAlias => typeAliases = typeAliases :+ typeInfo
+        case _ =>
+      }
+    }
+
     var th = typeHierarchy
+    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)](
+      () => TypeOutliner(th).outlineTypeAliases(typeAliases)
+    )
     while (workList.nonEmpty && !reporter.hasIssue) {
       var l = ISZ[QName]()
-      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
       for (name <- workList) {
         val ti = th.typeMap.get(name).get
         var ok: B = F
@@ -113,6 +124,7 @@ object TypeOutliner {
       reporter.reports(r._2.messages)
       th = r._1
       workList = l
+      jobs = ISZ()
     }
     if (!reporter.hasIssue) {
       var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
@@ -287,6 +299,22 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(nameMap = th.nameMap.putAll(infos).put(info.name, info(outlined = T))), reporter)
   }
 
+  @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+    val reporter = AccumulatingReporter.create
+    var r = ISZ[(QName, TypeInfo)]()
+    for (info <- infos) {
+      val tm = typeParamMap(info.ast.typeParams, reporter)
+      val scope = localTypeScope(tm.map, info.scope)
+      val newTipeOpt = typeHierarchy.typed(scope, info.ast.tipe, reporter)
+      val newInfo: TypeInfo.TypeAlias = newTipeOpt match {
+        case Some(newTipe) => info(ast = info.ast(tipe = newTipe))
+        case _ => info
+      }
+      r = r :+ ((info.name, newInfo))
+    }
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.putAll(r)), reporter)
+  }
+
   @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
     val reporter = AccumulatingReporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
@@ -320,12 +348,17 @@ object TypeOutliner {
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
     var newParams = ISZ[AST.AbstractDatatypeParam]()
     var paramTypes = ISZ[AST.Typed]()
+    var extractorTypeMap = Map.empty[String, AST.Typed]
     for (p <- info.ast.params) {
       val newTipeOpt = typeHierarchy.typed(scope, p.tipe, reporter)
       newTipeOpt match {
         case Some(newTipe) if newTipe.typedOpt.nonEmpty =>
-          paramTypes = paramTypes :+ newTipe.typedOpt.get
+          val t = newTipe.typedOpt.get
+          paramTypes = paramTypes :+ t
           newParams = newParams :+ p(tipe = newTipe)
+          if (!p.isHidden) {
+            extractorTypeMap = extractorTypeMap.put(p.id.value, t)
+          }
         case _ =>
       }
     }
@@ -355,6 +388,7 @@ object TypeOutliner {
               AST.Typed.Fun(T, F, paramTypes, info.tpe)
             )
           ),
+          extractorTypeMap = extractorTypeMap,
           specVars = specVars,
           vars = vars,
           specMethods = specMethods,
