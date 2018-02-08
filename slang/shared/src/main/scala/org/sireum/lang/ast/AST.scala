@@ -481,28 +481,72 @@ object Type {
 
 }
 
-@datatype trait Pattern
+@datatype trait Pattern {
+  @pure def posOpt: Option[PosInfo]
+}
 
 object Pattern {
 
-  @datatype class Literal(lit: Lit) extends Pattern
+  @datatype class Literal(lit: Lit) extends Pattern {
 
-  @datatype class LitInterpolate(prefix: String, value: String, @hidden attr: TypedAttr) extends Pattern
+    @pure override def posOpt: Option[PosInfo] = {
+      return lit.posOpt
+    }
 
-  @datatype class Ref(name: Name, @hidden attr: ResolvedAttr) extends Pattern
+  }
 
-  @datatype class VarBinding(id: Id, typeOpt: Option[Type], @hidden attr: Attr) extends Pattern
+  @datatype class LitInterpolate(prefix: String, value: String, @hidden attr: TypedAttr) extends Pattern {
 
-  @datatype class Wildcard(typeOpt: Option[Type], @hidden attr: Attr) extends Pattern
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
 
-  @datatype class SeqWildcard(@hidden attr: TypedAttr) extends Pattern
+  }
+
+  @datatype class Ref(name: Name, @hidden attr: ResolvedAttr) extends Pattern {
+
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
+
+  @datatype class VarBinding(id: Id, typeOpt: Option[Type], @hidden attr: Attr) extends Pattern {
+
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
+
+  @datatype class Wildcard(typeOpt: Option[Type], @hidden attr: Attr) extends Pattern {
+
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
+
+  @datatype class SeqWildcard(@hidden attr: TypedAttr) extends Pattern {
+
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
   @datatype class Structure(
     idOpt: Option[Id],
     nameOpt: Option[Name],
     patterns: ISZ[Pattern],
     @hidden attr: ResolvedAttr
-  ) extends Pattern
+  ) extends Pattern {
+
+    @pure override def posOpt: Option[PosInfo] = {
+      return attr.posOpt
+    }
+
+  }
 
 }
 
@@ -514,7 +558,11 @@ object Pattern {
 
 }
 
-@sig sealed trait Lit
+@sig sealed trait Lit {
+
+  @pure def posOpt: Option[PosInfo]
+
+}
 
 object Exp {
 
