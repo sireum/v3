@@ -265,7 +265,7 @@ object TypeHierarchy {
         val ancestors: ISZ[AST.Typed.Name] = typeMap.get(tn.ids) match {
           case Some(info: TypeInfo.Sig) => info.ancestors
           case Some(info: TypeInfo.AbstractDatatype) => info.ancestors
-          case _ => halt("Unexpected situation while type checking assign-exp.")
+          case _ => halt(s"Unexpected situation while computing the least upper bound of { '${(ts, "', '")}' }.")
         }
         val lubName = lub.t.ids
         var commonType = tn
@@ -282,6 +282,53 @@ object TypeHierarchy {
           }
         }
         return Some(commonType)
+      case _ => return None()
+    }
+  }
+
+  @pure def glb(ts: ISZ[AST.Typed]): Option[AST.Typed] = {
+    val types: ISZ[AST.Typed] =
+      for (t <- ts if AST.Typed.nothing != t) yield t
+    types.size match {
+      case z"0" => return if (ts.isEmpty) None() else Some(ts(0))
+      case z"1" => return Some(types(0))
+      case _ =>
+    }
+
+    var typeNames = ISZ[AST.Typed.Name]()
+    val first = types(0)
+    var i = 0
+    val size = types.size
+    while (i < size) {
+      types(i) match {
+        case t: AST.Typed.Name =>
+          typeNames = typeNames :+ t
+        case t =>
+          if (first != t) {
+            return None()
+          }
+      }
+      i = i + 1
+    }
+
+    if (typeNames.size < 2) {
+      return Some(first)
+    }
+
+    val tns = typeNames.map(tn => TypeHierarchy.TypeName(tn))
+    poset.glb(tns) match {
+      case Some(glb) =>
+        val (tpe, ancestors): (AST.Typed, HashSet[AST.Typed.Name]) = typeMap.get(glb.t.ids) match {
+          case Some(info: TypeInfo.Sig) => (info.tpe, HashSet.empty[AST.Typed.Name].addAll(info.ancestors))
+          case Some(info: TypeInfo.AbstractDatatype) => (info.tpe, HashSet.empty[AST.Typed.Name].addAll(info.ancestors))
+          case _ => halt(s"Unexpected situation while computing the greatest lower bound of { '${(ts, "', '")}' }.")
+        }
+        for (t <- typeNames) {
+          if (!ancestors.contains(t)) {
+            return None()
+          }
+        }
+        return Some(tpe)
       case _ => return None()
     }
   }
