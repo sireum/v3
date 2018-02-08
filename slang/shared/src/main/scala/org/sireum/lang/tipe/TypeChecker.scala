@@ -207,23 +207,13 @@ import TypeChecker._
           return None()
         }
         if (tpe.ids.size == 3) {
-          if (tpe.ids == AST.Typed.b.ids) {
-            return Some(BasicKind.B)
-          }
-          if (tpe.ids == AST.Typed.z.ids) {
-            return Some(BasicKind.Z)
-          }
-          if (tpe.ids == AST.Typed.c.ids) {
-            return Some(BasicKind.C)
-          }
-          if (tpe.ids == AST.Typed.f32.ids) {
-            return Some(BasicKind.F32)
-          }
-          if (tpe.ids == AST.Typed.f64.ids) {
-            return Some(BasicKind.F64)
-          }
-          if (tpe.ids == AST.Typed.r.ids) {
-            return Some(BasicKind.R)
+          tpe.ids match {
+            case AST.Typed.bName => return Some(BasicKind.B)
+            case AST.Typed.zName => return Some(BasicKind.Z)
+            case AST.Typed.cName => return Some(BasicKind.C)
+            case AST.Typed.f32Name => return Some(BasicKind.F32)
+            case AST.Typed.f64Name => return Some(BasicKind.F64)
+            case AST.Typed.rName => return Some(BasicKind.R)
           }
         }
         scope.resolveType(typeMap, tpe.ids) match {
@@ -1781,7 +1771,7 @@ import TypeChecker._
   }
 
   def checkPattern(
-    expectedOpt: Option[AST.Typed],
+    expected: AST.Typed,
     scope: Scope.Local,
     pattern: AST.Pattern,
     reporter: Reporter
@@ -1838,7 +1828,7 @@ import TypeChecker._
     var newCases = ISZ[AST.Case]()
     for (c <- stmt.cases) {
       val (newScopeOpt, newPattern) =
-        checkPattern(Some(expType), scope, c.pattern, reporter)
+        checkPattern(expType, scope, c.pattern, reporter)
       newScopeOpt match {
         case Some(newScope) =>
           val newCondOpt: Option[AST.Exp] = c.condOpt match {
