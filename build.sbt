@@ -368,6 +368,7 @@ lazy val sireumJvm =
         assembly / test := {},
         assembly / logLevel := Level.Error,
         assembly / assemblyMergeStrategy := {
+          case PathList("transformed", _*) =>  MergeStrategy.discard
           case PathList("org", "sireum", _*) => new MergeStrategy {
             override def name: String = "sireum"
 
