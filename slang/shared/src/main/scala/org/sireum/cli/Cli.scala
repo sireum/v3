@@ -41,24 +41,29 @@ object Cli {
   @datatype class LogikaOption(
     help: String,
     args: ISZ[String],
-    auto: B,
-    symexe: B,
-    formula: String,
-    bitwidth: Z,
-    last: B,
-    sat: B,
+    formula: Option[String],
     server: B,
-    timeout: Z
+    auto: B,
+    bitwidth: Z,
+    c: Option[String],
+    compare: B,
+    last: B,
+    run: B,
+    sat: B,
+    symexe: B,
+    timeout: Z,
+    ascii: B,
+    unicode: B
   ) extends SireumOption
 
   @datatype class CligenOption(
     help: String,
     args: ISZ[String],
     packageName: ISZ[String],
-    name: String,
+    name: Option[String],
     width: ISZ[Z],
-    license: String,
-    outputDir: String
+    license: Option[String],
+    outputDir: Option[String]
   ) extends SireumOption
 
   @enum object SerializerMode {
@@ -70,9 +75,9 @@ object Cli {
     help: String,
     args: ISZ[String],
     modes: ISZ[SerializerMode.Type],
-    name: String,
-    license: String,
-    outputDir: String
+    name: Option[String],
+    license: Option[String],
+    outputDir: Option[String]
   ) extends SireumOption
 
   @enum object TransformerMode {
@@ -84,9 +89,9 @@ object Cli {
     help: String,
     args: ISZ[String],
     modes: ISZ[TransformerMode.Type],
-    name: String,
-    license: String,
-    outputDir: String
+    name: Option[String],
+    license: Option[String],
+    outputDir: Option[String]
   ) extends SireumOption
 }
 
@@ -123,26 +128,42 @@ import Cli._
           |Usage: <option>* <file>+
           |
           |Available Options:
-          |-a, --auto               Enables auto mode
-          |-x, --symexe             Enables symbolic execution mode
-          |-f, --formula            Enables symbolic execution mode (expects a string)
-          |-b, --bitwidth           Default bitwidth for Z and N (expects one of { 0, 8,
-          |                           16, 32, 64 })
-          |-l, --last               Verifies the last file only
-          |    --sat                Enables facts and contracts satisfiability checking
-          |    --server             Enables symbolic execution mode
-          |-t, --timeout            Timeout for SMT2 solver (in milliseconds) (expects an
-          |                           integer; default is 1000)
-          |-h, --help               Display this information""".render
+          |-f, --formula            Formula/sequent matching the truth table/logic input
+          |                           file's (expects a string)
+          |    --server             Enable server mode
+          |-h, --help               Display this information
+          |
+          |Programming Logic Options:
+          |-a, --auto               Enable auto mode
+          |-b, --bitwidth           Default integer bit-width for symbolic execution &
+          |                           translation (expects one of { 0, 8, 16, 32, 64 })
+          |    --c                  File/directory path for C translation (expects a path)
+          |    --compare            Compare well-formed input program files (sans
+          |                           contracts/prints)
+          |-l, --last               Check last program only
+          |    --run                Run input program file(s)
+          |    --sat                Enable sat checking of facts and contracts
+          |-x, --symexe             Enable symbolic execution
+          |-t, --timeout            Timeout for algebra and auto (in milliseconds)
+          |                           (expects an integer; default is 1000)
+          |
+          |Symbol Conversion Options:
+          |    --ascii              Convert to ASCII
+          |    --unicode            Convert to Unicode""".render
 
-    var auto: B = false
-    var symexe: B = false
-    var formula: String = ""
-    var bitwidth: Z = 0
-    var last: B = false
-    var sat: B = false
+    var formula: Option[String] = None[String]()
     var server: B = false
+    var auto: B = false
+    var bitwidth: Z = 0
+    var c: Option[String] = None[String]()
+    var compare: B = false
+    var last: B = false
+    var run: B = false
+    var sat: B = false
+    var symexe: B = false
     var timeout: Z = 1000
+    var ascii: B = false
+    var unicode: B = false
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -151,40 +172,10 @@ import Cli._
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())
-        } else if (arg == "-a" || arg == "--auto") {
-           val o: Option[B] = { j = j - 1; Some(!auto) }
-           o match {
-             case Some(v) => auto = v
-             case _ => return None()
-           }
-         } else if (arg == "-x" || arg == "--symexe") {
-           val o: Option[B] = { j = j - 1; Some(!symexe) }
-           o match {
-             case Some(v) => symexe = v
-             case _ => return None()
-           }
-         } else if (arg == "-f" || arg == "--formula") {
-           val o: Option[String] = parseString(args, j + 1)
+        } else if (arg == "-f" || arg == "--formula") {
+           val o: Option[Option[String]] = parseString(args, j + 1)
            o match {
              case Some(v) => formula = v
-             case _ => return None()
-           }
-         } else if (arg == "-b" || arg == "--bitwidth") {
-           val o: Option[Z] = parseNumChoice(args, j + 1, ISZ(z"0", z"8", z"16", z"32", z"64"))
-           o match {
-             case Some(v) => bitwidth = v
-             case _ => return None()
-           }
-         } else if (arg == "-l" || arg == "--last") {
-           val o: Option[B] = { j = j - 1; Some(!last) }
-           o match {
-             case Some(v) => last = v
-             case _ => return None()
-           }
-         } else if (arg == "--sat") {
-           val o: Option[B] = { j = j - 1; Some(!sat) }
-           o match {
-             case Some(v) => sat = v
              case _ => return None()
            }
          } else if (arg == "--server") {
@@ -193,10 +184,70 @@ import Cli._
              case Some(v) => server = v
              case _ => return None()
            }
+         } else if (arg == "-a" || arg == "--auto") {
+           val o: Option[B] = { j = j - 1; Some(!auto) }
+           o match {
+             case Some(v) => auto = v
+             case _ => return None()
+           }
+         } else if (arg == "-b" || arg == "--bitwidth") {
+           val o: Option[Z] = parseNumChoice(args, j + 1, ISZ(z"0", z"8", z"16", z"32", z"64"))
+           o match {
+             case Some(v) => bitwidth = v
+             case _ => return None()
+           }
+         } else if (arg == "--c") {
+           val o: Option[Option[String]] = parsePath(args, j + 1)
+           o match {
+             case Some(v) => c = v
+             case _ => return None()
+           }
+         } else if (arg == "--compare") {
+           val o: Option[B] = { j = j - 1; Some(!compare) }
+           o match {
+             case Some(v) => compare = v
+             case _ => return None()
+           }
+         } else if (arg == "-l" || arg == "--last") {
+           val o: Option[B] = { j = j - 1; Some(!last) }
+           o match {
+             case Some(v) => last = v
+             case _ => return None()
+           }
+         } else if (arg == "--run") {
+           val o: Option[B] = { j = j - 1; Some(!run) }
+           o match {
+             case Some(v) => run = v
+             case _ => return None()
+           }
+         } else if (arg == "--sat") {
+           val o: Option[B] = { j = j - 1; Some(!sat) }
+           o match {
+             case Some(v) => sat = v
+             case _ => return None()
+           }
+         } else if (arg == "-x" || arg == "--symexe") {
+           val o: Option[B] = { j = j - 1; Some(!symexe) }
+           o match {
+             case Some(v) => symexe = v
+             case _ => return None()
+           }
          } else if (arg == "-t" || arg == "--timeout") {
            val o: Option[Z] = parseNum(args, j + 1, Some(1000), None())
            o match {
              case Some(v) => timeout = v
+             case _ => return None()
+           }
+         } else if (arg == "--ascii") {
+           val o: Option[B] = { j = j - 1; Some(!ascii) }
+           o match {
+             case Some(v) => ascii = v
+             case _ => return None()
+           }
+         } else if (arg == "--unicode") {
+           val o: Option[B] = { j = j - 1; Some(!unicode) }
+           o match {
+             case Some(v) => unicode = v
              case _ => return None()
            }
          } else {
@@ -208,7 +259,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(LogikaOption(help, parseArguments(args, j), auto, symexe, formula, bitwidth, last, sat, server, timeout))
+    return Some(LogikaOption(help, parseArguments(args, j), formula, server, auto, bitwidth, c, compare, last, run, sat, symexe, timeout, ascii, unicode))
   }
 
   def parseUtil(args: ISZ[String], i: Z): Option[SireumOption] = {
@@ -253,10 +304,10 @@ import Cli._
           |-h, --help               Display this information""".render
 
     var packageName: ISZ[String] = ISZ("cli")
-    var name: String = "Cli"
+    var name: Option[String] = Some("Cli")
     var width: ISZ[Z] = ISZ()
-    var license: String = ""
-    var outputDir: String = "."
+    var license: Option[String] = None[String]()
+    var outputDir: Option[String] = Some(".")
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -272,7 +323,7 @@ import Cli._
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o: Option[String] = parseString(args, j + 1)
+           val o: Option[Option[String]] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
@@ -284,13 +335,13 @@ import Cli._
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()
@@ -360,9 +411,9 @@ import Cli._
           |-h, --help               Display this information""".render
 
     var modes: ISZ[SerializerMode.Type] = ISZ(SerializerMode.Json)
-    var name: String = ""
-    var license: String = ""
-    var outputDir: String = "."
+    var name: Option[String] = None[String]()
+    var license: Option[String] = None[String]()
+    var outputDir: Option[String] = Some(".")
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -378,19 +429,19 @@ import Cli._
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o: Option[String] = parseString(args, j + 1)
+           val o: Option[Option[String]] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()
@@ -460,9 +511,9 @@ import Cli._
           |-h, --help               Display this information""".render
 
     var modes: ISZ[TransformerMode.Type] = ISZ(TransformerMode.Immutable)
-    var name: String = ""
-    var license: String = ""
-    var outputDir: String = "."
+    var name: Option[String] = None[String]()
+    var license: Option[String] = None[String]()
+    var outputDir: Option[String] = Some(".")
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -478,19 +529,19 @@ import Cli._
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
-           val o: Option[String] = parseString(args, j + 1)
+           val o: Option[Option[String]] = parseString(args, j + 1)
            o match {
              case Some(v) => name = v
              case _ => return None()
            }
          } else if (arg == "-l" || arg == "--license") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => license = v
              case _ => return None()
            }
          } else if (arg == "-o" || arg == "--output-dir") {
-           val o: Option[String] = parsePath(args, j + 1)
+           val o: Option[Option[String]] = parsePath(args, j + 1)
            o match {
              case Some(v) => outputDir = v
              case _ => return None()
@@ -521,11 +572,11 @@ import Cli._
     return tokenize(args, i, "path", pathSep, F)
   }
 
-  def parsePath(args: ISZ[String], i: Z): Option[String] = {
+  def parsePath(args: ISZ[String], i: Z): Option[Option[String]] = {
     if (i >= args.size) {
       eprintln("Expecting a path, but none found.")
     }
-    return Some(args(i))
+    return Some(Some(args(i)))
   }
 
   def parseStrings(args: ISZ[String], i: Z, sep: C): Option[ISZ[String]] = {
@@ -535,12 +586,12 @@ import Cli._
     }
   }
 
-  def parseString(args: ISZ[String], i: Z): Option[String] = {
+  def parseString(args: ISZ[String], i: Z): Option[Option[String]] = {
     if (i >= args.size) {
       eprintln("Expecting a string, but none found.")
       return None()
     }
-    return Some(args(i))
+    return Some(Some(args(i)))
   }
 
   def parseNums(args: ISZ[String], i: Z, sep: C, minOpt: Option[Z], maxOpt: Option[Z]): Option[ISZ[Z]] = {
