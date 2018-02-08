@@ -277,6 +277,36 @@ import TypeChecker._
     }
   }
 
+  @pure def checkInfo(info: Info): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+    info match {
+      case info: Info.LocalVar => return (info.typedOpt, info.resOpt)
+      case info: Info.Package => return (info.typedOpt, info.resOpt)
+      case info: Info.Object => return (info.typedOpt, info.resOpt)
+      case info: Info.Enum => return (info.typedOpt, info.resOpt)
+      case info: Info.Method =>
+        return if (inSpec && info.ast.purity == AST.Purity.Impure)
+          (None(), None())
+        else (info.typedOpt, info.resOpt)
+      case info: Info.ExtMethod =>
+        return if (inSpec && !info.ast.isPure) (None(), None())
+        else (info.typedOpt, info.resOpt)
+      case info: Info.Var => return (info.typedOpt, info.resOpt)
+      case info: Info.QuantVar =>
+        return if (inSpec) (info.typedOpt, info.resOpt) else (None(), None())
+      case info: Info.SpecMethod =>
+        return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
+      case info: Info.SpecVar =>
+        return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
+    }
+  }
+
+  @pure def checkInfoOpt(infoOpt: Option[Info]): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+    infoOpt match {
+      case Some(info) => return checkInfo(info)
+      case _ => return (None(), None())
+    }
+  }
+
   def checkExp(
     expectedOpt: Option[AST.Typed],
     scope: Scope,
@@ -461,36 +491,6 @@ import TypeChecker._
       val tOpt: Option[AST.Typed] = Some(t)
       r = r(attr = r.attr(typedOpt = tOpt))
       return (r, tOpt)
-    }
-
-    @pure def checkInfo(info: Info): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
-      info match {
-        case info: Info.LocalVar => return (info.typedOpt, info.resOpt)
-        case info: Info.Package => return (info.typedOpt, info.resOpt)
-        case info: Info.Object => return (info.typedOpt, info.resOpt)
-        case info: Info.Enum => return (info.typedOpt, info.resOpt)
-        case info: Info.Method =>
-          return if (inSpec && info.ast.purity == AST.Purity.Impure)
-            (None(), None())
-          else (info.typedOpt, info.resOpt)
-        case info: Info.ExtMethod =>
-          return if (inSpec && !info.ast.isPure) (None(), None())
-          else (info.typedOpt, info.resOpt)
-        case info: Info.Var => return (info.typedOpt, info.resOpt)
-        case info: Info.QuantVar =>
-          return if (inSpec) (info.typedOpt, info.resOpt) else (None(), None())
-        case info: Info.SpecMethod =>
-          return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
-        case info: Info.SpecVar =>
-          return if (!inSpec) (None(), None()) else (info.typedOpt, info.resOpt)
-      }
-    }
-
-    @pure def checkInfoOpt(infoOpt: Option[Info]): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
-      infoOpt match {
-        case Some(info) => return checkInfo(info)
-        case _ => return (None(), None())
-      }
     }
 
     def checkStringInterpolate(exp: AST.Exp.StringInterpolate): (AST.Exp, Option[AST.Typed]) = {
@@ -1602,20 +1602,20 @@ import TypeChecker._
             case _ => val r = checkInvokeNamed(exp); return r
           }
 
-        case exp: AST.Exp.LitB => return (exp, Some(AST.Typed.b))
+        case exp: AST.Exp.LitB => return (exp, exp.typedOpt)
 
-        case exp: AST.Exp.LitC => return (exp, Some(AST.Typed.c))
+        case exp: AST.Exp.LitC => return (exp, exp.typedOpt)
 
-        case exp: AST.Exp.LitF32 => return (exp, Some(AST.Typed.f32))
+        case exp: AST.Exp.LitF32 => return (exp, exp.typedOpt)
 
-        case exp: AST.Exp.LitF64 => return (exp, Some(AST.Typed.f64))
+        case exp: AST.Exp.LitF64 => return (exp, exp.typedOpt)
 
-        case exp: AST.Exp.LitR => return (exp, Some(AST.Typed.r))
+        case exp: AST.Exp.LitR => return (exp, exp.typedOpt)
 
         case exp: AST.Exp.LitString =>
           return (exp, Some(AST.Typed.string))
 
-        case exp: AST.Exp.LitZ => return (exp, Some(AST.Typed.z))
+        case exp: AST.Exp.LitZ => return (exp, exp.typedOpt)
 
         case exp: AST.Exp.Quant => halt("Unimplemented") // TODO
 
@@ -1772,11 +1772,94 @@ import TypeChecker._
 
   def checkPattern(
     expected: AST.Typed,
-    scope: Scope.Local,
+    sc: Scope.Local,
     pattern: AST.Pattern,
     reporter: Reporter
   ): (Option[Scope.Local], AST.Pattern) = {
-    halt("Unimplemented") // TODO
+
+    var scope = Scope.Local(HashMap.empty, HashMap.empty, None(), Some(sc))
+    var ok = T
+
+    def checkPatternH(expected: AST.Typed): AST.Pattern = {
+      pattern match {
+        case pattern: AST.Pattern.Wildcard =>
+          return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+        case pattern: AST.Pattern.SeqWildcard =>
+          return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+        case pattern: AST.Pattern.Ref =>
+          val refName = pattern.name.ids.map(id => id.value)
+          checkInfoOpt(scope.resolveName(typeHierarchy.nameMap, refName)) match {
+            case (Some(t), resOpt) =>
+              if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
+                reporter.error(
+                  pattern.posOpt,
+                  typeCheckerKind,
+                  s"Fruitless matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
+                )
+                ok = F
+              }
+              return pattern(attr = pattern.attr(typedOpt = Some(t), resOpt = resOpt))
+            case _ =>
+              reporter.error(pattern.posOpt, typeCheckerKind,
+                s"Could not resolve '${(refName, ".")}'.")
+              return pattern
+          }
+        case pattern: AST.Pattern.Literal =>
+          val t = pattern.lit.typedOpt.get
+          if (t != expected) {
+            reporter.error(pattern.posOpt, typeCheckerKind, s"Cannot match $t with $expected.")
+          }
+          return pattern
+        case pattern: AST.Pattern.LitInterpolate =>
+          val t: AST.Typed = pattern.prefix.native match {
+            case "z" => AST.Typed.z
+            case "r" => AST.Typed.r
+            case "c" => AST.Typed.c
+            case "f32" => AST.Typed.f32
+            case "f64" => AST.Typed.f64
+            case "string" => AST.Typed.string
+            case _ => halt("Unimplemented") // TODO
+          }
+          if (t != expected) {
+            reporter.error(pattern.posOpt, typeCheckerKind, s"Cannot match $t with $expected.")
+          }
+          return pattern(attr = pattern.attr(typedOpt = Some(t)))
+        case pattern: AST.Pattern.VarBinding =>
+          pattern.tipeOpt match {
+            case Some(tipe) =>
+              val newTipeOpt = typeHierarchy.typed(scope, tipe, reporter)
+              newTipeOpt match {
+                case Some(newTipe) if newTipe.typedOpt.nonEmpty =>
+                  val t = newTipe.typedOpt.get
+                  if (!typeHierarchy.isSubType(expected, t)) {
+                    if (typeHierarchy.isSubType(t, expected)) {
+                      reporter.warn(
+                        tipe.posOpt,
+                        typeCheckerKind,
+                        s"Unnecessary type matching because it is always going to be successful (i.e.,  $t <: $expected)."
+                      )
+                    } else {
+                      if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
+                        reporter.error(
+                          tipe.posOpt,
+                          typeCheckerKind,
+                          s"Fruitless type matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
+                        )
+                        ok = F
+                      }
+                    }
+                  }
+                  return pattern(tipeOpt = newTipeOpt, attr = pattern.attr(typedOpt = Some(t)))
+                case _ => ok = F; return pattern(tipeOpt = newTipeOpt)
+              }
+            case _ => return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+          }
+        case pattern: AST.Pattern.Structure => halt("Unimplemented") // TODO
+      }
+
+    }
+    val r = checkPatternH(expected)
+    return if (ok) (Some(scope), r) else (None(), r)
   }
 
   def checkExpr(
