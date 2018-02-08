@@ -89,16 +89,16 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.SerializerMode.Json =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String("JSON") else o.name.get
-          else if (o.name.isEmpty) String("JSON") else o.name.get, SerializerGen.Mode.JSON)
+            if (o.name.isEmpty) "JSON" else s"${o.name.get}JSON"
+          else if (o.name.isEmpty) "JSON" else o.name.get.value, SerializerGen.Mode.JSON)
         case Cli.SerializerMode.Msgpack =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String("MsgPack") else o.name.get
-          else if (o.name.isEmpty) String("MsgPack") else o.name.get, SerializerGen.Mode.MessagePack)
+            if (o.name.isEmpty) "MsgPack" else s"${o.name.get}MsgPack"
+          else if (o.name.isEmpty) "MsgPack" else o.name.get.value, SerializerGen.Mode.MessagePack)
       }
-      val dest = new File(destDir, name.value + ".scala")
+      val dest = new File(destDir, name + ".scala")
       val reporter = AccumulatingReporter.create
-      SerializerGenJvm(T, mode, lOpt, src, dest, Some(name), reporter) match {
+      SerializerGenJvm(T, mode, lOpt, src, dest, Some(String(name)), reporter) match {
         case Some(out) =>
           val fw = new FileWriter(dest)
           fw.write(out)
@@ -129,16 +129,16 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.TransformerMode.Immutable =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String("Transformer") else o.name.get
-          else if (o.name.isEmpty) String("Transformer") else o.name.get, T)
+            if (o.name.isEmpty) "Transformer" else s"${o.name.get}Transformer"
+          else if (o.name.isEmpty) "Transformer" else o.name.get.value, T)
         case Cli.TransformerMode.Mutable =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String("MTransformer") else o.name.get
-          else if (o.name.isEmpty) String("MTransformer") else o.name.get, F)
+            if (o.name.isEmpty) "MTransformer" else s"M${o.name.get}Transformer"
+          else if (o.name.isEmpty) "MTransformer" else o.name.get.value, F)
       }
-      val dest = new File(destDir, name.value + ".scala")
+      val dest = new File(destDir, name + ".scala")
       val reporter = AccumulatingReporter.create
-      TransformerGenJvm(T, mode, lOpt, src, dest, Some(name), reporter) match {
+      TransformerGenJvm(T, mode, lOpt, src, dest, Some(String(name)), reporter) match {
         case Some(out) =>
           val fw = new FileWriter(dest)
           fw.write(out)
