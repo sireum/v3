@@ -1537,7 +1537,9 @@ object Typed {
 
   val optionName: ISZ[String] = sireumName :+ "Option"
   val isName: ISZ[String] = sireumName :+ "IS"
+  val isResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Type(isName))
   val msName: ISZ[String] = sireumName :+ "MS"
+  val msResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Type(msName))
   val iszName: ISZ[String] = sireumName :+ "ISZ"
   val mszName: ISZ[String] = sireumName :+ "MSZ"
   val zsName: ISZ[String] = sireumName :+ "ZS"
