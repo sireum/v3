@@ -89,11 +89,11 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.SerializerMode.Json =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String(o.name.get + "JSON") else o.name.get
+            if (o.name.isEmpty) String("JSON") else o.name.get
           else if (o.name.isEmpty) String("JSON") else o.name.get, SerializerGen.Mode.JSON)
         case Cli.SerializerMode.Msgpack =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String(o.name.get + "MsgPack") else o.name.get
+            if (o.name.isEmpty) String("MsgPack") else o.name.get
           else if (o.name.isEmpty) String("MsgPack") else o.name.get, SerializerGen.Mode.MessagePack)
       }
       val dest = new File(destDir, name.value + ".scala")
@@ -129,11 +129,11 @@ object Sireum extends App {
       val (name, mode) = m match {
         case Cli.TransformerMode.Immutable =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String(o.name.get + "Transformer") else o.name.get
+            if (o.name.isEmpty) String("Transformer") else o.name.get
           else if (o.name.isEmpty) String("Transformer") else o.name.get, T)
         case Cli.TransformerMode.Mutable =>
           (if (o.modes.size > 1)
-            if (o.name.isEmpty) String("M" + o.name.get + "Transformer") else o.name.get
+            if (o.name.isEmpty) String("MTransformer") else o.name.get
           else if (o.name.isEmpty) String("MTransformer") else o.name.get, F)
       }
       val dest = new File(destDir, name.value + ".scala")
