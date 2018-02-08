@@ -45,9 +45,7 @@ object Sireum extends App {
   })
 
   def logika(option: Cli.LogikaOption): Int = {
-    val clz = Class.forName("org.sireum.cli.Logika")
-    val o = clz.getDeclaredConstructor().newInstance()
-    clz.getMethod("run", option.getClass).invoke(o, option).asInstanceOf[Int]
+    Logika.run(option)
   }
 
   def cliGen(o: Cli.CligenOption): Int = try {
@@ -160,7 +158,7 @@ object Sireum extends App {
   def arsitGen(o: Cli.ArsitOption): Int = {
     try {
       var cls = Class.forName("org.sireum.aadl.arsit.Runner")
-      val m = cls.getDeclaredMethod("run", classOf[java.io.File], classOf[scala.Boolean], classOf[scala.Predef.String])
+      val m = cls.getDeclaredMethod("run", classOf[File], classOf[scala.Boolean], classOf[scala.Predef.String])
 
       val destDir = path2fileOpt("output directory", o.outputDir, T).get
       if (!destDir.isDirectory) {
