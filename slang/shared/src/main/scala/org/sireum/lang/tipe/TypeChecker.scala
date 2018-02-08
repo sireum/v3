@@ -307,6 +307,25 @@ import TypeChecker._
     }
   }
 
+  def checkStringInterpolator(
+    posOpt: Option[AST.PosInfo],
+    scope: Scope,
+    prefix: String,
+    reporter: Reporter
+  ): Option[AST.Typed] = {
+    scope.resolveName(typeHierarchy.nameMap, ISZ(prefix)) match {
+      case Some(info: Info.Object) =>
+        scope.resolveType(typeHierarchy.typeMap, info.owner) match {
+          case Some(typeInfo: TypeInfo.SubZ) =>
+            return Some(AST.Typed.Name(typeInfo.name, ISZ()))
+          case _ =>
+        }
+      case _ =>
+    }
+    reporter.error(posOpt, typeCheckerKind, s"Could not resolve literal interpolator for '$prefix'.")
+    return None()
+  }
+
   def checkExp(
     expectedOpt: Option[AST.Typed],
     scope: Scope,
@@ -506,9 +525,14 @@ import TypeChecker._
         }
       }
       exp.prefix.native match {
-        case "s" => return (exp(args = args), Some(AST.Typed.string))
-        case "st" => return (exp(args = args), Some(AST.Typed.st))
-        case _ => halt("Unimplemented") // TODO
+        case "s" => return (exp(args = args, attr = exp.attr(typedOpt = AST.Typed.stringOpt)), Some(AST.Typed.string))
+        case "st" => return (exp(args = args, attr = exp.attr(typedOpt = AST.Typed.stOpt)), Some(AST.Typed.st))
+        case _ =>
+          val tOpt = checkStringInterpolator(exp.posOpt, scope, exp.prefix, reporter)
+          tOpt match {
+            case Some(_) => return (exp(args = args, attr = exp.attr(typedOpt = tOpt)), tOpt)
+            case _ => return (exp(args = args), None())
+          }
       }
     }
 
@@ -1800,8 +1824,7 @@ import TypeChecker._
               }
               return pattern(attr = pattern.attr(typedOpt = Some(t), resOpt = resOpt))
             case _ =>
-              reporter.error(pattern.posOpt, typeCheckerKind,
-                s"Could not resolve '${(refName, ".")}'.")
+              reporter.error(pattern.posOpt, typeCheckerKind, s"Could not resolve '${(refName, ".")}'.")
               return pattern
           }
         case pattern: AST.Pattern.Literal =>
@@ -1818,7 +1841,12 @@ import TypeChecker._
             case "f32" => AST.Typed.f32
             case "f64" => AST.Typed.f64
             case "string" => AST.Typed.string
-            case _ => halt("Unimplemented") // TODO
+            case _ =>
+              val tpeOpt = checkStringInterpolator(pattern.posOpt, scope, pattern.prefix, reporter)
+              tpeOpt match {
+                case Some(tpe) => tpe
+                case _ => return pattern
+              }
           }
           if (t != expected) {
             reporter.error(pattern.posOpt, typeCheckerKind, s"Cannot match $t with $expected.")

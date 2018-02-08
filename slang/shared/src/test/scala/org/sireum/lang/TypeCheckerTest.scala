@@ -103,6 +103,11 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
+                             |import org.sireum.F32._
+                             |val x: F32 = f32"0.0"
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |var x: Z = 1
                              |while (x > 0) {
                              |  println("x is positive")

@@ -231,8 +231,16 @@ import org.sireum.lang.{ast => AST}
           stmt.attr.posOpt
         )
       case stmt: AST.Stmt.SubZ =>
-        val name = currentName :+ stmt.id.value
-        declareType(if (stmt.isBitVector) "bits" else "range", name, TypeInfo.SubZ(currentName, stmt), stmt.attr.posOpt)
+        val id = stmt.id.value
+        val stringInterpolator = ops.StringOps(id).firstToUpper
+        val name = currentName :+ id
+        val stringInterpolatorName = name :+ stringInterpolator
+        val entity: String = if (stmt.isBitVector) "bits" else "range"
+        declareType(entity, name, TypeInfo.SubZ(currentName, stmt), stmt.attr.posOpt)
+        declareName(entity, stringInterpolatorName, Info.Object(name, T, T,
+          AST.Stmt.Object(F, AST.Id(stringInterpolator, stmt.id.attr), ISZ(), ISZ(), stmt.attr),
+          Some(AST.Typed.Object(name, stringInterpolator)),
+          Some(AST.ResolvedInfo.Object(stringInterpolatorName))), stmt.attr.posOpt)
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Map.empty[String, Option[AST.ResolvedInfo]]
