@@ -166,7 +166,7 @@
     name = "aadl",
     description = "AADL Tools",
     header = "Sireum AADL Tools",
-    unlisted = T,
+    unlisted = F,
     subs = ISZ(arsitTool, awasTool)
   )
 

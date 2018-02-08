@@ -578,7 +578,7 @@ import Cli._
         st"""Sireum Experimental Tools
             |
             |Available modes:
-            """.render
+            |aadl                     AADL Tools""".render
       )
       return Some(HelpOption())
     }
