@@ -330,8 +330,14 @@ import org.sireum.lang.{ast => AST}
         val name = currentName :+ stmt.id.value
         val sc = scope(packageName, currentImports, name)
         var paramVars = HashMap.empty[String, Info.Var]
+        var constructorParamVars = ISZ[String]()
+        var extractorParamVars = ISZ[String]()
         for (p <- stmt.params) {
           val id = p.id.value
+          constructorParamVars = constructorParamVars :+ id
+          if (!p.isHidden) {
+            extractorParamVars = extractorParamVars :+ id
+          }
           paramVars = paramVars.put(
             id,
             Info.Var(
@@ -345,19 +351,27 @@ import org.sireum.lang.{ast => AST}
           )
         }
         val members = resolveMembers(name, sc, stmt.stmts, paramVars)
-        val tpe = AST.Typed.Name(
-          name,
-          for (tVar <- typeParamMap(stmt.typeParams, reporter).keys.elements)
-            yield AST.Typed.TypeVar(tVar)
-        )
-        val resOpt: Option[AST.ResolvedInfo] = Some(
+        val typeVars = typeParamMap(stmt.typeParams, reporter).keys.elements
+        val tpe = AST.Typed.Name(name, for (tVar <- typeVars) yield AST.Typed.TypeVar(tVar))
+        val constructorResOpt: Option[AST.ResolvedInfo] = Some(
           AST.ResolvedInfo.Method(
             F,
             AST.MethodMode.Constructor,
-            stmt.typeParams.map(tp => tp.id.value),
+            typeVars,
             currentName,
             stmt.id.value,
-            stmt.params.map(p => p.id.value),
+            constructorParamVars,
+            None()
+          )
+        )
+        val extractorResOpt: Option[AST.ResolvedInfo] = Some(
+          AST.ResolvedInfo.Method(
+            F,
+            AST.MethodMode.Extractor,
+            typeVars,
+            currentName,
+            stmt.id.value,
+            extractorParamVars,
             None()
           )
         )
@@ -369,7 +383,9 @@ import org.sireum.lang.{ast => AST}
             F,
             tpe,
             None(),
-            resOpt,
+            constructorResOpt,
+            Map.empty,
+            extractorResOpt,
             ISZ(),
             members.specVars,
             members.vars,

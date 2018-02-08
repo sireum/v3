@@ -40,30 +40,27 @@ object Resolver {
 
   type TypeMap = HashMap[QName, TypeInfo]
 
-
   @datatype trait Scope {
 
     @pure def outerOpt: Option[Scope]
 
-    @pure def resolveName(globalNameMap: NameMap,
-                          name: QName): Option[Info]
+    @pure def resolveName(globalNameMap: NameMap, name: QName): Option[Info]
 
-    @pure def resolveType(globalTypeMap: TypeMap,
-                          name: QName): Option[TypeInfo]
+    @pure def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo]
 
     @pure def returnOpt: Option[AST.Typed]
   }
 
   object Scope {
 
-    @datatype class Local(nameMap: HashMap[String, Info],
-                          typeMap: HashMap[String, TypeInfo],
-                          val returnOpt: Option[AST.Typed],
-                          val outerOpt: Option[Scope])
-      extends Scope {
+    @datatype class Local(
+      nameMap: HashMap[String, Info],
+      typeMap: HashMap[String, TypeInfo],
+      val returnOpt: Option[AST.Typed],
+      val outerOpt: Option[Scope]
+    ) extends Scope {
 
-      @pure override def resolveName(globalNameMap: NameMap,
-                            name: QName): Option[Info] = {
+      @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
         if (name.size == 1) {
           val infoOpt = nameMap.get(name(0))
           if (infoOpt.nonEmpty) {
@@ -76,8 +73,7 @@ object Resolver {
         }
       }
 
-      @pure override def resolveType(globalTypeMap: TypeMap,
-                            name: QName): Option[TypeInfo] = {
+      @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
         if (name.size == 1) {
           val typeInfoOpt = typeMap.get(name(0))
           if (typeInfoOpt.nonEmpty) {
@@ -99,10 +95,7 @@ object Resolver {
 
     }
 
-    @datatype class Global(packageName: QName,
-                           imports: ISZ[AST.Stmt.Import],
-                           enclosingName: QName)
-      extends Scope {
+    @datatype class Global(packageName: QName, imports: ISZ[AST.Stmt.Import], enclosingName: QName) extends Scope {
 
       @pure override def outerOpt: Option[Scope] = {
         return Global.OuterOpt
@@ -112,13 +105,11 @@ object Resolver {
         return Global.ReturnOpt
       }
 
-      @pure override def resolveName(globalNameMap: NameMap,
-                            name: QName): Option[Info] = {
+      @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
         return resolveNameMemoized(globalNameMap, name)
       }
 
-      @pure def resolveImported(globalNameMap: NameMap,
-                                name: QName): Option[Info] = {
+      @pure def resolveImported(globalNameMap: NameMap, name: QName): Option[Info] = {
         for (i <- imports.indices.reverse) {
           val impor = imports(i)
           val importers = impor.importers
@@ -173,13 +164,11 @@ object Resolver {
         return None()
       }
 
-      @pure override def resolveType(globalTypeMap: TypeMap,
-                            name: QName): Option[TypeInfo] = {
+      @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
         return resolveTypeMemoized(globalTypeMap, name)
       }
 
-      @pure def resolveImportedType(globalTypeMap: TypeMap,
-                                    name: QName): Option[TypeInfo] = {
+      @pure def resolveImportedType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
         for (i <- imports.indices.reverse) {
           val impor = imports(i)
           val importers = impor.importers
@@ -234,8 +223,7 @@ object Resolver {
         return None()
       }
 
-      @memoize def resolveNameMemoized(@hidden globalNameMap: NameMap,
-                                       name: QName): Option[Info] = {
+      @memoize def resolveNameMemoized(@hidden globalNameMap: NameMap, name: QName): Option[Info] = {
         val globalOpt = globalNameMap.get(name)
         if (globalOpt.nonEmpty) {
           return globalOpt
@@ -258,8 +246,7 @@ object Resolver {
         return globalNameMap.get(packageName ++ name)
       }
 
-      @memoize def resolveTypeMemoized(@hidden globalTypeMap: TypeMap,
-                                       name: QName): Option[TypeInfo] = {
+      @memoize def resolveTypeMemoized(@hidden globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
         val globalTypeOpt = globalTypeMap.get(name)
         if (globalTypeOpt.nonEmpty) {
           return globalTypeOpt
@@ -293,20 +280,23 @@ object Resolver {
 
   object Info {
 
-    @datatype class Package(val name: QName,
-                            typedOpt: Option[AST.Typed],
-                            resOpt: Option[AST.ResolvedInfo]) extends Info {
+    @datatype class Package(val name: QName, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo])
+        extends Info {
+
       @pure override def posOpt: Option[AST.PosInfo] = {
         return None[AST.PosInfo]()
       }
     }
 
-    @datatype class Var(owner: QName,
-                        isInObject: B,
-                        scope: Scope,
-                        ast: AST.Stmt.Var,
-                        typedOpt: Option[AST.Typed],
-                        resOpt: Option[AST.ResolvedInfo]) extends Info {
+    @datatype class Var(
+      owner: QName,
+      isInObject: B,
+      scope: Scope,
+      ast: AST.Stmt.Var,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
+
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -323,12 +313,15 @@ object Resolver {
       }
     }
 
-    @datatype class SpecVar(owner: QName,
-                            isInObject: B,
-                            scope: Scope,
-                            ast: AST.Stmt.SpecVar,
-                            typedOpt: Option[AST.Typed],
-                            resOpt: Option[AST.ResolvedInfo]) extends Info {
+    @datatype class SpecVar(
+      owner: QName,
+      isInObject: B,
+      scope: Scope,
+      ast: AST.Stmt.SpecVar,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
+
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -342,13 +335,16 @@ object Resolver {
       }
     }
 
-    @datatype class Method(owner: QName,
-                           isInObject: B,
-                           scope: Scope,
-                           hasBody: B,
-                           ast: AST.Stmt.Method,
-                           typedOpt: Option[AST.Typed],
-                           resOpt: Option[AST.ResolvedInfo]) extends Info {
+    @datatype class Method(
+      owner: QName,
+      isInObject: B,
+      scope: Scope,
+      hasBody: B,
+      ast: AST.Stmt.Method,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
+
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -363,12 +359,15 @@ object Resolver {
 
     }
 
-    @datatype class SpecMethod(val owner: QName,
-                               isInObject: B,
-                               scope: Scope,
-                               ast: AST.Stmt.SpecMethod,
-                               typedOpt: Option[AST.Typed],
-                               resOpt: Option[AST.ResolvedInfo]) extends Info {
+    @datatype class SpecMethod(
+      val owner: QName,
+      isInObject: B,
+      scope: Scope,
+      ast: AST.Stmt.SpecMethod,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
+
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
       }
@@ -382,13 +381,14 @@ object Resolver {
       }
     }
 
-    @datatype class Object(owner: QName,
-                           isSynthetic: B,
-                           outlined: B,
-                           ast: AST.Stmt.Object,
-                           typedOpt: Option[AST.Typed],
-                           resOpt: Option[AST.ResolvedInfo])
-      extends Info {
+    @datatype class Object(
+      owner: QName,
+      isSynthetic: B,
+      outlined: B,
+      ast: AST.Stmt.Object,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
 
       @pure override def name: QName = {
         return owner :+ ast.id.value
@@ -400,12 +400,13 @@ object Resolver {
 
     }
 
-    @datatype class ExtMethod(owner: QName,
-                              scope: Scope.Global,
-                              ast: AST.Stmt.ExtMethod,
-                              typedOpt: Option[AST.Typed],
-                              resOpt: Option[AST.ResolvedInfo])
-      extends Info {
+    @datatype class ExtMethod(
+      owner: QName,
+      scope: Scope.Global,
+      ast: AST.Stmt.ExtMethod,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
 
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -421,19 +422,21 @@ object Resolver {
 
     }
 
-    @datatype class Enum(val name: QName,
-                         elements: Map[String, Option[AST.ResolvedInfo]],
-                         typedOpt: Option[AST.Typed],
-                         resOpt: Option[AST.ResolvedInfo],
-                         elementTypedOpt: Option[AST.Typed],
-                         val posOpt: Option[AST.PosInfo])
-      extends Info
+    @datatype class Enum(
+      val name: QName,
+      elements: Map[String, Option[AST.ResolvedInfo]],
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo],
+      elementTypedOpt: Option[AST.Typed],
+      val posOpt: Option[AST.PosInfo]
+    ) extends Info
 
-    @datatype class LocalVar(val name: QName,
-                             ast: AST.Id,
-                             typedOpt: Option[AST.Typed],
-                             resOpt: Option[AST.ResolvedInfo])
-      extends Info {
+    @datatype class LocalVar(
+      val name: QName,
+      ast: AST.Id,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
 
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -441,11 +444,12 @@ object Resolver {
 
     }
 
-    @datatype class QuantVar(val name: QName,
-                             ast: AST.Id,
-                             typedOpt: Option[AST.Typed],
-                             resOpt: Option[AST.ResolvedInfo])
-      extends Info {
+    @datatype class QuantVar(
+      val name: QName,
+      ast: AST.Id,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo]
+    ) extends Info {
 
       @pure override def posOpt: Option[AST.PosInfo] = {
         return ast.attr.posOpt
@@ -466,8 +470,7 @@ object Resolver {
 
   object TypeInfo {
 
-    @datatype class SubZ(owner: QName,
-                         ast: AST.Stmt.SubZ) extends TypeInfo {
+    @datatype class SubZ(owner: QName, ast: AST.Stmt.SubZ) extends TypeInfo {
 
       @pure override def name: QName = {
         return owner :+ ast.id.value
@@ -482,26 +485,28 @@ object Resolver {
       }
     }
 
-    @datatype class Enum(val name: QName,
-                         elements: Map[String, Option[AST.ResolvedInfo]],
-                         val posOpt: Option[AST.PosInfo])
-      extends TypeInfo {
+    @datatype class Enum(
+      val name: QName,
+      elements: Map[String, Option[AST.ResolvedInfo]],
+      val posOpt: Option[AST.PosInfo]
+    ) extends TypeInfo {
 
       @pure override def canHaveCompanion: B = {
         return F
       }
     }
 
-    @datatype class Sig(owner: QName,
-                        outlined: B,
-                        tpe: AST.Typed.Name,
-                        ancestors: ISZ[AST.Typed.Name],
-                        specVars: HashMap[String, Info.SpecVar],
-                        specMethods: HashMap[String, Info.SpecMethod],
-                        methods: HashMap[String, Info.Method],
-                        scope: Scope.Global,
-                        ast: AST.Stmt.Sig)
-      extends TypeInfo {
+    @datatype class Sig(
+      owner: QName,
+      outlined: B,
+      tpe: AST.Typed.Name,
+      ancestors: ISZ[AST.Typed.Name],
+      specVars: HashMap[String, Info.SpecVar],
+      specMethods: HashMap[String, Info.SpecMethod],
+      methods: HashMap[String, Info.Method],
+      scope: Scope.Global,
+      ast: AST.Stmt.Sig
+    ) extends TypeInfo {
 
       @pure override def name: QName = {
         return owner :+ ast.id.value
@@ -524,7 +529,7 @@ object Resolver {
         methods.get(id) match {
           case Some(m) =>
             return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
-              else (m.typedOpt, m.resOpt)
+            else (m.typedOpt, m.resOpt)
           case _ =>
         }
 
@@ -546,19 +551,22 @@ object Resolver {
       }
     }
 
-    @datatype class AbstractDatatype(owner: QName,
-                                     outlined: B,
-                                     tpe: AST.Typed.Name,
-                                     constructorTypeOpt: Option[AST.Typed],
-                                     constructorResOpt: Option[AST.ResolvedInfo],
-                                     ancestors: ISZ[AST.Typed.Name],
-                                     specVars: HashMap[String, Info.SpecVar],
-                                     vars: HashMap[String, Info.Var],
-                                     specMethods: HashMap[String, Info.SpecMethod],
-                                     methods: HashMap[String, Info.Method],
-                                     scope: Scope.Global,
-                                     ast: AST.Stmt.AbstractDatatype)
-      extends TypeInfo {
+    @datatype class AbstractDatatype(
+      owner: QName,
+      outlined: B,
+      tpe: AST.Typed.Name,
+      constructorTypeOpt: Option[AST.Typed],
+      constructorResOpt: Option[AST.ResolvedInfo],
+      extractorTypeMap: Map[String, AST.Typed],
+      extractorResOpt: Option[AST.ResolvedInfo],
+      ancestors: ISZ[AST.Typed.Name],
+      specVars: HashMap[String, Info.SpecVar],
+      vars: HashMap[String, Info.Var],
+      specMethods: HashMap[String, Info.SpecMethod],
+      methods: HashMap[String, Info.Method],
+      scope: Scope.Global,
+      ast: AST.Stmt.AbstractDatatype
+    ) extends TypeInfo {
 
       @pure override def canHaveCompanion: B = {
         return T
@@ -586,7 +594,7 @@ object Resolver {
         methods.get(id) match {
           case Some(m) =>
             return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
-              else (m.typedOpt, m.resOpt)
+            else (m.typedOpt, m.resOpt)
           case _ =>
         }
 
@@ -608,10 +616,11 @@ object Resolver {
       }
     }
 
-    @datatype class TypeAlias(val name: QName,
-                              scope: Scope.Global,
-                              ast: AST.Stmt.TypeAlias)
-      extends TypeInfo {
+    @datatype class TypeAlias(val name: QName, scope: Scope.Global, ast: AST.Stmt.TypeAlias) extends TypeInfo {
+
+      @pure def outlined: B = {
+        return ast.tipe.typedOpt.nonEmpty
+      }
 
       @pure override def canHaveCompanion: B = {
         return F
@@ -622,9 +631,7 @@ object Resolver {
       }
     }
 
-    @datatype class TypeVar(id: String,
-                            ast: AST.TypeParam)
-      extends TypeInfo {
+    @datatype class TypeVar(id: String, ast: AST.TypeParam) extends TypeInfo {
 
       @pure override def name: QName = {
         return ISZ(id)
@@ -639,16 +646,19 @@ object Resolver {
       }
     }
 
-    @datatype class Members(specVars: HashMap[String, Info.SpecVar],
-                            vars: HashMap[String, Info.Var],
-                            specMethods: HashMap[String, Info.SpecMethod],
-                            methods: HashMap[String, Info.Method])
+    @datatype class Members(
+      specVars: HashMap[String, Info.SpecVar],
+      vars: HashMap[String, Info.Var],
+      specMethods: HashMap[String, Info.SpecMethod],
+      methods: HashMap[String, Info.Method]
+    )
 
   }
 
   val resolverKind: String = "Slang Resolver"
-  val rootPackageInfo: Info.Package = Info.Package(ISZ(),
-    Some(AST.Typed.Package(ISZ())), Some(AST.ResolvedInfo.Package(ISZ())))
+
+  val rootPackageInfo: Info.Package =
+    Info.Package(ISZ(), Some(AST.Typed.Package(ISZ())), Some(AST.ResolvedInfo.Package(ISZ())))
 
   @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
     (ti1.posOpt, ti2.posOpt) match {
@@ -661,9 +671,7 @@ object Resolver {
     return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo)
   }
 
-  @pure def typePoset(globalTypeMap: TypeMap,
-                      globalTypes: ISZ[TypeInfo],
-                      reporter: Reporter): Poset[QName] = {
+  @pure def typePoset(globalTypeMap: TypeMap, globalTypes: ISZ[TypeInfo], reporter: Reporter): Poset[QName] = {
     var r = Poset.empty[QName]
 
     for (ti <- globalTypes) {
@@ -679,14 +687,21 @@ object Resolver {
           for (t <- ti.ast.parents) {
             ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(t.name.ids)) match {
               case Some(parent: TypeInfo.AbstractDatatype) if parent.ast.isDatatype == ti.ast.isDatatype =>
-                  r = r.addChildren(parent.name, ISZ(ti.name))
+                r = r.addChildren(parent.name, ISZ(ti.name))
               case Some(parent: TypeInfo.Sig) if parent.ast.isImmutable == ti.ast.isDatatype =>
                 r = r.addChildren(parent.name, ISZ(ti.name))
               case Some(_) =>
-                reporter.error(t.attr.posOpt, resolverKind,
-                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
-              case _ => reporter.error(t.attr.posOpt, resolverKind,
-                st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
+                reporter.error(
+                  t.attr.posOpt,
+                  resolverKind,
+                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render
+                )
+              case _ =>
+                reporter.error(
+                  t.attr.posOpt,
+                  resolverKind,
+                  st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render
+                )
             }
           }
         case ti: TypeInfo.Sig =>
@@ -695,10 +710,17 @@ object Resolver {
               case Some(parent: TypeInfo.Sig) if parent.ast.isImmutable == ti.ast.isImmutable =>
                 r = r.addChildren(parent.name, ISZ(ti.name))
               case Some(_) =>
-                reporter.error(t.attr.posOpt, resolverKind,
-                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
-              case _ => reporter.error(t.attr.posOpt, resolverKind,
-                st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render)
+                reporter.error(
+                  t.attr.posOpt,
+                  resolverKind,
+                  st"${(ti.name, ".")} cannot extend ${(AST.Util.ids2strings(t.name.ids), ".")}.".render
+                )
+              case _ =>
+                reporter.error(
+                  t.attr.posOpt,
+                  resolverKind,
+                  st"Could not find ${(ti.name, ".")}'s super type ${(AST.Util.ids2strings(t.name.ids), ".")}.".render
+                )
             }
           }
         case _ =>
@@ -731,9 +753,7 @@ object Resolver {
     }
   }
 
-  def typeParamsScope(tps: ISZ[AST.TypeParam],
-                      scope: Scope,
-                      reporter: Reporter): Scope = {
+  def typeParamsScope(tps: ISZ[AST.TypeParam], scope: Scope, reporter: Reporter): Scope = {
     var typeMap = HashMap.empty[String, TypeInfo]
     for (tp <- tps) {
       val id = tp.id.value
@@ -760,47 +780,103 @@ object Resolver {
     }
 
     val emptyAttr = AST.Attr(None[AST.PosInfo]())
-    val dollar = AST.Exp.Ident(AST.Id("$", emptyAttr),
-      AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
+    val dollar = AST.Exp
+      .Ident(AST.Id("$", emptyAttr), AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
     val dollarAssignExp = AST.Stmt.Expr(dollar, emptyAttr)
 
     val scope = Scope.Global(AST.Typed.sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 
-    var tm = typeMap.put(AST.Typed.iszName, TypeInfo.TypeAlias(AST.Typed.iszName, scope,
-      Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
+    var tm = typeMap.put(
+      AST.Typed.iszName,
+      TypeInfo.TypeAlias(AST.Typed.iszName, scope, Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
+    )
 
-    tm = tm.put(AST.Typed.mszName, TypeInfo.TypeAlias(AST.Typed.mszName, scope,
-      Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias]))
+    tm = tm.put(
+      AST.Typed.mszName,
+      TypeInfo.TypeAlias(AST.Typed.mszName, scope, Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
+    )
 
-    tm = tm.put(AST.Typed.zsName, TypeInfo.TypeAlias(AST.Typed.zsName, scope,
-      Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias]))
+    tm = tm.put(
+      AST.Typed.zsName,
+      TypeInfo.TypeAlias(AST.Typed.zsName, scope, Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias])
+    )
 
     val tName = AST.Typed.sireumName :+ "T"
-    var nm = nameMap.put(tName, Info.Var(AST.Typed.sireumName, T, scope,
-      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
-      Some(AST.ResolvedInfo.Var(T, F, tName, "T"))))
+    var nm = nameMap.put(
+      tName,
+      Info.Var(
+        AST.Typed.sireumName,
+        T,
+        scope,
+        Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+        None(),
+        Some(AST.ResolvedInfo.Var(T, F, tName, "T"))
+      )
+    )
 
     val fName = AST.Typed.sireumName :+ "F"
-    nm = nm.put(fName, Info.Var(AST.Typed.sireumName, T, scope,
-      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)), None(),
-      Some(AST.ResolvedInfo.Var(T, F, tName, "F"))))
+    nm = nm.put(
+      fName,
+      Info.Var(
+        AST.Typed.sireumName,
+        T,
+        scope,
+        Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+        None(),
+        Some(AST.ResolvedInfo.Var(T, F, tName, "F"))
+      )
+    )
 
-    tm = tm.put(AST.Typed.unit.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.unit, None(), None(), ISZ(),
-      HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
-      AST.Stmt.AbstractDatatype(F, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
+    tm = tm.put(
+      AST.Typed.unit.ids,
+      TypeInfo.AbstractDatatype(
+        ISZ(),
+        T,
+        AST.Typed.unit,
+        None(),
+        None(),
+        Map.empty,
+        None(),
+        ISZ(),
+        HashMap.empty,
+        HashMap.empty,
+        HashMap.empty,
+        HashMap.empty,
+        scope,
+        AST.Stmt.AbstractDatatype(T, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
+      )
+    )
 
-    tm = tm.put(AST.Typed.nothing.ids, TypeInfo.AbstractDatatype(ISZ(), T, AST.Typed.nothing, None(), None(), ISZ(),
-      HashMap.empty, HashMap.empty, HashMap.empty, HashMap.empty, scope,
-      AST.Stmt.AbstractDatatype(F, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)))
+    tm = tm.put(
+      AST.Typed.nothing.ids,
+      TypeInfo.AbstractDatatype(
+        ISZ(),
+        T,
+        AST.Typed.nothing,
+        None(),
+        None(),
+        Map.empty,
+        None(),
+        ISZ(),
+        HashMap.empty,
+        HashMap.empty,
+        HashMap.empty,
+        HashMap.empty,
+        scope,
+        AST.Stmt.AbstractDatatype(T, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
+      )
+    )
 
     return (nm, tm)
 
   }
 
-  def parseProgramAndGloballyResolve(sources: ISZ[(Option[String], String)],
-                                     nameMap: NameMap,
-                                     typeMap: TypeMap): (AccumulatingReporter, NameMap, TypeMap) = {
+  def parseProgramAndGloballyResolve(
+    sources: ISZ[(Option[String], String)],
+    nameMap: NameMap,
+    typeMap: TypeMap
+  ): (AccumulatingReporter, NameMap, TypeMap) = {
     def parseGloballyResolve(p: (Option[String], String)): (AccumulatingReporter, NameMap, TypeMap) = {
       val reporter = AccumulatingReporter.create
       val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
@@ -816,8 +892,10 @@ object Resolver {
       }
     }
 
-    @pure def combine(r: (AccumulatingReporter, NameMap, TypeMap),
-                      u: (AccumulatingReporter, NameMap, TypeMap)): (AccumulatingReporter, NameMap, TypeMap) = {
+    @pure def combine(
+      r: (AccumulatingReporter, NameMap, TypeMap),
+      u: (AccumulatingReporter, NameMap, TypeMap)
+    ): (AccumulatingReporter, NameMap, TypeMap) = {
       var rNameMap = r._2
       var rTypeMap = r._3
       val uNameMap = u._2
@@ -837,8 +915,11 @@ object Resolver {
                       case Some(fileUri) => s" in $fileUri"
                       case _ => ""
                     }
-                    reporter.error(uInfo.posOpt, resolverKind,
-                      st"Name '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render)
+                    reporter.error(
+                      uInfo.posOpt,
+                      resolverKind,
+                      st"Name '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
+                    )
                   case _ =>
                 }
             }
@@ -856,8 +937,11 @@ object Resolver {
                   case Some(fileUri) => s" in $fileUri"
                   case _ => ""
                 }
-                reporter.error(uInfo.posOpt, resolverKind,
-                  st"Type named '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render)
+                reporter.error(
+                  uInfo.posOpt,
+                  resolverKind,
+                  st"Type named '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
+                )
               case _ =>
             }
           case _ => rTypeMap = rTypeMap.put(name, uInfo)
@@ -866,22 +950,26 @@ object Resolver {
       return (reporter, rNameMap, rTypeMap)
     }
 
-    val t = ISZOps(sources).
-      mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
-      parseGloballyResolve _, combine _, (AccumulatingReporter.create, nameMap, typeMap))
+    val t = ISZOps(sources)
+      .mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
+        parseGloballyResolve _,
+        combine _,
+        (AccumulatingReporter.create, nameMap, typeMap)
+      )
     val p = addBuiltIns(t._2, t._3)
     return (t._1, p._1, p._2)
   }
 
-  def typeParamMap(typeParams: ISZ[AST.TypeParam],
-                   reporter: Reporter): HashSMap[String, TypeInfo] = {
+  def typeParamMap(typeParams: ISZ[AST.TypeParam], reporter: Reporter): HashSMap[String, TypeInfo] = {
     val r = typeParamMapInit(typeParams, HashSMap.empty[String, TypeInfo], reporter)
     return r
   }
 
-  def typeParamMapInit(typeParams: ISZ[AST.TypeParam],
-                       init: HashSMap[String, TypeInfo],
-                       reporter: Reporter): HashSMap[String, TypeInfo] = {
+  def typeParamMapInit(
+    typeParams: ISZ[AST.TypeParam],
+    init: HashSMap[String, TypeInfo],
+    reporter: Reporter
+  ): HashSMap[String, TypeInfo] = {
     var r = init
     for (tp <- typeParams) {
       val id = tp.id.value
