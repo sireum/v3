@@ -1827,14 +1827,12 @@ import TypeChecker._
 
     var newCases = ISZ[AST.Case]()
     for (c <- stmt.cases) {
-      val (newScopeOpt, newPattern) =
-        checkPattern(expType, scope, c.pattern, reporter)
+      val (newScopeOpt, newPattern) = checkPattern(expType, scope, c.pattern, reporter)
       newScopeOpt match {
         case Some(newScope) =>
           val newCondOpt: Option[AST.Exp] = c.condOpt match {
             case Some(cond) =>
-              val (newCond, _) =
-                checkExp(AST.Typed.bOpt, newScope, cond, reporter)
+              val (newCond, _) = checkExp(AST.Typed.bOpt, newScope, cond, reporter)
               Some(newCond)
             case o => o
           }
@@ -1911,6 +1909,38 @@ import TypeChecker._
         case _ =>
           return (None(), r)
       }
+    }
+
+    def checkVarPattern(stmt: AST.Stmt.VarPattern): (Option[Scope.Local], AST.Stmt) = {
+      var newTipeOpt = stmt.tipeOpt
+      val expectedOpt: Option[AST.Typed] = newTipeOpt match {
+        case Some(tipe) =>
+          newTipeOpt = typeHierarchy.typed(scope, tipe, reporter)
+          newTipeOpt match {
+            case Some(newTipe) if newTipe.typedOpt.nonEmpty => newTipe.typedOpt
+            case _ => return (None(), stmt(tipeOpt = newTipeOpt))
+          }
+        case _ => None()
+      }
+      val (newInit, initTypeOpt) = checkAssignExp(expectedOpt, scope, stmt.init, reporter)
+      initTypeOpt match {
+        case Some(initType) =>
+          val expected: AST.Typed = if (expectedOpt.nonEmpty) expectedOpt.get else initType
+          val (scopeOpt, newPattern) = checkPattern(expected, scope, stmt.pattern, reporter)
+          return (scopeOpt, stmt(pattern = newPattern, tipeOpt = newTipeOpt, init = newInit))
+        case _ =>
+          if (expectedOpt.isEmpty) {
+            val varText: String = if (stmt.isVal) "val" else "var"
+            reporter.error(
+              stmt.pattern.posOpt,
+              typeCheckerKind,
+              s"Could not infer the expected type for $varText pattern to match to."
+            )
+          }
+          return (None(), stmt(tipeOpt = newTipeOpt, init = newInit))
+      }
+
+      halt("Unimplemented") // TODO
     }
 
     def checkAssign(stmt: AST.Stmt.Assign): AST.Stmt = {
@@ -2008,7 +2038,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Var => val r = checkVar(stmt); return r
 
-      case stmt: AST.Stmt.VarPattern => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.VarPattern => val r = checkVarPattern(stmt); return r
 
       case stmt: AST.Stmt.While =>
         val (newCond, _) = checkExp(AST.Typed.bOpt, scope, stmt.cond, reporter)
