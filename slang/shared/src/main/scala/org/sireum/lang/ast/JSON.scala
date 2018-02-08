@@ -602,7 +602,7 @@ object JSON {
         ("type", st""""Pattern.VarBinding""""),
         ("id", printId(o.id)),
         ("typeOpt", printOption(o.typeOpt, printType)),
-        ("attr", printAttr(o.attr))
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -610,7 +610,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Pattern.Wildcard""""),
         ("typeOpt", printOption(o.typeOpt, printType)),
-        ("attr", printAttr(o.attr))
+        ("attr", printTypedAttr(o.attr))
       ))
     }
 
@@ -2882,7 +2882,7 @@ object JSON {
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseAttr()
+      val attr = parseTypedAttr()
       parser.parseObjectNext()
       return Pattern.VarBinding(id, typeOpt, attr)
     }
@@ -2900,7 +2900,7 @@ object JSON {
       val typeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseAttr()
+      val attr = parseTypedAttr()
       parser.parseObjectNext()
       return Pattern.Wildcard(typeOpt, attr)
     }

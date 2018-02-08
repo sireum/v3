@@ -802,13 +802,13 @@ object MsgPack {
       writer.writeZ(Constants.PatternVarBinding)
       writeId(o.id)
       writer.writeOption(o.typeOpt, writeType)
-      writeAttr(o.attr)
+      writeTypedAttr(o.attr)
     }
 
     def writePatternWildcard(o: Pattern.Wildcard): Unit = {
       writer.writeZ(Constants.PatternWildcard)
       writer.writeOption(o.typeOpt, writeType)
-      writeAttr(o.attr)
+      writeTypedAttr(o.attr)
     }
 
     def writePatternSeqWildcard(o: Pattern.SeqWildcard): Unit = {
@@ -2594,7 +2594,7 @@ object MsgPack {
       }
       val id = readId()
       val typeOpt = reader.readOption(readType _)
-      val attr = readAttr()
+      val attr = readTypedAttr()
       return Pattern.VarBinding(id, typeOpt, attr)
     }
 
@@ -2608,7 +2608,7 @@ object MsgPack {
         reader.expectZ(Constants.PatternWildcard)
       }
       val typeOpt = reader.readOption(readType _)
-      val attr = readAttr()
+      val attr = readTypedAttr()
       return Pattern.Wildcard(typeOpt, attr)
     }
 

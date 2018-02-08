@@ -2632,14 +2632,14 @@ import MTransformer._
         case o2: Pattern.VarBinding =>
           val r0: MOption[Id] = transformId(o2.id)
           val r1: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType)
-          val r2: MOption[Attr] = transformAttr(o2.attr)
+          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(id = r0.getOrElse(o2.id), typeOpt = r1.getOrElse(o2.typeOpt), attr = r2.getOrElse(o2.attr)))
           else
             MNone()
         case o2: Pattern.Wildcard =>
           val r0: MOption[Option[Type]] = transformOption(o2.typeOpt, transformType)
-          val r1: MOption[Attr] = transformAttr(o2.attr)
+          val r1: MOption[TypedAttr] = transformTypedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty)
             MSome(o2(typeOpt = r0.getOrElse(o2.typeOpt), attr = r1.getOrElse(o2.attr)))
           else

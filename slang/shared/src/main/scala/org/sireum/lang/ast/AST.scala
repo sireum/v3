@@ -511,7 +511,7 @@ object Pattern {
 
   }
 
-  @datatype class VarBinding(id: Id, typeOpt: Option[Type], @hidden attr: Attr) extends Pattern {
+  @datatype class VarBinding(id: Id, typeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -519,7 +519,7 @@ object Pattern {
 
   }
 
-  @datatype class Wildcard(typeOpt: Option[Type], @hidden attr: Attr) extends Pattern {
+  @datatype class Wildcard(typeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt

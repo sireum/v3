@@ -1288,20 +1288,20 @@ class SlangParser(text: Predef.String,
         if (disallowedMethodIds.contains(name.name.value)) {
           errorInSlang(name.name.pos, s"Identifier ${name.name.value} is reserved")
         }
-        AST.Pattern.VarBinding(cid(name), Some(translateType(tpe)), attr(pat.pos))
+        AST.Pattern.VarBinding(cid(name), Some(translateType(tpe)), typedAttr(pat.pos))
       case q"${name: Pat.Var}" =>
         if (disallowedMethodIds.contains(name.name.value)) {
           errorInSlang(name.name.pos, s"Identifier ${name.name.value} is reserved")
         }
-        AST.Pattern.VarBinding(cid(name), None(), attr(pat.pos))
-      case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)), attr(pat.pos))
-      case p"_" => AST.Pattern.Wildcard(None(), attr(pat.pos))
+        AST.Pattern.VarBinding(cid(name), None(), typedAttr(pat.pos))
+      case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)), typedAttr(pat.pos))
+      case p"_" => AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
       case p"${lit: Pat.Interpolate}" => translateLit(lit)
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _: Pat.SeqWildcard => AST.Pattern.SeqWildcard(typedAttr(pat.pos))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${pat.structure}'")
-        AST.Pattern.Wildcard(None(), attr(pat.pos))
+        AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
     }
   }
 
@@ -1318,15 +1318,15 @@ class SlangParser(text: Predef.String,
           }
         }
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard(None(), attr(pat.pos))
+        AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
       case q"(..$exprsnel)" if exprsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(),
           ISZ(exprsnel.map(translatePattern): _*), resolvedAttr(pat.pos))
-      case q"${name: Term.Name}" => AST.Pattern.VarBinding(cid(name), None(), attr(pat.pos))
+      case q"${name: Term.Name}" => AST.Pattern.VarBinding(cid(name), None(), typedAttr(pat.pos))
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _ =>
         errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
-        AST.Pattern.Wildcard(None(), attr(pat.pos))
+        AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
     }
   }
 
@@ -1453,10 +1453,6 @@ class SlangParser(text: Predef.String,
   }
 
   def translateAssign(enclosing: Enclosing.Type, fun: Term, argss: List[List[Term]], rhs: Term, stat: Term): AST.Stmt = {
-    def patVar(arg: Term): AST.Pattern = arg match {
-      case arg: Term.Name => AST.Pattern.VarBinding(cid(arg), None(), attr(arg.pos))
-    }
-
     val pos = stat.pos
 
     stmtCheck(enclosing, stat, "Assigments")

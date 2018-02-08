@@ -2638,14 +2638,14 @@ import Transformer._
         case o2: Pattern.VarBinding =>
           val r0: Result[Context, Id] = transformId(ctx, o2.id)
           val r1: Result[Context, Option[Type]] = transformOption(r0.ctx, o2.typeOpt, transformType)
-          val r2: Result[Context, Attr] = transformAttr(r1.ctx, o2.attr)
+          val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
             Result(r2.ctx, Some(o2(id = r0.resultOpt.getOrElse(o2.id), typeOpt = r1.resultOpt.getOrElse(o2.typeOpt), attr = r2.resultOpt.getOrElse(o2.attr))))
           else
             Result(r2.ctx, None())
         case o2: Pattern.Wildcard =>
           val r0: Result[Context, Option[Type]] = transformOption(ctx, o2.typeOpt, transformType)
-          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
             Result(r1.ctx, Some(o2(typeOpt = r0.resultOpt.getOrElse(o2.typeOpt), attr = r1.resultOpt.getOrElse(o2.attr))))
           else
