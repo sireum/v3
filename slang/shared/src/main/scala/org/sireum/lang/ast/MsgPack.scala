@@ -801,7 +801,7 @@ object MsgPack {
     def writePatternVarBinding(o: Pattern.VarBinding): Unit = {
       writer.writeZ(Constants.PatternVarBinding)
       writeId(o.id)
-      writer.writeOption(o.typeOpt, writeType)
+      writer.writeOption(o.tipeOpt, writeType)
       writeTypedAttr(o.attr)
     }
 
@@ -2593,9 +2593,9 @@ object MsgPack {
         reader.expectZ(Constants.PatternVarBinding)
       }
       val id = readId()
-      val typeOpt = reader.readOption(readType _)
+      val tipeOpt = reader.readOption(readType _)
       val attr = readTypedAttr()
-      return Pattern.VarBinding(id, typeOpt, attr)
+      return Pattern.VarBinding(id, tipeOpt, attr)
     }
 
     def readPatternWildcard(): Pattern.Wildcard = {

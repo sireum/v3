@@ -511,7 +511,7 @@ object Pattern {
 
   }
 
-  @datatype class VarBinding(id: Id, typeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
+  @datatype class VarBinding(id: Id, tipeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -561,6 +561,8 @@ object Pattern {
 @sig sealed trait Lit {
 
   @pure def posOpt: Option[PosInfo]
+
+  @pure def typedOpt: Option[Typed]
 
 }
 

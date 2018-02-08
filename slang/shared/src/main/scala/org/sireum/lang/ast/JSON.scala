@@ -601,7 +601,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Pattern.VarBinding""""),
         ("id", printId(o.id)),
-        ("typeOpt", printOption(o.typeOpt, printType)),
+        ("tipeOpt", printOption(o.tipeOpt, printType)),
         ("attr", printTypedAttr(o.attr))
       ))
     }
@@ -2878,13 +2878,13 @@ object JSON {
       parser.parseObjectKey("id")
       val id = parseId()
       parser.parseObjectNext()
-      parser.parseObjectKey("typeOpt")
-      val typeOpt = parser.parseOption(parseType _)
+      parser.parseObjectKey("tipeOpt")
+      val tipeOpt = parser.parseOption(parseType _)
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Pattern.VarBinding(id, typeOpt, attr)
+      return Pattern.VarBinding(id, tipeOpt, attr)
     }
 
     def parsePatternWildcard(): Pattern.Wildcard = {
