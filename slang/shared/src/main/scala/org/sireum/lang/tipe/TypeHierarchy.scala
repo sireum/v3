@@ -240,7 +240,7 @@ object TypeHierarchy {
 
     var typeNames = ISZ[AST.Typed.Name]()
     val first = types(0)
-    var i = 0
+    var i = 1
     val size = types.size
     while (i < size) {
       types(i) match {
@@ -252,6 +252,10 @@ object TypeHierarchy {
           }
       }
       i = i + 1
+    }
+
+    if (typeNames.size != 0 && typeNames.size != types.size) {
+      return None()
     }
 
     if (typeNames.size < 2) {
@@ -297,7 +301,7 @@ object TypeHierarchy {
 
     var typeNames = ISZ[AST.Typed.Name]()
     val first = types(0)
-    var i = 0
+    var i = 1
     val size = types.size
     while (i < size) {
       types(i) match {
@@ -309,6 +313,10 @@ object TypeHierarchy {
           }
       }
       i = i + 1
+    }
+
+    if (typeNames.size != 0 && typeNames.size != types.size) {
+      return None()
     }
 
     if (typeNames.size < 2) {
@@ -333,13 +341,13 @@ object TypeHierarchy {
     }
   }
 
-  def dealiasInit(t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
+  def dealiasInit(posOpt: Option[AST.PosInfo], t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
     aliases.get(TypeHierarchy.TypeName(t)) match {
       case Some(t2: AST.Typed.Name) =>
-        val r = dealiasInit(t2, reporter)
+        val r = dealiasInit(posOpt, t2, reporter)
         return r
       case Some(_) =>
-        reporter.error(None(), resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
+        reporter.error(posOpt, resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
         return None()
       case _ => return Some(t)
     }
@@ -471,9 +479,13 @@ object TypeHierarchy {
                      ti: TypeInfo.TypeAlias,
                      posOpt: Option[AST.PosInfo],
                      reporter: Reporter): Option[AST.Typed] = {
-    val tm = typeParamMap(ti.ast.typeParams, reporter)
-    val scope = localTypeScope(tm.map, ti.scope)
-    val tipeOpt = this.typed(scope, ti.ast.tipe, reporter)
+    val tipeOpt: Option[AST.Type] = if (!ti.outlined) {
+      val tm = typeParamMap(ti.ast.typeParams, reporter)
+      val scope = localTypeScope(tm.map, ti.scope)
+      this.typed(scope, ti.ast.tipe, reporter)
+    } else {
+      Some(ti.ast.tipe)
+    }
     tipeOpt match {
       case Some(tipe) if tipe.typedOpt.nonEmpty =>
         val substMapOpt = TypeChecker.buildTypeSubstMap(ti.name, posOpt, ti.ast.typeParams, typed.args, reporter)
