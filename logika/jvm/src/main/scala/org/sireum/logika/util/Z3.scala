@@ -49,12 +49,12 @@ object Z3 {
 
   case object Error extends CheckResult
 
-  private[logika] var satCacheEnabled = false
-  private[logika] var satCachePrev: MMap[Object, (String, CheckResult)] = {
+  private[sireum] var satCacheEnabled = false
+  private[sireum] var satCachePrev: MMap[Object, (String, CheckResult)] = {
     import scala.collection.JavaConverters._
     new ConcurrentHashMap[Object, (String, CheckResult)].asScala
   }
-  private[logika] var satCacheCurrent: MMap[Object, (String, CheckResult)] = {
+  private[sireum] var satCacheCurrent: MMap[Object, (String, CheckResult)] = {
     import scala.collection.JavaConverters._
     new ConcurrentHashMap[Object, (String, CheckResult)].asScala
   }
