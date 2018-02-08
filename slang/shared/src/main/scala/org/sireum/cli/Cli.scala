@@ -93,6 +93,19 @@ object Cli {
     license: Option[String],
     outputDir: Option[String]
   ) extends SireumOption
+
+  @datatype class ArsitOption(
+    help: String,
+    args: ISZ[String],
+    json: B,
+    inputFile: Option[String],
+    outputDir: Option[String]
+  ) extends SireumOption
+
+  @datatype class AwasOption(
+    help: String,
+    args: ISZ[String]
+  ) extends SireumOption
 }
 
 import Cli._
@@ -111,10 +124,11 @@ import Cli._
       )
       return Some(HelpOption())
     }
-    val opt = select("sireum", args, i, ISZ("logika", "util"))
+    val opt = select("sireum", args, i, ISZ("logika", "util", "x"))
     opt match {
       case Some(string"logika") => parseLogika(args, i + 1)
       case Some(string"util") => parseUtil(args, i + 1)
+      case Some(string"x") => parseX(args, i + 1)
       case _ => return None()
     }
   }
@@ -556,6 +570,127 @@ import Cli._
       }
     }
     return Some(TransgenOption(help, parseArguments(args, j), modes, name, license, outputDir))
+  }
+
+  def parseX(args: ISZ[String], i: Z): Option[SireumOption] = {
+    if (i >= args.size) {
+      println(
+        st"""Sireum Experimental Tools
+            |
+            |Available modes:
+            """.render
+      )
+      return Some(HelpOption())
+    }
+    val opt = select("x", args, i, ISZ("aadl"))
+    opt match {
+      case Some(string"aadl") => parseAadl(args, i + 1)
+      case _ => return None()
+    }
+  }
+
+  def parseAadl(args: ISZ[String], i: Z): Option[SireumOption] = {
+    if (i >= args.size) {
+      println(
+        st"""Sireum AADL Tools
+            |
+            |Available modes:
+            |arsit                    Generate Slang-Embedded project from AadlXml
+            |awas                     Generate Awas from AADL model""".render
+      )
+      return Some(HelpOption())
+    }
+    val opt = select("aadl", args, i, ISZ("arsit", "awas"))
+    opt match {
+      case Some(string"arsit") => parseArsit(args, i + 1)
+      case Some(string"awas") => parseAwas(args, i + 1)
+      case _ => return None()
+    }
+  }
+
+  def parseArsit(args: ISZ[String], i: Z): Option[SireumOption] = {
+    val help =
+      st"""Slang-Embedded generator
+          |
+          |Usage: <option>*
+          |
+          |Available Options:
+          |-j, --json               Input serialized using Json (otherwise MsgPack
+          |                           assumed)
+          |-f, --input-file         Read input from file rather than stdin (expects a
+          |                           path)
+          |-o, --output-dir         Output directory for the generated project files
+          |                           (expects a path; default is ".")
+          |-h, --help               Display this information""".render
+
+    var json: B = false
+    var inputFile: Option[String] = None[String]()
+    var outputDir: Option[String] = Some(".")
+    var j = i
+    var isOption = T
+    while (j < args.size && isOption) {
+      val arg = args(j)
+      if (ops.StringOps(arg).first == '-') {
+        if (args(j) == "-h" || args(j) == "--help") {
+          println(help)
+          return Some(HelpOption())
+        } else if (arg == "-j" || arg == "--json") {
+           val o: Option[B] = { j = j - 1; Some(!json) }
+           o match {
+             case Some(v) => json = v
+             case _ => return None()
+           }
+         } else if (arg == "-f" || arg == "--input-file") {
+           val o: Option[Option[String]] = parsePath(args, j + 1)
+           o match {
+             case Some(v) => inputFile = v
+             case _ => return None()
+           }
+         } else if (arg == "-o" || arg == "--output-dir") {
+           val o: Option[Option[String]] = parsePath(args, j + 1)
+           o match {
+             case Some(v) => outputDir = v
+             case _ => return None()
+           }
+         } else {
+          eprintln(s"Unrecognized option '$arg'.")
+          return None()
+        }
+        j = j + 2
+      } else {
+        isOption = F
+      }
+    }
+    return Some(ArsitOption(help, parseArguments(args, j), json, inputFile, outputDir))
+  }
+
+  def parseAwas(args: ISZ[String], i: Z): Option[SireumOption] = {
+    val help =
+      st"""Awas generator
+          |
+          |Usage: ??
+          |
+          |Available Options:
+          |-h, --help               Display this information""".render
+
+    val j = i
+    var isOption = T
+    while (j < args.size && isOption) {
+      val arg = args(j)
+      if (ops.StringOps(arg).first == '-') {
+        if (args(j) == "-h" || args(j) == "--help") {
+          println(help)
+          return Some(HelpOption())
+        } else {
+          eprintln(s"Unrecognized option '$arg'.")
+          return None()
+        }
+
+      } else {
+        isOption = F
+      }
+    }
+    return Some(AwasOption(help, parseArguments(args, j)))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {

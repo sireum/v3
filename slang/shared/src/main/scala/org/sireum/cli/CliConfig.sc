@@ -137,6 +137,39 @@
     groups = ISZ()
   )
 
+  val arsitTool: Tool = Tool(
+    name = "arsit",
+    description = "Generate Slang-Embedded project from AadlXml",
+    header = "Slang-Embedded generator",
+    usage = "<option>*",
+    opts = ISZ(
+      Opt(name = "json", longKey = "json", shortKey = Some('j'),
+        tpe = Type.Flag(F), description = "Input serialized using Json (otherwise MsgPack assumed)"),
+      Opt(name = "inputFile", longKey = "input-file", shortKey = Some('f'),
+        tpe = Type.Path(multiple = F, default = None()), description = "Read input from file rather than stdin"),
+      Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
+        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated project files")
+    ),
+    groups = ISZ()
+  )
+
+  val awasTool: Tool = Tool(
+    name = "awas",
+    description = "Generate Awas from AADL model",
+    header = "Awas generator",
+    usage = "??",
+    opts = ISZ(),
+    groups = ISZ()
+  )
+
+  val aadlGroup: Group = Group(
+    name = "aadl",
+    description = "AADL Tools",
+    header = "Sireum AADL Tools",
+    unlisted = T,
+    subs = ISZ(arsitTool, awasTool)
+  )
+
   val utilGroup: Group = Group(
     name = "util",
     description = "Utility Tools",
@@ -145,6 +178,13 @@
     subs = ISZ(cliGenTool, serializerGenTool, transformerGenTool)
   )
 
+  val xGroup: Group = Group(
+    name = "x",
+    description = "Experimental Tools",
+    header = "Sireum Experimental Tools",
+    unlisted = T,
+    subs = ISZ(aadlGroup)
+  )
   val mainGroup: Group = Group(
     name = "sireum",
     description = "",
@@ -152,7 +192,7 @@
       st"""Sireum: A Software Analysis Platform (v3)
           |(c) 2018, SAnToS Laboratory, Kansas State University""".render,
     unlisted = F,
-    subs = ISZ(logikaTool, utilGroup)
+    subs = ISZ(logikaTool, utilGroup, xGroup)
   )
 
   mainGroup
