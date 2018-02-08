@@ -32,7 +32,7 @@ import org.sireum.option.LogikaOption
 import org.sireum.logika.ast._
 import org.sireum.logika.util.SymbolConverter
 import org.sireum.util._
-import org.sireum.util.jvm._
+import org.sireum.util.jvm.{FileUtil, OsArch, OsUtil}
 
 object Main {
   final val READ_INPUT_FAILED_EXIT_CODE: Int = -1
