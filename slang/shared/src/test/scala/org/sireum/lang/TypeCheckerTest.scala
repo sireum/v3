@@ -43,6 +43,72 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |val xOpt: Option[Z] = Some(4)
+                             |
+                             |// Note: val pattern cannot appear at the top-level
+                             |{
+                             |  val Some(x) = xOpt
+                             |  assert(x > 0)
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |
+                             |{
+                             |  val Poset(parents, children) = poset
+                             |  val parentsTyped: HashMap[Z, HashSet[Z]] = parents
+                             |  val childrenTyped: HashMap[Z, HashSet[Z]] = children
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
+                             |poset match {
+                             |  case Poset(parents, _) if parents.nonEmpty =>
+                             |    val psTyped: HashMap[Z, HashSet[Z]] = parents
+                             |  case _ =>
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |ISZ(1, 2, 3) match {
+                             | case IS(n1, n2, n3, _*) =>
+                             | case _ => halt("impossible")
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val x: Option[Z] = None()
+                             |x match {
+                             | case Some(_) => halt("impossible")
+                             | case _ =>
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |5 match {
+                             | case z"1" => halt("impossible")
+                             | case 10 => halt("impossible")
+                             | case _ =>
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |"abc".native match {
+                             | case "abcd" => halt("impossible")
+                             | case _ =>
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |'A' match {
+                             | case c"A" =>
+                             | case _ => halt("impossible")
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)
                              |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty[Z].addAll(ISZ(1, 2, 3))))
                              |val upPosetTyped: Poset[Z] = upPoset
@@ -163,6 +229,14 @@ class TypeCheckerTest extends SireumSpec {
     "Failing" - {
 
       "Worksheet" - {
+
+        *(failingWorksheet("""import org.sireum._
+                             |val x: Option[Z] = None()
+                             |x match {
+                             | case Some(_: Z) => halt("impossible")
+                             | case _ =>
+                             |}
+                             |""".stripMargin, "Unnecessary"))
 
         *(failingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)

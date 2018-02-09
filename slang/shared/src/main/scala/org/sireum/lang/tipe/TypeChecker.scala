@@ -326,6 +326,26 @@ import TypeChecker._
     return None()
   }
 
+  def checkUnboundTypeVar(
+    posOpt: Option[AST.PosInfo],
+    sm: HashMap[String, AST.Typed],
+    typeParams: ISZ[String],
+    reporter: Reporter
+  ): B = {
+    var unbound = ISZ[String]()
+    for (tp <- typeParams) {
+      sm.get(tp) match {
+        case Some(_) =>
+        case _ => unbound = unbound :+ tp
+      }
+    }
+    if (unbound.nonEmpty) {
+      reporter.error(posOpt, typeCheckerKind, st"Could not infer type parameter(s): '${(unbound, "', '")}'.".render)
+      return F
+    }
+    return T
+  }
+
   def checkExp(
     expectedOpt: Option[AST.Typed],
     scope: Scope,
@@ -539,7 +559,7 @@ import TypeChecker._
     def checkId(id: AST.Id): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
       scope.resolveName(typeHierarchy.nameMap, ISZ(id.value)) match {
         case Some(info) => return checkInfo(info)
-        case _ => halt("Unimplemented") // TODO: check this.<exp>
+        case _ => halt(s"Unimplemented $id") // TODO: check this.<exp>
       }
     }
 
@@ -565,7 +585,12 @@ import TypeChecker._
                   val smOpt =
                     unify(exp.posOpt, T, expected, t.tpe.ret, reporter)
                   smOpt match {
-                    case Some(sm) => sm
+                    case Some(sm) =>
+                      val ok = checkUnboundTypeVar(exp.posOpt, sm, t.typeParams, reporter)
+                      if (!ok) {
+                        return noResult
+                      }
+                      sm
                     case _ => return noResult
                   }
                 case _ =>
@@ -1252,19 +1277,8 @@ import TypeChecker._
             val smOpt = unifies(expId.attr.posOpt, T, argTypes, m.tpe.args, rep)
             smOpt match {
               case Some(sm) =>
-                var unbound = ISZ[String]()
-                for (tp <- m.typeParams) {
-                  sm.get(tp) match {
-                    case Some(_) =>
-                    case _ => unbound = unbound :+ tp
-                  }
-                }
-                if (unbound.nonEmpty) {
-                  reporter.error(
-                    expId.attr.posOpt,
-                    typeCheckerKind,
-                    st"Could not infer type parameter(s): '${(unbound, "', '")}'.".render
-                  )
+                val ok = checkUnboundTypeVar(expId.attr.posOpt, sm, m.typeParams, rep)
+                if (!ok) {
                   return (make(newArgs, None()), None())
                 }
                 val funType = m.tpe.subst(sm)
@@ -1777,37 +1791,86 @@ import TypeChecker._
     val (newScopeOpt, newStmts) =
       checkStmts(expectedOpt, scope, body.stmts, reporter)
     val undecls: ISZ[String] = newScopeOpt match {
-      case Some(newScope) =>
-        var r = ISZ[String]()
-        var sc = newScope
-        while (sc != scope) {
-          r = r ++ scope.nameMap.keys
-          sc.outerOpt match {
-            case Some(sc2: Scope.Local) => sc = sc2
-            case _ =>
-              halt("Unexpected situation when computing out of scope body variables.")
-          }
-        }
-        r
+      case Some(newScope) => newScope.nameMap.keys
       case _ => body.undecls
     }
     return body(stmts = newStmts, undecls = undecls)
   }
 
+  def createNewScope(scope: Scope.Local): Scope.Local = {
+    return Scope.Local(HashMap.empty, HashMap.empty, None(), Some(scope))
+  }
+
   def checkPattern(
     expected: AST.Typed,
     sc: Scope.Local,
-    pattern: AST.Pattern,
+    pat: AST.Pattern,
     reporter: Reporter
   ): (Option[Scope.Local], AST.Pattern) = {
 
-    var scope = Scope.Local(HashMap.empty, HashMap.empty, None(), Some(sc))
+    var scope = createNewScope(sc)
     var ok = T
 
-    def checkPatternH(expected: AST.Typed): AST.Pattern = {
+    def declId(idOpt: Option[AST.Id], tOpt: Option[AST.Typed]): Unit = {
+      idOpt match {
+        case Some(id) =>
+          val key = id.value
+          if (scope.nameMap.contains(key)) {
+            reporter.error(
+              id.attr.posOpt,
+              typeCheckerKind,
+              s"Cannot declare '$key' because the identifier has already been previously declared."
+            )
+            ok = F
+          } else {
+            scope = scope(
+              nameMap = scope.nameMap
+                .put(key, Info.LocalVar(context :+ key, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+            )
+          }
+        case _ =>
+      }
+    }
+
+    def checkTipe(expected: AST.Typed, tipe: AST.Type): AST.Type = {
+      val newTipeOpt = typeHierarchy.typed(scope, tipe, reporter)
+      newTipeOpt match {
+        case Some(newTipe) if newTipe.typedOpt.nonEmpty =>
+          val t = newTipe.typedOpt.get
+          if (t != expected && typeHierarchy.isSubType(expected, t)) {
+            // OK
+          } else {
+            if (typeHierarchy.isSubType(t, expected)) {
+              reporter.warn(
+                tipe.posOpt,
+                typeCheckerKind,
+                s"Unnecessary type matching because it is always going to be successful (i.e.,  $t <: $expected)."
+              )
+            } else {
+              if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
+                reporter.error(
+                  tipe.posOpt,
+                  typeCheckerKind,
+                  s"Fruitless type matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
+                )
+                ok = F
+              }
+            }
+          }
+          return newTipe
+        case _ => return tipe
+      }
+    }
+
+    def checkPatternH(expected: AST.Typed, pattern: AST.Pattern): AST.Pattern = {
       pattern match {
         case pattern: AST.Pattern.Wildcard =>
-          return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+          pattern.typeOpt match {
+            case Some(tipe) =>
+              val newTipe = checkTipe(expected, tipe)
+              return pattern(typeOpt = Some(newTipe), attr = pattern.attr(typedOpt = Some(expected)))
+            case _ => return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+          }
         case pattern: AST.Pattern.SeqWildcard =>
           return pattern(attr = pattern.attr(typedOpt = Some(expected)))
         case pattern: AST.Pattern.Ref =>
@@ -1855,38 +1918,196 @@ import TypeChecker._
         case pattern: AST.Pattern.VarBinding =>
           pattern.tipeOpt match {
             case Some(tipe) =>
-              val newTipeOpt = typeHierarchy.typed(scope, tipe, reporter)
-              newTipeOpt match {
-                case Some(newTipe) if newTipe.typedOpt.nonEmpty =>
-                  val t = newTipe.typedOpt.get
-                  if (!typeHierarchy.isSubType(expected, t)) {
-                    if (typeHierarchy.isSubType(t, expected)) {
-                      reporter.warn(
-                        tipe.posOpt,
-                        typeCheckerKind,
-                        s"Unnecessary type matching because it is always going to be successful (i.e.,  $t <: $expected)."
-                      )
-                    } else {
-                      if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
+              val newTipe = checkTipe(expected, tipe)
+              if (newTipe.typedOpt.nonEmpty) {
+                val t = newTipe.typedOpt.get
+                val tOpt: Option[AST.Typed] = Some(t)
+                declId(Some(pattern.id), tOpt)
+                return pattern(tipeOpt = Some(newTipe), attr = pattern.attr(typedOpt = tOpt))
+              }
+              return pattern(tipeOpt = Some(newTipe))
+            case _ =>
+              val tOpt: Option[AST.Typed] = Some(expected)
+              declId(Some(pattern.id), tOpt)
+              return pattern(attr = pattern.attr(typedOpt = tOpt))
+          }
+        case pattern: AST.Pattern.Structure =>
+          pattern.nameOpt match {
+            case Some(nm) =>
+              val name: ISZ[String] = scope.resolveType(typeHierarchy.typeMap, nm.ids.map(id => id.value)) match {
+                case Some(info) => info.name
+                case nms =>
+                  reporter
+                    .error(pattern.posOpt, typeCheckerKind, st"Could not resolve type named ${(nms, ".")}.".render)
+                  return pattern
+              }
+
+              def s(valueType: AST.Typed): AST.Pattern = {
+                var newPatterns = ISZ[AST.Pattern]()
+                for (p <- pattern.patterns) {
+                  val newPattern = checkPatternH(valueType, p)
+                  newPatterns = newPatterns :+ newPattern
+                }
+                val tOpt: Option[AST.Typed] = Some(expected)
+                declId(pattern.idOpt, tOpt)
+                return pattern(
+                  patterns = newPatterns,
+                  attr = pattern.attr(typedOpt = tOpt, resOpt = AST.Typed.isResOpt)
+                )
+              }
+              (name, expected) match {
+                case (AST.Typed.isName, AST.Typed.Name(AST.Typed.isName, argTypes)) => val r = s(argTypes(1)); return r
+                case (AST.Typed.msName, AST.Typed.Name(AST.Typed.msName, argTypes)) => val r = s(argTypes(1)); return r
+                case (AST.Typed.iszName, AST.Typed.Name(AST.Typed.isName, argTypes)) =>
+                  if (argTypes(0) != AST.Typed.z) {
+                    reporter.error(
+                      pattern.posOpt,
+                      typeCheckerKind,
+                      st"Expecting an '${(AST.Typed.isName, ".")}' with index type '${AST.Typed.z}', but found index type '${argTypes(0)}'.".render
+                    )
+                    return pattern
+                  }
+                  val r = s(argTypes(1))
+                  return r
+                case (AST.Typed.mszName, AST.Typed.Name(AST.Typed.msName, argTypes)) =>
+                  if (argTypes(0) != AST.Typed.z) {
+                    reporter.error(
+                      pattern.posOpt,
+                      typeCheckerKind,
+                      st"Expecting an '${(AST.Typed.msName, ".")}' with index type '${AST.Typed.z}', but found index type '${argTypes(0)}'.".render
+                    )
+                    return pattern
+                  }
+                  val r = s(argTypes(1))
+                  return r
+                case (AST.Typed.zsName, AST.Typed.Name(AST.Typed.msName, argTypes)) =>
+                  var ok = T
+                  if (argTypes(0) != AST.Typed.z) {
+                    reporter.error(
+                      pattern.posOpt,
+                      typeCheckerKind,
+                      st"Expecting an '${(AST.Typed.msName, ".")}' with index type '${AST.Typed.z}', but found index type '${argTypes(0)}'.".render
+                    )
+                    ok = F
+                  }
+                  if (argTypes(1) != AST.Typed.z) {
+                    reporter.error(
+                      pattern.posOpt,
+                      typeCheckerKind,
+                      st"Expecting an '${(AST.Typed.msName, ".")}' with element type '${AST.Typed.z}', but found element type '${argTypes(1)}'.".render
+                    )
+                    ok = F
+                  }
+                  if (!ok) {
+                    return pattern
+                  }
+                  val r = s(argTypes(1))
+                  return r
+                case (_, expected: AST.Typed.Name) =>
+                  scope.resolveType(typeHierarchy.typeMap, name) match {
+                    case Some(info: TypeInfo.AbstractDatatype) if !info.ast.isRoot =>
+                      val typedOpt: Option[AST.Typed] = Some(expected)
+
+                      def partialResult: AST.Pattern = {
+                        return pattern(attr = pattern.attr(typedOpt = typedOpt, resOpt = info.extractorResOpt))
+                      }
+
+                      val size = info.extractorTypeMap.size
+                      if (size != pattern.patterns.size) {
                         reporter.error(
-                          tipe.posOpt,
+                          pattern.posOpt,
                           typeCheckerKind,
-                          s"Fruitless type matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
+                          s"Expecting $size patterns, but found ${pattern.patterns.size}."
                         )
                         ok = F
+                        return partialResult
                       }
-                    }
+                      val smOpt = unify(pattern.posOpt, T, expected, info.tpe, reporter)
+                      smOpt match {
+                        case Some(sm) =>
+                          val ok = checkUnboundTypeVar(
+                            pattern.posOpt,
+                            sm,
+                            info.ast.typeParams.map(tp => tp.id.value),
+                            reporter
+                          )
+                          if (!ok) {
+                            return partialResult
+                          }
+                          var newPatterns = ISZ[AST.Pattern]()
+                          var i = 0
+                          val exts = info.extractorTypeMap.values
+                          while (i < size) {
+                            val newPattern = checkPatternH(exts(i).subst(sm), pattern.patterns(i))
+                            newPatterns = newPatterns :+ newPattern
+                            i = i + 1
+                          }
+                          return pattern(
+                            patterns = newPatterns,
+                            attr = pattern.attr(typedOpt = typedOpt, resOpt = info.extractorResOpt)
+                          )
+                        case _ => return partialResult
+                      }
+                    case Some(_) =>
+                      reporter.error(
+                        pattern.posOpt,
+                        typeCheckerKind,
+                        st"Cannot pattern match on type $expected using ${(name, ".")}.".render
+                      )
+                      ok = F
+                      return pattern
+                    case _ =>
                   }
-                  return pattern(tipeOpt = newTipeOpt, attr = pattern.attr(typedOpt = Some(t)))
-                case _ => ok = F; return pattern(tipeOpt = newTipeOpt)
+                case _ =>
+                  expected match {
+                    case _: AST.Typed.Name =>
+                      reporter.error(
+                        pattern.posOpt,
+                        typeCheckerKind,
+                        st"Cannot pattern match on type $expected using ${(name, ".")}.".render
+                      )
+                    case _ =>
+                  }
               }
-            case _ => return pattern(attr = pattern.attr(typedOpt = Some(expected)))
+              reporter
+                .error(pattern.posOpt, typeCheckerKind, st"Undefined type ${(name, ".")} for pattern matching.".render)
+              ok = F
+              return pattern
+            case _ =>
+              expected match {
+                case expected: AST.Typed.Tuple =>
+                  val size = expected.args.size
+                  if (size != pattern.patterns.size) {
+                    reporter.error(
+                      pattern.posOpt,
+                      typeCheckerKind,
+                      s"Expecting $size patterns, but found ${pattern.patterns.size}."
+                    )
+                    ok = F
+                    return pattern
+                  }
+                  var newPatterns = ISZ[AST.Pattern]()
+                  var i = 0
+                  while (i < size) {
+                    val p = checkPatternH(expected.args(i), pattern.patterns(i))
+                    newPatterns = newPatterns :+ p
+                    i = i + 1
+                  }
+                  declId(pattern.idOpt, Some(expected))
+                  return pattern(
+                    patterns = newPatterns,
+                    attr =
+                      pattern.attr(typedOpt = Some(expected), resOpt = Some(AST.ResolvedInfo.BuiltIn(s"tuple$size")))
+                  )
+                case _ =>
+                  reporter.error(pattern.posOpt, typeCheckerKind, "Cannot match non-tuple type with tuple extractor.")
+                  ok = F
+                  return pattern
+              }
           }
-        case pattern: AST.Pattern.Structure => halt("Unimplemented") // TODO
       }
-
     }
-    val r = checkPatternH(expected)
+    val r = checkPatternH(expected, pat)
     return if (ok) (Some(scope), r) else (None(), r)
   }
 
@@ -1906,14 +2127,14 @@ import TypeChecker._
     stmt: AST.Stmt.Block,
     reporter: Reporter
   ): AST.Stmt = {
-    val newBody = checkBody(expectedOpt, scope, stmt.body, reporter)
+    val newBody = checkBody(expectedOpt, createNewScope(scope), stmt.body, reporter)
     return stmt(body = newBody)
   }
 
   def checkIf(expectedOpt: Option[AST.Typed], scope: Scope.Local, stmt: AST.Stmt.If, reporter: Reporter): AST.Stmt = {
     val (newCond, _) = checkExp(AST.Typed.bOpt, scope, stmt.cond, reporter)
-    val tBody = checkBody(expectedOpt, scope, stmt.thenBody, reporter)
-    val eBody = checkBody(expectedOpt, scope, stmt.elseBody, reporter)
+    val tBody = checkBody(expectedOpt, createNewScope(scope), stmt.thenBody, reporter)
+    val eBody = checkBody(expectedOpt, createNewScope(scope), stmt.elseBody, reporter)
     return stmt(cond = newCond, thenBody = tBody, elseBody = eBody)
   }
 
@@ -1947,7 +2168,7 @@ import TypeChecker._
               Some(newCond)
             case o => o
           }
-          val newBody = checkBody(expectedOpt, scope, c.body, reporter)
+          val newBody = checkBody(expectedOpt, newScope, c.body, reporter)
           newCases = newCases :+ c(pattern = newPattern, condOpt = newCondOpt, body = newBody)
         case _ => newCases = newCases :+ c(pattern = newPattern)
       }
@@ -1980,7 +2201,7 @@ import TypeChecker._
         reporter.error(
           stmt.id.attr.posOpt,
           typeCheckerKind,
-          s"Cannot declare '$key' because the name has already been previously declared."
+          s"Cannot declare '$key' because the identifier has already been previously declared."
         )
       }
 
@@ -1992,7 +2213,7 @@ import TypeChecker._
           return (None(), r)
         case _ =>
       }
-      val expected: Option[AST.Typed] = stmt.tipeOpt match {
+      val expectedOpt: Option[AST.Typed] = stmt.tipeOpt match {
         case Some(tipe) =>
           tipe.typedOpt match {
             case tOpt @ Some(_) => tOpt
@@ -2008,12 +2229,16 @@ import TypeChecker._
         case _ => None()
       }
       val (rhs, tOpt) =
-        checkAssignExp(expected, scope, stmt.initOpt.get, reporter)
+        checkAssignExp(expectedOpt, scope, stmt.initOpt.get, reporter)
       tOpt match {
         case Some(_) =>
+          val typedOpt: Option[AST.Typed] = expectedOpt match {
+            case Some(_) => expectedOpt
+            case _ => tOpt
+          }
           val newScope = scope(
             nameMap =
-              scope.nameMap.put(key, Info.LocalVar(name, r.id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+              scope.nameMap.put(key, Info.LocalVar(name, r.id, typedOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
           )
           val newStmt = r(initOpt = Some(rhs))
           return (Some(newScope), newStmt)
@@ -2083,7 +2308,7 @@ import TypeChecker._
         return (Some(scope), r)
 
       case stmt: AST.Stmt.DoWhile =>
-        val newBody = checkBody(None(), scope, stmt.body, reporter)
+        val newBody = checkBody(None(), createNewScope(scope), stmt.body, reporter)
         val (newCond, _) = checkExp(AST.Typed.bOpt, scope, stmt.cond, reporter)
         return (Some(scope), stmt(cond = newCond, body = newBody))
 
@@ -2153,7 +2378,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.While =>
         val (newCond, _) = checkExp(AST.Typed.bOpt, scope, stmt.cond, reporter)
-        val newBody = checkBody(None(), scope, stmt.body, reporter)
+        val newBody = checkBody(None(), createNewScope(scope), stmt.body, reporter)
         return (Some(scope), stmt(cond = newCond, body = newBody))
 
     }
