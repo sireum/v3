@@ -254,7 +254,7 @@ object TypeHierarchy {
       i = i + 1
     }
 
-    if (typeNames.size != 0 && typeNames.size != types.size) {
+    if (typeNames.size != 0 && typeNames.size + 1 != types.size) {
       return None()
     }
 
@@ -315,7 +315,7 @@ object TypeHierarchy {
       i = i + 1
     }
 
-    if (typeNames.size != 0 && typeNames.size != types.size) {
+    if (typeNames.size != 0 && typeNames.size + 1 != types.size) {
       return None()
     }
 
