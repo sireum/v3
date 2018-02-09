@@ -297,6 +297,17 @@ lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
+lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI, slangPI)
+lazy val skemaT = toSbtCrossProject(skemaPI, slangSettings ++ Seq(
+  libraryDependencies ++= Seq(
+    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
+  ),
+  Test / parallelExecution := true
+))
+lazy val skemaShared = skemaT._1
+lazy val skemaJvm = skemaT._2
+lazy val skemaJs = skemaT._3
+
 // Jvm Projects
 
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
@@ -315,30 +326,23 @@ lazy val awasJvm = awasT._2.settings(
   ))
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
-// Js Projects
-
-lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI, slangPI)
-lazy val skemaT = toSbtCrossProject(skemaPI, slangSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-  ),
-  Test / parallelExecution := true
-))
-lazy val skemaShared = skemaT._1
-lazy val skemaJvm = skemaT._2
-lazy val skemaJs = skemaT._3
-
-
 lazy val arsitPI = new ProjectInfo("aadl/arsit", isCross = false,
   utilPI, testPI, commonPI, macrosPI, libraryPI, slangPI, skemaPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings ++ Seq(
   Test / parallelExecution := true
 ))
 
+lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false,
+  macrosPI, libraryPI, skemaPI)
+lazy val minix = toSbtJvmProject(minixPI, slangSettings ++ Seq(
+  Test / parallelExecution := true
+))
+
+// Js Projects
 
 lazy val subProjectsJvm = Seq(
   utilJvm, testJvm, pilarJvm,
-  macrosJvm, libraryJvm, logikaJvm, slangJvm, java, cli, awasJvm, skemaJvm, arsit
+  macrosJvm, libraryJvm, logikaJvm, slangJvm, java, cli, awasJvm, skemaJvm, arsit, minix
 )
 
 lazy val subProjectsJs = Seq(
