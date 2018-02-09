@@ -1573,6 +1573,40 @@ import TypeChecker._
       }
     }
 
+    def checkIf(exp: AST.Exp.If): (AST.Exp, Option[AST.Typed]) = {
+      val (newCond, _) = checkExp(AST.Typed.bOpt, scope, exp.cond, reporter)
+      expectedOpt match {
+        case Some(expected) =>
+          val (newThenExp, _) = checkExp(Some(expected), scope, exp.thenExp, reporter)
+          val (newElseExp, _) = checkExp(Some(expected), scope, exp.elseExp, reporter)
+          return (
+            exp(cond = newCond, thenExp = newThenExp, elseExp = newElseExp, attr = exp.attr(typedOpt = expectedOpt)),
+            expectedOpt
+          )
+        case _ =>
+          val (newThenExp, thenTypeOpt) = checkExp(expectedOpt, scope, exp.thenExp, reporter)
+          val (newElseExp, elseTypeOpt) = checkExp(expectedOpt, scope, exp.elseExp, reporter)
+          (thenTypeOpt, elseTypeOpt) match {
+            case (Some(thenType), Some(elseType)) =>
+              val tOpt = typeHierarchy.lub(ISZ(thenType, elseType))
+              tOpt match {
+                case Some(_) =>
+                case _ =>
+                  reporter.error(
+                    exp.posOpt,
+                    typeCheckerKind,
+                    st"Could not find a common ancestor for: { '${(ISZ(thenType, elseType), "', '")}' }.".render
+                  )
+              }
+              return (
+                exp(cond = newCond, thenExp = newThenExp, elseExp = newElseExp, attr = exp.attr(typedOpt = tOpt)),
+                tOpt
+              )
+            case _ => return (exp(cond = newCond, thenExp = newThenExp, elseExp = newElseExp), None())
+          }
+      }
+    }
+
     def checkExpH(): (AST.Exp, Option[AST.Typed]) = {
       exp match {
 
@@ -1592,7 +1626,7 @@ import TypeChecker._
 
         case exp: AST.Exp.Ident => val r = checkIdent(exp, None()); return r
 
-        case exp: AST.Exp.If => halt("Unimplemented") // TODO
+        case exp: AST.Exp.If => val r = checkIf(exp); return r
 
         case exp: AST.Exp.Invoke =>
           exp match {

@@ -43,6 +43,14 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |val xOpt: Option[B] = if (B.random) Some(T) else None()
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |assert((if (B.random) Some(T) else None[B]()).nonEmpty)
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val xOpt: Option[Z] = Some(4)
                              |
                              |// Note: val pattern cannot appear at the top-level
