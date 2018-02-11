@@ -389,7 +389,7 @@ import TypeChecker._
           } else {
             scope = scope(
               nameMap = scope.nameMap
-                .put(key, Info.LocalVar(context :+ key, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+                .put(key, Info.LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
             )
           }
         case _ =>
@@ -2037,7 +2037,7 @@ import TypeChecker._
           } else {
             scope = scope(
               nameMap = scope.nameMap
-                .put(key, Info.LocalVar(context :+ key, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+                .put(key, Info.LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
             )
           }
         case _ =>
@@ -2450,8 +2450,8 @@ import TypeChecker._
             case _ => tOpt
           }
           val newScope = scope(
-            nameMap =
-              scope.nameMap.put(key, Info.LocalVar(name, r.id, typedOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+            nameMap = scope.nameMap
+              .put(key, Info.LocalVar(name, stmt.isVal, r.id, typedOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
           )
           val newStmt = r(initOpt = Some(rhs))
           return (Some(newScope), newStmt)
@@ -2524,8 +2524,7 @@ import TypeChecker._
       case stmt: AST.Stmt.Assign => val r = checkAssign(stmt); return (Some(scope), r)
 
       case stmt: AST.Stmt.Block =>
-        val r = checkBlock(None(), scope, stmt, reporter);
-        return (Some(scope), r)
+        val r = checkBlock(None(), scope, stmt, reporter); return (Some(scope), r)
 
       case stmt: AST.Stmt.DoWhile =>
         val newBody = checkBody(None(), createNewScope(scope), stmt.body, reporter)
@@ -2534,9 +2533,7 @@ import TypeChecker._
 
       case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
 
-      case stmt: AST.Stmt.Expr =>
-        val r = checkExpr(None(), scope, stmt, reporter);
-        return (Some(scope), r)
+      case stmt: AST.Stmt.Expr => val r = checkExpr(None(), scope, stmt, reporter); return (Some(scope), r)
 
       case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
 

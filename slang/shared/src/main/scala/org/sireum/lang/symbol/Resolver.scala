@@ -433,6 +433,7 @@ object Resolver {
 
     @datatype class LocalVar(
       val name: QName,
+      isVal: B,
       ast: AST.Id,
       typedOpt: Option[AST.Typed],
       resOpt: Option[AST.ResolvedInfo]
