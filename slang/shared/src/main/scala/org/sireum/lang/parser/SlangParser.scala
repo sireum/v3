@@ -1702,7 +1702,15 @@ class SlangParser(
 
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Assign): AST.Stmt = {
     stmtCheck(enclosing, stat, "Assigments")
-    AST.Stmt.Assign(translateExp(stat.lhs), translateAssignExp(stat.rhs), attr(stat.pos))
+    val lhs = translateExp(stat.lhs)
+    lhs match {
+      case lhs: AST.Exp.Ident =>
+      case lhs: AST.Exp.Select if lhs.targs.isEmpty =>
+      case lhs: AST.Exp.Invoke if lhs.targs.isEmpty && lhs.args.size == 1 =>
+      case _ =>
+        errorInSlang(stat.pos, s"Invalid assignment left-hand-side form")
+    }
+    AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs), attr(stat.pos))
   }
 
   def translateAssign(
