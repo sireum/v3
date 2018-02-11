@@ -43,6 +43,28 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |val bs: MSZ[B] = for (s <- MSZ(ZS(0), ZS(1), ZS(3)); n <- s) yield n == 0
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val bs: ISZ[Z] = for (s <- for (i <- 0 until 10) yield ISZ(i); n <- s if n % 2 == 1) yield n
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val bs: MS[Z8, B] = for (b <- MS[Z8, B](T, F)) yield b
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val bs: ISZ[B] = for (b <- ISZ(T, F)) yield b
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |for (i <- 0 until 10 if i % 2 == 0; j <- i until 10) {
+                             |  assert(j >= i)
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val xOpt: Option[B] = if (B.random) Some(T) else None()
                              |""".stripMargin))
 
@@ -299,7 +321,7 @@ class TypeCheckerTest extends SireumSpec {
     val reporter = AccumulatingReporter.create
     Parser(input)
       .parseTopUnit[ast.TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
-      case Some(program) =>
+      case Some(program) if !reporter.hasIssue =>
         val p = TypeChecker.checkWorksheet(program, reporter)
         if (reporter.hasIssue) {
           if (isPassing) {
