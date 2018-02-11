@@ -116,221 +116,219 @@ object MsgPack {
 
     val EnumGenRangeExpr: Z = 39
 
-    val EnumGenRangeIndices: Z = 40
+    val EnumGenRangeStep: Z = 40
 
-    val EnumGenRangeStep: Z = 41
+    val EnumGenFor: Z = 41
 
-    val EnumGenFor: Z = 42
+    val TypeNamed: Z = 42
 
-    val TypeNamed: Z = 43
+    val TypeFun: Z = 43
 
-    val TypeFun: Z = 44
+    val TypeTuple: Z = 44
 
-    val TypeTuple: Z = 45
+    val PatternLiteral: Z = 45
 
-    val PatternLiteral: Z = 46
+    val PatternLitInterpolate: Z = 46
 
-    val PatternLitInterpolate: Z = 47
+    val PatternRef: Z = 47
 
-    val PatternRef: Z = 48
+    val PatternVarBinding: Z = 48
 
-    val PatternVarBinding: Z = 49
+    val PatternWildcard: Z = 49
 
-    val PatternWildcard: Z = 50
+    val PatternSeqWildcard: Z = 50
 
-    val PatternSeqWildcard: Z = 51
+    val PatternStructure: Z = 51
 
-    val PatternStructure: Z = 52
+    val ExpLitB: Z = 52
 
-    val ExpLitB: Z = 53
+    val ExpLitC: Z = 53
 
-    val ExpLitC: Z = 54
+    val ExpLitZ: Z = 54
 
-    val ExpLitZ: Z = 55
+    val ExpLitF32: Z = 55
 
-    val ExpLitF32: Z = 56
+    val ExpLitF64: Z = 56
 
-    val ExpLitF64: Z = 57
+    val ExpLitR: Z = 57
 
-    val ExpLitR: Z = 58
+    val ExpLitString: Z = 58
 
-    val ExpLitString: Z = 59
+    val ExpStringInterpolate: Z = 59
 
-    val ExpStringInterpolate: Z = 60
+    val ExpThis: Z = 60
 
-    val ExpThis: Z = 61
+    val ExpSuper: Z = 61
 
-    val ExpSuper: Z = 62
+    val ExpUnary: Z = 62
 
-    val ExpUnary: Z = 63
+    val ExpBinary: Z = 63
 
-    val ExpBinary: Z = 64
+    val ExpIdent: Z = 64
 
-    val ExpIdent: Z = 65
+    val ExpEta: Z = 65
 
-    val ExpEta: Z = 66
+    val ExpTuple: Z = 66
 
-    val ExpTuple: Z = 67
+    val ExpSelect: Z = 67
 
-    val ExpSelect: Z = 68
+    val ExpInvoke: Z = 68
 
-    val ExpInvoke: Z = 69
+    val ExpInvokeNamed: Z = 69
 
-    val ExpInvokeNamed: Z = 70
+    val ExpIf: Z = 70
 
-    val ExpIf: Z = 71
+    val ExpFunParam: Z = 71
 
-    val ExpFunParam: Z = 72
+    val ExpFun: Z = 72
 
-    val ExpFun: Z = 73
+    val ExpForYield: Z = 73
 
-    val ExpForYield: Z = 74
+    val ExpQuant: Z = 74
 
-    val ExpQuant: Z = 75
+    val NamedArg: Z = 75
 
-    val NamedArg: Z = 76
+    val VarFragment: Z = 76
 
-    val VarFragment: Z = 77
+    val DomainType: Z = 77
 
-    val DomainType: Z = 78
+    val DomainRange: Z = 78
 
-    val DomainRange: Z = 79
+    val Id: Z = 79
 
-    val Id: Z = 80
+    val Name: Z = 80
 
-    val Name: Z = 81
+    val Body: Z = 81
 
-    val Body: Z = 82
+    val AbstractDatatypeParam: Z = 82
 
-    val AbstractDatatypeParam: Z = 83
+    val MethodSig: Z = 83
 
-    val MethodSig: Z = 84
+    val Param: Z = 84
 
-    val Param: Z = 85
+    val TypeParam: Z = 85
 
-    val TypeParam: Z = 86
+    val Contract: Z = 86
 
-    val Contract: Z = 87
+    val SubContract: Z = 87
 
-    val SubContract: Z = 88
+    val WhereDefVal: Z = 88
 
-    val WhereDefVal: Z = 89
+    val WhereDefDef: Z = 89
 
-    val WhereDefDef: Z = 90
+    val SpecDef: Z = 90
 
-    val SpecDef: Z = 91
+    val ProofStepBasic: Z = 91
 
-    val ProofStepBasic: Z = 92
+    val ProofStepSubProof: Z = 92
 
-    val ProofStepSubProof: Z = 93
+    val AssumeProofStepRegular: Z = 93
 
-    val AssumeProofStepRegular: Z = 94
+    val AssumeProofStepForallIntroAps: Z = 94
 
-    val AssumeProofStepForallIntroAps: Z = 95
+    val AssumeProofStepExistsElimAps: Z = 95
 
-    val AssumeProofStepExistsElimAps: Z = 96
+    val JustPremise: Z = 96
 
-    val JustPremise: Z = 97
+    val JustAndIntro: Z = 97
 
-    val JustAndIntro: Z = 98
+    val JustAndElim: Z = 98
 
-    val JustAndElim: Z = 99
+    val JustOrIntro: Z = 99
 
-    val JustOrIntro: Z = 100
+    val JustOrElim: Z = 100
 
-    val JustOrElim: Z = 101
+    val JustImplyIntro: Z = 101
 
-    val JustImplyIntro: Z = 102
+    val JustImplyElim: Z = 102
 
-    val JustImplyElim: Z = 103
+    val JustNegIntro: Z = 103
 
-    val JustNegIntro: Z = 104
+    val JustNegElim: Z = 104
 
-    val JustNegElim: Z = 105
+    val JustBottomElim: Z = 105
 
-    val JustBottomElim: Z = 106
+    val JustPbc: Z = 106
 
-    val JustPbc: Z = 107
+    val JustForallIntro: Z = 107
 
-    val JustForallIntro: Z = 108
+    val JustForallElim: Z = 108
 
-    val JustForallElim: Z = 109
+    val JustExistsIntro: Z = 109
 
-    val JustExistsIntro: Z = 110
+    val JustExistsElim: Z = 110
 
-    val JustExistsElim: Z = 111
+    val JustFact: Z = 111
 
-    val JustFact: Z = 112
+    val JustInvariant: Z = 112
 
-    val JustInvariant: Z = 113
+    val JustSubst: Z = 113
 
-    val JustSubst: Z = 114
+    val JustAuto: Z = 114
 
-    val JustAuto: Z = 115
+    val JustCoq: Z = 115
 
-    val JustCoq: Z = 116
+    val TruthTableRow: Z = 116
 
-    val TruthTableRow: Z = 117
+    val TruthTableAssignment: Z = 117
 
-    val TruthTableAssignment: Z = 118
+    val TruthTableConclusionValidity: Z = 118
 
-    val TruthTableConclusionValidity: Z = 119
+    val TruthTableConclusionTautology: Z = 119
 
-    val TruthTableConclusionTautology: Z = 120
+    val TruthTableConclusionContradictory: Z = 120
 
-    val TruthTableConclusionContradictory: Z = 121
+    val TruthTableConclusionContingent: Z = 121
 
-    val TruthTableConclusionContingent: Z = 122
+    val TypedName: Z = 122
 
-    val TypedName: Z = 123
+    val TypedTuple: Z = 123
 
-    val TypedTuple: Z = 124
+    val TypedFun: Z = 124
 
-    val TypedFun: Z = 125
+    val TypedTypeVar: Z = 125
 
-    val TypedTypeVar: Z = 126
+    val TypedPackage: Z = 126
 
-    val TypedPackage: Z = 127
+    val TypedObject: Z = 127
 
-    val TypedObject: Z = 128
+    val TypedEnum: Z = 128
 
-    val TypedEnum: Z = 129
+    val TypedMethodSubst: Z = 129
 
-    val TypedMethodSubst: Z = 130
+    val TypedMethod: Z = 130
 
-    val TypedMethod: Z = 131
+    val TypedMethods: Z = 131
 
-    val TypedMethods: Z = 132
+    val Attr: Z = 132
 
-    val Attr: Z = 133
+    val TypedAttr: Z = 133
 
-    val TypedAttr: Z = 134
+    val ResolvedAttr: Z = 134
 
-    val ResolvedAttr: Z = 135
+    val ResolvedInfoBuiltIn: Z = 135
 
-    val ResolvedInfoBuiltIn: Z = 136
+    val ResolvedInfoPackage: Z = 136
 
-    val ResolvedInfoPackage: Z = 137
+    val ResolvedInfoEnum: Z = 137
 
-    val ResolvedInfoEnum: Z = 138
+    val ResolvedInfoEnumElement: Z = 138
 
-    val ResolvedInfoEnumElement: Z = 139
+    val ResolvedInfoObject: Z = 139
 
-    val ResolvedInfoObject: Z = 140
+    val ResolvedInfoVar: Z = 140
 
-    val ResolvedInfoVar: Z = 141
+    val ResolvedInfoMethod: Z = 141
 
-    val ResolvedInfoMethod: Z = 142
+    val ResolvedInfoMethods: Z = 142
 
-    val ResolvedInfoMethods: Z = 143
+    val ResolvedInfoType: Z = 143
 
-    val ResolvedInfoType: Z = 144
+    val ResolvedInfoTuple: Z = 144
 
-    val ResolvedInfoTuple: Z = 145
+    val ResolvedInfoLocalVar: Z = 145
 
-    val ResolvedInfoLocalVar: Z = 146
-
-    val PosInfo: Z = 147
+    val PosInfo: Z = 146
 
   }
 
@@ -706,7 +704,6 @@ object MsgPack {
     def writeEnumGenRange(o: EnumGen.Range): Unit = {
       o match {
         case o: EnumGen.Range.Expr => writeEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Indices => writeEnumGenRangeIndices(o)
         case o: EnumGen.Range.Step => writeEnumGenRangeStep(o)
       }
     }
@@ -714,13 +711,9 @@ object MsgPack {
     def writeEnumGenRangeExpr(o: EnumGen.Range.Expr): Unit = {
       writer.writeZ(Constants.EnumGenRangeExpr)
       writeB(o.isReverse)
+      writeB(o.isIndices)
       writeExp(o.exp)
-    }
-
-    def writeEnumGenRangeIndices(o: EnumGen.Range.Indices): Unit = {
-      writer.writeZ(Constants.EnumGenRangeIndices)
-      writeB(o.isReverse)
-      writeExp(o.exp)
+      writeAttr(o.attr)
     }
 
     def writeEnumGenRangeStep(o: EnumGen.Range.Step): Unit = {
@@ -729,6 +722,7 @@ object MsgPack {
       writeExp(o.start)
       writeExp(o.end)
       writer.writeOption(o.byOpt, writeExp)
+      writeAttr(o.attr)
     }
 
     def writeEnumGenFor(o: EnumGen.For): Unit = {
@@ -2406,7 +2400,6 @@ object MsgPack {
       val t = reader.readZ()
       t match {
         case Constants.EnumGenRangeExpr => val r = readEnumGenRangeExprT(T); return r
-        case Constants.EnumGenRangeIndices => val r = readEnumGenRangeIndicesT(T); return r
         case Constants.EnumGenRangeStep => val r = readEnumGenRangeStepT(T); return r
         case _ => halt(s"Unexpected type code $t.")
       }
@@ -2422,22 +2415,10 @@ object MsgPack {
         reader.expectZ(Constants.EnumGenRangeExpr)
       }
       val isReverse = reader.readB()
+      val isIndices = reader.readB()
       val exp = readExp()
-      return EnumGen.Range.Expr(isReverse, exp)
-    }
-
-    def readEnumGenRangeIndices(): EnumGen.Range.Indices = {
-      val r = readEnumGenRangeIndicesT(F)
-      return r
-    }
-
-    def readEnumGenRangeIndicesT(typeParsed: B): EnumGen.Range.Indices = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.EnumGenRangeIndices)
-      }
-      val isReverse = reader.readB()
-      val exp = readExp()
-      return EnumGen.Range.Indices(isReverse, exp)
+      val attr = readAttr()
+      return EnumGen.Range.Expr(isReverse, isIndices, exp, attr)
     }
 
     def readEnumGenRangeStep(): EnumGen.Range.Step = {
@@ -2453,7 +2434,8 @@ object MsgPack {
       val start = readExp()
       val end = readExp()
       val byOpt = reader.readOption(readExp _)
-      return EnumGen.Range.Step(isInclusive, start, end, byOpt)
+      val attr = readAttr()
+      return EnumGen.Range.Step(isInclusive, start, end, byOpt, attr)
     }
 
     def readEnumGenFor(): EnumGen.For = {
@@ -4906,21 +4888,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fEnumGenRangeExpr)
-    return r
-  }
-
-  def fromEnumGenRangeIndices(o: EnumGen.Range.Indices, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeEnumGenRangeIndices(o)
-    return w.result
-  }
-
-  def toEnumGenRangeIndices(data: ISZ[U8]): EnumGen.Range.Indices = {
-    def fEnumGenRangeIndices(reader: Reader): EnumGen.Range.Indices = {
-      val r = reader.readEnumGenRangeIndices()
-      return r
-    }
-    val r = to(data, fEnumGenRangeIndices)
     return r
   }
 

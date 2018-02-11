@@ -408,11 +408,9 @@ object EnumGen {
 
   object Range {
 
-    @datatype class Expr(isReverse: B, exp: Exp) extends Range
+    @datatype class Expr(isReverse: B, isIndices: B, exp: Exp, @hidden attr: Attr) extends Range
 
-    @datatype class Indices(isReverse: B, exp: Exp) extends Range
-
-    @datatype class Step(isInclusive: B, start: Exp, end: Exp, byOpt: Option[Exp]) extends Range
+    @datatype class Step(isInclusive: B, start: Exp, end: Exp, byOpt: Option[Exp], @hidden attr: Attr) extends Range
 
   }
 
@@ -1446,7 +1444,17 @@ object Typed {
     }
 
     @pure override def string: String = {
-      return st"$mode ${(owner, ".")}${if (isInObject) "." else "#"}$name".render
+      val mST = st"${(owner, ".")}${if (isInObject) "." else "#"}$name"
+      mode match {
+        case MethodMode.Extractor => return st"extractor of $mST".render
+        case MethodMode.Ext => return st"@ext object method $mST".render
+        case MethodMode.Copy => return st"copy of $mST".render
+        case MethodMode.Constructor => return st"constructor of $mST".render
+        case MethodMode.Method => return st"method $mST".render
+        case MethodMode.Select => return st"indexing of $mST".render
+        case MethodMode.Spec => return st"@spec method $mST".render
+        case MethodMode.Store => return st"update of $mST".render
+      }
     }
 
     @pure override def subst(m: HashMap[String, Typed]): Typed.Method = {

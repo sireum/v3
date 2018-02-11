@@ -1930,17 +1930,17 @@ class SlangParser(
   def translateRange(r: Term): AST.EnumGen.Range = {
     r match {
       case q"$start until $end by $by" =>
-        AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), Some(translateExp(by)))
+        AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
       case q"$start to $end by $by" =>
-        AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), Some(translateExp(by)))
+        AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
       case q"$start until $end" =>
-        AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), None())
+        AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), None(), attr(r.pos))
       case q"$start to $end" =>
-        AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), None())
-      case q"$s.indices" => AST.EnumGen.Range.Indices(isReverse = false, translateExp(s))
-      case q"$s.indices.reverse" => AST.EnumGen.Range.Indices(isReverse = true, translateExp(s))
-      case q"$s.reverse" => AST.EnumGen.Range.Expr(isReverse = true, translateExp(s))
-      case _ => AST.EnumGen.Range.Expr(isReverse = false, translateExp(r))
+        AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), None(), attr(r.pos))
+      case q"$s.indices" => AST.EnumGen.Range.Expr(isReverse = false, isIndices = true, translateExp(s), attr(r.pos))
+      case q"$s.indices.reverse" => AST.EnumGen.Range.Expr(isReverse = true, isIndices = true, translateExp(s), attr(r.pos))
+      case q"$s.reverse" => AST.EnumGen.Range.Expr(isReverse = true, isIndices = false, translateExp(s), attr(r.pos))
+      case _ => AST.EnumGen.Range.Expr(isReverse = false, isIndices = false, translateExp(r), attr(r.pos))
     }
   }
 

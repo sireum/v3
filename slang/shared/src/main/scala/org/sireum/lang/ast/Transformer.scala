@@ -295,16 +295,11 @@ object Transformer {
     @pure def preEnumGenRange(ctx: Context, o: EnumGen.Range): PreResult[Context, EnumGen.Range] = {
       o match {
         case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(ctx, o)
-        case o: EnumGen.Range.Indices => return preEnumGenRangeIndices(ctx, o)
         case o: EnumGen.Range.Step => return preEnumGenRangeStep(ctx, o)
       }
     }
 
     @pure def preEnumGenRangeExpr(ctx: Context, o: EnumGen.Range.Expr): PreResult[Context, EnumGen.Range] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preEnumGenRangeIndices(ctx: Context, o: EnumGen.Range.Indices): PreResult[Context, EnumGen.Range] = {
       return PreResult(ctx, T, None())
     }
 
@@ -1201,16 +1196,11 @@ object Transformer {
     @pure def postEnumGenRange(ctx: Context, o: EnumGen.Range): Result[Context, EnumGen.Range] = {
       o match {
         case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(ctx, o)
-        case o: EnumGen.Range.Indices => return postEnumGenRangeIndices(ctx, o)
         case o: EnumGen.Range.Step => return postEnumGenRangeStep(ctx, o)
       }
     }
 
     @pure def postEnumGenRangeExpr(ctx: Context, o: EnumGen.Range.Expr): Result[Context, EnumGen.Range] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postEnumGenRangeIndices(ctx: Context, o: EnumGen.Range.Indices): Result[Context, EnumGen.Range] = {
       return Result(ctx, None())
     }
 
@@ -2496,24 +2486,20 @@ import Transformer._
       val rOpt: Result[Context, EnumGen.Range] = o2 match {
         case o2: EnumGen.Range.Expr =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp))))
+          val r1: Result[Context, Attr] = transformAttr(r0.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+            Result(r1.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp), attr = r1.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r0.ctx, None())
-        case o2: EnumGen.Range.Indices =>
-          val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
-          if (hasChanged || r0.resultOpt.nonEmpty)
-            Result(r0.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp))))
-          else
-            Result(r0.ctx, None())
+            Result(r1.ctx, None())
         case o2: EnumGen.Range.Step =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.start)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.end)
           val r2: Result[Context, Option[Exp]] = transformOption(r1.ctx, o2.byOpt, transformExp)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-            Result(r2.ctx, Some(o2(start = r0.resultOpt.getOrElse(o2.start), end = r1.resultOpt.getOrElse(o2.end), byOpt = r2.resultOpt.getOrElse(o2.byOpt))))
+          val r3: Result[Context, Attr] = transformAttr(r2.ctx, o2.attr)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(start = r0.resultOpt.getOrElse(o2.start), end = r1.resultOpt.getOrElse(o2.end), byOpt = r2.resultOpt.getOrElse(o2.byOpt), attr = r3.resultOpt.getOrElse(o2.attr))))
           else
-            Result(r2.ctx, None())
+            Result(r3.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {

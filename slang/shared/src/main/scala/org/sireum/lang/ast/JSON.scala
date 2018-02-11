@@ -485,7 +485,6 @@ object JSON {
     @pure def printEnumGenRange(o: EnumGen.Range): ST = {
       o match {
         case o: EnumGen.Range.Expr => return printEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Indices => return printEnumGenRangeIndices(o)
         case o: EnumGen.Range.Step => return printEnumGenRangeStep(o)
       }
     }
@@ -494,15 +493,9 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""EnumGen.Range.Expr""""),
         ("isReverse", printB(o.isReverse)),
-        ("exp", printExp(o.exp))
-      ))
-    }
-
-    @pure def printEnumGenRangeIndices(o: EnumGen.Range.Indices): ST = {
-      return printObject(ISZ(
-        ("type", st""""EnumGen.Range.Indices""""),
-        ("isReverse", printB(o.isReverse)),
-        ("exp", printExp(o.exp))
+        ("isIndices", printB(o.isIndices)),
+        ("exp", printExp(o.exp)),
+        ("attr", printAttr(o.attr))
       ))
     }
 
@@ -512,7 +505,8 @@ object JSON {
         ("isInclusive", printB(o.isInclusive)),
         ("start", printExp(o.start)),
         ("end", printExp(o.end)),
-        ("byOpt", printOption(o.byOpt, printExp))
+        ("byOpt", printOption(o.byOpt, printExp)),
+        ("attr", printAttr(o.attr))
       ))
     }
 
@@ -2632,10 +2626,9 @@ object JSON {
     }
 
     def parseEnumGenRange(): EnumGen.Range = {
-      val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Expr", "EnumGen.Range.Indices", "EnumGen.Range.Step"))
+      val t = parser.parseObjectTypes(ISZ("EnumGen.Range.Expr", "EnumGen.Range.Step"))
       t.native match {
         case "EnumGen.Range.Expr" => val r = parseEnumGenRangeExprT(T); return r
-        case "EnumGen.Range.Indices" => val r = parseEnumGenRangeIndicesT(T); return r
         case "EnumGen.Range.Step" => val r = parseEnumGenRangeStepT(T); return r
         case _ => halt(parser.errorMessage)
       }
@@ -2653,28 +2646,16 @@ object JSON {
       parser.parseObjectKey("isReverse")
       val isReverse = parser.parseB()
       parser.parseObjectNext()
-      parser.parseObjectKey("exp")
-      val exp = parseExp()
-      parser.parseObjectNext()
-      return EnumGen.Range.Expr(isReverse, exp)
-    }
-
-    def parseEnumGenRangeIndices(): EnumGen.Range.Indices = {
-      val r = parseEnumGenRangeIndicesT(F)
-      return r
-    }
-
-    def parseEnumGenRangeIndicesT(typeParsed: B): EnumGen.Range.Indices = {
-      if (!typeParsed) {
-        parser.parseObjectType("EnumGen.Range.Indices")
-      }
-      parser.parseObjectKey("isReverse")
-      val isReverse = parser.parseB()
+      parser.parseObjectKey("isIndices")
+      val isIndices = parser.parseB()
       parser.parseObjectNext()
       parser.parseObjectKey("exp")
       val exp = parseExp()
       parser.parseObjectNext()
-      return EnumGen.Range.Indices(isReverse, exp)
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return EnumGen.Range.Expr(isReverse, isIndices, exp, attr)
     }
 
     def parseEnumGenRangeStep(): EnumGen.Range.Step = {
@@ -2698,7 +2679,10 @@ object JSON {
       parser.parseObjectKey("byOpt")
       val byOpt = parser.parseOption(parseExp _)
       parser.parseObjectNext()
-      return EnumGen.Range.Step(isInclusive, start, end, byOpt)
+      parser.parseObjectKey("attr")
+      val attr = parseAttr()
+      parser.parseObjectNext()
+      return EnumGen.Range.Step(isInclusive, start, end, byOpt, attr)
     }
 
     def parseEnumGenFor(): EnumGen.For = {
@@ -5935,24 +5919,6 @@ object JSON {
       return r
     }
     val r = to(s, fEnumGenRangeExpr)
-    return r
-  }
-
-  def fromEnumGenRangeIndices(o: EnumGen.Range.Indices, isCompact: B): String = {
-    val st = Printer.printEnumGenRangeIndices(o)
-    if (isCompact) {
-      return st.renderCompact
-    } else {
-      return st.render
-    }
-  }
-
-  def toEnumGenRangeIndices(s: String): EnumGen.Range.Indices = {
-    def fEnumGenRangeIndices(parser: Parser): EnumGen.Range.Indices = {
-      val r = parser.parseEnumGenRangeIndices()
-      return r
-    }
-    val r = to(s, fEnumGenRangeIndices)
     return r
   }
 

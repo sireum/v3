@@ -291,16 +291,11 @@ object MTransformer {
     def preEnumGenRange(o: EnumGen.Range): PreResult[EnumGen.Range] = {
       o match {
         case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Indices => return preEnumGenRangeIndices(o)
         case o: EnumGen.Range.Step => return preEnumGenRangeStep(o)
       }
     }
 
     def preEnumGenRangeExpr(o: EnumGen.Range.Expr): PreResult[EnumGen.Range] = {
-      return PreResult(T, MNone())
-    }
-
-    def preEnumGenRangeIndices(o: EnumGen.Range.Indices): PreResult[EnumGen.Range] = {
       return PreResult(T, MNone())
     }
 
@@ -1197,16 +1192,11 @@ object MTransformer {
     def postEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
       o match {
         case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Indices => return postEnumGenRangeIndices(o)
         case o: EnumGen.Range.Step => return postEnumGenRangeStep(o)
       }
     }
 
     def postEnumGenRangeExpr(o: EnumGen.Range.Expr): MOption[EnumGen.Range] = {
-      return MNone()
-    }
-
-    def postEnumGenRangeIndices(o: EnumGen.Range.Indices): MOption[EnumGen.Range] = {
       return MNone()
     }
 
@@ -2490,22 +2480,18 @@ import MTransformer._
       val rOpt: MOption[EnumGen.Range] = o2 match {
         case o2: EnumGen.Range.Expr =>
           val r0: MOption[Exp] = transformExp(o2.exp)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(exp = r0.getOrElse(o2.exp)))
-          else
-            MNone()
-        case o2: EnumGen.Range.Indices =>
-          val r0: MOption[Exp] = transformExp(o2.exp)
-          if (hasChanged || r0.nonEmpty)
-            MSome(o2(exp = r0.getOrElse(o2.exp)))
+          val r1: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+            MSome(o2(exp = r0.getOrElse(o2.exp), attr = r1.getOrElse(o2.attr)))
           else
             MNone()
         case o2: EnumGen.Range.Step =>
           val r0: MOption[Exp] = transformExp(o2.start)
           val r1: MOption[Exp] = transformExp(o2.end)
           val r2: MOption[Option[Exp]] = transformOption(o2.byOpt, transformExp)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-            MSome(o2(start = r0.getOrElse(o2.start), end = r1.getOrElse(o2.end), byOpt = r2.getOrElse(o2.byOpt)))
+          val r3: MOption[Attr] = transformAttr(o2.attr)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(start = r0.getOrElse(o2.start), end = r1.getOrElse(o2.end), byOpt = r2.getOrElse(o2.byOpt), attr = r3.getOrElse(o2.attr)))
           else
             MNone()
       }
