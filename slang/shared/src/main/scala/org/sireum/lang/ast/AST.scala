@@ -323,7 +323,7 @@ object Stmt {
   }
 
   @datatype class For(
-    enumGen: EnumGen.For,
+    enumGens: ISZ[EnumGen.For],
     invariants: ISZ[ContractExp],
     modifies: ISZ[Exp],
     body: Body,

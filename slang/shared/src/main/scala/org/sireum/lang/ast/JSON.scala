@@ -370,7 +370,7 @@ object JSON {
     @pure def printStmtFor(o: Stmt.For): ST = {
       return printObject(ISZ(
         ("type", st""""Stmt.For""""),
-        ("enumGen", printEnumGenFor(o.enumGen)),
+        ("enumGens", printISZ(F, o.enumGens, printEnumGenFor)),
         ("invariants", printISZ(F, o.invariants, printContractExp)),
         ("modifies", printISZ(F, o.modifies, printExp)),
         ("body", printBody(o.body)),
@@ -2391,8 +2391,8 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Stmt.For")
       }
-      parser.parseObjectKey("enumGen")
-      val enumGen = parseEnumGenFor()
+      parser.parseObjectKey("enumGens")
+      val enumGens = parser.parseISZ(parseEnumGenFor _)
       parser.parseObjectNext()
       parser.parseObjectKey("invariants")
       val invariants = parser.parseISZ(parseContractExp _)
@@ -2406,7 +2406,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseAttr()
       parser.parseObjectNext()
-      return Stmt.For(enumGen, invariants, modifies, body, attr)
+      return Stmt.For(enumGens, invariants, modifies, body, attr)
     }
 
     def parseStmtReturn(): Stmt.Return = {

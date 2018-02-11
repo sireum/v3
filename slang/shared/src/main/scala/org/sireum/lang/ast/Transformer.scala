@@ -2114,13 +2114,13 @@ import Transformer._
           else
             Result(r4.ctx, None())
         case o2: Stmt.For =>
-          val r0: Result[Context, EnumGen.For] = transformEnumGenFor(ctx, o2.enumGen)
+          val r0: Result[Context, IS[Z, EnumGen.For]] = transformISZ(ctx, o2.enumGens, transformEnumGenFor)
           val r1: Result[Context, IS[Z, ContractExp]] = transformISZ(r0.ctx, o2.invariants, transformContractExp)
           val r2: Result[Context, IS[Z, Exp]] = transformISZ(r1.ctx, o2.modifies, transformExp)
           val r3: Result[Context, Body] = transformBody(r2.ctx, o2.body)
           val r4: Result[Context, Attr] = transformAttr(r3.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty)
-            Result(r4.ctx, Some(o2(enumGen = r0.resultOpt.getOrElse(o2.enumGen), invariants = r1.resultOpt.getOrElse(o2.invariants), modifies = r2.resultOpt.getOrElse(o2.modifies), body = r3.resultOpt.getOrElse(o2.body), attr = r4.resultOpt.getOrElse(o2.attr))))
+            Result(r4.ctx, Some(o2(enumGens = r0.resultOpt.getOrElse(o2.enumGens), invariants = r1.resultOpt.getOrElse(o2.invariants), modifies = r2.resultOpt.getOrElse(o2.modifies), body = r3.resultOpt.getOrElse(o2.body), attr = r4.resultOpt.getOrElse(o2.attr))))
           else
             Result(r4.ctx, None())
         case o2: Stmt.Return =>

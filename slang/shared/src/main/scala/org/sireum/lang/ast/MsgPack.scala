@@ -616,7 +616,7 @@ object MsgPack {
 
     def writeStmtFor(o: Stmt.For): Unit = {
       writer.writeZ(Constants.StmtFor)
-      writeEnumGenFor(o.enumGen)
+      writer.writeISZ(o.enumGens, writeEnumGenFor)
       writer.writeISZ(o.invariants, writeContractExp)
       writer.writeISZ(o.modifies, writeExp)
       writeBody(o.body)
@@ -2216,12 +2216,12 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.StmtFor)
       }
-      val enumGen = readEnumGenFor()
+      val enumGens = reader.readISZ(readEnumGenFor _)
       val invariants = reader.readISZ(readContractExp _)
       val modifies = reader.readISZ(readExp _)
       val body = readBody()
       val attr = readAttr()
-      return Stmt.For(enumGen, invariants, modifies, body, attr)
+      return Stmt.For(enumGens, invariants, modifies, body, attr)
     }
 
     def readStmtReturn(): Stmt.Return = {
