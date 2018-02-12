@@ -43,7 +43,12 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
-                             |val bs: MSZ[B] = for (s <- MSZ(ZS(0), ZS(1), ZS(3)); n <- s) yield n == 0
+                             |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1)
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val bs: MSZ[MSZ[B]] = for (s <- MSZ(ZS(0), ZS(1), ZS(3)); n <- s) yield MSZ(n == 0)
+                             |bs(0)(1) = bs(1)(0)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -261,6 +266,11 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(failingWorksheet("""import org.sireum._
+                             |val zs: ZS = ZS(1, 2, 3).map(x => x + 1)
+                             |""".stripMargin, "Could not infer"))
+
+
+        *(failingWorksheet("""import org.sireum._
                              |val x: Option[Z] = None()
                              |x match {
                              | case Some(_: Z) => halt("impossible")
@@ -292,9 +302,9 @@ class TypeCheckerTest extends SireumSpec {
 
       "Stmt" - {
 
-        *(failingStmt("assert(1)", "but found org.sireum.Z"))
+        *(failingStmt("assert(1)", "but 'org.sireum.Z' found"))
 
-        *(failingStmt("""halt(1)""", "but found org.sireum.Z"))
+        *(failingStmt("""halt(1)""", "but 'org.sireum.Z' found"))
 
         *(failingStmt("""println(org.sireum.Map.empty)""", "Explicit type"))
 
@@ -367,7 +377,7 @@ class TypeCheckerTest extends SireumSpec {
     }
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope =
-      Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
+      Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>
