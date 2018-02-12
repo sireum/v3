@@ -49,6 +49,8 @@ object Resolver {
     @pure def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo]
 
     @pure def returnOpt: Option[AST.Typed]
+
+    @pure def thisOpt: Option[AST.Typed]
   }
 
   object Scope {
@@ -56,6 +58,7 @@ object Resolver {
     @datatype class Local(
       nameMap: HashMap[String, Info],
       typeMap: HashMap[String, TypeInfo],
+      val thisOpt: Option[AST.Typed],
       val returnOpt: Option[AST.Typed],
       val outerOpt: Option[Scope]
     ) extends Scope {
@@ -87,22 +90,18 @@ object Resolver {
       }
     }
 
-    object Global {
-
-      val OuterOpt: Option[Scope] = None()
-
-      val ReturnOpt: Option[AST.Typed] = None()
-
-    }
-
     @datatype class Global(packageName: QName, imports: ISZ[AST.Stmt.Import], enclosingName: QName) extends Scope {
 
       @pure override def outerOpt: Option[Scope] = {
-        return Global.OuterOpt
+        return None()
+      }
+
+      @pure override def thisOpt: Option[AST.Typed] = {
+        return None()
       }
 
       @pure override def returnOpt: Option[AST.Typed] = {
-        return Global.ReturnOpt
+        return None()
       }
 
       @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
@@ -764,7 +763,7 @@ object Resolver {
         typeMap = typeMap.put(id, TypeInfo.TypeVar(id, tp))
       }
     }
-    return Scope.Local(HashMap.empty, typeMap, None(), Some(scope))
+    return Scope.Local(HashMap.empty, typeMap, None(), None(), Some(scope))
   }
 
   @pure def typeNameString(name: QName, ids: QName): ST = {
@@ -983,7 +982,7 @@ object Resolver {
   }
 
   @pure def localTypeScope(typeMap: HashMap[String, TypeInfo], outer: Scope): Scope = {
-    return Scope.Local(HashMap.empty[String, Info], typeMap, None(), Some(outer))
+    return Scope.Local(HashMap.empty[String, Info], typeMap, None(), None(), Some(outer))
   }
 
 }
