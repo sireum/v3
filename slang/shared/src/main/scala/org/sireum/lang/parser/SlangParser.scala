@@ -251,7 +251,7 @@ class SlangParser(
             AST.TopUnit.Program(
               fileUriOpt,
               AST.Name(ISZ(), emptyAttr),
-              bodyCheck(ISZ(rest.map(translateStat(Enclosing.Top)): _*), ISZ())
+              bodyCheck(checkNestedMethods(ISZ(rest.map(translateStat(Enclosing.Top)): _*)), ISZ())
             )
           )
         )
@@ -272,8 +272,11 @@ class SlangParser(
                 text,
                 hashSireum,
                 Some(
-                  AST.TopUnit
-                    .Program(fileUriOpt, name, bodyCheck(ISZ(stats.map(translateStat(Enclosing.Package)): _*), ISZ()))
+                  AST.TopUnit.Program(
+                    fileUriOpt,
+                    name,
+                    bodyCheck(checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.Package)): _*)), ISZ())
+                  )
                 )
               )
             else {
@@ -286,8 +289,11 @@ class SlangParser(
                 text,
                 hashSireum,
                 Some(
-                  AST.TopUnit
-                    .Program(fileUriOpt, name, bodyCheck(ISZ(rest.map(translateStat(Enclosing.Package)): _*), ISZ()))
+                  AST.TopUnit.Program(
+                    fileUriOpt,
+                    name,
+                    bodyCheck(checkNestedMethods(ISZ(rest.map(translateStat(Enclosing.Package)): _*)), ISZ())
+                  )
                 )
               )
 
@@ -1133,8 +1139,13 @@ class SlangParser(
       AST.Stmt.Enum(cid(name), ISZ(elements: _*), attr(stat.pos))
     } else if (!hasError) {
       val tstat = if (hasExt) translateStat(Enclosing.ExtObject) _ else translateStat(Enclosing.Object) _
-      AST.Stmt
-        .Object(hasExt, cid(name), ISZ(ctorcalls.map(translateExtend): _*), ISZ(stats.map(tstat): _*), attr(stat.pos))
+      AST.Stmt.Object(
+        hasExt,
+        cid(name),
+        ISZ(ctorcalls.map(translateExtend): _*),
+        checkNestedMethods(ISZ(stats.map(tstat): _*)),
+        attr(stat.pos)
+      )
     } else AST.Stmt.Object(hasExt, cid(name), ISZ(), ISZ(), attr(stat.pos))
   }
 
@@ -1210,7 +1221,7 @@ class SlangParser(
       cid(tname),
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.Sig)): _*),
+      checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.Sig)): _*)),
       attr(stat.pos)
     )
   }
@@ -1253,7 +1264,7 @@ class SlangParser(
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*),
+      checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.DatatypeTrait)): _*)),
       attr(stat.pos)
     )
   }
@@ -1299,7 +1310,7 @@ class SlangParser(
       ISZ(tparams.map(translateTypeParam): _*),
       params,
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*),
+      checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.DatatypeClass)): _*)),
       attr(stat.pos)
     )
   }
@@ -1341,7 +1352,7 @@ class SlangParser(
       ISZ(tparams.map(translateTypeParam): _*),
       ISZ(),
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*),
+      checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.RecordTrait)): _*)),
       attr(stat.pos)
     )
   }
@@ -1387,7 +1398,7 @@ class SlangParser(
       ISZ(tparams.map(translateTypeParam): _*),
       params,
       ISZ(ctorcalls.map(translateExtend): _*),
-      ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*),
+      checkNestedMethods(ISZ(stats.map(translateStat(Enclosing.RecordClass)): _*)),
       attr(stat.pos)
     )
   }
@@ -2503,6 +2514,30 @@ class SlangParser(
     if (!checkLSyntax(exp)) return (ISZ(), ISZ())
     val (invs, mods) = lParser(exp)(_.loopInvMode())
     (ISZ(invs: _*), ISZ(mods: _*))
+  }
+
+  def checkNestedMethods(stmts: ISZ[AST.Stmt]): ISZ[AST.Stmt] = {
+    for (stmt <- stmts) stmt match {
+      case stmt: AST.Stmt.Method => checkNestedMethods(stmt)
+      case _ =>
+    }
+    stmts
+  }
+
+  def checkNestedMethods(m: AST.Stmt.Method): Unit = {
+    val set = scala.collection.mutable.HashSet[Predef.String]()
+    val transformer = new AST.Transformer[Unit](new AST.Transformer.PrePost[Unit] {
+      def string: String = ""
+
+      override def preStmtMethod(ctx: Unit, o: AST.Stmt.Method): AST.Transformer.PreResult[Unit, AST.Stmt] = {
+        val id = o.sig.id.value.value
+        if (set.contains(id)) {
+          reporter.error(o.sig.id.attr.posOpt, SlangParser.messageKind, s"Cannot redeclare nested method '$id'.")
+        }
+        set.add(id)
+        super.preStmtMethod(ctx, o)
+      }
+    })
   }
 
   def cid(t: Pat.Var): AST.Id = cid(t.name.value, t.pos)
