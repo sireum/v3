@@ -92,6 +92,11 @@ object SlangParser {
     "unapply",
     "unapplySeq"
   )
+
+  val disallowedMethodIdEndings = Seq("old", "result", "read", "modifies", "pre", "requires", "post", "ensures", "=")
+
+  val unaryMethods = Seq("unary_!", "unary_+", "unary_-", "unary_~")
+
   val topLevelMethodsIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt")
 
   def scalaDialect(isWorksheet: Boolean): Dialect =
@@ -316,24 +321,16 @@ class SlangParser(
       case stat: Defn.Val => translateVal(enclosing, stat)
       case stat: Defn.Var => translateVar(enclosing, stat)
       case stat: Decl.Def =>
-        if (disallowedMethodIds.contains(stat.name.value)) {
-          errorInSlang(stat.name.pos, s"Identifier ${stat.name.value} is reserved")
-        }
+        checkMethodId(stat.name.pos, stat.name.value)
         translateDef(enclosing, stat)
       case stat: Defn.Def =>
-        if (disallowedMethodIds.contains(stat.name.value)) {
-          errorInSlang(stat.name.pos, s"Identifier ${stat.name.value} is reserved")
-        }
+        checkMethodId(stat.name.pos, stat.name.value)
         translateDef(enclosing, stat)
       case stat: Defn.Object =>
-        if (disallowedTypeIds.contains(stat.name.value)) {
-          errorInSlang(stat.name.pos, s"Identifier ${stat.name.value} is reserved")
-        }
+        checkTypeId(stat.name.pos, stat.name.value)
         translateObject(enclosing, stat)
       case stat: Defn.Trait =>
-        if (disallowedTypeIds.contains(stat.name.value)) {
-          errorInSlang(stat.name.pos, s"Identifier ${stat.name.value} is reserved")
-        }
+        checkTypeId(stat.name.pos, stat.name.value)
         for (mod <- stat.mods.headOption) mod match {
           case mod"@sig" | mod"@msig" | mod"@ext" => return translateSig(enclosing, stat)
           case mod"@datatype" => return translateDatatype(enclosing, stat)
@@ -343,9 +340,7 @@ class SlangParser(
         errorNotSlang(stat.pos, s"Statement '${syntax(stat)}' is")
         rStmt
       case stat: Defn.Class =>
-        if (disallowedTypeIds.contains(stat.name.value)) {
-          errorInSlang(stat.name.pos, s"Identifier ${stat.name.value} is reserved")
-        }
+        checkTypeId(stat.name.pos, stat.name.value)
         stat match {
           case stat @ q"@range(..$_) class $_" => return translateRangeType(enclosing, stat)
           case stat @ q"@bits(..$_) class $_" => return translateBitsType(enclosing, stat)
@@ -521,9 +516,7 @@ class SlangParser(
     else
       patsnel.head match {
         case x: Pat.Var =>
-          if (disallowedMethodIds.contains(x.name.value)) {
-            errorInSlang(x.name.pos, s"Identifier ${x.name.value} is reserved")
-          }
+          checkMethodId(x.name.pos, x.name.value)
           val r = AST.Stmt.Var(
             isVal = true,
             cid(x),
@@ -618,9 +611,7 @@ class SlangParser(
     else
       patsnel.head match {
         case x: Pat.Var =>
-          if (disallowedMethodIds.contains(x.name.value)) {
-            errorInSlang(x.name.pos, s"Identifier ${x.name.value} is reserved")
-          }
+          checkMethodId(x.name.pos, x.name.value)
           val r = AST.Stmt.Var(
             isVal = false,
             cid(x),
@@ -1513,24 +1504,16 @@ class SlangParser(
       case p"(..$patsnel)" if patsnel.size > 1 =>
         AST.Pattern.Structure(None(), None(), ISZ(patsnel.map(translatePattern): _*), resolvedAttr(pat.pos))
       case p"${ref: Term.Ref}.$ename" =>
-        if (disallowedMethodIds.contains(ename.value)) {
-          errorInSlang(ename.pos, s"Identifier ${ename.value} is reserved")
-        }
+        checkMethodId(ename.pos, ename.value)
         AST.Pattern.Ref(AST.Name(ref2IS(ref) :+ cid(ename), attr(pat.pos)), resolvedAttr(pat.pos))
       case pat: Term.Name =>
-        if (disallowedMethodIds.contains(pat.value)) {
-          errorInSlang(pat.pos, s"Identifier ${pat.value} is reserved")
-        }
+        checkMethodId(pat.pos, pat.value)
         AST.Pattern.Ref(AST.Name(ISZ(cid(pat)), attr(pat.pos)), resolvedAttr(pat.pos))
       case p"${name: Pat.Var} : $tpe" =>
-        if (disallowedMethodIds.contains(name.name.value)) {
-          errorInSlang(name.name.pos, s"Identifier ${name.name.value} is reserved")
-        }
+        checkMethodId(name.name.pos, name.name.value)
         AST.Pattern.VarBinding(cid(name), Some(translateType(tpe)), typedAttr(pat.pos))
       case q"${name: Pat.Var}" =>
-        if (disallowedMethodIds.contains(name.name.value)) {
-          errorInSlang(name.name.pos, s"Identifier ${name.name.value} is reserved")
-        }
+        checkMethodId(name.name.pos, name.name.value)
         AST.Pattern.VarBinding(cid(name), None(), typedAttr(pat.pos))
       case p"_ : $tpe" => AST.Pattern.Wildcard(Some(translateType(tpe)), typedAttr(pat.pos))
       case p"_" => AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
@@ -1575,9 +1558,7 @@ class SlangParser(
     case tparam"..$mods $_[..$tparams] >: ${stpeopt: scala.Option[Type]} <: ${tpeopt: scala.Option[Type]} <% ..$tpes : ..$tpes2" =>
       if (mods.nonEmpty || tparams.nonEmpty || stpeopt.nonEmpty || tpeopt.nonEmpty || tpes.nonEmpty || tpes2.nonEmpty)
         errorInSlang(tp.pos, "Only type parameters of the forms '〈ID〉' is")
-      if (disallowedTypeIds.contains(tp.name.value)) {
-        errorInSlang(tp.name.pos, s"Identifier ${tp.name.value} is reserved")
-      }
+      checkTypeId(tp.name.pos, tp.name.value)
       AST.TypeParam(cid(tp.name))
   }
 
@@ -1665,9 +1646,7 @@ class SlangParser(
     var hasError = false
     var hasHidden = false
     var isVar = false
-    if (disallowedMethodIds.contains(tp.name.value)) {
-      errorInSlang(tp.name.pos, s"Identifier ${tp.name.value} is reserved")
-    }
+    checkMethodId(tp.name.pos, tp.name.value)
     for (mod <- mods) mod match {
       case mod"@hidden" =>
         if (hasHidden) {
@@ -1987,9 +1966,7 @@ class SlangParser(
         case enumerator"${_: Pat.Wildcard} <- $expr" =>
           AST.EnumGen.For(None(), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
         case enumerator"${id: Pat.Var} <- $expr" =>
-          if (disallowedMethodIds.contains(id.name.value)) {
-            errorInSlang(id.name.pos, s"Identifier ${id.name.value} is reserved")
-          }
+          checkMethodId(id.name.pos, id.name.value)
           AST.EnumGen.For(Some(cid(id)), translateRange(expr), Some(translateExp(cond))) +: translateEnumGens(rest)
         case _ =>
           errorNotSlang(head.pos, s"For-loop enumerator: '${syntax(head)}'")
@@ -1998,9 +1975,7 @@ class SlangParser(
     case enumerator"${_: Pat.Wildcard} <- $expr" :: rest =>
       AST.EnumGen.For(None(), translateRange(expr), None()) +: translateEnumGens(rest)
     case enumerator"${id: Pat.Var} <- $expr" :: rest =>
-      if (disallowedMethodIds.contains(id.name.value)) {
-        errorInSlang(id.name.pos, s"Identifier ${id.name.value} is reserved")
-      }
+      checkMethodId(id.name.pos, id.name.value)
       AST.EnumGen.For(Some(cid(id)), translateRange(expr), None()) +: translateEnumGens(rest)
     case Nil => ISZ()
     case _ =>
@@ -2291,6 +2266,12 @@ class SlangParser(
     if (t.targs.nonEmpty)
       errorInSlang(t.targs.head.pos, "Binary operations cannot have type arguments")
 
+    if (!t.op.value.headOption.exists(_ == '$') && !checkSymbol(t.op.value)) {
+      error(
+        t.op.pos,
+        s"Cannot use infix expression notation to invoke '${t.op.value}' in Slang (use dot invoke notation instead)."
+      )
+    }
     t.args match {
       case List(right) =>
         binops.get(t.op.value) match {
@@ -2316,6 +2297,14 @@ class SlangParser(
     def translateArgss(argss: Seq[Seq[Term]]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
       if (argss.isEmpty) return Right(ISZ())
       translateArgs(argss.head)
+    }
+
+    if (checkSymbol(name.value.value)) {
+      reporter.error(
+        name.attr.posOpt,
+        SlangParser.messageKind,
+        s"Cannot use dot invocation notation for ${name.value.value} in Slang (use infix expression notation instead)."
+      )
     }
 
     var r: AST.Exp = translateArgss(argss) match {
@@ -2528,6 +2517,55 @@ class SlangParser(
       errorInSlang(pos, s"'$id' is not a valid identifier form")
 
     cidNoCheck(id, pos)
+  }
+
+  def checkTypeId(pos: Position, id: Predef.String): Unit = {
+    if (disallowedTypeIds.contains(id)) {
+      errorInSlang(pos, s"Type identifier $id is disallowed")
+    }
+  }
+
+  def isSymbolChar(c: Char): Boolean = {
+    c match {
+      case '*' | '/' | '%' | '+' | '-' | ':' | '=' | '!' | '<' | '>' | '&' | '^' | '|' => true
+      case _ => fastparse.CharPredicates.isMathSymbol(c) || fastparse.CharPredicates.isOtherSymbol(c)
+    }
+  }
+
+  def checkSymbol(id: Predef.String): Boolean = {
+    id.headOption.exists(isSymbolChar)
+  }
+
+  def checkMethodId(pos: Position, id: Predef.String): Unit = {
+    def err(): Unit = errorInSlang(pos, s"Identifier $id is disallowed")
+
+    if (disallowedMethodIds.contains(id)) {
+      err()
+    } else if (unaryMethods.contains(id)) {
+      return
+    } else if (id.startsWith("unary_")) {
+      err()
+    } else {
+      val i = id.lastIndexOf('_')
+      if (i >= 0 && i != id.length - 1) {
+        val ending = id.substring(i + 1)
+        if (disallowedMethodIdEndings.contains(ending)) {
+          err()
+        } else {
+          try {
+            BigInt(ending)
+            err()
+          } catch {
+            case _: Throwable =>
+          }
+        }
+      }
+    }
+    if (id.headOption.exists(isSymbolChar)) {
+      if (!id.forall(isSymbolChar)) {
+        errorInSlang(pos, s"Cannot mix symbol and non-symbol characters for identifier starting with a symbol")
+      }
+    }
   }
 
   def attr(pos: Position): AST.Attr = AST.Attr(posOpt = posOpt(pos))
