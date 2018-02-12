@@ -78,7 +78,20 @@ object SlangParser {
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
   val disallowedTypeIds = Seq("Unit", "Nothing")
-  val disallowedMethodIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt", "native")
+
+  val disallowedMethodIds = Seq(
+    "assert",
+    "assume",
+    "print",
+    "println",
+    "eprint",
+    "eprintln",
+    "halt",
+    "native",
+    "apply",
+    "unapply",
+    "unapplySeq"
+  )
   val topLevelMethodsIds = Seq("assert", "assume", "print", "println", "eprint", "eprintln", "halt")
 
   def scalaDialect(isWorksheet: Boolean): Dialect =
@@ -373,16 +386,22 @@ class SlangParser(
 
       override def preExpInvoke(ctx: Unit, o: AST.Exp.Invoke): AST.Transformer.PreResult[Unit, AST.Exp] = {
         if (topLevelMethodsIds.contains(o.id.value)) {
-          reporter.error(o.id.attr.posOpt, SlangParser.messageKind,
-            s"Method '${o.id.value}' can only be called at the statement level.")
+          reporter.error(
+            o.id.attr.posOpt,
+            SlangParser.messageKind,
+            s"Method '${o.id.value}' can only be called at the statement level."
+          )
         }
         super.preExpInvoke(ctx, o)
       }
 
       override def preExpInvokeNamed(ctx: Unit, o: AST.Exp.InvokeNamed): AST.Transformer.PreResult[Unit, AST.Exp] = {
         if (topLevelMethodsIds.contains(o.id.value)) {
-          reporter.error(o.id.attr.posOpt, SlangParser.messageKind,
-            s"Method '${o.id.value}' cannot be called using named arguments.")
+          reporter.error(
+            o.id.attr.posOpt,
+            SlangParser.messageKind,
+            s"Method '${o.id.value}' cannot be called using named arguments."
+          )
         }
         super.preExpInvokeNamed(ctx, o)
       }
@@ -1700,17 +1719,24 @@ class SlangParser(
       true
   }
 
+  def checkLhs(lhs: AST.Exp): AST.Exp = {
+    lhs match {
+      case lhs: AST.Exp.Ident =>
+      case lhs: AST.Exp.Select if lhs.targs.isEmpty && lhs.receiverOpt.nonEmpty =>
+        lhs.receiverOpt.foreach(receiver => checkLhs(receiver))
+      case lhs: AST.Exp.Invoke
+          if lhs.id.value.value == "apply" && lhs.receiverOpt.nonEmpty && lhs.targs.isEmpty && lhs.args.size == 1 =>
+        lhs.receiverOpt.foreach(receiver => checkLhs(receiver))
+      case _ =>
+        reporter.error(lhs.posOpt, SlangParser.messageKind, s"Invalid assignment left-hand-side form in Slang: ${lhs}")
+    }
+    lhs
+  }
+
   def translateAssign(enclosing: Enclosing.Type, stat: Term.Assign): AST.Stmt = {
     stmtCheck(enclosing, stat, "Assigments")
     val lhs = translateExp(stat.lhs)
-    lhs match {
-      case lhs: AST.Exp.Ident =>
-      case lhs: AST.Exp.Select if lhs.targs.isEmpty =>
-      case lhs: AST.Exp.Invoke if lhs.targs.isEmpty && lhs.args.size == 1 =>
-      case _ =>
-        errorInSlang(stat.pos, s"Invalid assignment left-hand-side form")
-    }
-    AST.Stmt.Assign(lhs, translateAssignExp(stat.rhs), attr(stat.pos))
+    AST.Stmt.Assign(checkLhs(lhs), translateAssignExp(stat.rhs), attr(stat.pos))
   }
 
   def translateAssign(
@@ -1735,7 +1761,7 @@ class SlangParser(
     } else {
       errorInSlang(pos, s"Invalid update form: '${syntax(stat)}'")
     }
-    AST.Stmt.Assign(lhs, translateAssignExp(rhs), attr(pos))
+    AST.Stmt.Assign(checkLhs(lhs), translateAssignExp(rhs), attr(pos))
   }
 
   def translateIfStmt(enclosing: Enclosing.Type, stat: Term.If, isAssignExp: Boolean): AST.Stmt.If = {
@@ -1938,15 +1964,18 @@ class SlangParser(
   def translateRange(r: Term): AST.EnumGen.Range = {
     r match {
       case q"$start until $end by $by" =>
-        AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
+        AST.EnumGen.Range
+          .Step(isInclusive = false, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
       case q"$start to $end by $by" =>
-        AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
+        AST.EnumGen.Range
+          .Step(isInclusive = true, translateExp(start), translateExp(end), Some(translateExp(by)), attr(r.pos))
       case q"$start until $end" =>
         AST.EnumGen.Range.Step(isInclusive = false, translateExp(start), translateExp(end), None(), attr(r.pos))
       case q"$start to $end" =>
         AST.EnumGen.Range.Step(isInclusive = true, translateExp(start), translateExp(end), None(), attr(r.pos))
       case q"$s.indices" => AST.EnumGen.Range.Expr(isReverse = false, isIndices = true, translateExp(s), attr(r.pos))
-      case q"$s.indices.reverse" => AST.EnumGen.Range.Expr(isReverse = true, isIndices = true, translateExp(s), attr(r.pos))
+      case q"$s.indices.reverse" =>
+        AST.EnumGen.Range.Expr(isReverse = true, isIndices = true, translateExp(s), attr(r.pos))
       case q"$s.reverse" => AST.EnumGen.Range.Expr(isReverse = true, isIndices = false, translateExp(s), attr(r.pos))
       case _ => AST.EnumGen.Range.Expr(isReverse = false, isIndices = false, translateExp(r), attr(r.pos))
     }
@@ -2010,7 +2039,8 @@ class SlangParser(
           rExp
         } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
       case exp: Term.This => AST.Exp.This(typedAttr(exp.pos))
-      case q"super" => AST.Exp.Super(typedAttr(exp.pos))
+      case q"super[${name: Name}]" => AST.Exp.Super(Some(cid(name)), typedAttr(exp.pos))
+      case q"super" => AST.Exp.Super(None(), typedAttr(exp.pos))
       case exp: Term.Eta =>
         val ref: AST.Exp.Ref = translateExp(exp.expr) match {
           case r: AST.Exp.Ident => r
@@ -2369,7 +2399,7 @@ class SlangParser(
         }
       case _ => (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), translateAssignExp(exp.body))
     }
-    AST.Exp.Fun(ps, mc, body, typedAttr(exp.pos))
+    AST.Exp.Fun(ISZ(), ps, mc, body, typedAttr(exp.pos))
   }
 
   def translateArgs(args: Seq[Term]): Either[ISZ[AST.NamedArg], ISZ[AST.Exp]] = {
@@ -2401,11 +2431,12 @@ class SlangParser(
     else Right(ISZ(args.map(expArg): _*))
   }
 
-  def translateApply(fun: AST.Exp, termArgs: Seq[Term], pos: Position): AST.Exp =
+  def translateApply(fun: AST.Exp, termArgs: Seq[Term], pos: Position): AST.Exp = {
     translateArgs(termArgs) match {
       case Left(args) => AST.Exp.InvokeNamed(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
       case Right(args) => AST.Exp.Invoke(Some(fun), cidNoCheck("apply", pos), ISZ(), args, resolvedAttr(pos))
     }
+  }
 
   def checkLSyntax(exp: Term.Interpolate): Boolean = {
     val startOffset = exp.pos.start
