@@ -914,6 +914,7 @@ object MsgPack {
 
     def writeExpSuper(o: Exp.Super): Unit = {
       writer.writeZ(Constants.ExpSuper)
+      writer.writeOption(o.idOpt, writeId)
       writeTypedAttr(o.attr)
     }
 
@@ -1007,6 +1008,7 @@ object MsgPack {
 
     def writeExpFun(o: Exp.Fun): Unit = {
       writer.writeZ(Constants.ExpFun)
+      writer.writeISZ(o.context, writeString)
       writer.writeISZ(o.params, writeExpFunParam)
       writeContract(o.contract)
       writeAssignExp(o.exp)
@@ -2802,8 +2804,9 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ExpSuper)
       }
+      val idOpt = reader.readOption(readId _)
       val attr = readTypedAttr()
-      return Exp.Super(attr)
+      return Exp.Super(idOpt, attr)
     }
 
     def readExpUnaryOp(): Exp.UnaryOp.Type = {
@@ -2987,11 +2990,12 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ExpFun)
       }
+      val context = reader.readISZ(reader.readString _)
       val params = reader.readISZ(readExpFunParam _)
       val contract = readContract()
       val exp = readAssignExp()
       val attr = readTypedAttr()
-      return Exp.Fun(params, contract, exp, attr)
+      return Exp.Fun(context, params, contract, exp, attr)
     }
 
     def readExpForYield(): Exp.ForYield = {

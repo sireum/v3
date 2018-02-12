@@ -666,7 +666,7 @@ object Exp {
     }
   }
 
-  @datatype class Super(@hidden attr: TypedAttr) extends Exp {
+  @datatype class Super(idOpt: Option[Id], @hidden attr: TypedAttr) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -863,7 +863,13 @@ object Exp {
 
   }
 
-  @datatype class Fun(params: ISZ[Fun.Param], contract: Contract, exp: AssignExp, @hidden attr: TypedAttr) extends Exp {
+  @datatype class Fun(
+    context: ISZ[String],
+    params: ISZ[Fun.Param],
+    contract: Contract,
+    exp: AssignExp,
+    @hidden attr: TypedAttr
+  ) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt

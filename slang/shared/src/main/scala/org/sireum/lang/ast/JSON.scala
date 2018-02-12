@@ -740,6 +740,7 @@ object JSON {
     @pure def printExpSuper(o: Exp.Super): ST = {
       return printObject(ISZ(
         ("type", st""""Exp.Super""""),
+        ("idOpt", printOption(o.idOpt, printId)),
         ("attr", printTypedAttr(o.attr))
       ))
     }
@@ -894,6 +895,7 @@ object JSON {
     @pure def printExpFun(o: Exp.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""Exp.Fun""""),
+        ("context", printISZ(T, o.context, printString)),
         ("params", printISZ(F, o.params, printExpFunParam)),
         ("contract", printContract(o.contract)),
         ("exp", printAssignExp(o.exp)),
@@ -3145,10 +3147,13 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Exp.Super")
       }
+      parser.parseObjectKey("idOpt")
+      val idOpt = parser.parseOption(parseId _)
+      parser.parseObjectNext()
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Exp.Super(attr)
+      return Exp.Super(idOpt, attr)
     }
 
     def parseExpUnaryOp(): Exp.UnaryOp.Type = {
@@ -3451,6 +3456,9 @@ object JSON {
       if (!typeParsed) {
         parser.parseObjectType("Exp.Fun")
       }
+      parser.parseObjectKey("context")
+      val context = parser.parseISZ(parser.parseString _)
+      parser.parseObjectNext()
       parser.parseObjectKey("params")
       val params = parser.parseISZ(parseExpFunParam _)
       parser.parseObjectNext()
@@ -3463,7 +3471,7 @@ object JSON {
       parser.parseObjectKey("attr")
       val attr = parseTypedAttr()
       parser.parseObjectNext()
-      return Exp.Fun(params, contract, exp, attr)
+      return Exp.Fun(context, params, contract, exp, attr)
     }
 
     def parseExpForYield(): Exp.ForYield = {
