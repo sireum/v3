@@ -232,7 +232,7 @@ import org.sireum.lang.{ast => AST}
         )
       case stmt: AST.Stmt.SubZ =>
         val id = stmt.id.value
-        val stringInterpolator = ops.StringOps(id).firstToUpper
+        val stringInterpolator = ops.StringOps(id).firstToLower
         val name = currentName :+ id
         val stringInterpolatorName = name :+ stringInterpolator
         val entity: String = if (stmt.isBitVector) "bits" else "range"
