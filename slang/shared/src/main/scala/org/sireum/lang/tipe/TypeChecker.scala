@@ -201,6 +201,7 @@ import TypeChecker._
             case AST.Typed.f32Name => return Some(BasicKind.F32)
             case AST.Typed.f64Name => return Some(BasicKind.F64)
             case AST.Typed.rName => return Some(BasicKind.R)
+            case _ =>
           }
         }
         scope.resolveType(typeMap, tpe.ids) match {
@@ -1473,49 +1474,75 @@ import TypeChecker._
       }
 
       if (typeArgs.isEmpty && m.typeParams.nonEmpty) {
-        expectedOpt match {
-          case Some(expected) =>
-            val smOpt = unify(expId.attr.posOpt, T, expected, m.tpe.ret, rep)
-            smOpt match {
-              case Some(sm) =>
-                val ok = checkUnboundTypeVar(expId.attr.posOpt, m, sm, m.typeParams, rep)
-                if (!ok) {
-                  return partResult
-                }
-                val r = checkH(sm)
-                return r
-              case _ => return partResult
-            }
-          case _ =>
-            var newArgs = ISZ[AST.Exp]()
-            var argTypes = ISZ[AST.Typed]()
-            for (e <- expArgs) {
-              val (newArg, argTypeOpt) = checkExp(None(), scope, e, rep)
-              argTypeOpt match {
-                case Some(argType) =>
-                  newArgs = newArgs :+ newArg
-                  argTypes = argTypes :+ argType
-                case _ =>
+        val repExpected = AccumulatingReporter.create
+        def tryExpected(): (AST.Exp, Option[AST.Typed]) = {
+          expectedOpt match {
+            case Some(expected) =>
+              val smOpt = unify(expId.attr.posOpt, T, expected, m.tpe.ret, repExpected)
+              smOpt match {
+                case Some(sm) =>
+                  val ok = checkUnboundTypeVar(expId.attr.posOpt, m, sm, m.typeParams, repExpected)
+                  if (!ok) {
+                    return partResult
+                  }
+                  val r = checkH(sm)
+                  return r
+                case _ => return partResult
               }
-            }
-
-            val smOpt = unifies(expId.attr.posOpt, T, argTypes, m.tpe.args, rep)
-            smOpt match {
-              case Some(sm) =>
-                val ok = checkUnboundTypeVar(expId.attr.posOpt, m, sm, m.typeParams, rep)
-                if (!ok) {
-                  return (make(newArgs, None()), None())
-                }
-                val funType = m.tpe.subst(sm)
-                return (make(newArgs, Some(funType.ret)), Some(funType.ret))
-              case _ =>
-                return (make(newArgs, None()), None())
-            }
+            case _ => return partResult
+          }
         }
+        val rExpected = tryExpected()
+        if (rExpected._2.nonEmpty) {
+          return rExpected
+        }
+        val repArgs = AccumulatingReporter.create
+        def tryArgs(): (AST.Exp, Option[AST.Typed]) = {
+          var newArgs = ISZ[AST.Exp]()
+          var argTypes = ISZ[AST.Typed]()
+          for (e <- expArgs) {
+            val (newArg, argTypeOpt) = checkExp(None(), scope, e, repArgs)
+            argTypeOpt match {
+              case Some(argType) =>
+                newArgs = newArgs :+ newArg
+                argTypes = argTypes :+ argType
+              case _ =>
+            }
+          }
+
+          val smOpt = unifies(expId.attr.posOpt, T, argTypes, m.tpe.args, repArgs)
+          smOpt match {
+            case Some(sm) =>
+              val ok = checkUnboundTypeVar(expId.attr.posOpt, m, sm, m.typeParams, repArgs)
+              if (!ok) {
+                return (make(newArgs, None()), None())
+              }
+              val funType = m.tpe.subst(sm)
+              return (make(newArgs, Some(funType.ret)), Some(funType.ret))
+            case _ =>
+              return (make(newArgs, None()), None())
+          }
+        }
+        val rArgs = tryArgs()
+        if (rArgs._2.nonEmpty) {
+          return rArgs
+        }
+        if (repArgs.hasIssue) {
+          rep.reports(repArgs.messages)
+        } else {
+          rep.reports(repExpected.messages)
+        }
+        return rArgs
       } else {
         val smOpt = buildMethodSubstMap(m, expId.attr.posOpt, typeArgs, rep)
         smOpt match {
-          case Some(sm) => val r = checkH(sm); return r
+          case Some(sm) =>
+            val ok = checkUnboundTypeVar(expId.attr.posOpt, m, sm, m.typeParams, rep)
+            if (!ok) {
+              return partResult
+            }
+            val r = checkH(sm)
+            return r
           case _ => return partResult
         }
       }
@@ -2906,7 +2933,7 @@ import TypeChecker._
     reporter: Reporter
   ): Option[HashMap[String, AST.Typed]] = {
     def err(): Unit = {
-      reporter.error(posOpt, typeCheckerKind, s"Could not unify type $expected with $tpe.")
+      reporter.error(posOpt, typeCheckerKind, s"Could not unify type '$expected' with '$tpe'.")
     }
 
     if (expected == tpe) {
@@ -3016,7 +3043,7 @@ import TypeChecker._
       reporter.error(
         posOpt,
         typeCheckerKind,
-        s"Could not unify type ${AST.Typed.Tuple(expected)} with ${AST.Typed.Tuple(tpe)}."
+        s"Could not unify type '${AST.Typed.Tuple(expected)}' with '${AST.Typed.Tuple(tpe)}'."
       )
     }
 

@@ -43,6 +43,11 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |import org.sireum.Z8._
+                             |val z8s: ISZ[Z8] = ISZ(z8"1", z8"2", z8"3").map((x: Z8) => x + z8"1")
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1)
                              |""".stripMargin))
 
@@ -267,7 +272,7 @@ class TypeCheckerTest extends SireumSpec {
 
         *(failingWorksheet("""import org.sireum._
                              |val zs: ZS = ZS(1, 2, 3).map(x => x + 1)
-                             |""".stripMargin, "Could not infer"))
+                             |""".stripMargin, "Explicit type"))
 
 
         *(failingWorksheet("""import org.sireum._
