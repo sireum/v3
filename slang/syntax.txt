@@ -288,6 +288,8 @@
                      |  +:          // prepend, right-associative
                      |  ++          // append all
                      |  --          // remove all
+                     |  <SYMID>     // an identifier whose characters are all symbols (except a single colon)
+                                    // right associative if it ends with a colon
 
 <and-op>           ::=  ∧
                      |  ^

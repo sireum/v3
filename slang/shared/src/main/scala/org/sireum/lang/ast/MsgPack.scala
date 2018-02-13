@@ -926,7 +926,7 @@ object MsgPack {
       writer.writeZ(Constants.ExpUnary)
       writeExpUnaryOp(o.op)
       writeExp(o.exp)
-      writeTypedAttr(o.attr)
+      writeResolvedAttr(o.attr)
     }
 
     def writeExpRef(o: Exp.Ref): Unit = {
@@ -2821,7 +2821,7 @@ object MsgPack {
       }
       val op = readExpUnaryOp()
       val exp = readExp()
-      val attr = readTypedAttr()
+      val attr = readResolvedAttr()
       return Exp.Unary(op, exp, attr)
     }
 

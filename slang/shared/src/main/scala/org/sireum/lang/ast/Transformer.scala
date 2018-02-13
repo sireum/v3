@@ -2741,7 +2741,7 @@ import Transformer._
             Result(r1.ctx, None())
         case o2: Exp.Unary =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.exp)
-          val r1: Result[Context, TypedAttr] = transformTypedAttr(r0.ctx, o2.attr)
+          val r1: Result[Context, ResolvedAttr] = transformResolvedAttr(r0.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
             Result(r1.ctx, Some(o2(exp = r0.resultOpt.getOrElse(o2.exp), attr = r1.resultOpt.getOrElse(o2.attr))))
           else

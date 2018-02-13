@@ -684,7 +684,7 @@ object Exp {
     'Complement
   }
 
-  @datatype class Unary(op: UnaryOp.Type, exp: Exp, @hidden attr: TypedAttr) extends Exp {
+  @datatype class Unary(op: UnaryOp.Type, exp: Exp, @hidden attr: ResolvedAttr) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
@@ -721,36 +721,6 @@ object Exp {
     val AppendAll: String = "++"
     val RemoveAll: String = "--"
     val MapsTo: String = "~>"
-
-    val opResOpt: HashMap[String, Option[ResolvedInfo]] = {
-      HashMap
-        .empty[String, Option[ResolvedInfo]]
-        .put("+", Some(ResolvedInfo.BuiltIn("+")))
-        .put("-", Some(ResolvedInfo.BuiltIn("-")))
-        .put("*", Some(ResolvedInfo.BuiltIn("*")))
-        .put("/", Some(ResolvedInfo.BuiltIn("/")))
-        .put("%", Some(ResolvedInfo.BuiltIn("%")))
-        .put("==", Some(ResolvedInfo.BuiltIn("==")))
-        .put("!=", Some(ResolvedInfo.BuiltIn("!=")))
-        .put("<<", Some(ResolvedInfo.BuiltIn("<<")))
-        .put(">>", Some(ResolvedInfo.BuiltIn(">>")))
-        .put(">>>", Some(ResolvedInfo.BuiltIn(">>>")))
-        .put("<", Some(ResolvedInfo.BuiltIn("<")))
-        .put("<=", Some(ResolvedInfo.BuiltIn("<=")))
-        .put(">", Some(ResolvedInfo.BuiltIn(">")))
-        .put(">=", Some(ResolvedInfo.BuiltIn(">=")))
-        .put("&", Some(ResolvedInfo.BuiltIn("&")))
-        .put("|", Some(ResolvedInfo.BuiltIn("|")))
-        .put("|^", Some(ResolvedInfo.BuiltIn("|^")))
-        .put("->", Some(ResolvedInfo.BuiltIn("->")))
-        .put("&&", Some(ResolvedInfo.BuiltIn("&&")))
-        .put("||", Some(ResolvedInfo.BuiltIn("||")))
-        .put(":+", Some(ResolvedInfo.BuiltIn(":+")))
-        .put("+:", Some(ResolvedInfo.BuiltIn("+:")))
-        .put("++", Some(ResolvedInfo.BuiltIn("++")))
-        .put("--", Some(ResolvedInfo.BuiltIn("--")))
-        .put("~>", Some(ResolvedInfo.BuiltIn("~>")))
-    }
   }
 
   @sig sealed trait Ref {

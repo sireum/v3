@@ -63,7 +63,9 @@ object SlangParser {
     "apply",
     "unapply",
     "unapplySeq",
-    "~>"
+    "~>",
+    "==",
+    "!="
   )
 
   val disallowedMethodIdEndings = Seq("old", "result", "reads", "modifies", "pre", "requires", "post", "ensures", "=")
@@ -2249,7 +2251,7 @@ class SlangParser(
 
   def translateUnaryExp(t: Term.ApplyUnary): AST.Exp = {
     unops.get(t.op.value) match {
-      case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg), typedAttr(t.op.pos))
+      case scala.Some(op) => AST.Exp.Unary(op, translateExp(t.arg), resolvedAttr(t.op.pos))
       case _ =>
         errorInSlang(t.op.pos, s"'${t.op.value}' is not a unary operator")
         rExp

@@ -92,6 +92,15 @@ object Util {
     }
   }
 
+  def unopId(op: Exp.UnaryOp.Type): String = {
+    op match {
+      case Exp.UnaryOp.Not => return "unary_!"
+      case Exp.UnaryOp.Plus => return "unary_+"
+      case Exp.UnaryOp.Minus => return "unary_-"
+      case Exp.UnaryOp.Complement => return "unary_~"
+    }
+  }
+
   @pure def isBoolBinop(op: String): B = {
     op match {
       case Exp.BinaryOp.Eq => return T

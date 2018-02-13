@@ -763,7 +763,7 @@ object JSON {
         ("type", st""""Exp.Unary""""),
         ("op", printExpUnaryOp(o.op)),
         ("exp", printExp(o.exp)),
-        ("attr", printTypedAttr(o.attr))
+        ("attr", printResolvedAttr(o.attr))
       ))
     }
 
@@ -3159,7 +3159,7 @@ object JSON {
       val exp = parseExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseTypedAttr()
+      val attr = parseResolvedAttr()
       parser.parseObjectNext()
       return Exp.Unary(op, exp, attr)
     }
