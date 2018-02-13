@@ -2280,7 +2280,8 @@ class SlangParser(
     t.args match {
       case List(right) => AST.Exp.Binary(translateExp(t.lhs), op, translateExp(right), resolvedAttr(t.op.pos))
       case _ =>
-        error(t.op.pos, s"Invalid righ-hand-side for '${t.op.value}': '(..${t.args.map(_.syntax)})'")
+        import org.sireum._
+        error(t.op.pos, st"Invalid righ-hand-side for '${t.op.value}': '(${(t.args.map(_.syntax), ", ")})'".render.value)
         rExp
     }
   }
@@ -2548,15 +2549,22 @@ class SlangParser(
     }
   }
 
-  def isSymbolChar(c: Char): Boolean = {
+  def isSymbolFirstChar(c: Char): Boolean = {
     c match {
       case '*' | '/' | '%' | '+' | '-' | ':' | '=' | '!' | '<' | '>' | '&' | '^' | '|' => true
       case _ => fastparse.CharPredicates.isMathSymbol(c) || fastparse.CharPredicates.isOtherSymbol(c)
     }
   }
 
+  def isSymbolFollowChar(c: Char): Boolean = {
+    c match {
+      case '@' | '#' | '?' => true
+      case _ => isSymbolFirstChar(c)
+    }
+  }
+
   def checkSymbol(id: Predef.String): Boolean = {
-    id.headOption.exists(isSymbolChar)
+    id.headOption.exists(isSymbolFirstChar)
   }
 
   def checkMethodId(pos: Position, id: Predef.String): Unit = {
@@ -2584,8 +2592,8 @@ class SlangParser(
         }
       }
     }
-    if (id.headOption.exists(isSymbolChar)) {
-      if (!id.forall(isSymbolChar)) {
+    if (id.headOption.exists(isSymbolFirstChar)) {
+      if (!id.tail.forall(isSymbolFollowChar)) {
         errorInSlang(pos, s"Cannot mix symbol and non-symbol characters for identifier starting with a symbol")
       }
     }
