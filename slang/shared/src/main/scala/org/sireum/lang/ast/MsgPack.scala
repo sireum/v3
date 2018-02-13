@@ -929,10 +929,6 @@ object MsgPack {
       writeTypedAttr(o.attr)
     }
 
-    def writeExpBinaryOp(o: Exp.BinaryOp.Type): Unit = {
-      writer.writeZ(o.ordinal)
-    }
-
     def writeExpRef(o: Exp.Ref): Unit = {
       o match {
         case o: Exp.Ident => writeExpIdent(o)
@@ -943,9 +939,9 @@ object MsgPack {
     def writeExpBinary(o: Exp.Binary): Unit = {
       writer.writeZ(Constants.ExpBinary)
       writeExp(o.left)
-      writeExpBinaryOp(o.op)
+      writeString(o.op)
       writeExp(o.right)
-      writeTypedAttr(o.attr)
+      writeResolvedAttr(o.attr)
     }
 
     def writeExpIdent(o: Exp.Ident): Unit = {
@@ -2829,11 +2825,6 @@ object MsgPack {
       return Exp.Unary(op, exp, attr)
     }
 
-    def readExpBinaryOp(): Exp.BinaryOp.Type = {
-      val r = reader.readZ()
-      return Exp.BinaryOp.byOrdinal(r).get
-    }
-
     def readExpRef(): Exp.Ref = {
       val t = reader.readZ()
       t match {
@@ -2853,9 +2844,9 @@ object MsgPack {
         reader.expectZ(Constants.ExpBinary)
       }
       val left = readExp()
-      val op = readExpBinaryOp()
+      val op = reader.readString()
       val right = readExp()
-      val attr = readTypedAttr()
+      val attr = readResolvedAttr()
       return Exp.Binary(left, op, right, attr)
     }
 

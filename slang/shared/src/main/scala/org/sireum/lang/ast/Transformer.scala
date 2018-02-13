@@ -2749,7 +2749,7 @@ import Transformer._
         case o2: Exp.Binary =>
           val r0: Result[Context, Exp] = transformExp(ctx, o2.left)
           val r1: Result[Context, Exp] = transformExp(r0.ctx, o2.right)
-          val r2: Result[Context, TypedAttr] = transformTypedAttr(r1.ctx, o2.attr)
+          val r2: Result[Context, ResolvedAttr] = transformResolvedAttr(r1.ctx, o2.attr)
           if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
             Result(r2.ctx, Some(o2(left = r0.resultOpt.getOrElse(o2.left), right = r1.resultOpt.getOrElse(o2.right), attr = r2.resultOpt.getOrElse(o2.attr))))
           else

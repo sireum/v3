@@ -695,32 +695,62 @@ object Exp {
     }
   }
 
-  @enum object BinaryOp {
-    'Add
-    'Sub
-    'Mul
-    'Div
-    'Rem
-    'Eq
-    'Ne
-    'Shl
-    'Shr
-    'Ushr
-    'Lt
-    'Le
-    'Gt
-    'Ge
-    'And
-    'Or
-    'Xor
-    'Imply
-    'CondAnd
-    'CondOr
-    'Append
-    'Prepend
-    'AppendAll
-    'RemoveAll
-    'MapsTo
+  object BinaryOp {
+    val Add: String = "+"
+    val Sub: String = "-"
+    val Mul: String = "*"
+    val Div: String = "/"
+    val Rem: String = "%"
+    val Eq: String = "=="
+    val Ne: String = "!="
+    val Shl: String = "<<"
+    val Shr: String = ">>"
+    val Ushr: String = ">>>"
+    val Lt: String = "<"
+    val Le: String = "<="
+    val Gt: String = ">"
+    val Ge: String = ">="
+    val And: String = "&"
+    val Or: String = "|"
+    val Xor: String = "|^"
+    val Imply: String = "$->:"
+    val CondAnd: String = "&&"
+    val CondOr: String = "||"
+    val Append: String = ":+"
+    val Prepend: String = "+:"
+    val AppendAll: String = "++"
+    val RemoveAll: String = "--"
+    val MapsTo: String = "~>"
+
+    val opResOpt: HashMap[String, Option[ResolvedInfo]] = {
+      HashMap
+        .empty[String, Option[ResolvedInfo]]
+        .put("+", Some(ResolvedInfo.BuiltIn("+")))
+        .put("-", Some(ResolvedInfo.BuiltIn("-")))
+        .put("*", Some(ResolvedInfo.BuiltIn("*")))
+        .put("/", Some(ResolvedInfo.BuiltIn("/")))
+        .put("%", Some(ResolvedInfo.BuiltIn("%")))
+        .put("==", Some(ResolvedInfo.BuiltIn("==")))
+        .put("!=", Some(ResolvedInfo.BuiltIn("!=")))
+        .put("<<", Some(ResolvedInfo.BuiltIn("<<")))
+        .put(">>", Some(ResolvedInfo.BuiltIn(">>")))
+        .put(">>>", Some(ResolvedInfo.BuiltIn(">>>")))
+        .put("<", Some(ResolvedInfo.BuiltIn("<")))
+        .put("<=", Some(ResolvedInfo.BuiltIn("<=")))
+        .put(">", Some(ResolvedInfo.BuiltIn(">")))
+        .put(">=", Some(ResolvedInfo.BuiltIn(">=")))
+        .put("&", Some(ResolvedInfo.BuiltIn("&")))
+        .put("|", Some(ResolvedInfo.BuiltIn("|")))
+        .put("|^", Some(ResolvedInfo.BuiltIn("|^")))
+        .put("$->:", Some(ResolvedInfo.BuiltIn("$->:")))
+        .put("&&", Some(ResolvedInfo.BuiltIn("&&")))
+        .put("||", Some(ResolvedInfo.BuiltIn("||")))
+        .put(":+", Some(ResolvedInfo.BuiltIn(":+")))
+        .put("+:", Some(ResolvedInfo.BuiltIn("+:")))
+        .put("++", Some(ResolvedInfo.BuiltIn("++")))
+        .put("--", Some(ResolvedInfo.BuiltIn("--")))
+        .put("~>", Some(ResolvedInfo.BuiltIn("~>")))
+    }
   }
 
   @sig sealed trait Ref {
@@ -729,7 +759,7 @@ object Exp {
     @pure def asExp: Exp
   }
 
-  @datatype class Binary(left: Exp, op: BinaryOp.Type, right: Exp, @hidden attr: TypedAttr) extends Exp {
+  @datatype class Binary(left: Exp, op: String, right: Exp, @hidden attr: ResolvedAttr) extends Exp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt

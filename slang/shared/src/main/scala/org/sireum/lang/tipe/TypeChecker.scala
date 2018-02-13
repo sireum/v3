@@ -664,22 +664,20 @@ import TypeChecker._
             reporter.error(
               exp.posOpt,
               typeCheckerKind,
-              st"Incompatible types for binary operation '$leftType' ${AST.Util.binop(exp.op)} '$rightType'.".render
+              st"Incompatible types for binary operation '$leftType' ${exp.op} '$rightType'.".render
             )
           }
 
           def errUndef(): Unit = {
-            reporter.error(
-              exp.posOpt,
-              typeCheckerKind,
-              st"Undefined binary operation ${AST.Util.binop(exp.op)} on '$leftType'".render
-            )
+            reporter.error(exp.posOpt, typeCheckerKind, st"Undefined binary operation ${exp.op} on '$leftType'".render)
           }
 
-          if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Eq) {
+          if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Ne) {
             val isCompat = typeHierarchy.isCompatible(leftType, rightType)
             if (isCompat) {
-              newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = AST.Typed.bOpt))
+              newBinaryExp = newBinaryExp(
+                attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = AST.Typed.bOpt)
+              )
               return (newBinaryExp, AST.Typed.bOpt)
             } else {
               errIncompat()
@@ -687,7 +685,12 @@ import TypeChecker._
             }
           } else if (exp.op == AST.Exp.BinaryOp.MapsTo) {
             val tOpt: Option[AST.Typed] = Some(AST.Typed.Tuple(ISZ(leftType, rightType)))
-            return (newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt)), tOpt)
+            return (
+              newBinaryExp(
+                attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
+              ),
+              tOpt
+            )
           }
 
           val lOpt = basicKind(scope, leftType, exp.left.posOpt, reporter)
@@ -702,11 +705,15 @@ import TypeChecker._
                 (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
                 (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
                 val tOpt: Option[AST.Typed] = Some(leftType)
-                newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt))
+                newBinaryExp = newBinaryExp(
+                  attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
+                )
                 return (newBinaryExp, tOpt)
               } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
                 val tOpt: Option[AST.Typed] = Some(AST.Typed.b)
-                newBinaryExp = newBinaryExp(attr = newBinaryExp.attr(typedOpt = tOpt))
+                newBinaryExp = newBinaryExp(
+                  attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
+                )
                 return (newBinaryExp, tOpt)
               } else {
                 errUndef()
@@ -2796,8 +2803,11 @@ import TypeChecker._
               val (newArg, _) = checkExp(Some(args(0)), scope, lhs.args(0), reporter)
               val (newRhs, _) = checkAssignExp(Some(args(1)), scope, stmt.rhs, reporter)
               return stmt(
-                lhs = lhs(receiverOpt = Some(newReceiver), args = ISZ(newArg), attr = lhs.attr(resOpt =
-                  Some(AST.ResolvedInfo.BuiltIn("update")), typedOpt = Some(args(1)))),
+                lhs = lhs(
+                  receiverOpt = Some(newReceiver),
+                  args = ISZ(newArg),
+                  attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn("update")), typedOpt = Some(args(1)))
+                ),
                 rhs = newRhs
               )
             case Some(lhsType) =>
@@ -2805,8 +2815,11 @@ import TypeChecker._
             case _ =>
           }
           val (newRhs, _) = checkAssignExp(None(), scope, stmt.rhs, reporter)
-          return stmt(lhs = lhs(receiverOpt = Some(newReceiver),
-            attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn("update")))), rhs = newRhs)
+          return stmt(
+            lhs =
+              lhs(receiverOpt = Some(newReceiver), attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn("update")))),
+            rhs = newRhs
+          )
         case _ => halt("Unexpected situation when type checking assignment.")
       }
     }

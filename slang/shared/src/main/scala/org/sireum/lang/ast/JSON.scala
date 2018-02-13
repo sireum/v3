@@ -767,40 +767,6 @@ object JSON {
       ))
     }
 
-    @pure def printExpBinaryOp(o: Exp.BinaryOp.Type): ST = {
-      val value: String = o match {
-        case Exp.BinaryOp.Add => "Add"
-        case Exp.BinaryOp.Sub => "Sub"
-        case Exp.BinaryOp.Mul => "Mul"
-        case Exp.BinaryOp.Div => "Div"
-        case Exp.BinaryOp.Rem => "Rem"
-        case Exp.BinaryOp.Eq => "Eq"
-        case Exp.BinaryOp.Ne => "Ne"
-        case Exp.BinaryOp.Shl => "Shl"
-        case Exp.BinaryOp.Shr => "Shr"
-        case Exp.BinaryOp.Ushr => "Ushr"
-        case Exp.BinaryOp.Lt => "Lt"
-        case Exp.BinaryOp.Le => "Le"
-        case Exp.BinaryOp.Gt => "Gt"
-        case Exp.BinaryOp.Ge => "Ge"
-        case Exp.BinaryOp.And => "And"
-        case Exp.BinaryOp.Or => "Or"
-        case Exp.BinaryOp.Xor => "Xor"
-        case Exp.BinaryOp.Imply => "Imply"
-        case Exp.BinaryOp.CondAnd => "CondAnd"
-        case Exp.BinaryOp.CondOr => "CondOr"
-        case Exp.BinaryOp.Append => "Append"
-        case Exp.BinaryOp.Prepend => "Prepend"
-        case Exp.BinaryOp.AppendAll => "AppendAll"
-        case Exp.BinaryOp.RemoveAll => "RemoveAll"
-        case Exp.BinaryOp.MapsTo => "MapsTo"
-      }
-      return printObject(ISZ(
-        ("type", printString("Exp.BinaryOp")),
-        ("value", printString(value))
-      ))
-    }
-
     @pure def printExpRef(o: Exp.Ref): ST = {
       o match {
         case o: Exp.Ident => return printExpIdent(o)
@@ -812,9 +778,9 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""Exp.Binary""""),
         ("left", printExp(o.left)),
-        ("op", printExpBinaryOp(o.op)),
+        ("op", printString(o.op)),
         ("right", printExp(o.right)),
-        ("attr", printTypedAttr(o.attr))
+        ("attr", printResolvedAttr(o.attr))
       ))
     }
 
@@ -3198,48 +3164,6 @@ object JSON {
       return Exp.Unary(op, exp, attr)
     }
 
-    def parseExpBinaryOp(): Exp.BinaryOp.Type = {
-      val r = parseExpBinaryOpT(F)
-      return r
-    }
-
-    def parseExpBinaryOpT(typeParsed: B): Exp.BinaryOp.Type = {
-      if (!typeParsed) {
-        parser.parseObjectType("Exp.BinaryOp")
-      }
-      parser.parseObjectKey("value")
-      val s = parser.parseString()
-      parser.parseObjectNext()
-      s.native match {
-        case "Add" => return Exp.BinaryOp.Add
-        case "Sub" => return Exp.BinaryOp.Sub
-        case "Mul" => return Exp.BinaryOp.Mul
-        case "Div" => return Exp.BinaryOp.Div
-        case "Rem" => return Exp.BinaryOp.Rem
-        case "Eq" => return Exp.BinaryOp.Eq
-        case "Ne" => return Exp.BinaryOp.Ne
-        case "Shl" => return Exp.BinaryOp.Shl
-        case "Shr" => return Exp.BinaryOp.Shr
-        case "Ushr" => return Exp.BinaryOp.Ushr
-        case "Lt" => return Exp.BinaryOp.Lt
-        case "Le" => return Exp.BinaryOp.Le
-        case "Gt" => return Exp.BinaryOp.Gt
-        case "Ge" => return Exp.BinaryOp.Ge
-        case "And" => return Exp.BinaryOp.And
-        case "Or" => return Exp.BinaryOp.Or
-        case "Xor" => return Exp.BinaryOp.Xor
-        case "Imply" => return Exp.BinaryOp.Imply
-        case "CondAnd" => return Exp.BinaryOp.CondAnd
-        case "CondOr" => return Exp.BinaryOp.CondOr
-        case "Append" => return Exp.BinaryOp.Append
-        case "Prepend" => return Exp.BinaryOp.Prepend
-        case "AppendAll" => return Exp.BinaryOp.AppendAll
-        case "RemoveAll" => return Exp.BinaryOp.RemoveAll
-        case "MapsTo" => return Exp.BinaryOp.MapsTo
-        case _ => halt(parser.errorMessage)
-      }
-    }
-
     def parseExpRef(): Exp.Ref = {
       val t = parser.parseObjectTypes(ISZ("Exp.Ident", "Exp.Select"))
       t.native match {
@@ -3262,13 +3186,13 @@ object JSON {
       val left = parseExp()
       parser.parseObjectNext()
       parser.parseObjectKey("op")
-      val op = parseExpBinaryOp()
+      val op = parser.parseString()
       parser.parseObjectNext()
       parser.parseObjectKey("right")
       val right = parseExp()
       parser.parseObjectNext()
       parser.parseObjectKey("attr")
-      val attr = parseTypedAttr()
+      val attr = parseResolvedAttr()
       parser.parseObjectNext()
       return Exp.Binary(left, op, right, attr)
     }

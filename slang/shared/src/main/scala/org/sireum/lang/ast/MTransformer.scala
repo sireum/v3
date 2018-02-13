@@ -2743,7 +2743,7 @@ import MTransformer._
         case o2: Exp.Binary =>
           val r0: MOption[Exp] = transformExp(o2.left)
           val r1: MOption[Exp] = transformExp(o2.right)
-          val r2: MOption[TypedAttr] = transformTypedAttr(o2.attr)
+          val r2: MOption[ResolvedAttr] = transformResolvedAttr(o2.attr)
           if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
             MSome(o2(left = r0.getOrElse(o2.left), right = r1.getOrElse(o2.right), attr = r2.getOrElse(o2.attr)))
           else

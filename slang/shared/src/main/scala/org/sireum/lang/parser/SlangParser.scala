@@ -47,34 +47,6 @@ object SlangParser {
     "¬" -> AST.Exp.UnaryOp.Not
   )
 
-  val binops: Map[Predef.String, AST.Exp.BinaryOp.Type] = Map(
-    "+" -> AST.Exp.BinaryOp.Add,
-    "-" -> AST.Exp.BinaryOp.Sub,
-    "*" -> AST.Exp.BinaryOp.Mul,
-    "/" -> AST.Exp.BinaryOp.Div,
-    "%" -> AST.Exp.BinaryOp.Rem,
-    "==" -> AST.Exp.BinaryOp.Eq,
-    "!=" -> AST.Exp.BinaryOp.Ne,
-    "<<" -> AST.Exp.BinaryOp.Shl,
-    ">>" -> AST.Exp.BinaryOp.Shr,
-    ">>>" -> AST.Exp.BinaryOp.Ushr,
-    "<" -> AST.Exp.BinaryOp.Lt,
-    "<=" -> AST.Exp.BinaryOp.Le,
-    ">" -> AST.Exp.BinaryOp.Gt,
-    ">=" -> AST.Exp.BinaryOp.Ge,
-    "&" -> AST.Exp.BinaryOp.And,
-    "&&" -> AST.Exp.BinaryOp.CondAnd,
-    "|" -> AST.Exp.BinaryOp.Or,
-    "||" -> AST.Exp.BinaryOp.CondOr,
-    "|^" -> AST.Exp.BinaryOp.Xor,
-    LParser.implyInternalSym -> AST.Exp.BinaryOp.Imply,
-    ":+" -> AST.Exp.BinaryOp.Append,
-    "+:" -> AST.Exp.BinaryOp.Prepend,
-    "++" -> AST.Exp.BinaryOp.AppendAll,
-    "--" -> AST.Exp.BinaryOp.RemoveAll,
-    "~>" -> AST.Exp.BinaryOp.MapsTo
-  )
-
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
   val disallowedTypeIds = Seq("Unit", "Nothing")
@@ -2283,14 +2255,9 @@ class SlangParser(
         s"Cannot use infix expression notation to invoke '${t.op.value}' in Slang (use dot invoke notation instead)."
       )
     }
+    val op = if (t.op.value == LParser.implyInternalSym) "->" else t.op.value
     t.args match {
-      case List(right) =>
-        binops.get(t.op.value) match {
-          case scala.Some(op) => AST.Exp.Binary(translateExp(t.lhs), op, translateExp(right), typedAttr(t.op.pos))
-          case _ =>
-            errorInSlang(t.op.pos, s"'${t.op.value}' is not a binary operator")
-            rExp
-        }
+      case List(right) => AST.Exp.Binary(translateExp(t.lhs), op, translateExp(right), resolvedAttr(t.op.pos))
       case _ =>
         error(t.op.pos, s"Invalid righ-hand-side for '${t.op.value}': '(..${t.args.map(_.syntax)})'")
         rExp
