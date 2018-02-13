@@ -98,16 +98,13 @@ import org.sireum.lang.{ast => AST}
         case _ =>
           if (ok) {
             val attr = AST.Attr(posOpt)
-            globalNameMap = globalNameMap.put(
-              name,
-              Info.Object(
-                owner,
-                T,
-                T,
-                AST.Stmt.Object(F, AST.Id(id, attr), ISZ(), ISZ(), attr),
-                Some(AST.Typed.Object(owner, id)),
-                Some(AST.ResolvedInfo.Object(name))
-              )
+            globalNameMap = globalNameMap + name ~> Info.Object(
+              owner,
+              T,
+              T,
+              AST.Stmt.Object(F, AST.Id(id, attr), ISZ(), ISZ(), attr),
+              Some(AST.Typed.Object(owner, id)),
+              Some(AST.ResolvedInfo.Object(name))
             )
           }
       }
@@ -237,10 +234,19 @@ import org.sireum.lang.{ast => AST}
         val stringInterpolatorName = name :+ stringInterpolator
         val entity: String = if (stmt.isBitVector) "bits" else "range"
         declareType(entity, name, TypeInfo.SubZ(currentName, stmt), stmt.attr.posOpt)
-        declareName(entity, stringInterpolatorName, Info.Object(name, T, T,
-          AST.Stmt.Object(F, AST.Id(stringInterpolator, stmt.id.attr), ISZ(), ISZ(), stmt.attr),
-          Some(AST.Typed.Object(name, stringInterpolator)),
-          Some(AST.ResolvedInfo.Object(stringInterpolatorName))), stmt.attr.posOpt)
+        declareName(
+          entity,
+          stringInterpolatorName,
+          Info.Object(
+            name,
+            T,
+            T,
+            AST.Stmt.Object(F, AST.Id(stringInterpolator, stmt.id.attr), ISZ(), ISZ(), stmt.attr),
+            Some(AST.Typed.Object(name, stringInterpolator)),
+            Some(AST.ResolvedInfo.Object(stringInterpolatorName))
+          ),
+          stmt.attr.posOpt
+        )
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
         var elements = Map.empty[String, Option[AST.ResolvedInfo]]
@@ -251,7 +257,7 @@ import org.sireum.lang.{ast => AST}
           if (elements.contains(e.value)) {
             reporter.error(e.attr.posOpt, resolverKind, s"Redeclaration of @enum element ${e.value}.")
           } else {
-            elements = elements.put(e.value, Some(AST.ResolvedInfo.EnumElement(name, e.value, ordinal)))
+            elements = elements + e.value ~> Some(AST.ResolvedInfo.EnumElement(name, e.value, ordinal))
           }
           ordinal = ordinal + 1
         }
@@ -338,42 +344,25 @@ import org.sireum.lang.{ast => AST}
           if (!p.isHidden) {
             extractorParamVars = extractorParamVars :+ id
           }
-          paramVars = paramVars.put(
-            id,
-            Info.Var(
-              name,
-              F,
-              sc,
-              AST.Stmt.Var(p.isVal, p.id, Some(p.tipe), None(), p.id.attr),
-              None(),
-              Some(AST.ResolvedInfo.Var(F, F, name, id))
-            )
+          paramVars = paramVars + id ~> Info.Var(
+            name,
+            F,
+            sc,
+            AST.Stmt.Var(p.isVal, p.id, Some(p.tipe), None(), p.id.attr),
+            None(),
+            Some(AST.ResolvedInfo.Var(F, F, name, id))
           )
         }
         val members = resolveMembers(name, sc, stmt.stmts, paramVars)
         val typeVars = typeParamMap(stmt.typeParams, reporter).keys.elements
         val tpe = AST.Typed.Name(name, for (tVar <- typeVars) yield AST.Typed.TypeVar(tVar))
         val constructorResOpt: Option[AST.ResolvedInfo] = Some(
-          AST.ResolvedInfo.Method(
-            F,
-            AST.MethodMode.Constructor,
-            typeVars,
-            currentName,
-            stmt.id.value,
-            constructorParamVars,
-            None()
-          )
+          AST.ResolvedInfo
+            .Method(F, AST.MethodMode.Constructor, typeVars, currentName, stmt.id.value, constructorParamVars, None())
         )
         val extractorResOpt: Option[AST.ResolvedInfo] = Some(
-          AST.ResolvedInfo.Method(
-            F,
-            AST.MethodMode.Extractor,
-            typeVars,
-            currentName,
-            stmt.id.value,
-            extractorParamVars,
-            None()
-          )
+          AST.ResolvedInfo
+            .Method(F, AST.MethodMode.Extractor, typeVars, currentName, stmt.id.value, extractorParamVars, None())
         )
         declareType(
           if (stmt.isDatatype) "datatype" else "record",
@@ -437,58 +426,53 @@ import org.sireum.lang.{ast => AST}
         case stmt: AST.Stmt.Var =>
           checkId(stmt.id)
           val id = stmt.id.value
-          vars = vars.put(id, Info.Var(owner, F, scope, stmt, None(), Some(AST.ResolvedInfo.Var(F, F, owner, id))))
+          vars = vars + id ~> Info.Var(owner, F, scope, stmt, None(), Some(AST.ResolvedInfo.Var(F, F, owner, id)))
         case stmt: AST.Stmt.SpecVar =>
           checkId(stmt.id)
           val id = stmt.id.value
           specVars =
-            specVars.put(id, Info.SpecVar(owner, F, scope, stmt, None(), Some(AST.ResolvedInfo.Var(F, T, owner, id))))
+            specVars + id ~> Info.SpecVar(owner, F, scope, stmt, None(), Some(AST.ResolvedInfo.Var(F, T, owner, id)))
         case stmt: AST.Stmt.Method =>
           checkId(stmt.sig.id)
           val id = stmt.sig.id.value
-          methods = methods.put(
-            id,
-            Info.Method(
-              owner,
-              F,
-              scope,
-              stmt.bodyOpt.nonEmpty,
-              stmt,
-              None(),
-              Some(
-                AST.ResolvedInfo.Method(
-                  F,
-                  AST.MethodMode.Method,
-                  stmt.sig.typeParams.map(tp => tp.id.value),
-                  owner,
-                  id,
-                  stmt.sig.params.map(p => p.id.value),
-                  None()
-                )
+          methods = methods + id ~> Info.Method(
+            owner,
+            F,
+            scope,
+            stmt.bodyOpt.nonEmpty,
+            stmt,
+            None(),
+            Some(
+              AST.ResolvedInfo.Method(
+                F,
+                AST.MethodMode.Method,
+                stmt.sig.typeParams.map(tp => tp.id.value),
+                owner,
+                id,
+                stmt.sig.params.map(p => p.id.value),
+                None()
               )
             )
           )
+
         case stmt: AST.Stmt.SpecMethod =>
           checkId(stmt.sig.id)
           val id = stmt.sig.id.value
-          specMethods = specMethods.put(
-            id,
-            Info.SpecMethod(
-              owner,
-              F,
-              scope,
-              stmt,
-              None(),
-              Some(
-                AST.ResolvedInfo.Method(
-                  F,
-                  AST.MethodMode.Spec,
-                  stmt.sig.typeParams.map(tp => tp.id.value),
-                  owner,
-                  id,
-                  stmt.sig.params.map(p => p.id.value),
-                  None()
-                )
+          specMethods = specMethods + id ~> Info.SpecMethod(
+            owner,
+            F,
+            scope,
+            stmt,
+            None(),
+            Some(
+              AST.ResolvedInfo.Method(
+                F,
+                AST.MethodMode.Spec,
+                stmt.sig.typeParams.map(tp => tp.id.value),
+                owner,
+                id,
+                stmt.sig.params.map(p => p.id.value),
+                None()
               )
             )
           )
@@ -503,7 +487,7 @@ import org.sireum.lang.{ast => AST}
       case Some(_) =>
         reporter
           .error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
-      case _ => globalNameMap = globalNameMap.put(name, info)
+      case _ => globalNameMap = globalNameMap + name ~> info
     }
   }
 
@@ -532,7 +516,7 @@ import org.sireum.lang.{ast => AST}
       case Some(_) =>
         reporter
           .error(posOpt, resolverKind, s"Cannot declare $entity because the name has already been declared previously.")
-      case _ => globalTypeMap = globalTypeMap.put(name, info)
+      case _ => globalTypeMap = globalTypeMap + name ~> info
     }
   }
 
@@ -546,8 +530,8 @@ import org.sireum.lang.{ast => AST}
           "Cannot declare package because the name has already been used for a non-package entity."
         )
       case _ =>
-        globalNameMap = globalNameMap
-          .put(name, Info.Package(name, Some(AST.Typed.Package(name)), Some(AST.ResolvedInfo.Package(name))))
+        globalNameMap = globalNameMap + name ~> Info
+          .Package(name, Some(AST.Typed.Package(name)), Some(AST.ResolvedInfo.Package(name)))
     }
   }
 

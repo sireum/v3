@@ -2079,6 +2079,8 @@ class SlangParser(
       case q"$expr.$name[..$tpes]" if tpes.nonEmpty =>
         translateSelect(expr, name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case q"$expr.$name" => translateSelect(expr, name, List(), name.pos)
+      case q"${name: Term.Name}[..$tpes]" if tpes.nonEmpty =>
+        translateSelect(name, tpes, Position.Range(exp.pos.input, name.pos.start, exp.pos.end))
       case exp: Term.If => translateIfExp(exp)
       case exp: Term.Function => translateFun(exp)
       case Term.Block(List(fn: Term.Function)) => translateFun(fn)
@@ -2329,6 +2331,10 @@ class SlangParser(
       error(name.pos, "Selector 'native' does not accept type arguments.")
     }
     AST.Exp.Select(Some(translateExp(receiver)), cid(name), ISZ(tpes.map(translateType): _*), resolvedAttr(pos))
+  }
+
+  def translateSelect(name: Term.Name, tpes: Seq[Type], pos: Position): AST.Exp = {
+    AST.Exp.Select(None(), cid(name), ISZ(tpes.map(translateType): _*), resolvedAttr(pos))
   }
 
   def translateIfExp(exp: Term.If): AST.Exp = {

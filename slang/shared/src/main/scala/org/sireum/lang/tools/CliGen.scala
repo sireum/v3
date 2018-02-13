@@ -374,8 +374,8 @@ import CliGen.CliOpt._
         options = options :+
           st"""|
            |${topts._1}
-               |${(columnize(triples), "\n")}
-               |${columnize(ISZ(("-h", "--help", "Display this information")))}"""
+           |${(columnize(triples), "\n")}
+           |${columnize(ISZ(("-h", "--help", "Display this information")))}"""
       } else {
         options = options :+
           st"""|
@@ -463,7 +463,7 @@ import CliGen.CliOpt._
     if (enumNames.contains(name)) {
       return
     }
-    enumNames = enumNames.add(name)
+    enumNames = enumNames + name
     val elements: ISZ[String] = for (e <- c.elements) yield ops.StringOps(e).firstToUpper
     decls = decls :+
       st"""@enum object $name {
@@ -555,7 +555,8 @@ import CliGen.CliOpt._
         c.sep match {
           case Some(_) =>
             return ("ISZ[String]", if (c.default.isEmpty) "ISZ[String]()" else s"""ISZ("${c.default.get}")""")
-          case _ => return ("Option[String]", if (c.default.isEmpty) "None[String]()" else s"""Some("${c.default.get}")""")
+          case _ =>
+            return ("Option[String]", if (c.default.isEmpty) "None[String]()" else s"""Some("${c.default.get}")""")
         }
       case c: Type.Choice =>
         val name = ops.StringOps(c.name).firstToUpper
@@ -579,15 +580,15 @@ import CliGen.CliOpt._
         else s"|${t._1}, ${t._2}    "
       if (r.size > firstColumnLimit) {
         lines = lines :+ r
-        r = st"|${for (i <- z"0" until firstColumnLimit) yield " "}".render
+        r = st"|${for (_ <- z"0" until firstColumnLimit) yield " "}".render
       } else {
-        r = st"$r${for (i <- z"0" until (firstColumnLimit - r.size)) yield " "}".render
+        r = st"$r${for (_ <- z"0" until (firstColumnLimit - r.size)) yield " "}".render
       }
 
       for (token <- tokenizeH(t._3, ' ', F)) {
         if (r.size + token.size + 1 > secondColumnLimit) {
           lines = lines :+ r
-          r = st"|${for (i <- z"0" to firstColumnLimit) yield " "}".render
+          r = st"|${for (_ <- z"0" to firstColumnLimit) yield " "}".render
         }
         r = s"$r $token"
       }

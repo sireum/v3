@@ -45,7 +45,7 @@ object TruthTableVerifier {
           if (r.contains(x)) {
             reporter.error(id.attr.posOpt, kind, s"Redeclaration of '$x'.")
           } else {
-            r = r.add(x)
+            r = r + x
           }
         }
         r
@@ -100,9 +100,7 @@ object TruthTableVerifier {
     }
 
     def checkRowAssignments(): B = {
-      @pure def allAssignments(i: Z,
-                               keys: ISZ[String],
-                               ss: ISZ[Assignment]): ISZ[Assignment] = {
+      @pure def allAssignments(i: Z, keys: ISZ[String], ss: ISZ[Assignment]): ISZ[Assignment] = {
         if (i >= keys.size) {
           return ss
         }
@@ -110,7 +108,7 @@ object TruthTableVerifier {
       }
 
       val vars: ISZ[String] = for (id <- tt.vars) yield id.value
-      val assignments = Set.empty.addAll(allAssignments(0, vars, ISZ(ISZ())))
+      val assignments = Set.empty ++ allAssignments(0, vars, ISZ(ISZ()))
       var currentAssignments = assignments
       for (row <- tt.rows) {
         val ra: ISZ[AST.Exp.LitB] = row.assignment.values
@@ -125,10 +123,9 @@ object TruthTableVerifier {
           reporter.error(row.assignment.attr.posOpt, kind, s"Invalid truth assignment $rowAssignment.")
         } else {
           if (currentAssignments.contains(rowAssignment)) {
-            currentAssignments = currentAssignments.remove(rowAssignment)
+            currentAssignments = currentAssignments - rowAssignment
           } else {
-            reporter.error(row.assignment.attr.posOpt, kind,
-              s"Duplicated truth assignment $rowAssignment.")
+            reporter.error(row.assignment.attr.posOpt, kind, s"Duplicated truth assignment $rowAssignment.")
           }
         }
       }
@@ -149,7 +146,7 @@ object TruthTableVerifier {
           if (!AST.Util.beginColumnEqual(x.attr.posOpt, v.attr.posOpt)) {
             reporter.error(v.attr.posOpt, kind, "Invalid asssignment position.")
           }
-          store = store.put(x.value, v.value)
+          store = store + x.value ~> v.value
         }
         return store
       }
@@ -164,7 +161,7 @@ object TruthTableVerifier {
 
         def evalExp(e: AST.Exp): B = {
           def putResult(v: B, opt: B): Unit = {
-            resultMap = resultMap.put(AST.Util.beginColumn(e.posOpt), (v, opt))
+            resultMap = resultMap + AST.Util.beginColumn(e.posOpt) ~> ((v, opt))
           }
 
           e match {
@@ -204,13 +201,13 @@ object TruthTableVerifier {
         for (b <- row.values.values) {
           val column = AST.Util.beginColumn(b.posOpt)
           resultMap.get(column) match {
-            case Some(p@(v, _)) =>
+            case Some(p @ (v, _)) =>
               if (v != b.value) {
                 hasError = T
               } else {
                 rowValues = rowValues :+ v
               }
-              resultMap = resultMap.remove(column, p)
+              resultMap = resultMap - ((column, p))
             case _ => reporter.error(b.posOpt, kind, "Invalid truth value position.")
           }
         }
@@ -248,12 +245,12 @@ object TruthTableVerifier {
                     if (fas.nonEmpty) {
                       reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
                     }
-                    Set.empty.addAll(tas)
+                    Set.empty ++ tas
                   } else {
                     if (fas.isEmpty) {
                       reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
                     }
-                    Set.empty.addAll(fas)
+                    Set.empty ++ fas
                   }
                 for (a <- conclusion.assignments) {
                   val ra = a.values
@@ -261,7 +258,7 @@ object TruthTableVerifier {
                   if (!set.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect witness.")
                   } else {
-                    set = set.remove(w)
+                    set = set - w
                   }
                 }
                 if (set.nonEmpty) {
@@ -274,15 +271,15 @@ object TruthTableVerifier {
               case conclusion: AST.TruthTable.Conclusion.Tautology if fas.nonEmpty =>
                 reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
               case conclusion: AST.TruthTable.Conclusion.Contingent =>
-                var taSet = Set.empty.addAll(tas)
-                var faSet = Set.empty.addAll(fas)
+                var taSet = Set.empty ++ tas
+                var faSet = Set.empty ++ fas
                 for (a <- conclusion.trueAssignments) {
                   val ra = a.values
                   val w: Assignment = for (b <- ra) yield b.value
                   if (!taSet.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect summary witness.")
                   } else {
-                    taSet = taSet.remove(w)
+                    taSet = taSet - w
                   }
                 }
                 for (a <- conclusion.falseAssignments) {
@@ -291,7 +288,7 @@ object TruthTableVerifier {
                   if (!faSet.contains(w)) {
                     reporter.error(a.attr.posOpt, kind, s"Incorrect summary witness.")
                   } else {
-                    faSet = faSet.remove(w)
+                    faSet = faSet - w
                   }
                 }
                 if (taSet.nonEmpty || faSet.nonEmpty) {

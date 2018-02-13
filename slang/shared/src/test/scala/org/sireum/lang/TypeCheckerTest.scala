@@ -44,7 +44,7 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
-                             |val b = Bag.of[Z] + 1 +# 2 ~> 3
+                             |val b = Bag.empty[Z] + 1 +# 2 ~> 3
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -163,13 +163,13 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty[Z].addAll(ISZ(1, 2, 3))))
+                             |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet ++ ISZ(1, 2, 3)))
                              |val upPosetTyped: Poset[Z] = upPoset
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty))
+                             |val upPoset = poset(parents = poset.parents + 3 ~> HashSet.empty[Z])
                              |val upPosetTyped: Poset[Z] = upPoset
                              |""".stripMargin))
 
@@ -206,7 +206,7 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
-                             |println(Map.empty[String, Z].put(value = 1, key = "A").get("B").getOrElse(default = 0))
+                             |println((Map.empty[String, Z] + "A" ~> 1).get(key = "B").getOrElse(default = 0))
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -218,7 +218,7 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
-                             |println(Map.empty[String, Z].put("A", 1).get("B").getOrElse(0))
+                             |println((Map.empty[String, Z] + "A" ~> 1).get("B").getOrElse(0))
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -297,13 +297,7 @@ class TypeCheckerTest extends SireumSpec {
 
         *(failingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty[Z].addAll(1, 2, 3)))
-                             |val upPosetTyped: Poset[Z] = upPoset
-                             |""".stripMargin, "expecting 1 argument"))
-
-        *(failingWorksheet("""import org.sireum._
-                             |val poset = Poset[Z](HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents.put(3, HashSet.empty.addAll(1, 2, 3)))
+                             |val upPoset = poset(parents = poset.parents + 3 ~> HashSet.empty ++ ISZ(1, 2, 3))
                              |val upPosetTyped: Poset[Z] = upPoset
                              |""".stripMargin, "Explicit type"))
 

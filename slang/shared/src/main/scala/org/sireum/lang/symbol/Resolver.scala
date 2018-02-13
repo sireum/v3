@@ -760,7 +760,7 @@ object Resolver {
       if (typeMap.contains(id)) {
         reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter '$id'.")
       } else {
-        typeMap = typeMap.put(id, TypeInfo.TypeVar(id, tp))
+        typeMap = typeMap + id ~> TypeInfo.TypeVar(id, tp)
       }
     }
     return Scope.Local(HashMap.empty, typeMap, None(), None(), Some(scope))
@@ -787,85 +787,67 @@ object Resolver {
 
     val scope = Scope.Global(AST.Typed.sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
 
-    var tm = typeMap.put(
-      AST.Typed.iszName,
+    var tm = typeMap + AST.Typed.iszName ~>
       TypeInfo.TypeAlias(AST.Typed.iszName, scope, Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
-    )
 
-    tm = tm.put(
-      AST.Typed.mszName,
+    tm = tm + AST.Typed.mszName ~>
       TypeInfo.TypeAlias(AST.Typed.mszName, scope, Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
-    )
 
-    tm = tm.put(
-      AST.Typed.zsName,
+    tm = tm + AST.Typed.zsName ~>
       TypeInfo.TypeAlias(AST.Typed.zsName, scope, Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias])
-    )
 
     val tName = AST.Typed.sireumName :+ "T"
-    var nm = nameMap.put(
-      tName,
-      Info.Var(
-        AST.Typed.sireumName,
-        T,
-        scope,
-        Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-        None(),
-        Some(AST.ResolvedInfo.Var(T, F, tName, "T"))
-      )
+    var nm = nameMap + tName ~> Info.Var(
+      AST.Typed.sireumName,
+      T,
+      scope,
+      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "T"))
     )
 
     val fName = AST.Typed.sireumName :+ "F"
-    nm = nm.put(
-      fName,
-      Info.Var(
-        AST.Typed.sireumName,
-        T,
-        scope,
-        Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-        None(),
-        Some(AST.ResolvedInfo.Var(T, F, tName, "F"))
-      )
+    nm = nm + fName ~> Info.Var(
+      AST.Typed.sireumName,
+      T,
+      scope,
+      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "F"))
     )
 
-    tm = tm.put(
-      AST.Typed.unit.ids,
-      TypeInfo.AbstractDatatype(
-        ISZ(),
-        T,
-        AST.Typed.unit,
-        None(),
-        None(),
-        Map.empty,
-        None(),
-        ISZ(),
-        HashMap.empty,
-        HashMap.empty,
-        HashMap.empty,
-        HashMap.empty,
-        scope,
-        AST.Stmt.AbstractDatatype(T, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
-      )
+    tm = tm + AST.Typed.unit.ids ~> TypeInfo.AbstractDatatype(
+      ISZ(),
+      T,
+      AST.Typed.unit,
+      None(),
+      None(),
+      Map.empty,
+      None(),
+      ISZ(),
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      scope,
+      AST.Stmt.AbstractDatatype(T, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
     )
 
-    tm = tm.put(
-      AST.Typed.nothing.ids,
-      TypeInfo.AbstractDatatype(
-        ISZ(),
-        T,
-        AST.Typed.nothing,
-        None(),
-        None(),
-        Map.empty,
-        None(),
-        ISZ(),
-        HashMap.empty,
-        HashMap.empty,
-        HashMap.empty,
-        HashMap.empty,
-        scope,
-        AST.Stmt.AbstractDatatype(T, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
-      )
+    tm = tm + AST.Typed.nothing.ids ~> TypeInfo.AbstractDatatype(
+      ISZ(),
+      T,
+      AST.Typed.nothing,
+      None(),
+      None(),
+      Map.empty,
+      None(),
+      ISZ(),
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      scope,
+      AST.Stmt.AbstractDatatype(T, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
     )
 
     return (nm, tm)
@@ -923,7 +905,7 @@ object Resolver {
                   case _ =>
                 }
             }
-          case _ => rNameMap = rNameMap.put(name, uInfo)
+          case _ => rNameMap = rNameMap + name ~> uInfo
         }
       }
       for (p <- uTypeMap.entries) {
@@ -944,7 +926,7 @@ object Resolver {
                 )
               case _ =>
             }
-          case _ => rTypeMap = rTypeMap.put(name, uInfo)
+          case _ => rTypeMap = rTypeMap + name ~> uInfo
         }
       }
       return (reporter, rNameMap, rTypeMap)
@@ -976,7 +958,7 @@ object Resolver {
       if (r.contains(id)) {
         reporter.error(tp.id.attr.posOpt, resolverKind, s"Redeclaration of type parameter $id.")
       }
-      r = r.put(id, TypeInfo.TypeVar(id, tp))
+      r = r + id ~> TypeInfo.TypeVar(id, tp)
     }
     return r
   }

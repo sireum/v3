@@ -1173,7 +1173,7 @@ object TruthTable {
           case Some(n) => n
           case _ =>
             val n = map.size
-            map = map.put(t, n)
+            map = map + t ~> n
             n
         }
         newTypeParams = newTypeParams :+ s"$$$i"
@@ -1207,7 +1207,7 @@ object TruthTable {
             case Some(n) => n
             case _ =>
               val n = map.size
-              map = map.put(t.id, n)
+              map = map + t.id ~> n
               n
           }
           return t(id = s"$$$i")
@@ -1233,7 +1233,7 @@ object TruthTable {
   }
 
   @pure def typeVarSet: HashSSet[String] = {
-    return HashSSet.empty[String].addAll(collectTypeVars)
+    return HashSSet.empty[String] ++ collectTypeVars
   }
 
   @pure def collectTypeVars: ISZ[String]
@@ -1419,7 +1419,7 @@ object Typed {
           r.get(subst.id) match {
             case Some(_) =>
             case _ =>
-              r = r.put(subst.id, subst.tipe)
+              r = r + subst.id ~> subst.tipe
           }
         }
         return r
@@ -1674,33 +1674,32 @@ object Typed {
   val rConstructorResOpt: Option[ResolvedInfo] = Some(ResolvedInfo.Method(T, MethodMode.Constructor, ISZ(),
     sireumName, "R", ISZ(), Some(Typed.rConstructorType)))
 
-  val basicConstructorMap: HashMap[ISZ[String], (Option[Typed], Option[ResolvedInfo])] = {
-    var m = HashMap.emptyInit[ISZ[String], (Option[Typed], Option[ResolvedInfo])](30)
-    m = m.put(b.ids,   (bConstructorMethodOpt  , bConstructorResOpt  ))
-    m = m.put(c.ids,   (cConstructorMethodOpt  , cConstructorResOpt  ))
-    m = m.put(z.ids,   (zConstructorMethodOpt  , zConstructorResOpt  ))
-    m = m.put(z8.ids,  (z8ConstructorMethodOpt , z8ConstructorResOpt ))
-    m = m.put(z16.ids, (z16ConstructorMethodOpt, z16ConstructorResOpt))
-    m = m.put(z32.ids, (z32ConstructorMethodOpt, z32ConstructorResOpt))
-    m = m.put(z64.ids, (z64ConstructorMethodOpt, z64ConstructorResOpt))
-    m = m.put(n.ids,   (nConstructorMethodOpt  , nConstructorResOpt  ))
-    m = m.put(n8.ids,  (n8ConstructorMethodOpt , n8ConstructorResOpt ))
-    m = m.put(n16.ids, (n16ConstructorMethodOpt, n16ConstructorResOpt))
-    m = m.put(n32.ids, (n32ConstructorMethodOpt, n32ConstructorResOpt))
-    m = m.put(n64.ids, (n64ConstructorMethodOpt, n64ConstructorResOpt))
-    m = m.put(s8.ids,  (s8ConstructorMethodOpt , s8ConstructorResOpt ))
-    m = m.put(s16.ids, (s16ConstructorMethodOpt, s16ConstructorResOpt))
-    m = m.put(s32.ids, (s32ConstructorMethodOpt, s32ConstructorResOpt))
-    m = m.put(s64.ids, (s64ConstructorMethodOpt, s64ConstructorResOpt))
-    m = m.put(u8.ids,  (u8ConstructorMethodOpt , u8ConstructorResOpt ))
-    m = m.put(u16.ids, (u16ConstructorMethodOpt, u16ConstructorResOpt))
-    m = m.put(u32.ids, (u32ConstructorMethodOpt, u32ConstructorResOpt))
-    m = m.put(u64.ids, (u64ConstructorMethodOpt, u64ConstructorResOpt))
-    m = m.put(f32.ids, (f32ConstructorMethodOpt, f32ConstructorResOpt))
-    m = m.put(f64.ids, (f64ConstructorMethodOpt, f64ConstructorResOpt))
-    m = m.put(r.ids,   (rConstructorMethodOpt  , rConstructorResOpt  ))
-    m
-  }
+  val basicConstructorMap: HashMap[ISZ[String], (Option[Typed], Option[ResolvedInfo])] =
+    HashMap.emptyInit[ISZ[String], (Option[Typed], Option[ResolvedInfo])](30) ++ ISZ(
+      b.ids   ~> ((bConstructorMethodOpt  , bConstructorResOpt  )),
+      c.ids   ~> ((cConstructorMethodOpt  , cConstructorResOpt  )),
+      z.ids   ~> ((zConstructorMethodOpt  , zConstructorResOpt  )),
+      z8.ids  ~> ((z8ConstructorMethodOpt , z8ConstructorResOpt )),
+      z16.ids ~> ((z16ConstructorMethodOpt, z16ConstructorResOpt)),
+      z32.ids ~> ((z32ConstructorMethodOpt, z32ConstructorResOpt)),
+      z64.ids ~> ((z64ConstructorMethodOpt, z64ConstructorResOpt)),
+      n.ids   ~> ((nConstructorMethodOpt  , nConstructorResOpt  )),
+      n8.ids  ~> ((n8ConstructorMethodOpt , n8ConstructorResOpt )),
+      n16.ids ~> ((n16ConstructorMethodOpt, n16ConstructorResOpt)),
+      n32.ids ~> ((n32ConstructorMethodOpt, n32ConstructorResOpt)),
+      n64.ids ~> ((n64ConstructorMethodOpt, n64ConstructorResOpt)),
+      s8.ids  ~> ((s8ConstructorMethodOpt , s8ConstructorResOpt )),
+      s16.ids ~> ((s16ConstructorMethodOpt, s16ConstructorResOpt)),
+      s32.ids ~> ((s32ConstructorMethodOpt, s32ConstructorResOpt)),
+      s64.ids ~> ((s64ConstructorMethodOpt, s64ConstructorResOpt)),
+      u8.ids  ~> ((u8ConstructorMethodOpt , u8ConstructorResOpt )),
+      u16.ids ~> ((u16ConstructorMethodOpt, u16ConstructorResOpt)),
+      u32.ids ~> ((u32ConstructorMethodOpt, u32ConstructorResOpt)),
+      u64.ids ~> ((u64ConstructorMethodOpt, u64ConstructorResOpt)),
+      f32.ids ~> ((f32ConstructorMethodOpt, f32ConstructorResOpt)),
+      f64.ids ~> ((f64ConstructorMethodOpt, f64ConstructorResOpt)),
+      r.ids   ~> ((rConstructorMethodOpt  , rConstructorResOpt  ))
+    )
   // @formatter:on
 
 }

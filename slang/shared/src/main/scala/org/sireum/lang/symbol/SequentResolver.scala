@@ -36,8 +36,8 @@ import org.sireum.lang.util.Reporter
 
 object SequentResolver {
 
-  @datatype class QScope(nameMap: HashMap[String, Id],
-                         outerOpt: Option[QScope]) {
+  @datatype class QScope(nameMap: HashMap[String, Id], outerOpt: Option[QScope]) {
+
     @pure def resolve(name: String): Option[Id] = {
       nameMap.get(name) match {
         case Some(id) => return Some(id)
@@ -50,11 +50,12 @@ object SequentResolver {
     }
   }
 
-  @record class DeclResolver(var scope: QScope,
-                             var freeVarMap: HashMap[String, (Id, Z)],
-                             var hasQuant: B,
-                             reporter: Reporter)
-    extends MTransformer.PrePost {
+  @record class DeclResolver(
+    var scope: QScope,
+    var freeVarMap: HashMap[String, (Id, Z)],
+    var hasQuant: B,
+    reporter: Reporter
+  ) extends MTransformer.PrePost {
 
     override def preExpQuant(o: Quant): MTransformer.PreResult[Exp] = {
       hasQuant = T
@@ -62,14 +63,19 @@ object SequentResolver {
 
       for (vf <- o.varFragments) {
         vf.domainOpt match {
-          case Some(domain) => reporter.error(domain.attr.posOpt, resolverKind, s"Predicate logic sequents cannot have quantified variable domains.")
+          case Some(domain) =>
+            reporter.error(
+              domain.attr.posOpt,
+              resolverKind,
+              s"Predicate logic sequents cannot have quantified variable domains."
+            )
           case _ =>
         }
         for (id <- vf.ids) {
           val key = id.value
           newScope.resolve(key) match {
             case Some(_) => reporter.error(id.attr.posOpt, resolverKind, s"$key has been previously declared.")
-            case _ => newScope = newScope(nameMap = newScope.nameMap.put(key, id))
+            case _ => newScope = newScope(nameMap = newScope.nameMap + key ~> id)
           }
         }
       }
@@ -80,7 +86,9 @@ object SequentResolver {
     override def postExpQuant(o: Quant): MOption[Exp] = {
       scope.outerOpt match {
         case Some(outer) => scope = outer
-        case _ => reporter.internalError(o.attr.posOpt, resolverKind, s"Unexpected scoping situation when resolving quantification.")
+        case _ =>
+          reporter
+            .internalError(o.attr.posOpt, resolverKind, s"Unexpected scoping situation when resolving quantification.")
       }
       return MNone()
     }
@@ -89,13 +97,20 @@ object SequentResolver {
       val id = o.id
       val k = id.value
       scope.resolve(k) match {
-        case Some(_) => reporter.error(o.attr.posOpt, resolverKind, s"Quantified variable '$k' cannot be used as a function/predicate.")
+        case Some(_) =>
+          reporter
+            .error(o.attr.posOpt, resolverKind, s"Quantified variable '$k' cannot be used as a function/predicate.")
         case _ =>
           freeVarMap.get(k) match {
-            case Some((_, n)) => if (n != o.args.size) {
-              reporter.error(o.attr.posOpt, resolverKind, s"Inconsistent usage of '$k' with different numbers of arguments.")
-            }
-            case _ => freeVarMap = freeVarMap.put(k, (id, o.args.size))
+            case Some((_, n)) =>
+              if (n != o.args.size) {
+                reporter.error(
+                  o.attr.posOpt,
+                  resolverKind,
+                  s"Inconsistent usage of '$k' with different numbers of arguments."
+                )
+              }
+            case _ => freeVarMap = freeVarMap + k ~> ((id, o.args.size))
           }
       }
       for (arg <- o.args) {
@@ -115,19 +130,25 @@ object SequentResolver {
           freeVarMap.get(k) match {
             case Some((_, n)) =>
               if (n != 0) {
-                reporter.error(o.attr.posOpt, resolverKind, s"Inconsistent usage of '$k' as both a variable and a function/predicate.")
+                reporter.error(
+                  o.attr.posOpt,
+                  resolverKind,
+                  s"Inconsistent usage of '$k' as both a variable and a function/predicate."
+                )
               }
-            case _ => freeVarMap = freeVarMap.put(k, (id, 0))
+            case _ => freeVarMap = freeVarMap + k ~> ((id, 0))
           }
       }
       return PreResult(F, MNone())
     }
   }
 
-  def resolveDeclExp(scope: QScope,
-                     freeVarMap: HashMap[String, (Id, Z)],
-                     reporter: Reporter,
-                     e: Exp): (B, HashMap[String, (Id, Z)]) = {
+  def resolveDeclExp(
+    scope: QScope,
+    freeVarMap: HashMap[String, (Id, Z)],
+    reporter: Reporter,
+    e: Exp
+  ): (B, HashMap[String, (Id, Z)]) = {
     val dr = DeclResolver(scope, freeVarMap, F, reporter)
     MTransformer(dr).transformExp(e)
     return (dr.hasQuant, dr.freeVarMap)

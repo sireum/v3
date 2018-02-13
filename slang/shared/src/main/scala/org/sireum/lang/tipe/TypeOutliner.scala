@@ -153,7 +153,7 @@ object TypeOutliner {
           case _ => None()
         }
         infoOpt match {
-          case Some(inf) => gnm = gnm.put(info.name, inf)
+          case Some(inf) => gnm = gnm + info.name ~> inf
           case _ =>
         }
       }
@@ -296,7 +296,7 @@ object TypeOutliner {
       }
     }
 
-    return (th: TypeHierarchy) => (th(nameMap = th.nameMap.putAll(infos).put(info.name, info(outlined = T))), reporter)
+    return (th: TypeHierarchy) => (th(nameMap = th.nameMap ++ infos + info.name ~> info(outlined = T)), reporter)
   }
 
   @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
@@ -312,7 +312,7 @@ object TypeOutliner {
       }
       r = r :+ ((info.name, newInfo))
     }
-    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.putAll(r)), reporter)
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap ++ r), reporter)
   }
 
   @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
@@ -330,7 +330,7 @@ object TypeOutliner {
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
     val newInfo =
       info(outlined = T, ancestors = ancestors, specVars = specVars, specMethods = specMethods, methods = methods)
-    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
 
   @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
@@ -357,7 +357,7 @@ object TypeOutliner {
           paramTypes = paramTypes :+ t
           newParams = newParams :+ p(tipe = newTipe)
           if (!p.isHidden) {
-            extractorTypeMap = extractorTypeMap.put(p.id.value, t)
+            extractorTypeMap = extractorTypeMap + p.id.value ~> t
           }
         case _ =>
       }
@@ -395,7 +395,7 @@ object TypeOutliner {
           methods = methods,
           ast = info.ast(params = newParams)
         )
-    return (th: TypeHierarchy) => (th(typeMap = th.typeMap.put(info.name, newInfo)), reporter)
+    return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
 
   def outlineMethodSig(scope: Scope, sig: AST.MethodSig, reporter: Reporter): Option[(AST.MethodSig, ISZ[String])] = {
@@ -453,7 +453,7 @@ object TypeOutliner {
       val tipeOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
       tipeOpt match {
         case Some(tipe) if tipe.typedOpt.nonEmpty =>
-          specVars = specVars.put(id, info(ast = sv(tipe = tipe), typedOpt = tipe.typedOpt))
+          specVars = specVars + id ~> info(ast = sv(tipe = tipe), typedOpt = tipe.typedOpt)
         case _ =>
       }
     }
@@ -469,7 +469,7 @@ object TypeOutliner {
       val tipeOpt = typeHierarchy.typed(scope, tpe, reporter)
       tipeOpt match {
         case Some(tipe) =>
-          vars = vars.put(id, info(ast = v(tipeOpt = Some(tipe)), typedOpt = tipe.typedOpt))
+          vars = vars + id ~> info(ast = v(tipeOpt = Some(tipe)), typedOpt = tipe.typedOpt)
         case _ =>
       }
     }
@@ -484,9 +484,7 @@ object TypeOutliner {
       val sigOpt = outlineMethodSig(scope, sm.sig, reporter)
       sigOpt match {
         case Some((sig, tVars)) =>
-          specMethods = specMethods.put(
-            id,
-            info(
+          specMethods = specMethods + id ~> info(
               ast = sm(sig = sig),
               typedOpt = Some(
                 AST.Typed.Method(
@@ -501,7 +499,6 @@ object TypeOutliner {
                 )
               )
             )
-          )
         case _ =>
       }
     }
@@ -516,9 +513,7 @@ object TypeOutliner {
       val sigOpt = outlineMethodSig(scope, m.sig, reporter)
       sigOpt match {
         case Some((sig, tVars)) =>
-          methods = methods.put(
-            id,
-            info(
+          methods = methods + id ~> info(
               ast = m(sig = sig),
               typedOpt = Some(
                 AST.Typed.Method(
@@ -533,7 +528,6 @@ object TypeOutliner {
                 )
               )
             )
-          )
         case _ =>
       }
     }
@@ -660,10 +654,10 @@ object TypeOutliner {
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
         if (substMap.isEmpty) {
-          specVars = specVars.put(id, info)
+          specVars = specVars + id ~> info
         } else {
           sv = sv(tipe = sv.tipe.typed(sv.tipe.typedOpt.get.subst(substMap)))
-          specVars = specVars.put(id, info(ast = sv, typedOpt = sv.tipe.typedOpt))
+          specVars = specVars + id ~> info(ast = sv, typedOpt = sv.tipe.typedOpt)
         }
       }
     }
@@ -678,11 +672,11 @@ object TypeOutliner {
           if (v.initOpt.nonEmpty) {
             v = v(initOpt = None())
           }
-          vars = vars.put(id, info(ast = v))
+          vars = vars + id ~> info(ast = v)
         } else {
           val t = v.tipeOpt.get.typed(v.tipeOpt.get.typedOpt.get.subst(substMap))
           v = v(tipeOpt = Some(t), initOpt = None())
-          vars = vars.put(id, info(ast = v, typedOpt = t.typedOpt))
+          vars = vars + id ~> info(ast = v, typedOpt = t.typedOpt)
         }
       }
     }
@@ -701,7 +695,7 @@ object TypeOutliner {
           if (sm.defs.nonEmpty || sm.where.nonEmpty) {
             sm = sm(defs = ISZ(), where = ISZ())
           }
-          specMethods = specMethods.put(id, info(ast = sm))
+          specMethods = specMethods + id ~> info(ast = sm)
         } else {
           var params = ISZ[AST.Param]()
           for (param <- sm.sig.params) {
@@ -713,7 +707,7 @@ object TypeOutliner {
               returnType = sm.sig.returnType.typed(sm.sig.returnType.typedOpt.get.subst(substMap))
             )
           )
-          specMethods = specMethods.put(id, info(ast = sm, typedOpt = Some(sm.sig.funType)))
+          specMethods = specMethods + id ~> info(ast = sm, typedOpt = Some(sm.sig.funType))
         }
       }
     }
@@ -844,11 +838,8 @@ object TypeOutliner {
               }
             case _ =>
               if (substMap.isEmpty) {
-                methods = methods.put(
-                  id,
-                  if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None()))
-                  else info
-                )
+                methods = methods + id ~>
+                    (if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None())) else info)
               } else {
                 var m = pm
                 var params = ISZ[AST.Param]()
@@ -862,7 +853,7 @@ object TypeOutliner {
                     returnType = m.sig.returnType.typed(m.sig.returnType.typedOpt.get.subst(substMap))
                   )
                 )
-                methods = methods.put(id, info(ast = m, typedOpt = Some(info.typedOpt.get.subst(substMap))))
+                methods = methods + id ~> info(ast = m, typedOpt = Some(info.typedOpt.get.subst(substMap)))
               }
           }
       }
@@ -882,9 +873,9 @@ object TypeOutliner {
                       TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                     substMapOpt match {
                       case Some(substMap) =>
-                        ancestors = ancestors.add(ti.tpe.subst(substMap))
+                        ancestors = ancestors + ti.tpe.subst(substMap)
                         for (tpe <- ti.ancestors) {
-                          ancestors = ancestors.add(tpe.subst(substMap))
+                          ancestors = ancestors + tpe.subst(substMap)
                         }
                         for (p <- ti.specVars.values) {
                           inheritSpecVar(p, parent.attr.posOpt, substMap)
@@ -902,9 +893,9 @@ object TypeOutliner {
                       TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
                     substMapOpt match {
                       case Some(substMap) =>
-                        ancestors = ancestors.add(ti.tpe.subst(substMap))
+                        ancestors = ancestors + ti.tpe.subst(substMap)
                         for (tpe <- ti.ancestors) {
-                          ancestors = ancestors.add(tpe.subst(substMap))
+                          ancestors = ancestors + tpe.subst(substMap)
                         }
                         for (p <- ti.specVars.values) {
                           inheritSpecVar(p, parent.attr.posOpt, substMap)

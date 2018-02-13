@@ -55,7 +55,7 @@ object TypeChecker {
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ())
 
   val builtInMethods: HashSet[String] =
-    HashSet.empty[String].addAll(ISZ("assert", "assume", "println", "print", "eprintln", "eprint", "halt"))
+    HashSet ++ ISZ("assert", "assume", "println", "print", "eprintln", "eprint", "halt")
   val assertResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("assert"))
 
   val assertume1TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, F, ISZ(AST.Typed.b), AST.Typed.unit))
@@ -78,44 +78,40 @@ object TypeChecker {
   val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
   val applyResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("apply"))
 
-  val unopResOpt: HashMap[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]] = {
-    HashMap
-      .empty[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]]
-      .put(AST.Exp.UnaryOp.Plus, Some(AST.ResolvedInfo.BuiltIn("+")))
-      .put(AST.Exp.UnaryOp.Minus, Some(AST.ResolvedInfo.BuiltIn("-")))
-      .put(AST.Exp.UnaryOp.Not, Some(AST.ResolvedInfo.BuiltIn("!")))
-      .put(AST.Exp.UnaryOp.Complement, Some(AST.ResolvedInfo.BuiltIn("~")))
-  }
+  val unopResOpt: HashMap[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]] = HashMap ++ ISZ(
+    AST.Exp.UnaryOp.Plus ~> Some(AST.ResolvedInfo.BuiltIn("+")),
+    AST.Exp.UnaryOp.Minus ~> Some(AST.ResolvedInfo.BuiltIn("-")),
+    AST.Exp.UnaryOp.Not ~> Some(AST.ResolvedInfo.BuiltIn("!")),
+    AST.Exp.UnaryOp.Complement ~> Some(AST.ResolvedInfo.BuiltIn("~"))
+  )
 
-  val binopResOpt: HashMap[String, Option[AST.ResolvedInfo]] = {
-    HashMap
-      .empty[String, Option[AST.ResolvedInfo]]
-      .put("+", Some(AST.ResolvedInfo.BuiltIn("+")))
-      .put("-", Some(AST.ResolvedInfo.BuiltIn("-")))
-      .put("*", Some(AST.ResolvedInfo.BuiltIn("*")))
-      .put("/", Some(AST.ResolvedInfo.BuiltIn("/")))
-      .put("%", Some(AST.ResolvedInfo.BuiltIn("%")))
-      .put("==", Some(AST.ResolvedInfo.BuiltIn("==")))
-      .put("!=", Some(AST.ResolvedInfo.BuiltIn("!=")))
-      .put("<<", Some(AST.ResolvedInfo.BuiltIn("<<")))
-      .put(">>", Some(AST.ResolvedInfo.BuiltIn(">>")))
-      .put(">>>", Some(AST.ResolvedInfo.BuiltIn(">>>")))
-      .put("<", Some(AST.ResolvedInfo.BuiltIn("<")))
-      .put("<=", Some(AST.ResolvedInfo.BuiltIn("<=")))
-      .put(">", Some(AST.ResolvedInfo.BuiltIn(">")))
-      .put(">=", Some(AST.ResolvedInfo.BuiltIn(">=")))
-      .put("&", Some(AST.ResolvedInfo.BuiltIn("&")))
-      .put("|", Some(AST.ResolvedInfo.BuiltIn("|")))
-      .put("|^", Some(AST.ResolvedInfo.BuiltIn("|^")))
-      .put("->", Some(AST.ResolvedInfo.BuiltIn("->")))
-      .put("&&", Some(AST.ResolvedInfo.BuiltIn("&&")))
-      .put("||", Some(AST.ResolvedInfo.BuiltIn("||")))
-      .put(":+", Some(AST.ResolvedInfo.BuiltIn(":+")))
-      .put("+:", Some(AST.ResolvedInfo.BuiltIn("+:")))
-      .put("++", Some(AST.ResolvedInfo.BuiltIn("++")))
-      .put("--", Some(AST.ResolvedInfo.BuiltIn("--")))
-      .put("~>", Some(AST.ResolvedInfo.BuiltIn("~>")))
-  }
+  val binopResOpt: HashMap[String, Option[AST.ResolvedInfo]] = HashMap ++ ISZ(
+    string"+" ~> Some(AST.ResolvedInfo.BuiltIn("+")),
+    string"-" ~> Some(AST.ResolvedInfo.BuiltIn("-")),
+    string"*" ~> Some(AST.ResolvedInfo.BuiltIn("*")),
+    string"/" ~> Some(AST.ResolvedInfo.BuiltIn("/")),
+    string"%" ~> Some(AST.ResolvedInfo.BuiltIn("%")),
+    string"==" ~> Some(AST.ResolvedInfo.BuiltIn("==")),
+    string"!=" ~> Some(AST.ResolvedInfo.BuiltIn("!=")),
+    string"<<" ~> Some(AST.ResolvedInfo.BuiltIn("<<")),
+    string">>" ~> Some(AST.ResolvedInfo.BuiltIn(">>")),
+    string">>>" ~> Some(AST.ResolvedInfo.BuiltIn(">>>")),
+    string"<" ~> Some(AST.ResolvedInfo.BuiltIn("<")),
+    string"<=" ~> Some(AST.ResolvedInfo.BuiltIn("<=")),
+    string">" ~> Some(AST.ResolvedInfo.BuiltIn(">")),
+    string">=" ~> Some(AST.ResolvedInfo.BuiltIn(">=")),
+    string"&" ~> Some(AST.ResolvedInfo.BuiltIn("&")),
+    string"|" ~> Some(AST.ResolvedInfo.BuiltIn("|")),
+    string"|^" ~> Some(AST.ResolvedInfo.BuiltIn("|^")),
+    string"->" ~> Some(AST.ResolvedInfo.BuiltIn("->")),
+    string"&&" ~> Some(AST.ResolvedInfo.BuiltIn("&&")),
+    string"||" ~> Some(AST.ResolvedInfo.BuiltIn("||")),
+    string":+" ~> Some(AST.ResolvedInfo.BuiltIn(":+")),
+    string"+:" ~> Some(AST.ResolvedInfo.BuiltIn("+:")),
+    string"++" ~> Some(AST.ResolvedInfo.BuiltIn("++")),
+    string"--" ~> Some(AST.ResolvedInfo.BuiltIn("--")),
+    string"~>" ~> Some(AST.ResolvedInfo.BuiltIn("~>"))
+  )
 
   var _libraryCheckerReporter: Option[(TypeChecker, AccumulatingReporter)] =
     None()
@@ -154,7 +150,7 @@ object TypeChecker {
     }
     var substMap = HashMap.empty[String, AST.Typed]
     for (i <- z"0" until args.size) {
-      substMap = substMap.put(typeParams(i).id.value, args(i))
+      substMap = substMap + typeParams(i).id.value ~> args(i)
     }
     return Some(substMap)
   }
@@ -175,7 +171,7 @@ object TypeChecker {
     }
     var substMap = HashMap.empty[String, AST.Typed]
     for (i <- z"0" until args.size) {
-      substMap = substMap.put(m.typeParams(i), args(i))
+      substMap = substMap + m.typeParams(i) ~> args(i)
     }
     return Some(substMap)
   }
@@ -373,8 +369,8 @@ import TypeChecker._
             ok = F
           } else {
             scope = scope(
-              nameMap = scope.nameMap
-                .put(key, Info.LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+              nameMap = scope.nameMap + key ~> Info
+                .LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key)))
             )
           }
         case _ =>
@@ -505,8 +501,8 @@ import TypeChecker._
         ok = F
       } else {
         scope = scope(
-          nameMap = scope.nameMap
-            .put(key, Info.LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+          nameMap = scope.nameMap + key ~> Info
+            .LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key)))
         )
       }
     }
@@ -880,7 +876,7 @@ import TypeChecker._
               val size = typeArgs.size
               var i = 0
               while (i < size) {
-                sm = sm.put(t.typeParams(i), typeArgs(i))
+                sm = sm + t.typeParams(i) ~> typeArgs(i)
                 i = i + 1
               }
               sm
@@ -1012,15 +1008,21 @@ import TypeChecker._
         case receiverType: AST.Typed.Package =>
           val r = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
           if (r._1.isEmpty) {
-            reporter.error(ident.attr.posOpt, typeCheckerKind,
-              st"'$id' is not a member of package '${(receiverType.name, ".")}'.".render)
+            reporter.error(
+              ident.attr.posOpt,
+              typeCheckerKind,
+              st"'$id' is not a member of package '${(receiverType.name, ".")}'.".render
+            )
           }
           return r
         case receiverType: AST.Typed.Object =>
           val r = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
           if (r._1.isEmpty) {
-            reporter.error(ident.attr.posOpt, typeCheckerKind,
-              st"'$id' is not a member of object '${(receiverType.name, ".")}'.".render)
+            reporter.error(
+              ident.attr.posOpt,
+              typeCheckerKind,
+              st"'$id' is not a member of object '${(receiverType.name, ".")}'.".render
+            )
           }
           return r
         case receiverType: AST.Typed.Enum =>
@@ -1111,11 +1113,14 @@ import TypeChecker._
               case Some(receiverType) =>
                 val (typedOpt, resOpt) =
                   checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
-                (exp(
-                  targs = newTargs,
-                  receiverOpt = Some(newReceiver),
-                  attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)
-                ), typedOpt)
+                (
+                  exp(
+                    targs = newTargs,
+                    receiverOpt = Some(newReceiver),
+                    attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)
+                  ),
+                  typedOpt
+                )
               case _ =>
                 (exp(targs = newTargs, receiverOpt = Some(newReceiver)), None[AST.Typed]())
             }
@@ -1473,10 +1478,10 @@ import TypeChecker._
             case _ =>
               typeHierarchy.typeMap.get(tpe.ids) match {
                 case Some(info: TypeInfo.AbstractDatatype) if !info.ast.isRoot =>
-                  val argNameSet = HashSSet.emptyInit[String](argNames.size).addAll(argNames)
+                  val argNameSet = HashSSet.emptyInit[String](argNames.size) ++ argNames
                   val params = info.ast.params.withFilter(p => argNameSet.contains(p.id.value))
                   if (argNameSet.size != params.size) {
-                    val names = argNameSet.removeAll(info.ast.params.map(p => p.id.value))
+                    val names = argNameSet -- info.ast.params.map(p => p.id.value)
                     reporter.error(
                       posOpt,
                       typeCheckerKind,
@@ -1540,7 +1545,7 @@ import TypeChecker._
           while (i < size) {
             val (newArg, _) =
               checkExp(Some(funType.args(i)), scope, expArgs(i), rep)
-            args = args.put(m.paramNames(i), newArg)
+            args = args + m.paramNames(i) ~> newArg
             i = i + 1
           }
           return (make(args.values, Some(funType.ret)), Some(funType.ret))
@@ -1810,7 +1815,7 @@ import TypeChecker._
               var r = HashMap.emptyInit[String, Z](m.paramNames.size)
               var i = 0
               for (name <- m.paramNames) {
-                r = r.put(name, i)
+                r = r + name ~> i
                 i = i + 1
               }
               r
@@ -1831,7 +1836,7 @@ import TypeChecker._
                     s"An argument for parameter '$name' has previously been supplied."
                   )
                 }
-                defined = defined.add(name)
+                defined = defined + name
                 nameToIndexMap.get(name) match {
                   case Some(n) => r(n) = na.arg
                   case _ =>
@@ -2273,8 +2278,8 @@ import TypeChecker._
             ok = F
           } else {
             scope = scope(
-              nameMap = scope.nameMap
-                .put(key, Info.LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key))))
+              nameMap = scope.nameMap + key ~> Info
+                .LocalVar(context :+ key, F, id, tOpt, Some(AST.ResolvedInfo.LocalVar(context, key)))
             )
           }
         case _ =>
@@ -2734,9 +2739,7 @@ import TypeChecker._
             case Some(_) => expectedOpt
             case _ => tOpt
           }
-          val newScope = scope(
-            nameMap = scope.nameMap.put(key, Info.LocalVar(name, stmt.isVal, r.id, typedOpt, resOpt))
-          )
+          val newScope = scope(nameMap = scope.nameMap + key ~> Info.LocalVar(name, stmt.isVal, r.id, typedOpt, resOpt))
           val newStmt = r(initOpt = Some(rhs))
           return (Some(newScope), newStmt)
         case _ =>
@@ -2999,7 +3002,7 @@ import TypeChecker._
           if (value != v) {
             return None()
           }
-        case _ => res = res.put(key, value)
+        case _ => res = res + key ~> value
       }
     }
     return Some(res)
@@ -3021,7 +3024,7 @@ import TypeChecker._
     }
     (expected, tpe) match {
       case (_, tpe: AST.Typed.TypeVar) =>
-        return Some(HashMap.empty[String, AST.Typed].put(tpe.id, expected))
+        return Some(HashMap.empty[String, AST.Typed] + tpe.id ~> expected)
       case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
         val rt: AST.Typed.Name = if (allowSubType) {
           if (typeHierarchy.isSubType(tpe, expected)) {

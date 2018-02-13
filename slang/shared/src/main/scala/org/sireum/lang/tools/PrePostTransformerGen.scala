@@ -180,7 +180,7 @@ object PrePostTransformerGen {
 
       val coll = s"${if (isImmutableCollection) "IS" else "MS"}$indexType"
       if (!collAdded.contains(coll)) {
-        collAdded = collAdded.add(coll)
+        collAdded = collAdded + coll
         transformHelpers = transformHelpers :+
           (if (isImmutableCollection) template.transformIS(indexType)
           else template.transformMS(indexType))
@@ -282,7 +282,7 @@ object PrePostTransformerGen {
         if (specificAdded.contains(adts)) {
           return
         }
-        specificAdded = specificAdded.add(adts)
+        specificAdded = specificAdded + adts
         val adTypeName = typeName(packageName, name)
         val ac = genAdtChild(ti)
         transformSpecificMethods = transformSpecificMethods :+

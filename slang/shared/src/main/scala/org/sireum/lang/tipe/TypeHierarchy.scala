@@ -142,12 +142,12 @@ object TypeHierarchy {
       t match {
         case t: AST.Typed.Name =>
           typeMap.get(t.ids) match {
-            case Some(ti: TypeInfo.TypeAlias) => resolveAlias(ti, seen.add(info.name))
+            case Some(ti: TypeInfo.TypeAlias) => resolveAlias(ti, seen + info.name)
             case _ =>
           }
         case _ =>
       }
-      r = r(aliases = r.aliases.put(TypeHierarchy.TypeName(typed), t))
+      r = r(aliases = r.aliases + TypeHierarchy.TypeName(typed) ~> t)
       return t
     }
 
@@ -327,8 +327,8 @@ object TypeHierarchy {
     poset.glb(tns) match {
       case Some(glb) =>
         val (tpe, ancestors): (AST.Typed, HashSet[AST.Typed.Name]) = typeMap.get(glb.t.ids) match {
-          case Some(info: TypeInfo.Sig) => (info.tpe, HashSet.empty[AST.Typed.Name].addAll(info.ancestors))
-          case Some(info: TypeInfo.AbstractDatatype) => (info.tpe, HashSet.empty[AST.Typed.Name].addAll(info.ancestors))
+          case Some(info: TypeInfo.Sig) => (info.tpe, HashSet.empty[AST.Typed.Name] ++ info.ancestors)
+          case Some(info: TypeInfo.AbstractDatatype) => (info.tpe, HashSet.empty[AST.Typed.Name] ++ info.ancestors)
           case _ => halt(s"Unexpected situation while computing the greatest lower bound of { '${(ts, "', '")}' }.")
         }
         for (t <- typeNames) {
