@@ -38,9 +38,22 @@ class TypeCheckerTest extends SireumSpec {
 
     implicit val _spec: SireumSpec = this
 
+
     "Passing" - {
 
       "Worksheet" - {
+
+        *(passingWorksheet("""import org.sireum._
+                             |val b = Bag.of[Z] + 1 +# 2 ~> 3
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val b = Bag ++ ISZ(1, 2, 3)
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
+                             |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1).map(x => x + 2)
+                             |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |import org.sireum.Z8._
@@ -271,9 +284,8 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(failingWorksheet("""import org.sireum._
-                             |val zs: ZS = ZS(1, 2, 3).map(x => x + 1)
+                             |val zs = ZS(1, 2, 3).map(x => x + 1)
                              |""".stripMargin, "Explicit type"))
-
 
         *(failingWorksheet("""import org.sireum._
                              |val x: Option[Z] = None()

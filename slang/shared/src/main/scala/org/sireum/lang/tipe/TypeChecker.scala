@@ -78,6 +78,45 @@ object TypeChecker {
   val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
   val applyResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("apply"))
 
+  val unopResOpt: HashMap[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]] = {
+    HashMap
+      .empty[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]]
+      .put(AST.Exp.UnaryOp.Plus, Some(AST.ResolvedInfo.BuiltIn("+")))
+      .put(AST.Exp.UnaryOp.Minus, Some(AST.ResolvedInfo.BuiltIn("-")))
+      .put(AST.Exp.UnaryOp.Not, Some(AST.ResolvedInfo.BuiltIn("!")))
+      .put(AST.Exp.UnaryOp.Complement, Some(AST.ResolvedInfo.BuiltIn("~")))
+  }
+
+  val binopResOpt: HashMap[String, Option[AST.ResolvedInfo]] = {
+    HashMap
+      .empty[String, Option[AST.ResolvedInfo]]
+      .put("+", Some(AST.ResolvedInfo.BuiltIn("+")))
+      .put("-", Some(AST.ResolvedInfo.BuiltIn("-")))
+      .put("*", Some(AST.ResolvedInfo.BuiltIn("*")))
+      .put("/", Some(AST.ResolvedInfo.BuiltIn("/")))
+      .put("%", Some(AST.ResolvedInfo.BuiltIn("%")))
+      .put("==", Some(AST.ResolvedInfo.BuiltIn("==")))
+      .put("!=", Some(AST.ResolvedInfo.BuiltIn("!=")))
+      .put("<<", Some(AST.ResolvedInfo.BuiltIn("<<")))
+      .put(">>", Some(AST.ResolvedInfo.BuiltIn(">>")))
+      .put(">>>", Some(AST.ResolvedInfo.BuiltIn(">>>")))
+      .put("<", Some(AST.ResolvedInfo.BuiltIn("<")))
+      .put("<=", Some(AST.ResolvedInfo.BuiltIn("<=")))
+      .put(">", Some(AST.ResolvedInfo.BuiltIn(">")))
+      .put(">=", Some(AST.ResolvedInfo.BuiltIn(">=")))
+      .put("&", Some(AST.ResolvedInfo.BuiltIn("&")))
+      .put("|", Some(AST.ResolvedInfo.BuiltIn("|")))
+      .put("|^", Some(AST.ResolvedInfo.BuiltIn("|^")))
+      .put("->", Some(AST.ResolvedInfo.BuiltIn("->")))
+      .put("&&", Some(AST.ResolvedInfo.BuiltIn("&&")))
+      .put("||", Some(AST.ResolvedInfo.BuiltIn("||")))
+      .put(":+", Some(AST.ResolvedInfo.BuiltIn(":+")))
+      .put("+:", Some(AST.ResolvedInfo.BuiltIn("+:")))
+      .put("++", Some(AST.ResolvedInfo.BuiltIn("++")))
+      .put("--", Some(AST.ResolvedInfo.BuiltIn("--")))
+      .put("~>", Some(AST.ResolvedInfo.BuiltIn("~>")))
+  }
+
   var _libraryCheckerReporter: Option[(TypeChecker, AccumulatingReporter)] =
     None()
 
@@ -516,7 +555,7 @@ import TypeChecker._
           return (exp(context = context, params = newParams, exp = newExp, attr = exp.attr(typedOpt = tOpt)), tOpt)
         case _ =>
           for (p <- exp.params if p.tipeOpt.isEmpty) {
-            reporter.error(p.id.attr.posOpt, typeCheckerKind, "Explicit type is required.")
+            reporter.error(p.id.attr.posOpt, typeCheckerKind, "Explicit type for the lambda expression is required.")
           }
           return (exp, None())
       }
@@ -629,20 +668,17 @@ import TypeChecker._
               }
               if (exp.op == AST.Exp.UnaryOp.Complement &&
                 !(kind == BasicKind.B || kind == BasicKind.Bits)) {
-                reporter.error(exp.posOpt, typeCheckerKind, st"Undefined unary operation ~ on 'tpe'.".render)
+                reporter.error(exp.posOpt, typeCheckerKind, st"Undefined unary operation ~ on '$expType'.".render)
                 return (newUnaryExp, None())
               }
               var r = newUnaryExp
               val tOpt: Option[AST.Typed] = Some(expType)
-              r = r(attr = r.attr(typedOpt = tOpt))
+              r = r(attr = r.attr(typedOpt = tOpt, resOpt = unopResOpt.get(exp.op).get))
               return (r, tOpt)
             case _ =>
-              // TODO: resolve unary_<op> on <expType>
-              reporter.error(
-                exp.posOpt,
-                typeCheckerKind,
-                st"Undefined unary operation ${AST.Util.unop(exp.op)} on '$expType'.".render
-              )
+              val (typedOpt, resOpt) =
+                checkSelectH(expType, AST.Id(AST.Util.unopId(exp.op), AST.Attr(exp.posOpt)), F)
+              return (exp(exp = newExp, attr = exp.attr(resOpt = resOpt, typedOpt = typedOpt)), typedOpt)
           }
         case _ =>
       }
@@ -650,79 +686,103 @@ import TypeChecker._
     }
 
     def checkBinary(exp: AST.Exp.Binary): (AST.Exp, Option[AST.Typed]) = {
-      val (left, leftTypeOpt) = checkExp(None(), scope, exp.left, reporter)
-      val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
-      var newBinaryExp = exp(left = left, right = right)
+      val (newLeft, leftTypeOpt) = checkExp(None(), scope, exp.left, reporter)
+      if (leftTypeOpt.isEmpty) {
+        return (exp(left = newLeft), None())
+      }
+      val leftType = leftTypeOpt.get
 
-      def noResult: (AST.Exp, Option[AST.Typed]) = {
-        return (newBinaryExp, None())
+      def errIncompat(rt: AST.Typed): Unit = {
+        reporter.error(
+          exp.posOpt,
+          typeCheckerKind,
+          st"Incompatible types for binary operation '$leftType' ${exp.op} '$rt'.".render
+        )
       }
 
-      (leftTypeOpt, rightTypeOpt) match {
-        case (Some(leftType), Some(rightType)) =>
-          def errIncompat(): Unit = {
-            reporter.error(
-              exp.posOpt,
-              typeCheckerKind,
-              st"Incompatible types for binary operation '$leftType' ${exp.op} '$rightType'.".render
-            )
-          }
-
-          def errUndef(): Unit = {
-            reporter.error(exp.posOpt, typeCheckerKind, st"Undefined binary operation ${exp.op} on '$leftType'".render)
-          }
-
-          if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Ne) {
+      if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Ne) {
+        val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
+        rightTypeOpt match {
+          case Some(rightType) =>
             val isCompat = typeHierarchy.isCompatible(leftType, rightType)
-            if (isCompat) {
-              newBinaryExp = newBinaryExp(
-                attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = AST.Typed.bOpt)
-              )
-              return (newBinaryExp, AST.Typed.bOpt)
-            } else {
-              errIncompat()
-              return noResult
+            if (!isCompat) {
+              errIncompat(rightType)
             }
-          } else if (exp.op == AST.Exp.BinaryOp.MapsTo) {
-            val tOpt: Option[AST.Typed] = Some(AST.Typed.Tuple(ISZ(leftType, rightType)))
-            return (
-              newBinaryExp(
-                attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
-              ),
-              tOpt
-            )
-          }
+          case _ =>
+        }
+        return (
+          exp(
+            left = newLeft,
+            right = right,
+            attr = exp.attr(resOpt = binopResOpt.get(exp.op).get, typedOpt = AST.Typed.bOpt)
+          ),
+          AST.Typed.bOpt
+        )
+      } else if (exp.op == AST.Exp.BinaryOp.MapsTo) {
+        val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
+        val tOpt: Option[AST.Typed] = rightTypeOpt match {
+          case Some(rightType) => Some(AST.Typed.Tuple(ISZ(leftType, rightType)))
+          case _ => None()
+        }
+        return (
+          exp(left = newLeft, right = right, attr = exp.attr(resOpt = binopResOpt.get(exp.op).get, typedOpt = tOpt)),
+          tOpt
+        )
+      }
 
-          val lOpt = basicKind(scope, leftType, exp.left.posOpt, reporter)
-          val rOpt = basicKind(scope, rightType, exp.right.posOpt, reporter)
-          (lOpt, rOpt) match {
-            case (Some(leftKind), Some(rightKind)) =>
-              if (leftKind != rightKind) {
-                errIncompat()
-                return noResult
+      val lOpt = basicKind(scope, leftType, exp.left.posOpt, reporter)
+
+      lOpt match {
+        case Some(leftKind) =>
+          val (newRight, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
+
+          rightTypeOpt match {
+            case Some(rightType) =>
+              def errUndef(): Unit = {
+                reporter
+                  .error(exp.posOpt, typeCheckerKind, st"Undefined binary operation ${exp.op} on '$leftType'".render)
               }
-              if ((leftKind == BasicKind.B && AST.Util.isBoolBinop(exp.op)) ||
-                (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
-                (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
-                val tOpt: Option[AST.Typed] = Some(leftType)
-                newBinaryExp = newBinaryExp(
-                  attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
-                )
-                return (newBinaryExp, tOpt)
-              } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
-                val tOpt: Option[AST.Typed] = Some(AST.Typed.b)
-                newBinaryExp = newBinaryExp(
-                  attr = newBinaryExp.attr(resOpt = AST.Exp.BinaryOp.opResOpt.get(exp.op).get, typedOpt = tOpt)
-                )
-                return (newBinaryExp, tOpt)
-              } else {
-                errUndef()
-                return noResult
+
+              val rOpt = basicKind(scope, rightType, exp.right.posOpt, reporter)
+              val tOpt: Option[AST.Typed] = rOpt match {
+                case Some(rightKind) =>
+                  if (leftKind != rightKind) {
+                    errIncompat(rightType)
+                    None()
+                  } else if ((leftKind == BasicKind.B && AST.Util.isBoolBinop(exp.op)) ||
+                    (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
+                    (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
+                    Some(leftType)
+                  } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
+                    Some(AST.Typed.b)
+                  } else {
+                    errUndef()
+                    None()
+                  }
+                case _ =>
+                  errIncompat(rightType)
+                  None()
               }
-            case _ =>
-              halt("Unimplemented") // TODO: find <op> binary methods
+              return (
+                exp(
+                  left = newLeft,
+                  right = newRight,
+                  attr = exp.attr(resOpt = binopResOpt.get(exp.op).get, typedOpt = tOpt)
+                ),
+                tOpt
+              )
+
+            case _ => return (exp(left = newLeft, right = newRight), None())
           }
-        case _ => return noResult
+        case _ =>
+          val (newInvoke, tOpt) = checkInvoke(
+            AST.Exp.Invoke(Some(exp.left), AST.Id(exp.op, AST.Attr(exp.posOpt)), ISZ(), ISZ(exp.right), exp.attr)
+          )
+          newInvoke match {
+            case newInvoke: AST.Exp.Invoke =>
+              return (exp(left = newInvoke.receiverOpt.get, right = newInvoke.args(0), attr = newInvoke.attr), tOpt)
+            case _ => halt("Unexpected situation when type checking binary expression.")
+          }
       }
     }
 
@@ -883,11 +943,11 @@ import TypeChecker._
       }
 
       def errAccess(t: AST.Typed): Unit = {
-        reporter.error(ident.attr.posOpt, typeCheckerKind, s"Cannot access '$id' from type '$t'.")
+        reporter.error(ident.attr.posOpt, typeCheckerKind, s"'$id' is not a member of type '$t'.")
       }
 
       def errTypeArgs(t: AST.Typed): Unit = {
-        reporter.error(ident.attr.posOpt, typeCheckerKind, s"Method '$id' does not accept type arguments.")
+        reporter.error(ident.attr.posOpt, typeCheckerKind, s"Member '$id' of type '$t' does not accept type arguments.")
       }
 
       @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
@@ -950,9 +1010,19 @@ import TypeChecker._
           errAccess(receiverType)
           return noResult
         case receiverType: AST.Typed.Package =>
-          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+          val r = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+          if (r._1.isEmpty) {
+            reporter.error(ident.attr.posOpt, typeCheckerKind,
+              st"'$id' is not a member of package '${(receiverType.name, ".")}'.".render)
+          }
+          return r
         case receiverType: AST.Typed.Object =>
-          return checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+          val r = checkInfoOpt(typeHierarchy.nameMap.get(receiverType.name :+ id))
+          if (r._1.isEmpty) {
+            reporter.error(ident.attr.posOpt, typeCheckerKind,
+              st"'$id' is not a member of object '${(receiverType.name, ".")}'.".render)
+          }
+          return r
         case receiverType: AST.Typed.Enum =>
           typeHierarchy.nameMap.get(receiverType.name) match {
             case Some(info: Info.Enum) =>
@@ -1041,20 +1111,17 @@ import TypeChecker._
               case Some(receiverType) =>
                 val (typedOpt, resOpt) =
                   checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
-                val newExp = exp(
+                (exp(
                   targs = newTargs,
                   receiverOpt = Some(newReceiver),
                   attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)
-                )
-                (newExp, typedOpt)
+                ), typedOpt)
               case _ =>
                 (exp(targs = newTargs, receiverOpt = Some(newReceiver)), None[AST.Typed]())
             }
           case _ =>
             val (typedOpt, resOpt) = checkId(exp.id)
-            val newExp =
-              exp(targs = newTargs, attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt))
-            (newExp, typedOpt)
+            (exp(targs = newTargs, attr = exp.attr(typedOpt = typedOpt, resOpt = resOpt)), typedOpt)
         }
       }
 
@@ -1707,7 +1774,7 @@ import TypeChecker._
         }
       }
 
-      def checkInvokeH(
+      def checkInvokeNamedH(
         tOpt: Option[AST.Typed],
         rOpt: Option[AST.ResolvedInfo],
         receiverOpt: Option[AST.Exp]
@@ -1823,11 +1890,11 @@ import TypeChecker._
           }
           val (typedOpt, resOpt) =
             checkSelectH(receiverType, exp.id, exp.targs.nonEmpty)
-          val r = checkInvokeH(typedOpt, resOpt, Some(newReceiver))
+          val r = checkInvokeNamedH(typedOpt, resOpt, Some(newReceiver))
           return r
         case _ =>
           val (typedOpt, resOpt) = checkId(exp.id)
-          val r = checkInvokeH(typedOpt, resOpt, None())
+          val r = checkInvokeNamedH(typedOpt, resOpt, None())
           return r
       }
     }
@@ -2720,7 +2787,7 @@ import TypeChecker._
           }
           def checkVar(info: Info.Var): AST.Stmt = {
             if (info.ast.isVal) {
-              reporter.error(lhs.posOpt, typeCheckerKind, s"Cannot assign to read-only variable ${lhs.id.value}.")
+              reporter.error(lhs.posOpt, typeCheckerKind, s"Cannot assign to read-only variable '${lhs.id.value}'.")
             }
             val r = checkAssignH(info.typedOpt, info.resOpt)
             return r
@@ -2728,13 +2795,13 @@ import TypeChecker._
           scope.resolveName(typeHierarchy.nameMap, ISZ(lhs.id.value)) match {
             case Some(info: Info.LocalVar) =>
               if (info.isVal) {
-                reporter.error(lhs.posOpt, typeCheckerKind, s"Cannot assign to read-only variable ${lhs.id.value}.")
+                reporter.error(lhs.posOpt, typeCheckerKind, s"Cannot assign to read-only variable '${lhs.id.value}'.")
               }
               val r = checkAssignH(info.typedOpt, info.resOpt)
               return r
             case Some(info: Info.Var) => val r = checkVar(info); return r
             case Some(info) =>
-              reporter.error(lhs.posOpt, typeCheckerKind, st"Cannot assign to ${(info.name, ".")}.".render)
+              reporter.error(lhs.posOpt, typeCheckerKind, st"Cannot assign to '${(info.name, ".")}'.".render)
               val (newRhs, _) = checkAssignExp(None(), scope, stmt.rhs, reporter)
               return stmt(rhs = newRhs)
             case _ =>
@@ -2743,14 +2810,14 @@ import TypeChecker._
                   typeHierarchy.typeMap.get(t.ids) match {
                     case Some(info: TypeInfo.AbstractDatatype) =>
                       info.vars.get(lhs.id.value) match {
-                        case Some(info) => val r = checkVar(info); return r
+                        case Some(varInfo) => val r = checkVar(varInfo); return r
                         case _ =>
                       }
                     case _ =>
                   }
                 case _ =>
               }
-              reporter.error(lhs.id.attr.posOpt, typeCheckerKind, s"Could not resolve ${lhs.id.value}.")
+              reporter.error(lhs.id.attr.posOpt, typeCheckerKind, s"Could not resolve '${lhs.id.value}'.")
               val r = partialResult()
               return r
           }
@@ -2770,7 +2837,7 @@ import TypeChecker._
                         reporter.error(
                           lhs.id.attr.posOpt,
                           typeCheckerKind,
-                          st"Cannot assign to read-only field ${lhs.id.value} of ${(info.name, ".")}.".render
+                          st"Cannot assign to val '${lhs.id.value}' of '${(info.name, ".")}'.".render
                         )
                       }
                       val (newRhs, _) = checkAssignExp(varInfo.typedOpt, scope, stmt.rhs, reporter)
@@ -2785,7 +2852,7 @@ import TypeChecker._
                       reporter.error(
                         lhs.id.attr.posOpt,
                         typeCheckerKind,
-                        st"Could not resolve field ${lhs.id.value} of ${(info.name, ".")}.".render
+                        st"'${lhs.id.value}' is not a var of '${(info.name, ".")}'.".render
                       )
                   }
                 case _ =>
@@ -2962,8 +3029,10 @@ import TypeChecker._
             return None()
           }
           typeHierarchy.typeMap.get(expected.ids) match {
-            case Some(info: TypeInfo.AbstractDatatype) => info.tpe
-            case Some(info: TypeInfo.Sig) => info.tpe
+            case Some(info: TypeInfo.AbstractDatatype) =>
+              if (info.ast.typeParams.size == tpe.args.size) tpe else info.tpe
+            case Some(info: TypeInfo.Sig) =>
+              if (info.ast.typeParams.size == tpe.args.size) tpe else info.tpe
             case _ =>
               halt(s"Unexpected situation when trying to unify $expected and $tpe")
           }
