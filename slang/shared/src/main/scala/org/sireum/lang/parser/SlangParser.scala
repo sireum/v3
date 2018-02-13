@@ -297,7 +297,7 @@ class SlangParser(
   }
 
   def translateStat(enclosing: Enclosing.Type)(stat: Stat): AST.Stmt = {
-    val r = stat match {
+    val r: AST.Stmt = stat match {
       case stat: Import => translateImport(enclosing, stat)
       case stat: Defn.Val => translateVal(enclosing, stat)
       case stat: Defn.Var => translateVar(enclosing, stat)
@@ -348,9 +348,10 @@ class SlangParser(
       case stat: Term.Do => translateDoWhile(enclosing, stat)
       case stat: Term.For => translateFor(enclosing, stat)
       case stat: Term.Return => translateReturn(enclosing, stat)
-      case stat: Term.Apply =>
-        stmtCheck(enclosing, stat, s"${syntax(stat)}")
-        AST.Stmt.Expr(translateExp(stat), attr(stat.pos))
+      case _: Term.Apply | _: Term.ApplyInfix =>
+        val term = stat.asInstanceOf[Term]
+        stmtCheck(enclosing, term, s"${syntax(stat)}")
+        AST.Stmt.Expr(translateExp(term), attr(stat.pos))
       case stat @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
