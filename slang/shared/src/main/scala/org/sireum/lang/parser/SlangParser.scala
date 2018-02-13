@@ -692,7 +692,6 @@ class SlangParser(
     val sig =
       AST.MethodSig(isPure, cid(name), ISZ(tparams.map(translateTypeParam): _*), hasParams, params, translateType(tpe))
     val purity = if (isPure) AST.Purity.Pure else AST.Purity.Impure
-    checkMethodSig(name.pos, sig)
     AST.Stmt.Method(
       purity,
       hasOverride,
@@ -702,13 +701,6 @@ class SlangParser(
       None(),
       attr(stat.pos)
     )
-  }
-
-  def checkMethodSig(pos: Position, sig: AST.MethodSig): Unit = {
-    val id = sig.id.value.value
-    if (checkSymbol(id) && sig.typeParams.nonEmpty) {
-      errorInSlang(pos, s"Method with identifier starting with a symbol cannot have type parameters")
-    }
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -844,7 +836,6 @@ class SlangParser(
                 else Some(bodyCheck(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*), ISZ()))
               )
           }
-          checkMethodSig(name.pos, sig)
           AST.Stmt.Method(purity, hasOverride, isHelper, sig, mc, bodyOpt, attr(tree.pos))
         case l @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           enclosing match {
@@ -855,7 +846,6 @@ class SlangParser(
                   "Only the @pure and/or override method modifiers are allowed for method declarations"
                 )
               }
-              checkMethodSig(name.pos, sig)
               AST.Stmt.Method(purity, hasOverride, isHelper, sig, parseContract(l), None(), attr(tree.pos))
             case _ => err()
           }
