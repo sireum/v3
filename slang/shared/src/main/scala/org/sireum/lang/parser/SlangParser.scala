@@ -62,10 +62,11 @@ object SlangParser {
     "native",
     "apply",
     "unapply",
-    "unapplySeq"
+    "unapplySeq",
+    "~>"
   )
 
-  val disallowedMethodIdEndings = Seq("old", "result", "read", "modifies", "pre", "requires", "post", "ensures", "=")
+  val disallowedMethodIdEndings = Seq("old", "result", "reads", "modifies", "pre", "requires", "post", "ensures", "=")
 
   val unaryMethods = Seq("unary_!", "unary_+", "unary_-", "unary_~")
 
@@ -126,6 +127,8 @@ object SlangParser {
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
   private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
+  private[SlangParser] lazy val emptyContract = AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
+
 }
 
 import SlangParser._
@@ -688,15 +691,23 @@ class SlangParser(
     val sig =
       AST.MethodSig(isPure, cid(name), ISZ(tparams.map(translateTypeParam): _*), hasParams, params, translateType(tpe))
     val purity = if (isPure) AST.Purity.Pure else AST.Purity.Impure
+    checkMethodSig(name.pos, sig)
     AST.Stmt.Method(
       purity,
       hasOverride,
       isHelper,
       sig,
-      AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
+      emptyContract,
       None(),
       attr(stat.pos)
     )
+  }
+
+  def checkMethodSig(pos: Position, sig: AST.MethodSig): Unit = {
+    val id = sig.id.value.value
+    if (checkSymbol(id) && sig.typeParams.nonEmpty) {
+      errorInSlang(pos, s"Method with identifier starting with a symbol cannot have type parameters")
+    }
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -810,7 +821,7 @@ class SlangParser(
           hasOverride,
           isHelper,
           sig,
-          AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
+          emptyContract,
           None(),
           attr(tree.pos)
         )
@@ -827,11 +838,12 @@ class SlangParser(
               )
             case _ =>
               (
-                AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()),
+                emptyContract,
                 if (isDiet) None[AST.Body]()
                 else Some(bodyCheck(ISZ(exp.stats.map(translateStat(Enclosing.Method)): _*), ISZ()))
               )
           }
+          checkMethodSig(name.pos, sig)
           AST.Stmt.Method(purity, hasOverride, isHelper, sig, mc, bodyOpt, attr(tree.pos))
         case l @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           enclosing match {
@@ -842,6 +854,7 @@ class SlangParser(
                   "Only the @pure and/or override method modifiers are allowed for method declarations"
                 )
               }
+              checkMethodSig(name.pos, sig)
               AST.Stmt.Method(purity, hasOverride, isHelper, sig, parseContract(l), None(), attr(tree.pos))
             case _ => err()
           }
@@ -849,18 +862,25 @@ class SlangParser(
       }
     }
 
-    if (isSpec)
+    if (isSpec) {
+      if (checkSymbol(sig.id.value.value)) {
+        error(name.pos, s"@spec methods cannot be named with an identifier starting with a symbol")
+      }
       exp match {
         case exp: Term.Name if exp.value == "$" =>
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
-        case exp @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           val (sds, wds) = parseDefs(exp)
           AST.Stmt.SpecMethod(sig, sds, wds, attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' is allowed as Slang @spec method expression.")
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
-      } else if (enclosing == Enclosing.ExtObject) {
+      }
+    } else if (enclosing == Enclosing.ExtObject) {
+      if (checkSymbol(sig.id.value.value)) {
+        error(name.pos, s"Extension methods cannot be named with an identifier starting with a symbol")
+      }
       if (isHelper)
         errorInSlang(exp.pos, s"Extension methods cannot have a @helper modifier")
       if (hasOverride)
@@ -869,13 +889,13 @@ class SlangParser(
         errorInSlang(exp.pos, s"Extension methods cannot have a @memoize modifier")
       exp match {
         case exp: Term.Name if exp.value == "$" =>
-          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+          AST.Stmt.ExtMethod(isPure, sig, emptyContract, attr(tree.pos))
         case exp @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           AST.Stmt.ExtMethod(isPure, sig, parseContract(exp), attr(tree.pos))
         case _ =>
           hasError = true
           error(exp.pos, "Only '$' or 'l\"\"\"{ ... }\"\"\"' are allowed as Slang extension method expression.")
-          AST.Stmt.ExtMethod(isPure, sig, AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), attr(tree.pos))
+          AST.Stmt.ExtMethod(isPure, sig, emptyContract, attr(tree.pos))
       }
     } else body()
   }
@@ -2362,9 +2382,9 @@ class SlangParser(
             val newBlock = tbody.copy(stats = stats.tail)
             (parseContract(l), translateAssignExp(newBlock))
           case _ =>
-            (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), translateAssignExp(tbody))
+            (emptyContract, translateAssignExp(tbody))
         }
-      case _ => (AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ()), translateAssignExp(exp.body))
+      case _ => (emptyContract, translateAssignExp(exp.body))
     }
     AST.Exp.Fun(ISZ(), ps, mc, body, typedAttr(exp.pos))
   }
@@ -2440,7 +2460,7 @@ class SlangParser(
   }
 
   def parseContract(exp: Term.Interpolate): AST.Contract = {
-    if (!checkLSyntax(exp)) return AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
+    if (!checkLSyntax(exp)) return emptyContract
     lParser(exp)(_.defContract())
   }
 
