@@ -713,7 +713,7 @@ object Exp {
     val And: String = "&"
     val Or: String = "|"
     val Xor: String = "|^"
-    val Imply: String = "$->:"
+    val Imply: String = "->"
     val CondAnd: String = "&&"
     val CondOr: String = "||"
     val Append: String = ":+"
@@ -742,7 +742,7 @@ object Exp {
         .put("&", Some(ResolvedInfo.BuiltIn("&")))
         .put("|", Some(ResolvedInfo.BuiltIn("|")))
         .put("|^", Some(ResolvedInfo.BuiltIn("|^")))
-        .put("$->:", Some(ResolvedInfo.BuiltIn("$->:")))
+        .put("->", Some(ResolvedInfo.BuiltIn("->")))
         .put("&&", Some(ResolvedInfo.BuiltIn("&&")))
         .put("||", Some(ResolvedInfo.BuiltIn("||")))
         .put(":+", Some(ResolvedInfo.BuiltIn(":+")))
