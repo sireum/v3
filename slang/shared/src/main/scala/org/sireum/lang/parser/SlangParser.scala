@@ -514,8 +514,11 @@ class SlangParser(
           r
         case pattern: Pat =>
           enclosing match {
-            case Enclosing.Method | Enclosing.Block =>
-            case _ => errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
+            case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+            case _ =>
+              if (isWorksheet)
+                errorInSlang(stat.pos, "Val pattern can only appear at the top-level, inside methods, or code blocks")
+              else errorInSlang(pattern.pos, "Val pattern can only appear inside methods or code blocks")
           }
           val pat = translatePattern(pattern)
           pat match {
@@ -609,8 +612,14 @@ class SlangParser(
           r
         case pattern: Pat =>
           enclosing match {
-            case Enclosing.Method | Enclosing.Block =>
-            case _ => errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
+            case Enclosing.Top | Enclosing.Method | Enclosing.Block =>
+            case _ =>
+              if (isWorksheet)
+                errorInSlang(
+                  pattern.pos,
+                  "Var pattern can only appear at the top-level, inside methods, or code blocks"
+                )
+              else errorInSlang(pattern.pos, "Var pattern can only appear inside methods or code blocks")
           }
           if (tpeopt.nonEmpty)
             errorInSlang(pattern.pos, "Var pattern cannot be explicitly typed")
@@ -694,15 +703,7 @@ class SlangParser(
     val sig =
       AST.MethodSig(isPure, cid(name), ISZ(tparams.map(translateTypeParam): _*), hasParams, params, translateType(tpe))
     val purity = if (isPure) AST.Purity.Pure else AST.Purity.Impure
-    AST.Stmt.Method(
-      purity,
-      hasOverride,
-      isHelper,
-      sig,
-      emptyContract,
-      None(),
-      attr(stat.pos)
-    )
+    AST.Stmt.Method(purity, hasOverride, isHelper, sig, emptyContract, None(), attr(stat.pos))
   }
 
   def translateDef(enclosing: Enclosing.Type, tree: Defn.Def): AST.Stmt = {
@@ -811,15 +812,7 @@ class SlangParser(
     def body(): AST.Stmt.Method = {
       def err(): AST.Stmt.Method = {
         errorInSlang(exp.pos, "Only block '{ ... }' is allowed for a method body")
-        AST.Stmt.Method(
-          purity,
-          hasOverride,
-          isHelper,
-          sig,
-          emptyContract,
-          None(),
-          attr(tree.pos)
-        )
+        AST.Stmt.Method(purity, hasOverride, isHelper, sig, emptyContract, None(), attr(tree.pos))
       }
 
       exp match {
@@ -862,7 +855,7 @@ class SlangParser(
       exp match {
         case exp: Term.Name if exp.value == "$" =>
           AST.Stmt.SpecMethod(sig, ISZ(), ISZ(), attr(tree.pos))
-        case exp@Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
+        case exp @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) =>
           val (sds, wds) = parseDefs(exp)
           AST.Stmt.SpecMethod(sig, sds, wds, attr(tree.pos))
         case _ =>
@@ -2275,7 +2268,10 @@ class SlangParser(
       case List(right) => AST.Exp.Binary(translateExp(t.lhs), op, translateExp(right), resolvedAttr(t.op.pos))
       case _ =>
         import org.sireum._
-        error(t.op.pos, st"Invalid righ-hand-side for '${t.op.value}': '(${(t.args.map(_.syntax), ", ")})'".render.value)
+        error(
+          t.op.pos,
+          st"Invalid righ-hand-side for '${t.op.value}': '(${(t.args.map(_.syntax), ", ")})'".render.value
+        )
         rExp
     }
   }
