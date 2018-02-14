@@ -44,6 +44,11 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |@pure def foo(x: Z): Z = { return x + 1 }
+                             |assert(foo(4) > 4)
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |val b = Bag.empty[Z] + 1 +# 2 ~> 3
                              |""".stripMargin))
 
@@ -97,22 +102,15 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet("""import org.sireum._
                              |val xOpt: Option[Z] = Some(4)
-                             |
-                             |// Note: val pattern cannot appear at the top-level
-                             |{
-                             |  val Some(x) = xOpt
-                             |  assert(x > 0)
-                             |}
+                             |val Some(x) = xOpt
+                             |assert(x > 0)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
                              |val poset = Poset[Z](HashMap.empty, HashMap.empty)
-                             |
-                             |{
-                             |  val Poset(parents, children) = poset
-                             |  val parentsTyped: HashMap[Z, HashSet[Z]] = parents
-                             |  val childrenTyped: HashMap[Z, HashSet[Z]] = children
-                             |}
+                             |val Poset(parents, children) = poset
+                             |val parentsTyped: HashMap[Z, HashSet[Z]] = parents
+                             |val childrenTyped: HashMap[Z, HashSet[Z]] = children
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -282,6 +280,16 @@ class TypeCheckerTest extends SireumSpec {
     "Failing" - {
 
       "Worksheet" - {
+
+        *(failingWorksheet("""import org.sireum._
+                             |@pure def foo(x: Z): Z = { return }
+                             |assert(foo(4) > 4)
+                             |""".stripMargin, "none found"))
+
+        *(failingWorksheet("""import org.sireum._
+                             |@pure def foo(x: Z): Unit = { return x + 1 }
+                             |foo(4)
+                             |""".stripMargin, "Expecting type 'org.sireum.Unit'"))
 
         *(failingWorksheet("""import org.sireum._
                              |val zs = ZS(1, 2, 3).map(x => x + 1)

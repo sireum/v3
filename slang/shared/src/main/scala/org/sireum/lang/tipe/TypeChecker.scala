@@ -177,39 +177,42 @@ object TypeChecker {
   }
 
   def checkWorksheet(program: AST.TopUnit.Program, reporter: Reporter): AST.TopUnit.Program = {
-    val emptyAttr = AST.Attr(None())
-    val p = program(packageName = AST.Name(ISZ(AST.Id("worksheet", emptyAttr)), emptyAttr))
     val th: TypeHierarchy = {
       val (tc, rep) = libraryCheckerReporter
       if (rep.hasIssue) {
         reporter.reports(rep.messages)
-        return p
+        return program
       }
       tc.typeHierarchy
     }
 
     val gdr = GlobalDeclarationResolver(th.nameMap, th.typeMap, reporter)
-    gdr.resolveProgram(p)
+    gdr.resolveProgram(program(body = program.body(stmts = program.body.stmts.withFilter(stmt => stmt match {
+      case _: AST.Stmt.Method => F
+      case _: AST.Stmt.Var => F
+      case _: AST.Stmt.VarPattern => F
+      case _ => T
+    }))))
 
     reporter.reports(gdr.reporter.messages)
     if (reporter.hasIssue) {
-      return p
+      return program
     }
 
     val th2 = TypeHierarchy.build(th(nameMap = gdr.globalNameMap, typeMap = gdr.globalTypeMap), reporter)
     if (reporter.hasIssue) {
-      return p
+      return program
     }
 
     val th3 = TypeOutliner.checkOutline(th2, reporter)
     if (reporter.hasIssue) {
-      return p
+      return program
     }
 
     val typeChecker = TypeChecker(th3, ISZ(), F)
     val scope = Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
-    val (_, newStmts) = typeChecker.checkStmts(None(), scope, p.body.stmts, reporter)
-    return p(body = p.body(newStmts))
+    val newBody = typeChecker.checkBody(None(), scope, program.body, reporter)
+    return program(body = newBody)
   }
 }
 
@@ -532,7 +535,7 @@ import TypeChecker._
                       reporter.error(
                         tipe.posOpt,
                         typeCheckerKind,
-                        s"Expected type '$expectedType', but '${t.typedOpt.get}' found."
+                        s"Expecting type '$expectedType', but '${t.typedOpt.get}' found."
                       )
                     }
                   case _ =>
@@ -2131,7 +2134,7 @@ import TypeChecker._
         if (typeHierarchy.isSubType(t, expected)) {
           return r
         } else {
-          reporter.error(exp.posOpt, typeCheckerKind, s"Expected type '$expected', but '$t' found.")
+          reporter.error(exp.posOpt, typeCheckerKind, s"Expecting type '$expected', but '$t' found.")
           return (r._1, None())
         }
       case _ =>
@@ -2186,7 +2189,7 @@ import TypeChecker._
             if (typeHierarchy.isSubType(t, expected)) {
               return (newAexp, r)
             } else {
-              reporter.error(newStmt.posOpt, typeCheckerKind, s"Expected type '$expected', but '$t' found")
+              reporter.error(newStmt.posOpt, typeCheckerKind, s"Expecting type '$expected', but '$t' found")
               return (newAexp, None())
             }
           case _ => return (newAexp, r)
@@ -2241,11 +2244,93 @@ import TypeChecker._
     return (Some(newScope), newStmts)
   }
 
-  def checkBody(expectedOpt: Option[AST.Typed], scope: Scope.Local, body: AST.Body, reporter: Reporter): AST.Body = {
-    val (newScopeOpt, newStmts) =
-      checkStmts(expectedOpt, scope, body.stmts, reporter)
+  def checkImport(scope: Scope.Local, stmt: AST.Stmt.Import, reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
+    // TODO: resolve import
+
+    @pure def addImport(s: Scope.Local): Scope.Local = {
+      s.outerOpt match {
+        case Some(outer: Scope.Local) => s(outerOpt = Some(addImport(outer)))
+        case Some(outer: Scope.Global) =>
+          s(outerOpt = Some(outer(imports = outer.imports :+ stmt)))
+        case _ => halt("Unexpected local scope without an outer scope.")
+      }
+    }
+
+    return (Some(addImport(scope)), stmt)
+  }
+
+  @pure def globalScope(s: Scope): Scope = {
+    s match {
+      case s: Scope.Global => return s
+      case _ => s.outerOpt match {
+        case Some(outer) => return globalScope(outer)
+        case _ => halt("Unexpected situation when type checking a body.")
+      }
+    }
+  }
+
+  def checkBody(expectedOpt: Option[AST.Typed], sc: Scope.Local, body: AST.Body, reporter: Reporter): AST.Body = {
+    val to = TypeOutliner(typeHierarchy)
+    var ok = T
+    var scope = sc
+    var stmts = ISZ[AST.Stmt]()
+    for (stmt <- body.stmts) {
+      stmt match {
+        case stmt: AST.Stmt.Import =>
+          val (newScopeOpt, newStmt) = checkImport(scope, stmt, reporter)
+          newScopeOpt match {
+            case Some(newScope) => scope = newScope
+            case _ => return body
+          }
+          stmts = stmts :+ newStmt
+        case stmt: AST.Stmt.Method =>
+          val id = stmt.sig.id.value
+          val infoOpt = to.outlineMethod(
+            Info.Method(
+              context,
+              F,
+              globalScope(scope),
+              T,
+              stmt,
+              None(),
+              Some(
+                AST.ResolvedInfo.Method(
+                  F,
+                  AST.MethodMode.Method,
+                  stmt.sig.typeParams.map(tp => tp.id.value),
+                  context,
+                  id,
+                  stmt.sig.params.map(p => p.id.value),
+                  None()
+                )
+              )
+            ),
+            reporter
+          )
+          infoOpt match {
+            case Some(info: Info.Method) =>
+              scope = scope(nameMap = scope.nameMap + id ~> info)
+              stmts = stmts :+ info.ast
+            case _ => ok = F
+          }
+        case _ => stmts = stmts :+ stmt
+      }
+    }
+    if (!ok) {
+      return body
+    }
+    scope = sc(nameMap = scope.nameMap)
+    val (newScopeOpt, newStmts) = checkStmts(expectedOpt, scope, stmts, reporter)
     val undecls: ISZ[String] = newScopeOpt match {
-      case Some(newScope) => newScope.nameMap.keys
+      case Some(newScope) =>
+        var r = ISZ[String]()
+        for (e <- newScope.nameMap.entries) {
+          e._2 match {
+            case _: Info.Method =>
+            case _ => r = r :+ e._1
+          }
+        }
+        r
       case _ => body.undecls
     }
     return body(stmts = newStmts, undecls = undecls)
@@ -2681,21 +2766,6 @@ import TypeChecker._
 
   def checkStmt(scope: Scope.Local, stmt: AST.Stmt, reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
 
-    def checkImport(stmt: AST.Stmt.Import): (Option[Scope.Local], AST.Stmt) = {
-      // TODO: resolve import
-
-      @pure def addImport(s: Scope.Local): Scope.Local = {
-        s.outerOpt match {
-          case Some(outer: Scope.Local) => s(outerOpt = Some(addImport(outer)))
-          case Some(outer: Scope.Global) =>
-            s(outerOpt = Some(outer(imports = outer.imports :+ stmt)))
-          case _ => halt("Unexpected local scope without an outer scope.")
-        }
-      }
-
-      return (Some(addImport(scope)), stmt)
-    }
-
     def checkVar(stmt: AST.Stmt.Var): (Option[Scope.Local], AST.Stmt) = {
       val key = stmt.id.value
 
@@ -2906,9 +2976,9 @@ import TypeChecker._
 
     stmt match {
 
-      case stmt: AST.Stmt.LStmt => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.LStmt => return (Some(scope), stmt) // TODO
 
-      case stmt: AST.Stmt.AbstractDatatype => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.AbstractDatatype => return (Some(scope), stmt)
 
       case stmt: AST.Stmt.Assign => val r = checkAssign(stmt); return (Some(scope), r)
 
@@ -2920,26 +2990,29 @@ import TypeChecker._
         val (newCond, _) = checkExp(AST.Typed.bOpt, scope, stmt.cond, reporter)
         return (Some(scope), stmt(cond = newCond, body = newBody))
 
-      case stmt: AST.Stmt.Enum => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Enum => return (Some(scope), stmt)
 
       case stmt: AST.Stmt.Expr => val r = checkExpr(None(), scope, stmt, reporter); return (Some(scope), r)
 
-      case stmt: AST.Stmt.ExtMethod => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.ExtMethod => return (Some(scope), stmt)
 
       case stmt: AST.Stmt.For => val r = checkFor(stmt); return (Some(scope), r)
 
       case stmt: AST.Stmt.If =>
         val r = checkIf(None(), scope, stmt, reporter); return (Some(scope), r)
 
-      case stmt: AST.Stmt.Import => val r = checkImport(stmt); return r
+      case stmt: AST.Stmt.Import => val r = checkImport(scope, stmt, reporter); return r
 
       case stmt: AST.Stmt.Match =>
         val r = checkMatch(None(), scope, stmt, reporter);
         return (Some(scope), r)
 
-      case stmt: AST.Stmt.Method => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Method =>
+        val tc = TypeChecker(typeHierarchy, context :+ stmt.sig.id.value, inSpec)
+        val r = tc.checkMethod(scope, stmt, reporter)
+        return (Some(scope), r)
 
-      case stmt: AST.Stmt.Object => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Object => return (Some(scope), stmt)
 
       case stmt: AST.Stmt.Return =>
         (scope.returnOpt, stmt.expOpt) match {
@@ -2947,7 +3020,7 @@ import TypeChecker._
             val (newExp, expTypeCond) = checkExp(tOpt, scope, exp, reporter)
             expTypeCond match {
               case Some(t) =>
-                if (typeHierarchy.isSubType(t, tOpt.get)) {
+                if (!typeHierarchy.isSubType(t, tOpt.get)) {
                   reporter.error(
                     exp.posOpt,
                     typeCheckerKind,
@@ -2958,8 +3031,12 @@ import TypeChecker._
               case _ => return (None(), stmt(expOpt = Some(newExp)))
             }
           case (Some(t), _) =>
-            reporter.error(stmt.posOpt, typeCheckerKind, s"Expecting type '$t', but none found.")
-            return (None(), stmt)
+            if (t != AST.Typed.unit) {
+              reporter.error(stmt.posOpt, typeCheckerKind, s"Expecting type '$t', but none found.")
+              return (None(), stmt)
+            } else {
+              return (Some(scope), stmt(attr = stmt.attr(typedOpt = AST.Typed.unitOpt)))
+            }
           case (_, Some(exp)) =>
             val (newExp, _) = checkExp(None(), scope, exp, reporter)
             reporter.error(exp.posOpt, typeCheckerKind, s"Unexpected return expression.")
@@ -2968,15 +3045,15 @@ import TypeChecker._
             return (Some(scope), stmt)
         }
 
-      case stmt: AST.Stmt.Sig => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.Sig => return (Some(scope), stmt)
 
-      case stmt: AST.Stmt.SpecMethod => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.SpecMethod => return (Some(scope), stmt) // TODO
 
-      case stmt: AST.Stmt.SpecVar => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.SpecVar => return (Some(scope), stmt)
 
-      case stmt: AST.Stmt.SubZ => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.SubZ => return (Some(scope), stmt)
 
-      case stmt: AST.Stmt.TypeAlias => halt("Unimplemented.") // TODO
+      case stmt: AST.Stmt.TypeAlias => return (Some(scope), stmt)
 
       case stmt: AST.Stmt.Var => val r = checkVar(stmt); return r
 
@@ -2988,6 +3065,57 @@ import TypeChecker._
         return (Some(scope), stmt(cond = newCond, body = newBody))
 
     }
+  }
+
+  def checkMethod(sc: Scope, stmt: AST.Stmt.Method, reporter: Reporter): AST.Stmt = {
+    if (stmt.bodyOpt.isEmpty) {
+      return stmt
+    }
+    var scope = createNewScope(sc)
+    stmt.sig.returnType.typedOpt match {
+      case tOpt@Some(_) => scope = scope(returnOpt = tOpt)
+      case _ => halt("Unexpected situation when type checking method.")
+    }
+    val typeParams = typeParamMap(stmt.sig.typeParams, reporter)
+    for (tp <- typeParams.entries) {
+      scope = scope(typeMap = scope.typeMap + tp._1 ~> tp._2)
+    }
+    var ok = T
+    for (p <- stmt.sig.params) {
+      val id = p.id.value
+      scope.nameMap.get(id) match {
+        case Some(_) =>
+          reporter.error(p.id.attr.posOpt, typeCheckerKind, s"Cannot redeclare '$id' as it has previously been declared.")
+          ok = F
+        case _ =>
+          scope.resolveName(typeHierarchy.nameMap, ISZ(id)) match {
+            case Some(_: Info.LocalVar) =>
+              reporter.warn(p.id.attr.posOpt, typeCheckerKind, s"Identifier '$id' shadows a declaration in the enclosing context.")
+              ok = F
+            case _ =>
+              scope = scope(nameMap = scope.nameMap + id ~> Info.LocalVar(context :+ id, T, p.id, p.tipe.typedOpt, Some(
+                AST.ResolvedInfo.LocalVar(context, id)
+              )))
+          }
+      }
+    }
+    if (!ok) {
+      return stmt
+    }
+    val newBody = checkBody(None(), scope, stmt.bodyOpt.get, reporter)
+    return stmt(bodyOpt = Some(newBody))
+  }
+
+  def checkAbstractDatatype(info: TypeInfo.AbstractDatatype, reporter: Reporter): TypeInfo.AbstractDatatype = {
+    halt("TODO") // TODO
+  }
+
+  def checkSig(info: TypeInfo.Sig, reporter: Reporter): TypeInfo.AbstractDatatype = {
+    halt("TODO") // TODO
+  }
+
+  def checkObject(info: Info.Object, reporter: Reporter): TypeInfo.AbstractDatatype = {
+    halt("TODO") // TODO
   }
 
   @pure def unifyCombine(
