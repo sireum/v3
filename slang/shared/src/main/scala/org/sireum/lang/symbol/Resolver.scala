@@ -59,7 +59,7 @@ object Resolver {
       nameMap: HashMap[String, Info],
       typeMap: HashMap[String, TypeInfo],
       localThisOpt: Option[AST.Typed],
-      val returnOpt: Option[AST.Typed],
+      methodReturnOpt: Option[AST.Typed],
       val outerOpt: Option[Scope]
     ) extends Scope {
 
@@ -69,6 +69,17 @@ object Resolver {
           case _ =>
             outerOpt match {
               case Some(outer) => return outer.thisOpt
+              case _ => return None()
+            }
+        }
+      }
+
+      @pure override def returnOpt: Option[AST.Typed] = {
+        methodReturnOpt match {
+          case r@Some(_) => return r
+          case _ =>
+            outerOpt match {
+              case Some(outer) => return outer.returnOpt
               case _ => return None()
             }
         }
