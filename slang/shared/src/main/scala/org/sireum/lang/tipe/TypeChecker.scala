@@ -841,7 +841,7 @@ import TypeChecker._
                     None()
                   } else if ((leftKind == BasicKind.B && AST.Util.isBoolBinop(exp.op)) ||
                     (AST.Util.isArithBinop(exp.op) && leftKind != BasicKind.B) ||
-                    (AST.Util.isBitsBinop(exp.op) && leftKind == BasicKind.Bits)) {
+                    (AST.Util.isBitsBinop(exp.op) && (leftKind == BasicKind.Bits || leftKind == BasicKind.C))) {
                     Some(leftType)
                   } else if (AST.Util.isCompareBinop(exp.op) && leftKind != BasicKind.B) {
                     Some(AST.Typed.b)
@@ -877,19 +877,19 @@ import TypeChecker._
     }
 
     def checkTuple(exp: AST.Exp.Tuple): (AST.Exp, Option[AST.Typed]) = {
-      var args = ISZ[AST.Exp]()
+      var newArgs = ISZ[AST.Exp]()
       var argTypes = ISZ[AST.Typed]()
       var ok = T
-      for (arg <- args) {
+      for (arg <- exp.args) {
         val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
-        args = args :+ newArg
+        newArgs = newArgs :+ newArg
         argTypeOpt match {
           case Some(argType) => argTypes = argTypes :+ argType
           case _ => ok = F
         }
       }
       var r = exp
-      r = r(args = args)
+      r = r(args = newArgs)
       if (!ok) {
         return (r, None())
       }
@@ -1028,8 +1028,9 @@ import TypeChecker._
       hasTypeArgs: B
     ): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
       val id = ident.value
-      if (id == "apply") {
-        return (Some(receiverType), applyResOpt)
+      id.native match {
+        case "apply" => return (Some(receiverType), applyResOpt)
+        case _ =>
       }
 
       def errAccess(t: AST.Typed): Unit = {
@@ -1072,18 +1073,17 @@ import TypeChecker._
                   }
                 case _ => errAccess(receiverType); return noResult
               }
-            case _ =>
-              halt("Unexpected situation while type checking method access.")
+            case _ => errAccess(receiverType); return noResult
           }
         case receiverType: AST.Typed.Tuple =>
-          if (id.size == 0 || ops.StringOps(id).first == '_') {
+          if (id.size == 0 || ops.StringOps(id).first != '_') {
             errAccess(receiverType)
             return noResult
           }
           Z(ops.StringOps(id).substring(1, id.size)) match {
             case Some(n) =>
               val size = receiverType.args.size
-              if (!(0 <= n && n < size)) {
+              if (!(0 < n && n <= size)) {
                 errAccess(receiverType)
                 return noResult
               }
@@ -1091,7 +1091,7 @@ import TypeChecker._
                 errTypeArgs(receiverType)
                 return noResult
               }
-              return (Some(receiverType.args(n)), Some(AST.ResolvedInfo.Tuple(size, n)))
+              return (Some(receiverType.args(n - 1)), Some(AST.ResolvedInfo.Tuple(size, n)))
             case _ =>
               errAccess(receiverType)
               return noResult
@@ -1572,23 +1572,25 @@ import TypeChecker._
             case _ =>
               typeHierarchy.typeMap.get(tpe.ids) match {
                 case Some(info: TypeInfo.AbstractDatatype) if !info.ast.isRoot =>
-                  val argNameSet = HashSSet.emptyInit[String](argNames.size) ++ argNames
-                  val params = info.ast.params.withFilter(p => argNameSet.contains(p.id.value))
-                  if (argNameSet.size != params.size) {
-                    val names = argNameSet -- info.ast.params.map(p => p.id.value)
-                    reporter.error(
-                      posOpt,
-                      typeCheckerKind,
-                      st"Could not find parameter(s) '${(names.elements, "', '")}' in '$tpe'.".render
-                    )
-                    return (None(), resOpt)
-                  } else if (params.size == 0 && info.ast.params.size != 0) {
-                    reporter.error(
-                      posOpt,
-                      typeCheckerKind,
-                      st"Cannot perform copy of '$tpe' without argument.".render
-                    )
-                    return (None(), resOpt)
+                  val params: ISZ[AST.AbstractDatatypeParam] = if (argNames.isEmpty) {
+                    info.ast.params
+                  } else {
+                    val argNameSet = HashSSet.emptyInit[String](argNames.size) ++ argNames
+                    val ps = info.ast.params.withFilter(p => argNameSet.contains(p.id.value))
+                    if (argNameSet.size != ps.size) {
+                      val names = argNameSet -- info.ast.params.map(p => p.id.value)
+                      reporter.error(
+                        posOpt,
+                        typeCheckerKind,
+                        st"Could not find parameter(s) '${(names.elements, "', '")}' in '$tpe'.".render
+                      )
+                      return (None(), resOpt)
+                    } else if (ps.size == 0 && info.ast.params.size != 0) {
+                      reporter
+                        .error(posOpt, typeCheckerKind, st"Cannot perform copy of '$tpe' without argument.".render)
+                      return (None(), resOpt)
+                    }
+                    ps
                   }
                   val paramNames = params.map(p => p.id.value)
                   val paramTypes = params.map(p => p.tipe.typedOpt.get)
@@ -1764,11 +1766,7 @@ import TypeChecker._
           rep: Reporter
         ): (AST.Exp, Option[AST.Typed]) = {
           if (m.tpe.isByName) {
-            reporter.error(
-              exp.id.attr.posOpt,
-              typeCheckerKind,
-              s"$m does not accept any argument."
-            )
+            reporter.error(exp.id.attr.posOpt, typeCheckerKind, s"$m does not accept any argument.")
             return partResult
           } else if (m.tpe.args.size != exp.args.size) {
             reporter.error(
@@ -3213,7 +3211,7 @@ import TypeChecker._
     val typeParams = typeParamMap(stmt.sig.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, sc)
     stmt.sig.returnType.typedOpt match {
-      case tOpt @ Some(_) => scope = scope(returnOpt = tOpt)
+      case tOpt @ Some(_) => scope = scope(methodReturnOpt = tOpt)
       case _ => halt("Unexpected situation when type checking method.")
     }
     var ok = T
@@ -3362,7 +3360,8 @@ import TypeChecker._
       }
     }
     val reporter = AccumulatingReporter.create
-    val scope = createNewScope(info.scope)
+    var scope = createNewScope(info.scope)
+    scope = scope(localThisOpt = Some(AST.Typed.Object(info.owner, info.ast.id.value)))
     var stmtOpts = ISZ[Option[AST.Stmt]]()
     for (stmt <- info.ast.stmts) {
       stmt match {
