@@ -45,17 +45,31 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet("""import org.sireum._
                              |
-                             |@datatype class Foo(x: Z) {
+                             |object FooLike {
+                             |  @sig trait T {
+                             |    def fooLike(): Z = {
+                             |      return 10
+                             |    }
+                             |  }
+                             |}
+                             |
+                             |@datatype class Foo(x: Z) extends FooLike.T {
                              |  @pure def foo(): Z = {
                              |    return x
                              |  }
                              |}
                              |
-                             |@record class Bar(var x: Z, foo: Foo)
+                             |@msig trait BarLike {
+                             |  @pure def bar: Z = {
+                             |    return Z.random
+                             |  }
+                             |}
+                             |
+                             |@record class Bar(var x: Z, foo: Foo) extends BarLike
                              |
                              |val bar = Bar(4, Foo(3))
-                             |bar.x = 4
-                             |assert(bar.foo.foo() == 3)
+                             |bar.x = bar.bar
+                             |assert(bar.foo.foo() != bar.foo.fooLike())
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
