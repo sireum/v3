@@ -45,13 +45,17 @@ class TypeCheckerTest extends SireumSpec {
 
         *(passingWorksheet("""import org.sireum._
                              |
-                             |@datatype class Foo(x: Z)
+                             |@datatype class Foo(x: Z) {
+                             |  @pure def foo(): Z = {
+                             |    return x
+                             |  }
+                             |}
                              |
                              |@record class Bar(var x: Z, foo: Foo)
                              |
                              |val bar = Bar(4, Foo(3))
                              |bar.x = 4
-                             |assert(bar.foo.x == 3)
+                             |assert(bar.foo.foo() == 3)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._

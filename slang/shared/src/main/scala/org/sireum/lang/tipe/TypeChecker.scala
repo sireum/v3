@@ -272,15 +272,39 @@ object TypeChecker {
         case _ =>
       }
     }
-    val r = ops
+    val p = ops
       .ISZOps(jobs)
       .parMapFoldLeft(
         (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
         TypeHierarchy.combine _,
         (th, AccumulatingReporter.create)
       )
-    reporter.reports(r._2.messages)
-    return r._1
+    var r = p._1
+    for (name <- nameMap.keys) {
+      r.nameMap.get(name) match {
+        case Some(info: Info.Object) =>
+          var newStmts = ISZ[AST.Stmt]()
+          for (stmt <- info.ast.stmts) {
+            stmt match {
+              case stmt: AST.Stmt.AbstractDatatype =>
+                r.typeMap.get(info.name :+ stmt.id.value) match {
+                  case Some(adtInfo: TypeInfo.AbstractDatatype) => newStmts = newStmts :+ adtInfo.ast
+                  case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
+                }
+              case stmt: AST.Stmt.Sig =>
+                r.typeMap.get(info.name :+ stmt.id.value) match {
+                  case Some(sigInfo: TypeInfo.Sig) => newStmts = newStmts :+ sigInfo.ast
+                  case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
+                }
+              case _ => newStmts = newStmts :+ stmt
+            }
+          }
+          r = r(nameMap = r.nameMap + info.name ~> info(ast = info.ast(stmts = newStmts)))
+        case _ =>
+      }
+    }
+    reporter.reports(p._2.messages)
+    return r
   }
 }
 
@@ -339,8 +363,7 @@ import TypeChecker._
           (None(), None())
         else (info.typedOpt, info.resOpt)
       case info: Info.ExtMethod =>
-        return if (inSpec && !info.ast.isPure) (None(), None())
-        else (info.typedOpt, info.resOpt)
+        return if (inSpec && !info.ast.isPure) (None(), None()) else (info.typedOpt, info.resOpt)
       case info: Info.Var => return (info.typedOpt, info.resOpt)
       case info: Info.QuantVar =>
         return if (inSpec) (info.typedOpt, info.resOpt) else (None(), None())
@@ -1559,6 +1582,13 @@ import TypeChecker._
                       st"Could not find parameter(s) '${(names.elements, "', '")}' in '$tpe'.".render
                     )
                     return (None(), resOpt)
+                  } else if (params.size == 0 && info.ast.params.size != 0) {
+                    reporter.error(
+                      posOpt,
+                      typeCheckerKind,
+                      st"Cannot perform copy of '$tpe' without argument.".render
+                    )
+                    return (None(), resOpt)
                   }
                   val paramNames = params.map(p => p.id.value)
                   val paramTypes = params.map(p => p.tipe.typedOpt.get)
@@ -1652,10 +1682,9 @@ import TypeChecker._
           var argTypes = ISZ[AST.Typed]()
           for (e <- expArgs) {
             val (newArg, argTypeOpt) = checkExp(None(), scope, e, repArgs)
+            newArgs = newArgs :+ newArg
             argTypeOpt match {
-              case Some(argType) =>
-                newArgs = newArgs :+ newArg
-                argTypes = argTypes :+ argType
+              case Some(argType) => argTypes = argTypes :+ argType
               case _ =>
             }
           }
@@ -1734,7 +1763,14 @@ import TypeChecker._
           mResOpt: Option[AST.ResolvedInfo],
           rep: Reporter
         ): (AST.Exp, Option[AST.Typed]) = {
-          if (m.tpe.args.size != exp.args.size) {
+          if (m.tpe.isByName) {
+            reporter.error(
+              exp.id.attr.posOpt,
+              typeCheckerKind,
+              s"$m does not accept any argument."
+            )
+            return partResult
+          } else if (m.tpe.args.size != exp.args.size) {
             reporter.error(
               exp.id.attr.posOpt,
               typeCheckerKind,
@@ -2310,6 +2346,30 @@ import TypeChecker._
     }
 
     return (Some(newScope), newStmts)
+  }
+
+  def checkStmtOpts(scope: Scope.Local, stmtOpts: ISZ[Option[AST.Stmt]], reporter: Reporter): ISZ[Option[AST.Stmt]] = {
+    var newScope = scope
+    var newStmtOpts = ISZ[Option[AST.Stmt]]()
+    for (i <- z"0" until stmtOpts.size) {
+      stmtOpts(i) match {
+        case Some(stmt) =>
+          val (newScope2Opt, newStmt) = checkStmt(newScope, stmt, reporter)
+          newScope2Opt match {
+            case Some(newScope2) =>
+              newScope = newScope2
+              newStmtOpts = newStmtOpts :+ Some(newStmt)
+            case _ =>
+              for (j <- i until stmtOpts.size) {
+                newStmtOpts = newStmtOpts :+ stmtOpts(i)
+              }
+              return newStmtOpts
+          }
+        case _ => newStmtOpts = newStmtOpts :+ None()
+      }
+    }
+
+    return newStmtOpts
   }
 
   def checkImport(scope: Scope.Local, stmt: AST.Stmt.Import, reporter: Reporter): (Option[Scope.Local], AST.Stmt) = {
@@ -3182,11 +3242,11 @@ import TypeChecker._
   }
 
   def checkAbstractDatatype(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+    require(info.outlined)
     val reporter = AccumulatingReporter.create
-    assert(info.outlined)
     val typeParams = typeParamMap(info.ast.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, info.scope)
-    scope = scope(thisOpt = Some(info.tpe))
+    scope = scope(localThisOpt = Some(info.tpe))
     var stmts = ISZ[AST.Stmt]()
     for (stmt <- info.ast.stmts) {
       stmt match {
@@ -3239,15 +3299,95 @@ import TypeChecker._
   }
 
   def checkSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+    require(info.outlined)
     val reporter = AccumulatingReporter.create
-    var newInfo = info // TODO
-    return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
+    val typeParams = typeParamMap(info.ast.typeParams, reporter)
+    var scope = localTypeScope(typeParams.map, info.scope)
+    scope = scope(localThisOpt = Some(info.tpe))
+    var stmts = ISZ[AST.Stmt]()
+    for (stmt <- info.ast.stmts) {
+      stmt match {
+        case stmt: AST.Stmt.SpecVar => stmts = stmts :+ info.specVars.get(stmt.id.value).get.ast
+        case stmt: AST.Stmt.Method => stmts = stmts :+ info.methods.get(stmt.sig.id.value).get.ast
+        case stmt: AST.Stmt.SpecMethod => stmts = stmts :+ info.specMethods.get(stmt.sig.id.value).get.ast
+        case _ => stmts = stmts :+ stmt
+      }
+    }
+    val (_, newStmts) = checkStmts(None(), scope, stmts, reporter)
+    var specVars: HashMap[String, Info.SpecVar] = info.specVars
+    var specMethods: HashMap[String, Info.SpecMethod] = info.specMethods
+    var methods: HashMap[String, Info.Method] = info.methods
+    for (stmt <- newStmts) {
+      stmt match {
+        case stmt: AST.Stmt.SpecVar =>
+          val id = stmt.id.value
+          val svInfo = info.specVars.get(id).get
+          specVars = specVars + id ~> svInfo(ast = stmt)
+        case stmt: AST.Stmt.Method =>
+          val id = stmt.sig.id.value
+          val mInfo = info.methods.get(id).get
+          methods = methods + id ~> mInfo(ast = stmt)
+        case stmt: AST.Stmt.SpecMethod =>
+          val id = stmt.sig.id.value
+          val smInfo = info.specMethods.get(id).get
+          specMethods = specMethods + id ~> smInfo(ast = stmt)
+        case _ =>
+      }
+    }
+    return (th: TypeHierarchy) =>
+      (
+        th(
+          typeMap = th.typeMap + info.name ~> info(
+            ast = info.ast(stmts = newStmts),
+            specVars = specVars,
+            methods = methods,
+            specMethods = specMethods
+          )
+        ),
+        reporter
+    )
   }
 
   def checkObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+    require(info.outlined)
+    val name = info.name
+    def getStmt(id: String): Option[AST.Stmt] = {
+      typeHierarchy.nameMap.get(name :+ id).get match {
+        case info: Info.Var => return Some(info.ast)
+        case info: Info.SpecVar => return Some(info.ast)
+        case info: Info.SpecMethod => return Some(info.ast)
+        case info: Info.Method => return Some(info.ast)
+        case info: Info.ExtMethod => return Some(info.ast)
+        case _ => halt("Unexpected situation when type checking object.")
+      }
+    }
     val reporter = AccumulatingReporter.create
-    var newInfo = info // TODO
-    return (th: TypeHierarchy) => (th(nameMap = th.nameMap + info.name ~> newInfo), reporter)
+    val scope = createNewScope(info.scope)
+    var stmtOpts = ISZ[Option[AST.Stmt]]()
+    for (stmt <- info.ast.stmts) {
+      stmt match {
+        case stmt: AST.Stmt.Var => stmtOpts = stmtOpts :+ getStmt(stmt.id.value)
+        case stmt: AST.Stmt.SpecVar => stmtOpts = stmtOpts :+ getStmt(stmt.id.value)
+        case stmt: AST.Stmt.Method => stmtOpts = stmtOpts :+ getStmt(stmt.sig.id.value)
+        case stmt: AST.Stmt.SpecMethod => stmtOpts = stmtOpts :+ getStmt(stmt.sig.id.value)
+        case stmt: AST.Stmt.ExtMethod => stmtOpts = stmtOpts :+ getStmt(stmt.sig.id.value)
+        case _: AST.Stmt.Sig => stmtOpts = stmtOpts :+ None()
+        case _: AST.Stmt.AbstractDatatype => stmtOpts = stmtOpts :+ None()
+        case _ => stmtOpts = stmtOpts :+ Some(stmt)
+      }
+    }
+    val newStmtOpts = checkStmtOpts(scope, stmtOpts, reporter)
+    var i = 0
+    var newStmts = ISZ[AST.Stmt]()
+    for (stmtOpt <- newStmtOpts) {
+      stmtOpt match {
+        case Some(stmt) => newStmts = newStmts :+ stmt
+        case _ => newStmts = newStmts :+ info.ast.stmts(i)
+      }
+      i = i + 1
+    }
+    return (th: TypeHierarchy) =>
+      (th(nameMap = th.nameMap + info.name ~> info(ast = info.ast(stmts = newStmts))), reporter)
   }
 
   @pure def unifyCombine(
