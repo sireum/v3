@@ -817,7 +817,7 @@ object Resolver {
     )
 
     tm = tm + AST.Typed.unit.ids ~> TypeInfo.AbstractDatatype(
-      ISZ(),
+      AST.Typed.sireumName,
       T,
       AST.Typed.unit,
       None(),
@@ -834,7 +834,7 @@ object Resolver {
     )
 
     tm = tm + AST.Typed.nothing.ids ~> TypeInfo.AbstractDatatype(
-      ISZ(),
+      AST.Typed.sireumName,
       T,
       AST.Typed.nothing,
       None(),
