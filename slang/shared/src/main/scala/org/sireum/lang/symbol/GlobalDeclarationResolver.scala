@@ -115,6 +115,18 @@ import org.sireum.lang.{ast => AST}
     return Scope.Global(packageName, imports, ISZOps(name).dropRight(1))
   }
 
+  def checkParams(params: ISZ[AST.Param]): ISZ[String] = {
+    var paramSet = HashSSet.empty[String]
+    for (p <- params) {
+      val id = p.id.value
+      if (paramSet.contains(id)) {
+        reporter.error(p.id.attr.posOpt, resolverKind, s"Cannot redeclare parameter '$id'.")
+      }
+      paramSet = paramSet + id
+    }
+    return paramSet.elements
+  }
+
   def resolveGlobalStmt(stmt: AST.Stmt): Unit = {
     stmt match {
       case stmt: AST.Stmt.Import =>
@@ -152,6 +164,7 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.Method =>
         val id = stmt.sig.id.value
         val name = currentName :+ id
+        val params = checkParams(stmt.sig.params)
         declareName(
           "method",
           name,
@@ -169,7 +182,7 @@ import org.sireum.lang.{ast => AST}
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 currentName,
                 id,
-                stmt.sig.params.map(p => p.id.value),
+                params,
                 None()
               )
             )
@@ -179,6 +192,7 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.ExtMethod =>
         val id = stmt.sig.id.value
         val name = currentName :+ stmt.sig.id.value
+        val params = checkParams(stmt.sig.params)
         declareName(
           "extension method",
           name,
@@ -194,7 +208,7 @@ import org.sireum.lang.{ast => AST}
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 currentName,
                 id,
-                stmt.sig.params.map(p => p.id.value),
+                params,
                 None()
               )
             )
@@ -204,6 +218,7 @@ import org.sireum.lang.{ast => AST}
       case stmt: AST.Stmt.SpecMethod =>
         val id = stmt.sig.id.value
         val name = currentName :+ id
+        val params = checkParams(stmt.sig.params)
         declareName(
           "specification method",
           name,
@@ -220,7 +235,7 @@ import org.sireum.lang.{ast => AST}
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 currentName,
                 id,
-                stmt.sig.params.map(p => p.id.value),
+                params,
                 None()
               )
             )
@@ -344,6 +359,9 @@ import org.sireum.lang.{ast => AST}
           if (!p.isHidden) {
             extractorParamVars = extractorParamVars :+ id
           }
+          if (paramVars.contains(id)) {
+            reporter.error(p.id.attr.posOpt, resolverKind, s"Cannot redeclare parameter '$id'.")
+          }
           paramVars = paramVars + id ~> Info.Var(
             name,
             F,
@@ -435,6 +453,7 @@ import org.sireum.lang.{ast => AST}
         case stmt: AST.Stmt.Method =>
           checkId(stmt.sig.id)
           val id = stmt.sig.id.value
+          val params = checkParams(stmt.sig.params)
           methods = methods + id ~> Info.Method(
             owner,
             F,
@@ -449,7 +468,7 @@ import org.sireum.lang.{ast => AST}
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 owner,
                 id,
-                stmt.sig.params.map(p => p.id.value),
+                params,
                 None()
               )
             )
@@ -458,6 +477,7 @@ import org.sireum.lang.{ast => AST}
         case stmt: AST.Stmt.SpecMethod =>
           checkId(stmt.sig.id)
           val id = stmt.sig.id.value
+          val params = checkParams(stmt.sig.params)
           specMethods = specMethods + id ~> Info.SpecMethod(
             owner,
             F,
@@ -471,7 +491,7 @@ import org.sireum.lang.{ast => AST}
                 stmt.sig.typeParams.map(tp => tp.id.value),
                 owner,
                 id,
-                stmt.sig.params.map(p => p.id.value),
+                params,
                 None()
               )
             )

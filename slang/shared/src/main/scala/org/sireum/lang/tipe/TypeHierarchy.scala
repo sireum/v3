@@ -75,7 +75,12 @@ object TypeHierarchy {
           var name = AST.Util.ids2strings(t.name.ids)
           scope.resolveType(typeMap, name) match {
             case Some(ti) => name = ti.name
-            case _ => reporter.error(t.name.attr.posOpt, resolverKind, s"Could not resolve type named '${st"${(name, ".")}".render}'.")
+            case _ =>
+              reporter.error(
+                t.name.attr.posOpt,
+                resolverKind,
+                s"Could not resolve type named '${st"${(name, ".")}".render}'."
+              )
           }
           val args: ISZ[AST.Typed] = {
             var as = ISZ[AST.Typed]()
@@ -110,9 +115,7 @@ object TypeHierarchy {
       }
     }
 
-    def resolveTypeNameds(posOpt: Option[AST.PosInfo],
-                          scope: Scope,
-                          ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
+    def resolveTypeNameds(posOpt: Option[AST.PosInfo], scope: Scope, ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
       var r = ISZ[AST.Typed.Name]()
       for (t <- ts) {
         val typed = resolveType(scope, t)
@@ -202,12 +205,22 @@ object TypeHierarchy {
     return r
   }
 
+  @pure def combine(
+    r: (TypeHierarchy, AccumulatingReporter),
+    f: TypeHierarchy => (TypeHierarchy, AccumulatingReporter)
+  ): (TypeHierarchy, AccumulatingReporter) = {
+    val p = f(r._1)
+    return (p._1, AccumulatingReporter.combine(r._2, p._2))
+  }
+
 }
 
-@datatype class TypeHierarchy(nameMap: NameMap,
-                              typeMap: TypeMap,
-                              poset: Poset[TypeHierarchy.TypeName],
-                              aliases: HashMap[TypeHierarchy.TypeName, AST.Typed]) {
+@datatype class TypeHierarchy(
+  val nameMap: NameMap,
+  val typeMap: TypeMap,
+  val poset: Poset[TypeHierarchy.TypeName],
+  val aliases: HashMap[TypeHierarchy.TypeName, AST.Typed]
+) {
 
   @pure def rootTypes: ISZ[AST.Typed.Name] = {
     var r = ISZ[AST.Typed.Name]()
@@ -347,7 +360,8 @@ object TypeHierarchy {
         val r = dealiasInit(posOpt, t2, reporter)
         return r
       case Some(_) =>
-        reporter.error(posOpt, resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
+        reporter
+          .error(posOpt, resolverKind, st"Expected a named type in type hiearchy but ${(t.ids, ".")} is not.".render)
         return None()
       case _ => return Some(t)
     }
@@ -368,9 +382,7 @@ object TypeHierarchy {
     }
   }
 
-  def typed(scope: Scope,
-            tipe: AST.Type,
-            reporter: Reporter): Option[AST.Type] = {
+  def typed(scope: Scope, tipe: AST.Type, reporter: Reporter): Option[AST.Type] = {
     def checkNothing(t: AST.Typed): Unit = {
       if (t == AST.Typed.nothing) {
         reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind, s"Cannot use type '$t'.")
@@ -398,8 +410,11 @@ object TypeHierarchy {
           case Some(ti: TypeInfo.TypeAlias) =>
             val tparamSize = ti.ast.typeParams.size
             if (newTypeArgs.size != tparamSize) {
-              reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind,
-                st"Type alias ${(name, ".")} requires $tparamSize type arguments but ${newTypeArgs.size} supplied.".render)
+              reporter.error(
+                tipe.posOpt,
+                TypeChecker.typeCheckerKind,
+                st"Type alias ${(name, ".")} requires $tparamSize type arguments but ${newTypeArgs.size} supplied.".render
+              )
               return None()
             }
             val tpe = dealias(AST.Typed.Name(ti.name, argTypes), tipe.posOpt, reporter)
@@ -407,8 +422,11 @@ object TypeHierarchy {
             return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(tpe))))
           case Some(ti: TypeInfo.TypeVar) =>
             if (newTypeArgs.nonEmpty) {
-              reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind,
-                s"Type variable ${name(0)} does not accept type arguments.")
+              reporter.error(
+                tipe.posOpt,
+                TypeChecker.typeCheckerKind,
+                s"Type variable ${name(0)} does not accept type arguments."
+              )
               return None()
             }
             return Some(tipe(attr = tipe.attr(typedOpt = Some(AST.Typed.TypeVar(ti.name(0))))))
@@ -416,17 +434,25 @@ object TypeHierarchy {
             val p: (String, Z) = ti match {
               case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0)
               case _: TypeInfo.Enum => ("@enum", 0)
-              case ti: TypeInfo.Sig => (if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig", ti.ast.typeParams.size)
-              case ti: TypeInfo.AbstractDatatype => (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size)
+              case ti: TypeInfo.Sig =>
+                (if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig", ti.ast.typeParams.size)
+              case ti: TypeInfo.AbstractDatatype =>
+                (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size)
               case _ => halt("Infeasible")
             }
             if (newTypeArgs.size != p._2) {
               if (p._2 == 0) {
-                reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind,
-                  st"Slang ${p._1} ${(name, ".")} does not accept type arguments.".render)
+                reporter.error(
+                  tipe.posOpt,
+                  TypeChecker.typeCheckerKind,
+                  st"Slang ${p._1} ${(name, ".")} does not accept type arguments.".render
+                )
               } else {
-                reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind,
-                  st"Slang ${p._1} ${(name, ".")} requires ${p._2} type arguments but ${newTypeArgs.size} is supplied.".render)
+                reporter.error(
+                  tipe.posOpt,
+                  TypeChecker.typeCheckerKind,
+                  st"Slang ${p._1} ${(name, ".")} requires ${p._2} type arguments but ${newTypeArgs.size} is supplied.".render
+                )
               }
               return None()
             }
@@ -434,7 +460,8 @@ object TypeHierarchy {
             checkNothing(t)
             return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(t))))
           case _ =>
-            reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
+            reporter
+              .error(tipe.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
             return None()
         }
       case tipe: AST.Type.Tuple =>
@@ -472,17 +499,26 @@ object TypeHierarchy {
         newRetOpt match {
           case Some(newRet) if !hasError && newRet.typedOpt.nonEmpty =>
             val retType = newRet.typedOpt.get
-            return Some(tipe(args = newArgs, ret = newRet, attr = tipe.attr(typedOpt = Some(
-              AST.Typed.Fun(tipe.isPure || retType.isPureFun, tipe.isByName, paramTypes, retType)))))
+            return Some(
+              tipe(
+                args = newArgs,
+                ret = newRet,
+                attr = tipe.attr(
+                  typedOpt = Some(AST.Typed.Fun(tipe.isPure || retType.isPureFun, tipe.isByName, paramTypes, retType))
+                )
+              )
+            )
           case _ => return None[AST.Type]()
         }
     }
   }
 
-  def applyTypeAlias(typed: AST.Typed.Name,
-                     ti: TypeInfo.TypeAlias,
-                     posOpt: Option[AST.PosInfo],
-                     reporter: Reporter): Option[AST.Typed] = {
+  def applyTypeAlias(
+    typed: AST.Typed.Name,
+    ti: TypeInfo.TypeAlias,
+    posOpt: Option[AST.PosInfo],
+    reporter: Reporter
+  ): Option[AST.Typed] = {
     val tipeOpt: Option[AST.Type] = if (!ti.outlined) {
       val tm = typeParamMap(ti.ast.typeParams, reporter)
       val scope = localTypeScope(tm.map, ti.scope)

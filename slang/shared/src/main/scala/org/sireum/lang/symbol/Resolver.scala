@@ -854,6 +854,64 @@ object Resolver {
 
   }
 
+  @pure def combine(
+    r: (AccumulatingReporter, NameMap, TypeMap),
+    u: (AccumulatingReporter, NameMap, TypeMap)
+  ): (AccumulatingReporter, NameMap, TypeMap) = {
+    var rNameMap = r._2
+    var rTypeMap = r._3
+    val uNameMap = u._2
+    val uTypeMap = u._3
+    val reporter = AccumulatingReporter.combine(r._1, u._1)
+    for (p <- uNameMap.entries) {
+      val name = p._1
+      val uInfo = p._2
+      rNameMap.get(name) match {
+        case Some(rInfo) =>
+          (rInfo, uInfo) match {
+            case (_: Info.Package, _: Info.Package) =>
+            case _ =>
+              rInfo.posOpt match {
+                case Some(pos) =>
+                  val file: String = pos.fileUriOpt match {
+                    case Some(fileUri) => s" in $fileUri"
+                    case _ => ""
+                  }
+                  reporter.error(
+                    uInfo.posOpt,
+                    resolverKind,
+                    st"Name '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
+                  )
+                case _ =>
+              }
+          }
+        case _ => rNameMap = rNameMap + name ~> uInfo
+      }
+    }
+    for (p <- uTypeMap.entries) {
+      val name = p._1
+      val uInfo = p._2
+      rTypeMap.get(name) match {
+        case Some(rInfo) =>
+          rInfo.posOpt match {
+            case Some(pos) =>
+              val file: String = pos.fileUriOpt match {
+                case Some(fileUri) => s" in $fileUri"
+                case _ => ""
+              }
+              reporter.error(
+                uInfo.posOpt,
+                resolverKind,
+                st"Type named '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
+              )
+            case _ =>
+          }
+        case _ => rTypeMap = rTypeMap + name ~> uInfo
+      }
+    }
+    return (reporter, rNameMap, rTypeMap)
+  }
+
   def parseProgramAndGloballyResolve(
     sources: ISZ[(Option[String], String)],
     nameMap: NameMap,
@@ -872,64 +930,6 @@ object Resolver {
           return (reporter, gdr.globalNameMap, gdr.globalTypeMap)
         case _ => return (reporter, nameMap, typeMap)
       }
-    }
-
-    @pure def combine(
-      r: (AccumulatingReporter, NameMap, TypeMap),
-      u: (AccumulatingReporter, NameMap, TypeMap)
-    ): (AccumulatingReporter, NameMap, TypeMap) = {
-      var rNameMap = r._2
-      var rTypeMap = r._3
-      val uNameMap = u._2
-      val uTypeMap = u._3
-      val reporter = AccumulatingReporter.combine(r._1, u._1)
-      for (p <- uNameMap.entries) {
-        val name = p._1
-        val uInfo = p._2
-        rNameMap.get(name) match {
-          case Some(rInfo) =>
-            (rInfo, uInfo) match {
-              case (_: Info.Package, _: Info.Package) =>
-              case _ =>
-                rInfo.posOpt match {
-                  case Some(pos) =>
-                    val file: String = pos.fileUriOpt match {
-                      case Some(fileUri) => s" in $fileUri"
-                      case _ => ""
-                    }
-                    reporter.error(
-                      uInfo.posOpt,
-                      resolverKind,
-                      st"Name '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
-                    )
-                  case _ =>
-                }
-            }
-          case _ => rNameMap = rNameMap + name ~> uInfo
-        }
-      }
-      for (p <- uTypeMap.entries) {
-        val name = p._1
-        val uInfo = p._2
-        rTypeMap.get(name) match {
-          case Some(rInfo) =>
-            rInfo.posOpt match {
-              case Some(pos) =>
-                val file: String = pos.fileUriOpt match {
-                  case Some(fileUri) => s" in $fileUri"
-                  case _ => ""
-                }
-                reporter.error(
-                  uInfo.posOpt,
-                  resolverKind,
-                  st"Type named '${(name, ".")}' has already been declared at [${pos.beginLine}, ${pos.beginColumn}]$file".render
-                )
-              case _ =>
-            }
-          case _ => rTypeMap = rTypeMap + name ~> uInfo
-        }
-      }
-      return (reporter, rNameMap, rTypeMap)
     }
 
     val t = ISZOps(sources)
@@ -963,7 +963,7 @@ object Resolver {
     return r
   }
 
-  @pure def localTypeScope(typeMap: HashMap[String, TypeInfo], outer: Scope): Scope = {
+  @pure def localTypeScope(typeMap: HashMap[String, TypeInfo], outer: Scope): Scope.Local = {
     return Scope.Local(HashMap.empty[String, Info], typeMap, None(), None(), Some(outer))
   }
 

@@ -35,14 +35,6 @@ import org.sireum.lang.util._
 object TypeOutliner {
 
   def checkOutline(typeHierarchy: TypeHierarchy, reporter: Reporter): TypeHierarchy = {
-    def combine(
-      r: (TypeHierarchy, AccumulatingReporter),
-      f: TypeHierarchy => (TypeHierarchy, AccumulatingReporter)
-    ): (TypeHierarchy, AccumulatingReporter) = {
-      val p = f(r._1)
-      return (p._1, AccumulatingReporter.combine(r._2, p._2))
-    }
-
     def parentsOutlined(name: QName, typeMap: TypeMap): B = {
       def isOutlined(name: QName): B = {
         typeMap.get(name).get match {
@@ -115,10 +107,9 @@ object TypeOutliner {
           }
         }
       }
-      val jobsOps = ISZOps(jobs)
-      val r = jobsOps.parMapFoldLeft(
+      val r = ISZOps(jobs).parMapFoldLeft(
         (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
-        combine _,
+        TypeHierarchy.combine _,
         (th, AccumulatingReporter.create)
       )
       reporter.reports(r._2.messages)
@@ -137,7 +128,7 @@ object TypeOutliner {
       }
       val r = ISZOps(jobs).parMapFoldLeft(
         (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
-        combine _,
+        TypeHierarchy.combine _,
         (th, AccumulatingReporter.create)
       )
       reporter.reports(r._2.messages)
