@@ -31,9 +31,7 @@ import org.sireum.lang.util.Reporter.Message
 import org.sireum.lang.util.Reporter.Message.Level
 
 object Reporter {
-
   object Message {
-
     @enum object Level {
       'InternalError
       'Error
@@ -41,13 +39,10 @@ object Reporter {
       'Info
     }
   }
-
   @datatype class Message(level: Message.Level.Type, posOpt: Option[PosInfo], kind: String, message: String) {
-
     def isError: B = {
       return level == Message.Level.InternalError || level == Message.Level.Error
     }
-
     def fileUriOpt: Option[String] = {
       posOpt match {
         case Some(pos) => return pos.fileUriOpt
@@ -92,7 +87,6 @@ import Reporter.Message
 import Reporter.Message.Level
 
 object AccumulatingReporter {
-
   @pure def create: AccumulatingReporter = {
     return AccumulatingReporter(ISZ[Message]())
   }
@@ -102,7 +96,8 @@ object AccumulatingReporter {
   }
 }
 
-@record class AccumulatingReporter(var messages: ISZ[Message]) extends Reporter {
+@record class AccumulatingReporter(var messages: ISZ[Message])
+  extends Reporter {
 
   def hasInternalError: B = {
     for (m <- messages) {
@@ -171,8 +166,7 @@ object AccumulatingReporter {
   }
 
   def issues: ISZ[Message] = {
-    return for (m <- messages if m.level == Level.InternalError || m.level == Level.Error || m.level == Level.Warning)
-      yield m
+    return for (m <- messages if m.level == Level.InternalError || m.level == Level.Error || m.level == Level.Warning) yield m
   }
 
   def infos: ISZ[Message] = {
