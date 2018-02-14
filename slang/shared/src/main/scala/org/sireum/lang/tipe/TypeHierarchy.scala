@@ -371,6 +371,11 @@ object TypeHierarchy {
   def typed(scope: Scope,
             tipe: AST.Type,
             reporter: Reporter): Option[AST.Type] = {
+    def checkNothing(t: AST.Typed): Unit = {
+      if (t == AST.Typed.nothing) {
+        reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind, s"Cannot use type '$t'.")
+      }
+    }
     tipe match {
       case tipe: AST.Type.Named =>
         var newTypeArgs = ISZ[AST.Type]()
@@ -398,6 +403,7 @@ object TypeHierarchy {
               return None()
             }
             val tpe = dealias(AST.Typed.Name(ti.name, argTypes), tipe.posOpt, reporter)
+            checkNothing(tpe)
             return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(tpe))))
           case Some(ti: TypeInfo.TypeVar) =>
             if (newTypeArgs.nonEmpty) {
@@ -424,13 +430,11 @@ object TypeHierarchy {
               }
               return None()
             }
-            return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(AST.Typed.Name(ti.name, argTypes)))))
+            val t = AST.Typed.Name(ti.name, argTypes)
+            checkNothing(t)
+            return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(t))))
           case _ =>
-            if (name.size == 1 && newTypeArgs.isEmpty && name(0) == "Unit") {
-              return Some(tipe(attr = tipe.attr(typedOpt = Some(AST.Typed.unit))))
-            } else {
-              reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
-            }
+            reporter.error(tipe.posOpt, TypeChecker.typeCheckerKind, st"Could not find a type named ${(name, ".")}.".render)
             return None()
         }
       case tipe: AST.Type.Tuple =>
