@@ -784,7 +784,7 @@ import Cli._
   }
 
   def parseNumChoice(args: ISZ[String], i: Z, choices: ISZ[Z]): Option[Z] = {
-    val set = HashSet.empty[Z].++(choices)
+    val set = HashSet.empty[Z] ++ choices
     parseNum(args, i, None(), None()) match {
       case r@Some(n) =>
         if (set.contains(n)) {
