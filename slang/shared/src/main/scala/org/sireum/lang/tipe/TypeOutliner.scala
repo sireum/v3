@@ -317,10 +317,9 @@ object TypeOutliner {
       scope,
       reporter
     )
-    val (TypeInfo.Members(specVars, _, specMethods, methods), ancestors) =
+    val (TypeInfo.Members(specVars, _, specMethods, methods), ancestors, newParents) =
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
-    val newInfo =
-      info(outlined = T, ancestors = ancestors, specVars = specVars, specMethods = specMethods, methods = methods)
+    val newInfo = info(outlined = T, ancestors = ancestors, ast = info.ast(parents = newParents), specVars = specVars, specMethods = specMethods, methods = methods)
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
 
@@ -335,7 +334,7 @@ object TypeOutliner {
       scope,
       reporter
     )
-    val (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors) =
+    val (TypeInfo.Members(specVars, vars, specMethods, methods), ancestors, newParents) =
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
     var newParams = ISZ[AST.AbstractDatatypeParam]()
     var paramTypes = ISZ[AST.Typed]()
@@ -358,6 +357,7 @@ object TypeOutliner {
         info(
           outlined = T,
           ancestors = ancestors,
+          ast = info.ast(parents = newParents),
           specVars = specVars,
           vars = vars,
           specMethods = specMethods,
@@ -384,7 +384,7 @@ object TypeOutliner {
           vars = vars,
           specMethods = specMethods,
           methods = methods,
-          ast = info.ast(params = newParams)
+          ast = info.ast(params = newParams, parents = newParents)
         )
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
@@ -548,7 +548,7 @@ object TypeOutliner {
     scope: Scope,
     info: TypeInfo.Members,
     reporter: Reporter
-  ): (TypeInfo.Members, ISZ[AST.Typed.Name]) = {
+  ): (TypeInfo.Members, ISZ[AST.Typed.Name], ISZ[AST.Type.Named]) = {
     var specVars = info.specVars
     var vars = info.vars
     var specMethods = info.specMethods
@@ -851,66 +851,71 @@ object TypeOutliner {
     }
 
     var ancestors = HashSSet.empty[AST.Typed]
+    var newParents = ISZ[AST.Type.Named]()
     for (parent <- parents) {
       val tipeOpt = typeHierarchy.typed(scope, parent, reporter)
-      for (tipe <- tipeOpt) {
-        tipe.typedOpt match {
-          case Some(t: AST.Typed.Name) =>
-            t match {
-              case t: AST.Typed.Name =>
-                typeHierarchy.typeMap.get(t.ids) match {
-                  case Some(ti: TypeInfo.Sig) =>
-                    val substMapOpt =
-                      TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                    substMapOpt match {
-                      case Some(substMap) =>
-                        ancestors = ancestors + ti.tpe.subst(substMap)
-                        for (tpe <- ti.ancestors) {
-                          ancestors = ancestors + tpe.subst(substMap)
-                        }
-                        for (p <- ti.specVars.values) {
-                          inheritSpecVar(p, parent.attr.posOpt, substMap)
-                        }
-                        for (p <- ti.specMethods.values) {
-                          inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                        }
-                        for (p <- ti.methods.values) {
-                          inheritMethod(p, parent.attr.posOpt, substMap)
-                        }
-                      case _ =>
-                    }
-                  case Some(ti: TypeInfo.AbstractDatatype) =>
-                    val substMapOpt =
-                      TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                    substMapOpt match {
-                      case Some(substMap) =>
-                        ancestors = ancestors + ti.tpe.subst(substMap)
-                        for (tpe <- ti.ancestors) {
-                          ancestors = ancestors + tpe.subst(substMap)
-                        }
-                        for (p <- ti.specVars.values) {
-                          inheritSpecVar(p, parent.attr.posOpt, substMap)
-                        }
-                        for (p <- ti.vars.values) {
-                          inheritVar(p, parent.attr.posOpt, substMap)
-                        }
-                        for (p <- ti.specMethods.values) {
-                          inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                        }
-                        for (p <- ti.methods.values) {
-                          inheritMethod(p, parent.attr.posOpt, substMap)
-                        }
-                      case _ =>
-                    }
-                  case _ =>
-                }
-              case _ =>
-                halt(
-                  "Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich."
-                )
-            }
-          case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
-        }
+      tipeOpt match {
+        case Some(tipe: AST.Type.Named) =>
+          newParents = newParents :+ tipe
+          tipe.typedOpt match {
+            case Some(t: AST.Typed.Name) =>
+              t match {
+                case t: AST.Typed.Name =>
+                  typeHierarchy.typeMap.get(t.ids) match {
+                    case Some(ti: TypeInfo.Sig) =>
+                      val substMapOpt =
+                        TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                      substMapOpt match {
+                        case Some(substMap) =>
+                          ancestors = ancestors + ti.tpe.subst(substMap)
+                          for (tpe <- ti.ancestors) {
+                            ancestors = ancestors + tpe.subst(substMap)
+                          }
+                          for (p <- ti.specVars.values) {
+                            inheritSpecVar(p, parent.attr.posOpt, substMap)
+                          }
+                          for (p <- ti.specMethods.values) {
+                            inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                          }
+                          for (p <- ti.methods.values) {
+                            inheritMethod(p, parent.attr.posOpt, substMap)
+                          }
+                        case _ =>
+                      }
+                    case Some(ti: TypeInfo.AbstractDatatype) =>
+                      val substMapOpt =
+                        TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                      substMapOpt match {
+                        case Some(substMap) =>
+                          ancestors = ancestors + ti.tpe.subst(substMap)
+                          for (tpe <- ti.ancestors) {
+                            ancestors = ancestors + tpe.subst(substMap)
+                          }
+                          for (p <- ti.specVars.values) {
+                            inheritSpecVar(p, parent.attr.posOpt, substMap)
+                          }
+                          for (p <- ti.vars.values) {
+                            inheritVar(p, parent.attr.posOpt, substMap)
+                          }
+                          for (p <- ti.specMethods.values) {
+                            inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                          }
+                          for (p <- ti.methods.values) {
+                            inheritMethod(p, parent.attr.posOpt, substMap)
+                          }
+                        case _ =>
+                      }
+                    case _ =>
+                  }
+                case _ =>
+                  halt(
+                    "Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich."
+                  )
+              }
+            case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
+          }
+        case Some(_) => halt("Infeasible.")
+        case _ =>
       }
     }
     return (
@@ -921,7 +926,8 @@ object TypeOutliner {
             case t: AST.Typed.Name => t
             case _ => halt("Unexpected situation while outlining types.")
         }
-      )
+      ),
+      newParents,
     )
   }
 
