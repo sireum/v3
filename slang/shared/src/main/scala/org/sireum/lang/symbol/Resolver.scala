@@ -58,10 +58,21 @@ object Resolver {
     @datatype class Local(
       nameMap: HashMap[String, Info],
       typeMap: HashMap[String, TypeInfo],
-      val thisOpt: Option[AST.Typed],
+      localThisOpt: Option[AST.Typed],
       val returnOpt: Option[AST.Typed],
       val outerOpt: Option[Scope]
     ) extends Scope {
+
+      @pure override def thisOpt: Option[AST.Typed] = {
+        localThisOpt match {
+          case r@Some(_) => return r
+          case _ =>
+            outerOpt match {
+              case Some(outer) => return outer.thisOpt
+              case _ => return None()
+            }
+        }
+      }
 
       @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
         if (name.size == 1) {
@@ -383,6 +394,7 @@ object Resolver {
     @datatype class Object(
       owner: QName,
       isSynthetic: B,
+      scope: Scope.Global,
       outlined: B,
       ast: AST.Stmt.Object,
       typedOpt: Option[AST.Typed],

@@ -52,7 +52,7 @@ import org.sireum.lang.{ast => AST}
 
     for (info <- globalTypeMap.values) {
 
-      @pure def helper: (ISZ[String], String, B, String, Option[AST.PosInfo]) = {
+      @pure def helper: (ISZ[String], String, B, String, Option[AST.PosInfo], Scope.Global) = {
         info match {
           case info: TypeInfo.Sig =>
             return (
@@ -60,7 +60,8 @@ import org.sireum.lang.{ast => AST}
               info.ast.id.value,
               T,
               if (info.ast.isImmutable) "@sig trait" else "@msig trait",
-              info.ast.id.attr.posOpt
+              info.ast.id.attr.posOpt,
+              info.scope
             )
           case info: TypeInfo.AbstractDatatype =>
             return (
@@ -71,21 +72,14 @@ import org.sireum.lang.{ast => AST}
                 if (info.ast.isDatatype) "@datatype trait" else "@record trait"
               else if (info.ast.isDatatype) "@datatype class"
               else "@record class",
-              info.ast.id.attr.posOpt
+              info.ast.id.attr.posOpt,
+              info.scope
             )
-          case info: TypeInfo.SubZ =>
-            return (
-              info.owner,
-              info.ast.id.value,
-              T,
-              if (info.ast.isBitVector) "@bits class" else "@range class",
-              info.ast.id.attr.posOpt
-            )
-          case _ => return (ISZ(), "", F, "", None())
+          case _ => return (ISZ(), "", F, "", None(), Scope.Global(ISZ(), ISZ(), ISZ()))
         }
       }
 
-      val (owner, id, ok, desc, posOpt) = helper
+      val (owner, id, ok, desc, posOpt, scope) = helper
       val name = owner :+ id
       globalNameMap.get(name) match {
         case Some(_: Info.Object) =>
@@ -101,6 +95,7 @@ import org.sireum.lang.{ast => AST}
             globalNameMap = globalNameMap + name ~> Info.Object(
               owner,
               T,
+              scope,
               T,
               AST.Stmt.Object(F, AST.Id(id, attr), ISZ(), ISZ(), attr),
               Some(AST.Typed.Object(owner, id)),
@@ -246,6 +241,7 @@ import org.sireum.lang.{ast => AST}
         val id = stmt.id.value
         val stringInterpolator = ops.StringOps(id).firstToLower
         val name = currentName :+ id
+        val sc = scope(packageName, currentImports, name)
         val stringInterpolatorName = name :+ stringInterpolator
         val entity: String = if (stmt.isBitVector) "bits" else "range"
         declareType(entity, name, TypeInfo.SubZ(currentName, stmt), stmt.attr.posOpt)
@@ -255,6 +251,7 @@ import org.sireum.lang.{ast => AST}
           Info.Object(
             name,
             T,
+            sc,
             T,
             AST.Stmt.Object(F, AST.Id(stringInterpolator, stmt.id.attr), ISZ(), ISZ(), stmt.attr),
             Some(AST.Typed.Object(name, stringInterpolator)),
@@ -292,7 +289,7 @@ import org.sireum.lang.{ast => AST}
         declareType("enumeration", elementTypeName, TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
-
+        val sc = scope(packageName, currentImports, name)
         globalTypeMap.get(name) match {
           case Some(info) =>
             val posOpt = stmt.attr.posOpt
@@ -318,6 +315,7 @@ import org.sireum.lang.{ast => AST}
           Info.Object(
             currentName,
             F,
+            sc,
             F,
             stmt,
             Some(AST.Typed.Object(currentName, stmt.id.value)),
