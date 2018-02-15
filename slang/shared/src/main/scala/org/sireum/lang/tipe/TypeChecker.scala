@@ -865,13 +865,24 @@ import TypeChecker._
             case _ => return (exp(left = newLeft, right = newRight), None())
           }
         case _ =>
-          val (newInvoke, tOpt) = checkInvoke(
-            AST.Exp.Invoke(Some(exp.left), AST.Id(exp.op, AST.Attr(exp.posOpt)), ISZ(), ISZ(exp.right), exp.attr)
-          )
-          newInvoke match {
-            case newInvoke: AST.Exp.Invoke =>
-              return (exp(left = newInvoke.receiverOpt.get, right = newInvoke.args(0), attr = newInvoke.attr), tOpt)
-            case _ => halt("Unexpected situation when type checking binary expression.")
+          if (ops.StringOps(exp.op).endsWith(":")) {
+            val (newInvoke, tOpt) = checkInvoke(
+              AST.Exp.Invoke(Some(exp.right), AST.Id(exp.op, AST.Attr(exp.posOpt)), ISZ(), ISZ(exp.left), exp.attr)
+            )
+            newInvoke match {
+              case newInvoke: AST.Exp.Invoke =>
+                return (exp(left = newInvoke.args(0), right = newInvoke.receiverOpt.get, attr = newInvoke.attr), tOpt)
+              case _ => halt("Unexpected situation when type checking binary expression.")
+            }
+          } else {
+            val (newInvoke, tOpt) = checkInvoke(
+              AST.Exp.Invoke(Some(exp.left), AST.Id(exp.op, AST.Attr(exp.posOpt)), ISZ(), ISZ(exp.right), exp.attr)
+            )
+            newInvoke match {
+              case newInvoke: AST.Exp.Invoke =>
+                return (exp(left = newInvoke.receiverOpt.get, right = newInvoke.args(0), attr = newInvoke.attr), tOpt)
+              case _ => halt("Unexpected situation when type checking binary expression.")
+            }
           }
       }
     }
@@ -1235,10 +1246,14 @@ import TypeChecker._
     def checkInvokeType(
       posOpt: Option[AST.PosInfo],
       resOpt: Option[AST.ResolvedInfo],
-      tpe: AST.Typed,
+      typed: AST.Typed,
       numOfArgs: Z,
       argNames: ISZ[String]
     ): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+      val tpe: AST.Typed = typed match {
+        case typed: AST.Typed.Method if typed.tpe.isByName => typed.tpe.ret
+        case _ => typed
+      }
       tpe match {
         case tpe: AST.Typed.Object =>
           AST.Typed.basicConstructorMap.get(tpe.name) match {
@@ -2255,7 +2270,7 @@ import TypeChecker._
     val newStmt: AST.Stmt = aexp match {
       case aexp: AST.Stmt.Expr =>
         val r = checkExpr(expectedOpt, scope, aexp, reporter)
-        return (r, r.exp.typedOpt)
+        return (r, r.typedOpt)
       case aexp: AST.Stmt.If =>
         val r = checkIf(expectedOpt, scope, aexp, reporter); r
       case aexp: AST.Stmt.Block =>
@@ -2784,8 +2799,8 @@ import TypeChecker._
     stmt: AST.Stmt.Expr,
     reporter: Reporter
   ): AST.Stmt.Expr = {
-    val (newExp, _) = checkExp(expectedOpt, scope, stmt.exp, reporter)
-    return stmt(exp = newExp)
+    val (newExp, typedOpt) = checkExp(expectedOpt, scope, stmt.exp, reporter)
+    return stmt(exp = newExp, attr = stmt.attr(typedOpt = typedOpt))
   }
 
   def checkBlock(
@@ -3418,26 +3433,23 @@ import TypeChecker._
       reporter.error(posOpt, typeCheckerKind, s"Could not unify type '$expected' with '$tpe'.")
     }
 
-    if (expected == tpe) {
-      return Some(HashMap.empty)
-    }
     (expected, tpe) match {
       case (_, tpe: AST.Typed.TypeVar) =>
         return Some(HashMap.empty[String, AST.Typed] + tpe.id ~> expected)
       case (expected: AST.Typed.Name, tpe: AST.Typed.Name) =>
-        val rt: AST.Typed.Name = if (allowSubType) {
-          if (typeHierarchy.isSubType(tpe, expected)) {
-            err()
-            return None()
+        val rt: AST.Typed.Name = if (allowSubType && tpe.ids != expected.ids) {
+          val ancestors: ISZ[AST.Typed.Name] = typeHierarchy.typeMap.get(tpe.ids) match {
+            case Some(info: TypeInfo.AbstractDatatype) => info.ancestors
+            case Some(info: TypeInfo.Sig) => info.ancestors
+            case _ => halt(s"Unexpected situation when trying to unify $expected and $tpe")
           }
-          typeHierarchy.typeMap.get(expected.ids) match {
-            case Some(info: TypeInfo.AbstractDatatype) =>
-              if (info.ast.typeParams.size == tpe.args.size) tpe else info.tpe
-            case Some(info: TypeInfo.Sig) =>
-              if (info.ast.typeParams.size == tpe.args.size) tpe else info.tpe
-            case _ =>
-              halt(s"Unexpected situation when trying to unify $expected and $tpe")
+          var r = tpe
+          var found = F
+          for (ancestor <- ancestors if !found && ancestor.ids == expected.ids) {
+            r = ancestor
+            found = T
           }
+          r
         } else {
           if (tpe.ids != expected.ids || tpe.args.size != expected.args.size) {
             err()

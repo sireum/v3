@@ -431,13 +431,17 @@ object TypeHierarchy {
             }
             return Some(tipe(attr = tipe.attr(typedOpt = Some(AST.Typed.TypeVar(ti.name(0))))))
           case Some(ti) =>
-            val p: (String, Z) = ti match {
-              case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0)
-              case _: TypeInfo.Enum => ("@enum", 0)
+            val p: (String, Z, ISZ[String]) = ti match {
+              case ti: TypeInfo.SubZ => (if (ti.ast.isBitVector) "@bits" else "@range", 0, ti.name)
+              case _: TypeInfo.Enum => ("@enum", 0, ti.name :+ "Type")
               case ti: TypeInfo.Sig =>
-                (if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig", ti.ast.typeParams.size)
+                (
+                  if (ti.ast.isExt) "@ext" else if (ti.ast.isImmutable) "@sig" else "@msig",
+                  ti.ast.typeParams.size,
+                  ti.name
+                )
               case ti: TypeInfo.AbstractDatatype =>
-                (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size)
+                (if (ti.ast.isDatatype) "@datatype" else "@record", ti.ast.typeParams.size, ti.name)
               case _ => halt("Infeasible")
             }
             if (newTypeArgs.size != p._2) {
@@ -456,7 +460,7 @@ object TypeHierarchy {
               }
               return None()
             }
-            val t = AST.Typed.Name(ti.name, argTypes)
+            val t = AST.Typed.Name(p._3, argTypes)
             checkNothing(t)
             return Some(tipe(typeArgs = newTypeArgs, attr = tipe.attr(typedOpt = Some(t))))
           case _ =>
@@ -628,23 +632,29 @@ object TypeHierarchy {
   }
 
   @pure def isSubType(t1: AST.Typed, t2: AST.Typed): B = {
-    if (AST.Typed.nothing == t1) {
+    if (AST.Typed.nothing == t1 || t1 == t2) {
       return T
     }
     (t1, t2) match {
       case (t1: AST.Typed.Name, t2: AST.Typed.Name) =>
-        if (t1.args.size != t2.args.size) {
-          return F
-        }
-        for (i <- z"0" until t1.args.size) {
-          if (t1.args(i) != t2.args(i)) {
-            return F
+        @pure def buildSm(tps: ISZ[AST.TypeParam]): HashMap[String, AST.Typed] = {
+          var i = 0
+          var sm = HashMap.emptyInit[String, AST.Typed](t1.args.size)
+          for (tp <- tps) {
+            sm = sm + tp.id.value ~> t1.args(i)
+            i = i + 1
           }
+          return sm
         }
-        if (t1.ids == t2.ids) {
+        val (ancestors, substMap): (ISZ[AST.Typed.Name], HashMap[String, AST.Typed]) = typeMap.get(t1.ids) match {
+          case Some(info: TypeInfo.Sig) => (info.ancestors, buildSm(info.ast.typeParams))
+          case Some(info: TypeInfo.AbstractDatatype) => (info.ancestors, buildSm(info.ast.typeParams))
+          case _ => return F
+        }
+        for (ancestor <- ancestors if ancestor.ids == t2.ids && ancestor.subst(substMap) == t2) {
           return T
         }
-        return poset.ancestorsOf(TypeHierarchy.TypeName(t1)).contains(TypeHierarchy.TypeName(t2))
+        return F
       case _ => return t1 == t2
     }
   }
