@@ -77,6 +77,8 @@ object TypeChecker {
   val nativeF32TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f32))
   val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
   val applyResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("apply"))
+  val stringResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("string"))
+  val hashResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("hash"))
 
   val unopResOpt: HashMap[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]] = HashMap ++ ISZ(
     AST.Exp.UnaryOp.Plus ~> Some(AST.ResolvedInfo.BuiltIn("+")),
@@ -294,6 +296,11 @@ object TypeChecker {
               case stmt: AST.Stmt.Sig =>
                 r.typeMap.get(info.name :+ stmt.id.value) match {
                   case Some(sigInfo: TypeInfo.Sig) => newStmts = newStmts :+ sigInfo.ast
+                  case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
+                }
+              case stmt: AST.Stmt.Object =>
+                r.nameMap.get(info.name :+ stmt.id.value) match {
+                  case Some(objectInfo: Info.Object) => newStmts = newStmts :+ objectInfo.ast
                   case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
                 }
               case _ => newStmts = newStmts :+ stmt
@@ -1044,21 +1051,28 @@ import TypeChecker._
         case _ =>
       }
 
+      @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+        return (None(), None())
+      }
+
       def errAccess(t: AST.Typed): Unit = {
         reporter.error(ident.attr.posOpt, typeCheckerKind, s"'$id' is not a member of type '$t'.")
+      }
+
+      def checkAccess(t: AST.Typed): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+        id.native match {
+          case "string" => return (AST.Typed.stringOpt, stringResOpt)
+          case "hash" => return (AST.Typed.zOpt, hashResOpt)
+          case _ => errAccess(t); return noResult
+        }
       }
 
       def errTypeArgs(t: AST.Typed): Unit = {
         reporter.error(ident.attr.posOpt, typeCheckerKind, s"Member '$id' of type '$t' does not accept type arguments.")
       }
 
-      @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
-        return (None(), None())
-      }
-
       receiverType match {
         case receiverType: AST.Typed.Name =>
-          val id = ident.value
           typeHierarchy.typeMap.get(receiverType.ids).get match {
             case info: TypeInfo.Sig =>
               val r = info.typeRes(id, inSpec)
@@ -1070,7 +1084,7 @@ import TypeChecker._
                     case Some(sm) => return (Some(rt.subst(sm)), r._2)
                     case _ => return noResult
                   }
-                case _ => errAccess(receiverType); return noResult
+                case _ => val res = checkAccess(receiverType); return res
               }
             case info: TypeInfo.AbstractDatatype =>
               val r = info.typeRes(id, inSpec)
@@ -1082,14 +1096,14 @@ import TypeChecker._
                     case Some(sm) => return (Some(rt.subst(sm)), r._2)
                     case _ => return noResult
                   }
-                case _ => errAccess(receiverType); return noResult
+                case _ => val res = checkAccess(receiverType); return res
               }
-            case _ => errAccess(receiverType); return noResult
+            case _ => val res = checkAccess(receiverType); return res
           }
         case receiverType: AST.Typed.Tuple =>
           if (id.size == 0 || ops.StringOps(id).first != '_') {
-            errAccess(receiverType)
-            return noResult
+            val res = checkAccess(receiverType)
+            return res
           }
           Z(ops.StringOps(id).substring(1, id.size)) match {
             case Some(n) =>
@@ -1153,9 +1167,7 @@ import TypeChecker._
         case receiverType: AST.Typed.Methods =>
           errAccess(receiverType)
           return noResult
-        case receiverType: AST.Typed.TypeVar =>
-          errAccess(receiverType)
-          return noResult
+        case receiverType: AST.Typed.TypeVar => val res = checkAccess(receiverType); return res
       }
     }
 
@@ -2400,17 +2412,6 @@ import TypeChecker._
     return (Some(addImport(scope)), stmt)
   }
 
-  @pure def globalScope(s: Scope): Scope = {
-    s match {
-      case s: Scope.Global => return s
-      case _ =>
-        s.outerOpt match {
-          case Some(outer) => return globalScope(outer)
-          case _ => halt("Unexpected situation when type checking a body.")
-        }
-    }
-  }
-
   def checkBody(expectedOpt: Option[AST.Typed], sc: Scope.Local, body: AST.Body, reporter: Reporter): AST.Body = {
     val to = TypeOutliner(typeHierarchy)
     var ok = T
@@ -2431,7 +2432,7 @@ import TypeChecker._
             Info.Method(
               context,
               F,
-              globalScope(scope),
+              scope,
               T,
               stmt,
               None(),
@@ -2568,8 +2569,14 @@ import TypeChecker._
               }
               return pattern(attr = pattern.attr(typedOpt = Some(t), resOpt = resOpt))
             case _ =>
-              reporter.error(pattern.posOpt, typeCheckerKind, s"Could not resolve '${(refName, ".")}'.")
-              return pattern
+              val refNameM1 = ops.ISZOps(refName).dropRight(1)
+              scope.resolveName(typeHierarchy.nameMap, refNameM1) match {
+                case Some(info: Info.Enum) if info.elements.contains(refName(refName.size - 1)) =>
+                  return pattern(attr = pattern.attr(typedOpt = info.elementTypedOpt, resOpt = info.resOpt))
+                case _ =>
+                  reporter.error(pattern.posOpt, typeCheckerKind, st"Could not resolve '${(refName, ".")}'.".render)
+                  return pattern
+              }
           }
         case pattern: AST.Pattern.Literal =>
           val t = pattern.lit.typedOpt.get
@@ -2923,7 +2930,7 @@ import TypeChecker._
       var r = stmt
       val resOpt: Option[AST.ResolvedInfo] = scope.resolveName(typeHierarchy.nameMap, ISZ(key)) match {
         case Some(info: Info.Var) => info.resOpt
-        case Some(_) =>
+        case Some(_: Info.LocalVar) =>
           err()
           return (None(), r)
         case _ => Some(AST.ResolvedInfo.LocalVar(context, key))
@@ -3375,7 +3382,7 @@ import TypeChecker._
       }
     }
     val reporter = AccumulatingReporter.create
-    var scope = createNewScope(info.scope)
+    var scope = createNewScope(info.scope(enclosingName = name))
     scope = scope(localThisOpt = Some(AST.Typed.Object(info.owner, info.ast.id.value)))
     var stmtOpts = ISZ[Option[AST.Stmt]]()
     for (stmt <- info.ast.stmts) {
@@ -3387,6 +3394,7 @@ import TypeChecker._
         case stmt: AST.Stmt.ExtMethod => stmtOpts = stmtOpts :+ getStmt(stmt.sig.id.value)
         case _: AST.Stmt.Sig => stmtOpts = stmtOpts :+ None()
         case _: AST.Stmt.AbstractDatatype => stmtOpts = stmtOpts :+ None()
+        case _: AST.Stmt.Object => stmtOpts = stmtOpts :+ None()
         case _ => stmtOpts = stmtOpts :+ Some(stmt)
       }
     }

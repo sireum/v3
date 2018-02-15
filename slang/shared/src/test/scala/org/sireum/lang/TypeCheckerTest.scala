@@ -44,6 +44,21 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |object L1 {
+                             |  @enum object E { 'A }
+                             |  object L2 {
+                             |    def bar(): Unit = {
+                             |      def foo(e: E.Type): Unit = {
+                             |        e match {
+                             |          case E.A =>
+                             |        }
+                             |      }
+                             |    }
+                             |  }
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |
                              |object FooLike {
                              |  @sig trait T {
@@ -457,7 +472,8 @@ class TypeCheckerTest extends SireumSpec {
   }
 
   def errIf(b: Boolean): Unit = {
-    if (b) new Throwable().printStackTrace()
+    if (b)
+      new Throwable().printStackTrace()
     assert(!b)
   }
 }

@@ -49,8 +49,8 @@ class LibraryTypeCheckingTest extends SireumSpec {
       }
       val reporter = AccumulatingReporter.create
       reporter.reports(rep.messages)
-      val all = F
-      val name = "org.sireum.Map"
+      val all = T
+      val name = ""
       val nameMap: Resolver.NameMap = if (all) tc.typeHierarchy.nameMap else HashMap ++ ISZ(
         nameInfo(name)
       )
