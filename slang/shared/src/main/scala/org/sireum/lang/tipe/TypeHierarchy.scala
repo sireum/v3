@@ -646,10 +646,19 @@ object TypeHierarchy {
           }
           return sm
         }
-        val (ancestors, substMap): (ISZ[AST.Typed.Name], HashMap[String, AST.Typed]) = typeMap.get(t1.ids) match {
-          case Some(info: TypeInfo.Sig) => (info.ancestors, buildSm(info.ast.typeParams))
-          case Some(info: TypeInfo.AbstractDatatype) => (info.ancestors, buildSm(info.ast.typeParams))
-          case _ => return F
+        if (!poset.ancestorsOf(TypeHierarchy.TypeName(t1)).contains(TypeHierarchy.TypeName(t2))) {
+          return F
+        } else if (t2.args.isEmpty) {
+          return T
+        }
+        val (outlined, ancestors, substMap): (B, ISZ[AST.Typed.Name], HashMap[String, AST.Typed]) =
+          typeMap.get(t1.ids) match {
+            case Some(info: TypeInfo.Sig) => (info.outlined, info.ancestors, buildSm(info.ast.typeParams))
+            case Some(info: TypeInfo.AbstractDatatype) => (info.outlined, info.ancestors, buildSm(info.ast.typeParams))
+            case _ => return F
+          }
+        if (!outlined) {
+          return T
         }
         for (ancestor <- ancestors if ancestor.ids == t2.ids && ancestor.subst(substMap) == t2) {
           return T
