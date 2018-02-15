@@ -178,12 +178,33 @@
     subs = ISZ(cliGenTool, serializerGenTool, transformerGenTool)
   )
 
+  val langChecker: Tool = Tool(
+    name = "checker",
+    description = "Slang checker",
+    header = "Slang Checker",
+    usage = "<option>* ( <scala-filename> | <slang-filename> )*",
+    opts = ISZ(
+      Opt(name = "sourcepath", longKey = "sourcepath", shortKey = Some('p'),
+        tpe = Type.Path(T, Some(".")),
+        description = "Sourcepath of Slang files")
+    ),
+    groups = ISZ()
+  )
+
+  val slangGroup: Group = Group(
+    name = "slang",
+    description = "Slang toolbox",
+    header = "Sireum Language (Slang) Toolbox",
+    unlisted = F,
+    subs = ISZ(langChecker)
+  )
+
   val xGroup: Group = Group(
     name = "x",
     description = "Experimental Tools",
     header = "Sireum Experimental Tools",
     unlisted = T,
-    subs = ISZ(aadlGroup)
+    subs = ISZ(aadlGroup, slangGroup)
   )
   val mainGroup: Group = Group(
     name = "sireum",

@@ -34,7 +34,8 @@ import org.sireum.lang.util.AccumulatingReporter
 object Sireum extends App {
   System.exit(Cli(_root_.java.io.File.pathSeparatorChar).
     parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
-    case Some(o: Cli.LogikaOption) => logika(o)
+    case Some(o: Cli.LogikaOption) => Logika.run(o)
+    case Some(o: Cli.CheckerOption) => SlangChecker.run(o)
     case Some(o: Cli.CligenOption) => cliGen(o)
     case Some(o: Cli.SergenOption) => serGen(o)
     case Some(o: Cli.TransgenOption) => transGen(o)
@@ -43,10 +44,6 @@ object Sireum extends App {
     case Some(_: Cli.HelpOption) => 0
     case _ => -1
   })
-
-  def logika(option: Cli.LogikaOption): Int = {
-    Logika.run(option)
-  }
 
   def cliGen(o: Cli.CligenOption): Int = try {
     o.args.size match {

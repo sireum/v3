@@ -106,6 +106,12 @@ object Cli {
     help: String,
     args: ISZ[String]
   ) extends SireumOption
+
+  @datatype class CheckerOption(
+    help: String,
+    args: ISZ[String],
+    sourcepath: ISZ[String]
+  ) extends SireumOption
 }
 
 import Cli._
@@ -578,13 +584,15 @@ import Cli._
         st"""Sireum Experimental Tools
             |
             |Available modes:
-            |aadl                     AADL Tools""".render
+            |aadl                     AADL Tools
+            |slang                    Slang toolbox""".render
       )
       return Some(HelpOption())
     }
-    val opt = select("x", args, i, ISZ("aadl"))
+    val opt = select("x", args, i, ISZ("aadl", "slang"))
     opt match {
       case Some(string"aadl") => parseAadl(args, i + 1)
+      case Some(string"slang") => parseSlang(args, i + 1)
       case _ => return None()
     }
   }
@@ -691,6 +699,61 @@ import Cli._
       }
     }
     return Some(AwasOption(help, parseArguments(args, j)))
+  }
+
+  def parseSlang(args: ISZ[String], i: Z): Option[SireumOption] = {
+    if (i >= args.size) {
+      println(
+        st"""Sireum Language (Slang) Toolbox
+            |
+            |Available modes:
+            |checker                  Slang checker""".render
+      )
+      return Some(HelpOption())
+    }
+    val opt = select("slang", args, i, ISZ("checker"))
+    opt match {
+      case Some(string"checker") => parseChecker(args, i + 1)
+      case _ => return None()
+    }
+  }
+
+  def parseChecker(args: ISZ[String], i: Z): Option[SireumOption] = {
+    val help =
+      st"""Slang Checker
+          |
+          |Usage: <option>* ( <scala-filename> | <slang-filename> )*
+          |
+          |Available Options:
+          |-p, --sourcepath         Sourcepath of Slang files (expects paths; default is
+          |                           ".")
+          |-h, --help               Display this information""".render
+
+    var sourcepath: ISZ[String] = ISZ(".")
+    var j = i
+    var isOption = T
+    while (j < args.size && isOption) {
+      val arg = args(j)
+      if (ops.StringOps(arg).first == '-') {
+        if (args(j) == "-h" || args(j) == "--help") {
+          println(help)
+          return Some(HelpOption())
+        } else if (arg == "-p" || arg == "--sourcepath") {
+           val o: Option[ISZ[String]] = parsePaths(args, j + 1)
+           o match {
+             case Some(v) => sourcepath = v
+             case _ => return None()
+           }
+         } else {
+          eprintln(s"Unrecognized option '$arg'.")
+          return None()
+        }
+        j = j + 2
+      } else {
+        isOption = F
+      }
+    }
+    return Some(CheckerOption(help, parseArguments(args, j), sourcepath))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {
