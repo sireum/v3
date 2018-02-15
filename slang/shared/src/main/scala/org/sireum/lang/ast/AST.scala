@@ -356,14 +356,14 @@ object Stmt {
 
   }
 
-  @datatype class Expr(exp: Exp, @hidden attr: Attr) extends Stmt with AssignExp {
+  @datatype class Expr(exp: Exp, @hidden attr: TypedAttr) extends Stmt with AssignExp {
 
     @pure override def posOpt: Option[PosInfo] = {
       return attr.posOpt
     }
 
     @pure def typedOpt: Option[Typed] = {
-      return exp.typedOpt
+      return attr.typedOpt
     }
 
     @pure override def asAssignExp: AssignExp = {
