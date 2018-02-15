@@ -369,7 +369,7 @@ object TypeOutliner {
           ancestors = ancestors,
           constructorTypeOpt = Some(
             AST.Typed.Method(
-              F,
+              T,
               AST.MethodMode.Constructor,
               tm.keys.elements,
               info.owner,
