@@ -49,7 +49,6 @@ class SlangFrontEndTest extends SireumSpec {
 
       passing("package a.b.c; import org.sireum._", addImport = false)
 
-
       "Var/Val" - {
 
         passing("val x: Z = 4", isWorksheet = true)
@@ -159,12 +158,11 @@ class SlangFrontEndTest extends SireumSpec {
 
       failing("object Foo", "⊢", addImport = false)
 
-      failingPos(
-        s"""def foo(x: Z): Unit = {
-           |  l$tq requires x > -2
-           |                x = 0 $tq
-           |}
-       """.stripMargin, (4, 17), (4, 22), isWorksheet = true)
+      failingPos(s"""def foo(x: Z): Unit = {
+                    |  l$tq requires x > -2
+                    |                x = 0 $tq
+                    |}
+       """.stripMargin, (4, 17), (4, 21), isWorksheet = true)
 
       "Val/Var" - {
 
@@ -297,7 +295,6 @@ class SlangFrontEndTest extends SireumSpec {
     }
   }
 
-
   def parse(text: String, isWorksheet: Boolean, isPrelude: Boolean, reporter: Reporter): SlangParser.Result =
     SlangParser(isPrelude, isWorksheet, isDiet = false, SNone(), text, reporter)
 
@@ -309,27 +306,35 @@ class SlangFrontEndTest extends SireumSpec {
             passingRc(child)
           }
         case child: Trie.Leaf[String, String] =>
-          registerTest(childKey, ts: _*)(assert(
-            passingCheck(child.data, addImport = false, isPrelude = true,
-              checkJson = false, checkMsgPack = notJs)))(pos)
+          registerTest(childKey, ts: _*)(
+            assert(passingCheck(child.data, addImport = false, isPrelude = true, checkMsgPack = notJs))
+          )(pos)
       }
     case _ =>
   }
 
-  def passingCheck(text: String,
-                   addImport: Boolean = true,
-                   isWorksheet: Boolean = false,
-                   isPrelude: Boolean = false,
-                   checkJson: Boolean = true,
-                   checkMsgPack: Boolean = true): Boolean = {
+  def passingCheck(
+    text: String,
+    addImport: Boolean = true,
+    isWorksheet: Boolean = false,
+    isPrelude: Boolean = false,
+    checkMsgPack: Boolean = true
+  ): Boolean = {
     val reporter = AccumulatingReporter.create
-    val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-      isWorksheet, isPrelude, reporter)
+    val r = parse(
+      s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+      isWorksheet,
+      isPrelude,
+      reporter
+    )
     var b = r.unitOpt.nonEmpty && !reporter.hasIssue
     if (!b) report(r, reporter)
     else {
-      val gdr = GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Resolver.Info],
-        SHashMap.empty[ISZ[SString], Resolver.TypeInfo], reporter)
+      val gdr = GlobalDeclarationResolver(
+        SHashMap.empty[ISZ[SString], Resolver.Info],
+        SHashMap.empty[ISZ[SString], Resolver.TypeInfo],
+        reporter
+      )
       reporter.reports(gdr.reporter.messages)
       if (reporter.hasIssue) report(r, reporter)
       r.unitOpt.foreach {
@@ -340,16 +345,10 @@ class SlangFrontEndTest extends SireumSpec {
             b = false
           }
 
-          if (checkJson) {
-            val json = AST.JSON.fromTopUnit(p, true)
-            //println(json)
-            assert(AST.JSON.toTopUnit(json) == p)
-          }
-
           if (checkMsgPack) {
-            val bin = AST.MsgPack.fromTopUnit(p, true)
+            val bin = AST.CustomMessagePack.fromTopUnit(p)
             //println(bin.size)
-            assert(AST.MsgPack.toTopUnit(bin) == p)
+            assert(AST.CustomMessagePack.toTopUnit(bin) == p)
           }
         case _ => b = false
       }
@@ -357,43 +356,58 @@ class SlangFrontEndTest extends SireumSpec {
     b
   }
 
-  def passing(text: String,
-              addImport: Boolean = true,
-              isWorksheet: Boolean = false,
-              isPrelude: Boolean = false,
-              checkJson: Boolean = true)(
-               implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
+  def passing(
+    text: String,
+    addImport: Boolean = true,
+    isWorksheet: Boolean = false,
+    isPrelude: Boolean = false,
+    checkJson: Boolean = true
+  )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
 
-  def failing(text: String, msg: String,
-              addImport: Boolean = true,
-              isWorksheet: Boolean = false,
-              isPrelude: Boolean = false)(
-               implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
+  def failing(
+    text: String,
+    msg: String,
+    addImport: Boolean = true,
+    isWorksheet: Boolean = false,
+    isPrelude: Boolean = false
+  )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
       val reporter = AccumulatingReporter.create
-      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude, reporter)
+      val r = parse(
+        s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+        isWorksheet,
+        isPrelude,
+        reporter
+      )
       val b = reporter.issues.elements.exists(_.message.value.contains(msg))
       if (!b) report(r, reporter)
       b
     }
 
-  def failingPos(text: String,
-                 begin: (org.sireum.Z, org.sireum.Z),
-                 end: (org.sireum.Z, org.sireum.Z),
-                 addImport: Boolean = true,
-                 isWorksheet: Boolean = false,
-                 isPrelude: Boolean = false)(
-                  implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
+  def failingPos(
+    text: String,
+    begin: (org.sireum.Z, org.sireum.Z),
+    end: (org.sireum.Z, org.sireum.Z),
+    addImport: Boolean = true,
+    isWorksheet: Boolean = false,
+    isPrelude: Boolean = false
+  )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
       val reporter = AccumulatingReporter.create
-      val r = parse(s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
-        isWorksheet, isPrelude, reporter)
-      val b = reporter.issues.elements.exists(_.posOpt.exists(info =>
-        info.beginLine == begin._1 && info.beginColumn == begin._2 &&
-          info.endLine == end._1 && info.endColumn == end._2
-      ))
+      val r = parse(
+        s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
+        isWorksheet,
+        isPrelude,
+        reporter
+      )
+      val b = reporter.issues.elements.exists(
+        _.posOpt.exists(
+          info =>
+            info.beginLine == begin._1 && info.beginColumn == begin._2 &&
+              info.endLine == end._1 && info.endColumn == end._2
+        )
+      )
       if (!b) report(r, reporter)
       b
     }

@@ -148,6 +148,19 @@ class SlangParser(
 ) {
   var lPointOpt: scala.Option[Int] = scala.None
 
+  val fileInfo = AST.FileInfo(fileUriOpt = fileUriOpt, lineOffsets = {
+    val util = new org.langmeta.InputUtil(input)
+    var line = 0
+    import org.sireum._
+    import org.sireum.U32._
+    var r = ISZ[U32]()
+    try while (true) {
+      r = r :+ U32(util.lineToOffset(line))
+      line = line + 1
+    } catch { case _: Throwable => }
+    r
+  })
+
   def parseTopUnit(): Result = {
     try {
       if (fileUriOpt.getOrElse("").value.endsWith(".scala")) {
@@ -186,16 +199,29 @@ class SlangParser(
 
   def posInfo(pos: Position): AST.PosInfo = {
     val startOffset = lPointOpt.getOrElse(0)
-    val range = Position.Range(input, startOffset + pos.start, startOffset + pos.end)
-    AST.PosInfo(
-      fileUriOpt = fileUriOpt,
-      beginLine = range.startLine + 1,
-      beginColumn = range.startColumn + 1,
-      endLine = range.endLine + 1,
-      endColumn = range.endColumn + 1,
-      offset = range.start,
-      length = range.end - range.start
-    )
+    //val range = Position.Range(input, startOffset + pos.start, startOffset + pos.end)
+    //val beginLine = range.startLine + 1
+    //val beginColumn = range.startColumn + 1
+    //val endLine = range.endLine + 1
+    //val endColumn = range.endColumn
+    val offset = startOffset + pos.start //range.start
+    val length = startOffset + pos.end - offset //range.end - range.start
+
+    import org.sireum._
+    import org.sireum.U64._
+
+    val off = conversions.Z.toU64(offset) << u64"32"
+    val len = conversions.Z.toU64(length)
+    val offsetLength = off | len
+
+    val r = AST.PosInfo(fileInfo = fileInfo, offsetLength = offsetLength)
+    //assert(r.offset == offset, s"Pos offset: ${r.offset} != $offset")
+    //assert(r.length == length, s"Pos len: ${r.length} == $length")
+    //assert(r.beginLine == beginLine, s"Pos begin line: ${r.beginLine} == $beginLine")
+    //assert(r.beginColumn == beginColumn, s"Pos begin column: ${r.beginColumn} == $beginColumn")
+    //assert(r.endLine == endLine, s"Pos end line: ${r.endLine} == $endLine")
+    //assert(r.endColumn == endColumn, s"Pos end column: ${r.endColumn} == $endColumn")
+    r
   }
 
   def posOpt(pos: Position): Option[AST.PosInfo] = Some(posInfo(pos))

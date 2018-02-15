@@ -1746,23 +1746,18 @@ object ResolvedInfo {
 
 }
 
-@datatype class PosInfo(
-  fileUriOpt: Option[String],
-  beginLine: Z,
-  beginColumn: Z,
-  endLine: Z,
-  endColumn: Z,
-  offset: Z,
-  length: Z
-) {
-  {
-    assert(beginLine >= 1, "beginLine")
-    assert(beginColumn >= 1, "beginColumn")
-    assert(endLine >= 1, "endLine")
-    assert(endColumn >= 1, "endColumn")
-    assert(offset >= 0, "offset")
-    assert(length >= 0, "length")
-  }
+import org.sireum.U64._
+
+@datatype class PosInfo(fileInfo: FileInfo, offsetLength: U64) {
+
+  //{
+  //  assert(beginLine >= 1, "beginLine")
+  //  assert(beginColumn >= 1, "beginColumn")
+  //  assert(endLine >= 1, "endLine")
+  //  assert(endColumn >= 1, "endColumn")
+  //  assert(offset >= 0, "offset")
+  //  assert(length >= 0, "length")
+  //}
 
   l"""invariant beginLine ≥ 1
                 beginColumn ≥ 1
@@ -1772,4 +1767,70 @@ object ResolvedInfo {
                 length ≥ 0
    """
 
+  @pure def fileUriOpt: Option[String] = {
+    return fileInfo.fileUriOpt
+  }
+
+  @pure def beginLine: Z = {
+    return conversions.U64.toZ(fileInfo.lineColumn(offsetLength) >>> u64"32")
+  }
+
+  @pure def beginColumn: Z = {
+    return conversions.U64.toZ(fileInfo.lineColumn(offsetLength) & u64"0xFFFFFFFF")
+  }
+
+  @pure def endLine: Z = {
+    val endOffset = offsetLength + ((offsetLength - u64"1") << u64"32")
+    return conversions.U64.toZ(fileInfo.lineColumn(endOffset) >>> u64"32")
+  }
+
+  @pure def endColumn: Z = {
+    val endOffset = offsetLength + ((offsetLength - u64"1") << u64"32")
+    return conversions.U64.toZ(fileInfo.lineColumn(endOffset) & u64"0xFFFFFFFF")
+  }
+
+  @pure def offset: Z = {
+    return conversions.U64.toZ(offsetLength >>> u64"32")
+  }
+
+  @pure def length: Z = {
+    return conversions.U64.toZ(offsetLength & u64"0xFFFFFFFF")
+  }
+
+  @pure override def string: String = {
+    return s"[$beginLine, $beginColumn]"
+  }
+
+}
+
+@datatype class FileInfo(val fileUriOpt: Option[String], val lineOffsets: ISZ[U32]) {
+
+  @pure def lineColumn(offsetLength: U64): U64 = {
+    val offsetLine = conversions.U64.toU32(offsetLength >>> u64"32")
+    @pure def computeLC(i: Z): U64 = {
+      val line = conversions.Z.toU64(i + 1) << u64"32"
+      val column = conversions.U32.toU64(offsetLine - lineOffsets(i)) + u64"1"
+      return line | column
+    }
+    val size = lineOffsets.size
+    var i = size / 2
+    var max = size - 1
+    var min = z"0"
+    while (min < i && i <= max) {
+      val lineOffsetsI = lineOffsets(i)
+      if (offsetLine < lineOffsetsI) {
+        if (lineOffsets(i - 1) <= offsetLine) {
+          return computeLC(i - 1)
+        }
+        max = i
+        i = i - ((i - min) / 2)
+      } else if (offsetLine == lineOffsetsI) {
+        return computeLC(i)
+      } else {
+        min = i
+        i = i + (max - i) / 2
+      }
+    }
+    return if (i <= min) computeLC(min) else computeLC(max)
+  }
 }

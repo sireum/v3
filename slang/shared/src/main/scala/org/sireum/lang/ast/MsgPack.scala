@@ -330,11 +330,13 @@ object MsgPack {
 
     val PosInfo: Z = 146
 
+    val FileInfo: Z = 147
+
   }
 
   object Writer {
 
-    @record class Default(val writer: MessagePack.Writer) extends Writer
+    @record class Default(val writer: MessagePack.Writer.Impl) extends Writer
 
   }
 
@@ -1591,13 +1593,14 @@ object MsgPack {
 
     def writePosInfo(o: PosInfo): Unit = {
       writer.writeZ(Constants.PosInfo)
+      writeFileInfo(o.fileInfo)
+      writeU64(o.offsetLength)
+    }
+
+    def writeFileInfo(o: FileInfo): Unit = {
+      writer.writeZ(Constants.FileInfo)
       writer.writeOption(o.fileUriOpt, writeString)
-      writeZ(o.beginLine)
-      writeZ(o.beginColumn)
-      writeZ(o.endLine)
-      writeZ(o.endColumn)
-      writeZ(o.offset)
-      writeZ(o.length)
+      writer.writeISZ(o.lineOffsets, writeU32)
     }
 
     def writeB(b: B): Unit = {
@@ -1704,7 +1707,7 @@ object MsgPack {
 
   object Reader {
 
-    @record class Default(val reader: MessagePack.Reader) extends Reader
+    @record class Default(val reader: MessagePack.Reader.Impl) extends Reader
 
   }
 
@@ -4177,14 +4180,23 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.PosInfo)
       }
+      val fileInfo = readFileInfo()
+      val offsetLength = reader.readU64()
+      return PosInfo(fileInfo, offsetLength)
+    }
+
+    def readFileInfo(): FileInfo = {
+      val r = readFileInfoT(F)
+      return r
+    }
+
+    def readFileInfoT(typeParsed: B): FileInfo = {
+      if (!typeParsed) {
+        reader.expectZ(Constants.FileInfo)
+      }
       val fileUriOpt = reader.readOption(reader.readString _)
-      val beginLine = reader.readZ()
-      val beginColumn = reader.readZ()
-      val endLine = reader.readZ()
-      val endColumn = reader.readZ()
-      val offset = reader.readZ()
-      val length = reader.readZ()
-      return PosInfo(fileUriOpt, beginLine, beginColumn, endLine, endColumn, offset, length)
+      val lineOffsets = reader.readISZ(reader.readU32 _)
+      return FileInfo(fileUriOpt, lineOffsets)
     }
 
   }
@@ -6683,6 +6695,21 @@ object MsgPack {
       return r
     }
     val r = to(data, fPosInfo)
+    return r
+  }
+
+  def fromFileInfo(o: FileInfo, poolString: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(poolString))
+    w.writeFileInfo(o)
+    return w.result
+  }
+
+  def toFileInfo(data: ISZ[U8]): FileInfo = {
+    def fFileInfo(reader: Reader): FileInfo = {
+      val r = reader.readFileInfo()
+      return r
+    }
+    val r = to(data, fFileInfo)
     return r
   }
 

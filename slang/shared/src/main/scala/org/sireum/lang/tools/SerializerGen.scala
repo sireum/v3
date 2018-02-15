@@ -404,7 +404,7 @@ object SerializerGen {
                  |
                  |  object Writer {
                  |
-                 |    @record class Default(val writer: MessagePack.Writer) extends Writer
+                 |    @record class Default(val writer: MessagePack.Writer.Impl) extends Writer
                  |
                  |  }
                  |
@@ -518,7 +518,7 @@ object SerializerGen {
                  |
                  |  object Reader {
                  |
-                 |    @record class Default(val reader: MessagePack.Reader) extends Reader
+                 |    @record class Default(val reader: MessagePack.Reader.Impl) extends Reader
                  |
                  |  }
                  |

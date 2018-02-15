@@ -37,8 +37,6 @@ import org.sireum.util.FileUtil
 
 class SerializerGenJvmTest extends SireumSpec {
 
-  *(gen(slangAstPath, slangJSONPath, SerializerGen.Mode.JSON))
-
   *(gen(slangAstPath, slangMsgPackPath, SerializerGen.Mode.MessagePack))
 
   def gen(src: File, dest: File, mode: SerializerGen.Mode.Type): Boolean = {

@@ -944,6 +944,10 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
+    @pure def preFileInfo(ctx: Context, o: FileInfo): PreResult[Context, FileInfo] = {
+      return PreResult(ctx, T, None())
+    }
+
     @pure def postTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
       o match {
         case o: TopUnit.Program => return postTopUnitProgram(ctx, o)
@@ -1842,6 +1846,10 @@ object Transformer {
     }
 
     @pure def postPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
+      return Result(ctx, None())
+    }
+
+    @pure def postFileInfo(ctx: Context, o: FileInfo): Result[Context, FileInfo] = {
       return Result(ctx, None())
     }
 
@@ -4060,6 +4068,33 @@ import Transformer._
     val r: Result[Context, PosInfo] = if (preR.continu) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
+      val r0: Result[Context, FileInfo] = transformFileInfo(ctx, o2.fileInfo)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(fileInfo = r0.resultOpt.getOrElse(o2.fileInfo))))
+      else
+        Result(r0.ctx, None())
+    } else if (preR.resultOpt.nonEmpty) {
+      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
+    } else {
+      Result(preR.ctx, None())
+    }
+    val hasChanged: B = r.resultOpt.nonEmpty
+    val o2: PosInfo = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, PosInfo] = pp.postPosInfo(r.ctx, o2)
+    if (postR.resultOpt.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return Result(postR.ctx, Some(o2))
+    } else {
+      return Result(postR.ctx, None())
+    }
+  }
+
+  @pure def transformFileInfo(ctx: Context, o: FileInfo): Result[Context, FileInfo] = {
+    val preR: PreResult[Context, FileInfo] = pp.preFileInfo(ctx, o)
+    val r: Result[Context, FileInfo] = if (preR.continu) {
+      val o2: FileInfo = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
       if (hasChanged)
         Result(ctx, Some(o2))
       else
@@ -4070,8 +4105,8 @@ import Transformer._
       Result(preR.ctx, None())
     }
     val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: PosInfo = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, PosInfo] = pp.postPosInfo(r.ctx, o2)
+    val o2: FileInfo = r.resultOpt.getOrElse(o)
+    val postR: Result[Context, FileInfo] = pp.postFileInfo(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

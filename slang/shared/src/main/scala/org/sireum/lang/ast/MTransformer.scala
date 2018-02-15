@@ -940,6 +940,10 @@ object MTransformer {
       return PreResult(T, MNone())
     }
 
+    def preFileInfo(o: FileInfo): PreResult[FileInfo] = {
+      return PreResult(T, MNone())
+    }
+
     def postTopUnit(o: TopUnit): MOption[TopUnit] = {
       o match {
         case o: TopUnit.Program => return postTopUnitProgram(o)
@@ -1838,6 +1842,10 @@ object MTransformer {
     }
 
     def postPosInfo(o: PosInfo): MOption[PosInfo] = {
+      return MNone()
+    }
+
+    def postFileInfo(o: FileInfo): MOption[FileInfo] = {
       return MNone()
     }
 
@@ -4054,8 +4062,9 @@ import MTransformer._
     val r: MOption[PosInfo] = if (preR.continu) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      if (hasChanged)
-        MSome(o2)
+      val r0: MOption[FileInfo] = transformFileInfo(o2.fileInfo)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(fileInfo = r0.getOrElse(o2.fileInfo)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -4066,6 +4075,32 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: PosInfo = r.getOrElse(o)
     val postR: MOption[PosInfo] = pp.postPosInfo(o2)
+    if (postR.nonEmpty) {
+      return postR
+    } else if (hasChanged) {
+      return MSome(o2)
+    } else {
+      return MNone()
+    }
+  }
+
+  def transformFileInfo(o: FileInfo): MOption[FileInfo] = {
+    val preR: PreResult[FileInfo] = pp.preFileInfo(o)
+    val r: MOption[FileInfo] = if (preR.continu) {
+      val o2: FileInfo = preR.resultOpt.getOrElse(o)
+      val hasChanged: B = preR.resultOpt.nonEmpty
+      if (hasChanged)
+        MSome(o2)
+      else
+        MNone()
+    } else if (preR.resultOpt.nonEmpty) {
+      MSome(preR.resultOpt.getOrElse(o))
+    } else {
+      MNone()
+    }
+    val hasChanged: B = r.nonEmpty
+    val o2: FileInfo = r.getOrElse(o)
+    val postR: MOption[FileInfo] = pp.postFileInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
