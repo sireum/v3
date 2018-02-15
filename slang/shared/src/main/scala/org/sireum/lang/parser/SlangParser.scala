@@ -128,7 +128,7 @@ object SlangParser {
 
   private[SlangParser] lazy val rDollarId = AST.Id("$", emptyAttr)
   private[SlangParser] lazy val rExp = AST.Exp.Ident(rDollarId, emptyResolvedAttr)
-  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyAttr)
+  private[SlangParser] lazy val rStmt = AST.Stmt.Expr(rExp, emptyTypedAttr)
   private[SlangParser] lazy val emptyContract = AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
 
 }
@@ -353,7 +353,7 @@ class SlangParser(
       case _: Term.Apply | _: Term.ApplyInfix =>
         val term = stat.asInstanceOf[Term]
         stmtCheck(enclosing, term, s"${syntax(stat)}")
-        AST.Stmt.Expr(translateExp(term), attr(stat.pos))
+        AST.Stmt.Expr(translateExp(term), typedAttr(stat.pos))
       case stat @ Term.Interpolate(Term.Name("l"), Seq(_: Lit.String), Nil) => parseLStmt(enclosing, stat)
       case _ =>
         errorNotSlang(stat.pos, s"Statement '${stat.syntax}' is")
@@ -630,7 +630,7 @@ class SlangParser(
             case _: AST.Pattern.Structure =>
             case _ => error(pattern.pos, s"Unallowable var pattern: '${pattern.syntax}'")
           }
-          val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, attr(pattern.pos)))
+          val exp = expropt.map(translateAssignExp).getOrElse(AST.Stmt.Expr(rExp, typedAttr(pattern.pos)))
           val r = AST.Stmt.VarPattern(isVal = false, pat, opt(tpeopt.map(translateType)), exp, attr(stat.pos))
           if (tpeopt.isEmpty) checkTyped(expropt.get.pos, Some(r.init))
           r
@@ -1455,7 +1455,7 @@ class SlangParser(
       translateIfStmt(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Match => translateMatch(Enclosing.Block, exp, isAssignExp = true)
     case exp: Term.Return => translateReturn(Enclosing.Block, exp)
-    case _ => AST.Stmt.Expr(translateExp(exp), attr(exp.pos))
+    case _ => AST.Stmt.Expr(translateExp(exp), typedAttr(exp.pos))
   }
 
   def translateStmtsExp(pos: Position, stats: Seq[Stat]): ISZ[AST.Stmt] = {
