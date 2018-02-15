@@ -282,9 +282,9 @@ object TypeChecker {
         (th, AccumulatingReporter.create)
       )
     var r = p._1
-    for (name <- nameMap.keys) {
-      r.nameMap.get(name) match {
-        case Some(info: Info.Object) =>
+    def reconstructObject(info: Info): Unit = {
+      info match {
+        case info: Info.Object =>
           var newStmts = ISZ[AST.Stmt]()
           for (stmt <- info.ast.stmts) {
             stmt match {
@@ -299,14 +299,17 @@ object TypeChecker {
                   case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
                 }
               case stmt: AST.Stmt.Object =>
-                r.nameMap.get(info.name :+ stmt.id.value) match {
-                  case Some(objectInfo: Info.Object) => newStmts = newStmts :+ objectInfo.ast
-                  case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
-                }
+                reconstructObject(r.nameMap.get(info.name :+ stmt.id.value).get)
               case _ => newStmts = newStmts :+ stmt
             }
           }
           r = r(nameMap = r.nameMap + info.name ~> info(ast = info.ast(stmts = newStmts)))
+        case _ =>
+      }
+    }
+    for (name <- nameMap.keys) {
+      r.nameMap.get(name) match {
+        case Some(info) => reconstructObject(info)
         case _ =>
       }
     }
