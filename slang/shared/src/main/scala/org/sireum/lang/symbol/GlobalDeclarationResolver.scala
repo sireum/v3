@@ -53,6 +53,7 @@ import org.sireum.lang.{ast => AST}
     for (info <- globalTypeMap.values) {
 
       @pure def helper: (ISZ[String], String, B, String, Option[AST.PosInfo], Scope.Global) = {
+        val emptyScope = Scope.Global(ISZ(), ISZ(), ISZ())
         info match {
           case info: TypeInfo.Sig =>
             return (
@@ -75,7 +76,17 @@ import org.sireum.lang.{ast => AST}
               info.ast.id.attr.posOpt,
               info.scope
             )
-          case _ => return (ISZ(), "", F, "", None(), Scope.Global(ISZ(), ISZ(), ISZ()))
+          case info: TypeInfo.SubZ =>
+            return (
+              info.owner,
+              info.ast.id.value,
+              T,
+              if (info.ast.isBitVector) "@bits class"
+              else "@range class",
+              info.ast.id.attr.posOpt,
+              emptyScope
+            )
+          case _ => return (ISZ(), "", F, "", None(), emptyScope)
         }
       }
 
@@ -460,15 +471,8 @@ import org.sireum.lang.{ast => AST}
             stmt,
             None(),
             Some(
-              AST.ResolvedInfo.Method(
-                F,
-                AST.MethodMode.Method,
-                stmt.sig.typeParams.map(tp => tp.id.value),
-                owner,
-                id,
-                params,
-                None()
-              )
+              AST.ResolvedInfo
+                .Method(F, AST.MethodMode.Method, stmt.sig.typeParams.map(tp => tp.id.value), owner, id, params, None())
             )
           )
 
@@ -483,15 +487,8 @@ import org.sireum.lang.{ast => AST}
             stmt,
             None(),
             Some(
-              AST.ResolvedInfo.Method(
-                F,
-                AST.MethodMode.Spec,
-                stmt.sig.typeParams.map(tp => tp.id.value),
-                owner,
-                id,
-                params,
-                None()
-              )
+              AST.ResolvedInfo
+                .Method(F, AST.MethodMode.Spec, stmt.sig.typeParams.map(tp => tp.id.value), owner, id, params, None())
             )
           )
         case _ =>
