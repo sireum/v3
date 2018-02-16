@@ -110,7 +110,9 @@ object Cli {
   @datatype class SlangCheckerOption(
     help: String,
     args: ISZ[String],
-    sourcepath: ISZ[String]
+    sourcepath: ISZ[String],
+    outline: B,
+    force: ISZ[String]
   ) extends SireumOption
 }
 
@@ -704,7 +706,7 @@ import Cli._
   def parseSlang(args: ISZ[String], i: Z): Option[SireumOption] = {
     if (i >= args.size) {
       println(
-        st"""Sireum Language (Slang) Toolbox
+        st"""The Sireum Language (Slang) Toolbox
             |
             |Available modes:
             |checker                  Slang checker""".render
@@ -722,14 +724,21 @@ import Cli._
     val help =
       st"""Slang Checker
           |
-          |Usage: <option>* ( <scala-filename> | <slang-filename> )*
+          |Usage: <option>* [<slang-file>]
           |
           |Available Options:
-          |-p, --sourcepath         Sourcepath of Slang files (expects paths; default is
-          |                           ".")
+          |-s, --sourcepath         Sourcepath of Slang .scala files (expects path
+          |                           strings)
+          |-o, --outline            Perform type outlining only for files in the
+          |                           sourcepath
+          |-f, --force              Fully qualified names of traits, classes, and objects
+          |                           to force full type checking on when type outlining
+          |                           is enabled (expects a string separated by ",")
           |-h, --help               Display this information""".render
 
-    var sourcepath: ISZ[String] = ISZ(".")
+    var sourcepath: ISZ[String] = ISZ[String]()
+    var outline: B = false
+    var force: ISZ[String] = ISZ[String]()
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -738,10 +747,22 @@ import Cli._
         if (args(j) == "-h" || args(j) == "--help") {
           println(help)
           return Some(HelpOption())
-        } else if (arg == "-p" || arg == "--sourcepath") {
+        } else if (arg == "-s" || arg == "--sourcepath") {
            val o: Option[ISZ[String]] = parsePaths(args, j + 1)
            o match {
              case Some(v) => sourcepath = v
+             case _ => return None()
+           }
+         } else if (arg == "-o" || arg == "--outline") {
+           val o: Option[B] = { j = j - 1; Some(!outline) }
+           o match {
+             case Some(v) => outline = v
+             case _ => return None()
+           }
+         } else if (arg == "-f" || arg == "--force") {
+           val o: Option[ISZ[String]] = parseStrings(args, j + 1, ',')
+           o match {
+             case Some(v) => force = v
              case _ => return None()
            }
          } else {
@@ -753,7 +774,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(SlangCheckerOption(help, parseArguments(args, j), sourcepath))
+    return Some(SlangCheckerOption(help, parseArguments(args, j), sourcepath, outline, force))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {

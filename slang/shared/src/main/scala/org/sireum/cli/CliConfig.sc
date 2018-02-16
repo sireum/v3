@@ -189,11 +189,16 @@
     command = "checker",
     description = "Slang checker",
     header = "Slang Checker",
-    usage = "<option>* ( <scala-filename> | <slang-filename> )*",
+    usage = "<option>* [<slang-file>]",
     opts = ISZ(
-      Opt(name = "sourcepath", longKey = "sourcepath", shortKey = Some('p'),
-        tpe = Type.Path(T, Some(".")),
-        description = "Sourcepath of Slang files")
+      Opt(name = "sourcepath", longKey = "sourcepath", shortKey = Some('s'),
+        tpe = Type.Path(T, None()),
+        description = "Sourcepath of Slang .scala files"),
+      Opt(name = "outline", longKey = "outline", shortKey = Some('o'),
+        tpe = Type.Flag(F), description = "Perform type outlining only for files in the sourcepath"),
+      Opt(name = "force", longKey = "force", shortKey = Some('f'),
+        tpe = Type.Str(Some(','), None()),
+        description = "Fully qualified names of traits, classes, and objects to force full type checking on when type outlining is enabled")
     ),
     groups = ISZ()
   )
@@ -201,7 +206,7 @@
   val slangGroup: Group = Group(
     name = "slang",
     description = "Slang toolbox",
-    header = "Sireum Language (Slang) Toolbox",
+    header = "The Sireum Language (Slang) Toolbox",
     unlisted = F,
     subs = ISZ(langChecker)
   )
