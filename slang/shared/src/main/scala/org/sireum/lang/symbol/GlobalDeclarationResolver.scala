@@ -108,6 +108,7 @@ import org.sireum.lang.{ast => AST}
               T,
               scope,
               T,
+              T,
               AST.Stmt.Object(F, AST.Id(id, attr), ISZ(), ISZ(), attr),
               Some(AST.Typed.Object(owner, id)),
               Some(AST.ResolvedInfo.Object(name))
@@ -264,6 +265,7 @@ import org.sireum.lang.{ast => AST}
             T,
             sc,
             T,
+            T,
             AST.Stmt.Object(F, AST.Id(stringInterpolator, stmt.id.attr), ISZ(), ISZ(), stmt.attr),
             Some(AST.Typed.Object(name, stringInterpolator)),
             Some(AST.ResolvedInfo.Object(stringInterpolatorName))
@@ -328,6 +330,7 @@ import org.sireum.lang.{ast => AST}
             F,
             sc,
             F,
+            F,
             stmt,
             Some(AST.Typed.Object(currentName, stmt.id.value)),
             Some(AST.ResolvedInfo.Object(name))
@@ -353,7 +356,7 @@ import org.sireum.lang.{ast => AST}
         declareType(
           "sig",
           name,
-          TypeInfo.Sig(currentName, F, tpe, ISZ(), members.specVars, members.specMethods, members.methods, sc, stmt),
+          TypeInfo.Sig(currentName, F, F, tpe, ISZ(), members.specVars, members.specMethods, members.methods, sc, stmt),
           stmt.attr.posOpt
         )
       case stmt: AST.Stmt.AbstractDatatype =>
@@ -396,6 +399,7 @@ import org.sireum.lang.{ast => AST}
           name,
           TypeInfo.AbstractDatatype(
             currentName,
+            F,
             F,
             tpe,
             None(),

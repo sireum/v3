@@ -407,6 +407,7 @@ object Resolver {
       isSynthetic: B,
       scope: Scope.Global,
       outlined: B,
+      typeChecked: B,
       ast: AST.Stmt.Object,
       typedOpt: Option[AST.Typed],
       resOpt: Option[AST.ResolvedInfo]
@@ -522,6 +523,7 @@ object Resolver {
     @datatype class Sig(
       owner: QName,
       outlined: B,
+      typeChecked: B,
       tpe: AST.Typed.Name,
       ancestors: ISZ[AST.Typed.Name],
       specVars: HashMap[String, Info.SpecVar],
@@ -577,6 +579,7 @@ object Resolver {
     @datatype class AbstractDatatype(
       owner: QName,
       outlined: B,
+      typeChecked: B,
       tpe: AST.Typed.Name,
       constructorTypeOpt: Option[AST.Typed],
       constructorResOpt: Option[AST.ResolvedInfo],
@@ -842,6 +845,7 @@ object Resolver {
     tm = tm + AST.Typed.unit.ids ~> TypeInfo.AbstractDatatype(
       AST.Typed.sireumName,
       T,
+      T,
       AST.Typed.unit,
       None(),
       None(),
@@ -858,6 +862,7 @@ object Resolver {
 
     tm = tm + AST.Typed.nothing.ids ~> TypeInfo.AbstractDatatype(
       AST.Typed.sireumName,
+      T,
       T,
       AST.Typed.nothing,
       None(),
