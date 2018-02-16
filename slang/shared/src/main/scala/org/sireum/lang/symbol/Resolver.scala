@@ -65,7 +65,7 @@ object Resolver {
 
       @pure override def thisOpt: Option[AST.Typed] = {
         localThisOpt match {
-          case r@Some(_) => return r
+          case r @ Some(_) => return r
           case _ =>
             outerOpt match {
               case Some(outer) => return outer.thisOpt
@@ -76,7 +76,7 @@ object Resolver {
 
       @pure override def returnOpt: Option[AST.Typed] = {
         methodReturnOpt match {
-          case r@Some(_) => return r
+          case r @ Some(_) => return r
           case _ =>
             outerOpt match {
               case Some(outer) => return outer.returnOpt
@@ -453,6 +453,20 @@ object Resolver {
       elementTypedOpt: Option[AST.Typed],
       val posOpt: Option[AST.PosInfo]
     ) extends Info
+
+    @datatype class EnumElement(
+      owner: QName,
+      id: String,
+      typedOpt: Option[AST.Typed],
+      resOpt: Option[AST.ResolvedInfo],
+      val posOpt: Option[AST.PosInfo]
+    ) extends Info {
+
+      @pure override def name: QName = {
+        return owner :+ id
+      }
+
+    }
 
     @datatype class LocalVar(
       val name: QName,
@@ -950,9 +964,12 @@ object Resolver {
       val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
       val nameMap = HashMap.empty[QName, Info]
       val typeMap = HashMap.empty[QName, TypeInfo]
+      if (reporter.hasError) {
+        return (reporter, nameMap, typeMap)
+      }
       r match {
         case Some(program) =>
-          val gdr = GlobalDeclarationResolver(nameMap, typeMap, reporter)
+          val gdr = GlobalDeclarationResolver(nameMap, typeMap, AccumulatingReporter.create)
           gdr.resolveProgram(program)
           reporter.reports(gdr.reporter.messages)
           return (reporter, gdr.globalNameMap, gdr.globalTypeMap)

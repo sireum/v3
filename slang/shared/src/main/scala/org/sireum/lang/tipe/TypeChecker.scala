@@ -213,7 +213,7 @@ object TypeChecker {
       )
     )
 
-    if (gdr.reporter.hasIssue) {
+    if (gdr.reporter.hasError) {
       reporter.reports(gdr.reporter.messages)
       return program
     }
@@ -233,12 +233,12 @@ object TypeChecker {
       TypeHierarchy.build(th(nameMap = nameMap, typeMap = typeMap), reporter)
     }
 
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return program
     }
 
     val th3 = TypeOutliner.checkOutline(th2, reporter)
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return program
     }
 
@@ -254,7 +254,7 @@ object TypeChecker {
     }
 
     val th4 = checkComponents(th3, nameMap, typeMap, reporter)
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return program
     }
 
@@ -375,6 +375,7 @@ import TypeChecker._
       case info: Info.Package => return (info.typedOpt, info.resOpt)
       case info: Info.Object => return (info.typedOpt, info.resOpt)
       case info: Info.Enum => return (info.typedOpt, info.resOpt)
+      case info: Info.EnumElement => return (info.typedOpt, info.resOpt)
       case info: Info.Method =>
         return if (inSpec && info.ast.purity == AST.Purity.Impure)
           (None(), None())
@@ -2579,14 +2580,8 @@ import TypeChecker._
               }
               return pattern(attr = pattern.attr(typedOpt = Some(t), resOpt = resOpt))
             case _ =>
-              val refNameM1 = ops.ISZOps(refName).dropRight(1)
-              scope.resolveName(typeHierarchy.nameMap, refNameM1) match {
-                case Some(info: Info.Enum) if info.elements.contains(refName(refName.size - 1)) =>
-                  return pattern(attr = pattern.attr(typedOpt = info.elementTypedOpt, resOpt = info.resOpt))
-                case _ =>
-                  reporter.error(pattern.posOpt, typeCheckerKind, st"Could not resolve '${(refName, ".")}'.".render)
-                  return pattern
-              }
+              reporter.error(pattern.posOpt, typeCheckerKind, st"Could not resolve '${(refName, ".")}'.".render)
+              return pattern
           }
         case pattern: AST.Pattern.Literal =>
           val t = pattern.lit.typedOpt.get

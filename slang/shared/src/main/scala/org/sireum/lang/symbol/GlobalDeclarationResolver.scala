@@ -277,12 +277,14 @@ import org.sireum.lang.{ast => AST}
         var elements = Map.empty[String, Option[AST.ResolvedInfo]]
         val elementTypeName = name :+ "Type"
         val elementTypedOpt: Option[AST.Typed] = Some(AST.Typed.Name(elementTypeName, ISZ()))
+        var elementPosOpts: ISZ[Option[AST.PosInfo]] = ISZ()
         var ordinal = 0
         for (e <- stmt.elements) {
           if (elements.contains(e.value)) {
             reporter.error(e.attr.posOpt, resolverKind, s"Redeclaration of @enum element ${e.value}.")
           } else {
             elements = elements + e.value ~> Some(AST.ResolvedInfo.EnumElement(name, e.value, ordinal))
+            elementPosOpts = elementPosOpts :+ e.attr.posOpt
           }
           ordinal = ordinal + 1
         }
@@ -300,6 +302,23 @@ import org.sireum.lang.{ast => AST}
           stmt.attr.posOpt
         )
         declareType("enumeration", elementTypeName, TypeInfo.Enum(name, elements, stmt.attr.posOpt), stmt.attr.posOpt)
+        var i = 0
+        for (e <- elements.entries) {
+          val posOpt = elementPosOpts(i)
+          declareName(
+            "enumeration element",
+            name :+ e._1,
+            Info.EnumElement(
+              name,
+              e._1,
+              elementTypedOpt,
+              e._2,
+              posOpt
+            ),
+            posOpt
+          )
+          i = i + 1
+        }
       case stmt: AST.Stmt.Object =>
         val name = currentName :+ stmt.id.value
         val sc = scope(packageName, currentImports, name)
