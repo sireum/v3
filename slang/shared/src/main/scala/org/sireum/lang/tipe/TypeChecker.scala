@@ -115,16 +115,7 @@ object TypeChecker {
     string"~>" ~> Some(AST.ResolvedInfo.BuiltIn("~>"))
   )
 
-  var _libraryReporter: Option[(TypeChecker, AccumulatingReporter)] =
-    None()
-
-  var _checkedLibraryReporter: Option[(TypeChecker, AccumulatingReporter)] =
-    None()
-
-  def libraryReporter: (TypeChecker, AccumulatingReporter) = {
-    if (_libraryReporter.nonEmpty) {
-      return _libraryReporter.get
-    }
+  @memoize def libraryReporter: (TypeChecker, AccumulatingReporter) = {
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
     val (reporter, nameMap, typeMap) =
@@ -134,11 +125,10 @@ object TypeChecker {
     val thOutlined = TypeOutliner.checkOutline(th, reporter)
     val tc = TypeChecker(thOutlined, ISZ(), F)
     val r = (tc, reporter)
-    _libraryReporter = Some(r)
     return r
   }
 
-  def checkedLibraryReporter: (TypeChecker, AccumulatingReporter) = {
+  @memoize def checkedLibraryReporter: (TypeChecker, AccumulatingReporter) = {
     val (tc, reporter) = libraryReporter
     val th = tc.typeHierarchy
     val th2 = TypeChecker.checkComponents(th, th.nameMap, th.typeMap, reporter)
