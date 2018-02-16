@@ -68,7 +68,7 @@ object Sireum extends App {
     0
   } catch {
     case e: Throwable =>
-      eprintln(e.getMessage)
+      e.printStackTrace()
       -1
   }
 
@@ -108,7 +108,7 @@ object Sireum extends App {
     0
   } catch {
     case e: Throwable =>
-      eprintln(e.getMessage)
+      e.printStackTrace()
       -1
   }
 
@@ -148,13 +148,13 @@ object Sireum extends App {
     0
   } catch {
     case e: Throwable =>
-      eprintln(e.getMessage)
+      e.printStackTrace()
       -1
   }
 
   def arsitGen(o: Cli.ArsitOption): Int = {
     try {
-      var cls = Class.forName("org.sireum.aadl.arsit.Runner")
+      val cls = Class.forName("org.sireum.aadl.arsit.Runner")
       val m = cls.getDeclaredMethod("run", classOf[File], classOf[scala.Boolean], classOf[scala.Predef.String])
 
       val destDir = path2fileOpt("output directory", o.outputDir, T).get
@@ -176,7 +176,7 @@ object Sireum extends App {
       // params need to extend Object
       m.invoke(null, destDir, Boolean.box(o.json), input.toString).asInstanceOf[Int]
     } catch {
-      case e: Throwable =>
+      case _: Throwable =>
         println(s"This feature is not available")
         -1
     }
