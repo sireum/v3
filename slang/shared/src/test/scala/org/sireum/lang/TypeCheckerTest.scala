@@ -44,6 +44,20 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |@enum object Three {
+                             |  'One
+                             |  'Two
+                             |  'Three
+                             |}
+                             |val twoOpt: Option[Three.Type] = Three.byOrdinal(1)
+                             |assert(twoOpt == Some(Three.Two))
+                             |val threeOpt: Option[Three.Type] = Three.byName("Three")
+                             |assert(threeOpt == Some(Three.Three))
+                             |assert(Three.One.ordinal == 0)
+                             |assert(Three.Two.name == "Two")
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |object L1 {
                              |  @enum object E { 'A }
                              |  object L2 {

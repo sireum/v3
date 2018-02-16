@@ -1074,7 +1074,21 @@ import TypeChecker._
         id.native match {
           case "string" => return (AST.Typed.stringOpt, stringResOpt)
           case "hash" => return (AST.Typed.zOpt, hashResOpt)
-          case _ => errAccess(t); return noResult
+          case _ =>
+            t match {
+              case t: AST.Typed.Name if t.args.isEmpty =>
+                typeHierarchy.typeMap.get(t.ids) match {
+                  case Some(info: TypeInfo.Enum) =>
+                    id.native match {
+                      case "name" => return (info.nameTypedOpt, TypeInfo.Enum.nameResOpt)
+                      case "ordinal" => return (info.ordinalTypedOpt, TypeInfo.Enum.ordinalResOpt)
+                      case _ =>
+                    }
+                }
+              case _ =>
+            }
+            errAccess(t)
+            return noResult
         }
       }
 
@@ -1158,6 +1172,11 @@ import TypeChecker._
         case receiverType: AST.Typed.Enum =>
           typeHierarchy.nameMap.get(receiverType.name) match {
             case Some(info: Info.Enum) =>
+              id.native match {
+                case "byName" => return (info.byNameTypedOpt, Info.Enum.byNameResOpt)
+                case "byOrdinal" => return (info.byOrdinalTypedOpt, Info.Enum.byOrdinalResOpt)
+                case _ =>
+              }
               info.elements.get(id) match {
                 case Some(resOpt) =>
                   if (hasTypeArgs) {

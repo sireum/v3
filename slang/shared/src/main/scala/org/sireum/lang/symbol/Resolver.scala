@@ -445,6 +445,16 @@ object Resolver {
 
     }
 
+    object Enum {
+
+      val elementTypeSuffix: String = "Type"
+
+      val byNameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("byName"))
+
+      val byOrdinalResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("byOrdinal"))
+
+    }
+
     @datatype class Enum(
       val name: QName,
       elements: Map[String, Option[AST.ResolvedInfo]],
@@ -452,7 +462,34 @@ object Resolver {
       resOpt: Option[AST.ResolvedInfo],
       elementTypedOpt: Option[AST.Typed],
       val posOpt: Option[AST.PosInfo]
-    ) extends Info
+    ) extends Info {
+
+      val byNameTypedOpt: Option[AST.Typed] = Some(
+        AST.Typed.Method(
+          T,
+          AST.MethodMode.Method,
+          ISZ(),
+          name,
+          "byName",
+          ISZ(),
+          ISZ(),
+          AST.Typed.Fun(T, F, ISZ(AST.Typed.string), AST.Typed.Name(AST.Typed.optionName, ISZ(elementTypedOpt.get)))
+        )
+      )
+
+      val byOrdinalTypedOpt: Option[AST.Typed] = Some(
+        AST.Typed.Method(
+          T,
+          AST.MethodMode.Method,
+          ISZ(),
+          name,
+          "byOrdinal",
+          ISZ(),
+          ISZ(),
+          AST.Typed.Fun(T, F, ISZ(AST.Typed.z), AST.Typed.Name(AST.Typed.optionName, ISZ(elementTypedOpt.get)))
+        )
+      )
+    }
 
     @datatype class EnumElement(
       owner: QName,
@@ -523,11 +560,44 @@ object Resolver {
       }
     }
 
+    object Enum {
+
+      val nameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("name"))
+
+      val ordinalResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("ordinal"))
+    }
+
     @datatype class Enum(
       val name: QName,
       elements: Map[String, Option[AST.ResolvedInfo]],
       val posOpt: Option[AST.PosInfo]
     ) extends TypeInfo {
+
+      val nameTypedOpt: Option[AST.Typed] = Some(
+        AST.Typed.Method(
+          F,
+          AST.MethodMode.Method,
+          ISZ(),
+          name :+ Info.Enum.elementTypeSuffix,
+          "name",
+          ISZ(),
+          ISZ(),
+          AST.Typed.Fun(T, T, ISZ(), AST.Typed.string)
+        )
+      )
+
+      val ordinalTypedOpt: Option[AST.Typed] = Some(
+        AST.Typed.Method(
+          F,
+          AST.MethodMode.Method,
+          ISZ(),
+          name :+ Info.Enum.elementTypeSuffix,
+          "ordinal",
+          ISZ(),
+          ISZ(),
+          AST.Typed.Fun(T, T, ISZ(), AST.Typed.z)
+        )
+      )
 
       @pure override def canHaveCompanion: B = {
         return F
