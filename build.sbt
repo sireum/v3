@@ -379,7 +379,6 @@ lazy val sireumJvm =
           ShadeRule.rename("org.scalameta.**" -> "sh4d3.org.scalameta.@1").inAll,
           ShadeRule.rename("scala.meta.**" -> "sh4d3.scala.meta.@1").inAll,
           ShadeRule.rename("scalapb.**" -> "sh4d3.scalapb.@1").inAll,
-          ShadeRule.rename("scala.**" -> "sh4d3.scala.@1").inAll,
           ShadeRule.rename("upickle.**" -> "sh4d3.upickle.@1").inAll,
           ShadeRule.rename("scalajson.**" -> "sh4d3.scalajson.@1").inAll,
           ShadeRule.rename("sbt.**" -> "sh4d3.sbt.@1").inAll,
