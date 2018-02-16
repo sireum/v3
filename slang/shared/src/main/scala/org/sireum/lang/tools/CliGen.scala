@@ -363,8 +363,8 @@ import CliGen.CliOpt._
           case t: Type.NumChoice => st"${opt.description} (expects one of { ${(t.choices, ", ")} })".render
           case t: Type.Path =>
             if (t.multiple) {
-              if (t.default.isEmpty) s"${opt.description} (expects paths)"
-              else s"""${opt.description} (expects paths; default is "${t.default.get}")"""
+              if (t.default.isEmpty) s"${opt.description} (expects path strings)"
+              else s"""${opt.description} (expects path strings; default is "${t.default.get}")"""
             } else {
               if (t.default.isEmpty) s"${opt.description} (expects a path)"
               else s"""${opt.description} (expects a path; default is "${t.default.get}")"""
