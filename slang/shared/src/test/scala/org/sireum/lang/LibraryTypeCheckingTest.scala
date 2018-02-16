@@ -38,7 +38,7 @@ class LibraryTypeCheckingTest extends SireumSpec {
     implicit val _spec: SireumSpec = this
 
     * {
-      val (tc, rep) = TypeChecker.libraryCheckerReporter
+      val (tc, rep) = TypeChecker.libraryReporter
       def nameInfo(name: Predef.String): (ISZ[String], Resolver.Info) = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
         return (ids, tc.typeHierarchy.nameMap.get(ids).get)

@@ -115,12 +115,15 @@ object TypeChecker {
     string"~>" ~> Some(AST.ResolvedInfo.BuiltIn("~>"))
   )
 
-  var _libraryCheckerReporter: Option[(TypeChecker, AccumulatingReporter)] =
+  var _libraryReporter: Option[(TypeChecker, AccumulatingReporter)] =
     None()
 
-  def libraryCheckerReporter: (TypeChecker, AccumulatingReporter) = {
-    if (_libraryCheckerReporter.nonEmpty) {
-      return _libraryCheckerReporter.get
+  var _checkedLibraryReporter: Option[(TypeChecker, AccumulatingReporter)] =
+    None()
+
+  def libraryReporter: (TypeChecker, AccumulatingReporter) = {
+    if (_libraryReporter.nonEmpty) {
+      return _libraryReporter.get
     }
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
@@ -131,8 +134,15 @@ object TypeChecker {
     val thOutlined = TypeOutliner.checkOutline(th, reporter)
     val tc = TypeChecker(thOutlined, ISZ(), F)
     val r = (tc, reporter)
-    _libraryCheckerReporter = Some(r)
+    _libraryReporter = Some(r)
     return r
+  }
+
+  def checkedLibraryReporter: (TypeChecker, AccumulatingReporter) = {
+    val (tc, reporter) = libraryReporter
+    val th = tc.typeHierarchy
+    val th2 = TypeChecker.checkComponents(th, th.nameMap, th.typeMap, reporter)
+    return (TypeChecker(th2, ISZ(), F), reporter)
   }
 
   def buildTypeSubstMap(
@@ -178,14 +188,20 @@ object TypeChecker {
     return Some(substMap)
   }
 
-  def checkWorksheet(program: AST.TopUnit.Program, reporter: Reporter): AST.TopUnit.Program = {
-    val th: TypeHierarchy = {
-      val (tc, rep) = libraryCheckerReporter
-      if (rep.hasIssue) {
-        reporter.reports(rep.messages)
-        return program
-      }
-      tc.typeHierarchy
+  def checkWorksheet(
+    thOpt: Option[TypeHierarchy],
+    program: AST.TopUnit.Program,
+    reporter: Reporter
+  ): AST.TopUnit.Program = {
+    val th: TypeHierarchy = thOpt match {
+      case Some(thi) => thi
+      case _ =>
+        val (tc, rep) = libraryReporter
+        if (rep.hasIssue) {
+          reporter.reports(rep.messages)
+          return program
+        }
+        tc.typeHierarchy
     }
 
     val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, AccumulatingReporter.create)
@@ -262,8 +278,9 @@ object TypeChecker {
     var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
     for (info <- typeMap.values) {
       info match {
-        case info: TypeInfo.Sig => jobs = jobs :+ (() => TypeChecker(th, info.name, F).checkSig(info))
-        case info: TypeInfo.AbstractDatatype =>
+        case info: TypeInfo.Sig if !info.typeChecked =>
+          jobs = jobs :+ (() => TypeChecker(th, info.name, F).checkSig(info))
+        case info: TypeInfo.AbstractDatatype if !info.typeChecked =>
           jobs = jobs :+ (() => TypeChecker(th, info.name, F).checkAbstractDatatype(info))
         case _ =>
       }
@@ -303,7 +320,7 @@ object TypeChecker {
               case _ => newStmts = newStmts :+ stmt
             }
           }
-          r = r(nameMap = r.nameMap + info.name ~> info(ast = info.ast(stmts = newStmts)))
+          r = r(nameMap = r.nameMap + info.name ~> info(typeChecked = T, ast = info.ast(stmts = newStmts)))
         case _ =>
       }
     }
@@ -3310,6 +3327,7 @@ import TypeChecker._
       (
         th(
           typeMap = th.typeMap + info.name ~> info(
+            typeChecked = T,
             ast = info.ast(stmts = newStmts),
             vars = vars,
             specVars = specVars,
@@ -3361,6 +3379,7 @@ import TypeChecker._
       (
         th(
           typeMap = th.typeMap + info.name ~> info(
+            typeChecked = T,
             ast = info.ast(stmts = newStmts),
             specVars = specVars,
             methods = methods,

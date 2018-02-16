@@ -395,7 +395,7 @@ class TypeCheckerTest extends SireumSpec {
     Parser(input)
       .parseTopUnit[ast.TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) if !reporter.hasIssue =>
-        val p = TypeChecker.checkWorksheet(program, reporter)
+        val p = TypeChecker.checkWorksheet(None(), program, reporter)
         if (reporter.hasIssue) {
           if (isPassing) {
             reporter.printMessages()
@@ -431,7 +431,7 @@ class TypeCheckerTest extends SireumSpec {
 
   def testStmt(input: Predef.String, isPassing: Boolean, msg: Predef.String = ""): Boolean = {
     val typeChecker: TypeChecker = {
-      val (tc, rep) = TypeChecker.libraryCheckerReporter
+      val (tc, rep) = TypeChecker.libraryReporter
       if (rep.hasIssue) {
         rep.printMessages()
         return false
