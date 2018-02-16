@@ -147,7 +147,7 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println(s"${if (o.outline) "Type outlining" else "Type checking"} Slang library files ...")
+      println(s"Parsing, resolving, and type ${if (o.outline) "outlining" else "checking"} Slang library files ...")
       startTime()
     }
 
