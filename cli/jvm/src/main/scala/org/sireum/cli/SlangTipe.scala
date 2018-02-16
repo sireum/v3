@@ -52,18 +52,38 @@ object SlangTipe {
 
   def run(o: SlangTipeOption): Int = {
     def readFile(f: File): (Option[String], String) = {
-      (Some(f.getCanonicalFile.toURI.toASCIIString), read ! ammonite.ops.Path(f))
+      val file = f.getCanonicalFile.getAbsoluteFile
+      (Some(file.toURI.toASCIIString), read ! ammonite.ops.Path(file))
     }
     if (o.args.isEmpty && o.sourcepath.isEmpty) {
       println(o.help)
       println()
-      println("Please either specify sourcepath or Slang files as arguments.")
+      println("Please either specify sourcepath or Slang files as arguments")
       return 0
     }
     if (o.force.nonEmpty && !o.outline) {
-      eprintln("Forcing type checking can only be used when outline is used")
+      eprintln("Forcing type checking can only be used when outline is enabled")
       return InvalidMode
     }
+
+    var start = 0l
+    def startTime(): Unit = {
+      start = System.currentTimeMillis
+    }
+    def stopTime(): Unit = {
+      if (o.verbose) {
+        val end = System.currentTimeMillis
+        println(s"Time: ${end - start} ms")
+      }
+    }
+
+    var begin = System.currentTimeMillis
+
+    if (o.verbose && o.args.nonEmpty) {
+      println("Reading Slang file arguments ...")
+      startTime()
+    }
+
     var slangFiles = ISZ[(String, (Option[String], String))]()
     for (arg <- o.args) {
       val f = new File(arg.value)
@@ -80,6 +100,15 @@ object SlangTipe {
       slangFiles = slangFiles :+ (arg, readFile(f))
     }
 
+    if (o.verbose) {
+      if (o.args.nonEmpty) {
+        stopTime()
+        println()
+      }
+      println("Reading sourcepath files ...")
+      startTime()
+    }
+
     var sources = ISZ[(Option[String], String)]()
     def collectFiles(f: File): Unit = {
       if (f.isDirectory) {
@@ -93,10 +122,8 @@ object SlangTipe {
             isSlang = firstLine.replaceAllLiterally(" ", "").replaceAllLiterally("\t", "").replaceAllLiterally("\r", "").contains("#Sireum")
           }
           if (isSlang) {
-            if (o.verbose) {
-              println(s"Found ${f.getCanonicalPath}")
-            }
             sources = sources :+ readFile(f)
+            if (o.verbose) println(s"Read ${f.getCanonicalPath}")
           }
         }
       }
@@ -116,6 +143,13 @@ object SlangTipe {
       eprintln("Did not find any sources in the specified sourcepath")
       return InvalidSources
     }
+    stopTime()
+
+    if (o.verbose) {
+      println()
+      println(s"${if (o.outline) "Type outlining" else "Type checking"} Slang library files ...")
+      startTime()
+    }
 
     var (th, reporter): (TypeHierarchy, AccumulatingReporter) = if (o.outline) {
         val p = TypeChecker.libraryReporter
@@ -129,11 +163,25 @@ object SlangTipe {
       reporter.printMessages()
       return InvalidLibrary
     }
+    stopTime()
+
+    if (o.verbose) {
+      println()
+      println("Parsing and resolving Slang programs in sourcepath ...")
+      startTime()
+    }
 
     val t = Resolver.parseProgramAndGloballyResolve(sources, th.nameMap, th.typeMap)
     if (t._1.hasIssue) {
       t._1.printMessages()
       return InvalidSources
+    }
+    stopTime()
+
+    if (o.verbose) {
+      println()
+      println("Building type hierarchy of Slang programs in sourcepath ...")
+      startTime()
     }
 
     th = TypeHierarchy.build(th(nameMap = t._2, typeMap = t._3), reporter)
@@ -141,16 +189,31 @@ object SlangTipe {
       reporter.printMessages()
       return InvalidSources
     }
+    stopTime()
+
+    if (o.verbose) {
+      println()
+      println("Type outlining Slang programs in sourcepath ...")
+      startTime()
+    }
 
     th = TypeOutliner.checkOutline(th, reporter)
     if (reporter.hasIssue) {
       reporter.printMessages()
       return InvalidSources
     }
+    stopTime()
 
     if (o.outline) {
       var nameMap: Resolver.NameMap = HashMap.empty
       var typeMap: Resolver.TypeMap = HashMap.empty
+
+      if (o.verbose && o.force.nonEmpty) {
+        println()
+        println("Type checking Slang programs in the force list ...")
+        startTime()
+      }
+
       var ok = T
       for (name <- o.force) {
         val ids = ISZ[String](name.value.split('.').map(id => String(id)): _*)
@@ -171,7 +234,7 @@ object SlangTipe {
           case _ =>
         }
         if (!found) {
-          eprintln(st"No object, trait, or class with name '${(ids, ".")}' was found.".render)
+          eprintln(st"No object, trait, or class with name '${(ids, ".")}' was found".render)
           ok = F
         }
       }
@@ -180,6 +243,13 @@ object SlangTipe {
       }
       th = TypeChecker.checkComponents(th, nameMap, typeMap, reporter)
     } else {
+
+      if (o.verbose) {
+        println()
+        println("Type checking Slang programs in sourcepath ...")
+        startTime()
+      }
+
       th = TypeChecker.checkComponents(th, th.nameMap, th.typeMap, reporter)
     }
 
@@ -188,13 +258,22 @@ object SlangTipe {
       return InvalidSources
     }
 
+    if (!o.outline || (o.outline && o.force.nonEmpty)) stopTime()
+
     val thOpt: Option[TypeHierarchy] = Some(th)
 
     for (slangFile <- slangFiles) {
+
+      if (o.verbose) {
+        println()
+        println(s"Parsing, resolving, and type checking ${slangFile._1} ...")
+        startTime()
+      }
+
       Parser.parseTopUnit(slangFile._2._2, F, T, F, slangFile._2._1, reporter) match {
         case Some(p: TopUnit.Program) =>
           TypeChecker.checkWorksheet(thOpt, p, reporter)
-        case Some(_) => eprintln(s"File '${slangFile._1}' does not contain a Slang program.")
+        case Some(_) => eprintln(s"File '${slangFile._1}' does not contain a Slang program")
         case _ =>
       }
     }
@@ -202,6 +281,13 @@ object SlangTipe {
     if (reporter.hasIssue) {
       reporter.printMessages()
       return InvalidSlangFiles
+    }
+
+    if (slangFiles.nonEmpty) stopTime()
+
+    if (o.verbose) {
+      println()
+      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s")
     }
 
     return 0

@@ -200,7 +200,7 @@
         tpe = Type.Str(Some(','), None()),
         description = "Fully qualified names of traits, classes, and objects to force full type checking on when type outlining is enabled"),
       Opt(name = "verbose", longKey = "verbose", shortKey = None(),
-        tpe = Type.Flag(F), description = "Print Slang .scala file path found in sourcepath")
+        tpe = Type.Flag(F), description = "Enable verbose mode")
     ),
     groups = ISZ()
   )

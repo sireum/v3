@@ -735,7 +735,7 @@ import Cli._
           |-f, --force              Fully qualified names of traits, classes, and objects
           |                           to force full type checking on when type outlining
           |                           is enabled (expects a string separated by ",")
-          |    --verbose            Print Slang .scala file path found in sourcepath
+          |    --verbose            Enable verbose mode
           |-h, --help               Display this information""".render
 
     var sourcepath: ISZ[String] = ISZ[String]()
