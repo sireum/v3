@@ -40,7 +40,7 @@ import org.sireum.lang.symbol.Resolver
 import org.sireum.lang.tipe.{TypeChecker, TypeHierarchy, TypeOutliner}
 import org.sireum.lang.util.AccumulatingReporter
 
-object SlangChecker {
+object SlangTipe {
 
   val InvalidLibrary: Int = -1
   val InvalidMode: Int = -2
@@ -110,6 +110,11 @@ object SlangChecker {
       } else {
         collectFiles(f)
       }
+    }
+
+    if (o.sourcepath.nonEmpty && sources.isEmpty) {
+      eprintln("Did not find any sources in the specified sourcepath")
+      return InvalidSources
     }
 
     var (th, reporter): (TypeHierarchy, AccumulatingReporter) = if (o.outline) {
