@@ -107,7 +107,7 @@ object Cli {
     args: ISZ[String]
   ) extends SireumOption
 
-  @datatype class CheckerOption(
+  @datatype class SlangCheckerOption(
     help: String,
     args: ISZ[String],
     sourcepath: ISZ[String]
@@ -713,12 +713,12 @@ import Cli._
     }
     val opt = select("slang", args, i, ISZ("checker"))
     opt match {
-      case Some(string"checker") => parseChecker(args, i + 1)
+      case Some(string"checker") => parseSlangChecker(args, i + 1)
       case _ => return None()
     }
   }
 
-  def parseChecker(args: ISZ[String], i: Z): Option[SireumOption] = {
+  def parseSlangChecker(args: ISZ[String], i: Z): Option[SireumOption] = {
     val help =
       st"""Slang Checker
           |
@@ -753,7 +753,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(CheckerOption(help, parseArguments(args, j), sourcepath))
+    return Some(SlangCheckerOption(help, parseArguments(args, j), sourcepath))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {

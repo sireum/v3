@@ -28,6 +28,7 @@
 
   val logikaTool: Tool = Tool(
     name = "logika",
+    command = "logika",
     description = "Logika Verifier and Proof Checker",
     header =
       st"""Sireum/Logika:
@@ -76,6 +77,7 @@
 
   val cliGenTool: Tool = Tool(
     name = "cligen",
+    command = "cligen",
     description = "Command-line interface (CLI) generator",
     header = "Sireum CLI Generator",
     usage = "<option>* <config-file>",
@@ -99,6 +101,7 @@
 
   val transformerGenTool: Tool = Tool(
     name = "transgen",
+    command = "transgen",
     description = "Transformer (visitor/rewriter) generator",
     header = "Sireum Transformer Generator",
     usage = "<option>* <slang-file>",
@@ -119,6 +122,7 @@
 
   val serializerGenTool: Tool = Tool(
     name = "sergen",
+    command = "sergen",
     description = "De/Serializer generator",
     header = "Sireum De/Serializer Generator",
     usage = "<option>* <slang-file>",
@@ -139,6 +143,7 @@
 
   val arsitTool: Tool = Tool(
     name = "arsit",
+    command = "arsit",
     description = "Generate Slang-Embedded project from AadlXml",
     header = "Slang-Embedded generator",
     usage = "<option>*",
@@ -155,6 +160,7 @@
 
   val awasTool: Tool = Tool(
     name = "awas",
+    command = "awas",
     description = "Generate Awas from AADL model",
     header = "Awas generator",
     usage = "??",
@@ -179,7 +185,8 @@
   )
 
   val langChecker: Tool = Tool(
-    name = "checker",
+    name = "slangChecker",
+    command = "checker",
     description = "Slang checker",
     header = "Slang Checker",
     usage = "<option>* ( <scala-filename> | <slang-filename> )*",

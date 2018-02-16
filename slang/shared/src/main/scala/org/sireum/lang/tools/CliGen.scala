@@ -31,13 +31,15 @@ import org.sireum._
 object CliGen {
 
   @datatype trait CliOpt {
-    def name: String
+    @pure def name: String
 
-    def description: String
+    @pure def command: String
 
-    def header: String
+    @pure def description: String
 
-    def unlisted: B
+    @pure def header: String
+
+    @pure def unlisted: B
   }
 
   object CliOpt {
@@ -50,10 +52,15 @@ object CliGen {
       val header: String,
       val unlisted: B,
       subs: ISZ[CliOpt]
-    ) extends CliOpt
+    ) extends CliOpt {
+      @pure def command: String = {
+        return name
+      }
+    }
 
     @datatype class Tool(
       val name: String,
+      val command: String,
       val description: String,
       val header: String,
       usage: String,
@@ -511,11 +518,11 @@ import CliGen.CliOpt._
   }
 
   def group(topName: String, c: Group): Unit = {
-    val choices: ISZ[String] = for (sub <- c.subs) yield sub.name
+    val choices: ISZ[String] = for (sub <- c.subs) yield sub.command
     val choiceCases: ISZ[ST] = for (sub <- c.subs)
-      yield st"""case Some(string"${sub.name}") => parse${ops.StringOps(sub.name).firstToUpper}(args, i + 1)"""
+      yield st"""case Some(string"${sub.command}") => parse${ops.StringOps(sub.name).firstToUpper}(args, i + 1)"""
     val columns: ISZ[(String, String, String)] = for (sub <- c.subs if !sub.unlisted)
-      yield (sub.name, "", sub.description)
+      yield (sub.command, "", sub.description)
     parser = parser :+
       st"""def parse${ops.StringOps(c.name).firstToUpper}(args: ISZ[String], i: Z): Option[$topName] = {
       |  if (i >= args.size) {

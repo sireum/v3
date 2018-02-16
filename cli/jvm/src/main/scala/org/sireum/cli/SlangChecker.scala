@@ -25,10 +25,10 @@
 
 package org.sireum.cli
 
-import org.sireum.cli.Cli.CheckerOption
+import org.sireum.cli.Cli.SlangCheckerOption
 
 object SlangChecker {
-  def run(o: CheckerOption): Int = {
+  def run(o: SlangCheckerOption): Int = {
     println("Coming soon...")
     println()
     println(o.help)
