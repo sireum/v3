@@ -1536,7 +1536,7 @@ class SlangParser(
       case p"${lit: Lit}" => AST.Pattern.Literal(translateLit(lit))
       case _: Pat.SeqWildcard => AST.Pattern.SeqWildcard(typedAttr(pat.pos))
       case _ =>
-        errorInSlang(pat.pos, s"Invalid pattern: '${pat.structure}'")
+        errorInSlang(pat.pos, s"Invalid pattern: '${syntax(pat)}'")
         AST.Pattern.Wildcard(None(), typedAttr(pat.pos))
     }
   }
