@@ -276,7 +276,9 @@ lazy val slangT = toSbtCrossProject(slangPI, slangSettings ++ Seq(
   ),
   Test / parallelExecution := true
 ))
-lazy val slangShared = slangT._1
+lazy val slangShared = slangT._1.settings(Seq(
+  Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value
+))
 lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
 
