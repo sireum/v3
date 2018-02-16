@@ -1721,6 +1721,8 @@ object ResolvedInfo {
       'Assume
       'EnumByName
       'EnumByOrdinal
+      'Cprint
+      'Cprintln
       'Eprint
       'Eprintln
       'Halt

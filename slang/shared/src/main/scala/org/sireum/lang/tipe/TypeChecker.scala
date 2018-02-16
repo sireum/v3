@@ -55,7 +55,7 @@ object TypeChecker {
   val errType: AST.Typed = AST.Typed.Name(ISZ(), ISZ())
 
   val builtInMethods: HashSet[String] =
-    HashSet ++ ISZ("assert", "assume", "println", "print", "eprintln", "eprint", "halt")
+    HashSet ++ ISZ("assert", "assume", "println", "print", "cprintln", "cprint", "eprintln", "eprint", "halt")
   val assertResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Assert))
 
   val assertume1TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, F, ISZ(AST.Typed.b), AST.Typed.unit))
@@ -66,6 +66,8 @@ object TypeChecker {
   val assumeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Assume))
   val printlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Println))
   val printResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Print))
+  val cprintlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Cprintln))
+  val cprintResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Cprint))
   val eprintlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Eprintln))
   val eprintResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Eprint))
   val haltResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Halt))
@@ -737,7 +739,14 @@ import TypeChecker._
       args: ISZ[AST.Exp]
     ): (AST.Exp, Option[AST.Typed]) = {
       var newArgs = ISZ[AST.Exp]()
-      var argTypes = ISZ[AST.Typed]()
+      var argTypes: ISZ[AST.Typed] = {
+        val hasBool: B = resOpt.get match {
+          case AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Cprint) => T
+          case AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Cprintln) => T
+          case _ => F
+        }
+        if (hasBool) ISZ[AST.Typed](AST.Typed.b) else ISZ[AST.Typed]()
+      }
       for (arg <- args) {
         val (newArg, argTypeOpt) = checkExp(None(), scope, arg, reporter)
         argTypeOpt match {
@@ -2221,6 +2230,8 @@ import TypeChecker._
                   case "assume" => (BuiltInKind.Assertume, assumeResOpt)
                   case "println" => (BuiltInKind.Print, printlnResOpt)
                   case "print" => (BuiltInKind.Print, printResOpt)
+                  case "cprintln" => (BuiltInKind.Print, cprintlnResOpt)
+                  case "cprint" => (BuiltInKind.Print, cprintResOpt)
                   case "eprintln" => (BuiltInKind.Print, eprintlnResOpt)
                   case "eprint" => (BuiltInKind.Print, eprintResOpt)
                   case "halt" => (BuiltInKind.Halt, haltResOpt)
