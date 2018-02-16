@@ -1714,7 +1714,58 @@ object Typed {
 
 object ResolvedInfo {
 
-  @datatype class BuiltIn(name: String) extends ResolvedInfo
+  object BuiltIn {
+    @enum object Kind {
+      'Apply
+      'Assert
+      'Assume
+      'EnumByName
+      'EnumByOrdinal
+      'Eprint
+      'Eprintln
+      'Halt
+      'Hash
+      'EnumName
+      'Native
+      'EnumOrdinal
+      'Print
+      'Println
+      'String
+      'Tuple
+      'Update
+      'UnaryPlus
+      'UnaryMinus
+      'UnaryNot
+      'UnaryComplement
+      'BinaryAdd
+      'BinarySub
+      'BinaryMul
+      'BinaryDiv
+      'BinaryRem
+      'BinaryEq
+      'BinaryNe
+      'BinaryLt
+      'BinaryLe
+      'BinaryGt
+      'BinaryGe
+      'BinaryShl
+      'BinaryShr
+      'BinaryUshr
+      'BinaryAnd
+      'BinaryOr
+      'BinaryXor
+      'BinaryImply
+      'BinaryCondAnd
+      'BinaryCondOr
+      'BinaryAppend
+      'BinaryPrepend
+      'BinaryAppendAll
+      'BinaryRemoveAll
+      'BinaryMapsTo
+    }
+  }
+
+  @datatype class BuiltIn(kind: BuiltIn.Kind.Type) extends ResolvedInfo
 
   @datatype class Package(name: ISZ[String]) extends ResolvedInfo
 

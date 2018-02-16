@@ -449,9 +449,13 @@ object Resolver {
 
       val elementTypeSuffix: String = "Type"
 
-      val byNameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("byName"))
+      val byNameResOpt: Option[AST.ResolvedInfo] = Some(
+        AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumByName)
+      )
 
-      val byOrdinalResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("byOrdinal"))
+      val byOrdinalResOpt: Option[AST.ResolvedInfo] = Some(
+        AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumByOrdinal)
+      )
 
     }
 
@@ -562,9 +566,11 @@ object Resolver {
 
     object Enum {
 
-      val nameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("name"))
+      val nameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumName))
 
-      val ordinalResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("ordinal"))
+      val ordinalResOpt: Option[AST.ResolvedInfo] = Some(
+        AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumOrdinal)
+      )
     }
 
     @datatype class Enum(

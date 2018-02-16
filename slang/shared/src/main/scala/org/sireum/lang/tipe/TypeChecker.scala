@@ -56,63 +56,63 @@ object TypeChecker {
 
   val builtInMethods: HashSet[String] =
     HashSet ++ ISZ("assert", "assume", "println", "print", "eprintln", "eprint", "halt")
-  val assertResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("assert"))
+  val assertResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Assert))
 
   val assertume1TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, F, ISZ(AST.Typed.b), AST.Typed.unit))
 
   val assertume2TypedOpt: Option[AST.Typed] = Some(
     AST.Typed.Fun(F, F, ISZ(AST.Typed.b, AST.Typed.string), AST.Typed.unit)
   )
-  val assumeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("assume"))
-  val printlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("println"))
-  val printResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("print"))
-  val eprintlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("eprintln"))
-  val eprintResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("eprint"))
-  val haltResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("halt"))
+  val assumeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Assume))
+  val printlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Println))
+  val printResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Print))
+  val eprintlnResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Eprintln))
+  val eprintResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Eprint))
+  val haltResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Halt))
 
   val haltTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, F, ISZ(AST.Typed.string), AST.Typed.nothing))
-  val nativeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("native"))
+  val nativeResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Native))
   val nativeCTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.c))
   val nativeStringTypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.string))
   val nativeF32TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f32))
   val nativeF64TypedOpt: Option[AST.Typed] = Some(AST.Typed.Fun(F, T, ISZ(), AST.Typed.f64))
-  val applyResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("apply"))
-  val stringResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("string"))
-  val hashResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn("hash"))
+  val applyResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Apply))
+  val stringResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.String))
+  val hashResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Hash))
 
   val unopResOpt: HashMap[AST.Exp.UnaryOp.Type, Option[AST.ResolvedInfo]] = HashMap ++ ISZ(
-    AST.Exp.UnaryOp.Plus ~> Some(AST.ResolvedInfo.BuiltIn("+")),
-    AST.Exp.UnaryOp.Minus ~> Some(AST.ResolvedInfo.BuiltIn("-")),
-    AST.Exp.UnaryOp.Not ~> Some(AST.ResolvedInfo.BuiltIn("!")),
-    AST.Exp.UnaryOp.Complement ~> Some(AST.ResolvedInfo.BuiltIn("~"))
+    AST.Exp.UnaryOp.Plus ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.UnaryPlus)),
+    AST.Exp.UnaryOp.Minus ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.UnaryMinus)),
+    AST.Exp.UnaryOp.Not ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.UnaryNot)),
+    AST.Exp.UnaryOp.Complement ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.UnaryComplement))
   )
 
   val binopResOpt: HashMap[String, Option[AST.ResolvedInfo]] = HashMap ++ ISZ(
-    string"+" ~> Some(AST.ResolvedInfo.BuiltIn("+")),
-    string"-" ~> Some(AST.ResolvedInfo.BuiltIn("-")),
-    string"*" ~> Some(AST.ResolvedInfo.BuiltIn("*")),
-    string"/" ~> Some(AST.ResolvedInfo.BuiltIn("/")),
-    string"%" ~> Some(AST.ResolvedInfo.BuiltIn("%")),
-    string"==" ~> Some(AST.ResolvedInfo.BuiltIn("==")),
-    string"!=" ~> Some(AST.ResolvedInfo.BuiltIn("!=")),
-    string"<<" ~> Some(AST.ResolvedInfo.BuiltIn("<<")),
-    string">>" ~> Some(AST.ResolvedInfo.BuiltIn(">>")),
-    string">>>" ~> Some(AST.ResolvedInfo.BuiltIn(">>>")),
-    string"<" ~> Some(AST.ResolvedInfo.BuiltIn("<")),
-    string"<=" ~> Some(AST.ResolvedInfo.BuiltIn("<=")),
-    string">" ~> Some(AST.ResolvedInfo.BuiltIn(">")),
-    string">=" ~> Some(AST.ResolvedInfo.BuiltIn(">=")),
-    string"&" ~> Some(AST.ResolvedInfo.BuiltIn("&")),
-    string"|" ~> Some(AST.ResolvedInfo.BuiltIn("|")),
-    string"|^" ~> Some(AST.ResolvedInfo.BuiltIn("|^")),
-    string"->" ~> Some(AST.ResolvedInfo.BuiltIn("->")),
-    string"&&" ~> Some(AST.ResolvedInfo.BuiltIn("&&")),
-    string"||" ~> Some(AST.ResolvedInfo.BuiltIn("||")),
-    string":+" ~> Some(AST.ResolvedInfo.BuiltIn(":+")),
-    string"+:" ~> Some(AST.ResolvedInfo.BuiltIn("+:")),
-    string"++" ~> Some(AST.ResolvedInfo.BuiltIn("++")),
-    string"--" ~> Some(AST.ResolvedInfo.BuiltIn("--")),
-    string"~>" ~> Some(AST.ResolvedInfo.BuiltIn("~>"))
+    string"+" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryAdd)),
+    string"-" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinarySub)),
+    string"*" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryMul)),
+    string"/" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryDiv)),
+    string"%" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryRem)),
+    string"==" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryEq)),
+    string"!=" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryNe)),
+    string"<<" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryShl)),
+    string">>" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryShr)),
+    string">>>" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryUshr)),
+    string"<" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryLt)),
+    string"<=" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryLe)),
+    string">" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryGt)),
+    string">=" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryGe)),
+    string"&" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryAnd)),
+    string"|" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryOr)),
+    string"|^" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryXor)),
+    string"->" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryImply)),
+    string"&&" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryCondAnd)),
+    string"||" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryCondOr)),
+    string":+" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryAppend)),
+    string"+:" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryPrepend)),
+    string"++" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryAppendAll)),
+    string"--" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryRemoveAll)),
+    string"~>" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryMapsTo))
   )
 
   @memoize def libraryReporter: (TypeChecker, AccumulatingReporter) = {
@@ -2809,8 +2809,10 @@ import TypeChecker._
                   declId(pattern.idOpt, Some(expected))
                   return pattern(
                     patterns = newPatterns,
-                    attr =
-                      pattern.attr(typedOpt = Some(expected), resOpt = Some(AST.ResolvedInfo.BuiltIn(s"tuple$size")))
+                    attr = pattern.attr(
+                      typedOpt = Some(expected),
+                      resOpt = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Tuple))
+                    )
                   )
                 case _ =>
                   reporter.error(pattern.posOpt, typeCheckerKind, "Cannot match non-tuple type with tuple extractor.")
@@ -3119,7 +3121,10 @@ import TypeChecker._
                 lhs = lhs(
                   receiverOpt = Some(newReceiver),
                   args = ISZ(newArg),
-                  attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn("update")), typedOpt = Some(args(1)))
+                  attr = lhs.attr(
+                    resOpt = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Update)),
+                    typedOpt = Some(args(1))
+                  )
                 ),
                 rhs = newRhs
               )
@@ -3129,8 +3134,10 @@ import TypeChecker._
           }
           val (newRhs, _) = checkAssignExp(None(), scope, stmt.rhs, reporter)
           return stmt(
-            lhs =
-              lhs(receiverOpt = Some(newReceiver), attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn("update")))),
+            lhs = lhs(
+              receiverOpt = Some(newReceiver),
+              attr = lhs.attr(resOpt = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.Update)))
+            ),
             rhs = newRhs
           )
         case _ => halt("Unexpected situation when type checking assignment.")

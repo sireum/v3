@@ -1523,9 +1523,13 @@ object MsgPack {
       }
     }
 
+    def writeResolvedInfoBuiltInKind(o: ResolvedInfo.BuiltIn.Kind.Type): Unit = {
+      writer.writeZ(o.ordinal)
+    }
+
     def writeResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): Unit = {
       writer.writeZ(Constants.ResolvedInfoBuiltIn)
-      writeString(o.name)
+      writeResolvedInfoBuiltInKind(o.kind)
     }
 
     def writeResolvedInfoPackage(o: ResolvedInfo.Package): Unit = {
@@ -4015,6 +4019,11 @@ object MsgPack {
       }
     }
 
+    def readResolvedInfoBuiltInKind(): ResolvedInfo.BuiltIn.Kind.Type = {
+      val r = reader.readZ()
+      return ResolvedInfo.BuiltIn.Kind.byOrdinal(r).get
+    }
+
     def readResolvedInfoBuiltIn(): ResolvedInfo.BuiltIn = {
       val r = readResolvedInfoBuiltInT(F)
       return r
@@ -4024,8 +4033,8 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ResolvedInfoBuiltIn)
       }
-      val name = reader.readString()
-      return ResolvedInfo.BuiltIn(name)
+      val kind = readResolvedInfoBuiltInKind()
+      return ResolvedInfo.BuiltIn(kind)
     }
 
     def readResolvedInfoPackage(): ResolvedInfo.Package = {
