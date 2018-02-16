@@ -107,12 +107,13 @@ object Cli {
     args: ISZ[String]
   ) extends SireumOption
 
-  @datatype class SlangCheckerOption(
+  @datatype class SlangTipeOption(
     help: String,
     args: ISZ[String],
     sourcepath: ISZ[String],
     outline: B,
-    force: ISZ[String]
+    force: ISZ[String],
+    verbose: B
   ) extends SireumOption
 }
 
@@ -709,20 +710,20 @@ import Cli._
         st"""The Sireum Language (Slang) Toolbox
             |
             |Available modes:
-            |checker                  Slang checker""".render
+            |tipe                     Slang type checker""".render
       )
       return Some(HelpOption())
     }
-    val opt = select("slang", args, i, ISZ("checker"))
+    val opt = select("slang", args, i, ISZ("tipe"))
     opt match {
-      case Some(string"checker") => parseSlangChecker(args, i + 1)
+      case Some(string"tipe") => parseSlangTipe(args, i + 1)
       case _ => return None()
     }
   }
 
-  def parseSlangChecker(args: ISZ[String], i: Z): Option[SireumOption] = {
+  def parseSlangTipe(args: ISZ[String], i: Z): Option[SireumOption] = {
     val help =
-      st"""Slang Checker
+      st"""Slang Type Checker
           |
           |Usage: <option>* [<slang-file>]
           |
@@ -734,11 +735,13 @@ import Cli._
           |-f, --force              Fully qualified names of traits, classes, and objects
           |                           to force full type checking on when type outlining
           |                           is enabled (expects a string separated by ",")
+          |    --verbose            Print Slang .scala file path found in sourcepath
           |-h, --help               Display this information""".render
 
     var sourcepath: ISZ[String] = ISZ[String]()
     var outline: B = false
     var force: ISZ[String] = ISZ[String]()
+    var verbose: B = false
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -765,6 +768,12 @@ import Cli._
              case Some(v) => force = v
              case _ => return None()
            }
+         } else if (arg == "--verbose") {
+           val o: Option[B] = { j = j - 1; Some(!verbose) }
+           o match {
+             case Some(v) => verbose = v
+             case _ => return None()
+           }
          } else {
           eprintln(s"Unrecognized option '$arg'.")
           return None()
@@ -774,7 +783,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(SlangCheckerOption(help, parseArguments(args, j), sourcepath, outline, force))
+    return Some(SlangTipeOption(help, parseArguments(args, j), sourcepath, outline, force, verbose))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {

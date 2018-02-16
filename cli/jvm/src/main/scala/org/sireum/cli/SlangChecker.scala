@@ -26,7 +26,7 @@
 package org.sireum.cli
 
 import org.sireum._
-import org.sireum.cli.Cli.SlangCheckerOption
+import org.sireum.cli.Cli.SlangTipeOption
 import _root_.java.io._
 import _root_.java.nio.file._
 import _root_.java.nio.charset._
@@ -50,7 +50,7 @@ object SlangChecker {
   val InvalidSlangFiles: Int = -6
   val InvalidForceNames: Int = -7
 
-  def run(o: SlangCheckerOption): Int = {
+  def run(o: SlangTipeOption): Int = {
     def readFile(f: File): (Option[String], String) = {
       (Some(f.getCanonicalFile.toURI.toASCIIString), read ! ammonite.ops.Path(f))
     }
@@ -68,10 +68,10 @@ object SlangChecker {
     for (arg <- o.args) {
       val f = new File(arg.value)
       if (!f.exists) {
-        eprintln(s"File '$arg' does not exist.")
+        eprintln(s"File $arg does not exist.")
         return InvalidFile
       } else if (!f.isFile) {
-        eprintln(s"Path '$arg' is not a file.")
+        eprintln(s"Path $arg is not a file.")
         return InvalidFile
       } else if (!f.getName.endsWith(".slang")) {
         eprintln(s"Can only accept .slang files as arguments")
@@ -93,6 +93,9 @@ object SlangChecker {
             isSlang = firstLine.replaceAllLiterally(" ", "").replaceAllLiterally("\t", "").replaceAllLiterally("\r", "").contains("#Sireum")
           }
           if (isSlang) {
+            if (o.verbose) {
+              println(s"Found ${f.getCanonicalPath}")
+            }
             sources = sources :+ readFile(f)
           }
         }

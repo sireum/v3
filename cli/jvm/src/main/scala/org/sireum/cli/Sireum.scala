@@ -35,7 +35,7 @@ object Sireum extends App {
   System.exit(Cli(_root_.java.io.File.pathSeparatorChar).
     parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
     case Some(o: Cli.LogikaOption) => Logika.run(o)
-    case Some(o: Cli.SlangCheckerOption) => SlangChecker.run(o)
+    case Some(o: Cli.SlangTipeOption) => SlangChecker.run(o)
     case Some(o: Cli.CligenOption) => cliGen(o)
     case Some(o: Cli.SergenOption) => serGen(o)
     case Some(o: Cli.TransgenOption) => transGen(o)
