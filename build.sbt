@@ -371,8 +371,41 @@ lazy val sireumJvm =
         assembly / assemblyOutputPath := file("bin/sireum.jar"),
         assembly / test := {},
         assembly / logLevel := Level.Error,
+        assemblyShadeRules in assembly := Seq(
+          ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
+          ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
+          ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
+          ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
+          ShadeRule.rename("org.scalameta.**" -> "sh4d3.org.scalameta.@1").inAll,
+          ShadeRule.rename("scala.meta.**" -> "sh4d3.scala.meta.@1").inAll,
+          ShadeRule.rename("scalapb.**" -> "sh4d3.scalapb.@1").inAll,
+          ShadeRule.rename("scala.**" -> "sh4d3.scala.@1").inAll,
+          ShadeRule.rename("upickle.**" -> "sh4d3.upickle.@1").inAll,
+          ShadeRule.rename("scalajson.**" -> "sh4d3.scalajson.@1").inAll,
+          ShadeRule.rename("sbt.**" -> "sh4d3.sbt.@1").inAll,
+          ShadeRule.rename("spire.**" -> "sh4d3.spire.@1").inAll,
+          ShadeRule.rename("org.yaml.**" -> "sh4d3.org.yaml.@1").inAll,
+          ShadeRule.rename("org.stringtemplate.**" -> "sh4d3.org.stringtemplate.@1").inAll,
+          ShadeRule.rename("org.objectweb.**" -> "sh4d3.org.objectweb.@1").inAll,
+          ShadeRule.rename("org.junit.**" -> "sh4d3.org.junit.@1").inAll,
+          ShadeRule.rename("org.jgrapht.**" -> "sh4d3.org.jgrapht.@1").inAll,
+          ShadeRule.rename("org.hamcrest.**" -> "sh4d3.org.hamcrest.@1").inAll,
+          ShadeRule.rename("org.apache.**" -> "sh4d3.org.apache.@1").inAll,
+          ShadeRule.rename("org.antlr.**" -> "sh4d3.org.antlr.@1").inAll,
+          ShadeRule.rename("org.scalatools.**" -> "sh4d3.org.scalatools.@1").inAll,
+          ShadeRule.rename("machinist.**" -> "sh4d3.machinist.@1").inAll,
+          ShadeRule.rename("junit.**" -> "sh4d3.junit.@1").inAll,
+          ShadeRule.rename("jawn.**" -> "sh4d3.jawn.@1").inAll,
+          ShadeRule.rename("geny.**" -> "sh4d3.geny.@1").inAll,
+          ShadeRule.rename("ammonite.**" -> "sh4d3.ammonite.@1").inAll,
+          ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
+          ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
+        ),
         assembly / assemblyMergeStrategy := {
           case PathList("transformed", _*) =>  MergeStrategy.discard
+          case PathList("Scratch.class") =>  MergeStrategy.discard
+          case PathList("Scratch$.class") =>  MergeStrategy.discard
+          case PathList("Scratch$delayedInit$body.class") =>  MergeStrategy.discard
           case PathList("org", "sireum", _*) => new MergeStrategy {
             override def name: String = "sireum"
 
