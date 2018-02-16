@@ -31,7 +31,9 @@ import org.sireum.lang.util.Reporter.Message
 import org.sireum.lang.util.Reporter.Message.Level
 
 object Reporter {
+
   object Message {
+
     @enum object Level {
       'InternalError
       'Error
@@ -39,10 +41,13 @@ object Reporter {
       'Info
     }
   }
+
   @datatype class Message(level: Message.Level.Type, posOpt: Option[PosInfo], kind: String, message: String) {
+
     def isError: B = {
       return level == Message.Level.InternalError || level == Message.Level.Error
     }
+
     def fileUriOpt: Option[String] = {
       posOpt match {
         case Some(pos) => return pos.fileUriOpt
@@ -53,51 +58,6 @@ object Reporter {
 }
 
 @msig trait Reporter {
-
-  def hasIssue: B
-
-  def messages: ISZ[Message]
-
-  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.InternalError, posOpt, kind, message))
-  }
-
-  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.Error, posOpt, kind, message))
-  }
-
-  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.Warning, posOpt, kind, message))
-  }
-
-  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
-    report(Message(Level.Info, posOpt, kind, message))
-  }
-
-  def reports(ms: ISZ[Reporter.Message]): Unit = {
-    for (m <- ms) {
-      report(m)
-    }
-  }
-
-  def report(m: Reporter.Message): Unit
-}
-
-import Reporter.Message
-import Reporter.Message.Level
-
-object AccumulatingReporter {
-  @pure def create: AccumulatingReporter = {
-    return AccumulatingReporter(ISZ[Message]())
-  }
-
-  @pure def combine(r1: AccumulatingReporter, r2: AccumulatingReporter): AccumulatingReporter = {
-    return AccumulatingReporter(r1.messages ++ r2.messages)
-  }
-}
-
-@record class AccumulatingReporter(var messages: ISZ[Message])
-  extends Reporter {
 
   def hasInternalError: B = {
     for (m <- messages) {
@@ -112,6 +72,7 @@ object AccumulatingReporter {
   def hasError: B = {
     for (m <- messages) {
       m.level match {
+        case Level.InternalError => return T
         case Level.Error => return T
         case _ =>
       }
@@ -153,6 +114,49 @@ object AccumulatingReporter {
     return messages.nonEmpty
   }
 
+  def messages: ISZ[Message]
+
+  def internalError(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.InternalError, posOpt, kind, message))
+  }
+
+  def error(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.Error, posOpt, kind, message))
+  }
+
+  def warn(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.Warning, posOpt, kind, message))
+  }
+
+  def info(posOpt: Option[PosInfo], kind: String, message: String): Unit = {
+    report(Message(Level.Info, posOpt, kind, message))
+  }
+
+  def reports(ms: ISZ[Reporter.Message]): Unit = {
+    for (m <- ms) {
+      report(m)
+    }
+  }
+
+  def report(m: Reporter.Message): Unit
+}
+
+import Reporter.Message
+import Reporter.Message.Level
+
+object AccumulatingReporter {
+
+  @pure def create: AccumulatingReporter = {
+    return AccumulatingReporter(ISZ[Message]())
+  }
+
+  @pure def combine(r1: AccumulatingReporter, r2: AccumulatingReporter): AccumulatingReporter = {
+    return AccumulatingReporter(r1.messages ++ r2.messages)
+  }
+}
+
+@record class AccumulatingReporter(var messages: ISZ[Message]) extends Reporter {
+
   def internalErrors: ISZ[Message] = {
     return for (m <- messages if m.level == Level.InternalError) yield m
   }
@@ -166,7 +170,8 @@ object AccumulatingReporter {
   }
 
   def issues: ISZ[Message] = {
-    return for (m <- messages if m.level == Level.InternalError || m.level == Level.Error || m.level == Level.Warning) yield m
+    return for (m <- messages if m.level == Level.InternalError || m.level == Level.Error || m.level == Level.Warning)
+      yield m
   }
 
   def infos: ISZ[Message] = {
@@ -174,6 +179,7 @@ object AccumulatingReporter {
   }
 
   def report(m: Message): Unit = {
+    assert(!ops.ISZOps(messages).contains(m))
     messages = messages :+ m
   }
 
@@ -191,20 +197,15 @@ object AccumulatingReporter {
 
   def printMessages(): Unit = {
     val map = messagesByFileUri
-    val inclFileUri = map.size > 1
     val err = hasIssue
     for (kv <- map.entries) {
       val fileUriOpt = kv._1
       val ms = kv._2
       fileUriOpt match {
         case Some(fileUri) =>
-          if (inclFileUri) {
-            cprintln(err, s"* $fileUri")
-          }
+          cprintln(err, s"* $fileUri")
           for (m <- ms) {
-            if (inclFileUri) {
-              cprint(err, "  ")
-            }
+            cprint(err, "  ")
             val mText: String = m.posOpt match {
               case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
               case _ => s"- ${m.message}"
