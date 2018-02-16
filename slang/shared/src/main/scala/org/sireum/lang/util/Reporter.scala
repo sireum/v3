@@ -196,15 +196,29 @@ object AccumulatingReporter {
   }
 
   def printMessages(): Unit = {
+    @pure def sortMessages(ms: ISZ[Message]): ISZ[Message] = {
+      return ops.ISZOps(ms).sortWith((m1, m2) => {
+        (m1.posOpt, m2.posOpt) match {
+          case (Some(m1pos), Some(m2pos)) =>
+            if (m1pos.beginLine > m2pos.beginLine) F else m1pos.beginColumn <= m2pos.beginColumn
+          case _ => T
+        }
+      })
+    }
     val map = messagesByFileUri
-    val err = hasIssue
+    val err = hasError
+    var first = T
     for (kv <- map.entries) {
+      if (!first) {
+        cprintln(err, "")
+      }
+      first = F
       val fileUriOpt = kv._1
       val ms = kv._2
       fileUriOpt match {
         case Some(fileUri) =>
           cprintln(err, s"* $fileUri")
-          for (m <- ms) {
+          for (m <- sortMessages(ms)) {
             cprint(err, "  ")
             val mText: String = m.posOpt match {
               case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
@@ -213,7 +227,7 @@ object AccumulatingReporter {
             cprintln(err, mText)
           }
         case _ =>
-          for (m <- ms) {
+          for (m <- sortMessages(ms)) {
             val mText: String = m.posOpt match {
               case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
               case _ => s"- ${m.message}"
