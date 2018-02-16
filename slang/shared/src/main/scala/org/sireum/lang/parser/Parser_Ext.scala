@@ -46,7 +46,7 @@ object Parser_Ext {
       allowSireumPackage = false, hashSireum = true, isWorksheet = false,
       isDiet = false, None(), reporter).translateStat(Enclosing.Method)(stat)
     reporter.printMessages()
-    if (reporter.hasIssue) err()
+    if (reporter.hasError) err()
     stmt.asInstanceOf[T]
   }
 
@@ -62,7 +62,7 @@ object Parser_Ext {
       allowSireumPackage = false, hashSireum = true, isWorksheet = false,
       isDiet = false, None(), reporter).translateExp(term)
     reporter.printMessages()
-    if (reporter.hasIssue) err()
+    if (reporter.hasError) err()
     exp.asInstanceOf[T]
   }
 

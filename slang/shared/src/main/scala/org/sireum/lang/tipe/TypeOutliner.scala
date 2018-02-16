@@ -71,7 +71,7 @@ object TypeOutliner {
     var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)](
       () => TypeOutliner(th).outlineTypeAliases(typeAliases)
     )
-    while (workList.nonEmpty && !reporter.hasIssue) {
+    while (workList.nonEmpty && !reporter.hasError) {
       var l = ISZ[QName]()
       for (name <- workList) {
         val ti = th.typeMap.get(name).get
@@ -117,7 +117,7 @@ object TypeOutliner {
       workList = l
       jobs = ISZ()
     }
-    if (!reporter.hasIssue) {
+    if (!reporter.hasError) {
       var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
       val to = TypeOutliner(th)
       for (info <- th.nameMap.values) {

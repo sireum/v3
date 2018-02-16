@@ -198,7 +198,7 @@ object TypeHierarchy {
         case _: TypeInfo.TypeVar => halt("Infeasible")
       }
     }
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return r
     }
     r.checkCyclic(reporter)

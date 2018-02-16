@@ -310,19 +310,19 @@ object TruthTableVerifier {
 
     checkStarPositionsForm()
 
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return
     }
 
     val all = checkRowAssignments()
 
-    if (reporter.hasIssue) {
+    if (reporter.hasError) {
       return
     }
 
     val (tas, fas) = checkAssignments()
 
-    if (all && !reporter.hasIssue) {
+    if (all && !reporter.hasError) {
       checkConclusion(tas, fas)
     }
 
