@@ -179,7 +179,7 @@ object AccumulatingReporter {
   }
 
   def report(m: Message): Unit = {
-    assert(!ops.ISZOps(messages).contains(m))
+    assert(m.fileUriOpt.isEmpty || !ops.ISZOps(messages).contains(m))
     messages = messages :+ m
   }
 
