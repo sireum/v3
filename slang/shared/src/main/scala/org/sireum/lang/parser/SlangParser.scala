@@ -49,7 +49,7 @@ object SlangParser {
 
   val builtinPrefix = Seq("z", "r", "c", "string", "f32", "f64")
 
-  val disallowedTypeIds = Seq("Unit", "Nothing")
+  val disallowedTypeIds = Seq()
 
   val disallowedMethodIds = Seq(
     "assert",
@@ -2564,8 +2564,8 @@ class SlangParser(
   }
 
   def checkTypeId(pos: Position, id: Predef.String): Unit = {
-    if (disallowedTypeIds.contains(id)) {
-      errorInSlang(pos, s"Type identifier $id is disallowed")
+    if (checkSymbol(id)) {
+      errorInSlang(pos, s"Type identifier '$id' is disallowed")
     }
   }
 
