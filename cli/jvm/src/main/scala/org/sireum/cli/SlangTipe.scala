@@ -67,13 +67,19 @@ object SlangTipe {
     }
 
     var start = 0l
+    var used = 0l
+    val rt = Runtime.getRuntime
     def startTime(): Unit = {
       start = System.currentTimeMillis
     }
     def stopTime(): Unit = {
       if (o.verbose) {
         val end = System.currentTimeMillis
-        println(s"Time: ${end - start} ms")
+        val newUsed = rt.totalMemory - rt.freeMemory
+        if (newUsed > used) {
+          used = newUsed
+        }
+        println(f"Time: ${end - start} ms, Memory: ${used / 1024d / 1024d}%.2f MB")
       }
     }
 
@@ -286,8 +292,12 @@ object SlangTipe {
     if (slangFiles.nonEmpty) stopTime()
 
     if (o.verbose) {
+      val newUsed = rt.totalMemory - rt.freeMemory
+      if (newUsed > used) {
+        used = newUsed
+      }
       println()
-      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s")
+      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s, Memory: ${used / 1024d / 1024d}%.2f MB")
     }
 
     return 0
