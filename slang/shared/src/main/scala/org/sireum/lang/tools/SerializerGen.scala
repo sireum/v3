@@ -166,17 +166,16 @@ object SerializerGen {
                  |      return r
                  |    }
                  |
-                 |    def errorOpt: Option[Json.ErrorMsg] = {
-                 |      return parser.errorOpt
-                 |    }
-                 |
                  |  }
                  |
-                 |  def to[T](s: String, f: Parser => T): T = {
+                 |  def to[T](s: String, f: Parser => T): Either[T, Json.ErrorMsg] = {
                  |    val parser = Parser(s)
                  |    val r = f(parser)
                  |    parser.eof()
-                 |    return r
+                 |    parser.errorOpt match {
+                 |      case Some(e) => return Either.Right(e)
+                 |      case _ => return Either.Left(r)
+                 |    }
                  |  }
                  |
                  |  ${(fromsTos, "\n\n")}
@@ -196,7 +195,7 @@ object SerializerGen {
     }
 
     @pure def to(name: ST, tpe: ST): ST = {
-      return st"""def to$name(s: String): $tpe = {
+      return st"""def to$name(s: String): Either[$tpe, Json.ErrorMsg] = {
                  |  def f$name(parser: Parser): $tpe = {
                  |    val r = parser.parse$name()
                  |    return r
@@ -538,11 +537,14 @@ object SerializerGen {
                  |
                  |  }
                  |
-                 |  def to[T](data: ISZ[U8], f: Reader => T): T = {
+                 |  def to[T](data: ISZ[U8], f: Reader => T): Either[T, MessagePack.ErrorMsg] = {
                  |    val rd = Reader.Default(MessagePack.reader(data))
                  |    rd.reader.init()
                  |    val r = f(rd)
-                 |    return r
+                 |    rd.errorOpt match {
+                 |      case Some(e) => return Either.Right(e)
+                 |      case _ => return Either.Left(r)
+                 |    }
                  |  }
                  |
                  |  ${(fromsTos, "\n\n")}
@@ -559,7 +561,7 @@ object SerializerGen {
     }
 
     @pure def to(name: ST, tpe: ST): ST = {
-      return st"""def to$name(data: ISZ[U8]): $tpe = {
+      return st"""def to$name(data: ISZ[U8]): Either[$tpe, MessagePack.ErrorMsg] = {
                  |  def f$name(reader: Reader): $tpe = {
                  |    val r = reader.read$name()
                  |    return r

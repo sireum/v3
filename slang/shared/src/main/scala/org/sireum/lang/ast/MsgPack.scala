@@ -4214,11 +4214,14 @@ object MsgPack {
 
   }
 
-  def to[T](data: ISZ[U8], f: Reader => T): T = {
+  def to[T](data: ISZ[U8], f: Reader => T): Either[T, MessagePack.ErrorMsg] = {
     val rd = Reader.Default(MessagePack.reader(data))
     rd.reader.init()
     val r = f(rd)
-    return r
+    rd.errorOpt match {
+      case Some(e) => return Either.Right(e)
+      case _ => return Either.Left(r)
+    }
   }
 
   def fromTopUnit(o: TopUnit, poolString: B): ISZ[U8] = {
@@ -4227,7 +4230,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTopUnit(data: ISZ[U8]): TopUnit = {
+  def toTopUnit(data: ISZ[U8]): Either[TopUnit, MessagePack.ErrorMsg] = {
     def fTopUnit(reader: Reader): TopUnit = {
       val r = reader.readTopUnit()
       return r
@@ -4242,7 +4245,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTopUnitProgram(data: ISZ[U8]): TopUnit.Program = {
+  def toTopUnitProgram(data: ISZ[U8]): Either[TopUnit.Program, MessagePack.ErrorMsg] = {
     def fTopUnitProgram(reader: Reader): TopUnit.Program = {
       val r = reader.readTopUnitProgram()
       return r
@@ -4257,7 +4260,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTopUnitSequentUnit(data: ISZ[U8]): TopUnit.SequentUnit = {
+  def toTopUnitSequentUnit(data: ISZ[U8]): Either[TopUnit.SequentUnit, MessagePack.ErrorMsg] = {
     def fTopUnitSequentUnit(reader: Reader): TopUnit.SequentUnit = {
       val r = reader.readTopUnitSequentUnit()
       return r
@@ -4272,7 +4275,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTopUnitTruthTableUnit(data: ISZ[U8]): TopUnit.TruthTableUnit = {
+  def toTopUnitTruthTableUnit(data: ISZ[U8]): Either[TopUnit.TruthTableUnit, MessagePack.ErrorMsg] = {
     def fTopUnitTruthTableUnit(reader: Reader): TopUnit.TruthTableUnit = {
       val r = reader.readTopUnitTruthTableUnit()
       return r
@@ -4287,7 +4290,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmt(data: ISZ[U8]): Stmt = {
+  def toStmt(data: ISZ[U8]): Either[Stmt, MessagePack.ErrorMsg] = {
     def fStmt(reader: Reader): Stmt = {
       val r = reader.readStmt()
       return r
@@ -4302,7 +4305,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAssignExp(data: ISZ[U8]): AssignExp = {
+  def toAssignExp(data: ISZ[U8]): Either[AssignExp, MessagePack.ErrorMsg] = {
     def fAssignExp(reader: Reader): AssignExp = {
       val r = reader.readAssignExp()
       return r
@@ -4317,7 +4320,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImport(data: ISZ[U8]): Stmt.Import = {
+  def toStmtImport(data: ISZ[U8]): Either[Stmt.Import, MessagePack.ErrorMsg] = {
     def fStmtImport(reader: Reader): Stmt.Import = {
       val r = reader.readStmtImport()
       return r
@@ -4332,7 +4335,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImportImporter(data: ISZ[U8]): Stmt.Import.Importer = {
+  def toStmtImportImporter(data: ISZ[U8]): Either[Stmt.Import.Importer, MessagePack.ErrorMsg] = {
     def fStmtImportImporter(reader: Reader): Stmt.Import.Importer = {
       val r = reader.readStmtImportImporter()
       return r
@@ -4347,7 +4350,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImportSelector(data: ISZ[U8]): Stmt.Import.Selector = {
+  def toStmtImportSelector(data: ISZ[U8]): Either[Stmt.Import.Selector, MessagePack.ErrorMsg] = {
     def fStmtImportSelector(reader: Reader): Stmt.Import.Selector = {
       val r = reader.readStmtImportSelector()
       return r
@@ -4362,7 +4365,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImportMultiSelector(data: ISZ[U8]): Stmt.Import.MultiSelector = {
+  def toStmtImportMultiSelector(data: ISZ[U8]): Either[Stmt.Import.MultiSelector, MessagePack.ErrorMsg] = {
     def fStmtImportMultiSelector(reader: Reader): Stmt.Import.MultiSelector = {
       val r = reader.readStmtImportMultiSelector()
       return r
@@ -4377,7 +4380,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImportWildcardSelector(data: ISZ[U8]): Stmt.Import.WildcardSelector = {
+  def toStmtImportWildcardSelector(data: ISZ[U8]): Either[Stmt.Import.WildcardSelector, MessagePack.ErrorMsg] = {
     def fStmtImportWildcardSelector(reader: Reader): Stmt.Import.WildcardSelector = {
       val r = reader.readStmtImportWildcardSelector()
       return r
@@ -4392,7 +4395,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtImportNamedSelector(data: ISZ[U8]): Stmt.Import.NamedSelector = {
+  def toStmtImportNamedSelector(data: ISZ[U8]): Either[Stmt.Import.NamedSelector, MessagePack.ErrorMsg] = {
     def fStmtImportNamedSelector(reader: Reader): Stmt.Import.NamedSelector = {
       val r = reader.readStmtImportNamedSelector()
       return r
@@ -4407,7 +4410,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtVar(data: ISZ[U8]): Stmt.Var = {
+  def toStmtVar(data: ISZ[U8]): Either[Stmt.Var, MessagePack.ErrorMsg] = {
     def fStmtVar(reader: Reader): Stmt.Var = {
       val r = reader.readStmtVar()
       return r
@@ -4422,7 +4425,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtVarPattern(data: ISZ[U8]): Stmt.VarPattern = {
+  def toStmtVarPattern(data: ISZ[U8]): Either[Stmt.VarPattern, MessagePack.ErrorMsg] = {
     def fStmtVarPattern(reader: Reader): Stmt.VarPattern = {
       val r = reader.readStmtVarPattern()
       return r
@@ -4437,7 +4440,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtSpecVar(data: ISZ[U8]): Stmt.SpecVar = {
+  def toStmtSpecVar(data: ISZ[U8]): Either[Stmt.SpecVar, MessagePack.ErrorMsg] = {
     def fStmtSpecVar(reader: Reader): Stmt.SpecVar = {
       val r = reader.readStmtSpecVar()
       return r
@@ -4452,7 +4455,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtMethod(data: ISZ[U8]): Stmt.Method = {
+  def toStmtMethod(data: ISZ[U8]): Either[Stmt.Method, MessagePack.ErrorMsg] = {
     def fStmtMethod(reader: Reader): Stmt.Method = {
       val r = reader.readStmtMethod()
       return r
@@ -4467,7 +4470,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtExtMethod(data: ISZ[U8]): Stmt.ExtMethod = {
+  def toStmtExtMethod(data: ISZ[U8]): Either[Stmt.ExtMethod, MessagePack.ErrorMsg] = {
     def fStmtExtMethod(reader: Reader): Stmt.ExtMethod = {
       val r = reader.readStmtExtMethod()
       return r
@@ -4482,7 +4485,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtSpecMethod(data: ISZ[U8]): Stmt.SpecMethod = {
+  def toStmtSpecMethod(data: ISZ[U8]): Either[Stmt.SpecMethod, MessagePack.ErrorMsg] = {
     def fStmtSpecMethod(reader: Reader): Stmt.SpecMethod = {
       val r = reader.readStmtSpecMethod()
       return r
@@ -4497,7 +4500,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtEnum(data: ISZ[U8]): Stmt.Enum = {
+  def toStmtEnum(data: ISZ[U8]): Either[Stmt.Enum, MessagePack.ErrorMsg] = {
     def fStmtEnum(reader: Reader): Stmt.Enum = {
       val r = reader.readStmtEnum()
       return r
@@ -4512,7 +4515,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtSubZ(data: ISZ[U8]): Stmt.SubZ = {
+  def toStmtSubZ(data: ISZ[U8]): Either[Stmt.SubZ, MessagePack.ErrorMsg] = {
     def fStmtSubZ(reader: Reader): Stmt.SubZ = {
       val r = reader.readStmtSubZ()
       return r
@@ -4527,7 +4530,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtObject(data: ISZ[U8]): Stmt.Object = {
+  def toStmtObject(data: ISZ[U8]): Either[Stmt.Object, MessagePack.ErrorMsg] = {
     def fStmtObject(reader: Reader): Stmt.Object = {
       val r = reader.readStmtObject()
       return r
@@ -4542,7 +4545,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtSig(data: ISZ[U8]): Stmt.Sig = {
+  def toStmtSig(data: ISZ[U8]): Either[Stmt.Sig, MessagePack.ErrorMsg] = {
     def fStmtSig(reader: Reader): Stmt.Sig = {
       val r = reader.readStmtSig()
       return r
@@ -4557,7 +4560,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtAbstractDatatype(data: ISZ[U8]): Stmt.AbstractDatatype = {
+  def toStmtAbstractDatatype(data: ISZ[U8]): Either[Stmt.AbstractDatatype, MessagePack.ErrorMsg] = {
     def fStmtAbstractDatatype(reader: Reader): Stmt.AbstractDatatype = {
       val r = reader.readStmtAbstractDatatype()
       return r
@@ -4572,7 +4575,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtTypeAlias(data: ISZ[U8]): Stmt.TypeAlias = {
+  def toStmtTypeAlias(data: ISZ[U8]): Either[Stmt.TypeAlias, MessagePack.ErrorMsg] = {
     def fStmtTypeAlias(reader: Reader): Stmt.TypeAlias = {
       val r = reader.readStmtTypeAlias()
       return r
@@ -4587,7 +4590,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtAssign(data: ISZ[U8]): Stmt.Assign = {
+  def toStmtAssign(data: ISZ[U8]): Either[Stmt.Assign, MessagePack.ErrorMsg] = {
     def fStmtAssign(reader: Reader): Stmt.Assign = {
       val r = reader.readStmtAssign()
       return r
@@ -4602,7 +4605,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtBlock(data: ISZ[U8]): Stmt.Block = {
+  def toStmtBlock(data: ISZ[U8]): Either[Stmt.Block, MessagePack.ErrorMsg] = {
     def fStmtBlock(reader: Reader): Stmt.Block = {
       val r = reader.readStmtBlock()
       return r
@@ -4617,7 +4620,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtIf(data: ISZ[U8]): Stmt.If = {
+  def toStmtIf(data: ISZ[U8]): Either[Stmt.If, MessagePack.ErrorMsg] = {
     def fStmtIf(reader: Reader): Stmt.If = {
       val r = reader.readStmtIf()
       return r
@@ -4632,7 +4635,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtMatch(data: ISZ[U8]): Stmt.Match = {
+  def toStmtMatch(data: ISZ[U8]): Either[Stmt.Match, MessagePack.ErrorMsg] = {
     def fStmtMatch(reader: Reader): Stmt.Match = {
       val r = reader.readStmtMatch()
       return r
@@ -4647,7 +4650,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtWhile(data: ISZ[U8]): Stmt.While = {
+  def toStmtWhile(data: ISZ[U8]): Either[Stmt.While, MessagePack.ErrorMsg] = {
     def fStmtWhile(reader: Reader): Stmt.While = {
       val r = reader.readStmtWhile()
       return r
@@ -4662,7 +4665,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtDoWhile(data: ISZ[U8]): Stmt.DoWhile = {
+  def toStmtDoWhile(data: ISZ[U8]): Either[Stmt.DoWhile, MessagePack.ErrorMsg] = {
     def fStmtDoWhile(reader: Reader): Stmt.DoWhile = {
       val r = reader.readStmtDoWhile()
       return r
@@ -4677,7 +4680,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtFor(data: ISZ[U8]): Stmt.For = {
+  def toStmtFor(data: ISZ[U8]): Either[Stmt.For, MessagePack.ErrorMsg] = {
     def fStmtFor(reader: Reader): Stmt.For = {
       val r = reader.readStmtFor()
       return r
@@ -4692,7 +4695,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtReturn(data: ISZ[U8]): Stmt.Return = {
+  def toStmtReturn(data: ISZ[U8]): Either[Stmt.Return, MessagePack.ErrorMsg] = {
     def fStmtReturn(reader: Reader): Stmt.Return = {
       val r = reader.readStmtReturn()
       return r
@@ -4707,7 +4710,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtLStmt(data: ISZ[U8]): Stmt.LStmt = {
+  def toStmtLStmt(data: ISZ[U8]): Either[Stmt.LStmt, MessagePack.ErrorMsg] = {
     def fStmtLStmt(reader: Reader): Stmt.LStmt = {
       val r = reader.readStmtLStmt()
       return r
@@ -4722,7 +4725,7 @@ object MsgPack {
     return w.result
   }
 
-  def toStmtExpr(data: ISZ[U8]): Stmt.Expr = {
+  def toStmtExpr(data: ISZ[U8]): Either[Stmt.Expr, MessagePack.ErrorMsg] = {
     def fStmtExpr(reader: Reader): Stmt.Expr = {
       val r = reader.readStmtExpr()
       return r
@@ -4737,7 +4740,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClause(data: ISZ[U8]): LClause = {
+  def toLClause(data: ISZ[U8]): Either[LClause, MessagePack.ErrorMsg] = {
     def fLClause(reader: Reader): LClause = {
       val r = reader.readLClause()
       return r
@@ -4752,7 +4755,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseInvariants(data: ISZ[U8]): LClause.Invariants = {
+  def toLClauseInvariants(data: ISZ[U8]): Either[LClause.Invariants, MessagePack.ErrorMsg] = {
     def fLClauseInvariants(reader: Reader): LClause.Invariants = {
       val r = reader.readLClauseInvariants()
       return r
@@ -4767,7 +4770,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseFacts(data: ISZ[U8]): LClause.Facts = {
+  def toLClauseFacts(data: ISZ[U8]): Either[LClause.Facts, MessagePack.ErrorMsg] = {
     def fLClauseFacts(reader: Reader): LClause.Facts = {
       val r = reader.readLClauseFacts()
       return r
@@ -4782,7 +4785,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseFact(data: ISZ[U8]): LClause.Fact = {
+  def toLClauseFact(data: ISZ[U8]): Either[LClause.Fact, MessagePack.ErrorMsg] = {
     def fLClauseFact(reader: Reader): LClause.Fact = {
       val r = reader.readLClauseFact()
       return r
@@ -4797,7 +4800,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseTheorems(data: ISZ[U8]): LClause.Theorems = {
+  def toLClauseTheorems(data: ISZ[U8]): Either[LClause.Theorems, MessagePack.ErrorMsg] = {
     def fLClauseTheorems(reader: Reader): LClause.Theorems = {
       val r = reader.readLClauseTheorems()
       return r
@@ -4812,7 +4815,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseTheorem(data: ISZ[U8]): LClause.Theorem = {
+  def toLClauseTheorem(data: ISZ[U8]): Either[LClause.Theorem, MessagePack.ErrorMsg] = {
     def fLClauseTheorem(reader: Reader): LClause.Theorem = {
       val r = reader.readLClauseTheorem()
       return r
@@ -4827,7 +4830,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseSequent(data: ISZ[U8]): LClause.Sequent = {
+  def toLClauseSequent(data: ISZ[U8]): Either[LClause.Sequent, MessagePack.ErrorMsg] = {
     def fLClauseSequent(reader: Reader): LClause.Sequent = {
       val r = reader.readLClauseSequent()
       return r
@@ -4842,7 +4845,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLClauseProof(data: ISZ[U8]): LClause.Proof = {
+  def toLClauseProof(data: ISZ[U8]): Either[LClause.Proof, MessagePack.ErrorMsg] = {
     def fLClauseProof(reader: Reader): LClause.Proof = {
       val r = reader.readLClauseProof()
       return r
@@ -4857,7 +4860,7 @@ object MsgPack {
     return w.result
   }
 
-  def toContractExp(data: ISZ[U8]): ContractExp = {
+  def toContractExp(data: ISZ[U8]): Either[ContractExp, MessagePack.ErrorMsg] = {
     def fContractExp(reader: Reader): ContractExp = {
       val r = reader.readContractExp()
       return r
@@ -4872,7 +4875,7 @@ object MsgPack {
     return w.result
   }
 
-  def toCase(data: ISZ[U8]): Case = {
+  def toCase(data: ISZ[U8]): Either[Case, MessagePack.ErrorMsg] = {
     def fCase(reader: Reader): Case = {
       val r = reader.readCase()
       return r
@@ -4887,7 +4890,7 @@ object MsgPack {
     return w.result
   }
 
-  def toEnumGenRange(data: ISZ[U8]): EnumGen.Range = {
+  def toEnumGenRange(data: ISZ[U8]): Either[EnumGen.Range, MessagePack.ErrorMsg] = {
     def fEnumGenRange(reader: Reader): EnumGen.Range = {
       val r = reader.readEnumGenRange()
       return r
@@ -4902,7 +4905,7 @@ object MsgPack {
     return w.result
   }
 
-  def toEnumGenRangeExpr(data: ISZ[U8]): EnumGen.Range.Expr = {
+  def toEnumGenRangeExpr(data: ISZ[U8]): Either[EnumGen.Range.Expr, MessagePack.ErrorMsg] = {
     def fEnumGenRangeExpr(reader: Reader): EnumGen.Range.Expr = {
       val r = reader.readEnumGenRangeExpr()
       return r
@@ -4917,7 +4920,7 @@ object MsgPack {
     return w.result
   }
 
-  def toEnumGenRangeStep(data: ISZ[U8]): EnumGen.Range.Step = {
+  def toEnumGenRangeStep(data: ISZ[U8]): Either[EnumGen.Range.Step, MessagePack.ErrorMsg] = {
     def fEnumGenRangeStep(reader: Reader): EnumGen.Range.Step = {
       val r = reader.readEnumGenRangeStep()
       return r
@@ -4932,7 +4935,7 @@ object MsgPack {
     return w.result
   }
 
-  def toEnumGenFor(data: ISZ[U8]): EnumGen.For = {
+  def toEnumGenFor(data: ISZ[U8]): Either[EnumGen.For, MessagePack.ErrorMsg] = {
     def fEnumGenFor(reader: Reader): EnumGen.For = {
       val r = reader.readEnumGenFor()
       return r
@@ -4947,7 +4950,7 @@ object MsgPack {
     return w.result
   }
 
-  def toType(data: ISZ[U8]): Type = {
+  def toType(data: ISZ[U8]): Either[Type, MessagePack.ErrorMsg] = {
     def fType(reader: Reader): Type = {
       val r = reader.readType()
       return r
@@ -4962,7 +4965,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypeNamed(data: ISZ[U8]): Type.Named = {
+  def toTypeNamed(data: ISZ[U8]): Either[Type.Named, MessagePack.ErrorMsg] = {
     def fTypeNamed(reader: Reader): Type.Named = {
       val r = reader.readTypeNamed()
       return r
@@ -4977,7 +4980,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypeFun(data: ISZ[U8]): Type.Fun = {
+  def toTypeFun(data: ISZ[U8]): Either[Type.Fun, MessagePack.ErrorMsg] = {
     def fTypeFun(reader: Reader): Type.Fun = {
       val r = reader.readTypeFun()
       return r
@@ -4992,7 +4995,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypeTuple(data: ISZ[U8]): Type.Tuple = {
+  def toTypeTuple(data: ISZ[U8]): Either[Type.Tuple, MessagePack.ErrorMsg] = {
     def fTypeTuple(reader: Reader): Type.Tuple = {
       val r = reader.readTypeTuple()
       return r
@@ -5007,7 +5010,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPattern(data: ISZ[U8]): Pattern = {
+  def toPattern(data: ISZ[U8]): Either[Pattern, MessagePack.ErrorMsg] = {
     def fPattern(reader: Reader): Pattern = {
       val r = reader.readPattern()
       return r
@@ -5022,7 +5025,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternLiteral(data: ISZ[U8]): Pattern.Literal = {
+  def toPatternLiteral(data: ISZ[U8]): Either[Pattern.Literal, MessagePack.ErrorMsg] = {
     def fPatternLiteral(reader: Reader): Pattern.Literal = {
       val r = reader.readPatternLiteral()
       return r
@@ -5037,7 +5040,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternLitInterpolate(data: ISZ[U8]): Pattern.LitInterpolate = {
+  def toPatternLitInterpolate(data: ISZ[U8]): Either[Pattern.LitInterpolate, MessagePack.ErrorMsg] = {
     def fPatternLitInterpolate(reader: Reader): Pattern.LitInterpolate = {
       val r = reader.readPatternLitInterpolate()
       return r
@@ -5052,7 +5055,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternRef(data: ISZ[U8]): Pattern.Ref = {
+  def toPatternRef(data: ISZ[U8]): Either[Pattern.Ref, MessagePack.ErrorMsg] = {
     def fPatternRef(reader: Reader): Pattern.Ref = {
       val r = reader.readPatternRef()
       return r
@@ -5067,7 +5070,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternVarBinding(data: ISZ[U8]): Pattern.VarBinding = {
+  def toPatternVarBinding(data: ISZ[U8]): Either[Pattern.VarBinding, MessagePack.ErrorMsg] = {
     def fPatternVarBinding(reader: Reader): Pattern.VarBinding = {
       val r = reader.readPatternVarBinding()
       return r
@@ -5082,7 +5085,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternWildcard(data: ISZ[U8]): Pattern.Wildcard = {
+  def toPatternWildcard(data: ISZ[U8]): Either[Pattern.Wildcard, MessagePack.ErrorMsg] = {
     def fPatternWildcard(reader: Reader): Pattern.Wildcard = {
       val r = reader.readPatternWildcard()
       return r
@@ -5097,7 +5100,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternSeqWildcard(data: ISZ[U8]): Pattern.SeqWildcard = {
+  def toPatternSeqWildcard(data: ISZ[U8]): Either[Pattern.SeqWildcard, MessagePack.ErrorMsg] = {
     def fPatternSeqWildcard(reader: Reader): Pattern.SeqWildcard = {
       val r = reader.readPatternSeqWildcard()
       return r
@@ -5112,7 +5115,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPatternStructure(data: ISZ[U8]): Pattern.Structure = {
+  def toPatternStructure(data: ISZ[U8]): Either[Pattern.Structure, MessagePack.ErrorMsg] = {
     def fPatternStructure(reader: Reader): Pattern.Structure = {
       val r = reader.readPatternStructure()
       return r
@@ -5127,7 +5130,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExp(data: ISZ[U8]): Exp = {
+  def toExp(data: ISZ[U8]): Either[Exp, MessagePack.ErrorMsg] = {
     def fExp(reader: Reader): Exp = {
       val r = reader.readExp()
       return r
@@ -5142,7 +5145,7 @@ object MsgPack {
     return w.result
   }
 
-  def toLit(data: ISZ[U8]): Lit = {
+  def toLit(data: ISZ[U8]): Either[Lit, MessagePack.ErrorMsg] = {
     def fLit(reader: Reader): Lit = {
       val r = reader.readLit()
       return r
@@ -5157,7 +5160,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitB(data: ISZ[U8]): Exp.LitB = {
+  def toExpLitB(data: ISZ[U8]): Either[Exp.LitB, MessagePack.ErrorMsg] = {
     def fExpLitB(reader: Reader): Exp.LitB = {
       val r = reader.readExpLitB()
       return r
@@ -5172,7 +5175,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitC(data: ISZ[U8]): Exp.LitC = {
+  def toExpLitC(data: ISZ[U8]): Either[Exp.LitC, MessagePack.ErrorMsg] = {
     def fExpLitC(reader: Reader): Exp.LitC = {
       val r = reader.readExpLitC()
       return r
@@ -5187,7 +5190,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitZ(data: ISZ[U8]): Exp.LitZ = {
+  def toExpLitZ(data: ISZ[U8]): Either[Exp.LitZ, MessagePack.ErrorMsg] = {
     def fExpLitZ(reader: Reader): Exp.LitZ = {
       val r = reader.readExpLitZ()
       return r
@@ -5202,7 +5205,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitF32(data: ISZ[U8]): Exp.LitF32 = {
+  def toExpLitF32(data: ISZ[U8]): Either[Exp.LitF32, MessagePack.ErrorMsg] = {
     def fExpLitF32(reader: Reader): Exp.LitF32 = {
       val r = reader.readExpLitF32()
       return r
@@ -5217,7 +5220,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitF64(data: ISZ[U8]): Exp.LitF64 = {
+  def toExpLitF64(data: ISZ[U8]): Either[Exp.LitF64, MessagePack.ErrorMsg] = {
     def fExpLitF64(reader: Reader): Exp.LitF64 = {
       val r = reader.readExpLitF64()
       return r
@@ -5232,7 +5235,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitR(data: ISZ[U8]): Exp.LitR = {
+  def toExpLitR(data: ISZ[U8]): Either[Exp.LitR, MessagePack.ErrorMsg] = {
     def fExpLitR(reader: Reader): Exp.LitR = {
       val r = reader.readExpLitR()
       return r
@@ -5247,7 +5250,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpLitString(data: ISZ[U8]): Exp.LitString = {
+  def toExpLitString(data: ISZ[U8]): Either[Exp.LitString, MessagePack.ErrorMsg] = {
     def fExpLitString(reader: Reader): Exp.LitString = {
       val r = reader.readExpLitString()
       return r
@@ -5262,7 +5265,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpStringInterpolate(data: ISZ[U8]): Exp.StringInterpolate = {
+  def toExpStringInterpolate(data: ISZ[U8]): Either[Exp.StringInterpolate, MessagePack.ErrorMsg] = {
     def fExpStringInterpolate(reader: Reader): Exp.StringInterpolate = {
       val r = reader.readExpStringInterpolate()
       return r
@@ -5277,7 +5280,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpThis(data: ISZ[U8]): Exp.This = {
+  def toExpThis(data: ISZ[U8]): Either[Exp.This, MessagePack.ErrorMsg] = {
     def fExpThis(reader: Reader): Exp.This = {
       val r = reader.readExpThis()
       return r
@@ -5292,7 +5295,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpSuper(data: ISZ[U8]): Exp.Super = {
+  def toExpSuper(data: ISZ[U8]): Either[Exp.Super, MessagePack.ErrorMsg] = {
     def fExpSuper(reader: Reader): Exp.Super = {
       val r = reader.readExpSuper()
       return r
@@ -5307,7 +5310,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpUnary(data: ISZ[U8]): Exp.Unary = {
+  def toExpUnary(data: ISZ[U8]): Either[Exp.Unary, MessagePack.ErrorMsg] = {
     def fExpUnary(reader: Reader): Exp.Unary = {
       val r = reader.readExpUnary()
       return r
@@ -5322,7 +5325,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpRef(data: ISZ[U8]): Exp.Ref = {
+  def toExpRef(data: ISZ[U8]): Either[Exp.Ref, MessagePack.ErrorMsg] = {
     def fExpRef(reader: Reader): Exp.Ref = {
       val r = reader.readExpRef()
       return r
@@ -5337,7 +5340,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpBinary(data: ISZ[U8]): Exp.Binary = {
+  def toExpBinary(data: ISZ[U8]): Either[Exp.Binary, MessagePack.ErrorMsg] = {
     def fExpBinary(reader: Reader): Exp.Binary = {
       val r = reader.readExpBinary()
       return r
@@ -5352,7 +5355,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpIdent(data: ISZ[U8]): Exp.Ident = {
+  def toExpIdent(data: ISZ[U8]): Either[Exp.Ident, MessagePack.ErrorMsg] = {
     def fExpIdent(reader: Reader): Exp.Ident = {
       val r = reader.readExpIdent()
       return r
@@ -5367,7 +5370,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpEta(data: ISZ[U8]): Exp.Eta = {
+  def toExpEta(data: ISZ[U8]): Either[Exp.Eta, MessagePack.ErrorMsg] = {
     def fExpEta(reader: Reader): Exp.Eta = {
       val r = reader.readExpEta()
       return r
@@ -5382,7 +5385,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpTuple(data: ISZ[U8]): Exp.Tuple = {
+  def toExpTuple(data: ISZ[U8]): Either[Exp.Tuple, MessagePack.ErrorMsg] = {
     def fExpTuple(reader: Reader): Exp.Tuple = {
       val r = reader.readExpTuple()
       return r
@@ -5397,7 +5400,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpSelect(data: ISZ[U8]): Exp.Select = {
+  def toExpSelect(data: ISZ[U8]): Either[Exp.Select, MessagePack.ErrorMsg] = {
     def fExpSelect(reader: Reader): Exp.Select = {
       val r = reader.readExpSelect()
       return r
@@ -5412,7 +5415,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpInvoke(data: ISZ[U8]): Exp.Invoke = {
+  def toExpInvoke(data: ISZ[U8]): Either[Exp.Invoke, MessagePack.ErrorMsg] = {
     def fExpInvoke(reader: Reader): Exp.Invoke = {
       val r = reader.readExpInvoke()
       return r
@@ -5427,7 +5430,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpInvokeNamed(data: ISZ[U8]): Exp.InvokeNamed = {
+  def toExpInvokeNamed(data: ISZ[U8]): Either[Exp.InvokeNamed, MessagePack.ErrorMsg] = {
     def fExpInvokeNamed(reader: Reader): Exp.InvokeNamed = {
       val r = reader.readExpInvokeNamed()
       return r
@@ -5442,7 +5445,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpIf(data: ISZ[U8]): Exp.If = {
+  def toExpIf(data: ISZ[U8]): Either[Exp.If, MessagePack.ErrorMsg] = {
     def fExpIf(reader: Reader): Exp.If = {
       val r = reader.readExpIf()
       return r
@@ -5457,7 +5460,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpFunParam(data: ISZ[U8]): Exp.Fun.Param = {
+  def toExpFunParam(data: ISZ[U8]): Either[Exp.Fun.Param, MessagePack.ErrorMsg] = {
     def fExpFunParam(reader: Reader): Exp.Fun.Param = {
       val r = reader.readExpFunParam()
       return r
@@ -5472,7 +5475,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpFun(data: ISZ[U8]): Exp.Fun = {
+  def toExpFun(data: ISZ[U8]): Either[Exp.Fun, MessagePack.ErrorMsg] = {
     def fExpFun(reader: Reader): Exp.Fun = {
       val r = reader.readExpFun()
       return r
@@ -5487,7 +5490,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpForYield(data: ISZ[U8]): Exp.ForYield = {
+  def toExpForYield(data: ISZ[U8]): Either[Exp.ForYield, MessagePack.ErrorMsg] = {
     def fExpForYield(reader: Reader): Exp.ForYield = {
       val r = reader.readExpForYield()
       return r
@@ -5502,7 +5505,7 @@ object MsgPack {
     return w.result
   }
 
-  def toExpQuant(data: ISZ[U8]): Exp.Quant = {
+  def toExpQuant(data: ISZ[U8]): Either[Exp.Quant, MessagePack.ErrorMsg] = {
     def fExpQuant(reader: Reader): Exp.Quant = {
       val r = reader.readExpQuant()
       return r
@@ -5517,7 +5520,7 @@ object MsgPack {
     return w.result
   }
 
-  def toNamedArg(data: ISZ[U8]): NamedArg = {
+  def toNamedArg(data: ISZ[U8]): Either[NamedArg, MessagePack.ErrorMsg] = {
     def fNamedArg(reader: Reader): NamedArg = {
       val r = reader.readNamedArg()
       return r
@@ -5532,7 +5535,7 @@ object MsgPack {
     return w.result
   }
 
-  def toVarFragment(data: ISZ[U8]): VarFragment = {
+  def toVarFragment(data: ISZ[U8]): Either[VarFragment, MessagePack.ErrorMsg] = {
     def fVarFragment(reader: Reader): VarFragment = {
       val r = reader.readVarFragment()
       return r
@@ -5547,7 +5550,7 @@ object MsgPack {
     return w.result
   }
 
-  def toDomain(data: ISZ[U8]): Domain = {
+  def toDomain(data: ISZ[U8]): Either[Domain, MessagePack.ErrorMsg] = {
     def fDomain(reader: Reader): Domain = {
       val r = reader.readDomain()
       return r
@@ -5562,7 +5565,7 @@ object MsgPack {
     return w.result
   }
 
-  def toDomainType(data: ISZ[U8]): Domain.Type = {
+  def toDomainType(data: ISZ[U8]): Either[Domain.Type, MessagePack.ErrorMsg] = {
     def fDomainType(reader: Reader): Domain.Type = {
       val r = reader.readDomainType()
       return r
@@ -5577,7 +5580,7 @@ object MsgPack {
     return w.result
   }
 
-  def toDomainRange(data: ISZ[U8]): Domain.Range = {
+  def toDomainRange(data: ISZ[U8]): Either[Domain.Range, MessagePack.ErrorMsg] = {
     def fDomainRange(reader: Reader): Domain.Range = {
       val r = reader.readDomainRange()
       return r
@@ -5592,7 +5595,7 @@ object MsgPack {
     return w.result
   }
 
-  def toId(data: ISZ[U8]): Id = {
+  def toId(data: ISZ[U8]): Either[Id, MessagePack.ErrorMsg] = {
     def fId(reader: Reader): Id = {
       val r = reader.readId()
       return r
@@ -5607,7 +5610,7 @@ object MsgPack {
     return w.result
   }
 
-  def toName(data: ISZ[U8]): Name = {
+  def toName(data: ISZ[U8]): Either[Name, MessagePack.ErrorMsg] = {
     def fName(reader: Reader): Name = {
       val r = reader.readName()
       return r
@@ -5622,7 +5625,7 @@ object MsgPack {
     return w.result
   }
 
-  def toBody(data: ISZ[U8]): Body = {
+  def toBody(data: ISZ[U8]): Either[Body, MessagePack.ErrorMsg] = {
     def fBody(reader: Reader): Body = {
       val r = reader.readBody()
       return r
@@ -5637,7 +5640,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAbstractDatatypeParam(data: ISZ[U8]): AbstractDatatypeParam = {
+  def toAbstractDatatypeParam(data: ISZ[U8]): Either[AbstractDatatypeParam, MessagePack.ErrorMsg] = {
     def fAbstractDatatypeParam(reader: Reader): AbstractDatatypeParam = {
       val r = reader.readAbstractDatatypeParam()
       return r
@@ -5652,7 +5655,7 @@ object MsgPack {
     return w.result
   }
 
-  def toMethodSig(data: ISZ[U8]): MethodSig = {
+  def toMethodSig(data: ISZ[U8]): Either[MethodSig, MessagePack.ErrorMsg] = {
     def fMethodSig(reader: Reader): MethodSig = {
       val r = reader.readMethodSig()
       return r
@@ -5667,7 +5670,7 @@ object MsgPack {
     return w.result
   }
 
-  def toParam(data: ISZ[U8]): Param = {
+  def toParam(data: ISZ[U8]): Either[Param, MessagePack.ErrorMsg] = {
     def fParam(reader: Reader): Param = {
       val r = reader.readParam()
       return r
@@ -5682,7 +5685,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypeParam(data: ISZ[U8]): TypeParam = {
+  def toTypeParam(data: ISZ[U8]): Either[TypeParam, MessagePack.ErrorMsg] = {
     def fTypeParam(reader: Reader): TypeParam = {
       val r = reader.readTypeParam()
       return r
@@ -5697,7 +5700,7 @@ object MsgPack {
     return w.result
   }
 
-  def toContract(data: ISZ[U8]): Contract = {
+  def toContract(data: ISZ[U8]): Either[Contract, MessagePack.ErrorMsg] = {
     def fContract(reader: Reader): Contract = {
       val r = reader.readContract()
       return r
@@ -5712,7 +5715,7 @@ object MsgPack {
     return w.result
   }
 
-  def toSubContract(data: ISZ[U8]): SubContract = {
+  def toSubContract(data: ISZ[U8]): Either[SubContract, MessagePack.ErrorMsg] = {
     def fSubContract(reader: Reader): SubContract = {
       val r = reader.readSubContract()
       return r
@@ -5727,7 +5730,7 @@ object MsgPack {
     return w.result
   }
 
-  def toWhereDef(data: ISZ[U8]): WhereDef = {
+  def toWhereDef(data: ISZ[U8]): Either[WhereDef, MessagePack.ErrorMsg] = {
     def fWhereDef(reader: Reader): WhereDef = {
       val r = reader.readWhereDef()
       return r
@@ -5742,7 +5745,7 @@ object MsgPack {
     return w.result
   }
 
-  def toWhereDefVal(data: ISZ[U8]): WhereDef.Val = {
+  def toWhereDefVal(data: ISZ[U8]): Either[WhereDef.Val, MessagePack.ErrorMsg] = {
     def fWhereDefVal(reader: Reader): WhereDef.Val = {
       val r = reader.readWhereDefVal()
       return r
@@ -5757,7 +5760,7 @@ object MsgPack {
     return w.result
   }
 
-  def toWhereDefDef(data: ISZ[U8]): WhereDef.Def = {
+  def toWhereDefDef(data: ISZ[U8]): Either[WhereDef.Def, MessagePack.ErrorMsg] = {
     def fWhereDefDef(reader: Reader): WhereDef.Def = {
       val r = reader.readWhereDefDef()
       return r
@@ -5772,7 +5775,7 @@ object MsgPack {
     return w.result
   }
 
-  def toSpecDef(data: ISZ[U8]): SpecDef = {
+  def toSpecDef(data: ISZ[U8]): Either[SpecDef, MessagePack.ErrorMsg] = {
     def fSpecDef(reader: Reader): SpecDef = {
       val r = reader.readSpecDef()
       return r
@@ -5787,7 +5790,7 @@ object MsgPack {
     return w.result
   }
 
-  def toProofStep(data: ISZ[U8]): ProofStep = {
+  def toProofStep(data: ISZ[U8]): Either[ProofStep, MessagePack.ErrorMsg] = {
     def fProofStep(reader: Reader): ProofStep = {
       val r = reader.readProofStep()
       return r
@@ -5802,7 +5805,7 @@ object MsgPack {
     return w.result
   }
 
-  def toProofStepBasic(data: ISZ[U8]): ProofStep.Basic = {
+  def toProofStepBasic(data: ISZ[U8]): Either[ProofStep.Basic, MessagePack.ErrorMsg] = {
     def fProofStepBasic(reader: Reader): ProofStep.Basic = {
       val r = reader.readProofStepBasic()
       return r
@@ -5817,7 +5820,7 @@ object MsgPack {
     return w.result
   }
 
-  def toProofStepSubProof(data: ISZ[U8]): ProofStep.SubProof = {
+  def toProofStepSubProof(data: ISZ[U8]): Either[ProofStep.SubProof, MessagePack.ErrorMsg] = {
     def fProofStepSubProof(reader: Reader): ProofStep.SubProof = {
       val r = reader.readProofStepSubProof()
       return r
@@ -5832,7 +5835,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAssumeProofStep(data: ISZ[U8]): AssumeProofStep = {
+  def toAssumeProofStep(data: ISZ[U8]): Either[AssumeProofStep, MessagePack.ErrorMsg] = {
     def fAssumeProofStep(reader: Reader): AssumeProofStep = {
       val r = reader.readAssumeProofStep()
       return r
@@ -5847,7 +5850,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAssumeProofStepRegular(data: ISZ[U8]): AssumeProofStep.Regular = {
+  def toAssumeProofStepRegular(data: ISZ[U8]): Either[AssumeProofStep.Regular, MessagePack.ErrorMsg] = {
     def fAssumeProofStepRegular(reader: Reader): AssumeProofStep.Regular = {
       val r = reader.readAssumeProofStepRegular()
       return r
@@ -5862,7 +5865,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAssumeProofStepForallIntroAps(data: ISZ[U8]): AssumeProofStep.ForallIntroAps = {
+  def toAssumeProofStepForallIntroAps(data: ISZ[U8]): Either[AssumeProofStep.ForallIntroAps, MessagePack.ErrorMsg] = {
     def fAssumeProofStepForallIntroAps(reader: Reader): AssumeProofStep.ForallIntroAps = {
       val r = reader.readAssumeProofStepForallIntroAps()
       return r
@@ -5877,7 +5880,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAssumeProofStepExistsElimAps(data: ISZ[U8]): AssumeProofStep.ExistsElimAps = {
+  def toAssumeProofStepExistsElimAps(data: ISZ[U8]): Either[AssumeProofStep.ExistsElimAps, MessagePack.ErrorMsg] = {
     def fAssumeProofStepExistsElimAps(reader: Reader): AssumeProofStep.ExistsElimAps = {
       val r = reader.readAssumeProofStepExistsElimAps()
       return r
@@ -5892,7 +5895,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJust(data: ISZ[U8]): Just = {
+  def toJust(data: ISZ[U8]): Either[Just, MessagePack.ErrorMsg] = {
     def fJust(reader: Reader): Just = {
       val r = reader.readJust()
       return r
@@ -5907,7 +5910,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustPremise(data: ISZ[U8]): Just.Premise = {
+  def toJustPremise(data: ISZ[U8]): Either[Just.Premise, MessagePack.ErrorMsg] = {
     def fJustPremise(reader: Reader): Just.Premise = {
       val r = reader.readJustPremise()
       return r
@@ -5922,7 +5925,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustAndIntro(data: ISZ[U8]): Just.AndIntro = {
+  def toJustAndIntro(data: ISZ[U8]): Either[Just.AndIntro, MessagePack.ErrorMsg] = {
     def fJustAndIntro(reader: Reader): Just.AndIntro = {
       val r = reader.readJustAndIntro()
       return r
@@ -5937,7 +5940,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustAndElim(data: ISZ[U8]): Just.AndElim = {
+  def toJustAndElim(data: ISZ[U8]): Either[Just.AndElim, MessagePack.ErrorMsg] = {
     def fJustAndElim(reader: Reader): Just.AndElim = {
       val r = reader.readJustAndElim()
       return r
@@ -5952,7 +5955,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustOrIntro(data: ISZ[U8]): Just.OrIntro = {
+  def toJustOrIntro(data: ISZ[U8]): Either[Just.OrIntro, MessagePack.ErrorMsg] = {
     def fJustOrIntro(reader: Reader): Just.OrIntro = {
       val r = reader.readJustOrIntro()
       return r
@@ -5967,7 +5970,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustOrElim(data: ISZ[U8]): Just.OrElim = {
+  def toJustOrElim(data: ISZ[U8]): Either[Just.OrElim, MessagePack.ErrorMsg] = {
     def fJustOrElim(reader: Reader): Just.OrElim = {
       val r = reader.readJustOrElim()
       return r
@@ -5982,7 +5985,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustImplyIntro(data: ISZ[U8]): Just.ImplyIntro = {
+  def toJustImplyIntro(data: ISZ[U8]): Either[Just.ImplyIntro, MessagePack.ErrorMsg] = {
     def fJustImplyIntro(reader: Reader): Just.ImplyIntro = {
       val r = reader.readJustImplyIntro()
       return r
@@ -5997,7 +6000,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustImplyElim(data: ISZ[U8]): Just.ImplyElim = {
+  def toJustImplyElim(data: ISZ[U8]): Either[Just.ImplyElim, MessagePack.ErrorMsg] = {
     def fJustImplyElim(reader: Reader): Just.ImplyElim = {
       val r = reader.readJustImplyElim()
       return r
@@ -6012,7 +6015,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustNegIntro(data: ISZ[U8]): Just.NegIntro = {
+  def toJustNegIntro(data: ISZ[U8]): Either[Just.NegIntro, MessagePack.ErrorMsg] = {
     def fJustNegIntro(reader: Reader): Just.NegIntro = {
       val r = reader.readJustNegIntro()
       return r
@@ -6027,7 +6030,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustNegElim(data: ISZ[U8]): Just.NegElim = {
+  def toJustNegElim(data: ISZ[U8]): Either[Just.NegElim, MessagePack.ErrorMsg] = {
     def fJustNegElim(reader: Reader): Just.NegElim = {
       val r = reader.readJustNegElim()
       return r
@@ -6042,7 +6045,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustBottomElim(data: ISZ[U8]): Just.BottomElim = {
+  def toJustBottomElim(data: ISZ[U8]): Either[Just.BottomElim, MessagePack.ErrorMsg] = {
     def fJustBottomElim(reader: Reader): Just.BottomElim = {
       val r = reader.readJustBottomElim()
       return r
@@ -6057,7 +6060,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustPbc(data: ISZ[U8]): Just.Pbc = {
+  def toJustPbc(data: ISZ[U8]): Either[Just.Pbc, MessagePack.ErrorMsg] = {
     def fJustPbc(reader: Reader): Just.Pbc = {
       val r = reader.readJustPbc()
       return r
@@ -6072,7 +6075,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustForallIntro(data: ISZ[U8]): Just.ForallIntro = {
+  def toJustForallIntro(data: ISZ[U8]): Either[Just.ForallIntro, MessagePack.ErrorMsg] = {
     def fJustForallIntro(reader: Reader): Just.ForallIntro = {
       val r = reader.readJustForallIntro()
       return r
@@ -6087,7 +6090,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustForallElim(data: ISZ[U8]): Just.ForallElim = {
+  def toJustForallElim(data: ISZ[U8]): Either[Just.ForallElim, MessagePack.ErrorMsg] = {
     def fJustForallElim(reader: Reader): Just.ForallElim = {
       val r = reader.readJustForallElim()
       return r
@@ -6102,7 +6105,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustExistsIntro(data: ISZ[U8]): Just.ExistsIntro = {
+  def toJustExistsIntro(data: ISZ[U8]): Either[Just.ExistsIntro, MessagePack.ErrorMsg] = {
     def fJustExistsIntro(reader: Reader): Just.ExistsIntro = {
       val r = reader.readJustExistsIntro()
       return r
@@ -6117,7 +6120,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustExistsElim(data: ISZ[U8]): Just.ExistsElim = {
+  def toJustExistsElim(data: ISZ[U8]): Either[Just.ExistsElim, MessagePack.ErrorMsg] = {
     def fJustExistsElim(reader: Reader): Just.ExistsElim = {
       val r = reader.readJustExistsElim()
       return r
@@ -6132,7 +6135,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustFact(data: ISZ[U8]): Just.Fact = {
+  def toJustFact(data: ISZ[U8]): Either[Just.Fact, MessagePack.ErrorMsg] = {
     def fJustFact(reader: Reader): Just.Fact = {
       val r = reader.readJustFact()
       return r
@@ -6147,7 +6150,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustInvariant(data: ISZ[U8]): Just.Invariant = {
+  def toJustInvariant(data: ISZ[U8]): Either[Just.Invariant, MessagePack.ErrorMsg] = {
     def fJustInvariant(reader: Reader): Just.Invariant = {
       val r = reader.readJustInvariant()
       return r
@@ -6162,7 +6165,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustSubst(data: ISZ[U8]): Just.Subst = {
+  def toJustSubst(data: ISZ[U8]): Either[Just.Subst, MessagePack.ErrorMsg] = {
     def fJustSubst(reader: Reader): Just.Subst = {
       val r = reader.readJustSubst()
       return r
@@ -6177,7 +6180,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustAuto(data: ISZ[U8]): Just.Auto = {
+  def toJustAuto(data: ISZ[U8]): Either[Just.Auto, MessagePack.ErrorMsg] = {
     def fJustAuto(reader: Reader): Just.Auto = {
       val r = reader.readJustAuto()
       return r
@@ -6192,7 +6195,7 @@ object MsgPack {
     return w.result
   }
 
-  def toJustCoq(data: ISZ[U8]): Just.Coq = {
+  def toJustCoq(data: ISZ[U8]): Either[Just.Coq, MessagePack.ErrorMsg] = {
     def fJustCoq(reader: Reader): Just.Coq = {
       val r = reader.readJustCoq()
       return r
@@ -6207,7 +6210,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableRow(data: ISZ[U8]): TruthTable.Row = {
+  def toTruthTableRow(data: ISZ[U8]): Either[TruthTable.Row, MessagePack.ErrorMsg] = {
     def fTruthTableRow(reader: Reader): TruthTable.Row = {
       val r = reader.readTruthTableRow()
       return r
@@ -6222,7 +6225,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableAssignment(data: ISZ[U8]): TruthTable.Assignment = {
+  def toTruthTableAssignment(data: ISZ[U8]): Either[TruthTable.Assignment, MessagePack.ErrorMsg] = {
     def fTruthTableAssignment(reader: Reader): TruthTable.Assignment = {
       val r = reader.readTruthTableAssignment()
       return r
@@ -6237,7 +6240,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableConclusion(data: ISZ[U8]): TruthTable.Conclusion = {
+  def toTruthTableConclusion(data: ISZ[U8]): Either[TruthTable.Conclusion, MessagePack.ErrorMsg] = {
     def fTruthTableConclusion(reader: Reader): TruthTable.Conclusion = {
       val r = reader.readTruthTableConclusion()
       return r
@@ -6252,7 +6255,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableConclusionValidity(data: ISZ[U8]): TruthTable.Conclusion.Validity = {
+  def toTruthTableConclusionValidity(data: ISZ[U8]): Either[TruthTable.Conclusion.Validity, MessagePack.ErrorMsg] = {
     def fTruthTableConclusionValidity(reader: Reader): TruthTable.Conclusion.Validity = {
       val r = reader.readTruthTableConclusionValidity()
       return r
@@ -6267,7 +6270,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableConclusionTautology(data: ISZ[U8]): TruthTable.Conclusion.Tautology = {
+  def toTruthTableConclusionTautology(data: ISZ[U8]): Either[TruthTable.Conclusion.Tautology, MessagePack.ErrorMsg] = {
     def fTruthTableConclusionTautology(reader: Reader): TruthTable.Conclusion.Tautology = {
       val r = reader.readTruthTableConclusionTautology()
       return r
@@ -6282,7 +6285,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableConclusionContradictory(data: ISZ[U8]): TruthTable.Conclusion.Contradictory = {
+  def toTruthTableConclusionContradictory(data: ISZ[U8]): Either[TruthTable.Conclusion.Contradictory, MessagePack.ErrorMsg] = {
     def fTruthTableConclusionContradictory(reader: Reader): TruthTable.Conclusion.Contradictory = {
       val r = reader.readTruthTableConclusionContradictory()
       return r
@@ -6297,7 +6300,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTruthTableConclusionContingent(data: ISZ[U8]): TruthTable.Conclusion.Contingent = {
+  def toTruthTableConclusionContingent(data: ISZ[U8]): Either[TruthTable.Conclusion.Contingent, MessagePack.ErrorMsg] = {
     def fTruthTableConclusionContingent(reader: Reader): TruthTable.Conclusion.Contingent = {
       val r = reader.readTruthTableConclusionContingent()
       return r
@@ -6312,7 +6315,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTyped(data: ISZ[U8]): Typed = {
+  def toTyped(data: ISZ[U8]): Either[Typed, MessagePack.ErrorMsg] = {
     def fTyped(reader: Reader): Typed = {
       val r = reader.readTyped()
       return r
@@ -6327,7 +6330,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedName(data: ISZ[U8]): Typed.Name = {
+  def toTypedName(data: ISZ[U8]): Either[Typed.Name, MessagePack.ErrorMsg] = {
     def fTypedName(reader: Reader): Typed.Name = {
       val r = reader.readTypedName()
       return r
@@ -6342,7 +6345,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedTuple(data: ISZ[U8]): Typed.Tuple = {
+  def toTypedTuple(data: ISZ[U8]): Either[Typed.Tuple, MessagePack.ErrorMsg] = {
     def fTypedTuple(reader: Reader): Typed.Tuple = {
       val r = reader.readTypedTuple()
       return r
@@ -6357,7 +6360,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedFun(data: ISZ[U8]): Typed.Fun = {
+  def toTypedFun(data: ISZ[U8]): Either[Typed.Fun, MessagePack.ErrorMsg] = {
     def fTypedFun(reader: Reader): Typed.Fun = {
       val r = reader.readTypedFun()
       return r
@@ -6372,7 +6375,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedTypeVar(data: ISZ[U8]): Typed.TypeVar = {
+  def toTypedTypeVar(data: ISZ[U8]): Either[Typed.TypeVar, MessagePack.ErrorMsg] = {
     def fTypedTypeVar(reader: Reader): Typed.TypeVar = {
       val r = reader.readTypedTypeVar()
       return r
@@ -6387,7 +6390,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedPackage(data: ISZ[U8]): Typed.Package = {
+  def toTypedPackage(data: ISZ[U8]): Either[Typed.Package, MessagePack.ErrorMsg] = {
     def fTypedPackage(reader: Reader): Typed.Package = {
       val r = reader.readTypedPackage()
       return r
@@ -6402,7 +6405,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedObject(data: ISZ[U8]): Typed.Object = {
+  def toTypedObject(data: ISZ[U8]): Either[Typed.Object, MessagePack.ErrorMsg] = {
     def fTypedObject(reader: Reader): Typed.Object = {
       val r = reader.readTypedObject()
       return r
@@ -6417,7 +6420,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedEnum(data: ISZ[U8]): Typed.Enum = {
+  def toTypedEnum(data: ISZ[U8]): Either[Typed.Enum, MessagePack.ErrorMsg] = {
     def fTypedEnum(reader: Reader): Typed.Enum = {
       val r = reader.readTypedEnum()
       return r
@@ -6432,7 +6435,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedMethodSubst(data: ISZ[U8]): Typed.Method.Subst = {
+  def toTypedMethodSubst(data: ISZ[U8]): Either[Typed.Method.Subst, MessagePack.ErrorMsg] = {
     def fTypedMethodSubst(reader: Reader): Typed.Method.Subst = {
       val r = reader.readTypedMethodSubst()
       return r
@@ -6447,7 +6450,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedMethod(data: ISZ[U8]): Typed.Method = {
+  def toTypedMethod(data: ISZ[U8]): Either[Typed.Method, MessagePack.ErrorMsg] = {
     def fTypedMethod(reader: Reader): Typed.Method = {
       val r = reader.readTypedMethod()
       return r
@@ -6462,7 +6465,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedMethods(data: ISZ[U8]): Typed.Methods = {
+  def toTypedMethods(data: ISZ[U8]): Either[Typed.Methods, MessagePack.ErrorMsg] = {
     def fTypedMethods(reader: Reader): Typed.Methods = {
       val r = reader.readTypedMethods()
       return r
@@ -6477,7 +6480,7 @@ object MsgPack {
     return w.result
   }
 
-  def toAttr(data: ISZ[U8]): Attr = {
+  def toAttr(data: ISZ[U8]): Either[Attr, MessagePack.ErrorMsg] = {
     def fAttr(reader: Reader): Attr = {
       val r = reader.readAttr()
       return r
@@ -6492,7 +6495,7 @@ object MsgPack {
     return w.result
   }
 
-  def toTypedAttr(data: ISZ[U8]): TypedAttr = {
+  def toTypedAttr(data: ISZ[U8]): Either[TypedAttr, MessagePack.ErrorMsg] = {
     def fTypedAttr(reader: Reader): TypedAttr = {
       val r = reader.readTypedAttr()
       return r
@@ -6507,7 +6510,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedAttr(data: ISZ[U8]): ResolvedAttr = {
+  def toResolvedAttr(data: ISZ[U8]): Either[ResolvedAttr, MessagePack.ErrorMsg] = {
     def fResolvedAttr(reader: Reader): ResolvedAttr = {
       val r = reader.readResolvedAttr()
       return r
@@ -6522,7 +6525,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfo(data: ISZ[U8]): ResolvedInfo = {
+  def toResolvedInfo(data: ISZ[U8]): Either[ResolvedInfo, MessagePack.ErrorMsg] = {
     def fResolvedInfo(reader: Reader): ResolvedInfo = {
       val r = reader.readResolvedInfo()
       return r
@@ -6537,7 +6540,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoBuiltIn(data: ISZ[U8]): ResolvedInfo.BuiltIn = {
+  def toResolvedInfoBuiltIn(data: ISZ[U8]): Either[ResolvedInfo.BuiltIn, MessagePack.ErrorMsg] = {
     def fResolvedInfoBuiltIn(reader: Reader): ResolvedInfo.BuiltIn = {
       val r = reader.readResolvedInfoBuiltIn()
       return r
@@ -6552,7 +6555,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoPackage(data: ISZ[U8]): ResolvedInfo.Package = {
+  def toResolvedInfoPackage(data: ISZ[U8]): Either[ResolvedInfo.Package, MessagePack.ErrorMsg] = {
     def fResolvedInfoPackage(reader: Reader): ResolvedInfo.Package = {
       val r = reader.readResolvedInfoPackage()
       return r
@@ -6567,7 +6570,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoEnum(data: ISZ[U8]): ResolvedInfo.Enum = {
+  def toResolvedInfoEnum(data: ISZ[U8]): Either[ResolvedInfo.Enum, MessagePack.ErrorMsg] = {
     def fResolvedInfoEnum(reader: Reader): ResolvedInfo.Enum = {
       val r = reader.readResolvedInfoEnum()
       return r
@@ -6582,7 +6585,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoEnumElement(data: ISZ[U8]): ResolvedInfo.EnumElement = {
+  def toResolvedInfoEnumElement(data: ISZ[U8]): Either[ResolvedInfo.EnumElement, MessagePack.ErrorMsg] = {
     def fResolvedInfoEnumElement(reader: Reader): ResolvedInfo.EnumElement = {
       val r = reader.readResolvedInfoEnumElement()
       return r
@@ -6597,7 +6600,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoObject(data: ISZ[U8]): ResolvedInfo.Object = {
+  def toResolvedInfoObject(data: ISZ[U8]): Either[ResolvedInfo.Object, MessagePack.ErrorMsg] = {
     def fResolvedInfoObject(reader: Reader): ResolvedInfo.Object = {
       val r = reader.readResolvedInfoObject()
       return r
@@ -6612,7 +6615,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoVar(data: ISZ[U8]): ResolvedInfo.Var = {
+  def toResolvedInfoVar(data: ISZ[U8]): Either[ResolvedInfo.Var, MessagePack.ErrorMsg] = {
     def fResolvedInfoVar(reader: Reader): ResolvedInfo.Var = {
       val r = reader.readResolvedInfoVar()
       return r
@@ -6627,7 +6630,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoMethod(data: ISZ[U8]): ResolvedInfo.Method = {
+  def toResolvedInfoMethod(data: ISZ[U8]): Either[ResolvedInfo.Method, MessagePack.ErrorMsg] = {
     def fResolvedInfoMethod(reader: Reader): ResolvedInfo.Method = {
       val r = reader.readResolvedInfoMethod()
       return r
@@ -6642,7 +6645,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoMethods(data: ISZ[U8]): ResolvedInfo.Methods = {
+  def toResolvedInfoMethods(data: ISZ[U8]): Either[ResolvedInfo.Methods, MessagePack.ErrorMsg] = {
     def fResolvedInfoMethods(reader: Reader): ResolvedInfo.Methods = {
       val r = reader.readResolvedInfoMethods()
       return r
@@ -6657,7 +6660,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoType(data: ISZ[U8]): ResolvedInfo.Type = {
+  def toResolvedInfoType(data: ISZ[U8]): Either[ResolvedInfo.Type, MessagePack.ErrorMsg] = {
     def fResolvedInfoType(reader: Reader): ResolvedInfo.Type = {
       val r = reader.readResolvedInfoType()
       return r
@@ -6672,7 +6675,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoTuple(data: ISZ[U8]): ResolvedInfo.Tuple = {
+  def toResolvedInfoTuple(data: ISZ[U8]): Either[ResolvedInfo.Tuple, MessagePack.ErrorMsg] = {
     def fResolvedInfoTuple(reader: Reader): ResolvedInfo.Tuple = {
       val r = reader.readResolvedInfoTuple()
       return r
@@ -6687,7 +6690,7 @@ object MsgPack {
     return w.result
   }
 
-  def toResolvedInfoLocalVar(data: ISZ[U8]): ResolvedInfo.LocalVar = {
+  def toResolvedInfoLocalVar(data: ISZ[U8]): Either[ResolvedInfo.LocalVar, MessagePack.ErrorMsg] = {
     def fResolvedInfoLocalVar(reader: Reader): ResolvedInfo.LocalVar = {
       val r = reader.readResolvedInfoLocalVar()
       return r
@@ -6702,7 +6705,7 @@ object MsgPack {
     return w.result
   }
 
-  def toPosInfo(data: ISZ[U8]): PosInfo = {
+  def toPosInfo(data: ISZ[U8]): Either[PosInfo, MessagePack.ErrorMsg] = {
     def fPosInfo(reader: Reader): PosInfo = {
       val r = reader.readPosInfo()
       return r
@@ -6717,7 +6720,7 @@ object MsgPack {
     return w.result
   }
 
-  def toFileInfo(data: ISZ[U8]): FileInfo = {
+  def toFileInfo(data: ISZ[U8]): Either[FileInfo, MessagePack.ErrorMsg] = {
     def fFileInfo(reader: Reader): FileInfo = {
       val r = reader.readFileInfo()
       return r
