@@ -243,7 +243,7 @@ object TransformerGen {
 
       @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def post$typeName(ctx: Context, o: $tpe): Result[Context, $superType] = {
-                   |  return post${typeName}Result(ctx)
+                   |  return Result(ctx, None())
                    |}"""
       }
 
