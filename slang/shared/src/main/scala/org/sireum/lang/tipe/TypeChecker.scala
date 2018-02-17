@@ -307,6 +307,11 @@ object TypeChecker {
                   case Some(sigInfo: TypeInfo.Sig) => newStmts = newStmts :+ sigInfo.ast
                   case _ => halt(s"Unexpected situation when type checking object @datatype/@record members")
                 }
+              case stmt: AST.Stmt.TypeAlias =>
+                r.typeMap.get(info.name :+ stmt.id.value) match {
+                  case Some(taInfo: TypeInfo.TypeAlias) => newStmts = newStmts :+ taInfo.ast
+                  case _ => halt(s"Unexpected situation when type checking object type alias members")
+                }
               case stmt: AST.Stmt.Object =>
                 reconstructObject(r.nameMap.get(info.name :+ stmt.id.value).get)
               case _ => newStmts = newStmts :+ stmt
