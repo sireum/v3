@@ -39,6 +39,8 @@ class LibraryTypeCheckingTest extends SireumSpec {
 
     * {
       val (tc, rep) = TypeChecker.libraryReporter
+      rep.printMessages()
+      assert(!rep.hasIssue)
       def nameInfo(name: Predef.String): (ISZ[String], Resolver.Info) = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
         return (ids, tc.typeHierarchy.nameMap.get(ids).get)
