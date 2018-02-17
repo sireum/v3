@@ -38,25 +38,37 @@ object CustomMessagePack {
 
     var fileInfoPool: MSZ[Option[FileInfo]] = MSZ()
 
+    def errorOpt: Option[MessagePack.ErrorMsg] = {
+      return reader.errorOpt
+    }
+
     def init(): Unit = {
       reader.initialized = T
-      val (t, size) = reader.readExtTypeHeader()
-      assert(t == MessagePack.StringPoolExtType)
-      reader.stringPool.expand(size, "")
-      var i = 0
-      while (i < size) {
-        val s = reader.readStringConstant()
-        reader.stringPool(i) = s
-        i = i + 1
+      var pOpt = reader.readExtTypeHeader()
+      pOpt match {
+        case Some((t, size)) =>
+          assert(t == MessagePack.StringPoolExtType)
+          reader.stringPool.expand(size, "")
+          var i = 0
+          while (i < size) {
+            val s = reader.readStringConstant()
+            reader.stringPool(i) = s
+            i = i + 1
+          }
+        case _ =>
       }
-      val (t2, size2) = reader.readExtTypeHeader()
-      assert(t2 == FileInfoExtType)
-      fileInfoPool.expand(size2, None())
-      i = 0
-      while (i < size2) {
-        val o = super.readFileInfo()
-        fileInfoPool(i) = Some(o)
-        i = i + 1
+      pOpt = reader.readExtTypeHeader()
+      pOpt match {
+        case Some((t, size)) =>
+          assert(t == FileInfoExtType)
+          fileInfoPool.expand(size, None())
+          var i = 0
+          while (i < size) {
+            val o = super.readFileInfo()
+            fileInfoPool(i) = Some(o)
+            i = i + 1
+          }
+        case _ =>
       }
     }
 

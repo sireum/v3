@@ -1711,7 +1711,11 @@ object MsgPack {
 
   object Reader {
 
-    @record class Default(val reader: MessagePack.Reader.Impl) extends Reader
+    @record class Default(val reader: MessagePack.Reader.Impl) extends Reader {
+      def errorOpt: Option[MessagePack.ErrorMsg] = {
+        return reader.errorOpt
+      }
+    }
 
   }
 
