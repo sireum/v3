@@ -32,6 +32,13 @@ import Resolver._
 import org.sireum.lang.util.Reporter
 import org.sireum.lang.{ast => AST}
 
+object GlobalDeclarationResolver {
+
+  val disallowedTypeIds: HashSet[String] = HashSet ++ ISZ("Option", "MOption", "Either", "MEither")
+}
+
+import GlobalDeclarationResolver._
+
 @record class GlobalDeclarationResolver(var globalNameMap: NameMap, var globalTypeMap: TypeMap, reporter: Reporter) {
 
   var packageName: QName = ISZ()
@@ -530,6 +537,13 @@ import org.sireum.lang.{ast => AST}
   }
 
   def declareType(entity: String, name: QName, info: TypeInfo, posOpt: Option[AST.PosInfo]): Unit = {
+    if (disallowedTypeIds.contains(name(name.size - 1)) && ops.ISZOps(name).dropRight(1) != AST.Typed.sireumName) {
+      reporter.error(
+        posOpt,
+        resolverKind,
+        s"Cannot declare $entity because '${name(name.size - 1)}' is a reserved type identifier in Slang."
+      )
+    }
     globalNameMap.get(name) match {
       case Some(_: Info.Object) =>
         if (!info.canHaveCompanion) {
