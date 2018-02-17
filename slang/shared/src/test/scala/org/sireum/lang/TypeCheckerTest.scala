@@ -260,7 +260,7 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
-                             |val x: Either[B, Z] = Either(Some(T), None())
+                             |val x: Either[B, Z] = Either.Left(T)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -268,7 +268,7 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
-                             |val x: MEither[B, Z] = MEither(rightOpt = MNone(), leftOpt = MSome(value = T))
+                             |val x: MEither[B, Z] = MEither.Right(value = 5)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -280,7 +280,7 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
-                             |val x: Either[B, Z] = Either(Some(T), None())
+                             |val x: Either[B, Z] = Either.Left(T)
                              |""".stripMargin))
 
         *(passingWorksheet("""import org.sireum._
@@ -378,8 +378,12 @@ class TypeCheckerTest extends SireumSpec {
                              |""".stripMargin, "Explicit type"))
 
         *(failingWorksheet("""import org.sireum._
-                             |val x = Either(Some(T), None())
-                             |""".stripMargin, "type parameter(s): 'T'"))
+                             |val x: MEither[B, Z] = MEither.Right(value = T)
+                             |""".stripMargin, "but 'org.sireum.B'"))
+
+        *(failingWorksheet("""import org.sireum._
+                             |val x = Either.Left(T)
+                             |""".stripMargin, "type parameter(s): 'R'"))
 
         *(failingWorksheet("""import org.sireum._
                              |println(Z(s = "0").getOrElse(1))
