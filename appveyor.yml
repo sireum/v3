@@ -25,9 +25,11 @@ environment:
 cache:
   - platform -> bin\prelude.sh
   - apps -> bin\prelude.sh
-  - '%USERPROFILE%\.ivy2'
   - '%USERPROFILE%\.coursier'
   - '%USERPROFILE%\.sbt'
+  - '%USERPROFILE%\.ivy2\cache'
+  - '%USERPROFILE%\.m2'
+  - '%LOCALAPPDATA%\Coursier\cache'
 
 install:
   - bash -lc "pacman --noconfirm -S unzip bc"
