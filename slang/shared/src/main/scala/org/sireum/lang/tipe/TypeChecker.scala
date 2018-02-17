@@ -3309,7 +3309,7 @@ import TypeChecker._
   }
 
   def checkAbstractDatatype(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    require(info.outlined)
+    assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
     val reporter = AccumulatingReporter.create
     val typeParams = typeParamMap(info.ast.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, info.scope)
@@ -3367,7 +3367,7 @@ import TypeChecker._
   }
 
   def checkSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    require(info.outlined)
+    assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
     val reporter = AccumulatingReporter.create
     val typeParams = typeParamMap(info.ast.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, info.scope)
@@ -3418,7 +3418,7 @@ import TypeChecker._
   }
 
   def checkObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    require(info.outlined)
+    assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
     val name = info.name
     def getStmt(id: String): Option[AST.Stmt] = {
       typeHierarchy.nameMap.get(name :+ id).get match {
