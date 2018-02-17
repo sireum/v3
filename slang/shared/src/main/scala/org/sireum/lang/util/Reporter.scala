@@ -197,13 +197,19 @@ object AccumulatingReporter {
 
   def printMessages(): Unit = {
     @pure def sortMessages(ms: ISZ[Message]): ISZ[Message] = {
-      return ops.ISZOps(ms).sortWith((m1, m2) => {
-        (m1.posOpt, m2.posOpt) match {
-          case (Some(m1pos), Some(m2pos)) =>
-            if (m1pos.beginLine > m2pos.beginLine) F else m1pos.beginColumn <= m2pos.beginColumn
-          case _ => T
-        }
-      })
+      return ops
+        .ISZOps(ms)
+        .sortWith((m1, m2) => {
+          (m1.posOpt, m2.posOpt) match {
+            case (Some(m1pos), Some(m2pos)) =>
+              if (m1pos.beginLine < m2pos.beginLine) T
+              else if (m1pos.beginLine > m2pos.beginLine) F
+              else if (m1pos.beginColumn < m2pos.beginColumn) T
+              else if (m1pos.beginColumn > m2pos.beginColumn) F
+              else m1.message.size < m2.message.size
+            case _ => m1.message.size < m2.message.size
+          }
+        })
     }
     val map = messagesByFileUri
     val err = hasError
@@ -220,16 +226,18 @@ object AccumulatingReporter {
           cprintln(err, s"* $fileUri")
           for (m <- sortMessages(ms)) {
             cprint(err, "  ")
+            val int: String = if (m.level == Message.Level.InternalError) "INTERNAL ERROR -- " else ""
             val mText: String = m.posOpt match {
-              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
+              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] $int${m.message}"
               case _ => s"- ${m.message}"
             }
             cprintln(err, mText)
           }
         case _ =>
           for (m <- sortMessages(ms)) {
+            val int: String = if (m.level == Message.Level.InternalError) "INTERNAL ERROR -- " else ""
             val mText: String = m.posOpt match {
-              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] ${m.message}"
+              case Some(pos) => s"- [${pos.beginLine}, ${pos.beginColumn}] $int${m.message}"
               case _ => s"- ${m.message}"
             }
             cprintln(err, mText)
