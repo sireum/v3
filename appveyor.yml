@@ -3,12 +3,14 @@ version: 1.0.{build}
 image: Visual Studio 2017
 
 init:
-  - git config --global core.autocrlf true
+  - cmd: git config --global core.autocrlf true
+  - cmd: git config core.symlinks true
 
 clone_folder: c:\sireum-v3
 
 before_build:
-  - git submodule update -q --init --recursive
+  - cmd: git reset --hard
+  - cmd: git submodule update -q --init --recursive
 
 environment:
   matrix:
