@@ -89,6 +89,7 @@ iveDistros / traceLevel := -1
 Global / parallelExecution := isParallelBuild
 Global / concurrentRestrictions ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
 
+addCommandAlias("refresh-slang", "; project sireum; refreshSlang")
 addCommandAlias("fatjar", "; project sireum; assembly")
 
 lazy val sireumSettings = Seq(
@@ -274,11 +275,10 @@ lazy val slangT = toSbtCrossProject(slangPI, slangSettings ++ Seq(
     "org.scalameta" %%% "scalameta" % metaVersion,
     "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
   ),
+  Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value,
   Test / parallelExecution := true
 ))
-lazy val slangShared = slangT._1.settings(Seq(
-  Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value
-))
+lazy val slangShared = slangT._1
 lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
 
