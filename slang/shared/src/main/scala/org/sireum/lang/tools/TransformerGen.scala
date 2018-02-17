@@ -46,11 +46,15 @@ object TransformerGen {
 
     @pure def preMethodRootCase(typeName: ST, tpe: ST, superType: ST, preAdaptOpt: Option[ST]): ST
 
+    @pure def preMethodResult(typeName: ST, superType: ST): ST
+
     @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST
 
     @pure def postMethodRoot(typeName: ST, tpe: ST, postMethodRootCases: ISZ[ST]): ST
 
     @pure def postMethodRootCase(typeName: ST, tpe: ST, superType: ST, postAdaptOpt: Option[ST]): ST
+
+    @pure def postMethodResult(typeName: ST, superType: ST): ST
 
     @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST
 
@@ -205,6 +209,10 @@ object TransformerGen {
         }
       }
 
+      @pure def preMethodResult(typeName: ST, superType: ST): ST = {
+        return st""
+      }
+
       @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def pre$typeName(ctx: Context, o: $tpe): PreResult[Context, $superType] = {
                    |  return PreResult(ctx, T, None())
@@ -229,9 +237,13 @@ object TransformerGen {
         }
       }
 
+      @pure def postMethodResult(typeName: ST, superType: ST): ST = {
+        return st""
+      }
+
       @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""@pure def post$typeName(ctx: Context, o: $tpe): Result[Context, $superType] = {
-                   |  return Result(ctx, None())
+                   |  return post${typeName}Result(ctx)
                    |}"""
       }
 
@@ -446,21 +458,17 @@ object TransformerGen {
                    |  @record class PreResult[T](continu: B,
                    |                             resultOpt: MOption[T])
                    |
-                   |  @msig trait PrePost {
-                   |
-                   |    ${(preMethods, "\n\n")}
-                   |
-                   |    ${(postMethods, "\n\n")}
-                   |
-                   |  }
-                   |
                    |  ${(transformHelpers, "\n\n")}
                    |
                    |}
                    |
                    |import $name._
                    |
-                   |@record class $name(pp: PrePost) {
+                   |@msig trait $name {
+                   |
+                   |  ${(preMethods, "\n\n")}
+                   |
+                   |  ${(postMethods, "\n\n")}
                    |
                    |  ${(transformMethods, "\n\n")}
                    |
@@ -487,9 +495,13 @@ object TransformerGen {
         }
       }
 
+      @pure def preMethodResult(typeName: ST, superType: ST): ST = {
+        return st"""val PreResult$typeName: PreResult[$superType] = PreResult(T, MNone())"""
+      }
+
       @pure def preMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""def pre$typeName(o: $tpe): PreResult[$superType] = {
-                   |  return PreResult(T, MNone())
+                   |  return PreResult$typeName
                    |}"""
       }
 
@@ -511,9 +523,13 @@ object TransformerGen {
         }
       }
 
+      @pure def postMethodResult(typeName: ST, superType: ST): ST = {
+        return st"""val PostResult$typeName: MOption[$superType] = MNone()"""
+      }
+
       @pure def postMethod(typeName: ST, tpe: ST, superType: ST): ST = {
         return st"""def post$typeName(o: $tpe): MOption[$superType] = {
-                   |  return MNone()
+                   |  return PostResult$typeName
                    |}"""
       }
 
@@ -523,7 +539,7 @@ object TransformerGen {
                                 preAdaptOpt: Option[ST],
                                 postAdaptOpt: Option[ST]): ST = {
         return st"""def transform$typeName(o: $tpe): MOption[$tpe] = {
-                   |  val preR: PreResult[$tpe] = pp.pre$typeName(o)${opt(preAdaptOpt)}
+                   |  val preR: PreResult[$tpe] = pre$typeName(o)${opt(preAdaptOpt)}
                    |  val r: MOption[$tpe] = if (preR.continu) {
                    |    val o2: $tpe = preR.resultOpt.getOrElse(o)
                    |    val hasChanged: B = preR.resultOpt.nonEmpty
@@ -535,7 +551,7 @@ object TransformerGen {
                    |  }
                    |  val hasChanged: B = r.nonEmpty
                    |  val o2: $tpe = r.getOrElse(o)
-                   |  val postR: MOption[$tpe] = pp.post$typeName(o2)${opt(postAdaptOpt)}
+                   |  val postR: MOption[$tpe] = post$typeName(o2)${opt(postAdaptOpt)}
                    |  if (postR.nonEmpty) {
                    |    return postR
                    |  } else if (hasChanged) {

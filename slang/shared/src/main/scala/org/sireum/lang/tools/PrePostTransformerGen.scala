@@ -139,6 +139,10 @@ object PrePostTransformerGen {
         case Some(name) => typeNameString(packageName, name)
         case _ => adTypeString
       }
+      if (!isImmutable) {
+        transformHelpers = transformHelpers :+ template.preMethodResult(adTypeName, superTypeString)
+        transformHelpers = transformHelpers :+ template.postMethodResult(adTypeName, superTypeString)
+      }
       preMethods = preMethods :+ template.preMethod(adTypeName, adTypeString, superTypeString)
       postMethods = postMethods :+ template.postMethod(adTypeName, adTypeString, superTypeString)
       if (poset.parentsOf(ti.name).isEmpty) {

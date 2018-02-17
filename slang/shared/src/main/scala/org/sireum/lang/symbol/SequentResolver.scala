@@ -55,7 +55,7 @@ object SequentResolver {
     var freeVarMap: HashMap[String, (Id, Z)],
     var hasQuant: B,
     reporter: Reporter
-  ) extends MTransformer.PrePost {
+  ) extends MTransformer {
 
     override def preExpQuant(o: Quant): MTransformer.PreResult[Exp] = {
       hasQuant = T
@@ -150,7 +150,7 @@ object SequentResolver {
     e: Exp
   ): (B, HashMap[String, (Id, Z)]) = {
     val dr = DeclResolver(scope, freeVarMap, F, reporter)
-    MTransformer(dr).transformExp(e)
+    dr.transformExp(e)
     return (dr.hasQuant, dr.freeVarMap)
   }
 

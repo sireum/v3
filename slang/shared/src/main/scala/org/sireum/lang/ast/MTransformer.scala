@@ -37,1820 +37,6 @@ object MTransformer {
   @record class PreResult[T](continu: B,
                              resultOpt: MOption[T])
 
-  @msig trait PrePost {
-
-    def preTopUnit(o: TopUnit): PreResult[TopUnit] = {
-      o match {
-        case o: TopUnit.Program => return preTopUnitProgram(o)
-        case o: TopUnit.SequentUnit => return preTopUnitSequentUnit(o)
-        case o: TopUnit.TruthTableUnit => return preTopUnitTruthTableUnit(o)
-      }
-    }
-
-    def preTopUnitProgram(o: TopUnit.Program): PreResult[TopUnit] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTopUnitSequentUnit(o: TopUnit.SequentUnit): PreResult[TopUnit] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmt(o: Stmt): PreResult[Stmt] = {
-      o match {
-        case o: Stmt.Import => return preStmtImport(o)
-        case o: Stmt.Var => return preStmtVar(o)
-        case o: Stmt.VarPattern => return preStmtVarPattern(o)
-        case o: Stmt.SpecVar => return preStmtSpecVar(o)
-        case o: Stmt.Method => return preStmtMethod(o)
-        case o: Stmt.ExtMethod => return preStmtExtMethod(o)
-        case o: Stmt.SpecMethod => return preStmtSpecMethod(o)
-        case o: Stmt.Enum => return preStmtEnum(o)
-        case o: Stmt.SubZ => return preStmtSubZ(o)
-        case o: Stmt.Object => return preStmtObject(o)
-        case o: Stmt.Sig => return preStmtSig(o)
-        case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
-        case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
-        case o: Stmt.Assign => return preStmtAssign(o)
-        case o: Stmt.Block => return preStmtBlock(o)
-        case o: Stmt.If => return preStmtIf(o)
-        case o: Stmt.Match => return preStmtMatch(o)
-        case o: Stmt.While => return preStmtWhile(o)
-        case o: Stmt.DoWhile => return preStmtDoWhile(o)
-        case o: Stmt.For => return preStmtFor(o)
-        case o: Stmt.Return => return preStmtReturn(o)
-        case o: Stmt.LStmt => return preStmtLStmt(o)
-        case o: Stmt.Expr => return preStmtExpr(o)
-      }
-    }
-
-    def preAssignExp(o: AssignExp): PreResult[AssignExp] = {
-      o match {
-        case o: Stmt.Block =>
-          val r: PreResult[AssignExp] = preStmtBlock(o) match {
-           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
-           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
-          }
-          return r
-        case o: Stmt.If =>
-          val r: PreResult[AssignExp] = preStmtIf(o) match {
-           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
-           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
-          }
-          return r
-        case o: Stmt.Match =>
-          val r: PreResult[AssignExp] = preStmtMatch(o) match {
-           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
-           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
-          }
-          return r
-        case o: Stmt.Return =>
-          val r: PreResult[AssignExp] = preStmtReturn(o) match {
-           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
-           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
-          }
-          return r
-        case o: Stmt.Expr =>
-          val r: PreResult[AssignExp] = preStmtExpr(o) match {
-           case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
-           case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
-          }
-          return r
-      }
-    }
-
-    def preStmtImport(o: Stmt.Import): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtImportImporter(o: Stmt.Import.Importer): PreResult[Stmt.Import.Importer] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtImportSelector(o: Stmt.Import.Selector): PreResult[Stmt.Import.Selector] = {
-      o match {
-        case o: Stmt.Import.MultiSelector => return preStmtImportMultiSelector(o)
-        case o: Stmt.Import.WildcardSelector => return preStmtImportWildcardSelector(o)
-      }
-    }
-
-    def preStmtImportMultiSelector(o: Stmt.Import.MultiSelector): PreResult[Stmt.Import.Selector] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): PreResult[Stmt.Import.Selector] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtImportNamedSelector(o: Stmt.Import.NamedSelector): PreResult[Stmt.Import.NamedSelector] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtVar(o: Stmt.Var): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtVarPattern(o: Stmt.VarPattern): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtSpecVar(o: Stmt.SpecVar): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtMethod(o: Stmt.Method): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtExtMethod(o: Stmt.ExtMethod): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtSpecMethod(o: Stmt.SpecMethod): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtEnum(o: Stmt.Enum): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtSubZ(o: Stmt.SubZ): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtObject(o: Stmt.Object): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtSig(o: Stmt.Sig): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtTypeAlias(o: Stmt.TypeAlias): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtAssign(o: Stmt.Assign): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtBlock(o: Stmt.Block): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtIf(o: Stmt.If): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtMatch(o: Stmt.Match): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtWhile(o: Stmt.While): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtDoWhile(o: Stmt.DoWhile): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtFor(o: Stmt.For): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtReturn(o: Stmt.Return): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtLStmt(o: Stmt.LStmt): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preStmtExpr(o: Stmt.Expr): PreResult[Stmt] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClause(o: LClause): PreResult[LClause] = {
-      o match {
-        case o: LClause.Invariants => return preLClauseInvariants(o)
-        case o: LClause.Facts => return preLClauseFacts(o)
-        case o: LClause.Theorems => return preLClauseTheorems(o)
-        case o: LClause.Sequent => return preLClauseSequent(o)
-        case o: LClause.Proof => return preLClauseProof(o)
-      }
-    }
-
-    def preLClauseInvariants(o: LClause.Invariants): PreResult[LClause] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseFacts(o: LClause.Facts): PreResult[LClause] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseFact(o: LClause.Fact): PreResult[LClause.Fact] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseTheorems(o: LClause.Theorems): PreResult[LClause] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseTheorem(o: LClause.Theorem): PreResult[LClause.Theorem] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseSequent(o: LClause.Sequent): PreResult[LClause] = {
-      return PreResult(T, MNone())
-    }
-
-    def preLClauseProof(o: LClause.Proof): PreResult[LClause] = {
-      return PreResult(T, MNone())
-    }
-
-    def preContractExp(o: ContractExp): PreResult[ContractExp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preCase(o: Case): PreResult[Case] = {
-      return PreResult(T, MNone())
-    }
-
-    def preEnumGenRange(o: EnumGen.Range): PreResult[EnumGen.Range] = {
-      o match {
-        case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Step => return preEnumGenRangeStep(o)
-      }
-    }
-
-    def preEnumGenRangeExpr(o: EnumGen.Range.Expr): PreResult[EnumGen.Range] = {
-      return PreResult(T, MNone())
-    }
-
-    def preEnumGenRangeStep(o: EnumGen.Range.Step): PreResult[EnumGen.Range] = {
-      return PreResult(T, MNone())
-    }
-
-    def preEnumGenFor(o: EnumGen.For): PreResult[EnumGen.For] = {
-      return PreResult(T, MNone())
-    }
-
-    def preType(o: Type): PreResult[Type] = {
-      o match {
-        case o: Type.Named => return preTypeNamed(o)
-        case o: Type.Fun => return preTypeFun(o)
-        case o: Type.Tuple => return preTypeTuple(o)
-      }
-    }
-
-    def preTypeNamed(o: Type.Named): PreResult[Type] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypeFun(o: Type.Fun): PreResult[Type] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypeTuple(o: Type.Tuple): PreResult[Type] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePattern(o: Pattern): PreResult[Pattern] = {
-      o match {
-        case o: Pattern.Literal => return prePatternLiteral(o)
-        case o: Pattern.LitInterpolate => return prePatternLitInterpolate(o)
-        case o: Pattern.Ref => return prePatternRef(o)
-        case o: Pattern.VarBinding => return prePatternVarBinding(o)
-        case o: Pattern.Wildcard => return prePatternWildcard(o)
-        case o: Pattern.SeqWildcard => return prePatternSeqWildcard(o)
-        case o: Pattern.Structure => return prePatternStructure(o)
-      }
-    }
-
-    def prePatternLiteral(o: Pattern.Literal): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternLitInterpolate(o: Pattern.LitInterpolate): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternRef(o: Pattern.Ref): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternVarBinding(o: Pattern.VarBinding): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternWildcard(o: Pattern.Wildcard): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternSeqWildcard(o: Pattern.SeqWildcard): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePatternStructure(o: Pattern.Structure): PreResult[Pattern] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExp(o: Exp): PreResult[Exp] = {
-      o match {
-        case o: Exp.LitB => return preExpLitB(o)
-        case o: Exp.LitC => return preExpLitC(o)
-        case o: Exp.LitZ => return preExpLitZ(o)
-        case o: Exp.LitF32 => return preExpLitF32(o)
-        case o: Exp.LitF64 => return preExpLitF64(o)
-        case o: Exp.LitR => return preExpLitR(o)
-        case o: Exp.LitString => return preExpLitString(o)
-        case o: Exp.StringInterpolate => return preExpStringInterpolate(o)
-        case o: Exp.This => return preExpThis(o)
-        case o: Exp.Super => return preExpSuper(o)
-        case o: Exp.Unary => return preExpUnary(o)
-        case o: Exp.Binary => return preExpBinary(o)
-        case o: Exp.Ident => return preExpIdent(o)
-        case o: Exp.Eta => return preExpEta(o)
-        case o: Exp.Tuple => return preExpTuple(o)
-        case o: Exp.Select => return preExpSelect(o)
-        case o: Exp.Invoke => return preExpInvoke(o)
-        case o: Exp.InvokeNamed => return preExpInvokeNamed(o)
-        case o: Exp.If => return preExpIf(o)
-        case o: Exp.Fun => return preExpFun(o)
-        case o: Exp.ForYield => return preExpForYield(o)
-        case o: Exp.Quant => return preExpQuant(o)
-      }
-    }
-
-    def preLit(o: Lit): PreResult[Lit] = {
-      o match {
-        case o: Exp.LitB =>
-          val r: PreResult[Lit] = preExpLitB(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitC =>
-          val r: PreResult[Lit] = preExpLitC(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitZ =>
-          val r: PreResult[Lit] = preExpLitZ(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitF32 =>
-          val r: PreResult[Lit] = preExpLitF32(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitF64 =>
-          val r: PreResult[Lit] = preExpLitF64(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitR =>
-          val r: PreResult[Lit] = preExpLitR(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-        case o: Exp.LitString =>
-          val r: PreResult[Lit] = preExpLitString(o) match {
-           case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
-           case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
-          }
-          return r
-      }
-    }
-
-    def preExpLitB(o: Exp.LitB): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitC(o: Exp.LitC): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitZ(o: Exp.LitZ): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitF32(o: Exp.LitF32): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitF64(o: Exp.LitF64): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitR(o: Exp.LitR): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpLitString(o: Exp.LitString): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpStringInterpolate(o: Exp.StringInterpolate): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpThis(o: Exp.This): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpSuper(o: Exp.Super): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpUnary(o: Exp.Unary): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpRef(o: Exp.Ref): PreResult[Exp.Ref] = {
-      o match {
-        case o: Exp.Ident =>
-          val r: PreResult[Exp.Ref] = preExpIdent(o) match {
-           case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
-           case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
-          }
-          return r
-        case o: Exp.Select =>
-          val r: PreResult[Exp.Ref] = preExpSelect(o) match {
-           case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
-           case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
-           case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
-          }
-          return r
-      }
-    }
-
-    def preExpBinary(o: Exp.Binary): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpIdent(o: Exp.Ident): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpEta(o: Exp.Eta): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpTuple(o: Exp.Tuple): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpSelect(o: Exp.Select): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpInvoke(o: Exp.Invoke): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpInvokeNamed(o: Exp.InvokeNamed): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpIf(o: Exp.If): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpFunParam(o: Exp.Fun.Param): PreResult[Exp.Fun.Param] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpFun(o: Exp.Fun): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpForYield(o: Exp.ForYield): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preExpQuant(o: Exp.Quant): PreResult[Exp] = {
-      return PreResult(T, MNone())
-    }
-
-    def preNamedArg(o: NamedArg): PreResult[NamedArg] = {
-      return PreResult(T, MNone())
-    }
-
-    def preVarFragment(o: VarFragment): PreResult[VarFragment] = {
-      return PreResult(T, MNone())
-    }
-
-    def preDomain(o: Domain): PreResult[Domain] = {
-      o match {
-        case o: Domain.Type => return preDomainType(o)
-        case o: Domain.Range => return preDomainRange(o)
-      }
-    }
-
-    def preDomainType(o: Domain.Type): PreResult[Domain] = {
-      return PreResult(T, MNone())
-    }
-
-    def preDomainRange(o: Domain.Range): PreResult[Domain] = {
-      return PreResult(T, MNone())
-    }
-
-    def preId(o: Id): PreResult[Id] = {
-      return PreResult(T, MNone())
-    }
-
-    def preName(o: Name): PreResult[Name] = {
-      return PreResult(T, MNone())
-    }
-
-    def preBody(o: Body): PreResult[Body] = {
-      return PreResult(T, MNone())
-    }
-
-    def preAbstractDatatypeParam(o: AbstractDatatypeParam): PreResult[AbstractDatatypeParam] = {
-      return PreResult(T, MNone())
-    }
-
-    def preMethodSig(o: MethodSig): PreResult[MethodSig] = {
-      return PreResult(T, MNone())
-    }
-
-    def preParam(o: Param): PreResult[Param] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypeParam(o: TypeParam): PreResult[TypeParam] = {
-      return PreResult(T, MNone())
-    }
-
-    def preContract(o: Contract): PreResult[Contract] = {
-      return PreResult(T, MNone())
-    }
-
-    def preSubContract(o: SubContract): PreResult[SubContract] = {
-      return PreResult(T, MNone())
-    }
-
-    def preWhereDef(o: WhereDef): PreResult[WhereDef] = {
-      o match {
-        case o: WhereDef.Val => return preWhereDefVal(o)
-        case o: WhereDef.Def => return preWhereDefDef(o)
-      }
-    }
-
-    def preWhereDefVal(o: WhereDef.Val): PreResult[WhereDef] = {
-      return PreResult(T, MNone())
-    }
-
-    def preWhereDefDef(o: WhereDef.Def): PreResult[WhereDef] = {
-      return PreResult(T, MNone())
-    }
-
-    def preSpecDef(o: SpecDef): PreResult[SpecDef] = {
-      return PreResult(T, MNone())
-    }
-
-    def preProofStep(o: ProofStep): PreResult[ProofStep] = {
-      o match {
-        case o: ProofStep.Basic => return preProofStepBasic(o)
-        case o: ProofStep.SubProof => return preProofStepSubProof(o)
-      }
-    }
-
-    def preProofStepBasic(o: ProofStep.Basic): PreResult[ProofStep] = {
-      return PreResult(T, MNone())
-    }
-
-    def preProofStepSubProof(o: ProofStep.SubProof): PreResult[ProofStep] = {
-      return PreResult(T, MNone())
-    }
-
-    def preAssumeProofStep(o: AssumeProofStep): PreResult[AssumeProofStep] = {
-      o match {
-        case o: AssumeProofStep.Regular => return preAssumeProofStepRegular(o)
-        case o: AssumeProofStep.ForallIntroAps => return preAssumeProofStepForallIntroAps(o)
-        case o: AssumeProofStep.ExistsElimAps => return preAssumeProofStepExistsElimAps(o)
-      }
-    }
-
-    def preAssumeProofStepRegular(o: AssumeProofStep.Regular): PreResult[AssumeProofStep] = {
-      return PreResult(T, MNone())
-    }
-
-    def preAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): PreResult[AssumeProofStep] = {
-      return PreResult(T, MNone())
-    }
-
-    def preAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): PreResult[AssumeProofStep] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJust(o: Just): PreResult[Just] = {
-      o match {
-        case o: Just.Premise => return preJustPremise(o)
-        case o: Just.AndIntro => return preJustAndIntro(o)
-        case o: Just.AndElim => return preJustAndElim(o)
-        case o: Just.OrIntro => return preJustOrIntro(o)
-        case o: Just.OrElim => return preJustOrElim(o)
-        case o: Just.ImplyIntro => return preJustImplyIntro(o)
-        case o: Just.ImplyElim => return preJustImplyElim(o)
-        case o: Just.NegIntro => return preJustNegIntro(o)
-        case o: Just.NegElim => return preJustNegElim(o)
-        case o: Just.BottomElim => return preJustBottomElim(o)
-        case o: Just.Pbc => return preJustPbc(o)
-        case o: Just.ForallIntro => return preJustForallIntro(o)
-        case o: Just.ForallElim => return preJustForallElim(o)
-        case o: Just.ExistsIntro => return preJustExistsIntro(o)
-        case o: Just.ExistsElim => return preJustExistsElim(o)
-        case o: Just.Fact => return preJustFact(o)
-        case o: Just.Invariant => return preJustInvariant(o)
-        case o: Just.Subst => return preJustSubst(o)
-        case o: Just.Auto => return preJustAuto(o)
-        case o: Just.Coq => return preJustCoq(o)
-      }
-    }
-
-    def preJustPremise(o: Just.Premise): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustAndIntro(o: Just.AndIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustAndElim(o: Just.AndElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustOrIntro(o: Just.OrIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustOrElim(o: Just.OrElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustImplyIntro(o: Just.ImplyIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustImplyElim(o: Just.ImplyElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustNegIntro(o: Just.NegIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustNegElim(o: Just.NegElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustBottomElim(o: Just.BottomElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustPbc(o: Just.Pbc): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustForallIntro(o: Just.ForallIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustForallElim(o: Just.ForallElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustExistsIntro(o: Just.ExistsIntro): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustExistsElim(o: Just.ExistsElim): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustFact(o: Just.Fact): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustInvariant(o: Just.Invariant): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustSubst(o: Just.Subst): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustAuto(o: Just.Auto): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preJustCoq(o: Just.Coq): PreResult[Just] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableRow(o: TruthTable.Row): PreResult[TruthTable.Row] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableAssignment(o: TruthTable.Assignment): PreResult[TruthTable.Assignment] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableConclusion(o: TruthTable.Conclusion): PreResult[TruthTable.Conclusion] = {
-      o match {
-        case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(o)
-        case o: TruthTable.Conclusion.Tautology => return preTruthTableConclusionTautology(o)
-        case o: TruthTable.Conclusion.Contradictory => return preTruthTableConclusionContradictory(o)
-        case o: TruthTable.Conclusion.Contingent => return preTruthTableConclusionContingent(o)
-      }
-    }
-
-    def preTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): PreResult[TruthTable.Conclusion] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): PreResult[TruthTable.Conclusion] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): PreResult[TruthTable.Conclusion] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): PreResult[TruthTable.Conclusion] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTyped(o: Typed): PreResult[Typed] = {
-      o match {
-        case o: Typed.Name => return preTypedName(o)
-        case o: Typed.Tuple => return preTypedTuple(o)
-        case o: Typed.Fun => return preTypedFun(o)
-        case o: Typed.TypeVar => return preTypedTypeVar(o)
-        case o: Typed.Package => return preTypedPackage(o)
-        case o: Typed.Object => return preTypedObject(o)
-        case o: Typed.Enum => return preTypedEnum(o)
-        case o: Typed.Method => return preTypedMethod(o)
-        case o: Typed.Methods => return preTypedMethods(o)
-      }
-    }
-
-    def preTypedName(o: Typed.Name): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedTuple(o: Typed.Tuple): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedFun(o: Typed.Fun): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedTypeVar(o: Typed.TypeVar): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedPackage(o: Typed.Package): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedObject(o: Typed.Object): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedEnum(o: Typed.Enum): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedMethodSubst(o: Typed.Method.Subst): PreResult[Typed.Method.Subst] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedMethod(o: Typed.Method): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedMethods(o: Typed.Methods): PreResult[Typed] = {
-      return PreResult(T, MNone())
-    }
-
-    def preAttr(o: Attr): PreResult[Attr] = {
-      return PreResult(T, MNone())
-    }
-
-    def preTypedAttr(o: TypedAttr): PreResult[TypedAttr] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedAttr(o: ResolvedAttr): PreResult[ResolvedAttr] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfo(o: ResolvedInfo): PreResult[ResolvedInfo] = {
-      o match {
-        case o: ResolvedInfo.BuiltIn => return preResolvedInfoBuiltIn(o)
-        case o: ResolvedInfo.Package => return preResolvedInfoPackage(o)
-        case o: ResolvedInfo.Enum => return preResolvedInfoEnum(o)
-        case o: ResolvedInfo.EnumElement => return preResolvedInfoEnumElement(o)
-        case o: ResolvedInfo.Object => return preResolvedInfoObject(o)
-        case o: ResolvedInfo.Var => return preResolvedInfoVar(o)
-        case o: ResolvedInfo.Method => return preResolvedInfoMethod(o)
-        case o: ResolvedInfo.Methods => return preResolvedInfoMethods(o)
-        case o: ResolvedInfo.Type => return preResolvedInfoType(o)
-        case o: ResolvedInfo.Tuple => return preResolvedInfoTuple(o)
-        case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(o)
-      }
-    }
-
-    def preResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoPackage(o: ResolvedInfo.Package): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoEnum(o: ResolvedInfo.Enum): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoObject(o: ResolvedInfo.Object): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoVar(o: ResolvedInfo.Var): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoMethod(o: ResolvedInfo.Method): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoMethods(o: ResolvedInfo.Methods): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoType(o: ResolvedInfo.Type): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoTuple(o: ResolvedInfo.Tuple): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): PreResult[ResolvedInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def prePosInfo(o: PosInfo): PreResult[PosInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def preFileInfo(o: FileInfo): PreResult[FileInfo] = {
-      return PreResult(T, MNone())
-    }
-
-    def postTopUnit(o: TopUnit): MOption[TopUnit] = {
-      o match {
-        case o: TopUnit.Program => return postTopUnitProgram(o)
-        case o: TopUnit.SequentUnit => return postTopUnitSequentUnit(o)
-        case o: TopUnit.TruthTableUnit => return postTopUnitTruthTableUnit(o)
-      }
-    }
-
-    def postTopUnitProgram(o: TopUnit.Program): MOption[TopUnit] = {
-      return MNone()
-    }
-
-    def postTopUnitSequentUnit(o: TopUnit.SequentUnit): MOption[TopUnit] = {
-      return MNone()
-    }
-
-    def postTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): MOption[TopUnit] = {
-      return MNone()
-    }
-
-    def postStmt(o: Stmt): MOption[Stmt] = {
-      o match {
-        case o: Stmt.Import => return postStmtImport(o)
-        case o: Stmt.Var => return postStmtVar(o)
-        case o: Stmt.VarPattern => return postStmtVarPattern(o)
-        case o: Stmt.SpecVar => return postStmtSpecVar(o)
-        case o: Stmt.Method => return postStmtMethod(o)
-        case o: Stmt.ExtMethod => return postStmtExtMethod(o)
-        case o: Stmt.SpecMethod => return postStmtSpecMethod(o)
-        case o: Stmt.Enum => return postStmtEnum(o)
-        case o: Stmt.SubZ => return postStmtSubZ(o)
-        case o: Stmt.Object => return postStmtObject(o)
-        case o: Stmt.Sig => return postStmtSig(o)
-        case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
-        case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
-        case o: Stmt.Assign => return postStmtAssign(o)
-        case o: Stmt.Block => return postStmtBlock(o)
-        case o: Stmt.If => return postStmtIf(o)
-        case o: Stmt.Match => return postStmtMatch(o)
-        case o: Stmt.While => return postStmtWhile(o)
-        case o: Stmt.DoWhile => return postStmtDoWhile(o)
-        case o: Stmt.For => return postStmtFor(o)
-        case o: Stmt.Return => return postStmtReturn(o)
-        case o: Stmt.LStmt => return postStmtLStmt(o)
-        case o: Stmt.Expr => return postStmtExpr(o)
-      }
-    }
-
-    def postAssignExp(o: AssignExp): MOption[AssignExp] = {
-      o match {
-        case o: Stmt.Block =>
-          val r: MOption[AssignExp] = postStmtBlock(o) match {
-           case MSome(result: AssignExp) => MSome[AssignExp](result)
-           case MSome(_) => halt("Can only produce object of type AssignExp")
-           case _ => MNone[AssignExp]()
-          }
-          return r
-        case o: Stmt.If =>
-          val r: MOption[AssignExp] = postStmtIf(o) match {
-           case MSome(result: AssignExp) => MSome[AssignExp](result)
-           case MSome(_) => halt("Can only produce object of type AssignExp")
-           case _ => MNone[AssignExp]()
-          }
-          return r
-        case o: Stmt.Match =>
-          val r: MOption[AssignExp] = postStmtMatch(o) match {
-           case MSome(result: AssignExp) => MSome[AssignExp](result)
-           case MSome(_) => halt("Can only produce object of type AssignExp")
-           case _ => MNone[AssignExp]()
-          }
-          return r
-        case o: Stmt.Return =>
-          val r: MOption[AssignExp] = postStmtReturn(o) match {
-           case MSome(result: AssignExp) => MSome[AssignExp](result)
-           case MSome(_) => halt("Can only produce object of type AssignExp")
-           case _ => MNone[AssignExp]()
-          }
-          return r
-        case o: Stmt.Expr =>
-          val r: MOption[AssignExp] = postStmtExpr(o) match {
-           case MSome(result: AssignExp) => MSome[AssignExp](result)
-           case MSome(_) => halt("Can only produce object of type AssignExp")
-           case _ => MNone[AssignExp]()
-          }
-          return r
-      }
-    }
-
-    def postStmtImport(o: Stmt.Import): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
-      return MNone()
-    }
-
-    def postStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
-      o match {
-        case o: Stmt.Import.MultiSelector => return postStmtImportMultiSelector(o)
-        case o: Stmt.Import.WildcardSelector => return postStmtImportWildcardSelector(o)
-      }
-    }
-
-    def postStmtImportMultiSelector(o: Stmt.Import.MultiSelector): MOption[Stmt.Import.Selector] = {
-      return MNone()
-    }
-
-    def postStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): MOption[Stmt.Import.Selector] = {
-      return MNone()
-    }
-
-    def postStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
-      return MNone()
-    }
-
-    def postStmtVar(o: Stmt.Var): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtVarPattern(o: Stmt.VarPattern): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtSpecVar(o: Stmt.SpecVar): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtMethod(o: Stmt.Method): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtExtMethod(o: Stmt.ExtMethod): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtSpecMethod(o: Stmt.SpecMethod): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtEnum(o: Stmt.Enum): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtSubZ(o: Stmt.SubZ): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtObject(o: Stmt.Object): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtSig(o: Stmt.Sig): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtTypeAlias(o: Stmt.TypeAlias): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtAssign(o: Stmt.Assign): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtBlock(o: Stmt.Block): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtIf(o: Stmt.If): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtMatch(o: Stmt.Match): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtWhile(o: Stmt.While): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtDoWhile(o: Stmt.DoWhile): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtFor(o: Stmt.For): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtReturn(o: Stmt.Return): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtLStmt(o: Stmt.LStmt): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postStmtExpr(o: Stmt.Expr): MOption[Stmt] = {
-      return MNone()
-    }
-
-    def postLClause(o: LClause): MOption[LClause] = {
-      o match {
-        case o: LClause.Invariants => return postLClauseInvariants(o)
-        case o: LClause.Facts => return postLClauseFacts(o)
-        case o: LClause.Theorems => return postLClauseTheorems(o)
-        case o: LClause.Sequent => return postLClauseSequent(o)
-        case o: LClause.Proof => return postLClauseProof(o)
-      }
-    }
-
-    def postLClauseInvariants(o: LClause.Invariants): MOption[LClause] = {
-      return MNone()
-    }
-
-    def postLClauseFacts(o: LClause.Facts): MOption[LClause] = {
-      return MNone()
-    }
-
-    def postLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
-      return MNone()
-    }
-
-    def postLClauseTheorems(o: LClause.Theorems): MOption[LClause] = {
-      return MNone()
-    }
-
-    def postLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
-      return MNone()
-    }
-
-    def postLClauseSequent(o: LClause.Sequent): MOption[LClause] = {
-      return MNone()
-    }
-
-    def postLClauseProof(o: LClause.Proof): MOption[LClause] = {
-      return MNone()
-    }
-
-    def postContractExp(o: ContractExp): MOption[ContractExp] = {
-      return MNone()
-    }
-
-    def postCase(o: Case): MOption[Case] = {
-      return MNone()
-    }
-
-    def postEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
-      o match {
-        case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(o)
-        case o: EnumGen.Range.Step => return postEnumGenRangeStep(o)
-      }
-    }
-
-    def postEnumGenRangeExpr(o: EnumGen.Range.Expr): MOption[EnumGen.Range] = {
-      return MNone()
-    }
-
-    def postEnumGenRangeStep(o: EnumGen.Range.Step): MOption[EnumGen.Range] = {
-      return MNone()
-    }
-
-    def postEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
-      return MNone()
-    }
-
-    def postType(o: Type): MOption[Type] = {
-      o match {
-        case o: Type.Named => return postTypeNamed(o)
-        case o: Type.Fun => return postTypeFun(o)
-        case o: Type.Tuple => return postTypeTuple(o)
-      }
-    }
-
-    def postTypeNamed(o: Type.Named): MOption[Type] = {
-      return MNone()
-    }
-
-    def postTypeFun(o: Type.Fun): MOption[Type] = {
-      return MNone()
-    }
-
-    def postTypeTuple(o: Type.Tuple): MOption[Type] = {
-      return MNone()
-    }
-
-    def postPattern(o: Pattern): MOption[Pattern] = {
-      o match {
-        case o: Pattern.Literal => return postPatternLiteral(o)
-        case o: Pattern.LitInterpolate => return postPatternLitInterpolate(o)
-        case o: Pattern.Ref => return postPatternRef(o)
-        case o: Pattern.VarBinding => return postPatternVarBinding(o)
-        case o: Pattern.Wildcard => return postPatternWildcard(o)
-        case o: Pattern.SeqWildcard => return postPatternSeqWildcard(o)
-        case o: Pattern.Structure => return postPatternStructure(o)
-      }
-    }
-
-    def postPatternLiteral(o: Pattern.Literal): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternLitInterpolate(o: Pattern.LitInterpolate): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternRef(o: Pattern.Ref): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternVarBinding(o: Pattern.VarBinding): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternWildcard(o: Pattern.Wildcard): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternSeqWildcard(o: Pattern.SeqWildcard): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postPatternStructure(o: Pattern.Structure): MOption[Pattern] = {
-      return MNone()
-    }
-
-    def postExp(o: Exp): MOption[Exp] = {
-      o match {
-        case o: Exp.LitB => return postExpLitB(o)
-        case o: Exp.LitC => return postExpLitC(o)
-        case o: Exp.LitZ => return postExpLitZ(o)
-        case o: Exp.LitF32 => return postExpLitF32(o)
-        case o: Exp.LitF64 => return postExpLitF64(o)
-        case o: Exp.LitR => return postExpLitR(o)
-        case o: Exp.LitString => return postExpLitString(o)
-        case o: Exp.StringInterpolate => return postExpStringInterpolate(o)
-        case o: Exp.This => return postExpThis(o)
-        case o: Exp.Super => return postExpSuper(o)
-        case o: Exp.Unary => return postExpUnary(o)
-        case o: Exp.Binary => return postExpBinary(o)
-        case o: Exp.Ident => return postExpIdent(o)
-        case o: Exp.Eta => return postExpEta(o)
-        case o: Exp.Tuple => return postExpTuple(o)
-        case o: Exp.Select => return postExpSelect(o)
-        case o: Exp.Invoke => return postExpInvoke(o)
-        case o: Exp.InvokeNamed => return postExpInvokeNamed(o)
-        case o: Exp.If => return postExpIf(o)
-        case o: Exp.Fun => return postExpFun(o)
-        case o: Exp.ForYield => return postExpForYield(o)
-        case o: Exp.Quant => return postExpQuant(o)
-      }
-    }
-
-    def postLit(o: Lit): MOption[Lit] = {
-      o match {
-        case o: Exp.LitB =>
-          val r: MOption[Lit] = postExpLitB(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitC =>
-          val r: MOption[Lit] = postExpLitC(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitZ =>
-          val r: MOption[Lit] = postExpLitZ(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitF32 =>
-          val r: MOption[Lit] = postExpLitF32(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitF64 =>
-          val r: MOption[Lit] = postExpLitF64(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitR =>
-          val r: MOption[Lit] = postExpLitR(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-        case o: Exp.LitString =>
-          val r: MOption[Lit] = postExpLitString(o) match {
-           case MSome(result: Lit) => MSome[Lit](result)
-           case MSome(_) => halt("Can only produce object of type Lit")
-           case _ => MNone[Lit]()
-          }
-          return r
-      }
-    }
-
-    def postExpLitB(o: Exp.LitB): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitC(o: Exp.LitC): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitZ(o: Exp.LitZ): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitF32(o: Exp.LitF32): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitF64(o: Exp.LitF64): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitR(o: Exp.LitR): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpLitString(o: Exp.LitString): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpStringInterpolate(o: Exp.StringInterpolate): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpThis(o: Exp.This): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpSuper(o: Exp.Super): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpUnary(o: Exp.Unary): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpRef(o: Exp.Ref): MOption[Exp.Ref] = {
-      o match {
-        case o: Exp.Ident =>
-          val r: MOption[Exp.Ref] = postExpIdent(o) match {
-           case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
-           case MSome(_) => halt("Can only produce object of type Exp.Ref")
-           case _ => MNone[Exp.Ref]()
-          }
-          return r
-        case o: Exp.Select =>
-          val r: MOption[Exp.Ref] = postExpSelect(o) match {
-           case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
-           case MSome(_) => halt("Can only produce object of type Exp.Ref")
-           case _ => MNone[Exp.Ref]()
-          }
-          return r
-      }
-    }
-
-    def postExpBinary(o: Exp.Binary): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpIdent(o: Exp.Ident): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpEta(o: Exp.Eta): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpTuple(o: Exp.Tuple): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpSelect(o: Exp.Select): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpInvoke(o: Exp.Invoke): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpInvokeNamed(o: Exp.InvokeNamed): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpIf(o: Exp.If): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpFunParam(o: Exp.Fun.Param): MOption[Exp.Fun.Param] = {
-      return MNone()
-    }
-
-    def postExpFun(o: Exp.Fun): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpForYield(o: Exp.ForYield): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postExpQuant(o: Exp.Quant): MOption[Exp] = {
-      return MNone()
-    }
-
-    def postNamedArg(o: NamedArg): MOption[NamedArg] = {
-      return MNone()
-    }
-
-    def postVarFragment(o: VarFragment): MOption[VarFragment] = {
-      return MNone()
-    }
-
-    def postDomain(o: Domain): MOption[Domain] = {
-      o match {
-        case o: Domain.Type => return postDomainType(o)
-        case o: Domain.Range => return postDomainRange(o)
-      }
-    }
-
-    def postDomainType(o: Domain.Type): MOption[Domain] = {
-      return MNone()
-    }
-
-    def postDomainRange(o: Domain.Range): MOption[Domain] = {
-      return MNone()
-    }
-
-    def postId(o: Id): MOption[Id] = {
-      return MNone()
-    }
-
-    def postName(o: Name): MOption[Name] = {
-      return MNone()
-    }
-
-    def postBody(o: Body): MOption[Body] = {
-      return MNone()
-    }
-
-    def postAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
-      return MNone()
-    }
-
-    def postMethodSig(o: MethodSig): MOption[MethodSig] = {
-      return MNone()
-    }
-
-    def postParam(o: Param): MOption[Param] = {
-      return MNone()
-    }
-
-    def postTypeParam(o: TypeParam): MOption[TypeParam] = {
-      return MNone()
-    }
-
-    def postContract(o: Contract): MOption[Contract] = {
-      return MNone()
-    }
-
-    def postSubContract(o: SubContract): MOption[SubContract] = {
-      return MNone()
-    }
-
-    def postWhereDef(o: WhereDef): MOption[WhereDef] = {
-      o match {
-        case o: WhereDef.Val => return postWhereDefVal(o)
-        case o: WhereDef.Def => return postWhereDefDef(o)
-      }
-    }
-
-    def postWhereDefVal(o: WhereDef.Val): MOption[WhereDef] = {
-      return MNone()
-    }
-
-    def postWhereDefDef(o: WhereDef.Def): MOption[WhereDef] = {
-      return MNone()
-    }
-
-    def postSpecDef(o: SpecDef): MOption[SpecDef] = {
-      return MNone()
-    }
-
-    def postProofStep(o: ProofStep): MOption[ProofStep] = {
-      o match {
-        case o: ProofStep.Basic => return postProofStepBasic(o)
-        case o: ProofStep.SubProof => return postProofStepSubProof(o)
-      }
-    }
-
-    def postProofStepBasic(o: ProofStep.Basic): MOption[ProofStep] = {
-      return MNone()
-    }
-
-    def postProofStepSubProof(o: ProofStep.SubProof): MOption[ProofStep] = {
-      return MNone()
-    }
-
-    def postAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
-      o match {
-        case o: AssumeProofStep.Regular => return postAssumeProofStepRegular(o)
-        case o: AssumeProofStep.ForallIntroAps => return postAssumeProofStepForallIntroAps(o)
-        case o: AssumeProofStep.ExistsElimAps => return postAssumeProofStepExistsElimAps(o)
-      }
-    }
-
-    def postAssumeProofStepRegular(o: AssumeProofStep.Regular): MOption[AssumeProofStep] = {
-      return MNone()
-    }
-
-    def postAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): MOption[AssumeProofStep] = {
-      return MNone()
-    }
-
-    def postAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): MOption[AssumeProofStep] = {
-      return MNone()
-    }
-
-    def postJust(o: Just): MOption[Just] = {
-      o match {
-        case o: Just.Premise => return postJustPremise(o)
-        case o: Just.AndIntro => return postJustAndIntro(o)
-        case o: Just.AndElim => return postJustAndElim(o)
-        case o: Just.OrIntro => return postJustOrIntro(o)
-        case o: Just.OrElim => return postJustOrElim(o)
-        case o: Just.ImplyIntro => return postJustImplyIntro(o)
-        case o: Just.ImplyElim => return postJustImplyElim(o)
-        case o: Just.NegIntro => return postJustNegIntro(o)
-        case o: Just.NegElim => return postJustNegElim(o)
-        case o: Just.BottomElim => return postJustBottomElim(o)
-        case o: Just.Pbc => return postJustPbc(o)
-        case o: Just.ForallIntro => return postJustForallIntro(o)
-        case o: Just.ForallElim => return postJustForallElim(o)
-        case o: Just.ExistsIntro => return postJustExistsIntro(o)
-        case o: Just.ExistsElim => return postJustExistsElim(o)
-        case o: Just.Fact => return postJustFact(o)
-        case o: Just.Invariant => return postJustInvariant(o)
-        case o: Just.Subst => return postJustSubst(o)
-        case o: Just.Auto => return postJustAuto(o)
-        case o: Just.Coq => return postJustCoq(o)
-      }
-    }
-
-    def postJustPremise(o: Just.Premise): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustAndIntro(o: Just.AndIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustAndElim(o: Just.AndElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustOrIntro(o: Just.OrIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustOrElim(o: Just.OrElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustImplyIntro(o: Just.ImplyIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustImplyElim(o: Just.ImplyElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustNegIntro(o: Just.NegIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustNegElim(o: Just.NegElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustBottomElim(o: Just.BottomElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustPbc(o: Just.Pbc): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustForallIntro(o: Just.ForallIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustForallElim(o: Just.ForallElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustExistsIntro(o: Just.ExistsIntro): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustExistsElim(o: Just.ExistsElim): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustFact(o: Just.Fact): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustInvariant(o: Just.Invariant): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustSubst(o: Just.Subst): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustAuto(o: Just.Auto): MOption[Just] = {
-      return MNone()
-    }
-
-    def postJustCoq(o: Just.Coq): MOption[Just] = {
-      return MNone()
-    }
-
-    def postTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
-      return MNone()
-    }
-
-    def postTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
-      return MNone()
-    }
-
-    def postTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
-      o match {
-        case o: TruthTable.Conclusion.Validity => return postTruthTableConclusionValidity(o)
-        case o: TruthTable.Conclusion.Tautology => return postTruthTableConclusionTautology(o)
-        case o: TruthTable.Conclusion.Contradictory => return postTruthTableConclusionContradictory(o)
-        case o: TruthTable.Conclusion.Contingent => return postTruthTableConclusionContingent(o)
-      }
-    }
-
-    def postTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): MOption[TruthTable.Conclusion] = {
-      return MNone()
-    }
-
-    def postTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): MOption[TruthTable.Conclusion] = {
-      return MNone()
-    }
-
-    def postTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): MOption[TruthTable.Conclusion] = {
-      return MNone()
-    }
-
-    def postTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): MOption[TruthTable.Conclusion] = {
-      return MNone()
-    }
-
-    def postTyped(o: Typed): MOption[Typed] = {
-      o match {
-        case o: Typed.Name => return postTypedName(o)
-        case o: Typed.Tuple => return postTypedTuple(o)
-        case o: Typed.Fun => return postTypedFun(o)
-        case o: Typed.TypeVar => return postTypedTypeVar(o)
-        case o: Typed.Package => return postTypedPackage(o)
-        case o: Typed.Object => return postTypedObject(o)
-        case o: Typed.Enum => return postTypedEnum(o)
-        case o: Typed.Method => return postTypedMethod(o)
-        case o: Typed.Methods => return postTypedMethods(o)
-      }
-    }
-
-    def postTypedName(o: Typed.Name): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedTuple(o: Typed.Tuple): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedFun(o: Typed.Fun): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedTypeVar(o: Typed.TypeVar): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedPackage(o: Typed.Package): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedObject(o: Typed.Object): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedEnum(o: Typed.Enum): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedMethodSubst(o: Typed.Method.Subst): MOption[Typed.Method.Subst] = {
-      return MNone()
-    }
-
-    def postTypedMethod(o: Typed.Method): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postTypedMethods(o: Typed.Methods): MOption[Typed] = {
-      return MNone()
-    }
-
-    def postAttr(o: Attr): MOption[Attr] = {
-      return MNone()
-    }
-
-    def postTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
-      return MNone()
-    }
-
-    def postResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
-      return MNone()
-    }
-
-    def postResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
-      o match {
-        case o: ResolvedInfo.BuiltIn => return postResolvedInfoBuiltIn(o)
-        case o: ResolvedInfo.Package => return postResolvedInfoPackage(o)
-        case o: ResolvedInfo.Enum => return postResolvedInfoEnum(o)
-        case o: ResolvedInfo.EnumElement => return postResolvedInfoEnumElement(o)
-        case o: ResolvedInfo.Object => return postResolvedInfoObject(o)
-        case o: ResolvedInfo.Var => return postResolvedInfoVar(o)
-        case o: ResolvedInfo.Method => return postResolvedInfoMethod(o)
-        case o: ResolvedInfo.Methods => return postResolvedInfoMethods(o)
-        case o: ResolvedInfo.Type => return postResolvedInfoType(o)
-        case o: ResolvedInfo.Tuple => return postResolvedInfoTuple(o)
-        case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(o)
-      }
-    }
-
-    def postResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoPackage(o: ResolvedInfo.Package): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoEnum(o: ResolvedInfo.Enum): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoObject(o: ResolvedInfo.Object): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoVar(o: ResolvedInfo.Var): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoMethods(o: ResolvedInfo.Methods): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoType(o: ResolvedInfo.Type): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoTuple(o: ResolvedInfo.Tuple): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): MOption[ResolvedInfo] = {
-      return MNone()
-    }
-
-    def postPosInfo(o: PosInfo): MOption[PosInfo] = {
-      return MNone()
-    }
-
-    def postFileInfo(o: FileInfo): MOption[FileInfo] = {
-      return MNone()
-    }
-
-  }
-
   def transformISZ[T](s: IS[Z, T], f: T => MOption[T]): MOption[IS[Z, T]] = {
     val s2: MS[Z, T] = s.toMS
     var changed: B = F
@@ -1879,14 +65,2416 @@ object MTransformer {
     }
   }
 
+  val PreResultTopUnitProgram: PreResult[TopUnit] = PreResult(T, MNone())
+
+  val PostResultTopUnitProgram: MOption[TopUnit] = MNone()
+
+  val PreResultTopUnitSequentUnit: PreResult[TopUnit] = PreResult(T, MNone())
+
+  val PostResultTopUnitSequentUnit: MOption[TopUnit] = MNone()
+
+  val PreResultTopUnitTruthTableUnit: PreResult[TopUnit] = PreResult(T, MNone())
+
+  val PostResultTopUnitTruthTableUnit: MOption[TopUnit] = MNone()
+
+  val PreResultStmtImport: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtImport: MOption[Stmt] = MNone()
+
+  val PreResultStmtImportImporter: PreResult[Stmt.Import.Importer] = PreResult(T, MNone())
+
+  val PostResultStmtImportImporter: MOption[Stmt.Import.Importer] = MNone()
+
+  val PreResultStmtImportMultiSelector: PreResult[Stmt.Import.Selector] = PreResult(T, MNone())
+
+  val PostResultStmtImportMultiSelector: MOption[Stmt.Import.Selector] = MNone()
+
+  val PreResultStmtImportWildcardSelector: PreResult[Stmt.Import.Selector] = PreResult(T, MNone())
+
+  val PostResultStmtImportWildcardSelector: MOption[Stmt.Import.Selector] = MNone()
+
+  val PreResultStmtImportNamedSelector: PreResult[Stmt.Import.NamedSelector] = PreResult(T, MNone())
+
+  val PostResultStmtImportNamedSelector: MOption[Stmt.Import.NamedSelector] = MNone()
+
+  val PreResultStmtVar: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtVar: MOption[Stmt] = MNone()
+
+  val PreResultStmtVarPattern: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtVarPattern: MOption[Stmt] = MNone()
+
+  val PreResultStmtSpecVar: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtSpecVar: MOption[Stmt] = MNone()
+
+  val PreResultStmtMethod: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtMethod: MOption[Stmt] = MNone()
+
+  val PreResultStmtExtMethod: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtExtMethod: MOption[Stmt] = MNone()
+
+  val PreResultStmtSpecMethod: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtSpecMethod: MOption[Stmt] = MNone()
+
+  val PreResultStmtEnum: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtEnum: MOption[Stmt] = MNone()
+
+  val PreResultStmtSubZ: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtSubZ: MOption[Stmt] = MNone()
+
+  val PreResultStmtObject: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtObject: MOption[Stmt] = MNone()
+
+  val PreResultStmtSig: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtSig: MOption[Stmt] = MNone()
+
+  val PreResultStmtAbstractDatatype: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtAbstractDatatype: MOption[Stmt] = MNone()
+
+  val PreResultStmtTypeAlias: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtTypeAlias: MOption[Stmt] = MNone()
+
+  val PreResultStmtAssign: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtAssign: MOption[Stmt] = MNone()
+
+  val PreResultStmtBlock: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtBlock: MOption[Stmt] = MNone()
+
+  val PreResultStmtIf: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtIf: MOption[Stmt] = MNone()
+
+  val PreResultStmtMatch: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtMatch: MOption[Stmt] = MNone()
+
+  val PreResultStmtWhile: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtWhile: MOption[Stmt] = MNone()
+
+  val PreResultStmtDoWhile: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtDoWhile: MOption[Stmt] = MNone()
+
+  val PreResultStmtFor: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtFor: MOption[Stmt] = MNone()
+
+  val PreResultStmtReturn: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtReturn: MOption[Stmt] = MNone()
+
+  val PreResultStmtLStmt: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtLStmt: MOption[Stmt] = MNone()
+
+  val PreResultStmtExpr: PreResult[Stmt] = PreResult(T, MNone())
+
+  val PostResultStmtExpr: MOption[Stmt] = MNone()
+
+  val PreResultLClauseInvariants: PreResult[LClause] = PreResult(T, MNone())
+
+  val PostResultLClauseInvariants: MOption[LClause] = MNone()
+
+  val PreResultLClauseFacts: PreResult[LClause] = PreResult(T, MNone())
+
+  val PostResultLClauseFacts: MOption[LClause] = MNone()
+
+  val PreResultLClauseFact: PreResult[LClause.Fact] = PreResult(T, MNone())
+
+  val PostResultLClauseFact: MOption[LClause.Fact] = MNone()
+
+  val PreResultLClauseTheorems: PreResult[LClause] = PreResult(T, MNone())
+
+  val PostResultLClauseTheorems: MOption[LClause] = MNone()
+
+  val PreResultLClauseTheorem: PreResult[LClause.Theorem] = PreResult(T, MNone())
+
+  val PostResultLClauseTheorem: MOption[LClause.Theorem] = MNone()
+
+  val PreResultLClauseSequent: PreResult[LClause] = PreResult(T, MNone())
+
+  val PostResultLClauseSequent: MOption[LClause] = MNone()
+
+  val PreResultLClauseProof: PreResult[LClause] = PreResult(T, MNone())
+
+  val PostResultLClauseProof: MOption[LClause] = MNone()
+
+  val PreResultContractExp: PreResult[ContractExp] = PreResult(T, MNone())
+
+  val PostResultContractExp: MOption[ContractExp] = MNone()
+
+  val PreResultCase: PreResult[Case] = PreResult(T, MNone())
+
+  val PostResultCase: MOption[Case] = MNone()
+
+  val PreResultEnumGenRangeExpr: PreResult[EnumGen.Range] = PreResult(T, MNone())
+
+  val PostResultEnumGenRangeExpr: MOption[EnumGen.Range] = MNone()
+
+  val PreResultEnumGenRangeStep: PreResult[EnumGen.Range] = PreResult(T, MNone())
+
+  val PostResultEnumGenRangeStep: MOption[EnumGen.Range] = MNone()
+
+  val PreResultEnumGenFor: PreResult[EnumGen.For] = PreResult(T, MNone())
+
+  val PostResultEnumGenFor: MOption[EnumGen.For] = MNone()
+
+  val PreResultTypeNamed: PreResult[Type] = PreResult(T, MNone())
+
+  val PostResultTypeNamed: MOption[Type] = MNone()
+
+  val PreResultTypeFun: PreResult[Type] = PreResult(T, MNone())
+
+  val PostResultTypeFun: MOption[Type] = MNone()
+
+  val PreResultTypeTuple: PreResult[Type] = PreResult(T, MNone())
+
+  val PostResultTypeTuple: MOption[Type] = MNone()
+
+  val PreResultPatternLiteral: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternLiteral: MOption[Pattern] = MNone()
+
+  val PreResultPatternLitInterpolate: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternLitInterpolate: MOption[Pattern] = MNone()
+
+  val PreResultPatternRef: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternRef: MOption[Pattern] = MNone()
+
+  val PreResultPatternVarBinding: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternVarBinding: MOption[Pattern] = MNone()
+
+  val PreResultPatternWildcard: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternWildcard: MOption[Pattern] = MNone()
+
+  val PreResultPatternSeqWildcard: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternSeqWildcard: MOption[Pattern] = MNone()
+
+  val PreResultPatternStructure: PreResult[Pattern] = PreResult(T, MNone())
+
+  val PostResultPatternStructure: MOption[Pattern] = MNone()
+
+  val PreResultExpLitB: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitB: MOption[Exp] = MNone()
+
+  val PreResultExpLitC: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitC: MOption[Exp] = MNone()
+
+  val PreResultExpLitZ: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitZ: MOption[Exp] = MNone()
+
+  val PreResultExpLitF32: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitF32: MOption[Exp] = MNone()
+
+  val PreResultExpLitF64: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitF64: MOption[Exp] = MNone()
+
+  val PreResultExpLitR: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitR: MOption[Exp] = MNone()
+
+  val PreResultExpLitString: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpLitString: MOption[Exp] = MNone()
+
+  val PreResultExpStringInterpolate: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpStringInterpolate: MOption[Exp] = MNone()
+
+  val PreResultExpThis: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpThis: MOption[Exp] = MNone()
+
+  val PreResultExpSuper: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpSuper: MOption[Exp] = MNone()
+
+  val PreResultExpUnary: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpUnary: MOption[Exp] = MNone()
+
+  val PreResultExpBinary: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpBinary: MOption[Exp] = MNone()
+
+  val PreResultExpIdent: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpIdent: MOption[Exp] = MNone()
+
+  val PreResultExpEta: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpEta: MOption[Exp] = MNone()
+
+  val PreResultExpTuple: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpTuple: MOption[Exp] = MNone()
+
+  val PreResultExpSelect: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpSelect: MOption[Exp] = MNone()
+
+  val PreResultExpInvoke: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpInvoke: MOption[Exp] = MNone()
+
+  val PreResultExpInvokeNamed: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpInvokeNamed: MOption[Exp] = MNone()
+
+  val PreResultExpIf: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpIf: MOption[Exp] = MNone()
+
+  val PreResultExpFunParam: PreResult[Exp.Fun.Param] = PreResult(T, MNone())
+
+  val PostResultExpFunParam: MOption[Exp.Fun.Param] = MNone()
+
+  val PreResultExpFun: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpFun: MOption[Exp] = MNone()
+
+  val PreResultExpForYield: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpForYield: MOption[Exp] = MNone()
+
+  val PreResultExpQuant: PreResult[Exp] = PreResult(T, MNone())
+
+  val PostResultExpQuant: MOption[Exp] = MNone()
+
+  val PreResultNamedArg: PreResult[NamedArg] = PreResult(T, MNone())
+
+  val PostResultNamedArg: MOption[NamedArg] = MNone()
+
+  val PreResultVarFragment: PreResult[VarFragment] = PreResult(T, MNone())
+
+  val PostResultVarFragment: MOption[VarFragment] = MNone()
+
+  val PreResultDomainType: PreResult[Domain] = PreResult(T, MNone())
+
+  val PostResultDomainType: MOption[Domain] = MNone()
+
+  val PreResultDomainRange: PreResult[Domain] = PreResult(T, MNone())
+
+  val PostResultDomainRange: MOption[Domain] = MNone()
+
+  val PreResultId: PreResult[Id] = PreResult(T, MNone())
+
+  val PostResultId: MOption[Id] = MNone()
+
+  val PreResultName: PreResult[Name] = PreResult(T, MNone())
+
+  val PostResultName: MOption[Name] = MNone()
+
+  val PreResultBody: PreResult[Body] = PreResult(T, MNone())
+
+  val PostResultBody: MOption[Body] = MNone()
+
+  val PreResultAbstractDatatypeParam: PreResult[AbstractDatatypeParam] = PreResult(T, MNone())
+
+  val PostResultAbstractDatatypeParam: MOption[AbstractDatatypeParam] = MNone()
+
+  val PreResultMethodSig: PreResult[MethodSig] = PreResult(T, MNone())
+
+  val PostResultMethodSig: MOption[MethodSig] = MNone()
+
+  val PreResultParam: PreResult[Param] = PreResult(T, MNone())
+
+  val PostResultParam: MOption[Param] = MNone()
+
+  val PreResultTypeParam: PreResult[TypeParam] = PreResult(T, MNone())
+
+  val PostResultTypeParam: MOption[TypeParam] = MNone()
+
+  val PreResultContract: PreResult[Contract] = PreResult(T, MNone())
+
+  val PostResultContract: MOption[Contract] = MNone()
+
+  val PreResultSubContract: PreResult[SubContract] = PreResult(T, MNone())
+
+  val PostResultSubContract: MOption[SubContract] = MNone()
+
+  val PreResultWhereDefVal: PreResult[WhereDef] = PreResult(T, MNone())
+
+  val PostResultWhereDefVal: MOption[WhereDef] = MNone()
+
+  val PreResultWhereDefDef: PreResult[WhereDef] = PreResult(T, MNone())
+
+  val PostResultWhereDefDef: MOption[WhereDef] = MNone()
+
+  val PreResultSpecDef: PreResult[SpecDef] = PreResult(T, MNone())
+
+  val PostResultSpecDef: MOption[SpecDef] = MNone()
+
+  val PreResultProofStepBasic: PreResult[ProofStep] = PreResult(T, MNone())
+
+  val PostResultProofStepBasic: MOption[ProofStep] = MNone()
+
+  val PreResultProofStepSubProof: PreResult[ProofStep] = PreResult(T, MNone())
+
+  val PostResultProofStepSubProof: MOption[ProofStep] = MNone()
+
+  val PreResultAssumeProofStepRegular: PreResult[AssumeProofStep] = PreResult(T, MNone())
+
+  val PostResultAssumeProofStepRegular: MOption[AssumeProofStep] = MNone()
+
+  val PreResultAssumeProofStepForallIntroAps: PreResult[AssumeProofStep] = PreResult(T, MNone())
+
+  val PostResultAssumeProofStepForallIntroAps: MOption[AssumeProofStep] = MNone()
+
+  val PreResultAssumeProofStepExistsElimAps: PreResult[AssumeProofStep] = PreResult(T, MNone())
+
+  val PostResultAssumeProofStepExistsElimAps: MOption[AssumeProofStep] = MNone()
+
+  val PreResultJustPremise: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustPremise: MOption[Just] = MNone()
+
+  val PreResultJustAndIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustAndIntro: MOption[Just] = MNone()
+
+  val PreResultJustAndElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustAndElim: MOption[Just] = MNone()
+
+  val PreResultJustOrIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustOrIntro: MOption[Just] = MNone()
+
+  val PreResultJustOrElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustOrElim: MOption[Just] = MNone()
+
+  val PreResultJustImplyIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustImplyIntro: MOption[Just] = MNone()
+
+  val PreResultJustImplyElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustImplyElim: MOption[Just] = MNone()
+
+  val PreResultJustNegIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustNegIntro: MOption[Just] = MNone()
+
+  val PreResultJustNegElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustNegElim: MOption[Just] = MNone()
+
+  val PreResultJustBottomElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustBottomElim: MOption[Just] = MNone()
+
+  val PreResultJustPbc: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustPbc: MOption[Just] = MNone()
+
+  val PreResultJustForallIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustForallIntro: MOption[Just] = MNone()
+
+  val PreResultJustForallElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustForallElim: MOption[Just] = MNone()
+
+  val PreResultJustExistsIntro: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustExistsIntro: MOption[Just] = MNone()
+
+  val PreResultJustExistsElim: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustExistsElim: MOption[Just] = MNone()
+
+  val PreResultJustFact: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustFact: MOption[Just] = MNone()
+
+  val PreResultJustInvariant: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustInvariant: MOption[Just] = MNone()
+
+  val PreResultJustSubst: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustSubst: MOption[Just] = MNone()
+
+  val PreResultJustAuto: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustAuto: MOption[Just] = MNone()
+
+  val PreResultJustCoq: PreResult[Just] = PreResult(T, MNone())
+
+  val PostResultJustCoq: MOption[Just] = MNone()
+
+  val PreResultTruthTableRow: PreResult[TruthTable.Row] = PreResult(T, MNone())
+
+  val PostResultTruthTableRow: MOption[TruthTable.Row] = MNone()
+
+  val PreResultTruthTableAssignment: PreResult[TruthTable.Assignment] = PreResult(T, MNone())
+
+  val PostResultTruthTableAssignment: MOption[TruthTable.Assignment] = MNone()
+
+  val PreResultTruthTableConclusionValidity: PreResult[TruthTable.Conclusion] = PreResult(T, MNone())
+
+  val PostResultTruthTableConclusionValidity: MOption[TruthTable.Conclusion] = MNone()
+
+  val PreResultTruthTableConclusionTautology: PreResult[TruthTable.Conclusion] = PreResult(T, MNone())
+
+  val PostResultTruthTableConclusionTautology: MOption[TruthTable.Conclusion] = MNone()
+
+  val PreResultTruthTableConclusionContradictory: PreResult[TruthTable.Conclusion] = PreResult(T, MNone())
+
+  val PostResultTruthTableConclusionContradictory: MOption[TruthTable.Conclusion] = MNone()
+
+  val PreResultTruthTableConclusionContingent: PreResult[TruthTable.Conclusion] = PreResult(T, MNone())
+
+  val PostResultTruthTableConclusionContingent: MOption[TruthTable.Conclusion] = MNone()
+
+  val PreResultTypedName: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedName: MOption[Typed] = MNone()
+
+  val PreResultTypedTuple: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedTuple: MOption[Typed] = MNone()
+
+  val PreResultTypedFun: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedFun: MOption[Typed] = MNone()
+
+  val PreResultTypedTypeVar: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedTypeVar: MOption[Typed] = MNone()
+
+  val PreResultTypedPackage: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedPackage: MOption[Typed] = MNone()
+
+  val PreResultTypedObject: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedObject: MOption[Typed] = MNone()
+
+  val PreResultTypedEnum: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedEnum: MOption[Typed] = MNone()
+
+  val PreResultTypedMethodSubst: PreResult[Typed.Method.Subst] = PreResult(T, MNone())
+
+  val PostResultTypedMethodSubst: MOption[Typed.Method.Subst] = MNone()
+
+  val PreResultTypedMethod: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedMethod: MOption[Typed] = MNone()
+
+  val PreResultTypedMethods: PreResult[Typed] = PreResult(T, MNone())
+
+  val PostResultTypedMethods: MOption[Typed] = MNone()
+
+  val PreResultAttr: PreResult[Attr] = PreResult(T, MNone())
+
+  val PostResultAttr: MOption[Attr] = MNone()
+
+  val PreResultTypedAttr: PreResult[TypedAttr] = PreResult(T, MNone())
+
+  val PostResultTypedAttr: MOption[TypedAttr] = MNone()
+
+  val PreResultResolvedAttr: PreResult[ResolvedAttr] = PreResult(T, MNone())
+
+  val PostResultResolvedAttr: MOption[ResolvedAttr] = MNone()
+
+  val PreResultResolvedInfoBuiltIn: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoBuiltIn: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoPackage: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoPackage: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoEnum: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoEnum: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoEnumElement: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoEnumElement: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoObject: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoObject: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoVar: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoVar: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoMethod: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoMethod: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoMethods: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoMethods: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoType: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoType: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoTuple: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoTuple: MOption[ResolvedInfo] = MNone()
+
+  val PreResultResolvedInfoLocalVar: PreResult[ResolvedInfo] = PreResult(T, MNone())
+
+  val PostResultResolvedInfoLocalVar: MOption[ResolvedInfo] = MNone()
+
+  val PreResultPosInfo: PreResult[PosInfo] = PreResult(T, MNone())
+
+  val PostResultPosInfo: MOption[PosInfo] = MNone()
+
+  val PreResultFileInfo: PreResult[FileInfo] = PreResult(T, MNone())
+
+  val PostResultFileInfo: MOption[FileInfo] = MNone()
+
 }
 
 import MTransformer._
 
-@record class MTransformer(pp: PrePost) {
+@msig trait MTransformer {
+
+  def preTopUnit(o: TopUnit): PreResult[TopUnit] = {
+    o match {
+      case o: TopUnit.Program => return preTopUnitProgram(o)
+      case o: TopUnit.SequentUnit => return preTopUnitSequentUnit(o)
+      case o: TopUnit.TruthTableUnit => return preTopUnitTruthTableUnit(o)
+    }
+  }
+
+  def preTopUnitProgram(o: TopUnit.Program): PreResult[TopUnit] = {
+    return PreResultTopUnitProgram
+  }
+
+  def preTopUnitSequentUnit(o: TopUnit.SequentUnit): PreResult[TopUnit] = {
+    return PreResultTopUnitSequentUnit
+  }
+
+  def preTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): PreResult[TopUnit] = {
+    return PreResultTopUnitTruthTableUnit
+  }
+
+  def preStmt(o: Stmt): PreResult[Stmt] = {
+    o match {
+      case o: Stmt.Import => return preStmtImport(o)
+      case o: Stmt.Var => return preStmtVar(o)
+      case o: Stmt.VarPattern => return preStmtVarPattern(o)
+      case o: Stmt.SpecVar => return preStmtSpecVar(o)
+      case o: Stmt.Method => return preStmtMethod(o)
+      case o: Stmt.ExtMethod => return preStmtExtMethod(o)
+      case o: Stmt.SpecMethod => return preStmtSpecMethod(o)
+      case o: Stmt.Enum => return preStmtEnum(o)
+      case o: Stmt.SubZ => return preStmtSubZ(o)
+      case o: Stmt.Object => return preStmtObject(o)
+      case o: Stmt.Sig => return preStmtSig(o)
+      case o: Stmt.AbstractDatatype => return preStmtAbstractDatatype(o)
+      case o: Stmt.TypeAlias => return preStmtTypeAlias(o)
+      case o: Stmt.Assign => return preStmtAssign(o)
+      case o: Stmt.Block => return preStmtBlock(o)
+      case o: Stmt.If => return preStmtIf(o)
+      case o: Stmt.Match => return preStmtMatch(o)
+      case o: Stmt.While => return preStmtWhile(o)
+      case o: Stmt.DoWhile => return preStmtDoWhile(o)
+      case o: Stmt.For => return preStmtFor(o)
+      case o: Stmt.Return => return preStmtReturn(o)
+      case o: Stmt.LStmt => return preStmtLStmt(o)
+      case o: Stmt.Expr => return preStmtExpr(o)
+    }
+  }
+
+  def preAssignExp(o: AssignExp): PreResult[AssignExp] = {
+    o match {
+      case o: Stmt.Block =>
+        val r: PreResult[AssignExp] = preStmtBlock(o) match {
+         case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+         case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+        }
+        return r
+      case o: Stmt.If =>
+        val r: PreResult[AssignExp] = preStmtIf(o) match {
+         case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+         case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+        }
+        return r
+      case o: Stmt.Match =>
+        val r: PreResult[AssignExp] = preStmtMatch(o) match {
+         case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+         case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+        }
+        return r
+      case o: Stmt.Return =>
+        val r: PreResult[AssignExp] = preStmtReturn(o) match {
+         case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+         case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+        }
+        return r
+      case o: Stmt.Expr =>
+        val r: PreResult[AssignExp] = preStmtExpr(o) match {
+         case PreResult(continu, MSome(r: AssignExp)) => PreResult(continu, MSome[AssignExp](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type AssignExp")
+         case PreResult(continu, _) => PreResult(continu, MNone[AssignExp]())
+        }
+        return r
+    }
+  }
+
+  def preStmtImport(o: Stmt.Import): PreResult[Stmt] = {
+    return PreResultStmtImport
+  }
+
+  def preStmtImportImporter(o: Stmt.Import.Importer): PreResult[Stmt.Import.Importer] = {
+    return PreResultStmtImportImporter
+  }
+
+  def preStmtImportSelector(o: Stmt.Import.Selector): PreResult[Stmt.Import.Selector] = {
+    o match {
+      case o: Stmt.Import.MultiSelector => return preStmtImportMultiSelector(o)
+      case o: Stmt.Import.WildcardSelector => return preStmtImportWildcardSelector(o)
+    }
+  }
+
+  def preStmtImportMultiSelector(o: Stmt.Import.MultiSelector): PreResult[Stmt.Import.Selector] = {
+    return PreResultStmtImportMultiSelector
+  }
+
+  def preStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): PreResult[Stmt.Import.Selector] = {
+    return PreResultStmtImportWildcardSelector
+  }
+
+  def preStmtImportNamedSelector(o: Stmt.Import.NamedSelector): PreResult[Stmt.Import.NamedSelector] = {
+    return PreResultStmtImportNamedSelector
+  }
+
+  def preStmtVar(o: Stmt.Var): PreResult[Stmt] = {
+    return PreResultStmtVar
+  }
+
+  def preStmtVarPattern(o: Stmt.VarPattern): PreResult[Stmt] = {
+    return PreResultStmtVarPattern
+  }
+
+  def preStmtSpecVar(o: Stmt.SpecVar): PreResult[Stmt] = {
+    return PreResultStmtSpecVar
+  }
+
+  def preStmtMethod(o: Stmt.Method): PreResult[Stmt] = {
+    return PreResultStmtMethod
+  }
+
+  def preStmtExtMethod(o: Stmt.ExtMethod): PreResult[Stmt] = {
+    return PreResultStmtExtMethod
+  }
+
+  def preStmtSpecMethod(o: Stmt.SpecMethod): PreResult[Stmt] = {
+    return PreResultStmtSpecMethod
+  }
+
+  def preStmtEnum(o: Stmt.Enum): PreResult[Stmt] = {
+    return PreResultStmtEnum
+  }
+
+  def preStmtSubZ(o: Stmt.SubZ): PreResult[Stmt] = {
+    return PreResultStmtSubZ
+  }
+
+  def preStmtObject(o: Stmt.Object): PreResult[Stmt] = {
+    return PreResultStmtObject
+  }
+
+  def preStmtSig(o: Stmt.Sig): PreResult[Stmt] = {
+    return PreResultStmtSig
+  }
+
+  def preStmtAbstractDatatype(o: Stmt.AbstractDatatype): PreResult[Stmt] = {
+    return PreResultStmtAbstractDatatype
+  }
+
+  def preStmtTypeAlias(o: Stmt.TypeAlias): PreResult[Stmt] = {
+    return PreResultStmtTypeAlias
+  }
+
+  def preStmtAssign(o: Stmt.Assign): PreResult[Stmt] = {
+    return PreResultStmtAssign
+  }
+
+  def preStmtBlock(o: Stmt.Block): PreResult[Stmt] = {
+    return PreResultStmtBlock
+  }
+
+  def preStmtIf(o: Stmt.If): PreResult[Stmt] = {
+    return PreResultStmtIf
+  }
+
+  def preStmtMatch(o: Stmt.Match): PreResult[Stmt] = {
+    return PreResultStmtMatch
+  }
+
+  def preStmtWhile(o: Stmt.While): PreResult[Stmt] = {
+    return PreResultStmtWhile
+  }
+
+  def preStmtDoWhile(o: Stmt.DoWhile): PreResult[Stmt] = {
+    return PreResultStmtDoWhile
+  }
+
+  def preStmtFor(o: Stmt.For): PreResult[Stmt] = {
+    return PreResultStmtFor
+  }
+
+  def preStmtReturn(o: Stmt.Return): PreResult[Stmt] = {
+    return PreResultStmtReturn
+  }
+
+  def preStmtLStmt(o: Stmt.LStmt): PreResult[Stmt] = {
+    return PreResultStmtLStmt
+  }
+
+  def preStmtExpr(o: Stmt.Expr): PreResult[Stmt] = {
+    return PreResultStmtExpr
+  }
+
+  def preLClause(o: LClause): PreResult[LClause] = {
+    o match {
+      case o: LClause.Invariants => return preLClauseInvariants(o)
+      case o: LClause.Facts => return preLClauseFacts(o)
+      case o: LClause.Theorems => return preLClauseTheorems(o)
+      case o: LClause.Sequent => return preLClauseSequent(o)
+      case o: LClause.Proof => return preLClauseProof(o)
+    }
+  }
+
+  def preLClauseInvariants(o: LClause.Invariants): PreResult[LClause] = {
+    return PreResultLClauseInvariants
+  }
+
+  def preLClauseFacts(o: LClause.Facts): PreResult[LClause] = {
+    return PreResultLClauseFacts
+  }
+
+  def preLClauseFact(o: LClause.Fact): PreResult[LClause.Fact] = {
+    return PreResultLClauseFact
+  }
+
+  def preLClauseTheorems(o: LClause.Theorems): PreResult[LClause] = {
+    return PreResultLClauseTheorems
+  }
+
+  def preLClauseTheorem(o: LClause.Theorem): PreResult[LClause.Theorem] = {
+    return PreResultLClauseTheorem
+  }
+
+  def preLClauseSequent(o: LClause.Sequent): PreResult[LClause] = {
+    return PreResultLClauseSequent
+  }
+
+  def preLClauseProof(o: LClause.Proof): PreResult[LClause] = {
+    return PreResultLClauseProof
+  }
+
+  def preContractExp(o: ContractExp): PreResult[ContractExp] = {
+    return PreResultContractExp
+  }
+
+  def preCase(o: Case): PreResult[Case] = {
+    return PreResultCase
+  }
+
+  def preEnumGenRange(o: EnumGen.Range): PreResult[EnumGen.Range] = {
+    o match {
+      case o: EnumGen.Range.Expr => return preEnumGenRangeExpr(o)
+      case o: EnumGen.Range.Step => return preEnumGenRangeStep(o)
+    }
+  }
+
+  def preEnumGenRangeExpr(o: EnumGen.Range.Expr): PreResult[EnumGen.Range] = {
+    return PreResultEnumGenRangeExpr
+  }
+
+  def preEnumGenRangeStep(o: EnumGen.Range.Step): PreResult[EnumGen.Range] = {
+    return PreResultEnumGenRangeStep
+  }
+
+  def preEnumGenFor(o: EnumGen.For): PreResult[EnumGen.For] = {
+    return PreResultEnumGenFor
+  }
+
+  def preType(o: Type): PreResult[Type] = {
+    o match {
+      case o: Type.Named => return preTypeNamed(o)
+      case o: Type.Fun => return preTypeFun(o)
+      case o: Type.Tuple => return preTypeTuple(o)
+    }
+  }
+
+  def preTypeNamed(o: Type.Named): PreResult[Type] = {
+    return PreResultTypeNamed
+  }
+
+  def preTypeFun(o: Type.Fun): PreResult[Type] = {
+    return PreResultTypeFun
+  }
+
+  def preTypeTuple(o: Type.Tuple): PreResult[Type] = {
+    return PreResultTypeTuple
+  }
+
+  def prePattern(o: Pattern): PreResult[Pattern] = {
+    o match {
+      case o: Pattern.Literal => return prePatternLiteral(o)
+      case o: Pattern.LitInterpolate => return prePatternLitInterpolate(o)
+      case o: Pattern.Ref => return prePatternRef(o)
+      case o: Pattern.VarBinding => return prePatternVarBinding(o)
+      case o: Pattern.Wildcard => return prePatternWildcard(o)
+      case o: Pattern.SeqWildcard => return prePatternSeqWildcard(o)
+      case o: Pattern.Structure => return prePatternStructure(o)
+    }
+  }
+
+  def prePatternLiteral(o: Pattern.Literal): PreResult[Pattern] = {
+    return PreResultPatternLiteral
+  }
+
+  def prePatternLitInterpolate(o: Pattern.LitInterpolate): PreResult[Pattern] = {
+    return PreResultPatternLitInterpolate
+  }
+
+  def prePatternRef(o: Pattern.Ref): PreResult[Pattern] = {
+    return PreResultPatternRef
+  }
+
+  def prePatternVarBinding(o: Pattern.VarBinding): PreResult[Pattern] = {
+    return PreResultPatternVarBinding
+  }
+
+  def prePatternWildcard(o: Pattern.Wildcard): PreResult[Pattern] = {
+    return PreResultPatternWildcard
+  }
+
+  def prePatternSeqWildcard(o: Pattern.SeqWildcard): PreResult[Pattern] = {
+    return PreResultPatternSeqWildcard
+  }
+
+  def prePatternStructure(o: Pattern.Structure): PreResult[Pattern] = {
+    return PreResultPatternStructure
+  }
+
+  def preExp(o: Exp): PreResult[Exp] = {
+    o match {
+      case o: Exp.LitB => return preExpLitB(o)
+      case o: Exp.LitC => return preExpLitC(o)
+      case o: Exp.LitZ => return preExpLitZ(o)
+      case o: Exp.LitF32 => return preExpLitF32(o)
+      case o: Exp.LitF64 => return preExpLitF64(o)
+      case o: Exp.LitR => return preExpLitR(o)
+      case o: Exp.LitString => return preExpLitString(o)
+      case o: Exp.StringInterpolate => return preExpStringInterpolate(o)
+      case o: Exp.This => return preExpThis(o)
+      case o: Exp.Super => return preExpSuper(o)
+      case o: Exp.Unary => return preExpUnary(o)
+      case o: Exp.Binary => return preExpBinary(o)
+      case o: Exp.Ident => return preExpIdent(o)
+      case o: Exp.Eta => return preExpEta(o)
+      case o: Exp.Tuple => return preExpTuple(o)
+      case o: Exp.Select => return preExpSelect(o)
+      case o: Exp.Invoke => return preExpInvoke(o)
+      case o: Exp.InvokeNamed => return preExpInvokeNamed(o)
+      case o: Exp.If => return preExpIf(o)
+      case o: Exp.Fun => return preExpFun(o)
+      case o: Exp.ForYield => return preExpForYield(o)
+      case o: Exp.Quant => return preExpQuant(o)
+    }
+  }
+
+  def preLit(o: Lit): PreResult[Lit] = {
+    o match {
+      case o: Exp.LitB =>
+        val r: PreResult[Lit] = preExpLitB(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitC =>
+        val r: PreResult[Lit] = preExpLitC(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitZ =>
+        val r: PreResult[Lit] = preExpLitZ(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitF32 =>
+        val r: PreResult[Lit] = preExpLitF32(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitF64 =>
+        val r: PreResult[Lit] = preExpLitF64(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitR =>
+        val r: PreResult[Lit] = preExpLitR(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+      case o: Exp.LitString =>
+        val r: PreResult[Lit] = preExpLitString(o) match {
+         case PreResult(continu, MSome(r: Lit)) => PreResult(continu, MSome[Lit](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Lit")
+         case PreResult(continu, _) => PreResult(continu, MNone[Lit]())
+        }
+        return r
+    }
+  }
+
+  def preExpLitB(o: Exp.LitB): PreResult[Exp] = {
+    return PreResultExpLitB
+  }
+
+  def preExpLitC(o: Exp.LitC): PreResult[Exp] = {
+    return PreResultExpLitC
+  }
+
+  def preExpLitZ(o: Exp.LitZ): PreResult[Exp] = {
+    return PreResultExpLitZ
+  }
+
+  def preExpLitF32(o: Exp.LitF32): PreResult[Exp] = {
+    return PreResultExpLitF32
+  }
+
+  def preExpLitF64(o: Exp.LitF64): PreResult[Exp] = {
+    return PreResultExpLitF64
+  }
+
+  def preExpLitR(o: Exp.LitR): PreResult[Exp] = {
+    return PreResultExpLitR
+  }
+
+  def preExpLitString(o: Exp.LitString): PreResult[Exp] = {
+    return PreResultExpLitString
+  }
+
+  def preExpStringInterpolate(o: Exp.StringInterpolate): PreResult[Exp] = {
+    return PreResultExpStringInterpolate
+  }
+
+  def preExpThis(o: Exp.This): PreResult[Exp] = {
+    return PreResultExpThis
+  }
+
+  def preExpSuper(o: Exp.Super): PreResult[Exp] = {
+    return PreResultExpSuper
+  }
+
+  def preExpUnary(o: Exp.Unary): PreResult[Exp] = {
+    return PreResultExpUnary
+  }
+
+  def preExpRef(o: Exp.Ref): PreResult[Exp.Ref] = {
+    o match {
+      case o: Exp.Ident =>
+        val r: PreResult[Exp.Ref] = preExpIdent(o) match {
+         case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
+         case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
+        }
+        return r
+      case o: Exp.Select =>
+        val r: PreResult[Exp.Ref] = preExpSelect(o) match {
+         case PreResult(continu, MSome(r: Exp.Ref)) => PreResult(continu, MSome[Exp.Ref](r))
+         case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.Ref")
+         case PreResult(continu, _) => PreResult(continu, MNone[Exp.Ref]())
+        }
+        return r
+    }
+  }
+
+  def preExpBinary(o: Exp.Binary): PreResult[Exp] = {
+    return PreResultExpBinary
+  }
+
+  def preExpIdent(o: Exp.Ident): PreResult[Exp] = {
+    return PreResultExpIdent
+  }
+
+  def preExpEta(o: Exp.Eta): PreResult[Exp] = {
+    return PreResultExpEta
+  }
+
+  def preExpTuple(o: Exp.Tuple): PreResult[Exp] = {
+    return PreResultExpTuple
+  }
+
+  def preExpSelect(o: Exp.Select): PreResult[Exp] = {
+    return PreResultExpSelect
+  }
+
+  def preExpInvoke(o: Exp.Invoke): PreResult[Exp] = {
+    return PreResultExpInvoke
+  }
+
+  def preExpInvokeNamed(o: Exp.InvokeNamed): PreResult[Exp] = {
+    return PreResultExpInvokeNamed
+  }
+
+  def preExpIf(o: Exp.If): PreResult[Exp] = {
+    return PreResultExpIf
+  }
+
+  def preExpFunParam(o: Exp.Fun.Param): PreResult[Exp.Fun.Param] = {
+    return PreResultExpFunParam
+  }
+
+  def preExpFun(o: Exp.Fun): PreResult[Exp] = {
+    return PreResultExpFun
+  }
+
+  def preExpForYield(o: Exp.ForYield): PreResult[Exp] = {
+    return PreResultExpForYield
+  }
+
+  def preExpQuant(o: Exp.Quant): PreResult[Exp] = {
+    return PreResultExpQuant
+  }
+
+  def preNamedArg(o: NamedArg): PreResult[NamedArg] = {
+    return PreResultNamedArg
+  }
+
+  def preVarFragment(o: VarFragment): PreResult[VarFragment] = {
+    return PreResultVarFragment
+  }
+
+  def preDomain(o: Domain): PreResult[Domain] = {
+    o match {
+      case o: Domain.Type => return preDomainType(o)
+      case o: Domain.Range => return preDomainRange(o)
+    }
+  }
+
+  def preDomainType(o: Domain.Type): PreResult[Domain] = {
+    return PreResultDomainType
+  }
+
+  def preDomainRange(o: Domain.Range): PreResult[Domain] = {
+    return PreResultDomainRange
+  }
+
+  def preId(o: Id): PreResult[Id] = {
+    return PreResultId
+  }
+
+  def preName(o: Name): PreResult[Name] = {
+    return PreResultName
+  }
+
+  def preBody(o: Body): PreResult[Body] = {
+    return PreResultBody
+  }
+
+  def preAbstractDatatypeParam(o: AbstractDatatypeParam): PreResult[AbstractDatatypeParam] = {
+    return PreResultAbstractDatatypeParam
+  }
+
+  def preMethodSig(o: MethodSig): PreResult[MethodSig] = {
+    return PreResultMethodSig
+  }
+
+  def preParam(o: Param): PreResult[Param] = {
+    return PreResultParam
+  }
+
+  def preTypeParam(o: TypeParam): PreResult[TypeParam] = {
+    return PreResultTypeParam
+  }
+
+  def preContract(o: Contract): PreResult[Contract] = {
+    return PreResultContract
+  }
+
+  def preSubContract(o: SubContract): PreResult[SubContract] = {
+    return PreResultSubContract
+  }
+
+  def preWhereDef(o: WhereDef): PreResult[WhereDef] = {
+    o match {
+      case o: WhereDef.Val => return preWhereDefVal(o)
+      case o: WhereDef.Def => return preWhereDefDef(o)
+    }
+  }
+
+  def preWhereDefVal(o: WhereDef.Val): PreResult[WhereDef] = {
+    return PreResultWhereDefVal
+  }
+
+  def preWhereDefDef(o: WhereDef.Def): PreResult[WhereDef] = {
+    return PreResultWhereDefDef
+  }
+
+  def preSpecDef(o: SpecDef): PreResult[SpecDef] = {
+    return PreResultSpecDef
+  }
+
+  def preProofStep(o: ProofStep): PreResult[ProofStep] = {
+    o match {
+      case o: ProofStep.Basic => return preProofStepBasic(o)
+      case o: ProofStep.SubProof => return preProofStepSubProof(o)
+    }
+  }
+
+  def preProofStepBasic(o: ProofStep.Basic): PreResult[ProofStep] = {
+    return PreResultProofStepBasic
+  }
+
+  def preProofStepSubProof(o: ProofStep.SubProof): PreResult[ProofStep] = {
+    return PreResultProofStepSubProof
+  }
+
+  def preAssumeProofStep(o: AssumeProofStep): PreResult[AssumeProofStep] = {
+    o match {
+      case o: AssumeProofStep.Regular => return preAssumeProofStepRegular(o)
+      case o: AssumeProofStep.ForallIntroAps => return preAssumeProofStepForallIntroAps(o)
+      case o: AssumeProofStep.ExistsElimAps => return preAssumeProofStepExistsElimAps(o)
+    }
+  }
+
+  def preAssumeProofStepRegular(o: AssumeProofStep.Regular): PreResult[AssumeProofStep] = {
+    return PreResultAssumeProofStepRegular
+  }
+
+  def preAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): PreResult[AssumeProofStep] = {
+    return PreResultAssumeProofStepForallIntroAps
+  }
+
+  def preAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): PreResult[AssumeProofStep] = {
+    return PreResultAssumeProofStepExistsElimAps
+  }
+
+  def preJust(o: Just): PreResult[Just] = {
+    o match {
+      case o: Just.Premise => return preJustPremise(o)
+      case o: Just.AndIntro => return preJustAndIntro(o)
+      case o: Just.AndElim => return preJustAndElim(o)
+      case o: Just.OrIntro => return preJustOrIntro(o)
+      case o: Just.OrElim => return preJustOrElim(o)
+      case o: Just.ImplyIntro => return preJustImplyIntro(o)
+      case o: Just.ImplyElim => return preJustImplyElim(o)
+      case o: Just.NegIntro => return preJustNegIntro(o)
+      case o: Just.NegElim => return preJustNegElim(o)
+      case o: Just.BottomElim => return preJustBottomElim(o)
+      case o: Just.Pbc => return preJustPbc(o)
+      case o: Just.ForallIntro => return preJustForallIntro(o)
+      case o: Just.ForallElim => return preJustForallElim(o)
+      case o: Just.ExistsIntro => return preJustExistsIntro(o)
+      case o: Just.ExistsElim => return preJustExistsElim(o)
+      case o: Just.Fact => return preJustFact(o)
+      case o: Just.Invariant => return preJustInvariant(o)
+      case o: Just.Subst => return preJustSubst(o)
+      case o: Just.Auto => return preJustAuto(o)
+      case o: Just.Coq => return preJustCoq(o)
+    }
+  }
+
+  def preJustPremise(o: Just.Premise): PreResult[Just] = {
+    return PreResultJustPremise
+  }
+
+  def preJustAndIntro(o: Just.AndIntro): PreResult[Just] = {
+    return PreResultJustAndIntro
+  }
+
+  def preJustAndElim(o: Just.AndElim): PreResult[Just] = {
+    return PreResultJustAndElim
+  }
+
+  def preJustOrIntro(o: Just.OrIntro): PreResult[Just] = {
+    return PreResultJustOrIntro
+  }
+
+  def preJustOrElim(o: Just.OrElim): PreResult[Just] = {
+    return PreResultJustOrElim
+  }
+
+  def preJustImplyIntro(o: Just.ImplyIntro): PreResult[Just] = {
+    return PreResultJustImplyIntro
+  }
+
+  def preJustImplyElim(o: Just.ImplyElim): PreResult[Just] = {
+    return PreResultJustImplyElim
+  }
+
+  def preJustNegIntro(o: Just.NegIntro): PreResult[Just] = {
+    return PreResultJustNegIntro
+  }
+
+  def preJustNegElim(o: Just.NegElim): PreResult[Just] = {
+    return PreResultJustNegElim
+  }
+
+  def preJustBottomElim(o: Just.BottomElim): PreResult[Just] = {
+    return PreResultJustBottomElim
+  }
+
+  def preJustPbc(o: Just.Pbc): PreResult[Just] = {
+    return PreResultJustPbc
+  }
+
+  def preJustForallIntro(o: Just.ForallIntro): PreResult[Just] = {
+    return PreResultJustForallIntro
+  }
+
+  def preJustForallElim(o: Just.ForallElim): PreResult[Just] = {
+    return PreResultJustForallElim
+  }
+
+  def preJustExistsIntro(o: Just.ExistsIntro): PreResult[Just] = {
+    return PreResultJustExistsIntro
+  }
+
+  def preJustExistsElim(o: Just.ExistsElim): PreResult[Just] = {
+    return PreResultJustExistsElim
+  }
+
+  def preJustFact(o: Just.Fact): PreResult[Just] = {
+    return PreResultJustFact
+  }
+
+  def preJustInvariant(o: Just.Invariant): PreResult[Just] = {
+    return PreResultJustInvariant
+  }
+
+  def preJustSubst(o: Just.Subst): PreResult[Just] = {
+    return PreResultJustSubst
+  }
+
+  def preJustAuto(o: Just.Auto): PreResult[Just] = {
+    return PreResultJustAuto
+  }
+
+  def preJustCoq(o: Just.Coq): PreResult[Just] = {
+    return PreResultJustCoq
+  }
+
+  def preTruthTableRow(o: TruthTable.Row): PreResult[TruthTable.Row] = {
+    return PreResultTruthTableRow
+  }
+
+  def preTruthTableAssignment(o: TruthTable.Assignment): PreResult[TruthTable.Assignment] = {
+    return PreResultTruthTableAssignment
+  }
+
+  def preTruthTableConclusion(o: TruthTable.Conclusion): PreResult[TruthTable.Conclusion] = {
+    o match {
+      case o: TruthTable.Conclusion.Validity => return preTruthTableConclusionValidity(o)
+      case o: TruthTable.Conclusion.Tautology => return preTruthTableConclusionTautology(o)
+      case o: TruthTable.Conclusion.Contradictory => return preTruthTableConclusionContradictory(o)
+      case o: TruthTable.Conclusion.Contingent => return preTruthTableConclusionContingent(o)
+    }
+  }
+
+  def preTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): PreResult[TruthTable.Conclusion] = {
+    return PreResultTruthTableConclusionValidity
+  }
+
+  def preTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): PreResult[TruthTable.Conclusion] = {
+    return PreResultTruthTableConclusionTautology
+  }
+
+  def preTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): PreResult[TruthTable.Conclusion] = {
+    return PreResultTruthTableConclusionContradictory
+  }
+
+  def preTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): PreResult[TruthTable.Conclusion] = {
+    return PreResultTruthTableConclusionContingent
+  }
+
+  def preTyped(o: Typed): PreResult[Typed] = {
+    o match {
+      case o: Typed.Name => return preTypedName(o)
+      case o: Typed.Tuple => return preTypedTuple(o)
+      case o: Typed.Fun => return preTypedFun(o)
+      case o: Typed.TypeVar => return preTypedTypeVar(o)
+      case o: Typed.Package => return preTypedPackage(o)
+      case o: Typed.Object => return preTypedObject(o)
+      case o: Typed.Enum => return preTypedEnum(o)
+      case o: Typed.Method => return preTypedMethod(o)
+      case o: Typed.Methods => return preTypedMethods(o)
+    }
+  }
+
+  def preTypedName(o: Typed.Name): PreResult[Typed] = {
+    return PreResultTypedName
+  }
+
+  def preTypedTuple(o: Typed.Tuple): PreResult[Typed] = {
+    return PreResultTypedTuple
+  }
+
+  def preTypedFun(o: Typed.Fun): PreResult[Typed] = {
+    return PreResultTypedFun
+  }
+
+  def preTypedTypeVar(o: Typed.TypeVar): PreResult[Typed] = {
+    return PreResultTypedTypeVar
+  }
+
+  def preTypedPackage(o: Typed.Package): PreResult[Typed] = {
+    return PreResultTypedPackage
+  }
+
+  def preTypedObject(o: Typed.Object): PreResult[Typed] = {
+    return PreResultTypedObject
+  }
+
+  def preTypedEnum(o: Typed.Enum): PreResult[Typed] = {
+    return PreResultTypedEnum
+  }
+
+  def preTypedMethodSubst(o: Typed.Method.Subst): PreResult[Typed.Method.Subst] = {
+    return PreResultTypedMethodSubst
+  }
+
+  def preTypedMethod(o: Typed.Method): PreResult[Typed] = {
+    return PreResultTypedMethod
+  }
+
+  def preTypedMethods(o: Typed.Methods): PreResult[Typed] = {
+    return PreResultTypedMethods
+  }
+
+  def preAttr(o: Attr): PreResult[Attr] = {
+    return PreResultAttr
+  }
+
+  def preTypedAttr(o: TypedAttr): PreResult[TypedAttr] = {
+    return PreResultTypedAttr
+  }
+
+  def preResolvedAttr(o: ResolvedAttr): PreResult[ResolvedAttr] = {
+    return PreResultResolvedAttr
+  }
+
+  def preResolvedInfo(o: ResolvedInfo): PreResult[ResolvedInfo] = {
+    o match {
+      case o: ResolvedInfo.BuiltIn => return preResolvedInfoBuiltIn(o)
+      case o: ResolvedInfo.Package => return preResolvedInfoPackage(o)
+      case o: ResolvedInfo.Enum => return preResolvedInfoEnum(o)
+      case o: ResolvedInfo.EnumElement => return preResolvedInfoEnumElement(o)
+      case o: ResolvedInfo.Object => return preResolvedInfoObject(o)
+      case o: ResolvedInfo.Var => return preResolvedInfoVar(o)
+      case o: ResolvedInfo.Method => return preResolvedInfoMethod(o)
+      case o: ResolvedInfo.Methods => return preResolvedInfoMethods(o)
+      case o: ResolvedInfo.Type => return preResolvedInfoType(o)
+      case o: ResolvedInfo.Tuple => return preResolvedInfoTuple(o)
+      case o: ResolvedInfo.LocalVar => return preResolvedInfoLocalVar(o)
+    }
+  }
+
+  def preResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoBuiltIn
+  }
+
+  def preResolvedInfoPackage(o: ResolvedInfo.Package): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoPackage
+  }
+
+  def preResolvedInfoEnum(o: ResolvedInfo.Enum): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoEnum
+  }
+
+  def preResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoEnumElement
+  }
+
+  def preResolvedInfoObject(o: ResolvedInfo.Object): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoObject
+  }
+
+  def preResolvedInfoVar(o: ResolvedInfo.Var): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoVar
+  }
+
+  def preResolvedInfoMethod(o: ResolvedInfo.Method): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoMethod
+  }
+
+  def preResolvedInfoMethods(o: ResolvedInfo.Methods): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoMethods
+  }
+
+  def preResolvedInfoType(o: ResolvedInfo.Type): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoType
+  }
+
+  def preResolvedInfoTuple(o: ResolvedInfo.Tuple): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoTuple
+  }
+
+  def preResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): PreResult[ResolvedInfo] = {
+    return PreResultResolvedInfoLocalVar
+  }
+
+  def prePosInfo(o: PosInfo): PreResult[PosInfo] = {
+    return PreResultPosInfo
+  }
+
+  def preFileInfo(o: FileInfo): PreResult[FileInfo] = {
+    return PreResultFileInfo
+  }
+
+  def postTopUnit(o: TopUnit): MOption[TopUnit] = {
+    o match {
+      case o: TopUnit.Program => return postTopUnitProgram(o)
+      case o: TopUnit.SequentUnit => return postTopUnitSequentUnit(o)
+      case o: TopUnit.TruthTableUnit => return postTopUnitTruthTableUnit(o)
+    }
+  }
+
+  def postTopUnitProgram(o: TopUnit.Program): MOption[TopUnit] = {
+    return PostResultTopUnitProgram
+  }
+
+  def postTopUnitSequentUnit(o: TopUnit.SequentUnit): MOption[TopUnit] = {
+    return PostResultTopUnitSequentUnit
+  }
+
+  def postTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): MOption[TopUnit] = {
+    return PostResultTopUnitTruthTableUnit
+  }
+
+  def postStmt(o: Stmt): MOption[Stmt] = {
+    o match {
+      case o: Stmt.Import => return postStmtImport(o)
+      case o: Stmt.Var => return postStmtVar(o)
+      case o: Stmt.VarPattern => return postStmtVarPattern(o)
+      case o: Stmt.SpecVar => return postStmtSpecVar(o)
+      case o: Stmt.Method => return postStmtMethod(o)
+      case o: Stmt.ExtMethod => return postStmtExtMethod(o)
+      case o: Stmt.SpecMethod => return postStmtSpecMethod(o)
+      case o: Stmt.Enum => return postStmtEnum(o)
+      case o: Stmt.SubZ => return postStmtSubZ(o)
+      case o: Stmt.Object => return postStmtObject(o)
+      case o: Stmt.Sig => return postStmtSig(o)
+      case o: Stmt.AbstractDatatype => return postStmtAbstractDatatype(o)
+      case o: Stmt.TypeAlias => return postStmtTypeAlias(o)
+      case o: Stmt.Assign => return postStmtAssign(o)
+      case o: Stmt.Block => return postStmtBlock(o)
+      case o: Stmt.If => return postStmtIf(o)
+      case o: Stmt.Match => return postStmtMatch(o)
+      case o: Stmt.While => return postStmtWhile(o)
+      case o: Stmt.DoWhile => return postStmtDoWhile(o)
+      case o: Stmt.For => return postStmtFor(o)
+      case o: Stmt.Return => return postStmtReturn(o)
+      case o: Stmt.LStmt => return postStmtLStmt(o)
+      case o: Stmt.Expr => return postStmtExpr(o)
+    }
+  }
+
+  def postAssignExp(o: AssignExp): MOption[AssignExp] = {
+    o match {
+      case o: Stmt.Block =>
+        val r: MOption[AssignExp] = postStmtBlock(o) match {
+         case MSome(result: AssignExp) => MSome[AssignExp](result)
+         case MSome(_) => halt("Can only produce object of type AssignExp")
+         case _ => MNone[AssignExp]()
+        }
+        return r
+      case o: Stmt.If =>
+        val r: MOption[AssignExp] = postStmtIf(o) match {
+         case MSome(result: AssignExp) => MSome[AssignExp](result)
+         case MSome(_) => halt("Can only produce object of type AssignExp")
+         case _ => MNone[AssignExp]()
+        }
+        return r
+      case o: Stmt.Match =>
+        val r: MOption[AssignExp] = postStmtMatch(o) match {
+         case MSome(result: AssignExp) => MSome[AssignExp](result)
+         case MSome(_) => halt("Can only produce object of type AssignExp")
+         case _ => MNone[AssignExp]()
+        }
+        return r
+      case o: Stmt.Return =>
+        val r: MOption[AssignExp] = postStmtReturn(o) match {
+         case MSome(result: AssignExp) => MSome[AssignExp](result)
+         case MSome(_) => halt("Can only produce object of type AssignExp")
+         case _ => MNone[AssignExp]()
+        }
+        return r
+      case o: Stmt.Expr =>
+        val r: MOption[AssignExp] = postStmtExpr(o) match {
+         case MSome(result: AssignExp) => MSome[AssignExp](result)
+         case MSome(_) => halt("Can only produce object of type AssignExp")
+         case _ => MNone[AssignExp]()
+        }
+        return r
+    }
+  }
+
+  def postStmtImport(o: Stmt.Import): MOption[Stmt] = {
+    return PostResultStmtImport
+  }
+
+  def postStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
+    return PostResultStmtImportImporter
+  }
+
+  def postStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
+    o match {
+      case o: Stmt.Import.MultiSelector => return postStmtImportMultiSelector(o)
+      case o: Stmt.Import.WildcardSelector => return postStmtImportWildcardSelector(o)
+    }
+  }
+
+  def postStmtImportMultiSelector(o: Stmt.Import.MultiSelector): MOption[Stmt.Import.Selector] = {
+    return PostResultStmtImportMultiSelector
+  }
+
+  def postStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector): MOption[Stmt.Import.Selector] = {
+    return PostResultStmtImportWildcardSelector
+  }
+
+  def postStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
+    return PostResultStmtImportNamedSelector
+  }
+
+  def postStmtVar(o: Stmt.Var): MOption[Stmt] = {
+    return PostResultStmtVar
+  }
+
+  def postStmtVarPattern(o: Stmt.VarPattern): MOption[Stmt] = {
+    return PostResultStmtVarPattern
+  }
+
+  def postStmtSpecVar(o: Stmt.SpecVar): MOption[Stmt] = {
+    return PostResultStmtSpecVar
+  }
+
+  def postStmtMethod(o: Stmt.Method): MOption[Stmt] = {
+    return PostResultStmtMethod
+  }
+
+  def postStmtExtMethod(o: Stmt.ExtMethod): MOption[Stmt] = {
+    return PostResultStmtExtMethod
+  }
+
+  def postStmtSpecMethod(o: Stmt.SpecMethod): MOption[Stmt] = {
+    return PostResultStmtSpecMethod
+  }
+
+  def postStmtEnum(o: Stmt.Enum): MOption[Stmt] = {
+    return PostResultStmtEnum
+  }
+
+  def postStmtSubZ(o: Stmt.SubZ): MOption[Stmt] = {
+    return PostResultStmtSubZ
+  }
+
+  def postStmtObject(o: Stmt.Object): MOption[Stmt] = {
+    return PostResultStmtObject
+  }
+
+  def postStmtSig(o: Stmt.Sig): MOption[Stmt] = {
+    return PostResultStmtSig
+  }
+
+  def postStmtAbstractDatatype(o: Stmt.AbstractDatatype): MOption[Stmt] = {
+    return PostResultStmtAbstractDatatype
+  }
+
+  def postStmtTypeAlias(o: Stmt.TypeAlias): MOption[Stmt] = {
+    return PostResultStmtTypeAlias
+  }
+
+  def postStmtAssign(o: Stmt.Assign): MOption[Stmt] = {
+    return PostResultStmtAssign
+  }
+
+  def postStmtBlock(o: Stmt.Block): MOption[Stmt] = {
+    return PostResultStmtBlock
+  }
+
+  def postStmtIf(o: Stmt.If): MOption[Stmt] = {
+    return PostResultStmtIf
+  }
+
+  def postStmtMatch(o: Stmt.Match): MOption[Stmt] = {
+    return PostResultStmtMatch
+  }
+
+  def postStmtWhile(o: Stmt.While): MOption[Stmt] = {
+    return PostResultStmtWhile
+  }
+
+  def postStmtDoWhile(o: Stmt.DoWhile): MOption[Stmt] = {
+    return PostResultStmtDoWhile
+  }
+
+  def postStmtFor(o: Stmt.For): MOption[Stmt] = {
+    return PostResultStmtFor
+  }
+
+  def postStmtReturn(o: Stmt.Return): MOption[Stmt] = {
+    return PostResultStmtReturn
+  }
+
+  def postStmtLStmt(o: Stmt.LStmt): MOption[Stmt] = {
+    return PostResultStmtLStmt
+  }
+
+  def postStmtExpr(o: Stmt.Expr): MOption[Stmt] = {
+    return PostResultStmtExpr
+  }
+
+  def postLClause(o: LClause): MOption[LClause] = {
+    o match {
+      case o: LClause.Invariants => return postLClauseInvariants(o)
+      case o: LClause.Facts => return postLClauseFacts(o)
+      case o: LClause.Theorems => return postLClauseTheorems(o)
+      case o: LClause.Sequent => return postLClauseSequent(o)
+      case o: LClause.Proof => return postLClauseProof(o)
+    }
+  }
+
+  def postLClauseInvariants(o: LClause.Invariants): MOption[LClause] = {
+    return PostResultLClauseInvariants
+  }
+
+  def postLClauseFacts(o: LClause.Facts): MOption[LClause] = {
+    return PostResultLClauseFacts
+  }
+
+  def postLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
+    return PostResultLClauseFact
+  }
+
+  def postLClauseTheorems(o: LClause.Theorems): MOption[LClause] = {
+    return PostResultLClauseTheorems
+  }
+
+  def postLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
+    return PostResultLClauseTheorem
+  }
+
+  def postLClauseSequent(o: LClause.Sequent): MOption[LClause] = {
+    return PostResultLClauseSequent
+  }
+
+  def postLClauseProof(o: LClause.Proof): MOption[LClause] = {
+    return PostResultLClauseProof
+  }
+
+  def postContractExp(o: ContractExp): MOption[ContractExp] = {
+    return PostResultContractExp
+  }
+
+  def postCase(o: Case): MOption[Case] = {
+    return PostResultCase
+  }
+
+  def postEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
+    o match {
+      case o: EnumGen.Range.Expr => return postEnumGenRangeExpr(o)
+      case o: EnumGen.Range.Step => return postEnumGenRangeStep(o)
+    }
+  }
+
+  def postEnumGenRangeExpr(o: EnumGen.Range.Expr): MOption[EnumGen.Range] = {
+    return PostResultEnumGenRangeExpr
+  }
+
+  def postEnumGenRangeStep(o: EnumGen.Range.Step): MOption[EnumGen.Range] = {
+    return PostResultEnumGenRangeStep
+  }
+
+  def postEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
+    return PostResultEnumGenFor
+  }
+
+  def postType(o: Type): MOption[Type] = {
+    o match {
+      case o: Type.Named => return postTypeNamed(o)
+      case o: Type.Fun => return postTypeFun(o)
+      case o: Type.Tuple => return postTypeTuple(o)
+    }
+  }
+
+  def postTypeNamed(o: Type.Named): MOption[Type] = {
+    return PostResultTypeNamed
+  }
+
+  def postTypeFun(o: Type.Fun): MOption[Type] = {
+    return PostResultTypeFun
+  }
+
+  def postTypeTuple(o: Type.Tuple): MOption[Type] = {
+    return PostResultTypeTuple
+  }
+
+  def postPattern(o: Pattern): MOption[Pattern] = {
+    o match {
+      case o: Pattern.Literal => return postPatternLiteral(o)
+      case o: Pattern.LitInterpolate => return postPatternLitInterpolate(o)
+      case o: Pattern.Ref => return postPatternRef(o)
+      case o: Pattern.VarBinding => return postPatternVarBinding(o)
+      case o: Pattern.Wildcard => return postPatternWildcard(o)
+      case o: Pattern.SeqWildcard => return postPatternSeqWildcard(o)
+      case o: Pattern.Structure => return postPatternStructure(o)
+    }
+  }
+
+  def postPatternLiteral(o: Pattern.Literal): MOption[Pattern] = {
+    return PostResultPatternLiteral
+  }
+
+  def postPatternLitInterpolate(o: Pattern.LitInterpolate): MOption[Pattern] = {
+    return PostResultPatternLitInterpolate
+  }
+
+  def postPatternRef(o: Pattern.Ref): MOption[Pattern] = {
+    return PostResultPatternRef
+  }
+
+  def postPatternVarBinding(o: Pattern.VarBinding): MOption[Pattern] = {
+    return PostResultPatternVarBinding
+  }
+
+  def postPatternWildcard(o: Pattern.Wildcard): MOption[Pattern] = {
+    return PostResultPatternWildcard
+  }
+
+  def postPatternSeqWildcard(o: Pattern.SeqWildcard): MOption[Pattern] = {
+    return PostResultPatternSeqWildcard
+  }
+
+  def postPatternStructure(o: Pattern.Structure): MOption[Pattern] = {
+    return PostResultPatternStructure
+  }
+
+  def postExp(o: Exp): MOption[Exp] = {
+    o match {
+      case o: Exp.LitB => return postExpLitB(o)
+      case o: Exp.LitC => return postExpLitC(o)
+      case o: Exp.LitZ => return postExpLitZ(o)
+      case o: Exp.LitF32 => return postExpLitF32(o)
+      case o: Exp.LitF64 => return postExpLitF64(o)
+      case o: Exp.LitR => return postExpLitR(o)
+      case o: Exp.LitString => return postExpLitString(o)
+      case o: Exp.StringInterpolate => return postExpStringInterpolate(o)
+      case o: Exp.This => return postExpThis(o)
+      case o: Exp.Super => return postExpSuper(o)
+      case o: Exp.Unary => return postExpUnary(o)
+      case o: Exp.Binary => return postExpBinary(o)
+      case o: Exp.Ident => return postExpIdent(o)
+      case o: Exp.Eta => return postExpEta(o)
+      case o: Exp.Tuple => return postExpTuple(o)
+      case o: Exp.Select => return postExpSelect(o)
+      case o: Exp.Invoke => return postExpInvoke(o)
+      case o: Exp.InvokeNamed => return postExpInvokeNamed(o)
+      case o: Exp.If => return postExpIf(o)
+      case o: Exp.Fun => return postExpFun(o)
+      case o: Exp.ForYield => return postExpForYield(o)
+      case o: Exp.Quant => return postExpQuant(o)
+    }
+  }
+
+  def postLit(o: Lit): MOption[Lit] = {
+    o match {
+      case o: Exp.LitB =>
+        val r: MOption[Lit] = postExpLitB(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitC =>
+        val r: MOption[Lit] = postExpLitC(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitZ =>
+        val r: MOption[Lit] = postExpLitZ(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitF32 =>
+        val r: MOption[Lit] = postExpLitF32(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitF64 =>
+        val r: MOption[Lit] = postExpLitF64(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitR =>
+        val r: MOption[Lit] = postExpLitR(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+      case o: Exp.LitString =>
+        val r: MOption[Lit] = postExpLitString(o) match {
+         case MSome(result: Lit) => MSome[Lit](result)
+         case MSome(_) => halt("Can only produce object of type Lit")
+         case _ => MNone[Lit]()
+        }
+        return r
+    }
+  }
+
+  def postExpLitB(o: Exp.LitB): MOption[Exp] = {
+    return PostResultExpLitB
+  }
+
+  def postExpLitC(o: Exp.LitC): MOption[Exp] = {
+    return PostResultExpLitC
+  }
+
+  def postExpLitZ(o: Exp.LitZ): MOption[Exp] = {
+    return PostResultExpLitZ
+  }
+
+  def postExpLitF32(o: Exp.LitF32): MOption[Exp] = {
+    return PostResultExpLitF32
+  }
+
+  def postExpLitF64(o: Exp.LitF64): MOption[Exp] = {
+    return PostResultExpLitF64
+  }
+
+  def postExpLitR(o: Exp.LitR): MOption[Exp] = {
+    return PostResultExpLitR
+  }
+
+  def postExpLitString(o: Exp.LitString): MOption[Exp] = {
+    return PostResultExpLitString
+  }
+
+  def postExpStringInterpolate(o: Exp.StringInterpolate): MOption[Exp] = {
+    return PostResultExpStringInterpolate
+  }
+
+  def postExpThis(o: Exp.This): MOption[Exp] = {
+    return PostResultExpThis
+  }
+
+  def postExpSuper(o: Exp.Super): MOption[Exp] = {
+    return PostResultExpSuper
+  }
+
+  def postExpUnary(o: Exp.Unary): MOption[Exp] = {
+    return PostResultExpUnary
+  }
+
+  def postExpRef(o: Exp.Ref): MOption[Exp.Ref] = {
+    o match {
+      case o: Exp.Ident =>
+        val r: MOption[Exp.Ref] = postExpIdent(o) match {
+         case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
+         case MSome(_) => halt("Can only produce object of type Exp.Ref")
+         case _ => MNone[Exp.Ref]()
+        }
+        return r
+      case o: Exp.Select =>
+        val r: MOption[Exp.Ref] = postExpSelect(o) match {
+         case MSome(result: Exp.Ref) => MSome[Exp.Ref](result)
+         case MSome(_) => halt("Can only produce object of type Exp.Ref")
+         case _ => MNone[Exp.Ref]()
+        }
+        return r
+    }
+  }
+
+  def postExpBinary(o: Exp.Binary): MOption[Exp] = {
+    return PostResultExpBinary
+  }
+
+  def postExpIdent(o: Exp.Ident): MOption[Exp] = {
+    return PostResultExpIdent
+  }
+
+  def postExpEta(o: Exp.Eta): MOption[Exp] = {
+    return PostResultExpEta
+  }
+
+  def postExpTuple(o: Exp.Tuple): MOption[Exp] = {
+    return PostResultExpTuple
+  }
+
+  def postExpSelect(o: Exp.Select): MOption[Exp] = {
+    return PostResultExpSelect
+  }
+
+  def postExpInvoke(o: Exp.Invoke): MOption[Exp] = {
+    return PostResultExpInvoke
+  }
+
+  def postExpInvokeNamed(o: Exp.InvokeNamed): MOption[Exp] = {
+    return PostResultExpInvokeNamed
+  }
+
+  def postExpIf(o: Exp.If): MOption[Exp] = {
+    return PostResultExpIf
+  }
+
+  def postExpFunParam(o: Exp.Fun.Param): MOption[Exp.Fun.Param] = {
+    return PostResultExpFunParam
+  }
+
+  def postExpFun(o: Exp.Fun): MOption[Exp] = {
+    return PostResultExpFun
+  }
+
+  def postExpForYield(o: Exp.ForYield): MOption[Exp] = {
+    return PostResultExpForYield
+  }
+
+  def postExpQuant(o: Exp.Quant): MOption[Exp] = {
+    return PostResultExpQuant
+  }
+
+  def postNamedArg(o: NamedArg): MOption[NamedArg] = {
+    return PostResultNamedArg
+  }
+
+  def postVarFragment(o: VarFragment): MOption[VarFragment] = {
+    return PostResultVarFragment
+  }
+
+  def postDomain(o: Domain): MOption[Domain] = {
+    o match {
+      case o: Domain.Type => return postDomainType(o)
+      case o: Domain.Range => return postDomainRange(o)
+    }
+  }
+
+  def postDomainType(o: Domain.Type): MOption[Domain] = {
+    return PostResultDomainType
+  }
+
+  def postDomainRange(o: Domain.Range): MOption[Domain] = {
+    return PostResultDomainRange
+  }
+
+  def postId(o: Id): MOption[Id] = {
+    return PostResultId
+  }
+
+  def postName(o: Name): MOption[Name] = {
+    return PostResultName
+  }
+
+  def postBody(o: Body): MOption[Body] = {
+    return PostResultBody
+  }
+
+  def postAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
+    return PostResultAbstractDatatypeParam
+  }
+
+  def postMethodSig(o: MethodSig): MOption[MethodSig] = {
+    return PostResultMethodSig
+  }
+
+  def postParam(o: Param): MOption[Param] = {
+    return PostResultParam
+  }
+
+  def postTypeParam(o: TypeParam): MOption[TypeParam] = {
+    return PostResultTypeParam
+  }
+
+  def postContract(o: Contract): MOption[Contract] = {
+    return PostResultContract
+  }
+
+  def postSubContract(o: SubContract): MOption[SubContract] = {
+    return PostResultSubContract
+  }
+
+  def postWhereDef(o: WhereDef): MOption[WhereDef] = {
+    o match {
+      case o: WhereDef.Val => return postWhereDefVal(o)
+      case o: WhereDef.Def => return postWhereDefDef(o)
+    }
+  }
+
+  def postWhereDefVal(o: WhereDef.Val): MOption[WhereDef] = {
+    return PostResultWhereDefVal
+  }
+
+  def postWhereDefDef(o: WhereDef.Def): MOption[WhereDef] = {
+    return PostResultWhereDefDef
+  }
+
+  def postSpecDef(o: SpecDef): MOption[SpecDef] = {
+    return PostResultSpecDef
+  }
+
+  def postProofStep(o: ProofStep): MOption[ProofStep] = {
+    o match {
+      case o: ProofStep.Basic => return postProofStepBasic(o)
+      case o: ProofStep.SubProof => return postProofStepSubProof(o)
+    }
+  }
+
+  def postProofStepBasic(o: ProofStep.Basic): MOption[ProofStep] = {
+    return PostResultProofStepBasic
+  }
+
+  def postProofStepSubProof(o: ProofStep.SubProof): MOption[ProofStep] = {
+    return PostResultProofStepSubProof
+  }
+
+  def postAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
+    o match {
+      case o: AssumeProofStep.Regular => return postAssumeProofStepRegular(o)
+      case o: AssumeProofStep.ForallIntroAps => return postAssumeProofStepForallIntroAps(o)
+      case o: AssumeProofStep.ExistsElimAps => return postAssumeProofStepExistsElimAps(o)
+    }
+  }
+
+  def postAssumeProofStepRegular(o: AssumeProofStep.Regular): MOption[AssumeProofStep] = {
+    return PostResultAssumeProofStepRegular
+  }
+
+  def postAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps): MOption[AssumeProofStep] = {
+    return PostResultAssumeProofStepForallIntroAps
+  }
+
+  def postAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps): MOption[AssumeProofStep] = {
+    return PostResultAssumeProofStepExistsElimAps
+  }
+
+  def postJust(o: Just): MOption[Just] = {
+    o match {
+      case o: Just.Premise => return postJustPremise(o)
+      case o: Just.AndIntro => return postJustAndIntro(o)
+      case o: Just.AndElim => return postJustAndElim(o)
+      case o: Just.OrIntro => return postJustOrIntro(o)
+      case o: Just.OrElim => return postJustOrElim(o)
+      case o: Just.ImplyIntro => return postJustImplyIntro(o)
+      case o: Just.ImplyElim => return postJustImplyElim(o)
+      case o: Just.NegIntro => return postJustNegIntro(o)
+      case o: Just.NegElim => return postJustNegElim(o)
+      case o: Just.BottomElim => return postJustBottomElim(o)
+      case o: Just.Pbc => return postJustPbc(o)
+      case o: Just.ForallIntro => return postJustForallIntro(o)
+      case o: Just.ForallElim => return postJustForallElim(o)
+      case o: Just.ExistsIntro => return postJustExistsIntro(o)
+      case o: Just.ExistsElim => return postJustExistsElim(o)
+      case o: Just.Fact => return postJustFact(o)
+      case o: Just.Invariant => return postJustInvariant(o)
+      case o: Just.Subst => return postJustSubst(o)
+      case o: Just.Auto => return postJustAuto(o)
+      case o: Just.Coq => return postJustCoq(o)
+    }
+  }
+
+  def postJustPremise(o: Just.Premise): MOption[Just] = {
+    return PostResultJustPremise
+  }
+
+  def postJustAndIntro(o: Just.AndIntro): MOption[Just] = {
+    return PostResultJustAndIntro
+  }
+
+  def postJustAndElim(o: Just.AndElim): MOption[Just] = {
+    return PostResultJustAndElim
+  }
+
+  def postJustOrIntro(o: Just.OrIntro): MOption[Just] = {
+    return PostResultJustOrIntro
+  }
+
+  def postJustOrElim(o: Just.OrElim): MOption[Just] = {
+    return PostResultJustOrElim
+  }
+
+  def postJustImplyIntro(o: Just.ImplyIntro): MOption[Just] = {
+    return PostResultJustImplyIntro
+  }
+
+  def postJustImplyElim(o: Just.ImplyElim): MOption[Just] = {
+    return PostResultJustImplyElim
+  }
+
+  def postJustNegIntro(o: Just.NegIntro): MOption[Just] = {
+    return PostResultJustNegIntro
+  }
+
+  def postJustNegElim(o: Just.NegElim): MOption[Just] = {
+    return PostResultJustNegElim
+  }
+
+  def postJustBottomElim(o: Just.BottomElim): MOption[Just] = {
+    return PostResultJustBottomElim
+  }
+
+  def postJustPbc(o: Just.Pbc): MOption[Just] = {
+    return PostResultJustPbc
+  }
+
+  def postJustForallIntro(o: Just.ForallIntro): MOption[Just] = {
+    return PostResultJustForallIntro
+  }
+
+  def postJustForallElim(o: Just.ForallElim): MOption[Just] = {
+    return PostResultJustForallElim
+  }
+
+  def postJustExistsIntro(o: Just.ExistsIntro): MOption[Just] = {
+    return PostResultJustExistsIntro
+  }
+
+  def postJustExistsElim(o: Just.ExistsElim): MOption[Just] = {
+    return PostResultJustExistsElim
+  }
+
+  def postJustFact(o: Just.Fact): MOption[Just] = {
+    return PostResultJustFact
+  }
+
+  def postJustInvariant(o: Just.Invariant): MOption[Just] = {
+    return PostResultJustInvariant
+  }
+
+  def postJustSubst(o: Just.Subst): MOption[Just] = {
+    return PostResultJustSubst
+  }
+
+  def postJustAuto(o: Just.Auto): MOption[Just] = {
+    return PostResultJustAuto
+  }
+
+  def postJustCoq(o: Just.Coq): MOption[Just] = {
+    return PostResultJustCoq
+  }
+
+  def postTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
+    return PostResultTruthTableRow
+  }
+
+  def postTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
+    return PostResultTruthTableAssignment
+  }
+
+  def postTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
+    o match {
+      case o: TruthTable.Conclusion.Validity => return postTruthTableConclusionValidity(o)
+      case o: TruthTable.Conclusion.Tautology => return postTruthTableConclusionTautology(o)
+      case o: TruthTable.Conclusion.Contradictory => return postTruthTableConclusionContradictory(o)
+      case o: TruthTable.Conclusion.Contingent => return postTruthTableConclusionContingent(o)
+    }
+  }
+
+  def postTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): MOption[TruthTable.Conclusion] = {
+    return PostResultTruthTableConclusionValidity
+  }
+
+  def postTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology): MOption[TruthTable.Conclusion] = {
+    return PostResultTruthTableConclusionTautology
+  }
+
+  def postTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory): MOption[TruthTable.Conclusion] = {
+    return PostResultTruthTableConclusionContradictory
+  }
+
+  def postTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent): MOption[TruthTable.Conclusion] = {
+    return PostResultTruthTableConclusionContingent
+  }
+
+  def postTyped(o: Typed): MOption[Typed] = {
+    o match {
+      case o: Typed.Name => return postTypedName(o)
+      case o: Typed.Tuple => return postTypedTuple(o)
+      case o: Typed.Fun => return postTypedFun(o)
+      case o: Typed.TypeVar => return postTypedTypeVar(o)
+      case o: Typed.Package => return postTypedPackage(o)
+      case o: Typed.Object => return postTypedObject(o)
+      case o: Typed.Enum => return postTypedEnum(o)
+      case o: Typed.Method => return postTypedMethod(o)
+      case o: Typed.Methods => return postTypedMethods(o)
+    }
+  }
+
+  def postTypedName(o: Typed.Name): MOption[Typed] = {
+    return PostResultTypedName
+  }
+
+  def postTypedTuple(o: Typed.Tuple): MOption[Typed] = {
+    return PostResultTypedTuple
+  }
+
+  def postTypedFun(o: Typed.Fun): MOption[Typed] = {
+    return PostResultTypedFun
+  }
+
+  def postTypedTypeVar(o: Typed.TypeVar): MOption[Typed] = {
+    return PostResultTypedTypeVar
+  }
+
+  def postTypedPackage(o: Typed.Package): MOption[Typed] = {
+    return PostResultTypedPackage
+  }
+
+  def postTypedObject(o: Typed.Object): MOption[Typed] = {
+    return PostResultTypedObject
+  }
+
+  def postTypedEnum(o: Typed.Enum): MOption[Typed] = {
+    return PostResultTypedEnum
+  }
+
+  def postTypedMethodSubst(o: Typed.Method.Subst): MOption[Typed.Method.Subst] = {
+    return PostResultTypedMethodSubst
+  }
+
+  def postTypedMethod(o: Typed.Method): MOption[Typed] = {
+    return PostResultTypedMethod
+  }
+
+  def postTypedMethods(o: Typed.Methods): MOption[Typed] = {
+    return PostResultTypedMethods
+  }
+
+  def postAttr(o: Attr): MOption[Attr] = {
+    return PostResultAttr
+  }
+
+  def postTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
+    return PostResultTypedAttr
+  }
+
+  def postResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
+    return PostResultResolvedAttr
+  }
+
+  def postResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
+    o match {
+      case o: ResolvedInfo.BuiltIn => return postResolvedInfoBuiltIn(o)
+      case o: ResolvedInfo.Package => return postResolvedInfoPackage(o)
+      case o: ResolvedInfo.Enum => return postResolvedInfoEnum(o)
+      case o: ResolvedInfo.EnumElement => return postResolvedInfoEnumElement(o)
+      case o: ResolvedInfo.Object => return postResolvedInfoObject(o)
+      case o: ResolvedInfo.Var => return postResolvedInfoVar(o)
+      case o: ResolvedInfo.Method => return postResolvedInfoMethod(o)
+      case o: ResolvedInfo.Methods => return postResolvedInfoMethods(o)
+      case o: ResolvedInfo.Type => return postResolvedInfoType(o)
+      case o: ResolvedInfo.Tuple => return postResolvedInfoTuple(o)
+      case o: ResolvedInfo.LocalVar => return postResolvedInfoLocalVar(o)
+    }
+  }
+
+  def postResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoBuiltIn
+  }
+
+  def postResolvedInfoPackage(o: ResolvedInfo.Package): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoPackage
+  }
+
+  def postResolvedInfoEnum(o: ResolvedInfo.Enum): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoEnum
+  }
+
+  def postResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoEnumElement
+  }
+
+  def postResolvedInfoObject(o: ResolvedInfo.Object): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoObject
+  }
+
+  def postResolvedInfoVar(o: ResolvedInfo.Var): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoVar
+  }
+
+  def postResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoMethod
+  }
+
+  def postResolvedInfoMethods(o: ResolvedInfo.Methods): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoMethods
+  }
+
+  def postResolvedInfoType(o: ResolvedInfo.Type): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoType
+  }
+
+  def postResolvedInfoTuple(o: ResolvedInfo.Tuple): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoTuple
+  }
+
+  def postResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): MOption[ResolvedInfo] = {
+    return PostResultResolvedInfoLocalVar
+  }
+
+  def postPosInfo(o: PosInfo): MOption[PosInfo] = {
+    return PostResultPosInfo
+  }
+
+  def postFileInfo(o: FileInfo): MOption[FileInfo] = {
+    return PostResultFileInfo
+  }
 
   def transformTopUnit(o: TopUnit): MOption[TopUnit] = {
-    val preR: PreResult[TopUnit] = pp.preTopUnit(o)
+    val preR: PreResult[TopUnit] = preTopUnit(o)
     val r: MOption[TopUnit] = if (preR.continu) {
       val o2: TopUnit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -1924,7 +2512,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TopUnit = r.getOrElse(o)
-    val postR: MOption[TopUnit] = pp.postTopUnit(o2)
+    val postR: MOption[TopUnit] = postTopUnit(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -1935,7 +2523,7 @@ import MTransformer._
   }
 
   def transformStmt(o: Stmt): MOption[Stmt] = {
-    val preR: PreResult[Stmt] = pp.preStmt(o)
+    val preR: PreResult[Stmt] = preStmt(o)
     val r: MOption[Stmt] = if (preR.continu) {
       val o2: Stmt = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2145,7 +2733,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt = r.getOrElse(o)
-    val postR: MOption[Stmt] = pp.postStmt(o2)
+    val postR: MOption[Stmt] = postStmt(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2156,7 +2744,7 @@ import MTransformer._
   }
 
   def transformAssignExp(o: AssignExp): MOption[AssignExp] = {
-    val preR: PreResult[AssignExp] = pp.preAssignExp(o)
+    val preR: PreResult[AssignExp] = preAssignExp(o)
     val r: MOption[AssignExp] = if (preR.continu) {
       val o2: AssignExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2208,7 +2796,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: AssignExp = r.getOrElse(o)
-    val postR: MOption[AssignExp] = pp.postAssignExp(o2)
+    val postR: MOption[AssignExp] = postAssignExp(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2219,7 +2807,7 @@ import MTransformer._
   }
 
   def transformStmtImportImporter(o: Stmt.Import.Importer): MOption[Stmt.Import.Importer] = {
-    val preR: PreResult[Stmt.Import.Importer] = pp.preStmtImportImporter(o)
+    val preR: PreResult[Stmt.Import.Importer] = preStmtImportImporter(o)
     val r: MOption[Stmt.Import.Importer] = if (preR.continu) {
       val o2: Stmt.Import.Importer = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2236,7 +2824,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.Importer = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.Importer] = pp.postStmtImportImporter(o2)
+    val postR: MOption[Stmt.Import.Importer] = postStmtImportImporter(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2247,7 +2835,7 @@ import MTransformer._
   }
 
   def transformStmtImportSelector(o: Stmt.Import.Selector): MOption[Stmt.Import.Selector] = {
-    val preR: PreResult[Stmt.Import.Selector] = pp.preStmtImportSelector(o)
+    val preR: PreResult[Stmt.Import.Selector] = preStmtImportSelector(o)
     val r: MOption[Stmt.Import.Selector] = if (preR.continu) {
       val o2: Stmt.Import.Selector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2272,7 +2860,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.Selector = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.Selector] = pp.postStmtImportSelector(o2)
+    val postR: MOption[Stmt.Import.Selector] = postStmtImportSelector(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2283,7 +2871,7 @@ import MTransformer._
   }
 
   def transformStmtImportNamedSelector(o: Stmt.Import.NamedSelector): MOption[Stmt.Import.NamedSelector] = {
-    val preR: PreResult[Stmt.Import.NamedSelector] = pp.preStmtImportNamedSelector(o)
+    val preR: PreResult[Stmt.Import.NamedSelector] = preStmtImportNamedSelector(o)
     val r: MOption[Stmt.Import.NamedSelector] = if (preR.continu) {
       val o2: Stmt.Import.NamedSelector = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2300,7 +2888,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Stmt.Import.NamedSelector = r.getOrElse(o)
-    val postR: MOption[Stmt.Import.NamedSelector] = pp.postStmtImportNamedSelector(o2)
+    val postR: MOption[Stmt.Import.NamedSelector] = postStmtImportNamedSelector(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2311,7 +2899,7 @@ import MTransformer._
   }
 
   def transformLClause(o: LClause): MOption[LClause] = {
-    val preR: PreResult[LClause] = pp.preLClause(o)
+    val preR: PreResult[LClause] = preLClause(o)
     val r: MOption[LClause] = if (preR.continu) {
       val o2: LClause = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2357,7 +2945,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause = r.getOrElse(o)
-    val postR: MOption[LClause] = pp.postLClause(o2)
+    val postR: MOption[LClause] = postLClause(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2368,7 +2956,7 @@ import MTransformer._
   }
 
   def transformLClauseFact(o: LClause.Fact): MOption[LClause.Fact] = {
-    val preR: PreResult[LClause.Fact] = pp.preLClauseFact(o)
+    val preR: PreResult[LClause.Fact] = preLClauseFact(o)
     val r: MOption[LClause.Fact] = if (preR.continu) {
       val o2: LClause.Fact = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2385,7 +2973,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Fact = r.getOrElse(o)
-    val postR: MOption[LClause.Fact] = pp.postLClauseFact(o2)
+    val postR: MOption[LClause.Fact] = postLClauseFact(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2396,7 +2984,7 @@ import MTransformer._
   }
 
   def transformLClauseTheorem(o: LClause.Theorem): MOption[LClause.Theorem] = {
-    val preR: PreResult[LClause.Theorem] = pp.preLClauseTheorem(o)
+    val preR: PreResult[LClause.Theorem] = preLClauseTheorem(o)
     val r: MOption[LClause.Theorem] = if (preR.continu) {
       val o2: LClause.Theorem = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2413,7 +3001,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Theorem = r.getOrElse(o)
-    val postR: MOption[LClause.Theorem] = pp.postLClauseTheorem(o2)
+    val postR: MOption[LClause.Theorem] = postLClauseTheorem(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2424,7 +3012,7 @@ import MTransformer._
   }
 
   def transformContractExp(o: ContractExp): MOption[ContractExp] = {
-    val preR: PreResult[ContractExp] = pp.preContractExp(o)
+    val preR: PreResult[ContractExp] = preContractExp(o)
     val r: MOption[ContractExp] = if (preR.continu) {
       val o2: ContractExp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2441,7 +3029,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ContractExp = r.getOrElse(o)
-    val postR: MOption[ContractExp] = pp.postContractExp(o2)
+    val postR: MOption[ContractExp] = postContractExp(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2452,7 +3040,7 @@ import MTransformer._
   }
 
   def transformCase(o: Case): MOption[Case] = {
-    val preR: PreResult[Case] = pp.preCase(o)
+    val preR: PreResult[Case] = preCase(o)
     val r: MOption[Case] = if (preR.continu) {
       val o2: Case = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2470,7 +3058,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Case = r.getOrElse(o)
-    val postR: MOption[Case] = pp.postCase(o2)
+    val postR: MOption[Case] = postCase(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2481,7 +3069,7 @@ import MTransformer._
   }
 
   def transformEnumGenRange(o: EnumGen.Range): MOption[EnumGen.Range] = {
-    val preR: PreResult[EnumGen.Range] = pp.preEnumGenRange(o)
+    val preR: PreResult[EnumGen.Range] = preEnumGenRange(o)
     val r: MOption[EnumGen.Range] = if (preR.continu) {
       val o2: EnumGen.Range = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2511,7 +3099,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: EnumGen.Range = r.getOrElse(o)
-    val postR: MOption[EnumGen.Range] = pp.postEnumGenRange(o2)
+    val postR: MOption[EnumGen.Range] = postEnumGenRange(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2522,7 +3110,7 @@ import MTransformer._
   }
 
   def transformEnumGenFor(o: EnumGen.For): MOption[EnumGen.For] = {
-    val preR: PreResult[EnumGen.For] = pp.preEnumGenFor(o)
+    val preR: PreResult[EnumGen.For] = preEnumGenFor(o)
     val r: MOption[EnumGen.For] = if (preR.continu) {
       val o2: EnumGen.For = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2540,7 +3128,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: EnumGen.For = r.getOrElse(o)
-    val postR: MOption[EnumGen.For] = pp.postEnumGenFor(o2)
+    val postR: MOption[EnumGen.For] = postEnumGenFor(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2551,7 +3139,7 @@ import MTransformer._
   }
 
   def transformType(o: Type): MOption[Type] = {
-    val preR: PreResult[Type] = pp.preType(o)
+    val preR: PreResult[Type] = preType(o)
     val r: MOption[Type] = if (preR.continu) {
       val o2: Type = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2588,7 +3176,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Type = r.getOrElse(o)
-    val postR: MOption[Type] = pp.postType(o2)
+    val postR: MOption[Type] = postType(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2599,7 +3187,7 @@ import MTransformer._
   }
 
   def transformPattern(o: Pattern): MOption[Pattern] = {
-    val preR: PreResult[Pattern] = pp.prePattern(o)
+    val preR: PreResult[Pattern] = prePattern(o)
     val r: MOption[Pattern] = if (preR.continu) {
       val o2: Pattern = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2662,7 +3250,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Pattern = r.getOrElse(o)
-    val postR: MOption[Pattern] = pp.postPattern(o2)
+    val postR: MOption[Pattern] = postPattern(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2673,7 +3261,7 @@ import MTransformer._
   }
 
   def transformExp(o: Exp): MOption[Exp] = {
-    val preR: PreResult[Exp] = pp.preExp(o)
+    val preR: PreResult[Exp] = preExp(o)
     val r: MOption[Exp] = if (preR.continu) {
       val o2: Exp = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2849,7 +3437,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp = r.getOrElse(o)
-    val postR: MOption[Exp] = pp.postExp(o2)
+    val postR: MOption[Exp] = postExp(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2860,7 +3448,7 @@ import MTransformer._
   }
 
   def transformLit(o: Lit): MOption[Lit] = {
-    val preR: PreResult[Lit] = pp.preLit(o)
+    val preR: PreResult[Lit] = preLit(o)
     val r: MOption[Lit] = if (preR.continu) {
       val o2: Lit = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2916,7 +3504,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Lit = r.getOrElse(o)
-    val postR: MOption[Lit] = pp.postLit(o2)
+    val postR: MOption[Lit] = postLit(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2927,7 +3515,7 @@ import MTransformer._
   }
 
   def transformExpRef(o: Exp.Ref): MOption[Exp.Ref] = {
-    val preR: PreResult[Exp.Ref] = pp.preExpRef(o)
+    val preR: PreResult[Exp.Ref] = preExpRef(o)
     val r: MOption[Exp.Ref] = if (preR.continu) {
       val o2: Exp.Ref = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2957,7 +3545,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.Ref = r.getOrElse(o)
-    val postR: MOption[Exp.Ref] = pp.postExpRef(o2)
+    val postR: MOption[Exp.Ref] = postExpRef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2968,7 +3556,7 @@ import MTransformer._
   }
 
   def transformExpFunParam(o: Exp.Fun.Param): MOption[Exp.Fun.Param] = {
-    val preR: PreResult[Exp.Fun.Param] = pp.preExpFunParam(o)
+    val preR: PreResult[Exp.Fun.Param] = preExpFunParam(o)
     val r: MOption[Exp.Fun.Param] = if (preR.continu) {
       val o2: Exp.Fun.Param = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -2985,7 +3573,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.Fun.Param = r.getOrElse(o)
-    val postR: MOption[Exp.Fun.Param] = pp.postExpFunParam(o2)
+    val postR: MOption[Exp.Fun.Param] = postExpFunParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -2996,7 +3584,7 @@ import MTransformer._
   }
 
   def transformNamedArg(o: NamedArg): MOption[NamedArg] = {
-    val preR: PreResult[NamedArg] = pp.preNamedArg(o)
+    val preR: PreResult[NamedArg] = preNamedArg(o)
     val r: MOption[NamedArg] = if (preR.continu) {
       val o2: NamedArg = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3013,7 +3601,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: NamedArg = r.getOrElse(o)
-    val postR: MOption[NamedArg] = pp.postNamedArg(o2)
+    val postR: MOption[NamedArg] = postNamedArg(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3024,7 +3612,7 @@ import MTransformer._
   }
 
   def transformVarFragment(o: VarFragment): MOption[VarFragment] = {
-    val preR: PreResult[VarFragment] = pp.preVarFragment(o)
+    val preR: PreResult[VarFragment] = preVarFragment(o)
     val r: MOption[VarFragment] = if (preR.continu) {
       val o2: VarFragment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3041,7 +3629,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: VarFragment = r.getOrElse(o)
-    val postR: MOption[VarFragment] = pp.postVarFragment(o2)
+    val postR: MOption[VarFragment] = postVarFragment(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3052,7 +3640,7 @@ import MTransformer._
   }
 
   def transformDomain(o: Domain): MOption[Domain] = {
-    val preR: PreResult[Domain] = pp.preDomain(o)
+    val preR: PreResult[Domain] = preDomain(o)
     val r: MOption[Domain] = if (preR.continu) {
       val o2: Domain = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3081,7 +3669,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Domain = r.getOrElse(o)
-    val postR: MOption[Domain] = pp.postDomain(o2)
+    val postR: MOption[Domain] = postDomain(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3092,7 +3680,7 @@ import MTransformer._
   }
 
   def transformId(o: Id): MOption[Id] = {
-    val preR: PreResult[Id] = pp.preId(o)
+    val preR: PreResult[Id] = preId(o)
     val r: MOption[Id] = if (preR.continu) {
       val o2: Id = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3108,7 +3696,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Id = r.getOrElse(o)
-    val postR: MOption[Id] = pp.postId(o2)
+    val postR: MOption[Id] = postId(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3119,7 +3707,7 @@ import MTransformer._
   }
 
   def transformName(o: Name): MOption[Name] = {
-    val preR: PreResult[Name] = pp.preName(o)
+    val preR: PreResult[Name] = preName(o)
     val r: MOption[Name] = if (preR.continu) {
       val o2: Name = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3136,7 +3724,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Name = r.getOrElse(o)
-    val postR: MOption[Name] = pp.postName(o2)
+    val postR: MOption[Name] = postName(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3147,7 +3735,7 @@ import MTransformer._
   }
 
   def transformBody(o: Body): MOption[Body] = {
-    val preR: PreResult[Body] = pp.preBody(o)
+    val preR: PreResult[Body] = preBody(o)
     val r: MOption[Body] = if (preR.continu) {
       val o2: Body = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3163,7 +3751,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Body = r.getOrElse(o)
-    val postR: MOption[Body] = pp.postBody(o2)
+    val postR: MOption[Body] = postBody(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3174,7 +3762,7 @@ import MTransformer._
   }
 
   def transformAbstractDatatypeParam(o: AbstractDatatypeParam): MOption[AbstractDatatypeParam] = {
-    val preR: PreResult[AbstractDatatypeParam] = pp.preAbstractDatatypeParam(o)
+    val preR: PreResult[AbstractDatatypeParam] = preAbstractDatatypeParam(o)
     val r: MOption[AbstractDatatypeParam] = if (preR.continu) {
       val o2: AbstractDatatypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3191,7 +3779,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: AbstractDatatypeParam = r.getOrElse(o)
-    val postR: MOption[AbstractDatatypeParam] = pp.postAbstractDatatypeParam(o2)
+    val postR: MOption[AbstractDatatypeParam] = postAbstractDatatypeParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3202,7 +3790,7 @@ import MTransformer._
   }
 
   def transformMethodSig(o: MethodSig): MOption[MethodSig] = {
-    val preR: PreResult[MethodSig] = pp.preMethodSig(o)
+    val preR: PreResult[MethodSig] = preMethodSig(o)
     val r: MOption[MethodSig] = if (preR.continu) {
       val o2: MethodSig = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3221,7 +3809,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: MethodSig = r.getOrElse(o)
-    val postR: MOption[MethodSig] = pp.postMethodSig(o2)
+    val postR: MOption[MethodSig] = postMethodSig(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3232,7 +3820,7 @@ import MTransformer._
   }
 
   def transformParam(o: Param): MOption[Param] = {
-    val preR: PreResult[Param] = pp.preParam(o)
+    val preR: PreResult[Param] = preParam(o)
     val r: MOption[Param] = if (preR.continu) {
       val o2: Param = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3249,7 +3837,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Param = r.getOrElse(o)
-    val postR: MOption[Param] = pp.postParam(o2)
+    val postR: MOption[Param] = postParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3260,7 +3848,7 @@ import MTransformer._
   }
 
   def transformTypeParam(o: TypeParam): MOption[TypeParam] = {
-    val preR: PreResult[TypeParam] = pp.preTypeParam(o)
+    val preR: PreResult[TypeParam] = preTypeParam(o)
     val r: MOption[TypeParam] = if (preR.continu) {
       val o2: TypeParam = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3276,7 +3864,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TypeParam = r.getOrElse(o)
-    val postR: MOption[TypeParam] = pp.postTypeParam(o2)
+    val postR: MOption[TypeParam] = postTypeParam(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3287,7 +3875,7 @@ import MTransformer._
   }
 
   def transformContract(o: Contract): MOption[Contract] = {
-    val preR: PreResult[Contract] = pp.preContract(o)
+    val preR: PreResult[Contract] = preContract(o)
     val r: MOption[Contract] = if (preR.continu) {
       val o2: Contract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3307,7 +3895,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Contract = r.getOrElse(o)
-    val postR: MOption[Contract] = pp.postContract(o2)
+    val postR: MOption[Contract] = postContract(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3318,7 +3906,7 @@ import MTransformer._
   }
 
   def transformSubContract(o: SubContract): MOption[SubContract] = {
-    val preR: PreResult[SubContract] = pp.preSubContract(o)
+    val preR: PreResult[SubContract] = preSubContract(o)
     val r: MOption[SubContract] = if (preR.continu) {
       val o2: SubContract = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3336,7 +3924,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: SubContract = r.getOrElse(o)
-    val postR: MOption[SubContract] = pp.postSubContract(o2)
+    val postR: MOption[SubContract] = postSubContract(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3347,7 +3935,7 @@ import MTransformer._
   }
 
   def transformWhereDef(o: WhereDef): MOption[WhereDef] = {
-    val preR: PreResult[WhereDef] = pp.preWhereDef(o)
+    val preR: PreResult[WhereDef] = preWhereDef(o)
     val r: MOption[WhereDef] = if (preR.continu) {
       val o2: WhereDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3378,7 +3966,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: WhereDef = r.getOrElse(o)
-    val postR: MOption[WhereDef] = pp.postWhereDef(o2)
+    val postR: MOption[WhereDef] = postWhereDef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3389,7 +3977,7 @@ import MTransformer._
   }
 
   def transformSpecDef(o: SpecDef): MOption[SpecDef] = {
-    val preR: PreResult[SpecDef] = pp.preSpecDef(o)
+    val preR: PreResult[SpecDef] = preSpecDef(o)
     val r: MOption[SpecDef] = if (preR.continu) {
       val o2: SpecDef = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3408,7 +3996,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: SpecDef = r.getOrElse(o)
-    val postR: MOption[SpecDef] = pp.postSpecDef(o2)
+    val postR: MOption[SpecDef] = postSpecDef(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3419,7 +4007,7 @@ import MTransformer._
   }
 
   def transformProofStep(o: ProofStep): MOption[ProofStep] = {
-    val preR: PreResult[ProofStep] = pp.preProofStep(o)
+    val preR: PreResult[ProofStep] = preProofStep(o)
     val r: MOption[ProofStep] = if (preR.continu) {
       val o2: ProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3449,7 +4037,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ProofStep = r.getOrElse(o)
-    val postR: MOption[ProofStep] = pp.postProofStep(o2)
+    val postR: MOption[ProofStep] = postProofStep(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3460,7 +4048,7 @@ import MTransformer._
   }
 
   def transformAssumeProofStep(o: AssumeProofStep): MOption[AssumeProofStep] = {
-    val preR: PreResult[AssumeProofStep] = pp.preAssumeProofStep(o)
+    val preR: PreResult[AssumeProofStep] = preAssumeProofStep(o)
     val r: MOption[AssumeProofStep] = if (preR.continu) {
       val o2: AssumeProofStep = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3496,7 +4084,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: AssumeProofStep = r.getOrElse(o)
-    val postR: MOption[AssumeProofStep] = pp.postAssumeProofStep(o2)
+    val postR: MOption[AssumeProofStep] = postAssumeProofStep(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3507,7 +4095,7 @@ import MTransformer._
   }
 
   def transformJust(o: Just): MOption[Just] = {
-    val preR: PreResult[Just] = pp.preJust(o)
+    val preR: PreResult[Just] = preJust(o)
     val r: MOption[Just] = if (preR.continu) {
       val o2: Just = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3668,7 +4256,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Just = r.getOrElse(o)
-    val postR: MOption[Just] = pp.postJust(o2)
+    val postR: MOption[Just] = postJust(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3679,7 +4267,7 @@ import MTransformer._
   }
 
   def transformTruthTableRow(o: TruthTable.Row): MOption[TruthTable.Row] = {
-    val preR: PreResult[TruthTable.Row] = pp.preTruthTableRow(o)
+    val preR: PreResult[TruthTable.Row] = preTruthTableRow(o)
     val r: MOption[TruthTable.Row] = if (preR.continu) {
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3697,7 +4285,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TruthTable.Row = r.getOrElse(o)
-    val postR: MOption[TruthTable.Row] = pp.postTruthTableRow(o2)
+    val postR: MOption[TruthTable.Row] = postTruthTableRow(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3708,7 +4296,7 @@ import MTransformer._
   }
 
   def transformTruthTableAssignment(o: TruthTable.Assignment): MOption[TruthTable.Assignment] = {
-    val preR: PreResult[TruthTable.Assignment] = pp.preTruthTableAssignment(o)
+    val preR: PreResult[TruthTable.Assignment] = preTruthTableAssignment(o)
     val r: MOption[TruthTable.Assignment] = if (preR.continu) {
       val o2: TruthTable.Assignment = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3725,7 +4313,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TruthTable.Assignment = r.getOrElse(o)
-    val postR: MOption[TruthTable.Assignment] = pp.postTruthTableAssignment(o2)
+    val postR: MOption[TruthTable.Assignment] = postTruthTableAssignment(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3736,7 +4324,7 @@ import MTransformer._
   }
 
   def transformTruthTableConclusion(o: TruthTable.Conclusion): MOption[TruthTable.Conclusion] = {
-    val preR: PreResult[TruthTable.Conclusion] = pp.preTruthTableConclusion(o)
+    val preR: PreResult[TruthTable.Conclusion] = preTruthTableConclusion(o)
     val r: MOption[TruthTable.Conclusion] = if (preR.continu) {
       val o2: TruthTable.Conclusion = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3777,7 +4365,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TruthTable.Conclusion = r.getOrElse(o)
-    val postR: MOption[TruthTable.Conclusion] = pp.postTruthTableConclusion(o2)
+    val postR: MOption[TruthTable.Conclusion] = postTruthTableConclusion(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3788,7 +4376,7 @@ import MTransformer._
   }
 
   def transformTyped(o: Typed): MOption[Typed] = {
-    val preR: PreResult[Typed] = pp.preTyped(o)
+    val preR: PreResult[Typed] = preTyped(o)
     val r: MOption[Typed] = if (preR.continu) {
       val o2: Typed = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3854,7 +4442,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Typed = r.getOrElse(o)
-    val postR: MOption[Typed] = pp.postTyped(o2)
+    val postR: MOption[Typed] = postTyped(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3865,7 +4453,7 @@ import MTransformer._
   }
 
   def transformTypedMethodSubst(o: Typed.Method.Subst): MOption[Typed.Method.Subst] = {
-    val preR: PreResult[Typed.Method.Subst] = pp.preTypedMethodSubst(o)
+    val preR: PreResult[Typed.Method.Subst] = preTypedMethodSubst(o)
     val r: MOption[Typed.Method.Subst] = if (preR.continu) {
       val o2: Typed.Method.Subst = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3881,7 +4469,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Typed.Method.Subst = r.getOrElse(o)
-    val postR: MOption[Typed.Method.Subst] = pp.postTypedMethodSubst(o2)
+    val postR: MOption[Typed.Method.Subst] = postTypedMethodSubst(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3892,7 +4480,7 @@ import MTransformer._
   }
 
   def transformAttr(o: Attr): MOption[Attr] = {
-    val preR: PreResult[Attr] = pp.preAttr(o)
+    val preR: PreResult[Attr] = preAttr(o)
     val r: MOption[Attr] = if (preR.continu) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3908,7 +4496,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Attr = r.getOrElse(o)
-    val postR: MOption[Attr] = pp.postAttr(o2)
+    val postR: MOption[Attr] = postAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3919,7 +4507,7 @@ import MTransformer._
   }
 
   def transformTypedAttr(o: TypedAttr): MOption[TypedAttr] = {
-    val preR: PreResult[TypedAttr] = pp.preTypedAttr(o)
+    val preR: PreResult[TypedAttr] = preTypedAttr(o)
     val r: MOption[TypedAttr] = if (preR.continu) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3936,7 +4524,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: TypedAttr = r.getOrElse(o)
-    val postR: MOption[TypedAttr] = pp.postTypedAttr(o2)
+    val postR: MOption[TypedAttr] = postTypedAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3947,7 +4535,7 @@ import MTransformer._
   }
 
   def transformResolvedAttr(o: ResolvedAttr): MOption[ResolvedAttr] = {
-    val preR: PreResult[ResolvedAttr] = pp.preResolvedAttr(o)
+    val preR: PreResult[ResolvedAttr] = preResolvedAttr(o)
     val r: MOption[ResolvedAttr] = if (preR.continu) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -3965,7 +4553,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedAttr = r.getOrElse(o)
-    val postR: MOption[ResolvedAttr] = pp.postResolvedAttr(o2)
+    val postR: MOption[ResolvedAttr] = postResolvedAttr(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -3976,7 +4564,7 @@ import MTransformer._
   }
 
   def transformResolvedInfo(o: ResolvedInfo): MOption[ResolvedInfo] = {
-    val preR: PreResult[ResolvedInfo] = pp.preResolvedInfo(o)
+    val preR: PreResult[ResolvedInfo] = preResolvedInfo(o)
     val r: MOption[ResolvedInfo] = if (preR.continu) {
       val o2: ResolvedInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -4047,7 +4635,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedInfo = r.getOrElse(o)
-    val postR: MOption[ResolvedInfo] = pp.postResolvedInfo(o2)
+    val postR: MOption[ResolvedInfo] = postResolvedInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -4058,7 +4646,7 @@ import MTransformer._
   }
 
   def transformPosInfo(o: PosInfo): MOption[PosInfo] = {
-    val preR: PreResult[PosInfo] = pp.prePosInfo(o)
+    val preR: PreResult[PosInfo] = prePosInfo(o)
     val r: MOption[PosInfo] = if (preR.continu) {
       val o2: PosInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -4074,7 +4662,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: PosInfo = r.getOrElse(o)
-    val postR: MOption[PosInfo] = pp.postPosInfo(o2)
+    val postR: MOption[PosInfo] = postPosInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -4085,7 +4673,7 @@ import MTransformer._
   }
 
   def transformFileInfo(o: FileInfo): MOption[FileInfo] = {
-    val preR: PreResult[FileInfo] = pp.preFileInfo(o)
+    val preR: PreResult[FileInfo] = preFileInfo(o)
     val r: MOption[FileInfo] = if (preR.continu) {
       val o2: FileInfo = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
@@ -4100,7 +4688,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: FileInfo = r.getOrElse(o)
-    val postR: MOption[FileInfo] = pp.postFileInfo(o2)
+    val postR: MOption[FileInfo] = postFileInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {
@@ -4111,7 +4699,7 @@ import MTransformer._
   }
 
   def transformLClauseProof(o: LClause.Proof): MOption[LClause.Proof] = {
-    val preR: PreResult[LClause.Proof] = pp.preLClauseProof(o) match {
+    val preR: PreResult[LClause.Proof] = preLClauseProof(o) match {
      case PreResult(continu, MSome(r: LClause.Proof)) => PreResult(continu, MSome[LClause.Proof](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type LClause.Proof")
      case PreResult(continu, _) => PreResult(continu, MNone[LClause.Proof]())
@@ -4131,7 +4719,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Proof = r.getOrElse(o)
-    val postR: MOption[LClause.Proof] = pp.postLClauseProof(o2) match {
+    val postR: MOption[LClause.Proof] = postLClauseProof(o2) match {
      case MSome(result: LClause.Proof) => MSome[LClause.Proof](result)
      case MSome(_) => halt("Can only produce object of type LClause.Proof")
      case _ => MNone[LClause.Proof]()
@@ -4146,7 +4734,7 @@ import MTransformer._
   }
 
   def transformLClauseSequent(o: LClause.Sequent): MOption[LClause.Sequent] = {
-    val preR: PreResult[LClause.Sequent] = pp.preLClauseSequent(o) match {
+    val preR: PreResult[LClause.Sequent] = preLClauseSequent(o) match {
      case PreResult(continu, MSome(r: LClause.Sequent)) => PreResult(continu, MSome[LClause.Sequent](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type LClause.Sequent")
      case PreResult(continu, _) => PreResult(continu, MNone[LClause.Sequent]())
@@ -4168,7 +4756,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: LClause.Sequent = r.getOrElse(o)
-    val postR: MOption[LClause.Sequent] = pp.postLClauseSequent(o2) match {
+    val postR: MOption[LClause.Sequent] = postLClauseSequent(o2) match {
      case MSome(result: LClause.Sequent) => MSome[LClause.Sequent](result)
      case MSome(_) => halt("Can only produce object of type LClause.Sequent")
      case _ => MNone[LClause.Sequent]()
@@ -4183,7 +4771,7 @@ import MTransformer._
   }
 
   def transformTypeNamed(o: Type.Named): MOption[Type.Named] = {
-    val preR: PreResult[Type.Named] = pp.preTypeNamed(o) match {
+    val preR: PreResult[Type.Named] = preTypeNamed(o) match {
      case PreResult(continu, MSome(r: Type.Named)) => PreResult(continu, MSome[Type.Named](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Type.Named")
      case PreResult(continu, _) => PreResult(continu, MNone[Type.Named]())
@@ -4205,7 +4793,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Type.Named = r.getOrElse(o)
-    val postR: MOption[Type.Named] = pp.postTypeNamed(o2) match {
+    val postR: MOption[Type.Named] = postTypeNamed(o2) match {
      case MSome(result: Type.Named) => MSome[Type.Named](result)
      case MSome(_) => halt("Can only produce object of type Type.Named")
      case _ => MNone[Type.Named]()
@@ -4220,7 +4808,7 @@ import MTransformer._
   }
 
   def transformExpLitString(o: Exp.LitString): MOption[Exp.LitString] = {
-    val preR: PreResult[Exp.LitString] = pp.preExpLitString(o) match {
+    val preR: PreResult[Exp.LitString] = preExpLitString(o) match {
      case PreResult(continu, MSome(r: Exp.LitString)) => PreResult(continu, MSome[Exp.LitString](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.LitString")
      case PreResult(continu, _) => PreResult(continu, MNone[Exp.LitString]())
@@ -4240,7 +4828,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitString = r.getOrElse(o)
-    val postR: MOption[Exp.LitString] = pp.postExpLitString(o2) match {
+    val postR: MOption[Exp.LitString] = postExpLitString(o2) match {
      case MSome(result: Exp.LitString) => MSome[Exp.LitString](result)
      case MSome(_) => halt("Can only produce object of type Exp.LitString")
      case _ => MNone[Exp.LitString]()
@@ -4255,7 +4843,7 @@ import MTransformer._
   }
 
   def transformExpLitZ(o: Exp.LitZ): MOption[Exp.LitZ] = {
-    val preR: PreResult[Exp.LitZ] = pp.preExpLitZ(o) match {
+    val preR: PreResult[Exp.LitZ] = preExpLitZ(o) match {
      case PreResult(continu, MSome(r: Exp.LitZ)) => PreResult(continu, MSome[Exp.LitZ](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.LitZ")
      case PreResult(continu, _) => PreResult(continu, MNone[Exp.LitZ]())
@@ -4275,7 +4863,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitZ = r.getOrElse(o)
-    val postR: MOption[Exp.LitZ] = pp.postExpLitZ(o2) match {
+    val postR: MOption[Exp.LitZ] = postExpLitZ(o2) match {
      case MSome(result: Exp.LitZ) => MSome[Exp.LitZ](result)
      case MSome(_) => halt("Can only produce object of type Exp.LitZ")
      case _ => MNone[Exp.LitZ]()
@@ -4290,7 +4878,7 @@ import MTransformer._
   }
 
   def transformExpLitB(o: Exp.LitB): MOption[Exp.LitB] = {
-    val preR: PreResult[Exp.LitB] = pp.preExpLitB(o) match {
+    val preR: PreResult[Exp.LitB] = preExpLitB(o) match {
      case PreResult(continu, MSome(r: Exp.LitB)) => PreResult(continu, MSome[Exp.LitB](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Exp.LitB")
      case PreResult(continu, _) => PreResult(continu, MNone[Exp.LitB]())
@@ -4310,7 +4898,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Exp.LitB = r.getOrElse(o)
-    val postR: MOption[Exp.LitB] = pp.postExpLitB(o2) match {
+    val postR: MOption[Exp.LitB] = postExpLitB(o2) match {
      case MSome(result: Exp.LitB) => MSome[Exp.LitB](result)
      case MSome(_) => halt("Can only produce object of type Exp.LitB")
      case _ => MNone[Exp.LitB]()
@@ -4325,7 +4913,7 @@ import MTransformer._
   }
 
   def transformTypedFun(o: Typed.Fun): MOption[Typed.Fun] = {
-    val preR: PreResult[Typed.Fun] = pp.preTypedFun(o) match {
+    val preR: PreResult[Typed.Fun] = preTypedFun(o) match {
      case PreResult(continu, MSome(r: Typed.Fun)) => PreResult(continu, MSome[Typed.Fun](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Typed.Fun")
      case PreResult(continu, _) => PreResult(continu, MNone[Typed.Fun]())
@@ -4346,7 +4934,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Typed.Fun = r.getOrElse(o)
-    val postR: MOption[Typed.Fun] = pp.postTypedFun(o2) match {
+    val postR: MOption[Typed.Fun] = postTypedFun(o2) match {
      case MSome(result: Typed.Fun) => MSome[Typed.Fun](result)
      case MSome(_) => halt("Can only produce object of type Typed.Fun")
      case _ => MNone[Typed.Fun]()
@@ -4361,7 +4949,7 @@ import MTransformer._
   }
 
   def transformTypedMethod(o: Typed.Method): MOption[Typed.Method] = {
-    val preR: PreResult[Typed.Method] = pp.preTypedMethod(o) match {
+    val preR: PreResult[Typed.Method] = preTypedMethod(o) match {
      case PreResult(continu, MSome(r: Typed.Method)) => PreResult(continu, MSome[Typed.Method](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type Typed.Method")
      case PreResult(continu, _) => PreResult(continu, MNone[Typed.Method]())
@@ -4382,7 +4970,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: Typed.Method = r.getOrElse(o)
-    val postR: MOption[Typed.Method] = pp.postTypedMethod(o2) match {
+    val postR: MOption[Typed.Method] = postTypedMethod(o2) match {
      case MSome(result: Typed.Method) => MSome[Typed.Method](result)
      case MSome(_) => halt("Can only produce object of type Typed.Method")
      case _ => MNone[Typed.Method]()
@@ -4397,7 +4985,7 @@ import MTransformer._
   }
 
   def transformResolvedInfoMethod(o: ResolvedInfo.Method): MOption[ResolvedInfo.Method] = {
-    val preR: PreResult[ResolvedInfo.Method] = pp.preResolvedInfoMethod(o) match {
+    val preR: PreResult[ResolvedInfo.Method] = preResolvedInfoMethod(o) match {
      case PreResult(continu, MSome(r: ResolvedInfo.Method)) => PreResult(continu, MSome[ResolvedInfo.Method](r))
      case PreResult(_, MSome(_)) => halt("Can only produce object of type ResolvedInfo.Method")
      case PreResult(continu, _) => PreResult(continu, MNone[ResolvedInfo.Method]())
@@ -4417,7 +5005,7 @@ import MTransformer._
     }
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedInfo.Method = r.getOrElse(o)
-    val postR: MOption[ResolvedInfo.Method] = pp.postResolvedInfoMethod(o2) match {
+    val postR: MOption[ResolvedInfo.Method] = postResolvedInfoMethod(o2) match {
      case MSome(result: ResolvedInfo.Method) => MSome[ResolvedInfo.Method](result)
      case MSome(_) => halt("Can only produce object of type ResolvedInfo.Method")
      case _ => MNone[ResolvedInfo.Method]()
