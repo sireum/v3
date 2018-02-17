@@ -4,11 +4,11 @@ image: Visual Studio 2017
 
 init:
   - cmd: git config --global core.autocrlf true
-  - cmd: git config core.symlinks true
 
 clone_folder: c:\sireum-v3
 
 before_build:
+  - cmd: git config core.symlinks true
   - cmd: git reset --hard
   - cmd: git submodule update -q --init --recursive
 
