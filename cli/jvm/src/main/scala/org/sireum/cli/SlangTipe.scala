@@ -37,7 +37,7 @@ import org.sireum.lang.parser.Parser
 
 import scala.collection.JavaConverters._
 import org.sireum.lang.symbol.Resolver
-import org.sireum.lang.tipe.{TypeChecker, TypeHierarchy, TypeOutliner}
+import org.sireum.lang.tipe.{PostTipeAttrChecker, TypeChecker, TypeHierarchy, TypeOutliner}
 import org.sireum.lang.util.AccumulatingReporter
 
 object SlangTipe {
@@ -49,6 +49,7 @@ object SlangTipe {
   val InvalidSources: Int = -5
   val InvalidSlangFiles: Int = -6
   val InvalidForceNames: Int = -7
+  val InternalError: Int = -8
 
   def run(o: SlangTipeOption): Int = {
     def readFile(f: File): (Option[String], String) = {
@@ -79,11 +80,11 @@ object SlangTipe {
         if (newUsed > used) {
           used = newUsed
         }
-        println(f"Time: ${end - start} ms, Memory: ${used / 1024d / 1024d}%.2f MB")
+        println(f"Time: ${end - start} ms, Memory: ${newUsed / 1024d / 1024d}%.2f MB")
       }
     }
 
-    var begin = System.currentTimeMillis
+    val begin = System.currentTimeMillis
 
     if (o.verbose && o.args.nonEmpty) {
       println("Reading Slang file arguments ...")
@@ -153,7 +154,7 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println(s"Parsing, resolving, and type ${if (o.outline) "outlining" else "checking"} Slang library files ...")
+      println(s"Parsing, resolving, ${if (o.outline) "and type outlining" else "type outlining, and type checking"} Slang library files ...")
       startTime()
     }
 
@@ -173,7 +174,7 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println("Parsing and resolving Slang programs in sourcepath ...")
+      println("Parsing and resolving Slang sourcepath programs ...")
       startTime()
     }
 
@@ -186,7 +187,7 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println("Building type hierarchy of Slang programs in sourcepath ...")
+      println("Building type hierarchy of Slang sourcepath programs ...")
       startTime()
     }
 
@@ -199,7 +200,7 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println("Type outlining Slang programs in sourcepath ...")
+      println("Type outlining Slang sourcepath programs ...")
       startTime()
     }
 
@@ -216,7 +217,7 @@ object SlangTipe {
 
       if (o.verbose && o.force.nonEmpty) {
         println()
-        println("Type checking Slang programs in the force list ...")
+        println("Type checking Slang entities in the force list ...")
         startTime()
       }
 
@@ -247,24 +248,45 @@ object SlangTipe {
       if (!ok) {
         return InvalidForceNames
       }
+
       th = TypeChecker.checkComponents(th, nameMap, typeMap, reporter)
+
+      if (reporter.hasIssue) {
+        reporter.printMessages()
+        return InvalidSources
+      }
+      if (o.force.nonEmpty) stopTime()
+
     } else {
 
       if (o.verbose) {
         println()
-        println("Type checking Slang programs in sourcepath ...")
+        println("Type checking Slang sourcepath programs ...")
         startTime()
       }
 
       th = TypeChecker.checkComponents(th, th.nameMap, th.typeMap, reporter)
-    }
 
-    if (reporter.hasIssue) {
-      reporter.printMessages()
-      return InvalidSources
-    }
+      if (reporter.hasIssue) {
+        reporter.printMessages()
+        return InvalidSources
+      }
+      stopTime()
 
-    if (!o.outline || (o.outline && o.force.nonEmpty)) stopTime()
+      if (o.verbose) {
+        println()
+        println("Sanity checking computed symbol and type information of Slang library files and sourcepath programs ...")
+        startTime()
+      }
+
+      PostTipeAttrChecker.check(th.nameMap, th.typeMap, reporter)
+
+      if (reporter.hasIssue) {
+        reporter.printMessages()
+        return InternalError
+      }
+      stopTime()
+    }
 
     val thOpt: Option[TypeHierarchy] = Some(th)
 
@@ -272,24 +294,37 @@ object SlangTipe {
 
       if (o.verbose) {
         println()
-        println(s"Parsing, resolving, and type checking ${slangFile._1} ...")
+        println(s"Parsing, resolving, type outlining, and type checking ${slangFile._1} ...")
         startTime()
       }
 
       Parser.parseTopUnit(slangFile._2._2, F, T, F, slangFile._2._1, reporter) match {
         case Some(p: TopUnit.Program) =>
-          TypeChecker.checkWorksheet(thOpt, p, reporter)
+          val p2 = TypeChecker.checkWorksheet(thOpt, p, reporter)
+          if (reporter.hasIssue) {
+            reporter.printMessages()
+            return InvalidSlangFiles
+          }
+          stopTime()
+
+          if (o.verbose) {
+            println()
+            println(s"Sanity checking computed symbol and type information of ${slangFile._1} ...")
+            startTime()
+          }
+
+          PostTipeAttrChecker.check(p2, reporter)
+
+          if (reporter.hasIssue) {
+            reporter.printMessages()
+            return InternalError
+          }
+          stopTime()
+
         case Some(_) => eprintln(s"File '${slangFile._1}' does not contain a Slang program")
         case _ =>
       }
     }
-
-    if (reporter.hasIssue) {
-      reporter.printMessages()
-      return InvalidSlangFiles
-    }
-
-    if (slangFiles.nonEmpty) stopTime()
 
     if (o.verbose) {
       val newUsed = rt.totalMemory - rt.freeMemory
@@ -297,7 +332,7 @@ object SlangTipe {
         used = newUsed
       }
       println()
-      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s, Memory: ${used / 1024d / 1024d}%.2f MB")
+      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s, Max memory: ${used / 1024d / 1024d}%.2f MB")
     }
 
     return 0

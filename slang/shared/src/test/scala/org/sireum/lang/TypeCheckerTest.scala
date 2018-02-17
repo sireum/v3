@@ -38,7 +38,6 @@ class TypeCheckerTest extends SireumSpec {
 
     implicit val _spec: SireumSpec = this
 
-
     "Passing" - {
 
       "Worksheet" - {
@@ -419,22 +418,7 @@ class TypeCheckerTest extends SireumSpec {
           }
         }
         assert(isPassing)
-        val t = ast.MTransformer(new ast.MTransformer.PrePost {
-          def $owned: Boolean = F
-          def $owned_=(b: Boolean): $internal.MutableMarker = this
-          def $clone: $internal.MutableMarker = this
-          def string: String = ""
-          override def preTypedAttr(o: ast.TypedAttr): ast.MTransformer.PreResult[ast.TypedAttr] = {
-            errIf(o.typedOpt.isEmpty)
-            super.preTypedAttr(o)
-          }
-          override def preResolvedAttr(o: ast.ResolvedAttr): ast.MTransformer.PreResult[ast.ResolvedAttr] = {
-            errIf(o.resOpt.isEmpty || o.typedOpt.isEmpty)
-            super.preResolvedAttr(o)
-          }
-
-        })
-        t.transformTopUnit(p)
+        PostTipeAttrChecker.check(p, reporter)
       case _ =>
     }
     if (reporter.hasIssue) {
@@ -454,7 +438,8 @@ class TypeCheckerTest extends SireumSpec {
     }
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope =
-      Resolver.Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
+      Resolver.Scope
+        .Local(HashMap.empty, HashMap.empty, None(), None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>
@@ -462,23 +447,8 @@ class TypeCheckerTest extends SireumSpec {
           reporter.printMessages()
           return false
         }
-        val t = ast.Transformer(new ast.Transformer.PrePost[Unit] {
-          override def preTypedAttr(ctx: Unit, o: ast.TypedAttr): ast.Transformer.PreResult[Unit, ast.TypedAttr] = {
-            errIf(o.typedOpt.isEmpty)
-            super.preTypedAttr(ctx, o)
-          }
-
-          override def preResolvedAttr(
-            ctx: Unit,
-            o: ast.ResolvedAttr
-          ): ast.Transformer.PreResult[Unit, ast.ResolvedAttr] = {
-            errIf(o.resOpt.isEmpty || o.typedOpt.isEmpty)
-            super.preResolvedAttr(ctx, o)
-          }
-
-          def string: String = ""
-        })
-        t.transformStmt((), checkedStmt)
+        PostTipeAttrChecker.check(checkedStmt, reporter)
+        reporter.printMessages()
         !reporter.hasIssue
       case _ =>
         !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
