@@ -279,7 +279,7 @@ object SlangTipe {
         startTime()
       }
 
-      PostTipeAttrChecker.check(th.nameMap, th.typeMap, reporter)
+      PostTipeAttrChecker.checkNameTypeMaps(th.nameMap, th.typeMap, reporter)
 
       if (reporter.hasIssue) {
         reporter.printMessages()
@@ -313,7 +313,7 @@ object SlangTipe {
             startTime()
           }
 
-          PostTipeAttrChecker.check(p2, reporter)
+          PostTipeAttrChecker.checkProgram(p2, reporter)
 
           if (reporter.hasIssue) {
             reporter.printMessages()

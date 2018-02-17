@@ -43,6 +43,17 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
+                             |@datatype trait Or[L, R]
+                             |@datatype class Left[L, R](value: L) extends Or[L, R]
+                             |@datatype class Right[L, R](value: R) extends Or[L, R]
+                             |val or: Or[Z, B] = Left(5)
+                             |or match {
+                             |  case Left(n) => assert(n == 5)
+                             |  case Right(b) => halt("Impossible")
+                             |}
+                             |""".stripMargin))
+
+        *(passingWorksheet("""import org.sireum._
                              |@enum object Three {
                              |  'One
                              |  'Two
@@ -418,7 +429,7 @@ class TypeCheckerTest extends SireumSpec {
           }
         }
         assert(isPassing)
-        PostTipeAttrChecker.check(p, reporter)
+        PostTipeAttrChecker.checkProgram(p, reporter)
       case _ =>
     }
     if (reporter.hasIssue) {
@@ -447,7 +458,7 @@ class TypeCheckerTest extends SireumSpec {
           reporter.printMessages()
           return false
         }
-        PostTipeAttrChecker.check(checkedStmt, reporter)
+        PostTipeAttrChecker.checkStmt(checkedStmt, reporter)
         reporter.printMessages()
         !reporter.hasIssue
       case _ =>

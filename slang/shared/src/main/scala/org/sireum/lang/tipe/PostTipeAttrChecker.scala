@@ -41,7 +41,7 @@ object PostTipeAttrChecker {
   val TypedResult: MTransformer.PreResult[TypedAttr] = MTransformer.PreResult[TypedAttr](F, MNone())
   val WhereDefResult: MTransformer.PreResult[WhereDef] = MTransformer.PreResult[WhereDef](F, MNone()) // TODO: Unskip contract
 
-  def check(nameMap: NameMap, typeMap: TypeMap, reporter: Reporter): Unit = {
+  def checkNameTypeMaps(nameMap: NameMap, typeMap: TypeMap, reporter: Reporter): Unit = {
     val t = PostTipeAttrChecker(HashSSet.empty)
     for (info <- nameMap.values) {
       info match {
@@ -68,13 +68,13 @@ object PostTipeAttrChecker {
     reporter.reports(t.messages.elements)
   }
 
-  def check(stmt: Stmt, reporter: Reporter): Unit = {
+  def checkStmt(stmt: Stmt, reporter: Reporter): Unit = {
     val t = PostTipeAttrChecker(HashSSet.empty)
     t.transformStmt(stmt)
     reporter.reports(t.messages.elements)
   }
 
-  def check(program: TopUnit.Program, reporter: Reporter): Unit = {
+  def checkProgram(program: TopUnit.Program, reporter: Reporter): Unit = {
     val t = PostTipeAttrChecker(HashSSet.empty)
     t.transformTopUnit(program)
     reporter.reports(t.messages.elements)

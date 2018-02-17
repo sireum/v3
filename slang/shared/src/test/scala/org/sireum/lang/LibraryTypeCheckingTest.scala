@@ -54,7 +54,7 @@ class LibraryTypeCheckingTest extends SireumSpec {
       val nameMap: Resolver.NameMap = if (all) tc.typeHierarchy.nameMap else HashMap ++ ISZ(nameInfo(name))
       val typeMap: Resolver.TypeMap = if (all) tc.typeHierarchy.typeMap else HashMap ++ ISZ(typeInfo(name))
       val th = TypeChecker.checkComponents(tc.typeHierarchy, nameMap, typeMap, reporter)
-      PostTipeAttrChecker.check(th.nameMap, th.typeMap, reporter)
+      PostTipeAttrChecker.checkNameTypeMaps(th.nameMap, th.typeMap, reporter)
       reporter.printMessages()
       !reporter.hasIssue
     }
