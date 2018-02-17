@@ -163,9 +163,12 @@ lazy val webSettings = sireumSettings ++ Seq(
   )
 )
 
-lazy val slangSettings = sireumSettings ++ Seq(
-  scalacOptions ++= Seq("-Yrangepos"),
+lazy val commonSlangSettings = Seq(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion)
+)
+
+lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
+  scalacOptions ++= Seq("-Yrangepos")
 )
 
 val depOpt = Some("test->test;compile->compile;test->compile")
@@ -316,7 +319,7 @@ lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilar
 lazy val java = toSbtJvmProject(javaPI)
 
 lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, slangPI)
-lazy val cli = toSbtJvmProject(cliPI)
+lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, skemaPI)
 lazy val awasT = toSbtCrossProject(awasPI, Seq(Test / parallelExecution := false))
