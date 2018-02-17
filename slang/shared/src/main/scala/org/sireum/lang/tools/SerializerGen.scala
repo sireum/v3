@@ -155,6 +155,10 @@ object SerializerGen {
                  |  @record class Parser(input: String) {
                  |    val parser: Json.Parser = Json.Parser.create(input)
                  |
+                 |    def errorOpt: Option[Json.ErrorMsg] = {
+                 |      return parser.errorOpt
+                 |    }
+                 |
                  |    ${(parsers, "\n\n")}
                  |
                  |    def eof(): B = {
