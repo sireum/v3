@@ -223,23 +223,11 @@ object TypeHierarchy {
 ) {
 
   @pure def rootTypes: ISZ[AST.Typed.Name] = {
-    var r = ISZ[AST.Typed.Name]()
-    for (ps <- poset.parents.entries) {
-      if (ps._2.isEmpty) {
-        r = r :+ ps._1.t
-      }
-    }
-    return r
+    return poset.rootNodes.map(tn => tn.t)
   }
 
   @pure def rootTypeNames(): ISZ[QName] = {
-    var r = ISZ[QName]()
-    for (p <- poset.parents.entries) {
-      if (p._2.isEmpty) {
-        r = r :+ p._1.t.ids
-      }
-    }
-    return r
+    return poset.rootNodes.map(tn => tn.t.ids)
   }
 
   @pure def lub(ts: ISZ[AST.Typed]): Option[AST.Typed] = {
@@ -368,16 +356,17 @@ object TypeHierarchy {
   }
 
   def checkCyclic(reporter: Reporter): Unit = {
-    var cache = HashMap.empty[TypeHierarchy.TypeName, HashSet[TypeHierarchy.TypeName]]
+    var cache = HashMap.empty[Poset.Index, HashSet[Poset.Index]]
     for (t <- rootTypes) {
-      val r = poset.descendantsCache(TypeHierarchy.TypeName(t), cache)
+      val n = poset.nodes.get(TypeHierarchy.TypeName(t)).get
+      val r = Poset.Internal.descendantsCache(poset, n, cache)
       cache = r._2
     }
     for (kv <- cache.entries) {
       val k = kv._1
       val v = kv._2
       if (v.contains(k)) {
-        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(k.t.ids, ".")}.".render)
+        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(poset.nodesInverse(k).t.ids, ".")}.".render)
       }
     }
   }
