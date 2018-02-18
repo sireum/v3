@@ -808,7 +808,8 @@ import TypeChecker._
     }
 
     def checkBinary(exp: AST.Exp.Binary): (AST.Exp, Option[AST.Typed]) = {
-      val (newLeft, leftTypeOpt) = checkExp(None(), scope, exp.left, reporter)
+      val rep = AccumulatingReporter.create
+      val (newLeft, leftTypeOpt) = checkExp(None(), scope, exp.left, rep)
       if (leftTypeOpt.isEmpty) {
         return (exp(left = newLeft), None())
       }
@@ -823,6 +824,7 @@ import TypeChecker._
       }
 
       if (exp.op == AST.Exp.BinaryOp.Eq || exp.op == AST.Exp.BinaryOp.Ne) {
+        reporter.reports(rep.messages)
         val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
         rightTypeOpt match {
           case Some(rightType) =>
@@ -841,6 +843,7 @@ import TypeChecker._
           AST.Typed.bOpt
         )
       } else if (exp.op == AST.Exp.BinaryOp.MapsTo) {
+        reporter.reports(rep.messages)
         val (right, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
         val tOpt: Option[AST.Typed] = rightTypeOpt match {
           case Some(rightType) => Some(AST.Typed.Tuple(ISZ(leftType, rightType)))
@@ -856,6 +859,7 @@ import TypeChecker._
 
       lOpt match {
         case Some(leftKind) =>
+          reporter.reports(rep.messages)
           val (newRight, rightTypeOpt) = checkExp(None(), scope, exp.right, reporter)
 
           rightTypeOpt match {
