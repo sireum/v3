@@ -1851,7 +1851,16 @@ import org.sireum.U64._
   }
 
   @pure override def string: String = {
-    return s"[$beginLine, $beginColumn]"
+    fileUriOpt match {
+      case Some(fileUri) =>
+        var i = ops.StringOps(fileUri).lastIndexOf('/')
+        if (i < 0) {
+          i = 0
+        }
+        return s"[${ops.StringOps(fileUri).substring(i, fileUri.size)}, $beginLine, $beginColumn]"
+      case _ => return s"[$beginLine, $beginColumn]"
+    }
+
   }
 
 }
