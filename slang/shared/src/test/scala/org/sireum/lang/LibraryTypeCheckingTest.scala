@@ -41,22 +41,28 @@ class LibraryTypeCheckingTest extends SireumSpec {
       val (tc, rep) = TypeChecker.libraryReporter
       rep.printMessages()
       assert(!rep.hasIssue)
-      def nameInfo(name: Predef.String): (ISZ[String], Resolver.Info) = {
+      def nameInfo(th: TypeHierarchy, name: Predef.String): Resolver.NameMap = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
-        return (ids, tc.typeHierarchy.nameMap.get(ids).get)
+        return HashMap ++ ISZ((ids, th.nameMap.get(ids).get))
       }
-      def typeInfo(name: Predef.String): (ISZ[String], Resolver.TypeInfo) = {
+      def typeInfo(th: TypeHierarchy, name: Predef.String): Resolver.TypeMap = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
-        return (ids, tc.typeHierarchy.typeMap.get(ids).get)
+        return HashMap ++ ISZ((ids, th.typeMap.get(ids).get))
       }
       val reporter = AccumulatingReporter.create
       reporter.reports(rep.messages)
       val all = T
       val name = ""
-      val nameMap: Resolver.NameMap = if (all) tc.typeHierarchy.nameMap else HashMap ++ ISZ(nameInfo(name))
-      val typeMap: Resolver.TypeMap = if (all) tc.typeHierarchy.typeMap else HashMap ++ ISZ(typeInfo(name))
+      val nameMap: Resolver.NameMap = if (all) tc.typeHierarchy.nameMap else nameInfo(tc.typeHierarchy, name)
+      val typeMap: Resolver.TypeMap = if (all) tc.typeHierarchy.typeMap else typeInfo(tc.typeHierarchy, name)
       val th = TypeChecker.checkComponents(tc.typeHierarchy, nameMap, typeMap, reporter)
-      PostTipeAttrChecker.checkNameTypeMaps(th.nameMap, th.typeMap, reporter)
+      if (!reporter.hasError) {
+        if (all) {
+          PostTipeAttrChecker.checkNameTypeMaps(th.nameMap, th.typeMap, reporter)
+        } else {
+          PostTipeAttrChecker.checkNameTypeMaps(nameInfo(th, name), typeInfo(th, name), reporter)
+        }
+      }
       reporter.printMessages()
       !reporter.hasIssue
     }
