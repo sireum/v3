@@ -452,9 +452,7 @@ class TypeCheckerTest extends SireumSpec {
       tc
     }
     val stmt = Parser(input).parseStmt[ast.Stmt]
-    val scope =
-      Resolver.Scope
-        .Local(HashMap.empty, HashMap.empty, None(), None(), Some(Resolver.Scope.Global(ISZ(), ISZ(), ISZ())))
+    val scope = Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = AccumulatingReporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>

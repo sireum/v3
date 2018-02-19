@@ -1,0 +1,750 @@
+// #Sireum
+/*
+ Copyright (c) 2017, Robby, Kansas State University
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package org.sireum.lang.symbol
+
+import org.sireum._
+import org.sireum.lang.{ast => AST}
+import Resolver._
+
+@datatype trait Scope {
+
+  @pure def outerOpt: Option[Scope]
+
+  @pure def resolveName(globalNameMap: NameMap, name: QName): Option[Info]
+
+  @pure def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo]
+
+  @pure def returnOpt: Option[AST.Typed]
+
+  @pure def thisOpt: Option[AST.Typed]
+}
+
+object Scope {
+
+  @datatype class Local(
+    nameMap: HashMap[String, Info],
+    typeMap: HashMap[String, TypeInfo],
+    localThisOpt: Option[AST.Typed],
+    methodReturnOpt: Option[AST.Typed],
+    val outerOpt: Option[Scope]
+  ) extends Scope {
+
+    @pure override def thisOpt: Option[AST.Typed] = {
+      localThisOpt match {
+        case r @ Some(_) => return r
+        case _ =>
+          outerOpt match {
+            case Some(outer) => return outer.thisOpt
+            case _ => return None()
+          }
+      }
+    }
+
+    @pure override def returnOpt: Option[AST.Typed] = {
+      methodReturnOpt match {
+        case r @ Some(_) => return r
+        case _ =>
+          outerOpt match {
+            case Some(outer) => return outer.returnOpt
+            case _ => return None()
+          }
+      }
+    }
+
+    @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
+      if (name.size == 1) {
+        val infoOpt = nameMap.get(name(0))
+        if (infoOpt.nonEmpty) {
+          return infoOpt
+        }
+      }
+      outerOpt match {
+        case Some(scope) => return scope.resolveName(globalNameMap, name)
+        case _ => return None()
+      }
+    }
+
+    @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+      if (name.size == 1) {
+        val typeInfoOpt = typeMap.get(name(0))
+        if (typeInfoOpt.nonEmpty) {
+          return typeInfoOpt
+        }
+      }
+      outerOpt match {
+        case Some(scope) => return scope.resolveType(globalTypeMap, name)
+        case _ => return None()
+      }
+    }
+  }
+
+  @datatype class Global(packageName: QName, imports: ISZ[AST.Stmt.Import], enclosingName: QName) extends Scope {
+
+    @pure override def outerOpt: Option[Scope] = {
+      return None()
+    }
+
+    @pure override def thisOpt: Option[AST.Typed] = {
+      return None()
+    }
+
+    @pure override def returnOpt: Option[AST.Typed] = {
+      return None()
+    }
+
+    @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
+      return resolveNameMemoized(globalNameMap, name)
+    }
+
+    @pure def resolveImported(globalNameMap: NameMap, name: QName): Option[Info] = {
+      for (i <- imports.indices.reverse) {
+        val impor = imports(i)
+        val importers = impor.importers
+        for (j <- importers.indices.reverse) {
+          val importer = importers(j)
+          val contextName = AST.Util.ids2strings(importer.name.ids)
+          importer.selectorOpt match {
+            case Some(selector: AST.Stmt.Import.MultiSelector) =>
+              val nss = selector.selectors
+              val name0 = name(0)
+              for (k <- nss.indices.reverse) {
+                val ns = nss(k)
+                if (name0 == ns.to.value) {
+                  val n = (contextName :+ ns.from.value) ++ ops.ISZOps(name).drop(1)
+                  val rOpt = globalNameMap.get(packageName ++ n)
+                  if (rOpt.nonEmpty) {
+                    return rOpt
+                  }
+                  val rGlobalOpt = globalNameMap.get(n)
+                  if (rGlobalOpt.nonEmpty) {
+                    return rGlobalOpt
+                  }
+                }
+              }
+            case Some(_: AST.Stmt.Import.WildcardSelector) =>
+              val n = contextName ++ name
+              val rOpt = globalNameMap.get(n)
+              if (rOpt.nonEmpty) {
+                return rOpt
+              }
+              val rGlobalOpt = globalNameMap.get(packageName ++ n)
+              if (rGlobalOpt.nonEmpty) {
+                return rGlobalOpt
+              }
+            case None() =>
+              val name0 = name(0)
+              val contextLast = contextName(contextName.size - 1)
+              if (contextLast == name0) {
+                val n = contextName ++ ops.ISZOps(name).drop(1)
+                val rOpt = globalNameMap.get(packageName ++ n)
+                if (rOpt.nonEmpty) {
+                  return rOpt
+                }
+                val rGlobalOpt = globalNameMap.get(n)
+                if (rGlobalOpt.nonEmpty) {
+                  return rGlobalOpt
+                }
+              }
+          }
+        }
+      }
+      return None()
+    }
+
+    @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+      return resolveTypeMemoized(globalTypeMap, name)
+    }
+
+    @pure def resolveImportedType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+      for (i <- imports.indices.reverse) {
+        val impor = imports(i)
+        val importers = impor.importers
+        for (j <- importers.indices.reverse) {
+          val importer = importers(j)
+          val contextName = AST.Util.ids2strings(importer.name.ids)
+          importer.selectorOpt match {
+            case Some(selector: AST.Stmt.Import.MultiSelector) =>
+              val nss = selector.selectors
+              val name0 = name(0)
+              for (k <- nss.indices.reverse) {
+                val ns = nss(k)
+                if (name0 == ns.to.value) {
+                  val n = (contextName :+ ns.from.value) ++ ops.ISZOps(name).drop(1)
+                  val rOpt = globalTypeMap.get(packageName ++ n)
+                  if (rOpt.nonEmpty) {
+                    return rOpt
+                  }
+                  val rGlobalOpt = globalTypeMap.get(n)
+                  if (rGlobalOpt.nonEmpty) {
+                    return rGlobalOpt
+                  }
+                }
+              }
+            case Some(_: AST.Stmt.Import.WildcardSelector) =>
+              val n = contextName ++ name
+              val rOpt = globalTypeMap.get(packageName ++ n)
+              if (rOpt.nonEmpty) {
+                return rOpt
+              }
+              val rGlobalOpt = globalTypeMap.get(n)
+              if (rGlobalOpt.nonEmpty) {
+                return rGlobalOpt
+              }
+            case None() =>
+              val name0 = name(0)
+              val contextLast = contextName(contextName.size - 1)
+              if (contextLast == name0) {
+                val n = contextName ++ ops.ISZOps(name).drop(1)
+                val rOpt = globalTypeMap.get(packageName ++ n)
+                if (rOpt.nonEmpty) {
+                  return rOpt
+                }
+                val rGlobalOpt = globalTypeMap.get(n)
+                if (rGlobalOpt.nonEmpty) {
+                  return rGlobalOpt
+                }
+              }
+          }
+        }
+      }
+      return None()
+    }
+
+    @memoize def resolveNameMemoized(@hidden globalNameMap: NameMap, name: QName): Option[Info] = {
+      val globalOpt = globalNameMap.get(name)
+      if (globalOpt.nonEmpty) {
+        return globalOpt
+      }
+
+      var en = enclosingName
+      while (en.size >= packageName.size && en != packageName) {
+        val enclosedOpt = globalNameMap.get(en ++ name)
+        if (enclosedOpt.nonEmpty) {
+          return enclosedOpt
+        }
+        en = ops.ISZOps(en).dropRight(1)
+      }
+
+      val importedOpt = resolveImported(globalNameMap, name)
+      if (importedOpt.nonEmpty) {
+        return importedOpt
+      }
+
+      return globalNameMap.get(packageName ++ name)
+    }
+
+    @memoize def resolveTypeMemoized(@hidden globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+      val globalTypeOpt = globalTypeMap.get(name)
+      if (globalTypeOpt.nonEmpty) {
+        return globalTypeOpt
+      }
+
+      var en = enclosingName
+      while (en.size >= packageName.size && en != packageName) {
+        val enclosedTypeOpt = globalTypeMap.get(en ++ name)
+        if (enclosedTypeOpt.nonEmpty) {
+          return enclosedTypeOpt
+        }
+        en = ops.ISZOps(en).dropRight(1)
+      }
+
+      val importedTypeOpt = resolveImportedType(globalTypeMap, name)
+      if (importedTypeOpt.nonEmpty) {
+        return importedTypeOpt
+      }
+
+      return globalTypeMap.get(packageName ++ name)
+    }
+  }
+
+}
+
+@datatype trait Info {
+  @pure def name: QName
+
+  @pure def posOpt: Option[AST.PosInfo]
+}
+
+object Info {
+
+  @datatype class Package(val name: QName, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo]) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return None[AST.PosInfo]()
+    }
+  }
+
+  @datatype class Var(
+    owner: QName,
+    isInObject: B,
+    scope: Scope,
+    ast: AST.Stmt.Var,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def outlined: B = {
+      ast.tipeOpt match {
+        case Some(t) => return t.typedOpt.nonEmpty
+        case _ => return T
+      }
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+  }
+
+  @datatype class SpecVar(
+    owner: QName,
+    isInObject: B,
+    scope: Scope,
+    ast: AST.Stmt.SpecVar,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def outlined: B = {
+      return ast.tipe.typedOpt.nonEmpty
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+  }
+
+  @datatype class Method(
+    owner: QName,
+    isInObject: B,
+    scope: Scope,
+    hasBody: B,
+    ast: AST.Stmt.Method,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def outlined: B = {
+      return ast.sig.returnType.typedOpt.nonEmpty
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.sig.id.value
+    }
+
+  }
+
+  @datatype class SpecMethod(
+    val owner: QName,
+    isInObject: B,
+    scope: Scope,
+    ast: AST.Stmt.SpecMethod,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def outlined: B = {
+      return ast.sig.returnType.typedOpt.nonEmpty
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.sig.id.value
+    }
+  }
+
+  @datatype class Object(
+    owner: QName,
+    isSynthetic: B,
+    scope: Scope.Global,
+    outlined: B,
+    typeChecked: B,
+    ast: AST.Stmt.Object,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+  }
+
+  @datatype class ExtMethod(
+    owner: QName,
+    scope: Scope.Global,
+    ast: AST.Stmt.ExtMethod,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.sig.id.value
+    }
+
+    @pure def outlined: B = {
+      return ast.sig.returnType.typedOpt.nonEmpty
+    }
+
+  }
+
+  object Enum {
+
+    val elementTypeSuffix: String = "Type"
+
+    val byNameResOpt: Option[AST.ResolvedInfo] = Some(
+      AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumByName)
+    )
+
+    val byOrdinalResOpt: Option[AST.ResolvedInfo] = Some(
+      AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumByOrdinal)
+    )
+
+  }
+
+  @datatype class Enum(
+    val name: QName,
+    elements: Map[String, Option[AST.ResolvedInfo]],
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo],
+    elementTypedOpt: Option[AST.Typed],
+    val posOpt: Option[AST.PosInfo]
+  ) extends Info {
+
+    val byNameTypedOpt: Option[AST.Typed] = Some(
+      AST.Typed.Method(
+        T,
+        AST.MethodMode.Method,
+        ISZ(),
+        name,
+        "byName",
+        ISZ(),
+        ISZ(),
+        AST.Typed.Fun(T, F, ISZ(AST.Typed.string), AST.Typed.Name(AST.Typed.optionName, ISZ(elementTypedOpt.get)))
+      )
+    )
+
+    val byOrdinalTypedOpt: Option[AST.Typed] = Some(
+      AST.Typed.Method(
+        T,
+        AST.MethodMode.Method,
+        ISZ(),
+        name,
+        "byOrdinal",
+        ISZ(),
+        ISZ(),
+        AST.Typed.Fun(T, F, ISZ(AST.Typed.z), AST.Typed.Name(AST.Typed.optionName, ISZ(elementTypedOpt.get)))
+      )
+    )
+  }
+
+  @datatype class EnumElement(
+    owner: QName,
+    id: String,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo],
+    val posOpt: Option[AST.PosInfo]
+  ) extends Info {
+
+    @pure override def name: QName = {
+      return owner :+ id
+    }
+
+  }
+
+  @datatype class LocalVar(
+    val name: QName,
+    isVal: B,
+    ast: AST.Id,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+  }
+
+  @datatype class QuantVar(val name: QName, ast: AST.Id, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo])
+      extends Info {
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+  }
+
+}
+
+@datatype trait TypeInfo {
+
+  @pure def name: QName
+
+  @pure def canHaveCompanion: B
+
+  @pure def posOpt: Option[AST.PosInfo]
+}
+
+object TypeInfo {
+
+  @datatype class SubZ(owner: QName, ast: AST.Stmt.SubZ) extends TypeInfo {
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+
+    @pure override def canHaveCompanion: B = {
+      return F
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+  }
+
+  object Enum {
+
+    val nameResOpt: Option[AST.ResolvedInfo] = Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumName))
+
+    val ordinalResOpt: Option[AST.ResolvedInfo] = Some(
+      AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.EnumOrdinal)
+    )
+  }
+
+  @datatype class Enum(owner: QName, elements: Map[String, Option[AST.ResolvedInfo]], val posOpt: Option[AST.PosInfo])
+      extends TypeInfo {
+
+    val nameTypedOpt: Option[AST.Typed] = Some(
+      AST.Typed.Method(
+        F,
+        AST.MethodMode.Method,
+        ISZ(),
+        name,
+        "name",
+        ISZ(),
+        ISZ(),
+        AST.Typed.Fun(T, T, ISZ(), AST.Typed.string)
+      )
+    )
+
+    val ordinalTypedOpt: Option[AST.Typed] = Some(
+      AST.Typed
+        .Method(F, AST.MethodMode.Method, ISZ(), name, "ordinal", ISZ(), ISZ(), AST.Typed.Fun(T, T, ISZ(), AST.Typed.z))
+    )
+
+    @pure override def name: QName = {
+      return owner :+ Info.Enum.elementTypeSuffix
+    }
+
+    @pure override def canHaveCompanion: B = {
+      return F
+    }
+  }
+
+  @datatype class Sig(
+    owner: QName,
+    outlined: B,
+    typeChecked: B,
+    tpe: AST.Typed.Name,
+    ancestors: ISZ[AST.Typed.Name],
+    specVars: HashMap[String, Info.SpecVar],
+    specMethods: HashMap[String, Info.SpecMethod],
+    methods: HashMap[String, Info.Method],
+    scope: Scope.Global,
+    ast: AST.Stmt.Sig
+  ) extends TypeInfo {
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+
+    @pure override def canHaveCompanion: B = {
+      return T
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def typeRes(id: String, inSpec: B): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+
+      @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+        return (None(), None())
+      }
+
+      methods.get(id) match {
+        case Some(m) =>
+          return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
+          else (m.typedOpt, m.resOpt)
+        case _ =>
+      }
+
+      if (!inSpec) {
+        return noResult
+      }
+
+      specMethods.get(id) match {
+        case Some(sm) => return (sm.typedOpt, sm.resOpt)
+        case _ =>
+      }
+
+      specVars.get(id) match {
+        case Some(sv) => return (sv.typedOpt, sv.resOpt)
+        case _ =>
+      }
+
+      return noResult
+    }
+  }
+
+  @datatype class AbstractDatatype(
+    owner: QName,
+    outlined: B,
+    typeChecked: B,
+    tpe: AST.Typed.Name,
+    constructorTypeOpt: Option[AST.Typed],
+    constructorResOpt: Option[AST.ResolvedInfo],
+    extractorTypeMap: Map[String, AST.Typed],
+    extractorResOpt: Option[AST.ResolvedInfo],
+    ancestors: ISZ[AST.Typed.Name],
+    specVars: HashMap[String, Info.SpecVar],
+    vars: HashMap[String, Info.Var],
+    specMethods: HashMap[String, Info.SpecMethod],
+    methods: HashMap[String, Info.Method],
+    scope: Scope.Global,
+    ast: AST.Stmt.AbstractDatatype
+  ) extends TypeInfo {
+
+    @pure override def canHaveCompanion: B = {
+      return T
+    }
+
+    @pure override def name: QName = {
+      return owner :+ ast.id.value
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+
+    @pure def typeRes(id: String, inSpec: B): (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+
+      @pure def noResult: (Option[AST.Typed], Option[AST.ResolvedInfo]) = {
+        return (None(), None())
+      }
+
+      vars.get(id) match {
+        case Some(v) => return (v.typedOpt, v.resOpt)
+        case _ =>
+      }
+
+      methods.get(id) match {
+        case Some(m) =>
+          return if (inSpec && m.ast.purity == AST.Purity.Impure) noResult
+          else (m.typedOpt, m.resOpt)
+        case _ =>
+      }
+
+      if (!inSpec) {
+        return noResult
+      }
+
+      specMethods.get(id) match {
+        case Some(sm) => return (sm.typedOpt, sm.resOpt)
+        case _ =>
+      }
+
+      specVars.get(id) match {
+        case Some(sv) => return (sv.typedOpt, sv.resOpt)
+        case _ =>
+      }
+
+      return noResult
+    }
+  }
+
+  @datatype class TypeAlias(val name: QName, scope: Scope.Global, ast: AST.Stmt.TypeAlias) extends TypeInfo {
+
+    @pure def outlined: B = {
+      return ast.tipe.typedOpt.nonEmpty
+    }
+
+    @pure override def canHaveCompanion: B = {
+      return F
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.attr.posOpt
+    }
+  }
+
+  @datatype class TypeVar(id: String, ast: AST.TypeParam) extends TypeInfo {
+
+    @pure override def name: QName = {
+      return ISZ(id)
+    }
+
+    @pure override def canHaveCompanion: B = {
+      return F
+    }
+
+    @pure override def posOpt: Option[AST.PosInfo] = {
+      return ast.id.attr.posOpt
+    }
+  }
+
+  @datatype class Members(
+    specVars: HashMap[String, Info.SpecVar],
+    vars: HashMap[String, Info.Var],
+    specMethods: HashMap[String, Info.SpecMethod],
+    methods: HashMap[String, Info.Method]
+  )
+
+}

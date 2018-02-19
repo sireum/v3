@@ -28,6 +28,7 @@ package org.sireum.lang.tipe
 
 import org.sireum._
 import org.sireum.lang.ast._
+import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util.Reporter
 

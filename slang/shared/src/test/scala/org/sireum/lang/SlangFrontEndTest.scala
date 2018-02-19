@@ -30,7 +30,7 @@ import org.sireum.test._
 import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
-import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
+import org.sireum.lang.symbol._
 import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
 class SlangFrontEndTest extends SireumSpec {
@@ -330,11 +330,8 @@ class SlangFrontEndTest extends SireumSpec {
     var b = r.unitOpt.nonEmpty && !reporter.hasIssue
     if (!b) report(r, reporter)
     else {
-      val gdr = GlobalDeclarationResolver(
-        SHashMap.empty[ISZ[SString], Resolver.Info],
-        SHashMap.empty[ISZ[SString], Resolver.TypeInfo],
-        reporter
-      )
+      val gdr =
+        GlobalDeclarationResolver(SHashMap.empty[ISZ[SString], Info], SHashMap.empty[ISZ[SString], TypeInfo], reporter)
       reporter.reports(gdr.reporter.messages)
       if (reporter.hasIssue) report(r, reporter)
       r.unitOpt.foreach {

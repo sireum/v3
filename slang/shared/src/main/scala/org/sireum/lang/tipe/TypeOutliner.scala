@@ -29,6 +29,7 @@ package org.sireum.lang.tipe
 import org.sireum._
 import org.sireum.ops._
 import org.sireum.lang.{ast => AST}
+import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
 
