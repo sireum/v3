@@ -219,7 +219,6 @@ object TruthTableVerifier {
           missing = T
         }
         if (missing) {
-          println(resultMap)
           reporter.error(row.values.attr.posOpt, kind, s"There are still some missing truth values.")
         }
         if ((tt.isSequent && p) || !tt.isSequent) {
