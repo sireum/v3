@@ -56,9 +56,10 @@ object SerializerGenJvm {
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
-        SSome(SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
-          Util.ids2strings(p.packageName.ids), reporter).gen(lOpt, fOpt, nameOpt).
-          render.value)
+        val gen = SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
+          Util.ids2strings(p.packageName.ids), reporter)
+        reporter.reports(gen.reporter.messages)
+        SSome(gen.gen(lOpt, fOpt, nameOpt).render.value)
       case _ =>
         reporter.error(SNone(), messageKind, "Expecting program input.")
         return SNone()

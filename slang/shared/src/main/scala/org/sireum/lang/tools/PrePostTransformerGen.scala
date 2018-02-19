@@ -46,9 +46,11 @@ object PrePostTransformerGen {
     val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, reporter)
     gdr.resolveProgram(p)
     val name = nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer")
-    PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
-      AST.Util.ids2strings(p.packageName.ids), isImmutable, reporter).gen(licenseOpt, fileOpt, name)
-
+    val t = PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
+      AST.Util.ids2strings(p.packageName.ids), isImmutable, reporter)
+    val r = t.gen(licenseOpt, fileOpt, name)
+    reporter.reports(t.reporter.messages)
+    return r
   }
 }
 
@@ -322,6 +324,23 @@ object PrePostTransformerGen {
         case "B" => return None[QName]()
         case "C" => return None[QName]()
         case "Z" => return None[QName]()
+        case "Z8" => return None[QName]()
+        case "Z16" => return None[QName]()
+        case "Z32" => return None[QName]()
+        case "Z64" => return None[QName]()
+        case "N" => return None[QName]()
+        case "N8" => return None[QName]()
+        case "N16" => return None[QName]()
+        case "N32" => return None[QName]()
+        case "N64" => return None[QName]()
+        case "S8" => return None[QName]()
+        case "S16" => return None[QName]()
+        case "S32" => return None[QName]()
+        case "S64" => return None[QName]()
+        case "U8" => return None[QName]()
+        case "U16" => return None[QName]()
+        case "U32" => return None[QName]()
+        case "U64" => return None[QName]()
         case "F32" => return None[QName]()
         case "F64" => return None[QName]()
         case "R" => return None[QName]()
