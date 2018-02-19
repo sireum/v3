@@ -1103,6 +1103,7 @@ import TypeChecker._
                       case "ordinal" => return (info.ordinalTypedOpt, TypeInfo.Enum.ordinalResOpt)
                       case _ =>
                     }
+                  case _ =>
                 }
               case _ =>
             }
