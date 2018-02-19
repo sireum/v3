@@ -29,6 +29,7 @@ package org.sireum.lang.tools
 import org.sireum._
 import org.sireum.ops._
 import org.sireum.lang.{ast => AST}
+import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
 import org.sireum.lang.util._
 
@@ -218,7 +219,7 @@ object SerializerGen {
     }
 
     @pure def printEnum(name: ST, tpe: ST, printEnumCases: ISZ[ST]): ST = {
-      return st"""@pure def print$name(o: $tpe.Type): ST = {
+      return st"""@pure def print${name}Type(o: $tpe.Type): ST = {
       |  val value: String = o match {
       |    ${(printEnumCases, "\n")}
       |  }
@@ -287,7 +288,7 @@ object SerializerGen {
     }
 
     @pure def parseEnum(name: ST, tpe: ST, parseEnumCases: ISZ[ST]): ST = {
-      return st"""def parse$name(): $tpe.Type = {
+      return st"""def parse${name}Type(): $tpe.Type = {
       |  val r = parse${name}T(F)
       |  return r
       |}
@@ -464,7 +465,7 @@ object SerializerGen {
     }
 
     @pure def printEnum(name: ST, tpe: ST, printEnumCases: ISZ[ST]): ST = {
-      return st"""def write$name(o: $tpe.Type): Unit = {
+      return st"""def write${name}Type(o: $tpe.Type): Unit = {
       |  writer.writeZ(o.ordinal)
       |}"""
     }
@@ -529,7 +530,7 @@ object SerializerGen {
     }
 
     @pure def parseEnum(name: ST, tpe: ST, parseEnumCases: ISZ[ST]): ST = {
-      return st"""def read$name(): $tpe.Type = {
+      return st"""def read${name}Type(): $tpe.Type = {
       |  val r = reader.readZ()
       |  return $tpe.byOrdinal(r).get
       |}"""
@@ -593,8 +594,8 @@ object SerializerGen {
     }
 
     def genEnum(ti: TypeInfo.Enum): Unit = {
-      val enumTypeString = typeNameString(packageName, ti.name)
-      val enumTypeName = typeName(packageName, ti.name)
+      val enumTypeString = typeNameString(packageName, ti.owner)
+      val enumTypeName = typeName(packageName, ti.owner)
       printers = printers :+
         template.printEnum(
           enumTypeName,

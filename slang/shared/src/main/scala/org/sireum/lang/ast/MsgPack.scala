@@ -415,7 +415,7 @@ object MsgPack {
       }
     }
 
-    def writePurity(o: Purity.Type): Unit = {
+    def writePurityType(o: Purity.Type): Unit = {
       writer.writeZ(o.ordinal)
     }
 
@@ -481,7 +481,7 @@ object MsgPack {
 
     def writeStmtMethod(o: Stmt.Method): Unit = {
       writer.writeZ(Constants.StmtMethod)
-      writePurity(o.purity)
+      writePurityType(o.purity)
       writer.writeB(o.hasOverride)
       writer.writeB(o.isHelper)
       writeMethodSig(o.sig)
@@ -920,13 +920,13 @@ object MsgPack {
       writeTypedAttr(o.attr)
     }
 
-    def writeExpUnaryOp(o: Exp.UnaryOp.Type): Unit = {
+    def writeExpUnaryOpType(o: Exp.UnaryOp.Type): Unit = {
       writer.writeZ(o.ordinal)
     }
 
     def writeExpUnary(o: Exp.Unary): Unit = {
       writer.writeZ(Constants.ExpUnary)
-      writeExpUnaryOp(o.op)
+      writeExpUnaryOpType(o.op)
       writeExp(o.exp)
       writeResolvedAttr(o.attr)
     }
@@ -1422,7 +1422,7 @@ object MsgPack {
       }
     }
 
-    def writeMethodMode(o: MethodMode.Type): Unit = {
+    def writeMethodModeType(o: MethodMode.Type): Unit = {
       writer.writeZ(o.ordinal)
     }
 
@@ -1475,7 +1475,7 @@ object MsgPack {
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
       writer.writeB(o.isInObject)
-      writeMethodMode(o.mode)
+      writeMethodModeType(o.mode)
       writer.writeISZ(o.typeParams, writer.writeString)
       writer.writeISZ(o.owner, writer.writeString)
       writer.writeString(o.name)
@@ -1523,13 +1523,13 @@ object MsgPack {
       }
     }
 
-    def writeResolvedInfoBuiltInKind(o: ResolvedInfo.BuiltIn.Kind.Type): Unit = {
+    def writeResolvedInfoBuiltInKindType(o: ResolvedInfo.BuiltIn.Kind.Type): Unit = {
       writer.writeZ(o.ordinal)
     }
 
     def writeResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn): Unit = {
       writer.writeZ(Constants.ResolvedInfoBuiltIn)
-      writeResolvedInfoBuiltInKind(o.kind)
+      writeResolvedInfoBuiltInKindType(o.kind)
     }
 
     def writeResolvedInfoPackage(o: ResolvedInfo.Package): Unit = {
@@ -1565,7 +1565,7 @@ object MsgPack {
     def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
       writer.writeZ(Constants.ResolvedInfoMethod)
       writer.writeB(o.isInObject)
-      writeMethodMode(o.mode)
+      writeMethodModeType(o.mode)
       writer.writeISZ(o.typeParams, writer.writeString)
       writer.writeISZ(o.owner, writer.writeString)
       writer.writeString(o.name)
@@ -1728,7 +1728,7 @@ object MsgPack {
       }
     }
 
-    def readPurity(): Purity.Type = {
+    def readPurityType(): Purity.Type = {
       val r = reader.readZ()
       return Purity.byOrdinal(r).get
     }
@@ -1868,7 +1868,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.StmtMethod)
       }
-      val purity = readPurity()
+      val purity = readPurityType()
       val hasOverride = reader.readB()
       val isHelper = reader.readB()
       val sig = readMethodSig()
@@ -2720,7 +2720,7 @@ object MsgPack {
       return Exp.Super(idOpt, attr)
     }
 
-    def readExpUnaryOp(): Exp.UnaryOp.Type = {
+    def readExpUnaryOpType(): Exp.UnaryOp.Type = {
       val r = reader.readZ()
       return Exp.UnaryOp.byOrdinal(r).get
     }
@@ -2734,7 +2734,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ExpUnary)
       }
-      val op = readExpUnaryOp()
+      val op = readExpUnaryOpType()
       val exp = readExp()
       val attr = readResolvedAttr()
       return Exp.Unary(op, exp, attr)
@@ -3719,7 +3719,7 @@ object MsgPack {
       }
     }
 
-    def readMethodMode(): MethodMode.Type = {
+    def readMethodModeType(): MethodMode.Type = {
       val r = reader.readZ()
       return MethodMode.byOrdinal(r).get
     }
@@ -3844,7 +3844,7 @@ object MsgPack {
         reader.expectZ(Constants.TypedMethod)
       }
       val isInObject = reader.readB()
-      val mode = readMethodMode()
+      val mode = readMethodModeType()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
@@ -3927,7 +3927,7 @@ object MsgPack {
       }
     }
 
-    def readResolvedInfoBuiltInKind(): ResolvedInfo.BuiltIn.Kind.Type = {
+    def readResolvedInfoBuiltInKindType(): ResolvedInfo.BuiltIn.Kind.Type = {
       val r = reader.readZ()
       return ResolvedInfo.BuiltIn.Kind.byOrdinal(r).get
     }
@@ -3941,7 +3941,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ResolvedInfoBuiltIn)
       }
-      val kind = readResolvedInfoBuiltInKind()
+      val kind = readResolvedInfoBuiltInKindType()
       return ResolvedInfo.BuiltIn(kind)
     }
 
@@ -4025,7 +4025,7 @@ object MsgPack {
         reader.expectZ(Constants.ResolvedInfoMethod)
       }
       val isInObject = reader.readB()
-      val mode = readMethodMode()
+      val mode = readMethodModeType()
       val typeParams = reader.readISZ(reader.readString _)
       val owner = reader.readISZ(reader.readString _)
       val name = reader.readString()
