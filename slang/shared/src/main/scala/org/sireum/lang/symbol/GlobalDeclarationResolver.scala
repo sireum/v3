@@ -528,6 +528,7 @@ import GlobalDeclarationResolver._
   }
 
   def declareName(entity: String, name: QName, info: Info, posOpt: Option[AST.PosInfo]): Unit = {
+    assert(name == info.name)
     globalNameMap.get(name) match {
       case Some(_) =>
         reporter
@@ -537,6 +538,7 @@ import GlobalDeclarationResolver._
   }
 
   def declareType(entity: String, name: QName, info: TypeInfo, posOpt: Option[AST.PosInfo]): Unit = {
+    assert(name == info.name)
     if (disallowedTypeIds.contains(name(name.size - 1)) && ops.ISZOps(name).dropRight(1) != AST.Typed.sireumName) {
       reporter.error(
         posOpt,
