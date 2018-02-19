@@ -45,8 +45,8 @@ object TypeOutliner {
       }
 
       var r = T
-      for (p <- typeHierarchy.poset.parentsOf(TypeHierarchy.TypeName(AST.Typed.Name(name, ISZ()))).elements if r) {
-        typeMap.get(p.t.ids).get match {
+      for (p <- typeHierarchy.poset.parentsOf(name).elements if r) {
+        typeMap.get(p).get match {
           case ti: TypeInfo.TypeAlias =>
             val t = typeHierarchy.dealiasInit(None(), AST.Typed.Name(ti.name, ISZ()), reporter).get
             r = isOutlined(t.ids)
@@ -101,9 +101,9 @@ object TypeOutliner {
           case _ =>
         }
         if (ok) {
-          val children = typeHierarchy.poset.childrenOf(TypeHierarchy.TypeName(AST.Typed.Name(name, ISZ()))).elements
+          val children = typeHierarchy.poset.childrenOf(name).elements
           for (n <- children) {
-            l = l :+ n.t.ids
+            l = l :+ n
           }
         }
       }
