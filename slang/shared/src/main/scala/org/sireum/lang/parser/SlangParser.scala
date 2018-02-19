@@ -2029,8 +2029,9 @@ class SlangParser(
           rExp
         } else AST.Exp.Ident(cid(exp), resolvedAttr(exp.pos))
       case exp: Term.This => AST.Exp.This(typedAttr(exp.pos))
-      case q"super[${name: Name}]" => AST.Exp.Super(Some(cid(name)), typedAttr(exp.pos))
-      case q"super" => AST.Exp.Super(None(), typedAttr(exp.pos))
+      case exp: Term.Super if exp.thisp.value == "" =>
+        if (exp.superp.value != "") AST.Exp.Super(Some(cid(exp.superp)), typedAttr(exp.pos))
+        else AST.Exp.Super(None(), typedAttr(exp.pos))
       case exp: Term.Eta =>
         val ref: AST.Exp.Ref = translateExp(exp.expr) match {
           case r: AST.Exp.Ident => r
