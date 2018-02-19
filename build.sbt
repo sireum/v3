@@ -36,7 +36,7 @@ val sireumVersion = "3"
 
 val scalaVer = "2.12.4"
 
-val sireumScalacVersion = "3.2.7"
+val sireumScalacVersion = "3.2.8"
 
 val metaVersion = "3.2.0"
 
