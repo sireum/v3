@@ -26,9 +26,9 @@
 package org.sireum.lang
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
-import org.sireum.lang.util.AccumulatingReporter
 import org.sireum.test.SireumSpec
 
 class LibraryTypeCheckingTest extends SireumSpec {
@@ -49,7 +49,7 @@ class LibraryTypeCheckingTest extends SireumSpec {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
         return HashMap ++ ISZ((ids, th.typeMap.get(ids).get))
       }
-      val reporter = AccumulatingReporter.create
+      val reporter = Reporter.create
       reporter.reports(rep.messages)
       val all = T
       val name = ""

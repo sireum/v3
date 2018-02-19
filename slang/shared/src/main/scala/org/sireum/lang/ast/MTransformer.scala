@@ -649,14 +649,6 @@ object MTransformer {
 
   val PostResultResolvedInfoLocalVar: MOption[ResolvedInfo] = MNone()
 
-  val PreResultPosInfo: PreResult[PosInfo] = PreResult(T, MNone())
-
-  val PostResultPosInfo: MOption[PosInfo] = MNone()
-
-  val PreResultFileInfo: PreResult[FileInfo] = PreResult(T, MNone())
-
-  val PostResultFileInfo: MOption[FileInfo] = MNone()
-
 }
 
 import MTransformer._
@@ -1560,14 +1552,6 @@ import MTransformer._
     return PreResultResolvedInfoLocalVar
   }
 
-  def prePosInfo(o: PosInfo): PreResult[PosInfo] = {
-    return PreResultPosInfo
-  }
-
-  def preFileInfo(o: FileInfo): PreResult[FileInfo] = {
-    return PreResultFileInfo
-  }
-
   def postTopUnit(o: TopUnit): MOption[TopUnit] = {
     o match {
       case o: TopUnit.Program => return postTopUnitProgram(o)
@@ -2465,14 +2449,6 @@ import MTransformer._
     return PostResultResolvedInfoLocalVar
   }
 
-  def postPosInfo(o: PosInfo): MOption[PosInfo] = {
-    return PostResultPosInfo
-  }
-
-  def postFileInfo(o: FileInfo): MOption[FileInfo] = {
-    return PostResultFileInfo
-  }
-
   def transformTopUnit(o: TopUnit): MOption[TopUnit] = {
     val preR: PreResult[TopUnit] = preTopUnit(o)
     val r: MOption[TopUnit] = if (preR.continu) {
@@ -2493,14 +2469,12 @@ import MTransformer._
           else
             MNone()
         case o2: TopUnit.TruthTableUnit =>
-          val r0: MOption[IS[Z, PosInfo]] = transformISZ(o2.stars, transformPosInfo)
-          val r1: MOption[IS[Z, Id]] = transformISZ(o2.vars, transformId)
-          val r2: MOption[PosInfo] = transformPosInfo(o2.separator)
-          val r3: MOption[LClause.Sequent] = transformLClauseSequent(o2.sequent)
-          val r4: MOption[IS[Z, TruthTable.Row]] = transformISZ(o2.rows, transformTruthTableRow)
-          val r5: MOption[Option[TruthTable.Conclusion]] = transformOption(o2.conclusionOpt, transformTruthTableConclusion)
-          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty || r4.nonEmpty || r5.nonEmpty)
-            MSome(o2(stars = r0.getOrElse(o2.stars), vars = r1.getOrElse(o2.vars), separator = r2.getOrElse(o2.separator), sequent = r3.getOrElse(o2.sequent), rows = r4.getOrElse(o2.rows), conclusionOpt = r5.getOrElse(o2.conclusionOpt)))
+          val r0: MOption[IS[Z, Id]] = transformISZ(o2.vars, transformId)
+          val r1: MOption[LClause.Sequent] = transformLClauseSequent(o2.sequent)
+          val r2: MOption[IS[Z, TruthTable.Row]] = transformISZ(o2.rows, transformTruthTableRow)
+          val r3: MOption[Option[TruthTable.Conclusion]] = transformOption(o2.conclusionOpt, transformTruthTableConclusion)
+          if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty || r3.nonEmpty)
+            MSome(o2(vars = r0.getOrElse(o2.vars), sequent = r1.getOrElse(o2.sequent), rows = r2.getOrElse(o2.rows), conclusionOpt = r3.getOrElse(o2.conclusionOpt)))
           else
             MNone()
       }
@@ -4272,10 +4246,9 @@ import MTransformer._
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.assignment)
-      val r1: MOption[PosInfo] = transformPosInfo(o2.separator)
-      val r2: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.values)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(assignment = r0.getOrElse(o2.assignment), separator = r1.getOrElse(o2.separator), values = r2.getOrElse(o2.values)))
+      val r1: MOption[TruthTable.Assignment] = transformTruthTableAssignment(o2.values)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(assignment = r0.getOrElse(o2.assignment), values = r1.getOrElse(o2.values)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -4484,9 +4457,8 @@ import MTransformer._
     val r: MOption[Attr] = if (preR.continu) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(posOpt = r0.getOrElse(o2.posOpt)))
+      if (hasChanged)
+        MSome(o2)
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -4511,10 +4483,9 @@ import MTransformer._
     val r: MOption[TypedAttr] = if (preR.continu) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-      val r1: MOption[Option[Typed]] = transformOption(o2.typedOpt, transformTyped)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
-        MSome(o2(posOpt = r0.getOrElse(o2.posOpt), typedOpt = r1.getOrElse(o2.typedOpt)))
+      val r0: MOption[Option[Typed]] = transformOption(o2.typedOpt, transformTyped)
+      if (hasChanged || r0.nonEmpty)
+        MSome(o2(typedOpt = r0.getOrElse(o2.typedOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -4539,11 +4510,10 @@ import MTransformer._
     val r: MOption[ResolvedAttr] = if (preR.continu) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[Option[PosInfo]] = transformOption(o2.posOpt, transformPosInfo)
-      val r1: MOption[Option[ResolvedInfo]] = transformOption(o2.resOpt, transformResolvedInfo)
-      val r2: MOption[Option[Typed]] = transformOption(o2.typedOpt, transformTyped)
-      if (hasChanged || r0.nonEmpty || r1.nonEmpty || r2.nonEmpty)
-        MSome(o2(posOpt = r0.getOrElse(o2.posOpt), resOpt = r1.getOrElse(o2.resOpt), typedOpt = r2.getOrElse(o2.typedOpt)))
+      val r0: MOption[Option[ResolvedInfo]] = transformOption(o2.resOpt, transformResolvedInfo)
+      val r1: MOption[Option[Typed]] = transformOption(o2.typedOpt, transformTyped)
+      if (hasChanged || r0.nonEmpty || r1.nonEmpty)
+        MSome(o2(resOpt = r0.getOrElse(o2.resOpt), typedOpt = r1.getOrElse(o2.typedOpt)))
       else
         MNone()
     } else if (preR.resultOpt.nonEmpty) {
@@ -4636,59 +4606,6 @@ import MTransformer._
     val hasChanged: B = r.nonEmpty
     val o2: ResolvedInfo = r.getOrElse(o)
     val postR: MOption[ResolvedInfo] = postResolvedInfo(o2)
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformPosInfo(o: PosInfo): MOption[PosInfo] = {
-    val preR: PreResult[PosInfo] = prePosInfo(o)
-    val r: MOption[PosInfo] = if (preR.continu) {
-      val o2: PosInfo = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: MOption[FileInfo] = transformFileInfo(o2.fileInfo)
-      if (hasChanged || r0.nonEmpty)
-        MSome(o2(fileInfo = r0.getOrElse(o2.fileInfo)))
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: PosInfo = r.getOrElse(o)
-    val postR: MOption[PosInfo] = postPosInfo(o2)
-    if (postR.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return MSome(o2)
-    } else {
-      return MNone()
-    }
-  }
-
-  def transformFileInfo(o: FileInfo): MOption[FileInfo] = {
-    val preR: PreResult[FileInfo] = preFileInfo(o)
-    val r: MOption[FileInfo] = if (preR.continu) {
-      val o2: FileInfo = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      if (hasChanged)
-        MSome(o2)
-      else
-        MNone()
-    } else if (preR.resultOpt.nonEmpty) {
-      MSome(preR.resultOpt.getOrElse(o))
-    } else {
-      MNone()
-    }
-    val hasChanged: B = r.nonEmpty
-    val o2: FileInfo = r.getOrElse(o)
-    val postR: MOption[FileInfo] = postFileInfo(o2)
     if (postR.nonEmpty) {
       return postR
     } else if (hasChanged) {

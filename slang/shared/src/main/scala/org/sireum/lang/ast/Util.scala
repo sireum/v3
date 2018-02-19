@@ -27,6 +27,7 @@
 package org.sireum.lang.ast
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.U64._
 
 object Util {
@@ -39,51 +40,59 @@ object Util {
     return r.toIS
   }
 
-  @pure def fileUriOptEq(posOpt1: Option[PosInfo], posOpt2: Option[PosInfo]): B = {
+  @pure def fileUriOptEq(posOpt1: Option[Position], posOpt2: Option[Position]): B = {
     (posOpt1, posOpt2) match {
-      case (Some(pos1), Some(pos2)) => return pos1.fileUriOpt == pos2.fileUriOpt
+      case (Some(pos1), Some(pos2)) => return pos1.uriOpt == pos2.uriOpt
       case _ => return F
     }
   }
 
-  @pure def beginColumn(posOpt: Option[PosInfo]): Z = {
-    l""" requires ∃pos: PosInfo  posOpt == Some(pos) """
+  @pure def beginColumn(posOpt: Option[Position]): Z = {
+    l""" requires ∃pos: Position  posOpt == Some(pos) """
     posOpt match {
       case Some(pos) => return pos.beginColumn
       case _ => return 0
     }
   }
 
-  @pure def beginColumnEqual(posOpt1: Option[PosInfo], posOpt2: Option[PosInfo]): B = {
+  @pure def beginColumnEqual(posOpt1: Option[Position], posOpt2: Option[Position]): B = {
     (posOpt1, posOpt2) match {
       case (Some(pos1), Some(pos2)) => return pos1.beginColumn == pos2.beginColumn
       case _ => return F
     }
   }
 
-  @pure def posOptRangeA(attr1: Attr, attr2: Attr): Option[PosInfo] = {
+  @pure def posOptRangeA(attr1: Attr, attr2: Attr): Option[Position] = {
     return posOptRange(attr1.posOpt, attr2.posOpt)
   }
 
-  @pure def posOptRangeTA(attr1: TypedAttr, attr2: TypedAttr): Option[PosInfo] = {
+  @pure def posOptRangeTA(attr1: TypedAttr, attr2: TypedAttr): Option[Position] = {
     return posOptRange(attr1.posOpt, attr2.posOpt)
   }
 
-  @pure def posOptRangeRA(attr1: ResolvedAttr, attr2: ResolvedAttr): Option[PosInfo] = {
+  @pure def posOptRangeRA(attr1: ResolvedAttr, attr2: ResolvedAttr): Option[Position] = {
     return posOptRange(attr1.posOpt, attr2.posOpt)
   }
 
-  @pure def posOptRange(posOpt1: Option[PosInfo], posOpt2: Option[PosInfo]): Option[PosInfo] = {
-    posOpt1 match {
-      case Some(pos1) =>
-        posOpt2 match {
-          case Some(pos2) =>
-            val offset = pos1.offset
-            val length = pos2.offset + pos2.length - offset
-            Some(PosInfo(pos1.fileInfo, (conversions.Z.toU64(offset) << u64"32") | conversions.Z.toU64(length)))
-          case _ => return posOpt1
-        }
-      case _ => return posOpt2
+  @pure def posOptRange(posOpt1: Option[Position], posOpt2: Option[Position]): Option[Position] = {
+    (posOpt1, posOpt2) match {
+      case (Some(pos1: PosInfo), Some(pos2: PosInfo)) =>
+        val offset = pos1.offset
+        val length = pos2.offset + pos2.length - offset
+        return Some(PosInfo(pos1.info, (conversions.Z.toU64(offset) << u64"32") | conversions.Z.toU64(length)))
+      case (Some(pos1), Some(pos2)) =>
+        return Some(
+          FlatPos(
+            pos1.uriOpt,
+            conversions.Z.toU32(pos1.beginLine),
+            conversions.Z.toU32(pos1.beginColumn),
+            conversions.Z.toU32(pos2.endLine),
+            conversions.Z.toU32(pos2.endColumn),
+            conversions.Z.toU32(pos1.offset),
+            conversions.Z.toU32(pos2.offset + pos2.length - pos1.length)
+          )
+        )
+      case _ => return None()
     }
   }
 

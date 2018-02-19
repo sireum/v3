@@ -27,11 +27,11 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.ops._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util._
 
 object TypeOutliner {
 
@@ -69,9 +69,8 @@ object TypeOutliner {
     }
 
     var th = typeHierarchy
-    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)](
-      () => TypeOutliner(th).outlineTypeAliases(typeAliases)
-    )
+    var jobs =
+      ISZ[() => TypeHierarchy => (TypeHierarchy, Reporter)](() => TypeOutliner(th).outlineTypeAliases(typeAliases))
     while (workList.nonEmpty && !reporter.hasError) {
       var l = ISZ[QName]()
       for (name <- workList) {
@@ -109,9 +108,9 @@ object TypeOutliner {
         }
       }
       val r = ISZOps(jobs).parMapFoldLeft(
-        (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
+        (f: () => TypeHierarchy => (TypeHierarchy, Reporter)) => f(),
         TypeHierarchy.combine _,
-        (th, AccumulatingReporter.create)
+        (th, Reporter.create)
       )
       reporter.reports(r._2.messages)
       th = r._1
@@ -119,7 +118,7 @@ object TypeOutliner {
       jobs = ISZ()
     }
     if (!reporter.hasError) {
-      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
+      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, Reporter)]()
       val to = TypeOutliner(th)
       for (info <- th.nameMap.values) {
         info match {
@@ -128,9 +127,9 @@ object TypeOutliner {
         }
       }
       val r = ISZOps(jobs).parMapFoldLeft(
-        (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
+        (f: () => TypeHierarchy => (TypeHierarchy, Reporter)) => f(),
         TypeHierarchy.combine _,
-        (th, AccumulatingReporter.create)
+        (th, Reporter.create)
       )
       reporter.reports(r._2.messages)
       th = r._1
@@ -257,8 +256,8 @@ object TypeOutliner {
     }
   }
 
-  @pure def outlineObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    val reporter = AccumulatingReporter.create
+  @pure def outlineObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, Reporter) = {
+    val reporter = Reporter.create
 
     var infos = ISZ[(QName, Info)]()
     for (stmt <- info.ast.stmts) {
@@ -291,8 +290,8 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(nameMap = th.nameMap ++ infos + info.name ~> info(outlined = T)), reporter)
   }
 
-  @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    val reporter = AccumulatingReporter.create
+  @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, Reporter) = {
+    val reporter = Reporter.create
     var r = ISZ[(QName, TypeInfo)]()
     for (info <- infos) {
       val tm = typeParamMap(info.ast.typeParams, reporter)
@@ -307,8 +306,8 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap ++ r), reporter)
   }
 
-  @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    val reporter = AccumulatingReporter.create
+  @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, Reporter) = {
+    val reporter = Reporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
     val members = outlineMembers(
@@ -320,12 +319,19 @@ object TypeOutliner {
     )
     val (TypeInfo.Members(specVars, _, specMethods, methods), ancestors, newParents) =
       outlineInheritedMembers(info.name, info.ast.parents, scope, members, reporter)
-    val newInfo = info(outlined = T, ancestors = ancestors, ast = info.ast(parents = newParents), specVars = specVars, specMethods = specMethods, methods = methods)
+    val newInfo = info(
+      outlined = T,
+      ancestors = ancestors,
+      ast = info.ast(parents = newParents),
+      specVars = specVars,
+      specMethods = specMethods,
+      methods = methods
+    )
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
 
-  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
-    val reporter = AccumulatingReporter.create
+  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, Reporter) = {
+    val reporter = Reporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
     val members = outlineMembers(
@@ -477,20 +483,20 @@ object TypeOutliner {
       sigOpt match {
         case Some((sig, tVars)) =>
           specMethods = specMethods + id ~> info(
-              ast = sm(sig = sig),
-              typedOpt = Some(
-                AST.Typed.Method(
-                  F,
-                  AST.MethodMode.Spec,
-                  tVars,
-                  info.owner,
-                  id,
-                  sig.params.map(p => p.id.value),
-                  ISZ(),
-                  sig.funType
-                )
+            ast = sm(sig = sig),
+            typedOpt = Some(
+              AST.Typed.Method(
+                F,
+                AST.MethodMode.Spec,
+                tVars,
+                info.owner,
+                id,
+                sig.params.map(p => p.id.value),
+                ISZ(),
+                sig.funType
               )
             )
+          )
         case _ =>
       }
     }
@@ -506,20 +512,20 @@ object TypeOutliner {
       sigOpt match {
         case Some((sig, tVars)) =>
           methods = methods + id ~> info(
-              ast = m(sig = sig),
-              typedOpt = Some(
-                AST.Typed.Method(
-                  F,
-                  AST.MethodMode.Method,
-                  tVars,
-                  info.owner,
-                  id,
-                  sig.params.map(p => p.id.value),
-                  ISZ(),
-                  sig.funType
-                )
+            ast = m(sig = sig),
+            typedOpt = Some(
+              AST.Typed.Method(
+                F,
+                AST.MethodMode.Method,
+                tVars,
+                info.owner,
+                id,
+                sig.params.map(p => p.id.value),
+                ISZ(),
+                sig.funType
               )
             )
+          )
         case _ =>
       }
     }
@@ -555,7 +561,7 @@ object TypeOutliner {
     var specMethods = info.specMethods
     var methods = info.methods
 
-    def checkSpecInherit(id: String, tname: QName, posOpt: Option[AST.PosInfo]): B = {
+    def checkSpecInherit(id: String, tname: QName, posOpt: Option[Position]): B = {
       specVars.get(id) match {
         case Some(otherInfo) =>
           if (name != tname) {
@@ -595,7 +601,7 @@ object TypeOutliner {
       return T
     }
 
-    def checkInherit(id: String, tname: QName, posOpt: Option[AST.PosInfo]): B = {
+    def checkInherit(id: String, tname: QName, posOpt: Option[Position]): B = {
       val ok = checkSpecInherit(id, tname, posOpt)
       if (!ok) {
         return ok
@@ -639,7 +645,7 @@ object TypeOutliner {
       return T
     }
 
-    def inheritSpecVar(info: Info.SpecVar, posOpt: Option[AST.PosInfo], substMap: HashMap[String, AST.Typed]): Unit = {
+    def inheritSpecVar(info: Info.SpecVar, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
       val owner = info.owner
       var sv = info.ast
       val id = sv.id.value
@@ -654,7 +660,7 @@ object TypeOutliner {
       }
     }
 
-    def inheritVar(info: Info.Var, posOpt: Option[AST.PosInfo], substMap: HashMap[String, AST.Typed]): Unit = {
+    def inheritVar(info: Info.Var, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
       val owner = info.owner
       var v = info.ast
       val id = v.id.value
@@ -675,7 +681,7 @@ object TypeOutliner {
 
     def inheritSpecMethod(
       info: Info.SpecMethod,
-      posOpt: Option[AST.PosInfo],
+      posOpt: Option[Position],
       substMap: HashMap[String, AST.Typed]
     ): Unit = {
       val owner = info.owner
@@ -708,7 +714,7 @@ object TypeOutliner {
       m1: Info.Method,
       m2: Info.Method,
       substMap: HashMap[String, AST.Typed],
-      posOpt: Option[AST.PosInfo]
+      posOpt: Option[Position]
     ): B = {
       val t1 = m1.typedOpt.get.deBruijn
       val t2 = m2.typedOpt.get.subst(substMap).deBruijn
@@ -719,7 +725,7 @@ object TypeOutliner {
       m: Info.Method,
       supM: Info.Method,
       substMap: HashMap[String, AST.Typed],
-      posOpt: Option[AST.PosInfo]
+      posOpt: Option[Position]
     ): B = {
       val t1 = m.typedOpt.get.deBruijn
       val t2 = supM.typedOpt.get.subst(substMap).deBruijn
@@ -730,7 +736,7 @@ object TypeOutliner {
       m: AST.Stmt.Method,
       v: AST.Stmt.Var,
       substMap: HashMap[String, AST.Typed],
-      posOpt: Option[AST.PosInfo]
+      posOpt: Option[Position]
     ): B = {
       if (m.sig.typeParams.nonEmpty) {
         return F
@@ -744,7 +750,7 @@ object TypeOutliner {
       return r
     }
 
-    def inheritMethod(info: Info.Method, posOpt: Option[AST.PosInfo], substMap: HashMap[String, AST.Typed]): Unit = {
+    def inheritMethod(info: Info.Method, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
       val tname = info.owner
       val pm = info.ast
       val id = pm.sig.id.value
@@ -831,7 +837,7 @@ object TypeOutliner {
             case _ =>
               if (substMap.isEmpty) {
                 methods = methods + id ~>
-                    (if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None())) else info)
+                  (if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None())) else info)
               } else {
                 var m = pm
                 var params = ISZ[AST.Param]()

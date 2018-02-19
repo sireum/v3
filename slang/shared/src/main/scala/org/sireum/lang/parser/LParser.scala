@@ -27,7 +27,8 @@ package org.sireum.lang.parser
 
 import org.sireum.{B, F, ISZ, T, Z, None => SNone, Option => SOption, Some => SSome, String => SString}
 import org.sireum.lang.ast.{ContractExp, VarFragment, WhereDef}
-import org.sireum.lang.util.AccumulatingReporter
+import org.sireum.message
+import org.sireum.message.Reporter
 
 import scala.collection.immutable.ListSet
 import scala.meta._
@@ -35,7 +36,24 @@ import scala.meta.inputs.Input
 import scala.meta.internal.parsers.{InfixMode, ModifiedScalametaParser}
 import scala.meta.internal.tokens.TokenInfo
 import scala.meta.tokens.TokensHelper
-import scala.meta.tokens.Token.{BOF, Colon, Comma, Dot, EOF, Ident, KwCase, KwDef, KwIf, KwVal, LeftBrace, LeftBracket, LeftParen, RightBrace, RightBracket, RightParen}
+import scala.meta.tokens.Token.{
+  BOF,
+  Colon,
+  Comma,
+  Dot,
+  EOF,
+  Ident,
+  KwCase,
+  KwDef,
+  KwIf,
+  KwVal,
+  LeftBrace,
+  LeftBracket,
+  LeftParen,
+  RightBrace,
+  RightBracket,
+  RightParen
+}
 import org.sireum.lang.{ast => AST}
 
 object LParser {
@@ -45,6 +63,7 @@ object LParser {
   val quantTokens: ListSet[String] = forallTokens ++ existsTokens
   val lStmtFirst = ListSet("requires", "theorem", "fact")
   val implyInternalSym = "$->:"
+
   val internalOpMap = Map(
     "→" -> implyInternalSym,
     "->" -> implyInternalSym,
@@ -63,8 +82,8 @@ object LParser {
     "⊢" -> "|-"
   )
 
-  def apply[T](text: String, reporter: AccumulatingReporter)(f: (LParser, AccumulatingReporter) => T): T = {
-    val input = Input.String(text.replaceAllLiterally("\r\n", "\n"))  // WORKAROUND: scalameta crlf issues
+  def apply[T](text: String, reporter: Reporter)(f: (LParser, Reporter) => T): T = {
+    val input = Input.String(text.replaceAllLiterally("\r\n", "\n")) // WORKAROUND: scalameta crlf issues
     val dialect = SlangParser.scalaDialect(isWorksheet = false)
     val slangParser = new SlangParser(
       input = input,
@@ -75,17 +94,16 @@ object LParser {
       fileUriOpt = org.sireum.None(),
       isWorksheet = false,
       text = text,
-      reporter = reporter)
+      reporter = reporter
+    )
     f(new LParser(input, dialect, slangParser), reporter)
   }
 }
 
 import LParser._
 
-final class LParser(input: Input,
-                    dialect: Dialect,
-                    sparser: SlangParser)
-  extends ModifiedScalametaParser(input, dialect) {
+final class LParser(input: Input, dialect: Dialect, sparser: SlangParser)
+    extends ModifiedScalametaParser(input, dialect) {
 
   object loutPattern extends PatternContextSensitive {
     override def infixTypeRest(t: Type, mode: InfixMode.Value): Type = {
@@ -118,9 +136,31 @@ final class LParser(input: Input,
     def fork: TokenIterator = new LimitingTokenIterator(i, end)
   }
 
-  val justFirst = Set("assume", "premise", "Vi1", "Vi2", "Ve", "pbc", "Ai", "alli", "foralli",
-    "Ae", "alle", "foralle", "Ei", "somei", "existsi", "Ee", "somee", "existse",
-    "fact", "invariant", "subst", "algebra", "auto", "coq"
+  val justFirst = Set(
+    "assume",
+    "premise",
+    "Vi1",
+    "Vi2",
+    "Ve",
+    "pbc",
+    "Ai",
+    "alli",
+    "foralli",
+    "Ae",
+    "alle",
+    "foralle",
+    "Ei",
+    "somei",
+    "existsi",
+    "Ee",
+    "somee",
+    "existse",
+    "fact",
+    "invariant",
+    "subst",
+    "algebra",
+    "auto",
+    "coq"
   )
 
   @inline def aheadNF[T](body: => T): T = {
@@ -130,7 +170,6 @@ final class LParser(input: Input,
 
   @inline def tokenCurrOrAfterNl(p: => Boolean): Boolean =
     p || TokensHelper.isNl(token) && ahead(p)
-
 
   val justPrefix: List[() => Option[(String, Int)]] = List(
     () => {
@@ -153,30 +192,40 @@ final class LParser(input: Input,
     },
     () => {
       var text = ""
-      val r = (isIdentOf(implyInternalSym) || isIdentOf("!") || isIdentOf("¬") || isIdentOf("~") || isIdentOf("∀") || isIdentOf("∃")) && {
+      val r = (isIdentOf(implyInternalSym) || isIdentOf("!") || isIdentOf("¬") || isIdentOf("~") || isIdentOf("∀") || isIdentOf(
+        "∃"
+      )) && {
         text = token.asInstanceOf[Ident].value
         ahead {
           text += token.text
           (isIdentOf("i") || isIdentOf("e")) && aheadNF(token.is[Token.Constant.Int])
         }
       }
-      if (r) Some((text.replaceAllLiterally("!", "¬").replaceAllLiterally("~", "¬").replaceAllLiterally(implyInternalSym, "→"), 2)) else None
+      if (r)
+        Some(
+          (
+            text.replaceAllLiterally("!", "¬").replaceAllLiterally("~", "¬").replaceAllLiterally(implyInternalSym, "→"),
+            2
+          )
+        )
+      else None
     },
     () => {
       if (isIdentOf("F") && ahead(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))) Some(("⊥e", 2)) else None
     },
     () => {
-      if ( {
+      if ({
         val t1 = token
         isIdentOf("_") && ahead {
           val t2 = token
           isIdentOf("|") && t2.pos.start == t1.pos.start + 1 && aheadNF {
             val t3 = token
             isIdentOf("_") && t3.pos.start == t2.pos.start + 1 &&
-              aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))
+            aheadNF(isIdentOf("e") && aheadNF(token.is[Token.Constant.Int]))
           }
         }
-      }) Some(("⊥e", 4)) else None
+      }) Some(("⊥e", 4))
+      else None
     }
   )
 
@@ -189,14 +238,15 @@ final class LParser(input: Input,
     var iP = 0
     while (iS < sTokens.length) {
       sTokens(iS) match {
-        case t@Ident(value) => internalOpMap.get(value) match {
-          case Some(op) =>
-            val t2 = t.copy(value = op)
-            sTokens(iS) = t2
-            while (t ne pTokens(iP)) iP += 1
-            pTokens(iP) = t2
-          case _ =>
-        }
+        case t @ Ident(value) =>
+          internalOpMap.get(value) match {
+            case Some(op) =>
+              val t2 = t.copy(value = op)
+              sTokens(iS) = t2
+              while (t ne pTokens(iP)) iP += 1
+              pTokens(iP) = t2
+            case _ =>
+          }
         case _ =>
       }
       iS += 1
@@ -236,7 +286,7 @@ final class LParser(input: Input,
     } finally in = oldIn
   }
 
-  def acceptToken[T <: Token : TokenInfo]: T = {
+  def acceptToken[T <: Token: TokenInfo]: T = {
     val t = token
     accept[T]
     t.asInstanceOf[T]
@@ -262,32 +312,34 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  SimplExpr      ::= QuantExpr
-   *                    |  ... super.simpleExpr()
-   *  }}}
-   */
+    *  SimplExpr      ::= QuantExpr
+    *                    |  ... super.simpleExpr()
+    *  }}}
+    */
   override def simpleExpr(allowRepeated: Boolean): Term = token match {
     case Ident(value) if quantTokens.contains(value) => quantExpr()
     case _ => super.simpleExpr(allowRepeated)
   }
 
   /** {{{
-   *  QuantExpr      ::= QuantOp Idents [ `:' Domain ] [nl] PostfixExpr
-   *
-   *  Idents         ::= Ident { `,' Ident }
-   *
-   *  QuantOp        ::= Ident<∀> | Ident<A> | Ident<all> | Ident<forall> | Ident<∃> | Ident<E> | Ident<some> | Ident<exists>
-   *
-   *  Domain         ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
-   *                   |  Type
-   *  }}}
-   */
+    *  QuantExpr      ::= QuantOp Idents [ `:' Domain ] [nl] PostfixExpr
+    *
+    *  Idents         ::= Ident { `,' Ident }
+    *
+    *  QuantOp        ::= Ident<∀> | Ident<A> | Ident<all> | Ident<forall> | Ident<∃> | Ident<E> | Ident<some> | Ident<exists>
+    *
+    *  Domain         ::= ( `(' | `<' | `[' ) Expr ',' Expr ( `)' | `>' | `]' )
+    *                   |  Type
+    *  }}}
+    */
   private def quantExpr(): Term = autoPos {
     def acceptKw(kws: ListSet[String]): String = token match {
       case Ident(value) if kws.contains(value) =>
         next()
         value
-      case _ => reporter.syntaxError(s"Either ${kws.mkString(" or ")} expected but ${TokensHelper.name(token)} found", at = token)
+      case _ =>
+        reporter
+          .syntaxError(s"Either ${kws.mkString(" or ")} expected but ${TokensHelper.name(token)} found", at = token)
     }
 
     val isForAll = forallTokens.contains(acceptKw(quantTokens))
@@ -309,24 +361,18 @@ final class LParser(input: Input,
     if (token.isNot[Colon]) {
       newLineOpt()
       val e = expr()
-      Term.Apply(
-        Term.Name("L$Quant"),
-        List[Term](Lit.Boolean(isForAll), ids, e))
+      Term.Apply(Term.Name("L$Quant"), List[Term](Lit.Boolean(isForAll), ids, e))
     } else {
       next()
       domainRaw() match {
         case Left(t) =>
           newLineOpt()
           val e = expr()
-          Term.Apply(
-            Term.Name("L$Quant"),
-            List[Term](Lit.Boolean(isForAll), Term.Ascribe(ids, t), e))
+          Term.Apply(Term.Name("L$Quant"), List[Term](Lit.Boolean(isForAll), Term.Ascribe(ids, t), e))
         case Right(q) =>
           newLineOpt()
           val e = expr()
-          Term.Apply(
-            Term.Name("L$Quant"),
-            List[Term](Lit.Boolean(isForAll), ids, q, e))
+          Term.Apply(Term.Name("L$Quant"), List[Term](Lit.Boolean(isForAll), ids, q, e))
       }
     }
   }
@@ -347,13 +393,14 @@ final class LParser(input: Input,
 
   def domain(): AST.Domain = domainRaw() match {
     case Left(t) => AST.Domain.Type(sparser.translateType(t), sparser.typedAttr(t.pos))
-    case Right(tt@Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean, _))) =>
+    case Right(tt @ Term.Tuple(Seq(lo, loExact: Lit.Boolean, hi, hiExact: Lit.Boolean, _))) =>
       AST.Domain.Range(
         sparser.translateExp(lo),
         if (loExact.value) T else F,
         sparser.translateExp(hi),
         if (hiExact.value) T else F,
-        sparser.typedAttr(tt.pos))
+        sparser.typedAttr(tt.pos)
+      )
   }
 
   def idents(): List[Ident] = {
@@ -370,31 +417,24 @@ final class LParser(input: Input,
   def isz[T](l: List[T]): ISZ[T] = ISZ(l: _*)
 
   /** {{{
-   *  DefContract    ::= BOF {nl}
-   *                     [ Ident<reads> {nl} Expr { `,' {nl} Expr } ] {nl}
-   *                     [ Ident<requires> {nl} NamedExprs ]
-   *                     [ Ident<modifies> {nl} Expr { `,' {nl} Expr } ] {nl}
-   *                     [ Ident<ensures> {nl} NamedExprs ]
-   *                     { SubContract {nl} }
-   *                     EOF
-   *
-   *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
-   *
-   *  NamedExpr      ::= [ Ident `:' {nl} ] Expr
-   *
-   *  SubContract    ::= def Ident `(' Ident {`,' Ident} `)' {nl} DefContract
-   *
-   *  PureOpt        ::= [ `@' Ident<pure> ]
-   *  }}}
-   */
+    *  DefContract    ::= BOF {nl}
+    *                     [ Ident<reads> {nl} Expr { `,' {nl} Expr } ] {nl}
+    *                     [ Ident<requires> {nl} NamedExprs ]
+    *                     [ Ident<modifies> {nl} Expr { `,' {nl} Expr } ] {nl}
+    *                     [ Ident<ensures> {nl} NamedExprs ]
+    *                     { SubContract {nl} }
+    *                     EOF
+    *
+    *  NamedExprs     ::= NamedExpr {nl} { NamedExpr {nl} }
+    *
+    *  NamedExpr      ::= [ Ident `:' {nl} ] Expr
+    *
+    *  SubContract    ::= def Ident `(' Ident {`,' Ident} `)' {nl} DefContract
+    *
+    *  PureOpt        ::= [ `@' Ident<pure> ]
+    *  }}}
+    */
   def defContract(): AST.Contract = {
-    def pureOpt(): B = {
-      if (token.is[Token.At] && ahead(isIdentOf("pure"))) {
-        nextTwice()
-        T
-      } else F
-    }
-
     def subContract(): List[AST.SubContract] = {
       var r = List[AST.SubContract]()
       while (token.isNot[EOF]) {
@@ -435,18 +475,19 @@ final class LParser(input: Input,
     r
   }
 
-  def readsModifies(keyword: String): List[AST.Exp] = if (isIdentOf(keyword)) {
-    next()
-    newLinesOpt()
-    var r = List(sparser.translateExp(expr()))
-    while (token.is[Comma]) {
+  def readsModifies(keyword: String): List[AST.Exp] =
+    if (isIdentOf(keyword)) {
       next()
       newLinesOpt()
-      r ::= sparser.translateExp(expr())
-    }
-    newLinesOpt()
-    r.reverse
-  } else List()
+      var r = List(sparser.translateExp(expr()))
+      while (token.is[Comma]) {
+        next()
+        newLinesOpt()
+        r ::= sparser.translateExp(expr())
+      }
+      newLinesOpt()
+      r.reverse
+    } else List()
 
   def namedExpr(): ContractExp =
     if (token.is[Ident] && ahead(token.is[Colon])) {
@@ -469,22 +510,22 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  SpecDefs       ::= BOF
-   *                     {nl} SpecDef {nl} { SpecDef {nl} } [ WhereDefs {nl} ]
-   *                     EOF
-   *
-   *  SpecDef        ::= `=' NamedExpr [`,' ( [ case Pattern ] [ if PostfixExpr ] | Ident<otherwise> ) ]
-   *
-   *  WhereDefs      ::= Ident<where> {nl} WhereDef { {nl} WhereDef }
-   *
-   *  WhereDef       ::= val Ident `:' Type `=' Expr
-   *                   |  def Ident `(' SpecParams `)' `:' Type {nl} SpecDef { {nl} SpecDef }
-   *
-   *  SpecParams     ::= SpecParam { `,' SpecParam }
-   *
-   *  SpecParam      ::= Id `:' Type
-   *  }}}
-   */
+    *  SpecDefs       ::= BOF
+    *                     {nl} SpecDef {nl} { SpecDef {nl} } [ WhereDefs {nl} ]
+    *                     EOF
+    *
+    *  SpecDef        ::= `=' NamedExpr [`,' ( [ case Pattern ] [ if PostfixExpr ] | Ident<otherwise> ) ]
+    *
+    *  WhereDefs      ::= Ident<where> {nl} WhereDef { {nl} WhereDef }
+    *
+    *  WhereDef       ::= val Ident `:' Type `=' Expr
+    *                   |  def Ident `(' SpecParams `)' `:' Type {nl} SpecDef { {nl} SpecDef }
+    *
+    *  SpecParams     ::= SpecParam { `,' SpecParam }
+    *
+    *  SpecParam      ::= Id `:' Type
+    *  }}}
+    */
   def specDefs(): (List[AST.SpecDef], List[AST.WhereDef]) = {
     accept[BOF]
     newLinesOpt()
@@ -576,12 +617,12 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  LoopInvMod     ::= BOF {nl}
-   *                     [ Ident<invariant> {nl} NamedExprs ]
-   *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
-   *                     EOF
-   *  }}}
-   */
+    *  LoopInvMod     ::= BOF {nl}
+    *                     [ Ident<invariant> {nl} NamedExprs ]
+    *                     [ Ident<modifies> {nl} Expr {`,' {nl} Expr} ] {nl}
+    *                     EOF
+    *  }}}
+    */
   def loopInvMode(): (List[AST.ContractExp], List[AST.Exp]) = {
     accept[BOF]
     val is = if (isIdentOf("invariant")) {
@@ -595,15 +636,15 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  LClause        ::= BOF {nl}
-   *                     ( Invariants
-   *                     | Facts
-   *                     | Theorems
-   *                     | Sequent
-   *                     | Proof
-   *                     ) EOF
-   *  }}}
-   */
+    *  LClause        ::= BOF {nl}
+    *                     ( Invariants
+    *                     | Facts
+    *                     | Theorems
+    *                     | Sequent
+    *                     | Proof
+    *                     ) EOF
+    *  }}}
+    */
   def lClause(): AST.LClause = {
     accept[BOF]
     newLinesOpt()
@@ -622,9 +663,9 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  Invariants     ::= Ident<invariant> {nl} NamedExprs
-   *  }}}
-   */
+    *  Invariants     ::= Ident<invariant> {nl} NamedExprs
+    *  }}}
+    */
   private def invariants(): AST.LClause.Invariants = {
     next()
     newLinesOpt()
@@ -632,11 +673,11 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  Facts          ::= Ident<fact> {nl} Fact {nl} { Fact {nl} }
-   *
-   *  Fact           ::= Ident `:' {nl} Expr
-   *  }}}
-   */
+    *  Facts          ::= Ident<fact> {nl} Fact {nl} { Fact {nl} }
+    *
+    *  Fact           ::= Ident `:' {nl} Expr
+    *  }}}
+    */
   private def facts(): AST.LClause.Facts = {
     def fact(): AST.LClause.Fact = {
       val ident = id(acceptToken[Ident])
@@ -656,11 +697,11 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  Theorems       ::= Ident<theorem> {nl} Theorem {nl} { Theorem {nl} }
-   *
-   *  Theorem        ::= Ident `:' {nl} Sequent
-   *  }}}
-   */
+    *  Theorems       ::= Ident<theorem> {nl} Theorem {nl} { Theorem {nl} }
+    *
+    *  Theorem        ::= Ident `:' {nl} Sequent
+    *  }}}
+    */
   private def theorems(): AST.LClause.Theorems = {
     def theorem(): AST.LClause.Theorem = {
       val ident = id(acceptToken[Ident])
@@ -681,20 +722,24 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  Sequent       ::= [ Exprs ] {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
-   *
-   *  Exprs         ::= Expr {`,' {nl} Expr}
-   *  }}}
-   */
-  def sequent(sequentIndex: Int = findTokenPos(isSequentToken, t => t.isNot[LeftBrace]),
-              noProof: Boolean = false): AST.LClause.Sequent = {
+    *  Sequent       ::= [ Exprs ] {nl} ( Ident<|-> | Ident<⊢> ) {nl} Exprs {nl} [ Proof ]
+    *
+    *  Exprs         ::= Expr {`,' {nl} Expr}
+    *  }}}
+    */
+  def sequent(
+    sequentIndex: Int = findTokenPos(isSequentToken, t => t.isNot[LeftBrace]),
+    noProof: Boolean = false
+  ): AST.LClause.Sequent = {
     if (sequentIndex < 0) reporter.syntaxError(s"... ⊢ ... expected", at = token)
     val emptyPremises = tokenCurrOrAfterNl(isSequentToken(token))
     var oldIn = in.asInstanceOf[LimitingTokenIterator]
-    val premises = if (emptyPremises) List() else {
-      in = new LimitingTokenIterator(oldIn.i, sequentIndex - 1)
-      exprs()
-    }
+    val premises =
+      if (emptyPremises) List()
+      else {
+        in = new LimitingTokenIterator(oldIn.i, sequentIndex - 1)
+        exprs()
+      }
     in = new LimitingTokenIterator(sequentIndex + 1, oldIn.end)
     newLinesOpt()
     val proofIndex = if (noProof) -1 else findTokenPos(t => t.is[LeftBrace], _ => true)
@@ -732,44 +777,44 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  Proof          ::= `{' { {nl} ProofStep } {nl} `}' {nl}
-   *
-   *  ProofStep      ::= Int `.' Expr Just
-   *                   |  Int `.' SubProof
-   *
-   *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
-   *
-   *  AssumeStep     ::= Int `.' Expr Ident<assume>
-   *                   |  Int `.' Idents
-   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain }
-   *                   |  Int `.' Idents {nl} Expr Ident<assume>
-   *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } {nl} Expr Ident<assume>
-   *
-   *  Just           ::= Ident<premise>
-   *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int { Int }
-   *                   |  ( Ident<∧> | Ident<^> ) Ident<e1>                                 Int
-   *                   |  ( Ident<∧> | Ident<^> ) Ident<e2>                                 Int
-   *                   |  ( Ident<∨> Ident<i1> | Ident<Vi1> )                               Int
-   *                   |  ( Ident<∨> Ident<i2> | Ident<Vi2> )                               Int
-   *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int { Int }
-   *                   |  ( Ident<→> | Ident<->> ) Ident<i>                                 Int
-   *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int { Int }
-   *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<i>                       Int
-   *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<e>                       Int Int
-   *                   |  ( Ident<⊥> | Ident<_> `|' Ident<_> ) Ident<e>                     Int
-   *                   |  Ident<pbc>                                                        Int
-   *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
-   *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int {nl} Expr { `,' {nl} Expr }
-   *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int {nl} Expr { `,' {nl} Expr }
-   *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
-   *                   |  Ident<fact>                                                       QualId
-   *                   |  Ident<invariant>                                                  [ QualId ]
-   *                   |  Ident<subst>                                                      ( '<' | '>' ) Int Int
-   *                   |  Ident<algebra>                                                    { Int }
-   *                   |  Ident<auto>                                                       { Int }
-   *                   |  Ident<coq>                                                        String { Int }
-   *  }}}
-   */
+    *  Proof          ::= `{' { {nl} ProofStep } {nl} `}' {nl}
+    *
+    *  ProofStep      ::= Int `.' Expr Just
+    *                   |  Int `.' SubProof
+    *
+    *  SubProof       ::= `{' {nl} AssumeStep { {nl} ProofStep } {nl} `}'
+    *
+    *  AssumeStep     ::= Int `.' Expr Ident<assume>
+    *                   |  Int `.' Idents
+    *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain }
+    *                   |  Int `.' Idents {nl} Expr Ident<assume>
+    *                   |  Int `.' Idents `:' Domain { {nl} Idents `:' Domain } {nl} Expr Ident<assume>
+    *
+    *  Just           ::= Ident<premise>
+    *                   |  ( Ident<∧> | Ident<^> ) Ident<i>                                  Int Int { Int }
+    *                   |  ( Ident<∧> | Ident<^> ) Ident<e1>                                 Int
+    *                   |  ( Ident<∧> | Ident<^> ) Ident<e2>                                 Int
+    *                   |  ( Ident<∨> Ident<i1> | Ident<Vi1> )                               Int
+    *                   |  ( Ident<∨> Ident<i2> | Ident<Vi2> )                               Int
+    *                   |  ( Ident<∨> Ident<e> | Ident<Ve> )                                 Int Int Int { Int }
+    *                   |  ( Ident<→> | Ident<->> ) Ident<i>                                 Int
+    *                   |  ( Ident<→> | Ident<->> ) Ident<e>                                 Int Int { Int }
+    *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<i>                       Int
+    *                   |  ( Ident<¬> | Ident<~> | Ident<!> ) Ident<e>                       Int Int
+    *                   |  ( Ident<⊥> | Ident<_> `|' Ident<_> ) Ident<e>                     Int
+    *                   |  Ident<pbc>                                                        Int
+    *                   |  ( Ident<∀> Ident<i> | Ident<Ai> | Ident<alli> | Ident<foralli> )  Int
+    *                   |  ( Ident<∀> Ident<e> | Ident<Ae> | Ident<alle> | Ident<foralle> )  Int {nl} Expr { `,' {nl} Expr }
+    *                   |  ( Ident<∃> Ident<i> | Ident<Ei> | Ident<somei> | Ident<existsi> ) Int {nl} Expr { `,' {nl} Expr }
+    *                   |  ( Ident<∃> Ident<e> | Ident<Ee> | Ident<somee> | Ident<existse> ) Int Int
+    *                   |  Ident<fact>                                                       QualId
+    *                   |  Ident<invariant>                                                  [ QualId ]
+    *                   |  Ident<subst>                                                      ( '<' | '>' ) Int Int
+    *                   |  Ident<algebra>                                                    { Int }
+    *                   |  Ident<auto>                                                       { Int }
+    *                   |  Ident<coq>                                                        String { Int }
+    *  }}}
+    */
   private def proof(): AST.LClause.Proof = {
     def just(kind: String, offset: Int): AST.Just = {
       val input = token.pos.input
@@ -894,7 +939,8 @@ final class LParser(input: Input,
           }
           AST.AssumeProofStep.ForallIntroAps(n, isz(fresh.reverse))
         } else AST.AssumeProofStep.ForallIntroAps(n, ISZ(AST.VarFragment(isz(ids), SNone())))
-      } else if ("assume" != justKind) reporter.syntaxError(s"Expected assume but $justKind found", at = parserTokens(justPos))
+      } else if ("assume" != justKind)
+        reporter.syntaxError(s"Expected assume but $justKind found", at = parserTokens(justPos))
       else {
         val oldIn = in.asInstanceOf[LimitingTokenIterator]
         try {
@@ -965,31 +1011,31 @@ final class LParser(input: Input,
   }
 
   /** {{{
-   *  TruthTable     ::= BOF {nl}
-   *                     Ident<*> { Ident<*> } {nl}
-   *                     Ident<----...> {nl}
-   *                     { Ident } Ident<|> ( Sequent | Expr ) {nl}   // Sequent without Proof
-   *                     Ident<----...> {nl}
-   *                     { TruthTableRow {nl} }
-   *                     Ident<----...> {nl}
-   *                     [ TruthTableConc {nl} ]
-   *                     EOF
-   *
-   *  TruthTableRow  ::= [ BLits ] Ident<|> BLits
-   *
-   *  BLits          ::= BLit { BLit }
-   *
-   *  BLit           ::= Ident<T> | Ident<F>                          // Can be sequenced without whitespace
-   *
-   *  TruthTableConc ::= Ident<Valid> { {nl} `[' BLits `]' }
-   *                   |  Ident<Invalid> { {nl} `[' BLits `]' }
-   *                   |  Ident<Tautology>
-   *                   |  Ident<Contradictory>
-   *                   |  Ident<Contingent> {nl}
-   *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
-   *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
-   *  }}}
-   */
+    *  TruthTable     ::= BOF {nl}
+    *                     Ident<*> { Ident<*> } {nl}
+    *                     Ident<----...> {nl}
+    *                     { Ident } Ident<|> ( Sequent | Expr ) {nl}   // Sequent without Proof
+    *                     Ident<----...> {nl}
+    *                     { TruthTableRow {nl} }
+    *                     Ident<----...> {nl}
+    *                     [ TruthTableConc {nl} ]
+    *                     EOF
+    *
+    *  TruthTableRow  ::= [ BLits ] Ident<|> BLits
+    *
+    *  BLits          ::= BLit { BLit }
+    *
+    *  BLit           ::= Ident<T> | Ident<F>                          // Can be sequenced without whitespace
+    *
+    *  TruthTableConc ::= Ident<Valid> { {nl} `[' BLits `]' }
+    *                   |  Ident<Invalid> { {nl} `[' BLits `]' }
+    *                   |  Ident<Tautology>
+    *                   |  Ident<Contradictory>
+    *                   |  Ident<Contingent> {nl}
+    *                      [ Ident<-> ] Ident<T> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' } {nl}
+    *                      [ Ident<-> ] Ident<F> `:' {nl} `[' BLits `]' { {nl} `[' BLits `]' }
+    *  }}}
+    */
   def truthTable(fileUriOpt: SOption[SString]): SlangParser.Result = {
     def conclusion(isSequent: Boolean): SOption[AST.TruthTable.Conclusion] = {
       def assignment(): AST.TruthTable.Assignment = {
@@ -1006,48 +1052,48 @@ final class LParser(input: Input,
         case _ => return SNone()
       }
       val attr = sparser.attr(token.pos)
-      val r = if (isSequent)
-        text match {
-          case "Valid" | "Invalid" =>
-            next()
-            val isValid = if (text == "Valid") T else F
-            var assignments = List[AST.TruthTable.Assignment](assignment())
-            newLinesOpt()
-            while (tokenCurrOrAfterNl(token.is[LeftBracket])) {
-              assignments ::= assignment()
-            }
-            AST.TruthTable.Conclusion.Validity(isValid, isz(assignments.reverse), attr)
-          case _ => reporter.syntaxError(s"Either Valid or Invalid expected but found $text", at = token)
-        }
-      else
-        text match {
-          case "Tautology" =>
-            next()
-            AST.TruthTable.Conclusion.Tautology(attr)
-          case "Contradictory" =>
-            next()
-            AST.TruthTable.Conclusion.Contradictory(attr)
-          case "Contingent" =>
-            next()
-            newLinesOpt()
-            if (isIdentOf("-")) next()
-            if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
-            next()
-            accept[Colon]
-            var truthAssignments = List(assignment())
-            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
-              truthAssignments ::= assignment()
-            newLinesOpt()
-            if (isIdentOf("-")) next()
-            if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
-            next()
-            accept[Colon]
-            var falseAssignments = List(assignment())
-            while (tokenCurrOrAfterNl(token.is[LeftBracket]))
-              falseAssignments ::= assignment()
-            AST.TruthTable.Conclusion.Contingent(isz(truthAssignments.reverse), isz(falseAssignments.reverse), attr)
-          case _ => reporter.syntaxError(s"Either Tautology, Contradictory, or Contingent expected but found $text", at = token)
-        }
+      val r =
+        if (isSequent)
+          text match {
+            case "Valid" | "Invalid" =>
+              next()
+              val isValid = if (text == "Valid") T else F
+              var assignments = List[AST.TruthTable.Assignment](assignment())
+              newLinesOpt()
+              while (tokenCurrOrAfterNl(token.is[LeftBracket])) {
+                assignments ::= assignment()
+              }
+              AST.TruthTable.Conclusion.Validity(isValid, isz(assignments.reverse), attr)
+            case _ => reporter.syntaxError(s"Either Valid or Invalid expected but found $text", at = token)
+          } else
+          text match {
+            case "Tautology" =>
+              next()
+              AST.TruthTable.Conclusion.Tautology(attr)
+            case "Contradictory" =>
+              next()
+              AST.TruthTable.Conclusion.Contradictory(attr)
+            case "Contingent" =>
+              next()
+              newLinesOpt()
+              if (isIdentOf("-")) next()
+              if (!isIdentOf("T")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
+              next()
+              accept[Colon]
+              var truthAssignments = List(assignment())
+              while (tokenCurrOrAfterNl(token.is[LeftBracket])) truthAssignments ::= assignment()
+              newLinesOpt()
+              if (isIdentOf("-")) next()
+              if (!isIdentOf("F")) reporter.syntaxError(s"T expected but ${TokensHelper.name(token)} found", at = token)
+              next()
+              accept[Colon]
+              var falseAssignments = List(assignment())
+              while (tokenCurrOrAfterNl(token.is[LeftBracket])) falseAssignments ::= assignment()
+              AST.TruthTable.Conclusion.Contingent(isz(truthAssignments.reverse), isz(falseAssignments.reverse), attr)
+            case _ =>
+              reporter
+                .syntaxError(s"Either Tautology, Contradictory, or Contingent expected but found $text", at = token)
+          }
       newLinesOpt()
       SSome(r)
     }
@@ -1063,8 +1109,7 @@ final class LParser(input: Input,
         val offset = token.pos.start
         val value = token.value
         (for (j <- 0 until value.length) yield {
-          AST.Exp.LitB(value.charAt(j) == 'T',
-            sparser.attr(Position.Range(input, offset + j, offset + j + 1)))
+          AST.Exp.LitB(value.charAt(j) == 'T', sparser.attr(Position.Range(input, offset + j, offset + j + 1)))
         }).toList
       }
 
@@ -1088,7 +1133,7 @@ final class LParser(input: Input,
     }
 
     var vars = List[AST.Id]()
-    var sep: AST.PosInfo = null
+    var sep: message.Position = null
     var formula: AST.LClause.Sequent = null
     var isSequent: B = F
 
@@ -1109,7 +1154,7 @@ final class LParser(input: Input,
       newLinesOpt()
     }
 
-    var stars = List[AST.PosInfo]()
+    var stars = List[message.Position]()
 
     def start(): Unit = {
       if (isIdentOf("*")) {
@@ -1150,7 +1195,8 @@ final class LParser(input: Input,
       isSequent,
       formula,
       isz(rows.reverse),
-      conclusion(isSequent))
+      conclusion(isSequent)
+    )
     newLinesOpt()
     accept[EOF]
     SlangParser.Result(input.text, hashSireum = false, SSome(r))

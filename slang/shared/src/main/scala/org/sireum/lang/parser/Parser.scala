@@ -27,7 +27,7 @@
 package org.sireum.lang.parser
 
 import org.sireum._
-import org.sireum.lang.util._
+import org.sireum.message._
 
 @ext object Parser {
 

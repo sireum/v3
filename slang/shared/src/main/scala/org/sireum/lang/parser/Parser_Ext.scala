@@ -26,7 +26,7 @@
 package org.sireum.lang.parser
 
 import org.sireum._
-import org.sireum.lang.util._
+import org.sireum.message._
 
 import scala.meta._
 import scala.meta.internal.parsers.ModifiedScalametaParser
@@ -35,45 +35,62 @@ import scala.util._
 object Parser_Ext {
 
   def parseStmt[T](text: String): T = {
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
     val stat = Try(metap.parseStat) match {
       case Success(s) => s
       case Failure(e) => err(e.getMessage)
     }
-    val stmt = new SlangParser(text.value, input, dialect,
-      allowSireumPackage = false, hashSireum = true, isWorksheet = false,
-      isDiet = false, None(), reporter).translateStat(Enclosing.Method)(stat)
+    val stmt = new SlangParser(
+      text.value,
+      input,
+      dialect,
+      allowSireumPackage = false,
+      hashSireum = true,
+      isWorksheet = false,
+      isDiet = false,
+      None(),
+      reporter
+    ).translateStat(Enclosing.Method)(stat)
     reporter.printMessages()
     if (reporter.hasError) err()
     stmt.asInstanceOf[T]
   }
 
   def parseExp[T](text: String): T = {
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     val (dialect, input) = SlangParser.scalaDialect(isWorksheet = false)(text.value)
     val metap = new ModifiedScalametaParser(input, dialect)
     val term = Try(metap.parseTerm) match {
       case Success(t) => t
       case Failure(e) => err(e.getMessage)
     }
-    val exp = new SlangParser(text.value, input, dialect,
-      allowSireumPackage = false, hashSireum = true, isWorksheet = false,
-      isDiet = false, None(), reporter).translateExp(term)
+    val exp = new SlangParser(
+      text.value,
+      input,
+      dialect,
+      allowSireumPackage = false,
+      hashSireum = true,
+      isWorksheet = false,
+      isDiet = false,
+      None(),
+      reporter
+    ).translateExp(term)
     reporter.printMessages()
     if (reporter.hasError) err()
     exp.asInstanceOf[T]
   }
 
-  def parseTopUnit[T](text: String,
-                      allowSireum: B,
-                      isWorksheet: B,
-                      isDiet: B,
-                      fileUriOpt: Option[String],
-                      reporter: Reporter): Option[T] =
-    SlangParser(allowSireum, isWorksheet, isDiet, fileUriOpt,
-      text.value, reporter).unitOpt.map(_.asInstanceOf[T])
+  def parseTopUnit[T](
+    text: String,
+    allowSireum: B,
+    isWorksheet: B,
+    isDiet: B,
+    fileUriOpt: Option[String],
+    reporter: Reporter
+  ): Option[T] =
+    SlangParser(allowSireum, isWorksheet, isDiet, fileUriOpt, text.value, reporter).unitOpt.map(_.asInstanceOf[T])
 
   def err(s: Predef.String = "Can only be used for non-erroneous Slang statement."): Nothing = halt(s)
 }

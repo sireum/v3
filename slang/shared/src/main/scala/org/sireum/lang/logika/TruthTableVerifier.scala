@@ -27,7 +27,7 @@
 package org.sireum.lang.logika
 
 import org.sireum._
-import org.sireum.lang.util.Reporter
+import org.sireum.message._
 import org.sireum.lang.{ast => AST}
 
 object TruthTableVerifier {
@@ -84,7 +84,7 @@ object TruthTableVerifier {
       }
 
       var i = 0
-      val stars: ISZ[AST.PosInfo] = tt.stars
+      val stars: ISZ[Position] = tt.stars
       for (e <- tt.sequent.premises ++ tt.sequent.conclusions) {
         if (i < stars.size) {
           val posOpt = Some(stars(i))

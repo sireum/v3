@@ -29,7 +29,7 @@ package org.sireum.lang.symbol
 import org.sireum._
 import org.sireum.lang.parser.Parser
 import org.sireum.ops._
-import org.sireum.lang.util.{AccumulatingReporter, Reporter}
+import org.sireum.message._
 import org.sireum.lang.{ast => AST}
 
 object Resolver {
@@ -164,9 +164,9 @@ object Resolver {
       return (nameMap, typeMap)
     }
 
-    val emptyAttr = AST.Attr(None[AST.PosInfo]())
+    val emptyAttr = AST.Attr(None[Position]())
     val dollar = AST.Exp
-      .Ident(AST.Id("$", emptyAttr), AST.ResolvedAttr(None[AST.PosInfo](), None[AST.ResolvedInfo](), None[AST.Typed]()))
+      .Ident(AST.Id("$", emptyAttr), AST.ResolvedAttr(None[Position](), None[AST.ResolvedInfo](), None[AST.Typed]()))
 
     val dollarAssignExp = AST.Stmt.Expr(dollar, AST.TypedAttr(None(), None()))
 
@@ -241,15 +241,12 @@ object Resolver {
 
   }
 
-  @pure def combine(
-    r: (AccumulatingReporter, NameMap, TypeMap),
-    u: (AccumulatingReporter, NameMap, TypeMap)
-  ): (AccumulatingReporter, NameMap, TypeMap) = {
+  @pure def combine(r: (Reporter, NameMap, TypeMap), u: (Reporter, NameMap, TypeMap)): (Reporter, NameMap, TypeMap) = {
     var rNameMap = r._2
     var rTypeMap = r._3
     val uNameMap = u._2
     val uTypeMap = u._3
-    val reporter = AccumulatingReporter.combine(r._1, u._1)
+    val reporter = Reporter.combine(r._1, u._1)
     for (p <- uNameMap.entries) {
       val name = p._1
       val uInfo = p._2
@@ -260,7 +257,7 @@ object Resolver {
             case _ =>
               rInfo.posOpt match {
                 case Some(pos) =>
-                  val file: String = pos.fileUriOpt match {
+                  val file: String = pos.uriOpt match {
                     case Some(fileUri) => s" in $fileUri"
                     case _ => ""
                   }
@@ -282,7 +279,7 @@ object Resolver {
         case Some(rInfo) =>
           rInfo.posOpt match {
             case Some(pos) =>
-              val file: String = pos.fileUriOpt match {
+              val file: String = pos.uriOpt match {
                 case Some(fileUri) => s" in $fileUri"
                 case _ => ""
               }
@@ -303,9 +300,9 @@ object Resolver {
     sources: ISZ[(Option[String], String)],
     nameMap: NameMap,
     typeMap: TypeMap
-  ): (AccumulatingReporter, NameMap, TypeMap) = {
-    def parseGloballyResolve(p: (Option[String], String)): (AccumulatingReporter, NameMap, TypeMap) = {
-      val reporter = AccumulatingReporter.create
+  ): (Reporter, NameMap, TypeMap) = {
+    def parseGloballyResolve(p: (Option[String], String)): (Reporter, NameMap, TypeMap) = {
+      val reporter = Reporter.create
       val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
       val nameMap = HashMap.empty[QName, Info]
       val typeMap = HashMap.empty[QName, TypeInfo]
@@ -314,7 +311,7 @@ object Resolver {
       }
       r match {
         case Some(program) =>
-          val gdr = GlobalDeclarationResolver(nameMap, typeMap, AccumulatingReporter.create)
+          val gdr = GlobalDeclarationResolver(nameMap, typeMap, Reporter.create)
           gdr.resolveProgram(program)
           reporter.reports(gdr.reporter.messages)
           return (reporter, gdr.globalNameMap, gdr.globalTypeMap)
@@ -322,12 +319,11 @@ object Resolver {
       }
     }
 
-    val t = ISZOps(sources)
-      .mParMapFoldLeft[(AccumulatingReporter, NameMap, TypeMap), (AccumulatingReporter, NameMap, TypeMap)](
-        parseGloballyResolve _,
-        combine _,
-        (AccumulatingReporter.create, nameMap, typeMap)
-      )
+    val t = ISZOps(sources).mParMapFoldLeft[(Reporter, NameMap, TypeMap), (Reporter, NameMap, TypeMap)](
+      parseGloballyResolve _,
+      combine _,
+      (Reporter.create, nameMap, typeMap)
+    )
     val p = addBuiltIns(t._2, t._3)
     return (t._1, p._1, p._2)
   }

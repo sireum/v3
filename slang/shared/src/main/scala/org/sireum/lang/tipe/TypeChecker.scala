@@ -27,11 +27,10 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
-import org.sireum.lang.symbol.{GlobalDeclarationResolver, Resolver}
+import org.sireum.message._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util._
 
 object TypeChecker {
 
@@ -118,7 +117,7 @@ object TypeChecker {
     string"~>" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryMapsTo))
   )
 
-  @memoize def libraryReporter: (TypeChecker, AccumulatingReporter) = {
+  @memoize def libraryReporter: (TypeChecker, Reporter) = {
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
     val (reporter, nameMap, typeMap) =
@@ -131,7 +130,7 @@ object TypeChecker {
     return r
   }
 
-  @memoize def checkedLibraryReporter: (TypeChecker, AccumulatingReporter) = {
+  @memoize def checkedLibraryReporter: (TypeChecker, Reporter) = {
     val (tc, reporter) = libraryReporter
     val th = tc.typeHierarchy
     val th2 = TypeChecker.checkComponents(th, th.nameMap, th.typeMap, reporter)
@@ -140,7 +139,7 @@ object TypeChecker {
 
   def buildTypeSubstMap(
     name: QName,
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     typeParams: ISZ[AST.TypeParam],
     args: ISZ[AST.Typed],
     reporter: Reporter
@@ -162,7 +161,7 @@ object TypeChecker {
 
   def buildMethodSubstMap(
     m: AST.Typed.Method,
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     args: ISZ[AST.Typed],
     reporter: Reporter
   ): Option[HashMap[String, AST.Typed]] = {
@@ -197,7 +196,7 @@ object TypeChecker {
         tc.typeHierarchy
     }
 
-    val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, AccumulatingReporter.create)
+    val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, Reporter.create)
     gdr.resolveProgram(
       program(
         body = program.body(
@@ -223,10 +222,8 @@ object TypeChecker {
 
     val th2: TypeHierarchy = {
       val (rep, nameMap, typeMap) =
-        Resolver.combine(
-          (AccumulatingReporter.create, th.nameMap, th.typeMap),
-          (AccumulatingReporter.create, gdr.globalNameMap, gdr.globalTypeMap)
-        )
+        Resolver
+          .combine((Reporter.create, th.nameMap, th.typeMap), (Reporter.create, gdr.globalNameMap, gdr.globalTypeMap))
 
       if (rep.hasIssue) {
         reporter.reports(rep.messages)
@@ -268,7 +265,7 @@ object TypeChecker {
   }
 
   def checkComponents(th: TypeHierarchy, nameMap: NameMap, typeMap: TypeMap, reporter: Reporter): TypeHierarchy = {
-    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)]()
+    var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, Reporter)]()
     for (info <- typeMap.values) {
       info match {
         case info: TypeInfo.Sig if !info.typeChecked =>
@@ -287,9 +284,9 @@ object TypeChecker {
     val p = ops
       .ISZOps(jobs)
       .parMapFoldLeft(
-        (f: () => TypeHierarchy => (TypeHierarchy, AccumulatingReporter)) => f(),
+        (f: () => TypeHierarchy => (TypeHierarchy, Reporter)) => f(),
         TypeHierarchy.combine _,
-        (th, AccumulatingReporter.create)
+        (th, Reporter.create)
       )
     var r = p._1
     def reconstructObject(info: Info): Unit = {
@@ -337,12 +334,7 @@ import TypeChecker._
 
 @datatype class TypeChecker(typeHierarchy: TypeHierarchy, context: QName, inSpec: B) {
 
-  def basicKind(
-    scope: Scope,
-    tpe: AST.Typed,
-    posOpt: Option[AST.PosInfo],
-    reporter: Reporter
-  ): Option[BasicKind.Type] = {
+  def basicKind(scope: Scope, tpe: AST.Typed, posOpt: Option[Position], reporter: Reporter): Option[BasicKind.Type] = {
     tpe match {
       case tpe: AST.Typed.Name =>
         if (tpe.args.nonEmpty) {
@@ -408,7 +400,7 @@ import TypeChecker._
   }
 
   def checkStringInterpolator(
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     scope: Scope,
     prefix: String,
     reporter: Reporter
@@ -427,7 +419,7 @@ import TypeChecker._
   }
 
   def checkUnboundTypeVar(
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     t: AST.Typed,
     sm: HashMap[String, AST.Typed],
     typeParams: ISZ[String],
@@ -448,7 +440,7 @@ import TypeChecker._
     return T
   }
 
-  def checkIndexType(posOpt: Option[AST.PosInfo], t: AST.Typed, reporter: Reporter): Unit = {
+  def checkIndexType(posOpt: Option[Position], t: AST.Typed, reporter: Reporter): Unit = {
     if (t == AST.Typed.z) {
       return
     }
@@ -497,7 +489,7 @@ import TypeChecker._
       }
     }
 
-    def checkIS(posOpt: Option[AST.PosInfo], b: B): B = {
+    def checkIS(posOpt: Option[Position], b: B): B = {
       isISOpt match {
         case Some(prev) =>
           if (b != prev) {
@@ -809,7 +801,7 @@ import TypeChecker._
     }
 
     def checkBinary(exp: AST.Exp.Binary): (AST.Exp, Option[AST.Typed]) = {
-      val rep = AccumulatingReporter.create
+      val rep = Reporter.create
       val (newLeft, leftTypeOpt) = checkExp(None(), scope, exp.left, rep)
       if (leftTypeOpt.isEmpty) {
         return (exp(left = newLeft), None())
@@ -1306,7 +1298,7 @@ import TypeChecker._
     }
 
     def checkInvokeType(
-      posOpt: Option[AST.PosInfo],
+      posOpt: Option[Position],
       resOpt: Option[AST.ResolvedInfo],
       typed: AST.Typed,
       numOfArgs: Z,
@@ -1733,7 +1725,7 @@ import TypeChecker._
       }
 
       if (typeArgs.isEmpty && m.typeParams.nonEmpty) {
-        val repExpected = AccumulatingReporter.create
+        val repExpected = Reporter.create
         def tryExpected(): (AST.Exp, Option[AST.Typed]) = {
           expectedOpt match {
             case Some(expected) =>
@@ -1755,7 +1747,7 @@ import TypeChecker._
         if (rExpected._2.nonEmpty) {
           return rExpected
         }
-        val repArgs = AccumulatingReporter.create
+        val repArgs = Reporter.create
         def tryArgs(): (AST.Exp, Option[AST.Typed]) = {
           var newArgs = ISZ[AST.Exp]()
           var argTypes = ISZ[AST.Typed]()
@@ -1875,13 +1867,13 @@ import TypeChecker._
               case _ =>
                 halt(s"Unexpected situation when invoking IS/MS store/select.")
             }
-            var messages = ISZ[Reporter.Message]()
+            var messages = ISZ[Message]()
             var found = F
             var i = 0
             val size = m.methods.size
             var r = partResult
             while (!found && i < size) {
-              val rep = AccumulatingReporter.create
+              val rep = Reporter.create
               r = checkInvokeMethod(m.methods(i), Some(res.methods(i)), rep)
               if (!rep.hasIssue) {
                 found = T
@@ -2213,7 +2205,7 @@ import TypeChecker._
         case exp: AST.Exp.ForYield => val r = checkForYield(exp); return r
 
         case exp: AST.Exp.Fun =>
-          val pos: AST.PosInfo = exp.posOpt match {
+          val pos: Position = exp.posOpt match {
             case Some(p) => p
             case _ =>
               reporter.error(
@@ -2251,20 +2243,14 @@ import TypeChecker._
               kind match {
                 case BuiltInKind.Assertume =>
                   args.size match {
-                    case z"1" =>
-                      val r = checkAssertume(resOpt, exp, args(0), None());
-                      return r
-                    case z"2" =>
-                      val r =
-                        checkAssertume(resOpt, exp, args(0), Some(args(1)));
-                      return r
+                    case z"1" => val r = checkAssertume(resOpt, exp, args(0), None()); return r
+                    case z"2" => val r = checkAssertume(resOpt, exp, args(0), Some(args(1))); return r
                     case _ =>
                       reporter
                         .error(exp.posOpt, typeCheckerKind, s"Invalid number of arguments (${args.size}) for $name.")
                       return (exp, None())
                   }
-                case BuiltInKind.Print =>
-                  val r = checkPrint(resOpt, exp, args); return r
+                case BuiltInKind.Print => val r = checkPrint(resOpt, exp, args); return r
                 case BuiltInKind.Halt => val r = checkHalt(exp, args); return r
               }
             case _ => val r = checkInvoke(exp); return r
@@ -2574,21 +2560,19 @@ import TypeChecker._
           if (t != expected && typeHierarchy.isSubType(expected, t)) {
             // OK
           } else {
-            if (typeHierarchy.isSubType(t, expected)) {
+            if (t == expected) {
               reporter.warn(
                 tipe.posOpt,
                 typeCheckerKind,
-                s"Unnecessary type matching because it is always going to be successful (i.e.,  $t <: $expected)."
+                s"Unnecessary type matching because it is always going to be successful (i.e.,  $t ≡ $expected)."
               )
-            } else {
-              if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
-                reporter.error(
-                  tipe.posOpt,
-                  typeCheckerKind,
-                  s"Fruitless type matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
-                )
-                ok = F
-              }
+            } else if (typeHierarchy.glb(ISZ(expected, t)).isEmpty) {
+              reporter.error(
+                tipe.posOpt,
+                typeCheckerKind,
+                s"Fruitless type matching because it is always going to be unsuccessful (i.e., $t and $expected do not have a common subtype)."
+              )
+              ok = F
             }
           }
           return newTipe
@@ -3314,9 +3298,9 @@ import TypeChecker._
     return stmt(bodyOpt = Some(newBody))
   }
 
-  def checkAbstractDatatype(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+  def checkAbstractDatatype(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, Reporter) = {
     assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     val typeParams = typeParamMap(info.ast.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, info.scope)
     scope = scope(localThisOpt = Some(info.tpe))
@@ -3372,9 +3356,9 @@ import TypeChecker._
     )
   }
 
-  def checkSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+  def checkSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, Reporter) = {
     assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     val typeParams = typeParamMap(info.ast.typeParams, reporter)
     var scope = localTypeScope(typeParams.map, info.scope)
     scope = scope(localThisOpt = Some(info.tpe))
@@ -3423,7 +3407,7 @@ import TypeChecker._
     )
   }
 
-  def checkObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, AccumulatingReporter) = {
+  def checkObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, Reporter) = {
     assert(info.outlined, st"${(info.name, ".")} is not outlined".render)
     val name = info.name
     def getStmt(id: String): Option[AST.Stmt] = {
@@ -3436,7 +3420,7 @@ import TypeChecker._
         case _ => halt("Unexpected situation when type checking object.")
       }
     }
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     var scope = createNewScope(info.scope(enclosingName = name))
     scope = scope(localThisOpt = Some(AST.Typed.Object(info.owner, info.ast.id.value)))
     var stmtOpts = ISZ[Option[AST.Stmt]]()
@@ -3486,7 +3470,7 @@ import TypeChecker._
   }
 
   def unify(
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     allowSubType: B,
     expected: AST.Typed,
     tpe: AST.Typed,
@@ -3592,7 +3576,7 @@ import TypeChecker._
   }
 
   def unifies(
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     allowSubType: B,
     expected: ISZ[AST.Typed],
     tpe: ISZ[AST.Typed],

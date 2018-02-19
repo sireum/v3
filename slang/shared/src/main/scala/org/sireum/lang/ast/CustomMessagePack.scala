@@ -28,15 +28,10 @@ package org.sireum.lang.ast
 
 import org.sireum._
 import org.sireum.U8._
-import org.sireum.S8._
 
 object CustomMessagePack {
 
-  val FileInfoExtType: S8 = MessagePack.StringPoolExtType + s8"1"
-
   @record class Reader(val reader: MessagePack.Reader.Impl) extends MsgPack.Reader {
-
-    var fileInfoPool: MSZ[Option[FileInfo]] = MSZ()
 
     def errorOpt: Option[MessagePack.ErrorMsg] = {
       return reader.errorOpt
@@ -44,6 +39,7 @@ object CustomMessagePack {
 
     def init(): Unit = {
       reader.initialized = T
+      reader.pooling = T
       var pOpt = reader.readExtTypeHeader()
       pOpt match {
         case Some((t, size)) =>
@@ -51,7 +47,7 @@ object CustomMessagePack {
           reader.stringPool.expand(size, "")
           var i = 0
           while (i < size) {
-            val s = reader.readStringConstant()
+            val s = reader.readStringNoPool()
             reader.stringPool(i) = s
             i = i + 1
           }
@@ -60,36 +56,20 @@ object CustomMessagePack {
       pOpt = reader.readExtTypeHeader()
       pOpt match {
         case Some((t, size)) =>
-          assert(t == FileInfoExtType)
-          fileInfoPool.expand(size, None())
+          assert(t == MessagePack.DocInfoExtType)
+          reader.docInfoPool.expand(size, message.DocInfo(None(), ISZ()))
           var i = 0
           while (i < size) {
-            val o = super.readFileInfo()
-            fileInfoPool(i) = Some(o)
+            val docInfo = reader.readDocInfoNoPool()
+            reader.docInfoPool(i) = docInfo
             i = i + 1
           }
         case _ =>
       }
     }
-
-    override def readFileInfo(): FileInfo = {
-      val n = reader.readZ()
-      return fileInfoPool(n).get
-    }
   }
 
   @record class Writer(val writer: MessagePack.Writer.Impl) extends MsgPack.Writer {
-    var fileInfoPool: HashSMap[FileInfo, Z] = HashSMap.empty
-
-    override def writeFileInfo(o: FileInfo): Unit = {
-      val n: Z = fileInfoPool.get(o) match {
-        case Some(m) => m
-        case _ =>
-          fileInfoPool = fileInfoPool + o ~> fileInfoPool.size
-          fileInfoPool.size - 1
-      }
-      writer.writeZ(n)
-    }
 
     override def result: ISZ[U8] = {
       val strings = writer.stringPool.keys.elements
@@ -100,31 +80,28 @@ object CustomMessagePack {
         }
         r + 4
       }
-      val (poolBuf, poolBufSize): (MSZ[U8], Z) = {
-        val w = MsgPack.Writer.Default(
-          MessagePack.Writer.Impl(F, MSZ.create(poolBufferSize + fileInfoPool.size * 1000, u8"0"), 0, HashSMap.empty)
-        )
-        w.writer.writeExtTypeHeader(MessagePack.StringPoolExtType, strings.size)
+      val (stringPoolBuf, stringPoolBufSize): (MSZ[U8], Z) = {
+        val r = MessagePack.Writer.Impl(F, MSZ.create(poolBufferSize, u8"0"), 0)
+        r.writeExtTypeHeader(MessagePack.StringPoolExtType, strings.size)
         for (s <- strings) {
-          w.writer.writeStringConstant(s)
+          r.writeStringNoPool(s)
         }
-        val size = fileInfoPool.size
-        w.writer.writeExtTypeHeader(FileInfoExtType, size)
-        for (o <- fileInfoPool.keys.elements) {
-          w.writeFileInfo(o)
+        r.writeExtTypeHeader(MessagePack.DocInfoExtType, writer.docInfoPool.size)
+        for (di <- writer.docInfoPool.keys.elements) {
+          r.writeDocInfoNoPool(di)
         }
-        (w.writer.buf, w.writer.size)
+        (r.buf, r.size)
       }
 
-      val r = MSZ.create(poolBufSize + writer.size, u8"0")
+      val r = MSZ.create(stringPoolBufSize + writer.size, u8"0")
       var i = 0
-      while (i < poolBufSize) {
-        r(i) = poolBuf(i)
+      while (i < stringPoolBufSize) {
+        r(i) = stringPoolBuf(i)
         i = i + 1
       }
       i = 0
       while (i < writer.size) {
-        r(i + poolBufSize) = writer.buf(i)
+        r(i + stringPoolBufSize) = writer.buf(i)
         i = i + 1
       }
       return r.toIS
@@ -132,28 +109,28 @@ object CustomMessagePack {
   }
 
   def fromTopUnit(o: TopUnit): ISZ[U8] = {
-    val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0, HashSMap.emptyInit(1024)))
+    val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0))
     writer.writeTopUnit(o)
     val r = writer.result
     return r
   }
 
   def toTopUnit(data: ISZ[U8]): TopUnit = {
-    val reader = Reader(MessagePack.Reader.Impl(data, 0, MSZ(), T))
+    val reader = Reader(MessagePack.Reader.Impl(data, 0))
     reader.init()
     val r = reader.readTopUnit()
     return r
   }
 
   def fromExp(o: Exp): ISZ[U8] = {
-    val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0, HashSMap.emptyInit(1024)))
+    val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0))
     writer.writeExp(o)
     val r = writer.result
     return r
   }
 
   def toExp(data: ISZ[U8]): Exp = {
-    val reader = Reader(MessagePack.Reader.Impl(data, 0, MSZ(), T))
+    val reader = Reader(MessagePack.Reader.Impl(data, 0))
     reader.init()
     val r = reader.readExp()
     return r

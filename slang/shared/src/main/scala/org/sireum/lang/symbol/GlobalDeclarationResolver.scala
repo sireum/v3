@@ -29,7 +29,7 @@ package org.sireum.lang.symbol
 import org.sireum._
 import org.sireum.ops._
 import Resolver._
-import org.sireum.lang.util.Reporter
+import org.sireum.message._
 import org.sireum.lang.{ast => AST}
 
 object GlobalDeclarationResolver {
@@ -59,7 +59,7 @@ import GlobalDeclarationResolver._
 
     for (info <- globalTypeMap.values) {
 
-      @pure def helper: (ISZ[String], String, B, String, Option[AST.PosInfo], Scope.Global) = {
+      @pure def helper: (ISZ[String], String, B, String, Option[Position], Scope.Global) = {
         val emptyScope = Scope.Global(ISZ(), ISZ(), ISZ())
         info match {
           case info: TypeInfo.Sig =>
@@ -284,7 +284,7 @@ import GlobalDeclarationResolver._
         var elements = Map.empty[String, Option[AST.ResolvedInfo]]
         val elementTypeName = name :+ Info.Enum.elementTypeSuffix
         val elementTypedOpt: Option[AST.Typed] = Some(AST.Typed.Name(elementTypeName, ISZ()))
-        var elementPosOpts: ISZ[Option[AST.PosInfo]] = ISZ()
+        var elementPosOpts: ISZ[Option[Position]] = ISZ()
         var ordinal = 0
         for (e <- stmt.elements) {
           if (elements.contains(e.value)) {
@@ -315,13 +315,7 @@ import GlobalDeclarationResolver._
           declareName(
             "enumeration element",
             name :+ e._1,
-            Info.EnumElement(
-              name,
-              e._1,
-              elementTypedOpt,
-              e._2,
-              posOpt
-            ),
+            Info.EnumElement(name, e._1, elementTypedOpt, e._2, posOpt),
             posOpt
           )
           i = i + 1
@@ -527,7 +521,7 @@ import GlobalDeclarationResolver._
     TypeInfo.Members(specVars, vars, specMethods, methods)
   }
 
-  def declareName(entity: String, name: QName, info: Info, posOpt: Option[AST.PosInfo]): Unit = {
+  def declareName(entity: String, name: QName, info: Info, posOpt: Option[Position]): Unit = {
     assert(name == info.name)
     globalNameMap.get(name) match {
       case Some(_) =>
@@ -537,7 +531,7 @@ import GlobalDeclarationResolver._
     }
   }
 
-  def declareType(entity: String, name: QName, info: TypeInfo, posOpt: Option[AST.PosInfo]): Unit = {
+  def declareType(entity: String, name: QName, info: TypeInfo, posOpt: Option[Position]): Unit = {
     assert(name == info.name)
     if (disallowedTypeIds.contains(name(name.size - 1)) && ops.ISZOps(name).dropRight(1) != AST.Typed.sireumName) {
       reporter.error(
@@ -574,7 +568,7 @@ import GlobalDeclarationResolver._
     }
   }
 
-  def declarePackage(name: QName, posOpt: Option[AST.PosInfo]): Unit = {
+  def declarePackage(name: QName, posOpt: Option[Position]): Unit = {
     globalNameMap.get(name) match {
       case Some(_: Info.Package) =>
       case Some(_) =>

@@ -27,23 +27,25 @@ package org.sireum.lang.tools
 
 import java.io.File
 
+import org.sireum.message._
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol.GlobalDeclarationResolver
-import org.sireum.lang.util.Reporter
 import org.sireum.util.FileUtil
 import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object SerializerGenJvm {
   val messageKind = "JsonGen"
 
-  def apply(allowSireumPackage: Boolean,
-            mode: SerializerGen.Mode.Type,
-            licenseOpt: Option[File],
-            src: File,
-            dest: File,
-            nameOpt: SOption[SString],
-            reporter: Reporter): SOption[String] = {
+  def apply(
+    allowSireumPackage: Boolean,
+    mode: SerializerGen.Mode.Type,
+    licenseOpt: Option[File],
+    src: File,
+    dest: File,
+    nameOpt: SOption[SString],
+    reporter: Reporter
+  ): SOption[String] = {
     val srcText = FileUtil.readFile(src)
     val srcUri = FileUtil.toUri(src)
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
@@ -56,8 +58,8 @@ object SerializerGenJvm {
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
-        val gen = SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap,
-          Util.ids2strings(p.packageName.ids), reporter)
+        val gen =
+          SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap, Util.ids2strings(p.packageName.ids), reporter)
         reporter.reports(gen.reporter.messages)
         SSome(gen.gen(lOpt, fOpt, nameOpt).render.value)
       case _ =>

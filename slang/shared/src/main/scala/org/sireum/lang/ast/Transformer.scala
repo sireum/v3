@@ -940,14 +940,6 @@ object Transformer {
       return PreResult(ctx, T, None())
     }
 
-    @pure def prePosInfo(ctx: Context, o: PosInfo): PreResult[Context, PosInfo] = {
-      return PreResult(ctx, T, None())
-    }
-
-    @pure def preFileInfo(ctx: Context, o: FileInfo): PreResult[Context, FileInfo] = {
-      return PreResult(ctx, T, None())
-    }
-
     @pure def postTopUnit(ctx: Context, o: TopUnit): Result[Context, TopUnit] = {
       o match {
         case o: TopUnit.Program => return postTopUnitProgram(ctx, o)
@@ -1845,14 +1837,6 @@ object Transformer {
       return Result(ctx, None())
     }
 
-    @pure def postPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
-      return Result(ctx, None())
-    }
-
-    @pure def postFileInfo(ctx: Context, o: FileInfo): Result[Context, FileInfo] = {
-      return Result(ctx, None())
-    }
-
   }
 
   @pure def transformISZ[Context, T](ctx: Context, s: IS[Z, T], f: (Context, T) => Result[Context, T] @pure): Result[Context, IS[Z, T]] = {
@@ -1911,16 +1895,14 @@ import Transformer._
           else
             Result(r0.ctx, None())
         case o2: TopUnit.TruthTableUnit =>
-          val r0: Result[Context, IS[Z, PosInfo]] = transformISZ(ctx, o2.stars, transformPosInfo)
-          val r1: Result[Context, IS[Z, Id]] = transformISZ(r0.ctx, o2.vars, transformId)
-          val r2: Result[Context, PosInfo] = transformPosInfo(r1.ctx, o2.separator)
-          val r3: Result[Context, LClause.Sequent] = transformLClauseSequent(r2.ctx, o2.sequent)
-          val r4: Result[Context, IS[Z, TruthTable.Row]] = transformISZ(r3.ctx, o2.rows, transformTruthTableRow)
-          val r5: Result[Context, Option[TruthTable.Conclusion]] = transformOption(r4.ctx, o2.conclusionOpt, transformTruthTableConclusion)
-          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty || r4.resultOpt.nonEmpty || r5.resultOpt.nonEmpty)
-            Result(r5.ctx, Some(o2(stars = r0.resultOpt.getOrElse(o2.stars), vars = r1.resultOpt.getOrElse(o2.vars), separator = r2.resultOpt.getOrElse(o2.separator), sequent = r3.resultOpt.getOrElse(o2.sequent), rows = r4.resultOpt.getOrElse(o2.rows), conclusionOpt = r5.resultOpt.getOrElse(o2.conclusionOpt))))
+          val r0: Result[Context, IS[Z, Id]] = transformISZ(ctx, o2.vars, transformId)
+          val r1: Result[Context, LClause.Sequent] = transformLClauseSequent(r0.ctx, o2.sequent)
+          val r2: Result[Context, IS[Z, TruthTable.Row]] = transformISZ(r1.ctx, o2.rows, transformTruthTableRow)
+          val r3: Result[Context, Option[TruthTable.Conclusion]] = transformOption(r2.ctx, o2.conclusionOpt, transformTruthTableConclusion)
+          if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty || r3.resultOpt.nonEmpty)
+            Result(r3.ctx, Some(o2(vars = r0.resultOpt.getOrElse(o2.vars), sequent = r1.resultOpt.getOrElse(o2.sequent), rows = r2.resultOpt.getOrElse(o2.rows), conclusionOpt = r3.resultOpt.getOrElse(o2.conclusionOpt))))
           else
-            Result(r5.ctx, None())
+            Result(r3.ctx, None())
       }
       rOpt
     } else if (preR.resultOpt.nonEmpty) {
@@ -3690,12 +3672,11 @@ import Transformer._
       val o2: TruthTable.Row = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
       val r0: Result[Context, TruthTable.Assignment] = transformTruthTableAssignment(ctx, o2.assignment)
-      val r1: Result[Context, PosInfo] = transformPosInfo(r0.ctx, o2.separator)
-      val r2: Result[Context, TruthTable.Assignment] = transformTruthTableAssignment(r1.ctx, o2.values)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(assignment = r0.resultOpt.getOrElse(o2.assignment), separator = r1.resultOpt.getOrElse(o2.separator), values = r2.resultOpt.getOrElse(o2.values))))
+      val r1: Result[Context, TruthTable.Assignment] = transformTruthTableAssignment(r0.ctx, o2.values)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+        Result(r1.ctx, Some(o2(assignment = r0.resultOpt.getOrElse(o2.assignment), values = r1.resultOpt.getOrElse(o2.values))))
       else
-        Result(r2.ctx, None())
+        Result(r1.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {
@@ -3902,11 +3883,10 @@ import Transformer._
     val r: Result[Context, Attr] = if (preR.continu) {
       val o2: Attr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt))))
+      if (hasChanged)
+        Result(ctx, Some(o2))
       else
-        Result(r0.ctx, None())
+        Result(ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {
@@ -3929,12 +3909,11 @@ import Transformer._
     val r: Result[Context, TypedAttr] = if (preR.continu) {
       val o2: TypedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo)
-      val r1: Result[Context, Option[Typed]] = transformOption(r0.ctx, o2.typedOpt, transformTyped)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
-        Result(r1.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), typedOpt = r1.resultOpt.getOrElse(o2.typedOpt))))
+      val r0: Result[Context, Option[Typed]] = transformOption(ctx, o2.typedOpt, transformTyped)
+      if (hasChanged || r0.resultOpt.nonEmpty)
+        Result(r0.ctx, Some(o2(typedOpt = r0.resultOpt.getOrElse(o2.typedOpt))))
       else
-        Result(r1.ctx, None())
+        Result(r0.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {
@@ -3957,13 +3936,12 @@ import Transformer._
     val r: Result[Context, ResolvedAttr] = if (preR.continu) {
       val o2: ResolvedAttr = preR.resultOpt.getOrElse(o)
       val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, Option[PosInfo]] = transformOption(ctx, o2.posOpt, transformPosInfo)
-      val r1: Result[Context, Option[ResolvedInfo]] = transformOption(r0.ctx, o2.resOpt, transformResolvedInfo)
-      val r2: Result[Context, Option[Typed]] = transformOption(r1.ctx, o2.typedOpt, transformTyped)
-      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty || r2.resultOpt.nonEmpty)
-        Result(r2.ctx, Some(o2(posOpt = r0.resultOpt.getOrElse(o2.posOpt), resOpt = r1.resultOpt.getOrElse(o2.resOpt), typedOpt = r2.resultOpt.getOrElse(o2.typedOpt))))
+      val r0: Result[Context, Option[ResolvedInfo]] = transformOption(ctx, o2.resOpt, transformResolvedInfo)
+      val r1: Result[Context, Option[Typed]] = transformOption(r0.ctx, o2.typedOpt, transformTyped)
+      if (hasChanged || r0.resultOpt.nonEmpty || r1.resultOpt.nonEmpty)
+        Result(r1.ctx, Some(o2(resOpt = r0.resultOpt.getOrElse(o2.resOpt), typedOpt = r1.resultOpt.getOrElse(o2.typedOpt))))
       else
-        Result(r2.ctx, None())
+        Result(r1.ctx, None())
     } else if (preR.resultOpt.nonEmpty) {
       Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
     } else {
@@ -4054,59 +4032,6 @@ import Transformer._
     val hasChanged: B = r.resultOpt.nonEmpty
     val o2: ResolvedInfo = r.resultOpt.getOrElse(o)
     val postR: Result[Context, ResolvedInfo] = pp.postResolvedInfo(r.ctx, o2)
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformPosInfo(ctx: Context, o: PosInfo): Result[Context, PosInfo] = {
-    val preR: PreResult[Context, PosInfo] = pp.prePosInfo(ctx, o)
-    val r: Result[Context, PosInfo] = if (preR.continu) {
-      val o2: PosInfo = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      val r0: Result[Context, FileInfo] = transformFileInfo(ctx, o2.fileInfo)
-      if (hasChanged || r0.resultOpt.nonEmpty)
-        Result(r0.ctx, Some(o2(fileInfo = r0.resultOpt.getOrElse(o2.fileInfo))))
-      else
-        Result(r0.ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: PosInfo = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, PosInfo] = pp.postPosInfo(r.ctx, o2)
-    if (postR.resultOpt.nonEmpty) {
-      return postR
-    } else if (hasChanged) {
-      return Result(postR.ctx, Some(o2))
-    } else {
-      return Result(postR.ctx, None())
-    }
-  }
-
-  @pure def transformFileInfo(ctx: Context, o: FileInfo): Result[Context, FileInfo] = {
-    val preR: PreResult[Context, FileInfo] = pp.preFileInfo(ctx, o)
-    val r: Result[Context, FileInfo] = if (preR.continu) {
-      val o2: FileInfo = preR.resultOpt.getOrElse(o)
-      val hasChanged: B = preR.resultOpt.nonEmpty
-      if (hasChanged)
-        Result(ctx, Some(o2))
-      else
-        Result(ctx, None())
-    } else if (preR.resultOpt.nonEmpty) {
-      Result(preR.ctx, Some(preR.resultOpt.getOrElse(o)))
-    } else {
-      Result(preR.ctx, None())
-    }
-    val hasChanged: B = r.resultOpt.nonEmpty
-    val o2: FileInfo = r.resultOpt.getOrElse(o)
-    val postR: Result[Context, FileInfo] = pp.postFileInfo(r.ctx, o2)
     if (postR.resultOpt.nonEmpty) {
       return postR
     } else if (hasChanged) {

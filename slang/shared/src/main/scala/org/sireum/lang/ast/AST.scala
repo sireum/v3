@@ -27,6 +27,7 @@
 package org.sireum.lang.ast
 
 import org.sireum._
+import org.sireum.message._
 
 @datatype trait TopUnit {
   @pure def fileUriOpt: Option[String]
@@ -40,9 +41,9 @@ object TopUnit {
 
   @datatype class TruthTableUnit(
     val fileUriOpt: Option[String],
-    stars: ISZ[PosInfo],
+    stars: ISZ[Position],
     vars: ISZ[Id],
-    separator: PosInfo,
+    separator: Position,
     isSequent: B,
     sequent: LClause.Sequent,
     rows: ISZ[TruthTable.Row],
@@ -52,7 +53,7 @@ object TopUnit {
 }
 
 @datatype trait Stmt {
-  def posOpt: Option[PosInfo]
+  def posOpt: Option[Position]
 
   def asAssignExp: AssignExp = {
     halt(s"Invalid operation 'asAssignExp' on $this.")
@@ -90,7 +91,7 @@ object Stmt {
 
   @datatype class Import(importers: ISZ[Import.Importer], @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -113,7 +114,7 @@ object Stmt {
   @datatype class Var(isVal: B, id: Id, tipeOpt: Option[Type], initOpt: Option[AssignExp], @hidden attr: Attr)
       extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -122,7 +123,7 @@ object Stmt {
   @datatype class VarPattern(isVal: B, pattern: Pattern, tipeOpt: Option[Type], init: AssignExp, @hidden attr: Attr)
       extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -130,7 +131,7 @@ object Stmt {
 
   @datatype class SpecVar(isVal: B, id: Id, tipe: Type, @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -146,7 +147,7 @@ object Stmt {
     @hidden attr: Attr
   ) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -154,7 +155,7 @@ object Stmt {
 
   @datatype class ExtMethod(isPure: B, sig: MethodSig, contract: Contract, @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -163,7 +164,7 @@ object Stmt {
   @datatype class SpecMethod(sig: MethodSig, defs: ISZ[SpecDef], where: ISZ[WhereDef], @hidden attr: Attr)
       extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -171,7 +172,7 @@ object Stmt {
 
   @datatype class Enum(id: Id, elements: ISZ[Id], @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -191,7 +192,7 @@ object Stmt {
     @hidden attr: Attr
   ) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -202,7 +203,7 @@ object Stmt {
 
   @datatype class Object(isExt: B, id: Id, parents: ISZ[Type], stmts: ISZ[Stmt], @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -218,7 +219,7 @@ object Stmt {
     @hidden attr: Attr
   ) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -235,7 +236,7 @@ object Stmt {
     @hidden attr: Attr
   ) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -243,7 +244,7 @@ object Stmt {
 
   @datatype class TypeAlias(id: Id, typeParams: ISZ[TypeParam], tipe: Type, @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -251,7 +252,7 @@ object Stmt {
 
   @datatype class Assign(lhs: Exp, rhs: AssignExp, @hidden attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -259,7 +260,7 @@ object Stmt {
 
   @datatype class Block(body: Body, @hidden attr: Attr) extends Stmt with AssignExp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -275,7 +276,7 @@ object Stmt {
 
   @datatype class If(cond: Exp, thenBody: Body, elseBody: Body, @hidden attr: Attr) extends Stmt with AssignExp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -290,7 +291,7 @@ object Stmt {
 
   @datatype class Match(exp: Exp, cases: ISZ[Case], @hidden attr: Attr) extends Stmt with AssignExp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -307,7 +308,7 @@ object Stmt {
   @datatype class While(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
       extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -316,7 +317,7 @@ object Stmt {
   @datatype class DoWhile(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
       extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -330,7 +331,7 @@ object Stmt {
     @hidden attr: Attr
   ) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -338,7 +339,7 @@ object Stmt {
 
   @datatype class Return(expOpt: Option[Exp], @hidden attr: TypedAttr) extends Stmt with AssignExp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -350,7 +351,7 @@ object Stmt {
 
   @datatype class LStmt(clause: LClause, @hidden val attr: Attr) extends Stmt {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -358,7 +359,7 @@ object Stmt {
 
   @datatype class Expr(exp: Exp, @hidden attr: TypedAttr) extends Stmt with AssignExp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -420,7 +421,7 @@ object EnumGen {
 
 @datatype trait Type {
 
-  @pure def posOpt: Option[PosInfo]
+  @pure def posOpt: Option[Position]
 
   @pure def typedOpt: Option[Typed]
 
@@ -431,7 +432,7 @@ object Type {
 
   @datatype class Named(name: Name, typeArgs: ISZ[Type], attr: TypedAttr) extends Type {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -447,7 +448,7 @@ object Type {
 
   @datatype class Fun(isPure: B, isByName: B, args: ISZ[Type], ret: Type, attr: TypedAttr) extends Type {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -463,7 +464,7 @@ object Type {
 
   @datatype class Tuple(args: ISZ[Type], attr: TypedAttr) extends Type {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -480,14 +481,14 @@ object Type {
 }
 
 @datatype trait Pattern {
-  @pure def posOpt: Option[PosInfo]
+  @pure def posOpt: Option[Position]
 }
 
 object Pattern {
 
   @datatype class Literal(lit: Lit) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return lit.posOpt
     }
 
@@ -495,7 +496,7 @@ object Pattern {
 
   @datatype class LitInterpolate(prefix: String, value: String, @hidden attr: TypedAttr) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -503,7 +504,7 @@ object Pattern {
 
   @datatype class Ref(name: Name, @hidden attr: ResolvedAttr) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -511,7 +512,7 @@ object Pattern {
 
   @datatype class VarBinding(id: Id, tipeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -519,7 +520,7 @@ object Pattern {
 
   @datatype class Wildcard(typeOpt: Option[Type], @hidden attr: TypedAttr) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -527,7 +528,7 @@ object Pattern {
 
   @datatype class SeqWildcard(@hidden attr: TypedAttr) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -540,7 +541,7 @@ object Pattern {
     @hidden attr: ResolvedAttr
   ) extends Pattern {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -550,7 +551,7 @@ object Pattern {
 
 @datatype trait Exp {
 
-  @pure def posOpt: Option[PosInfo]
+  @pure def posOpt: Option[Position]
 
   @pure def typedOpt: Option[Typed]
 
@@ -558,7 +559,7 @@ object Pattern {
 
 @sig sealed trait Lit {
 
-  @pure def posOpt: Option[PosInfo]
+  @pure def posOpt: Option[Position]
 
   @pure def typedOpt: Option[Typed]
 
@@ -568,7 +569,7 @@ object Exp {
 
   @datatype class LitB(value: B, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -579,7 +580,7 @@ object Exp {
 
   @datatype class LitC(value: C, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -590,7 +591,7 @@ object Exp {
 
   @datatype class LitZ(value: Z, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -601,7 +602,7 @@ object Exp {
 
   @datatype class LitF32(value: F32, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -612,7 +613,7 @@ object Exp {
 
   @datatype class LitF64(value: F64, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -623,7 +624,7 @@ object Exp {
 
   @datatype class LitR(value: R, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -634,7 +635,7 @@ object Exp {
 
   @datatype class LitString(value: String, @hidden attr: Attr) extends Exp with Lit {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -646,7 +647,7 @@ object Exp {
   @datatype class StringInterpolate(prefix: String, lits: ISZ[LitString], args: ISZ[Exp], @hidden attr: TypedAttr)
       extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -657,7 +658,7 @@ object Exp {
 
   @datatype class This(@hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -668,7 +669,7 @@ object Exp {
 
   @datatype class Super(idOpt: Option[Id], @hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -686,7 +687,7 @@ object Exp {
 
   @datatype class Unary(op: UnaryOp.Type, exp: Exp, @hidden attr: ResolvedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -731,7 +732,7 @@ object Exp {
 
   @datatype class Binary(left: Exp, op: String, right: Exp, @hidden attr: ResolvedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -770,7 +771,7 @@ object Exp {
       }
     }
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -781,7 +782,7 @@ object Exp {
 
   @datatype class Eta(ref: Ref, @hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -792,7 +793,7 @@ object Exp {
 
   @datatype class Tuple(args: ISZ[Exp], @hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -808,7 +809,7 @@ object Exp {
       return this
     }
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -820,7 +821,7 @@ object Exp {
   @datatype class Invoke(receiverOpt: Option[Exp], id: Id, targs: ISZ[Type], args: ISZ[Exp], @hidden attr: ResolvedAttr)
       extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -837,7 +838,7 @@ object Exp {
     @hidden attr: ResolvedAttr
   ) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -848,7 +849,7 @@ object Exp {
 
   @datatype class If(cond: Exp, thenExp: Exp, elseExp: Exp, @hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -871,7 +872,7 @@ object Exp {
     @hidden attr: TypedAttr
   ) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -882,7 +883,7 @@ object Exp {
 
   @datatype class ForYield(enumGens: ISZ[EnumGen.For], exp: Exp, @hidden attr: TypedAttr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -893,7 +894,7 @@ object Exp {
 
   @datatype class Quant(isForall: B, varFragments: ISZ[VarFragment], exp: Exp, @hidden attr: Attr) extends Exp {
 
-    @pure override def posOpt: Option[PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return attr.posOpt
     }
 
@@ -1052,7 +1053,7 @@ object Just {
 
 object TruthTable {
 
-  @datatype class Row(assignment: Assignment, separator: PosInfo, values: Assignment)
+  @datatype class Row(assignment: Assignment, separator: Position, values: Assignment)
 
   @datatype class Assignment(values: ISZ[Exp.LitB], @hidden attr: Attr)
 
@@ -1083,6 +1084,20 @@ object TruthTable {
   @pure def isPureFun: B
 
   @pure def subst(map: HashMap[String, Typed]): Typed
+
+  @pure override def hash: Z = {
+    this match  {
+      case t: Typed.Name => return (t.ids, t.args).hash
+      case t: Typed.TypeVar => return t.id.hash
+      case t: Typed.Tuple => return t.args.hash
+      case t: Typed.Method => return t.name.hash
+      case t: Typed.Enum => return t.name.hash
+      case t: Typed.Object => return t.name.hash
+      case t: Typed.Methods => return t.methods.hash
+      case t: Typed.Package => return t.name.hash
+      case t: Typed.Fun => return (t.args, t.ret).hash
+    }
+  }
 
   @pure def isEqual(other: Typed): B = {
     (this, other) match {
@@ -1704,11 +1719,11 @@ object Typed {
 
 }
 
-@datatype class Attr(posOpt: Option[PosInfo])
+@datatype class Attr(posOpt: Option[Position])
 
-@datatype class TypedAttr(posOpt: Option[PosInfo], typedOpt: Option[Typed])
+@datatype class TypedAttr(posOpt: Option[Position], typedOpt: Option[Typed])
 
-@datatype class ResolvedAttr(posOpt: Option[PosInfo], resOpt: Option[ResolvedInfo], typedOpt: Option[Typed])
+@datatype class ResolvedAttr(posOpt: Option[Position], resOpt: Option[ResolvedInfo], typedOpt: Option[Typed])
 
 @datatype trait ResolvedInfo
 
@@ -1797,102 +1812,4 @@ object ResolvedInfo {
 
   @datatype class LocalVar(context: ISZ[String], id: String) extends ResolvedInfo
 
-}
-
-import org.sireum.U64._
-
-@datatype class PosInfo(fileInfo: FileInfo, offsetLength: U64) {
-
-  //{
-  //  assert(beginLine >= 1, "beginLine")
-  //  assert(beginColumn >= 1, "beginColumn")
-  //  assert(endLine >= 1, "endLine")
-  //  assert(endColumn >= 1, "endColumn")
-  //  assert(offset >= 0, "offset")
-  //  assert(length >= 0, "length")
-  //}
-
-  l"""invariant beginLine ≥ 1
-                beginColumn ≥ 1
-                endLine ≥ 1
-                endColumn ≥ 1
-                offset ≥ 0
-                length ≥ 0
-   """
-
-  @pure def fileUriOpt: Option[String] = {
-    return fileInfo.fileUriOpt
-  }
-
-  @pure def beginLine: Z = {
-    return conversions.U64.toZ(fileInfo.lineColumn(offsetLength) >>> u64"32")
-  }
-
-  @pure def beginColumn: Z = {
-    return conversions.U64.toZ(fileInfo.lineColumn(offsetLength) & u64"0xFFFFFFFF")
-  }
-
-  @pure def endLine: Z = {
-    val endOffset = offsetLength + ((offsetLength - u64"1") << u64"32")
-    return conversions.U64.toZ(fileInfo.lineColumn(endOffset) >>> u64"32")
-  }
-
-  @pure def endColumn: Z = {
-    val endOffset = offsetLength + ((offsetLength - u64"1") << u64"32")
-    return conversions.U64.toZ(fileInfo.lineColumn(endOffset) & u64"0xFFFFFFFF")
-  }
-
-  @pure def offset: Z = {
-    return conversions.U64.toZ(offsetLength >>> u64"32")
-  }
-
-  @pure def length: Z = {
-    return conversions.U64.toZ(offsetLength & u64"0xFFFFFFFF")
-  }
-
-  @pure override def string: String = {
-    fileUriOpt match {
-      case Some(fileUri) =>
-        var i = ops.StringOps(fileUri).lastIndexOf('/')
-        if (i < 0) {
-          i = 0
-        }
-        return s"[${ops.StringOps(fileUri).substring(i, fileUri.size)}, $beginLine, $beginColumn]"
-      case _ => return s"[$beginLine, $beginColumn]"
-    }
-
-  }
-
-}
-
-@datatype class FileInfo(val fileUriOpt: Option[String], val lineOffsets: ISZ[U32]) {
-
-  @pure def lineColumn(offsetLength: U64): U64 = {
-    val offsetLine = conversions.U64.toU32(offsetLength >>> u64"32")
-    @pure def computeLC(i: Z): U64 = {
-      val line = conversions.Z.toU64(i + 1) << u64"32"
-      val column = conversions.U32.toU64(offsetLine - lineOffsets(i)) + u64"1"
-      return line | column
-    }
-    val size = lineOffsets.size
-    var i = size / 2
-    var max = size - 1
-    var min = z"0"
-    while (min < i && i <= max) {
-      val lineOffsetsI = lineOffsets(i)
-      if (offsetLine < lineOffsetsI) {
-        if (lineOffsets(i - 1) <= offsetLine) {
-          return computeLC(i - 1)
-        }
-        max = i
-        i = i - ((i - min) / 2)
-      } else if (offsetLine == lineOffsetsI) {
-        return computeLC(i)
-      } else {
-        min = i
-        i = i + (max - i) / 2
-      }
-    }
-    return if (i <= min) computeLC(min) else computeLC(max)
-  }
 }

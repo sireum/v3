@@ -26,10 +26,10 @@
 package org.sireum.lang
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.lang.parser._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
-import org.sireum.lang.util.AccumulatingReporter
 import org.sireum.test.SireumSpec
 
 class TypeCheckerTest extends SireumSpec {
@@ -419,7 +419,7 @@ class TypeCheckerTest extends SireumSpec {
     testWorksheet(input, isPassing = false, msg)
 
   def testWorksheet(input: Predef.String, isPassing: Boolean, msg: Predef.String = ""): Boolean = {
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     Parser(input)
       .parseTopUnit[ast.TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) if !reporter.hasIssue =>
@@ -429,7 +429,7 @@ class TypeCheckerTest extends SireumSpec {
             reporter.printMessages()
             return false
           } else {
-            return reporter.messages.elements.exists(m => m.message.value.contains(msg))
+            return reporter.messages.elements.exists(_.text.value.contains(msg))
           }
         }
         assert(isPassing)
@@ -453,7 +453,7 @@ class TypeCheckerTest extends SireumSpec {
     }
     val stmt = Parser(input).parseStmt[ast.Stmt]
     val scope = Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
       case (Some(_), checkedStmt) if isPassing =>
         if (reporter.hasIssue) {
@@ -464,7 +464,7 @@ class TypeCheckerTest extends SireumSpec {
         reporter.printMessages()
         !reporter.hasIssue
       case _ =>
-        !isPassing && reporter.errors.elements.exists(_.message.value.contains(msg))
+        !isPassing && reporter.errors.elements.exists(_.text.value.contains(msg))
     }
   }
 

@@ -27,10 +27,10 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.lang.ast._
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util.Reporter
 
 object PostTipeAttrChecker {
   val AttrResult: MTransformer.PreResult[Attr] = MTransformer.PreResult[Attr](F, MNone())
@@ -82,7 +82,7 @@ object PostTipeAttrChecker {
   }
 }
 
-@record class PostTipeAttrChecker(var messages: HashSSet[Reporter.Message]) extends MTransformer {
+@record class PostTipeAttrChecker(var messages: HashSSet[Message]) extends MTransformer {
 
   override def preContract(o: Contract): MTransformer.PreResult[Contract] = {
     return PostTipeAttrChecker.ContractResult
@@ -124,9 +124,13 @@ object PostTipeAttrChecker {
     return PostTipeAttrChecker.TypedResult
   }
 
-  def emptyError(isType: B, posOpt: Option[PosInfo]): Unit = {
-    val m = Reporter.Message(Reporter.Message.Level.InternalError, posOpt, TypeChecker.typeCheckerKind,
-      s"Empty ${if (isType) "type" else "symbol"} information after type checking phase")
+  def emptyError(isType: B, posOpt: Option[Position]): Unit = {
+    val m = Message(
+      Level.InternalError,
+      posOpt,
+      TypeChecker.typeCheckerKind,
+      s"Empty ${if (isType) "type" else "symbol"} information after type checking phase"
+    )
     if (m.fileUriOpt.isEmpty || !messages.contains(m)) {
       messages = messages + m
     }

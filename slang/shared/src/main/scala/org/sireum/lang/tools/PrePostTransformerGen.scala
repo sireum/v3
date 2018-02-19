@@ -27,39 +27,48 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.ops._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util.Reporter
 import TransformerGen._
 import org.sireum.lang.symbol.GlobalDeclarationResolver
 
 object PrePostTransformerGen {
 
-  def gen(isImmutable: B,
-          licenseOpt: Option[String],
-          fileOpt: Option[String],
-          nameOpt: Option[String],
-          p: AST.TopUnit.Program,
-          reporter: Reporter): ST = {
+  def gen(
+    isImmutable: B,
+    licenseOpt: Option[String],
+    fileOpt: Option[String],
+    nameOpt: Option[String],
+    p: AST.TopUnit.Program,
+    reporter: Reporter
+  ): ST = {
 
     val gdr = GlobalDeclarationResolver(HashMap.empty, HashMap.empty, reporter)
     gdr.resolveProgram(p)
     val name = nameOpt.getOrElse(if (isImmutable) "Transformer" else "MTransformer")
-    val t = PrePostTransformerGen(gdr.globalNameMap, gdr.globalTypeMap,
-      AST.Util.ids2strings(p.packageName.ids), isImmutable, reporter)
+    val t = PrePostTransformerGen(
+      gdr.globalNameMap,
+      gdr.globalTypeMap,
+      AST.Util.ids2strings(p.packageName.ids),
+      isImmutable,
+      reporter
+    )
     val r = t.gen(licenseOpt, fileOpt, name)
     reporter.reports(t.reporter.messages)
     return r
   }
 }
 
-@record class PrePostTransformerGen(globalNameMap: NameMap,
-                                    globalTypeMap: TypeMap,
-                                    packageName: QName,
-                                    isImmutable: B,
-                                    reporter: Reporter) {
+@record class PrePostTransformerGen(
+  globalNameMap: NameMap,
+  globalTypeMap: TypeMap,
+  packageName: QName,
+  isImmutable: B,
+  reporter: Reporter
+) {
 
   val globalTypes: ISZ[TypeInfo] = sortedGlobalTypes(globalTypeMap)
   val poset: Poset[QName] = typePoset(globalTypeMap, globalTypes, reporter)
@@ -74,9 +83,7 @@ object PrePostTransformerGen {
   var transformMethods: ISZ[ST] = ISZ()
   var transformSpecificMethods: ISZ[ST] = ISZ()
 
-  def gen(licenseOpt: Option[String],
-          fileUriOpt: Option[String],
-          name: String): ST = {
+  def gen(licenseOpt: Option[String], fileUriOpt: Option[String], name: String): ST = {
     for (ti <- globalTypes) {
       ti match {
         case ti: TypeInfo.AbstractDatatype => genAdt(ti)
@@ -84,8 +91,16 @@ object PrePostTransformerGen {
         case _ =>
       }
     }
-    template.main(licenseOpt, fileUriOpt, packageName, name, preMethods, postMethods,
-      transformHelpers, transformMethods ++ transformSpecificMethods)
+    template.main(
+      licenseOpt,
+      fileUriOpt,
+      packageName,
+      name,
+      preMethods,
+      postMethods,
+      transformHelpers,
+      transformMethods ++ transformSpecificMethods
+    )
   }
 
   def genRoot(name: QName, isSig: B): Unit = {
@@ -114,8 +129,10 @@ object PrePostTransformerGen {
           val childIds = childTI.name
           val childTypeString = typeNameString(packageName, childIds)
           val childTypeName = typeName(packageName, childIds)
-          preMethodCases = preMethodCases :+ template.preMethodRootCase(childTypeName, childTypeString, rootTypeString, p._1)
-          postMethodCases = postMethodCases :+ template.postMethodRootCase(childTypeName, childTypeString, rootTypeString, p._2)
+          preMethodCases = preMethodCases :+ template
+            .preMethodRootCase(childTypeName, childTypeString, rootTypeString, p._1)
+          postMethodCases = postMethodCases :+ template
+            .postMethodRootCase(childTypeName, childTypeString, rootTypeString, p._2)
           val ac = genAdtChild(childTI)
           methodCases = methodCases :+ template.transformMethodCase(childTypeString, ac)
         case _ =>
@@ -130,7 +147,11 @@ object PrePostTransformerGen {
 
   def genAdt(ti: TypeInfo.AbstractDatatype): Unit = {
     if (!ti.ast.isDatatype && isImmutable) {
-      reporter.error(ti.ast.id.attr.posOpt, transformerGenKind, s"Cannot generate immutable transformer for @record ${ti.ast.id.value}.")
+      reporter.error(
+        ti.ast.id.attr.posOpt,
+        transformerGenKind,
+        s"Cannot generate immutable transformer for @record ${ti.ast.id.value}."
+      )
       return
     }
     if (ti.ast.isRoot) {
@@ -151,12 +172,10 @@ object PrePostTransformerGen {
       if (poset.parentsOf(ti.name).isEmpty) {
         val ac = genAdtChild(ti)
         transformMethods = transformMethods :+
-          template.transformMethod(adTypeName, adTypeString,
-            template.transformMethodMatchSimple(ac), None(), None())
+          template.transformMethod(adTypeName, adTypeString, template.transformMethodMatchSimple(ac), None(), None())
       }
     }
   }
-
 
   def genAdtChild(ti: TypeInfo.AbstractDatatype): AdtChild = {
     var methodCaseMembers = ISZ[ST]()
@@ -168,20 +187,20 @@ object PrePostTransformerGen {
       methodCaseUpdates = methodCaseUpdates :+ template.transformMethodCaseUpdate(i, fieldName)
     }
 
-    def transformMethodCaseMemberS(isImmutableCollection: B,
-                                   i: Z,
-                                   indexType: ST,
-                                   name: QName,
-                                   fieldName: String): Unit = {
+    def transformMethodCaseMemberS(
+      isImmutableCollection: B,
+      i: Z,
+      indexType: ST,
+      name: QName,
+      fieldName: String
+    ): Unit = {
       val adTypeString = typeNameString(packageName, name)
       val adTypeName = typeName(packageName, name)
       val transformMethodCaseMemberSST: ST =
         if (isImmutableCollection)
-          template.transformMethodCaseMemberIS(i, i - 1, indexType,
-            adTypeName, adTypeString, fieldName)
+          template.transformMethodCaseMemberIS(i, i - 1, indexType, adTypeName, adTypeString, fieldName)
         else
-          template.transformMethodCaseMemberMS(i, i - 1, indexType,
-            adTypeName, adTypeString, fieldName)
+          template.transformMethodCaseMemberMS(i, i - 1, indexType, adTypeName, adTypeString, fieldName)
       methodCaseMembers = methodCaseMembers :+ transformMethodCaseMemberSST
       addChangedUpdate(i, fieldName)
 
@@ -190,19 +209,20 @@ object PrePostTransformerGen {
         collAdded = collAdded + coll
         transformHelpers = transformHelpers :+
           (if (isImmutableCollection) template.transformIS(indexType)
-          else template.transformMS(indexType))
+           else template.transformMS(indexType))
       }
       transformSpecific(name)
     }
 
     var i = 0
 
-    def genS(isImmutableCollection: B,
-             indexType: ST,
-             elementType: AST.Type,
-             p: AST.AbstractDatatypeParam): Unit = {
+    def genS(isImmutableCollection: B, indexType: ST, elementType: AST.Type, p: AST.AbstractDatatypeParam): Unit = {
       if (isImmutable && !isImmutableCollection) {
-        reporter.error(p.id.attr.posOpt, transformerGenKind, s"MS unsupported in immutable transformer for parameter ${p.id.value}")
+        reporter.error(
+          p.id.attr.posOpt,
+          transformerGenKind,
+          s"MS unsupported in immutable transformer for parameter ${p.id.value}"
+        )
         return
       }
       adtTypeNameOpt(ti, elementType) match {
@@ -215,7 +235,11 @@ object PrePostTransformerGen {
 
     def genOpt(isImmutableOpt: B, t: AST.Type, p: AST.AbstractDatatypeParam): Unit = {
       if (isImmutable && !isImmutableOpt) {
-        reporter.error(p.id.attr.posOpt, transformerGenKind, s"MOption unsupported in immutable transformer for parameter ${p.id.value}")
+        reporter.error(
+          p.id.attr.posOpt,
+          transformerGenKind,
+          s"MOption unsupported in immutable transformer for parameter ${p.id.value}"
+        )
         return
       }
       adtTypeNameOpt(ti, t) match {
@@ -224,11 +248,9 @@ object PrePostTransformerGen {
           val adTypeName = typeName(packageName, name)
           val transformMethodCaseMemberOptionST: ST =
             if (isImmutableOpt)
-              template.transformMethodCaseMemberOption(i, i - 1,
-                adTypeName, adTypeString, p.id.value)
+              template.transformMethodCaseMemberOption(i, i - 1, adTypeName, adTypeString, p.id.value)
             else
-              template.transformMethodCaseMemberMOption(i,
-                adTypeName, adTypeString, p.id.value)
+              template.transformMethodCaseMemberMOption(i, adTypeName, adTypeString, p.id.value)
           methodCaseMembers = methodCaseMembers :+ transformMethodCaseMemberOptionST
           addChangedUpdate(i, p.id.value)
           if (isImmutableOpt && !optionAdded) {
@@ -266,8 +288,7 @@ object PrePostTransformerGen {
                   val adTypeString = typeNameString(packageName, name)
                   val adTypeName = typeName(packageName, name)
                   methodCaseMembers = methodCaseMembers :+
-                    template.transformMethodCaseMember(i, i - 1,
-                      adTypeName, adTypeString, p.id.value)
+                    template.transformMethodCaseMember(i, i - 1, adTypeName, adTypeString, p.id.value)
                   addChangedUpdate(i, fieldName)
                   transformSpecific(name)
                   i = i + 1
@@ -293,9 +314,13 @@ object PrePostTransformerGen {
         val adTypeName = typeName(packageName, name)
         val ac = genAdtChild(ti)
         transformSpecificMethods = transformSpecificMethods :+
-          template.transformMethod(adTypeName, adTypeString,
-            template.transformMethodMatchSimple(ac), Some(template.preAdapt(adTypeString)),
-            Some(template.postAdapt(adTypeString)))
+          template.transformMethod(
+            adTypeName,
+            adTypeString,
+            template.transformMethodMatchSimple(ac),
+            Some(template.preAdapt(adTypeString)),
+            Some(template.postAdapt(adTypeString))
+          )
       case _ =>
     }
   }
@@ -311,7 +336,6 @@ object PrePostTransformerGen {
     return if (r.isEmpty) None() else Some(r)
   }
 
-
   def adtTypeNameOpt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): Option[QName] = {
     tipe match {
       case tipe: AST.Type.Named => adtNameOpt(ti, AST.Util.ids2strings(tipe.name.ids), tipe.attr.posOpt)
@@ -319,7 +343,7 @@ object PrePostTransformerGen {
     }
   }
 
-  def adtNameOpt(ti: TypeInfo.AbstractDatatype, ids: QName, posOpt: Option[AST.PosInfo]): Option[QName] = {
+  def adtNameOpt(ti: TypeInfo.AbstractDatatype, ids: QName, posOpt: Option[Position]): Option[QName] = {
     if (ids.size == 1) {
       ids(0).native match {
         case "B" => return None[QName]()
@@ -346,6 +370,11 @@ object PrePostTransformerGen {
         case "F64" => return None[QName]()
         case "R" => return None[QName]()
         case "String" => return None[QName]()
+        case "Position" => return None[QName]()
+        case "FlatPos" => return None[QName]()
+        case "PosInfo" => return None[QName]()
+        case "DocInfo" => return None[QName]()
+        case "Message" => return None[QName]()
         case _ =>
       }
     }
@@ -359,4 +388,3 @@ object PrePostTransformerGen {
     }
   }
 }
-

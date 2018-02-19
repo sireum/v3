@@ -328,10 +328,6 @@ object MsgPack {
 
     val ResolvedInfoLocalVar: Z = 145
 
-    val PosInfo: Z = 146
-
-    val FileInfo: Z = 147
-
   }
 
   object Writer {
@@ -368,9 +364,9 @@ object MsgPack {
     def writeTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): Unit = {
       writer.writeZ(Constants.TopUnitTruthTableUnit)
       writer.writeOption(o.fileUriOpt, writer.writeString)
-      writer.writeISZ(o.stars, writePosInfo)
+      writer.writeISZ(o.stars, writer.writePosition)
       writer.writeISZ(o.vars, writeId)
-      writePosInfo(o.separator)
+      writer.writePosition(o.separator)
       writer.writeB(o.isSequent)
       writeLClauseSequent(o.sequent)
       writer.writeISZ(o.rows, writeTruthTableRow)
@@ -1365,7 +1361,7 @@ object MsgPack {
     def writeTruthTableRow(o: TruthTable.Row): Unit = {
       writer.writeZ(Constants.TruthTableRow)
       writeTruthTableAssignment(o.assignment)
-      writePosInfo(o.separator)
+      writer.writePosition(o.separator)
       writeTruthTableAssignment(o.values)
     }
 
@@ -1491,18 +1487,18 @@ object MsgPack {
 
     def writeAttr(o: Attr): Unit = {
       writer.writeZ(Constants.Attr)
-      writer.writeOption(o.posOpt, writePosInfo)
+      writer.writeOption(o.posOpt, writer.writePosition)
     }
 
     def writeTypedAttr(o: TypedAttr): Unit = {
       writer.writeZ(Constants.TypedAttr)
-      writer.writeOption(o.posOpt, writePosInfo)
+      writer.writeOption(o.posOpt, writer.writePosition)
       writer.writeOption(o.typedOpt, writeTyped)
     }
 
     def writeResolvedAttr(o: ResolvedAttr): Unit = {
       writer.writeZ(Constants.ResolvedAttr)
-      writer.writeOption(o.posOpt, writePosInfo)
+      writer.writeOption(o.posOpt, writer.writePosition)
       writer.writeOption(o.resOpt, writeResolvedInfo)
       writer.writeOption(o.typedOpt, writeTyped)
     }
@@ -1595,18 +1591,6 @@ object MsgPack {
       writer.writeString(o.id)
     }
 
-    def writePosInfo(o: PosInfo): Unit = {
-      writer.writeZ(Constants.PosInfo)
-      writeFileInfo(o.fileInfo)
-      writer.writeU64(o.offsetLength)
-    }
-
-    def writeFileInfo(o: FileInfo): Unit = {
-      writer.writeZ(Constants.FileInfo)
-      writer.writeOption(o.fileUriOpt, writer.writeString)
-      writer.writeISZ(o.lineOffsets, writer.writeU32)
-    }
-
     def result: ISZ[U8] = {
       return writer.result
     }
@@ -1676,9 +1660,9 @@ object MsgPack {
         reader.expectZ(Constants.TopUnitTruthTableUnit)
       }
       val fileUriOpt = reader.readOption(reader.readString _)
-      val stars = reader.readISZ(readPosInfo _)
+      val stars = reader.readISZ(reader.readPosition _)
       val vars = reader.readISZ(readId _)
-      val separator = readPosInfo()
+      val separator = reader.readPosition()
       val isSequent = reader.readB()
       val sequent = readLClauseSequent()
       val rows = reader.readISZ(readTruthTableRow _)
@@ -3617,7 +3601,7 @@ object MsgPack {
         reader.expectZ(Constants.TruthTableRow)
       }
       val assignment = readTruthTableAssignment()
-      val separator = readPosInfo()
+      val separator = reader.readPosition()
       val values = readTruthTableAssignment()
       return TruthTable.Row(assignment, separator, values)
     }
@@ -3876,7 +3860,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.Attr)
       }
-      val posOpt = reader.readOption(readPosInfo _)
+      val posOpt = reader.readOption(reader.readPosition _)
       return Attr(posOpt)
     }
 
@@ -3889,7 +3873,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.TypedAttr)
       }
-      val posOpt = reader.readOption(readPosInfo _)
+      val posOpt = reader.readOption(reader.readPosition _)
       val typedOpt = reader.readOption(readTyped _)
       return TypedAttr(posOpt, typedOpt)
     }
@@ -3903,7 +3887,7 @@ object MsgPack {
       if (!typeParsed) {
         reader.expectZ(Constants.ResolvedAttr)
       }
-      val posOpt = reader.readOption(readPosInfo _)
+      val posOpt = reader.readOption(reader.readPosition _)
       val resOpt = reader.readOption(readResolvedInfo _)
       val typedOpt = reader.readOption(readTyped _)
       return ResolvedAttr(posOpt, resOpt, typedOpt)
@@ -4088,34 +4072,6 @@ object MsgPack {
       return ResolvedInfo.LocalVar(context, id)
     }
 
-    def readPosInfo(): PosInfo = {
-      val r = readPosInfoT(F)
-      return r
-    }
-
-    def readPosInfoT(typeParsed: B): PosInfo = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.PosInfo)
-      }
-      val fileInfo = readFileInfo()
-      val offsetLength = reader.readU64()
-      return PosInfo(fileInfo, offsetLength)
-    }
-
-    def readFileInfo(): FileInfo = {
-      val r = readFileInfoT(F)
-      return r
-    }
-
-    def readFileInfoT(typeParsed: B): FileInfo = {
-      if (!typeParsed) {
-        reader.expectZ(Constants.FileInfo)
-      }
-      val fileUriOpt = reader.readOption(reader.readString _)
-      val lineOffsets = reader.readISZ(reader.readU32 _)
-      return FileInfo(fileUriOpt, lineOffsets)
-    }
-
   }
 
   def to[T](data: ISZ[U8], f: Reader => T): Either[T, MessagePack.ErrorMsg] = {
@@ -4128,8 +4084,8 @@ object MsgPack {
     }
   }
 
-  def fromTopUnit(o: TopUnit, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTopUnit(o: TopUnit, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTopUnit(o)
     return w.result
   }
@@ -4143,8 +4099,8 @@ object MsgPack {
     return r
   }
 
-  def fromTopUnitProgram(o: TopUnit.Program, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTopUnitProgram(o: TopUnit.Program, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTopUnitProgram(o)
     return w.result
   }
@@ -4158,8 +4114,8 @@ object MsgPack {
     return r
   }
 
-  def fromTopUnitSequentUnit(o: TopUnit.SequentUnit, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTopUnitSequentUnit(o: TopUnit.SequentUnit, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTopUnitSequentUnit(o)
     return w.result
   }
@@ -4173,8 +4129,8 @@ object MsgPack {
     return r
   }
 
-  def fromTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTopUnitTruthTableUnit(o)
     return w.result
   }
@@ -4188,8 +4144,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmt(o: Stmt, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmt(o: Stmt, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmt(o)
     return w.result
   }
@@ -4203,8 +4159,8 @@ object MsgPack {
     return r
   }
 
-  def fromAssignExp(o: AssignExp, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAssignExp(o: AssignExp, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAssignExp(o)
     return w.result
   }
@@ -4218,8 +4174,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImport(o: Stmt.Import, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImport(o: Stmt.Import, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImport(o)
     return w.result
   }
@@ -4233,8 +4189,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImportImporter(o: Stmt.Import.Importer, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImportImporter(o: Stmt.Import.Importer, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImportImporter(o)
     return w.result
   }
@@ -4248,8 +4204,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImportSelector(o: Stmt.Import.Selector, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImportSelector(o: Stmt.Import.Selector, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImportSelector(o)
     return w.result
   }
@@ -4263,8 +4219,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImportMultiSelector(o: Stmt.Import.MultiSelector, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImportMultiSelector(o: Stmt.Import.MultiSelector, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImportMultiSelector(o)
     return w.result
   }
@@ -4278,8 +4234,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImportWildcardSelector(o: Stmt.Import.WildcardSelector, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImportWildcardSelector(o)
     return w.result
   }
@@ -4293,8 +4249,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtImportNamedSelector(o: Stmt.Import.NamedSelector, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtImportNamedSelector(o: Stmt.Import.NamedSelector, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtImportNamedSelector(o)
     return w.result
   }
@@ -4308,8 +4264,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtVar(o: Stmt.Var, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtVar(o: Stmt.Var, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtVar(o)
     return w.result
   }
@@ -4323,8 +4279,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtVarPattern(o: Stmt.VarPattern, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtVarPattern(o: Stmt.VarPattern, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtVarPattern(o)
     return w.result
   }
@@ -4338,8 +4294,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtSpecVar(o: Stmt.SpecVar, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtSpecVar(o: Stmt.SpecVar, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtSpecVar(o)
     return w.result
   }
@@ -4353,8 +4309,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtMethod(o: Stmt.Method, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtMethod(o: Stmt.Method, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtMethod(o)
     return w.result
   }
@@ -4368,8 +4324,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtExtMethod(o: Stmt.ExtMethod, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtExtMethod(o: Stmt.ExtMethod, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtExtMethod(o)
     return w.result
   }
@@ -4383,8 +4339,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtSpecMethod(o: Stmt.SpecMethod, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtSpecMethod(o: Stmt.SpecMethod, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtSpecMethod(o)
     return w.result
   }
@@ -4398,8 +4354,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtEnum(o: Stmt.Enum, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtEnum(o: Stmt.Enum, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtEnum(o)
     return w.result
   }
@@ -4413,8 +4369,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtSubZ(o: Stmt.SubZ, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtSubZ(o: Stmt.SubZ, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtSubZ(o)
     return w.result
   }
@@ -4428,8 +4384,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtObject(o: Stmt.Object, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtObject(o: Stmt.Object, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtObject(o)
     return w.result
   }
@@ -4443,8 +4399,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtSig(o: Stmt.Sig, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtSig(o: Stmt.Sig, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtSig(o)
     return w.result
   }
@@ -4458,8 +4414,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtAbstractDatatype(o: Stmt.AbstractDatatype, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtAbstractDatatype(o: Stmt.AbstractDatatype, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtAbstractDatatype(o)
     return w.result
   }
@@ -4473,8 +4429,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtTypeAlias(o: Stmt.TypeAlias, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtTypeAlias(o: Stmt.TypeAlias, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtTypeAlias(o)
     return w.result
   }
@@ -4488,8 +4444,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtAssign(o: Stmt.Assign, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtAssign(o: Stmt.Assign, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtAssign(o)
     return w.result
   }
@@ -4503,8 +4459,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtBlock(o: Stmt.Block, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtBlock(o: Stmt.Block, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtBlock(o)
     return w.result
   }
@@ -4518,8 +4474,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtIf(o: Stmt.If, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtIf(o: Stmt.If, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtIf(o)
     return w.result
   }
@@ -4533,8 +4489,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtMatch(o: Stmt.Match, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtMatch(o: Stmt.Match, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtMatch(o)
     return w.result
   }
@@ -4548,8 +4504,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtWhile(o: Stmt.While, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtWhile(o: Stmt.While, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtWhile(o)
     return w.result
   }
@@ -4563,8 +4519,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtDoWhile(o: Stmt.DoWhile, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtDoWhile(o: Stmt.DoWhile, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtDoWhile(o)
     return w.result
   }
@@ -4578,8 +4534,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtFor(o: Stmt.For, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtFor(o: Stmt.For, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtFor(o)
     return w.result
   }
@@ -4593,8 +4549,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtReturn(o: Stmt.Return, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtReturn(o: Stmt.Return, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtReturn(o)
     return w.result
   }
@@ -4608,8 +4564,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtLStmt(o: Stmt.LStmt, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtLStmt(o: Stmt.LStmt, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtLStmt(o)
     return w.result
   }
@@ -4623,8 +4579,8 @@ object MsgPack {
     return r
   }
 
-  def fromStmtExpr(o: Stmt.Expr, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromStmtExpr(o: Stmt.Expr, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeStmtExpr(o)
     return w.result
   }
@@ -4638,8 +4594,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClause(o: LClause, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClause(o: LClause, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClause(o)
     return w.result
   }
@@ -4653,8 +4609,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseInvariants(o: LClause.Invariants, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseInvariants(o: LClause.Invariants, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseInvariants(o)
     return w.result
   }
@@ -4668,8 +4624,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseFacts(o: LClause.Facts, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseFacts(o: LClause.Facts, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseFacts(o)
     return w.result
   }
@@ -4683,8 +4639,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseFact(o: LClause.Fact, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseFact(o: LClause.Fact, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseFact(o)
     return w.result
   }
@@ -4698,8 +4654,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseTheorems(o: LClause.Theorems, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseTheorems(o: LClause.Theorems, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseTheorems(o)
     return w.result
   }
@@ -4713,8 +4669,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseTheorem(o: LClause.Theorem, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseTheorem(o: LClause.Theorem, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseTheorem(o)
     return w.result
   }
@@ -4728,8 +4684,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseSequent(o: LClause.Sequent, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseSequent(o: LClause.Sequent, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseSequent(o)
     return w.result
   }
@@ -4743,8 +4699,8 @@ object MsgPack {
     return r
   }
 
-  def fromLClauseProof(o: LClause.Proof, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLClauseProof(o: LClause.Proof, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLClauseProof(o)
     return w.result
   }
@@ -4758,8 +4714,8 @@ object MsgPack {
     return r
   }
 
-  def fromContractExp(o: ContractExp, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromContractExp(o: ContractExp, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeContractExp(o)
     return w.result
   }
@@ -4773,8 +4729,8 @@ object MsgPack {
     return r
   }
 
-  def fromCase(o: Case, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromCase(o: Case, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeCase(o)
     return w.result
   }
@@ -4788,8 +4744,8 @@ object MsgPack {
     return r
   }
 
-  def fromEnumGenRange(o: EnumGen.Range, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromEnumGenRange(o: EnumGen.Range, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeEnumGenRange(o)
     return w.result
   }
@@ -4803,8 +4759,8 @@ object MsgPack {
     return r
   }
 
-  def fromEnumGenRangeExpr(o: EnumGen.Range.Expr, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromEnumGenRangeExpr(o: EnumGen.Range.Expr, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeEnumGenRangeExpr(o)
     return w.result
   }
@@ -4818,8 +4774,8 @@ object MsgPack {
     return r
   }
 
-  def fromEnumGenRangeStep(o: EnumGen.Range.Step, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromEnumGenRangeStep(o: EnumGen.Range.Step, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeEnumGenRangeStep(o)
     return w.result
   }
@@ -4833,8 +4789,8 @@ object MsgPack {
     return r
   }
 
-  def fromEnumGenFor(o: EnumGen.For, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromEnumGenFor(o: EnumGen.For, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeEnumGenFor(o)
     return w.result
   }
@@ -4848,8 +4804,8 @@ object MsgPack {
     return r
   }
 
-  def fromType(o: Type, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromType(o: Type, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeType(o)
     return w.result
   }
@@ -4863,8 +4819,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypeNamed(o: Type.Named, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypeNamed(o: Type.Named, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypeNamed(o)
     return w.result
   }
@@ -4878,8 +4834,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypeFun(o: Type.Fun, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypeFun(o: Type.Fun, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypeFun(o)
     return w.result
   }
@@ -4893,8 +4849,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypeTuple(o: Type.Tuple, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypeTuple(o: Type.Tuple, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypeTuple(o)
     return w.result
   }
@@ -4908,8 +4864,8 @@ object MsgPack {
     return r
   }
 
-  def fromPattern(o: Pattern, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPattern(o: Pattern, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePattern(o)
     return w.result
   }
@@ -4923,8 +4879,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternLiteral(o: Pattern.Literal, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternLiteral(o: Pattern.Literal, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternLiteral(o)
     return w.result
   }
@@ -4938,8 +4894,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternLitInterpolate(o: Pattern.LitInterpolate, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternLitInterpolate(o: Pattern.LitInterpolate, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternLitInterpolate(o)
     return w.result
   }
@@ -4953,8 +4909,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternRef(o: Pattern.Ref, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternRef(o: Pattern.Ref, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternRef(o)
     return w.result
   }
@@ -4968,8 +4924,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternVarBinding(o: Pattern.VarBinding, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternVarBinding(o: Pattern.VarBinding, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternVarBinding(o)
     return w.result
   }
@@ -4983,8 +4939,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternWildcard(o: Pattern.Wildcard, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternWildcard(o: Pattern.Wildcard, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternWildcard(o)
     return w.result
   }
@@ -4998,8 +4954,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternSeqWildcard(o: Pattern.SeqWildcard, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternSeqWildcard(o: Pattern.SeqWildcard, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternSeqWildcard(o)
     return w.result
   }
@@ -5013,8 +4969,8 @@ object MsgPack {
     return r
   }
 
-  def fromPatternStructure(o: Pattern.Structure, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromPatternStructure(o: Pattern.Structure, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writePatternStructure(o)
     return w.result
   }
@@ -5028,8 +4984,8 @@ object MsgPack {
     return r
   }
 
-  def fromExp(o: Exp, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExp(o: Exp, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExp(o)
     return w.result
   }
@@ -5043,8 +4999,8 @@ object MsgPack {
     return r
   }
 
-  def fromLit(o: Lit, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromLit(o: Lit, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeLit(o)
     return w.result
   }
@@ -5058,8 +5014,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitB(o: Exp.LitB, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitB(o: Exp.LitB, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitB(o)
     return w.result
   }
@@ -5073,8 +5029,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitC(o: Exp.LitC, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitC(o: Exp.LitC, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitC(o)
     return w.result
   }
@@ -5088,8 +5044,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitZ(o: Exp.LitZ, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitZ(o: Exp.LitZ, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitZ(o)
     return w.result
   }
@@ -5103,8 +5059,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitF32(o: Exp.LitF32, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitF32(o: Exp.LitF32, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitF32(o)
     return w.result
   }
@@ -5118,8 +5074,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitF64(o: Exp.LitF64, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitF64(o: Exp.LitF64, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitF64(o)
     return w.result
   }
@@ -5133,8 +5089,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitR(o: Exp.LitR, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitR(o: Exp.LitR, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitR(o)
     return w.result
   }
@@ -5148,8 +5104,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpLitString(o: Exp.LitString, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpLitString(o: Exp.LitString, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpLitString(o)
     return w.result
   }
@@ -5163,8 +5119,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpStringInterpolate(o: Exp.StringInterpolate, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpStringInterpolate(o: Exp.StringInterpolate, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpStringInterpolate(o)
     return w.result
   }
@@ -5178,8 +5134,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpThis(o: Exp.This, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpThis(o: Exp.This, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpThis(o)
     return w.result
   }
@@ -5193,8 +5149,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpSuper(o: Exp.Super, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpSuper(o: Exp.Super, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpSuper(o)
     return w.result
   }
@@ -5208,8 +5164,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpUnary(o: Exp.Unary, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpUnary(o: Exp.Unary, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpUnary(o)
     return w.result
   }
@@ -5223,8 +5179,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpRef(o: Exp.Ref, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpRef(o: Exp.Ref, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpRef(o)
     return w.result
   }
@@ -5238,8 +5194,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpBinary(o: Exp.Binary, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpBinary(o: Exp.Binary, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpBinary(o)
     return w.result
   }
@@ -5253,8 +5209,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpIdent(o: Exp.Ident, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpIdent(o: Exp.Ident, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpIdent(o)
     return w.result
   }
@@ -5268,8 +5224,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpEta(o: Exp.Eta, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpEta(o: Exp.Eta, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpEta(o)
     return w.result
   }
@@ -5283,8 +5239,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpTuple(o: Exp.Tuple, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpTuple(o: Exp.Tuple, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpTuple(o)
     return w.result
   }
@@ -5298,8 +5254,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpSelect(o: Exp.Select, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpSelect(o: Exp.Select, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpSelect(o)
     return w.result
   }
@@ -5313,8 +5269,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpInvoke(o: Exp.Invoke, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpInvoke(o: Exp.Invoke, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpInvoke(o)
     return w.result
   }
@@ -5328,8 +5284,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpInvokeNamed(o: Exp.InvokeNamed, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpInvokeNamed(o: Exp.InvokeNamed, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpInvokeNamed(o)
     return w.result
   }
@@ -5343,8 +5299,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpIf(o: Exp.If, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpIf(o: Exp.If, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpIf(o)
     return w.result
   }
@@ -5358,8 +5314,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpFunParam(o: Exp.Fun.Param, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpFunParam(o: Exp.Fun.Param, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpFunParam(o)
     return w.result
   }
@@ -5373,8 +5329,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpFun(o: Exp.Fun, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpFun(o: Exp.Fun, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpFun(o)
     return w.result
   }
@@ -5388,8 +5344,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpForYield(o: Exp.ForYield, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpForYield(o: Exp.ForYield, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpForYield(o)
     return w.result
   }
@@ -5403,8 +5359,8 @@ object MsgPack {
     return r
   }
 
-  def fromExpQuant(o: Exp.Quant, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromExpQuant(o: Exp.Quant, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeExpQuant(o)
     return w.result
   }
@@ -5418,8 +5374,8 @@ object MsgPack {
     return r
   }
 
-  def fromNamedArg(o: NamedArg, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromNamedArg(o: NamedArg, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeNamedArg(o)
     return w.result
   }
@@ -5433,8 +5389,8 @@ object MsgPack {
     return r
   }
 
-  def fromVarFragment(o: VarFragment, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromVarFragment(o: VarFragment, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeVarFragment(o)
     return w.result
   }
@@ -5448,8 +5404,8 @@ object MsgPack {
     return r
   }
 
-  def fromDomain(o: Domain, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromDomain(o: Domain, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeDomain(o)
     return w.result
   }
@@ -5463,8 +5419,8 @@ object MsgPack {
     return r
   }
 
-  def fromDomainType(o: Domain.Type, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromDomainType(o: Domain.Type, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeDomainType(o)
     return w.result
   }
@@ -5478,8 +5434,8 @@ object MsgPack {
     return r
   }
 
-  def fromDomainRange(o: Domain.Range, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromDomainRange(o: Domain.Range, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeDomainRange(o)
     return w.result
   }
@@ -5493,8 +5449,8 @@ object MsgPack {
     return r
   }
 
-  def fromId(o: Id, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromId(o: Id, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeId(o)
     return w.result
   }
@@ -5508,8 +5464,8 @@ object MsgPack {
     return r
   }
 
-  def fromName(o: Name, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromName(o: Name, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeName(o)
     return w.result
   }
@@ -5523,8 +5479,8 @@ object MsgPack {
     return r
   }
 
-  def fromBody(o: Body, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromBody(o: Body, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeBody(o)
     return w.result
   }
@@ -5538,8 +5494,8 @@ object MsgPack {
     return r
   }
 
-  def fromAbstractDatatypeParam(o: AbstractDatatypeParam, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAbstractDatatypeParam(o: AbstractDatatypeParam, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAbstractDatatypeParam(o)
     return w.result
   }
@@ -5553,8 +5509,8 @@ object MsgPack {
     return r
   }
 
-  def fromMethodSig(o: MethodSig, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromMethodSig(o: MethodSig, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeMethodSig(o)
     return w.result
   }
@@ -5568,8 +5524,8 @@ object MsgPack {
     return r
   }
 
-  def fromParam(o: Param, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromParam(o: Param, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeParam(o)
     return w.result
   }
@@ -5583,8 +5539,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypeParam(o: TypeParam, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypeParam(o: TypeParam, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypeParam(o)
     return w.result
   }
@@ -5598,8 +5554,8 @@ object MsgPack {
     return r
   }
 
-  def fromContract(o: Contract, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromContract(o: Contract, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeContract(o)
     return w.result
   }
@@ -5613,8 +5569,8 @@ object MsgPack {
     return r
   }
 
-  def fromSubContract(o: SubContract, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromSubContract(o: SubContract, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeSubContract(o)
     return w.result
   }
@@ -5628,8 +5584,8 @@ object MsgPack {
     return r
   }
 
-  def fromWhereDef(o: WhereDef, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromWhereDef(o: WhereDef, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeWhereDef(o)
     return w.result
   }
@@ -5643,8 +5599,8 @@ object MsgPack {
     return r
   }
 
-  def fromWhereDefVal(o: WhereDef.Val, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromWhereDefVal(o: WhereDef.Val, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeWhereDefVal(o)
     return w.result
   }
@@ -5658,8 +5614,8 @@ object MsgPack {
     return r
   }
 
-  def fromWhereDefDef(o: WhereDef.Def, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromWhereDefDef(o: WhereDef.Def, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeWhereDefDef(o)
     return w.result
   }
@@ -5673,8 +5629,8 @@ object MsgPack {
     return r
   }
 
-  def fromSpecDef(o: SpecDef, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromSpecDef(o: SpecDef, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeSpecDef(o)
     return w.result
   }
@@ -5688,8 +5644,8 @@ object MsgPack {
     return r
   }
 
-  def fromProofStep(o: ProofStep, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromProofStep(o: ProofStep, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeProofStep(o)
     return w.result
   }
@@ -5703,8 +5659,8 @@ object MsgPack {
     return r
   }
 
-  def fromProofStepBasic(o: ProofStep.Basic, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromProofStepBasic(o: ProofStep.Basic, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeProofStepBasic(o)
     return w.result
   }
@@ -5718,8 +5674,8 @@ object MsgPack {
     return r
   }
 
-  def fromProofStepSubProof(o: ProofStep.SubProof, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromProofStepSubProof(o: ProofStep.SubProof, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeProofStepSubProof(o)
     return w.result
   }
@@ -5733,8 +5689,8 @@ object MsgPack {
     return r
   }
 
-  def fromAssumeProofStep(o: AssumeProofStep, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAssumeProofStep(o: AssumeProofStep, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAssumeProofStep(o)
     return w.result
   }
@@ -5748,8 +5704,8 @@ object MsgPack {
     return r
   }
 
-  def fromAssumeProofStepRegular(o: AssumeProofStep.Regular, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAssumeProofStepRegular(o: AssumeProofStep.Regular, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAssumeProofStepRegular(o)
     return w.result
   }
@@ -5763,8 +5719,8 @@ object MsgPack {
     return r
   }
 
-  def fromAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAssumeProofStepForallIntroAps(o: AssumeProofStep.ForallIntroAps, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAssumeProofStepForallIntroAps(o)
     return w.result
   }
@@ -5778,8 +5734,8 @@ object MsgPack {
     return r
   }
 
-  def fromAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAssumeProofStepExistsElimAps(o: AssumeProofStep.ExistsElimAps, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAssumeProofStepExistsElimAps(o)
     return w.result
   }
@@ -5793,8 +5749,8 @@ object MsgPack {
     return r
   }
 
-  def fromJust(o: Just, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJust(o: Just, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJust(o)
     return w.result
   }
@@ -5808,8 +5764,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustPremise(o: Just.Premise, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustPremise(o: Just.Premise, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustPremise(o)
     return w.result
   }
@@ -5823,8 +5779,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustAndIntro(o: Just.AndIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustAndIntro(o: Just.AndIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustAndIntro(o)
     return w.result
   }
@@ -5838,8 +5794,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustAndElim(o: Just.AndElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustAndElim(o: Just.AndElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustAndElim(o)
     return w.result
   }
@@ -5853,8 +5809,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustOrIntro(o: Just.OrIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustOrIntro(o: Just.OrIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustOrIntro(o)
     return w.result
   }
@@ -5868,8 +5824,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustOrElim(o: Just.OrElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustOrElim(o: Just.OrElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustOrElim(o)
     return w.result
   }
@@ -5883,8 +5839,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustImplyIntro(o: Just.ImplyIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustImplyIntro(o: Just.ImplyIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustImplyIntro(o)
     return w.result
   }
@@ -5898,8 +5854,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustImplyElim(o: Just.ImplyElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustImplyElim(o: Just.ImplyElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustImplyElim(o)
     return w.result
   }
@@ -5913,8 +5869,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustNegIntro(o: Just.NegIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustNegIntro(o: Just.NegIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustNegIntro(o)
     return w.result
   }
@@ -5928,8 +5884,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustNegElim(o: Just.NegElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustNegElim(o: Just.NegElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustNegElim(o)
     return w.result
   }
@@ -5943,8 +5899,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustBottomElim(o: Just.BottomElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustBottomElim(o: Just.BottomElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustBottomElim(o)
     return w.result
   }
@@ -5958,8 +5914,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustPbc(o: Just.Pbc, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustPbc(o: Just.Pbc, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustPbc(o)
     return w.result
   }
@@ -5973,8 +5929,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustForallIntro(o: Just.ForallIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustForallIntro(o: Just.ForallIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustForallIntro(o)
     return w.result
   }
@@ -5988,8 +5944,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustForallElim(o: Just.ForallElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustForallElim(o: Just.ForallElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustForallElim(o)
     return w.result
   }
@@ -6003,8 +5959,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustExistsIntro(o: Just.ExistsIntro, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustExistsIntro(o: Just.ExistsIntro, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustExistsIntro(o)
     return w.result
   }
@@ -6018,8 +5974,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustExistsElim(o: Just.ExistsElim, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustExistsElim(o: Just.ExistsElim, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustExistsElim(o)
     return w.result
   }
@@ -6033,8 +5989,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustFact(o: Just.Fact, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustFact(o: Just.Fact, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustFact(o)
     return w.result
   }
@@ -6048,8 +6004,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustInvariant(o: Just.Invariant, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustInvariant(o: Just.Invariant, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustInvariant(o)
     return w.result
   }
@@ -6063,8 +6019,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustSubst(o: Just.Subst, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustSubst(o: Just.Subst, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustSubst(o)
     return w.result
   }
@@ -6078,8 +6034,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustAuto(o: Just.Auto, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustAuto(o: Just.Auto, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustAuto(o)
     return w.result
   }
@@ -6093,8 +6049,8 @@ object MsgPack {
     return r
   }
 
-  def fromJustCoq(o: Just.Coq, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromJustCoq(o: Just.Coq, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeJustCoq(o)
     return w.result
   }
@@ -6108,8 +6064,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableRow(o: TruthTable.Row, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableRow(o: TruthTable.Row, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableRow(o)
     return w.result
   }
@@ -6123,8 +6079,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableAssignment(o: TruthTable.Assignment, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableAssignment(o: TruthTable.Assignment, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableAssignment(o)
     return w.result
   }
@@ -6138,8 +6094,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableConclusion(o: TruthTable.Conclusion, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableConclusion(o: TruthTable.Conclusion, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableConclusion(o)
     return w.result
   }
@@ -6153,8 +6109,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableConclusionValidity(o)
     return w.result
   }
@@ -6168,8 +6124,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableConclusionTautology(o: TruthTable.Conclusion.Tautology, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableConclusionTautology(o)
     return w.result
   }
@@ -6183,8 +6139,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableConclusionContradictory(o: TruthTable.Conclusion.Contradictory, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableConclusionContradictory(o)
     return w.result
   }
@@ -6198,8 +6154,8 @@ object MsgPack {
     return r
   }
 
-  def fromTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTruthTableConclusionContingent(o: TruthTable.Conclusion.Contingent, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTruthTableConclusionContingent(o)
     return w.result
   }
@@ -6213,8 +6169,8 @@ object MsgPack {
     return r
   }
 
-  def fromTyped(o: Typed, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTyped(o: Typed, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTyped(o)
     return w.result
   }
@@ -6228,8 +6184,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedName(o: Typed.Name, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedName(o: Typed.Name, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedName(o)
     return w.result
   }
@@ -6243,8 +6199,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedTuple(o: Typed.Tuple, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedTuple(o: Typed.Tuple, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedTuple(o)
     return w.result
   }
@@ -6258,8 +6214,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedFun(o: Typed.Fun, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedFun(o: Typed.Fun, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedFun(o)
     return w.result
   }
@@ -6273,8 +6229,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedTypeVar(o: Typed.TypeVar, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedTypeVar(o: Typed.TypeVar, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedTypeVar(o)
     return w.result
   }
@@ -6288,8 +6244,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedPackage(o: Typed.Package, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedPackage(o: Typed.Package, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedPackage(o)
     return w.result
   }
@@ -6303,8 +6259,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedObject(o: Typed.Object, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedObject(o: Typed.Object, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedObject(o)
     return w.result
   }
@@ -6318,8 +6274,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedEnum(o: Typed.Enum, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedEnum(o: Typed.Enum, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedEnum(o)
     return w.result
   }
@@ -6333,8 +6289,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedMethodSubst(o: Typed.Method.Subst, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedMethodSubst(o: Typed.Method.Subst, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedMethodSubst(o)
     return w.result
   }
@@ -6348,8 +6304,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedMethod(o: Typed.Method, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedMethod(o: Typed.Method, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedMethod(o)
     return w.result
   }
@@ -6363,8 +6319,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedMethods(o: Typed.Methods, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedMethods(o: Typed.Methods, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedMethods(o)
     return w.result
   }
@@ -6378,8 +6334,8 @@ object MsgPack {
     return r
   }
 
-  def fromAttr(o: Attr, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromAttr(o: Attr, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeAttr(o)
     return w.result
   }
@@ -6393,8 +6349,8 @@ object MsgPack {
     return r
   }
 
-  def fromTypedAttr(o: TypedAttr, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromTypedAttr(o: TypedAttr, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeTypedAttr(o)
     return w.result
   }
@@ -6408,8 +6364,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedAttr(o: ResolvedAttr, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedAttr(o: ResolvedAttr, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedAttr(o)
     return w.result
   }
@@ -6423,8 +6379,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfo(o: ResolvedInfo, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfo(o: ResolvedInfo, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfo(o)
     return w.result
   }
@@ -6438,8 +6394,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoBuiltIn(o: ResolvedInfo.BuiltIn, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoBuiltIn(o)
     return w.result
   }
@@ -6453,8 +6409,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoPackage(o: ResolvedInfo.Package, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoPackage(o: ResolvedInfo.Package, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoPackage(o)
     return w.result
   }
@@ -6468,8 +6424,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoEnum(o: ResolvedInfo.Enum, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoEnum(o: ResolvedInfo.Enum, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoEnum(o)
     return w.result
   }
@@ -6483,8 +6439,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoEnumElement(o: ResolvedInfo.EnumElement, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoEnumElement(o: ResolvedInfo.EnumElement, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoEnumElement(o)
     return w.result
   }
@@ -6498,8 +6454,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoObject(o: ResolvedInfo.Object, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoObject(o: ResolvedInfo.Object, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoObject(o)
     return w.result
   }
@@ -6513,8 +6469,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoVar(o: ResolvedInfo.Var, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoVar(o: ResolvedInfo.Var, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoVar(o)
     return w.result
   }
@@ -6528,8 +6484,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoMethod(o: ResolvedInfo.Method, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoMethod(o: ResolvedInfo.Method, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoMethod(o)
     return w.result
   }
@@ -6543,8 +6499,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoMethods(o: ResolvedInfo.Methods, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoMethods(o: ResolvedInfo.Methods, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoMethods(o)
     return w.result
   }
@@ -6558,8 +6514,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoType(o: ResolvedInfo.Type, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoType(o: ResolvedInfo.Type, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoType(o)
     return w.result
   }
@@ -6573,8 +6529,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoTuple(o: ResolvedInfo.Tuple, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoTuple(o: ResolvedInfo.Tuple, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoTuple(o)
     return w.result
   }
@@ -6588,8 +6544,8 @@ object MsgPack {
     return r
   }
 
-  def fromResolvedInfoLocalVar(o: ResolvedInfo.LocalVar, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
+  def fromResolvedInfoLocalVar(o: ResolvedInfo.LocalVar, pooling: B): ISZ[U8] = {
+    val w = Writer.Default(MessagePack.writer(pooling))
     w.writeResolvedInfoLocalVar(o)
     return w.result
   }
@@ -6600,36 +6556,6 @@ object MsgPack {
       return r
     }
     val r = to(data, fResolvedInfoLocalVar)
-    return r
-  }
-
-  def fromPosInfo(o: PosInfo, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writePosInfo(o)
-    return w.result
-  }
-
-  def toPosInfo(data: ISZ[U8]): Either[PosInfo, MessagePack.ErrorMsg] = {
-    def fPosInfo(reader: Reader): PosInfo = {
-      val r = reader.readPosInfo()
-      return r
-    }
-    val r = to(data, fPosInfo)
-    return r
-  }
-
-  def fromFileInfo(o: FileInfo, poolString: B): ISZ[U8] = {
-    val w = Writer.Default(MessagePack.writer(poolString))
-    w.writeFileInfo(o)
-    return w.result
-  }
-
-  def toFileInfo(data: ISZ[U8]): Either[FileInfo, MessagePack.ErrorMsg] = {
-    def fFileInfo(reader: Reader): FileInfo = {
-      val r = reader.readFileInfo()
-      return r
-    }
-    val r = to(data, fFileInfo)
     return r
   }
 

@@ -25,17 +25,16 @@
 
 package org.sireum.lang.test
 
-import org.sireum.ISZ
 import org.sireum.lang.parser.LParser
-import org.sireum.lang.util.AccumulatingReporter
+import org.sireum.message.Reporter
 
 import scala.meta.{ParseException, TokenizeException}
 
 object TestUtil {
 
-  def lparser[T](input: String)(f: (LParser, AccumulatingReporter) => Boolean): Boolean = {
+  def lparser[T](input: String)(f: (LParser, Reporter) => Boolean): Boolean = {
     val r: Boolean = try {
-      LParser[Boolean](input, AccumulatingReporter.create)(f)
+      LParser[Boolean](input, Reporter.create)(f)
       //println(fparser(parser)
     } catch {
       case e: TokenizeException =>
@@ -50,7 +49,7 @@ object TestUtil {
     r
   }
 
-  def check(r: AccumulatingReporter): Boolean = {
+  def check(r: Reporter): Boolean = {
     if (r.hasIssue) r.printMessages()
     !r.hasIssue
   }

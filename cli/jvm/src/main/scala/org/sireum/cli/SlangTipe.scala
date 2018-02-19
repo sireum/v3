@@ -26,6 +26,7 @@
 package org.sireum.cli
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.cli.Cli.SlangTipeOption
 import _root_.java.io._
 import _root_.java.nio.file._
@@ -38,7 +39,6 @@ import org.sireum.lang.parser.Parser
 import scala.collection.JavaConverters._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
-import org.sireum.lang.util.AccumulatingReporter
 
 object SlangTipe {
 
@@ -126,7 +126,11 @@ object SlangTipe {
         if (f.getName.endsWith(".scala")) {
           var isSlang = F
           for (firstLine <- Files.lines(f.toPath, StandardCharsets.UTF_8).limit(1).iterator.asScala) {
-            isSlang = firstLine.replaceAllLiterally(" ", "").replaceAllLiterally("\t", "").replaceAllLiterally("\r", "").contains("#Sireum")
+            isSlang = firstLine
+              .replaceAllLiterally(" ", "")
+              .replaceAllLiterally("\t", "")
+              .replaceAllLiterally("\r", "")
+              .contains("#Sireum")
           }
           if (isSlang) {
             sources = sources :+ readFile(f)
@@ -154,17 +158,19 @@ object SlangTipe {
 
     if (o.verbose) {
       println()
-      println(s"Parsing, resolving, ${if (o.outline) "and type outlining" else "type outlining, and type checking"} Slang library files ...")
+      println(
+        s"Parsing, resolving, ${if (o.outline) "and type outlining" else "type outlining, and type checking"} Slang library files ..."
+      )
       startTime()
     }
 
-    var (th, reporter): (TypeHierarchy, AccumulatingReporter) = if (o.outline) {
-        val p = TypeChecker.libraryReporter
-        (p._1.typeHierarchy, p._2)
-      } else {
-        val p = TypeChecker.checkedLibraryReporter
-        (p._1.typeHierarchy, p._2)
-      }
+    var (th, reporter): (TypeHierarchy, Reporter) = if (o.outline) {
+      val p = TypeChecker.libraryReporter
+      (p._1.typeHierarchy, p._2)
+    } else {
+      val p = TypeChecker.checkedLibraryReporter
+      (p._1.typeHierarchy, p._2)
+    }
 
     if (reporter.hasIssue) {
       reporter.printMessages()
@@ -275,7 +281,9 @@ object SlangTipe {
 
       if (o.verbose) {
         println()
-        println("Sanity checking computed symbol and type information of Slang library files and sourcepath programs ...")
+        println(
+          "Sanity checking computed symbol and type information of Slang library files and sourcepath programs ..."
+        )
         startTime()
       }
 
@@ -332,7 +340,9 @@ object SlangTipe {
         used = newUsed
       }
       println()
-      println(f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s, Max memory: ${used / 1024d / 1024d}%.2f MB")
+      println(
+        f"Ok! Total time: ${(System.currentTimeMillis - begin) / 1000d}%.2f s, Max memory: ${used / 1024d / 1024d}%.2f MB"
+      )
     }
 
     return 0

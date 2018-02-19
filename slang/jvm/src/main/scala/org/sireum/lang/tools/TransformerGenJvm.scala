@@ -27,22 +27,24 @@ package org.sireum.lang.tools
 
 import java.io.File
 
+import org.sireum.message._
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
-import org.sireum.lang.util.Reporter
 import org.sireum.util.FileUtil
 import org.sireum.{None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object TransformerGenJvm {
   val messageKind = "TransformerGen"
 
-  def apply(allowSireumPackage: Boolean,
-            isImmutable: Boolean,
-            licenseOpt: Option[File],
-            src: File,
-            dest: File,
-            nameOpt: SOption[SString],
-            reporter: Reporter): SOption[String] = {
+  def apply(
+    allowSireumPackage: Boolean,
+    isImmutable: Boolean,
+    licenseOpt: Option[File],
+    src: File,
+    dest: File,
+    nameOpt: SOption[SString],
+    reporter: Reporter
+  ): SOption[String] = {
     val srcText = FileUtil.readFile(src)
     val srcUri = FileUtil.toUri(src)
     val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
@@ -53,8 +55,7 @@ object TransformerGenJvm {
           case _ => SNone[SString]()
         }
         val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
-        SSome(PrePostTransformerGen.gen(isImmutable, lOpt, fOpt,
-          nameOpt, p, reporter).render.value)
+        SSome(PrePostTransformerGen.gen(isImmutable, lOpt, fOpt, nameOpt, p, reporter).render.value)
       case _ =>
         reporter.error(SNone(), "TransformerGen", "Expecting program input.")
         return SNone()

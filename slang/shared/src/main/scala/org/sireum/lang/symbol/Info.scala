@@ -27,6 +27,7 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.lang.{ast => AST}
 import Resolver._
 
@@ -286,15 +287,15 @@ object Scope {
 @datatype trait Info {
   @pure def name: QName
 
-  @pure def posOpt: Option[AST.PosInfo]
+  @pure def posOpt: Option[Position]
 }
 
 object Info {
 
   @datatype class Package(val name: QName, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo]) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
-      return None[AST.PosInfo]()
+    @pure override def posOpt: Option[Position] = {
+      return None[Position]()
     }
   }
 
@@ -307,7 +308,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -332,7 +333,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -355,7 +356,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -378,7 +379,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -406,7 +407,7 @@ object Info {
       return owner :+ ast.id.value
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -420,7 +421,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -454,7 +455,7 @@ object Info {
     typedOpt: Option[AST.Typed],
     resOpt: Option[AST.ResolvedInfo],
     elementTypedOpt: Option[AST.Typed],
-    val posOpt: Option[AST.PosInfo]
+    val posOpt: Option[Position]
   ) extends Info {
 
     val byNameTypedOpt: Option[AST.Typed] = Some(
@@ -489,7 +490,7 @@ object Info {
     id: String,
     typedOpt: Option[AST.Typed],
     resOpt: Option[AST.ResolvedInfo],
-    val posOpt: Option[AST.PosInfo]
+    val posOpt: Option[Position]
   ) extends Info {
 
     @pure override def name: QName = {
@@ -506,7 +507,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -515,7 +516,7 @@ object Info {
   @datatype class QuantVar(val name: QName, ast: AST.Id, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo])
       extends Info {
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -529,7 +530,7 @@ object Info {
 
   @pure def canHaveCompanion: B
 
-  @pure def posOpt: Option[AST.PosInfo]
+  @pure def posOpt: Option[Position]
 }
 
 object TypeInfo {
@@ -544,7 +545,7 @@ object TypeInfo {
       return F
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
   }
@@ -558,7 +559,7 @@ object TypeInfo {
     )
   }
 
-  @datatype class Enum(owner: QName, elements: Map[String, Option[AST.ResolvedInfo]], val posOpt: Option[AST.PosInfo])
+  @datatype class Enum(owner: QName, elements: Map[String, Option[AST.ResolvedInfo]], val posOpt: Option[Position])
       extends TypeInfo {
 
     val nameTypedOpt: Option[AST.Typed] = Some(
@@ -609,7 +610,7 @@ object TypeInfo {
       return T
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -670,7 +671,7 @@ object TypeInfo {
       return owner :+ ast.id.value
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
 
@@ -720,7 +721,7 @@ object TypeInfo {
       return F
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
     }
   }
@@ -735,7 +736,7 @@ object TypeInfo {
       return F
     }
 
-    @pure override def posOpt: Option[AST.PosInfo] = {
+    @pure override def posOpt: Option[Position] = {
       return ast.id.attr.posOpt
     }
   }

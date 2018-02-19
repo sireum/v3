@@ -27,12 +27,12 @@
 package org.sireum.lang.symbol
 
 import org.sireum._
+import org.sireum.message._
 import Resolver._
 import org.sireum.lang.ast.Exp.Quant
 import org.sireum.lang.ast.LClause.Sequent
 import org.sireum.lang.ast.MTransformer.PreResult
 import org.sireum.lang.ast._
-import org.sireum.lang.util.Reporter
 
 object SequentResolver {
 

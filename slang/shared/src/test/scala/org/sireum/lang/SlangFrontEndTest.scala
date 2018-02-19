@@ -25,13 +25,13 @@
 
 package org.sireum.lang
 
+import org.sireum.message._
 import org.sireum.$internal.Trie
 import org.sireum.test._
 import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol._
-import org.sireum.lang.util.{AccumulatingReporter, Reporter}
 
 class SlangFrontEndTest extends SireumSpec {
   val notJs: Boolean = !org.sireum.$internal.Macro.isJs
@@ -307,7 +307,9 @@ class SlangFrontEndTest extends SireumSpec {
           }
         case child: Trie.Leaf[String, String] =>
           registerTest(childKey, ts: _*)(
-            assert(passingCheck(child.data, addImport = false, isPrelude = true, checkMsgPack = notJs))
+            assert(
+              passingCheck(child.data, addImport = false, isPrelude = true, checkJSON = false, checkMsgPack = notJs)
+            )
           )(pos)
       }
     case _ =>
@@ -318,9 +320,10 @@ class SlangFrontEndTest extends SireumSpec {
     addImport: Boolean = true,
     isWorksheet: Boolean = false,
     isPrelude: Boolean = false,
+    checkJSON: Boolean = false,
     checkMsgPack: Boolean = true
   ): Boolean = {
-    val reporter = AccumulatingReporter.create
+    val reporter = Reporter.create
     val r = parse(
       s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
       isWorksheet,
@@ -342,10 +345,21 @@ class SlangFrontEndTest extends SireumSpec {
             b = false
           }
 
+          if (checkJSON) {
+            val s = AST.JSON.fromTopUnit(p, true)
+            //println(s)
+            val org.sireum.Either.Left(r) = AST.JSON.toTopUnit(s)
+            assert(r == p)
+          }
+
           if (checkMsgPack) {
+            //val bin = AST.MsgPack.fromTopUnit(p, true)
             val bin = AST.CustomMessagePack.fromTopUnit(p)
             //println(bin.size)
-            assert(AST.CustomMessagePack.toTopUnit(bin) == p)
+            //val org.sireum.Either.Left(r) = AST.MsgPack.toTopUnit(bin)
+            val r = AST.CustomMessagePack.toTopUnit(bin)
+            assert(r == p)
+
           }
         case _ => b = false
       }
@@ -357,7 +371,7 @@ class SlangFrontEndTest extends SireumSpec {
     text: String,
     addImport: Boolean = true,
     isWorksheet: Boolean = false,
-    isPrelude: Boolean = false,
+    isPrelude: Boolean = true,
     checkJson: Boolean = true
   )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
@@ -370,14 +384,14 @@ class SlangFrontEndTest extends SireumSpec {
     isPrelude: Boolean = false
   )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
-      val reporter = AccumulatingReporter.create
+      val reporter = Reporter.create
       val r = parse(
         s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet,
         isPrelude,
         reporter
       )
-      val b = reporter.issues.elements.exists(_.message.value.contains(msg))
+      val b = reporter.issues.elements.exists(_.text.value.contains(msg))
       if (!b) report(r, reporter)
       b
     }
@@ -391,7 +405,7 @@ class SlangFrontEndTest extends SireumSpec {
     isPrelude: Boolean = false
   )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text)) {
-      val reporter = AccumulatingReporter.create
+      val reporter = Reporter.create
       val r = parse(
         s"${if (isPrelude) "" else "// #Sireum\n"}${if (addImport) "import org.sireum._; " else ""}$text",
         isWorksheet,
@@ -413,7 +427,7 @@ class SlangFrontEndTest extends SireumSpec {
     if (text.length <= max) text else text.substring(0, max) + " ... " + text.hashCode.toHexString
   }
 
-  def report(r: SlangParser.Result, reporter: AccumulatingReporter): Unit = {
+  def report(r: SlangParser.Result, reporter: Reporter): Unit = {
     reporter.printMessages()
     Console.err.println(r.text)
     Console.err.println(r.unitOpt)

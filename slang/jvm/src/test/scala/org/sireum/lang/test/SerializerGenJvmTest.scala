@@ -27,11 +27,11 @@ package org.sireum.lang.test
 
 import java.io.File
 
+import org.sireum.message._
 import com.sksamuel.diffpatch.DiffMatchPatch
 import org.sireum.{None => SNone, Some => SSome}
 import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.{SerializerGen, SerializerGenJvm}
-import org.sireum.lang.util.AccumulatingReporter
 import org.sireum.test.SireumSpec
 import org.sireum.util.FileUtil
 
@@ -39,10 +39,11 @@ class SerializerGenJvmTest extends SireumSpec {
 
   *(gen(slangAstPath, slangMsgPackPath, SerializerGen.Mode.MessagePack))
 
+  *(gen(slangAstPath, slangJSONPath, SerializerGen.Mode.JSON))
+
   def gen(src: File, dest: File, mode: SerializerGen.Mode.Type): Boolean = {
-    val reporter = AccumulatingReporter.create
-    val rOpt = SerializerGenJvm(allowSireumPackage = true, mode,
-      Some(licensePath), src, dest, SNone(), reporter)
+    val reporter = Reporter.create
+    val rOpt = SerializerGenJvm(allowSireumPackage = true, mode, Some(licensePath), src, dest, SNone(), reporter)
     reporter.printMessages()
     rOpt match {
       case SSome(r) =>

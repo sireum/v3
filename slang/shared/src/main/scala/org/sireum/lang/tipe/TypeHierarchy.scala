@@ -27,9 +27,9 @@
 package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util._
 import org.sireum.lang.{ast => AST}
 
 object TypeHierarchy {
@@ -104,7 +104,7 @@ object TypeHierarchy {
       }
     }
 
-    def resolveTypeNameds(posOpt: Option[AST.PosInfo], scope: Scope, ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
+    def resolveTypeNameds(posOpt: Option[Position], scope: Scope, ts: ISZ[AST.Type.Named]): ISZ[AST.Typed.Name] = {
       var r = ISZ[AST.Typed.Name]()
       for (t <- ts) {
         val typed = resolveType(scope, t)
@@ -189,11 +189,11 @@ object TypeHierarchy {
   }
 
   @pure def combine(
-    r: (TypeHierarchy, AccumulatingReporter),
-    f: TypeHierarchy => (TypeHierarchy, AccumulatingReporter)
-  ): (TypeHierarchy, AccumulatingReporter) = {
+    r: (TypeHierarchy, Reporter),
+    f: TypeHierarchy => (TypeHierarchy, Reporter)
+  ): (TypeHierarchy, Reporter) = {
     val p = f(r._1)
-    return (p._1, AccumulatingReporter.combine(r._2, p._2))
+    return (p._1, Reporter.combine(r._2, p._2))
   }
 
 }
@@ -209,7 +209,7 @@ object TypeHierarchy {
   @pure def rootTypes: ISZ[AST.Typed.Name] = {
     return poset.rootNodes.map(name => typeMap.)
   }
-  */
+   */
 
   @pure def rootTypeNames(): ISZ[QName] = {
     return poset.rootNodes
@@ -326,7 +326,7 @@ object TypeHierarchy {
     }
   }
 
-  def dealiasInit(posOpt: Option[AST.PosInfo], t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
+  def dealiasInit(posOpt: Option[Position], t: AST.Typed.Name, reporter: Reporter): Option[AST.Typed.Name] = {
     aliases.get(t.ids) match {
       case Some(t2: AST.Typed.Name) =>
         val r = dealiasInit(posOpt, t2, reporter)
@@ -350,7 +350,8 @@ object TypeHierarchy {
       val k = kv._1
       val v = kv._2
       if (v.contains(k)) {
-        reporter.error(None(), resolverKind, st"Cyclic type hierarchy involving ${(poset.nodesInverse(k), ".")}.".render)
+        reporter
+          .error(None(), resolverKind, st"Cyclic type hierarchy involving ${(poset.nodesInverse(k), ".")}.".render)
       }
     }
   }
@@ -493,7 +494,7 @@ object TypeHierarchy {
   def applyTypeAlias(
     typed: AST.Typed.Name,
     ti: TypeInfo.TypeAlias,
-    posOpt: Option[AST.PosInfo],
+    posOpt: Option[Position],
     reporter: Reporter
   ): Option[AST.Typed] = {
     val tipeOpt: Option[AST.Type] = if (!ti.outlined) {
@@ -514,7 +515,7 @@ object TypeHierarchy {
     }
   }
 
-  def dealias(typed: AST.Typed, posOpt: Option[AST.PosInfo], reporter: Reporter): AST.Typed = {
+  def dealias(typed: AST.Typed, posOpt: Option[Position], reporter: Reporter): AST.Typed = {
     def dealiasOpt(t: AST.Typed): Option[AST.Typed] = {
       t match {
         case t: AST.Typed.Name =>

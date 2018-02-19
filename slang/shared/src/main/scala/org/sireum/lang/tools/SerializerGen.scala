@@ -27,11 +27,11 @@
 package org.sireum.lang.tools
 
 import org.sireum._
+import org.sireum.message._
 import org.sireum.ops._
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.symbol._
 import org.sireum.lang.symbol.Resolver._
-import org.sireum.lang.util._
 
 object SerializerGen {
 
@@ -243,7 +243,14 @@ object SerializerGen {
       return st"print$nameOne(o.$fieldName, print$name)"
     }
 
-    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
+    @pure def printNameTwo(
+      nameTwo: String,
+      name1: ST,
+      name2: ST,
+      fieldName: String,
+      isBuiltIn1: B,
+      isBuiltIn2: B
+    ): ST = {
       return st"print$nameTwo(o.$fieldName, print$name1, print$name2)"
     }
 
@@ -418,8 +425,8 @@ object SerializerGen {
     }
 
     @pure def from(name: ST, tpe: ST): ST = {
-      return st"""def from$name(o: $tpe, poolString: B): ISZ[U8] = {
-      |  val w = Writer.Default(MessagePack.writer(poolString))
+      return st"""def from$name(o: $tpe, pooling: B): ISZ[U8] = {
+      |  val w = Writer.Default(MessagePack.writer(pooling))
       |  w.write$name(o)
       |  return w.result
       |}"""
@@ -485,7 +492,14 @@ object SerializerGen {
       return st"writer.write$nameOne(o.$fieldName, ${w}write$name)"
     }
 
-    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
+    @pure def printNameTwo(
+      nameTwo: String,
+      name1: ST,
+      name2: ST,
+      fieldName: String,
+      isBuiltIn1: B,
+      isBuiltIn2: B
+    ): ST = {
       val w1: String = if (isBuiltIn1) "writer." else ""
       val w2: String = if (isBuiltIn2) "writer." else ""
       return st"writer.write$nameTwo(o.$fieldName, ${w1}write$name1, ${w2}write$name2)"
@@ -826,6 +840,7 @@ object SerializerGen {
             return None()
           }
           val r = tipe.name.ids(0).value
+          var isSimple = T
           r.native match {
             case "B" =>
             case "C" =>
@@ -851,9 +866,14 @@ object SerializerGen {
             case "F64" =>
             case "R" =>
             case "String" =>
+            case "Message" => isSimple = F
+            case "Position" => isSimple = F
+            case "FlatPos" => isSimple = F
+            case "PosInfo" => isSimple = F
+            case "DocInfo" => isSimple = F
             case _ => return None()
           }
-          return Some((T, r))
+          return Some((isSimple, r))
         case _ => None()
       }
     }

@@ -25,7 +25,8 @@
 
 package org.sireum.lang.parser
 
-import org.sireum.lang.util.Reporter
+import org.sireum.message
+import org.sireum.message.Reporter
 import org.sireum.lang.{ast => AST}
 import org.sireum.{B, ISZ, None, Option, Some, String, Z}
 
@@ -148,7 +149,7 @@ class SlangParser(
 ) {
   var lPointOpt: scala.Option[Int] = scala.None
 
-  val fileInfo = AST.FileInfo(fileUriOpt = fileUriOpt, lineOffsets = {
+  val fileInfo = message.DocInfo(uriOpt = fileUriOpt, lineOffsets = {
     val util = new org.langmeta.InputUtil(input)
     var line = 0
     import org.sireum._
@@ -197,7 +198,7 @@ class SlangParser(
     }
   }
 
-  def posInfo(pos: Position): AST.PosInfo = {
+  def posInfo(pos: Position): message.Position = {
     val startOffset = lPointOpt.getOrElse(0)
     //val range = Position.Range(input, startOffset + pos.start, startOffset + pos.end)
     //val beginLine = range.startLine + 1
@@ -214,7 +215,7 @@ class SlangParser(
     val len = conversions.Z.toU64(length)
     val offsetLength = off | len
 
-    val r = AST.PosInfo(fileInfo = fileInfo, offsetLength = offsetLength)
+    val r = message.PosInfo(info = fileInfo, offsetLength = offsetLength)
     //assert(r.offset == offset, s"Pos offset: ${r.offset} != $offset")
     //assert(r.length == length, s"Pos len: ${r.length} == $length")
     //assert(r.beginLine == beginLine, s"Pos begin line: ${r.beginLine} == $beginLine")
@@ -224,7 +225,7 @@ class SlangParser(
     r
   }
 
-  def posOpt(pos: Position): Option[AST.PosInfo] = Some(posInfo(pos))
+  def posOpt(pos: Position): Option[message.Position] = Some(posInfo(pos))
 
   def error(pos: Position, message: Predef.String): Unit =
     reporter.error(posOpt(pos), SlangParser.messageKind, message)
