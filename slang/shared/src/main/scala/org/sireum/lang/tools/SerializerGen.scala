@@ -70,17 +70,11 @@ object SerializerGen {
 
     @pure def printEnumCase(elementName: String, tpe: ST): ST
 
-    @pure def printIS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST
+    @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST
 
-    @pure def printMS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST
+    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST
 
-    @pure def printOption(name: ST, fieldName: String, isBuiltIn: B): ST
-
-    @pure def printMOption(name: ST, fieldName: String, isBuiltIn: B): ST
-
-    @pure def printEither(name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST
-
-    @pure def printMEither(name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST
+    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST
 
@@ -96,17 +90,11 @@ object SerializerGen {
 
     @pure def parseEnumCase(elementName: String, tpe: ST): ST
 
-    @pure def parseIS(indexType: String, name: ST, isBuiltIn: B): ST
+    @pure def parseS(isImmutable: B, indexType: String, name: ST, isBuiltIn: B): ST
 
-    @pure def parseMS(indexType: String, name: ST, isBuiltIn: B): ST
+    @pure def parseNameOne(nameOne: String, name: ST, isBuiltIn: B): ST
 
-    @pure def parseOption(name: ST, isBuiltIn: B): ST
-
-    @pure def parseMOption(name: ST, isBuiltIn: B): ST
-
-    @pure def parseEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST
-
-    @pure def parseMEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST
+    @pure def parseNameTwo(prefix: String, name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST
   }
 
   @datatype class JsonTemplate extends Template {
@@ -245,28 +233,17 @@ object SerializerGen {
       return st"""case $tpe.$elementName => "$elementName""""
     }
 
-    @pure def printIS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
-      return st"printIS$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
+    @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
+      val sName: String = if (isImmutable) "IS" else "MS"
+      return st"print$sName$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
     }
 
-    @pure def printMS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
-      return st"printMS$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
+    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
+      return st"print$nameOne(o.$fieldName, print$name)"
     }
 
-    @pure def printOption(name: ST, fieldName: String, isBuiltIn: B): ST = {
-      return st"printOption(o.$fieldName, print$name)"
-    }
-
-    @pure def printMOption(name: ST, fieldName: String, isBuiltIn: B): ST = {
-      return st"printMOption(o.$fieldName, print$name)"
-    }
-
-    @pure def printEither(name0: ST, name1: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
-      return st"printEither(o.$fieldName, print$name0, print$name1)"
-    }
-
-    @pure def printMEither(name0: ST, name1: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
-      return st"printMEither(o.$fieldName, print$name0, print$name1)"
+    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
+      return st"print$nameTwo(o.$fieldName, print$name1, print$name2)"
     }
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
@@ -333,36 +310,21 @@ object SerializerGen {
       return st"""case "$elementName" => return $tpe.$elementName"""
     }
 
-    @pure def parseIS(indexType: String, name: ST, isBuiltIn: B): ST = {
+    @pure def parseS(isImmutable: B, indexType: String, name: ST, isBuiltIn: B): ST = {
+      val sName: String = if (isImmutable) "IS" else "MS"
       val p: String = if (isBuiltIn) "parser." else ""
-      return st"parser.parseIS$indexType(${p}parse$name _)"
+      return st"parser.parse$sName$indexType(${p}parse$name _)"
     }
 
-    @pure def parseMS(indexType: String, name: ST, isBuiltIn: B): ST = {
+    @pure def parseNameOne(nameOne: String, name: ST, isBuiltIn: B): ST = {
       val p: String = if (isBuiltIn) "parser." else ""
-      return st"parser.parseMS$indexType(${p}parse$name _)"
+      return st"parser.parse$nameOne(${p}parse$name _)"
     }
 
-    @pure def parseOption(name: ST, isBuiltIn: B): ST = {
-      val p: String = if (isBuiltIn) "parser." else ""
-      return st"parser.parseOption(${p}parse$name _)"
-    }
-
-    @pure def parseMOption(name: ST, isBuiltIn: B): ST = {
-      val p: String = if (isBuiltIn) "parser." else ""
-      return st"parser.parseMOption(${p}parse$name _)"
-    }
-
-    @pure def parseEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
+    @pure def parseNameTwo(prefix: String, name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
       val p1: String = if (isBuiltIn1) "parser." else ""
       val p2: String = if (isBuiltIn2) "parser." else ""
-      return st"parser.parseEither(${p1}parse$name1 _, ${p2}parse$name2 _)"
-    }
-
-    @pure def parseMEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
-      val p1: String = if (isBuiltIn1) "parser." else ""
-      val p2: String = if (isBuiltIn2) "parser." else ""
-      return st"parser.parseMEither(${p1}parse$name1 _, ${p2}parse$name2 _)"
+      return st"parser.parse${prefix}Map(${p1}parse$name1 _, ${p2}parse$name2 _)"
     }
   }
 
@@ -511,36 +473,21 @@ object SerializerGen {
       return st""
     }
 
-    @pure def printIS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
+    @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
+      val sName: String = if (isImmutable) "IS" else "MS"
       val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.writeIS$indexType(o.$fieldName, ${w}write$name)"
+      return st"writer.write$sName$indexType(o.$fieldName, ${w}write$name)"
     }
 
-    @pure def printMS(isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
+    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
       val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.writeMS$indexType(o.$fieldName, ${w}write$name)"
+      return st"writer.write$nameOne(o.$fieldName, ${w}write$name)"
     }
 
-    @pure def printOption(name: ST, fieldName: String, isBuiltIn: B): ST = {
-      val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.writeOption(o.$fieldName, ${w}write$name)"
-    }
-
-    @pure def printMOption(name: ST, fieldName: String, isBuiltIn: B): ST = {
-      val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.writeMOption(o.$fieldName, ${w}write$name)"
-    }
-
-    @pure def printEither(name0: ST, name1: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
+    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
       val w1: String = if (isBuiltIn1) "writer." else ""
       val w2: String = if (isBuiltIn2) "writer." else ""
-      return st"writer.writeEither(o.$fieldName, ${w1}write$name0, ${w2}write$name1)"
-    }
-
-    @pure def printMEither(name0: ST, name1: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST = {
-      val w1: String = if (isBuiltIn1) "writer." else ""
-      val w2: String = if (isBuiltIn2) "writer." else ""
-      return st"writer.writeMEither(o.$fieldName, ${w1}write$name0, ${w2}write$name1)"
+      return st"writer.write$nameTwo(o.$fieldName, ${w1}write$name1, ${w2}write$name2)"
     }
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
@@ -592,38 +539,22 @@ object SerializerGen {
       return st""
     }
 
-    @pure def parseIS(indexType: String, name: ST, isBuiltIn: B): ST = {
+    @pure def parseS(isImmutable: B, indexType: String, name: ST, isBuiltIn: B): ST = {
+      val sName: String = if (isImmutable) "IS" else "MS"
       val p: String = if (isBuiltIn) "reader." else ""
-      return st"reader.readIS$indexType(${p}read$name _)"
+      return st"reader.read$sName$indexType(${p}read$name _)"
     }
 
-    @pure def parseMS(indexType: String, name: ST, isBuiltIn: B): ST = {
+    @pure def parseNameOne(nameOne: String, name: ST, isBuiltIn: B): ST = {
       val p: String = if (isBuiltIn) "reader." else ""
-      return st"reader.readMS$indexType(${p}read$name _)"
+      return st"reader.read$nameOne(${p}read$name _)"
     }
 
-    @pure def parseOption(name: ST, isBuiltIn: B): ST = {
-      val p: String = if (isBuiltIn) "reader." else ""
-      return st"reader.readOption(${p}read$name _)"
-    }
-
-    @pure def parseMOption(name: ST, isBuiltIn: B): ST = {
-      val p: String = if (isBuiltIn) "reader." else ""
-      return st"reader.readMOption(${p}read$name _)"
-    }
-
-    @pure def parseEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
+    @pure def parseNameTwo(nameTwo: String, name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
       val p1: String = if (isBuiltIn1) "reader." else ""
       val p2: String = if (isBuiltIn2) "reader." else ""
-      return st"reader.readEither(${p1}read$name1 _, ${p2}read$name2 _)"
+      return st"reader.read$nameTwo(${p1}read$name1 _, ${p2}read$name2 _)"
     }
-
-    @pure def parseMEither(name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
-      val p1: String = if (isBuiltIn1) "reader." else ""
-      val p2: String = if (isBuiltIn2) "reader." else ""
-      return st"reader.readEither(${p1}read$name1 _, ${p2}read$name2 _)"
-    }
-
   }
 
   val jsonGenKind: String = "JsonGen"
@@ -755,36 +686,24 @@ object SerializerGen {
     def printValue(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {
       val sOpt = s(ti, tipe)
       sOpt match {
-        case Some((isImmutable, indexType, (isSimple, elementName))) =>
-          if (isImmutable) {
-            return template.printIS(isSimple, elementName, isSimple, fieldName, indexType)
-          } else {
-            return template.printMS(isSimple, elementName, isSimple, fieldName, indexType)
-          }
+        case Some((isImmutable, indexType, (isBuiltIn, isSimple, elementName))) =>
+          return template.printS(isImmutable, isSimple, elementName, isBuiltIn, fieldName, indexType)
         case _ =>
       }
-      val optOpt = opt(ti, tipe)
+      val optOpt = nameOne(ti, tipe)
       optOpt match {
-        case Some((isImmutable, (isSimple, elementName))) =>
-          if (isImmutable) {
-            return template.printOption(elementName, fieldName, isSimple)
-          } else {
-            return template.printMOption(elementName, fieldName, isSimple)
-          }
+        case Some((isImmutable, (isBuiltIn, _, elementName))) =>
+          return template.printNameOne(isImmutable, elementName, fieldName, isBuiltIn)
         case _ =>
       }
-      val eitherOpt = either(ti, tipe)
-      eitherOpt match {
-        case Some((isImmutable, (isSimple1, e1), (isSimple2, e2))) =>
-          if (isImmutable) {
-            return template.printEither(e1, e2, fieldName, isSimple1, isSimple2)
-          } else {
-            return template.printMEither(e1, e2, fieldName, isSimple1, isSimple2)
-          }
+      val mapOpt = nameTwo(ti, tipe)
+      mapOpt match {
+        case Some((prefix, (isBuiltIn1, _, e1), (isBuiltIn2, _, e2))) =>
+          return template.printNameTwo(prefix, e1, e2, fieldName, isBuiltIn1, isBuiltIn2)
         case _ =>
       }
-      val p = basicOrTypeName(ti, tipe)
-      template.printValue(p._2, fieldName, p._1)
+      val t = basicOrTypeName(ti, tipe)
+      template.printValue(t._3, fieldName, t._1)
     }
 
     def parseField(ti: TypeInfo.AbstractDatatype, fieldName: String, tipe: AST.Type.Named): ST = {
@@ -795,71 +714,65 @@ object SerializerGen {
     def parseValue(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): ST = {
       val sOpt = s(ti, tipe)
       sOpt match {
-        case Some((isImmutable, indexType, (isSimple, elementName))) =>
-          if (isImmutable) {
-            return template.parseIS(indexType, elementName, isSimple)
-          } else {
-            return template.parseMS(indexType, elementName, isSimple)
-          }
+        case Some((isImmutable, indexType, (isBuiltIn, _, elementName))) =>
+          return template.parseS(isImmutable, indexType, elementName, isBuiltIn)
         case _ =>
       }
-      val optOpt = opt(ti, tipe)
+      val optOpt = nameOne(ti, tipe)
       optOpt match {
-        case Some((isImmutable, (isSimple, elementName))) =>
-          if (isImmutable) {
-            return template.parseOption(elementName, isSimple)
-          } else {
-            return template.parseMOption(elementName, isSimple)
-          }
+        case Some((isImmutable, (isBuiltIn, _, elementName))) =>
+          return template.parseNameOne(isImmutable, elementName, isBuiltIn)
         case _ =>
       }
-      val eitherOpt = either(ti, tipe)
-      eitherOpt match {
-        case Some((isImmutable, (isSimple1, e1), (isSimple2, e2))) =>
-          if (isImmutable) {
-            return template.parseEither(e1, e2, isSimple1, isSimple2)
-          } else {
-            return template.parseMEither(e1, e2, isSimple1, isSimple2)
-          }
+      val mapOpt = nameTwo(ti, tipe)
+      mapOpt match {
+        case Some((prefix, (isBuiltIn1, _, e1), (isBuiltIn2, _, e2))) =>
+          return template.parseNameTwo(prefix, e1, e2, isBuiltIn1, isBuiltIn2)
         case _ =>
       }
-      val (isBuiltIn, name) = basicOrTypeName(ti, tipe)
-      return template.parseValue(ISZ(name, st"()"), isBuiltIn)
+      val t = basicOrTypeName(ti, tipe)
+      return template.parseValue(ISZ(t._3, st"()"), t._1)
     }
 
-    def either(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST), (B, ST))] = {
+    def nameTwo(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(String, (B, B, ST), (B, B, ST))] = {
       if (!(tipe.name.ids.size == 1 && tipe.typeArgs.size == 2)) {
         return None()
       }
       val name = tipe.name.ids(0).value
+      val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
+      val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
       name.native match {
         case "Either" =>
-          val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
-          val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
-          return Some((T, btn0, btn1))
-        case "MEither" =>
-          val btn0 = basicOrTypeName(ti, tipe.typeArgs(0))
-          val btn1 = basicOrTypeName(ti, tipe.typeArgs(1))
-          return Some((T, btn0, btn1))
+        case "Map" =>
+        case "HashMap" =>
+        case "HashSMap" =>
+        case "Graph" =>
       }
+      return Some((name, btn0, btn1))
     }
 
-    def opt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, (B, ST))] = {
+    def nameOne(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(String, (B, B, ST))] = {
       if (!(tipe.name.ids.size == 1 && tipe.typeArgs.size == 1)) {
         return None()
       }
       val name = tipe.name.ids(0).value
+      val btn = basicOrTypeName(ti, tipe.typeArgs(0))
       name.native match {
         case "Option" =>
-          val btn = basicOrTypeName(ti, tipe.typeArgs(0))
-          return Some((T, btn))
         case "MOption" =>
-          val btn = basicOrTypeName(ti, tipe.typeArgs(0))
-          return Some((F, btn))
+        case "Set" =>
+        case "HashSet" =>
+        case "HashSSet" =>
+        case "Poset" =>
+        case "Stack" =>
+        case "Bag" =>
+        case "HashBag" =>
+        case "UnionFind" =>
       }
+      return Some((name, btn))
     }
 
-    def s(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, String, (B, ST))] = {
+    def s(ti: TypeInfo.AbstractDatatype, tipe: AST.Type.Named): Option[(B, String, (B, B, ST))] = {
       if (!(tipe.name.ids.size == 1 && (tipe.typeArgs.size == 1 || tipe.typeArgs.size == 2))) {
         return None()
       }
@@ -869,8 +782,7 @@ object SerializerGen {
         val et = tipe.typeArgs(1)
         val btn = basicOrTypeName(ti, et)
         (basic(tipe.typeArgs(0)), basic(et)) match {
-          case (Some(it), Some(_)) => return Some((isImmutable, it, btn))
-          case (Some(it), _) => return Some((isImmutable, it, btn))
+          case (Some((_, it)), _) => return Some((isImmutable, it, btn))
           case _ => return None()
         }
       }
@@ -882,31 +794,31 @@ object SerializerGen {
       }
     }
 
-    def basicOrTypeName(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): (B, ST) = {
+    def basicOrTypeName(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): (B /* isBuiltIn */, B /* isSimple */, ST) = {
       basic(tipe) match {
-        case Some(typeName) => return (T, st"$typeName")
+        case Some((simple, typeName)) => return (T, simple, st"$typeName")
         case _ =>
           tipe match {
             case tipe: AST.Type.Named =>
               ti.scope.resolveType(globalTypeMap, AST.Util.ids2strings(tipe.name.ids)) match {
-                case Some(ti2) => return (F, typeName(packageName, ti2.name))
+                case Some(ti2) => return (F, F, typeName(packageName, ti2.name))
                 case _ =>
                   reporter.error(
                     tipe.posOpt,
                     jsonGenKind,
                     st"Could not find ${(AST.Util.ids2strings(tipe.name.ids), ".")}.".render
                   )
-                  return (F, st"")
+                  return (F, F, st"")
               }
             case _ =>
               reporter.error(tipe.posOpt, jsonGenKind, s"Only named types are supported for @datatype/@record fields.")
-              return (F, st"")
+              return (F, F, st"")
           }
 
       }
     }
 
-    @pure def basic(tipe: AST.Type): Option[String] = {
+    @pure def basic(tipe: AST.Type): Option[(B, String)] = {
       tipe match {
         case tipe: AST.Type.Named =>
           if (tipe.typeArgs.nonEmpty || tipe.name.ids.size != 1) {
@@ -940,7 +852,7 @@ object SerializerGen {
             case "String" =>
             case _ => return None()
           }
-          return Some(r)
+          return Some((T, r))
         case _ => None()
       }
     }
