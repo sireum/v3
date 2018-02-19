@@ -804,6 +804,7 @@ import TypeChecker._
       val rep = Reporter.create
       val (newLeft, leftTypeOpt) = checkExp(None(), scope, exp.left, rep)
       if (leftTypeOpt.isEmpty) {
+        reporter.reports(rep.messages)
         return (exp(left = newLeft), None())
       }
       val leftType = leftTypeOpt.get
