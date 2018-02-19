@@ -574,7 +574,7 @@ object Resolver {
     }
 
     @datatype class Enum(
-      val name: QName,
+      owner: QName,
       elements: Map[String, Option[AST.ResolvedInfo]],
       val posOpt: Option[AST.PosInfo]
     ) extends TypeInfo {
@@ -584,7 +584,7 @@ object Resolver {
           F,
           AST.MethodMode.Method,
           ISZ(),
-          name :+ Info.Enum.elementTypeSuffix,
+          name,
           "name",
           ISZ(),
           ISZ(),
@@ -597,13 +597,17 @@ object Resolver {
           F,
           AST.MethodMode.Method,
           ISZ(),
-          name :+ Info.Enum.elementTypeSuffix,
+          name,
           "ordinal",
           ISZ(),
           ISZ(),
           AST.Typed.Fun(T, T, ISZ(), AST.Typed.z)
         )
       )
+
+      @pure override def name: QName = {
+        return owner :+ Info.Enum.elementTypeSuffix
+      }
 
       @pure override def canHaveCompanion: B = {
         return F
