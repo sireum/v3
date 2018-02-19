@@ -36,8 +36,8 @@ import org.sireum.lang.ast.TopUnit
 import org.sireum.lang.parser.Parser
 
 import scala.collection.JavaConverters._
-import org.sireum.lang.symbol.Resolver
-import org.sireum.lang.tipe.{PostTipeAttrChecker, TypeChecker, TypeHierarchy, TypeOutliner}
+import org.sireum.lang.symbol._
+import org.sireum.lang.tipe._
 import org.sireum.lang.util.AccumulatingReporter
 
 object SlangTipe {
@@ -226,16 +226,16 @@ object SlangTipe {
         val ids = ISZ[String](name.value.split('.').map(id => String(id)): _*)
         var found = F
         th.nameMap.get(ids) match {
-          case Some(info: Resolver.Info.Object) =>
+          case Some(info: Info.Object) =>
             nameMap = nameMap + ids ~> info
             found = T
           case _ =>
         }
         th.typeMap.get(ids) match {
-          case Some(info: Resolver.TypeInfo.Sig) =>
+          case Some(info: TypeInfo.Sig) =>
             typeMap = typeMap + ids ~> info
             found = T
-          case Some(info: Resolver.TypeInfo.AbstractDatatype) =>
+          case Some(info: TypeInfo.AbstractDatatype) =>
             typeMap = typeMap + ids ~> info
             found = T
           case _ =>
