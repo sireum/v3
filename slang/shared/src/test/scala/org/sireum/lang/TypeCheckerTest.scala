@@ -43,11 +43,6 @@ class TypeCheckerTest extends SireumSpec {
       "Worksheet" - {
 
         *(passingWorksheet("""import org.sireum._
-                             |@pure def foo(): Z = { return 4 }
-                             |assert(foo - 4)
-                             |""".stripMargin))
-
-        *(passingWorksheet("""import org.sireum._
                              |@datatype trait Or[L, R]
                              |@datatype class Left[L, R](value: L) extends Or[L, R]
                              |@datatype class Right[L, R](value: R) extends Or[L, R]
@@ -353,6 +348,11 @@ class TypeCheckerTest extends SireumSpec {
     "Failing" - {
 
       "Worksheet" - {
+
+        *(failingWorksheet("""import org.sireum._
+                             |@pure def foo(): Z = { return 4 }
+                             |assert(foo - 4)
+                             |""".stripMargin, "eta"))
 
         *(failingWorksheet("""import org.sireum._
                              |@pure def foo(x: Z): Z = { return }
