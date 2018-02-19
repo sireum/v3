@@ -88,7 +88,7 @@ object CustomMessagePack {
           fileInfoPool = fileInfoPool + o ~> fileInfoPool.size
           fileInfoPool.size - 1
       }
-      writeZ(n)
+      writer.writeZ(n)
     }
 
     override def result: ISZ[U8] = {

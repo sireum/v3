@@ -354,24 +354,24 @@ object MsgPack {
 
     def writeTopUnitProgram(o: TopUnit.Program): Unit = {
       writer.writeZ(Constants.TopUnitProgram)
-      writer.writeOption(o.fileUriOpt, writeString)
+      writer.writeOption(o.fileUriOpt, writer.writeString)
       writeName(o.packageName)
       writeBody(o.body)
     }
 
     def writeTopUnitSequentUnit(o: TopUnit.SequentUnit): Unit = {
       writer.writeZ(Constants.TopUnitSequentUnit)
-      writer.writeOption(o.fileUriOpt, writeString)
+      writer.writeOption(o.fileUriOpt, writer.writeString)
       writeLClauseSequent(o.sequent)
     }
 
     def writeTopUnitTruthTableUnit(o: TopUnit.TruthTableUnit): Unit = {
       writer.writeZ(Constants.TopUnitTruthTableUnit)
-      writer.writeOption(o.fileUriOpt, writeString)
+      writer.writeOption(o.fileUriOpt, writer.writeString)
       writer.writeISZ(o.stars, writePosInfo)
       writer.writeISZ(o.vars, writeId)
       writePosInfo(o.separator)
-      writeB(o.isSequent)
+      writer.writeB(o.isSequent)
       writeLClauseSequent(o.sequent)
       writer.writeISZ(o.rows, writeTruthTableRow)
       writer.writeOption(o.conclusionOpt, writeTruthTableConclusion)
@@ -455,7 +455,7 @@ object MsgPack {
 
     def writeStmtVar(o: Stmt.Var): Unit = {
       writer.writeZ(Constants.StmtVar)
-      writeB(o.isVal)
+      writer.writeB(o.isVal)
       writeId(o.id)
       writer.writeOption(o.tipeOpt, writeType)
       writer.writeOption(o.initOpt, writeAssignExp)
@@ -464,7 +464,7 @@ object MsgPack {
 
     def writeStmtVarPattern(o: Stmt.VarPattern): Unit = {
       writer.writeZ(Constants.StmtVarPattern)
-      writeB(o.isVal)
+      writer.writeB(o.isVal)
       writePattern(o.pattern)
       writer.writeOption(o.tipeOpt, writeType)
       writeAssignExp(o.init)
@@ -473,7 +473,7 @@ object MsgPack {
 
     def writeStmtSpecVar(o: Stmt.SpecVar): Unit = {
       writer.writeZ(Constants.StmtSpecVar)
-      writeB(o.isVal)
+      writer.writeB(o.isVal)
       writeId(o.id)
       writeType(o.tipe)
       writeAttr(o.attr)
@@ -482,8 +482,8 @@ object MsgPack {
     def writeStmtMethod(o: Stmt.Method): Unit = {
       writer.writeZ(Constants.StmtMethod)
       writePurity(o.purity)
-      writeB(o.hasOverride)
-      writeB(o.isHelper)
+      writer.writeB(o.hasOverride)
+      writer.writeB(o.isHelper)
       writeMethodSig(o.sig)
       writeContract(o.contract)
       writer.writeOption(o.bodyOpt, writeBody)
@@ -492,7 +492,7 @@ object MsgPack {
 
     def writeStmtExtMethod(o: Stmt.ExtMethod): Unit = {
       writer.writeZ(Constants.StmtExtMethod)
-      writeB(o.isPure)
+      writer.writeB(o.isPure)
       writeMethodSig(o.sig)
       writeContract(o.contract)
       writeAttr(o.attr)
@@ -516,21 +516,21 @@ object MsgPack {
     def writeStmtSubZ(o: Stmt.SubZ): Unit = {
       writer.writeZ(Constants.StmtSubZ)
       writeId(o.id)
-      writeB(o.isSigned)
-      writeB(o.isBitVector)
-      writeB(o.isWrapped)
-      writeB(o.hasMin)
-      writeB(o.hasMax)
-      writeZ(o.bitWidth)
-      writeZ(o.min)
-      writeZ(o.max)
-      writeZ(o.index)
+      writer.writeB(o.isSigned)
+      writer.writeB(o.isBitVector)
+      writer.writeB(o.isWrapped)
+      writer.writeB(o.hasMin)
+      writer.writeB(o.hasMax)
+      writer.writeZ(o.bitWidth)
+      writer.writeZ(o.min)
+      writer.writeZ(o.max)
+      writer.writeZ(o.index)
       writeAttr(o.attr)
     }
 
     def writeStmtObject(o: Stmt.Object): Unit = {
       writer.writeZ(Constants.StmtObject)
-      writeB(o.isExt)
+      writer.writeB(o.isExt)
       writeId(o.id)
       writer.writeISZ(o.parents, writeType)
       writer.writeISZ(o.stmts, writeStmt)
@@ -539,8 +539,8 @@ object MsgPack {
 
     def writeStmtSig(o: Stmt.Sig): Unit = {
       writer.writeZ(Constants.StmtSig)
-      writeB(o.isImmutable)
-      writeB(o.isExt)
+      writer.writeB(o.isImmutable)
+      writer.writeB(o.isExt)
       writeId(o.id)
       writer.writeISZ(o.typeParams, writeTypeParam)
       writer.writeISZ(o.parents, writeTypeNamed)
@@ -550,8 +550,8 @@ object MsgPack {
 
     def writeStmtAbstractDatatype(o: Stmt.AbstractDatatype): Unit = {
       writer.writeZ(Constants.StmtAbstractDatatype)
-      writeB(o.isRoot)
-      writeB(o.isDatatype)
+      writer.writeB(o.isRoot)
+      writer.writeB(o.isDatatype)
       writeId(o.id)
       writer.writeISZ(o.typeParams, writeTypeParam)
       writer.writeISZ(o.params, writeAbstractDatatypeParam)
@@ -712,15 +712,15 @@ object MsgPack {
 
     def writeEnumGenRangeExpr(o: EnumGen.Range.Expr): Unit = {
       writer.writeZ(Constants.EnumGenRangeExpr)
-      writeB(o.isReverse)
-      writeB(o.isIndices)
+      writer.writeB(o.isReverse)
+      writer.writeB(o.isIndices)
       writeExp(o.exp)
       writeAttr(o.attr)
     }
 
     def writeEnumGenRangeStep(o: EnumGen.Range.Step): Unit = {
       writer.writeZ(Constants.EnumGenRangeStep)
-      writeB(o.isInclusive)
+      writer.writeB(o.isInclusive)
       writeExp(o.start)
       writeExp(o.end)
       writer.writeOption(o.byOpt, writeExp)
@@ -751,8 +751,8 @@ object MsgPack {
 
     def writeTypeFun(o: Type.Fun): Unit = {
       writer.writeZ(Constants.TypeFun)
-      writeB(o.isPure)
-      writeB(o.isByName)
+      writer.writeB(o.isPure)
+      writer.writeB(o.isByName)
       writer.writeISZ(o.args, writeType)
       writeType(o.ret)
       writeTypedAttr(o.attr)
@@ -783,8 +783,8 @@ object MsgPack {
 
     def writePatternLitInterpolate(o: Pattern.LitInterpolate): Unit = {
       writer.writeZ(Constants.PatternLitInterpolate)
-      writeString(o.prefix)
-      writeString(o.value)
+      writer.writeString(o.prefix)
+      writer.writeString(o.value)
       writeTypedAttr(o.attr)
     }
 
@@ -861,49 +861,49 @@ object MsgPack {
 
     def writeExpLitB(o: Exp.LitB): Unit = {
       writer.writeZ(Constants.ExpLitB)
-      writeB(o.value)
+      writer.writeB(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitC(o: Exp.LitC): Unit = {
       writer.writeZ(Constants.ExpLitC)
-      writeC(o.value)
+      writer.writeC(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitZ(o: Exp.LitZ): Unit = {
       writer.writeZ(Constants.ExpLitZ)
-      writeZ(o.value)
+      writer.writeZ(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitF32(o: Exp.LitF32): Unit = {
       writer.writeZ(Constants.ExpLitF32)
-      writeF32(o.value)
+      writer.writeF32(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitF64(o: Exp.LitF64): Unit = {
       writer.writeZ(Constants.ExpLitF64)
-      writeF64(o.value)
+      writer.writeF64(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitR(o: Exp.LitR): Unit = {
       writer.writeZ(Constants.ExpLitR)
-      writeR(o.value)
+      writer.writeR(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpLitString(o: Exp.LitString): Unit = {
       writer.writeZ(Constants.ExpLitString)
-      writeString(o.value)
+      writer.writeString(o.value)
       writeAttr(o.attr)
     }
 
     def writeExpStringInterpolate(o: Exp.StringInterpolate): Unit = {
       writer.writeZ(Constants.ExpStringInterpolate)
-      writeString(o.prefix)
+      writer.writeString(o.prefix)
       writer.writeISZ(o.lits, writeExpLitString)
       writer.writeISZ(o.args, writeExp)
       writeTypedAttr(o.attr)
@@ -941,7 +941,7 @@ object MsgPack {
     def writeExpBinary(o: Exp.Binary): Unit = {
       writer.writeZ(Constants.ExpBinary)
       writeExp(o.left)
-      writeString(o.op)
+      writer.writeString(o.op)
       writeExp(o.right)
       writeResolvedAttr(o.attr)
     }
@@ -1006,7 +1006,7 @@ object MsgPack {
 
     def writeExpFun(o: Exp.Fun): Unit = {
       writer.writeZ(Constants.ExpFun)
-      writer.writeISZ(o.context, writeString)
+      writer.writeISZ(o.context, writer.writeString)
       writer.writeISZ(o.params, writeExpFunParam)
       writeContract(o.contract)
       writeAssignExp(o.exp)
@@ -1022,7 +1022,7 @@ object MsgPack {
 
     def writeExpQuant(o: Exp.Quant): Unit = {
       writer.writeZ(Constants.ExpQuant)
-      writeB(o.isForall)
+      writer.writeB(o.isForall)
       writer.writeISZ(o.varFragments, writeVarFragment)
       writeExp(o.exp)
       writeAttr(o.attr)
@@ -1032,7 +1032,7 @@ object MsgPack {
       writer.writeZ(Constants.NamedArg)
       writeId(o.id)
       writeExp(o.arg)
-      writeZ(o.index)
+      writer.writeZ(o.index)
     }
 
     def writeVarFragment(o: VarFragment): Unit = {
@@ -1057,15 +1057,15 @@ object MsgPack {
     def writeDomainRange(o: Domain.Range): Unit = {
       writer.writeZ(Constants.DomainRange)
       writeExp(o.lo)
-      writeB(o.loExact)
+      writer.writeB(o.loExact)
       writeExp(o.hi)
-      writeB(o.hiExact)
+      writer.writeB(o.hiExact)
       writeTypedAttr(o.attr)
     }
 
     def writeId(o: Id): Unit = {
       writer.writeZ(Constants.Id)
-      writeString(o.value)
+      writer.writeString(o.value)
       writeAttr(o.attr)
     }
 
@@ -1078,30 +1078,30 @@ object MsgPack {
     def writeBody(o: Body): Unit = {
       writer.writeZ(Constants.Body)
       writer.writeISZ(o.stmts, writeStmt)
-      writer.writeISZ(o.undecls, writeString)
+      writer.writeISZ(o.undecls, writer.writeString)
     }
 
     def writeAbstractDatatypeParam(o: AbstractDatatypeParam): Unit = {
       writer.writeZ(Constants.AbstractDatatypeParam)
-      writeB(o.isHidden)
-      writeB(o.isVal)
+      writer.writeB(o.isHidden)
+      writer.writeB(o.isVal)
       writeId(o.id)
       writeType(o.tipe)
     }
 
     def writeMethodSig(o: MethodSig): Unit = {
       writer.writeZ(Constants.MethodSig)
-      writeB(o.isPure)
+      writer.writeB(o.isPure)
       writeId(o.id)
       writer.writeISZ(o.typeParams, writeTypeParam)
-      writeB(o.hasParams)
+      writer.writeB(o.hasParams)
       writer.writeISZ(o.params, writeParam)
       writeType(o.returnType)
     }
 
     def writeParam(o: Param): Unit = {
       writer.writeZ(Constants.Param)
-      writeB(o.isHidden)
+      writer.writeB(o.isHidden)
       writeId(o.id)
       writeType(o.tipe)
     }
@@ -1153,7 +1153,7 @@ object MsgPack {
       writer.writeZ(Constants.SpecDef)
       writer.writeOption(o.idOpt, writeId)
       writeExp(o.exp)
-      writeB(o.isOtherwise)
+      writer.writeB(o.isOtherwise)
       writer.writeOption(o.patternOpt, writePattern)
       writer.writeOption(o.guardOpt, writeExp)
     }
@@ -1244,14 +1244,14 @@ object MsgPack {
 
     def writeJustAndElim(o: Just.AndElim): Unit = {
       writer.writeZ(Constants.JustAndElim)
-      writeB(o.is1)
+      writer.writeB(o.is1)
       writeExpLitZ(o.andStep)
       writeAttr(o.attr)
     }
 
     def writeJustOrIntro(o: Just.OrIntro): Unit = {
       writer.writeZ(Constants.JustOrIntro)
-      writeB(o.is1)
+      writer.writeB(o.is1)
       writeExpLitZ(o.step)
       writeAttr(o.attr)
     }
@@ -1342,7 +1342,7 @@ object MsgPack {
 
     def writeJustSubst(o: Just.Subst): Unit = {
       writer.writeZ(Constants.JustSubst)
-      writeB(o.isRight)
+      writer.writeB(o.isRight)
       writeExpLitZ(o.eqStep)
       writeExpLitZ(o.step)
       writeAttr(o.attr)
@@ -1350,7 +1350,7 @@ object MsgPack {
 
     def writeJustAuto(o: Just.Auto): Unit = {
       writer.writeZ(Constants.JustAuto)
-      writeB(o.isAlgebra)
+      writer.writeB(o.isAlgebra)
       writer.writeISZ(o.steps, writeExpLitZ)
       writeAttr(o.attr)
     }
@@ -1386,7 +1386,7 @@ object MsgPack {
 
     def writeTruthTableConclusionValidity(o: TruthTable.Conclusion.Validity): Unit = {
       writer.writeZ(Constants.TruthTableConclusionValidity)
-      writeB(o.isValid)
+      writer.writeB(o.isValid)
       writer.writeISZ(o.assignments, writeTruthTableAssignment)
       writeAttr(o.attr)
     }
@@ -1428,7 +1428,7 @@ object MsgPack {
 
     def writeTypedName(o: Typed.Name): Unit = {
       writer.writeZ(Constants.TypedName)
-      writer.writeISZ(o.ids, writeString)
+      writer.writeISZ(o.ids, writer.writeString)
       writer.writeISZ(o.args, writeTyped)
     }
 
@@ -1439,47 +1439,47 @@ object MsgPack {
 
     def writeTypedFun(o: Typed.Fun): Unit = {
       writer.writeZ(Constants.TypedFun)
-      writeB(o.isPure)
-      writeB(o.isByName)
+      writer.writeB(o.isPure)
+      writer.writeB(o.isByName)
       writer.writeISZ(o.args, writeTyped)
       writeTyped(o.ret)
     }
 
     def writeTypedTypeVar(o: Typed.TypeVar): Unit = {
       writer.writeZ(Constants.TypedTypeVar)
-      writeString(o.id)
+      writer.writeString(o.id)
     }
 
     def writeTypedPackage(o: Typed.Package): Unit = {
       writer.writeZ(Constants.TypedPackage)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeTypedObject(o: Typed.Object): Unit = {
       writer.writeZ(Constants.TypedObject)
-      writer.writeISZ(o.owner, writeString)
-      writeString(o.id)
+      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeString(o.id)
     }
 
     def writeTypedEnum(o: Typed.Enum): Unit = {
       writer.writeZ(Constants.TypedEnum)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeTypedMethodSubst(o: Typed.Method.Subst): Unit = {
       writer.writeZ(Constants.TypedMethodSubst)
-      writeString(o.id)
+      writer.writeString(o.id)
       writeTyped(o.tipe)
     }
 
     def writeTypedMethod(o: Typed.Method): Unit = {
       writer.writeZ(Constants.TypedMethod)
-      writeB(o.isInObject)
+      writer.writeB(o.isInObject)
       writeMethodMode(o.mode)
-      writer.writeISZ(o.typeParams, writeString)
-      writer.writeISZ(o.owner, writeString)
-      writeString(o.name)
-      writer.writeISZ(o.paramNames, writeString)
+      writer.writeISZ(o.typeParams, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeString(o.name)
+      writer.writeISZ(o.paramNames, writer.writeString)
       writer.writeISZ(o.substs, writeTypedMethodSubst)
       writeTypedFun(o.tpe)
     }
@@ -1534,42 +1534,42 @@ object MsgPack {
 
     def writeResolvedInfoPackage(o: ResolvedInfo.Package): Unit = {
       writer.writeZ(Constants.ResolvedInfoPackage)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeResolvedInfoEnum(o: ResolvedInfo.Enum): Unit = {
       writer.writeZ(Constants.ResolvedInfoEnum)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeResolvedInfoEnumElement(o: ResolvedInfo.EnumElement): Unit = {
       writer.writeZ(Constants.ResolvedInfoEnumElement)
-      writer.writeISZ(o.owner, writeString)
-      writeString(o.name)
-      writeZ(o.ordinal)
+      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeString(o.name)
+      writer.writeZ(o.ordinal)
     }
 
     def writeResolvedInfoObject(o: ResolvedInfo.Object): Unit = {
       writer.writeZ(Constants.ResolvedInfoObject)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeResolvedInfoVar(o: ResolvedInfo.Var): Unit = {
       writer.writeZ(Constants.ResolvedInfoVar)
-      writeB(o.isInObject)
-      writeB(o.isSpec)
-      writer.writeISZ(o.owner, writeString)
-      writeString(o.id)
+      writer.writeB(o.isInObject)
+      writer.writeB(o.isSpec)
+      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeString(o.id)
     }
 
     def writeResolvedInfoMethod(o: ResolvedInfo.Method): Unit = {
       writer.writeZ(Constants.ResolvedInfoMethod)
-      writeB(o.isInObject)
+      writer.writeB(o.isInObject)
       writeMethodMode(o.mode)
-      writer.writeISZ(o.typeParams, writeString)
-      writer.writeISZ(o.owner, writeString)
-      writeString(o.name)
-      writer.writeISZ(o.paramNames, writeString)
+      writer.writeISZ(o.typeParams, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeString(o.name)
+      writer.writeISZ(o.paramNames, writer.writeString)
       writer.writeOption(o.tpeOpt, writeTypedFun)
     }
 
@@ -1580,127 +1580,31 @@ object MsgPack {
 
     def writeResolvedInfoType(o: ResolvedInfo.Type): Unit = {
       writer.writeZ(Constants.ResolvedInfoType)
-      writer.writeISZ(o.name, writeString)
+      writer.writeISZ(o.name, writer.writeString)
     }
 
     def writeResolvedInfoTuple(o: ResolvedInfo.Tuple): Unit = {
       writer.writeZ(Constants.ResolvedInfoTuple)
-      writeZ(o.size)
-      writeZ(o.index)
+      writer.writeZ(o.size)
+      writer.writeZ(o.index)
     }
 
     def writeResolvedInfoLocalVar(o: ResolvedInfo.LocalVar): Unit = {
       writer.writeZ(Constants.ResolvedInfoLocalVar)
-      writer.writeISZ(o.context, writeString)
-      writeString(o.id)
+      writer.writeISZ(o.context, writer.writeString)
+      writer.writeString(o.id)
     }
 
     def writePosInfo(o: PosInfo): Unit = {
       writer.writeZ(Constants.PosInfo)
       writeFileInfo(o.fileInfo)
-      writeU64(o.offsetLength)
+      writer.writeU64(o.offsetLength)
     }
 
     def writeFileInfo(o: FileInfo): Unit = {
       writer.writeZ(Constants.FileInfo)
-      writer.writeOption(o.fileUriOpt, writeString)
-      writer.writeISZ(o.lineOffsets, writeU32)
-    }
-
-    def writeB(b: B): Unit = {
-      writer.writeB(b)
-    }
-
-    def writeC(c: C): Unit = {
-      writer.writeC(c)
-    }
-
-    def writeZ(n: Z): Unit = {
-      writer.writeZ(n)
-    }
-
-    def writeZ8(n: Z8): Unit = {
-      writer.writeZ8(n)
-    }
-
-    def writeZ16(n: Z16): Unit = {
-      writer.writeZ16(n)
-    }
-
-    def writeZ32(n: Z32): Unit = {
-      writer.writeZ32(n)
-    }
-
-    def writeZ64(n: Z64): Unit = {
-      writer.writeZ64(n)
-    }
-
-    def writeN(n: N): Unit = {
-      writer.writeN(n)
-    }
-
-    def writeN8(n: N8): Unit = {
-      writer.writeN8(n)
-    }
-
-    def writeN16(n: N16): Unit = {
-      writer.writeN16(n)
-    }
-
-    def writeN32(n: N32): Unit = {
-      writer.writeN32(n)
-    }
-
-    def writeN64(n: N64): Unit = {
-      writer.writeN64(n)
-    }
-
-    def writeS8(n: S8): Unit = {
-      writer.writeS8(n)
-    }
-
-    def writeS16(n: S16): Unit = {
-      writer.writeS16(n)
-    }
-
-    def writeS32(n: S32): Unit = {
-      writer.writeS32(n)
-    }
-
-    def writeS64(n: S64): Unit = {
-      writer.writeS64(n)
-    }
-
-    def writeU8(n: U8): Unit = {
-      writer.writeU8(n)
-    }
-
-    def writeU16(n: U16): Unit = {
-      writer.writeU16(n)
-    }
-
-    def writeU32(n: U32): Unit = {
-      writer.writeU32(n)
-    }
-
-    def writeU64(n: U64): Unit = {
-      writer.writeU64(n)
-    }
-
-    def writeR(n: R): Unit = {
-      writer.writeR(n)
-    }
-
-    def writeF32(n: F32): Unit = {
-      writer.writeF32(n)
-    }
-
-    def writeF64(n: F64): Unit = {
-      writer.writeF64(n)
-    }
-
-    def writeString(s: String): Unit = {
-      writer.writeString(s)
+      writer.writeOption(o.fileUriOpt, writer.writeString)
+      writer.writeISZ(o.lineOffsets, writer.writeU32)
     }
 
     def result: ISZ[U8] = {
