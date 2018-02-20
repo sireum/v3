@@ -197,7 +197,7 @@ object SlangTipe {
       startTime()
     }
 
-    th = TypeHierarchy.build(th(nameMap = t._2, typeMap = t._3), reporter)
+    th = TypeHierarchy.build(th(nameMap = t._3, typeMap = t._4), reporter)
     if (reporter.hasIssue) {
       reporter.printMessages()
       return InvalidSources
