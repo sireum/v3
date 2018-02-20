@@ -118,7 +118,7 @@ object PrePostTransformerGen {
           case _ =>
         }
       }
-      ISZOps(r).sortWith(ltTypeInfo)
+      ISZOps(r).sortWith(ltTypeInfo(uriLt _))
     }
     val p: (Option[ST], Option[ST]) =
       if (isSig) (Some(template.preAdapt(rootTypeString)), Some(template.postAdapt(rootTypeString)))

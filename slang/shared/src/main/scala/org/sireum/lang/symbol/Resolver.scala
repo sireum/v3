@@ -45,15 +45,43 @@ object Resolver {
   val rootPackageInfo: Info.Package =
     Info.Package(ISZ(), Some(AST.Typed.Package(ISZ())), Some(AST.ResolvedInfo.Package(ISZ())))
 
-  @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
-    (ti1.posOpt, ti2.posOpt) match {
-      case (Some(pos1), Some(pos2)) => return pos1.offset < pos2.offset
-      case _ => return ti1.name.size < ti2.name.size
+  @pure def ltTypeInfo(uriLt: (String, String) => B @pure): (TypeInfo, TypeInfo) => B @pure = {
+    return { (ti1: TypeInfo, ti2: TypeInfo) =>
+      (ti1.posOpt, ti2.posOpt) match {
+        case (Some(pos1), Some(pos2)) =>
+          (pos1.uriOpt, pos2.uriOpt) match {
+            case (Some(uri1), Some(uri2)) =>
+              if (uriLt(uri1, uri2)) T
+              else if (uriLt(uri2, uri1)) F
+              else pos1.offset < pos2.offset
+            case _ => pos1.offset < pos2.offset
+          }
+        case _ => ti1.name.size < ti2.name.size
+      }
     }
   }
 
+  @pure def uriLt(uri1: String, uri2: String): B = {
+    return uri1.size < uri2.size
+  }
+
+  @pure def uriLtOrder(uris: ISZ[String]): (String, String) => B @pure = {
+    @pure def lt(map: HashMap[String, Z]): (String, String) => B @pure = {
+      return (uri1: String, uri2: String) => map.get(uri1).get < map.get(uri2).get
+    }
+    var map = HashMap.emptyInit[String, Z](uris.size)
+    for (uri <- uris) {
+      map = map + uri ~> map.size
+    }
+    return lt(map)
+  }
+
+  @pure def sortedGlobalTypesUriLt(globalTypeMap: TypeMap, uriLt: (String, String) => B @pure): ISZ[TypeInfo] = {
+    return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo(uriLt))
+  }
+
   @pure def sortedGlobalTypes(globalTypeMap: TypeMap): ISZ[TypeInfo] = {
-    return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo)
+    return ISZOps(globalTypeMap.values).sortWith(ltTypeInfo(uriLt _))
   }
 
   @pure def typePoset(globalTypeMap: TypeMap, globalTypes: ISZ[TypeInfo], reporter: Reporter): Poset[QName] = {
@@ -122,7 +150,7 @@ object Resolver {
     var i = z"0"
     while (i < name.size) {
       if (ids(i) != name(i)) {
-        return if (shorten) "_" +: ISZOps(ids).drop(i - 1) else ids
+        return if (shorten) "_" +: ISZOps(ids).drop(i) else ids
       }
       i = i + 1
     }
