@@ -224,7 +224,7 @@ object TypeChecker {
       val (rep, _, nameMap, typeMap) =
         Resolver
           .combine((Reporter.create, ISZ(), th.nameMap, th.typeMap),
-            (Reporter.create, Resolver.emptyProgram, gdr.globalNameMap, gdr.globalTypeMap))
+            (Reporter.create, AST.TopUnit.Program.empty, gdr.globalNameMap, gdr.globalTypeMap))
 
       if (rep.hasIssue) {
         reporter.reports(rep.messages)
