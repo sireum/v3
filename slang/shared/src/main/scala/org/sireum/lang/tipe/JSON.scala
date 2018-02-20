@@ -1939,7 +1939,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.symbol.Scope.Local" => val r = parse_symbolScopeLocalT(T); return r
         case "org.sireum.lang.symbol.Scope.Global" => val r = parse_symbolScopeGlobalT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_symbolScopeGlobalT(T); return r
       }
     }
 
@@ -2005,7 +2005,7 @@ object JSON {
         case "org.sireum.lang.symbol.Info.EnumElement" => val r = parse_symbolInfoEnumElementT(T); return r
         case "org.sireum.lang.symbol.Info.LocalVar" => val r = parse_symbolInfoLocalVarT(T); return r
         case "org.sireum.lang.symbol.Info.QuantVar" => val r = parse_symbolInfoQuantVarT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_symbolInfoQuantVarT(T); return r
       }
     }
 
@@ -2333,7 +2333,7 @@ object JSON {
         case "org.sireum.lang.symbol.TypeInfo.AbstractDatatype" => val r = parse_symbolTypeInfoAbstractDatatypeT(T); return r
         case "org.sireum.lang.symbol.TypeInfo.TypeAlias" => val r = parse_symbolTypeInfoTypeAliasT(T); return r
         case "org.sireum.lang.symbol.TypeInfo.TypeVar" => val r = parse_symbolTypeInfoTypeVarT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_symbolTypeInfoTypeVarT(T); return r
       }
     }
 
@@ -2544,7 +2544,7 @@ object JSON {
         case "org.sireum.lang.ast.TopUnit.Program" => val r = parse_astTopUnitProgramT(T); return r
         case "org.sireum.lang.ast.TopUnit.SequentUnit" => val r = parse_astTopUnitSequentUnitT(T); return r
         case "org.sireum.lang.ast.TopUnit.TruthTableUnit" => val r = parse_astTopUnitTruthTableUnitT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astTopUnitTruthTableUnitT(T); return r
       }
     }
 
@@ -2649,7 +2649,7 @@ object JSON {
         case "org.sireum.lang.ast.Stmt.Return" => val r = parse_astStmtReturnT(T); return r
         case "org.sireum.lang.ast.Stmt.LStmt" => val r = parse_astStmtLStmtT(T); return r
         case "org.sireum.lang.ast.Stmt.Expr" => val r = parse_astStmtExprT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astStmtExprT(T); return r
       }
     }
 
@@ -2694,7 +2694,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.Stmt.Import.MultiSelector" => val r = parse_astStmtImportMultiSelectorT(T); return r
         case "org.sireum.lang.ast.Stmt.Import.WildcardSelector" => val r = parse_astStmtImportWildcardSelectorT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astStmtImportWildcardSelectorT(T); return r
       }
     }
 
@@ -3315,7 +3315,7 @@ object JSON {
         case "org.sireum.lang.ast.Stmt.Match" => val r = parse_astStmtMatchT(T); return r
         case "org.sireum.lang.ast.Stmt.Return" => val r = parse_astStmtReturnT(T); return r
         case "org.sireum.lang.ast.Stmt.Expr" => val r = parse_astStmtExprT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astStmtExprT(T); return r
       }
     }
 
@@ -3329,13 +3329,14 @@ object JSON {
         parser.parseObjectType("org.sireum.lang.ast.Purity")
       }
       parser.parseObjectKey("value")
+      var i = parser.offset
       val s = parser.parseString()
       parser.parseObjectNext()
-      s.native match {
-        case "Impure" => return org.sireum.lang.ast.Purity.Impure
-        case "Pure" => return org.sireum.lang.ast.Purity.Pure
-        case "Memoize" => return org.sireum.lang.ast.Purity.Memoize
-        case _ => halt(parser.errorMessage)
+      org.sireum.lang.ast.Purity.byName(s) match {
+        case Some(r) => return r
+        case _ =>
+          parser.parseException(i, s"Invalid element name '$s' for org.sireum.lang.ast.Purity.")
+          return org.sireum.lang.ast.Purity.byOrdinal(0).get
       }
     }
 
@@ -3347,7 +3348,7 @@ object JSON {
         case "org.sireum.lang.ast.LClause.Theorems" => val r = parse_astLClauseTheoremsT(T); return r
         case "org.sireum.lang.ast.LClause.Sequent" => val r = parse_astLClauseSequentT(T); return r
         case "org.sireum.lang.ast.LClause.Proof" => val r = parse_astLClauseProofT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astLClauseProofT(T); return r
       }
     }
 
@@ -3512,7 +3513,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.EnumGen.Range.Expr" => val r = parse_astEnumGenRangeExprT(T); return r
         case "org.sireum.lang.ast.EnumGen.Range.Step" => val r = parse_astEnumGenRangeStepT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astEnumGenRangeStepT(T); return r
       }
     }
 
@@ -3594,7 +3595,7 @@ object JSON {
         case "org.sireum.lang.ast.Type.Named" => val r = parse_astTypeNamedT(T); return r
         case "org.sireum.lang.ast.Type.Fun" => val r = parse_astTypeFunT(T); return r
         case "org.sireum.lang.ast.Type.Tuple" => val r = parse_astTypeTupleT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astTypeTupleT(T); return r
       }
     }
 
@@ -3674,7 +3675,7 @@ object JSON {
         case "org.sireum.lang.ast.Pattern.Wildcard" => val r = parse_astPatternWildcardT(T); return r
         case "org.sireum.lang.ast.Pattern.SeqWildcard" => val r = parse_astPatternSeqWildcardT(T); return r
         case "org.sireum.lang.ast.Pattern.Structure" => val r = parse_astPatternStructureT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astPatternStructureT(T); return r
       }
     }
 
@@ -3835,7 +3836,7 @@ object JSON {
         case "org.sireum.lang.ast.Exp.Fun" => val r = parse_astExpFunT(T); return r
         case "org.sireum.lang.ast.Exp.ForYield" => val r = parse_astExpForYieldT(T); return r
         case "org.sireum.lang.ast.Exp.Quant" => val r = parse_astExpQuantT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astExpQuantT(T); return r
       }
     }
 
@@ -3849,7 +3850,7 @@ object JSON {
         case "org.sireum.lang.ast.Exp.LitF64" => val r = parse_astExpLitF64T(T); return r
         case "org.sireum.lang.ast.Exp.LitR" => val r = parse_astExpLitRT(T); return r
         case "org.sireum.lang.ast.Exp.LitString" => val r = parse_astExpLitStringT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astExpLitStringT(T); return r
       }
     }
 
@@ -4046,14 +4047,14 @@ object JSON {
         parser.parseObjectType("org.sireum.lang.ast.Exp.UnaryOp")
       }
       parser.parseObjectKey("value")
+      var i = parser.offset
       val s = parser.parseString()
       parser.parseObjectNext()
-      s.native match {
-        case "Not" => return org.sireum.lang.ast.Exp.UnaryOp.Not
-        case "Plus" => return org.sireum.lang.ast.Exp.UnaryOp.Plus
-        case "Minus" => return org.sireum.lang.ast.Exp.UnaryOp.Minus
-        case "Complement" => return org.sireum.lang.ast.Exp.UnaryOp.Complement
-        case _ => halt(parser.errorMessage)
+      org.sireum.lang.ast.Exp.UnaryOp.byName(s) match {
+        case Some(r) => return r
+        case _ =>
+          parser.parseException(i, s"Invalid element name '$s' for org.sireum.lang.ast.Exp.UnaryOp.")
+          return org.sireum.lang.ast.Exp.UnaryOp.byOrdinal(0).get
       }
     }
 
@@ -4083,7 +4084,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.Exp.Ident" => val r = parse_astExpIdentT(T); return r
         case "org.sireum.lang.ast.Exp.Select" => val r = parse_astExpSelectT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astExpSelectT(T); return r
       }
     }
 
@@ -4401,7 +4402,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.Domain.Type" => val r = parse_astDomainTypeT(T); return r
         case "org.sireum.lang.ast.Domain.Range" => val r = parse_astDomainRangeT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astDomainRangeT(T); return r
       }
     }
 
@@ -4647,7 +4648,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.WhereDef.Val" => val r = parse_astWhereDefValT(T); return r
         case "org.sireum.lang.ast.WhereDef.Def" => val r = parse_astWhereDefDefT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astWhereDefDefT(T); return r
       }
     }
 
@@ -4735,7 +4736,7 @@ object JSON {
         case "org.sireum.lang.ast.Typed.Enum" => val r = parse_astTypedEnumT(T); return r
         case "org.sireum.lang.ast.Typed.Method" => val r = parse_astTypedMethodT(T); return r
         case "org.sireum.lang.ast.Typed.Methods" => val r = parse_astTypedMethodsT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astTypedMethodsT(T); return r
       }
     }
 
@@ -4749,18 +4750,14 @@ object JSON {
         parser.parseObjectType("org.sireum.lang.ast.MethodMode")
       }
       parser.parseObjectKey("value")
+      var i = parser.offset
       val s = parser.parseString()
       parser.parseObjectNext()
-      s.native match {
-        case "Method" => return org.sireum.lang.ast.MethodMode.Method
-        case "Spec" => return org.sireum.lang.ast.MethodMode.Spec
-        case "Ext" => return org.sireum.lang.ast.MethodMode.Ext
-        case "Constructor" => return org.sireum.lang.ast.MethodMode.Constructor
-        case "Copy" => return org.sireum.lang.ast.MethodMode.Copy
-        case "Extractor" => return org.sireum.lang.ast.MethodMode.Extractor
-        case "Select" => return org.sireum.lang.ast.MethodMode.Select
-        case "Store" => return org.sireum.lang.ast.MethodMode.Store
-        case _ => halt(parser.errorMessage)
+      org.sireum.lang.ast.MethodMode.byName(s) match {
+        case Some(r) => return r
+        case _ =>
+          parser.parseException(i, s"Invalid element name '$s' for org.sireum.lang.ast.MethodMode.")
+          return org.sireum.lang.ast.MethodMode.byOrdinal(0).get
       }
     }
 
@@ -5021,7 +5018,7 @@ object JSON {
         case "org.sireum.lang.ast.ResolvedInfo.Type" => val r = parse_astResolvedInfoTypeT(T); return r
         case "org.sireum.lang.ast.ResolvedInfo.Tuple" => val r = parse_astResolvedInfoTupleT(T); return r
         case "org.sireum.lang.ast.ResolvedInfo.LocalVar" => val r = parse_astResolvedInfoLocalVarT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astResolvedInfoLocalVarT(T); return r
       }
     }
 
@@ -5035,58 +5032,14 @@ object JSON {
         parser.parseObjectType("org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind")
       }
       parser.parseObjectKey("value")
+      var i = parser.offset
       val s = parser.parseString()
       parser.parseObjectNext()
-      s.native match {
-        case "Apply" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Apply
-        case "Assert" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Assert
-        case "Assume" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Assume
-        case "EnumByName" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.EnumByName
-        case "EnumByOrdinal" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.EnumByOrdinal
-        case "Cprint" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Cprint
-        case "Cprintln" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Cprintln
-        case "Eprint" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Eprint
-        case "Eprintln" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Eprintln
-        case "Halt" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Halt
-        case "Hash" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Hash
-        case "EnumName" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.EnumName
-        case "Native" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Native
-        case "EnumOrdinal" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.EnumOrdinal
-        case "Print" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Print
-        case "Println" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Println
-        case "String" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.String
-        case "Tuple" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Tuple
-        case "Update" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.Update
-        case "UnaryPlus" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.UnaryPlus
-        case "UnaryMinus" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.UnaryMinus
-        case "UnaryNot" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.UnaryNot
-        case "UnaryComplement" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.UnaryComplement
-        case "BinaryAdd" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryAdd
-        case "BinarySub" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinarySub
-        case "BinaryMul" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryMul
-        case "BinaryDiv" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryDiv
-        case "BinaryRem" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryRem
-        case "BinaryEq" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryEq
-        case "BinaryNe" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryNe
-        case "BinaryLt" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryLt
-        case "BinaryLe" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryLe
-        case "BinaryGt" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryGt
-        case "BinaryGe" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryGe
-        case "BinaryShl" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryShl
-        case "BinaryShr" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryShr
-        case "BinaryUshr" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryUshr
-        case "BinaryAnd" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryAnd
-        case "BinaryOr" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryOr
-        case "BinaryXor" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryXor
-        case "BinaryImply" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryImply
-        case "BinaryCondAnd" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryCondAnd
-        case "BinaryCondOr" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryCondOr
-        case "BinaryAppend" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryAppend
-        case "BinaryPrepend" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryPrepend
-        case "BinaryAppendAll" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryAppendAll
-        case "BinaryRemoveAll" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryRemoveAll
-        case "BinaryMapsTo" => return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.BinaryMapsTo
-        case _ => halt(parser.errorMessage)
+      org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.byName(s) match {
+        case Some(r) => return r
+        case _ =>
+          parser.parseException(i, s"Invalid element name '$s' for org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.")
+          return org.sireum.lang.ast.ResolvedInfo.BuiltIn.Kind.byOrdinal(0).get
       }
     }
 
@@ -5299,7 +5252,7 @@ object JSON {
       t.native match {
         case "org.sireum.lang.ast.ProofStep.Basic" => val r = parse_astProofStepBasicT(T); return r
         case "org.sireum.lang.ast.ProofStep.SubProof" => val r = parse_astProofStepSubProofT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astProofStepSubProofT(T); return r
       }
     }
 
@@ -5351,7 +5304,7 @@ object JSON {
         case "org.sireum.lang.ast.AssumeProofStep.Regular" => val r = parse_astAssumeProofStepRegularT(T); return r
         case "org.sireum.lang.ast.AssumeProofStep.ForallIntroAps" => val r = parse_astAssumeProofStepForallIntroApsT(T); return r
         case "org.sireum.lang.ast.AssumeProofStep.ExistsElimAps" => val r = parse_astAssumeProofStepExistsElimApsT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astAssumeProofStepExistsElimApsT(T); return r
       }
     }
 
@@ -5435,7 +5388,7 @@ object JSON {
         case "org.sireum.lang.ast.Just.AndIntro" => val r = parse_astJustAndIntroT(T); return r
         case "org.sireum.lang.ast.Just.AndElim" => val r = parse_astJustAndElimT(T); return r
         case "org.sireum.lang.ast.Just.Pbc" => val r = parse_astJustPbcT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astJustPbcT(T); return r
       }
     }
 
@@ -5878,7 +5831,7 @@ object JSON {
         case "org.sireum.lang.ast.TruthTable.Conclusion.Tautology" => val r = parse_astTruthTableConclusionTautologyT(T); return r
         case "org.sireum.lang.ast.TruthTable.Conclusion.Contradictory" => val r = parse_astTruthTableConclusionContradictoryT(T); return r
         case "org.sireum.lang.ast.TruthTable.Conclusion.Contingent" => val r = parse_astTruthTableConclusionContingentT(T); return r
-        case _ => halt(parser.errorMessage)
+        case _ => val r = parse_astTruthTableConclusionContingentT(T); return r
       }
     }
 

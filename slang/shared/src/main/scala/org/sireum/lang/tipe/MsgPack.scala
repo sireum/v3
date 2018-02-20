@@ -1874,11 +1874,15 @@ object MsgPack {
     def reader: MessagePack.Reader
 
     def read_symbolScope(): org.sireum.lang.symbol.Scope = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._symbolScopeLocal => val r = read_symbolScopeLocalT(T); return r
         case Constants._symbolScopeGlobal => val r = read_symbolScopeGlobalT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.symbol.Scope.")
+          val r = read_symbolScopeGlobalT(T)
+          return r
       }
     }
 
@@ -1915,6 +1919,7 @@ object MsgPack {
     }
 
     def read_symbolInfo(): org.sireum.lang.symbol.Info = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._symbolInfoPackage => val r = read_symbolInfoPackageT(T); return r
@@ -1928,7 +1933,10 @@ object MsgPack {
         case Constants._symbolInfoEnumElement => val r = read_symbolInfoEnumElementT(T); return r
         case Constants._symbolInfoLocalVar => val r = read_symbolInfoLocalVarT(T); return r
         case Constants._symbolInfoQuantVar => val r = read_symbolInfoQuantVarT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.symbol.Info.")
+          val r = read_symbolInfoQuantVarT(T)
+          return r
       }
     }
 
@@ -2126,6 +2134,7 @@ object MsgPack {
     }
 
     def read_symbolTypeInfo(): org.sireum.lang.symbol.TypeInfo = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._symbolTypeInfoSubZ => val r = read_symbolTypeInfoSubZT(T); return r
@@ -2134,7 +2143,10 @@ object MsgPack {
         case Constants._symbolTypeInfoAbstractDatatype => val r = read_symbolTypeInfoAbstractDatatypeT(T); return r
         case Constants._symbolTypeInfoTypeAlias => val r = read_symbolTypeInfoTypeAliasT(T); return r
         case Constants._symbolTypeInfoTypeVar => val r = read_symbolTypeInfoTypeVarT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.symbol.TypeInfo.")
+          val r = read_symbolTypeInfoTypeVarT(T)
+          return r
       }
     }
 
@@ -2262,12 +2274,16 @@ object MsgPack {
     }
 
     def read_astTopUnit(): org.sireum.lang.ast.TopUnit = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astTopUnitProgram => val r = read_astTopUnitProgramT(T); return r
         case Constants._astTopUnitSequentUnit => val r = read_astTopUnitSequentUnitT(T); return r
         case Constants._astTopUnitTruthTableUnit => val r = read_astTopUnitTruthTableUnitT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.TopUnit.")
+          val r = read_astTopUnitTruthTableUnitT(T)
+          return r
       }
     }
 
@@ -2321,6 +2337,7 @@ object MsgPack {
     }
 
     def read_astStmt(): org.sireum.lang.ast.Stmt = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astStmtImport => val r = read_astStmtImportT(T); return r
@@ -2346,7 +2363,10 @@ object MsgPack {
         case Constants._astStmtReturn => val r = read_astStmtReturnT(T); return r
         case Constants._astStmtLStmt => val r = read_astStmtLStmtT(T); return r
         case Constants._astStmtExpr => val r = read_astStmtExprT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Stmt.")
+          val r = read_astStmtExprT(T)
+          return r
       }
     }
 
@@ -2379,11 +2399,15 @@ object MsgPack {
     }
 
     def read_astStmtImportSelector(): org.sireum.lang.ast.Stmt.Import.Selector = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astStmtImportMultiSelector => val r = read_astStmtImportMultiSelectorT(T); return r
         case Constants._astStmtImportWildcardSelector => val r = read_astStmtImportWildcardSelectorT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Stmt.Import.Selector.")
+          val r = read_astStmtImportWildcardSelectorT(T)
+          return r
       }
     }
 
@@ -2791,6 +2815,7 @@ object MsgPack {
     }
 
     def read_astAssignExp(): org.sireum.lang.ast.AssignExp = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astStmtBlock => val r = read_astStmtBlockT(T); return r
@@ -2798,7 +2823,10 @@ object MsgPack {
         case Constants._astStmtMatch => val r = read_astStmtMatchT(T); return r
         case Constants._astStmtReturn => val r = read_astStmtReturnT(T); return r
         case Constants._astStmtExpr => val r = read_astStmtExprT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.AssignExp.")
+          val r = read_astStmtExprT(T)
+          return r
       }
     }
 
@@ -2808,6 +2836,7 @@ object MsgPack {
     }
 
     def read_astLClause(): org.sireum.lang.ast.LClause = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astLClauseInvariants => val r = read_astLClauseInvariantsT(T); return r
@@ -2815,7 +2844,10 @@ object MsgPack {
         case Constants._astLClauseTheorems => val r = read_astLClauseTheoremsT(T); return r
         case Constants._astLClauseSequent => val r = read_astLClauseSequentT(T); return r
         case Constants._astLClauseProof => val r = read_astLClauseProofT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.LClause.")
+          val r = read_astLClauseProofT(T)
+          return r
       }
     }
 
@@ -2944,11 +2976,15 @@ object MsgPack {
     }
 
     def read_astEnumGenRange(): org.sireum.lang.ast.EnumGen.Range = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astEnumGenRangeExpr => val r = read_astEnumGenRangeExprT(T); return r
         case Constants._astEnumGenRangeStep => val r = read_astEnumGenRangeStepT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.EnumGen.Range.")
+          val r = read_astEnumGenRangeStepT(T)
+          return r
       }
     }
 
@@ -3001,12 +3037,16 @@ object MsgPack {
     }
 
     def read_astType(): org.sireum.lang.ast.Type = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astTypeNamed => val r = read_astTypeNamedT(T); return r
         case Constants._astTypeFun => val r = read_astTypeFunT(T); return r
         case Constants._astTypeTuple => val r = read_astTypeTupleT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Type.")
+          val r = read_astTypeTupleT(T)
+          return r
       }
     }
 
@@ -3057,6 +3097,7 @@ object MsgPack {
     }
 
     def read_astPattern(): org.sireum.lang.ast.Pattern = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astPatternLiteral => val r = read_astPatternLiteralT(T); return r
@@ -3066,7 +3107,10 @@ object MsgPack {
         case Constants._astPatternWildcard => val r = read_astPatternWildcardT(T); return r
         case Constants._astPatternSeqWildcard => val r = read_astPatternSeqWildcardT(T); return r
         case Constants._astPatternStructure => val r = read_astPatternStructureT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Pattern.")
+          val r = read_astPatternStructureT(T)
+          return r
       }
     }
 
@@ -3171,6 +3215,7 @@ object MsgPack {
     }
 
     def read_astExp(): org.sireum.lang.ast.Exp = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astExpLitB => val r = read_astExpLitBT(T); return r
@@ -3195,11 +3240,15 @@ object MsgPack {
         case Constants._astExpFun => val r = read_astExpFunT(T); return r
         case Constants._astExpForYield => val r = read_astExpForYieldT(T); return r
         case Constants._astExpQuant => val r = read_astExpQuantT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Exp.")
+          val r = read_astExpQuantT(T)
+          return r
       }
     }
 
     def read_astLit(): org.sireum.lang.ast.Lit = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astExpLitB => val r = read_astExpLitBT(T); return r
@@ -3209,7 +3258,10 @@ object MsgPack {
         case Constants._astExpLitF64 => val r = read_astExpLitF64T(T); return r
         case Constants._astExpLitR => val r = read_astExpLitRT(T); return r
         case Constants._astExpLitString => val r = read_astExpLitStringT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Lit.")
+          val r = read_astExpLitStringT(T)
+          return r
       }
     }
 
@@ -3375,11 +3427,15 @@ object MsgPack {
     }
 
     def read_astExpRef(): org.sireum.lang.ast.Exp.Ref = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astExpIdent => val r = read_astExpIdentT(T); return r
         case Constants._astExpSelect => val r = read_astExpSelectT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Exp.Ref.")
+          val r = read_astExpSelectT(T)
+          return r
       }
     }
 
@@ -3599,11 +3655,15 @@ object MsgPack {
     }
 
     def read_astDomain(): org.sireum.lang.ast.Domain = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astDomainType => val r = read_astDomainTypeT(T); return r
         case Constants._astDomainRange => val r = read_astDomainRangeT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Domain.")
+          val r = read_astDomainRangeT(T)
+          return r
       }
     }
 
@@ -3775,11 +3835,15 @@ object MsgPack {
     }
 
     def read_astWhereDef(): org.sireum.lang.ast.WhereDef = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astWhereDefVal => val r = read_astWhereDefValT(T); return r
         case Constants._astWhereDefDef => val r = read_astWhereDefDefT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.WhereDef.")
+          val r = read_astWhereDefDefT(T)
+          return r
       }
     }
 
@@ -3832,6 +3896,7 @@ object MsgPack {
     }
 
     def read_astTyped(): org.sireum.lang.ast.Typed = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astTypedName => val r = read_astTypedNameT(T); return r
@@ -3843,7 +3908,10 @@ object MsgPack {
         case Constants._astTypedEnum => val r = read_astTypedEnumT(T); return r
         case Constants._astTypedMethod => val r = read_astTypedMethodT(T); return r
         case Constants._astTypedMethods => val r = read_astTypedMethodsT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Typed.")
+          val r = read_astTypedMethodsT(T)
+          return r
       }
     }
 
@@ -4038,6 +4106,7 @@ object MsgPack {
     }
 
     def read_astResolvedInfo(): org.sireum.lang.ast.ResolvedInfo = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astResolvedInfoBuiltIn => val r = read_astResolvedInfoBuiltInT(T); return r
@@ -4051,7 +4120,10 @@ object MsgPack {
         case Constants._astResolvedInfoType => val r = read_astResolvedInfoTypeT(T); return r
         case Constants._astResolvedInfoTuple => val r = read_astResolvedInfoTupleT(T); return r
         case Constants._astResolvedInfoLocalVar => val r = read_astResolvedInfoLocalVarT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.ResolvedInfo.")
+          val r = read_astResolvedInfoLocalVarT(T)
+          return r
       }
     }
 
@@ -4217,11 +4289,15 @@ object MsgPack {
     }
 
     def read_astProofStep(): org.sireum.lang.ast.ProofStep = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astProofStepBasic => val r = read_astProofStepBasicT(T); return r
         case Constants._astProofStepSubProof => val r = read_astProofStepSubProofT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.ProofStep.")
+          val r = read_astProofStepSubProofT(T)
+          return r
       }
     }
 
@@ -4256,12 +4332,16 @@ object MsgPack {
     }
 
     def read_astAssumeProofStep(): org.sireum.lang.ast.AssumeProofStep = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astAssumeProofStepRegular => val r = read_astAssumeProofStepRegularT(T); return r
         case Constants._astAssumeProofStepForallIntroAps => val r = read_astAssumeProofStepForallIntroApsT(T); return r
         case Constants._astAssumeProofStepExistsElimAps => val r = read_astAssumeProofStepExistsElimApsT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.AssumeProofStep.")
+          val r = read_astAssumeProofStepExistsElimApsT(T)
+          return r
       }
     }
 
@@ -4309,6 +4389,7 @@ object MsgPack {
     }
 
     def read_astJust(): org.sireum.lang.ast.Just = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astJustPremise => val r = read_astJustPremiseT(T); return r
@@ -4331,7 +4412,10 @@ object MsgPack {
         case Constants._astJustAndIntro => val r = read_astJustAndIntroT(T); return r
         case Constants._astJustAndElim => val r = read_astJustAndElimT(T); return r
         case Constants._astJustPbc => val r = read_astJustPbcT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.Just.")
+          val r = read_astJustPbcT(T)
+          return r
       }
     }
 
@@ -4656,13 +4740,17 @@ object MsgPack {
     }
 
     def read_astTruthTableConclusion(): org.sireum.lang.ast.TruthTable.Conclusion = {
+      val i = reader.curr
       val t = reader.readZ()
       t match {
         case Constants._astTruthTableConclusionValidity => val r = read_astTruthTableConclusionValidityT(T); return r
         case Constants._astTruthTableConclusionTautology => val r = read_astTruthTableConclusionTautologyT(T); return r
         case Constants._astTruthTableConclusionContradictory => val r = read_astTruthTableConclusionContradictoryT(T); return r
         case Constants._astTruthTableConclusionContingent => val r = read_astTruthTableConclusionContingentT(T); return r
-        case _ => halt(s"Unexpected type code $t.")
+        case _ =>
+          reader.error(i, s"$t is not a valid type of org.sireum.lang.ast.TruthTable.Conclusion.")
+          val r = read_astTruthTableConclusionContingentT(T)
+          return r
       }
     }
 

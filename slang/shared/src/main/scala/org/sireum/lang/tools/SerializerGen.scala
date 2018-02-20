@@ -85,7 +85,7 @@ object SerializerGen {
       isBuiltIn2: B
     ): ST
 
-    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST
+    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST], defaultName: ST): ST
 
     @pure def parseRootCase(name: ST, tpe: ST): ST
 
@@ -263,12 +263,12 @@ object SerializerGen {
       return st"print$nameTwo(${if (isSimple) "T" else "F"}, o.$fieldName, print$name1, print$name2)"
     }
 
-    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
+    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST], defaultName: ST): ST = {
       return st"""def parse$name(): $tpe = {
       |  val t = parser.parseObjectTypes(ISZ("${(childrenTpes, "\", \"")}"))
       |  t.native match {
       |    ${(parseRootCases, "\n")}
-      |    case _ => halt(parser.errorMessage)
+      |    case _ => val r = parse${defaultName}T(T); return r
       |  }
       |}"""
     }
@@ -314,11 +314,14 @@ object SerializerGen {
       |    parser.parseObjectType("$tpe")
       |  }
       |  parser.parseObjectKey("value")
+      |  var i = parser.offset
       |  val s = parser.parseString()
       |  parser.parseObjectNext()
-      |  s.native match {
-      |    ${(parseEnumCases, "\n")}
-      |    case _ => halt(parser.errorMessage)
+      |  $tpe.byName(s) match {
+      |    case Some(r) => return r
+      |    case _ =>
+      |      parser.parseException(i, s"Invalid element name '$$s' for $tpe.")
+      |      return $tpe.byOrdinal(0).get
       |  }
       |}"""
     }
@@ -515,12 +518,16 @@ object SerializerGen {
       return st"writer.write$nameTwo(o.$fieldName, ${w1}write$name1, ${w2}write$name2)"
     }
 
-    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
+    @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST], defaultName: ST): ST = {
       return st"""def read$name(): $tpe = {
+      |  val i = reader.curr
       |  val t = reader.readZ()
       |  t match {
       |    ${(parseRootCases, "\n")}
-      |    case _ => halt(s"Unexpected type code $$t.")
+      |    case _ =>
+      |      reader.error(i, s"$$t is not a valid type of $tpe.")
+      |      val r = read${defaultName}T(T)
+      |      return r
       |  }
       |}"""
     }
@@ -719,12 +726,14 @@ object SerializerGen {
         }
         ISZOps(r).sortWith(ltTypeInfo(uriLt _))
       }
+      var firstChildTypeName = st"?"
       for (child <- sortedDescendants) {
         child match {
           case childTI: TypeInfo.AbstractDatatype if !childTI.ast.isRoot =>
             val childIds = childTI.name
             val childTypeString = typeNameString(packageName, childIds)
             val childTypeName = typeName(packageName, childIds)
+            firstChildTypeName = childTypeName
             childrenTypeStrings = childrenTypeStrings :+ childTypeString
             rootPrintCases = rootPrintCases :+ template.printRootCase(childTypeName, childTypeString)
             rootParseCases = rootParseCases :+ template.parseRootCase(childTypeName, childTypeString)
@@ -732,7 +741,8 @@ object SerializerGen {
         }
       }
       printers = printers :+ template.printRoot(rootTypeName, rootTypeString, rootPrintCases)
-      parsers = parsers :+ template.parseRoot(rootTypeName, rootTypeString, childrenTypeStrings, rootParseCases)
+      parsers = parsers :+ template
+        .parseRoot(rootTypeName, rootTypeString, childrenTypeStrings, rootParseCases, firstChildTypeName)
       fromsTos = fromsTos :+ template.from(rootTypeName, rootTypeString) :+ template.to(rootTypeName, rootTypeString)
     }
 
