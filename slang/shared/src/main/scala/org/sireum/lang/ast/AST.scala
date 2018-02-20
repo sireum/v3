@@ -35,6 +35,14 @@ import org.sireum.message._
 
 object TopUnit {
 
+  object Program {
+
+    @memoize def empty: Program = {
+      return TopUnit.Program(None(), Name(ISZ(), Attr(None())), Body(ISZ(), ISZ()))
+    }
+
+  }
+
   @datatype class Program(val fileUriOpt: Option[String], packageName: Name, body: Body) extends TopUnit
 
   @datatype class SequentUnit(val fileUriOpt: Option[String], sequent: LClause.Sequent) extends TopUnit
