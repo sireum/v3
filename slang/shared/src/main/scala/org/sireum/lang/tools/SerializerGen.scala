@@ -73,9 +73,17 @@ object SerializerGen {
 
     @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST
 
-    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST
+    @pure def printNameOne(isSimple: B, nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST
 
-    @pure def printNameTwo(nameTwo: String, name1: ST, name2: ST, fieldName: String, isBuiltIn1: B, isBuiltIn2: B): ST
+    @pure def printNameTwo(
+      isSimple: B,
+      nameTwo: String,
+      name1: ST,
+      name2: ST,
+      fieldName: String,
+      isBuiltIn1: B,
+      isBuiltIn2: B
+    ): ST
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST
 
@@ -239,11 +247,12 @@ object SerializerGen {
       return st"print$sName$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
     }
 
-    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
-      return st"print$nameOne(o.$fieldName, print$name)"
+    @pure def printNameOne(isSimple: B, nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
+      return st"print$nameOne(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
     }
 
     @pure def printNameTwo(
+      isSimple: B,
       nameTwo: String,
       name1: ST,
       name2: ST,
@@ -251,7 +260,7 @@ object SerializerGen {
       isBuiltIn1: B,
       isBuiltIn2: B
     ): ST = {
-      return st"print$nameTwo(o.$fieldName, print$name1, print$name2)"
+      return st"print$nameTwo(${if (isSimple) "T" else "F"}, o.$fieldName, print$name1, print$name2)"
     }
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST]): ST = {
@@ -332,7 +341,7 @@ object SerializerGen {
     @pure def parseNameTwo(prefix: String, name1: ST, name2: ST, isBuiltIn1: B, isBuiltIn2: B): ST = {
       val p1: String = if (isBuiltIn1) "parser." else ""
       val p2: String = if (isBuiltIn2) "parser." else ""
-      return st"parser.parse${prefix}Map(${p1}parse$name1 _, ${p2}parse$name2 _)"
+      return st"parser.parse$prefix(${p1}parse$name1 _, ${p2}parse$name2 _)"
     }
   }
 
@@ -487,12 +496,13 @@ object SerializerGen {
       return st"writer.write$sName$indexType(o.$fieldName, ${w}write$name)"
     }
 
-    @pure def printNameOne(nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
+    @pure def printNameOne(isSimple: B, nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
       val w: String = if (isBuiltIn) "writer." else ""
       return st"writer.write$nameOne(o.$fieldName, ${w}write$name)"
     }
 
     @pure def printNameTwo(
+      isSImple: B,
       nameTwo: String,
       name1: ST,
       name2: ST,
@@ -740,14 +750,14 @@ object SerializerGen {
       }
       val optOpt = nameOne(ti, tipe)
       optOpt match {
-        case Some((isImmutable, (isBuiltIn, _, elementName))) =>
-          return template.printNameOne(isImmutable, elementName, fieldName, isBuiltIn)
+        case Some((isImmutable, (isBuiltIn, isSimple, elementName))) =>
+          return template.printNameOne(isSimple, isImmutable, elementName, fieldName, isBuiltIn)
         case _ =>
       }
       val mapOpt = nameTwo(ti, tipe)
       mapOpt match {
-        case Some((prefix, (isBuiltIn1, _, e1), (isBuiltIn2, _, e2))) =>
-          return template.printNameTwo(prefix, e1, e2, fieldName, isBuiltIn1, isBuiltIn2)
+        case Some((prefix, (isBuiltIn1, isSimple1, e1), (isBuiltIn2, isSimple2, e2))) =>
+          return template.printNameTwo(isSimple1 && isSimple2, prefix, e1, e2, fieldName, isBuiltIn1, isBuiltIn2)
         case _ =>
       }
       val t = basicOrTypeName(ti, tipe)
