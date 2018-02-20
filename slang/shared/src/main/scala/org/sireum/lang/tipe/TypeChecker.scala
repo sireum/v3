@@ -1058,7 +1058,12 @@ import TypeChecker._
               case Some(_) =>
                 reporter.error(exp.posOpt, typeCheckerKind, s"Cannot eta-expand non-method '$t'.")
                 return noResult
-              case _ => return (exp, Some(t))
+              case _ =>
+                t match {
+                  case t: AST.Typed.Fun if t.isByName => return (exp, Some(t.ret))
+                  case _ => return (exp, Some(t))
+                }
+
             }
           }
       }
@@ -2299,6 +2304,13 @@ import TypeChecker._
 
     val r = checkExpH()
     (expectedOpt, r._2) match {
+      case (Some(expected: AST.Typed.Fun), Some(t)) if expected.isByName =>
+        if (typeHierarchy.isSubType(t, expected.ret)) {
+          return r
+        } else {
+          reporter.error(exp.posOpt, typeCheckerKind, s"Expecting type '$expected', but '$t' found.")
+          return (r._1, None())
+        }
       case (Some(expected), Some(t)) =>
         if (typeHierarchy.isSubType(t, expected)) {
           return r

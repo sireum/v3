@@ -1050,10 +1050,6 @@ object WhereDef {
         return T
       case (t1: Typed.TypeVar, t2: Typed.TypeVar) =>
         return t1.id == t2.id
-      case (t1: Typed.Fun, _) if t1.isByName =>
-        return t1.ret == other
-      case (_, t2: Typed.Fun) if t2.isByName =>
-        return this == t2.ret
       case (t1: Typed.Package, t2: Typed.Package) =>
         return t1.name == t2.name
       case (t1: Typed.Object, t2: Typed.Object) =>
