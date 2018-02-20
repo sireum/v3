@@ -583,14 +583,25 @@ object SerializerGen {
     fileUriOpt: Option[String],
     name: Option[String]
   ): ST = {
-    val (rep, programs, nameMap, typeMap) =
+    var uris = ISZ[String]()
+    var missingUri = F
+    for (p <- sources) {
+      p._1 match {
+        case Some(uri) => uris = uris :+ uri
+        case _ => missingUri = T
+      }
+    }
+    val (rep, programs, globalNameMap, globalTypeMap) =
       Resolver.parseProgramAndGloballyResolve(sources, HashMap.empty, HashMap.empty)
     if (rep.hasError) {
       reporter.reports(rep.messages)
       return st""
     }
     val pName: ISZ[String] = if (packageName.isEmpty) programs(0).packageName.ids.map(id => id.value) else packageName
-    val g = Gen(mode, nameMap, typeMap -- ISZ(AST.Typed.unit.ids, AST.Typed.nothing.ids), pName, Reporter.create)
+    val typeMap = globalTypeMap -- ISZ(AST.Typed.unit.ids, AST.Typed.nothing.ids)
+    val globalTypes: ISZ[TypeInfo] =
+      if (missingUri) sortedGlobalTypes(typeMap) else sortedGlobalTypesUriLt(typeMap, uriLtOrder(uris))
+    val g = Gen(mode, globalNameMap, typeMap, globalTypes, pName, Reporter.create)
     val r = g.gen(licenseOpt, fileUriOpt, name)
     reporter.reports(g.reporter.messages)
     return r
@@ -600,12 +611,12 @@ object SerializerGen {
     mode: Mode.Type,
     globalNameMap: NameMap,
     globalTypeMap: TypeMap,
+    sortedGlobalTypes: ISZ[TypeInfo],
     packageName: QName,
     reporter: Reporter
   ) {
 
-    val globalTypes: ISZ[TypeInfo] = sortedGlobalTypes(globalTypeMap)
-    val poset: Poset[QName] = typePoset(globalTypeMap, globalTypes, reporter)
+    val poset: Poset[QName] = typePoset(globalTypeMap, sortedGlobalTypes, reporter)
 
     var constants: ISZ[ST] = ISZ()
     var parsers: ISZ[ST] = ISZ()
@@ -618,7 +629,7 @@ object SerializerGen {
     }
 
     def gen(licenseOpt: Option[String], fileUriOpt: Option[String], name: Option[String]): ST = {
-      for (ti <- globalTypes) {
+      for (ti <- sortedGlobalTypes) {
         ti match {
           case ti: TypeInfo.AbstractDatatype => genAdt(ti)
           case ti: TypeInfo.Sig => genRoot(ti.name)
@@ -673,7 +684,7 @@ object SerializerGen {
           }
         }
         if (mode == Mode.MessagePack) {
-          constants = constants :+ st"""val $adTypeName: Z = ${constants.size}"""
+          constants = constants :+ st"""val $adTypeName: Z = ${constants.size - 32}"""
         }
         printers = printers :+ template.printObject(adTypeName, adTypeString, printFields)
         parsers = parsers :+ template.parseObject(adTypeName, adTypeString, parseFields, fieldNames)
@@ -696,7 +707,7 @@ object SerializerGen {
             case _ =>
           }
         }
-        ISZOps(r).sortWith(ltTypeInfo)
+        ISZOps(r).sortWith(ltTypeInfo(uriLt _))
       }
       for (child <- sortedDescendants) {
         child match {
