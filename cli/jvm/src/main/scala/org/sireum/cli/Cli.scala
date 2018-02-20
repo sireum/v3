@@ -75,6 +75,7 @@ object Cli {
     help: String,
     args: ISZ[String],
     modes: ISZ[SerializerMode.Type],
+    packageName: ISZ[String],
     name: Option[String],
     license: Option[String],
     outputDir: Option[String]
@@ -425,6 +426,9 @@ import Cli._
           |Available Options:
           |-m, --modes              De/serializer mode (expects one or more of { json,
           |                           msgpack }; default: json)
+          |-p, --package            Type simple name for the de/serializers (default:
+          |                           "Json" or "MsgPack") (expects a string separated by
+          |                           ".")
           |-n, --name               Type simple name for the de/serializers (default:
           |                           "Json" or "MsgPack") (expects a string)
           |-l, --license            License file to be inserted in the file header
@@ -434,6 +438,7 @@ import Cli._
           |-h, --help               Display this information""".render
 
     var modes: ISZ[SerializerMode.Type] = ISZ(SerializerMode.Json)
+    var packageName: ISZ[String] = ISZ[String]()
     var name: Option[String] = None[String]()
     var license: Option[String] = None[String]()
     var outputDir: Option[String] = Some(".")
@@ -449,6 +454,12 @@ import Cli._
            val o: Option[ISZ[SerializerMode.Type]] = parseSerializerModes(args, j + 1)
            o match {
              case Some(v) => modes = v
+             case _ => return None()
+           }
+         } else if (arg == "-p" || arg == "--package") {
+           val o: Option[ISZ[String]] = parseStrings(args, j + 1, '.')
+           o match {
+             case Some(v) => packageName = v
              case _ => return None()
            }
          } else if (arg == "-n" || arg == "--name") {
@@ -478,7 +489,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(SergenOption(help, parseArguments(args, j), modes, name, license, outputDir))
+    return Some(SergenOption(help, parseArguments(args, j), modes, packageName, name, license, outputDir))
   }
 
   def parseTransformerModeH(arg: String): Option[TransformerMode.Type] = {
