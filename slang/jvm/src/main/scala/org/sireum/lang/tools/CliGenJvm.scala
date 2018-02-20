@@ -44,7 +44,7 @@ object CliGenJvm {
       case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
       case _ => SNone[SString]()
     }
-    val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
+    val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
     CliGen(firstColumnLimit, secondColumnLimit + firstColumnLimit).
       gen(lOpt, fOpt, packageName, nameOpt.getOrElse("Cli"), config).render.value
   }
