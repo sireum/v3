@@ -56,7 +56,7 @@ object TransformerGenJvm {
         }
         val fOpt = SSome(
           SString(
-            dest.getParentFile.toPath.relativize(src.toPath).toString.replaceAllLiterally(File.pathSeparator, "/")
+            dest.getParentFile.toPath.relativize(src.toPath).toString.replaceAllLiterally(File.separator, "/")
           )
         )
         SSome(PrePostTransformerGen.gen(isImmutable, lOpt, fOpt, nameOpt, p, reporter).render.value)

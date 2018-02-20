@@ -59,7 +59,7 @@ object SerializerGenJvm {
       uris = uris :+ dest.getParentFile.toPath
         .relativize(src.toPath)
         .toString
-        .replaceAllLiterally(File.pathSeparator, "/")
+        .replaceAllLiterally(File.separator, "/")
       sources = sources :+ ((SSome(SString(srcUri)), SString(srcText)))
     }
     val fOpt = {
