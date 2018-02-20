@@ -31,21 +31,28 @@ import org.sireum.util.{FileUtil, ReflectUtil}
 import org.sireum.{ISZ, Z, None => SNone, Option => SOption, Some => SSome, String => SString}
 
 object CliGenJvm {
-  def apply(licenseOpt: Option[File],
-            src: File,
-            dest: File,
-            packageName: ISZ[SString],
-            nameOpt: SOption[SString],
-            firstColumnLimit: Z,
-            secondColumnLimit: Z): String = {
+
+  def apply(
+    licenseOpt: Option[File],
+    src: File,
+    dest: File,
+    packageName: ISZ[SString],
+    nameOpt: SOption[SString],
+    firstColumnLimit: Z,
+    secondColumnLimit: Z
+  ): String = {
     val srcText = FileUtil.readFile(src)
     val config = ReflectUtil.eval[CliGen.CliOpt.Group](srcText)
     val lOpt = licenseOpt match {
       case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
       case _ => SNone[SString]()
     }
-    val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
-    CliGen(firstColumnLimit, secondColumnLimit + firstColumnLimit).
-      gen(lOpt, fOpt, packageName, nameOpt.getOrElse("Cli"), config).render.value
+    val fOpt = SSome(
+      SString(dest.getParentFile.toPath.relativize(src.toPath).toString.replaceAllLiterally(File.pathSeparator, "/"))
+    )
+    CliGen(firstColumnLimit, secondColumnLimit + firstColumnLimit)
+      .gen(lOpt, fOpt, packageName, nameOpt.getOrElse("Cli"), config)
+      .render
+      .value
   }
 }

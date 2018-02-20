@@ -56,7 +56,10 @@ object SerializerGenJvm {
     for (src <- srcs) {
       val srcText = FileUtil.readFile(src)
       val srcUri = FileUtil.toUri(src)
-      uris = uris :+ dest.getParentFile.toPath.relativize(src.toPath).toString
+      uris = uris :+ dest.getParentFile.toPath
+        .relativize(src.toPath)
+        .toString
+        .replaceAllLiterally(File.pathSeparator, "/")
       sources = sources :+ ((SSome(SString(srcUri)), SString(srcText)))
     }
     val fOpt = {

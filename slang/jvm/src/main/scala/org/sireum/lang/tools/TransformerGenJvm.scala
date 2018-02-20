@@ -54,7 +54,11 @@ object TransformerGenJvm {
           case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
           case _ => SNone[SString]()
         }
-        val fOpt = SSome(SString(dest.getParentFile.toPath.relativize(src.toPath).toString))
+        val fOpt = SSome(
+          SString(
+            dest.getParentFile.toPath.relativize(src.toPath).toString.replaceAllLiterally(File.pathSeparator, "/")
+          )
+        )
         SSome(PrePostTransformerGen.gen(isImmutable, lOpt, fOpt, nameOpt, p, reporter).render.value)
       case _ =>
         reporter.error(SNone(), "TransformerGen", "Expecting program input.")
