@@ -281,7 +281,7 @@ import GlobalDeclarationResolver._
         )
       case stmt: AST.Stmt.Enum =>
         val name = currentName :+ stmt.id.value
-        var elements = Map.empty[String, Option[AST.ResolvedInfo]]
+        var elements = Map.empty[String, AST.ResolvedInfo]
         val elementTypeName = name :+ Info.Enum.elementTypeSuffix
         val elementTypedOpt: Option[AST.Typed] = Some(AST.Typed.Name(elementTypeName, ISZ()))
         var elementPosOpts: ISZ[Option[Position]] = ISZ()
@@ -290,7 +290,7 @@ import GlobalDeclarationResolver._
           if (elements.contains(e.value)) {
             reporter.error(e.attr.posOpt, resolverKind, s"Redeclaration of @enum element ${e.value}.")
           } else {
-            elements = elements + e.value ~> Some(AST.ResolvedInfo.EnumElement(name, e.value, ordinal))
+            elements = elements + e.value ~> AST.ResolvedInfo.EnumElement(name, e.value, ordinal)
             elementPosOpts = elementPosOpts :+ e.attr.posOpt
           }
           ordinal = ordinal + 1
@@ -315,7 +315,7 @@ import GlobalDeclarationResolver._
           declareName(
             "enumeration element",
             name :+ e._1,
-            Info.EnumElement(name, e._1, elementTypedOpt, e._2, posOpt),
+            Info.EnumElement(name, e._1, elementTypedOpt, Some(e._2), posOpt),
             posOpt
           )
           i = i + 1

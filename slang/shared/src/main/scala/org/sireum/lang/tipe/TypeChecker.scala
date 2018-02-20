@@ -120,7 +120,7 @@ object TypeChecker {
   @memoize def libraryReporter: (TypeChecker, Reporter) = {
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
-    val (reporter, nameMap, typeMap) =
+    val (reporter, _, nameMap, typeMap) =
       Resolver.parseProgramAndGloballyResolve(Library.files, initNameMap, initTypeMap)
     val th =
       TypeHierarchy.build(TypeHierarchy(nameMap, typeMap, Poset.empty, HashMap.empty), reporter)
@@ -221,9 +221,10 @@ object TypeChecker {
     }
 
     val th2: TypeHierarchy = {
-      val (rep, nameMap, typeMap) =
+      val (rep, _, nameMap, typeMap) =
         Resolver
-          .combine((Reporter.create, th.nameMap, th.typeMap), (Reporter.create, gdr.globalNameMap, gdr.globalTypeMap))
+          .combine((Reporter.create, ISZ(), th.nameMap, th.typeMap),
+            (Reporter.create, Resolver.emptyProgram, gdr.globalNameMap, gdr.globalTypeMap))
 
       if (rep.hasIssue) {
         reporter.reports(rep.messages)
@@ -1191,12 +1192,12 @@ import TypeChecker._
                 case _ =>
               }
               info.elements.get(id) match {
-                case Some(resOpt) =>
+                case Some(res) =>
                   if (hasTypeArgs) {
                     errTypeArgs(receiverType)
                     return noResult
                   }
-                  return (info.elementTypedOpt, resOpt)
+                  return (info.elementTypedOpt, Some(res))
                 case _ =>
                   errAccess(receiverType)
                   return noResult

@@ -29,15 +29,14 @@ package org.sireum.lang.symbol
 import org.sireum._
 import org.sireum.message._
 import org.sireum.lang.{ast => AST}
-import Resolver._
 
 @datatype trait Scope {
 
   @pure def outerOpt: Option[Scope]
 
-  @pure def resolveName(globalNameMap: NameMap, name: QName): Option[Info]
+  @pure def resolveName(globalNameMap: HashMap[ISZ[String], Info], name: ISZ[String]): Option[Info]
 
-  @pure def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo]
+  @pure def resolveType(globalTypeMap: HashMap[ISZ[String], TypeInfo], name: ISZ[String]): Option[TypeInfo]
 
   @pure def returnOpt: Option[AST.Typed]
 
@@ -76,7 +75,7 @@ object Scope {
       }
     }
 
-    @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
+    @pure override def resolveName(globalNameMap: HashMap[ISZ[String], Info], name: ISZ[String]): Option[Info] = {
       if (name.size == 1) {
         val infoOpt = nameMap.get(name(0))
         if (infoOpt.nonEmpty) {
@@ -89,7 +88,10 @@ object Scope {
       }
     }
 
-    @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+    @pure override def resolveType(
+      globalTypeMap: HashMap[ISZ[String], TypeInfo],
+      name: ISZ[String]
+    ): Option[TypeInfo] = {
       if (name.size == 1) {
         val typeInfoOpt = typeMap.get(name(0))
         if (typeInfoOpt.nonEmpty) {
@@ -103,7 +105,8 @@ object Scope {
     }
   }
 
-  @datatype class Global(packageName: QName, imports: ISZ[AST.Stmt.Import], enclosingName: QName) extends Scope {
+  @datatype class Global(packageName: ISZ[String], imports: ISZ[AST.Stmt.Import], enclosingName: ISZ[String])
+      extends Scope {
 
     @pure override def outerOpt: Option[Scope] = {
       return None()
@@ -117,11 +120,11 @@ object Scope {
       return None()
     }
 
-    @pure override def resolveName(globalNameMap: NameMap, name: QName): Option[Info] = {
+    @pure override def resolveName(globalNameMap: HashMap[ISZ[String], Info], name: ISZ[String]): Option[Info] = {
       return resolveNameMemoized(globalNameMap, name)
     }
 
-    @pure def resolveImported(globalNameMap: NameMap, name: QName): Option[Info] = {
+    @pure def resolveImported(globalNameMap: HashMap[ISZ[String], Info], name: ISZ[String]): Option[Info] = {
       for (i <- imports.indices.reverse) {
         val impor = imports(i)
         val importers = impor.importers
@@ -176,11 +179,17 @@ object Scope {
       return None()
     }
 
-    @pure override def resolveType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+    @pure override def resolveType(
+      globalTypeMap: HashMap[ISZ[String], TypeInfo],
+      name: ISZ[String]
+    ): Option[TypeInfo] = {
       return resolveTypeMemoized(globalTypeMap, name)
     }
 
-    @pure def resolveImportedType(globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+    @pure def resolveImportedType(
+      globalTypeMap: HashMap[ISZ[String], TypeInfo],
+      name: ISZ[String]
+    ): Option[TypeInfo] = {
       for (i <- imports.indices.reverse) {
         val impor = imports(i)
         val importers = impor.importers
@@ -235,7 +244,10 @@ object Scope {
       return None()
     }
 
-    @memoize def resolveNameMemoized(@hidden globalNameMap: NameMap, name: QName): Option[Info] = {
+    @memoize def resolveNameMemoized(
+      @hidden globalNameMap: HashMap[ISZ[String], Info],
+      name: ISZ[String]
+    ): Option[Info] = {
       val globalOpt = globalNameMap.get(name)
       if (globalOpt.nonEmpty) {
         return globalOpt
@@ -258,7 +270,10 @@ object Scope {
       return globalNameMap.get(packageName ++ name)
     }
 
-    @memoize def resolveTypeMemoized(@hidden globalTypeMap: TypeMap, name: QName): Option[TypeInfo] = {
+    @memoize def resolveTypeMemoized(
+      @hidden globalTypeMap: HashMap[ISZ[String], TypeInfo],
+      name: ISZ[String]
+    ): Option[TypeInfo] = {
       val globalTypeOpt = globalTypeMap.get(name)
       if (globalTypeOpt.nonEmpty) {
         return globalTypeOpt
@@ -285,14 +300,15 @@ object Scope {
 }
 
 @datatype trait Info {
-  @pure def name: QName
+  @pure def name: ISZ[String]
 
   @pure def posOpt: Option[Position]
 }
 
 object Info {
 
-  @datatype class Package(val name: QName, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo]) extends Info {
+  @datatype class Package(val name: ISZ[String], typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo])
+      extends Info {
 
     @pure override def posOpt: Option[Position] = {
       return None[Position]()
@@ -300,7 +316,7 @@ object Info {
   }
 
   @datatype class Var(
-    owner: QName,
+    owner: ISZ[String],
     isInObject: B,
     scope: Scope,
     ast: AST.Stmt.Var,
@@ -319,13 +335,13 @@ object Info {
       }
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
   }
 
   @datatype class SpecVar(
-    owner: QName,
+    owner: ISZ[String],
     isInObject: B,
     scope: Scope,
     ast: AST.Stmt.SpecVar,
@@ -341,13 +357,13 @@ object Info {
       return ast.tipe.typedOpt.nonEmpty
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
   }
 
   @datatype class Method(
-    owner: QName,
+    owner: ISZ[String],
     isInObject: B,
     scope: Scope,
     hasBody: B,
@@ -364,14 +380,14 @@ object Info {
       return ast.sig.returnType.typedOpt.nonEmpty
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.sig.id.value
     }
 
   }
 
   @datatype class SpecMethod(
-    val owner: QName,
+    val owner: ISZ[String],
     isInObject: B,
     scope: Scope,
     ast: AST.Stmt.SpecMethod,
@@ -387,13 +403,13 @@ object Info {
       return ast.sig.returnType.typedOpt.nonEmpty
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.sig.id.value
     }
   }
 
   @datatype class Object(
-    owner: QName,
+    owner: ISZ[String],
     isSynthetic: B,
     scope: Scope.Global,
     outlined: B,
@@ -403,7 +419,7 @@ object Info {
     resOpt: Option[AST.ResolvedInfo]
   ) extends Info {
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
 
@@ -414,7 +430,7 @@ object Info {
   }
 
   @datatype class ExtMethod(
-    owner: QName,
+    owner: ISZ[String],
     scope: Scope.Global,
     ast: AST.Stmt.ExtMethod,
     typedOpt: Option[AST.Typed],
@@ -425,7 +441,7 @@ object Info {
       return ast.attr.posOpt
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.sig.id.value
     }
 
@@ -450,8 +466,8 @@ object Info {
   }
 
   @datatype class Enum(
-    val name: QName,
-    elements: Map[String, Option[AST.ResolvedInfo]],
+    val name: ISZ[String],
+    elements: Map[String, AST.ResolvedInfo],
     typedOpt: Option[AST.Typed],
     resOpt: Option[AST.ResolvedInfo],
     elementTypedOpt: Option[AST.Typed],
@@ -486,21 +502,21 @@ object Info {
   }
 
   @datatype class EnumElement(
-    owner: QName,
+    owner: ISZ[String],
     id: String,
     typedOpt: Option[AST.Typed],
     resOpt: Option[AST.ResolvedInfo],
     val posOpt: Option[Position]
   ) extends Info {
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ id
     }
 
   }
 
   @datatype class LocalVar(
-    val name: QName,
+    val name: ISZ[String],
     isVal: B,
     ast: AST.Id,
     typedOpt: Option[AST.Typed],
@@ -513,8 +529,12 @@ object Info {
 
   }
 
-  @datatype class QuantVar(val name: QName, ast: AST.Id, typedOpt: Option[AST.Typed], resOpt: Option[AST.ResolvedInfo])
-      extends Info {
+  @datatype class QuantVar(
+    val name: ISZ[String],
+    ast: AST.Id,
+    typedOpt: Option[AST.Typed],
+    resOpt: Option[AST.ResolvedInfo]
+  ) extends Info {
 
     @pure override def posOpt: Option[Position] = {
       return ast.attr.posOpt
@@ -526,7 +546,7 @@ object Info {
 
 @datatype trait TypeInfo {
 
-  @pure def name: QName
+  @pure def name: ISZ[String]
 
   @pure def canHaveCompanion: B
 
@@ -535,9 +555,9 @@ object Info {
 
 object TypeInfo {
 
-  @datatype class SubZ(owner: QName, ast: AST.Stmt.SubZ) extends TypeInfo {
+  @datatype class SubZ(owner: ISZ[String], ast: AST.Stmt.SubZ) extends TypeInfo {
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
 
@@ -559,8 +579,11 @@ object TypeInfo {
     )
   }
 
-  @datatype class Enum(owner: QName, elements: Map[String, Option[AST.ResolvedInfo]], val posOpt: Option[Position])
-      extends TypeInfo {
+  @datatype class Enum(
+    owner: ISZ[String],
+    elements: Map[String, AST.ResolvedInfo],
+    val posOpt: Option[Position]
+  ) extends TypeInfo {
 
     val nameTypedOpt: Option[AST.Typed] = Some(
       AST.Typed.Method(
@@ -580,7 +603,7 @@ object TypeInfo {
         .Method(F, AST.MethodMode.Method, ISZ(), name, "ordinal", ISZ(), ISZ(), AST.Typed.Fun(T, T, ISZ(), AST.Typed.z))
     )
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ Info.Enum.elementTypeSuffix
     }
 
@@ -590,7 +613,7 @@ object TypeInfo {
   }
 
   @datatype class Sig(
-    owner: QName,
+    owner: ISZ[String],
     outlined: B,
     typeChecked: B,
     tpe: AST.Typed.Name,
@@ -602,7 +625,7 @@ object TypeInfo {
     ast: AST.Stmt.Sig
   ) extends TypeInfo {
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
 
@@ -646,7 +669,7 @@ object TypeInfo {
   }
 
   @datatype class AbstractDatatype(
-    owner: QName,
+    owner: ISZ[String],
     outlined: B,
     typeChecked: B,
     tpe: AST.Typed.Name,
@@ -667,7 +690,7 @@ object TypeInfo {
       return T
     }
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return owner :+ ast.id.value
     }
 
@@ -711,7 +734,7 @@ object TypeInfo {
     }
   }
 
-  @datatype class TypeAlias(val name: QName, scope: Scope.Global, ast: AST.Stmt.TypeAlias) extends TypeInfo {
+  @datatype class TypeAlias(val name: ISZ[String], scope: Scope.Global, ast: AST.Stmt.TypeAlias) extends TypeInfo {
 
     @pure def outlined: B = {
       return ast.tipe.typedOpt.nonEmpty
@@ -728,7 +751,7 @@ object TypeInfo {
 
   @datatype class TypeVar(id: String, ast: AST.TypeParam) extends TypeInfo {
 
-    @pure override def name: QName = {
+    @pure override def name: ISZ[String] = {
       return ISZ(id)
     }
 

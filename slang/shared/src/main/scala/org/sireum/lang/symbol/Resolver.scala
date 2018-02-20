@@ -48,7 +48,7 @@ object Resolver {
   @pure def ltTypeInfo(ti1: TypeInfo, ti2: TypeInfo): B = {
     (ti1.posOpt, ti2.posOpt) match {
       case (Some(pos1), Some(pos2)) => return pos1.offset < pos2.offset
-      case _ => return F
+      case _ => return ti1.name.size < ti2.name.size
     }
   }
 
@@ -114,7 +114,7 @@ object Resolver {
     return r
   }
 
-  @pure def relQName(name: QName, ids: QName): QName = {
+  @pure def relQName(name: QName, ids: QName, shorten: B): QName = {
     val sz = name.size
     if (ids.size <= sz) {
       return ids
@@ -122,7 +122,7 @@ object Resolver {
     var i = z"0"
     while (i < name.size) {
       if (ids(i) != name(i)) {
-        return ids
+        return if (shorten) "_" +: ISZOps(ids).drop(i - 1) else ids
       }
       i = i + 1
     }
@@ -131,7 +131,7 @@ object Resolver {
 
   def typeString(name: QName, t: AST.Type, reporter: Reporter): ST = {
     t match {
-      case t: AST.Type.Named => return typeNameString(name, relQName(name, AST.Util.ids2strings(t.name.ids)))
+      case t: AST.Type.Named => return typeNameString(name, relQName(name, AST.Util.ids2strings(t.name.ids), F))
       case _ =>
         reporter.internalError(t.posOpt, resolverKind, s"Unexpected type $t.")
         return st""
@@ -152,11 +152,11 @@ object Resolver {
   }
 
   @pure def typeNameString(name: QName, ids: QName): ST = {
-    return st"${(relQName(name, ids), ".")}"
+    return st"${(relQName(name, ids, F), ".")}"
   }
 
   @pure def typeName(name: QName, ids: QName): ST = {
-    return st"${relQName(name, ids)}"
+    return st"${relQName(name, ids, T)}"
   }
 
   @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
@@ -241,11 +241,14 @@ object Resolver {
 
   }
 
-  @pure def combine(r: (Reporter, NameMap, TypeMap), u: (Reporter, NameMap, TypeMap)): (Reporter, NameMap, TypeMap) = {
-    var rNameMap = r._2
-    var rTypeMap = r._3
-    val uNameMap = u._2
-    val uTypeMap = u._3
+  @pure def combine(
+    r: (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap),
+    u: (Reporter, AST.TopUnit.Program, NameMap, TypeMap)
+  ): (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap) = {
+    var rNameMap = r._3
+    var rTypeMap = r._4
+    val uNameMap = u._3
+    val uTypeMap = u._4
     val reporter = Reporter.combine(r._1, u._1)
     for (p <- uNameMap.entries) {
       val name = p._1
@@ -293,39 +296,38 @@ object Resolver {
         case _ => rTypeMap = rTypeMap + name ~> uInfo
       }
     }
-    return (reporter, rNameMap, rTypeMap)
+    return (reporter, r._2 :+ u._2, rNameMap, rTypeMap)
   }
 
-  def parseProgramAndGloballyResolve(
+  @pure def parseProgramAndGloballyResolve(
     sources: ISZ[(Option[String], String)],
     nameMap: NameMap,
     typeMap: TypeMap
-  ): (Reporter, NameMap, TypeMap) = {
-    def parseGloballyResolve(p: (Option[String], String)): (Reporter, NameMap, TypeMap) = {
+  ): (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap) = {
+    def parseGloballyResolve(p: (Option[String], String)): (Reporter, AST.TopUnit.Program, NameMap, TypeMap) = {
       val reporter = Reporter.create
       val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
       val nameMap = HashMap.empty[QName, Info]
       val typeMap = HashMap.empty[QName, TypeInfo]
       if (reporter.hasError) {
-        return (reporter, nameMap, typeMap)
+        return (reporter, AST.TopUnit.Program.empty, nameMap, typeMap)
       }
       r match {
         case Some(program) =>
           val gdr = GlobalDeclarationResolver(nameMap, typeMap, Reporter.create)
           gdr.resolveProgram(program)
           reporter.reports(gdr.reporter.messages)
-          return (reporter, gdr.globalNameMap, gdr.globalTypeMap)
-        case _ => return (reporter, nameMap, typeMap)
+          return (reporter, program, gdr.globalNameMap, gdr.globalTypeMap)
+        case _ => return (reporter, AST.TopUnit.Program.empty, nameMap, typeMap)
       }
     }
 
-    val t = ISZOps(sources).mParMapFoldLeft[(Reporter, NameMap, TypeMap), (Reporter, NameMap, TypeMap)](
-      parseGloballyResolve _,
-      combine _,
-      (Reporter.create, nameMap, typeMap)
-    )
-    val p = addBuiltIns(t._2, t._3)
-    return (t._1, p._1, p._2)
+    val t = ISZOps(sources).mParMapFoldLeft[
+      (Reporter, AST.TopUnit.Program, NameMap, TypeMap),
+      (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap)
+    ](parseGloballyResolve _, combine _, (Reporter.create, ISZ(), nameMap, typeMap))
+    val p = addBuiltIns(t._3, t._4)
+    return (t._1, t._2, p._1, p._2)
   }
 
   def typeParamMap(typeParams: ISZ[AST.TypeParam], reporter: Reporter): HashSMap[String, TypeInfo] = {
