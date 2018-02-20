@@ -30,9 +30,9 @@ import java.io.File
 import org.sireum.message._
 import org.sireum.lang.ast._
 import org.sireum.lang.parser.SlangParser
-import org.sireum.lang.symbol.GlobalDeclarationResolver
 import org.sireum.util.FileUtil
-import org.sireum.{HashMap => SHashMap, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.{ISZ, None => SNone, Option => SOption, Some => SSome, String => SString}
+import org.sireum.U32._
 
 object SerializerGenJvm {
   val messageKind = "JsonGen"
@@ -41,30 +41,33 @@ object SerializerGenJvm {
     allowSireumPackage: Boolean,
     mode: SerializerGen.Mode.Type,
     licenseOpt: Option[File],
-    src: File,
+    srcs: Seq[File],
     dest: File,
+    packageNameOpt: SOption[ISZ[SString]],
     nameOpt: SOption[SString],
     reporter: Reporter
   ): SOption[String] = {
-    val srcText = FileUtil.readFile(src)
-    val srcUri = FileUtil.toUri(src)
-    val r = SlangParser(allowSireumPackage, isWorksheet = false, isDiet = false, SSome(srcUri), srcText, reporter)
-    r.unitOpt match {
-      case SSome(p: TopUnit.Program) =>
-        val gdr = GlobalDeclarationResolver(SHashMap.empty, SHashMap.empty, reporter)
-        gdr.resolveProgram(p)
-        val lOpt = licenseOpt match {
-          case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
-          case _ => SNone[SString]()
-        }
-        val fOpt = SSome(SString(dest.getParentFile.toURI.relativize(src.toURI).toString))
-        val gen =
-          SerializerGen.Gen(mode, gdr.globalNameMap, gdr.globalTypeMap, Util.ids2strings(p.packageName.ids), reporter)
-        reporter.reports(gen.reporter.messages)
-        SSome(gen.gen(lOpt, fOpt, nameOpt).render.value)
-      case _ =>
-        reporter.error(SNone(), messageKind, "Expecting program input.")
-        return SNone()
+    val lOpt = licenseOpt match {
+      case Some(f) => SSome(SString(FileUtil.readFile(f).trim))
+      case _ => SNone[SString]()
     }
+    var uris = Vector[String]()
+    var sources = ISZ[(SOption[SString], SString)]()
+    for (src <- srcs) {
+      val srcText = FileUtil.readFile(src)
+      val srcUri = FileUtil.toUri(src)
+      uris = uris :+ dest.getParentFile.toPath.relativize(src.toPath).toString
+      sources = sources :+ ((SSome(SString(srcUri)), SString(srcText)))
+    }
+    val fOpt = {
+      import org.sireum._
+      SSome(st"${(uris, ", ")}".render)
+    }
+    val packageName: ISZ[SString] = packageNameOpt match {
+      case SSome(pn) => pn
+      case _ => ISZ()
+    }
+    val r = SerializerGen.gen(mode, sources, packageName, reporter, lOpt, fOpt, nameOpt)
+    if (reporter.hasError) SNone() else SSome(r.render.value)
   }
 }

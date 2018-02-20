@@ -68,19 +68,18 @@ object Sireum extends App {
       0
     } catch {
       case e: Throwable =>
-        e.printStackTrace()
+        eprintln(e.getMessage)
         -1
     }
 
   def serGen(o: Cli.SergenOption): Int =
     try {
-      o.args.size match {
-        case z"0" => println(o.help); return 0
-        case z"1" =>
-        case _ => println(s"Expecting one argument, but found ${o.args.size}."); return -1
+      if (o.args.isEmpty) {
+        println(o.help)
+        return 0
       }
       val lOpt = path2fileOpt("license file", o.license, T)
-      val src = paths2fileOpt("Slang file", o.args, T).get
+      val srcs = paths2files("Slang file", o.args, T)
       val destDir = path2fileOpt("output directory", o.outputDir, T).get
       if (!destDir.isDirectory) error(s"Path ${destDir.getPath} is not a directory")
       for (m <- o.modes) {
@@ -104,7 +103,8 @@ object Sireum extends App {
         }
         val dest = new File(destDir, name + ".scala")
         val reporter = Reporter.create
-        SerializerGenJvm(T, mode, lOpt, src, dest, Some(String(name)), reporter) match {
+        val packageNameOpt: Option[ISZ[String]] = if (o.packageName.isEmpty) None() else Some(o.packageName)
+        SerializerGenJvm(T, mode, lOpt, srcs, dest, packageNameOpt, Some(String(name)), reporter) match {
           case Some(out) =>
             val fw = new FileWriter(dest)
             fw.write(out)
@@ -166,7 +166,7 @@ object Sireum extends App {
       0
     } catch {
       case e: Throwable =>
-        e.printStackTrace()
+        eprintln(e.getMessage)
         -1
     }
 
@@ -206,13 +206,21 @@ object Sireum extends App {
     0 // TODO
   }
 
+  def paths2files(pathFor: String, paths: ISZ[String], checkExist: B): Seq[File] = {
+    var r = Vector[File]()
+    for (p <- paths) {
+      r = r :+ paths2fileOpt(pathFor, ISZ(p), checkExist).get
+    }
+    r
+  }
+
   def paths2fileOpt(pathFor: String, path: ISZ[String], checkExist: B): scala.Option[File] = {
     path.size match {
       case z"0" => scala.None
       case z"1" =>
         val f = new File(path(0).value)
         if (checkExist && !f.exists) error(s"File ${path(0)} does not exist.")
-        return scala.Some(f)
+        return scala.Some(f.getCanonicalFile.getAbsoluteFile)
       case _ =>
         error(s"Expecting a path for $pathFor, but found multiple.")
     }
@@ -222,7 +230,7 @@ object Sireum extends App {
     if (path.isEmpty) return scala.None
     val f = new File(path.get.value)
     if (checkExist && !f.exists) error(s"File '$path' does not exist.")
-    return scala.Some(f.getCanonicalFile)
+    return scala.Some(f.getCanonicalFile.getAbsoluteFile)
   }
 
   def error(msg: Predef.String): Nothing = {

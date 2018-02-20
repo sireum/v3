@@ -43,7 +43,8 @@ class SerializerGenJvmTest extends SireumSpec {
 
   def gen(src: File, dest: File, mode: SerializerGen.Mode.Type): Boolean = {
     val reporter = Reporter.create
-    val rOpt = SerializerGenJvm(allowSireumPackage = true, mode, Some(licensePath), src, dest, SNone(), reporter)
+    val rOpt =
+      SerializerGenJvm(allowSireumPackage = true, mode, Some(licensePath), Seq(src), dest, SNone(), SNone(), reporter)
     reporter.printMessages()
     rOpt match {
       case SSome(r) =>

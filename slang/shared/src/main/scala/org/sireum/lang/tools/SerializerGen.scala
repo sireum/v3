@@ -574,6 +574,28 @@ object SerializerGen {
 
   val jsonGenKind: String = "JsonGen"
 
+  def gen(
+    mode: Mode.Type,
+    sources: ISZ[(Option[String], String)],
+    packageName: QName,
+    reporter: Reporter,
+    licenseOpt: Option[String],
+    fileUriOpt: Option[String],
+    name: Option[String]
+  ): ST = {
+    val (rep, programs, nameMap, typeMap) =
+      Resolver.parseProgramAndGloballyResolve(sources, HashMap.empty, HashMap.empty)
+    if (rep.hasError) {
+      reporter.reports(rep.messages)
+      return st""
+    }
+    val pName: ISZ[String] = if (packageName.isEmpty) programs(0).packageName.ids.map(id => id.value) else packageName
+    val g = Gen(mode, nameMap, typeMap -- ISZ(AST.Typed.unit.ids, AST.Typed.nothing.ids), pName, Reporter.create)
+    val r = g.gen(licenseOpt, fileUriOpt, name)
+    reporter.reports(g.reporter.messages)
+    return r
+  }
+
   @record class Gen(
     mode: Mode.Type,
     globalNameMap: NameMap,
