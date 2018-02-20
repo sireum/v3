@@ -63,9 +63,59 @@ class LibraryTypeCheckingTest extends SireumSpec {
           PostTipeAttrChecker.checkNameTypeMaps(nameInfo(th, name), typeInfo(th, name), reporter)
         }
       }
+      val bin = CustomMessagePack.fromTypeHierarchy(th)
+      val Either.Left(th2) = CustomMessagePack.toTypeHierarchy(bin)
+      assert(th == th2)
+      //collectStats(th.nameMap, th.typeMap)
       reporter.printMessages()
       !reporter.hasIssue
     }
 
+    /*
+    def collectStats(os: Any*): Unit = {
+      final case class Wrapper(o: Any) {
+        override def hashCode: Int = o.hashCode
+
+        override def equals(ow: Any): Boolean = {
+          ow match {
+            case Wrapper(other) => try o == other catch { case _: Throwable => false }
+            case _ => false
+          }
+        }
+      }
+      val map = scala.collection.mutable.HashMap[Wrapper, Z]()
+      def collect(o: Any): Unit = {
+        o match {
+          case o: Some[_] => collect(o.value); return
+          case o: HashMap[_, _] => for (e <- o.entries) { collect(e._1); collect(e._2) }; return
+          case o: Map[_, _] => for (e <- o.entries) { collect(e._1); collect(e._2) }; return
+          case o: HashSMap[_, _] => for (e <- o.entries) { collect(e._1); collect(e._2) }; return
+          case o: Set[_] => for (e <- o.elements) collect(e); return
+          case o: HashSet[_] => for (e <- o.elements) collect(e); return
+          case o: HashSSet[_] => for (e <- o.elements) collect(e); return
+          case o: Bag[_] => for (e <- o.elements) collect(e); return
+          case o: HashBag[_] => for (e <- o.elements) collect(e); return
+          case o: Stack[_] => for (e <- o.elements) collect(e); return
+          case o: Poset[_] => for (e <- o.nodes) collect(e); return
+          case _: ZLike[_] | _: B  | _: C | _: F32 | _: F64 | _: R | _: String | _: None[_] => return
+          case o: DatatypeSig => for (e <- o.$content.tail) collect(e._2)
+          case o: RecordSig => for (e <- o.$content.tail) collect(e._2)
+          case o: IS[_, _] => for (e <- o) collect(e); return
+          case o: MS[_, _] => for (e <- o) collect(e); return
+          case (o1, o2) => collect(o1); collect(o2); return
+          case _: _root_.org.sireum.Immutable with _root_.scala.Ordered[_] => return
+          case _ => println(s"Ignoring ${o.getClass}: $o"); return
+        }
+        val ow = Wrapper(o)
+        map.put(ow, map.getOrElse[Z](ow, 0) + 1)
+      }
+      for (o <- os) {
+        collect(o)
+      }
+      for (e <- map.toSeq.sortWith((p1, p2) => p1._2 > p2._2)) {
+        println(s"${e._1.o.getClass.getName}: ${e._2}")
+      }
+    }
+   */
   }
 }
