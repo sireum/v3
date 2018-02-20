@@ -29,7 +29,7 @@ import java.io.File
 
 import org.sireum.message._
 import com.sksamuel.diffpatch.DiffMatchPatch
-import org.sireum.{None => SNone, Some => SSome}
+import org.sireum.{None => SNone, Some => SSome, String => SString, ISZ}
 import org.sireum.lang.test.Paths._
 import org.sireum.lang.tools.{SerializerGen, SerializerGenJvm}
 import org.sireum.test.SireumSpec
@@ -37,14 +37,23 @@ import org.sireum.util.FileUtil
 
 class SerializerGenJvmTest extends SireumSpec {
 
-  *(gen(slangAstPath, slangMsgPackPath, SerializerGen.Mode.MessagePack))
+  *(gen(Seq(slangInfoPath, slangAstPath), slangMsgPackPath, SerializerGen.Mode.MessagePack))
 
-  *(gen(slangAstPath, slangJSONPath, SerializerGen.Mode.JSON))
+  *(gen(Seq(slangInfoPath, slangAstPath), slangJSONPath, SerializerGen.Mode.JSON))
 
-  def gen(src: File, dest: File, mode: SerializerGen.Mode.Type): Boolean = {
+  def gen(srcs: Seq[File], dest: File, mode: SerializerGen.Mode.Type): Boolean = {
     val reporter = Reporter.create
     val rOpt =
-      SerializerGenJvm(allowSireumPackage = true, mode, Some(licensePath), Seq(src), dest, SNone(), SNone(), reporter)
+      SerializerGenJvm(
+        allowSireumPackage = true,
+        mode,
+        Some(licensePath),
+        srcs,
+        dest,
+        SSome(ISZ[SString]("org", "sireum", "lang", "tipe")),
+        SNone(),
+        reporter
+      )
     reporter.printMessages()
     rOpt match {
       case SSome(r) =>

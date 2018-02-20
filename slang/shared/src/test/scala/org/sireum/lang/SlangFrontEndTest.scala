@@ -346,18 +346,18 @@ class SlangFrontEndTest extends SireumSpec {
           }
 
           if (checkJSON) {
-            val s = AST.JSON.fromTopUnit(p, true)
+            val s = tipe.JSON.from_astTopUnit(p, true)
             //println(s)
-            val org.sireum.Either.Left(r) = AST.JSON.toTopUnit(s)
+            val org.sireum.Either.Left(r) = tipe.JSON.to_astTopUnit(s)
             assert(r == p)
           }
 
           if (checkMsgPack) {
             //val bin = AST.MsgPack.fromTopUnit(p, true)
-            val bin = AST.CustomMessagePack.fromTopUnit(p)
+            val bin = tipe.CustomMessagePack.fromTopUnit(p)
             //println(bin.size)
             //val org.sireum.Either.Left(r) = AST.MsgPack.toTopUnit(bin)
-            val r = AST.CustomMessagePack.toTopUnit(bin)
+            val r = tipe.CustomMessagePack.toTopUnit(bin)
             assert(r == p)
 
           }

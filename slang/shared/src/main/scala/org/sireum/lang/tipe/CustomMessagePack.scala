@@ -24,9 +24,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang.ast
+package org.sireum.lang.tipe
 
 import org.sireum._
+import org.sireum.lang.{ast => AST}
 import org.sireum.U8._
 
 object CustomMessagePack {
@@ -108,31 +109,31 @@ object CustomMessagePack {
     }
   }
 
-  def fromTopUnit(o: TopUnit): ISZ[U8] = {
+  def fromTopUnit(o: AST.TopUnit): ISZ[U8] = {
     val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0))
-    writer.writeTopUnit(o)
+    writer.write_astTopUnit(o)
     val r = writer.result
     return r
   }
 
-  def toTopUnit(data: ISZ[U8]): TopUnit = {
+  def toTopUnit(data: ISZ[U8]): AST.TopUnit = {
     val reader = Reader(MessagePack.Reader.Impl(data, 0))
     reader.init()
-    val r = reader.readTopUnit()
+    val r = reader.read_astTopUnit()
     return r
   }
 
-  def fromExp(o: Exp): ISZ[U8] = {
+  def fromExp(o: AST.Exp): ISZ[U8] = {
     val writer = Writer(MessagePack.Writer.Impl(T, MS.create(1024, u8"0"), 0))
-    writer.writeExp(o)
+    writer.write_astExp(o)
     val r = writer.result
     return r
   }
 
-  def toExp(data: ISZ[U8]): Exp = {
+  def toExp(data: ISZ[U8]): AST.Exp = {
     val reader = Reader(MessagePack.Reader.Impl(data, 0))
     reader.init()
-    val r = reader.readExp()
+    val r = reader.read_astExp()
     return r
   }
 

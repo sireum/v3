@@ -38,8 +38,9 @@ object Paths {
   val cliConfigPath = new File(rootDir, "cli/jvm/src/main/scala/org/sireum/cli/CliConfig.sc")
   val cliPath = new File(rootDir, "cli/jvm/src/main/scala/org/sireum/cli/Cli.scala")
   val slangAstPath = new File(slangPackagePath, "ast/AST.scala")
+  val slangInfoPath = new File(slangPackagePath, "symbol/Info.scala")
   val slangMTransformerPath = new File(slangPackagePath, "ast/MTransformer.scala")
   val slangTransformerPath = new File(slangPackagePath, "ast/Transformer.scala")
-  val slangJSONPath = new File(slangPackagePath, "ast/JSON.scala")
-  val slangMsgPackPath = new File(slangPackagePath, "ast/MsgPack.scala")
+  val slangJSONPath = new File(slangPackagePath, "tipe/JSON.scala")
+  val slangMsgPackPath = new File(slangPackagePath, "tipe/MsgPack.scala")
 }
