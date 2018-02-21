@@ -12,7 +12,7 @@ build:
   ci:
     - git submodule update --init --recursive
     - bin/sbt-launch.sh clean test:compile test:fastOptJS
-    - bin/sbt-launch.sh test
+    - SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh test
   post_ci:
   on_success:
   on_failure:
