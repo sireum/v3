@@ -319,21 +319,7 @@ Run:
 
   The resulting image name is `sireum/v3-compcert:latest`.
 
-### Troubleshooting
-
-#### Workaround for Sbt Issue [#2156](https://github.com/sbt/sbt/issues/2156)
-
-If the Sbt builds fails with: ``Could not create directory ...``, then you are
-affected by [sbt/sbt#2156](https://github.com/sbt/sbt/issues/2156).
-
-As a workaround, set the ``SIREUM_PARALLEL_BUILD`` environment variable to
-``false`` as follows:
-
-```bash
-export SIREUM_PARALLEL_BUILD=false
-```
-
-#### Other Issues?
+#### Issues?
 
 Please file a [new GitHub issue](https://github.com/sireum/v3/issues).
 
