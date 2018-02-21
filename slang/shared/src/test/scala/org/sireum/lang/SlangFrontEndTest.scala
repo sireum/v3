@@ -372,7 +372,7 @@ class SlangFrontEndTest extends SireumSpec {
     addImport: Boolean = true,
     isWorksheet: Boolean = false,
     isPrelude: Boolean = true,
-    checkJson: Boolean = true
+    checkJson: Boolean = false
   )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
 
