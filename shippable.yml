@@ -2,10 +2,6 @@ language: none
 
 services:
 
-env:
-  global:
-    - SIREUM_PARALLEL_BUILD=false
-
 build:
   pre_ci:
   pre_ci_boot:
