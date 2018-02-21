@@ -378,7 +378,7 @@ class TypeCheckerTest extends SireumSpec {
 
         *(failingWorksheet("""import org.sireum._
                              |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents + 3 ~> HashSet.empty ++ ISZ(1, 2, 3))
+                             |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet.empty ++ ISZ(1, 2, 3)))
                              |val upPosetTyped: Poset[String] = upPoset
                              |""".stripMargin, "Explicit type"))
 
