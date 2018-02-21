@@ -23,10 +23,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang
+package org.sireum.lang.test
 
 import org.sireum._
 import org.sireum.message._
+import org.sireum.lang.ast._
 import org.sireum.lang.parser._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
@@ -425,8 +426,7 @@ class TypeCheckerTest extends SireumSpec {
 
   def testWorksheet(input: Predef.String, isPassing: Boolean, msg: Predef.String = ""): Boolean = {
     val reporter = Reporter.create
-    Parser(input)
-      .parseTopUnit[ast.TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
+    Parser(input).parseTopUnit[TopUnit.Program](allowSireum = F, isWorksheet = T, isDiet = F, None(), reporter) match {
       case Some(program) if !reporter.hasIssue =>
         val p = TypeChecker.checkWorksheet(None(), program, reporter)
         if (reporter.hasIssue) {
@@ -456,7 +456,7 @@ class TypeCheckerTest extends SireumSpec {
       }
       tc
     }
-    val stmt = Parser(input).parseStmt[ast.Stmt]
+    val stmt = Parser(input).parseStmt[Stmt]
     val scope = Scope.Local(HashMap.empty, HashMap.empty, None(), None(), Some(Scope.Global(ISZ(), ISZ(), ISZ())))
     val reporter = Reporter.create
     typeChecker.checkStmt(scope, stmt, reporter) match {
