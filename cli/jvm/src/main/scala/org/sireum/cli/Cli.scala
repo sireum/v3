@@ -116,7 +116,8 @@ object Cli {
     force: ISZ[String],
     verbose: B,
     save: Option[String],
-    load: Option[String]
+    load: Option[String],
+    gzip: B
   ) extends SireumOption
 }
 
@@ -754,7 +755,8 @@ import Cli._
           |Persistence Options:
           |    --save               Path to save type information to (outline should not
           |                           be enabled) (expects a path)
-          |    --load               Path to load type information from (expects a path)""".render
+          |    --load               Path to load type information from (expects a path)
+          |-z, --gzip               Use gzip compression when saving and/or loading""".render
 
     var sourcepath: ISZ[String] = ISZ[String]()
     var outline: B = false
@@ -762,6 +764,7 @@ import Cli._
     var verbose: B = false
     var save: Option[String] = None[String]()
     var load: Option[String] = None[String]()
+    var gzip: B = false
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -806,6 +809,12 @@ import Cli._
              case Some(v) => load = v
              case _ => return None()
            }
+         } else if (arg == "-z" || arg == "--gzip") {
+           val o: Option[B] = { j = j - 1; Some(!gzip) }
+           o match {
+             case Some(v) => gzip = v
+             case _ => return None()
+           }
          } else {
           eprintln(s"Unrecognized option '$arg'.")
           return None()
@@ -815,7 +824,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(SlangTipeOption(help, parseArguments(args, j), sourcepath, outline, force, verbose, save, load))
+    return Some(SlangTipeOption(help, parseArguments(args, j), sourcepath, outline, force, verbose, save, load, gzip))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {

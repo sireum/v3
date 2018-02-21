@@ -190,18 +190,22 @@ object SlangTipe {
           println(s"Loading type information from ${loadFile.getPath} ...")
           startTime()
         }
-        try {
+        val data: ISZ[U8] = if (o.gzip) {
           val gis = new GZIPInputStream(new FileInputStream(loadFile))
-          val data = toIS(gis.readAllBytes())
-          CustomMessagePack.toTypeHierarchy(data) match {
-            case Either.Left(thl) => thl
-            case Either.Right(errorMsg) =>
-              eprintln(s"Loading error at offset ${errorMsg.offset}: ${errorMsg.message}")
+          try {
+            toIS(gis.readAllBytes())
+          } catch {
+            case e: IOException =>
+              eprintln(s"Could not load file: ${e.getMessage}")
               return LoadingError
-          }
-        } catch {
-          case e: IOException =>
-            eprintln(s"Could not load file: ${e.getMessage}")
+          } finally gis.close()
+        } else {
+          toIS(Files.readAllBytes(loadFile.toPath))
+        }
+        CustomMessagePack.toTypeHierarchy(data) match {
+          case Either.Left(thl) => thl
+          case Either.Right(errorMsg) =>
+            eprintln(s"Loading error at offset ${errorMsg.offset}: ${errorMsg.message}")
             return LoadingError
         }
       case _ =>
@@ -357,13 +361,23 @@ object SlangTipe {
         }
 
         val (buf, length) = fromIS(CustomMessagePack.fromTypeHierarchy(th))
-        val gos = new GZIPOutputStream(new FileOutputStream(saveFile))
-        try gos.write(buf, 0, length)
-        catch {
-          case e: IOException =>
-            eprintln(s"Could not save file: ${e.getMessage}")
-            return SavingError
-        } finally gos.close()
+        if (o.gzip) {
+          val gos = new GZIPOutputStream(new FileOutputStream(saveFile))
+          try gos.write(buf, 0, length)
+          catch {
+            case e: IOException =>
+              eprintln(s"Could not save file: ${e.getMessage}")
+              return SavingError
+          } finally gos.close()
+        } else {
+          val fos = new FileOutputStream(saveFile)
+          try fos.write(buf, 0, length)
+          catch {
+            case e: IOException =>
+              eprintln(s"Could not save file: ${e.getMessage}")
+              return SavingError
+          } finally fos.close()
+        }
 
         stopTime()
       case _ =>

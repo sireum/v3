@@ -209,7 +209,9 @@
       Opt(name = "save", longKey = "save", shortKey = None(), tpe = Type.Path(F, None()),
         description = "Path to save type information to (outline should not be enabled)"),
       Opt(name = "load", longKey = "load", shortKey = None(), tpe = Type.Path(F, None()),
-        description = "Path to load type information from")
+        description = "Path to load type information from"),
+      Opt(name = "gzip", longKey = "gzip", shortKey = Some('z'), tpe = Type.Flag(F),
+        description = "Use gzip compression when saving and/or loading")
     )))
   )
 
