@@ -329,10 +329,10 @@ object Resolver {
 
   @pure def parseProgramAndGloballyResolve(
     sources: ISZ[(Option[String], String)],
-    nameMap: NameMap,
-    typeMap: TypeMap
+    globalNameMap: NameMap,
+    globalTypeMap: TypeMap
   ): (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap) = {
-    def parseGloballyResolve(p: (Option[String], String)): (Reporter, AST.TopUnit.Program, NameMap, TypeMap) = {
+    @pure def parseGloballyResolve(p: (Option[String], String)): (Reporter, AST.TopUnit.Program, NameMap, TypeMap) = {
       val reporter = Reporter.create
       val r = Parser(p._2).parseTopUnit[AST.TopUnit.Program](T, F, F, p._1, reporter)
       val nameMap = HashMap.empty[QName, Info]
@@ -350,10 +350,10 @@ object Resolver {
       }
     }
 
-    val t = ISZOps(sources).mParMapFoldLeft[
+    val t = ISZOps(sources).parMapFoldLeft[
       (Reporter, AST.TopUnit.Program, NameMap, TypeMap),
       (Reporter, ISZ[AST.TopUnit.Program], NameMap, TypeMap)
-    ](parseGloballyResolve _, combine _, (Reporter.create, ISZ(), nameMap, typeMap))
+    ](parseGloballyResolve _, combine _, (Reporter.create, ISZ(), globalNameMap, globalTypeMap))
     val p = addBuiltIns(t._3, t._4)
     return (t._1, t._2, p._1, p._2)
   }

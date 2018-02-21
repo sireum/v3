@@ -47,20 +47,20 @@ object JSON {
     @pure def print_symbolScopeLocal(o: org.sireum.lang.symbol.Scope.Local): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Scope.Local""""),
-        ("nameMap", printHashMap(F, o.nameMap, printString, print_symbolInfo)),
-        ("typeMap", printHashMap(F, o.typeMap, printString, print_symbolTypeInfo)),
-        ("localThisOpt", printOption(F, o.localThisOpt, print_astTyped)),
-        ("methodReturnOpt", printOption(F, o.methodReturnOpt, print_astTyped)),
-        ("outerOpt", printOption(F, o.outerOpt, print_symbolScope))
+        ("nameMap", printHashMap(F, o.nameMap, printString _, print_symbolInfo _)),
+        ("typeMap", printHashMap(F, o.typeMap, printString _, print_symbolTypeInfo _)),
+        ("localThisOpt", printOption(F, o.localThisOpt, print_astTyped _)),
+        ("methodReturnOpt", printOption(F, o.methodReturnOpt, print_astTyped _)),
+        ("outerOpt", printOption(F, o.outerOpt, print_symbolScope _))
       ))
     }
 
     @pure def print_symbolScopeGlobal(o: org.sireum.lang.symbol.Scope.Global): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Scope.Global""""),
-        ("packageName", printISZ(T, o.packageName, printString)),
-        ("imports", printISZ(F, o.imports, print_astStmtImport)),
-        ("enclosingName", printISZ(T, o.enclosingName, printString))
+        ("packageName", printISZ(T, o.packageName, printString _)),
+        ("imports", printISZ(F, o.imports, print_astStmtImport _)),
+        ("enclosingName", printISZ(T, o.enclosingName, printString _))
       ))
     }
 
@@ -83,127 +83,127 @@ object JSON {
     @pure def print_symbolInfoPackage(o: org.sireum.lang.symbol.Info.Package): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.Package""""),
-        ("name", printISZ(T, o.name, printString)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("name", printISZ(T, o.name, printString _)),
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoVar(o: org.sireum.lang.symbol.Info.Var): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.Var""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("isInObject", printB(o.isInObject)),
         ("scope", print_symbolScope(o.scope)),
         ("ast", print_astStmtVar(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoSpecVar(o: org.sireum.lang.symbol.Info.SpecVar): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.SpecVar""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("isInObject", printB(o.isInObject)),
         ("scope", print_symbolScope(o.scope)),
         ("ast", print_astStmtSpecVar(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoMethod(o: org.sireum.lang.symbol.Info.Method): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.Method""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("isInObject", printB(o.isInObject)),
         ("scope", print_symbolScope(o.scope)),
         ("hasBody", printB(o.hasBody)),
         ("ast", print_astStmtMethod(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoSpecMethod(o: org.sireum.lang.symbol.Info.SpecMethod): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.SpecMethod""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("isInObject", printB(o.isInObject)),
         ("scope", print_symbolScope(o.scope)),
         ("ast", print_astStmtSpecMethod(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoObject(o: org.sireum.lang.symbol.Info.Object): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.Object""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("isSynthetic", printB(o.isSynthetic)),
         ("scope", print_symbolScopeGlobal(o.scope)),
         ("outlined", printB(o.outlined)),
         ("typeChecked", printB(o.typeChecked)),
         ("ast", print_astStmtObject(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoExtMethod(o: org.sireum.lang.symbol.Info.ExtMethod): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.ExtMethod""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("scope", print_symbolScopeGlobal(o.scope)),
         ("ast", print_astStmtExtMethod(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoEnum(o: org.sireum.lang.symbol.Info.Enum): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.Enum""""),
-        ("name", printISZ(T, o.name, printString)),
-        ("elements", printMap(F, o.elements, printString, print_astResolvedInfo)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo)),
-        ("elementTypedOpt", printOption(F, o.elementTypedOpt, print_astTyped)),
-        ("posOpt", printOption(F, o.posOpt, printPosition))
+        ("name", printISZ(T, o.name, printString _)),
+        ("elements", printMap(F, o.elements, printString _, print_astResolvedInfo _)),
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _)),
+        ("elementTypedOpt", printOption(F, o.elementTypedOpt, print_astTyped _)),
+        ("posOpt", printOption(F, o.posOpt, printPosition _))
       ))
     }
 
     @pure def print_symbolInfoEnumElement(o: org.sireum.lang.symbol.Info.EnumElement): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.EnumElement""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("id", printString(o.id)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo)),
-        ("posOpt", printOption(F, o.posOpt, printPosition))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _)),
+        ("posOpt", printOption(F, o.posOpt, printPosition _))
       ))
     }
 
     @pure def print_symbolInfoLocalVar(o: org.sireum.lang.symbol.Info.LocalVar): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.LocalVar""""),
-        ("name", printISZ(T, o.name, printString)),
+        ("name", printISZ(T, o.name, printString _)),
         ("isVal", printB(o.isVal)),
         ("ast", print_astId(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
     @pure def print_symbolInfoQuantVar(o: org.sireum.lang.symbol.Info.QuantVar): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.Info.QuantVar""""),
-        ("name", printISZ(T, o.name, printString)),
+        ("name", printISZ(T, o.name, printString _)),
         ("ast", print_astId(o.ast)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo))
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _))
       ))
     }
 
@@ -221,7 +221,7 @@ object JSON {
     @pure def print_symbolTypeInfoSubZ(o: org.sireum.lang.symbol.TypeInfo.SubZ): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.SubZ""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("ast", print_astStmtSubZ(o.ast))
       ))
     }
@@ -229,23 +229,23 @@ object JSON {
     @pure def print_symbolTypeInfoEnum(o: org.sireum.lang.symbol.TypeInfo.Enum): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.Enum""""),
-        ("owner", printISZ(T, o.owner, printString)),
-        ("elements", printMap(F, o.elements, printString, print_astResolvedInfo)),
-        ("posOpt", printOption(F, o.posOpt, printPosition))
+        ("owner", printISZ(T, o.owner, printString _)),
+        ("elements", printMap(F, o.elements, printString _, print_astResolvedInfo _)),
+        ("posOpt", printOption(F, o.posOpt, printPosition _))
       ))
     }
 
     @pure def print_symbolTypeInfoSig(o: org.sireum.lang.symbol.TypeInfo.Sig): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.Sig""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("outlined", printB(o.outlined)),
         ("typeChecked", printB(o.typeChecked)),
         ("tpe", print_astTypedName(o.tpe)),
-        ("ancestors", printISZ(F, o.ancestors, print_astTypedName)),
-        ("specVars", printHashMap(F, o.specVars, printString, print_symbolInfoSpecVar)),
-        ("specMethods", printHashMap(F, o.specMethods, printString, print_symbolInfoSpecMethod)),
-        ("methods", printHashMap(F, o.methods, printString, print_symbolInfoMethod)),
+        ("ancestors", printISZ(F, o.ancestors, print_astTypedName _)),
+        ("specVars", printHashMap(F, o.specVars, printString _, print_symbolInfoSpecVar _)),
+        ("specMethods", printHashMap(F, o.specMethods, printString _, print_symbolInfoSpecMethod _)),
+        ("methods", printHashMap(F, o.methods, printString _, print_symbolInfoMethod _)),
         ("scope", print_symbolScopeGlobal(o.scope)),
         ("ast", print_astStmtSig(o.ast))
       ))
@@ -254,19 +254,19 @@ object JSON {
     @pure def print_symbolTypeInfoAbstractDatatype(o: org.sireum.lang.symbol.TypeInfo.AbstractDatatype): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.AbstractDatatype""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("outlined", printB(o.outlined)),
         ("typeChecked", printB(o.typeChecked)),
         ("tpe", print_astTypedName(o.tpe)),
-        ("constructorTypeOpt", printOption(F, o.constructorTypeOpt, print_astTyped)),
-        ("constructorResOpt", printOption(F, o.constructorResOpt, print_astResolvedInfo)),
-        ("extractorTypeMap", printMap(F, o.extractorTypeMap, printString, print_astTyped)),
-        ("extractorResOpt", printOption(F, o.extractorResOpt, print_astResolvedInfo)),
-        ("ancestors", printISZ(F, o.ancestors, print_astTypedName)),
-        ("specVars", printHashMap(F, o.specVars, printString, print_symbolInfoSpecVar)),
-        ("vars", printHashMap(F, o.vars, printString, print_symbolInfoVar)),
-        ("specMethods", printHashMap(F, o.specMethods, printString, print_symbolInfoSpecMethod)),
-        ("methods", printHashMap(F, o.methods, printString, print_symbolInfoMethod)),
+        ("constructorTypeOpt", printOption(F, o.constructorTypeOpt, print_astTyped _)),
+        ("constructorResOpt", printOption(F, o.constructorResOpt, print_astResolvedInfo _)),
+        ("extractorTypeMap", printMap(F, o.extractorTypeMap, printString _, print_astTyped _)),
+        ("extractorResOpt", printOption(F, o.extractorResOpt, print_astResolvedInfo _)),
+        ("ancestors", printISZ(F, o.ancestors, print_astTypedName _)),
+        ("specVars", printHashMap(F, o.specVars, printString _, print_symbolInfoSpecVar _)),
+        ("vars", printHashMap(F, o.vars, printString _, print_symbolInfoVar _)),
+        ("specMethods", printHashMap(F, o.specMethods, printString _, print_symbolInfoSpecMethod _)),
+        ("methods", printHashMap(F, o.methods, printString _, print_symbolInfoMethod _)),
         ("scope", print_symbolScopeGlobal(o.scope)),
         ("ast", print_astStmtAbstractDatatype(o.ast))
       ))
@@ -275,7 +275,7 @@ object JSON {
     @pure def print_symbolTypeInfoTypeAlias(o: org.sireum.lang.symbol.TypeInfo.TypeAlias): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.TypeAlias""""),
-        ("name", printISZ(T, o.name, printString)),
+        ("name", printISZ(T, o.name, printString _)),
         ("scope", print_symbolScopeGlobal(o.scope)),
         ("ast", print_astStmtTypeAlias(o.ast))
       ))
@@ -292,10 +292,10 @@ object JSON {
     @pure def print_symbolTypeInfoMembers(o: org.sireum.lang.symbol.TypeInfo.Members): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.symbol.TypeInfo.Members""""),
-        ("specVars", printHashMap(F, o.specVars, printString, print_symbolInfoSpecVar)),
-        ("vars", printHashMap(F, o.vars, printString, print_symbolInfoVar)),
-        ("specMethods", printHashMap(F, o.specMethods, printString, print_symbolInfoSpecMethod)),
-        ("methods", printHashMap(F, o.methods, printString, print_symbolInfoMethod))
+        ("specVars", printHashMap(F, o.specVars, printString _, print_symbolInfoSpecVar _)),
+        ("vars", printHashMap(F, o.vars, printString _, print_symbolInfoVar _)),
+        ("specMethods", printHashMap(F, o.specMethods, printString _, print_symbolInfoSpecMethod _)),
+        ("methods", printHashMap(F, o.methods, printString _, print_symbolInfoMethod _))
       ))
     }
 
@@ -310,7 +310,7 @@ object JSON {
     @pure def print_astTopUnitProgram(o: org.sireum.lang.ast.TopUnit.Program): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TopUnit.Program""""),
-        ("fileUriOpt", printOption(T, o.fileUriOpt, printString)),
+        ("fileUriOpt", printOption(T, o.fileUriOpt, printString _)),
         ("packageName", print_astName(o.packageName)),
         ("body", print_astBody(o.body))
       ))
@@ -319,7 +319,7 @@ object JSON {
     @pure def print_astTopUnitSequentUnit(o: org.sireum.lang.ast.TopUnit.SequentUnit): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TopUnit.SequentUnit""""),
-        ("fileUriOpt", printOption(T, o.fileUriOpt, printString)),
+        ("fileUriOpt", printOption(T, o.fileUriOpt, printString _)),
         ("sequent", print_astLClauseSequent(o.sequent))
       ))
     }
@@ -327,14 +327,14 @@ object JSON {
     @pure def print_astTopUnitTruthTableUnit(o: org.sireum.lang.ast.TopUnit.TruthTableUnit): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TopUnit.TruthTableUnit""""),
-        ("fileUriOpt", printOption(T, o.fileUriOpt, printString)),
-        ("stars", printISZ(F, o.stars, printPosition)),
-        ("vars", printISZ(F, o.vars, print_astId)),
+        ("fileUriOpt", printOption(T, o.fileUriOpt, printString _)),
+        ("stars", printISZ(F, o.stars, printPosition _)),
+        ("vars", printISZ(F, o.vars, print_astId _)),
         ("separator", printPosition(o.separator)),
         ("isSequent", printB(o.isSequent)),
         ("sequent", print_astLClauseSequent(o.sequent)),
-        ("rows", printISZ(F, o.rows, print_astTruthTableRow)),
-        ("conclusionOpt", printOption(F, o.conclusionOpt, print_astTruthTableConclusion))
+        ("rows", printISZ(F, o.rows, print_astTruthTableRow _)),
+        ("conclusionOpt", printOption(F, o.conclusionOpt, print_astTruthTableConclusion _))
       ))
     }
 
@@ -369,7 +369,7 @@ object JSON {
     @pure def print_astStmtImport(o: org.sireum.lang.ast.Stmt.Import): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Import""""),
-        ("importers", printISZ(F, o.importers, print_astStmtImportImporter)),
+        ("importers", printISZ(F, o.importers, print_astStmtImportImporter _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -378,7 +378,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Import.Importer""""),
         ("name", print_astName(o.name)),
-        ("selectorOpt", printOption(F, o.selectorOpt, print_astStmtImportSelector))
+        ("selectorOpt", printOption(F, o.selectorOpt, print_astStmtImportSelector _))
       ))
     }
 
@@ -392,7 +392,7 @@ object JSON {
     @pure def print_astStmtImportMultiSelector(o: org.sireum.lang.ast.Stmt.Import.MultiSelector): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Import.MultiSelector""""),
-        ("selectors", printISZ(F, o.selectors, print_astStmtImportNamedSelector))
+        ("selectors", printISZ(F, o.selectors, print_astStmtImportNamedSelector _))
       ))
     }
 
@@ -415,8 +415,8 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Stmt.Var""""),
         ("isVal", printB(o.isVal)),
         ("id", print_astId(o.id)),
-        ("tipeOpt", printOption(F, o.tipeOpt, print_astType)),
-        ("initOpt", printOption(F, o.initOpt, print_astAssignExp)),
+        ("tipeOpt", printOption(F, o.tipeOpt, print_astType _)),
+        ("initOpt", printOption(F, o.initOpt, print_astAssignExp _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -426,7 +426,7 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Stmt.VarPattern""""),
         ("isVal", printB(o.isVal)),
         ("pattern", print_astPattern(o.pattern)),
-        ("tipeOpt", printOption(F, o.tipeOpt, print_astType)),
+        ("tipeOpt", printOption(F, o.tipeOpt, print_astType _)),
         ("init", print_astAssignExp(o.init)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -450,7 +450,7 @@ object JSON {
         ("isHelper", printB(o.isHelper)),
         ("sig", print_astMethodSig(o.sig)),
         ("contract", print_astContract(o.contract)),
-        ("bodyOpt", printOption(F, o.bodyOpt, print_astBody)),
+        ("bodyOpt", printOption(F, o.bodyOpt, print_astBody _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -469,8 +469,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.SpecMethod""""),
         ("sig", print_astMethodSig(o.sig)),
-        ("defs", printISZ(F, o.defs, print_astSpecDef)),
-        ("where", printISZ(F, o.where, print_astWhereDef)),
+        ("defs", printISZ(F, o.defs, print_astSpecDef _)),
+        ("where", printISZ(F, o.where, print_astWhereDef _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -479,7 +479,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Enum""""),
         ("id", print_astId(o.id)),
-        ("elements", printISZ(F, o.elements, print_astId)),
+        ("elements", printISZ(F, o.elements, print_astId _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -506,8 +506,8 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Stmt.Object""""),
         ("isExt", printB(o.isExt)),
         ("id", print_astId(o.id)),
-        ("parents", printISZ(F, o.parents, print_astType)),
-        ("stmts", printISZ(F, o.stmts, print_astStmt)),
+        ("parents", printISZ(F, o.parents, print_astType _)),
+        ("stmts", printISZ(F, o.stmts, print_astStmt _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -518,9 +518,9 @@ object JSON {
         ("isImmutable", printB(o.isImmutable)),
         ("isExt", printB(o.isExt)),
         ("id", print_astId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam)),
-        ("parents", printISZ(F, o.parents, print_astTypeNamed)),
-        ("stmts", printISZ(F, o.stmts, print_astStmt)),
+        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam _)),
+        ("parents", printISZ(F, o.parents, print_astTypeNamed _)),
+        ("stmts", printISZ(F, o.stmts, print_astStmt _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -531,10 +531,10 @@ object JSON {
         ("isRoot", printB(o.isRoot)),
         ("isDatatype", printB(o.isDatatype)),
         ("id", print_astId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam)),
-        ("params", printISZ(F, o.params, print_astAbstractDatatypeParam)),
-        ("parents", printISZ(F, o.parents, print_astTypeNamed)),
-        ("stmts", printISZ(F, o.stmts, print_astStmt)),
+        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam _)),
+        ("params", printISZ(F, o.params, print_astAbstractDatatypeParam _)),
+        ("parents", printISZ(F, o.parents, print_astTypeNamed _)),
+        ("stmts", printISZ(F, o.stmts, print_astStmt _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -543,7 +543,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.TypeAlias""""),
         ("id", print_astId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam)),
+        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam _)),
         ("tipe", print_astType(o.tipe)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -580,7 +580,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Match""""),
         ("exp", print_astExp(o.exp)),
-        ("cases", printISZ(F, o.cases, print_astCase)),
+        ("cases", printISZ(F, o.cases, print_astCase _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -589,8 +589,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.While""""),
         ("cond", print_astExp(o.cond)),
-        ("invariants", printISZ(F, o.invariants, print_astContractExp)),
-        ("modifies", printISZ(F, o.modifies, print_astExp)),
+        ("invariants", printISZ(F, o.invariants, print_astContractExp _)),
+        ("modifies", printISZ(F, o.modifies, print_astExp _)),
         ("body", print_astBody(o.body)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -600,8 +600,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.DoWhile""""),
         ("cond", print_astExp(o.cond)),
-        ("invariants", printISZ(F, o.invariants, print_astContractExp)),
-        ("modifies", printISZ(F, o.modifies, print_astExp)),
+        ("invariants", printISZ(F, o.invariants, print_astContractExp _)),
+        ("modifies", printISZ(F, o.modifies, print_astExp _)),
         ("body", print_astBody(o.body)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -610,9 +610,9 @@ object JSON {
     @pure def print_astStmtFor(o: org.sireum.lang.ast.Stmt.For): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.For""""),
-        ("enumGens", printISZ(F, o.enumGens, print_astEnumGenFor)),
-        ("invariants", printISZ(F, o.invariants, print_astContractExp)),
-        ("modifies", printISZ(F, o.modifies, print_astExp)),
+        ("enumGens", printISZ(F, o.enumGens, print_astEnumGenFor _)),
+        ("invariants", printISZ(F, o.invariants, print_astContractExp _)),
+        ("modifies", printISZ(F, o.modifies, print_astExp _)),
         ("body", print_astBody(o.body)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -621,7 +621,7 @@ object JSON {
     @pure def print_astStmtReturn(o: org.sireum.lang.ast.Stmt.Return): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Stmt.Return""""),
-        ("expOpt", printOption(F, o.expOpt, print_astExp)),
+        ("expOpt", printOption(F, o.expOpt, print_astExp _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -677,14 +677,14 @@ object JSON {
     @pure def print_astLClauseInvariants(o: org.sireum.lang.ast.LClause.Invariants): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.LClause.Invariants""""),
-        ("value", printISZ(F, o.value, print_astContractExp))
+        ("value", printISZ(F, o.value, print_astContractExp _))
       ))
     }
 
     @pure def print_astLClauseFacts(o: org.sireum.lang.ast.LClause.Facts): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.LClause.Facts""""),
-        ("value", printISZ(F, o.value, print_astLClauseFact))
+        ("value", printISZ(F, o.value, print_astLClauseFact _))
       ))
     }
 
@@ -699,7 +699,7 @@ object JSON {
     @pure def print_astLClauseTheorems(o: org.sireum.lang.ast.LClause.Theorems): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.LClause.Theorems""""),
-        ("value", printISZ(F, o.value, print_astLClauseTheorem))
+        ("value", printISZ(F, o.value, print_astLClauseTheorem _))
       ))
     }
 
@@ -714,23 +714,23 @@ object JSON {
     @pure def print_astLClauseSequent(o: org.sireum.lang.ast.LClause.Sequent): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.LClause.Sequent""""),
-        ("premises", printISZ(F, o.premises, print_astExp)),
-        ("conclusions", printISZ(F, o.conclusions, print_astExp)),
-        ("proofOpt", printOption(F, o.proofOpt, print_astLClauseProof))
+        ("premises", printISZ(F, o.premises, print_astExp _)),
+        ("conclusions", printISZ(F, o.conclusions, print_astExp _)),
+        ("proofOpt", printOption(F, o.proofOpt, print_astLClauseProof _))
       ))
     }
 
     @pure def print_astLClauseProof(o: org.sireum.lang.ast.LClause.Proof): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.LClause.Proof""""),
-        ("steps", printISZ(F, o.steps, print_astProofStep))
+        ("steps", printISZ(F, o.steps, print_astProofStep _))
       ))
     }
 
     @pure def print_astContractExp(o: org.sireum.lang.ast.ContractExp): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ContractExp""""),
-        ("idOpt", printOption(F, o.idOpt, print_astId)),
+        ("idOpt", printOption(F, o.idOpt, print_astId _)),
         ("exp", print_astExp(o.exp))
       ))
     }
@@ -739,7 +739,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Case""""),
         ("pattern", print_astPattern(o.pattern)),
-        ("condOpt", printOption(F, o.condOpt, print_astExp)),
+        ("condOpt", printOption(F, o.condOpt, print_astExp _)),
         ("body", print_astBody(o.body))
       ))
     }
@@ -767,7 +767,7 @@ object JSON {
         ("isInclusive", printB(o.isInclusive)),
         ("start", print_astExp(o.start)),
         ("end", print_astExp(o.end)),
-        ("byOpt", printOption(F, o.byOpt, print_astExp)),
+        ("byOpt", printOption(F, o.byOpt, print_astExp _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -775,9 +775,9 @@ object JSON {
     @pure def print_astEnumGenFor(o: org.sireum.lang.ast.EnumGen.For): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.EnumGen.For""""),
-        ("idOpt", printOption(F, o.idOpt, print_astId)),
+        ("idOpt", printOption(F, o.idOpt, print_astId _)),
         ("range", print_astEnumGenRange(o.range)),
-        ("condOpt", printOption(F, o.condOpt, print_astExp))
+        ("condOpt", printOption(F, o.condOpt, print_astExp _))
       ))
     }
 
@@ -793,7 +793,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Type.Named""""),
         ("name", print_astName(o.name)),
-        ("typeArgs", printISZ(F, o.typeArgs, print_astType)),
+        ("typeArgs", printISZ(F, o.typeArgs, print_astType _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -803,7 +803,7 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Type.Fun""""),
         ("isPure", printB(o.isPure)),
         ("isByName", printB(o.isByName)),
-        ("args", printISZ(F, o.args, print_astType)),
+        ("args", printISZ(F, o.args, print_astType _)),
         ("ret", print_astType(o.ret)),
         ("attr", print_astTypedAttr(o.attr))
       ))
@@ -812,7 +812,7 @@ object JSON {
     @pure def print_astTypeTuple(o: org.sireum.lang.ast.Type.Tuple): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Type.Tuple""""),
-        ("args", printISZ(F, o.args, print_astType)),
+        ("args", printISZ(F, o.args, print_astType _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -857,7 +857,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Pattern.VarBinding""""),
         ("id", print_astId(o.id)),
-        ("tipeOpt", printOption(F, o.tipeOpt, print_astType)),
+        ("tipeOpt", printOption(F, o.tipeOpt, print_astType _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -865,7 +865,7 @@ object JSON {
     @pure def print_astPatternWildcard(o: org.sireum.lang.ast.Pattern.Wildcard): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Pattern.Wildcard""""),
-        ("typeOpt", printOption(F, o.typeOpt, print_astType)),
+        ("typeOpt", printOption(F, o.typeOpt, print_astType _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -880,9 +880,9 @@ object JSON {
     @pure def print_astPatternStructure(o: org.sireum.lang.ast.Pattern.Structure): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Pattern.Structure""""),
-        ("idOpt", printOption(F, o.idOpt, print_astId)),
-        ("nameOpt", printOption(F, o.nameOpt, print_astName)),
-        ("patterns", printISZ(F, o.patterns, print_astPattern)),
+        ("idOpt", printOption(F, o.idOpt, print_astId _)),
+        ("nameOpt", printOption(F, o.nameOpt, print_astName _)),
+        ("patterns", printISZ(F, o.patterns, print_astPattern _)),
         ("attr", print_astResolvedAttr(o.attr))
       ))
     }
@@ -986,8 +986,8 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.StringInterpolate""""),
         ("prefix", printString(o.prefix)),
-        ("lits", printISZ(F, o.lits, print_astExpLitString)),
-        ("args", printISZ(F, o.args, print_astExp)),
+        ("lits", printISZ(F, o.lits, print_astExpLitString _)),
+        ("args", printISZ(F, o.args, print_astExp _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -1002,7 +1002,7 @@ object JSON {
     @pure def print_astExpSuper(o: org.sireum.lang.ast.Exp.Super): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Super""""),
-        ("idOpt", printOption(F, o.idOpt, print_astId)),
+        ("idOpt", printOption(F, o.idOpt, print_astId _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -1065,7 +1065,7 @@ object JSON {
     @pure def print_astExpTuple(o: org.sireum.lang.ast.Exp.Tuple): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Tuple""""),
-        ("args", printISZ(F, o.args, print_astExp)),
+        ("args", printISZ(F, o.args, print_astExp _)),
         ("attr", print_astTypedAttr(o.attr))
       ))
     }
@@ -1073,9 +1073,9 @@ object JSON {
     @pure def print_astExpSelect(o: org.sireum.lang.ast.Exp.Select): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Select""""),
-        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp)),
+        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp _)),
         ("id", print_astId(o.id)),
-        ("targs", printISZ(F, o.targs, print_astType)),
+        ("targs", printISZ(F, o.targs, print_astType _)),
         ("attr", print_astResolvedAttr(o.attr))
       ))
     }
@@ -1083,10 +1083,10 @@ object JSON {
     @pure def print_astExpInvoke(o: org.sireum.lang.ast.Exp.Invoke): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Invoke""""),
-        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp)),
+        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp _)),
         ("id", print_astId(o.id)),
-        ("targs", printISZ(F, o.targs, print_astType)),
-        ("args", printISZ(F, o.args, print_astExp)),
+        ("targs", printISZ(F, o.targs, print_astType _)),
+        ("args", printISZ(F, o.args, print_astExp _)),
         ("attr", print_astResolvedAttr(o.attr))
       ))
     }
@@ -1094,10 +1094,10 @@ object JSON {
     @pure def print_astExpInvokeNamed(o: org.sireum.lang.ast.Exp.InvokeNamed): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.InvokeNamed""""),
-        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp)),
+        ("receiverOpt", printOption(F, o.receiverOpt, print_astExp _)),
         ("id", print_astId(o.id)),
-        ("targs", printISZ(F, o.targs, print_astType)),
-        ("args", printISZ(F, o.args, print_astNamedArg)),
+        ("targs", printISZ(F, o.targs, print_astType _)),
+        ("args", printISZ(F, o.args, print_astNamedArg _)),
         ("attr", print_astResolvedAttr(o.attr))
       ))
     }
@@ -1116,15 +1116,15 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Fun.Param""""),
         ("id", print_astId(o.id)),
-        ("tipeOpt", printOption(F, o.tipeOpt, print_astType))
+        ("tipeOpt", printOption(F, o.tipeOpt, print_astType _))
       ))
     }
 
     @pure def print_astExpFun(o: org.sireum.lang.ast.Exp.Fun): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Fun""""),
-        ("context", printISZ(T, o.context, printString)),
-        ("params", printISZ(F, o.params, print_astExpFunParam)),
+        ("context", printISZ(T, o.context, printString _)),
+        ("params", printISZ(F, o.params, print_astExpFunParam _)),
         ("contract", print_astContract(o.contract)),
         ("exp", print_astAssignExp(o.exp)),
         ("attr", print_astTypedAttr(o.attr))
@@ -1134,7 +1134,7 @@ object JSON {
     @pure def print_astExpForYield(o: org.sireum.lang.ast.Exp.ForYield): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.ForYield""""),
-        ("enumGens", printISZ(F, o.enumGens, print_astEnumGenFor)),
+        ("enumGens", printISZ(F, o.enumGens, print_astEnumGenFor _)),
         ("exp", print_astExp(o.exp)),
         ("attr", print_astTypedAttr(o.attr))
       ))
@@ -1144,7 +1144,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Exp.Quant""""),
         ("isForall", printB(o.isForall)),
-        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment)),
+        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment _)),
         ("exp", print_astExp(o.exp)),
         ("attr", print_astAttr(o.attr))
       ))
@@ -1162,8 +1162,8 @@ object JSON {
     @pure def print_astVarFragment(o: org.sireum.lang.ast.VarFragment): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.VarFragment""""),
-        ("ids", printISZ(F, o.ids, print_astId)),
-        ("domainOpt", printOption(F, o.domainOpt, print_astDomain))
+        ("ids", printISZ(F, o.ids, print_astId _)),
+        ("domainOpt", printOption(F, o.domainOpt, print_astDomain _))
       ))
     }
 
@@ -1204,7 +1204,7 @@ object JSON {
     @pure def print_astName(o: org.sireum.lang.ast.Name): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Name""""),
-        ("ids", printISZ(F, o.ids, print_astId)),
+        ("ids", printISZ(F, o.ids, print_astId _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1212,8 +1212,8 @@ object JSON {
     @pure def print_astBody(o: org.sireum.lang.ast.Body): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Body""""),
-        ("stmts", printISZ(F, o.stmts, print_astStmt)),
-        ("undecls", printISZ(T, o.undecls, printString))
+        ("stmts", printISZ(F, o.stmts, print_astStmt _)),
+        ("undecls", printISZ(T, o.undecls, printString _))
       ))
     }
 
@@ -1232,9 +1232,9 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.MethodSig""""),
         ("isPure", printB(o.isPure)),
         ("id", print_astId(o.id)),
-        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam)),
+        ("typeParams", printISZ(F, o.typeParams, print_astTypeParam _)),
         ("hasParams", printB(o.hasParams)),
-        ("params", printISZ(F, o.params, print_astParam)),
+        ("params", printISZ(F, o.params, print_astParam _)),
         ("returnType", print_astType(o.returnType))
       ))
     }
@@ -1258,11 +1258,11 @@ object JSON {
     @pure def print_astContract(o: org.sireum.lang.ast.Contract): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Contract""""),
-        ("reads", printISZ(F, o.reads, print_astExp)),
-        ("requires", printISZ(F, o.requires, print_astContractExp)),
-        ("modifies", printISZ(F, o.modifies, print_astExp)),
-        ("ensures", printISZ(F, o.ensures, print_astContractExp)),
-        ("subs", printISZ(F, o.subs, print_astSubContract))
+        ("reads", printISZ(F, o.reads, print_astExp _)),
+        ("requires", printISZ(F, o.requires, print_astContractExp _)),
+        ("modifies", printISZ(F, o.modifies, print_astExp _)),
+        ("ensures", printISZ(F, o.ensures, print_astContractExp _)),
+        ("subs", printISZ(F, o.subs, print_astSubContract _))
       ))
     }
 
@@ -1270,7 +1270,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.SubContract""""),
         ("id", print_astId(o.id)),
-        ("params", printISZ(F, o.params, print_astId)),
+        ("params", printISZ(F, o.params, print_astId _)),
         ("contract", print_astContract(o.contract))
       ))
     }
@@ -1295,20 +1295,20 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.WhereDef.Def""""),
         ("id", print_astId(o.id)),
-        ("params", printISZ(F, o.params, print_astParam)),
+        ("params", printISZ(F, o.params, print_astParam _)),
         ("rTipe", print_astType(o.rTipe)),
-        ("defs", printISZ(F, o.defs, print_astSpecDef))
+        ("defs", printISZ(F, o.defs, print_astSpecDef _))
       ))
     }
 
     @pure def print_astSpecDef(o: org.sireum.lang.ast.SpecDef): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.SpecDef""""),
-        ("idOpt", printOption(F, o.idOpt, print_astId)),
+        ("idOpt", printOption(F, o.idOpt, print_astId _)),
         ("exp", print_astExp(o.exp)),
         ("isOtherwise", printB(o.isOtherwise)),
-        ("patternOpt", printOption(F, o.patternOpt, print_astPattern)),
-        ("guardOpt", printOption(F, o.guardOpt, print_astExp))
+        ("patternOpt", printOption(F, o.patternOpt, print_astPattern _)),
+        ("guardOpt", printOption(F, o.guardOpt, print_astExp _))
       ))
     }
 
@@ -1346,15 +1346,15 @@ object JSON {
     @pure def print_astTypedName(o: org.sireum.lang.ast.Typed.Name): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Name""""),
-        ("ids", printISZ(T, o.ids, printString)),
-        ("args", printISZ(F, o.args, print_astTyped))
+        ("ids", printISZ(T, o.ids, printString _)),
+        ("args", printISZ(F, o.args, print_astTyped _))
       ))
     }
 
     @pure def print_astTypedTuple(o: org.sireum.lang.ast.Typed.Tuple): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Tuple""""),
-        ("args", printISZ(F, o.args, print_astTyped))
+        ("args", printISZ(F, o.args, print_astTyped _))
       ))
     }
 
@@ -1363,7 +1363,7 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Typed.Fun""""),
         ("isPure", printB(o.isPure)),
         ("isByName", printB(o.isByName)),
-        ("args", printISZ(F, o.args, print_astTyped)),
+        ("args", printISZ(F, o.args, print_astTyped _)),
         ("ret", print_astTyped(o.ret))
       ))
     }
@@ -1378,14 +1378,14 @@ object JSON {
     @pure def print_astTypedPackage(o: org.sireum.lang.ast.Typed.Package): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Package""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
     @pure def print_astTypedObject(o: org.sireum.lang.ast.Typed.Object): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Object""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("id", printString(o.id))
       ))
     }
@@ -1393,7 +1393,7 @@ object JSON {
     @pure def print_astTypedEnum(o: org.sireum.lang.ast.Typed.Enum): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Enum""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
@@ -1410,11 +1410,11 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.Typed.Method""""),
         ("isInObject", printB(o.isInObject)),
         ("mode", print_astMethodModeType(o.mode)),
-        ("typeParams", printISZ(T, o.typeParams, printString)),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("typeParams", printISZ(T, o.typeParams, printString _)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("name", printString(o.name)),
-        ("paramNames", printISZ(T, o.paramNames, printString)),
-        ("substs", printISZ(F, o.substs, print_astTypedMethodSubst)),
+        ("paramNames", printISZ(T, o.paramNames, printString _)),
+        ("substs", printISZ(F, o.substs, print_astTypedMethodSubst _)),
         ("tpe", print_astTypedFun(o.tpe))
       ))
     }
@@ -1422,31 +1422,31 @@ object JSON {
     @pure def print_astTypedMethods(o: org.sireum.lang.ast.Typed.Methods): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Typed.Methods""""),
-        ("methods", printISZ(F, o.methods, print_astTypedMethod))
+        ("methods", printISZ(F, o.methods, print_astTypedMethod _))
       ))
     }
 
     @pure def print_astAttr(o: org.sireum.lang.ast.Attr): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Attr""""),
-        ("posOpt", printOption(F, o.posOpt, printPosition))
+        ("posOpt", printOption(F, o.posOpt, printPosition _))
       ))
     }
 
     @pure def print_astTypedAttr(o: org.sireum.lang.ast.TypedAttr): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TypedAttr""""),
-        ("posOpt", printOption(F, o.posOpt, printPosition)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped))
+        ("posOpt", printOption(F, o.posOpt, printPosition _)),
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _))
       ))
     }
 
     @pure def print_astResolvedAttr(o: org.sireum.lang.ast.ResolvedAttr): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedAttr""""),
-        ("posOpt", printOption(F, o.posOpt, printPosition)),
-        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo)),
-        ("typedOpt", printOption(F, o.typedOpt, print_astTyped))
+        ("posOpt", printOption(F, o.posOpt, printPosition _)),
+        ("resOpt", printOption(F, o.resOpt, print_astResolvedInfo _)),
+        ("typedOpt", printOption(F, o.typedOpt, print_astTyped _))
       ))
     }
 
@@ -1533,21 +1533,21 @@ object JSON {
     @pure def print_astResolvedInfoPackage(o: org.sireum.lang.ast.ResolvedInfo.Package): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Package""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
     @pure def print_astResolvedInfoEnum(o: org.sireum.lang.ast.ResolvedInfo.Enum): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Enum""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
     @pure def print_astResolvedInfoEnumElement(o: org.sireum.lang.ast.ResolvedInfo.EnumElement): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.EnumElement""""),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("name", printString(o.name)),
         ("ordinal", printZ(o.ordinal))
       ))
@@ -1556,7 +1556,7 @@ object JSON {
     @pure def print_astResolvedInfoObject(o: org.sireum.lang.ast.ResolvedInfo.Object): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Object""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
@@ -1565,7 +1565,7 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Var""""),
         ("isInObject", printB(o.isInObject)),
         ("isSpec", printB(o.isSpec)),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("id", printString(o.id))
       ))
     }
@@ -1575,25 +1575,25 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Method""""),
         ("isInObject", printB(o.isInObject)),
         ("mode", print_astMethodModeType(o.mode)),
-        ("typeParams", printISZ(T, o.typeParams, printString)),
-        ("owner", printISZ(T, o.owner, printString)),
+        ("typeParams", printISZ(T, o.typeParams, printString _)),
+        ("owner", printISZ(T, o.owner, printString _)),
         ("name", printString(o.name)),
-        ("paramNames", printISZ(T, o.paramNames, printString)),
-        ("tpeOpt", printOption(F, o.tpeOpt, print_astTypedFun))
+        ("paramNames", printISZ(T, o.paramNames, printString _)),
+        ("tpeOpt", printOption(F, o.tpeOpt, print_astTypedFun _))
       ))
     }
 
     @pure def print_astResolvedInfoMethods(o: org.sireum.lang.ast.ResolvedInfo.Methods): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Methods""""),
-        ("methods", printISZ(F, o.methods, print_astResolvedInfoMethod))
+        ("methods", printISZ(F, o.methods, print_astResolvedInfoMethod _))
       ))
     }
 
     @pure def print_astResolvedInfoType(o: org.sireum.lang.ast.ResolvedInfo.Type): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.Type""""),
-        ("name", printISZ(T, o.name, printString))
+        ("name", printISZ(T, o.name, printString _))
       ))
     }
 
@@ -1608,7 +1608,7 @@ object JSON {
     @pure def print_astResolvedInfoLocalVar(o: org.sireum.lang.ast.ResolvedInfo.LocalVar): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.ResolvedInfo.LocalVar""""),
-        ("context", printISZ(T, o.context, printString)),
+        ("context", printISZ(T, o.context, printString _)),
         ("id", printString(o.id))
       ))
     }
@@ -1634,7 +1634,7 @@ object JSON {
         ("type", st""""org.sireum.lang.ast.ProofStep.SubProof""""),
         ("step", print_astExpLitZ(o.step)),
         ("assumeStep", print_astAssumeProofStep(o.assumeStep)),
-        ("steps", printISZ(F, o.steps, print_astProofStep))
+        ("steps", printISZ(F, o.steps, print_astProofStep _))
       ))
     }
 
@@ -1658,7 +1658,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.AssumeProofStep.ForallIntroAps""""),
         ("step", print_astExpLitZ(o.step)),
-        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment))
+        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment _))
       ))
     }
 
@@ -1666,7 +1666,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.AssumeProofStep.ExistsElimAps""""),
         ("step", print_astExpLitZ(o.step)),
-        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment)),
+        ("varFragments", printISZ(F, o.varFragments, print_astVarFragment _)),
         ("exp", print_astExp(o.exp))
       ))
     }
@@ -1707,7 +1707,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.Auto""""),
         ("isAlgebra", printB(o.isAlgebra)),
-        ("steps", printISZ(F, o.steps, print_astExpLitZ)),
+        ("steps", printISZ(F, o.steps, print_astExpLitZ _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1716,7 +1716,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.Coq""""),
         ("path", print_astExpLitString(o.path)),
-        ("steps", printISZ(F, o.steps, print_astExpLitZ)),
+        ("steps", printISZ(F, o.steps, print_astExpLitZ _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1734,7 +1734,7 @@ object JSON {
     @pure def print_astJustInvariant(o: org.sireum.lang.ast.Just.Invariant): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.Invariant""""),
-        ("nameOpt", printOption(F, o.nameOpt, print_astName)),
+        ("nameOpt", printOption(F, o.nameOpt, print_astName _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1759,7 +1759,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.ImplyElim""""),
         ("implyStep", print_astExpLitZ(o.implyStep)),
-        ("steps", printISZ(F, o.steps, print_astExpLitZ)),
+        ("steps", printISZ(F, o.steps, print_astExpLitZ _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1801,7 +1801,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.ForallElim""""),
         ("forallStep", print_astExpLitZ(o.forallStep)),
-        ("args", printISZ(F, o.args, print_astExp)),
+        ("args", printISZ(F, o.args, print_astExp _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1810,7 +1810,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.ExistsIntro""""),
         ("existsStep", print_astExpLitZ(o.existsStep)),
-        ("args", printISZ(F, o.args, print_astExp)),
+        ("args", printISZ(F, o.args, print_astExp _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1837,7 +1837,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.OrElim""""),
         ("orStep", print_astExpLitZ(o.orStep)),
-        ("subProofSteps", printISZ(F, o.subProofSteps, print_astExpLitZ)),
+        ("subProofSteps", printISZ(F, o.subProofSteps, print_astExpLitZ _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1845,7 +1845,7 @@ object JSON {
     @pure def print_astJustAndIntro(o: org.sireum.lang.ast.Just.AndIntro): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.Just.AndIntro""""),
-        ("steps", printISZ(F, o.steps, print_astExpLitZ)),
+        ("steps", printISZ(F, o.steps, print_astExpLitZ _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1879,7 +1879,7 @@ object JSON {
     @pure def print_astTruthTableAssignment(o: org.sireum.lang.ast.TruthTable.Assignment): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TruthTable.Assignment""""),
-        ("values", printISZ(F, o.values, print_astExpLitB)),
+        ("values", printISZ(F, o.values, print_astExpLitB _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1897,7 +1897,7 @@ object JSON {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TruthTable.Conclusion.Validity""""),
         ("isValid", printB(o.isValid)),
-        ("assignments", printISZ(F, o.assignments, print_astTruthTableAssignment)),
+        ("assignments", printISZ(F, o.assignments, print_astTruthTableAssignment _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -1919,8 +1919,8 @@ object JSON {
     @pure def print_astTruthTableConclusionContingent(o: org.sireum.lang.ast.TruthTable.Conclusion.Contingent): ST = {
       return printObject(ISZ(
         ("type", st""""org.sireum.lang.ast.TruthTable.Conclusion.Contingent""""),
-        ("trueAssignments", printISZ(F, o.trueAssignments, print_astTruthTableAssignment)),
-        ("falseAssignments", printISZ(F, o.falseAssignments, print_astTruthTableAssignment)),
+        ("trueAssignments", printISZ(F, o.trueAssignments, print_astTruthTableAssignment _)),
+        ("falseAssignments", printISZ(F, o.falseAssignments, print_astTruthTableAssignment _)),
         ("attr", print_astAttr(o.attr))
       ))
     }
@@ -5938,7 +5938,7 @@ object JSON {
       val r = parser.parse_symbolScope()
       return r
     }
-    val r = to(s, f_symbolScope)
+    val r = to(s, f_symbolScope _)
     return r
   }
 
@@ -5956,7 +5956,7 @@ object JSON {
       val r = parser.parse_symbolScopeLocal()
       return r
     }
-    val r = to(s, f_symbolScopeLocal)
+    val r = to(s, f_symbolScopeLocal _)
     return r
   }
 
@@ -5974,7 +5974,7 @@ object JSON {
       val r = parser.parse_symbolScopeGlobal()
       return r
     }
-    val r = to(s, f_symbolScopeGlobal)
+    val r = to(s, f_symbolScopeGlobal _)
     return r
   }
 
@@ -5992,7 +5992,7 @@ object JSON {
       val r = parser.parse_symbolInfo()
       return r
     }
-    val r = to(s, f_symbolInfo)
+    val r = to(s, f_symbolInfo _)
     return r
   }
 
@@ -6010,7 +6010,7 @@ object JSON {
       val r = parser.parse_symbolInfoPackage()
       return r
     }
-    val r = to(s, f_symbolInfoPackage)
+    val r = to(s, f_symbolInfoPackage _)
     return r
   }
 
@@ -6028,7 +6028,7 @@ object JSON {
       val r = parser.parse_symbolInfoVar()
       return r
     }
-    val r = to(s, f_symbolInfoVar)
+    val r = to(s, f_symbolInfoVar _)
     return r
   }
 
@@ -6046,7 +6046,7 @@ object JSON {
       val r = parser.parse_symbolInfoSpecVar()
       return r
     }
-    val r = to(s, f_symbolInfoSpecVar)
+    val r = to(s, f_symbolInfoSpecVar _)
     return r
   }
 
@@ -6064,7 +6064,7 @@ object JSON {
       val r = parser.parse_symbolInfoMethod()
       return r
     }
-    val r = to(s, f_symbolInfoMethod)
+    val r = to(s, f_symbolInfoMethod _)
     return r
   }
 
@@ -6082,7 +6082,7 @@ object JSON {
       val r = parser.parse_symbolInfoSpecMethod()
       return r
     }
-    val r = to(s, f_symbolInfoSpecMethod)
+    val r = to(s, f_symbolInfoSpecMethod _)
     return r
   }
 
@@ -6100,7 +6100,7 @@ object JSON {
       val r = parser.parse_symbolInfoObject()
       return r
     }
-    val r = to(s, f_symbolInfoObject)
+    val r = to(s, f_symbolInfoObject _)
     return r
   }
 
@@ -6118,7 +6118,7 @@ object JSON {
       val r = parser.parse_symbolInfoExtMethod()
       return r
     }
-    val r = to(s, f_symbolInfoExtMethod)
+    val r = to(s, f_symbolInfoExtMethod _)
     return r
   }
 
@@ -6136,7 +6136,7 @@ object JSON {
       val r = parser.parse_symbolInfoEnum()
       return r
     }
-    val r = to(s, f_symbolInfoEnum)
+    val r = to(s, f_symbolInfoEnum _)
     return r
   }
 
@@ -6154,7 +6154,7 @@ object JSON {
       val r = parser.parse_symbolInfoEnumElement()
       return r
     }
-    val r = to(s, f_symbolInfoEnumElement)
+    val r = to(s, f_symbolInfoEnumElement _)
     return r
   }
 
@@ -6172,7 +6172,7 @@ object JSON {
       val r = parser.parse_symbolInfoLocalVar()
       return r
     }
-    val r = to(s, f_symbolInfoLocalVar)
+    val r = to(s, f_symbolInfoLocalVar _)
     return r
   }
 
@@ -6190,7 +6190,7 @@ object JSON {
       val r = parser.parse_symbolInfoQuantVar()
       return r
     }
-    val r = to(s, f_symbolInfoQuantVar)
+    val r = to(s, f_symbolInfoQuantVar _)
     return r
   }
 
@@ -6208,7 +6208,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfo()
       return r
     }
-    val r = to(s, f_symbolTypeInfo)
+    val r = to(s, f_symbolTypeInfo _)
     return r
   }
 
@@ -6226,7 +6226,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoSubZ()
       return r
     }
-    val r = to(s, f_symbolTypeInfoSubZ)
+    val r = to(s, f_symbolTypeInfoSubZ _)
     return r
   }
 
@@ -6244,7 +6244,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoEnum()
       return r
     }
-    val r = to(s, f_symbolTypeInfoEnum)
+    val r = to(s, f_symbolTypeInfoEnum _)
     return r
   }
 
@@ -6262,7 +6262,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoSig()
       return r
     }
-    val r = to(s, f_symbolTypeInfoSig)
+    val r = to(s, f_symbolTypeInfoSig _)
     return r
   }
 
@@ -6280,7 +6280,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoAbstractDatatype()
       return r
     }
-    val r = to(s, f_symbolTypeInfoAbstractDatatype)
+    val r = to(s, f_symbolTypeInfoAbstractDatatype _)
     return r
   }
 
@@ -6298,7 +6298,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoTypeAlias()
       return r
     }
-    val r = to(s, f_symbolTypeInfoTypeAlias)
+    val r = to(s, f_symbolTypeInfoTypeAlias _)
     return r
   }
 
@@ -6316,7 +6316,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoTypeVar()
       return r
     }
-    val r = to(s, f_symbolTypeInfoTypeVar)
+    val r = to(s, f_symbolTypeInfoTypeVar _)
     return r
   }
 
@@ -6334,7 +6334,7 @@ object JSON {
       val r = parser.parse_symbolTypeInfoMembers()
       return r
     }
-    val r = to(s, f_symbolTypeInfoMembers)
+    val r = to(s, f_symbolTypeInfoMembers _)
     return r
   }
 
@@ -6352,7 +6352,7 @@ object JSON {
       val r = parser.parse_astTopUnit()
       return r
     }
-    val r = to(s, f_astTopUnit)
+    val r = to(s, f_astTopUnit _)
     return r
   }
 
@@ -6370,7 +6370,7 @@ object JSON {
       val r = parser.parse_astTopUnitProgram()
       return r
     }
-    val r = to(s, f_astTopUnitProgram)
+    val r = to(s, f_astTopUnitProgram _)
     return r
   }
 
@@ -6388,7 +6388,7 @@ object JSON {
       val r = parser.parse_astTopUnitSequentUnit()
       return r
     }
-    val r = to(s, f_astTopUnitSequentUnit)
+    val r = to(s, f_astTopUnitSequentUnit _)
     return r
   }
 
@@ -6406,7 +6406,7 @@ object JSON {
       val r = parser.parse_astTopUnitTruthTableUnit()
       return r
     }
-    val r = to(s, f_astTopUnitTruthTableUnit)
+    val r = to(s, f_astTopUnitTruthTableUnit _)
     return r
   }
 
@@ -6424,7 +6424,7 @@ object JSON {
       val r = parser.parse_astStmt()
       return r
     }
-    val r = to(s, f_astStmt)
+    val r = to(s, f_astStmt _)
     return r
   }
 
@@ -6442,7 +6442,7 @@ object JSON {
       val r = parser.parse_astStmtImport()
       return r
     }
-    val r = to(s, f_astStmtImport)
+    val r = to(s, f_astStmtImport _)
     return r
   }
 
@@ -6460,7 +6460,7 @@ object JSON {
       val r = parser.parse_astStmtImportImporter()
       return r
     }
-    val r = to(s, f_astStmtImportImporter)
+    val r = to(s, f_astStmtImportImporter _)
     return r
   }
 
@@ -6478,7 +6478,7 @@ object JSON {
       val r = parser.parse_astStmtImportSelector()
       return r
     }
-    val r = to(s, f_astStmtImportSelector)
+    val r = to(s, f_astStmtImportSelector _)
     return r
   }
 
@@ -6496,7 +6496,7 @@ object JSON {
       val r = parser.parse_astStmtImportMultiSelector()
       return r
     }
-    val r = to(s, f_astStmtImportMultiSelector)
+    val r = to(s, f_astStmtImportMultiSelector _)
     return r
   }
 
@@ -6514,7 +6514,7 @@ object JSON {
       val r = parser.parse_astStmtImportWildcardSelector()
       return r
     }
-    val r = to(s, f_astStmtImportWildcardSelector)
+    val r = to(s, f_astStmtImportWildcardSelector _)
     return r
   }
 
@@ -6532,7 +6532,7 @@ object JSON {
       val r = parser.parse_astStmtImportNamedSelector()
       return r
     }
-    val r = to(s, f_astStmtImportNamedSelector)
+    val r = to(s, f_astStmtImportNamedSelector _)
     return r
   }
 
@@ -6550,7 +6550,7 @@ object JSON {
       val r = parser.parse_astStmtVar()
       return r
     }
-    val r = to(s, f_astStmtVar)
+    val r = to(s, f_astStmtVar _)
     return r
   }
 
@@ -6568,7 +6568,7 @@ object JSON {
       val r = parser.parse_astStmtVarPattern()
       return r
     }
-    val r = to(s, f_astStmtVarPattern)
+    val r = to(s, f_astStmtVarPattern _)
     return r
   }
 
@@ -6586,7 +6586,7 @@ object JSON {
       val r = parser.parse_astStmtSpecVar()
       return r
     }
-    val r = to(s, f_astStmtSpecVar)
+    val r = to(s, f_astStmtSpecVar _)
     return r
   }
 
@@ -6604,7 +6604,7 @@ object JSON {
       val r = parser.parse_astStmtMethod()
       return r
     }
-    val r = to(s, f_astStmtMethod)
+    val r = to(s, f_astStmtMethod _)
     return r
   }
 
@@ -6622,7 +6622,7 @@ object JSON {
       val r = parser.parse_astStmtExtMethod()
       return r
     }
-    val r = to(s, f_astStmtExtMethod)
+    val r = to(s, f_astStmtExtMethod _)
     return r
   }
 
@@ -6640,7 +6640,7 @@ object JSON {
       val r = parser.parse_astStmtSpecMethod()
       return r
     }
-    val r = to(s, f_astStmtSpecMethod)
+    val r = to(s, f_astStmtSpecMethod _)
     return r
   }
 
@@ -6658,7 +6658,7 @@ object JSON {
       val r = parser.parse_astStmtEnum()
       return r
     }
-    val r = to(s, f_astStmtEnum)
+    val r = to(s, f_astStmtEnum _)
     return r
   }
 
@@ -6676,7 +6676,7 @@ object JSON {
       val r = parser.parse_astStmtSubZ()
       return r
     }
-    val r = to(s, f_astStmtSubZ)
+    val r = to(s, f_astStmtSubZ _)
     return r
   }
 
@@ -6694,7 +6694,7 @@ object JSON {
       val r = parser.parse_astStmtObject()
       return r
     }
-    val r = to(s, f_astStmtObject)
+    val r = to(s, f_astStmtObject _)
     return r
   }
 
@@ -6712,7 +6712,7 @@ object JSON {
       val r = parser.parse_astStmtSig()
       return r
     }
-    val r = to(s, f_astStmtSig)
+    val r = to(s, f_astStmtSig _)
     return r
   }
 
@@ -6730,7 +6730,7 @@ object JSON {
       val r = parser.parse_astStmtAbstractDatatype()
       return r
     }
-    val r = to(s, f_astStmtAbstractDatatype)
+    val r = to(s, f_astStmtAbstractDatatype _)
     return r
   }
 
@@ -6748,7 +6748,7 @@ object JSON {
       val r = parser.parse_astStmtTypeAlias()
       return r
     }
-    val r = to(s, f_astStmtTypeAlias)
+    val r = to(s, f_astStmtTypeAlias _)
     return r
   }
 
@@ -6766,7 +6766,7 @@ object JSON {
       val r = parser.parse_astStmtAssign()
       return r
     }
-    val r = to(s, f_astStmtAssign)
+    val r = to(s, f_astStmtAssign _)
     return r
   }
 
@@ -6784,7 +6784,7 @@ object JSON {
       val r = parser.parse_astStmtBlock()
       return r
     }
-    val r = to(s, f_astStmtBlock)
+    val r = to(s, f_astStmtBlock _)
     return r
   }
 
@@ -6802,7 +6802,7 @@ object JSON {
       val r = parser.parse_astStmtIf()
       return r
     }
-    val r = to(s, f_astStmtIf)
+    val r = to(s, f_astStmtIf _)
     return r
   }
 
@@ -6820,7 +6820,7 @@ object JSON {
       val r = parser.parse_astStmtMatch()
       return r
     }
-    val r = to(s, f_astStmtMatch)
+    val r = to(s, f_astStmtMatch _)
     return r
   }
 
@@ -6838,7 +6838,7 @@ object JSON {
       val r = parser.parse_astStmtWhile()
       return r
     }
-    val r = to(s, f_astStmtWhile)
+    val r = to(s, f_astStmtWhile _)
     return r
   }
 
@@ -6856,7 +6856,7 @@ object JSON {
       val r = parser.parse_astStmtDoWhile()
       return r
     }
-    val r = to(s, f_astStmtDoWhile)
+    val r = to(s, f_astStmtDoWhile _)
     return r
   }
 
@@ -6874,7 +6874,7 @@ object JSON {
       val r = parser.parse_astStmtFor()
       return r
     }
-    val r = to(s, f_astStmtFor)
+    val r = to(s, f_astStmtFor _)
     return r
   }
 
@@ -6892,7 +6892,7 @@ object JSON {
       val r = parser.parse_astStmtReturn()
       return r
     }
-    val r = to(s, f_astStmtReturn)
+    val r = to(s, f_astStmtReturn _)
     return r
   }
 
@@ -6910,7 +6910,7 @@ object JSON {
       val r = parser.parse_astStmtLStmt()
       return r
     }
-    val r = to(s, f_astStmtLStmt)
+    val r = to(s, f_astStmtLStmt _)
     return r
   }
 
@@ -6928,7 +6928,7 @@ object JSON {
       val r = parser.parse_astStmtExpr()
       return r
     }
-    val r = to(s, f_astStmtExpr)
+    val r = to(s, f_astStmtExpr _)
     return r
   }
 
@@ -6946,7 +6946,7 @@ object JSON {
       val r = parser.parse_astAssignExp()
       return r
     }
-    val r = to(s, f_astAssignExp)
+    val r = to(s, f_astAssignExp _)
     return r
   }
 
@@ -6964,7 +6964,7 @@ object JSON {
       val r = parser.parse_astLClause()
       return r
     }
-    val r = to(s, f_astLClause)
+    val r = to(s, f_astLClause _)
     return r
   }
 
@@ -6982,7 +6982,7 @@ object JSON {
       val r = parser.parse_astLClauseInvariants()
       return r
     }
-    val r = to(s, f_astLClauseInvariants)
+    val r = to(s, f_astLClauseInvariants _)
     return r
   }
 
@@ -7000,7 +7000,7 @@ object JSON {
       val r = parser.parse_astLClauseFacts()
       return r
     }
-    val r = to(s, f_astLClauseFacts)
+    val r = to(s, f_astLClauseFacts _)
     return r
   }
 
@@ -7018,7 +7018,7 @@ object JSON {
       val r = parser.parse_astLClauseFact()
       return r
     }
-    val r = to(s, f_astLClauseFact)
+    val r = to(s, f_astLClauseFact _)
     return r
   }
 
@@ -7036,7 +7036,7 @@ object JSON {
       val r = parser.parse_astLClauseTheorems()
       return r
     }
-    val r = to(s, f_astLClauseTheorems)
+    val r = to(s, f_astLClauseTheorems _)
     return r
   }
 
@@ -7054,7 +7054,7 @@ object JSON {
       val r = parser.parse_astLClauseTheorem()
       return r
     }
-    val r = to(s, f_astLClauseTheorem)
+    val r = to(s, f_astLClauseTheorem _)
     return r
   }
 
@@ -7072,7 +7072,7 @@ object JSON {
       val r = parser.parse_astLClauseSequent()
       return r
     }
-    val r = to(s, f_astLClauseSequent)
+    val r = to(s, f_astLClauseSequent _)
     return r
   }
 
@@ -7090,7 +7090,7 @@ object JSON {
       val r = parser.parse_astLClauseProof()
       return r
     }
-    val r = to(s, f_astLClauseProof)
+    val r = to(s, f_astLClauseProof _)
     return r
   }
 
@@ -7108,7 +7108,7 @@ object JSON {
       val r = parser.parse_astContractExp()
       return r
     }
-    val r = to(s, f_astContractExp)
+    val r = to(s, f_astContractExp _)
     return r
   }
 
@@ -7126,7 +7126,7 @@ object JSON {
       val r = parser.parse_astCase()
       return r
     }
-    val r = to(s, f_astCase)
+    val r = to(s, f_astCase _)
     return r
   }
 
@@ -7144,7 +7144,7 @@ object JSON {
       val r = parser.parse_astEnumGenRange()
       return r
     }
-    val r = to(s, f_astEnumGenRange)
+    val r = to(s, f_astEnumGenRange _)
     return r
   }
 
@@ -7162,7 +7162,7 @@ object JSON {
       val r = parser.parse_astEnumGenRangeExpr()
       return r
     }
-    val r = to(s, f_astEnumGenRangeExpr)
+    val r = to(s, f_astEnumGenRangeExpr _)
     return r
   }
 
@@ -7180,7 +7180,7 @@ object JSON {
       val r = parser.parse_astEnumGenRangeStep()
       return r
     }
-    val r = to(s, f_astEnumGenRangeStep)
+    val r = to(s, f_astEnumGenRangeStep _)
     return r
   }
 
@@ -7198,7 +7198,7 @@ object JSON {
       val r = parser.parse_astEnumGenFor()
       return r
     }
-    val r = to(s, f_astEnumGenFor)
+    val r = to(s, f_astEnumGenFor _)
     return r
   }
 
@@ -7216,7 +7216,7 @@ object JSON {
       val r = parser.parse_astType()
       return r
     }
-    val r = to(s, f_astType)
+    val r = to(s, f_astType _)
     return r
   }
 
@@ -7234,7 +7234,7 @@ object JSON {
       val r = parser.parse_astTypeNamed()
       return r
     }
-    val r = to(s, f_astTypeNamed)
+    val r = to(s, f_astTypeNamed _)
     return r
   }
 
@@ -7252,7 +7252,7 @@ object JSON {
       val r = parser.parse_astTypeFun()
       return r
     }
-    val r = to(s, f_astTypeFun)
+    val r = to(s, f_astTypeFun _)
     return r
   }
 
@@ -7270,7 +7270,7 @@ object JSON {
       val r = parser.parse_astTypeTuple()
       return r
     }
-    val r = to(s, f_astTypeTuple)
+    val r = to(s, f_astTypeTuple _)
     return r
   }
 
@@ -7288,7 +7288,7 @@ object JSON {
       val r = parser.parse_astPattern()
       return r
     }
-    val r = to(s, f_astPattern)
+    val r = to(s, f_astPattern _)
     return r
   }
 
@@ -7306,7 +7306,7 @@ object JSON {
       val r = parser.parse_astPatternLiteral()
       return r
     }
-    val r = to(s, f_astPatternLiteral)
+    val r = to(s, f_astPatternLiteral _)
     return r
   }
 
@@ -7324,7 +7324,7 @@ object JSON {
       val r = parser.parse_astPatternLitInterpolate()
       return r
     }
-    val r = to(s, f_astPatternLitInterpolate)
+    val r = to(s, f_astPatternLitInterpolate _)
     return r
   }
 
@@ -7342,7 +7342,7 @@ object JSON {
       val r = parser.parse_astPatternRef()
       return r
     }
-    val r = to(s, f_astPatternRef)
+    val r = to(s, f_astPatternRef _)
     return r
   }
 
@@ -7360,7 +7360,7 @@ object JSON {
       val r = parser.parse_astPatternVarBinding()
       return r
     }
-    val r = to(s, f_astPatternVarBinding)
+    val r = to(s, f_astPatternVarBinding _)
     return r
   }
 
@@ -7378,7 +7378,7 @@ object JSON {
       val r = parser.parse_astPatternWildcard()
       return r
     }
-    val r = to(s, f_astPatternWildcard)
+    val r = to(s, f_astPatternWildcard _)
     return r
   }
 
@@ -7396,7 +7396,7 @@ object JSON {
       val r = parser.parse_astPatternSeqWildcard()
       return r
     }
-    val r = to(s, f_astPatternSeqWildcard)
+    val r = to(s, f_astPatternSeqWildcard _)
     return r
   }
 
@@ -7414,7 +7414,7 @@ object JSON {
       val r = parser.parse_astPatternStructure()
       return r
     }
-    val r = to(s, f_astPatternStructure)
+    val r = to(s, f_astPatternStructure _)
     return r
   }
 
@@ -7432,7 +7432,7 @@ object JSON {
       val r = parser.parse_astExp()
       return r
     }
-    val r = to(s, f_astExp)
+    val r = to(s, f_astExp _)
     return r
   }
 
@@ -7450,7 +7450,7 @@ object JSON {
       val r = parser.parse_astLit()
       return r
     }
-    val r = to(s, f_astLit)
+    val r = to(s, f_astLit _)
     return r
   }
 
@@ -7468,7 +7468,7 @@ object JSON {
       val r = parser.parse_astExpLitB()
       return r
     }
-    val r = to(s, f_astExpLitB)
+    val r = to(s, f_astExpLitB _)
     return r
   }
 
@@ -7486,7 +7486,7 @@ object JSON {
       val r = parser.parse_astExpLitC()
       return r
     }
-    val r = to(s, f_astExpLitC)
+    val r = to(s, f_astExpLitC _)
     return r
   }
 
@@ -7504,7 +7504,7 @@ object JSON {
       val r = parser.parse_astExpLitZ()
       return r
     }
-    val r = to(s, f_astExpLitZ)
+    val r = to(s, f_astExpLitZ _)
     return r
   }
 
@@ -7522,7 +7522,7 @@ object JSON {
       val r = parser.parse_astExpLitF32()
       return r
     }
-    val r = to(s, f_astExpLitF32)
+    val r = to(s, f_astExpLitF32 _)
     return r
   }
 
@@ -7540,7 +7540,7 @@ object JSON {
       val r = parser.parse_astExpLitF64()
       return r
     }
-    val r = to(s, f_astExpLitF64)
+    val r = to(s, f_astExpLitF64 _)
     return r
   }
 
@@ -7558,7 +7558,7 @@ object JSON {
       val r = parser.parse_astExpLitR()
       return r
     }
-    val r = to(s, f_astExpLitR)
+    val r = to(s, f_astExpLitR _)
     return r
   }
 
@@ -7576,7 +7576,7 @@ object JSON {
       val r = parser.parse_astExpLitString()
       return r
     }
-    val r = to(s, f_astExpLitString)
+    val r = to(s, f_astExpLitString _)
     return r
   }
 
@@ -7594,7 +7594,7 @@ object JSON {
       val r = parser.parse_astExpStringInterpolate()
       return r
     }
-    val r = to(s, f_astExpStringInterpolate)
+    val r = to(s, f_astExpStringInterpolate _)
     return r
   }
 
@@ -7612,7 +7612,7 @@ object JSON {
       val r = parser.parse_astExpThis()
       return r
     }
-    val r = to(s, f_astExpThis)
+    val r = to(s, f_astExpThis _)
     return r
   }
 
@@ -7630,7 +7630,7 @@ object JSON {
       val r = parser.parse_astExpSuper()
       return r
     }
-    val r = to(s, f_astExpSuper)
+    val r = to(s, f_astExpSuper _)
     return r
   }
 
@@ -7648,7 +7648,7 @@ object JSON {
       val r = parser.parse_astExpUnary()
       return r
     }
-    val r = to(s, f_astExpUnary)
+    val r = to(s, f_astExpUnary _)
     return r
   }
 
@@ -7666,7 +7666,7 @@ object JSON {
       val r = parser.parse_astExpRef()
       return r
     }
-    val r = to(s, f_astExpRef)
+    val r = to(s, f_astExpRef _)
     return r
   }
 
@@ -7684,7 +7684,7 @@ object JSON {
       val r = parser.parse_astExpBinary()
       return r
     }
-    val r = to(s, f_astExpBinary)
+    val r = to(s, f_astExpBinary _)
     return r
   }
 
@@ -7702,7 +7702,7 @@ object JSON {
       val r = parser.parse_astExpIdent()
       return r
     }
-    val r = to(s, f_astExpIdent)
+    val r = to(s, f_astExpIdent _)
     return r
   }
 
@@ -7720,7 +7720,7 @@ object JSON {
       val r = parser.parse_astExpEta()
       return r
     }
-    val r = to(s, f_astExpEta)
+    val r = to(s, f_astExpEta _)
     return r
   }
 
@@ -7738,7 +7738,7 @@ object JSON {
       val r = parser.parse_astExpTuple()
       return r
     }
-    val r = to(s, f_astExpTuple)
+    val r = to(s, f_astExpTuple _)
     return r
   }
 
@@ -7756,7 +7756,7 @@ object JSON {
       val r = parser.parse_astExpSelect()
       return r
     }
-    val r = to(s, f_astExpSelect)
+    val r = to(s, f_astExpSelect _)
     return r
   }
 
@@ -7774,7 +7774,7 @@ object JSON {
       val r = parser.parse_astExpInvoke()
       return r
     }
-    val r = to(s, f_astExpInvoke)
+    val r = to(s, f_astExpInvoke _)
     return r
   }
 
@@ -7792,7 +7792,7 @@ object JSON {
       val r = parser.parse_astExpInvokeNamed()
       return r
     }
-    val r = to(s, f_astExpInvokeNamed)
+    val r = to(s, f_astExpInvokeNamed _)
     return r
   }
 
@@ -7810,7 +7810,7 @@ object JSON {
       val r = parser.parse_astExpIf()
       return r
     }
-    val r = to(s, f_astExpIf)
+    val r = to(s, f_astExpIf _)
     return r
   }
 
@@ -7828,7 +7828,7 @@ object JSON {
       val r = parser.parse_astExpFunParam()
       return r
     }
-    val r = to(s, f_astExpFunParam)
+    val r = to(s, f_astExpFunParam _)
     return r
   }
 
@@ -7846,7 +7846,7 @@ object JSON {
       val r = parser.parse_astExpFun()
       return r
     }
-    val r = to(s, f_astExpFun)
+    val r = to(s, f_astExpFun _)
     return r
   }
 
@@ -7864,7 +7864,7 @@ object JSON {
       val r = parser.parse_astExpForYield()
       return r
     }
-    val r = to(s, f_astExpForYield)
+    val r = to(s, f_astExpForYield _)
     return r
   }
 
@@ -7882,7 +7882,7 @@ object JSON {
       val r = parser.parse_astExpQuant()
       return r
     }
-    val r = to(s, f_astExpQuant)
+    val r = to(s, f_astExpQuant _)
     return r
   }
 
@@ -7900,7 +7900,7 @@ object JSON {
       val r = parser.parse_astNamedArg()
       return r
     }
-    val r = to(s, f_astNamedArg)
+    val r = to(s, f_astNamedArg _)
     return r
   }
 
@@ -7918,7 +7918,7 @@ object JSON {
       val r = parser.parse_astVarFragment()
       return r
     }
-    val r = to(s, f_astVarFragment)
+    val r = to(s, f_astVarFragment _)
     return r
   }
 
@@ -7936,7 +7936,7 @@ object JSON {
       val r = parser.parse_astDomain()
       return r
     }
-    val r = to(s, f_astDomain)
+    val r = to(s, f_astDomain _)
     return r
   }
 
@@ -7954,7 +7954,7 @@ object JSON {
       val r = parser.parse_astDomainType()
       return r
     }
-    val r = to(s, f_astDomainType)
+    val r = to(s, f_astDomainType _)
     return r
   }
 
@@ -7972,7 +7972,7 @@ object JSON {
       val r = parser.parse_astDomainRange()
       return r
     }
-    val r = to(s, f_astDomainRange)
+    val r = to(s, f_astDomainRange _)
     return r
   }
 
@@ -7990,7 +7990,7 @@ object JSON {
       val r = parser.parse_astId()
       return r
     }
-    val r = to(s, f_astId)
+    val r = to(s, f_astId _)
     return r
   }
 
@@ -8008,7 +8008,7 @@ object JSON {
       val r = parser.parse_astName()
       return r
     }
-    val r = to(s, f_astName)
+    val r = to(s, f_astName _)
     return r
   }
 
@@ -8026,7 +8026,7 @@ object JSON {
       val r = parser.parse_astBody()
       return r
     }
-    val r = to(s, f_astBody)
+    val r = to(s, f_astBody _)
     return r
   }
 
@@ -8044,7 +8044,7 @@ object JSON {
       val r = parser.parse_astAbstractDatatypeParam()
       return r
     }
-    val r = to(s, f_astAbstractDatatypeParam)
+    val r = to(s, f_astAbstractDatatypeParam _)
     return r
   }
 
@@ -8062,7 +8062,7 @@ object JSON {
       val r = parser.parse_astMethodSig()
       return r
     }
-    val r = to(s, f_astMethodSig)
+    val r = to(s, f_astMethodSig _)
     return r
   }
 
@@ -8080,7 +8080,7 @@ object JSON {
       val r = parser.parse_astParam()
       return r
     }
-    val r = to(s, f_astParam)
+    val r = to(s, f_astParam _)
     return r
   }
 
@@ -8098,7 +8098,7 @@ object JSON {
       val r = parser.parse_astTypeParam()
       return r
     }
-    val r = to(s, f_astTypeParam)
+    val r = to(s, f_astTypeParam _)
     return r
   }
 
@@ -8116,7 +8116,7 @@ object JSON {
       val r = parser.parse_astContract()
       return r
     }
-    val r = to(s, f_astContract)
+    val r = to(s, f_astContract _)
     return r
   }
 
@@ -8134,7 +8134,7 @@ object JSON {
       val r = parser.parse_astSubContract()
       return r
     }
-    val r = to(s, f_astSubContract)
+    val r = to(s, f_astSubContract _)
     return r
   }
 
@@ -8152,7 +8152,7 @@ object JSON {
       val r = parser.parse_astWhereDef()
       return r
     }
-    val r = to(s, f_astWhereDef)
+    val r = to(s, f_astWhereDef _)
     return r
   }
 
@@ -8170,7 +8170,7 @@ object JSON {
       val r = parser.parse_astWhereDefVal()
       return r
     }
-    val r = to(s, f_astWhereDefVal)
+    val r = to(s, f_astWhereDefVal _)
     return r
   }
 
@@ -8188,7 +8188,7 @@ object JSON {
       val r = parser.parse_astWhereDefDef()
       return r
     }
-    val r = to(s, f_astWhereDefDef)
+    val r = to(s, f_astWhereDefDef _)
     return r
   }
 
@@ -8206,7 +8206,7 @@ object JSON {
       val r = parser.parse_astSpecDef()
       return r
     }
-    val r = to(s, f_astSpecDef)
+    val r = to(s, f_astSpecDef _)
     return r
   }
 
@@ -8224,7 +8224,7 @@ object JSON {
       val r = parser.parse_astTyped()
       return r
     }
-    val r = to(s, f_astTyped)
+    val r = to(s, f_astTyped _)
     return r
   }
 
@@ -8242,7 +8242,7 @@ object JSON {
       val r = parser.parse_astTypedName()
       return r
     }
-    val r = to(s, f_astTypedName)
+    val r = to(s, f_astTypedName _)
     return r
   }
 
@@ -8260,7 +8260,7 @@ object JSON {
       val r = parser.parse_astTypedTuple()
       return r
     }
-    val r = to(s, f_astTypedTuple)
+    val r = to(s, f_astTypedTuple _)
     return r
   }
 
@@ -8278,7 +8278,7 @@ object JSON {
       val r = parser.parse_astTypedFun()
       return r
     }
-    val r = to(s, f_astTypedFun)
+    val r = to(s, f_astTypedFun _)
     return r
   }
 
@@ -8296,7 +8296,7 @@ object JSON {
       val r = parser.parse_astTypedTypeVar()
       return r
     }
-    val r = to(s, f_astTypedTypeVar)
+    val r = to(s, f_astTypedTypeVar _)
     return r
   }
 
@@ -8314,7 +8314,7 @@ object JSON {
       val r = parser.parse_astTypedPackage()
       return r
     }
-    val r = to(s, f_astTypedPackage)
+    val r = to(s, f_astTypedPackage _)
     return r
   }
 
@@ -8332,7 +8332,7 @@ object JSON {
       val r = parser.parse_astTypedObject()
       return r
     }
-    val r = to(s, f_astTypedObject)
+    val r = to(s, f_astTypedObject _)
     return r
   }
 
@@ -8350,7 +8350,7 @@ object JSON {
       val r = parser.parse_astTypedEnum()
       return r
     }
-    val r = to(s, f_astTypedEnum)
+    val r = to(s, f_astTypedEnum _)
     return r
   }
 
@@ -8368,7 +8368,7 @@ object JSON {
       val r = parser.parse_astTypedMethodSubst()
       return r
     }
-    val r = to(s, f_astTypedMethodSubst)
+    val r = to(s, f_astTypedMethodSubst _)
     return r
   }
 
@@ -8386,7 +8386,7 @@ object JSON {
       val r = parser.parse_astTypedMethod()
       return r
     }
-    val r = to(s, f_astTypedMethod)
+    val r = to(s, f_astTypedMethod _)
     return r
   }
 
@@ -8404,7 +8404,7 @@ object JSON {
       val r = parser.parse_astTypedMethods()
       return r
     }
-    val r = to(s, f_astTypedMethods)
+    val r = to(s, f_astTypedMethods _)
     return r
   }
 
@@ -8422,7 +8422,7 @@ object JSON {
       val r = parser.parse_astAttr()
       return r
     }
-    val r = to(s, f_astAttr)
+    val r = to(s, f_astAttr _)
     return r
   }
 
@@ -8440,7 +8440,7 @@ object JSON {
       val r = parser.parse_astTypedAttr()
       return r
     }
-    val r = to(s, f_astTypedAttr)
+    val r = to(s, f_astTypedAttr _)
     return r
   }
 
@@ -8458,7 +8458,7 @@ object JSON {
       val r = parser.parse_astResolvedAttr()
       return r
     }
-    val r = to(s, f_astResolvedAttr)
+    val r = to(s, f_astResolvedAttr _)
     return r
   }
 
@@ -8476,7 +8476,7 @@ object JSON {
       val r = parser.parse_astResolvedInfo()
       return r
     }
-    val r = to(s, f_astResolvedInfo)
+    val r = to(s, f_astResolvedInfo _)
     return r
   }
 
@@ -8494,7 +8494,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoBuiltIn()
       return r
     }
-    val r = to(s, f_astResolvedInfoBuiltIn)
+    val r = to(s, f_astResolvedInfoBuiltIn _)
     return r
   }
 
@@ -8512,7 +8512,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoPackage()
       return r
     }
-    val r = to(s, f_astResolvedInfoPackage)
+    val r = to(s, f_astResolvedInfoPackage _)
     return r
   }
 
@@ -8530,7 +8530,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoEnum()
       return r
     }
-    val r = to(s, f_astResolvedInfoEnum)
+    val r = to(s, f_astResolvedInfoEnum _)
     return r
   }
 
@@ -8548,7 +8548,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoEnumElement()
       return r
     }
-    val r = to(s, f_astResolvedInfoEnumElement)
+    val r = to(s, f_astResolvedInfoEnumElement _)
     return r
   }
 
@@ -8566,7 +8566,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoObject()
       return r
     }
-    val r = to(s, f_astResolvedInfoObject)
+    val r = to(s, f_astResolvedInfoObject _)
     return r
   }
 
@@ -8584,7 +8584,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoVar()
       return r
     }
-    val r = to(s, f_astResolvedInfoVar)
+    val r = to(s, f_astResolvedInfoVar _)
     return r
   }
 
@@ -8602,7 +8602,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoMethod()
       return r
     }
-    val r = to(s, f_astResolvedInfoMethod)
+    val r = to(s, f_astResolvedInfoMethod _)
     return r
   }
 
@@ -8620,7 +8620,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoMethods()
       return r
     }
-    val r = to(s, f_astResolvedInfoMethods)
+    val r = to(s, f_astResolvedInfoMethods _)
     return r
   }
 
@@ -8638,7 +8638,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoType()
       return r
     }
-    val r = to(s, f_astResolvedInfoType)
+    val r = to(s, f_astResolvedInfoType _)
     return r
   }
 
@@ -8656,7 +8656,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoTuple()
       return r
     }
-    val r = to(s, f_astResolvedInfoTuple)
+    val r = to(s, f_astResolvedInfoTuple _)
     return r
   }
 
@@ -8674,7 +8674,7 @@ object JSON {
       val r = parser.parse_astResolvedInfoLocalVar()
       return r
     }
-    val r = to(s, f_astResolvedInfoLocalVar)
+    val r = to(s, f_astResolvedInfoLocalVar _)
     return r
   }
 
@@ -8692,7 +8692,7 @@ object JSON {
       val r = parser.parse_astProofStep()
       return r
     }
-    val r = to(s, f_astProofStep)
+    val r = to(s, f_astProofStep _)
     return r
   }
 
@@ -8710,7 +8710,7 @@ object JSON {
       val r = parser.parse_astProofStepBasic()
       return r
     }
-    val r = to(s, f_astProofStepBasic)
+    val r = to(s, f_astProofStepBasic _)
     return r
   }
 
@@ -8728,7 +8728,7 @@ object JSON {
       val r = parser.parse_astProofStepSubProof()
       return r
     }
-    val r = to(s, f_astProofStepSubProof)
+    val r = to(s, f_astProofStepSubProof _)
     return r
   }
 
@@ -8746,7 +8746,7 @@ object JSON {
       val r = parser.parse_astAssumeProofStep()
       return r
     }
-    val r = to(s, f_astAssumeProofStep)
+    val r = to(s, f_astAssumeProofStep _)
     return r
   }
 
@@ -8764,7 +8764,7 @@ object JSON {
       val r = parser.parse_astAssumeProofStepRegular()
       return r
     }
-    val r = to(s, f_astAssumeProofStepRegular)
+    val r = to(s, f_astAssumeProofStepRegular _)
     return r
   }
 
@@ -8782,7 +8782,7 @@ object JSON {
       val r = parser.parse_astAssumeProofStepForallIntroAps()
       return r
     }
-    val r = to(s, f_astAssumeProofStepForallIntroAps)
+    val r = to(s, f_astAssumeProofStepForallIntroAps _)
     return r
   }
 
@@ -8800,7 +8800,7 @@ object JSON {
       val r = parser.parse_astAssumeProofStepExistsElimAps()
       return r
     }
-    val r = to(s, f_astAssumeProofStepExistsElimAps)
+    val r = to(s, f_astAssumeProofStepExistsElimAps _)
     return r
   }
 
@@ -8818,7 +8818,7 @@ object JSON {
       val r = parser.parse_astJust()
       return r
     }
-    val r = to(s, f_astJust)
+    val r = to(s, f_astJust _)
     return r
   }
 
@@ -8836,7 +8836,7 @@ object JSON {
       val r = parser.parse_astJustPremise()
       return r
     }
-    val r = to(s, f_astJustPremise)
+    val r = to(s, f_astJustPremise _)
     return r
   }
 
@@ -8854,7 +8854,7 @@ object JSON {
       val r = parser.parse_astJustAuto()
       return r
     }
-    val r = to(s, f_astJustAuto)
+    val r = to(s, f_astJustAuto _)
     return r
   }
 
@@ -8872,7 +8872,7 @@ object JSON {
       val r = parser.parse_astJustCoq()
       return r
     }
-    val r = to(s, f_astJustCoq)
+    val r = to(s, f_astJustCoq _)
     return r
   }
 
@@ -8890,7 +8890,7 @@ object JSON {
       val r = parser.parse_astJustSubst()
       return r
     }
-    val r = to(s, f_astJustSubst)
+    val r = to(s, f_astJustSubst _)
     return r
   }
 
@@ -8908,7 +8908,7 @@ object JSON {
       val r = parser.parse_astJustInvariant()
       return r
     }
-    val r = to(s, f_astJustInvariant)
+    val r = to(s, f_astJustInvariant _)
     return r
   }
 
@@ -8926,7 +8926,7 @@ object JSON {
       val r = parser.parse_astJustFact()
       return r
     }
-    val r = to(s, f_astJustFact)
+    val r = to(s, f_astJustFact _)
     return r
   }
 
@@ -8944,7 +8944,7 @@ object JSON {
       val r = parser.parse_astJustImplyIntro()
       return r
     }
-    val r = to(s, f_astJustImplyIntro)
+    val r = to(s, f_astJustImplyIntro _)
     return r
   }
 
@@ -8962,7 +8962,7 @@ object JSON {
       val r = parser.parse_astJustImplyElim()
       return r
     }
-    val r = to(s, f_astJustImplyElim)
+    val r = to(s, f_astJustImplyElim _)
     return r
   }
 
@@ -8980,7 +8980,7 @@ object JSON {
       val r = parser.parse_astJustNegIntro()
       return r
     }
-    val r = to(s, f_astJustNegIntro)
+    val r = to(s, f_astJustNegIntro _)
     return r
   }
 
@@ -8998,7 +8998,7 @@ object JSON {
       val r = parser.parse_astJustNegElim()
       return r
     }
-    val r = to(s, f_astJustNegElim)
+    val r = to(s, f_astJustNegElim _)
     return r
   }
 
@@ -9016,7 +9016,7 @@ object JSON {
       val r = parser.parse_astJustBottomElim()
       return r
     }
-    val r = to(s, f_astJustBottomElim)
+    val r = to(s, f_astJustBottomElim _)
     return r
   }
 
@@ -9034,7 +9034,7 @@ object JSON {
       val r = parser.parse_astJustForallIntro()
       return r
     }
-    val r = to(s, f_astJustForallIntro)
+    val r = to(s, f_astJustForallIntro _)
     return r
   }
 
@@ -9052,7 +9052,7 @@ object JSON {
       val r = parser.parse_astJustForallElim()
       return r
     }
-    val r = to(s, f_astJustForallElim)
+    val r = to(s, f_astJustForallElim _)
     return r
   }
 
@@ -9070,7 +9070,7 @@ object JSON {
       val r = parser.parse_astJustExistsIntro()
       return r
     }
-    val r = to(s, f_astJustExistsIntro)
+    val r = to(s, f_astJustExistsIntro _)
     return r
   }
 
@@ -9088,7 +9088,7 @@ object JSON {
       val r = parser.parse_astJustExistsElim()
       return r
     }
-    val r = to(s, f_astJustExistsElim)
+    val r = to(s, f_astJustExistsElim _)
     return r
   }
 
@@ -9106,7 +9106,7 @@ object JSON {
       val r = parser.parse_astJustOrIntro()
       return r
     }
-    val r = to(s, f_astJustOrIntro)
+    val r = to(s, f_astJustOrIntro _)
     return r
   }
 
@@ -9124,7 +9124,7 @@ object JSON {
       val r = parser.parse_astJustOrElim()
       return r
     }
-    val r = to(s, f_astJustOrElim)
+    val r = to(s, f_astJustOrElim _)
     return r
   }
 
@@ -9142,7 +9142,7 @@ object JSON {
       val r = parser.parse_astJustAndIntro()
       return r
     }
-    val r = to(s, f_astJustAndIntro)
+    val r = to(s, f_astJustAndIntro _)
     return r
   }
 
@@ -9160,7 +9160,7 @@ object JSON {
       val r = parser.parse_astJustAndElim()
       return r
     }
-    val r = to(s, f_astJustAndElim)
+    val r = to(s, f_astJustAndElim _)
     return r
   }
 
@@ -9178,7 +9178,7 @@ object JSON {
       val r = parser.parse_astJustPbc()
       return r
     }
-    val r = to(s, f_astJustPbc)
+    val r = to(s, f_astJustPbc _)
     return r
   }
 
@@ -9196,7 +9196,7 @@ object JSON {
       val r = parser.parse_astTruthTableRow()
       return r
     }
-    val r = to(s, f_astTruthTableRow)
+    val r = to(s, f_astTruthTableRow _)
     return r
   }
 
@@ -9214,7 +9214,7 @@ object JSON {
       val r = parser.parse_astTruthTableAssignment()
       return r
     }
-    val r = to(s, f_astTruthTableAssignment)
+    val r = to(s, f_astTruthTableAssignment _)
     return r
   }
 
@@ -9232,7 +9232,7 @@ object JSON {
       val r = parser.parse_astTruthTableConclusion()
       return r
     }
-    val r = to(s, f_astTruthTableConclusion)
+    val r = to(s, f_astTruthTableConclusion _)
     return r
   }
 
@@ -9250,7 +9250,7 @@ object JSON {
       val r = parser.parse_astTruthTableConclusionValidity()
       return r
     }
-    val r = to(s, f_astTruthTableConclusionValidity)
+    val r = to(s, f_astTruthTableConclusionValidity _)
     return r
   }
 
@@ -9268,7 +9268,7 @@ object JSON {
       val r = parser.parse_astTruthTableConclusionTautology()
       return r
     }
-    val r = to(s, f_astTruthTableConclusionTautology)
+    val r = to(s, f_astTruthTableConclusionTautology _)
     return r
   }
 
@@ -9286,7 +9286,7 @@ object JSON {
       val r = parser.parse_astTruthTableConclusionContradictory()
       return r
     }
-    val r = to(s, f_astTruthTableConclusionContradictory)
+    val r = to(s, f_astTruthTableConclusionContradictory _)
     return r
   }
 
@@ -9304,7 +9304,7 @@ object JSON {
       val r = parser.parse_astTruthTableConclusionContingent()
       return r
     }
-    val r = to(s, f_astTruthTableConclusionContingent)
+    val r = to(s, f_astTruthTableConclusionContingent _)
     return r
   }
 

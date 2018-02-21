@@ -108,7 +108,7 @@ object TruthTableVerifier {
       }
 
       val vars: ISZ[String] = for (id <- tt.vars) yield id.value
-      val assignments = Set.empty ++ allAssignments(0, vars, ISZ(ISZ()))
+      val assignments = Set ++ allAssignments(0, vars, ISZ(ISZ()))
       var currentAssignments = assignments
       for (row <- tt.rows) {
         val ra: ISZ[AST.Exp.LitB] = row.assignment.values
@@ -244,12 +244,12 @@ object TruthTableVerifier {
                     if (fas.nonEmpty) {
                       reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
                     }
-                    Set.empty ++ tas
+                    Set ++ tas
                   } else {
                     if (fas.isEmpty) {
                       reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
                     }
-                    Set.empty ++ fas
+                    Set ++ fas
                   }
                 for (a <- conclusion.assignments) {
                   val ra = a.values
@@ -270,8 +270,8 @@ object TruthTableVerifier {
               case conclusion: AST.TruthTable.Conclusion.Tautology if fas.nonEmpty =>
                 reporter.error(conclusion.attr.posOpt, kind, "Incorrect summary.")
               case conclusion: AST.TruthTable.Conclusion.Contingent =>
-                var taSet = Set.empty ++ tas
-                var faSet = Set.empty ++ fas
+                var taSet = Set ++ tas
+                var faSet = Set ++ fas
                 for (a <- conclusion.trueAssignments) {
                   val ra = a.values
                   val w: Assignment = for (b <- ra) yield b.value

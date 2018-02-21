@@ -29,6 +29,7 @@ package org.sireum.lang.tipe
 import org.sireum._
 import org.sireum.lang.{ast => AST}
 import org.sireum.U8._
+import org.sireum.S8._
 import org.sireum.lang.symbol._
 
 /*
@@ -43,9 +44,9 @@ org.sireum.lang.ast.Contract
  */
 object CustomMessagePack {
 
-  val TypedPoolExtType: S8 = MessagePack.LastExtType.increase
-  val ResolvedInfoPoolExtType: S8 = TypedPoolExtType.increase
-  val ScopeGlobalPoolExtType: S8 = ResolvedInfoPoolExtType.increase
+  val TypedPoolExtType: S8 = MessagePack.LastExtType + s8"1"
+  val ResolvedInfoPoolExtType: S8 = TypedPoolExtType + s8"1"
+  val ScopeGlobalPoolExtType: S8 = ResolvedInfoPoolExtType + s8"1"
   val emptyContract: AST.Contract = AST.Contract(ISZ(), ISZ(), ISZ(), ISZ(), ISZ())
   val emptyAttr: AST.Attr = AST.Attr(None())
 
@@ -326,8 +327,8 @@ object CustomMessagePack {
   }
 
   def writeTypeHierarchy(writer: MsgPack.Writer, o: TypeHierarchy): Unit = {
-    def writeQName(o: ISZ[String]): Unit = {
-      writer.writer.writeISZ(o, writer.writer.writeString _)
+    def writeQName(ids: ISZ[String]): Unit = {
+      writer.writer.writeISZ(ids, writer.writer.writeString _)
     }
     writer.writer.writeISZ(o.nameMap.values, writer.write_symbolInfo _)
     writer.writer.writeISZ(o.typeMap.values, writer.write_symbolTypeInfo _)

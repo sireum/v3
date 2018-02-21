@@ -37,8 +37,8 @@ object TypeOutliner {
 
   def checkOutline(typeHierarchy: TypeHierarchy, reporter: Reporter): TypeHierarchy = {
     def parentsOutlined(name: QName, typeMap: TypeMap): B = {
-      def isOutlined(name: QName): B = {
-        typeMap.get(name).get match {
+      def isOutlined(ids: QName): B = {
+        typeMap.get(ids).get match {
           case ti: TypeInfo.Sig => return ti.outlined
           case ti: TypeInfo.AbstractDatatype => return ti.outlined
           case _ => return T
@@ -70,7 +70,9 @@ object TypeOutliner {
 
     var th = typeHierarchy
     var jobs =
-      ISZ[() => TypeHierarchy => (TypeHierarchy, Reporter)](() => TypeOutliner(th).outlineTypeAliases(typeAliases))
+      ISZ[() => (TypeHierarchy => (TypeHierarchy, Reporter) @pure) @pure](
+        () => TypeOutliner(th).outlineTypeAliases(typeAliases)
+      )
     while (workList.nonEmpty && !reporter.hasError) {
       var l = ISZ[QName]()
       for (name <- workList) {
@@ -118,7 +120,7 @@ object TypeOutliner {
       jobs = ISZ()
     }
     if (!reporter.hasError) {
-      var jobs = ISZ[() => TypeHierarchy => (TypeHierarchy, Reporter)]()
+      jobs = ISZ[() => (TypeHierarchy => (TypeHierarchy, Reporter) @pure) @pure]()
       val to = TypeOutliner(th)
       for (info <- th.nameMap.values) {
         info match {
@@ -256,7 +258,7 @@ object TypeOutliner {
     }
   }
 
-  @pure def outlineObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, Reporter) = {
+  @pure def outlineObject(info: Info.Object): TypeHierarchy => (TypeHierarchy, Reporter) @pure = {
     val reporter = Reporter.create
 
     var infos = ISZ[(QName, Info)]()
@@ -290,7 +292,7 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(nameMap = th.nameMap ++ infos + info.name ~> info(outlined = T)), reporter)
   }
 
-  @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, Reporter) = {
+  @pure def outlineTypeAliases(infos: ISZ[TypeInfo.TypeAlias]): TypeHierarchy => (TypeHierarchy, Reporter) @pure = {
     val reporter = Reporter.create
     var r = ISZ[(QName, TypeInfo)]()
     for (info <- infos) {
@@ -306,7 +308,7 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap ++ r), reporter)
   }
 
-  @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, Reporter) = {
+  @pure def outlineSig(info: TypeInfo.Sig): TypeHierarchy => (TypeHierarchy, Reporter) @pure = {
     val reporter = Reporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
@@ -330,7 +332,7 @@ object TypeOutliner {
     return (th: TypeHierarchy) => (th(typeMap = th.typeMap + info.name ~> newInfo), reporter)
   }
 
-  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, Reporter) = {
+  @pure def outlineAdt(info: TypeInfo.AbstractDatatype): TypeHierarchy => (TypeHierarchy, Reporter) @pure = {
     val reporter = Reporter.create
     val tm = typeParamMap(info.ast.typeParams, reporter)
     val scope = localTypeScope(tm.map, info.scope)
@@ -441,8 +443,8 @@ object TypeOutliner {
       return specVars.contains(id) || vars.contains(id) || specMethods.contains(id) || methods.contains(id)
     }
 
-    def checkSpecVar(info: Info.SpecVar): Unit = {
-      val sv = info.ast
+    def checkSpecVar(svInfo: Info.SpecVar): Unit = {
+      val sv = svInfo.ast
       val id = sv.id.value
       if (isDeclared(id)) {
         reporter.error(sv.attr.posOpt, TypeChecker.typeCheckerKind, s"Cannot redeclare $id.")
@@ -451,13 +453,13 @@ object TypeOutliner {
       val tipeOpt = typeHierarchy.typed(scope, sv.tipe, reporter)
       tipeOpt match {
         case Some(tipe) if tipe.typedOpt.nonEmpty =>
-          specVars = specVars + id ~> info(ast = sv(tipe = tipe), typedOpt = tipe.typedOpt)
+          specVars = specVars + id ~> svInfo(ast = sv(tipe = tipe), typedOpt = tipe.typedOpt)
         case _ =>
       }
     }
 
-    def checkVar(info: Info.Var): Unit = {
-      val v = info.ast
+    def checkVar(vInfo: Info.Var): Unit = {
+      val v = vInfo.ast
       val id = v.id.value
       if (isDeclared(id)) {
         reporter.error(v.attr.posOpt, TypeChecker.typeCheckerKind, s"Cannot redeclare $id.")
@@ -467,13 +469,13 @@ object TypeOutliner {
       val tipeOpt = typeHierarchy.typed(scope, tpe, reporter)
       tipeOpt match {
         case Some(tipe) =>
-          vars = vars + id ~> info(ast = v(tipeOpt = Some(tipe)), typedOpt = tipe.typedOpt)
+          vars = vars + id ~> vInfo(ast = v(tipeOpt = Some(tipe)), typedOpt = tipe.typedOpt)
         case _ =>
       }
     }
 
-    def checkSpecMethod(info: Info.SpecMethod): Unit = {
-      val sm = info.ast
+    def checkSpecMethod(smInfo: Info.SpecMethod): Unit = {
+      val sm = smInfo.ast
       val id = sm.sig.id.value
       if (isDeclared(id)) {
         reporter.error(sm.sig.id.attr.posOpt, TypeChecker.typeCheckerKind, s"Cannot redeclare $id.")
@@ -482,14 +484,14 @@ object TypeOutliner {
       val sigOpt = outlineMethodSig(scope, sm.sig, reporter)
       sigOpt match {
         case Some((sig, tVars)) =>
-          specMethods = specMethods + id ~> info(
+          specMethods = specMethods + id ~> smInfo(
             ast = sm(sig = sig),
             typedOpt = Some(
               AST.Typed.Method(
                 F,
                 AST.MethodMode.Spec,
                 tVars,
-                info.owner,
+                smInfo.owner,
                 id,
                 sig.params.map(p => p.id.value),
                 ISZ(),
@@ -501,8 +503,8 @@ object TypeOutliner {
       }
     }
 
-    def checkMethod(info: Info.Method): Unit = {
-      val m = info.ast
+    def checkMethod(mInfo: Info.Method): Unit = {
+      val m = mInfo.ast
       val id = m.sig.id.value
       if (isDeclared(id)) {
         reporter.error(m.sig.id.attr.posOpt, TypeChecker.typeCheckerKind, s"Cannot redeclare $id.")
@@ -511,14 +513,14 @@ object TypeOutliner {
       val sigOpt = outlineMethodSig(scope, m.sig, reporter)
       sigOpt match {
         case Some((sig, tVars)) =>
-          methods = methods + id ~> info(
+          methods = methods + id ~> mInfo(
             ast = m(sig = sig),
             typedOpt = Some(
               AST.Typed.Method(
                 F,
                 AST.MethodMode.Method,
                 tVars,
-                info.owner,
+                mInfo.owner,
                 id,
                 sig.params.map(p => p.id.value),
                 ISZ(),
@@ -645,24 +647,24 @@ object TypeOutliner {
       return T
     }
 
-    def inheritSpecVar(info: Info.SpecVar, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = info.owner
-      var sv = info.ast
+    def inheritSpecVar(svInfo: Info.SpecVar, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
+      val owner = svInfo.owner
+      var sv = svInfo.ast
       val id = sv.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
         if (substMap.isEmpty) {
-          specVars = specVars + id ~> info
+          specVars = specVars + id ~> svInfo
         } else {
           sv = sv(tipe = sv.tipe.typed(sv.tipe.typedOpt.get.subst(substMap)))
-          specVars = specVars + id ~> info(ast = sv, typedOpt = sv.tipe.typedOpt)
+          specVars = specVars + id ~> svInfo(ast = sv, typedOpt = sv.tipe.typedOpt)
         }
       }
     }
 
-    def inheritVar(info: Info.Var, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
-      val owner = info.owner
-      var v = info.ast
+    def inheritVar(vInfo: Info.Var, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
+      val owner = vInfo.owner
+      var v = vInfo.ast
       val id = v.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
@@ -670,22 +672,22 @@ object TypeOutliner {
           if (v.initOpt.nonEmpty) {
             v = v(initOpt = None())
           }
-          vars = vars + id ~> info(ast = v)
+          vars = vars + id ~> vInfo(ast = v)
         } else {
           val t = v.tipeOpt.get.typed(v.tipeOpt.get.typedOpt.get.subst(substMap))
           v = v(tipeOpt = Some(t), initOpt = None())
-          vars = vars + id ~> info(ast = v, typedOpt = t.typedOpt)
+          vars = vars + id ~> vInfo(ast = v, typedOpt = t.typedOpt)
         }
       }
     }
 
     def inheritSpecMethod(
-      info: Info.SpecMethod,
+      smInfo: Info.SpecMethod,
       posOpt: Option[Position],
       substMap: HashMap[String, AST.Typed]
     ): Unit = {
-      val owner = info.owner
-      var sm = info.ast
+      val owner = smInfo.owner
+      var sm = smInfo.ast
       val id = sm.sig.id.value
       val ok = checkInherit(id, owner, posOpt)
       if (ok) {
@@ -693,7 +695,7 @@ object TypeOutliner {
           if (sm.defs.nonEmpty || sm.where.nonEmpty) {
             sm = sm(defs = ISZ(), where = ISZ())
           }
-          specMethods = specMethods + id ~> info(ast = sm)
+          specMethods = specMethods + id ~> smInfo(ast = sm)
         } else {
           var params = ISZ[AST.Param]()
           for (param <- sm.sig.params) {
@@ -705,7 +707,7 @@ object TypeOutliner {
               returnType = sm.sig.returnType.typed(sm.sig.returnType.typedOpt.get.subst(substMap))
             )
           )
-          specMethods = specMethods + id ~> info(ast = sm, typedOpt = Some(sm.sig.funType))
+          specMethods = specMethods + id ~> smInfo(ast = sm, typedOpt = Some(sm.sig.funType))
         }
       }
     }
@@ -750,9 +752,9 @@ object TypeOutliner {
       return r
     }
 
-    def inheritMethod(info: Info.Method, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
-      val tname = info.owner
-      val pm = info.ast
+    def inheritMethod(mInfo: Info.Method, posOpt: Option[Position], substMap: HashMap[String, AST.Typed]): Unit = {
+      val tname = mInfo.owner
+      val pm = mInfo.ast
       val id = pm.sig.id.value
 
       var ok = checkSpecInherit(id, tname, posOpt)
@@ -768,9 +770,9 @@ object TypeOutliner {
               st"Cannot inherit $id from ${(tname, ".")} because it has been previously inherited from ${(name, ".")}.".render
             )
             return
-          } else if (!(!info.ast.sig.hasParams && typeHierarchy.isSubType(
+          } else if (!(!mInfo.ast.sig.hasParams && typeHierarchy.isSubType(
               otherInfo.typedOpt.get,
-              info.ast.sig.returnType.typedOpt.get
+              mInfo.ast.sig.returnType.typedOpt.get
             ))) {
             reporter.error(
               posOpt,
@@ -784,7 +786,7 @@ object TypeOutliner {
       methods.get(id) match {
         case Some(otherInfo) =>
           if (name != otherInfo.owner) {
-            ok = checkMethodEquality(otherInfo, info, substMap, posOpt)
+            ok = checkMethodEquality(otherInfo, mInfo, substMap, posOpt)
             if (!ok) {
               reporter.error(
                 posOpt,
@@ -793,7 +795,7 @@ object TypeOutliner {
               )
               return
             }
-            if (info.hasBody && otherInfo.hasBody) {
+            if (mInfo.hasBody && otherInfo.hasBody) {
               reporter.error(
                 posOpt,
                 TypeChecker.typeCheckerKind,
@@ -802,9 +804,9 @@ object TypeOutliner {
               return
             }
           } else {
-            ok = checkMethodRefinement(otherInfo, info, substMap, posOpt)
+            ok = checkMethodRefinement(otherInfo, mInfo, substMap, posOpt)
             if (!ok) {
-              checkMethodRefinement(otherInfo, info, substMap, posOpt)
+              checkMethodRefinement(otherInfo, mInfo, substMap, posOpt)
               reporter.error(
                 posOpt,
                 TypeChecker.typeCheckerKind,
@@ -812,7 +814,7 @@ object TypeOutliner {
               )
               return
             }
-            if (info.hasBody && !otherInfo.hasBody) {
+            if (mInfo.hasBody && !otherInfo.hasBody) {
               reporter.error(
                 posOpt,
                 TypeChecker.typeCheckerKind,
@@ -837,7 +839,7 @@ object TypeOutliner {
             case _ =>
               if (substMap.isEmpty) {
                 methods = methods + id ~>
-                  (if (info.ast.bodyOpt.nonEmpty) info(ast = info.ast(bodyOpt = None())) else info)
+                  (if (mInfo.ast.bodyOpt.nonEmpty) mInfo(ast = mInfo.ast(bodyOpt = None())) else mInfo)
               } else {
                 var m = pm
                 var params = ISZ[AST.Param]()
@@ -851,7 +853,7 @@ object TypeOutliner {
                     returnType = m.sig.returnType.typed(m.sig.returnType.typedOpt.get.subst(substMap))
                   )
                 )
-                methods = methods + id ~> info(ast = m, typedOpt = Some(info.typedOpt.get.subst(substMap)))
+                methods = methods + id ~> mInfo(ast = m, typedOpt = Some(mInfo.typedOpt.get.subst(substMap)))
               }
           }
       }
@@ -866,58 +868,51 @@ object TypeOutliner {
           newParents = newParents :+ tipe
           tipe.typedOpt match {
             case Some(t: AST.Typed.Name) =>
-              t match {
-                case t: AST.Typed.Name =>
-                  typeHierarchy.typeMap.get(t.ids) match {
-                    case Some(ti: TypeInfo.Sig) =>
-                      val substMapOpt =
-                        TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                      substMapOpt match {
-                        case Some(substMap) =>
-                          ancestors = ancestors + ti.tpe.subst(substMap)
-                          for (tpe <- ti.ancestors) {
-                            ancestors = ancestors + tpe.subst(substMap)
-                          }
-                          for (p <- ti.specVars.values) {
-                            inheritSpecVar(p, parent.attr.posOpt, substMap)
-                          }
-                          for (p <- ti.specMethods.values) {
-                            inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                          }
-                          for (p <- ti.methods.values) {
-                            inheritMethod(p, parent.attr.posOpt, substMap)
-                          }
-                        case _ =>
+              typeHierarchy.typeMap.get(t.ids) match {
+                case Some(ti: TypeInfo.Sig) =>
+                  val substMapOpt =
+                    TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                  substMapOpt match {
+                    case Some(substMap) =>
+                      ancestors = ancestors + ti.tpe.subst(substMap)
+                      for (tpe <- ti.ancestors) {
+                        ancestors = ancestors + tpe.subst(substMap)
                       }
-                    case Some(ti: TypeInfo.AbstractDatatype) =>
-                      val substMapOpt =
-                        TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
-                      substMapOpt match {
-                        case Some(substMap) =>
-                          ancestors = ancestors + ti.tpe.subst(substMap)
-                          for (tpe <- ti.ancestors) {
-                            ancestors = ancestors + tpe.subst(substMap)
-                          }
-                          for (p <- ti.specVars.values) {
-                            inheritSpecVar(p, parent.attr.posOpt, substMap)
-                          }
-                          for (p <- ti.vars.values) {
-                            inheritVar(p, parent.attr.posOpt, substMap)
-                          }
-                          for (p <- ti.specMethods.values) {
-                            inheritSpecMethod(p, parent.attr.posOpt, substMap)
-                          }
-                          for (p <- ti.methods.values) {
-                            inheritMethod(p, parent.attr.posOpt, substMap)
-                          }
-                        case _ =>
+                      for (p <- ti.specVars.values) {
+                        inheritSpecVar(p, parent.attr.posOpt, substMap)
+                      }
+                      for (p <- ti.specMethods.values) {
+                        inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                      }
+                      for (p <- ti.methods.values) {
+                        inheritMethod(p, parent.attr.posOpt, substMap)
+                      }
+                    case _ =>
+                  }
+                case Some(ti: TypeInfo.AbstractDatatype) =>
+                  val substMapOpt =
+                    TypeChecker.buildTypeSubstMap(ti.name, parent.posOpt, ti.ast.typeParams, t.args, reporter)
+                  substMapOpt match {
+                    case Some(substMap) =>
+                      ancestors = ancestors + ti.tpe.subst(substMap)
+                      for (tpe <- ti.ancestors) {
+                        ancestors = ancestors + tpe.subst(substMap)
+                      }
+                      for (p <- ti.specVars.values) {
+                        inheritSpecVar(p, parent.attr.posOpt, substMap)
+                      }
+                      for (p <- ti.vars.values) {
+                        inheritVar(p, parent.attr.posOpt, substMap)
+                      }
+                      for (p <- ti.specMethods.values) {
+                        inheritSpecMethod(p, parent.attr.posOpt, substMap)
+                      }
+                      for (p <- ti.methods.values) {
+                        inheritMethod(p, parent.attr.posOpt, substMap)
                       }
                     case _ =>
                   }
                 case _ =>
-                  halt(
-                    "Infeasible: type hierarchy phase should have checked type parents should be a @sig, @msig, @datatype, @record, or @rich."
-                  )
               }
             case _ => halt("Infeasible: type hierarchy phase should have checked type parents should be a typed name.")
           }

@@ -192,7 +192,7 @@ object SerializerGen {
       |    val r = parser.parse$name()
       |    return r
       |  }
-      |  val r = to(s, f$name)
+      |  val r = to(s, f$name _)
       |  return r
       |}"""
     }
@@ -244,11 +244,11 @@ object SerializerGen {
 
     @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
       val sName: String = if (isImmutable) "IS" else "MS"
-      return st"print$sName$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
+      return st"print$sName$indexType(${if (isSimple) "T" else "F"}, o.$fieldName, print$name _)"
     }
 
     @pure def printNameOne(isSimple: B, nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
-      return st"print$nameOne(${if (isSimple) "T" else "F"}, o.$fieldName, print$name)"
+      return st"print$nameOne(${if (isSimple) "T" else "F"}, o.$fieldName, print$name _)"
     }
 
     @pure def printNameTwo(
@@ -260,7 +260,7 @@ object SerializerGen {
       isBuiltIn1: B,
       isBuiltIn2: B
     ): ST = {
-      return st"print$nameTwo(${if (isSimple) "T" else "F"}, o.$fieldName, print$name1, print$name2)"
+      return st"print$nameTwo(${if (isSimple) "T" else "F"}, o.$fieldName, print$name1 _, print$name2 _)"
     }
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST], defaultName: ST): ST = {
@@ -450,7 +450,7 @@ object SerializerGen {
       |    val r = reader.read$name()
       |    return r
       |  }
-      |  val r = to(data, f$name)
+      |  val r = to(data, f$name _)
       |  return r
       |}"""
     }
@@ -496,12 +496,12 @@ object SerializerGen {
     @pure def printS(isImmutable: B, isSimple: B, name: ST, isBuiltIn: B, fieldName: String, indexType: String): ST = {
       val sName: String = if (isImmutable) "IS" else "MS"
       val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.write$sName$indexType(o.$fieldName, ${w}write$name)"
+      return st"writer.write$sName$indexType(o.$fieldName, ${w}write$name _)"
     }
 
     @pure def printNameOne(isSimple: B, nameOne: String, name: ST, fieldName: String, isBuiltIn: B): ST = {
       val w: String = if (isBuiltIn) "writer." else ""
-      return st"writer.write$nameOne(o.$fieldName, ${w}write$name)"
+      return st"writer.write$nameOne(o.$fieldName, ${w}write$name _)"
     }
 
     @pure def printNameTwo(
@@ -515,7 +515,7 @@ object SerializerGen {
     ): ST = {
       val w1: String = if (isBuiltIn1) "writer." else ""
       val w2: String = if (isBuiltIn2) "writer." else ""
-      return st"writer.write$nameTwo(o.$fieldName, ${w1}write$name1, ${w2}write$name2)"
+      return st"writer.write$nameTwo(o.$fieldName, ${w1}write$name1 _, ${w2}write$name2 _)"
     }
 
     @pure def parseRoot(name: ST, tpe: ST, childrenTpes: ISZ[ST], parseRootCases: ISZ[ST], defaultName: ST): ST = {

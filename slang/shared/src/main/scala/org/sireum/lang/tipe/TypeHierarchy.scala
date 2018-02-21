@@ -43,13 +43,13 @@ object TypeHierarchy {
       case info: TypeInfo.SubZ => return AST.Typed.Name(info.name, ISZ())
       case info: TypeInfo.Enum => return AST.Typed.Name(info.name, ISZ())
       case info: TypeInfo.Sig =>
-        val args = info.ast.typeParams.map(typedParam)
+        val args = info.ast.typeParams.map(typedParam _)
         return AST.Typed.Name(info.name, args)
       case info: TypeInfo.AbstractDatatype =>
-        val args = info.ast.typeParams.map(typedParam)
+        val args = info.ast.typeParams.map(typedParam _)
         return AST.Typed.Name(info.name, args)
       case info: TypeInfo.TypeAlias =>
-        val args = info.ast.typeParams.map(typedParam)
+        val args = info.ast.typeParams.map(typedParam _)
         return AST.Typed.Name(info.name, args)
       case _: TypeInfo.TypeVar => halt("Infeasible")
     }
@@ -248,7 +248,7 @@ object TypeHierarchy {
       return Some(first)
     }
 
-    val tns = typeNames.map(tn => tn.ids)
+    val tns = typeNames.map((tn: AST.Typed.Name) => tn.ids)
     poset.lub(tns) match {
       case Some(lub) =>
         val tn = typeNames(0)
@@ -308,7 +308,7 @@ object TypeHierarchy {
       return Some(first)
     }
 
-    val tns = typeNames.map(tn => tn.ids)
+    val tns = typeNames.map((tn: AST.Typed.Name) => tn.ids)
     poset.glb(tns) match {
       case Some(glb) =>
         val (tpe, ancestors): (AST.Typed, HashSet[AST.Typed.Name]) = typeMap.get(glb) match {

@@ -125,8 +125,8 @@ import GlobalDeclarationResolver._
     }
   }
 
-  @memoize def scope(packageName: QName, imports: ISZ[AST.Stmt.Import], name: QName): Scope.Global = {
-    return Scope.Global(packageName, imports, ISZOps(name).dropRight(1))
+  @memoize def scope(pName: QName, imports: ISZ[AST.Stmt.Import], name: QName): Scope.Global = {
+    return Scope.Global(pName, imports, ISZOps(name).dropRight(1))
   }
 
   def checkParams(params: ISZ[AST.Param]): ISZ[String] = {
@@ -588,17 +588,17 @@ import GlobalDeclarationResolver._
     if (name.ids.isEmpty) {
       return Some(rootPackageInfo)
     }
-    var currentName = ISZ(ids(0).value)
+    var currName = ISZ(ids(0).value)
     var currentPosOpt = ids(0).attr.posOpt
-    declarePackage(currentName, currentPosOpt)
+    declarePackage(currName, currentPosOpt)
 
     for (i <- z"1" until ids.size) {
-      currentName = currentName :+ ids(i).value
+      currName = currName :+ ids(i).value
       currentPosOpt = ids(i).attr.posOpt
-      declarePackage(currentName, currentPosOpt)
+      declarePackage(currName, currentPosOpt)
     }
 
-    globalNameMap.get(currentName) match {
+    globalNameMap.get(currName) match {
       case Some(info: Info.Package) => return Some(info)
       case _ => return None()
     }

@@ -389,18 +389,18 @@ object MsgPack {
 
     def write_symbolScopeLocal(o: org.sireum.lang.symbol.Scope.Local): Unit = {
       writer.writeZ(Constants._symbolScopeLocal)
-      writer.writeHashMap(o.nameMap, writer.writeString, write_symbolInfo)
-      writer.writeHashMap(o.typeMap, writer.writeString, write_symbolTypeInfo)
-      writer.writeOption(o.localThisOpt, write_astTyped)
-      writer.writeOption(o.methodReturnOpt, write_astTyped)
-      writer.writeOption(o.outerOpt, write_symbolScope)
+      writer.writeHashMap(o.nameMap, writer.writeString _, write_symbolInfo _)
+      writer.writeHashMap(o.typeMap, writer.writeString _, write_symbolTypeInfo _)
+      writer.writeOption(o.localThisOpt, write_astTyped _)
+      writer.writeOption(o.methodReturnOpt, write_astTyped _)
+      writer.writeOption(o.outerOpt, write_symbolScope _)
     }
 
     def write_symbolScopeGlobal(o: org.sireum.lang.symbol.Scope.Global): Unit = {
       writer.writeZ(Constants._symbolScopeGlobal)
-      writer.writeISZ(o.packageName, writer.writeString)
-      writer.writeISZ(o.imports, write_astStmtImport)
-      writer.writeISZ(o.enclosingName, writer.writeString)
+      writer.writeISZ(o.packageName, writer.writeString _)
+      writer.writeISZ(o.imports, write_astStmtImport _)
+      writer.writeISZ(o.enclosingName, writer.writeString _)
     }
 
     def write_symbolInfo(o: org.sireum.lang.symbol.Info): Unit = {
@@ -421,107 +421,107 @@ object MsgPack {
 
     def write_symbolInfoPackage(o: org.sireum.lang.symbol.Info.Package): Unit = {
       writer.writeZ(Constants._symbolInfoPackage)
-      writer.writeISZ(o.name, writer.writeString)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeISZ(o.name, writer.writeString _)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoVar(o: org.sireum.lang.symbol.Info.Var): Unit = {
       writer.writeZ(Constants._symbolInfoVar)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.isInObject)
       write_symbolScope(o.scope)
       write_astStmtVar(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoSpecVar(o: org.sireum.lang.symbol.Info.SpecVar): Unit = {
       writer.writeZ(Constants._symbolInfoSpecVar)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.isInObject)
       write_symbolScope(o.scope)
       write_astStmtSpecVar(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoMethod(o: org.sireum.lang.symbol.Info.Method): Unit = {
       writer.writeZ(Constants._symbolInfoMethod)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.isInObject)
       write_symbolScope(o.scope)
       writer.writeB(o.hasBody)
       write_astStmtMethod(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoSpecMethod(o: org.sireum.lang.symbol.Info.SpecMethod): Unit = {
       writer.writeZ(Constants._symbolInfoSpecMethod)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.isInObject)
       write_symbolScope(o.scope)
       write_astStmtSpecMethod(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoObject(o: org.sireum.lang.symbol.Info.Object): Unit = {
       writer.writeZ(Constants._symbolInfoObject)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.isSynthetic)
       write_symbolScopeGlobal(o.scope)
       writer.writeB(o.outlined)
       writer.writeB(o.typeChecked)
       write_astStmtObject(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoExtMethod(o: org.sireum.lang.symbol.Info.ExtMethod): Unit = {
       writer.writeZ(Constants._symbolInfoExtMethod)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       write_symbolScopeGlobal(o.scope)
       write_astStmtExtMethod(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoEnum(o: org.sireum.lang.symbol.Info.Enum): Unit = {
       writer.writeZ(Constants._symbolInfoEnum)
-      writer.writeISZ(o.name, writer.writeString)
-      writer.writeMap(o.elements, writer.writeString, write_astResolvedInfo)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
-      writer.writeOption(o.elementTypedOpt, write_astTyped)
-      writer.writeOption(o.posOpt, writer.writePosition)
+      writer.writeISZ(o.name, writer.writeString _)
+      writer.writeMap(o.elements, writer.writeString _, write_astResolvedInfo _)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
+      writer.writeOption(o.elementTypedOpt, write_astTyped _)
+      writer.writeOption(o.posOpt, writer.writePosition _)
     }
 
     def write_symbolInfoEnumElement(o: org.sireum.lang.symbol.Info.EnumElement): Unit = {
       writer.writeZ(Constants._symbolInfoEnumElement)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.id)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
-      writer.writeOption(o.posOpt, writer.writePosition)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
+      writer.writeOption(o.posOpt, writer.writePosition _)
     }
 
     def write_symbolInfoLocalVar(o: org.sireum.lang.symbol.Info.LocalVar): Unit = {
       writer.writeZ(Constants._symbolInfoLocalVar)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
       writer.writeB(o.isVal)
       write_astId(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolInfoQuantVar(o: org.sireum.lang.symbol.Info.QuantVar): Unit = {
       writer.writeZ(Constants._symbolInfoQuantVar)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
       write_astId(o.ast)
-      writer.writeOption(o.typedOpt, write_astTyped)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
+      writer.writeOption(o.typedOpt, write_astTyped _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
     }
 
     def write_symbolTypeInfo(o: org.sireum.lang.symbol.TypeInfo): Unit = {
@@ -537,53 +537,53 @@ object MsgPack {
 
     def write_symbolTypeInfoSubZ(o: org.sireum.lang.symbol.TypeInfo.SubZ): Unit = {
       writer.writeZ(Constants._symbolTypeInfoSubZ)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       write_astStmtSubZ(o.ast)
     }
 
     def write_symbolTypeInfoEnum(o: org.sireum.lang.symbol.TypeInfo.Enum): Unit = {
       writer.writeZ(Constants._symbolTypeInfoEnum)
-      writer.writeISZ(o.owner, writer.writeString)
-      writer.writeMap(o.elements, writer.writeString, write_astResolvedInfo)
-      writer.writeOption(o.posOpt, writer.writePosition)
+      writer.writeISZ(o.owner, writer.writeString _)
+      writer.writeMap(o.elements, writer.writeString _, write_astResolvedInfo _)
+      writer.writeOption(o.posOpt, writer.writePosition _)
     }
 
     def write_symbolTypeInfoSig(o: org.sireum.lang.symbol.TypeInfo.Sig): Unit = {
       writer.writeZ(Constants._symbolTypeInfoSig)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.outlined)
       writer.writeB(o.typeChecked)
       write_astTypedName(o.tpe)
-      writer.writeISZ(o.ancestors, write_astTypedName)
-      writer.writeHashMap(o.specVars, writer.writeString, write_symbolInfoSpecVar)
-      writer.writeHashMap(o.specMethods, writer.writeString, write_symbolInfoSpecMethod)
-      writer.writeHashMap(o.methods, writer.writeString, write_symbolInfoMethod)
+      writer.writeISZ(o.ancestors, write_astTypedName _)
+      writer.writeHashMap(o.specVars, writer.writeString _, write_symbolInfoSpecVar _)
+      writer.writeHashMap(o.specMethods, writer.writeString _, write_symbolInfoSpecMethod _)
+      writer.writeHashMap(o.methods, writer.writeString _, write_symbolInfoMethod _)
       write_symbolScopeGlobal(o.scope)
       write_astStmtSig(o.ast)
     }
 
     def write_symbolTypeInfoAbstractDatatype(o: org.sireum.lang.symbol.TypeInfo.AbstractDatatype): Unit = {
       writer.writeZ(Constants._symbolTypeInfoAbstractDatatype)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeB(o.outlined)
       writer.writeB(o.typeChecked)
       write_astTypedName(o.tpe)
-      writer.writeOption(o.constructorTypeOpt, write_astTyped)
-      writer.writeOption(o.constructorResOpt, write_astResolvedInfo)
-      writer.writeMap(o.extractorTypeMap, writer.writeString, write_astTyped)
-      writer.writeOption(o.extractorResOpt, write_astResolvedInfo)
-      writer.writeISZ(o.ancestors, write_astTypedName)
-      writer.writeHashMap(o.specVars, writer.writeString, write_symbolInfoSpecVar)
-      writer.writeHashMap(o.vars, writer.writeString, write_symbolInfoVar)
-      writer.writeHashMap(o.specMethods, writer.writeString, write_symbolInfoSpecMethod)
-      writer.writeHashMap(o.methods, writer.writeString, write_symbolInfoMethod)
+      writer.writeOption(o.constructorTypeOpt, write_astTyped _)
+      writer.writeOption(o.constructorResOpt, write_astResolvedInfo _)
+      writer.writeMap(o.extractorTypeMap, writer.writeString _, write_astTyped _)
+      writer.writeOption(o.extractorResOpt, write_astResolvedInfo _)
+      writer.writeISZ(o.ancestors, write_astTypedName _)
+      writer.writeHashMap(o.specVars, writer.writeString _, write_symbolInfoSpecVar _)
+      writer.writeHashMap(o.vars, writer.writeString _, write_symbolInfoVar _)
+      writer.writeHashMap(o.specMethods, writer.writeString _, write_symbolInfoSpecMethod _)
+      writer.writeHashMap(o.methods, writer.writeString _, write_symbolInfoMethod _)
       write_symbolScopeGlobal(o.scope)
       write_astStmtAbstractDatatype(o.ast)
     }
 
     def write_symbolTypeInfoTypeAlias(o: org.sireum.lang.symbol.TypeInfo.TypeAlias): Unit = {
       writer.writeZ(Constants._symbolTypeInfoTypeAlias)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
       write_symbolScopeGlobal(o.scope)
       write_astStmtTypeAlias(o.ast)
     }
@@ -596,10 +596,10 @@ object MsgPack {
 
     def write_symbolTypeInfoMembers(o: org.sireum.lang.symbol.TypeInfo.Members): Unit = {
       writer.writeZ(Constants._symbolTypeInfoMembers)
-      writer.writeHashMap(o.specVars, writer.writeString, write_symbolInfoSpecVar)
-      writer.writeHashMap(o.vars, writer.writeString, write_symbolInfoVar)
-      writer.writeHashMap(o.specMethods, writer.writeString, write_symbolInfoSpecMethod)
-      writer.writeHashMap(o.methods, writer.writeString, write_symbolInfoMethod)
+      writer.writeHashMap(o.specVars, writer.writeString _, write_symbolInfoSpecVar _)
+      writer.writeHashMap(o.vars, writer.writeString _, write_symbolInfoVar _)
+      writer.writeHashMap(o.specMethods, writer.writeString _, write_symbolInfoSpecMethod _)
+      writer.writeHashMap(o.methods, writer.writeString _, write_symbolInfoMethod _)
     }
 
     def write_astTopUnit(o: org.sireum.lang.ast.TopUnit): Unit = {
@@ -612,27 +612,27 @@ object MsgPack {
 
     def write_astTopUnitProgram(o: org.sireum.lang.ast.TopUnit.Program): Unit = {
       writer.writeZ(Constants._astTopUnitProgram)
-      writer.writeOption(o.fileUriOpt, writer.writeString)
+      writer.writeOption(o.fileUriOpt, writer.writeString _)
       write_astName(o.packageName)
       write_astBody(o.body)
     }
 
     def write_astTopUnitSequentUnit(o: org.sireum.lang.ast.TopUnit.SequentUnit): Unit = {
       writer.writeZ(Constants._astTopUnitSequentUnit)
-      writer.writeOption(o.fileUriOpt, writer.writeString)
+      writer.writeOption(o.fileUriOpt, writer.writeString _)
       write_astLClauseSequent(o.sequent)
     }
 
     def write_astTopUnitTruthTableUnit(o: org.sireum.lang.ast.TopUnit.TruthTableUnit): Unit = {
       writer.writeZ(Constants._astTopUnitTruthTableUnit)
-      writer.writeOption(o.fileUriOpt, writer.writeString)
-      writer.writeISZ(o.stars, writer.writePosition)
-      writer.writeISZ(o.vars, write_astId)
+      writer.writeOption(o.fileUriOpt, writer.writeString _)
+      writer.writeISZ(o.stars, writer.writePosition _)
+      writer.writeISZ(o.vars, write_astId _)
       writer.writePosition(o.separator)
       writer.writeB(o.isSequent)
       write_astLClauseSequent(o.sequent)
-      writer.writeISZ(o.rows, write_astTruthTableRow)
-      writer.writeOption(o.conclusionOpt, write_astTruthTableConclusion)
+      writer.writeISZ(o.rows, write_astTruthTableRow _)
+      writer.writeOption(o.conclusionOpt, write_astTruthTableConclusion _)
     }
 
     def write_astStmt(o: org.sireum.lang.ast.Stmt): Unit = {
@@ -665,14 +665,14 @@ object MsgPack {
 
     def write_astStmtImport(o: org.sireum.lang.ast.Stmt.Import): Unit = {
       writer.writeZ(Constants._astStmtImport)
-      writer.writeISZ(o.importers, write_astStmtImportImporter)
+      writer.writeISZ(o.importers, write_astStmtImportImporter _)
       write_astAttr(o.attr)
     }
 
     def write_astStmtImportImporter(o: org.sireum.lang.ast.Stmt.Import.Importer): Unit = {
       writer.writeZ(Constants._astStmtImportImporter)
       write_astName(o.name)
-      writer.writeOption(o.selectorOpt, write_astStmtImportSelector)
+      writer.writeOption(o.selectorOpt, write_astStmtImportSelector _)
     }
 
     def write_astStmtImportSelector(o: org.sireum.lang.ast.Stmt.Import.Selector): Unit = {
@@ -684,7 +684,7 @@ object MsgPack {
 
     def write_astStmtImportMultiSelector(o: org.sireum.lang.ast.Stmt.Import.MultiSelector): Unit = {
       writer.writeZ(Constants._astStmtImportMultiSelector)
-      writer.writeISZ(o.selectors, write_astStmtImportNamedSelector)
+      writer.writeISZ(o.selectors, write_astStmtImportNamedSelector _)
     }
 
     def write_astStmtImportWildcardSelector(o: org.sireum.lang.ast.Stmt.Import.WildcardSelector): Unit = {
@@ -701,8 +701,8 @@ object MsgPack {
       writer.writeZ(Constants._astStmtVar)
       writer.writeB(o.isVal)
       write_astId(o.id)
-      writer.writeOption(o.tipeOpt, write_astType)
-      writer.writeOption(o.initOpt, write_astAssignExp)
+      writer.writeOption(o.tipeOpt, write_astType _)
+      writer.writeOption(o.initOpt, write_astAssignExp _)
       write_astAttr(o.attr)
     }
 
@@ -710,7 +710,7 @@ object MsgPack {
       writer.writeZ(Constants._astStmtVarPattern)
       writer.writeB(o.isVal)
       write_astPattern(o.pattern)
-      writer.writeOption(o.tipeOpt, write_astType)
+      writer.writeOption(o.tipeOpt, write_astType _)
       write_astAssignExp(o.init)
       write_astAttr(o.attr)
     }
@@ -730,7 +730,7 @@ object MsgPack {
       writer.writeB(o.isHelper)
       write_astMethodSig(o.sig)
       write_astContract(o.contract)
-      writer.writeOption(o.bodyOpt, write_astBody)
+      writer.writeOption(o.bodyOpt, write_astBody _)
       write_astAttr(o.attr)
     }
 
@@ -745,15 +745,15 @@ object MsgPack {
     def write_astStmtSpecMethod(o: org.sireum.lang.ast.Stmt.SpecMethod): Unit = {
       writer.writeZ(Constants._astStmtSpecMethod)
       write_astMethodSig(o.sig)
-      writer.writeISZ(o.defs, write_astSpecDef)
-      writer.writeISZ(o.where, write_astWhereDef)
+      writer.writeISZ(o.defs, write_astSpecDef _)
+      writer.writeISZ(o.where, write_astWhereDef _)
       write_astAttr(o.attr)
     }
 
     def write_astStmtEnum(o: org.sireum.lang.ast.Stmt.Enum): Unit = {
       writer.writeZ(Constants._astStmtEnum)
       write_astId(o.id)
-      writer.writeISZ(o.elements, write_astId)
+      writer.writeISZ(o.elements, write_astId _)
       write_astAttr(o.attr)
     }
 
@@ -776,8 +776,8 @@ object MsgPack {
       writer.writeZ(Constants._astStmtObject)
       writer.writeB(o.isExt)
       write_astId(o.id)
-      writer.writeISZ(o.parents, write_astType)
-      writer.writeISZ(o.stmts, write_astStmt)
+      writer.writeISZ(o.parents, write_astType _)
+      writer.writeISZ(o.stmts, write_astStmt _)
       write_astAttr(o.attr)
     }
 
@@ -786,9 +786,9 @@ object MsgPack {
       writer.writeB(o.isImmutable)
       writer.writeB(o.isExt)
       write_astId(o.id)
-      writer.writeISZ(o.typeParams, write_astTypeParam)
-      writer.writeISZ(o.parents, write_astTypeNamed)
-      writer.writeISZ(o.stmts, write_astStmt)
+      writer.writeISZ(o.typeParams, write_astTypeParam _)
+      writer.writeISZ(o.parents, write_astTypeNamed _)
+      writer.writeISZ(o.stmts, write_astStmt _)
       write_astAttr(o.attr)
     }
 
@@ -797,17 +797,17 @@ object MsgPack {
       writer.writeB(o.isRoot)
       writer.writeB(o.isDatatype)
       write_astId(o.id)
-      writer.writeISZ(o.typeParams, write_astTypeParam)
-      writer.writeISZ(o.params, write_astAbstractDatatypeParam)
-      writer.writeISZ(o.parents, write_astTypeNamed)
-      writer.writeISZ(o.stmts, write_astStmt)
+      writer.writeISZ(o.typeParams, write_astTypeParam _)
+      writer.writeISZ(o.params, write_astAbstractDatatypeParam _)
+      writer.writeISZ(o.parents, write_astTypeNamed _)
+      writer.writeISZ(o.stmts, write_astStmt _)
       write_astAttr(o.attr)
     }
 
     def write_astStmtTypeAlias(o: org.sireum.lang.ast.Stmt.TypeAlias): Unit = {
       writer.writeZ(Constants._astStmtTypeAlias)
       write_astId(o.id)
-      writer.writeISZ(o.typeParams, write_astTypeParam)
+      writer.writeISZ(o.typeParams, write_astTypeParam _)
       write_astType(o.tipe)
       write_astAttr(o.attr)
     }
@@ -836,15 +836,15 @@ object MsgPack {
     def write_astStmtMatch(o: org.sireum.lang.ast.Stmt.Match): Unit = {
       writer.writeZ(Constants._astStmtMatch)
       write_astExp(o.exp)
-      writer.writeISZ(o.cases, write_astCase)
+      writer.writeISZ(o.cases, write_astCase _)
       write_astAttr(o.attr)
     }
 
     def write_astStmtWhile(o: org.sireum.lang.ast.Stmt.While): Unit = {
       writer.writeZ(Constants._astStmtWhile)
       write_astExp(o.cond)
-      writer.writeISZ(o.invariants, write_astContractExp)
-      writer.writeISZ(o.modifies, write_astExp)
+      writer.writeISZ(o.invariants, write_astContractExp _)
+      writer.writeISZ(o.modifies, write_astExp _)
       write_astBody(o.body)
       write_astAttr(o.attr)
     }
@@ -852,24 +852,24 @@ object MsgPack {
     def write_astStmtDoWhile(o: org.sireum.lang.ast.Stmt.DoWhile): Unit = {
       writer.writeZ(Constants._astStmtDoWhile)
       write_astExp(o.cond)
-      writer.writeISZ(o.invariants, write_astContractExp)
-      writer.writeISZ(o.modifies, write_astExp)
+      writer.writeISZ(o.invariants, write_astContractExp _)
+      writer.writeISZ(o.modifies, write_astExp _)
       write_astBody(o.body)
       write_astAttr(o.attr)
     }
 
     def write_astStmtFor(o: org.sireum.lang.ast.Stmt.For): Unit = {
       writer.writeZ(Constants._astStmtFor)
-      writer.writeISZ(o.enumGens, write_astEnumGenFor)
-      writer.writeISZ(o.invariants, write_astContractExp)
-      writer.writeISZ(o.modifies, write_astExp)
+      writer.writeISZ(o.enumGens, write_astEnumGenFor _)
+      writer.writeISZ(o.invariants, write_astContractExp _)
+      writer.writeISZ(o.modifies, write_astExp _)
       write_astBody(o.body)
       write_astAttr(o.attr)
     }
 
     def write_astStmtReturn(o: org.sireum.lang.ast.Stmt.Return): Unit = {
       writer.writeZ(Constants._astStmtReturn)
-      writer.writeOption(o.expOpt, write_astExp)
+      writer.writeOption(o.expOpt, write_astExp _)
       write_astTypedAttr(o.attr)
     }
 
@@ -911,12 +911,12 @@ object MsgPack {
 
     def write_astLClauseInvariants(o: org.sireum.lang.ast.LClause.Invariants): Unit = {
       writer.writeZ(Constants._astLClauseInvariants)
-      writer.writeISZ(o.value, write_astContractExp)
+      writer.writeISZ(o.value, write_astContractExp _)
     }
 
     def write_astLClauseFacts(o: org.sireum.lang.ast.LClause.Facts): Unit = {
       writer.writeZ(Constants._astLClauseFacts)
-      writer.writeISZ(o.value, write_astLClauseFact)
+      writer.writeISZ(o.value, write_astLClauseFact _)
     }
 
     def write_astLClauseFact(o: org.sireum.lang.ast.LClause.Fact): Unit = {
@@ -927,7 +927,7 @@ object MsgPack {
 
     def write_astLClauseTheorems(o: org.sireum.lang.ast.LClause.Theorems): Unit = {
       writer.writeZ(Constants._astLClauseTheorems)
-      writer.writeISZ(o.value, write_astLClauseTheorem)
+      writer.writeISZ(o.value, write_astLClauseTheorem _)
     }
 
     def write_astLClauseTheorem(o: org.sireum.lang.ast.LClause.Theorem): Unit = {
@@ -938,26 +938,26 @@ object MsgPack {
 
     def write_astLClauseSequent(o: org.sireum.lang.ast.LClause.Sequent): Unit = {
       writer.writeZ(Constants._astLClauseSequent)
-      writer.writeISZ(o.premises, write_astExp)
-      writer.writeISZ(o.conclusions, write_astExp)
-      writer.writeOption(o.proofOpt, write_astLClauseProof)
+      writer.writeISZ(o.premises, write_astExp _)
+      writer.writeISZ(o.conclusions, write_astExp _)
+      writer.writeOption(o.proofOpt, write_astLClauseProof _)
     }
 
     def write_astLClauseProof(o: org.sireum.lang.ast.LClause.Proof): Unit = {
       writer.writeZ(Constants._astLClauseProof)
-      writer.writeISZ(o.steps, write_astProofStep)
+      writer.writeISZ(o.steps, write_astProofStep _)
     }
 
     def write_astContractExp(o: org.sireum.lang.ast.ContractExp): Unit = {
       writer.writeZ(Constants._astContractExp)
-      writer.writeOption(o.idOpt, write_astId)
+      writer.writeOption(o.idOpt, write_astId _)
       write_astExp(o.exp)
     }
 
     def write_astCase(o: org.sireum.lang.ast.Case): Unit = {
       writer.writeZ(Constants._astCase)
       write_astPattern(o.pattern)
-      writer.writeOption(o.condOpt, write_astExp)
+      writer.writeOption(o.condOpt, write_astExp _)
       write_astBody(o.body)
     }
 
@@ -981,15 +981,15 @@ object MsgPack {
       writer.writeB(o.isInclusive)
       write_astExp(o.start)
       write_astExp(o.end)
-      writer.writeOption(o.byOpt, write_astExp)
+      writer.writeOption(o.byOpt, write_astExp _)
       write_astAttr(o.attr)
     }
 
     def write_astEnumGenFor(o: org.sireum.lang.ast.EnumGen.For): Unit = {
       writer.writeZ(Constants._astEnumGenFor)
-      writer.writeOption(o.idOpt, write_astId)
+      writer.writeOption(o.idOpt, write_astId _)
       write_astEnumGenRange(o.range)
-      writer.writeOption(o.condOpt, write_astExp)
+      writer.writeOption(o.condOpt, write_astExp _)
     }
 
     def write_astType(o: org.sireum.lang.ast.Type): Unit = {
@@ -1003,7 +1003,7 @@ object MsgPack {
     def write_astTypeNamed(o: org.sireum.lang.ast.Type.Named): Unit = {
       writer.writeZ(Constants._astTypeNamed)
       write_astName(o.name)
-      writer.writeISZ(o.typeArgs, write_astType)
+      writer.writeISZ(o.typeArgs, write_astType _)
       write_astTypedAttr(o.attr)
     }
 
@@ -1011,14 +1011,14 @@ object MsgPack {
       writer.writeZ(Constants._astTypeFun)
       writer.writeB(o.isPure)
       writer.writeB(o.isByName)
-      writer.writeISZ(o.args, write_astType)
+      writer.writeISZ(o.args, write_astType _)
       write_astType(o.ret)
       write_astTypedAttr(o.attr)
     }
 
     def write_astTypeTuple(o: org.sireum.lang.ast.Type.Tuple): Unit = {
       writer.writeZ(Constants._astTypeTuple)
-      writer.writeISZ(o.args, write_astType)
+      writer.writeISZ(o.args, write_astType _)
       write_astTypedAttr(o.attr)
     }
 
@@ -1055,13 +1055,13 @@ object MsgPack {
     def write_astPatternVarBinding(o: org.sireum.lang.ast.Pattern.VarBinding): Unit = {
       writer.writeZ(Constants._astPatternVarBinding)
       write_astId(o.id)
-      writer.writeOption(o.tipeOpt, write_astType)
+      writer.writeOption(o.tipeOpt, write_astType _)
       write_astTypedAttr(o.attr)
     }
 
     def write_astPatternWildcard(o: org.sireum.lang.ast.Pattern.Wildcard): Unit = {
       writer.writeZ(Constants._astPatternWildcard)
-      writer.writeOption(o.typeOpt, write_astType)
+      writer.writeOption(o.typeOpt, write_astType _)
       write_astTypedAttr(o.attr)
     }
 
@@ -1072,9 +1072,9 @@ object MsgPack {
 
     def write_astPatternStructure(o: org.sireum.lang.ast.Pattern.Structure): Unit = {
       writer.writeZ(Constants._astPatternStructure)
-      writer.writeOption(o.idOpt, write_astId)
-      writer.writeOption(o.nameOpt, write_astName)
-      writer.writeISZ(o.patterns, write_astPattern)
+      writer.writeOption(o.idOpt, write_astId _)
+      writer.writeOption(o.nameOpt, write_astName _)
+      writer.writeISZ(o.patterns, write_astPattern _)
       write_astResolvedAttr(o.attr)
     }
 
@@ -1162,8 +1162,8 @@ object MsgPack {
     def write_astExpStringInterpolate(o: org.sireum.lang.ast.Exp.StringInterpolate): Unit = {
       writer.writeZ(Constants._astExpStringInterpolate)
       writer.writeString(o.prefix)
-      writer.writeISZ(o.lits, write_astExpLitString)
-      writer.writeISZ(o.args, write_astExp)
+      writer.writeISZ(o.lits, write_astExpLitString _)
+      writer.writeISZ(o.args, write_astExp _)
       write_astTypedAttr(o.attr)
     }
 
@@ -1174,7 +1174,7 @@ object MsgPack {
 
     def write_astExpSuper(o: org.sireum.lang.ast.Exp.Super): Unit = {
       writer.writeZ(Constants._astExpSuper)
-      writer.writeOption(o.idOpt, write_astId)
+      writer.writeOption(o.idOpt, write_astId _)
       write_astTypedAttr(o.attr)
     }
 
@@ -1218,33 +1218,33 @@ object MsgPack {
 
     def write_astExpTuple(o: org.sireum.lang.ast.Exp.Tuple): Unit = {
       writer.writeZ(Constants._astExpTuple)
-      writer.writeISZ(o.args, write_astExp)
+      writer.writeISZ(o.args, write_astExp _)
       write_astTypedAttr(o.attr)
     }
 
     def write_astExpSelect(o: org.sireum.lang.ast.Exp.Select): Unit = {
       writer.writeZ(Constants._astExpSelect)
-      writer.writeOption(o.receiverOpt, write_astExp)
+      writer.writeOption(o.receiverOpt, write_astExp _)
       write_astId(o.id)
-      writer.writeISZ(o.targs, write_astType)
+      writer.writeISZ(o.targs, write_astType _)
       write_astResolvedAttr(o.attr)
     }
 
     def write_astExpInvoke(o: org.sireum.lang.ast.Exp.Invoke): Unit = {
       writer.writeZ(Constants._astExpInvoke)
-      writer.writeOption(o.receiverOpt, write_astExp)
+      writer.writeOption(o.receiverOpt, write_astExp _)
       write_astId(o.id)
-      writer.writeISZ(o.targs, write_astType)
-      writer.writeISZ(o.args, write_astExp)
+      writer.writeISZ(o.targs, write_astType _)
+      writer.writeISZ(o.args, write_astExp _)
       write_astResolvedAttr(o.attr)
     }
 
     def write_astExpInvokeNamed(o: org.sireum.lang.ast.Exp.InvokeNamed): Unit = {
       writer.writeZ(Constants._astExpInvokeNamed)
-      writer.writeOption(o.receiverOpt, write_astExp)
+      writer.writeOption(o.receiverOpt, write_astExp _)
       write_astId(o.id)
-      writer.writeISZ(o.targs, write_astType)
-      writer.writeISZ(o.args, write_astNamedArg)
+      writer.writeISZ(o.targs, write_astType _)
+      writer.writeISZ(o.args, write_astNamedArg _)
       write_astResolvedAttr(o.attr)
     }
 
@@ -1259,13 +1259,13 @@ object MsgPack {
     def write_astExpFunParam(o: org.sireum.lang.ast.Exp.Fun.Param): Unit = {
       writer.writeZ(Constants._astExpFunParam)
       write_astId(o.id)
-      writer.writeOption(o.tipeOpt, write_astType)
+      writer.writeOption(o.tipeOpt, write_astType _)
     }
 
     def write_astExpFun(o: org.sireum.lang.ast.Exp.Fun): Unit = {
       writer.writeZ(Constants._astExpFun)
-      writer.writeISZ(o.context, writer.writeString)
-      writer.writeISZ(o.params, write_astExpFunParam)
+      writer.writeISZ(o.context, writer.writeString _)
+      writer.writeISZ(o.params, write_astExpFunParam _)
       write_astContract(o.contract)
       write_astAssignExp(o.exp)
       write_astTypedAttr(o.attr)
@@ -1273,7 +1273,7 @@ object MsgPack {
 
     def write_astExpForYield(o: org.sireum.lang.ast.Exp.ForYield): Unit = {
       writer.writeZ(Constants._astExpForYield)
-      writer.writeISZ(o.enumGens, write_astEnumGenFor)
+      writer.writeISZ(o.enumGens, write_astEnumGenFor _)
       write_astExp(o.exp)
       write_astTypedAttr(o.attr)
     }
@@ -1281,7 +1281,7 @@ object MsgPack {
     def write_astExpQuant(o: org.sireum.lang.ast.Exp.Quant): Unit = {
       writer.writeZ(Constants._astExpQuant)
       writer.writeB(o.isForall)
-      writer.writeISZ(o.varFragments, write_astVarFragment)
+      writer.writeISZ(o.varFragments, write_astVarFragment _)
       write_astExp(o.exp)
       write_astAttr(o.attr)
     }
@@ -1295,8 +1295,8 @@ object MsgPack {
 
     def write_astVarFragment(o: org.sireum.lang.ast.VarFragment): Unit = {
       writer.writeZ(Constants._astVarFragment)
-      writer.writeISZ(o.ids, write_astId)
-      writer.writeOption(o.domainOpt, write_astDomain)
+      writer.writeISZ(o.ids, write_astId _)
+      writer.writeOption(o.domainOpt, write_astDomain _)
     }
 
     def write_astDomain(o: org.sireum.lang.ast.Domain): Unit = {
@@ -1329,14 +1329,14 @@ object MsgPack {
 
     def write_astName(o: org.sireum.lang.ast.Name): Unit = {
       writer.writeZ(Constants._astName)
-      writer.writeISZ(o.ids, write_astId)
+      writer.writeISZ(o.ids, write_astId _)
       write_astAttr(o.attr)
     }
 
     def write_astBody(o: org.sireum.lang.ast.Body): Unit = {
       writer.writeZ(Constants._astBody)
-      writer.writeISZ(o.stmts, write_astStmt)
-      writer.writeISZ(o.undecls, writer.writeString)
+      writer.writeISZ(o.stmts, write_astStmt _)
+      writer.writeISZ(o.undecls, writer.writeString _)
     }
 
     def write_astAbstractDatatypeParam(o: org.sireum.lang.ast.AbstractDatatypeParam): Unit = {
@@ -1351,9 +1351,9 @@ object MsgPack {
       writer.writeZ(Constants._astMethodSig)
       writer.writeB(o.isPure)
       write_astId(o.id)
-      writer.writeISZ(o.typeParams, write_astTypeParam)
+      writer.writeISZ(o.typeParams, write_astTypeParam _)
       writer.writeB(o.hasParams)
-      writer.writeISZ(o.params, write_astParam)
+      writer.writeISZ(o.params, write_astParam _)
       write_astType(o.returnType)
     }
 
@@ -1371,17 +1371,17 @@ object MsgPack {
 
     def write_astContract(o: org.sireum.lang.ast.Contract): Unit = {
       writer.writeZ(Constants._astContract)
-      writer.writeISZ(o.reads, write_astExp)
-      writer.writeISZ(o.requires, write_astContractExp)
-      writer.writeISZ(o.modifies, write_astExp)
-      writer.writeISZ(o.ensures, write_astContractExp)
-      writer.writeISZ(o.subs, write_astSubContract)
+      writer.writeISZ(o.reads, write_astExp _)
+      writer.writeISZ(o.requires, write_astContractExp _)
+      writer.writeISZ(o.modifies, write_astExp _)
+      writer.writeISZ(o.ensures, write_astContractExp _)
+      writer.writeISZ(o.subs, write_astSubContract _)
     }
 
     def write_astSubContract(o: org.sireum.lang.ast.SubContract): Unit = {
       writer.writeZ(Constants._astSubContract)
       write_astId(o.id)
-      writer.writeISZ(o.params, write_astId)
+      writer.writeISZ(o.params, write_astId _)
       write_astContract(o.contract)
     }
 
@@ -1402,18 +1402,18 @@ object MsgPack {
     def write_astWhereDefDef(o: org.sireum.lang.ast.WhereDef.Def): Unit = {
       writer.writeZ(Constants._astWhereDefDef)
       write_astId(o.id)
-      writer.writeISZ(o.params, write_astParam)
+      writer.writeISZ(o.params, write_astParam _)
       write_astType(o.rTipe)
-      writer.writeISZ(o.defs, write_astSpecDef)
+      writer.writeISZ(o.defs, write_astSpecDef _)
     }
 
     def write_astSpecDef(o: org.sireum.lang.ast.SpecDef): Unit = {
       writer.writeZ(Constants._astSpecDef)
-      writer.writeOption(o.idOpt, write_astId)
+      writer.writeOption(o.idOpt, write_astId _)
       write_astExp(o.exp)
       writer.writeB(o.isOtherwise)
-      writer.writeOption(o.patternOpt, write_astPattern)
-      writer.writeOption(o.guardOpt, write_astExp)
+      writer.writeOption(o.patternOpt, write_astPattern _)
+      writer.writeOption(o.guardOpt, write_astExp _)
     }
 
     def write_astTyped(o: org.sireum.lang.ast.Typed): Unit = {
@@ -1436,20 +1436,20 @@ object MsgPack {
 
     def write_astTypedName(o: org.sireum.lang.ast.Typed.Name): Unit = {
       writer.writeZ(Constants._astTypedName)
-      writer.writeISZ(o.ids, writer.writeString)
-      writer.writeISZ(o.args, write_astTyped)
+      writer.writeISZ(o.ids, writer.writeString _)
+      writer.writeISZ(o.args, write_astTyped _)
     }
 
     def write_astTypedTuple(o: org.sireum.lang.ast.Typed.Tuple): Unit = {
       writer.writeZ(Constants._astTypedTuple)
-      writer.writeISZ(o.args, write_astTyped)
+      writer.writeISZ(o.args, write_astTyped _)
     }
 
     def write_astTypedFun(o: org.sireum.lang.ast.Typed.Fun): Unit = {
       writer.writeZ(Constants._astTypedFun)
       writer.writeB(o.isPure)
       writer.writeB(o.isByName)
-      writer.writeISZ(o.args, write_astTyped)
+      writer.writeISZ(o.args, write_astTyped _)
       write_astTyped(o.ret)
     }
 
@@ -1460,18 +1460,18 @@ object MsgPack {
 
     def write_astTypedPackage(o: org.sireum.lang.ast.Typed.Package): Unit = {
       writer.writeZ(Constants._astTypedPackage)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astTypedObject(o: org.sireum.lang.ast.Typed.Object): Unit = {
       writer.writeZ(Constants._astTypedObject)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.id)
     }
 
     def write_astTypedEnum(o: org.sireum.lang.ast.Typed.Enum): Unit = {
       writer.writeZ(Constants._astTypedEnum)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astTypedMethodSubst(o: org.sireum.lang.ast.Typed.Method.Subst): Unit = {
@@ -1484,35 +1484,35 @@ object MsgPack {
       writer.writeZ(Constants._astTypedMethod)
       writer.writeB(o.isInObject)
       write_astMethodModeType(o.mode)
-      writer.writeISZ(o.typeParams, writer.writeString)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.typeParams, writer.writeString _)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.name)
-      writer.writeISZ(o.paramNames, writer.writeString)
-      writer.writeISZ(o.substs, write_astTypedMethodSubst)
+      writer.writeISZ(o.paramNames, writer.writeString _)
+      writer.writeISZ(o.substs, write_astTypedMethodSubst _)
       write_astTypedFun(o.tpe)
     }
 
     def write_astTypedMethods(o: org.sireum.lang.ast.Typed.Methods): Unit = {
       writer.writeZ(Constants._astTypedMethods)
-      writer.writeISZ(o.methods, write_astTypedMethod)
+      writer.writeISZ(o.methods, write_astTypedMethod _)
     }
 
     def write_astAttr(o: org.sireum.lang.ast.Attr): Unit = {
       writer.writeZ(Constants._astAttr)
-      writer.writeOption(o.posOpt, writer.writePosition)
+      writer.writeOption(o.posOpt, writer.writePosition _)
     }
 
     def write_astTypedAttr(o: org.sireum.lang.ast.TypedAttr): Unit = {
       writer.writeZ(Constants._astTypedAttr)
-      writer.writeOption(o.posOpt, writer.writePosition)
-      writer.writeOption(o.typedOpt, write_astTyped)
+      writer.writeOption(o.posOpt, writer.writePosition _)
+      writer.writeOption(o.typedOpt, write_astTyped _)
     }
 
     def write_astResolvedAttr(o: org.sireum.lang.ast.ResolvedAttr): Unit = {
       writer.writeZ(Constants._astResolvedAttr)
-      writer.writeOption(o.posOpt, writer.writePosition)
-      writer.writeOption(o.resOpt, write_astResolvedInfo)
-      writer.writeOption(o.typedOpt, write_astTyped)
+      writer.writeOption(o.posOpt, writer.writePosition _)
+      writer.writeOption(o.resOpt, write_astResolvedInfo _)
+      writer.writeOption(o.typedOpt, write_astTyped _)
     }
 
     def write_astResolvedInfo(o: org.sireum.lang.ast.ResolvedInfo): Unit = {
@@ -1542,31 +1542,31 @@ object MsgPack {
 
     def write_astResolvedInfoPackage(o: org.sireum.lang.ast.ResolvedInfo.Package): Unit = {
       writer.writeZ(Constants._astResolvedInfoPackage)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astResolvedInfoEnum(o: org.sireum.lang.ast.ResolvedInfo.Enum): Unit = {
       writer.writeZ(Constants._astResolvedInfoEnum)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astResolvedInfoEnumElement(o: org.sireum.lang.ast.ResolvedInfo.EnumElement): Unit = {
       writer.writeZ(Constants._astResolvedInfoEnumElement)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.name)
       writer.writeZ(o.ordinal)
     }
 
     def write_astResolvedInfoObject(o: org.sireum.lang.ast.ResolvedInfo.Object): Unit = {
       writer.writeZ(Constants._astResolvedInfoObject)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astResolvedInfoVar(o: org.sireum.lang.ast.ResolvedInfo.Var): Unit = {
       writer.writeZ(Constants._astResolvedInfoVar)
       writer.writeB(o.isInObject)
       writer.writeB(o.isSpec)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.id)
     }
 
@@ -1574,21 +1574,21 @@ object MsgPack {
       writer.writeZ(Constants._astResolvedInfoMethod)
       writer.writeB(o.isInObject)
       write_astMethodModeType(o.mode)
-      writer.writeISZ(o.typeParams, writer.writeString)
-      writer.writeISZ(o.owner, writer.writeString)
+      writer.writeISZ(o.typeParams, writer.writeString _)
+      writer.writeISZ(o.owner, writer.writeString _)
       writer.writeString(o.name)
-      writer.writeISZ(o.paramNames, writer.writeString)
-      writer.writeOption(o.tpeOpt, write_astTypedFun)
+      writer.writeISZ(o.paramNames, writer.writeString _)
+      writer.writeOption(o.tpeOpt, write_astTypedFun _)
     }
 
     def write_astResolvedInfoMethods(o: org.sireum.lang.ast.ResolvedInfo.Methods): Unit = {
       writer.writeZ(Constants._astResolvedInfoMethods)
-      writer.writeISZ(o.methods, write_astResolvedInfoMethod)
+      writer.writeISZ(o.methods, write_astResolvedInfoMethod _)
     }
 
     def write_astResolvedInfoType(o: org.sireum.lang.ast.ResolvedInfo.Type): Unit = {
       writer.writeZ(Constants._astResolvedInfoType)
-      writer.writeISZ(o.name, writer.writeString)
+      writer.writeISZ(o.name, writer.writeString _)
     }
 
     def write_astResolvedInfoTuple(o: org.sireum.lang.ast.ResolvedInfo.Tuple): Unit = {
@@ -1599,7 +1599,7 @@ object MsgPack {
 
     def write_astResolvedInfoLocalVar(o: org.sireum.lang.ast.ResolvedInfo.LocalVar): Unit = {
       writer.writeZ(Constants._astResolvedInfoLocalVar)
-      writer.writeISZ(o.context, writer.writeString)
+      writer.writeISZ(o.context, writer.writeString _)
       writer.writeString(o.id)
     }
 
@@ -1621,7 +1621,7 @@ object MsgPack {
       writer.writeZ(Constants._astProofStepSubProof)
       write_astExpLitZ(o.step)
       write_astAssumeProofStep(o.assumeStep)
-      writer.writeISZ(o.steps, write_astProofStep)
+      writer.writeISZ(o.steps, write_astProofStep _)
     }
 
     def write_astAssumeProofStep(o: org.sireum.lang.ast.AssumeProofStep): Unit = {
@@ -1641,13 +1641,13 @@ object MsgPack {
     def write_astAssumeProofStepForallIntroAps(o: org.sireum.lang.ast.AssumeProofStep.ForallIntroAps): Unit = {
       writer.writeZ(Constants._astAssumeProofStepForallIntroAps)
       write_astExpLitZ(o.step)
-      writer.writeISZ(o.varFragments, write_astVarFragment)
+      writer.writeISZ(o.varFragments, write_astVarFragment _)
     }
 
     def write_astAssumeProofStepExistsElimAps(o: org.sireum.lang.ast.AssumeProofStep.ExistsElimAps): Unit = {
       writer.writeZ(Constants._astAssumeProofStepExistsElimAps)
       write_astExpLitZ(o.step)
-      writer.writeISZ(o.varFragments, write_astVarFragment)
+      writer.writeISZ(o.varFragments, write_astVarFragment _)
       write_astExp(o.exp)
     }
 
@@ -1684,14 +1684,14 @@ object MsgPack {
     def write_astJustAuto(o: org.sireum.lang.ast.Just.Auto): Unit = {
       writer.writeZ(Constants._astJustAuto)
       writer.writeB(o.isAlgebra)
-      writer.writeISZ(o.steps, write_astExpLitZ)
+      writer.writeISZ(o.steps, write_astExpLitZ _)
       write_astAttr(o.attr)
     }
 
     def write_astJustCoq(o: org.sireum.lang.ast.Just.Coq): Unit = {
       writer.writeZ(Constants._astJustCoq)
       write_astExpLitString(o.path)
-      writer.writeISZ(o.steps, write_astExpLitZ)
+      writer.writeISZ(o.steps, write_astExpLitZ _)
       write_astAttr(o.attr)
     }
 
@@ -1705,7 +1705,7 @@ object MsgPack {
 
     def write_astJustInvariant(o: org.sireum.lang.ast.Just.Invariant): Unit = {
       writer.writeZ(Constants._astJustInvariant)
-      writer.writeOption(o.nameOpt, write_astName)
+      writer.writeOption(o.nameOpt, write_astName _)
       write_astAttr(o.attr)
     }
 
@@ -1724,7 +1724,7 @@ object MsgPack {
     def write_astJustImplyElim(o: org.sireum.lang.ast.Just.ImplyElim): Unit = {
       writer.writeZ(Constants._astJustImplyElim)
       write_astExpLitZ(o.implyStep)
-      writer.writeISZ(o.steps, write_astExpLitZ)
+      writer.writeISZ(o.steps, write_astExpLitZ _)
       write_astAttr(o.attr)
     }
 
@@ -1756,14 +1756,14 @@ object MsgPack {
     def write_astJustForallElim(o: org.sireum.lang.ast.Just.ForallElim): Unit = {
       writer.writeZ(Constants._astJustForallElim)
       write_astExpLitZ(o.forallStep)
-      writer.writeISZ(o.args, write_astExp)
+      writer.writeISZ(o.args, write_astExp _)
       write_astAttr(o.attr)
     }
 
     def write_astJustExistsIntro(o: org.sireum.lang.ast.Just.ExistsIntro): Unit = {
       writer.writeZ(Constants._astJustExistsIntro)
       write_astExpLitZ(o.existsStep)
-      writer.writeISZ(o.args, write_astExp)
+      writer.writeISZ(o.args, write_astExp _)
       write_astAttr(o.attr)
     }
 
@@ -1784,13 +1784,13 @@ object MsgPack {
     def write_astJustOrElim(o: org.sireum.lang.ast.Just.OrElim): Unit = {
       writer.writeZ(Constants._astJustOrElim)
       write_astExpLitZ(o.orStep)
-      writer.writeISZ(o.subProofSteps, write_astExpLitZ)
+      writer.writeISZ(o.subProofSteps, write_astExpLitZ _)
       write_astAttr(o.attr)
     }
 
     def write_astJustAndIntro(o: org.sireum.lang.ast.Just.AndIntro): Unit = {
       writer.writeZ(Constants._astJustAndIntro)
-      writer.writeISZ(o.steps, write_astExpLitZ)
+      writer.writeISZ(o.steps, write_astExpLitZ _)
       write_astAttr(o.attr)
     }
 
@@ -1816,7 +1816,7 @@ object MsgPack {
 
     def write_astTruthTableAssignment(o: org.sireum.lang.ast.TruthTable.Assignment): Unit = {
       writer.writeZ(Constants._astTruthTableAssignment)
-      writer.writeISZ(o.values, write_astExpLitB)
+      writer.writeISZ(o.values, write_astExpLitB _)
       write_astAttr(o.attr)
     }
 
@@ -1832,7 +1832,7 @@ object MsgPack {
     def write_astTruthTableConclusionValidity(o: org.sireum.lang.ast.TruthTable.Conclusion.Validity): Unit = {
       writer.writeZ(Constants._astTruthTableConclusionValidity)
       writer.writeB(o.isValid)
-      writer.writeISZ(o.assignments, write_astTruthTableAssignment)
+      writer.writeISZ(o.assignments, write_astTruthTableAssignment _)
       write_astAttr(o.attr)
     }
 
@@ -1848,8 +1848,8 @@ object MsgPack {
 
     def write_astTruthTableConclusionContingent(o: org.sireum.lang.ast.TruthTable.Conclusion.Contingent): Unit = {
       writer.writeZ(Constants._astTruthTableConclusionContingent)
-      writer.writeISZ(o.trueAssignments, write_astTruthTableAssignment)
-      writer.writeISZ(o.falseAssignments, write_astTruthTableAssignment)
+      writer.writeISZ(o.trueAssignments, write_astTruthTableAssignment _)
+      writer.writeISZ(o.falseAssignments, write_astTruthTableAssignment _)
       write_astAttr(o.attr)
     }
 
@@ -4833,7 +4833,7 @@ object MsgPack {
       val r = reader.read_symbolScope()
       return r
     }
-    val r = to(data, f_symbolScope)
+    val r = to(data, f_symbolScope _)
     return r
   }
 
@@ -4848,7 +4848,7 @@ object MsgPack {
       val r = reader.read_symbolScopeLocal()
       return r
     }
-    val r = to(data, f_symbolScopeLocal)
+    val r = to(data, f_symbolScopeLocal _)
     return r
   }
 
@@ -4863,7 +4863,7 @@ object MsgPack {
       val r = reader.read_symbolScopeGlobal()
       return r
     }
-    val r = to(data, f_symbolScopeGlobal)
+    val r = to(data, f_symbolScopeGlobal _)
     return r
   }
 
@@ -4878,7 +4878,7 @@ object MsgPack {
       val r = reader.read_symbolInfo()
       return r
     }
-    val r = to(data, f_symbolInfo)
+    val r = to(data, f_symbolInfo _)
     return r
   }
 
@@ -4893,7 +4893,7 @@ object MsgPack {
       val r = reader.read_symbolInfoPackage()
       return r
     }
-    val r = to(data, f_symbolInfoPackage)
+    val r = to(data, f_symbolInfoPackage _)
     return r
   }
 
@@ -4908,7 +4908,7 @@ object MsgPack {
       val r = reader.read_symbolInfoVar()
       return r
     }
-    val r = to(data, f_symbolInfoVar)
+    val r = to(data, f_symbolInfoVar _)
     return r
   }
 
@@ -4923,7 +4923,7 @@ object MsgPack {
       val r = reader.read_symbolInfoSpecVar()
       return r
     }
-    val r = to(data, f_symbolInfoSpecVar)
+    val r = to(data, f_symbolInfoSpecVar _)
     return r
   }
 
@@ -4938,7 +4938,7 @@ object MsgPack {
       val r = reader.read_symbolInfoMethod()
       return r
     }
-    val r = to(data, f_symbolInfoMethod)
+    val r = to(data, f_symbolInfoMethod _)
     return r
   }
 
@@ -4953,7 +4953,7 @@ object MsgPack {
       val r = reader.read_symbolInfoSpecMethod()
       return r
     }
-    val r = to(data, f_symbolInfoSpecMethod)
+    val r = to(data, f_symbolInfoSpecMethod _)
     return r
   }
 
@@ -4968,7 +4968,7 @@ object MsgPack {
       val r = reader.read_symbolInfoObject()
       return r
     }
-    val r = to(data, f_symbolInfoObject)
+    val r = to(data, f_symbolInfoObject _)
     return r
   }
 
@@ -4983,7 +4983,7 @@ object MsgPack {
       val r = reader.read_symbolInfoExtMethod()
       return r
     }
-    val r = to(data, f_symbolInfoExtMethod)
+    val r = to(data, f_symbolInfoExtMethod _)
     return r
   }
 
@@ -4998,7 +4998,7 @@ object MsgPack {
       val r = reader.read_symbolInfoEnum()
       return r
     }
-    val r = to(data, f_symbolInfoEnum)
+    val r = to(data, f_symbolInfoEnum _)
     return r
   }
 
@@ -5013,7 +5013,7 @@ object MsgPack {
       val r = reader.read_symbolInfoEnumElement()
       return r
     }
-    val r = to(data, f_symbolInfoEnumElement)
+    val r = to(data, f_symbolInfoEnumElement _)
     return r
   }
 
@@ -5028,7 +5028,7 @@ object MsgPack {
       val r = reader.read_symbolInfoLocalVar()
       return r
     }
-    val r = to(data, f_symbolInfoLocalVar)
+    val r = to(data, f_symbolInfoLocalVar _)
     return r
   }
 
@@ -5043,7 +5043,7 @@ object MsgPack {
       val r = reader.read_symbolInfoQuantVar()
       return r
     }
-    val r = to(data, f_symbolInfoQuantVar)
+    val r = to(data, f_symbolInfoQuantVar _)
     return r
   }
 
@@ -5058,7 +5058,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfo()
       return r
     }
-    val r = to(data, f_symbolTypeInfo)
+    val r = to(data, f_symbolTypeInfo _)
     return r
   }
 
@@ -5073,7 +5073,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoSubZ()
       return r
     }
-    val r = to(data, f_symbolTypeInfoSubZ)
+    val r = to(data, f_symbolTypeInfoSubZ _)
     return r
   }
 
@@ -5088,7 +5088,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoEnum()
       return r
     }
-    val r = to(data, f_symbolTypeInfoEnum)
+    val r = to(data, f_symbolTypeInfoEnum _)
     return r
   }
 
@@ -5103,7 +5103,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoSig()
       return r
     }
-    val r = to(data, f_symbolTypeInfoSig)
+    val r = to(data, f_symbolTypeInfoSig _)
     return r
   }
 
@@ -5118,7 +5118,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoAbstractDatatype()
       return r
     }
-    val r = to(data, f_symbolTypeInfoAbstractDatatype)
+    val r = to(data, f_symbolTypeInfoAbstractDatatype _)
     return r
   }
 
@@ -5133,7 +5133,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoTypeAlias()
       return r
     }
-    val r = to(data, f_symbolTypeInfoTypeAlias)
+    val r = to(data, f_symbolTypeInfoTypeAlias _)
     return r
   }
 
@@ -5148,7 +5148,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoTypeVar()
       return r
     }
-    val r = to(data, f_symbolTypeInfoTypeVar)
+    val r = to(data, f_symbolTypeInfoTypeVar _)
     return r
   }
 
@@ -5163,7 +5163,7 @@ object MsgPack {
       val r = reader.read_symbolTypeInfoMembers()
       return r
     }
-    val r = to(data, f_symbolTypeInfoMembers)
+    val r = to(data, f_symbolTypeInfoMembers _)
     return r
   }
 
@@ -5178,7 +5178,7 @@ object MsgPack {
       val r = reader.read_astTopUnit()
       return r
     }
-    val r = to(data, f_astTopUnit)
+    val r = to(data, f_astTopUnit _)
     return r
   }
 
@@ -5193,7 +5193,7 @@ object MsgPack {
       val r = reader.read_astTopUnitProgram()
       return r
     }
-    val r = to(data, f_astTopUnitProgram)
+    val r = to(data, f_astTopUnitProgram _)
     return r
   }
 
@@ -5208,7 +5208,7 @@ object MsgPack {
       val r = reader.read_astTopUnitSequentUnit()
       return r
     }
-    val r = to(data, f_astTopUnitSequentUnit)
+    val r = to(data, f_astTopUnitSequentUnit _)
     return r
   }
 
@@ -5223,7 +5223,7 @@ object MsgPack {
       val r = reader.read_astTopUnitTruthTableUnit()
       return r
     }
-    val r = to(data, f_astTopUnitTruthTableUnit)
+    val r = to(data, f_astTopUnitTruthTableUnit _)
     return r
   }
 
@@ -5238,7 +5238,7 @@ object MsgPack {
       val r = reader.read_astStmt()
       return r
     }
-    val r = to(data, f_astStmt)
+    val r = to(data, f_astStmt _)
     return r
   }
 
@@ -5253,7 +5253,7 @@ object MsgPack {
       val r = reader.read_astStmtImport()
       return r
     }
-    val r = to(data, f_astStmtImport)
+    val r = to(data, f_astStmtImport _)
     return r
   }
 
@@ -5268,7 +5268,7 @@ object MsgPack {
       val r = reader.read_astStmtImportImporter()
       return r
     }
-    val r = to(data, f_astStmtImportImporter)
+    val r = to(data, f_astStmtImportImporter _)
     return r
   }
 
@@ -5283,7 +5283,7 @@ object MsgPack {
       val r = reader.read_astStmtImportSelector()
       return r
     }
-    val r = to(data, f_astStmtImportSelector)
+    val r = to(data, f_astStmtImportSelector _)
     return r
   }
 
@@ -5298,7 +5298,7 @@ object MsgPack {
       val r = reader.read_astStmtImportMultiSelector()
       return r
     }
-    val r = to(data, f_astStmtImportMultiSelector)
+    val r = to(data, f_astStmtImportMultiSelector _)
     return r
   }
 
@@ -5313,7 +5313,7 @@ object MsgPack {
       val r = reader.read_astStmtImportWildcardSelector()
       return r
     }
-    val r = to(data, f_astStmtImportWildcardSelector)
+    val r = to(data, f_astStmtImportWildcardSelector _)
     return r
   }
 
@@ -5328,7 +5328,7 @@ object MsgPack {
       val r = reader.read_astStmtImportNamedSelector()
       return r
     }
-    val r = to(data, f_astStmtImportNamedSelector)
+    val r = to(data, f_astStmtImportNamedSelector _)
     return r
   }
 
@@ -5343,7 +5343,7 @@ object MsgPack {
       val r = reader.read_astStmtVar()
       return r
     }
-    val r = to(data, f_astStmtVar)
+    val r = to(data, f_astStmtVar _)
     return r
   }
 
@@ -5358,7 +5358,7 @@ object MsgPack {
       val r = reader.read_astStmtVarPattern()
       return r
     }
-    val r = to(data, f_astStmtVarPattern)
+    val r = to(data, f_astStmtVarPattern _)
     return r
   }
 
@@ -5373,7 +5373,7 @@ object MsgPack {
       val r = reader.read_astStmtSpecVar()
       return r
     }
-    val r = to(data, f_astStmtSpecVar)
+    val r = to(data, f_astStmtSpecVar _)
     return r
   }
 
@@ -5388,7 +5388,7 @@ object MsgPack {
       val r = reader.read_astStmtMethod()
       return r
     }
-    val r = to(data, f_astStmtMethod)
+    val r = to(data, f_astStmtMethod _)
     return r
   }
 
@@ -5403,7 +5403,7 @@ object MsgPack {
       val r = reader.read_astStmtExtMethod()
       return r
     }
-    val r = to(data, f_astStmtExtMethod)
+    val r = to(data, f_astStmtExtMethod _)
     return r
   }
 
@@ -5418,7 +5418,7 @@ object MsgPack {
       val r = reader.read_astStmtSpecMethod()
       return r
     }
-    val r = to(data, f_astStmtSpecMethod)
+    val r = to(data, f_astStmtSpecMethod _)
     return r
   }
 
@@ -5433,7 +5433,7 @@ object MsgPack {
       val r = reader.read_astStmtEnum()
       return r
     }
-    val r = to(data, f_astStmtEnum)
+    val r = to(data, f_astStmtEnum _)
     return r
   }
 
@@ -5448,7 +5448,7 @@ object MsgPack {
       val r = reader.read_astStmtSubZ()
       return r
     }
-    val r = to(data, f_astStmtSubZ)
+    val r = to(data, f_astStmtSubZ _)
     return r
   }
 
@@ -5463,7 +5463,7 @@ object MsgPack {
       val r = reader.read_astStmtObject()
       return r
     }
-    val r = to(data, f_astStmtObject)
+    val r = to(data, f_astStmtObject _)
     return r
   }
 
@@ -5478,7 +5478,7 @@ object MsgPack {
       val r = reader.read_astStmtSig()
       return r
     }
-    val r = to(data, f_astStmtSig)
+    val r = to(data, f_astStmtSig _)
     return r
   }
 
@@ -5493,7 +5493,7 @@ object MsgPack {
       val r = reader.read_astStmtAbstractDatatype()
       return r
     }
-    val r = to(data, f_astStmtAbstractDatatype)
+    val r = to(data, f_astStmtAbstractDatatype _)
     return r
   }
 
@@ -5508,7 +5508,7 @@ object MsgPack {
       val r = reader.read_astStmtTypeAlias()
       return r
     }
-    val r = to(data, f_astStmtTypeAlias)
+    val r = to(data, f_astStmtTypeAlias _)
     return r
   }
 
@@ -5523,7 +5523,7 @@ object MsgPack {
       val r = reader.read_astStmtAssign()
       return r
     }
-    val r = to(data, f_astStmtAssign)
+    val r = to(data, f_astStmtAssign _)
     return r
   }
 
@@ -5538,7 +5538,7 @@ object MsgPack {
       val r = reader.read_astStmtBlock()
       return r
     }
-    val r = to(data, f_astStmtBlock)
+    val r = to(data, f_astStmtBlock _)
     return r
   }
 
@@ -5553,7 +5553,7 @@ object MsgPack {
       val r = reader.read_astStmtIf()
       return r
     }
-    val r = to(data, f_astStmtIf)
+    val r = to(data, f_astStmtIf _)
     return r
   }
 
@@ -5568,7 +5568,7 @@ object MsgPack {
       val r = reader.read_astStmtMatch()
       return r
     }
-    val r = to(data, f_astStmtMatch)
+    val r = to(data, f_astStmtMatch _)
     return r
   }
 
@@ -5583,7 +5583,7 @@ object MsgPack {
       val r = reader.read_astStmtWhile()
       return r
     }
-    val r = to(data, f_astStmtWhile)
+    val r = to(data, f_astStmtWhile _)
     return r
   }
 
@@ -5598,7 +5598,7 @@ object MsgPack {
       val r = reader.read_astStmtDoWhile()
       return r
     }
-    val r = to(data, f_astStmtDoWhile)
+    val r = to(data, f_astStmtDoWhile _)
     return r
   }
 
@@ -5613,7 +5613,7 @@ object MsgPack {
       val r = reader.read_astStmtFor()
       return r
     }
-    val r = to(data, f_astStmtFor)
+    val r = to(data, f_astStmtFor _)
     return r
   }
 
@@ -5628,7 +5628,7 @@ object MsgPack {
       val r = reader.read_astStmtReturn()
       return r
     }
-    val r = to(data, f_astStmtReturn)
+    val r = to(data, f_astStmtReturn _)
     return r
   }
 
@@ -5643,7 +5643,7 @@ object MsgPack {
       val r = reader.read_astStmtLStmt()
       return r
     }
-    val r = to(data, f_astStmtLStmt)
+    val r = to(data, f_astStmtLStmt _)
     return r
   }
 
@@ -5658,7 +5658,7 @@ object MsgPack {
       val r = reader.read_astStmtExpr()
       return r
     }
-    val r = to(data, f_astStmtExpr)
+    val r = to(data, f_astStmtExpr _)
     return r
   }
 
@@ -5673,7 +5673,7 @@ object MsgPack {
       val r = reader.read_astAssignExp()
       return r
     }
-    val r = to(data, f_astAssignExp)
+    val r = to(data, f_astAssignExp _)
     return r
   }
 
@@ -5688,7 +5688,7 @@ object MsgPack {
       val r = reader.read_astLClause()
       return r
     }
-    val r = to(data, f_astLClause)
+    val r = to(data, f_astLClause _)
     return r
   }
 
@@ -5703,7 +5703,7 @@ object MsgPack {
       val r = reader.read_astLClauseInvariants()
       return r
     }
-    val r = to(data, f_astLClauseInvariants)
+    val r = to(data, f_astLClauseInvariants _)
     return r
   }
 
@@ -5718,7 +5718,7 @@ object MsgPack {
       val r = reader.read_astLClauseFacts()
       return r
     }
-    val r = to(data, f_astLClauseFacts)
+    val r = to(data, f_astLClauseFacts _)
     return r
   }
 
@@ -5733,7 +5733,7 @@ object MsgPack {
       val r = reader.read_astLClauseFact()
       return r
     }
-    val r = to(data, f_astLClauseFact)
+    val r = to(data, f_astLClauseFact _)
     return r
   }
 
@@ -5748,7 +5748,7 @@ object MsgPack {
       val r = reader.read_astLClauseTheorems()
       return r
     }
-    val r = to(data, f_astLClauseTheorems)
+    val r = to(data, f_astLClauseTheorems _)
     return r
   }
 
@@ -5763,7 +5763,7 @@ object MsgPack {
       val r = reader.read_astLClauseTheorem()
       return r
     }
-    val r = to(data, f_astLClauseTheorem)
+    val r = to(data, f_astLClauseTheorem _)
     return r
   }
 
@@ -5778,7 +5778,7 @@ object MsgPack {
       val r = reader.read_astLClauseSequent()
       return r
     }
-    val r = to(data, f_astLClauseSequent)
+    val r = to(data, f_astLClauseSequent _)
     return r
   }
 
@@ -5793,7 +5793,7 @@ object MsgPack {
       val r = reader.read_astLClauseProof()
       return r
     }
-    val r = to(data, f_astLClauseProof)
+    val r = to(data, f_astLClauseProof _)
     return r
   }
 
@@ -5808,7 +5808,7 @@ object MsgPack {
       val r = reader.read_astContractExp()
       return r
     }
-    val r = to(data, f_astContractExp)
+    val r = to(data, f_astContractExp _)
     return r
   }
 
@@ -5823,7 +5823,7 @@ object MsgPack {
       val r = reader.read_astCase()
       return r
     }
-    val r = to(data, f_astCase)
+    val r = to(data, f_astCase _)
     return r
   }
 
@@ -5838,7 +5838,7 @@ object MsgPack {
       val r = reader.read_astEnumGenRange()
       return r
     }
-    val r = to(data, f_astEnumGenRange)
+    val r = to(data, f_astEnumGenRange _)
     return r
   }
 
@@ -5853,7 +5853,7 @@ object MsgPack {
       val r = reader.read_astEnumGenRangeExpr()
       return r
     }
-    val r = to(data, f_astEnumGenRangeExpr)
+    val r = to(data, f_astEnumGenRangeExpr _)
     return r
   }
 
@@ -5868,7 +5868,7 @@ object MsgPack {
       val r = reader.read_astEnumGenRangeStep()
       return r
     }
-    val r = to(data, f_astEnumGenRangeStep)
+    val r = to(data, f_astEnumGenRangeStep _)
     return r
   }
 
@@ -5883,7 +5883,7 @@ object MsgPack {
       val r = reader.read_astEnumGenFor()
       return r
     }
-    val r = to(data, f_astEnumGenFor)
+    val r = to(data, f_astEnumGenFor _)
     return r
   }
 
@@ -5898,7 +5898,7 @@ object MsgPack {
       val r = reader.read_astType()
       return r
     }
-    val r = to(data, f_astType)
+    val r = to(data, f_astType _)
     return r
   }
 
@@ -5913,7 +5913,7 @@ object MsgPack {
       val r = reader.read_astTypeNamed()
       return r
     }
-    val r = to(data, f_astTypeNamed)
+    val r = to(data, f_astTypeNamed _)
     return r
   }
 
@@ -5928,7 +5928,7 @@ object MsgPack {
       val r = reader.read_astTypeFun()
       return r
     }
-    val r = to(data, f_astTypeFun)
+    val r = to(data, f_astTypeFun _)
     return r
   }
 
@@ -5943,7 +5943,7 @@ object MsgPack {
       val r = reader.read_astTypeTuple()
       return r
     }
-    val r = to(data, f_astTypeTuple)
+    val r = to(data, f_astTypeTuple _)
     return r
   }
 
@@ -5958,7 +5958,7 @@ object MsgPack {
       val r = reader.read_astPattern()
       return r
     }
-    val r = to(data, f_astPattern)
+    val r = to(data, f_astPattern _)
     return r
   }
 
@@ -5973,7 +5973,7 @@ object MsgPack {
       val r = reader.read_astPatternLiteral()
       return r
     }
-    val r = to(data, f_astPatternLiteral)
+    val r = to(data, f_astPatternLiteral _)
     return r
   }
 
@@ -5988,7 +5988,7 @@ object MsgPack {
       val r = reader.read_astPatternLitInterpolate()
       return r
     }
-    val r = to(data, f_astPatternLitInterpolate)
+    val r = to(data, f_astPatternLitInterpolate _)
     return r
   }
 
@@ -6003,7 +6003,7 @@ object MsgPack {
       val r = reader.read_astPatternRef()
       return r
     }
-    val r = to(data, f_astPatternRef)
+    val r = to(data, f_astPatternRef _)
     return r
   }
 
@@ -6018,7 +6018,7 @@ object MsgPack {
       val r = reader.read_astPatternVarBinding()
       return r
     }
-    val r = to(data, f_astPatternVarBinding)
+    val r = to(data, f_astPatternVarBinding _)
     return r
   }
 
@@ -6033,7 +6033,7 @@ object MsgPack {
       val r = reader.read_astPatternWildcard()
       return r
     }
-    val r = to(data, f_astPatternWildcard)
+    val r = to(data, f_astPatternWildcard _)
     return r
   }
 
@@ -6048,7 +6048,7 @@ object MsgPack {
       val r = reader.read_astPatternSeqWildcard()
       return r
     }
-    val r = to(data, f_astPatternSeqWildcard)
+    val r = to(data, f_astPatternSeqWildcard _)
     return r
   }
 
@@ -6063,7 +6063,7 @@ object MsgPack {
       val r = reader.read_astPatternStructure()
       return r
     }
-    val r = to(data, f_astPatternStructure)
+    val r = to(data, f_astPatternStructure _)
     return r
   }
 
@@ -6078,7 +6078,7 @@ object MsgPack {
       val r = reader.read_astExp()
       return r
     }
-    val r = to(data, f_astExp)
+    val r = to(data, f_astExp _)
     return r
   }
 
@@ -6093,7 +6093,7 @@ object MsgPack {
       val r = reader.read_astLit()
       return r
     }
-    val r = to(data, f_astLit)
+    val r = to(data, f_astLit _)
     return r
   }
 
@@ -6108,7 +6108,7 @@ object MsgPack {
       val r = reader.read_astExpLitB()
       return r
     }
-    val r = to(data, f_astExpLitB)
+    val r = to(data, f_astExpLitB _)
     return r
   }
 
@@ -6123,7 +6123,7 @@ object MsgPack {
       val r = reader.read_astExpLitC()
       return r
     }
-    val r = to(data, f_astExpLitC)
+    val r = to(data, f_astExpLitC _)
     return r
   }
 
@@ -6138,7 +6138,7 @@ object MsgPack {
       val r = reader.read_astExpLitZ()
       return r
     }
-    val r = to(data, f_astExpLitZ)
+    val r = to(data, f_astExpLitZ _)
     return r
   }
 
@@ -6153,7 +6153,7 @@ object MsgPack {
       val r = reader.read_astExpLitF32()
       return r
     }
-    val r = to(data, f_astExpLitF32)
+    val r = to(data, f_astExpLitF32 _)
     return r
   }
 
@@ -6168,7 +6168,7 @@ object MsgPack {
       val r = reader.read_astExpLitF64()
       return r
     }
-    val r = to(data, f_astExpLitF64)
+    val r = to(data, f_astExpLitF64 _)
     return r
   }
 
@@ -6183,7 +6183,7 @@ object MsgPack {
       val r = reader.read_astExpLitR()
       return r
     }
-    val r = to(data, f_astExpLitR)
+    val r = to(data, f_astExpLitR _)
     return r
   }
 
@@ -6198,7 +6198,7 @@ object MsgPack {
       val r = reader.read_astExpLitString()
       return r
     }
-    val r = to(data, f_astExpLitString)
+    val r = to(data, f_astExpLitString _)
     return r
   }
 
@@ -6213,7 +6213,7 @@ object MsgPack {
       val r = reader.read_astExpStringInterpolate()
       return r
     }
-    val r = to(data, f_astExpStringInterpolate)
+    val r = to(data, f_astExpStringInterpolate _)
     return r
   }
 
@@ -6228,7 +6228,7 @@ object MsgPack {
       val r = reader.read_astExpThis()
       return r
     }
-    val r = to(data, f_astExpThis)
+    val r = to(data, f_astExpThis _)
     return r
   }
 
@@ -6243,7 +6243,7 @@ object MsgPack {
       val r = reader.read_astExpSuper()
       return r
     }
-    val r = to(data, f_astExpSuper)
+    val r = to(data, f_astExpSuper _)
     return r
   }
 
@@ -6258,7 +6258,7 @@ object MsgPack {
       val r = reader.read_astExpUnary()
       return r
     }
-    val r = to(data, f_astExpUnary)
+    val r = to(data, f_astExpUnary _)
     return r
   }
 
@@ -6273,7 +6273,7 @@ object MsgPack {
       val r = reader.read_astExpRef()
       return r
     }
-    val r = to(data, f_astExpRef)
+    val r = to(data, f_astExpRef _)
     return r
   }
 
@@ -6288,7 +6288,7 @@ object MsgPack {
       val r = reader.read_astExpBinary()
       return r
     }
-    val r = to(data, f_astExpBinary)
+    val r = to(data, f_astExpBinary _)
     return r
   }
 
@@ -6303,7 +6303,7 @@ object MsgPack {
       val r = reader.read_astExpIdent()
       return r
     }
-    val r = to(data, f_astExpIdent)
+    val r = to(data, f_astExpIdent _)
     return r
   }
 
@@ -6318,7 +6318,7 @@ object MsgPack {
       val r = reader.read_astExpEta()
       return r
     }
-    val r = to(data, f_astExpEta)
+    val r = to(data, f_astExpEta _)
     return r
   }
 
@@ -6333,7 +6333,7 @@ object MsgPack {
       val r = reader.read_astExpTuple()
       return r
     }
-    val r = to(data, f_astExpTuple)
+    val r = to(data, f_astExpTuple _)
     return r
   }
 
@@ -6348,7 +6348,7 @@ object MsgPack {
       val r = reader.read_astExpSelect()
       return r
     }
-    val r = to(data, f_astExpSelect)
+    val r = to(data, f_astExpSelect _)
     return r
   }
 
@@ -6363,7 +6363,7 @@ object MsgPack {
       val r = reader.read_astExpInvoke()
       return r
     }
-    val r = to(data, f_astExpInvoke)
+    val r = to(data, f_astExpInvoke _)
     return r
   }
 
@@ -6378,7 +6378,7 @@ object MsgPack {
       val r = reader.read_astExpInvokeNamed()
       return r
     }
-    val r = to(data, f_astExpInvokeNamed)
+    val r = to(data, f_astExpInvokeNamed _)
     return r
   }
 
@@ -6393,7 +6393,7 @@ object MsgPack {
       val r = reader.read_astExpIf()
       return r
     }
-    val r = to(data, f_astExpIf)
+    val r = to(data, f_astExpIf _)
     return r
   }
 
@@ -6408,7 +6408,7 @@ object MsgPack {
       val r = reader.read_astExpFunParam()
       return r
     }
-    val r = to(data, f_astExpFunParam)
+    val r = to(data, f_astExpFunParam _)
     return r
   }
 
@@ -6423,7 +6423,7 @@ object MsgPack {
       val r = reader.read_astExpFun()
       return r
     }
-    val r = to(data, f_astExpFun)
+    val r = to(data, f_astExpFun _)
     return r
   }
 
@@ -6438,7 +6438,7 @@ object MsgPack {
       val r = reader.read_astExpForYield()
       return r
     }
-    val r = to(data, f_astExpForYield)
+    val r = to(data, f_astExpForYield _)
     return r
   }
 
@@ -6453,7 +6453,7 @@ object MsgPack {
       val r = reader.read_astExpQuant()
       return r
     }
-    val r = to(data, f_astExpQuant)
+    val r = to(data, f_astExpQuant _)
     return r
   }
 
@@ -6468,7 +6468,7 @@ object MsgPack {
       val r = reader.read_astNamedArg()
       return r
     }
-    val r = to(data, f_astNamedArg)
+    val r = to(data, f_astNamedArg _)
     return r
   }
 
@@ -6483,7 +6483,7 @@ object MsgPack {
       val r = reader.read_astVarFragment()
       return r
     }
-    val r = to(data, f_astVarFragment)
+    val r = to(data, f_astVarFragment _)
     return r
   }
 
@@ -6498,7 +6498,7 @@ object MsgPack {
       val r = reader.read_astDomain()
       return r
     }
-    val r = to(data, f_astDomain)
+    val r = to(data, f_astDomain _)
     return r
   }
 
@@ -6513,7 +6513,7 @@ object MsgPack {
       val r = reader.read_astDomainType()
       return r
     }
-    val r = to(data, f_astDomainType)
+    val r = to(data, f_astDomainType _)
     return r
   }
 
@@ -6528,7 +6528,7 @@ object MsgPack {
       val r = reader.read_astDomainRange()
       return r
     }
-    val r = to(data, f_astDomainRange)
+    val r = to(data, f_astDomainRange _)
     return r
   }
 
@@ -6543,7 +6543,7 @@ object MsgPack {
       val r = reader.read_astId()
       return r
     }
-    val r = to(data, f_astId)
+    val r = to(data, f_astId _)
     return r
   }
 
@@ -6558,7 +6558,7 @@ object MsgPack {
       val r = reader.read_astName()
       return r
     }
-    val r = to(data, f_astName)
+    val r = to(data, f_astName _)
     return r
   }
 
@@ -6573,7 +6573,7 @@ object MsgPack {
       val r = reader.read_astBody()
       return r
     }
-    val r = to(data, f_astBody)
+    val r = to(data, f_astBody _)
     return r
   }
 
@@ -6588,7 +6588,7 @@ object MsgPack {
       val r = reader.read_astAbstractDatatypeParam()
       return r
     }
-    val r = to(data, f_astAbstractDatatypeParam)
+    val r = to(data, f_astAbstractDatatypeParam _)
     return r
   }
 
@@ -6603,7 +6603,7 @@ object MsgPack {
       val r = reader.read_astMethodSig()
       return r
     }
-    val r = to(data, f_astMethodSig)
+    val r = to(data, f_astMethodSig _)
     return r
   }
 
@@ -6618,7 +6618,7 @@ object MsgPack {
       val r = reader.read_astParam()
       return r
     }
-    val r = to(data, f_astParam)
+    val r = to(data, f_astParam _)
     return r
   }
 
@@ -6633,7 +6633,7 @@ object MsgPack {
       val r = reader.read_astTypeParam()
       return r
     }
-    val r = to(data, f_astTypeParam)
+    val r = to(data, f_astTypeParam _)
     return r
   }
 
@@ -6648,7 +6648,7 @@ object MsgPack {
       val r = reader.read_astContract()
       return r
     }
-    val r = to(data, f_astContract)
+    val r = to(data, f_astContract _)
     return r
   }
 
@@ -6663,7 +6663,7 @@ object MsgPack {
       val r = reader.read_astSubContract()
       return r
     }
-    val r = to(data, f_astSubContract)
+    val r = to(data, f_astSubContract _)
     return r
   }
 
@@ -6678,7 +6678,7 @@ object MsgPack {
       val r = reader.read_astWhereDef()
       return r
     }
-    val r = to(data, f_astWhereDef)
+    val r = to(data, f_astWhereDef _)
     return r
   }
 
@@ -6693,7 +6693,7 @@ object MsgPack {
       val r = reader.read_astWhereDefVal()
       return r
     }
-    val r = to(data, f_astWhereDefVal)
+    val r = to(data, f_astWhereDefVal _)
     return r
   }
 
@@ -6708,7 +6708,7 @@ object MsgPack {
       val r = reader.read_astWhereDefDef()
       return r
     }
-    val r = to(data, f_astWhereDefDef)
+    val r = to(data, f_astWhereDefDef _)
     return r
   }
 
@@ -6723,7 +6723,7 @@ object MsgPack {
       val r = reader.read_astSpecDef()
       return r
     }
-    val r = to(data, f_astSpecDef)
+    val r = to(data, f_astSpecDef _)
     return r
   }
 
@@ -6738,7 +6738,7 @@ object MsgPack {
       val r = reader.read_astTyped()
       return r
     }
-    val r = to(data, f_astTyped)
+    val r = to(data, f_astTyped _)
     return r
   }
 
@@ -6753,7 +6753,7 @@ object MsgPack {
       val r = reader.read_astTypedName()
       return r
     }
-    val r = to(data, f_astTypedName)
+    val r = to(data, f_astTypedName _)
     return r
   }
 
@@ -6768,7 +6768,7 @@ object MsgPack {
       val r = reader.read_astTypedTuple()
       return r
     }
-    val r = to(data, f_astTypedTuple)
+    val r = to(data, f_astTypedTuple _)
     return r
   }
 
@@ -6783,7 +6783,7 @@ object MsgPack {
       val r = reader.read_astTypedFun()
       return r
     }
-    val r = to(data, f_astTypedFun)
+    val r = to(data, f_astTypedFun _)
     return r
   }
 
@@ -6798,7 +6798,7 @@ object MsgPack {
       val r = reader.read_astTypedTypeVar()
       return r
     }
-    val r = to(data, f_astTypedTypeVar)
+    val r = to(data, f_astTypedTypeVar _)
     return r
   }
 
@@ -6813,7 +6813,7 @@ object MsgPack {
       val r = reader.read_astTypedPackage()
       return r
     }
-    val r = to(data, f_astTypedPackage)
+    val r = to(data, f_astTypedPackage _)
     return r
   }
 
@@ -6828,7 +6828,7 @@ object MsgPack {
       val r = reader.read_astTypedObject()
       return r
     }
-    val r = to(data, f_astTypedObject)
+    val r = to(data, f_astTypedObject _)
     return r
   }
 
@@ -6843,7 +6843,7 @@ object MsgPack {
       val r = reader.read_astTypedEnum()
       return r
     }
-    val r = to(data, f_astTypedEnum)
+    val r = to(data, f_astTypedEnum _)
     return r
   }
 
@@ -6858,7 +6858,7 @@ object MsgPack {
       val r = reader.read_astTypedMethodSubst()
       return r
     }
-    val r = to(data, f_astTypedMethodSubst)
+    val r = to(data, f_astTypedMethodSubst _)
     return r
   }
 
@@ -6873,7 +6873,7 @@ object MsgPack {
       val r = reader.read_astTypedMethod()
       return r
     }
-    val r = to(data, f_astTypedMethod)
+    val r = to(data, f_astTypedMethod _)
     return r
   }
 
@@ -6888,7 +6888,7 @@ object MsgPack {
       val r = reader.read_astTypedMethods()
       return r
     }
-    val r = to(data, f_astTypedMethods)
+    val r = to(data, f_astTypedMethods _)
     return r
   }
 
@@ -6903,7 +6903,7 @@ object MsgPack {
       val r = reader.read_astAttr()
       return r
     }
-    val r = to(data, f_astAttr)
+    val r = to(data, f_astAttr _)
     return r
   }
 
@@ -6918,7 +6918,7 @@ object MsgPack {
       val r = reader.read_astTypedAttr()
       return r
     }
-    val r = to(data, f_astTypedAttr)
+    val r = to(data, f_astTypedAttr _)
     return r
   }
 
@@ -6933,7 +6933,7 @@ object MsgPack {
       val r = reader.read_astResolvedAttr()
       return r
     }
-    val r = to(data, f_astResolvedAttr)
+    val r = to(data, f_astResolvedAttr _)
     return r
   }
 
@@ -6948,7 +6948,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfo()
       return r
     }
-    val r = to(data, f_astResolvedInfo)
+    val r = to(data, f_astResolvedInfo _)
     return r
   }
 
@@ -6963,7 +6963,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoBuiltIn()
       return r
     }
-    val r = to(data, f_astResolvedInfoBuiltIn)
+    val r = to(data, f_astResolvedInfoBuiltIn _)
     return r
   }
 
@@ -6978,7 +6978,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoPackage()
       return r
     }
-    val r = to(data, f_astResolvedInfoPackage)
+    val r = to(data, f_astResolvedInfoPackage _)
     return r
   }
 
@@ -6993,7 +6993,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoEnum()
       return r
     }
-    val r = to(data, f_astResolvedInfoEnum)
+    val r = to(data, f_astResolvedInfoEnum _)
     return r
   }
 
@@ -7008,7 +7008,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoEnumElement()
       return r
     }
-    val r = to(data, f_astResolvedInfoEnumElement)
+    val r = to(data, f_astResolvedInfoEnumElement _)
     return r
   }
 
@@ -7023,7 +7023,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoObject()
       return r
     }
-    val r = to(data, f_astResolvedInfoObject)
+    val r = to(data, f_astResolvedInfoObject _)
     return r
   }
 
@@ -7038,7 +7038,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoVar()
       return r
     }
-    val r = to(data, f_astResolvedInfoVar)
+    val r = to(data, f_astResolvedInfoVar _)
     return r
   }
 
@@ -7053,7 +7053,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoMethod()
       return r
     }
-    val r = to(data, f_astResolvedInfoMethod)
+    val r = to(data, f_astResolvedInfoMethod _)
     return r
   }
 
@@ -7068,7 +7068,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoMethods()
       return r
     }
-    val r = to(data, f_astResolvedInfoMethods)
+    val r = to(data, f_astResolvedInfoMethods _)
     return r
   }
 
@@ -7083,7 +7083,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoType()
       return r
     }
-    val r = to(data, f_astResolvedInfoType)
+    val r = to(data, f_astResolvedInfoType _)
     return r
   }
 
@@ -7098,7 +7098,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoTuple()
       return r
     }
-    val r = to(data, f_astResolvedInfoTuple)
+    val r = to(data, f_astResolvedInfoTuple _)
     return r
   }
 
@@ -7113,7 +7113,7 @@ object MsgPack {
       val r = reader.read_astResolvedInfoLocalVar()
       return r
     }
-    val r = to(data, f_astResolvedInfoLocalVar)
+    val r = to(data, f_astResolvedInfoLocalVar _)
     return r
   }
 
@@ -7128,7 +7128,7 @@ object MsgPack {
       val r = reader.read_astProofStep()
       return r
     }
-    val r = to(data, f_astProofStep)
+    val r = to(data, f_astProofStep _)
     return r
   }
 
@@ -7143,7 +7143,7 @@ object MsgPack {
       val r = reader.read_astProofStepBasic()
       return r
     }
-    val r = to(data, f_astProofStepBasic)
+    val r = to(data, f_astProofStepBasic _)
     return r
   }
 
@@ -7158,7 +7158,7 @@ object MsgPack {
       val r = reader.read_astProofStepSubProof()
       return r
     }
-    val r = to(data, f_astProofStepSubProof)
+    val r = to(data, f_astProofStepSubProof _)
     return r
   }
 
@@ -7173,7 +7173,7 @@ object MsgPack {
       val r = reader.read_astAssumeProofStep()
       return r
     }
-    val r = to(data, f_astAssumeProofStep)
+    val r = to(data, f_astAssumeProofStep _)
     return r
   }
 
@@ -7188,7 +7188,7 @@ object MsgPack {
       val r = reader.read_astAssumeProofStepRegular()
       return r
     }
-    val r = to(data, f_astAssumeProofStepRegular)
+    val r = to(data, f_astAssumeProofStepRegular _)
     return r
   }
 
@@ -7203,7 +7203,7 @@ object MsgPack {
       val r = reader.read_astAssumeProofStepForallIntroAps()
       return r
     }
-    val r = to(data, f_astAssumeProofStepForallIntroAps)
+    val r = to(data, f_astAssumeProofStepForallIntroAps _)
     return r
   }
 
@@ -7218,7 +7218,7 @@ object MsgPack {
       val r = reader.read_astAssumeProofStepExistsElimAps()
       return r
     }
-    val r = to(data, f_astAssumeProofStepExistsElimAps)
+    val r = to(data, f_astAssumeProofStepExistsElimAps _)
     return r
   }
 
@@ -7233,7 +7233,7 @@ object MsgPack {
       val r = reader.read_astJust()
       return r
     }
-    val r = to(data, f_astJust)
+    val r = to(data, f_astJust _)
     return r
   }
 
@@ -7248,7 +7248,7 @@ object MsgPack {
       val r = reader.read_astJustPremise()
       return r
     }
-    val r = to(data, f_astJustPremise)
+    val r = to(data, f_astJustPremise _)
     return r
   }
 
@@ -7263,7 +7263,7 @@ object MsgPack {
       val r = reader.read_astJustAuto()
       return r
     }
-    val r = to(data, f_astJustAuto)
+    val r = to(data, f_astJustAuto _)
     return r
   }
 
@@ -7278,7 +7278,7 @@ object MsgPack {
       val r = reader.read_astJustCoq()
       return r
     }
-    val r = to(data, f_astJustCoq)
+    val r = to(data, f_astJustCoq _)
     return r
   }
 
@@ -7293,7 +7293,7 @@ object MsgPack {
       val r = reader.read_astJustSubst()
       return r
     }
-    val r = to(data, f_astJustSubst)
+    val r = to(data, f_astJustSubst _)
     return r
   }
 
@@ -7308,7 +7308,7 @@ object MsgPack {
       val r = reader.read_astJustInvariant()
       return r
     }
-    val r = to(data, f_astJustInvariant)
+    val r = to(data, f_astJustInvariant _)
     return r
   }
 
@@ -7323,7 +7323,7 @@ object MsgPack {
       val r = reader.read_astJustFact()
       return r
     }
-    val r = to(data, f_astJustFact)
+    val r = to(data, f_astJustFact _)
     return r
   }
 
@@ -7338,7 +7338,7 @@ object MsgPack {
       val r = reader.read_astJustImplyIntro()
       return r
     }
-    val r = to(data, f_astJustImplyIntro)
+    val r = to(data, f_astJustImplyIntro _)
     return r
   }
 
@@ -7353,7 +7353,7 @@ object MsgPack {
       val r = reader.read_astJustImplyElim()
       return r
     }
-    val r = to(data, f_astJustImplyElim)
+    val r = to(data, f_astJustImplyElim _)
     return r
   }
 
@@ -7368,7 +7368,7 @@ object MsgPack {
       val r = reader.read_astJustNegIntro()
       return r
     }
-    val r = to(data, f_astJustNegIntro)
+    val r = to(data, f_astJustNegIntro _)
     return r
   }
 
@@ -7383,7 +7383,7 @@ object MsgPack {
       val r = reader.read_astJustNegElim()
       return r
     }
-    val r = to(data, f_astJustNegElim)
+    val r = to(data, f_astJustNegElim _)
     return r
   }
 
@@ -7398,7 +7398,7 @@ object MsgPack {
       val r = reader.read_astJustBottomElim()
       return r
     }
-    val r = to(data, f_astJustBottomElim)
+    val r = to(data, f_astJustBottomElim _)
     return r
   }
 
@@ -7413,7 +7413,7 @@ object MsgPack {
       val r = reader.read_astJustForallIntro()
       return r
     }
-    val r = to(data, f_astJustForallIntro)
+    val r = to(data, f_astJustForallIntro _)
     return r
   }
 
@@ -7428,7 +7428,7 @@ object MsgPack {
       val r = reader.read_astJustForallElim()
       return r
     }
-    val r = to(data, f_astJustForallElim)
+    val r = to(data, f_astJustForallElim _)
     return r
   }
 
@@ -7443,7 +7443,7 @@ object MsgPack {
       val r = reader.read_astJustExistsIntro()
       return r
     }
-    val r = to(data, f_astJustExistsIntro)
+    val r = to(data, f_astJustExistsIntro _)
     return r
   }
 
@@ -7458,7 +7458,7 @@ object MsgPack {
       val r = reader.read_astJustExistsElim()
       return r
     }
-    val r = to(data, f_astJustExistsElim)
+    val r = to(data, f_astJustExistsElim _)
     return r
   }
 
@@ -7473,7 +7473,7 @@ object MsgPack {
       val r = reader.read_astJustOrIntro()
       return r
     }
-    val r = to(data, f_astJustOrIntro)
+    val r = to(data, f_astJustOrIntro _)
     return r
   }
 
@@ -7488,7 +7488,7 @@ object MsgPack {
       val r = reader.read_astJustOrElim()
       return r
     }
-    val r = to(data, f_astJustOrElim)
+    val r = to(data, f_astJustOrElim _)
     return r
   }
 
@@ -7503,7 +7503,7 @@ object MsgPack {
       val r = reader.read_astJustAndIntro()
       return r
     }
-    val r = to(data, f_astJustAndIntro)
+    val r = to(data, f_astJustAndIntro _)
     return r
   }
 
@@ -7518,7 +7518,7 @@ object MsgPack {
       val r = reader.read_astJustAndElim()
       return r
     }
-    val r = to(data, f_astJustAndElim)
+    val r = to(data, f_astJustAndElim _)
     return r
   }
 
@@ -7533,7 +7533,7 @@ object MsgPack {
       val r = reader.read_astJustPbc()
       return r
     }
-    val r = to(data, f_astJustPbc)
+    val r = to(data, f_astJustPbc _)
     return r
   }
 
@@ -7548,7 +7548,7 @@ object MsgPack {
       val r = reader.read_astTruthTableRow()
       return r
     }
-    val r = to(data, f_astTruthTableRow)
+    val r = to(data, f_astTruthTableRow _)
     return r
   }
 
@@ -7563,7 +7563,7 @@ object MsgPack {
       val r = reader.read_astTruthTableAssignment()
       return r
     }
-    val r = to(data, f_astTruthTableAssignment)
+    val r = to(data, f_astTruthTableAssignment _)
     return r
   }
 
@@ -7578,7 +7578,7 @@ object MsgPack {
       val r = reader.read_astTruthTableConclusion()
       return r
     }
-    val r = to(data, f_astTruthTableConclusion)
+    val r = to(data, f_astTruthTableConclusion _)
     return r
   }
 
@@ -7593,7 +7593,7 @@ object MsgPack {
       val r = reader.read_astTruthTableConclusionValidity()
       return r
     }
-    val r = to(data, f_astTruthTableConclusionValidity)
+    val r = to(data, f_astTruthTableConclusionValidity _)
     return r
   }
 
@@ -7608,7 +7608,7 @@ object MsgPack {
       val r = reader.read_astTruthTableConclusionTautology()
       return r
     }
-    val r = to(data, f_astTruthTableConclusionTautology)
+    val r = to(data, f_astTruthTableConclusionTautology _)
     return r
   }
 
@@ -7623,7 +7623,7 @@ object MsgPack {
       val r = reader.read_astTruthTableConclusionContradictory()
       return r
     }
-    val r = to(data, f_astTruthTableConclusionContradictory)
+    val r = to(data, f_astTruthTableConclusionContradictory _)
     return r
   }
 
@@ -7638,7 +7638,7 @@ object MsgPack {
       val r = reader.read_astTruthTableConclusionContingent()
       return r
     }
-    val r = to(data, f_astTruthTableConclusionContingent)
+    val r = to(data, f_astTruthTableConclusionContingent _)
     return r
   }
 

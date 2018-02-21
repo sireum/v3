@@ -95,7 +95,7 @@ object Stmt {
   }
 
   @datatype class Var(isVal: B, id: Id, tipeOpt: Option[Type], initOpt: Option[AssignExp], @hidden attr: Attr)
-    extends Stmt {
+      extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -104,7 +104,7 @@ object Stmt {
   }
 
   @datatype class VarPattern(isVal: B, pattern: Pattern, tipeOpt: Option[Type], init: AssignExp, @hidden attr: Attr)
-    extends Stmt {
+      extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -121,14 +121,14 @@ object Stmt {
   }
 
   @datatype class Method(
-                          purity: Purity.Type,
-                          hasOverride: B,
-                          isHelper: B,
-                          sig: MethodSig,
-                          contract: Contract,
-                          bodyOpt: Option[Body],
-                          @hidden attr: Attr
-                        ) extends Stmt {
+    purity: Purity.Type,
+    hasOverride: B,
+    isHelper: B,
+    sig: MethodSig,
+    contract: Contract,
+    bodyOpt: Option[Body],
+    @hidden attr: Attr
+  ) extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -145,7 +145,7 @@ object Stmt {
   }
 
   @datatype class SpecMethod(sig: MethodSig, defs: ISZ[SpecDef], where: ISZ[WhereDef], @hidden attr: Attr)
-    extends Stmt {
+      extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -162,18 +162,18 @@ object Stmt {
   }
 
   @datatype class SubZ(
-                        id: Id,
-                        isSigned: B,
-                        isBitVector: B,
-                        isWrapped: B,
-                        hasMin: B,
-                        hasMax: B,
-                        bitWidth: Z,
-                        min: Z,
-                        max: Z,
-                        index: Z,
-                        @hidden attr: Attr
-                      ) extends Stmt {
+    id: Id,
+    isSigned: B,
+    isBitVector: B,
+    isWrapped: B,
+    hasMin: B,
+    hasMax: B,
+    bitWidth: Z,
+    min: Z,
+    max: Z,
+    index: Z,
+    @hidden attr: Attr
+  ) extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -193,14 +193,14 @@ object Stmt {
   }
 
   @datatype class Sig(
-                       isImmutable: B,
-                       isExt: B,
-                       id: Id,
-                       typeParams: ISZ[TypeParam],
-                       parents: ISZ[Type.Named],
-                       stmts: ISZ[Stmt],
-                       @hidden attr: Attr
-                     ) extends Stmt {
+    isImmutable: B,
+    isExt: B,
+    id: Id,
+    typeParams: ISZ[TypeParam],
+    parents: ISZ[Type.Named],
+    stmts: ISZ[Stmt],
+    @hidden attr: Attr
+  ) extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -209,15 +209,15 @@ object Stmt {
   }
 
   @datatype class AbstractDatatype(
-                                    isRoot: B,
-                                    isDatatype: B,
-                                    id: Id,
-                                    typeParams: ISZ[TypeParam],
-                                    params: ISZ[AbstractDatatypeParam],
-                                    parents: ISZ[Type.Named],
-                                    stmts: ISZ[Stmt],
-                                    @hidden attr: Attr
-                                  ) extends Stmt {
+    isRoot: B,
+    isDatatype: B,
+    id: Id,
+    typeParams: ISZ[TypeParam],
+    params: ISZ[AbstractDatatypeParam],
+    parents: ISZ[Type.Named],
+    stmts: ISZ[Stmt],
+    @hidden attr: Attr
+  ) extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -289,7 +289,7 @@ object Stmt {
   }
 
   @datatype class While(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
-    extends Stmt {
+      extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -298,7 +298,7 @@ object Stmt {
   }
 
   @datatype class DoWhile(cond: Exp, invariants: ISZ[ContractExp], modifies: ISZ[Exp], body: Body, @hidden attr: Attr)
-    extends Stmt {
+      extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -307,12 +307,12 @@ object Stmt {
   }
 
   @datatype class For(
-                       enumGens: ISZ[EnumGen.For],
-                       invariants: ISZ[ContractExp],
-                       modifies: ISZ[Exp],
-                       body: Body,
-                       @hidden attr: Attr
-                     ) extends Stmt {
+    enumGens: ISZ[EnumGen.For],
+    invariants: ISZ[ContractExp],
+    modifies: ISZ[Exp],
+    body: Body,
+    @hidden attr: Attr
+  ) extends Stmt {
 
     @pure override def posOpt: Option[Position] = {
       return attr.posOpt
@@ -327,6 +327,10 @@ object Stmt {
     }
 
     @pure override def asStmt: Stmt = {
+      return this
+    }
+
+    @pure override def asAssignExp: AssignExp = {
       return this
     }
 
@@ -953,11 +957,7 @@ object Domain {
     for (p <- params) {
       pts = pts :+ p.tipe.typedOpt.get
     }
-    val t = Typed.Fun(isPure, !hasParams, pts, returnType.typedOpt.get)
-    t match {
-      case t: Typed.Fun => return t
-      case _ => halt("Infeasible")
-    }
+    return Typed.Fun(isPure, !hasParams, pts, returnType.typedOpt.get)
   }
 }
 
@@ -994,7 +994,7 @@ object WhereDef {
   @pure def subst(map: HashMap[String, Typed]): Typed
 
   @pure override def hash: Z = {
-    this match  {
+    this match {
       case t: Typed.Name => return (t.ids, t.args).hash
       case t: Typed.TypeVar => return t.id.hash
       case t: Typed.Tuple => return t.args.hash
@@ -1135,7 +1135,12 @@ object WhereDef {
         case t: Typed.Object => return t
         case t: Typed.Package => return t
         case t: Typed.Methods =>
-          t(t.methods.map(dbMethod _))
+          var newMethods = ISZ[Typed.Method]()
+          for (m <- t.methods) {
+            val newM = dbMethod(m)
+            newMethods = newMethods :+ newM
+          }
+          return t(newMethods)
       }
     }
 
@@ -1393,7 +1398,7 @@ object Typed {
         owner,
         name,
         paramNames,
-        Method.Subst.summarizeAsSubst(substs ++ m.entries.map(p => Method.Subst(p._1, p._2))),
+        Method.Subst.summarizeAsSubst(substs ++ m.entries.map((p: (String, Typed)) => Method.Subst(p._1, p._2))),
         tpe.subst(m)
       )
     }
@@ -1634,6 +1639,7 @@ object Typed {
 object ResolvedInfo {
 
   object BuiltIn {
+
     @enum object Kind {
       'Apply
       'Assert
@@ -1811,12 +1817,11 @@ object TruthTable {
     @datatype class Contradictory(@hidden val attr: Attr) extends Conclusion
 
     @datatype class Contingent(
-                                trueAssignments: ISZ[Assignment],
-                                falseAssignments: ISZ[Assignment],
-                                @hidden val attr: Attr
-                              ) extends Conclusion
+      trueAssignments: ISZ[Assignment],
+      falseAssignments: ISZ[Assignment],
+      @hidden val attr: Attr
+    ) extends Conclusion
 
   }
 
 }
-
