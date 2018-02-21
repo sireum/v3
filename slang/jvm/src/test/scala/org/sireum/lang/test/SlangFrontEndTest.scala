@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang
+package org.sireum.lang.test
 
 import org.sireum.message._
 import org.sireum.$internal.Trie
@@ -32,6 +32,7 @@ import org.sireum.{ISZ, HashMap => SHashMap, None => SNone, String => SString}
 import org.sireum.lang.{ast => AST}
 import org.sireum.lang.parser.SlangParser
 import org.sireum.lang.symbol._
+import org.sireum.lang.tipe._
 
 class SlangFrontEndTest extends SireumSpec {
   val notJs: Boolean = !org.sireum.$internal.Macro.isJs
@@ -308,7 +309,7 @@ class SlangFrontEndTest extends SireumSpec {
         case child: Trie.Leaf[String, String] =>
           registerTest(childKey, ts: _*)(
             assert(
-              passingCheck(child.data, addImport = false, isPrelude = true, checkJSON = false, checkMsgPack = notJs)
+              passingCheck(child.data, addImport = false, isPrelude = true, checkJSON = false)
             )
           )(pos)
       }
@@ -320,7 +321,7 @@ class SlangFrontEndTest extends SireumSpec {
     addImport: Boolean = true,
     isWorksheet: Boolean = false,
     isPrelude: Boolean = false,
-    checkJSON: Boolean = false,
+    checkJSON: Boolean = true,
     checkMsgPack: Boolean = true
   ): Boolean = {
     val reporter = Reporter.create
@@ -346,18 +347,18 @@ class SlangFrontEndTest extends SireumSpec {
           }
 
           if (checkJSON) {
-            val s = tipe.JSON.from_astTopUnit(p, true)
+            val s = JSON.from_astTopUnit(p, true)
             //println(s)
-            val org.sireum.Either.Left(r) = tipe.JSON.to_astTopUnit(s)
+            val org.sireum.Either.Left(r) = JSON.to_astTopUnit(s)
             assert(r == p)
           }
 
           if (checkMsgPack) {
             //val bin = AST.MsgPack.fromTopUnit(p, true)
-            val bin = tipe.CustomMessagePack.fromTopUnit(p)
+            val bin = CustomMessagePack.fromTopUnit(p)
             //println(bin.size)
             //val org.sireum.Either.Left(r) = AST.MsgPack.toTopUnit(bin)
-            val r = tipe.CustomMessagePack.toTopUnit(bin)
+            val r = CustomMessagePack.toTopUnit(bin)
             assert(r == p)
 
           }
@@ -372,7 +373,7 @@ class SlangFrontEndTest extends SireumSpec {
     addImport: Boolean = true,
     isWorksheet: Boolean = false,
     isPrelude: Boolean = true,
-    checkJson: Boolean = false
+    checkJson: Boolean = true
   )(implicit pos: org.scalactic.source.Position, spec: SireumSpec): Unit =
     spec.*(sub(text))(passingCheck(text, addImport, isWorksheet, isPrelude, checkJson))
 

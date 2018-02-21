@@ -23,7 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.lang
+package org.sireum.lang.test
 
 import org.sireum._
 import org.sireum.message._
