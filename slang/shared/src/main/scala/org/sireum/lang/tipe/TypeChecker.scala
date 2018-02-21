@@ -117,7 +117,7 @@ object TypeChecker {
     string"~>" ~> Some(AST.ResolvedInfo.BuiltIn(AST.ResolvedInfo.BuiltIn.Kind.BinaryMapsTo))
   )
 
-  @memoize def libraryReporter: (TypeChecker, Reporter) = {
+  def libraryReporter: (TypeChecker, Reporter) = {
     val (initNameMap, initTypeMap) =
       Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
     val (reporter, _, nameMap, typeMap) =
@@ -222,9 +222,10 @@ object TypeChecker {
 
     val th2: TypeHierarchy = {
       val (rep, _, nameMap, typeMap) =
-        Resolver
-          .combine((Reporter.create, ISZ(), th.nameMap, th.typeMap),
-            (Reporter.create, AST.TopUnit.Program.empty, gdr.globalNameMap, gdr.globalTypeMap))
+        Resolver.combine(
+          (Reporter.create, ISZ(), th.nameMap, th.typeMap),
+          (Reporter.create, AST.TopUnit.Program.empty, gdr.globalNameMap, gdr.globalTypeMap)
+        )
 
       if (rep.hasIssue) {
         reporter.reports(rep.messages)
@@ -3555,6 +3556,8 @@ import TypeChecker._
           i = i + 1
         }
         return Some(r)
+      case (expected: AST.Typed.Fun, _) if expected.isByName => unify(posOpt, allowSubType, expected.ret, tpe, reporter)
+      case (_, tpe: AST.Typed.Fun) if tpe.isByName => unify(posOpt, allowSubType, expected, tpe.ret, reporter)
       case (expected: AST.Typed.Fun, tpe: AST.Typed.Fun) =>
         val size = expected.args.size
         if (size != tpe.args.size) {
