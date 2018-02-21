@@ -93,7 +93,7 @@ object TransformerGen {
 
     @pure def transformOption: ST
 
-    @pure def transformMOption(): ST
+    @pure def transformMOption: ST
 
     @pure def transformIS(indexType: ST): ST
 
@@ -353,7 +353,7 @@ object TransformerGen {
         |}"""
       }
 
-      @pure def transformMOption(): ST = {
+      @pure def transformMOption: ST = {
         return empty
       }
 
@@ -609,7 +609,7 @@ object TransformerGen {
         |}"""
       }
 
-      @pure def transformMOption(): ST = {
+      @pure def transformMOption: ST = {
         return st"""def transformMOption[T](option: MOption[T], f: T => MOption[T]): MOption[MOption[T]] = {
         |  option match {
         |    case MSome(v) =>

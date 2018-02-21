@@ -339,7 +339,7 @@ object PrePostTransformerGen {
   def adtTypeNameOpt(ti: TypeInfo.AbstractDatatype, tipe: AST.Type): Option[QName] = {
     tipe match {
       case tipe: AST.Type.Named => adtNameOpt(ti, AST.Util.ids2strings(tipe.name.ids), tipe.attr.posOpt)
-      case _ => None()
+      case _ => return None()
     }
   }
 
@@ -379,12 +379,12 @@ object PrePostTransformerGen {
       }
     }
     ti.scope.resolveType(globalTypeMap, ids) match {
-      case Some(ti: TypeInfo.AbstractDatatype) => Some(ti.name)
-      case Some(ti: TypeInfo.Sig) => Some(ti.name)
-      case Some(_) => None()
+      case Some(ti: TypeInfo.AbstractDatatype) => return Some(ti.name)
+      case Some(ti: TypeInfo.Sig) => return Some(ti.name)
+      case Some(_) => return None()
       case _ =>
         reporter.error(posOpt, transformerGenKind, s"Could not find ${typeNameString(packageName, ids).render}.")
-        None()
+        return None()
     }
   }
 }

@@ -45,6 +45,86 @@ object Resolver {
   val rootPackageInfo: Info.Package =
     Info.Package(ISZ(), Some(AST.Typed.Package(ISZ())), Some(AST.ResolvedInfo.Package(ISZ())))
 
+  @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
+    if (typeMap.contains(AST.Typed.iszName)) {
+      return (nameMap, typeMap)
+    }
+
+    val emptyAttr = AST.Attr(None[Position]())
+    val dollar = AST.Exp
+      .Ident(AST.Id("$", emptyAttr), AST.ResolvedAttr(None[Position](), None[AST.ResolvedInfo](), None[AST.Typed]()))
+    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.TypedAttr(None(), None()))
+    val scope = Scope.Global(AST.Typed.sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
+
+    val tName = AST.Typed.sireumName :+ "T"
+    var nm = nameMap + tName ~> Info.Var(
+      AST.Typed.sireumName,
+      T,
+      scope,
+      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "T"))
+    )
+
+    val fName = AST.Typed.sireumName :+ "F"
+    nm = nm + fName ~> Info.Var(
+      AST.Typed.sireumName,
+      T,
+      scope,
+      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
+      None(),
+      Some(AST.ResolvedInfo.Var(T, F, tName, "F"))
+    )
+
+    var tm = typeMap + AST.Typed.iszName ~>
+      TypeInfo.TypeAlias(AST.Typed.iszName, scope, Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
+
+    tm = tm + AST.Typed.mszName ~>
+      TypeInfo.TypeAlias(AST.Typed.mszName, scope, Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
+
+    tm = tm + AST.Typed.zsName ~>
+      TypeInfo.TypeAlias(AST.Typed.zsName, scope, Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias])
+
+    tm = tm + AST.Typed.unit.ids ~> TypeInfo.AbstractDatatype(
+      AST.Typed.sireumName,
+      T,
+      T,
+      AST.Typed.unit,
+      None(),
+      None(),
+      Map.empty,
+      None(),
+      ISZ(),
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      scope,
+      AST.Stmt.AbstractDatatype(T, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
+    )
+
+    tm = tm + AST.Typed.nothing.ids ~> TypeInfo.AbstractDatatype(
+      AST.Typed.sireumName,
+      T,
+      T,
+      AST.Typed.nothing,
+      None(),
+      None(),
+      Map.empty,
+      None(),
+      ISZ(),
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      HashMap.empty,
+      scope,
+      AST.Stmt.AbstractDatatype(T, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
+    )
+
+    return (nm, tm)
+
+  }
+
   @pure def ltTypeInfo(uriLt: (String, String) => B @pure): (TypeInfo, TypeInfo) => B @pure = {
     return { (ti1: TypeInfo, ti2: TypeInfo) =>
       (ti1.posOpt, ti2.posOpt) match {
@@ -185,88 +265,6 @@ object Resolver {
 
   @pure def typeName(name: QName, ids: QName): ST = {
     return st"${relQName(name, ids, T)}"
-  }
-
-  @pure def addBuiltIns(nameMap: NameMap, typeMap: TypeMap): (NameMap, TypeMap) = {
-    if (typeMap.contains(AST.Typed.iszName)) {
-      return (nameMap, typeMap)
-    }
-
-    val emptyAttr = AST.Attr(None[Position]())
-    val dollar = AST.Exp
-      .Ident(AST.Id("$", emptyAttr), AST.ResolvedAttr(None[Position](), None[AST.ResolvedInfo](), None[AST.Typed]()))
-
-    val dollarAssignExp = AST.Stmt.Expr(dollar, AST.TypedAttr(None(), None()))
-
-    val scope = Scope.Global(AST.Typed.sireumName, ISZ[AST.Stmt.Import](), ISZ[String]())
-
-    var tm = typeMap + AST.Typed.iszName ~>
-      TypeInfo.TypeAlias(AST.Typed.iszName, scope, Parser("type ISZ[T] = IS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
-
-    tm = tm + AST.Typed.mszName ~>
-      TypeInfo.TypeAlias(AST.Typed.mszName, scope, Parser("type MSZ[T] = MS[Z, T]").parseStmt[AST.Stmt.TypeAlias])
-
-    tm = tm + AST.Typed.zsName ~>
-      TypeInfo.TypeAlias(AST.Typed.zsName, scope, Parser("type ZS = MS[Z, Z]").parseStmt[AST.Stmt.TypeAlias])
-
-    val tName = AST.Typed.sireumName :+ "T"
-    var nm = nameMap + tName ~> Info.Var(
-      AST.Typed.sireumName,
-      T,
-      scope,
-      Parser("val T: B = true").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      None(),
-      Some(AST.ResolvedInfo.Var(T, F, tName, "T"))
-    )
-
-    val fName = AST.Typed.sireumName :+ "F"
-    nm = nm + fName ~> Info.Var(
-      AST.Typed.sireumName,
-      T,
-      scope,
-      Parser("val F: B = false").parseStmt[AST.Stmt.Var](initOpt = Some(dollarAssignExp)),
-      None(),
-      Some(AST.ResolvedInfo.Var(T, F, tName, "F"))
-    )
-
-    tm = tm + AST.Typed.unit.ids ~> TypeInfo.AbstractDatatype(
-      AST.Typed.sireumName,
-      T,
-      T,
-      AST.Typed.unit,
-      None(),
-      None(),
-      Map.empty,
-      None(),
-      ISZ(),
-      HashMap.empty,
-      HashMap.empty,
-      HashMap.empty,
-      HashMap.empty,
-      scope,
-      AST.Stmt.AbstractDatatype(T, T, AST.Id("Unit", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
-    )
-
-    tm = tm + AST.Typed.nothing.ids ~> TypeInfo.AbstractDatatype(
-      AST.Typed.sireumName,
-      T,
-      T,
-      AST.Typed.nothing,
-      None(),
-      None(),
-      Map.empty,
-      None(),
-      ISZ(),
-      HashMap.empty,
-      HashMap.empty,
-      HashMap.empty,
-      HashMap.empty,
-      scope,
-      AST.Stmt.AbstractDatatype(T, T, AST.Id("Nothing", emptyAttr), ISZ(), ISZ(), ISZ(), ISZ(), emptyAttr)
-    )
-
-    return (nm, tm)
-
   }
 
   @pure def combine(

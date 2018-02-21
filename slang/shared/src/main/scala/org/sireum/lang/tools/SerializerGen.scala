@@ -927,7 +927,7 @@ object SerializerGen {
             case _ => return None()
           }
           return Some((isSimple, r))
-        case _ => None()
+        case _ => return None()
       }
     }
   }

@@ -34,10 +34,14 @@ class SlangCodebaseTest extends SireumSpec {
 
   *("Slang") {
     val (initNameMap, initTypeMap) = Resolver.addBuiltIns(HashMap.empty, HashMap.empty)
-    val (reporter, _, nameMap, typeMap) = Resolver.parseProgramAndGloballyResolve(
-      ISZ((org.sireum.Library_Ext.map.toSeq ++ org.sireum.lang.$SlangFiles.map.toSeq).
-        map(p => (Some(String(p._1.mkString("/"))), String(p._2))): _*),
-      initNameMap, initTypeMap)
+    val (reporter, _, globalNameMap, globalTypeMap) = Resolver.parseProgramAndGloballyResolve(
+      ISZ(
+        (org.sireum.Library_Ext.map.toSeq ++ org.sireum.lang.$SlangFiles.map.toSeq)
+          .map(p => (Some(String(p._1.mkString("/"))), String(p._2))): _*
+      ),
+      initNameMap,
+      initTypeMap
+    )
     def report(): Boolean = {
       if (reporter.hasIssue) {
         reporter.printMessages()
@@ -47,49 +51,37 @@ class SlangCodebaseTest extends SireumSpec {
       true
     }
     report()
-    val th = TypeHierarchy.build(TypeHierarchy(nameMap, typeMap, Poset.empty, HashMap.empty), reporter)
+    var th = TypeHierarchy.build(TypeHierarchy(globalNameMap, globalTypeMap, Poset.empty, HashMap.empty), reporter)
     report()
-    val thOutlined = TypeOutliner.checkOutline(th, reporter)
-    val tc = TypeChecker(thOutlined, ISZ(), F)
-    for (ti <- tc.typeMap.values) {
-      ti match {
-        case ti: TypeInfo.Sig =>
-          if (!ti.outlined) {
-            reporter.error(None(), "", st"Type ${(ti.name, ".")} is not outlined!".render)
-          }
-        case ti: TypeInfo.AbstractDatatype =>
-          if (!ti.outlined) {
-            reporter.error(None(), "", st"Type ${(ti.name, ".")} is not outlined!".render)
-          }
-        case _ =>
+    th = TypeOutliner.checkOutline(th, reporter)
+    report()
+    def nameInfo(th: TypeHierarchy, name: Predef.String): Resolver.NameMap = {
+      val ids = ISZ(name.split('.').map(s => s: String): _*)
+      return HashMap ++ ISZ((ids, th.nameMap.get(ids).get))
+    }
+    def typeInfo(th: TypeHierarchy, name: Predef.String): Resolver.TypeMap = {
+      val ids = ISZ(name.split('.').map(s => s: String): _*)
+      th.typeMap.get(ids) match {
+        case Some(info) => return HashMap ++ ISZ((ids, info))
+        case _ => return HashMap.empty
       }
     }
-    for (info <- tc.nameMap.values) {
-      info match {
-        case info: Info.Var =>
-          if (!info.outlined) {
-            reporter.error(None(), "", st"Var ${(info.name, ".")} is not outlined!".render)
-          }
-        case info: Info.SpecVar =>
-          if (!info.outlined) {
-            reporter.error(None(), "", st"Spec var ${(info.name, ".")} is not outlined!".render)
-          }
-        case info: Info.Method =>
-          if (!info.outlined) {
-            reporter.error(None(), "", st"Method ${(info.name, ".")} is not outlined!".render)
-          }
-        case info: Info.SpecMethod =>
-          if (!info.outlined) {
-            reporter.error(None(), "", st"Spec method ${(info.name, ".")} is not outlined!".render)
-          }
-        case info: Info.ExtMethod =>
-          if (!info.outlined) {
-            reporter.error(None(), "", st"@ext object method ${(info.name, ".")} is not outlined!".render)
-          }
-        case _ =>
+    val all = T
+    val name = ""
+    val nameMap: Resolver.NameMap = if (all) th.nameMap else nameInfo(th, name)
+    val typeMap: Resolver.TypeMap = if (all) th.typeMap else typeInfo(th, name)
+    th = TypeChecker.checkComponents(th, nameMap, typeMap, reporter)
+    if (!reporter.hasError) {
+      if (all) {
+        PostTipeAttrChecker.checkNameTypeMaps(th.nameMap, th.typeMap, reporter)
+      } else {
+        PostTipeAttrChecker.checkNameTypeMaps(nameInfo(th, name), typeInfo(th, name), reporter)
       }
     }
     report()
+    val bin = CustomMessagePack.fromTypeHierarchy(th)
+    val Either.Left(th2) = CustomMessagePack.toTypeHierarchy(bin)
+    th == th2
   }
 
 }
