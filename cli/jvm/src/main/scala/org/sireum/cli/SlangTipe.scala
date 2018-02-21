@@ -29,6 +29,7 @@ import org.sireum._
 import org.sireum.message._
 import org.sireum.cli.Cli.SlangTipeOption
 import _root_.java.io._
+import _root_.java.util.zip._
 import _root_.java.nio.file._
 import _root_.java.nio.charset._
 
@@ -50,6 +51,8 @@ object SlangTipe {
   val InvalidSlangFiles: Int = -6
   val InvalidForceNames: Int = -7
   val InternalError: Int = -8
+  val SavingError: Int = -9
+  val LoadingError: Int = -10
 
   def run(o: SlangTipeOption): Int = {
     def readFile(f: File): (Option[String], String) = {
@@ -62,10 +65,34 @@ object SlangTipe {
       println("Please either specify sourcepath or Slang files as arguments")
       return 0
     }
+
     if (o.force.nonEmpty && !o.outline) {
       eprintln("Forcing type checking can only be used when outline is enabled")
       return InvalidMode
     }
+
+    if (o.save.nonEmpty && o.outline) {
+      eprintln("Saving type information can only be used when outline is disabled")
+      return InvalidMode
+    }
+
+    val loadFileOpt: Option[File] = if (o.load.nonEmpty) {
+      val f = new File(o.load.get.value)
+      if (!f.isFile) {
+        eprintln("Invalid file to load type information from")
+        return InvalidFile
+      }
+      Some(f)
+    } else None()
+
+    val saveFileOpt: Option[File] = if (o.save.nonEmpty) {
+      val f = new File(o.save.get.value)
+      if (f.exists && !f.isFile) {
+        eprintln("Invalid file to save information to")
+        return InvalidFile
+      }
+      Some(f)
+    } else None()
 
     var start = 0l
     var used = 0l
@@ -156,27 +183,52 @@ object SlangTipe {
     }
     stopTime()
 
-    if (o.verbose) {
-      println()
-      println(
-        s"Parsing, resolving, ${if (o.outline) "and type outlining" else "type outlining, and type checking"} Slang library files ..."
-      )
-      startTime()
-    }
+    var th: TypeHierarchy = loadFileOpt match {
+      case Some(loadFile) =>
+        if (o.verbose) {
+          println()
+          println(s"Loading type information from ${loadFile.getPath} ...")
+          startTime()
+        }
+        try {
+          val gis = new GZIPInputStream(new FileInputStream(loadFile))
+          val data = toIS(gis.readAllBytes())
+          CustomMessagePack.toTypeHierarchy(data) match {
+            case Either.Left(thl) => thl
+            case Either.Right(errorMsg) =>
+              eprintln(s"Loading error at offset ${errorMsg.offset}: ${errorMsg.message}")
+              return LoadingError
+          }
+        } catch {
+          case e: IOException =>
+            eprintln(s"Could not load file: ${e.getMessage}")
+            return LoadingError
+        }
+      case _ =>
+        if (o.verbose) {
+          println()
+          println(
+            s"Parsing, resolving, ${if (o.outline) "and type outlining" else "type outlining, and type checking"} Slang library files ..."
+          )
+          startTime()
+        }
 
-    var (th, reporter): (TypeHierarchy, Reporter) = if (o.outline) {
-      val p = TypeChecker.libraryReporter
-      (p._1.typeHierarchy, p._2)
-    } else {
-      val p = TypeChecker.checkedLibraryReporter
-      (p._1.typeHierarchy, p._2)
-    }
-
-    if (reporter.hasIssue) {
-      reporter.printMessages()
-      return InvalidLibrary
+        val (thl, rep) = if (o.outline) {
+          val p = TypeChecker.libraryReporter
+          (p._1.typeHierarchy, p._2)
+        } else {
+          val p = TypeChecker.checkedLibraryReporter
+          (p._1.typeHierarchy, p._2)
+        }
+        if (rep.hasIssue) {
+          rep.printMessages()
+          return InvalidLibrary
+        }
+        thl
     }
     stopTime()
+
+    val reporter = Reporter.create
 
     if (o.verbose) {
       println()
@@ -296,6 +348,27 @@ object SlangTipe {
       stopTime()
     }
 
+    saveFileOpt match {
+      case Some(saveFile) =>
+        if (o.verbose) {
+          println()
+          println(s"Saving type information to ${saveFile.getPath} ...")
+          startTime()
+        }
+
+        val (buf, length) = fromIS(CustomMessagePack.fromTypeHierarchy(th))
+        val gos = new GZIPOutputStream(new FileOutputStream(saveFile))
+        try gos.write(buf, 0, length)
+        catch {
+          case e: IOException =>
+            eprintln(s"Could not save file: ${e.getMessage}")
+            return SavingError
+        } finally gos.close()
+
+        stopTime()
+      case _ =>
+    }
+
     val thOpt: Option[TypeHierarchy] = Some(th)
 
     for (slangFile <- slangFiles) {
@@ -346,5 +419,13 @@ object SlangTipe {
     }
 
     return 0
+  }
+
+  def toIS(data: Array[Byte]): ISZ[U8] = {
+    new IS(Z, data, data.length, U8.Boxer)
+  }
+
+  def fromIS(data: ISZ[U8]): (Array[Byte], Int) = {
+    return (data.data.asInstanceOf[Array[Byte]], data.size.toInt)
   }
 }

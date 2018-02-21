@@ -187,7 +187,7 @@
     subs = ISZ(cliGenTool, serializerGenTool, transformerGenTool)
   )
 
-  val langChecker: Tool = Tool(
+  val langTipe: Tool = Tool(
     name = "slangTipe",
     command = "tipe",
     description = "Slang type checker",
@@ -205,7 +205,12 @@
       Opt(name = "verbose", longKey = "verbose", shortKey = None(),
         tpe = Type.Flag(F), description = "Enable verbose mode")
     ),
-    groups = ISZ()
+    groups = ISZ(OptGroup(name = "Persistence", opts = ISZ(
+      Opt(name = "save", longKey = "save", shortKey = None(), tpe = Type.Path(F, None()),
+        description = "Path to save type information to (outline should not be enabled)"),
+      Opt(name = "load", longKey = "load", shortKey = None(), tpe = Type.Path(F, None()),
+        description = "Path to load type information from")
+    )))
   )
 
   val slangGroup: Group = Group(
@@ -213,7 +218,7 @@
     description = "Slang toolbox",
     header = "The Sireum Language (Slang) Toolbox",
     unlisted = F,
-    subs = ISZ(langChecker)
+    subs = ISZ(langTipe)
   )
 
   val xGroup: Group = Group(

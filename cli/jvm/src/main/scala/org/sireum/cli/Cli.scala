@@ -114,7 +114,9 @@ object Cli {
     sourcepath: ISZ[String],
     outline: B,
     force: ISZ[String],
-    verbose: B
+    verbose: B,
+    save: Option[String],
+    load: Option[String]
   ) extends SireumOption
 }
 
@@ -747,12 +749,19 @@ import Cli._
           |                           to force full type checking on when type outlining
           |                           is enabled (expects a string separated by ",")
           |    --verbose            Enable verbose mode
-          |-h, --help               Display this information""".render
+          |-h, --help               Display this information
+          |
+          |Persistence Options:
+          |    --save               Path to save type information to (outline should not
+          |                           be enabled) (expects a path)
+          |    --load               Path to load type information from (expects a path)""".render
 
     var sourcepath: ISZ[String] = ISZ[String]()
     var outline: B = false
     var force: ISZ[String] = ISZ[String]()
     var verbose: B = false
+    var save: Option[String] = None[String]()
+    var load: Option[String] = None[String]()
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -785,6 +794,18 @@ import Cli._
              case Some(v) => verbose = v
              case _ => return None()
            }
+         } else if (arg == "--save") {
+           val o: Option[Option[String]] = parsePath(args, j + 1)
+           o match {
+             case Some(v) => save = v
+             case _ => return None()
+           }
+         } else if (arg == "--load") {
+           val o: Option[Option[String]] = parsePath(args, j + 1)
+           o match {
+             case Some(v) => load = v
+             case _ => return None()
+           }
          } else {
           eprintln(s"Unrecognized option '$arg'.")
           return None()
@@ -794,7 +815,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(SlangTipeOption(help, parseArguments(args, j), sourcepath, outline, force, verbose))
+    return Some(SlangTipeOption(help, parseArguments(args, j), sourcepath, outline, force, verbose, save, load))
   }
 
   def parseArguments(args: ISZ[String], i: Z): ISZ[String] = {
