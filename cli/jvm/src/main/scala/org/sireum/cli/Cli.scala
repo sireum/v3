@@ -756,7 +756,7 @@ import Cli._
           |    --save               Path to save type information to (outline should not
           |                           be enabled) (expects a path)
           |    --load               Path to load type information from (expects a path)
-          |-z, --gzip               Use gzip compression when saving and/or loading""".render
+          |-z, --no-gzip            Disable gzip compression when saving and/or loading""".render
 
     var sourcepath: ISZ[String] = ISZ[String]()
     var outline: B = false
@@ -764,7 +764,7 @@ import Cli._
     var verbose: B = false
     var save: Option[String] = None[String]()
     var load: Option[String] = None[String]()
-    var gzip: B = false
+    var gzip: B = true
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -809,7 +809,7 @@ import Cli._
              case Some(v) => load = v
              case _ => return None()
            }
-         } else if (arg == "-z" || arg == "--gzip") {
+         } else if (arg == "-z" || arg == "--no-gzip") {
            val o: Option[B] = { j = j - 1; Some(!gzip) }
            o match {
              case Some(v) => gzip = v
