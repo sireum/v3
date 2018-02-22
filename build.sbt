@@ -98,8 +98,14 @@ lazy val sireumSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalaVersion := scalaVer,
   retrieveManaged := true,
-  scalacOptions ++= Seq("-target:jvm-1.8", "-deprecation",
-    "-Ydelambdafy:method", "-feature", "-unchecked", "-Xfatal-warnings"),
+  scalacOptions ++= Seq(
+    "-target:jvm-1.8",
+    "-deprecation",
+    "-Ydelambdafy:method",
+    "-feature",
+    "-unchecked",
+    "-Xfatal-warnings"
+  ),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "utf8"),
   Compile / doc / javacOptions := Seq("-notimestamp", "-linksource"),
   Compile / doc / scalacOptions := Seq("-groups", "-implicits"),
@@ -112,9 +118,7 @@ lazy val sireumSettings = Seq(
 )
 
 lazy val sireumSharedSettings = sireumSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "upickle" % upickleVersion
-  )
+  libraryDependencies ++= Seq("com.lihaoyi" %%% "upickle" % upickleVersion)
 )
 
 lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
@@ -143,10 +147,7 @@ lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   Test / parallelExecution := false,
   relativeSourceMaps := true,
   Global / scalaJSStage := (if (isRelease) FullOptStage else FastOptStage),
-  libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % scalaVer,
-    "com.lihaoyi" %%% "utest" % utestVersion
-  ),
+  libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVer, "com.lihaoyi" %%% "utest" % utestVersion),
   testFrameworks += new TestFramework("utest.runner.Framework")
 )
 
@@ -163,61 +164,55 @@ lazy val webSettings = sireumSettings ++ Seq(
   )
 )
 
-lazy val commonSlangSettings = Seq(
-  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion)
-)
+lazy val commonSlangSettings = Seq(addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion))
 
-lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
-  scalacOptions ++= Seq("-Yrangepos")
-)
+lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(scalacOptions ++= Seq("-Yrangepos"))
 
 val depOpt = Some("test->test;compile->compile;test->compile")
 
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
-  Project(
-    id = pi.id,
-    base = pi.baseDir / "jvm").
-    settings(Seq(name := pi.name) ++ settings: _*).
-    dependsOn(pi.dependencies.flatMap { p =>
+  Project(id = pi.id, base = pi.baseDir / "jvm")
+    .settings(Seq(name := pi.name) ++ settings: _*)
+    .dependsOn(pi.dependencies.flatMap { p =>
       if (p.isCross)
-        Seq(ClasspathDependency(LocalProject(p.id), depOpt),
-          ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
+        Seq(ClasspathDependency(LocalProject(p.id), depOpt), ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt))
       else Seq(ClasspathDependency(LocalProject(p.id), depOpt))
-    }: _*).
-    settings().disablePlugins(AssemblyPlugin)
+    }: _*)
+    .settings()
+    .disablePlugins(AssemblyPlugin)
 
 def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector()): (Project, Project, Project) = {
-  val shared = Project(
-    id = pi.id,
-    base = pi.baseDir / "shared").
-    settings(Seq(name := pi.name) ++ sireumSharedSettings ++ settings: _*).
-    dependsOn(pi.dependencies.map { p =>
+  val shared = Project(id = pi.id, base = pi.baseDir / "shared")
+    .settings(Seq(name := pi.name) ++ sireumSharedSettings ++ settings: _*)
+    .dependsOn(pi.dependencies.map { p =>
       ClasspathDependency(LocalProject(p.id), depOpt)
-    }: _*).
-    disablePlugins(AssemblyPlugin)
-  val cp = CrossProject(
-    jvmId = pi.id + "-jvm",
-    jsId = pi.id + "-js",
-    base = pi.baseDir,
-    crossType = CrossType.Full).settings(name := pi.id)
+    }: _*)
+    .disablePlugins(AssemblyPlugin)
+  val cp = CrossProject(jvmId = pi.id + "-jvm", jsId = pi.id + "-js", base = pi.baseDir, crossType = CrossType.Full)
+    .settings(name := pi.id)
   val jvm =
-    cp.jvm.settings(sireumJvmSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared % depOpt.get).
-      dependsOn(pi.dependencies.map { p =>
+    cp.jvm
+      .settings(sireumJvmSettings ++ settings)
+      .disablePlugins(AssemblyPlugin)
+      .dependsOn(shared % depOpt.get)
+      .dependsOn(pi.dependencies.map { p =>
         ClasspathDependency(LocalProject(p.id), depOpt)
-      }: _*).
-      dependsOn(pi.dependencies.map { p =>
+      }: _*)
+      .dependsOn(pi.dependencies.map { p =>
         ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
       }: _*)
   val js =
-    cp.js.settings(sireumJsSettings ++ settings).disablePlugins(AssemblyPlugin).
-      dependsOn(shared % depOpt.get).
-      dependsOn(pi.dependencies.map { p =>
+    cp.js
+      .settings(sireumJsSettings ++ settings)
+      .disablePlugins(AssemblyPlugin)
+      .dependsOn(shared % depOpt.get)
+      .dependsOn(pi.dependencies.map { p =>
         ClasspathDependency(LocalProject(p.id), depOpt)
-      }: _*).
-      dependsOn(pi.dependencies.map { p =>
+      }: _*)
+      .dependsOn(pi.dependencies.map { p =>
         ClasspathDependency(LocalProject(p.id + "-js"), depOpt)
-      }: _*).enablePlugins(ScalaJSPlugin)
+      }: _*)
+      .enablePlugins(ScalaJSPlugin)
   (shared, jvm, js)
 }
 
@@ -243,44 +238,58 @@ lazy val pilarJs = pilarT._3
 lazy val logikaPI = new ProjectInfo("logika", isCross = true, utilPI, testPI)
 lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
-lazy val logikaJvm = logikaT._2.settings(
-  Test / parallelExecution := false,
-  Compile / unmanagedResourceDirectories ++= Seq(
-    logikaT._2.base / "c-runtime" / "include",
-    logikaT._2.base / "c-runtime" / "src",
-    logikaT._2.base / "c-runtime" / "cmake"
+lazy val logikaJvm = logikaT._2
+  .settings(
+    Test / parallelExecution := false,
+    Compile / unmanagedResourceDirectories ++= Seq(
+      logikaT._2.base / "c-runtime" / "include",
+      logikaT._2.base / "c-runtime" / "src",
+      logikaT._2.base / "c-runtime" / "cmake"
+    )
   )
-).dependsOn(macrosJvm, libraryJvm)
+  .dependsOn(macrosJvm, libraryJvm)
 lazy val logikaJs = logikaT._3
 
 lazy val macrosPI = new ProjectInfo("runtime/macros", isCross = true)
-lazy val macrosT = toSbtCrossProject(macrosPI, Seq(
-  Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
-  libraryDependencies ++= Seq(
-    "org.spire-math" %%% "spire" % spireVersion)))
+lazy val macrosT = toSbtCrossProject(
+  macrosPI,
+  Seq(
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
+    libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVer)
+  )
+)
 lazy val macrosShared = macrosT._1
 lazy val macrosJvm = macrosT._2
 lazy val macrosJs = macrosT._3
 
 lazy val libraryPI = new ProjectInfo("runtime/library", isCross = true, macrosPI)
-lazy val libraryT = toSbtCrossProject(libraryPI, slangSettings ++ Seq(
-  Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
-  libraryDependencies ++= Seq(
-    "org.scala-lang.platform" %%% "scalajson" % scalajsonVersion,
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test")))
+lazy val libraryT = toSbtCrossProject(
+  libraryPI,
+  slangSettings ++ Seq(
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
+    libraryDependencies ++= Seq(
+      "org.scala-lang.platform" %%% "scalajson" % scalajsonVersion,
+      "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+      "org.spire-math" %%% "spire" % spireVersion % "test"
+    )
+  )
+)
 lazy val libraryShared = libraryT._1
 lazy val libraryJvm = libraryT._2
 lazy val libraryJs = libraryT._3
 
 lazy val slangPI = new ProjectInfo("slang", isCross = true, macrosPI, libraryPI)
-lazy val slangT = toSbtCrossProject(slangPI, slangSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "org.scalameta" %%% "scalameta" % metaVersion,
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-  ),
-  Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value,
-  Test / parallelExecution := true
-))
+lazy val slangT = toSbtCrossProject(
+  slangPI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "org.scalameta" %%% "scalameta" % metaVersion,
+      "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
+    ),
+    Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value,
+    Test / parallelExecution := true
+  )
+)
 lazy val slangShared = slangT._1
 lazy val slangJvm = slangT._2
 lazy val slangJs = slangT._3
@@ -292,23 +301,25 @@ lazy val commonJvm = commonT._2
 lazy val commonJs = commonT._3.settings(webSettings: _*)
 
 lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
-lazy val webT = toSbtCrossProject(webPI, slangSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-  ),
-  Test / parallelExecution := true
-))
+lazy val webT = toSbtCrossProject(
+  webPI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
+    Test / parallelExecution := true
+  )
+)
 lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
 lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI, slangPI)
-lazy val skemaT = toSbtCrossProject(skemaPI, slangSettings ++ Seq(
-  libraryDependencies ++= Seq(
-    "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-  ),
-  Test / parallelExecution := true
-))
+lazy val skemaT = toSbtCrossProject(
+  skemaPI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
+    Test / parallelExecution := true
+  )
+)
 lazy val skemaShared = skemaT._1
 lazy val skemaJvm = skemaT._2
 lazy val skemaJs = skemaT._3
@@ -325,35 +336,35 @@ lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, common
 lazy val awasT = toSbtCrossProject(awasPI, Seq(Test / parallelExecution := false))
 
 lazy val awasShared = awasT._1
-lazy val awasJvm = awasT._2.settings(
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
-  ))
+lazy val awasJvm = awasT._2.settings(libraryDependencies ++= Seq("com.lihaoyi" %%% "scalatags" % scalaTagsVersion))
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
-lazy val arsitPI = new ProjectInfo("aadl/arsit", isCross = false,
-  utilPI, testPI, commonPI, macrosPI, libraryPI, slangPI, skemaPI)
-lazy val arsit = toSbtJvmProject(arsitPI, slangSettings ++ Seq(
-  Test / parallelExecution := true
-))
+lazy val arsitPI =
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, slangPI, skemaPI)
+lazy val arsit = toSbtJvmProject(arsitPI, slangSettings ++ Seq(Test / parallelExecution := true))
 
-lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false,
-  macrosPI, libraryPI, skemaPI)
-lazy val minix = toSbtJvmProject(minixPI, slangSettings ++ Seq(
-  Test / parallelExecution := true
-))
+lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, skemaPI)
+lazy val minix = toSbtJvmProject(minixPI, slangSettings ++ Seq(Test / parallelExecution := true))
 
 // Js Projects
 
 lazy val subProjectsJvm = Seq(
-  utilJvm, testJvm, pilarJvm,
-  macrosJvm, libraryJvm, logikaJvm, slangJvm, java, cli, awasJvm, skemaJvm, arsit, minix
+  utilJvm,
+  testJvm,
+  pilarJvm,
+  macrosJvm,
+  libraryJvm,
+  logikaJvm,
+  slangJvm,
+  java,
+  cli,
+  awasJvm,
+  skemaJvm,
+  arsit,
+  minix
 )
 
-lazy val subProjectsJs = Seq(
-  utilJs, testJs, pilarJs,
-  macrosJs, libraryJs, logikaJs, slangJs, commonJs, awasJs, skemaJs
-)
+lazy val subProjectsJs = Seq(utilJs, testJs, pilarJs, macrosJs, libraryJs, logikaJs, slangJs, commonJs, awasJs, skemaJs)
 
 lazy val subProjectJvmReferences =
   subProjectsJvm.map(x => x: ProjectReference)
@@ -365,130 +376,134 @@ lazy val subProjectJsReferences =
   subProjectsJs.map(x => x: ProjectReference)
 
 lazy val sireumJvm =
-  Project(
-    id = "sireum-jvm",
-    base = file("jvm")).
-    settings(sireumJvmSettings ++ assemblySettings ++
-      Seq(
-        name := "Sireum.jvm",
-        libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
-        assembly / mainClass := Some("org.sireum.cli.Sireum"),
-        assembly / assemblyOutputPath := file("bin/sireum.jar"),
-        assembly / test := {},
-        assembly / logLevel := Level.Error,
-        assemblyShadeRules in assembly := Seq(
-          ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
-          ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
-          ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
-          ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
-          ShadeRule.rename("org.scalameta.**" -> "sh4d3.org.scalameta.@1").inAll,
-          ShadeRule.rename("scala.meta.**" -> "sh4d3.scala.meta.@1").inAll,
-          ShadeRule.rename("scalapb.**" -> "sh4d3.scalapb.@1").inAll,
-          ShadeRule.rename("upickle.**" -> "sh4d3.upickle.@1").inAll,
-          ShadeRule.rename("scalajson.**" -> "sh4d3.scalajson.@1").inAll,
-          ShadeRule.rename("sbt.**" -> "sh4d3.sbt.@1").inAll,
-          ShadeRule.rename("spire.**" -> "sh4d3.spire.@1").inAll,
-          ShadeRule.rename("org.yaml.**" -> "sh4d3.org.yaml.@1").inAll,
-          ShadeRule.rename("org.stringtemplate.**" -> "sh4d3.org.stringtemplate.@1").inAll,
-          ShadeRule.rename("org.objectweb.**" -> "sh4d3.org.objectweb.@1").inAll,
-          ShadeRule.rename("org.junit.**" -> "sh4d3.org.junit.@1").inAll,
-          ShadeRule.rename("org.jgrapht.**" -> "sh4d3.org.jgrapht.@1").inAll,
-          ShadeRule.rename("org.hamcrest.**" -> "sh4d3.org.hamcrest.@1").inAll,
-          ShadeRule.rename("org.apache.**" -> "sh4d3.org.apache.@1").inAll,
-          ShadeRule.rename("org.antlr.**" -> "sh4d3.org.antlr.@1").inAll,
-          ShadeRule.rename("org.scalatools.**" -> "sh4d3.org.scalatools.@1").inAll,
-          ShadeRule.rename("machinist.**" -> "sh4d3.machinist.@1").inAll,
-          ShadeRule.rename("junit.**" -> "sh4d3.junit.@1").inAll,
-          ShadeRule.rename("jawn.**" -> "sh4d3.jawn.@1").inAll,
-          ShadeRule.rename("geny.**" -> "sh4d3.geny.@1").inAll,
-          ShadeRule.rename("ammonite.**" -> "sh4d3.ammonite.@1").inAll,
-          ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
-          ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
-        ),
-        assembly / assemblyMergeStrategy := {
-          case PathList("transformed", _*) =>  MergeStrategy.discard
-          case PathList("Scratch.class") =>  MergeStrategy.discard
-          case PathList("Scratch$.class") =>  MergeStrategy.discard
-          case PathList("Scratch$delayedInit$body.class") =>  MergeStrategy.discard
-          case PathList("org", "sireum", _*) => new MergeStrategy {
-            override def name: String = "sireum"
+  Project(id = "sireum-jvm", base = file("jvm"))
+    .settings(
+      sireumJvmSettings ++ assemblySettings ++
+        Seq(
+          name := "Sireum.jvm",
+          libraryDependencies += "org.sireum" %% "scalac-plugin" % sireumScalacVersion,
+          assembly / mainClass := Some("org.sireum.cli.Sireum"),
+          assembly / assemblyOutputPath := file("bin/sireum.jar"),
+          assembly / test := {},
+          assembly / logLevel := Level.Error,
+          assemblyShadeRules in assembly := Seq(
+            ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
+            ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
+            ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
+            ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
+            ShadeRule.rename("org.scalameta.**" -> "sh4d3.org.scalameta.@1").inAll,
+            ShadeRule.rename("scala.meta.**" -> "sh4d3.scala.meta.@1").inAll,
+            ShadeRule.rename("scalapb.**" -> "sh4d3.scalapb.@1").inAll,
+            ShadeRule.rename("upickle.**" -> "sh4d3.upickle.@1").inAll,
+            ShadeRule.rename("scalajson.**" -> "sh4d3.scalajson.@1").inAll,
+            ShadeRule.rename("sbt.**" -> "sh4d3.sbt.@1").inAll,
+            ShadeRule.rename("org.yaml.**" -> "sh4d3.org.yaml.@1").inAll,
+            ShadeRule.rename("org.stringtemplate.**" -> "sh4d3.org.stringtemplate.@1").inAll,
+            ShadeRule.rename("org.objectweb.**" -> "sh4d3.org.objectweb.@1").inAll,
+            ShadeRule.rename("org.junit.**" -> "sh4d3.org.junit.@1").inAll,
+            ShadeRule.rename("org.jgrapht.**" -> "sh4d3.org.jgrapht.@1").inAll,
+            ShadeRule.rename("org.hamcrest.**" -> "sh4d3.org.hamcrest.@1").inAll,
+            ShadeRule.rename("org.apache.**" -> "sh4d3.org.apache.@1").inAll,
+            ShadeRule.rename("org.antlr.**" -> "sh4d3.org.antlr.@1").inAll,
+            ShadeRule.rename("org.scalatools.**" -> "sh4d3.org.scalatools.@1").inAll,
+            ShadeRule.rename("machinist.**" -> "sh4d3.machinist.@1").inAll,
+            ShadeRule.rename("junit.**" -> "sh4d3.junit.@1").inAll,
+            ShadeRule.rename("jawn.**" -> "sh4d3.jawn.@1").inAll,
+            ShadeRule.rename("geny.**" -> "sh4d3.geny.@1").inAll,
+            ShadeRule.rename("ammonite.**" -> "sh4d3.ammonite.@1").inAll,
+            ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
+            ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
+          ),
+          assembly / assemblyMergeStrategy := {
+            case PathList("transformed", _*) => MergeStrategy.discard
+            case PathList("Scratch.class") => MergeStrategy.discard
+            case PathList("Scratch$.class") => MergeStrategy.discard
+            case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
+            case PathList("org", "sireum", _*) =>
+              new MergeStrategy {
+                override def name: String = "sireum"
 
-            override def apply(tempDir: File, path: String,
-                               files: Seq[File]): Either[String, Seq[(File, String)]] = {
-              if (files.size == 1) return Right(Seq(files.head -> path))
-              val nonSharedFiles =
-                files.flatMap { f =>
-                  val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
-                  if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
+                override def apply(
+                  tempDir: File,
+                  path: String,
+                  files: Seq[File]
+                ): Either[String, Seq[(File, String)]] = {
+                  if (files.size == 1) return Right(Seq(files.head -> path))
+                  val nonSharedFiles =
+                    files.flatMap { f =>
+                      val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
+                      if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
+                    }
+                  Right(Seq(nonSharedFiles.head -> path))
                 }
-              Right(Seq(nonSharedFiles.head -> path))
-            }
+              }
+            case "module-info.class" => MergeStrategy.discard
+            case x =>
+              val oldStrategy = (assembly / assemblyMergeStrategy).value
+              oldStrategy(x)
           }
-          case "module-info.class" => MergeStrategy.discard
-          case x =>
-            val oldStrategy = (assembly / assemblyMergeStrategy).value
-            oldStrategy(x)
-        }
-      ): _*).
-    aggregate(subProjectJvmReferences: _*).
-    dependsOn(subProjectJvmClasspathDeps: _*)
+        ): _*
+    )
+    .aggregate(subProjectJvmReferences: _*)
+    .dependsOn(subProjectJvmClasspathDeps: _*)
 
 lazy val sireumJs =
-  Project(
-    id = "sireum-js",
-    base = file("js")).
-    settings(sireumSharedSettings ++
-      Seq(
-        name := "Sireum.js"): _*).
-    aggregate(subProjectJsReferences: _*).
-    disablePlugins(AssemblyPlugin)
+  Project(id = "sireum-js", base = file("js"))
+    .settings(
+      sireumSharedSettings ++
+        Seq(name := "Sireum.js"): _*
+    )
+    .aggregate(subProjectJsReferences: _*)
+    .disablePlugins(AssemblyPlugin)
 
+lazy val sireum = Project(id = "sireum", base = file("."))
+  .settings(
+    sireumSharedSettings ++ Seq(
+      name := "Sireum",
+      distros := {
+        Distros.build()
+      },
+      iveDistros := {
+        Distros.buildIVE()
+      },
+      devDistros := {
+        Distros.buildDev()
+      },
+      devIveDistros := {
+        Distros.buildIVEDev()
+      },
+      depDot := {
+        val args = spaceDelimited("<arg>").parsed
+        dotDependency(args)
+      },
+      refreshSlang := {
+        import ammonite.ops._
+        val rootDir = baseDirectory.value
+        val runtimeFile =
+          Path(new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/Library_Ext.scala").getCanonicalFile)
+        val slangFile =
+          Path(new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
 
-lazy val sireum = Project(
-  id = "sireum",
-  base = file(".")).
-  settings(sireumSharedSettings ++ Seq(
-    name := "Sireum",
-    distros := {
-      Distros.build()
-    },
-    iveDistros := {
-      Distros.buildIVE()
-    },
-    devDistros := {
-      Distros.buildDev()
-    },
-    devIveDistros := {
-      Distros.buildIVEDev()
-    },
-    depDot := {
-      val args = spaceDelimited("<arg>").parsed
-      dotDependency(args)
-    },
-    refreshSlang := {
-      import ammonite.ops._
-      val rootDir = baseDirectory.value
-      val runtimeFile = Path(new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/Library_Ext.scala").getCanonicalFile)
-      val slangFile = Path(new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
-
-      def touche(p: Path): Unit = {
-        val text = read ! p
-        if (text.last == '\n') {
-          write.over(p, text.trim)
-        } else {
-          write.over(p, text + '\n')
+        def touche(p: Path): Unit = {
+          val text = read ! p
+          if (text.last == '\n') {
+            write.over(p, text.trim)
+          } else {
+            write.over(p, text + '\n')
+          }
         }
-      }
 
-      touche(runtimeFile)
-      touche(slangFile)
-    },
-    initialize := {
-      val required = Set("1.8", "9")
-      val current = sys.props("java.specification.version")
-      assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
-    },
-    publish := {},
-    publishLocal := {}
-  ): _*).
-  aggregate(sireumJvm, sireumJs).disablePlugins(AssemblyPlugin)
+        touche(runtimeFile)
+        touche(slangFile)
+      },
+      initialize := {
+        val required = Set("1.8", "9")
+        val current = sys.props("java.specification.version")
+        assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
+      },
+      publish := {},
+      publishLocal := {}
+    ): _*
+  )
+  .aggregate(sireumJvm, sireumJs)
+  .disablePlugins(AssemblyPlugin)
