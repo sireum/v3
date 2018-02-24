@@ -24,7 +24,7 @@
  */ {
 
   import org.sireum._
-  import org.sireum.lang.tools.CliGen.CliOpt._
+  import org.sireum.tools.CliGen.CliOpt._
 
   val logikaTool: Tool = Tool(
     name = "logika",

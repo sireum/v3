@@ -29,7 +29,7 @@ import _root_.java.io._
 
 import org.sireum._
 import org.sireum.message._
-import org.sireum.lang.tools._
+import org.sireum.tools._
 
 object Sireum extends App {
   System.exit(Cli(_root_.java.io.File.pathSeparatorChar).parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {

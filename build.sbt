@@ -278,21 +278,47 @@ lazy val libraryShared = libraryT._1
 lazy val libraryJvm = libraryT._2
 lazy val libraryJs = libraryT._3
 
-lazy val slangPI = new ProjectInfo("slang", isCross = true, macrosPI, libraryPI)
-lazy val slangT = toSbtCrossProject(
-  slangPI,
+lazy val slangAstPI = new ProjectInfo("slang/ast", isCross = true, macrosPI, libraryPI)
+lazy val slangAstT = toSbtCrossProject(slangAstPI, slangSettings ++ Seq(Test / parallelExecution := true))
+lazy val slangAstShared = slangAstT._1
+lazy val slangAstJvm = slangAstT._2
+lazy val slangAstJs = slangAstT._3
+
+lazy val slangParserPI = new ProjectInfo("slang/parser", isCross = true, macrosPI, libraryPI, slangAstPI)
+lazy val slangParserT = toSbtCrossProject(
+  slangParserPI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq(
-      "org.scalameta" %%% "scalameta" % metaVersion,
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-    ),
-    Compile / unmanagedSourceDirectories += baseDirectory(_ / "src" / "main" / "scala-extra").value,
+    libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion),
     Test / parallelExecution := true
   )
 )
-lazy val slangShared = slangT._1
-lazy val slangJvm = slangT._2
-lazy val slangJs = slangT._3
+lazy val slangParserShared = slangParserT._1
+lazy val slangParserJvm = slangParserT._2
+lazy val slangParserJs = slangParserT._3
+
+lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI)
+lazy val slangTipeT = toSbtCrossProject(
+  slangTipePI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
+    Test / parallelExecution := true
+  )
+)
+lazy val slangTipeShared = slangTipeT._1
+lazy val slangTipeJvm = slangTipeT._2
+lazy val slangTipeJs = slangTipeT._3
+
+lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI)
+lazy val toolsT = toSbtCrossProject(
+  toolsPI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
+    Test / parallelExecution := true
+  )
+)
+lazy val toolsShared = toolsT._1
+lazy val toolsJvm = toolsT._2
+lazy val toolsJs = toolsT._3
 
 lazy val commonPI = new ProjectInfo("common", isCross = true, utilPI)
 lazy val commonT = toSbtCrossProject(commonPI)
@@ -312,7 +338,7 @@ lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
-lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI, slangPI)
+lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI)
 lazy val skemaT = toSbtCrossProject(
   skemaPI,
   slangSettings ++ Seq(
@@ -329,7 +355,7 @@ lazy val skemaJs = skemaT._3
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
 lazy val java = toSbtJvmProject(javaPI)
 
-lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, slangPI)
+lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, toolsPI)
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, skemaPI)
@@ -340,13 +366,11 @@ lazy val awasJvm = awasT._2.settings(libraryDependencies ++= Seq("com.lihaoyi" %
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, slangPI, skemaPI)
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, skemaPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings ++ Seq(Test / parallelExecution := true))
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, skemaPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings ++ Seq(Test / parallelExecution := true))
-
-// Js Projects
 
 lazy val subProjectsJvm = Seq(
   utilJvm,
@@ -355,7 +379,10 @@ lazy val subProjectsJvm = Seq(
   macrosJvm,
   libraryJvm,
   logikaJvm,
-  slangJvm,
+  slangAstJvm,
+  slangParserJvm,
+  slangTipeJvm,
+  toolsJvm,
   java,
   cli,
   awasJvm,
@@ -364,7 +391,23 @@ lazy val subProjectsJvm = Seq(
   minix
 )
 
-lazy val subProjectsJs = Seq(utilJs, testJs, pilarJs, macrosJs, libraryJs, logikaJs, slangJs, commonJs, awasJs, skemaJs)
+// Js Projects
+
+lazy val subProjectsJs = Seq(
+  utilJs,
+  testJs,
+  pilarJs,
+  macrosJs,
+  libraryJs,
+  logikaJs,
+  slangAstJs,
+  slangParserJs,
+  slangTipeJs,
+  toolsJs,
+  commonJs,
+  awasJs,
+  skemaJs
+)
 
 lazy val subProjectJvmReferences =
   subProjectsJvm.map(x => x: ProjectReference)
@@ -482,7 +525,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         val runtimeFile =
           Path(new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/Library_Ext.scala").getCanonicalFile)
         val slangFile =
-          Path(new File(rootDir, "slang/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
+          Path(new File(rootDir, "slang/tipe/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
 
         def touche(p: Path): Unit = {
           val text = read ! p
