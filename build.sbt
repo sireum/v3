@@ -74,6 +74,8 @@ val spireVersion = "0.13.0"
 
 val scalajsonVersion = "1.0.0-M4"
 
+val nuprocessVersion = "1.1.3"
+
 val BUILD_FILENAME = "BUILD"
 
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
@@ -127,6 +129,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % java8CompatVersion,
     "org.antlr" % "antlr4-runtime" % antlrRuntimeVersion,
+    "com.zaxxer" % "nuprocess" % nuprocessVersion,
     "org.antlr" % "ST4" % stVersion,
     "org.yaml" % "snakeyaml" % snakeYamlVersion,
     "org.ow2.asm" % "asm" % asmVersion,
@@ -138,13 +141,11 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "com.sksamuel.diff" % "diff" % diffVersion,
     "com.novocode" % "junit-interface" % junitInterfaceVersion
   ),
-  Test / parallelExecution := true,
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
 )
 
 lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   scalacOptions ++= Seq("-feature"),
-  Test / parallelExecution := false,
   relativeSourceMaps := true,
   Global / scalaJSStage := (if (isRelease) FullOptStage else FastOptStage),
   libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVer, "com.lihaoyi" %%% "utest" % utestVersion),
@@ -240,7 +241,6 @@ lazy val logikaT = toSbtCrossProject(logikaPI)
 lazy val logikaShared = logikaT._1
 lazy val logikaJvm = logikaT._2
   .settings(
-    Test / parallelExecution := false,
     Compile / unmanagedResourceDirectories ++= Seq(
       logikaT._2.base / "c-runtime" / "include",
       logikaT._2.base / "c-runtime" / "src",
@@ -279,7 +279,7 @@ lazy val libraryJvm = libraryT._2
 lazy val libraryJs = libraryT._3
 
 lazy val slangAstPI = new ProjectInfo("slang/ast", isCross = true, macrosPI, libraryPI)
-lazy val slangAstT = toSbtCrossProject(slangAstPI, slangSettings ++ Seq(Test / parallelExecution := true))
+lazy val slangAstT = toSbtCrossProject(slangAstPI, slangSettings)
 lazy val slangAstShared = slangAstT._1
 lazy val slangAstJvm = slangAstT._2
 lazy val slangAstJs = slangAstT._3
@@ -288,8 +288,7 @@ lazy val slangParserPI = new ProjectInfo("slang/parser", isCross = true, macrosP
 lazy val slangParserT = toSbtCrossProject(
   slangParserPI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion),
-    Test / parallelExecution := true
+    libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion)
   )
 )
 lazy val slangParserShared = slangParserT._1
@@ -300,8 +299,7 @@ lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, l
 lazy val slangTipeT = toSbtCrossProject(
   slangTipePI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
-    Test / parallelExecution := true
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
   )
 )
 lazy val slangTipeShared = slangTipeT._1
@@ -312,8 +310,7 @@ lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI,
 lazy val toolsT = toSbtCrossProject(
   toolsPI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
-    Test / parallelExecution := true
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
   )
 )
 lazy val toolsShared = toolsT._1
@@ -330,8 +327,7 @@ lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, uti
 lazy val webT = toSbtCrossProject(
   webPI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
-    Test / parallelExecution := true
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
   )
 )
 lazy val webShared = webT._1
@@ -342,8 +338,7 @@ lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI,
 lazy val skemaT = toSbtCrossProject(
   skemaPI,
   slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"),
-    Test / parallelExecution := true
+    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
   )
 )
 lazy val skemaShared = skemaT._1
@@ -367,10 +362,10 @@ lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
   new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, skemaPI)
-lazy val arsit = toSbtJvmProject(arsitPI, slangSettings ++ Seq(Test / parallelExecution := true))
+lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, skemaPI)
-lazy val minix = toSbtJvmProject(minixPI, slangSettings ++ Seq(Test / parallelExecution := true))
+lazy val minix = toSbtJvmProject(minixPI, slangSettings)
 
 lazy val subProjectsJvm = Seq(
   utilJvm,
