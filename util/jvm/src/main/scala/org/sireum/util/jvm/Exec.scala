@@ -69,9 +69,6 @@ final class Exec {
   def run(waitTime: Long, args: Seq[String], input: Option[String],
           dir: Option[File], extraEnv: (String, String)*): Exec.Result = {
     import scala.sys.process._
-    import scala.concurrent._
-    import scala.concurrent.duration._
-    import scala.concurrent.ExecutionContext.Implicits.global
     try {
       val p = Process({
         val pb = new java.lang.ProcessBuilder(args: _*)
@@ -87,18 +84,15 @@ final class Exec {
         val x = p.exitValue
         Exec.StringResult(sb.toString, x)
       } else {
-        val x = Await.result(Future {
-          p.exitValue
-        }, waitTime.millis)
-        if (p.isAlive()) {
+        Thread.sleep(waitTime)
+        if (p.isAlive) {
           p.destroy()
           Exec.Timeout
         } else {
-          Exec.StringResult(sb.toString, x)
+          Exec.StringResult(sb.toString, p.exitValue)
         }
       }
     } catch {
-      case _: TimeoutException => Exec.Timeout
       case e: Exception => Exec.ExceptionRaised(e)
     }
   }
