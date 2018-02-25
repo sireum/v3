@@ -378,7 +378,7 @@ ProofContext[T <: ProofContext[T]](implicit reporter: AccumulatingTagReporter) {
   val mode: ast.LogicMode = unitNode.mode
   val fileUriOpt: Option[FileResourceUri] = unitNode.fileUriOpt
   implicit val nodeLocMap: MIdMap[ast.Node, LocationInfo] = unitNode.nodeLocMap
-  val satTimeoutInMs: PosInteger = scala.math.min(timeoutInMs / 2, 500)
+  val satTimeoutInMs: PosInteger = if (timeoutInMs == 0) 500 else scala.math.min(timeoutInMs / 2, 500)
 
   def unitNode: ast.UnitNode
 
