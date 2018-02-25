@@ -45,7 +45,7 @@ object Exec {
 final class Exec {
   private val sb = new StringBuffer
 
-  val env = mmapEmpty[String, String]
+  val env: MMap[String, String] = mmapEmpty
 
   def process(args: Seq[String],
               writeInput: OutputStream => Unit,
@@ -87,9 +87,13 @@ final class Exec {
         val x = p.exitValue
         Exec.StringResult(sb.toString, x)
       } else {
-
         val x = Await.result(Future {
-          p.exitValue
+          if (p.isAlive) {
+            p.destroy()
+            -1
+          } else {
+            p.exitValue
+          }
         }, waitTime.millis)
         Exec.StringResult(sb.toString, x)
       }
