@@ -36,11 +36,11 @@ import org.sireum.util.jvm.FileUtil
 final class BackwardProgramTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
-  override def testDefs: ISeq[TestDef] =
-    (1 to 1).toVector.map { x =>
+  override def testDefs: ISeq[TestDef] = ivectorEmpty
+    /*(1 to 1).toVector.map { x =>
       val name = f"assignment-$x%02d"
       ConditionTest(name, check(name))
-    }
+    }*/
 
   def check(filename: String): Boolean = {
     val uri = s"example/backward/$filename.logika"
