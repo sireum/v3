@@ -38,7 +38,7 @@ final class Z3TestDefProvider(tf: TestFramework)
 
   val tmMult: Int = OsUtil.detect match {
     case OsArch.Linux => 1
-    case _ => 0
+    case _ => 1
   }
 
   override def testDefs: ISeq[TestDef] =

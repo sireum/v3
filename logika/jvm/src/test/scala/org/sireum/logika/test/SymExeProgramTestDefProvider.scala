@@ -38,7 +38,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
 
   val tmMult: Int = OsUtil.detect match {
     case OsArch.Linux => 1
-    case _ => 0
+    case _ => 1
   }
 
   override def testDefs: ISeq[TestDef] =
@@ -100,7 +100,7 @@ final class SymExeProgramTestDefProvider(tf: TestFramework)
       ConditionTest("forward/bank", check("forward/bank", 0, isSummarizing = true)) :+
       ConditionTest("forward/square", check("forward/square", 0, isSummarizing = true))
 
-  def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false, timeout: Int = 5000): Boolean = {
+  def check(filename: String, bitWidth: Int, isSummarizing: Boolean, hasError: Boolean = false, timeout: Int = 2000): Boolean = {
     var uri = s"example/$filename.logika"
     val r = try new InputStreamReader(getClass.getResourceAsStream(uri))
     catch {
