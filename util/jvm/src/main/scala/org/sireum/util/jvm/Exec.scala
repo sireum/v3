@@ -88,14 +88,14 @@ final class Exec {
         Exec.StringResult(sb.toString, x)
       } else {
         val x = Await.result(Future {
-          if (p.isAlive) {
-            p.destroy()
-            -1
-          } else {
-            p.exitValue
-          }
+          p.exitValue
         }, waitTime.millis)
-        Exec.StringResult(sb.toString, x)
+        if (p.isAlive()) {
+          p.destroy()
+          Exec.Timeout
+        } else {
+          Exec.StringResult(sb.toString, x)
+        }
       }
     } catch {
       case _: TimeoutException => Exec.Timeout
