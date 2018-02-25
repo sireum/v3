@@ -103,12 +103,14 @@ final class Exec {
     }
     val exitCode = p.waitFor(waitTime, TimeUnit.MILLISECONDS)
     if (exitCode != Int.MinValue) return Exec.StringResult(sb.toString, exitCode)
-    if (p.isRunning) {
+    if (p.isRunning) try {
       p.destroy(false)
       p.waitFor(500, TimeUnit.MICROSECONDS)
+    } catch {
+      case _: Throwable =>
     }
-    if (p.isRunning) {
-      p.destroy(true)
+    if (p.isRunning) try p.destroy(true) catch {
+      case _: Throwable =>
     }
     Exec.Timeout
   }
