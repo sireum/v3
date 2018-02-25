@@ -123,7 +123,7 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, isValidity: Boole
   val rounding = "RNE"
   val hardTimeout: PosInteger = timeout + (timeout * 10) / 100
 
-  def checkSat(es: ast.Exp*): (String, CheckResult) = {
+  def checkSat(es: ast.Exp*): (String, CheckResult) = try {
     val last = es.size - 1
     for (i <- es.indices) {
       val e = es(i)
@@ -144,49 +144,70 @@ private final class Z3(timeout: PosInteger, isSymExe: Boolean, isValidity: Boole
 
     val z3Script = stMain.render()
     //println(z3Script)
-    val result = {
-      val input =
-        OsUtil.detect match {
-          case OsArch.Win =>
-            ivector(z3, "/smt2", s"/t:$timeout", "/in")
-          case _ =>
-            ivector(z3, "-smt2", s"-t:$timeout", "-in")
-        }
-      new Exec().run(hardTimeout, input, Some(z3Script), None)
-    }
 
-    val r =
-      result match {
-        case Exec.StringResult(s, _) =>
-          val i = s.indexOf('\n')
-          val result = if (i >= 0) s.substring(0, i).trim else s.trim
-          result match {
-            case "unsat" => Unsat
-            case "unknown" => Unknown
-            case "sat" => Sat
-            case "timeout" => Timeout
+    try {
+      val result = {
+        val input =
+          OsUtil.detect match {
+            case OsArch.Win =>
+              ivector(z3, "/smt2", s"/t:$timeout", "/in")
             case _ =>
-              //              for (e <- es) {
-              //                println(ast.Exp.toString(e, inProof = true))
-              //              }
-              reporter.report(InternalErrorMessage("Z3",
-                s"""Error occurred when calling Z3 for the following script:
-$z3Script
-Z3 output:
-$s"""))
-              Error
+              ivector(z3, "-smt2", s"-t:$timeout", "-in")
           }
-        case Exec.Timeout => Timeout
-        case Exec.ExceptionRaised(err) =>
-          val sw = new StringWriter
-          val pw = new java.io.PrintWriter(sw)
-          pw.append("Error occurred when calling Z3:")
-          pw.append(lineSep)
-          err.printStackTrace(pw)
-          reporter.report(InternalErrorMessage("Z3", sw.toString))
-          Error
+        new Exec().run(hardTimeout, input, Some(z3Script), None)
       }
-    (z3Script, r)
+
+      val r =
+        result match {
+          case Exec.StringResult(s, _) =>
+            val i = s.indexOf('\n')
+            val result = if (i >= 0) s.substring(0, i).trim else s.trim
+            result match {
+              case "unsat" => Unsat
+              case "unknown" => Unknown
+              case "sat" => Sat
+              case "timeout" => Timeout
+              case _ =>
+                //              for (e <- es) {
+                //                println(ast.Exp.toString(e, inProof = true))
+                //              }
+                reporter.report(InternalErrorMessage("Z3",
+                  s"""Error occurred when calling Z3 for the following script:
+                     |$z3Script
+                     |Z3 output:
+                     |$s""".stripMargin))
+                Error
+            }
+          case Exec.Timeout => Timeout
+          case Exec.ExceptionRaised(err) =>
+            val sw = new StringWriter
+            val pw = new java.io.PrintWriter(sw)
+            pw.append("Error occurred when calling Z3:")
+            pw.append(lineSep)
+            err.printStackTrace(pw)
+            reporter.report(InternalErrorMessage("Z3", sw.toString))
+            Error
+        }
+      (z3Script, r)
+    } catch {
+      case ex: Throwable =>
+        val sw = new StringWriter
+        ex.printStackTrace(new java.io.PrintWriter(sw))
+        reporter.report(InternalErrorMessage("Z3",
+          s"""Error occurred when calling Z3 for the following script:
+             |$z3Script
+             |Error:
+             |${sw.toString}""".stripMargin))
+        (z3Script, Error)
+    }
+  } catch {
+    case ex: Throwable =>
+      val sw = new StringWriter
+      ex.printStackTrace(new java.io.PrintWriter(sw))
+      reporter.report(InternalErrorMessage("Z3",
+        s"""Error occurred when calling Z3:
+           |${sw.toString}""".stripMargin))
+      ("", Error)
   }
 
   def translate(n: BigInt, tpe: ast.IntegralType): ST = {
