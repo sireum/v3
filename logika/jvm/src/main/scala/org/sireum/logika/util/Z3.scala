@@ -50,16 +50,10 @@ object Z3 {
   case object Error extends CheckResult
 
   private[sireum] var satCacheEnabled = false
-  private[sireum] var satCachePrev: MMap[Object, (String, CheckResult)] = {
-    import scala.collection.JavaConverters._
-    new ConcurrentHashMap[Object, (String, CheckResult)].asScala
-  }
-  private[sireum] var satCacheCurrent: MMap[Object, (String, CheckResult)] = {
-    import scala.collection.JavaConverters._
-    new ConcurrentHashMap[Object, (String, CheckResult)].asScala
-  }
+  private[sireum] var satCachePrev: MMap[Object, (String, CheckResult)] = mmapEmpty
+  private[sireum] var satCacheCurrent: MMap[Object, (String, CheckResult)] = mmapEmpty
 
-  val z3: String = {
+  val z3: String = synchronized {
     import java.io._
     val z3Filename = OsUtil.detect match {
       case OsArch.Win => "z3.exe"
@@ -86,28 +80,29 @@ object Z3 {
   }
 
   def checkSat(timeoutInMs: PosInteger, isSymExe: Boolean, isValidity: Boolean, bitWidth: Natural, es: ast.Exp*)(
-    implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) = {
-    def f() = new Z3(timeoutInMs, isSymExe, isValidity, bitWidth).checkSat(es: _*)
+    implicit reporter: TagReporter, nodeLocMap: MIdMap[ast.Node, LocationInfo]): (String, CheckResult) =
+    synchronized {
+      def f() = new Z3(timeoutInMs, isSymExe, isValidity, bitWidth).checkSat(es: _*)
 
-    if (satCacheEnabled) {
-      val key: Object = es match {
-        case Seq(e) => e
-        case _ => es
-      }
-      satCachePrev.get(key) match {
-        case Some(v) =>
-          val cr = v._2
-          val r = if (cr == Timeout || cr == Unknown) f() else v
-          satCacheCurrent(key) = r
-          r
-        case _ =>
-          val r = f()
-          satCachePrev(key) = r
-          satCacheCurrent(key) = r
-          r
-      }
-    } else f()
-  }
+      if (satCacheEnabled) {
+        val key: Object = es match {
+          case Seq(e) => e
+          case _ => es
+        }
+        satCachePrev.get(key) match {
+          case Some(v) =>
+            val cr = v._2
+            val r = if (cr == Timeout || cr == Unknown) f() else v
+            satCacheCurrent(key) = r
+            r
+          case _ =>
+            val r = f()
+            satCachePrev(key) = r
+            satCacheCurrent(key) = r
+            r
+        }
+      } else f()
+    }
 }
 
 private final class Z3(timeout: PosInteger, isSymExe: Boolean, isValidity: Boolean, bitWidth: Natural)(

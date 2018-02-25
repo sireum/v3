@@ -15,4 +15,4 @@ install:
 
 script:
   - bin/sbt-launch.sh clean test:compile test:fastOptJS
-  - SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh 'project sireum-jvm' test
+  - bin/sbt-launch.sh 'project sireum-jvm' test
