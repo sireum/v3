@@ -429,6 +429,10 @@ lazy val sireumJvm =
           assembly / assemblyOutputPath := file("bin/sireum.jar"),
           assembly / test := {},
           assembly / logLevel := Level.Error,
+          assemblyExcludedJars in assembly := {
+            val cp = (fullClasspath in assembly).value
+            cp filter {x => x.data.getName.contains("scalapb") || x.data.getName.contains("protobuf")}
+          },
           assemblyShadeRules in assembly := Seq(
             ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
             ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
