@@ -32,7 +32,7 @@ trait TagReporter {
 class AccumulatingTagReporter extends TagReporter {
   var tags: ISeq[Tag] = ivectorEmpty
 
-  def hasError: Boolean = tags.exists(_.isInstanceOf[ErrorTag])
+  def hasError: Boolean = tags.exists(t => t.isInstanceOf[ErrorTag] || t.isInstanceOf[InternalErrorTag])
 
   override def report(tag: Tag): Unit = {
     tags :+= tag
